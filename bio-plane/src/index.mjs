@@ -894,6 +894,12 @@ const OPS = {
      falls in depends on what the record holds today, not on what it held when
      the document was captured. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
+  /* D-340 (LINK-FIDELITY.md §"Chrome: rendering and connection are different
+     problems"): how a HOST's navigation changed between captures — the links
+     its chrome carried in one capture and not the next. A pure read of the
+     derived `site_chrome` tables, on op=links' class cut, because it is the
+     same kind of fact: what the source's own pages linked to. */
+  navchanges: { classes: ["admin", "member", "probe"],           mutating: false },
   /* PL-10 / D-220: the DOCUMENT-VERSION CHAIN — every version at one address,
      in date order, with its bundle. A pure read, and it adds no state of its
      own: the answer is a JOIN over `captured_locators` and `register`, both of
@@ -7199,6 +7205,20 @@ export default {
       return json({ ok: true, ...r.result });
     }
 
+    if (op === "navchanges") {
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      const host = (url.searchParams.get("host") || "").trim().toLowerCase();
+      if (!host)
+        return json({ ok: false, ...requiredArgument("navchanges", "host", "<hostname, e.g. www.oaklandca.gov>",
+          "navchanges requires host=<hostname>") }, 400);
+      const limit = url.searchParams.get("limit");
+      const r = await doAnswer(st.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}`
+        + (limit ? `&limit=${encodeURIComponent(limit)}` : "")));
+      /* REC-52's rule: a store silence is not "the navigation never changed". */
+      if (!r.answered) return storeSilent("navchanges");
+      return json({ ok: true, ...r.result });
+    }
+
     if (op === "links") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const capture = url.searchParams.get("capture");
@@ -8669,7 +8689,10 @@ export default {
                       address_norm: normalizeAddress(l.address),
                       citation_norm: l.citation || normalizeCitation(l.address),
                       fragment: l.fragment || null,
-                      type: l.type, origin: l.origin })) }),
+                      type: l.type, origin: l.origin,
+                      /* D-340: the furniture classification and its basis, so
+                         the plane can derive the host's navigation. */
+                      chrome: !!l.chrome, chrome_basis: l.chrome_basis || null })) }),
                 });
               }
             } catch { /* an unfiled link is not a failed capture */ }

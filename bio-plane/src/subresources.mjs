@@ -169,6 +169,68 @@ const FURNITURE_TAGS = new Set(["nav", "footer", "header", "aside"]);
 const FURNITURE_ROLES = new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
 const BODY_TAGS = new Set(["article", "main"]);
 
+/** The region stack both walkers share, so a reference and a link found in the
+ *  same place are classified by ONE rule. A stack, not a flag, and body WINS OVER
+ *  furniture anywhere on it. <footer> inside <article> is the article's byline,
+ *  not the site's footer: HTML scopes <footer> to its nearest sectioning
+ *  ancestor, so once inside <article> or <main> everything is the document's.
+ *  Erring toward inclusion is also the safe direction, since the cost of keeping
+ *  a logo is bytes and the cost of dropping a figure is evidence. */
+function regionStack() {
+  const region = [];
+  return {
+    here() {
+      const body = region.find((r) => r.region === "body");
+      if (body) return body;
+      const furn = region[region.length - 1];
+      return furn || { region: "body", basis: "default" };
+    },
+    close(tag) {
+      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
+        for (let i = region.length - 1; i >= 0; i--)
+          if (region[i].tag === tag) { region.splice(i, 1); break; }
+      }
+    },
+    open(tag, as) {
+      const role = (attr(as, "role") || "").toLowerCase().trim();
+      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
+      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
+      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
+      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    },
+  };
+}
+
+/** D-340 (LINK-FIDELITY.md §"Chrome: rendering and connection are different
+ *  problems"): which of a page's <a>/<area> hrefs sit in FURNITURE, by the same
+ *  region rule `parseHtmlRefs` applies to subresources. Keyed by the raw href as
+ *  written, valued by the basis (`<nav>`, `role=navigation`, ...), first basis
+ *  wins. An href that appears in furniture ANYWHERE on the page is chrome: the
+ *  site's navigation carried it, which is the fact `site_chrome` records, even
+ *  when the body links it too. A CLASSIFICATION with its basis, never a deletion:
+ *  the link is filed either way. Comments are stripped first, as `parseHtmlRefs`
+ *  strips them, so a commented-out <nav> opens no region. */
+export function furnitureLinks(html) {
+  const src = String(html).replace(COMMENT_RE, "");
+  const out = new Map();
+  const region = regionStack();
+  TAG_RE.lastIndex = 0;
+  let m;
+  while ((m = TAG_RE.exec(src))) {
+    const raw = m[1];
+    const closing = raw.startsWith("/");
+    const tag = (closing ? raw.slice(1) : raw).toLowerCase();
+    if (closing) { region.close(tag); continue; }
+    const as = attrsOf(m[2] || "");
+    region.open(tag, as);
+    if (tag !== "a" && tag !== "area") continue;
+    const href = (attr(as, "href") || "").trim();
+    const r = region.here();
+    if (href && r.region === "furniture" && !out.has(href)) out.set(href, r.basis);
+  }
+  return out;
+}
+
 /** srcset families: one picture served at eight widths is ONE reference to the
  *  record, not eight. The largest candidate is kept, because a capture should
  *  hold the best rendition the source offered; the rest are recorded as seen
@@ -197,19 +259,8 @@ function pickSrcsetCandidate(cands) {
 export function parseHtmlRefs(html) {
   const src = String(html).replace(COMMENT_RE, "");
   const refs = [];
-  /* A stack, not a flag, and body WINS OVER furniture anywhere on it.
-     <footer> inside <article> is the article's byline, not the site's footer:
-     HTML scopes <footer> to its nearest sectioning ancestor, so once inside
-     <article> or <main> everything is the document's. Erring toward inclusion
-     is also the safe direction, since the cost of keeping a logo is bytes and
-     the cost of dropping a figure is evidence. */
-  const region = [];
-  const here = () => {
-    const body = region.find((r) => r.region === "body");
-    if (body) return body;
-    const furn = region[region.length - 1];
-    return furn || { region: "body", basis: "default" };
-  };
+  const region = regionStack();
+  const here = region.here;
   const add = (ref, kind, where, extra) => {
     if (!ref || !ref.trim()) return;
     const r = here();
@@ -222,21 +273,9 @@ export function parseHtmlRefs(html) {
     const raw = m[1];
     const closing = raw.startsWith("/");
     const tag = (closing ? raw.slice(1) : raw).toLowerCase();
-    if (closing) {
-      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
-        for (let i = region.length - 1; i >= 0; i--)
-          if (region[i].tag === tag) { region.splice(i, 1); break; }
-      }
-      continue;
-    }
+    if (closing) { region.close(tag); continue; }
     const as = attrsOf(m[2] || "");
-    {
-      const role = (attr(as, "role") || "").toLowerCase().trim();
-      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
-      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
-      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
-      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
-    }
+    region.open(tag, as);
     const inlineStyle = attr(as, "style");
     if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
 
@@ -1051,17 +1090,30 @@ export async function captureSubresources({
   /* Seeded from whatever a previous tick already recorded, using the same key
      note() builds, so a resumed capture does not re-append every link each time
      it rebuilds the companion. */
-  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.citation || l.address || l.ref}`, true]));
+  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.citation || l.address || l.ref}`, l]));
+  /* D-340: which hrefs the page carried in its furniture (<nav>, <footer>, a
+     navigation landmark ...), by the rule `parseHtmlRefs` uses. Recorded on the
+     link as a CLASSIFICATION with its basis, never a filter: every link is filed
+     exactly as before, and the plane derives `site_chrome` per host from these. */
+  const furniture = meter.sync("furniture_links", () => furnitureLinks(html), html.length);
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
+    const chromeBasis = furniture.get(raw) || null;
     const note = (type, address, extra = {}) => {
       /* Keyed on the CITATION, so a link to #findings and a link to
          #methodology in the same report are two records rather than one. */
       const key = `${type}\u0000${extra.citation || address || raw}`;
       if (!seenLink.has(key)) {
-        seenLink.set(key, true);
-        links.push({ ref: raw, type, address: address || null, as_of: when0,
-                     ...(address ? originOf(address, baseHost) : {}), ...extra });
+        const l = { ref: raw, type, address: address || null, as_of: when0,
+                    ...(address ? originOf(address, baseHost) : {}), ...extra,
+                    ...(chromeBasis ? { chrome: true, chrome_basis: chromeBasis } : {}) };
+        seenLink.set(key, l);
+        links.push(l);
+      } else if (chromeBasis) {
+        /* The same citation written a second way ("/x" in the body, the absolute
+           URL in the nav) is still one link, and the nav carried it. */
+        const l = seenLink.get(key);
+        if (l && typeof l === "object" && !l.chrome) { l.chrome = true; l.chrome_basis = chromeBasis; }
       }
       return { type, address, ...extra };
     };

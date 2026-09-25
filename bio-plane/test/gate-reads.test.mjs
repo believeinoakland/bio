@@ -1287,6 +1287,7 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     inbox: "the doorbell inbox — material submitted from OUTSIDE, filed against no bundle.",
     inboxget: "one such submission; filed against no bundle.",
     links: "outbound links by capture sha and inbound by address; names no bundle.",
+    navchanges: "a HOST's navigation across its direct captures, by capture sha and page address (D-340); names no bundle.",
     sourcereach: "reachability of a document ADDRESS; names no bundle.",
     archivelookup: "a CDX lookup against an external archive; names no bundle.",
     pdfstructure: "the structure of a captured PDF, by sha; names no bundle.",

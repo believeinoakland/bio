@@ -1302,6 +1302,11 @@ export class Store extends DurableObject {
          costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
       ["site_assets", "last_fetched_by", "TEXT"],
       ["site_asset_refs", "reused_from", "TEXT"],
+      /* D-340: the furniture region a link sat in, the BASIS of its chrome classification. NULLABLE AND
+         NEVER BACK-FILLED: a link filed before this column existed recorded no region, and no value a
+         backfill could reach for would not be invented; such a link reads as not chrome, stated by
+         `navChanges`' note. */
+      ["links", "chrome_basis", "TEXT"],
       /* REC-159 (Membership v2 §4.9, scope amended by BOB #31): WHO put a member's or a signing key's
          status where it is -- the SERVER's stamp of the administrator whose `op=memberset`,
          `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
@@ -33258,6 +33263,10 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM captured_locators`);
         this.sql.exec(`DELETE FROM site_asset_refs`);
         this.sql.exec(`DELETE FROM site_assets`);
+        /* D-340: the host's chrome is derived from `links` and `captured_locators`,
+           both cleared above, so it goes with them. */
+        this.sql.exec(`DELETE FROM site_chrome_refs`);
+        this.sql.exec(`DELETE FROM site_chrome`);
         /* CAP-4: verdicts on reused parts are derived from the corpus (a ratify
            verdict names a bundle; a posthoc verdict names a capture that reused
            bytes now gone). A whole-store purge that reported ALL and left these
@@ -43555,16 +43564,178 @@ export class Store extends DurableObject {
       if (!l || !l.address_norm) continue;
       this.sql.exec(
         `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           citation_norm, fragment, partition, origin, chrome, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
         sourceBundle, sourceCapture, String(l.ref || l.address), l.address || l.address_norm,
         l.address_norm, l.citation_norm || l.address_norm, l.fragment || null,
         l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
+        l.chrome ? String(l.chrome_basis || "") || null : null,
         capturedAt || now, now);
       n++;
     }
-    return { recorded: n, source_capture: sourceCapture };
+    /* D-340: the host's chrome is DERIVED from the rows just filed, so it is
+       re-derived here for this capture, in the same write. */
+    const chrome = this.#chromeDeriveCapture(sourceCapture);
+    return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
+  }
+
+  /* ------------------------------------------------------------------ *
+   * D-340: site_chrome, the host's navigation, derived per HOST
+   * (LINK-FIDELITY.md §"Chrome: rendering and connection are different problems")
+   * ------------------------------------------------------------------ */
+
+  /** The hosts and pages a capture is on record at. DIRECT captures only: an
+   *  archive capture's retrieval date is when WE asked the archive, not when the
+   *  site served that navigation, so ordering it among direct observations would
+   *  put a navigation at a date it was never seen. */
+  #chromePagesOf(sourceCapture) {
+    const out = [];
+    for (const r of this.#rows(
+      `SELECT address_norm, MIN(first_retrieved) AS first_retrieved, MAX(last_retrieved) AS last_retrieved
+         FROM captured_locators WHERE capture_sha = ? AND via = 'direct' GROUP BY address_norm`, sourceCapture)) {
+      let host = null;
+      try { host = new URL(r.address_norm).hostname.toLowerCase(); } catch { host = null; }
+      if (host) out.push({ host, page: r.address_norm, first: r.first_retrieved, last: r.last_retrieved });
+    }
+    return out;
+  }
+
+  /** Derive ONE capture's contribution: for each host and page it is on record
+   *  at, the set of chrome addresses it carried, fingerprinted, as a reference
+   *  to that host's chrome record. A capture that carried NO chrome contributes
+   *  nothing: a page with no <nav> says nothing about the site's navigation, and
+   *  recording it as an empty navigation would report every nav link lost. */
+  #chromeDeriveCapture(sourceCapture) {
+    const pages = this.#chromePagesOf(sourceCapture);
+    const touched = new Map();
+    for (const old of this.#rows(`SELECT host, fingerprint FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture))
+      touched.set(`${old.host}\u0000${old.fingerprint}`, old);
+    this.sql.exec(`DELETE FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture);
+    /* Anchors are excluded: a skip-link in the nav points into THIS page, so its
+       address differs page to page and would read as navigation churn. */
+    const chromeRows = this.#rows(
+      `SELECT DISTINCT address_norm, chrome_basis FROM links
+        WHERE source_capture = ? AND chrome = 1 AND partition <> 'anchor'`, sourceCapture);
+    const links = [...new Set(chromeRows.map((r) => r.address_norm))].sort();
+    const basis = [...new Set(chromeRows.map((r) => r.chrome_basis).filter(Boolean))].sort();
+    let observed = 0;
+    if (links.length) {
+      const fingerprint = sha256HexSync(links.join("\n"));
+      for (const p of pages) {
+        this.sql.exec(
+          `INSERT INTO site_chrome_refs (host, source_capture, page, first_observed, last_observed, fingerprint, basis)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          p.host, sourceCapture, p.page, p.first, p.last, fingerprint,
+          `containment: ${basis.length ? basis.join(", ") : "furniture region not recorded"}`);
+        this.sql.exec(
+          `INSERT INTO site_chrome (host, fingerprint, links, first_observed, last_observed, captures)
+           VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT(host, fingerprint) DO NOTHING`,
+          p.host, fingerprint, JSON.stringify(links), p.first, p.last);
+        touched.set(`${p.host}\u0000${fingerprint}`, { host: p.host, fingerprint });
+        observed++;
+      }
+    }
+    /* Roll every chrome record this capture touched up from its references,
+       so a record no capture references any more goes rather than lingering. */
+    for (const { host, fingerprint } of touched.values()) {
+      const agg = this.#one(
+        `SELECT MIN(first_observed) AS f, MAX(last_observed) AS l, COUNT(*) AS n
+           FROM site_chrome_refs WHERE host = ? AND fingerprint = ?`, host, fingerprint);
+      if (!agg || !agg.n) this.sql.exec(`DELETE FROM site_chrome WHERE host = ? AND fingerprint = ?`, host, fingerprint);
+      else this.sql.exec(
+        `UPDATE site_chrome SET first_observed = ?, last_observed = ?, captures = ? WHERE host = ? AND fingerprint = ?`,
+        agg.f, agg.l, agg.n, host, fingerprint);
+    }
+    return { observed, chrome_links: links.length };
+  }
+
+  /** Regenerate a host's chrome by SCAN, which is what makes it a derived table:
+   *  everything in it is recomputed from `links` and `captured_locators`.
+   *  BOUNDED AND PAGED (REC-57): a host captured ten thousand times is not rescanned
+   *  in one call. The first page (no `after`) clears the host's derived rows; each
+   *  page re-derives up to `limit` captures in capture-sha order and says whether
+   *  more remain (`truncated`, `next`). Until the last page lands the host's chrome
+   *  is PARTIAL, and the answer says so rather than leaving it to be inferred. */
+  deriveSiteChrome({ host, limit = null, after = null }) {
+    const h = String(host || "").trim().toLowerCase();
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(2000, Math.floor(asked)) : 500;
+    if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
+    const from = String(after || "");
+    if (!from) {
+      this.sql.exec(`DELETE FROM site_chrome_refs WHERE host = ?`, h);
+      this.sql.exec(`DELETE FROM site_chrome WHERE host = ?`, h);
+    }
+    const found = this.#rows(
+      `SELECT DISTINCT capture_sha FROM captured_locators
+        WHERE via = 'direct' AND capture_sha > ?
+          AND (substr(address_norm, 1, ?) = ? OR substr(address_norm, 1, ?) = ?)
+        ORDER BY capture_sha LIMIT ?`,
+      from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
+    const page = found.slice(0, cap);
+    for (const r of page) this.#chromeDeriveCapture(r.capture_sha);
+    const truncated = found.length > cap;
+    return { host: h, captures: page.length, derived: page.map((r) => r.capture_sha), limit: cap, truncated,
+             next: truncated ? page[page.length - 1].capture_sha : null,
+             ...(truncated ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}) };
+  }
+
+  /** THE PER-HOST READ: how a host's navigation changed between captures. The
+   *  host's observations are ordered by when each was first seen; each adjacent
+   *  pair is compared, and a link the earlier carried and the later did not is
+   *  LOST, named with the two captures it was lost between. Per HOST, not per
+   *  page: the site's navigation is a property of the site, so two captures of
+   *  different pages of one host are two observations of ONE navigation. When
+   *  the two pages differ the answer says so (`same_page: false`), because a
+   *  section's own sidebar can differ page to page, and which of the two a
+   *  difference is stays UNDETERMINED here rather than being decided. */
+  navChanges({ host, limit = null }) {
+    const h = String(host || "").trim().toLowerCase();
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
+    /* The NEWEST observations, cut at the cap and SAID to be cut (REC-57). */
+    const found = this.#rows(
+      `SELECT source_capture, page, first_observed, last_observed, fingerprint, basis
+         FROM site_chrome_refs WHERE host = ? ORDER BY first_observed DESC, source_capture DESC LIMIT ?`, h, cap + 1);
+    const seq = found.slice(0, cap).reverse();
+    const records = this.#rows(
+      `SELECT fingerprint, links, first_observed, last_observed, captures
+         FROM site_chrome WHERE host = ? ORDER BY first_observed`, h)
+      .map((r) => ({ ...r, links: JSON.parse(r.links || "[]") }));
+    const linksOf = new Map(records.map((r) => [r.fingerprint, r.links]));
+    const obs = (o) => ({ source_capture: o.source_capture, page: o.page, first_observed: o.first_observed,
+                          last_observed: o.last_observed, fingerprint: o.fingerprint });
+    const changes = [];
+    const lost = [];
+    for (let i = 1; i < seq.length; i++) {
+      const a = seq[i - 1], b = seq[i];
+      if (a.fingerprint === b.fingerprint) continue;
+      const A = new Set(linksOf.get(a.fingerprint) || []), B = new Set(linksOf.get(b.fingerprint) || []);
+      const gone = [...A].filter((x) => !B.has(x)).sort();
+      const came = [...B].filter((x) => !A.has(x)).sort();
+      const samePage = a.page === b.page;
+      changes.push({ from: obs(a), to: obs(b), lost: gone, gained: came, same_page: samePage });
+      for (const address_norm of gone) {
+        /* Seen again AFTER it went missing: identical bytes re-captured later
+           widen an earlier observation's interval rather than adding a row, so
+           the return shows as a later `last_observed` carrying the link. */
+        const again = seq.filter((o) => o.last_observed > b.first_observed
+                                      && (linksOf.get(o.fingerprint) || []).includes(address_norm))
+                         .map((o) => o.last_observed).sort().pop() || null;
+        lost.push({ address_norm, last_carried: obs(a), first_missing: obs(b), same_page: samePage,
+                    seen_again_at: again });
+      }
+    }
+    return { host: h, observations: seq.length, limit: cap, truncated: found.length > cap,
+             records, sequence: seq.map((o) => ({ ...obs(o), basis: o.basis })), changes, lost,
+             note: (seq.length < 2
+               ? "fewer than two captures of this host carried navigation: nothing to compare yet"
+               : "a link is LOST when the host's navigation carried it in one capture and not in the next")
+               + "; chrome here is CONTAINMENT (a link inside <nav>, <header>, <footer>, <aside> or a landmark role), "
+               + "a classification with its basis, not a proof; recurrence across pages is not yet weighed; "
+               + "a capture with no chrome at all is not an observation, so a navigation that lost EVERY link, "
+               + "or a link filed before chrome was recorded, is not seen here; direct captures only" };
   }
 
   /** Everything that points AT an address. The reverse index, which is the
@@ -51577,6 +51748,9 @@ export class Store extends DurableObject {
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
+        navchanges: () => this.navChanges({ host: url.searchParams.get("host"), limit: url.searchParams.get("limit") }),
+        derivesitechrome: () => this.deriveSiteChrome({ host: url.searchParams.get("host"),
+                                                        limit: url.searchParams.get("limit"), after: url.searchParams.get("after") }),
         sitechrome: () => this.siteChrome({ host: url.searchParams.get("host"),
                                             threshold: Number(url.searchParams.get("threshold")) || 0.6 }),
         recordcapturelimit: () => this.recordCaptureLimit(body || {}),
