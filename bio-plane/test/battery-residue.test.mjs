@@ -123,13 +123,22 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { moduleClosure } from "./moduleclosure.mjs";   /* D-566: the runner's closure is derived, never listed */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REAL_RUNNER = join(DIR, "..", "scripts", "battery.mjs");
 /* The runner cannot start without the modules it imports, and a FIXTURE copy of
    the report would agree with itself and prove nothing about what actually runs
    — M0-15's reason for copying the runner, one module further out. */
-const REAL_MODULES = ["provenance.mjs", "residue.mjs"];
+/* CORRECTED 2026-09-25 by D-566: this was a HAND LIST (`["provenance.mjs", "residue.mjs"]`), and D-237's comment above
+   records the day it fell behind the runner's imports. It is now derived by `moduleClosure`'s STATIC mode (M0-169) from
+   the runner itself, read at load time so a control driver's patched runner is the one whose closure is carried. A
+   module outside `scripts/` would not land where the loops below put it, so that THROWS rather than copying wrong. */
+const REAL_MODULES = moduleClosure({ repo: join(DIR, "..", ".."), roots: ["bio-plane/scripts/battery.mjs"],
+  dynamic: false, includeRoots: false }).map((rel) => {
+  if (!rel.startsWith("bio-plane/scripts/")) throw new Error(`D-566: battery.mjs reaches ${rel}, outside scripts/`);
+  return rel.slice("bio-plane/scripts/".length);
+});
 /* M0-107: an expired budget MEASURED NOTHING — one named budget assertion per spawn, and the arm that would
    read the expired result is SKIPPED, so the battery reads this suite NOT MEASURED, never RED. */
 import { budgetAssert } from "./budget.mjs";
