@@ -116,15 +116,15 @@ scope: move D-454's bullet after D-517's sentence ends; no other text changes.
 accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
-### D-685 · queued — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
-order: after D-684, the same acquire path, one worker at a time (SCHEDULER #23, 2026-09-25)
+### D-694 · queued — **A CSV CAPTURED THROUGH THE PROFILE-BRANCH PATH HOLDS NO SHEET LIST: that path carries no `container_extent`, so a sheet-range or sheet-cell citation naming a sheet the CSV lacks is SKIPPED as undetermined instead of refused, and a version notice reads "no sheet list" (measured: the key is absent on the acquired document).** Found by D-684's worker (minted on land/worker/D-684). — owner RECORD.
+order: after D-685, the same acquire assembly, one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M4
-interface: I3 — a truncated unit carried where one was dropped; the integrator classifies.
-design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1, with the store's per-unit cap (CAPTURE_TEXT_UNIT_CAP) and the truncated flag.
-depends-on: D-684 (running; the same acquire wire).
-scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge min(bytes, CAPTURE_TEXT_UNIT_CAP) and carry the prefix with `truncated: true`, which the store honours; state what is still dropped when even prefixes exceed the budget.
-accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
+interface: I5 — container_extent on a profile-branch capture; the integrator classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1 (D-684's Incomplete bullet).
+depends-on: D-685 (the same assembly; stacked on D-684).
+scope: lift the containerExtent projection out of the wire block into one function both paths call (as textUnitsFor was, CPDF-19); a CSV's sheet list is held; an out-of-range sheet citation is refused by name.
+accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
 
 ### D-709 · queued — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
 order: after D-698 (running on D-693), the same earned-basis entries (SCHEDULER #23, 2026-09-25)

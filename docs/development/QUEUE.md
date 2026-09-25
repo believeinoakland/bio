@@ -547,7 +547,8 @@ scope: add `import "../bio-plane/test/stdio.mjs";` on line 2 after the shebang; 
 accepts-when: 16 parallel runs x2 of the guard with a plant on the D-542 union lose no bytes (moves: 7 of 32 truncated). NEGATIVE CONTROL: remove the import and the truncation trial fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-664's worker).
 
-### D-684 · running — **A text/csv CAPTURE THROUGH op=acquire IS READ AS PROFILE TEXT AND NEVER REACHES THE FORMAT WIRE: the `canRead` branch wins, so a CSV gets no text_units and `reading.text_container` null — its cells are unsearchable though the csv format entry exists.** Measured in D-672's suite. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+### D-684 · integrated — **A text/csv CAPTURE THROUGH op=acquire IS READ AS PROFILE TEXT AND NEVER REACHES THE FORMAT WIRE: the `canRead` branch wins, so a CSV gets no text_units and `reading.text_container` null — its cells are unsearchable though the csv format entry exists.** Measured in D-672's suite. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+status: integrated — SCHEDULER #23 11:20Z: tip 9f6112d3 (on D-672 f676a996), GATE 385/385 GREEN FULLREUSE (21887 assertions), tree a6a4764a; a textual capture whose format entry declares text() reaches the format wire (CSV found by passage search); I1/I5 additive; adjacent-line union with D-374/D-375 at the acquire assembly; minted D-694
 order: spawned directly after D-672 — it makes the same workbook-class search reach CSV, a correction to just-landed search work (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3/I5 additive — CSV text_units and text_container; the integrator classifies.
@@ -826,6 +827,17 @@ depends-on: none (stacked on land/worker/D-701 @ 414439d2, integrated, on D-340 
 scope: a link is chrome when contained in a chrome region AND recurring across the host's held pages; a single held page reads chrome undetermined; a varying sidebar's links are content; navchanges names a loss only for chrome by both tests.
 accepts-when: a varying page-local sidebar reports no lost chrome link, and a one-page host reads undetermined (moves: a sidebar read as lost chrome). NEGATIVE CONTROL: judge by containment alone and the sidebar arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
+
+### D-685 · running — **THE ACQUIRE WIRE'S BUDGET LOOP DROPS A WHOLE UNIT whose text plus envelope exceeds the remaining budget (524,288 B), instead of carrying its per-unit-capped prefix (the store caps a unit at 128 KiB with truncated=1) — so a large sheet (M-20: 72.6 MB over 1,056 sheets) silently loses units from search.** Diagnosed at the code, not measured. Found by D-672's worker (minted on land/worker/D-672). — owner RECORD.
+status: running — SCHEDULER #23 11:20Z: spawned, stacked on land/worker/D-684 @ 9f6112d3
+order: after D-684, the same acquire path, one worker at a time (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3 — a truncated unit carried where one was dropped; the integrator classifies.
+design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.1, with the store's per-unit cap (CAPTURE_TEXT_UNIT_CAP) and the truncated flag.
+depends-on: none (stacked on land/worker/D-684 @ 9f6112d3, integrated, on D-672 on D-415 — the same acquire wire).
+scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge min(bytes, CAPTURE_TEXT_UNIT_CAP) and carry the prefix with `truncated: true`, which the store honours; state what is still dropped when even prefixes exceed the budget.
+accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
