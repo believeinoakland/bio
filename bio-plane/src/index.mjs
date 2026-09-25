@@ -111,7 +111,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderBlock,
+import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, renderAllowanceMs, renderBlock,
          renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
@@ -2992,7 +2992,8 @@ async function monitorRecordLook(stub, o) {
   const out = await doAnswer(stub.fetch(new Request(`http://do/monitorlook?${q}`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ bundleId: o.bundleId, address: o.address, outcome: o.outcome, baseline: o.baseline,
-                           seen: o.seen, httpStatus: o.httpStatus, reason: o.reason }) })));
+                           seen: o.seen, httpStatus: o.httpStatus, reason: o.reason,
+                           ...(o.scope ? { scope: o.scope } : {}) }) })));
   return out.answered ? out.result : { ok: false, written: false, why: "the store did not answer the observation write" };
 }
 
@@ -9811,7 +9812,7 @@ export default {
       /* The baseline is whatever the provenance register says was captured from
          this locator. Without one there is nothing to compare against, and the
          tick says so rather than guessing at a status. */
-      let baseline = null, baselineProfile = null, baselineAt = null;
+      let baseline = null, baselineProfile = null, baselineAt = null, renderTick = false;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const rows = (reg.documents || []).filter((d) => d && typeof d.locator === "string");
@@ -9830,17 +9831,32 @@ export default {
         const match = (driveTick && driveTick.harvestable
             ? rows.find((d) => d.locator === driveTick.exportAddress) : null)
           || rows.find((d) => d.locator === locator);
-        baseline = match?.capture?.sha256 || null;
+        /* D-567 — A RENDERED CAPTURE IS WATCHED BY ITS SHELL, NEVER BY ITS RENDERED PRIMARY
+         * (CLIENT-RENDERED.md, "RULED 2026-09-25 by BOB #34"). This tick fetches the
+         * SERVED document and cannot render, so on a render:true capture what it holds is
+         * a fresh SHELL; `capture.sha256` there names the RENDERED document (BOB #32 item
+         * 2), and comparing the two would read `modified` on every tick for a change
+         * nobody made — D-472's cry-wolf, one arm over. The comparable baseline is the
+         * pair's own `shell.sha256`. A rendered row that names no shell digest has NO
+         * baseline, stated, and never falls back to the rendered digest. The profile is
+         * the rendered document's, so it is not carried: D-60's evidentiary comparison
+         * does not apply to a shell. */
+        renderTick = !!match && ((match.pair && typeof match.pair === "object" && match.pair.primary === "rendered")
+          || (match.capture && match.capture.method === RENDERED_METHOD));
+        if (renderTick) {
+          const shellSha = match.pair && match.pair.shell && match.pair.shell.sha256;
+          baseline = typeof shellSha === "string" && /^[0-9a-f]{64}$/.test(shellSha) ? shellSha : null;
+        } else baseline = match?.capture?.sha256 || null;
         baselineAt = typeof match?.retrieved === "string" ? match.retrieved : null;
-        baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
+        baselineProfile = !renderTick && match && match.profile && typeof match.profile === "object" ? match.profile : null;
       } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
       const checked = new Date().toISOString().split(".")[0] + "Z";
-      let status = null, note = null, seen = null, compared = null, comparedBasis = null;
+      let status = null, note = null, seen = null, compared = null, comparedBasis = null, frame = null;
       /* D-65 — what `assess` said, the type the fetched document reads as, and the look. */
       let httpStatus = null, fetchedBytes = null, fetchedCtx = null, unreachable = null;
       const monitorLook = (o) => monitorRecordLook(stub0, { bundleId, address: normalizeAddress(locator),
-        baseline, seen, httpStatus, ...o,
+        baseline, seen, httpStatus, ...(renderTick ? { scope: "frame" } : {}), ...o,
         actorClass: viaSession ? "member" : "machine",
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
       try {
@@ -9957,7 +9973,24 @@ export default {
           fetchedBytes = bytes;
           { const hh = {}; for (const [hk, hv] of res.headers) hh[hk.toLowerCase()] = hv;
             fetchedCtx = { headers: hh, locator, content_type: res.headers.get("content-type") || null }; }
-          if (!baseline) note = "no captured baseline to compare against; recorded the check only";
+          if (renderTick) {
+            /* D-567 / BOB #34 (b): the FRAME is compared, raw, with the pair's shell digest,
+               and the CONTENT is undetermined on every tick, match or not. A match moves no
+               `source_status`: "unchanged" there would read as the document being stable,
+               which is exactly what a shell cannot say. A difference is a D-472 `modified`
+               about the frame only, and says so. */
+            if (!baseline)
+              note = "the capture is rendered and its register row names no shell digest (pair.shell.sha256), "
+                   + "so nothing was compared; " + RENDER_TICK_UNDETERMINED;
+            else {
+              compared = "shell";
+              comparedBasis = "the served shell was compared with the pair's shell digest (pair.shell.sha256), "
+                            + "never with the rendered primary's; this tick cannot render";
+              if (seen === baseline) { frame = "unchanged"; note = "frame unchanged; " + RENDER_TICK_UNDETERMINED; }
+              else { frame = "changed"; status = "modified";
+                     note = "modified (frame): the source no longer serves the captured shell; " + RENDER_TICK_UNDETERMINED; }
+            }
+          } else if (!baseline) note = "no captured baseline to compare against; recorded the check only";
           else {
             /* D-60 — MONITORING ASKS "HAS THE SUBSTANCE CHANGED?" (DOCUMENT-PROFILES.md,
                "Three digests, not one"), and on an ASP.NET page the raw bytes answer
@@ -10027,7 +10060,7 @@ export default {
 
       /* THE LOOK, written to the observation log (OBSERVATION-LOG-DESIGN.md §4.1). */
       const observation = await monitorLook({
-        outcome: status === "unchanged" ? "unchanged" : status === "modified" ? "changed"
+        outcome: status === "unchanged" || frame === "unchanged" ? "unchanged" : status === "modified" ? "changed"
                : status === "removed" ? "removed" : unreachable ? "unreachable" : "unbaselined",
         reason: unreachable });
 
@@ -10129,6 +10162,9 @@ export default {
         /* D-60: WHICH comparison the status rests on — "evidentiary" or "raw", null
            when none was made (no baseline, or the source did not answer) — and why. */
         compared, compared_basis: comparedBasis,
+        /* D-567: on a rendered capture the verdict is about the FRAME, and the content is
+           UNDETERMINED on every tick — stated in those words, never inferred from a match. */
+        ...(renderTick ? { frame, content: "undetermined", undetermined: [RENDER_TICK_UNDETERMINED] } : {}),
         /* D-65: the layered verdict (`stopped_at`, `trail`, graded `events`), or null with
            `assessment_basis` saying why none was made; the cadence and which source set it;
            and the look as the observation log recorded it. */

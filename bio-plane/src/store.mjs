@@ -47245,12 +47245,17 @@ export class Store extends DurableObject {
    *  so the tick and the suite read the same rule.
    *
    *  `actorClass`/`actor` come from the QUERY STRING, where the control plane stamped them. */
-  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null } = {}) {
+  static monitorObservationFor({ outcome, baseline = null, seen = null, httpStatus = null, reason = null, scope = null } = {}) {
     const cap = typeof baseline === "string" && /^[0-9a-f]{64}$/.test(baseline) ? baseline : null;
+    /* D-567: a rendered capture's tick compares the SHELL, so its look is about the FRAME and
+       the referent is the pair's shell digest; the detail says so, and says the content is
+       undetermined, so the log never reads a frame match as the document unchanged. */
+    const frame = scope === "frame" ? "frame " : "";
+    const tail = scope === "frame" ? "; content undetermined" : "";
     switch (outcome) {
       /* The zero-payload revisit: the record's own capture, confirmed at a date. */
       case "unchanged":
-        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: "unchanged" } : null;
+        return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap, detail: `${frame}unchanged${tail}` } : null;
       /* The substance moved. §4.1 says `result_ref` = the NEW sha — but a tick does not
          capture the new version, so the record does not hold it, and naming it as a
          `capture` would be the log claiming a document the record lacks. The referent is
@@ -47258,7 +47263,7 @@ export class Store extends DurableObject {
          (A DESIGN GAP against §4.1, raised in D-65's report.) */
       case "changed":
         return cap ? { state: "PRESENT", resultKind: "capture", resultRef: cap,
-                       detail: `changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}` } : null;
+                       detail: `${frame}changed; served sha256 ${typeof seen === "string" ? seen : "unknown"}${tail}` } : null;
       case "removed":
         return { state: "LOOKED_ABSENT", detail: `gone; the source answered ${httpStatus ?? "unknown"}` };
       case "unreachable":
@@ -47275,9 +47280,9 @@ export class Store extends DurableObject {
   }
 
   recordMonitorLook({ bundleId = null, address = null, outcome = null, baseline = null, seen = null,
-                      httpStatus = null, reason = null, actorClass = "plane", actor = null } = {}) {
+                      httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null } = {}) {
     if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a bundle and an address" };
-    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason });
+    const row = Store.monitorObservationFor({ outcome, baseline, seen, httpStatus, reason, scope });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
                          ? "no captured baseline, so the look has no capture to refer to and is not recorded"

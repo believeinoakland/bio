@@ -50,6 +50,13 @@ export const RENDER_DEFAULTS = Object.freeze({
 /* The render method string BOB #32 ruled. The shell keeps its own method. */
 export const RENDERED_METHOD = "rendered";
 
+/* D-567 / BOB #34 (b), 2026-09-25: what every monitoring tick on a rendered capture states
+   about its CONTENT, in the ruling's words. A tick fetches the served shell and cannot render,
+   so a shell match is never evidence the document is stable. One copy, read by op=monitor and
+   by its suite. */
+export const RENDER_TICK_UNDETERMINED =
+  "content undetermined — not watched: this source renders its content in the browser";
+
 /* D-499 — WHICH WAIT FIRED, AND WHAT THAT SAYS ABOUT COMPLETENESS.
  *
  * BOB #32, 2026-09-24 (QUEUE.md D-64's `owed-at-integration:` line, coord
