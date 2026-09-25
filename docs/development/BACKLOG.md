@@ -66,6 +66,16 @@ scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the
 accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
 
+### D-689 · queued — **A MACHINE CREDENTIAL CAN STATE A RECORDS REQUEST'S GOVERNING LAW: nothing fences `law` on a `records_request` (REC-201) or the creation of a `cpra_request` from an `ai` credential, though which law governs is the member's characterization (D-149's C-32.18 fences only the governing-laws list).** BOB #35 RULED 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149 (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a machine may only PROPOSE either (REC-195's shape) and a member's act adopts; existing machine-created `cpra_request` rows read MACHINE-STATED, never rewritten. — owner RECORD.
+order: at the backlog head after D-682, the first row after REC-201 (running), which adds the `law` field this fences (BOB #35's placement; SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — a named refusal for a machine credential; a machine-stated reading on existing rows; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*), with BOB #35's 08:25Z ruling, folded into §2 by this row.
+depends-on: REC-201 (running).
+scope: refuse by name an `ai` credential stating `law` or creating a `cpra_request`; offer the propose-then-adopt path as REC-195 does for the list; a pre-fence machine-created row reads machine-stated from its recorded author class, unchanged.
+accepts-when: an `ai` credential's cpra_request is refused by name and a member adopts its proposal (moves: a machine stating the law). NEGATIVE CONTROL: an `ai` credential creating a cpra_request is refused by name, and the pre-fence machine row reads machine-stated — lift the fence and the first arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 08:25Z ruling).
+
 ### D-628 · queued — **`op=promote` STILL THROWS A RAW NOT NULL STACK WHEN `current_state` (document and envelope), `meta.created` OR `meta.last_updated` IS STATED NOWHERE — for creations and revisions, and for `meta` sent as a string.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
 order: after D-615 — the same promote function as D-546, D-578 and D-615: one worker at a time (SCHEDULER #23, 2026-09-25)
 milestone: M7
@@ -1072,14 +1082,4 @@ design: `docs/development/VERIFICATION.md` (the negative-control register).
 depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
 scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
 accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
-order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
-depends-on: land/conduct/c20-batch11fix on `main`.
-scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
-accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
