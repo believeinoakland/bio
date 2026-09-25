@@ -110,3 +110,4 @@ D-581	2026-09-25T01:13:47.878Z	land/worker/D-523	D-523 findings: plain request p
 D-582	2026-09-25T01:13:47.878Z	land/worker/D-523	D-523 findings: plain request past expires still drained; C-83.6/.7 post-fetch codes treated as nothing-fetched; run not woken on expired render; CAPTURE_FETCH_FAILED uncatalogued
 D-583	2026-09-25T01:13:47.878Z	land/worker/D-523	D-523 findings: plain request past expires still drained; C-83.6/.7 post-fetch codes treated as nothing-fetched; run not woken on expired render; CAPTURE_FETCH_FAILED uncatalogued
 D-584	2026-09-25T01:13:47.878Z	land/worker/D-523	D-523 findings: plain request past expires still drained; C-83.6/.7 post-fetch codes treated as nothing-fetched; run not woken on expired render; CAPTURE_FETCH_FAILED uncatalogued
+D-585	2026-09-25T01:26:09.120Z	WORKER D-504	a scanned page with an empty BT/ET and inherited fonts is read as having a text layer: tier-1 no_text_layer and the OCR renderer both miss it (M-157 item 6)
