@@ -959,7 +959,7 @@ accepts-when: an ack on a C1-plus-newCase draft is NOT listed in C1's document a
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-708's worker; BOB #36 inbox).
 
 ### D-722 · integrated — **op=linkproject's WRITE HALF: it resolves a second time WITHOUT the viewer, so an outsider's act writes an edge into a project they cannot see (measured by D-706's worker: a hidden-plus-visible address writes the HIDDEN edge, leaving op=links' tally one short; the edge sits unattributed).** BOB #36 FINAL RULING 2026-09-25 11:15Z, (A)+(C) (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded; supersedes 10:50Z/10:58Z part 3). — owner RECORD.
-status: integrated — CONDUCT #23 12:38Z: worker report — tip 46ed027d (on D-706 6dd3e530), GATE 81/81 GREEN FULLREUSE (6864 assertions); linkproject write through the viewer; NO_SUCH_BUNDLE / PROJECT_ACT_NOT_A_PARTICIPANT (IC MAJOR); AUTHORITY/DISCLOSURE fix — rides batch30 after D-706, named to DIST
+status: integrated — SCHEDULER #24 12:46Z: tip 46ed027d (on D-706 6dd3e530), GATE 81/81 GREEN FULLREUSE (6864 assertions), tree b17c72f0; (A) one resolution through #captureGate, writes = answered edges; (C) hidden bundle= answers NO_SUCH_BUNDLE (stated tightening: an id naming nothing now refused too); joined test for a project source, linkproject in POSITIONAL_ACTS; d706 WRITE HALF arm inverted; refs sweep found no read leaking a hidden links_to edge
 order: directly behind D-706, whose disclosure half it completes; a write across the viewer fence is a disclosure defect and outranks every feature (SCHEDULER #24, 2026-09-25)
 milestone: M7
 interface: I3 — linkproject writes only the edges its answer names; bundle= naming a hidden bundle answers NO_SUCH_BUNDLE; the integrator classifies.
@@ -1200,7 +1200,8 @@ scope: in is-publish-draft-this-case treat a pair draft as standing at no case e
 accepts-when: op=publish case=C1 naming a pair draft is refused by name and writes nothing; a draft naming C1 only still publishes (moves: a pair draft bound by a publish). NEGATIVE CONTROL: compare the draft's named edition again and the pair arm publishes, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-721's worker).
 
-### D-645 · queued — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-645 · running — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 12:46Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-644, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
