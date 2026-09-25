@@ -30,6 +30,11 @@ const REAL = ["src/index.mjs", "src/store.mjs", "src/query.mjs"].map((f) => join
 const before = REAL.map(digest);
 
 const SIGHT_LINE = "if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);";
+/* REC-196: §11's reads, by the label each carries, so an arm can demand every one of them by name. */
+const REC196_READS = ["image", "file", "projection", "excludedby", "backlinks", "reevaluations", "inquirystrength",
+  "earnedbasis", "partitionindependence", "narrowcandidates", "versionnotice", "basisversions", "versionstrength",
+  "strengthbarof", "extractproposals", "capturerequests", "tasks", "biasmanifest", "airuns", "casedrafts",
+  "affordances", "projectownerarith", "projectvisibility", "projectparticipants"];
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
 
@@ -78,7 +83,11 @@ const ARMS = {
        not exist by this arm's own lie, which removes her item BEFORE any bound is read. */
     mustFail: ["SEES, NO ROLE:", "JOINED:",
                "THE ARM IS ARMED: the ADMIN token's five all MOVED on the hidden run",
-               "EXACT: the ADMIN token's aiRunLog less vera's"],
+               "EXACT: the ADMIN token's aiRunLog less vera's",
+               /* EXTENDED 2026-09-25 by REC-196, never exempted: the lie makes D's OWNER an outsider too, so §11's
+                  owner arms catch it by name — iris is answered C-70.1 and cannot open her own run. Measured on the
+                  first run with §11's fixture moved off iris's session (it had thrown before its foot). */
+               "11d+:", "11f: the OWNER", "11f+:"],
   },
 
   /* THE ROSTER STAMP DROPPED at the control plane: the roster acts receive no viewer. The store reads
@@ -305,6 +314,49 @@ const ARMS = {
      negation outside the membership test rather than inside it. Nothing may fail. */
   "d480-not-in-inverted": {
     patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
+    mustFail: [],
+  },
+
+  /* REC-196 — THE ROW'S OWN CONTROL: a read naming a discoverable project's own id answers "does not exist"
+     again (the pre-dispatch check disarmed, every read held open). Each of §11's 24 reads must fail 11b BY NAME,
+     and 11c with them (the absent answers carry keys a C-70.1 does not). Nothing else may fail. */
+  "rec196-existence-read-dropped": {
+    patches: [["store.mjs", "      const existence = this.#existenceRead(op, url, body);", "      const existence = null;"]],
+    mustFail: [...REC196_READS.map((n) => `11b: AT EXISTENCE, op=${n} naming`), "11c:"],
+  },
+  /* REC-196 LIAR 2: positional for a HIDDEN project too — every project the caller cannot fully see answers C-70.1.
+     §11e's 24 hidden-equals-absent arms must fail by name. */
+  "rec196-hidden-too": {
+    patches: [["store.mjs",
+      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;\n        const existence = this.#existenceAct(id, viewer);",
+      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=?`, id)) continue;\n        const existence = this.#inSight(id, viewer) ? null : this.#existenceOnly(id);"]],
+    mustFail: [...REC196_READS.map((n) => `11e: HIDDEN = ABSENT, raw: op=${n} naming`),
+      /* EXTENDED after the first run (2026-09-25), never exempted: the arm ALSO failed ten of REC-138's own
+         hidden-equals-absent READ arms earlier in the suite (projectparticipants, image, file, affordances, …) —
+         a second witness to the same liar, which the declaration had missed. Declared by that section's label. */
+      "HIDDEN = ABSENT, raw (status, content type, body): op="],
+  },
+  /* REC-196 LIAR 3: positional to EVERYBODY — the owner included. 11f and 11f+ must fail. */
+  "rec196-to-everyone": {
+    patches: [["store.mjs", "        const existence = this.#existenceAct(id, viewer);\n        if (existence) return existence;",
+               "        const existence = this.#existenceOnly(id);\n        if (existence) return existence;"]],
+    mustFail: ["11f: the OWNER", "11f+:"],
+  },
+  /* REC-196 LIAR 4: the table one read short. The sweep must name it, and its own 11b must fail. */
+  "rec196-table-short": {
+    patches: [["store.mjs", ` projectvisibility: ["projectId"], projectparticipants: ["projectId"],`, ` projectvisibility: ["projectId"],`]],
+    mustFail: ["11g: every read carrying", "11b: AT EXISTENCE, op=projectparticipants naming"],
+  },
+  /* REC-196: the control plane's viewer stamp on the roster read dropped — the store cannot ask sight without it. */
+  "rec196-roster-viewer-unstamped": {
+    patches: [["index.mjs", `                                "projectvisibility", "projectdirectory",\n`,
+               `                                "projectvisibility", "projectdirectory"];\n                                void [\n`]],
+    mustFail: ["11b: AT EXISTENCE, op=projectparticipants naming"],
+  },
+  /* REC-196 OVER-STRICTNESS: the same answer without the index prefilter (`#existenceAct` asked of every named id).
+     Nothing may fail. */
+  "rec196-no-prefilter": {
+    patches: [["store.mjs", "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;\n", ""]],
     mustFail: [],
   },
 
