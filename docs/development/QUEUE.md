@@ -987,9 +987,9 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-707 · running — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
+### D-707 · integrated — **op=promote STILL RETURNS A RAW NOT NULL STACK for a missing snapKey (manifest.snap_key), a file with no path (files.path) and a blob file with no bytes (files.bytes)** — the three fields D-578/D-628 did not reach. Found by D-628's worker. — owner RECORD.
+status: integrated — CONDUCT #23 12:27Z: worker report — tip 95839afa (on D-692 332c594e), GATE 391/391 GREEN FULLREUSE (22115 assertions); C-86.10..13 on promote (IC MAJOR tightening); CATALOG/floors/pen-sweep 24 re-read at union; rides batch30 after D-692
 order: after D-692, the same promote function, one worker at a time: a raw stack on a public op breaks DEC-49 and leaks internals (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:40Z: spawned, stacked on land/worker/D-692 @ 332c594e
 milestone: M7
 interface: I3 — three named refusal codes on op=promote; the integrator classifies.
 design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (C-2.5; the promote corrections D-578 and D-628 built as C-86.5 and C-86.8).
