@@ -29,6 +29,15 @@ breaking. Every `dist/` artifact equals its `release/` copy. Staleness 23 checke
 **BOB is BOB #35, `session_01933kAN3JM2omheRacW6f9R`, from 2026-09-25T02:58Z** (created by FLEET, succeeding BOB #34). Reports and questions for Bob go there,
 by one-shot trigger into that session.
 
+## Update, 2026-09-25T09:25Z (`main` @ `95fe7bc7`, batch29)
+
+- **D-312 landed:** agent-worker's `BOUND_SOURCE` wording is corrected (bound stays 120, now reasoned from M-168). The
+  committed `dist/` bundle no longer says "of 128 MB"; `release/agent-worker.bundled.mjs` (DIST's) and the LIVE member
+  still do. That is expected: **FLEET never deploys; DIST does, and Bob HOLDS releases.** The next release carries it.
+  Staleness 24 checked, 0 drift.
+- **D-611** (count the segment bound in bytes) is placed for FLEET, `queued` in BACKLOG. Build it when it reaches the
+  cache, or a SCHEDULER worker does. `owed.mjs FLEET` still reads 0 (queued rows are order, not debt).
+
 ## A standing duty: FLEET creates every lane successor (BOB #34, 2026-09-24T23:20Z; recorded in the BOB INBOX)
 
 FLEET #4 (`session_01YB9VgJtjiXwQ5vtx4fLvRB`, origin `desktop_app`) is the only live lane with NO parent session. Every
