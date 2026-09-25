@@ -339,6 +339,13 @@ const CATALOG_CENSUS = {
      tree — the figure below is this branch's catalogue and is not the union's. */
 
   /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
+
+  /* 1.30.0 (REC-197, 2026-09-25, branch land/worker/REC-197, stacked on land/worker/REC-196 @ 82f604d2): TWO ARRIVALS,
+     NO DEPARTURES — C-97.1 PROJECT_VISIBILITY_NO_OWNER and C-97.2 PROJECT_VISIBILITY_NOT_A_CREATION (a creation's
+     `visibility`, BOB #32's ruling (b)). 466 -> 468, count AND digest from THIS SUITE'S OWN PRINT on the item's tree,
+     never 466 + 2. 1.29.0's row STAYS. **IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE
+     UNION'S: CONDUCT takes the next number and re-reads the census from this suite's print on the merged tree.** */
+  "1.30.0": { count: 468, digest: "78740e5c8072d6d694c354539ffa0f2d3d0924c3ecc8f38a4437fbb1953c09ad" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -436,8 +443,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+/* CORRECTED 2026-09-25 by REC-197, never exempted: 1.29.0 -> 1.30.0, C-97.1 and C-97.2 arrived. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
