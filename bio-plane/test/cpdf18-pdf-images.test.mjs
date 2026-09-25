@@ -338,9 +338,16 @@ console.log("\n--- 4. a page with no images yields no rows and says so ---");
 const cropEmpty = await cropImage(IMAGES_PDF, { kind: "image", page: 1, rect: [50, 600, 250, 700] });
 t("a crop asked of a page that paints nothing is refused NO_IMAGE_AT_RECT with an EMPTY painted list — "
   + "the page was walked and holds none", [cropEmpty.reason, cropEmpty.painted], ["NO_IMAGE_AT_RECT", []]);
+/* CORRECTED 2026-09-25 by REC-206, never exempted and NOT re-pinned: tier-1 text pages now carry
+   their positioned `lines` (and `linesWhy` when there are none) — framework §16, "Positional text".
+   Those keys are removed BY NAME before the digest, so the pin still binds every byte the text walk
+   emitted before; that the lines are the text again, character for character, is asserted beside it. */
+const sansLines = (tx) => ({ ...tx, pages: (tx.pages || []).map(({ lines, linesWhy, ...p }) => p) });
+t("REC-206: every tier-1 page's positioned lines rejoin to its text",
+  [st.text, agenda.text].every((tx) => tx.pages.every((p) => Array.isArray(p.lines) && p.lines.map((l) => l.text).join("\n") === p.text)), true);
 t("TIER 1's TEXT over the image fixture and over a real agenda is unchanged by the image walk "
   + "(the tokenizer's inline-image option is off for text) — pinned by digest",
-  [sha(JSON.stringify(st.text)), sha(JSON.stringify(agenda.text))], [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
+  [sha(JSON.stringify(sansLines(st.text))), sha(JSON.stringify(sansLines(agenda.text)))], [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
 
 await mf.dispose();
 console.log(`\n${pass} pass, ${fail} fail`);

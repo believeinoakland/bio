@@ -190,7 +190,12 @@ const viaOp = await j(`/api/pdfstructure?token=mem-fmt&sha256=${sha}`);
    and SHA-256 of the text it answers with (framework Part II §16, "Reading provenance") — which is the
    op's own statement about its text and no part of the registry entry's output. So the byte-for-byte
    comparison is made with that ONE key removed by name, and its presence is asserted beside it. */
-const { provenance: viaProv, ...viaOpSans } = viaOp;
+/* CORRECTED 2026-09-25 by REC-206, never exempted: the op now also serves `membership` (or null with
+   `membershipWhy`) — the item-to-file membership the PLANE derives from the entry's links (framework
+   §16, "Positional text"), which is the op's inference and no part of the registry entry's output. So
+   those TWO keys are removed by name too, and their presence asserted. */
+const { provenance: viaProv, membership: viaMem, membershipWhy: viaMemWhy, ...viaOpSans } = viaOp;
+t("REC-206: the op states the membership it derived, or why none", [viaMem, viaMemWhy], [null, "no_item_links_of_a_known_shape"]);
 t("D-536: the op states the provenance of the text it serves", viaProv && viaProv.scheme, "reading-provenance/1");
 t("the op's output is the registry entry's output plus the tier stamp, byte for byte",
   viaOpSans, { ...direct, tier: 1 });

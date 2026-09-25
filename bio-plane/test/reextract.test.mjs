@@ -292,9 +292,24 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
   const plainScan = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${S}`);
   const plainLayer = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${L}`);
   console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`);
-  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(plainScan.text), PRE_ITEM_DIGEST.scan);
+  /* CORRECTED 2026-09-25 by REC-206, never exempted and NOT re-taken: `op=pdfstructure` now serves
+     positional text (`text.pages[].lines`, `linesWhy`), each link's `anchor` and the derived
+     `membership` / `membershipWhy` (framework §16, "Positional text"). Those keys are REMOVED BY NAME
+     and the answer re-serialised exactly as the op's `json` does (one-space indent); what remains must
+     hash to the SAME two literals as before, so the old default path stays pinned to its bytes rather
+     than to a printout. The additions' presence is asserted beside it. */
+  const sansRec206 = (text) => {
+    const o = JSON.parse(text);
+    delete o.membership; delete o.membershipWhy;
+    for (const l of (o.links || [])) delete l.anchor;
+    for (const p of ((o.text && o.text.pages) || [])) { delete p.lines; delete p.linesWhy; }
+    return JSON.stringify(o, null, 1);
+  };
+  t("REC-206: the plain read carries its positional additions (anchors, membership or its reason)",
+    [plainScan.body, plainLayer.body].every((b) => b && ("membership" in b) && (b.links || []).every((l) => "anchor" in l)), true);
+  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(sansRec206(plainScan.text)), PRE_ITEM_DIGEST.scan);
   t("the plain read of the text-layer document is BYTE-IDENTICAL to the pre-item answer (digest)",
-    sha(plainLayer.text), PRE_ITEM_DIGEST.layer);
+    sha(sansRec206(plainLayer.text)), PRE_ITEM_DIGEST.layer);
   t("the plain read of the scan does NOT reach tier 3 — the seam is opt-in, never automatic",
     plainScan.body?.tier !== 3, true);
   t("and it carries no re-extraction key at all", "reextraction" in (plainScan.body || {}), false);
