@@ -90,6 +90,11 @@
  *       words upper-cased and marked up with `<em>` instead of `<b>`. DECLARED GREEN -> GREEN 38 / 0,
  *       because every sentence assertion here runs over what a member READS (tags stripped, entities
  *       opened, case-insensitive) and never over the markup.
+ * RE-RUN 2026-09-25 by UI-109 against app.html `d10c06ef66af…` (1,621,459 B), after UI-109 put a second
+ * `not recorded` on the queue (the reopened FINDING item's `prior_disposition`): FIRST 3/4 — arm (A) RED 1 of
+ * 38 and NOT naming THE ROW'S SECOND HALF, because arm 5 read the whole queue and the item's words kept it
+ * green. Arm 5 was CORRECTED to read the set-aside row itself (comment at the site); then 4/4 AS DECLARED,
+ * BASELINE 38 / 0, (A) RED 2 of 38 by the same two names as above, (B) RED 1 of 38, (C) GREEN 38 / 0.
  * The driver is re-runnable in one step and prints these figures again: `node
  * civicos-ui/test/declared-flow-surface.control.mjs`.
  */
@@ -424,12 +429,21 @@ ok("after the boot the column is back and the old row holds NULL — never back-
 await U.renderQueue();
 const q3 = html("#q");
 ok("the decision is still on the page", /data-flowdisposed="grant::application"/.test(q3));
-ok("THE ROW'S SECOND HALF: which version it judged reads `not recorded`, IN WORDS", saysNotRecorded(q3));
+/* CORRECTED by UI-109 (2026-09-25), not exempted: these assertions read the WHOLE queue, and were sound
+   only while the set-aside row was the one place on it that could say `not recorded`. Since UI-109 the
+   reopened FINDING item says it too (its `prior_disposition`), so hiding this row's sentence left the
+   words on the page and the row's own assertion GREEN — measured: this suite's control arm (A) came back
+   1 failed, not naming THE ROW'S SECOND HALF. They now read the set-aside row itself, cut out by its own
+   `data-flowdisposed` key; `q3r` is that row. */
+const q3at = q3.indexOf('data-flowdisposed="grant::application"');
+const q3r = q3at < 0 ? "" : q3.slice(q3.lastIndexOf("<div", q3at), q3.indexOf("</div>", q3at) + 6);
+ok("THE ROW'S SECOND HALF: which version it judged reads `not recorded`, IN WORDS",
+   q3r.length > 100 && saysNotRecorded(q3r));
 ok("and the words are the sentence a member reads, not a bare token",
-   says(q3, /which version of the declared flow it judged is not recorded/i));
+   says(q3r, /which version of the declared flow it judged is not recorded/i));
 ok("no version number is invented in its place", !says(q3, /it judged version \d/i));
 ok("and the decision's own state, author and reason are still the record's",
-   says(q3, /set aside as dismissed/i) && says(q3, /took applications by telephone/i));
+   says(q3r, /set aside as dismissed/i) && says(q3r, /took applications by telephone/i));
 
 await mf.dispose();
 if(fails.length){ console.error(`declared-flow-surface: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }

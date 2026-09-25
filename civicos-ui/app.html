@@ -14962,6 +14962,80 @@ function queueDispositionVersion(it){
   const d = (it && it.disposition) || null;
   return (d && Number.isInteger(d.definition_version)) ? d.definition_version : null;
 }
+/* UI-109. THE REOPENED QUESTION SHOWS ITS EARLIER ANSWER, ON THE ITEM (framework §8.2, "The declared
+   flow, and its revisions"; D-527 on the plane, 2026-09-24). A decision to set a finding aside judges
+   the version of the declared flow it was taken against; after a revision the finding is OPEN again and
+   the plane publishes the earlier decision on the FINDING item itself as `prior_disposition` — `null`
+   where nobody has ever decided. Until this landing no surface read it, so a member meeting a reopened
+   question was shown one nobody had answered while the record held a decision.
+
+   EVERY WORD OF FACT IS THE PLANE'S (DEC-8): the state, the reason, who decided and when, the version
+   judged or `not recorded`, `applies` and the plane's own `applies_because` code, printed verbatim beside
+   the sentence that reads it. WHAT THE ITEM DOES NOT CARRY IS SAID, NOT FILLED: `prior_disposition` names
+   who DECIDED, not who REVISED the flow and so reopened the question — that member is on the declared
+   flow's own history (op=progression), not on this item (D-592: the plane's fix, to publish the revising
+   version's author and instant beside it), and no name is put here in its place. The
+   version the flow stands at now is the item's own `subject.definition_version`. A field ABSENT (a plane
+   that predates D-527) renders nothing, because absent says nothing about whether anybody decided; a
+   `null` says nobody has, and is stated. */
+const PRIOR_BECAUSE_WORDS = {
+  decided_against_earlier_version:
+    "the declared flow has been revised since that decision, so it judged a version that no longer stands",
+  version_not_recorded_definition_declared_since:
+    "the record did not keep which version it judged, and the declared flow was declared again after it was taken",
+  version_not_recorded_order_undetermined:
+    "the record did not keep which version it judged, and whether the flow was declared again before or after it is not in the record",
+  definition_not_declared:
+    "the record holds no declared flow for it to judge now",
+};
+function queueFindingPriorHtml(it){
+  if(!it || it.class !== "FINDING" || !Object.prototype.hasOwnProperty.call(it, "prior_disposition")) return "";
+  const p = it.prior_disposition;
+  if(p === null)
+    return `<div class="q-gap" data-prior="none"><b>Nobody has decided this question before.</b> The record holds no earlier decision on it.</div>`;
+  if(!p || typeof p !== "object")
+    return `<div class="q-gap" data-prior="unreadable">The record published an earlier decision on this question in a shape this page cannot read, and none is invented here.</div>`;
+  const state = String(p.state || "").trim();
+  const who   = String(p.decided_by || "").trim();
+  const at    = String(p.at || "").trim();
+  const why   = String(p.reason || "").trim();
+  const v     = p.definition_version;
+  const gaps = [];
+  if(!state) gaps.push("what it was set aside as");
+  if(!who)   gaps.push("who decided");
+  if(!at)    gaps.push("when");
+  if(!why)   gaps.push("their reason");
+  const judged = (String(p.definition_version_state || "").trim() === "recorded" && v != null && v !== "")
+    ? `It judged <b>version ${esc(String(v))}</b> of the declared flow.`
+    : String(p.definition_version_state || "").trim() === "not recorded"
+      ? `Which version of the declared flow that decision judged is <b>not recorded</b>: it was taken before the record kept the version, and no number is put there in its place.`
+      : `The record did not say which version of the declared flow it judged, and none is invented here.`;
+  const sv = it.subject && it.subject.definition_version;
+  const now = (sv != null && sv !== "") ? ` The flow stands at <b>version ${esc(String(sv))}</b> now.` : "";
+  const code = String(p.applies_because || "").trim();
+  const because = code
+    ? (PRIOR_BECAUSE_WORDS[code]
+        ? ` Why, in the record's words: ${esc(PRIOR_BECAUSE_WORDS[code])} (<code>${esc(code)}</code>).`
+        : ` The record's reason is <code>${esc(code)}</code>, which this page has no words for, so it is shown as the record gave it.`)
+    : ` The record gave no reason code.`;
+  const stands = p.applies === false
+    ? `<b>That decision no longer answers the question</b>, so it is asked again here. The decision is kept, never deleted.`
+    : p.applies === true
+      ? `The record says that decision <b>still applies</b>, yet it has put the question back on the open list; the two are shown as the record gave them and not reconciled here.`
+      : `The record did not say whether that decision still applies, so nothing is claimed about that here.`;
+  const qd = queueData();
+  const alsoHeld = !!(qd && qd.disposed && Array.isArray(qd.disposed.findings)
+    && qd.disposed.findings.some(r => String((r && r.key) || "") === queueFindingKey(it)));
+  return `<div class="q-notice" data-prior="${esc(queueFindingKey(it))}">`
+    + `<b>Reopened &mdash; somebody already decided this question once: set aside${state ? " as " + esc(state) : ""}`
+    + `${who ? " by " + esc(who) : ""}${at ? " on " + esc(at) : ""}.</b> `
+    + (why ? `<span class="q-notice-why">Their reason, as the record recorded it: ${esc(why)}</span> ` : "")
+    + `<span class="q-gap">${judged}${now}${because} ${stands}</span>`
+    + ` <span class="q-gap">Who revised the flow and so reopened the question is <b>not on this item</b>; the declared flow&rsquo;s own history names each version&rsquo;s author, and no name is put here in its place.</span>`
+    + (gaps.length ? ` <span class="q-gap">The record did not say ${esc(gaps.join(", "))}, and none of it is invented here.</span>` : "")
+    + (alsoHeld ? ` <span class="q-gap">It is the same decision listed among what the record holds as set aside, not a second one.</span>` : "")
+    + `</div>`;
+}
 function queueFindingAsProposal(it){
   const b = (it && it.basis) || {};
   return { key: queueFindingKey(it),
@@ -14987,6 +15061,7 @@ function queueItemHtml(it){
     ${queueAgeHtml(it)}
     <div class="q-summary">${esc(it.summary||"")}</div>
     ${it.detail ? `<div class="q-detail">${esc(it.detail)}</div>` : ""}
+    ${queueFindingPriorHtml(it)}
     <div class="q-meta">${queueSubjectHtml(it)}</div>
     ${queueAssigneeHtml(it)}
     ${queueCountsHtml(it)}
