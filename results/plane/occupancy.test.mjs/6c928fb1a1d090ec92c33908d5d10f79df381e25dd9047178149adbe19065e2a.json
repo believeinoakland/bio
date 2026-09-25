@@ -1,0 +1,16 @@
+{
+ "unit": "plane:occupancy.test.mjs",
+ "inputHash": "6c928fb1a1d090ec92c33908d5d10f79df381e25dd9047178149adbe19065e2a",
+ "verdict": "PASS",
+ "run": "f6580fa9b2ea28b3be22b2c893c9f9ad89a79485.1790330957504.29887.json",
+ "tree": "f6580fa9b2ea28b3be22b2c893c9f9ad89a79485",
+ "head": "530a355965256496deb2a49dd2e678edc7bc223d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1115,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "31cf288a-f424-558f-ab63-85084aca7fb6",
+ "at": "2026-09-25T10:09:17.522Z"
+}

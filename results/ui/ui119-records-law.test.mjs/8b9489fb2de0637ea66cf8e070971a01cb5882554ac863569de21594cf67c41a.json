@@ -1,0 +1,16 @@
+{
+ "unit": "ui:ui119-records-law.test.mjs",
+ "inputHash": "8b9489fb2de0637ea66cf8e070971a01cb5882554ac863569de21594cf67c41a",
+ "verdict": "PASS",
+ "run": "f6580fa9b2ea28b3be22b2c893c9f9ad89a79485.1790330957504.29887.json",
+ "tree": "f6580fa9b2ea28b3be22b2c893c9f9ad89a79485",
+ "head": "530a355965256496deb2a49dd2e678edc7bc223d",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 86,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "31cf288a-f424-558f-ab63-85084aca7fb6",
+ "at": "2026-09-25T10:09:17.522Z"
+}
