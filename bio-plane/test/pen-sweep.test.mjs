@@ -95,7 +95,12 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    `fileURLToPath(new URL("..", import.meta.url))`, and every write goes to a `mkdtempSync(join(tmpdir(), …))`
    mirror (read at each driver). The fix that lets this fall again is the walk resolving that expression as a
    tree READ; it is routed to SCHEDULER as a row, not taken here. */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547 and D-548 (<= 18)", g("UNCLASSIFIED").length <= 18, true);
+/* MOVED 18 -> 19 by D-564 (2026-09-25), BY NAME, never as slack: d564-block.control is d548-block.control
+   generalised to seven suites — the same copy-source shape (the plane-root READ, every write to a
+   `mkdtempSync(join(tmpdir(), …))` mirror). The walk's fix is M0-196 (land/worker/M0-196, not on main at this
+   branch's base 5e8a65a8), which resolves that read and drops the ceiling to 13; at the union CONDUCT keeps ONE
+   figure, M0-196's re-read with this driver present, never this one. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547, D-548 and D-564 (<= 19)", g("UNCLASSIFIED").length <= 19, true);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",
