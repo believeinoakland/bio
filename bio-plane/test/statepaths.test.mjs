@@ -217,7 +217,12 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    and d AS DECLARED at 43, every restore byte-identical. **Arm b DID NOT ARM**: its `COORD_BLOCK` anchor no longer
    matches `tools/coord.mjs`, whose import and re-export now also carry `RETIRED_FILES, isRetiredPath`. That is
    pre-existing (coord.mjs is untouched here), and it is minted D-621 rather than smoothed. */
-const UNITS_CEILING = 35;
+/* MOVED 35 -> 36 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ from this suite's print on the merged tree
+   (`36 unit(s) of 503 selected · 32 MEASUREMENTS reader(s) · 5 through tools/coord.mjs`). The one is D-312's
+   `plane:memoryshare.test.mjs` — merged after the 35 above was read — the ONE false selection D-312's own note states
+   (it walks docs/development/ and excludes the ledger by a regex the gate's lexer blanks); confirmed by name in a
+   `gates --explain` over a scratch clone with the ledger planted. A CEILING IS NOT A RATCHET: set at the printed figure. */
+const UNITS_CEILING = 36;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 /* D-535 (2026-09-25), from the figures THIS suite PRINTED on its clone of the D-535 tree over origin/main 964da679:
@@ -231,7 +236,11 @@ const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a sele
 /* MOVED 32 -> 33 by CONDUCT #22 at D-535's merge onto c22-batch29 (2026-09-25), READ from this suite's print on the
    merged tree (`33 of 44 doc-facing unit(s) take docs/development/MEASUREMENTS.md`): one doc-facing unit main landed
    since 964da679 takes the ledger. A CEILING IS NOT A RATCHET: set at the printed figure. */
-const DOCS_TAKEN_CEILING = 33;
+/* MOVED 33 -> 34 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ from this suite's print on the merged tree
+   (`34 of 45 doc-facing unit(s) take docs/development/MEASUREMENTS.md`): the one is D-312's `memoryshare.test.mjs`, a new
+   doc-facing unit, named in the `--explain` door list over a scratch clone — the same false selection as above.
+   A CEILING IS NOT A RATCHET: set at the printed figure. */
+const DOCS_TAKEN_CEILING = 34;
 const DOCS_FACING_FLOOR = 30;     /* the doc-facing set (43 at 964da679): a door narrowed to nothing is not a pass */
 const PLANE_FILES_FLOOR = 30;     /* bio-plane/src + bio-plane/checks (37 .mjs files at 964da679) */
 

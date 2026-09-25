@@ -636,7 +636,10 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      The read is now two keyed `#one` reads, by identity and by draft link (rec217-draft-binding block 7 drives both).
      The op leaves DRIVEN_ELSEWHERE, the envelope map and the named-constant arm in the same landing. The c22-batch29 union carries this departure beside REC-150's and REC-203's arrivals;
      its figure is re-read from this arm's own failure output. */
-  OPS.size, 46);
+  /* MOVED 46 -> 47 at the c22-batch29 union (CONDUCT #22, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
+     tree (`want 46 / got 47`; the corpus line printed `71 carrying a cap, reaching 47 ops`), never by arithmetic: main's
+     46 (D-525's driveshells) plus REC-150's projectrequests and REC-203's idmatch, less D-521b's statementack. */
+  OPS.size, 47);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were

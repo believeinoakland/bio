@@ -596,7 +596,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        ("corpus: 64 rows across 2 families") on the item's tree over origin/main 8bdf20e6, never 63 + 1: C-33.48
        LAST_OWNER_CANNOT_LEAVE — `rowsSeen, 64` on its branch. Ours' figure is kept at c22-batch29; NUMBER TO RE-READ
        from this suite's print on the union (REC-186's row arrives over ours' 67). */
-    rowsSeen, 67);
+    /* CONDUCT #22 at the c22-batch29 union: 67 -> 68, RE-READ from this suite's print on the merged tree ("corpus: 68
+       rows across 2 families", "got 68"), never 67 + 1: REC-186's C-33.48 LAST_OWNER_CANNOT_LEAVE, renumbered off
+       REC-207's C-33.47 at c22-rec186-renumber, the batch's one arrival in these two families. */
+    rowsSeen, 68);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

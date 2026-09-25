@@ -1422,7 +1422,13 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    under D-36's variable ceiling — never one read per edge; REC-220's `#legVersions` has the same shape. It is not in
    the amplification CLASS; the class roster pinned by name above is unmoved. REC-220 (land/worker/REC-220) takes
    117 -> 118 for `#legVersions` on its own branch, so AT THE UNION this figure is 119 — re-read from the print. */
-const SCANNING_MEASURED_2026_09_15 = 118;
+/* 118 -> 122 at the c22-batch29 union (CONDUCT #22, 2026-09-25), READ FROM THE CENSUS ROSTER THIS RUN PRINTED on the
+   merged tree (`CENSUS ROSTER (122 methods scanning UNBOUNDED)`) and DIFFED BY NAME against the same suite's roster on
+   origin/main 5e8a65a8 (118), never 118 + 4. FIVE ARRIVALS, ONE DEPARTURE: `#caseCitations` (REC-219), `#legVersions`
+   (REC-220), `#runContextQuestions` (D-451) and `#conditionsRenderDeferred` (D-523) — each named in its own note above,
+   D-523's as an admitted defect — and `#monitorSubjects` (REC-191), which took over `#monitorCadencePlan`'s row source
+   (REC-191's correction of that admission, above), so `#monitorCadencePlan` left the roster as it arrived. */
+const SCANNING_MEASURED_2026_09_15 = 122;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
