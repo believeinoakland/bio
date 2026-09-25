@@ -15430,6 +15430,17 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'document, so it stops and tells you both. Nothing was written. Send it again with the request saying what '
       + 'the document says, or saying nothing about it, or change the document first.',
   },
+  /* D-578 (2026-09-25) — the THIRD way, and the only one where neither statement exists: a CREATION whose document and
+   * envelope both state no type. `bundles.object_type` is NOT NULL, so it was refused by a raw constraint error
+   * carrying a stack; a revision in the same position keeps its head's type (stated on the answer), because the head
+   * is the one type C-86.2 admits. A creation has no head, so nothing may be defaulted. */
+  PROMOTED_TYPE_UNSTATED: {
+    check: 'C-86.5',
+    where: 'src/store.mjs promote > is-promote-type-unstated',
+    translation: 'This is a new item and nothing says what kind of thing it is: neither the document nor the request '
+      + 'names a type. What it is decides which rules protect it, so the record will not guess. Nothing was written. '
+      + 'Say in the document what kind of thing it is, and send it again.',
+  },
 };
 
 /* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,

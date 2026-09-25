@@ -94,8 +94,10 @@ const ARMS = {
 
   /* OVER-STRICTNESS (1): the derivation in a spelling this item did not write. Coupled to behaviour, all green. */
   spelling: {
-    patches: [[S, '    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);',
-                  '    const promotedType = documentType !== null ? documentType : (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);']],
+    /* ANCHOR CORRECTED 2026-09-25 BY D-578: the derivation line is now `let` with a `typeStated` envelope fallback;
+       the arm respells THAT line the same way, so it still asks the question it was written for. */
+    patches: [[S, '    let promotedType = documentType ?? envelopeType ?? undefined;',
+                  '    let promotedType = documentType !== null ? documentType : (envelopeType !== null ? envelopeType : undefined);']],
     mustFail: [], mustPass: LABELLED_ALL },
 
   /* OVER-STRICTNESS (2): a fence tighter than its rule — D-510's refusal treating an envelope that states NO type
