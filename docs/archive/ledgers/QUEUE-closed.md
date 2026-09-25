@@ -5169,3 +5169,14 @@ depends-on: REC-148 (`integrated` on c17-batch7).
 scope: the date is the last change's; the container stamp as ruled. Extend the review-copy suite.
 accepts-when: a comment moves both the hash and the date. NEGATIVE CONTROL: keep the old date, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
+
+### REC-209 · superseded — **A PUBLISHED CASE'S OWNERS ARE NEVER TOLD ITS CITED DOCUMENT HAS A NEWER VERSION: D-394's notice answers only when asked.** Re-scoped 2026-09-24 to OWNERS by Bob's ruling (option D), replacing BOB #32's 00:05Z "members". — owner RECORD.
+status: superseded — SCHEDULER #21 01:01Z: SUPERSEDED by REC-222, which carries Bob's option D (owners told once) under his 2026-09-25 00:40Z doctrine: notify ONLY when the newer version AFFECTS the referenced part or it is UNDETERMINED; REC-209 notified on any newer version
+order: after UI-96, the notice's delivery (SCHEDULER #17, 2026-09-24)
+milestone: M10
+interface: I3 — one queue item per published case and newer version, to its owners; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 — RULED by Bob (2026-09-24, option D; folded on land/bob/folds-0924b @ bde7644d): *a published case's OWNERS alone are told ONCE when a cited document has a newer version; other members and the public are not told; the case is never altered; a new edition stays the owners' choice.*
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: when a published case's cited document gains a newer version, raise one queue item to the case's OWNERS only, recorded so it is never raised twice for that pair; nothing to other members, the public surface, or the published case.
+accepts-when: a newer version raises exactly one item to the owners and none to a non-owner member; a second tick raises none; the published bytes are unchanged. NEGATIVE CONTROL: address the item to every member, and the non-owner arm fails by name.
+added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`); re-scoped to owners the same day.

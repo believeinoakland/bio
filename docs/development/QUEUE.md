@@ -754,15 +754,15 @@ scope: extend the extent test to A (byte-identical at the extent), B (same text,
 accepts-when: each grade is produced by a fixture pair and named on the wire (moves: no grade). NEGATIVE CONTROL: collapse C into B and the C arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
-### REC-209 · queued — **A PUBLISHED CASE'S OWNERS ARE NEVER TOLD ITS CITED DOCUMENT HAS A NEWER VERSION: D-394's notice answers only when asked.** Re-scoped 2026-09-24 to OWNERS by Bob's ruling (option D), replacing BOB #32's 00:05Z "members". — owner RECORD.
-order: after UI-96, the notice's delivery (SCHEDULER #17, 2026-09-24)
-milestone: M10
-interface: I3 — one queue item per published case and newer version, to its owners; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 — RULED by Bob (2026-09-24, option D; folded on land/bob/folds-0924b @ bde7644d): *a published case's OWNERS alone are told ONCE when a cited document has a newer version; other members and the public are not told; the case is never altered; a new edition stays the owners' choice.*
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: when a published case's cited document gains a newer version, raise one queue item to the case's OWNERS only, recorded so it is never raised twice for that pair; nothing to other members, the public surface, or the published case.
-accepts-when: a newer version raises exactly one item to the owners and none to a non-owner member; a second tick raises none; the published bytes are unchanged. NEGATIVE CONTROL: address the item to every member, and the non-owner arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs REC`); re-scoped to owners the same day.
+### UI-88 · queued — **THE ACCEPT CEREMONY FETCHES THE STRENGTH PAIR BEFORE THE MEMBER AFFIRMS, AND HIDES IT: `app.html` `acerOriginsRead` reads `op=versionstrength` and drops the pair client-side.** Once REC-192 lands it switches to the independence-only read. — owner UI.
+order: directly after REC-192, which it consumes (SCHEDULER #17, 2026-09-23; BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded))
+milestone: M9
+interface: I3 consumer (REC-192's IC).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (Strength) with DEC-32 clause 5.
+depends-on: REC-192, UI-74 (`integrated` on c17-batch5).
+scope: `acerOriginsRead` reads the version arm of the independence read; no code path fetches a strength-bearing answer before the affirmation. Extend `civicos-ui/test/accept-ceremony.test.mjs`.
+accepts-when: before the affirmation the ceremony's network log holds no strength-bearing answer. NEGATIVE CONTROL: point `acerOriginsRead` back at `op=versionstrength`, and the pre-affirmation fetch arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
