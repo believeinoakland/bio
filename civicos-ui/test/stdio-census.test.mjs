@@ -86,14 +86,16 @@
  * control can lose the one line it reads the verdict from.
  *
  * ============================================================================
- * THE RESIDUAL, NAMED HERE RATHER THAN LEFT TO A REGISTER
+ * THE THREE GUARDS OUTSIDE THIS DIRECTORY, REPAIRED BY D-690 (2026-09-25)
  * ============================================================================
- * `civicos-ui/check-*.mjs` is OUTSIDE M0-36's claimed region and is not repaired.
- * `check-semantics.mjs` has the live form of the defect — it prints its `OK: …`
- * verdict and calls `process.exit(fail ? 1 : 0)` on the next line. The other two are
- * at risk on their failure path only. A DELEGATION carries it to UI; ARM D below
- * PINS the residual so that landing it turns this file red, and whoever lands it
- * shrinks the list here in the same turn rather than discovering it later.
+ * `civicos-ui/check-*.mjs` was M0-36's named residual. D-690 gave all three the import
+ * (`import "../bio-plane/test/stdio.mjs";`, line 2, after the shebang), after the defect
+ * was MEASURED LIVE ON LINUX: on D-542's union the DEC-49 guard's output is 61 KB, and 16
+ * parallel piped runs x2 of it with a planted failure lost the stdout tail in 3 to 13 of
+ * 32 runs without the import and 0 of 64 with it (`docs/development/measurements/M-183.md`). ARM D now
+ * pins the repair instead of the residual; its control was RUN 2026-09-25: the import deleted
+ * from `check-semantics.mjs` -> 14 pass, 1 fail, ARM D1 naming that file; restored by `cp`, sha256-checked. D-387's half — `check-mock-envelope.mjs` as a
+ * piped READER on node's 1 MiB default — is a different defect and is still reported.
  */
 import "../../bio-plane/test/stdio.mjs";   /* this suite is in its own population */
 import { synchronousStdio } from "../../bio-plane/test/stdio.mjs";
@@ -201,24 +203,33 @@ ok(shared.length === exits.length,
      + `the ones nobody has written yet.`);
 }
 
-/* ---- ARM D — THE RESIDUAL, PINNED SO LANDING IT CLEARS THIS NOTE --------------- */
+/* ---- ARM D — THE THREE GUARDS STAY REPAIRED (D-690) ----------------------------- */
+/* Until D-690 this arm pinned the RESIDUAL (all three guards unflushed) so that repairing
+   one turned it red. D-690 repaired all three, so the pin is inverted rather than deleted:
+   the guards sit one directory up and import by `../`, so B's matcher, anchored to
+   `../../`, cannot see them — this one is the same line-start import anchor at their depth. */
 {
-  const RESIDUAL = ["check-semantics.mjs", "check-refusal-codes.mjs", "check-mock-envelope.mjs"];
-  const still = RESIDUAL.filter(f => {
+  const GUARD_REL = "../bio-plane/test/stdio.mjs";
+  const GUARD_IMPORTED = new RegExp(
+    '^import\\s+(?:[^;\\n]*\\sfrom\\s+)?["\']' + GUARD_REL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + '["\']', "m");
+  const GUARDS = ["check-semantics.mjs", "check-refusal-codes.mjs", "check-mock-envelope.mjs"];
+  const still = GUARDS.filter(f => {
     const s = fs.readFileSync(path.join(UIDIR, f), "utf8");
-    return /process\.exit/.test(s) && !s.includes("test/stdio.mjs");
+    return /process\.exit/.test(s) && !GUARD_IMPORTED.test(s);
   });
-  ok(still.length === RESIDUAL.length,
-     `ARM D1: this file's header and the 2026-09-16 M0->UI DELEGATION both say all ${RESIDUAL.length} guards in `
-     + `civicos-ui/ still carry the defect, and ${still.length} do. If a guard was repaired, this is not a failure of `
-     + `the tree — it is THIS FILE being stale. Remove the repaired guard from RESIDUAL, shrink the header's residual `
-     + `section, and discharge the DELEGATION in CLAIMS.md, all in the same turn. Do not exempt this arm.`);
-  /* D-387's residual is the SAME file list read for a DIFFERENT property, and it is kept
+  ok(still.length === 0,
+     `ARM D1 (D-690): ${still.length} of the ${GUARDS.length} civicos-ui/ guards call \`process.exit\` without importing `
+     + `the flush module: ${still.join(", ")}. MEASURED 2026-09-25 on Linux (docs/development/measurements/M-183.md): without it the DEC-49 `
+     + `guard lost its stdout tail in up to 13 of 32 parallel piped runs, so a FAIL can vanish under load. Restore `
+     + `\`import "${GUARD_REL}";\` on line 2, after the shebang.`);
+  ok(!GUARD_IMPORTED.test(`const IMPORT = "${GUARD_REL}";`) && GUARD_IMPORTED.test(`import "${GUARD_REL}";`),
+     `ARM D0 (instrument): the guard-depth import matcher accepts a mention or rejects a real import — see ARM B0.`);
+  /* D-387's residual is the SAME file read for a DIFFERENT property, and it is kept
      separate on purpose: check-mock-envelope.mjs is a piped READER of every suite here as
-     well as an unflushed WRITER itself, so repairing one half of it does not repair the
-     other. Reported rather than failed — it is outside this item's region either way. */
+     well as a WRITER itself, so repairing the writer half (D-690) does not repair the
+     reader half. Reported rather than failed — it is the open half of the 2026-09-16 DELEGATION. */
   const envelope = fs.readFileSync(path.join(UIDIR, "check-mock-envelope.mjs"), "utf8");
-  console.log(`  ARM D: residual OUTSIDE this item's region — ${still.length} guard(s) still exiting unflushed: ${still.join(", ")}`);
+  console.log(`  ARM D: ${GUARDS.length - still.length} of ${GUARDS.length} guard(s) in civicos-ui/ import the flush module`);
   console.log(`  ARM D (D-387): check-mock-envelope.mjs spawns all ${exits.length - 1} suites piped and sets maxBuffer: `
     + `${/maxBuffer/.test(envelope) ? "YES" : "NO — still on node's 1 MiB default, so it truncates a suite dumping past it"}`);
 }
