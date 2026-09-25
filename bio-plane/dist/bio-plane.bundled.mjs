@@ -20186,6 +20186,7 @@ var ODF_EVIDENTIARY_MEASURED = Object.freeze({
 var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
   odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"
 });
+var PRESENTATIONAL_REF = /* @__PURE__ */ new Set(["font-face-uri"]);
 function referencedMembers(contentXml, container) {
   const names = container.entries.map((e) => normalizePartName(e.name));
   const hit = /* @__PURE__ */ new Set();
@@ -20193,6 +20194,7 @@ function referencedMembers(contentXml, container) {
   let m;
   while ((m = RE.exec(contentXml)) !== null) {
     if (m[1] === void 0 || m[0][1] === "/") continue;
+    if (PRESENTATIONAL_REF.has(localOf3(m[1]))) continue;
     const href = attrsOf4(m[2]).href;
     if (typeof href !== "string" || !href || href.startsWith("#")) continue;
     if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
@@ -20264,7 +20266,7 @@ async function odfEvidentiaryDigest(bytes, sha256Hex6) {
     flavour,
     over: CONTENT_PART,
     evidentiary: await sha256Hex6(digested),
-    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
 

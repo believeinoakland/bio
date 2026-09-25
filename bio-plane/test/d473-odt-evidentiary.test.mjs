@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: run 2026-09-25 on src/odf.mjs's `odtNormalisedContentXml`, each arm ALONE, restored from a uniquely-named per-arm pristine copy in the session scratchpad and verified by sha256 (e4eedeef82f084b6…) AND cmp, 80,191 B, 3 of 3 IDENTICAL. BASELINE 28 pass 0 fail (d351-odf-evidentiary 41/0). Declared before arming: SKIP must fail the re-fetch pair, the fold and the monitor's `unchanged` while the one-byte text arm still PASSES; STRIP (delete xml:id, leave text:continue-list verbatim — the row's literal "strip") must fail only the continue-list over-strictness arms; ERASE (delete xml:id AND text:continue-list — the tidy rule that hides a change) must fail "A LIST THAT CONTINUES A DIFFERENT LIST MOVES THE DIGEST". (1) SKIP, the row's own — skip the relabelling (return the bytes unchanged): 20/8, failing BY NAME "THE RE-FETCH PAIR: one evidentiary digest across two exports with fresh list ids", C-18.3 FOLDS and its normalised arm, and "ACCEPTS-WHEN: an unchanged Doc reads `unchanged`"; "A ONE-BYTE TEXT CHANGE MOVES THE DIGEST" still PASSED, as declared; d351's corrected .odt arms failed 39/2; and over the LIVE pairs (M-167) `tools/measure-odf-stability.mjs derive` read the list-bearing Docs 1aJYj4Nb…, 1jZcxvXs… and 1kW6nVp3… NORMALISED_UNSTABLE by name, the instrument's own control 11/15. (2) STRIP: 25/3 — the over-strictness arm and the monitor arm (its Doc continues a list), plus the relabel-shape pin; d351 41/0. A FINDING about the row's wording: "strip xml:id" alone leaves a text:continue-list naming a random id, so it is NOT stable over a Doc that continues a list; the relabelling is what the measurement licenses. (3) ERASE: 26/2 — the different-list arm by name, plus the relabel-shape pin: a rule that forgets the relationship an id carries folds a real change. */
+/* NEGATIVE CONTROL: run 2026-09-25 on src/odf.mjs's `odtNormalisedContentXml`, each arm ALONE, restored from a uniquely-named per-arm pristine copy in the session scratchpad and verified by sha256 (e4eedeef82f084b6…) AND cmp, 80,191 B, 3 of 3 IDENTICAL. BASELINE 28 pass 0 fail (d351-odf-evidentiary 41/0). Declared before arming: SKIP must fail the re-fetch pair, the fold and the monitor's `unchanged` while the one-byte text arm still PASSES; STRIP (delete xml:id, leave text:continue-list verbatim — the row's literal "strip") must fail only the continue-list over-strictness arms; ERASE (delete xml:id AND text:continue-list — the tidy rule that hides a change) must fail "A LIST THAT CONTINUES A DIFFERENT LIST MOVES THE DIGEST". (1) SKIP, the row's own — skip the relabelling (return the bytes unchanged): 20/8, failing BY NAME "THE RE-FETCH PAIR: one evidentiary digest across two exports with fresh list ids", C-18.3 FOLDS and its normalised arm, and "ACCEPTS-WHEN: an unchanged Doc reads `unchanged`"; "A ONE-BYTE TEXT CHANGE MOVES THE DIGEST" still PASSED, as declared; d351's corrected .odt arms failed 39/2; and over the LIVE pairs (M-167) `tools/measure-odf-stability.mjs derive` read the list-bearing Docs 1aJYj4Nb…, 1jZcxvXs… and 1kW6nVp3… NORMALISED_UNSTABLE by name, the instrument's own control 11/15. (2) STRIP: 25/3 — the over-strictness arm and the monitor arm (its Doc continues a list), plus the relabel-shape pin; d351 41/0. A FINDING about the row's wording: "strip xml:id" alone leaves a text:continue-list naming a random id, so it is NOT stable over a Doc that continues a list; the relabelling is what the measurement licenses. (3) ERASE: 26/2 — the different-list arm by name, plus the relabel-shape pin: a rule that forgets the relationship an id carries folds a real change. (run 2026-09-25, D-612) on src/odf.mjs's `referencedMembers`, each arm ALONE, restored from a uniquely-named per-arm pristine copy in the session scratchpad and verified by sha256 (2237458d2c82f1b8…) AND cmp, 81,309 B, 2 of 2 IDENTICAL. BASELINE 35 pass 0 fail (d351-odf-evidentiary 41/0). Declared before arming: FONTS must fail the fonts-determined arms and the ONLY-it arm while "STILL REFUSES" PASSES; NOREFUSE must fail "STILL REFUSES" while the fonts-determined arms PASS. (4) FONTS, the row's own — count font-face-uri hrefs again (delete the PRESENTATIONAL_REF skip): 30/5, failing BY NAME "ACCEPTS-WHEN: A DOC WITH EMBEDDED FONTS AND NO IMAGE READS DETERMINED, over content.xml", the one-digest pair, the basis arm, "…naming the Pictures/ member and ONLY it" and the other-prefix OVER-STRICTNESS arm; "ACCEPTS-WHEN: A DOC WITH FONTS AND AN IMAGE STILL REFUSES" still PASSED, as declared; d351 41/0. (5) NOREFUSE, the over-wide direction — exempt EVERY element's href: 33/2, "ACCEPTS-WHEN: A DOC WITH FONTS AND AN IMAGE STILL REFUSES" and the ONLY-it arm by name; d351 38/3 (its .ods member-reference arms), so a fence wider than the font face is caught in both suites. */
 /* D-473 — THE `.odt` EVIDENTIARY DIGEST: Google's per-export list ids relabelled,
  * driven THROUGH `op=acquire`, `op=promote`, the C-18.3 fold and `op=monitor`
  * over a Drive Doc LINK.
@@ -22,6 +22,12 @@
  * carries — stripping the ids would have hidden that change); and the monitor
  * reads a re-export `unchanged` and a changed Doc `modified`. `.odp` stays
  * UNDETERMINED, naming its census target.
+ *
+ * D-612 (section 6). Every real Doc export M-167 read embeds its fonts
+ * (`svg:font-face-uri` → `Fonts/fontN.ttf`) and the member rule refused them,
+ * so none of the above reached a real Doc. A font face is presentational and
+ * is no longer counted: a Doc with fonts and no image reads determined; one
+ * with a picture still refuses.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -83,14 +89,29 @@ const NS = [
   'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"',
   'xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0"',
   'xmlns:xlink="http://www.w3.org/1999/xlink"',
+  'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"',
+  'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"',
 ].join(" ");
 /* A Doc the way Google exports it: several lists, each with a random xml:id;
    `cont` makes the LAST list continue list number `cont` (text:continue-list),
    the one relationship an id carries. An external link rides along (an href
    that is not a package member — over-strictness, built in). */
-const docXml = ({ ids, text = "Item 4: approve the minutes", cont = null }) => `<?xml version="1.0" encoding="UTF-8"?>`
-  + `<office:document-content ${NS} office:version="1.3"><office:body><office:text>`
+/* D-612: `fonts` embeds N font faces the way every real Doc export M-167 read
+   does (`office:font-face-decls` → `svg:font-face-uri xlink:href="Fonts/fontN.ttf"`,
+   `svgPrefix` lets an arm spell the prefix differently); `image` adds one
+   `draw:image` referencing a `Pictures/` member. */
+const fontDecls = (k, svgPrefix = "svg") => !k ? "" : `<office:font-face-decls>`
+  + Array.from({ length: k }, (_, i) => `<style:font-face style:name="Face${i}" ${svgPrefix}:font-family="Face${i}">`
+      + `<${svgPrefix}:font-face-src><${svgPrefix}:font-face-uri xlink:href="Fonts/font${i + 1}.ttf" xlink:type="simple">`
+      + `<${svgPrefix}:font-face-format ${svgPrefix}:string="truetype"/></${svgPrefix}:font-face-uri></${svgPrefix}:font-face-src>`
+      + `</style:font-face>`).join("")
+  + `</office:font-face-decls>`;
+const docXml = ({ ids, text = "Item 4: approve the minutes", cont = null, fonts = 0, svgPrefix = "svg", image = false }) =>
+  `<?xml version="1.0" encoding="UTF-8"?>`
+  + `<office:document-content ${NS}${svgPrefix !== "svg" ? ` xmlns:${svgPrefix}="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"` : ""} office:version="1.3">`
+  + fontDecls(fonts, svgPrefix) + `<office:body><office:text>`
   + `<text:p>${text} <text:a xlink:href="https://www.oaklandca.gov/agenda">agenda</text:a></text:p>`
+  + (image ? `<text:p><draw:frame draw:name="image1"><draw:image xlink:href="Pictures/10000001A.png" xlink:type="simple"/></draw:frame></text:p>` : "")
   + ids.map((id, i) => `<text:list xml:id="list${id}" text:style-name="L${i}"`
       + `${cont !== null && i === ids.length - 1 ? ` text:continue-list="list${ids[cont]}"` : ""}>`
       + `<text:list-item><text:p>point ${i}</text:p></text:list-item></text:list>`).join("")
@@ -104,12 +125,17 @@ const manifest = (mime) => `<?xml version="1.0" encoding="UTF-8"?>`
 const meta = (n) => `<?xml version="1.0" encoding="UTF-8"?><office:document-meta ${NS}><office:meta>`
   + `<meta:creation-date xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0">2026-09-25T00:00:0${n}</meta:creation-date>`
   + `</office:meta></office:document-meta>`;
-const pkg = (mime, content, n) => zip([
+const pkg = (mime, content, n, extra = []) => zip([
   { name: "mimetype", data: mime, store: true },
   ...(n % 2 ? [{ name: "content.xml", data: content }, { name: "META-INF/manifest.xml", data: manifest(mime) }]
             : [{ name: "META-INF/manifest.xml", data: manifest(mime) }, { name: "content.xml", data: content }]),
   { name: "meta.xml", data: meta(n) },
+  ...extra,
 ], 0x6a00 + n);
+/* The members a font- or image-bearing export carries. The font BYTES differ per
+   export (`n`), so a digest that folded them in could not be stable. */
+const fontMembers = (k, n) => Array.from({ length: k }, (_, i) => ({ name: `Fonts/font${i + 1}.ttf`, data: `\u0000\u0001TTF face ${i} export ${n}` }));
+const imageMember = (n) => [{ name: "Pictures/10000001A.png", data: `PNG image bytes, export ${n}` }];
 
 /* A FRESH RANDOM ID PER LIST PER EXPORT, as M-167 measured (never a fixed pair,
    so the suite cannot pass on two ids it happens to know). */
@@ -131,6 +157,9 @@ const CHG_ID = "1d473OdtChangedDocBBBBBBBBBBBBBBBBBBBBBBBB";
 const CNT_ID = "1d473OdtContinueDocCCCCCCCCCCCCCCCCCCCCCCC";
 const MON_ID = "1d473OdtMonitoredDocDDDDDDDDDDDDDDDDDDDDDD";
 const DECK_ID = "1d473OdpSlidesDeckEEEEEEEEEEEEEEEEEEEEEEEE";
+const FNT_ID = "1d612OdtFontsNoImageFFFFFFFFFFFFFFFFFFFFFFF";
+const FIM_ID = "1d612OdtFontsAndImageGGGGGGGGGGGGGGGGGGGGGG";
+const FPX_ID = "1d612OdtFontsOtherPrefixHHHHHHHHHHHHHHHHHHH";
 const docLink = (id) => `https://docs.google.com/document/d/${id}/edit`;
 const DECK = `https://docs.google.com/presentation/d/${DECK_ID}/edit`;
 let n = 0;
@@ -146,13 +175,18 @@ const mf = new Miniflare({
               GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
   outboundService(request) {
     const u = new URL(request.url), p = u.pathname, fmt = u.searchParams.get("format");
-    const odt = (content) => { const b = pkg(ODT_CONTENT_TYPE, content, ++n); served.push(sha(b));
+    const odt = (content, extra = () => []) => { const b = pkg(ODT_CONTENT_TYPE, content, ++n, extra(n)); served.push(sha(b));
       return new Response(b, { headers: { "content-type": ODT_CONTENT_TYPE } }); };
     if (u.hostname === "docs.google.com" && fmt === "odt") {
       if (p === `/document/d/${DOC_ID}/export`) return odt(docXml({ ids: freshIds(3) }));
       if (p === `/document/d/${CHG_ID}/export`) return odt(docXml({ ids: freshIds(3), text: "Item 4: approve the minuteS" }));
       if (p === `/document/d/${CNT_ID}/export`) return odt(docXml({ ids: freshIds(3), cont: 0 }));
       if (p === `/document/d/${MON_ID}/export`) return odt(docXml({ ids: freshIds(3), cont: 1, text: monText }));
+      if (p === `/document/d/${FNT_ID}/export`) return odt(docXml({ ids: freshIds(3), fonts: 8 }), (k) => fontMembers(8, k));
+      if (p === `/document/d/${FIM_ID}/export`)
+        return odt(docXml({ ids: freshIds(3), fonts: 8, image: true }), (k) => [...fontMembers(8, k), ...imageMember(k)]);
+      if (p === `/document/d/${FPX_ID}/export`)
+        return odt(docXml({ ids: freshIds(2), fonts: 9, svgPrefix: "s" }), (k) => fontMembers(9, k));
     }
     if (u.hostname === "docs.google.com" && fmt === "odp" && p === `/presentation/d/${DECK_ID}/export`)
       return new Response(pkg(ODP_CONTENT_TYPE, slidesXml, ++n), { headers: { "content-type": ODP_CONTENT_TYPE } });
@@ -297,6 +331,26 @@ console.log("\n--- 5. .odp: NOT claimed, and says why ---");
   t(".odp: UNDETERMINED, no digest invented", [dg(S).determined, dg(S).evidentiary], [false, null]);
   t(".odp: the basis cites M-167 and names the census target that would widen it",
     /M-167/.test(dg(S).basis || "") && /census target/.test(dg(S).basis || ""), true);
+}
+
+/* ====================================================================== 6 */
+console.log("\n--- 6. D-612: embedded font faces are presentational; a picture still refuses ---");
+{
+  const F = [await acquire(docLink(FNT_ID)), await acquire(docLink(FNT_ID))];
+  t("the fixture is real-shaped: 8 font-face-uri hrefs naming 8 Fonts/ members the package holds",
+    (docXml({ ids: ["1"], fonts: 8 }).match(/<svg:font-face-uri xlink:href="Fonts\/font\d\.ttf"/g) || []).length, 8);
+  t("ACCEPTS-WHEN: A DOC WITH EMBEDDED FONTS AND NO IMAGE READS DETERMINED, over content.xml",
+    F.map((d) => [dg(d).determined, dg(d).over]), [[true, "content.xml"], [true, "content.xml"]]);
+  t("…and two exports (fresh list ids, different font bytes) carry ONE evidentiary digest",
+    [F.filter((d) => HEX64.test(dg(d).evidentiary || "")).length, new Set(F.map((d) => dg(d).evidentiary)).size], [2, 1]);
+  t("…and the basis says font faces are discounted", /embedded font faces are discounted/.test(dg(F[0]).basis || ""), true);
+  const I = await acquire(docLink(FIM_ID));
+  t("ACCEPTS-WHEN: A DOC WITH FONTS AND AN IMAGE STILL REFUSES", [dg(I).determined, dg(I).evidentiary], [false, null]);
+  t("…naming the Pictures/ member and ONLY it (the fonts are not counted)",
+    /references 1 package member\(s\).*\(Pictures\/10000001A\.png\)/.test(dg(I).basis || ""), true);
+  const X = await acquire(docLink(FPX_ID));
+  t("OVER-STRICTNESS: font-face-uri under another prefix (matched by LOCAL name) reads determined",
+    [dg(X).determined, HEX64.test(dg(X).evidentiary || "")], [true, true]);
 }
 
 await mf.dispose();
