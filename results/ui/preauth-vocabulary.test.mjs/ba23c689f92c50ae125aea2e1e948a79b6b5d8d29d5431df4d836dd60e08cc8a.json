@@ -1,0 +1,16 @@
+{
+ "unit": "ui:preauth-vocabulary.test.mjs",
+ "inputHash": "ba23c689f92c50ae125aea2e1e948a79b6b5d8d29d5431df4d836dd60e08cc8a",
+ "verdict": "PASS",
+ "run": "afccd7dab73851c55e8c88931795c53969b4948a.1790306961622.9390.json",
+ "tree": "afccd7dab73851c55e8c88931795c53969b4948a",
+ "head": "97bd6e56f85e16d5371f68daa183441bf470ba80",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 1392,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2c1cb663-19ab-52c9-904f-c30284dbc39a",
+ "at": "2026-09-25T03:29:21.639Z"
+}
