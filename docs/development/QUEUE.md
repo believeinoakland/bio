@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 06:25Z · BOB #35 · D-627's two questions (M-178; D-627 stacked on D-608), RULED.** **(1) The third class (a chart or table painted as an image under a text title): the TRUE statement is per IMAGE, not per page, and needs no classifier.** Every painted image above a size floor (D-420's placements) is content whose text, if it has any, is UNREAD until a pass reads it — for a photo as for a chart. So the marker is carried per image placement (`image_unread`, with its rect and area share), and it is true without deciding what the image depicts. What needs a signal is only the ROUTING, which is a cost question: the 17-page class routes to OCR now, as D-627 built; the chart-under-title class stays unrouted until a follow-up row MEASURES one signal (image pixel dimensions against the page's text area, or glyph density outside the painted rects) over M-178's 49 classified pages and sets the rule where the classes separate. If none separates, the routing stays off and the per-image marker says what is true. PLACE that row after D-627 (owner CONTENT-PDF). **(2) D-635: APPEND.** A routed page whose folio decoded keeps its layer text and gets the transcription appended, and the page is listed in BOTH derivation parts — D-252's guarantee that layer text is never lost outranks the parts' partition. The fix must find every reader that assumes the parts partition pages (the "who else reads it" rule, CLAUDE.md §5), list each by name in the row, and correct or prove each one. Fold both into Content Framework §16 with the landings.
 
 
 
@@ -943,8 +942,8 @@ scope: the chooser offers each OCCURRENCE (page and position, from the plane's `
 accepts-when: a subject string read on three pages offers three choices and each is accepted (moves: C-74.4 on every multi-page mention). NEGATIVE CONTROL: omit `occurrence=` and the three-page arm reads C-74.4, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
-### UI-104 · running — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), the surface half of REC-214. — owner UI.
-status: running — SCHEDULER #22 05:43Z spawns WORKER UI-104 (depth 2)
+### UI-104 · integrated — **THE ACTION PAGE OFFERS NO RISK-TIER REVISION AND SHOWS NO TIER HISTORY.** BOB #33's risk-tier ruling (21:18Z; recorded in the inbox entry of 21:55Z), the surface half of REC-214. — owner UI.
+status: integrated — SCHEDULER #22 06:33Z: tip b9a13242, GATE 111/111 GREEN FULLREUSE (8245 assertions), tree 2ab2efc0; tier revision with required reason + tier history on the action page; figures unchanged
 order: directly after REC-214, which it consumes (BOB #33: plane, then UI) (SCHEDULER #19, 2026-09-24)
 milestone: M7
 interface: I3 consumer (REC-214's IC).
@@ -1052,6 +1051,16 @@ depends-on: D-548.
 scope: adopt `block()` and the per-section tally, -1 for a section that died, a section never reported a FAIL by name, as D-548 did; state the matcher's reach (the literal "FIXTURE ABORTED" only).
 accepts-when: in each suite, one section's fixture broken leaves every other section reporting its tally (moves: 7 suites ending at the first failure). NEGATIVE CONTROL: break one fixture per suite and the others still report; disarm the recorder and the foot is missing, by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-548's worker).
+
+### DIST-15 · queued — **THE INSTALLER'S `limits.subrequests` IS PINNED TO `wrangler.jsonc`, NOT CARRIED FROM THE SIGNED RELEASE, and a release without it is not refused: the signed manifest has no plane-limits field.** DIST-7's residue (DIST #6, 23:15Z): adding the field to the fleet statement (`bio-release-fleet/2`) would break every older installer's fleetSig reconstruction and degrade its updates to a plane-only install. — owner DIST.
+order: directly after DIST-7's place, in product order; the release-format choice is DIST's own (SCHEDULER #20, 2026-09-24)
+milestone: M7
+interface: I5 — a release-format change; the integrator classifies.
+design: `docs/architecture/BIO_Distribution_v0_1.md` (the installer installs the signed release as released), with IC-82's carry of `compat` as the precedent.
+depends-on: DIST-7.
+scope: DIST decides the format first and records it in Distribution: a SEPARATELY signed plane-limits field, or a `/3` statement older installers are told to skip; then the installer carries `limits.subrequests` from the signed release and refuses a release without it by name.
+accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
