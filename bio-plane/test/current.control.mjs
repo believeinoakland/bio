@@ -74,17 +74,46 @@ function runSuite(name) {
      assertion at all while the tally reads clean. */
   const m = /(\d+) pass(?:ed)?, (\d+) (?:FAIL|fail(?:ed)?)/.exec(out);
   const named = [...out.matchAll(/^ {2}FAIL {2}(.+)$/gm)].map((x) => x[1].slice(0, 150));
-  return m ? { pass: +m[1], fail: +m[2], named, out }
-           : { pass: -1, fail: -1, named, out };
+  const all = [...out.matchAll(/^ {2}(?:PASS|FAIL) {2}(.+)$/gm)].map((x) => x[1]);
+  return m ? { pass: +m[1], fail: +m[2], named, all, out }
+           : { pass: -1, fail: -1, named, all, out };
 }
 
-function edit(key, from, to) {
+/* M0-139, 2026-09-25: EVERY NAME AN ARM DECLARES MUST BE AN ASSERTION THE BASELINE RAN. Arm 7's
+   must-fail named an assertion block 7 had retired on 2026-08-10; the name survived in a COMMENT,
+   so no `FAIL` line could ever carry it, and the arm's verdict rested on the suite's tally alone.
+   A must-NOT-fail name that matches nothing is the same defect the other way round: it can never
+   fail, so it guards nothing. So each fragment is matched against the BASELINE's printed assertion
+   names (not the suite's source: a label built from a template literal is only whole at run time),
+   and one that matches none is a declaration the arm cannot honour — reported, never skipped. */
+let BASE_NAMES = null;
+
+/* `within`, when given, is a METHOD'S SIGNATURE LINE: it must occur exactly once, and `from` must then
+   occur exactly once in that method's body — from the signature to the next `  #name(` declaration.
+   M0-139, 2026-09-25: arm 8's guard is one line spelled identically in three producers, so a
+   whole-file count refuses it however much context is quoted, and quoting enough context to make it
+   unique ties the arm to prose that is not the subject. Scoping the count to the producer keeps
+   ARMED-BLIND impossible and names in the arm WHICH producer it breaks. */
+function edit(key, from, to, within) {
   const src = readFileSync(F[key], "utf8");
-  const n = src.split(from).length - 1;
+  let lo = 0, hi = src.length, where = key;
+  if (within) {
+    const w = src.split(within).length - 1;
+    if (w !== 1) throw new Error(`ARM REFUSED TO ARM BLIND: the scope '${within.trim().slice(0, 70)}' `
+      + `occurs ${w} times in ${key}; a scope that is not one method is no scope.`);
+    lo = src.indexOf(within);
+    const next = /\n {2}#[A-Za-z_]\w*\(/g;
+    next.lastIndex = lo + within.length;
+    const m = next.exec(src);
+    hi = m ? m.index : src.length;
+    where = `${key} inside '${within.trim().slice(0, 60)}'`;
+  }
+  const body = src.slice(lo, hi);
+  const n = body.split(from).length - 1;
   if (n !== 1) throw new Error(`ARM REFUSED TO ARM BLIND: '${from.slice(0, 70)}…' occurs ${n} times in `
-    + `${key}. An unguarded edit would have armed ${n} sites, and a control armed in more places than `
+    + `${where}. An unguarded edit would have armed ${n} sites, and a control armed in more places than `
     + `it claims is not the control it reports.`);
-  writeFileSync(F[key], src.replace(from, to));
+  writeFileSync(F[key], src.slice(0, lo) + body.replace(from, to) + src.slice(hi));
 }
 
 function restoreAll(armId) {
@@ -112,20 +141,38 @@ function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) 
     try { readFileSync(join(PEN, `arm${id}.${k}`)); }
     catch { copyFileSync(F[k], join(PEN, `arm${id}.${k}`)); }
   }
+  /* A DECLARATION THE BASELINE CANNOT CARRY is a finding about the arm, recorded before it runs. */
+  let wrong = false;
+  for (const frag of [...mustFail, ...mustNotFail])
+    if (!BASE_NAMES.some((n) => n.includes(frag))) {
+      console.log(`  ** WRONG: "${frag.slice(0, 80)}" names NO assertion the baseline ran — a declaration `
+        + "this arm can never honour");
+      wrong = true;
+    }
   try {
-    for (const [k, from, to] of edits) edit(k, from, to);
+    try {
+      for (const [k, from, to, within] of edits) edit(k, from, to, within);
+    } catch (e) {
+      /* AN ARM THAT NEVER ARMED IS A FINDING, and it must not take the arms behind it down with it:
+         before M0-139 this throw ended the driver, so arm 9 never ran either and the run printed no
+         tally at all. */
+      console.log(`  ** WRONG: NEVER ARMED — ${e.message}`);
+      armsWrong++;
+      return;
+    }
     const r = runSuite("current.test.mjs");
     console.log(`  MEASURED: ${r.pass} pass, ${r.fail} fail${r.fail === -1 ? "  ** NO TALLY — the suite THREW rather than failing, reported as -1" : ""}`);
     for (const n of r.named) console.log(`    FAILED: ${n}`);
     const hit = (frag) => r.named.some((n) => n.includes(frag));
-    let wrong = false;
     for (const frag of mustFail)
       if (!hit(frag) && r.fail !== -1) { console.log(`  ** WRONG: expected an assertion naming "${frag}" to FAIL and none did`); wrong = true; }
     for (const frag of mustNotFail)
       if (hit(frag)) { console.log(`  ** WRONG: "${frag}" failed, and this arm must leave it GREEN`); wrong = true; }
     if (expectGreen) {
-      if (r.fail !== 0) { console.log("  ** WRONG: this is an OVER-STRICTNESS arm and MUST stay green — correct work in a spelling the item did not anticipate must PASS"); wrong = true; }
-      else console.log("  as declared: GREEN. Correct work in an unanticipated spelling is not refused.");
+      if (r.fail !== 0) { console.log("  ** WRONG: this arm is DECLARED GREEN and MUST stay green"
+        + (typeof expectGreen === "string" ? "" : " — correct work in a spelling the item did not anticipate must PASS")); wrong = true; }
+      else console.log(typeof expectGreen === "string" ? `  ${expectGreen}`
+        : "  as declared: GREEN. Correct work in an unanticipated spelling is not refused.");
     } else if (r.fail === 0) {
       console.log("  ** WRONG: the suite stayed GREEN. A control that cannot fail proves nothing.");
       wrong = true;
@@ -139,8 +186,9 @@ function arm(id, title, edits, mustFail, mustNotFail = [], expectGreen = false) 
 console.log("\nPL-13 / IS-3 — negative controls. THE BASELINE FIRST, so every arm is a DELTA and so a\n"
           + "run in which every arm is broken is distinguishable from one in which every arm works.");
 const base = runSuite("current.test.mjs");
-console.log(`  BASELINE current.test.mjs: ${base.pass} pass, ${base.fail} fail`);
-if (base.fail !== 0) {
+console.log(`  BASELINE current.test.mjs: ${base.pass} pass, ${base.fail} fail · ${base.all.length} assertions named`);
+BASE_NAMES = base.all;
+if (base.fail !== 0 || base.all.length !== base.pass) {
   console.log("  ** the tree is not whole; every arm below would measure the wrong thing");
   process.exit(1);
 }
@@ -332,30 +380,63 @@ arm("7", "THE DISPOSITION PUBLICATION MUST BE A MEASUREMENT OF THE ACT AND NOT A
              `      return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON, key: null,
                finding: fid, projects: [],
                reason: "no_project_scope",`]],
-  ["NEITHER of this item's two kinds is dispositionable"],
-  ["DRIVEN — the pair the plane publishes as `keyed_on` is the pair the act ACCEPTS"]);
+  /* M0-139, 2026-09-25: the must-fail used to be *NEITHER of this item's two kinds is
+     dispositionable* — block 7 retired that assertion on 2026-08-10 (D-266) and the name lived on
+     only in a comment, so this arm ran 65/0 and was reported WRONG on every run since. The flipped
+     return is `no_project_scope`, and block 9 now DRIVES it: an export's finding, filed under no
+     project, must read `available:false`. */
+  ["A FINDING FILED UNDER NO PROJECT IS NOT DISPOSITIONABLE"],
+  ["DRIVEN — the pair the plane publishes as `keyed_on` is the pair the act ACCEPTS",
+   "BOTH of this item's two kinds are dispositionable AT PROJECT SCOPE"]);
 
 /* ============= (8) THE PURGE GUARD, WHICH THIS ITEM'S OWN ARM FOUND ====== */
 
-arm("8", "THE QUESTION MUST STILL EXIST. `#queueSharedInquiry`'s guard is removed, which is the "
-  + "state this item SHIPPED IN until the purge-by-consequence arm caught it: the sharing edge "
-  + "lives in the CITING project's own bytes and OUTLIVES the target, so both producers went on "
-  + "announcing a divergence about a question `op=purge` had removed. "
-  + "DECLARED: the purge arm MUST fail. Recorded as an arm rather than as a quiet fix, because a "
-  + "defect found by a control is the best evidence that the control is real.",
-  [["store", `      const q = this.#queueSharedInquiry(inq, viewer);
-      if (!q) continue;
-      const drawing = this.#projectsDrawingOn(inq, viewer);
-      if (drawing.length < 2) continue;
-      const qname = q.title || inq;
-      for (const p of drawing) {`,
-             `      const q = this.#queueSharedInquiry(inq, viewer) || { title: null };
-      const drawing = this.#projectsDrawingOn(inq, viewer);
-      if (drawing.length < 2) continue;
-      const qname = q.title || inq;
-      for (const p of drawing) {`]],
+/* SPLIT INTO 8a AND 8b BY M0-139, 2026-09-25, because the single arm COULD NOT ARM. It quoted the
+   guard with five lines of context, and REC-124's `#findingsConcludedElsewhere` copied those five
+   lines verbatim, so `edit()` counted two sites and refused (D-331) — and, re-measured on 95fe7bc7,
+   `#findingsVersionFromAnotherTeam` carries the same guard line too: THREE sites. One arm over one
+   guard was never the control anyway: the purge assertion counts TWO kinds from TWO producers, and
+   an arm that breaks both at once cannot tell you that each one's guard is load-bearing. So each arm
+   is scoped to ITS producer's signature line and breaks that guard alone. Measured: 8a fails the
+   purge assertion by name; 8b cannot (see its own note).
+   THE THIRD PRODUCER HAS NO ARM HERE, and that is said rather than papered over: this fixture
+   mints no `shared-inquiry-concluded-by-another-project` item, so no assertion here could fail if
+   `#findingsConcludedElsewhere`'s guard went, and no suite anywhere purges a concluded question —
+   minted as D-727 (with 8b's unwitnessed guard) rather than armed against nothing. */
+const GUARD = `      const q = this.#queueSharedInquiry(inq, viewer);
+      if (!q) continue;`;
+const GUARD_OPEN = `      const q = this.#queueSharedInquiry(inq, viewer) || { title: null };`;
+
+arm("8a", "THE QUESTION MUST STILL EXIST — FOR THE STANCE PRODUCER. `#findingsStanceDiverged`'s "
+  + "`#queueSharedInquiry` guard is removed, which is the state this item SHIPPED IN until the "
+  + "purge-by-consequence arm caught it: the sharing edge lives in the CITING project's own bytes and "
+  + "OUTLIVES the target, so the producer went on announcing a divergence about a question `op=purge` "
+  + "had removed. DECLARED: the purge arm MUST fail; the pre-purge non-empty guard MUST NOT. "
+  + "Recorded as an arm rather than as a quiet fix, because a defect found by a control is the best "
+  + "evidence that the control is real.",
+  [["store", GUARD, GUARD_OPEN, `  #findingsStanceDiverged(viewer, now, identity = null) {`]],
   ["PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET"],
   ["both producers are live on the shared question before the purge"]);
+
+/* **8b WAS DECLARED MUST-FAIL AND CAME BACK GREEN, AND THE FINDING IS ABOUT THE ARM** (M0-139,
+   2026-09-25, run on 95fe7bc7: 67 pass, 0 fail). There is a SECOND CAUSE: `op=purge` runs
+   `DELETE FROM inquiry_basis_versions WHERE bundle_id=?`, and those rows are the only thing
+   `#findingsVersionFromAnotherTeam` reads. So on purge this producer goes quiet whether or not
+   its guard is there, and no purge assertion can ever witness that guard. The guard still does
+   work: it gates a question the VIEWER cannot see (D-15's `#bundleGate`). No suite drives that, so
+   the guard has NO witness. That is minted as D-727, with its fix named, and not made up for here.
+   The arm is kept as a DECLARED GREEN because it measures something true: purge silences this
+   producer through the data it reads. If purge ever stops deleting the versions, this arm turns
+   red, which is when this guard becomes the only fence. It is NOT evidence that the guard works. */
+arm("8b", "THE QUESTION MUST STILL EXIST — FOR THE ARRIVING-VERSION PRODUCER, AND THIS ARM IS NOT ITS "
+  + "WITNESS. The same guard, removed from `#findingsVersionFromAnotherTeam` ALONE. DECLARED GREEN: "
+  + "`op=purge` deletes the question's `inquiry_basis_versions` rows, which are all this producer "
+  + "reads, so the purge assertion stays green without the guard. The guard's own witness, a question "
+  + "the viewer cannot see, is D-727's.",
+  [["store", GUARD, GUARD_OPEN, `  #findingsVersionFromAnotherTeam(viewer, now, identity = null) {`]],
+  [], ["PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET"],
+  "as declared: GREEN. Purge silences this producer through the rows it deletes (the second cause); "
+  + "the guard is unwitnessed here, D-727.");
 
 /* ================== (9) OVER-STRICTNESS — THESE MUST PASS ================ */
 

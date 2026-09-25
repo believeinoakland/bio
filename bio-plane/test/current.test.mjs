@@ -14,6 +14,10 @@
    (D-266.4) THROW AWAY THE UNATTRIBUTABLE COUNT at #findingsVersionFromAnotherTeam's return (`out.unattributed = 0`) -> **this suite 61/1**, the counted-silence arm failing, `proposedispose.test.mjs` 27/0 and untouched. MUST NOT FAIL: the run-less arm and the two-items arm — the ITEMS are unaffected, which is precisely the state this half of D-266 found: a correct silence indistinguishable from having nothing to be silent about.
    (D-266.5) COUNT ONE BRANCH OF THE SILENCE AND NOT THE OTHER — the `!from` increment removed, so a reading carried by a run working under a project that does not draw on this question stops being counted and the answer reads 1 where the truth is 2 -> **61/1**. This is why §5 asserts an EXACT figure: "at least one" would have passed over it, and the fixture for that branch (RUN_C / V4) did not exist before D-266 wrote it.
    (D-266.6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of being spread straight into `items` -> **62/0, GREEN**, which is the receipt that this suite's producer-wiring arm now asks its PROPERTY rather than pinning one of the two spellings the language offers. It used to pin the spelling, and D-266's own correct wiring failed it.
+   M0-139, RUN 2026-09-25 on main 95fe7bc7 by `test/current.control.mjs`: TWO ARMS COULD NOT FAIL, and both are fixed. Pristine store.mjs 3,643,114 bytes (sha256 217c103c…) and queuestate.mjs 24,486 bytes (732d3b43…), every restore verified by sha256, content and `cmp` x2. BASELINE 67/0, 67 assertions named. The driver's (7) is this list's (7). Its (8) is purge, and its (9) is this list's (8).
+   (7) BEFORE: its must-fail named *NEITHER of this item's two kinds is dispositionable*, which block 7 retired on 2026-08-10 and which survives only in a comment, so the arm measured 65/0 and was WRONG on every run. NOW it names block 9's new assertion, which DRIVES a finding filed under no project (an export's `export-performed`) and reads the disposition -> **66/1, "A FINDING FILED UNDER NO PROJECT IS NOT DISPOSITIONABLE" failing by name**, as declared.
+   (8) BEFORE: it NEVER ARMED. Its anchor occurred 3 times in store.mjs, in #findingsStanceDiverged, #findingsVersionFromAnotherTeam and REC-124's #findingsConcludedElsewhere. `edit()` threw, and the throw ended the driver, so (9) never ran either. NOW it is split and each arm is scoped to its producer's signature line. (8a) #findingsStanceDiverged's guard -> **66/1, "PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET" failing by name**, as declared. (8b) #findingsVersionFromAnotherTeam's guard -> **67/0, DECLARED GREEN**. It was first declared must-fail and came back green. The second cause is `op=purge`'s `DELETE FROM inquiry_basis_versions`, which removes every row this producer reads. The guard's real witness, a question the viewer cannot see, is driven by no suite: D-727.
+   The driver now also refuses any declared name that matches no assertion the BASELINE printed, and it records an arm that never armed as WRONG without stopping the arms behind it. Result: 11 arms run, 0 NOT as declared.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-13 / IS-3 — **CURRENT AS A PROJECT PROPERTY**, and the two
  * shared-inquiry FINDING slugs that the per-project answer makes necessary.
@@ -990,6 +994,36 @@ const beforeShaA = await shaOf(A);
   + "proves the silence above is the purge and not the walk falling over",
     itemsOf(await queue(), "stance-changed-here-not-elsewhere")
       .some((i) => i.basis?.inquiry === FOC), true);
+}
+
+/* ====================================================================== 9
+ * A FINDING FILED UNDER NO PROJECT IS THE THIRD ANSWER, AND IT IS DRIVEN.
+ *
+ * M0-139, 2026-09-25: `#dispositionOf`'s `no_project_scope` return was the
+ * target of the control's arm 7 and NO assertion here could see it. Arm 7's
+ * must-fail named *NEITHER of this item's two kinds is dispositionable*, which
+ * block 7 retired on 2026-08-10 and survives only in a comment, so the arm
+ * advertised the act on an unscoped item and the suite stayed 65/0. The
+ * fixture's own items are all filed under a project, so a finding with no
+ * project home is MADE here: an administrator's export raises
+ * `export-performed` (D-52), which is filed under no project at all.
+ * Placed after block 8 so the export's item enters no earlier count.
+ * ===================================================================== */
+{
+  const ex = await GET(`op=export&token=adm-pl13`);
+  const unscoped = itemsOf(await queue(), "export-performed");
+  const it = unscoped[0] || {};
+  t("the fixture HOLDS a finding filed under no project — the non-empty guard, without which the "
+  + "arm below would report its verdict over nothing",
+    [ex.ok !== false, unscoped.length > 0, it.class,
+     (it.case?.ancestors || []).some((a) => a && a.type === "project")],
+    [true, true, "FINDING", false]);
+  t("A FINDING FILED UNDER NO PROJECT IS NOT DISPOSITIONABLE AND SAYS WHY — `no_project_scope`, "
+  + "the third answer: there is no team whose feed a dismissal would govern, so the act is not "
+  + "offered, and the reason names the missing SCOPE rather than a missing identity (D-266)",
+    [it.disposition?.available, it.disposition?.op, it.disposition?.scope,
+     it.disposition?.reason, it.disposition?.projects],
+    [false, null, "project", "no_project_scope", []]);
 }
 
 /* THE FOOT, AND IT IS NOT DECORATION — this suite was GREEN AT 59/0 AND STILL
