@@ -162,14 +162,6 @@
    "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/nc-rec113.mjs",
-   "arm": "blind",
-   "anchor": "  const named = resultRef != null && String(resu",
-   "row": "D-646",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/airun.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-rec114.mjs",
    "arm": "b",
    "anchor": "      return { ...r,\n               grade: res ?",

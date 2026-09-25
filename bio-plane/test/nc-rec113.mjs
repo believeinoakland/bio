@@ -19,6 +19,18 @@
  * reported the same answer for every arm INCLUDING the baseline is on record
  * here, and without a baseline row six reds read exactly like six arms working.
  *
+ * NEGATIVE CONTROL: (D-646, RUN 2026-09-25, land/worker/D-646) `blind` HAD NOT ARMED
+ * since REC-100 (60ed0af043) put a comment between its two anchored lines — 0 matches,
+ * found by M0-197's anchor-drift reader. Re-anchored on the one line, unique in airun.mjs
+ * here and on origin/main; the allowance is deleted and the reader reads this driver LIVE.
+ * The reader's own control: the old two-line anchor put back → `FAIL DRIFT … arm blind …
+ * matches 0 times`, exit 1; restored by sha256 + cmp. `node test/nc-rec113.mjs all`:
+ * baseline 131/0 both ends; every arm AS DECLARED — blind fails L2 L2c L2e by name (plus
+ * L4 K3b K4, downstream of `backed`, undeclared); projection L2 L2c (+L4 K3b K4 K6d);
+ * statement L2 L2c L2d (+L4 K3b K3c K4 K6c K6d); manufacture L2d L2e (+K3c). Every arm's
+ * names were ALSO stale (D-500 renamed I2…I2f → L2…L2f), corrected below; `statement`'s
+ * L2b corrected with its reason. Identity arm SKIPPED: its pre-change checkout is absent.
+ *
  * WHAT THE SUBJECT IS. This item widened `op=airunlog` to project
  * `result_kind` / `result_ref` and to STATE a per-row `coverage`. Its two
  * failures are not symmetric and the arms are built around that asymmetry:
@@ -63,6 +75,12 @@ const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
  * THE ARMS. Each names the file, a UNIQUE anchor, its replacement, and
  * DECLARES before it runs what MUST fail and what MUST NOT.
  * ---------------------------------------------------------------- */
+/* D-646: THE NAMES BELOW ARE L2…L2f. D-500 (63aaf1b57b) renamed this item's
+   assertions I2…I2f to L2…L2f in the suite and left these declarations naming
+   the old ids — and `I2` now names a DIFFERENT assertion (the back-reference),
+   so every VERDICT here was judged against names the suite no longer prints.
+   The comments below are carried into the new names; what they record is
+   unchanged. */
 const ARMS = {
   /* (a) The row that distinguishes five-arms-broken from five-arms-working. */
   baseline: null,
@@ -79,8 +97,8 @@ const ARMS = {
        FROM observation_log`,
     /* DECLARATION CORRECTED 2026-09-17 AFTER THE ARM REFUTED IT, AND THE
        CORRECTION IS THIS CONTROL'S MOST USEFUL RESULT.
-       First declaration: MUST FAIL I2 I2b I2c I2d. ACTUAL: I2 and I2c only.
-       I2b and I2d CAME BACK GREEN OVER A READ THAT PROJECTS NOTHING AT ALL, and
+       First declaration: MUST FAIL L2 L2b L2c L2d. ACTUAL: L2 and L2c only.
+       L2b and L2d CAME BACK GREEN OVER A READ THAT PROJECTS NOTHING AT ALL, and
        that is a fact about those assertions rather than a fault in this arm.
        WHY, and it is this repository's own rule arriving inside its suite: with
        the columns gone, `e.result_ref` is `undefined`, so a row that HAS no
@@ -90,14 +108,14 @@ const ARMS = {
        because those two causes produce identical bytes. That is D-366's own
        shape one level up: an absence with two causes.
        THE CONSEQUENCE WORTH CARRYING: only an assertion over a row that HAS a
-       referent can detect a missing projection. I2 and I2c are those arms, and
+       referent can detect a missing projection. L2 and L2c are those arms, and
        this is the measurement that says they are load-bearing rather than
        decorative — a suite built only around the undetermined case would have
        passed over a read that projected nothing. */
-    mustFail:    ["I2", "I2c"],
-    mustNotFail: ["I2b", "I2d", "I2e", "I2f"],
-    note: "I2e/I2f are PURE — they drive `observationCoverage` and `checkObservation` "
-        + "directly and never touch the read, so they must survive this arm. I2b/I2d "
+    mustFail:    ["L2", "L2c"],
+    mustNotFail: ["L2b", "L2d", "L2e", "L2f"],
+    note: "L2e/L2f are PURE — they drive `observationCoverage` and `checkObservation` "
+        + "directly and never touch the read, so they must survive this arm. L2b/L2d "
         + "survive for a DIFFERENT and more interesting reason: see the correction above.",
   },
 
@@ -109,8 +127,14 @@ const ARMS = {
     file: STORE,
     find: `                        coverage: observationCoverage({ state: e.state, resultRef: e.result_ref }) }));`,
     repl: `                        coverage: undefined }));`,
-    mustFail:    ["I2", "I2b", "I2c", "I2d"],
-    mustNotFail: ["I2e", "I2f"],
+    /* D-646: L2b MOVED TO MUST-NOT-FAIL, AND THE OLD DECLARATION WAS WRONG FOR
+       THE SUITE AS IT NOW READS. When this was written I2b read a bare PRESENT
+       row's `coverage` off the log. REC-100 deleted the bare-run carve-out, so
+       L2b now asserts the TICK REFUSES that row (OBS_PRESENT_NO_REFERENT) and
+       nothing is appended — it reads no `coverage` at all, and this arm cannot
+       reach it. MEASURED 2026-09-25: this arm reddens L2 L2c L2d, never L2b. */
+    mustFail:    ["L2", "L2c", "L2d"],
+    mustNotFail: ["L2b", "L2e", "L2f"],
   },
 
   /* (d) THE COSTLY DIRECTION, ARM ONE: manufacture an unknown. Drop the state
@@ -122,9 +146,9 @@ const ARMS = {
     find: `  if (state === "PRESENT") return OBSERVATION_COVERAGE_UNDETERMINED;
   return "none_owed";`,
     repl: `  return OBSERVATION_COVERAGE_UNDETERMINED;`,
-    mustFail:    ["I2d", "I2e"],
-    mustNotFail: ["I2", "I2b", "I2c", "I2f"],
-    note: "I2/I2b/I2c must SURVIVE: a backed row still reads `backed` and a bare PRESENT "
+    mustFail:    ["L2d", "L2e"],
+    mustNotFail: ["L2", "L2b", "L2c", "L2f"],
+    note: "L2/L2b/L2c must SURVIVE: a backed row still reads `backed` and a bare PRESENT "
         + "still reads `undetermined` under this mutation. An arm that reddened everything "
         + "would not have isolated the variable.",
   },
@@ -134,12 +158,14 @@ const ARMS = {
          CAN back. The identity driver's own must-fail arm is here too. */
   blind: {
     file: AIRUN,
-    find: `  const named = resultRef != null && String(resultRef) !== "";
-  if (named) return "backed";`,
-    repl: `  const named = false;
-  if (named) return "backed";`,
-    mustFail:    ["I2", "I2c", "I2e"],
-    mustNotFail: ["I2b", "I2f"],
+    /* D-646: re-anchored on the ONE line. REC-100 put a comment between it and
+       `if (named) return "backed";`, so the two-line anchor matched 0 times and
+       this arm never armed. The line alone is unique in airun.mjs, and zeroing
+       `named` is the whole mutation. */
+    find: `  const named = resultRef != null && String(resultRef) !== "";`,
+    repl: `  const named = false;`,
+    mustFail:    ["L2", "L2c", "L2e"],
+    mustNotFail: ["L2b", "L2f"],
     identityMustFail: true,
   },
 };
