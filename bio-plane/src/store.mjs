@@ -22206,7 +22206,9 @@ export class Store extends DurableObject {
         + `level, or set a handle first`, { observation: obs });
     /* END DEC-49 REGION is-attribute-edition */
     const prior = this.#attributionInForce(cid, ed, obs);
-    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    /* c22-batch29 union (CONDUCT #22): D-543's one helper, not a hand-spelled whole-second stamp — MK-7 was cut before
+       D-543 and d543-instant-precision named this site. Same value: stampInstant("second") of the current instant. */
+    const when = stampInstant("second");
     const same = !!(prior && Number(prior.edition) === ed && prior.level === lv);
     if (!same)
       this.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at)

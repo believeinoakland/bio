@@ -113,7 +113,11 @@ const promote = async (tok, id, text, base = null) =>
   rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `${id}-${base ? "rev" : "new"}-${String(++snapKeySeq).padStart(4, "0")}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-    meta: { object_type: "action", group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: D-563 (C-86.3) refuses an envelope title the
+       held document contradicts, and D-147 was written on a base without it, so `title: \`Bundle ${id}\`` against
+       the document's "Records request …" made every promote here ENVELOPE_TITLE_DISAGREES. The envelope's title is
+       dropped exactly as D-563 dropped it in its 177 fixtures (actionquote.test.mjs's shape): promote derives it. */
+    meta: { object_type: "action", group: "believe-in-oakland",
             current_state: "active", created: NOW, last_updated: LATER },
   }));
 
