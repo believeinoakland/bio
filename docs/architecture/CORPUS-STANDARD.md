@@ -300,6 +300,7 @@ cannot be both governed and excluded.
 | `docs/development/TREE-SHARING.md` | process document | describes how the lanes share the repository and land on `main`, not what the system is |
 | `docs/development/PROCESS-DESIGN.md` | process document | states the principles of how BIO is built (APPROVED 2026-09-25), not what the system is |
 | `docs/development/PROCESS-MECHANICS.md` | process document | describes how the process principles are carried out (APPROVED 2026-09-25), not what the system is |
+| `docs/development/TRANSITION.md` | process document | the plan and progress log for moving BIO to the new process (APPROVED 2026-09-25), not what the system is |
 | `docs/development/kickoffs/*.md` | kickoff | describes how a lane works; `plancheck` already checks each for the mechanisms it must carry |
 
 The reasoning behind those rows, unchanged:
