@@ -513,7 +513,9 @@ ok("NO STANDING: a member outside the project opening the draft's address reads 
        and the comparison is SET EQUALITY against the plane's answer, both directions, with the corpus printed.
      - BUILD THE LIST HERE. So the page's own wire is read: `op=casedrafts` asked ONCE, naming the project, and
        the case-identity sentence rendered is the plane's bytes — a sentence this page could not have composed
-       ("a new case, whose identity is not yet allocated…" is the store's).
+       (the store's; since D-538 these drafts, naming no case and not asking for a new one, carry its DERIVATION
+       sentence — CORRECTED 2026-09-25 by UI-106: this example quoted the new-case sentence, which D-538 made
+       true only of a draft that sets `newCase`).
      - DRAW A ROW THAT OPENS NOTHING. So every row's own handler is RUN, as the browser would, and each is
        asserted to reach the plane as `op=reviewcopy&draft=<that id>` — which is the `read` the plane PUBLISHED
        on that row — and to draw that draft's own copy at its own address.

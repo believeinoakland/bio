@@ -240,6 +240,35 @@ to one connect body, so the real plane cuts a real derivation after 2 documents;
 receipt and the unbounded re-derivation are each asserted, with the suite's NEGATIVE CONTROL line recording three
 arms.
 
+v120, 2026-09-25 session, thread UI, UI-106 carrying D-619 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-106`, STACKED on `land/worker/D-568` @ `d5da99bb` (integrated, not yet on `main`), in the commit
+that carries this entry; the version number is PROVISIONAL — CONDUCT renumbers at integration. SURFACE: **the
+review copy's edit form keeps a draft's request for a new case, and its grant roster no longer tells a member a
+grant bound to no case was given "for a new case".**
+
+**WHAT IT CLOSES, two sentences on one surface that claimed more than the record holds.** (1) `rvcFormFromCopy`
+read the case choice from `case.case_id` alone, so a draft that asked for a NEW case came back to its editor with
+the choice unmade and `rvcDraftBody` wrote it back WITHOUT `newCase`: one edit of the scope turned it into a draft
+whose case publication DERIVES (D-538) — the D-309 override the field exists to refuse. REC-199 (IC-285) made
+`op=reviewcopy` say `newCase` back; the form now reads it, the named case keeping precedence, and the comment
+that said the answer carries no such field is corrected in place. Discharges `CLAIMS.md`'s "DELEGATION 2026-09-24
+RECORD (WORKER REC-199) -> UI". (2) D-619: `rvcGrantsHtml` said a grant bound to no case was given "for a new
+case"; for a DERIVED draft that is untrue, and the grant row does not record which kind of no-case draft it was
+given for, so it now says what the row holds — "a draft that named no case" — and a case-bound grant whose
+`edition` the plane leaves null (D-568) prints no edition rather than an empty or invented one.
+
+**UI-92's draft list needed no change, and that is measured, not assumed:** it already draws the plane's
+`case.identity` verbatim, so D-538's derivation sentence reaches the list as the plane states it — asserted on draft
+DD against the real plane, with no "edition 1" anywhere on its row or its copy.
+
+**WHAT LANDED:** three sites in `app.html`'s review-copy block (`rvcFormFromCopy` and its comment, the `bound`
+line of `rvcGrantsHtml`); `civicos-ui/test/review-copy-newcase.test.mjs` and its control, NEW; one stale example
+in `review-copy.test.mjs`'s 6b comment CORRECTED. No `DEC-49 REGION`, router, `SURFACES` key or other surface was
+touched. Negative control 6/6 AS DECLARED (its first run 5/6, recorded in the suite's header). Found on the way and
+minted, not fixed here (plane paths): **D-626**, two plane sentences of D-538's class — `REVIEW_NO_SUCH_CASE`'s
+canned translation still says *"Leave the name off and the draft is a new case"*, and `PUBLISH_DRAFT_NOT_THIS_CASE`
+builds its identity sentence without the draft's `newCase`.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
