@@ -1,0 +1,16 @@
+{
+ "unit": "plane:livefire.test.mjs",
+ "inputHash": "c1d32919ed0f62de0ec8626419be2c5b48945951d9309e91040ffe25a6fc4842",
+ "verdict": "PASS",
+ "run": "f37fdfedce18c609d7f6e86482604e8f66742e9f.1790315786864.3013.json",
+ "tree": "f37fdfedce18c609d7f6e86482604e8f66742e9f",
+ "head": "5ebea344d30eeb0cb6ecb88533da247f1d99da10",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 138,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "08eb3656-9b97-591d-bf6c-a7d5d79d827a",
+ "at": "2026-09-25T05:56:26.881Z"
+}
