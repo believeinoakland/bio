@@ -847,9 +847,9 @@ scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge
 accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
-### D-709 · running — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
+### D-709 · integrated — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
+status: integrated — SCHEDULER #24 12:52Z: tip 97e2925c (on D-698 c0f7a56f), GATE 385/385 GREEN FULLREUSE (21887 assertions; excludes 3 untallied), tree bc6204a3; a no-locator capture entry states fetch route unrecorded (CAPTURE_ROUTE_UNRECORDED), its leg reads the author letter under the ceiling and says so, no letter moves; seven suites corrected; IC-355 proposed I3 additive (CONDUCT classifies)
 order: after D-698 (running on D-693), the same earned-basis entries (SCHEDULER #23, 2026-09-25)
-status: running — SCHEDULER #24 10:57Z: spawned, stacked on land/worker/D-698 @ c0f7a56f
 milestone: M9
 interface: I5 — additive `fetch.route: "unrecorded"` on every no-locator capture entry; an IC required; the integrator mints and classifies.
 design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (the fetch-path table D-693 added), with BOB #35's 10:05Z ruling, folded there by this row.
@@ -1233,7 +1233,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-648 · queued — **`nc-rec118` arms b, d: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-648 · running — **`nc-rec118` arms b, d: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 12:52Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-647, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
