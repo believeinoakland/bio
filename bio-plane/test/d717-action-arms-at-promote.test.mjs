@@ -1,4 +1,21 @@
-/* NEGATIVE CONTROL: (pending — the D-717 worker fills this line from the run.) */
+/* NEGATIVE CONTROL: (RUN 2026-09-25 by the D-717 worker on land/worker/D-717 @ 2051ba09 over D-695 @ b6ebf625, each arm
+   ALONE, restored by cp from a uniquely-named per-arm pristine copy in the session scratchpad and verified by sha256
+   AND cmp — src/store.mjs 0d6d495b… at 3,482,940 B, checks/bio-checks.mjs e16940e5… at 1,024,644 B. BASELINE this
+   suite 76 pass / 0 fail, counterparty.test.mjs 43 / 0. REPRODUCTION, before the fix: every one of the 16 forbidden
+   writes in §1-§5 and §8 LANDED.)
+   (A1) remove the kind refusal, `catErrs(actionKindFindings)` -> `[]`. DECLARED: exactly §1's 3 fail. ACTUAL 73/3, AS
+   DECLARED, the first BY NAME "a MEMBER's action of kind `subpoena` — refused ACTION_KIND_REFUSED…".
+   (A2) remove the tier-vocabulary refusal. DECLARED: exactly §2's 6. ACTUAL 70/6, AS DECLARED.
+   (A3) THE ROW'S CONTROL — remove the counterparty refusal. DECLARED: §3's 21 and §8's 1; counterparty.test.mjs's op
+   block fails. ACTUAL 54/22 here and 38/5 there, AS DECLARED — the placeholder saves again, failing BY NAME "the flat
+   placeholder `counterparty: to be named` — refused COUNTERPARTY_REFUSED…".
+   (A4) remove the resolution refusal. DECLARED: exactly §4's 6. ACTUAL 70/6, AS DECLARED.
+   (A5) remove the clock refusal. DECLARED: exactly §5's 12. ACTUAL 64/12, AS DECLARED.
+   (B) OVER-STRICTNESS — refuse the MISSING block at the act too (drop `counterpartyAbsent`'s early return in
+   `counterpartyFindings`). DECLARED: exactly §6's two missing-counterparty asserts here, and counterparty.test.mjs's
+   missing-counterparty and audit-count asserts. ACTUAL 74/2 here and 37/6 there, AS DECLARED.
+   (C) OVER-STRICTNESS — arm the past-due check at the act (`clockFindings(…, null)` -> the pinned day). DECLARED:
+   exactly §6's two past-due asserts; §5 and §7's clock arms hold. ACTUAL 74/2, AS DECLARED. */
 /* D-717: FIVE OF C-2.10's / C-11.1's ACTION ARMS RUN AT THE ACT (`docs/architecture/BIO_Case_Making_v0_1.md` §2, the
  * action object: `action_kind`, `risk_tier`, `counterparty`, its states ending `resolved | abandoned`; C-11.1's clock
  * discipline; D-130's counterparty; DEC-49 as `BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it).
