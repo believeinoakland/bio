@@ -1021,7 +1021,7 @@ accepts-when: a bundle whose keys run against write order lists its history in w
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
 ### D-632 · integrated — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — SCHEDULER #24 12:20Z: tip 1ca6abd4 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6603 assertions), tree 6d0c4afb; aicredential.control arms 3 and 5 re-anchored (0 and 3 matches before), both allowances deleted, each arm alone fails by name; arm 3 old anchor is the one D-639 quotes
+status: integrated — CONDUCT #23 12:24Z: worker report — tip 1ca6abd4 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6603 assertions); aicredential.control arms 3,5 re-anchored, allowances removed; test-only, no IC; rides batch30 (keep every anchordrift.json deletion)
 order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
