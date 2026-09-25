@@ -76,16 +76,6 @@ scope: mergeTier2Text carries `image_unread` with image_content_*; mergeTier3Tex
 accepts-when: a tier-2-won page keeps its image_unread, and an OCR-appended page loses it (moves: a dropped true marker, a kept false one). NEGATIVE CONTROL: drop either change and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-665's union notes).
 
-### D-710 · queued — **A WHOLE-DOCUMENT UNIT OF A MIXED DOCUMENT READS `ocr` (the chain's last step), which is the overstatement D-686 exists to remove.** BOB #35 RULED 2026-09-25 09:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a new value, `mixed` — chainKindFor answers the single kind when every derivation step covering the unit is one kind, and `mixed` when they differ; not NULL, since the record KNOWS it was read both ways; every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4); an office unit with one kind reads that kind. D-686 (integrated) shipped the provisional last-step answer. — owner CONTENT-PDF, RECORD.
-order: at the backlog head after D-697 — it corrects just-integrated D-686 and rides its IC (SCHEDULER #23, 2026-09-25)
-milestone: M2
-interface: I5 — the chain-kind vocabulary gains `mixed`; rides D-686's IC; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (as D-686 folded BOB #35's 09:05Z ruling), with the 09:35Z ruling folded there by this row.
-depends-on: D-686 (integrated, land/worker/D-686 @ 8c55a9c2, on D-635).
-scope: chainKindFor answers `mixed` for a no-page unit whose covering steps differ; every machine-read-text reader treats it as containing machine-read text; the search grammar and reader sentences name it.
-accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
-
 ### D-713 · queued — **A PAGE D-635 APPENDED TO (folio kept + transcription) MAY BE SEEDED BY D-616's TAIL RE-READ AND GET ITS FOLIO APPENDED AGAIN, so the folio text appears twice in the record.** No suite drives the combination. Found at batch30's union (CONDUCT #22). — owner CONTENT-PDF.
 order: after D-710 with the PDF corrections — the record would claim text twice; it joins two just-landed rows (SCHEDULER #23, 2026-09-25)
 milestone: M2
@@ -1101,4 +1091,24 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
+order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
+depends-on: M0-158.
+scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
+accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
+order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
+depends-on: none.
+scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
+accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

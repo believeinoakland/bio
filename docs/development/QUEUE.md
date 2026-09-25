@@ -655,8 +655,8 @@ scope: op=links and navchanges pass every row through the viewer predicate befor
 accepts-when: a member outside a gated bundle's project sees neither its shas nor its addresses from either op, nor any count that moves with them (moves: disclosure). NEGATIVE CONTROL: a member outside a gated bundle's project calls both ops and must see neither its shas nor its addresses, nor any count that moves with them — drop the filter and it fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
 
-### D-688 · running — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
-status: running — SCHEDULER #23 09:50Z: spawned from main 95fe7bc7
+### D-688 · integrated — **`LIFECYCLE_TEXT_UNWRITABLE` (D-147, C-94.11) IS TWO CONDITIONS UNDER ONE CODE: C-94.11's sentence about exemptions and citation is FALSE for the token-field case (e.g. stage=Appeal), so a member is told something untrue.** Found at batch29's union figures pass (CONDUCT #22); the union declares it in arm G's MULTI_SITE_CANDIDATES and raises CEILING.multiSiteCodes 59->60 for it. — owner RECORD.
+status: integrated — SCHEDULER #23 11:00Z: tip ca653547 on main 95fe7bc7, GATE 409/409 GREEN FULLREUSE (22932 assertions), tree 02302d5b; LIFECYCLE_TOKEN_MALFORMED C-94.12 split out (region is-lifecycle-token); five QUOTE_* judged closed; CEILING.multiSiteCodes 60->54; CATALOG 1.31.0->1.32.0 (may collide with D-668/D-641); floors re-read at union
 order: after D-668, with the one-code-one-condition rows (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 — a new named code for the token-field case; the integrator classifies.
@@ -782,6 +782,17 @@ depends-on: none (stacked on land/worker/D-674 @ 96a7802f, integrated).
 scope: the image carries write order (rowid or a seq) for each manifest entry; C-20.1 walks it instead of the snap key; images without it read the key order and say so.
 accepts-when: a bundle whose snap-key order differs from its write order is audited in write order by C-20.1 (moves: gate and plane disagreeing on "prior"). NEGATIVE CONTROL: sort by key again and the divergent-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-674's worker).
+
+### D-710 · running — **A WHOLE-DOCUMENT UNIT OF A MIXED DOCUMENT READS `ocr` (the chain's last step), which is the overstatement D-686 exists to remove.** BOB #35 RULED 2026-09-25 09:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a new value, `mixed` — chainKindFor answers the single kind when every derivation step covering the unit is one kind, and `mixed` when they differ; not NULL, since the record KNOWS it was read both ways; every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4); an office unit with one kind reads that kind. D-686 (integrated) shipped the provisional last-step answer. — owner CONTENT-PDF, RECORD.
+status: running — SCHEDULER #23 11:00Z: spawned, stacked on land/worker/D-686 @ 8c55a9c2
+order: at the backlog head after D-697 — it corrects just-integrated D-686 and rides its IC (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I5 — the chain-kind vocabulary gains `mixed`; rides D-686's IC; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (as D-686 folded BOB #35's 09:05Z ruling), with the 09:35Z ruling folded there by this row.
+depends-on: none (stacked on land/worker/D-686 @ 8c55a9c2, integrated, on D-635 on D-627).
+scope: chainKindFor answers `mixed` for a no-page unit whose covering steps differ; every machine-read-text reader treats it as containing machine-read text; the search grammar and reader sentences name it.
+accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
