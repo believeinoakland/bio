@@ -1,6 +1,6 @@
 # The requirements canon
 
-**Status** · DRAFT by BOB #37, 2026-09-25, for Bob's approval (TRANSITION.md T3). The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history.
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T3), as drafted by BOB #37 the same day, including its three calls: unreviewed drafts are canon as they stand, a document named by section is canon only there, and Bob's DEC rulings are canon. The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history.
 
 ## Canon
 
@@ -76,7 +76,7 @@ Kept and citable as evidence. Never cited as a requirement.
 
 | document | replaced by |
 | --- | --- |
-| `docs/architecture/BIO_Membership_Architecture_v1.md` | v2 (superseded 2026-07-26) |
+| `docs/architecture/BIO_Membership_Architecture_v1.md` | v2 (superseded 2026-07-26); removed 2026-09-25 at Bob's direction, readable on `snapshot/pre-refactor-2026-09-25` |
 | `docs/architecture/CORPUS-STANDARD.md` | P5 and PROCESS-MECHANICS §3 |
 | `docs/architecture/README.md` | this file |
 | `docs/architecture/construct-status.json` | the build state (`build/`) and each module's tests |

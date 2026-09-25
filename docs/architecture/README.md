@@ -1,6 +1,6 @@
 # Architecture
 
-**Status** · The catalog of the design corpus: one entry per document with what it is for and its status, the publication note of July 24, 2026, and the note on what is referenced but not here. Current as of the corpus at `origin/main` on 2026-09-14; complete at its level — every document in this directory has an entry. Since 2026-09-14 the corpus is held to `CORPUS-STANDARD.md`, and `BIO_System_Design.md` places the constructs the documents describe. as of 2026-09-14.
+**Status** · The catalog of the design corpus: one entry per document with what it is for and its status, the publication note of July 24, 2026, and the note on what is referenced but not here. Current as of the corpus at `origin/main` on 2026-09-14; complete at its level — every document in this directory has an entry. Since 2026-09-14 the corpus is held to `CORPUS-STANDARD.md`, and `BIO_System_Design.md` places the constructs the documents describe. as of 2026-09-25.
 
 **Place in the system** · The index of `docs/architecture/`. `BIO_System_Design.md` is the level-0 map (constructs and their homes); this file is the catalog (documents and their status); `CORPUS-STANDARD.md` is the form both are held to. A reader new to the repository reads the Roadmap first, then the system design, then the construct they need.
 
@@ -100,11 +100,10 @@ participation and ownership, and secure verified export. A first-class
 document rather than an addendum, and the specification the current build
 works from. Its Section 9 records the root of trust as architecture debt.
 
-**BIO_Membership_Architecture_v1 — SUPERSEDED by v2, July 26, 2026.** Kept
-for the record and must not be worked from. Its Section 7.7 states the
-OPPOSITE of v2's on who removes a project participant: v1 gave that
-authority to administrators, v2 gives it to project owners. v2 carries a
-change table at the top listing every difference.
+**BIO_Membership_Architecture_v1 — SUPERSEDED by v2, July 26, 2026, and
+REMOVED 2026-09-25 at Bob's direction** (only the latest version stays).
+It remains readable on the branch `snapshot/pre-refactor-2026-09-25`. v2
+carries a change table at the top listing every difference.
 
 ## Design and doctrine
 
