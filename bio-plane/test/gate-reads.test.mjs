@@ -760,6 +760,9 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
      query.mjs's one compilation point. */
   const GATED = {
     list: "REC-25", index: "REC-25", projection: "REC-25", image: "REC-25", file: "REC-25",
+    /* D-525: the Drive shell sweep walks `bundles` under `viewerPredicate` exactly as
+       op=index does and names bundle ids, so it is gated for REC-25's reason. */
+    driveshells: "D-525: Store#driveShells selects from `bundles` under viewerPredicate(viewer), op=index's gate",
     search: "the first gated read", backlinks: "REC-25", affordances: "REC-25",
     /* CORRECTED 2026-09-18 BY REC-130 / IC-141, NEVER EXEMPTED: MOVED HERE FROM
        THE UNGATED LIST, and the entry it replaces was wrong. It read "An UNRATIFIED
@@ -1047,6 +1050,17 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "not-held one, because REC-94 measured `Store#frontier` accepting a `viewer` it never reads "
       + "and a classification here saying it was gated. A fence named in this file and absent from "
       + "the store is exactly the defect this file is least able to see.",
+    biasdebt: "REC-207: the BIAS DEBT on one run — what the lens change left owed, and which of the three "
+      + "acts settled it. Gated on `bias_debts.context_id` through the same `#bundleGate` op=airun and "
+      + "op=airunlog compile over the run's context, because it is the same disclosure one table over: "
+      + "the answer names the run, the context it ran in, and the two lens hashes the obligation was "
+      + "raised between. The posture is WITHHOLD THE ROW and it is sharper here than at its siblings, "
+      + "because this read has a SECOND absence to be confused with — a run that never carried a debt. "
+      + "Those two are answered by ONE object built at a single place in the method (`absent`), so a debt "
+      + "the viewer may not see and a run that never owed one are byte-identical by construction rather "
+      + "than by two branches that must be kept in step. The REFUSING door beside it, op=biasdebtresolve, "
+      + "is gated through the same predicate and answers BIAS_DEBT_NO_SUCH_DEBT for both cases for the "
+      + "same reason. Stamped fail-closed in the same list in index.mjs as op=biasmanifest.",
     airunlog: "IS-6: the observation log, gated on the same column and for the same reason as op=airun. "
       + "This one carries MORE than the run row does and is the sharper case: an entry's `subject` names "
       + "what the run went looking for, so a log a viewer could read for a project they were not invited "

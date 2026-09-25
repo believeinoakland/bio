@@ -1,6 +1,6 @@
 /* NEGATIVE CONTROL: (RUN 2026-09-23 by the D-182 worker; each arm ALONE, restored from a per-arm pristine copy and verified by sha256 AND cmp; baseline 31 pass / 0 fail before and after) (A) THE ROW'S CONTROL, restore the default of 1 - in checks/bio-checks.mjs riskTierState return 1 instead of 'undetermined' for an absent/undetermined tier -> 5 FAIL, declared and actual: the no-tier arms fail BY NAME ("a stated undetermined READS UNDETERMINED through op=projection", "an action whose bytes carry no tier READS UNDETERMINED through op=projection", both words arms, and the riskTierState unit arm); the member's-2 and over-strictness arms stayed green, as declared. (B) THE WRITER'S DEFAULT - in src/setup.mjs write "risk_tier: 1" again -> 3 FAIL: the source arm and both driven-writer arms. (C) THE LIAR the row names, a read rendering UNDETERMINED whatever is stored - in src/store.mjs #actionDerived set risk_tier to the constant "undetermined" -> 1 FAIL, "a member's act sets 2, and op=projection reads 2"; every no-tier arm stays GREEN over the constant, which is declared and is why sections 2 and 3 also read the STORED column and bytes. Also found while writing, not by an arm: the first draft's risk:1 search arm was VACUOUS (it read a result key the answer does not carry, so it passed over an empty list); the risk:2 positive beside it caught that and the key was corrected. */
 /* NEGATIVE CONTROL, D-483's section 6: (RUN 2026-09-24 by the D-483 worker; each arm ALONE in src/setup.mjs, restored from a per-arm pristine copy and verified by sha256 AND cmp at 96708072...; baseline 58 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, default the group to 1 - render ' checked' on SETTABLE_TIERS[0] -> 1 FAIL, declared and actual: "THE DEFAULT IS UNSET: no rendered radio carries a checked attribute". The write arms stayed GREEN, AS DECLARED and not as slack: the driver supplies :checked itself, so markup cannot reach them - which is why arm B exists. (B) THE SAME LIE IN THE WRITER, chosenRiskTier() returning 1 when nothing is checked -> 5 FAIL by name: "reports NO CHOICE" and all four unset arms through the op; the three CHOSEN-tier arms stayed green, the over-strictness direction. (C) HARD-CODED LABELS, the row's second liar - render a literal 'file freely'/'file with caution'/'do not file without counsel' instead of RISK_TIERS[k] -> 2 FAIL: the literal arm and the mechanism arm. THE FINDING WORTH KEEPING, a surprising green: the BEHAVIOURAL label arm ("each label is the PLANE's sentence") stayed GREEN under C, because a hand copy agrees with the vocabulary for free (WORKER.md: an equality that costs nothing is not evidence). A suite holding only that arm would have gone green over a page that had stopped reading the vocabulary at all, which is the drift this row exists to prevent - so the textual and mechanism arms are the load-bearing ones and the behavioural arm is the one that proves they are about a control a member actually sees. */
-/* NEGATIVE CONTROL, D-511's section 8 and its arm (ix): RUN BY `test/d511-replay-server-word.control.mjs` (deliberately NOT a `.test.mjs` — it patches COPIES of `src/` and the battery must not discover it). Re-run in one step from `bio-plane/`: `node test/d511-replay-server-word.control.mjs [arm]`. Every arm keeps the statement and changes only its CONDITION, so arm (ζ)'s one-delete pin is never the thing that moves — a control that moves a second variable refutes nothing. RESULTS, RUN 2026-09-24 by the D-511 worker (CONDUCT #20's, cloud) on origin/main e9b21be6 + this item; real sources hashed before and after, UNTOUCHED: YES (index.mjs 809,130 B sha256 622bc0c701e4…, store.mjs 3,236,684 B ea21f838c56b…, setup.mjs 83,079 B 96708072ccc7…, bio-checks.mjs 930,423 B 2f096c516b52…). ALL FIVE ARMS AS DECLARED, exit 0. (baseline) nothing armed → 87/0. **(no-fence) — THE ROW'S CONTROL, the QUEUE row's own words: the class test dropped, `if (false) delete b.replay;`, which is the tree exactly as it stood before D-511 → 82/5: arm (ix)'s THREE assertions BY NAME (the machine's replay lands a stated tier 1 again, the bundle projects, and `op=search q=risk:1` finds it), plus (β) (the founder's act is recorded `promotion-replay`) and (γ) (the probe's lands). (δ), (ε) and the residue arm stayed GREEN as declared — that class was always exempt.** **(any-session) — the session half alone, `if (cls !== "admin") delete b.replay;` → 86/1: (β) BY NAME and nothing else, which is what proves `!viaSession` is load-bearing. ITS FIRST RUN CAME BACK 85/0, ALL GREEN — A SURPRISING GREEN AND A FINDING ABOUT THE ARM, NOT THE SUBJECT: (β) was written under an admin-ROLE member's session on the assumption that her class reads `admin`, and `op=whoami` measured it `member`. The one session that arrives as the ADMIN class is the FOUNDER'S. Arm (β) was moved onto it and a REACH arm now MEASURES all four callers' classes instead of asserting them; the src comment carrying the same wrong sentence was corrected with it. Recorded here as the second measurement, never as the first.** **(any-class) — the class half alone, a fence TIGHTER than the rule: every caller's flag deleted, the migration's included → 85/2: (δ) and the RESIDUE arm BY NAME; arm (ix), (β), (γ) and (ε) stayed green, being about callers who never had the exemption.** (respelled) OVER-STRICTNESS, the same rule as `if (!(!viaSession && cls === "admin")) delete b.replay;` → 87/0, all green: the arms are coupled to behaviour and (ζ) pins the delete's shape, not its guard. */
+/* NEGATIVE CONTROL, D-511's section 8 and its arm (ix): RUN BY `test/d511-replay-server-word.control.mjs` (deliberately NOT a `.test.mjs` — it patches COPIES of `src/` and the battery must not discover it). Re-run in one step from `bio-plane/`: `node test/d511-replay-server-word.control.mjs [arm]`. Every arm keeps the statement and changes only its CONDITION, so arm (ζ)'s one-delete pin is never the thing that moves — a control that moves a second variable refutes nothing. RESULTS, RUN 2026-09-24 by the D-511 worker (CONDUCT #20's, cloud) on origin/main e9b21be6 + this item; real sources hashed before and after, UNTOUCHED: YES (index.mjs 809,130 B sha256 622bc0c701e4…, store.mjs 3,236,684 B ea21f838c56b…, setup.mjs 83,079 B 96708072ccc7…, bio-checks.mjs 930,423 B 2f096c516b52…). ALL FIVE ARMS AS DECLARED, exit 0. (baseline) nothing armed → 87/0. **(no-fence) — THE ROW'S CONTROL, the QUEUE row's own words: the class test dropped, `if (false) delete b.replay;`, which is the tree exactly as it stood before D-511 → 82/5: arm (ix)'s THREE assertions BY NAME (the machine's replay lands a stated tier 1 again, the bundle projects, and `op=search q=risk:1` finds it), plus (β) (the founder's act is recorded `promotion-replay`) and (γ) (the probe's lands). (δ), (ε) and the residue arm stayed GREEN as declared — that class was always exempt.** **(any-session) — the session half alone, `if (cls !== "admin") delete b.replay;` → 86/1: (β) BY NAME and nothing else, which is what proves `!viaSession` is load-bearing. ITS FIRST RUN CAME BACK 85/0, ALL GREEN — A SURPRISING GREEN AND A FINDING ABOUT THE ARM, NOT THE SUBJECT: (β) was written under an admin-ROLE member's session on the assumption that her class reads `admin`, and `op=whoami` measured it `member`. The one session that arrives as the ADMIN class is the FOUNDER'S. Arm (β) was moved onto it and a REACH arm now MEASURES all four callers' classes instead of asserting them; the src comment carrying the same wrong sentence was corrected with it. Recorded here as the second measurement, never as the first.** **(any-class) — the class half alone, a fence TIGHTER than the rule: every caller's flag deleted, the migration's included → 85/2: (δ) and the RESIDUE arm BY NAME; arm (ix), (β), (γ) and (ε) stayed green, being about callers who never had the exemption.** (respelled) OVER-STRICTNESS, the same rule as `if (!(!viaSession && cls === "admin")) delete b.replay;` → 87/0, all green: the arms are coupled to behaviour and (ζ) pins the delete's shape, not its guard. RE-RUN 2026-09-24 BY D-512, which INVERTED arm (δ) and its residue arm (BOB #33's step (2) built), added (δ)'s migration-path and second-condition arms, and corrected (ζ) to two deletes and one server write; on origin/main 9f8b69e6 + D-512 (real index.mjs 837,801 B sha256 cbd39b7220af…, store.mjs b1398c2d4762…, setup.mjs 96708072ccc7…, bio-checks.mjs 1b1847df33d3…, untouched: YES). FIRST RUN: 3/5 as declared — no-fence came back 86/4 and any-class 88/2 NOT AS DECLARED, both a finding about the DECLARATIONS: any-class named the (δ)/residue labels the inversion replaced, and no-fence now shows DEFENCE IN DEPTH — with step (1)'s delete disarmed, a non-admin's flag reaches step (2)'s verification (asked only for the admin class) and is refused C-66.6 before any fence, so arm (ix)'s NAMED refusal, (β), (γ) and (δ)'s second-condition arm fail while (ix)'s "nothing landed" and "no search finds it" arms stay GREEN, because nothing lands. Both re-declared in the driver with that reason; SECOND RUN, ALL FIVE AS DECLARED: baseline 90/0 · no-fence 86/4 · any-session 89/1 ((β) alone) · any-class 88/2 ((δ) and its migration path, refused C-32.19 once the admin's proven flag is deleted too) · respelled 90/0. */
 /* NEGATIVE CONTROL, D-505's section 7: (RUN 2026-09-24 by the D-505 worker; each arm ALONE on the ONE predicate the item changed - `isAction`, the guard of promote's action block in src/store.mjs - restored after every arm from a uniquely-named pristine copy (d505-pristine-store.mjs, in the session scratchpad and never in the worktree) and verified BY sha256 dd606e24... AND BY cmp at 3,224,435 B; baseline 77 pass / 0 fail before and after every arm) (A) THE ROW'S CONTROL, drop the fence's reach - restore the predicate to `normalizeType(meta.object_type) === "action"` alone, which is what REC-189 left. DECLARED: the EIGHT section-7 arms about the divergent envelope FAIL BY NAME, and nothing else moves - in particular the over-strictness arms (iv), (iv-b), (v), (vi), (vii) and the residue arm (ix) must stay GREEN. ACTUAL: AS DECLARED, 69 pass / 8 fail, every failure in section 7 and named, sections 1-6 untouched. (B) OVER-STRICTNESS, a spelling the item did not anticipate - the same union written as `[meta.object_type, docFmW?.object_type].some(tt => normalizeType(tt) === "action")`. DECLARED: all green, the suite being coupled to behaviour and not to an expression. ACTUAL: AS DECLARED, 77 pass / 0 fail. (C) THE HALF-UNION, AND IT IS THE ARM THAT CHANGED THE SUITE - the meta half dropped, a document-only predicate. FIRST RUN: 76 pass / 0 FAIL, ALL GREEN - a surprising green, and a finding about the ARMS rather than the subject: every arm written to that point handed the plane a document whose bytes said action, so the suite could not tell the union from half of it and a later 'simplification' would have silently given back REC-189's reach. Arm (iv-b), the mirror shape, was written for it; the control re-run then read 1 FAIL by name and is recorded above as the second measurement, not as the first. TWO FURTHER DEFECTS IN THE ARMS THEMSELVES were found by arm (A) and corrected before landing, both recorded at their sites: an 'and NOTHING landed' arm that compared `gone?.ok === true` against false over an answer carrying no `ok` key at all - VACUOUS IN BOTH DIRECTIONS, and it PASSED under the armed control - and a pair of revision arms sharing one bundle and one base, where with the fence removed the first landed, the second came back CAS_STALE (failing for the wrong reason) and the read-back died on a TypeError that goes through NO assertion at all. RE-RUN 2026-09-24 BY D-510, which CORRECTED this section's arms and therefore owes its control again (CLAUDE.md §5: a suite coupled to behaviour survives a change that disarms the control coupled to shape). Both arms re-run ALONE against the REAL `src/store.mjs`, restored from a uniquely-named pristine copy in the session scratchpad (never in the worktree) and verified BY sha256 93648670... AND BY cmp at 3,242,874 B after each; baseline 78 pass / 0 fail before and after. (A) the meta-only predicate -> **74 pass, 4 FAIL**, every failure named and in section 7: the envelope-states-no-type arm (i-b) and the three arms moved to that shape (the DROP, the CHANGE, and the tier-untouched read-back). The figure moved from D-505's 69/8 because the DIVERGENT-envelope arms no longer reach this predicate at all — D-510 refuses them above it — and that is the correction, measured rather than asserted. (C) the half-union, document-only -> **77 pass, 1 FAIL**, arm (iv-b) by name, exactly as D-505 declared: the mirror arm is untouched by this item and still discriminates. So BOTH halves of D-505's union are still driven after the correction, which is the thing a correction most often loses. */
 /* D-182 (BIO_Case_Making_v0_1.md §2, "`risk_tier`, RULED 2026-09-21 by BOB #21"): an action's risk tier gains
  * UNDETERMINED, and the plane publishes the three words.
@@ -31,6 +31,7 @@
  * `promote`'s action block — and `machine-fences.test.mjs` block (xiv) drives it; this suite's member arm is a
  * signed-in session for that reason.
  */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -38,7 +39,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle, RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
+import { checkBundle, RISK_TIERS, riskTierState, SURFACE_CHECKS as CHECK_CATALOGUE_SURFACE } from "../checks/bio-checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
 
 const shaHex = async (v) => createHash("sha256")
@@ -187,9 +188,18 @@ console.log("\n--- 2-4. through the ops: the no-tier action, a member's 2, and t
   t("the stated one's bytes say undetermined in the document itself",
     /^risk_tier: undetermined$/m.test(await stored(STATED)), true);
 
-  /* 3. A member's authored act sets 2: a new version of the same action, promoted by the member. */
+  /* 3. A member's authored act sets 2.
+     CORRECTED 2026-09-24 by REC-214 (BOB #33, "Risk-tier revision"): this arm set the tier by a plain op=promote
+     revision from the member, which WAS the member's authored act when it was written. It is not any more, and the
+     old assertion was wrong for a reason worth keeping: a plain revision records no reason and no history, so a
+     later 3 -> 1 by the same route would overwrite "do not file without counsel" silently. After intake the act is
+     op=actionrisktier (REQUIRED reason, APPEND-ONLY history), and promote now refuses the plain revision by name
+     (RISK_TIER_REWRITTEN, C-90.1) — which is driven in rec214-risk-tier-revision.test.mjs. Every read-side arm
+     below is unchanged: the act writes the SAME front-matter path, so the column, the bytes and the search agree. */
   const before = await projection(STATED);
-  await promoteAction(STATED, TIER.two, before.bundle_sha, RUTH);
+  const act = rP(await (await mf.dispatchFetch(`http://x/api/?op=actionrisktier&token=${RUTH}&target=${encodeURIComponent(STATED)}`,
+    { method: "POST", body: JSON.stringify({ tier: 2, reason: "a member assessed the filing" }) })).json());
+  if (act?.ok !== true) throw new Error(`actionrisktier ${STATED}: ${JSON.stringify(act)}`);
   const after = await projection(STATED);
   t("a member's act sets 2, and op=projection reads 2", after.action.risk_tier, 2);
   t("…in the plane's words: file with caution", after.action.risk_tier_words, "file with caution");
@@ -756,6 +766,8 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
     modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    /* D-512: evidence storage, so arm (δ)'s drive-provenance capture can be HELD and the replay VERIFIED. */
+    r2Buckets: ["CAPTURES"],
     bindings: { ADMIN_TOKEN: "adm-d511", MEMBER_TOKEN: "mem-d511", PROBE_TOKEN: "prb-d511", VERSION: "test" },
   });
   const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
@@ -801,15 +813,18 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
     [["admin", true], ["member", true], ["admin", false], ["member", false]]);
 
   let seq = 0;
-  const promote = async (id, token, extra = {}) => {
+  /* `proof: true` (D-512): the package names a held drive-provenance capture listing it (`replay-proof.mjs`), the
+     only form of `replay` BOB #33's step (2) honours. */
+  const promote = async (id, token, { proof = false, ...extra } = {}) => {
     const text = actionMd(id, TIER.one);
-    return post("promote", {
+    const pkg = {
       bundleId: id, base: null, snapKey: `20260724T040000Z_d511${String(++seq).padStart(4, "0")}`,
       author: "member-ruth",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [], ...extra,
-    }, token);
+    };
+    return post("promote", proof ? await withReplayProof(mf, `token=${token}`, pkg) : pkg, token);
   };
   /* The history's own word for what a promotion was. Read defensively: a missing manifest FAILS the arm rather
      than ending the module on a TypeError, which is what the previous shape of arm (ix) did when it went red. */
@@ -848,18 +863,36 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
   t("D-511 (γ): the PROBE deploy token's `replay: true` is refused C-32.19 by name too",
     [probeReplay?.ok, probeReplay?.reason, probeReplay?.check], [false, "MACHINE_CANNOT_SET_RISK_TIER", "C-32.19"]);
 
-  /* (δ) THE ADMIN CLASS WITH NO SESSION — THE MIGRATION PATH, AND THE RESIDUE. BOB #33 keeps the exemption here
-     on purpose, and states what it leaves open: until step (2) is built the root of trust can ASSERT a replay it
-     cannot show. This arm PINS that, the way arm (ix) pinned D-505's, so closing it turns this arm red rather than
-     letting the residue disappear quietly. */
+  /* (δ) THE ADMIN CLASS WITH NO SESSION — THE MIGRATION PATH, AND THE RESIDUE, INVERTED 2026-09-24 BY D-512, NEVER
+     DELETED, WHICH IS WHAT D-511 WROTE IT FOR. It PINNED a residue: the root of trust sending `replay: true` with no
+     drive-provenance capture landed a stated tier 1 and the record published it, because step (1) kept the admin's
+     flag as the admin's own word. BOB #33's step (2) honours `replay` only where the plane VERIFIES it against the
+     held provenance, so the same bare package is now REFUSED by name (C-66.6) and the record publishes nothing; and
+     the migration path the exemption exists for survives in the only form it ever had honestly — a replay that
+     SHOWS its provenance lands as a `promotion-replay`. The member token carrying the same proof is still judged by
+     C-32.19: the class test is kept as the second condition, as BOB #33 ruled. */
   const ADMIN_REPLAY = "ACTN-2026-0511-root-asserts-replay";
   const adminReplay = await promote(ADMIN_REPLAY, "adm-d511", { replay: true });
-  t("D-511 (δ): the ADMIN class with NO SESSION keeps the exemption — the same package lands and the history "
-    + "records a `promotion-replay`, which is how `migrate.mjs` carries the Drive era forward",
-    [adminReplay?.ok, await kindOf(ADMIN_REPLAY)], [true, "promotion-replay"]);
-  t("RESIDUE, PINNED AND NOT SMOOTHED (BOB #33 step (2), NOT BUILT): that replay is still CALLER-ASSERTED — the "
-    + "root of trust states a tier under it with no drive-provenance capture to show, and the record publishes 1",
-    (await get(`op=projection&id=${encodeURIComponent(ADMIN_REPLAY)}`))?.action?.risk_tier, 1);
+  const RU = CHECK_CATALOGUE_SURFACE.REPLAY_UNVERIFIED;
+  t("D-512 (δ), THE INVERSION OF D-511'S RESIDUE ARM: the ADMIN class with NO SESSION asserting `replay` with no "
+    + "drive-provenance capture to show is REFUSED BY NAME, REPLAY_UNVERIFIED (C-66.6), with its canned translation",
+    [adminReplay?.ok, adminReplay?.reason, adminReplay?.check, adminReplay?.translation === RU?.translation && !!RU?.translation],
+    [false, "REPLAY_UNVERIFIED", "C-66.6", true]);
+  t("RESIDUE CLOSED (BOB #33 step (2), BUILT BY D-512): nothing landed — the root of trust can no longer state a tier "
+    + "under a replay it cannot show, and the record publishes none",
+    (await get(`op=projection&id=${encodeURIComponent(ADMIN_REPLAY)}`))?.bundle_id ?? null, null);
+  const ADMIN_PROVEN = "ACTN-2026-0512-root-shows-replay";
+  const adminProven = await promote(ADMIN_PROVEN, "adm-d511", { replay: true, proof: true });
+  t("D-512 (δ) OVER-STRICTNESS, THE MIGRATION PATH: the ADMIN class replaying the same action over a held "
+    + "drive-provenance capture that lists this bundle and these bytes LANDS, the history records a "
+    + "`promotion-replay`, and the Drive-era tier is carried verbatim",
+    [adminProven?.ok, await kindOf(ADMIN_PROVEN),
+     (await get(`op=projection&id=${encodeURIComponent(ADMIN_PROVEN)}`))?.action?.risk_tier], [true, "promotion-replay", 1]);
+  const MEMBER_PROVEN = "ACTN-2026-0512-member-shows-replay";
+  const memberProven = await promote(MEMBER_PROVEN, "mem-d511", { replay: true, proof: true });
+  t("D-512 (δ), THE SECOND CONDITION: the MEMBER deploy token carrying the SAME proof is still refused C-32.19 — "
+    + "provenance does not hand a class the root of trust's exemption",
+    [memberProven?.ok, memberProven?.reason], [false, "MACHINE_CANNOT_SET_RISK_TIER"]);
 
   /* (ε) AND THE SAME CLASS WITHOUT THE FLAG IS REFUSED, which is what makes (δ) about the FLAG and not about the
      class: D-511 did not hand the admin token a standing exemption from C-32.19. */
@@ -873,9 +906,15 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
      place that strips or restores `replay` would make every behavioural arm above true and the rule false. This
      pins the SHAPE (one delete) and not the spelling of its guard, so a respelling of the condition — the
      over-strictness direction — does not fail it. What it cannot see is the delete written as an assignment. */
+  /* CORRECTED 2026-09-24 by D-512, never exempted: this pinned ONE `delete b.replay;`, which was the whole rule while
+     the class test was. Step (2) reads the caller's flag once and deletes it, so the ONLY write of `b.replay` after
+     that is the server's, on a verified replay: TWO deletes (the class test, kept as the second condition, and the
+     read-once) and ONE assignment, guarded by the proof. A third site, or an assignment anywhere else, still fails. */
   const idxSrc = readFileSync(SRC, "utf8");
-  t("D-511 (ζ): `src/index.mjs` deletes a caller's `replay` in exactly ONE place",
-    (idxSrc.match(/delete b\.replay;/g) ?? []).length, 1);
+  t("D-511 (ζ), AS D-512 LEFT IT: `src/index.mjs` deletes a caller's `replay` in exactly TWO places and sets it in "
+    + "exactly ONE — on a replay the plane verified",
+    [(idxSrc.match(/delete b\.replay;/g) ?? []).length, (idxSrc.match(/\bb\.replay\s*=[^=]/g) ?? []).length,
+     (idxSrc.match(/if \(proven\) b\.replay = true;/g) ?? []).length], [2, 1, 1]);
 
   await mf.dispose();
 }

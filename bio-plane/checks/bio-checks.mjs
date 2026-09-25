@@ -483,7 +483,18 @@ export const STATES = {
      append-only history — which re-pins — or a retirement and a successor.
      DELIBERATELY NOT ADDED: `draft -> adopted`. It is the only edge that could
      let a set become binding without ever having been proposed, and closing it
-     is what makes the proposed state load-bearing rather than ceremonial. */
+     is what makes the proposed state load-bearing rather than ceremonial.
+     AND SINCE D-468 (2026-09-24) THIS TABLE IS ENFORCED AT THE WRITE PATH AND NOT
+     ONLY DESCRIBED HERE. Everything above was true of the table and false of the
+     plane: `op=promote` consulted no edge table, so `adopted -> proposed` landed
+     and moved the head — a constraint that existed as a comment, which is the
+     defect this repository meets most. `promote`'s `bias-state-edge` region now
+     reads this table through `vocabFor` and refuses any move it does not declare
+     (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
+     stands is not a move and is not asked: that is how an adopted set is amended
+     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
+     THIS machine's alone — `promote` still asks no edge table for any other
+     object_type. */
   bias: {
     legal: ['draft', 'proposed', 'adopted', 'retired'],
     edges: {
@@ -537,6 +548,96 @@ export const RISK_TIERS = {
 export function riskTierState(v) {
   if (v === undefined || v === null || v === 'undetermined') return 'undetermined';
   return v === 1 || v === 2 || v === 3 ? v : null;
+}
+
+/* REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; BIO_Case_Making_v0_1.md §2, `risk_tier`): A MEMBER'S
+ * REVISION OF A TIER IS AN AUTHORED, APPEND-ONLY ACT. `op=actionrisktier` is the one writer of
+ * `risk_tier_history[]`; each entry is one revision — the tier it set, the tier it replaced (`prior`), who, when,
+ * and the REQUIRED reason — and the act appends, never edits. The reason is stored as the member wrote it; the
+ * restricted frontmatter grammar has no escapes, so a quote, backslash or line break is refused, not rewritten. */
+export const RISK_TIER_REASON_MAX = 500;
+export const RISK_TIER_HISTORY_MAX = 200;
+
+/** REC-214: THE ONE READER OF AN ACTION'S TIER HISTORY. The action's read (`op=projection`'s action block), the
+ *  act's own answer and the suite read this, so what a surface is shown and what the bytes hold cannot come
+ *  apart (UI-104 renders it; REC-215's labelled machine proposal is read BESIDE it and never inside it).
+ *
+ *  `revisions` is oldest first, exactly as the act appended them. `intake` is the tier the action held before its
+ *  first revision — the tier it was created with — and its author is UNDETERMINED IN WORDS: an intake writes
+ *  `risk_tier` with no attribution of its own (UI-85, D-483), so the record cannot say which member stated it,
+ *  and saying the action's creator did would be an inference it cannot support. With no revision, `intake` is
+ *  the current tier. An entry the grammar cannot read is returned with `readable: false`, never dropped: an
+ *  append-only history that silently loses a row is the overwrite this act exists to refuse. */
+export function riskTierHistoryOf(fm) {
+  const raw = fm && Array.isArray(fm.risk_tier_history) ? fm.risk_tier_history : [];
+  const revisions = raw.map((e, i) => {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return { ord: i, readable: false };
+    const tier = riskTierState(e.tier);
+    const prior = riskTierState(e.prior);
+    const by = typeof e.by === 'string' && e.by.trim() ? e.by.trim() : null;
+    const at = typeof e.at === 'string' && e.at.trim() ? e.at.trim() : null;
+    const reason = typeof e.reason === 'string' && e.reason.trim() ? e.reason.trim() : null;
+    return { ord: i, readable: tier !== null && tier !== 'undetermined' && prior !== null && !!by && !!at && !!reason,
+             tier, tier_words: RISK_TIERS[tier] ?? null, prior, prior_words: RISK_TIERS[prior] ?? null,
+             by, at, reason };
+  });
+  const current = riskTierState(fm ? fm.risk_tier : undefined);
+  const intakeTier = revisions.length ? revisions[0].prior : current;
+  return {
+    current, current_words: RISK_TIERS[current] ?? null,
+    intake: { tier: intakeTier, tier_words: RISK_TIERS[intakeTier] ?? null, by: null,
+              stated: intakeTier === 'undetermined'
+                ? 'No member stated a tier when this action was created.'
+                : 'Stated when this action was created. UNDETERMINED who stated it: an intake tier carries no '
+                  + 'author of its own in the record.' },
+    revisions,
+    stated: revisions.length
+      ? `${revisions.length} revision${revisions.length === 1 ? '' : 's'} by a member, each with its reason; `
+        + 'every earlier tier stays in this history'
+      : 'Never revised: the tier is the one the action was created with.',
+  };
+}
+
+/** REC-214: C-2.10's tier-history arm. Judges the SHAPE and the CHAIN — each entry names a member, a time, a
+ *  reason, a tier of 1, 2 or 3 and the tier it replaced; each `prior` is the tier the entry before it set; and
+ *  the last entry's tier is the tier the document states. A chain that does not close is the record claiming a
+ *  history its bytes do not carry. It cannot judge whether a reason is a good one, and does not try. */
+function riskTierHistoryFindings(fm, findings) {
+  if (!Object.prototype.hasOwnProperty.call(fm, 'risk_tier_history') || fm.risk_tier_history === null
+      || (Array.isArray(fm.risk_tier_history) && !fm.risk_tier_history.length)) return;
+  if (!Array.isArray(fm.risk_tier_history)) {
+    findings.push(f('C-2.10', 'error', 'risk_tier_history is not a list of revisions (REC-214)'));
+    return;
+  }
+  if (fm.risk_tier_history.length > RISK_TIER_HISTORY_MAX)
+    findings.push(f('C-2.10', 'error', `risk_tier_history holds ${fm.risk_tier_history.length} entries; at most ${RISK_TIER_HISTORY_MAX}`));
+  const h = riskTierHistoryOf(fm);
+  let prev = null;
+  for (const e of h.revisions) {
+    if (!e.readable) {
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}] is not a revision: each names tier (1, 2 or 3), `
+        + 'prior, by, at and a reason (REC-214)', ['revise the tier with op=actionrisktier']));
+      prev = null; continue;
+    }
+    if (isMachineIdentity(e.by))
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].by '${e.by.slice(0, 40)}' is a machine identity: `
+        + 'a risk tier is revised by a member\'s authored act (REC-214)'));
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(e.at))
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].at '${e.at}' is not a timestamp`));
+    if (e.reason.length > RISK_TIER_REASON_MAX)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].reason is longer than ${RISK_TIER_REASON_MAX} characters`));
+    if (e.prior === e.tier)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}] replaces tier ${e.tier} with itself: a revision changes the tier`));
+    if (prev && e.prior !== prev.tier)
+      findings.push(f('C-2.10', 'error', `risk_tier_history[${e.ord}].prior is ${e.prior}, and the revision before it `
+        + `set ${prev.tier}: the history does not close (REC-214)`));
+    prev = e;
+  }
+  const last = h.revisions[h.revisions.length - 1];
+  if (last && last.readable && last.tier !== h.current)
+    findings.push(f('C-2.10', 'error', `risk_tier is ${h.current} and the last revision in risk_tier_history set `
+      + `${last.tier}: the tier stated is not the tier the history ends on (REC-214)`,
+      ['revise the tier with op=actionrisktier']));
 }
 
 /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
@@ -4773,6 +4874,7 @@ function checkActionExtension(ctx, findings) {
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
+  riskTierHistoryFindings(fm, findings);
   /* REC-39: the four words are RESOLUTIONS at module level (exported for
      op=affordances) so this finding, op=actionmove's own refusal and the
      published vocabulary read one array — the ACTION_KINDS line above exactly.
@@ -8756,12 +8858,119 @@ export const BIAS_CHECKS = {
       + 'record can honour, and each one is named below with what is wrong with it. '
       + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',
   },
+  /* D-468 — THE MACHINE IS ENFORCED AT THE WRITE PATH, AND IT WAS NOT.
+     `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" gives bias sets
+     bundle governance — *"append-only history, member-authored transitions,
+     convergent promotion"* — and the STATES comment beside `bias` states the
+     edge that matters in its own words: *"NO EDGE OUT OF `adopted` EXCEPT
+     `retired`, and that is deliberate. An adopted set is PINNED (DEC-54 (d))
+     and a published case names the version it was held to; a set that could
+     slide back to draft in place would make 'the lens this case was produced
+     under' unresolvable after the fact."*
+     THAT SENTENCE DESCRIBED A CONSTRAINT NOTHING ENFORCED. `op=promote` writes
+     `meta.current_state` into the bundles row and consulted no edge table for
+     ANY type, so a bias set standing at `adopted` accepted a revision naming
+     `proposed` and moved backwards — measured by REC-187's worker (its F4) and
+     by `d84-case-manifest.test.mjs` §4, which drove the move and read a new
+     head back. A mechanism believed on the strength of its EXISTENCE rather
+     than its behaviour is this repository's most-met defect, and this is one.
+     WHY IT IS THE RECORD'S PROBLEM AND NOT A TIDINESS ONE: the manifest a
+     published case carries names the ADOPTED revision (REC-187), and
+     `op=biasadopt` pins the head of a set standing at `proposed` or `adopted`.
+     With the backwards move available, an adopted set could be returned to
+     `proposed` and re-adopted onto those bytes — which lifts the lens a case
+     was published under while the case still names it. Closing the edge closes
+     that, which is why construct 7's own residue sentence goes with it.
+     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, like its
+     `BIAS_REFUSED` sibling and for the same reason: that is where it FIRES, and
+     naming the site is what puts the code inside DEC-49's governed set. The
+     span is a REGION and not the function — `promote` both validates and
+     writes, which the note on `BIAS_REFUSED` below says is the one shape a
+     whole-function `where` may never claim. */
+  BIAS_ILLEGAL_TRANSITION: {
+    check: 'C-26.12',
+    where: 'src/store.mjs promote > bias-state-edge, reached from op=promote',
+    translation: 'That is not a move this bias set can make from where it stands. '
+      + 'A set is written, then offered, then adopted — and once it is adopted the only move left is '
+      + 'to retire it, because a case published under it names the revision it was held to and a set '
+      + 'that could slide backwards would make that unresolvable after the fact. '
+      + 'To change an adopted set, write the amendment AS the adopted set — a new revision re-pins the '
+      + 'lens — or retire it and adopt a successor. Nothing was written.',
+  },
   BIAS_ADOPTION_NOT_PROPOSED: {
     check: 'C-26.10',
     where: 'src/store.mjs biasAdopt, reached from op=biasadopt',
     translation: 'That bias set has not been proposed for adoption, so there is nothing to adopt yet. '
       + 'A set is written, then proposed, then adopted — and the middle step is what stops a set '
       + 'becoming binding without anybody having offered it.',
+  },
+
+  /* ---------------------------------------------------------------------------
+     REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
+     the EXISTING family rather than a new one, on SK-1's rule: a new `*_CHECKS`
+     family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for
+     everybody else's walk, and these refusals are bias's in the plainest sense —
+     they are the conditions under which the record declines to record that a
+     member has settled the obligation a lens change raised.
+
+     TWO REGIONS, NOT ONE, and the split is the order of the answers rather than
+     tidiness. `is-bias-debt-resolve-shape` holds the four conditions about the
+     ACT — no run named, no member behind the call, a machine, no stated reason —
+     and every one of them is answered BEFORE the record is read, so a caller who
+     cannot see the run learns nothing from which refusal they get.
+     `is-bias-debt-resolve-subject` holds the two about the DEBT, after the gated
+     lookup, where an unseen debt and an absent one are deliberately ONE answer.
+     --------------------------------------------------------------------------- */
+  BIAS_DEBT_NO_RUN: {
+    check: 'C-26.13',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because the request did not say which piece of work it is about. '
+      + 'A bias debt belongs to one assistant run — the one whose lens changed — so settling it has to '
+      + 'name that run.',
+  },
+  BIAS_DEBT_NO_ACTOR: {
+    check: 'C-26.14',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because this request has no member behind it. Deciding that a '
+      + 'change in the group\'s declared lens does not affect a piece of work is somebody\'s judgement, '
+      + 'and the record keeps whose it was. Sign in and do it as yourself.',
+  },
+  BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
+    check: 'C-26.15',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled. This was asked by a machine credential, and saying that a lens '
+      + 'change does not affect a finding is a person\'s judgement about the work — not something an '
+      + 'automated account can decide on anyone\'s behalf. A machine may raise this and show it to you; '
+      + 'answering it is yours.',
+  },
+  BIAS_DEBT_NO_REASON: {
+    check: 'C-26.16',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because no reason was given. The whole of what this act puts on '
+      + 'the record is why you judged that the change in the lens does not bear on this work — without '
+      + 'it the record would say only that somebody decided, and a later reader could not tell whether '
+      + 'the question was answered or waved away. Say why, and it is settled.',
+  },
+  BIAS_DEBT_REASON_TOO_LONG: {
+    check: 'C-26.17',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because the reason given is longer than this record holds for one. '
+      + 'Nothing about it was wrong — it is a size limit and not a judgement about what you wrote. Put '
+      + 'the reasoning where it belongs in the work and give the short form of it here.',
+  },
+  BIAS_DEBT_NO_SUCH_DEBT: {
+    check: 'C-26.18',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because there is no open bias debt on that run here. Either the '
+      + 'run never carried one, or it has already been settled, or it is not a run you can open.',
+  },
+  BIAS_DEBT_ALREADY_SETTLED: {
+    check: 'C-26.19',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
+    translation: 'Nothing was added, because this one has already been settled — by the lens moving back, '
+      + 'by a re-run under the lens now in force, or by a member who gave their reason. What settled it '
+      + 'is on the record and is not overwritten. If the lens changes again, the obligation is raised '
+      + 'again as a new one.',
   },
 };
 
@@ -9608,6 +9817,33 @@ export const CASE_DERIVATION_CHECKS = {
       + 'pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and '
       + 'it opens with this finding in it.',
   },
+  /* REC-217 (BIO_Publication_v0_1.md §3 rule 13; BOB #33, 2026-09-24 19:14Z) — THE PUBLISHER NAMES THE DRAFT
+     A CASE WAS PREPARED IN, and at that act the readings taken through it bind to the case it produced. The
+     three conditions under which that link would be FALSE are refused here, in this family because each is
+     about the case identity the act publishes: the same question C-44.1 asks of the members, asked of the
+     draft. Each is its own row and its own region, for three different mistakes. Asked before a case id is
+     minted, so a refusal spends none — and none of them can refuse a publication that names no draft. */
+  PUBLISH_DRAFT_NOT_FOUND: {
+    check: 'C-44.3',
+    where: 'src/store.mjs publishCase > is-publish-draft-found',
+    translation: 'The draft named for this case is not a draft of this project that you can open. Nothing was '
+      + 'published. Name the draft this case was prepared in, or publish without naming one; readings of a '
+      + 'draft that was not named are then counted in the case file and not attributed to anyone.',
+  },
+  PUBLISH_DRAFT_NOT_THIS_CASE: {
+    check: 'C-44.4',
+    where: 'src/store.mjs publishCase > is-publish-draft-this-case',
+    translation: 'The draft named here was prepared for a different case than the one being published, so its '
+      + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
+      + 'the draft of this case.',
+  },
+  PUBLISH_DRAFT_ALREADY_BOUND: {
+    check: 'C-44.5',
+    where: 'src/store.mjs publishCase > is-publish-draft-bound',
+    translation: 'That draft has already been named as the draft of another published case, and the people who '
+      + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
+      + 'Nothing was published.',
+  },
 };
 
 /* =========================================================================
@@ -9690,10 +9926,12 @@ export const MACHINE_FENCE_CHECKS = {
   /* REC-189 — D-182's ruling on the write side (BOB #21: *"Only a member's authored act sets 1, 2 or 3"*).
      Refuses a CHANGE of tier by a machine, never a presence: carrying a member's tier forward unchanged is
      not refused, nor is leaving undetermined a tier no member ever set. BOB #32 (2026-09-24 01:44Z): dropping a
-     member's tier to undetermined IS a change and is refused. Inside `promote`'s action block, not an act. */
+     member's tier to undetermined IS a change and is refused. REC-214 (BOB #33, 2026-09-24): the same code refuses a
+     machine at `op=actionrisktier`, the member's revision act, so the condition lives in ONE helper both `promote`'s
+     action block and the act ask (`#machineRiskTierRefusal`) — one code, one site, one region. */
   MACHINE_CANNOT_SET_RISK_TIER: {
     check: 'C-32.19',
-    where: 'src/store.mjs promote > is-machine-set-risk-tier',
+    where: 'src/store.mjs #machineRiskTierRefusal > is-machine-set-risk-tier',
     translation: 'A risk tier tells whoever reads this action whether it is safe to file, needs caution, or '
       + 'must not be filed without a lawyer, and somebody has to be answerable for that judgement. The '
       + 'credential that asked here is an automated one: it can carry forward the tier a member set, and '
@@ -9960,6 +10198,26 @@ export const GOVERNING_LAW_CHECKS = {
  * family's business, and a whole-function `where` conscripts every one of them.
  * ========================================================================= */
 export const ACT_SHAPE_CHECKS = {
+  /* REC-205, 2026-09-24 — A CLASS THAT IS NOT DISPOSED AT ALL, and it is a MEMBER-FACING refusal from
+     the day the queue lets a selection carry one. D-126's per-item weight means a member ticks items and
+     applies one handler; NOTIFICATIONS.md's "MARKED AS HANDLED" section says the scope differs by class,
+     so a CONDITION is muted and an OBLIGATION is resolved and neither is DISPOSED. Before this row the act
+     answered NO_SUCH_PROGRESSION and told the member to define a progression — true of the key it read and
+     useless about what they clicked, the same fault IC-60's bridge exists to have fixed one door over.
+     THE TRANSLATION NAMES THE ACT THAT DOES REACH IT rather than only refusing, because the member is
+     holding a selection and the next move is the whole question. It does NOT say the item is gone: under
+     the per-item weight the rest of the selection was handled and this one stays in the list, which is the
+     fact a member re-reading their queue needs. Numbered inside this family (C-33.x) on REC-211's own
+     precedent two rows down — C-33.42 and C-33.43 were added to it without minting a top-level C. */
+  CLASS_NOT_DISPOSED: {
+    check: 'C-33.44',
+    where: 'src/store.mjs proposeDispose > is-dispose-class',
+    translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
+      + 'about a FINDING — the record\'s own question — and this item is a different kind of thing: a '
+      + 'CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work '
+      + 'a named person owes and leaves every list when it is resolved. Nothing about it was changed, and '
+      + 'it is still in your list. The answer names the act that does reach it.',
+  },
   NO_CONCLUSION: {
     check: 'C-33.1',
     where: 'src/store.mjs conclude > is-conclude-answer',
@@ -10337,6 +10595,57 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'Nothing was run, because a run with this name is already on record here. The record '
       + 'keeps what each run did under its own name, so starting a second one under a name already in '
       + 'use would write two different histories into one place. Give this one a name of its own.',
+  },
+
+  /* ---------------------------------------------------------------------------
+     REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
+
+     They are ACT-SHAPE conditions — the answer to *may this open carry this
+     link* — so they belong here rather than in a family of their own (SK-1's
+     rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
+
+     WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
+     `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
+     the record cannot stand behind is a DISCHARGE resting on the caller's word.
+     The three conditions are the three ways that could happen: the run names
+     itself, it names something that is not there, or it names work in another
+     context whose lens is a different lens entirely.
+
+     A WHOLE-FUNCTION `where`, AND THE CHOICE IS MEASURED RATHER THAN LAZY.
+     These three were first written inside a narrowed REGION, which is what
+     `kickoffs/WORKER.md` asks for — and `check-refusal-codes.mjs` then FAILED
+     all three by name. `aiRunOpen`'s three existing rows carry a WHOLE-FUNCTION
+     `where`, and the guard does not subtract a region's span from the enclosing
+     function's: the region's refusals are judged TWICE, once at the region and
+     once at `aiRunOpen`, where the code is not one of that site's rows. So a
+     region inside a function that still has a whole-function `where` is not a
+     narrowing, it is a contradiction — the two sites disagree about who governs
+     the same lines. Narrowing ALL of `aiRunOpen`'s rows is the honest fix and
+     is REC-71's work rather than this item's, so these three join their three
+     neighbours at the function, and the residue is stated here rather than
+     left for the next reader to rediscover from a red guard.
+     --------------------------------------------------------------------------- */
+  AI_RUN_RERUN_SELF: {
+    check: 'C-33.45',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because this run was told it is a re-run of itself. A re-run says '
+      + 'which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its '
+      + 'own outstanding re-run. Name the earlier run, or leave the field out.',
+  },
+  AI_RUN_RERUN_UNKNOWN: {
+    check: 'C-33.46',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because the earlier run it says it repeats is not one this record '
+      + 'holds for you. It may never have existed, it may have been removed, or it may belong to work '
+      + 'you have not been brought into. Check the name.',
+  },
+  AI_RUN_RERUN_OTHER_CONTEXT: {
+    check: 'C-33.47',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because the earlier run it says it repeats belongs to a different '
+      + 'question or project. Repeating work means asking the same question again under the lens that is '
+      + 'in force for it — somewhere else the group\'s declared lens can be a different one, so the two '
+      + 'runs would not be comparable and settling anything on that basis would be wrong.',
   },
 
   /* ---------------------------------------------------------------------------
@@ -11035,7 +11344,8 @@ export const REQUIRED_ARGUMENT_CHECKS = {
        the token it failed to match.
 
    The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
-   the only person who can act on them. `error` is kept beside every code
+   the only person who can act on them — all but C-68.5 (D-549), whose ops are
+   public and whose sentence is therefore written for a member of the public. `error` is kept beside every code
    byte-identical (D-270's pattern), so no consumer reading it moves.
    =========================================================================== */
 export const INSTALLATION_CHECKS = {
@@ -11065,6 +11375,20 @@ export const INSTALLATION_CHECKS = {
     where: 'src/index.mjs fetch > is-bootstrap-claim',
     translation: 'The administrator token given does not match the one this copy holds, so the copy was not '
       + 'claimed. Nothing was changed.',
+  },
+  /* D-549. The one row in this family whose reader is most likely NOT whoever installed the copy:
+     `publishedbytes` and `publishedcase` are PUBLIC, so the sentence is written for a member of the
+     public holding no credential, and says what they can rely on (the document IS published, and
+     nothing about it changed) before who can cure it. It names no binding and no mechanism. It is
+     true at both sites: at `publishedbytes` the hash has already been verified as published, and at
+     `publishedcase` the finding is a member of a published case. */
+  NO_PUBLISHED_STORE: {
+    check: 'C-68.5',
+    where: 'src/index.mjs publishedStoreAbsent > is-published-store-absent',
+    translation: 'This copy of the record was set up without the storage it keeps its published documents in, '
+      + 'so it cannot hand over the published document\'s contents. The document is published; this is a fact '
+      + 'about how this copy was set up, not about the document or this request, and nothing was changed. '
+      + 'Whoever runs this copy can connect that storage.',
   },
 };
 
@@ -11369,6 +11693,29 @@ export const KNOCK_CHECKS = {
       + 'all. The request itself was well formed and named its content, so this is most likely an '
       + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '
       + 'stored. Check what you attached and knock again.',
+  },
+};
+
+/* ===========================================================================
+   D-530 — CO-ATTESTING A CAPTURE HELD IN PARTS (C-89; Intake Doctrine §8, D-476).
+
+   A document over one part is stored ONLY as its parts, each under its own hash,
+   and never under the whole's. `op=attest` asked only for the whole-hash object
+   and answered a miss NO_SUCH_CAPTURE, telling a member to capture again a
+   document the record holds. It now asks the store the whole-document question.
+   On the plane's own acquisition receipt it attests. On the register ALONE, a row
+   written from what a promoting caller named (D-45), it refuses by THIS code:
+   the bytes are not called absent, and a timestamp is not rested on a caller's
+   word. NO_SUCH_CAPTURE stays for a hash nothing names at all.
+   =========================================================================== */
+export const ATTEST_CHECKS = {
+  CAPTURE_HELD_IN_PARTS: {
+    check: 'C-89.1',
+    where: 'src/index.mjs fetch > is-attest-parts',
+    translation: 'The record lists this document, but keeps it in parts rather than as one file, and this '
+      + 'instance has no record of fetching it itself. A timestamp is only requested for bytes this '
+      + 'instance can vouch for, so none was requested. Nothing is missing: do not capture the document '
+      + 'again. If the instance fetches it from its address, it can then be co-attested.',
   },
 };
 
@@ -12004,11 +12351,25 @@ export function checkCaseDocument(fm, ctx = {}) {
   } else if (rq.declared) {
     /* THE PAIR, PER R2, and the reason is the one the member-side arm carried:
        a scalar would re-collapse the two axes in the one field a reader is most
-       likely to quote. */
+       likely to quote.
+       D-450 / BIO_Publication_v0_1.md §3 rule 14 (BOB #32, 2026-09-23): AN AXIS NOBODY SET IS NULL.
+       A project may declare its bar on one axis only (`op=publish` admits it: an unset axis gates
+       nothing), and demanding a grade on both refused the very document `op=publish` had authored —
+       a case that published and could never be signed, and a gate pressuring a member to invent a
+       bar on an axis they hold no view on (CLAUDE.md §4). So `null` is ADMITTED; what stays refused
+       is an OMITTED key (the pair stays a pair — silence is not "unset"), any other value, and a
+       bar declared on NEITHER axis, which claims a standard no axis holds. */
     for (const axis of ['capture', 'connection']) {
-      if (!BASIS_GRADES.includes(rq[axis])) {
-        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+      if (!Object.prototype.hasOwnProperty.call(rq, axis)) {
+        findings.push(f(C41.BAR, 'error', `required_strength.${axis} is absent — the declared bar is a PAIR per R2 and both keys are always written: an axis nobody set is written null, never omitted, because a reader cannot tell an omitted key from one nobody wrote down`,
+          [`write required_strength.${axis}: null if the project set no bar on the ${axis} axis`]));
+      } else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {
+        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')}, or null for an axis nobody set — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
       }
+    }
+    if (rq.capture === null && rq.connection === null) {
+      findings.push(f(C41.BAR, 'error', 'required_strength is declared with no bar set on either axis — a declared bar that gates nothing claims a standard no axis holds; a case with no bar states declared: false',
+        ['publish with the bar stated absent (declared: false), or declare a grade on at least one axis']));
     }
   }
   /* ===== D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): EVERY CHECK FOLLOWS ITS BLOCK. ========
@@ -13528,6 +13889,26 @@ export const SURFACE_CHECKS = {
       + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
       + 'value the current version carries and save the revision again.',
   },
+  /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
+     STEP (2)): `replay` exempts a promotion from every shape fence `promote` has, because a replay re-states the
+     record's own past verbatim. D-511 (step 1) removed the flag from every caller but the ADMIN class with no
+     session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
+     drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
+     by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
+     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
+     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
+     BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
+     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
+     rewritten on the way in. */
+  REPLAY_UNVERIFIED: {
+    check: 'C-66.6',
+    where: 'src/index.mjs fetch > is-promote-replay-verified',
+    translation: 'This save says it is a replay of the record\'s own history, and the plane could not check that '
+      + 'against the history it holds: the replay must name the provenance file for this document, already '
+      + 'uploaded, whose records list this document and exactly this version of it. A replay is excused from '
+      + 'the rules a new save must meet only when that check succeeds. Nothing was saved.',
+  },
 };
 
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
@@ -13970,6 +14351,125 @@ export const STATEMENT_ACK_CHECKS = {
       + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
       + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
       + 'be published either way.',
+  },
+};
+
+/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS,
+ * which reached a member as machine words (`BIO_Publication_v0_1.md` §6A, §6A.4; DEC-49).
+ *
+ * WHAT WAS MEASURED, and by which instrument. UI-68 built §6A's surface on 2026-09-23 — an editor drafts,
+ * an owner grants and revokes, a recipient reads and comments holding no credential — over a plane that
+ * mints ELEVEN refusal codes for those acts, and NOT ONE of them held a catalogue row. So every one arrived
+ * carrying the plane's authored `detail` and no `translation`, which is the state DEC-49 exists to make
+ * impossible. This is D-507's finding one op over, and the same day: a surface lands, and the codes it can
+ * now show turn out to have no sentence behind them.
+ *
+ * THE DEC-49 GUARD DID NOT AND COULD NOT SEE IT, which is the part worth keeping. `check-refusal-codes.mjs`
+ * puts a code IN REACH by three rules, and TEN of these eleven satisfied none of them: R1 wants a catalogue
+ * row (that is the defect), R2 wants a code LITERAL in `civicos-ui/app.html`, and R3 wants one in a harness
+ * mock. UI-68's surface renders the plane's own `detail` and keys on NO code literal, so R2 is blind to it —
+ * a surface can exist, and a member can meet the code on it, while the guard scores the code out of reach.
+ * Measured on origin/main 9f8b69e6 before this landing: arm F sorted ten of the eleven into F6, *out of
+ * reach, one site — needs a sentence WHEN its surface exists*, and its surface had existed for a day.
+ * **SO "OUT OF REACH" IS A STATEMENT ABOUT THE WALK, NEVER ABOUT THE MEMBER**, and the guard's own header
+ * says so ("in reach means a surface EXISTS today, never that a member could not otherwise meet the code").
+ * A row here closes that by R1, which is the rule that does not depend on how a surface spells things.
+ * D-542 carries the separate fix — teaching the walk reach-by-op, so the next surface built this way is
+ * not invisible to it for a day. It is NOT done here on purpose: the reach rule is shared by every op in
+ * the plane, so changing it moves the `reach` and `reachGap` ratchets for codes this item never touched,
+ * and that is its own item with its own controls rather than a rider on this one.
+ *
+ * THE ELEVENTH IS A DIFFERENT SHAPE and is not rounded in with the ten. `NO_REVIEW_COPY` sat in arm F's F4
+ * MULTI-SITE partition, not F6, because its literal occurs twice: the MINT in `#noReviewCopy` and a READ in
+ * `index.mjs` (`r?.reason === "NO_REVIEW_COPY" ? 404 : 400`), which the walk's site matcher cannot tell
+ * apart from a second mint. There is exactly ONE mint, so one row with one `where` is honest; the F4 count
+ * falls by one because this code leaves the untranslated set, not because the walk lost sight of a site.
+ *
+ * TWO OF THE ELEVEN ARE MINTED BY A SHARED HELPER AND THAT IS THE DESIGN, not a site to split.
+ * `#noReviewCopy` is THE ONE DEAD ANSWER (a revoked grant, a moved draft, a secret that never existed and a
+ * draft the caller has no standing in are one answer, built from no argument, so the bytes cannot vary with
+ * anything the caller sent); `#notReviewOwner` is the one answer for the three authoring acts, varying only
+ * with the act the CALLER chose. Each has ONE region around its one mint, which is the smallest span in
+ * which its refusal is enforced — the rule a `where` states.
+ *
+ * ADDITIVE ON THE WIRE, exactly as IC-270 was for `op=statementack`: `reason`, each site's own `detail` and
+ * its per-site keys (`act`, `caseId`) are UNCHANGED, and `code`, `check` and `translation` join them. That
+ * matters here beyond politeness: `index.mjs` branches on `reason === "NO_REVIEW_COPY"` to pick 404 over
+ * 400, and a rename would have changed a status code a caller already reads. */
+export const REVIEW_COPY_CHECKS = {
+  NO_REVIEW_COPY: {
+    check: 'C-87.1',
+    where: 'src/store.mjs #noReviewCopy > is-no-review-copy',
+    translation: 'No review copy answers to this request. A review copy is read through the grant issued for '
+      + 'it, or by a member with standing in the project that produced it. A grant that was withdrawn, one '
+      + 'whose draft has moved on to another edition, and one that never existed all answer the same way, so '
+      + 'this answer tells you nothing about which of those is the case.',
+  },
+  REVIEW_UNKNOWN_ACT: {
+    check: 'C-87.2',
+    where: 'src/store.mjs reviewAct > is-review-unknown-act',
+    translation: 'That is not one of the things you can do to a review copy. There are three: draft the case '
+      + 'that will be shown, grant someone a copy to read, and withdraw a grant you issued.',
+  },
+  REVIEW_NOT_PROJECT_OWNER: {
+    check: 'C-87.3',
+    where: 'src/store.mjs #notReviewOwner > is-review-authority',
+    translation: 'You do not hold this act\'s authority over this project. Drafting the case needs permission '
+      + 'to edit the project\'s work; handing the draft to someone outside the group, and withdrawing a copy '
+      + 'you handed over, are the project owner\'s own acts. A project, draft or grant you hold no such '
+      + 'authority over is answered exactly as one that does not exist, so this answer does not tell you '
+      + 'whether it is there.',
+  },
+  REVIEW_NO_PROJECT: {
+    check: 'C-87.4',
+    where: 'src/store.mjs #caseDraft > is-review-no-project',
+    translation: 'Say which project this draft belongs to. A draft case is a piece of a project\'s work, the '
+      + 'same as a published case is, and it is not held by anybody until it names one.',
+  },
+  REVIEW_DRAFT_CHANGES_PROJECT: {
+    check: 'C-87.5',
+    where: 'src/store.mjs #caseDraft > is-review-draft-changes-project',
+    translation: 'This draft belongs to a different project, and a case does not change hands. If the other '
+      + 'project should be making this case, draft it there as a case of its own.',
+  },
+  REVIEW_NO_SUCH_CASE: {
+    check: 'C-87.6',
+    where: 'src/store.mjs #caseDraft > is-review-no-such-case',
+    translation: 'This project has published no case by that name. A draft may name an existing case, which '
+      + 'makes the draft that case\'s next edition; a case another project published is answered exactly as '
+      + 'one that does not exist. Leave the name off and the draft is a new case.',
+  },
+  REVIEW_DRAFT_TOO_LARGE: {
+    check: 'C-87.7',
+    where: 'src/store.mjs #caseDraft > is-review-draft-too-large',
+    translation: 'This draft\'s arguments are larger than the plane will store: the limit is 64 KiB, the same '
+      + 'size publishing the case would accept. Nothing was saved. Material this large belongs in the '
+      + 'documents and content the case rests on rather than in the draft itself.',
+  },
+  REVIEW_NO_RECIPIENT: {
+    check: 'C-87.8',
+    where: 'src/store.mjs #reviewGrant > is-review-recipient',
+    translation: 'Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the '
+      + 'record says who it went to, and a grant addressed to nobody would leave no such record.',
+  },
+  REVIEW_NO_SECRET: {
+    check: 'C-87.9',
+    where: 'src/store.mjs #reviewGrant > is-review-secret',
+    translation: 'The reading secret that would let this recipient open the copy was not set. That secret is '
+      + 'made for you when the grant is issued, so this is a fault in the request rather than something you '
+      + 'supply; nothing was issued. Try issuing the grant again.',
+  },
+  REVIEW_NO_GRANT: {
+    check: 'C-87.10',
+    where: 'src/store.mjs #reviewRevoke > is-review-grant-named',
+    translation: 'Say which grant to withdraw, by the id you were given when it was issued. Nothing was '
+      + 'withdrawn. This answer says only that no grant was named; it says nothing about which grants exist.',
+  },
+  REVIEW_NO_COMMENT_TEXT: {
+    check: 'C-87.11',
+    where: 'src/store.mjs reviewComment > is-review-comment-text',
+    translation: 'A comment has to say something, and at most 4000 characters of it. Nothing was recorded. '
+      + 'What you have written is still yours to send once it is within that length.',
   },
 };
 
@@ -14856,11 +15356,23 @@ export const CONNECTION_CHOICE_CHECKS = {
       + 'reference as the reading recorded it; a mention the record never read cannot be the one '
       + 'a connection rests on.',
   },
+  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
+     string is not yet a choice between its mentions. Refused rather than defaulted: a default
+     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
+     member's name. The refusal lists the occurrences so the member can name one. */
+  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
+    check: 'C-74.4',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'That reference was read at more than one place in this document, and each place is '
+      + 'its own mention. Say which one is on point — by the occurrence the record lists for it, or by '
+      + 'the place as the record names it — and the choice will rest on that place alone.',
+  },
 };
 
 /* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
  * pins a document's type to its id prefix). ONE refusal, and the family is one row rather than padded out,
  * because there is exactly one way for the two statements to be wrong about each other.
+ * D-547 adds C-86.2 below: not a third statement, but the request against the RECORD's head.
  *
  * WHY IT IS A REFUSAL AND NOT A SILENT NORMALISATION, which was the alternative the row licensed: the
  * request carries TWO statements of what is being promoted — the document's own `object_type`, which every
@@ -14884,6 +15396,65 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'information — or the reverse — and index it as neither, it stops and tells you both answers. '
       + 'Nothing was written. Send it again with the request naming the type the document names, or change '
       + 'the document first.',
+  },
+  /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
+   * compares the two statements in ONE request; this compares the request with the RECORD. A revision whose document
+   * names a different type than the bundle already holds would rewrite `bundles.object_type` in place, and every
+   * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
+  REVISION_RETYPES_BUNDLE: {
+    check: 'C-86.2',
+    where: 'src/store.mjs promote > is-promote-retypes-bundle',
+    translation: 'This change would turn something the record already holds into a different kind of thing, '
+      + 'an item of information into an action, say. A change can alter what a document says, but not what it '
+      + 'is, because what it is decides which rules protect it. Nothing was written. To record it as the other '
+      + 'kind, create a new one of that kind and link the two.',
+  },
+};
+
+/* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,
+ * "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2, `risk_tier`). The field carries legal exposure: the record
+ * must show that a "do not file without counsel" tier was changed, by whom, when and why.
+ *
+ * `op=actionrisktier` is the one act that changes a tier after intake, and it writes through the one front-matter
+ * path every reader derives the tier from (`risk_tier`, read by `riskTierState`), appending one entry to
+ * `risk_tier_history[]`. A machine is refused at the act by C-32.19's own code, MACHINE_CANNOT_SET_RISK_TIER — not a
+ * second code for the same condition. Four rows are the act's own conditions; the fifth is `promote`'s: a
+ * revision that changes the tier or edits the history WITHOUT the act is refused, because a member's plain
+ * revision from 3 to 1 would otherwise overwrite "do not file without counsel" with nothing recording that it
+ * was ever there but an older snapshot. A creation may state a tier (that is intake) and may not state a history. */
+export const RISK_TIER_REVISION_CHECKS = {
+  RISK_TIER_REWRITTEN: {
+    check: 'C-90.1',
+    where: 'src/store.mjs promote > is-promote-risk-tier',
+    translation: 'After an action is created, its risk tier changes only through the risk-tier act, which records '
+      + 'who changed it, when and why, and keeps every earlier tier readable. This write would have changed the '
+      + 'tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act.',
+  },
+  BAD_RISK_TIER: {
+    check: 'C-90.2',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The '
+      + 'act states one of those three; "not assessed" is what an action reads when nobody has stated one, and '
+      + 'is not something to set. Nothing was written.',
+  },
+  RISK_TIER_REASON_REFUSED: {
+    check: 'C-90.3',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'Changing a risk tier needs a reason, and it is kept beside the change for as long as the record '
+      + 'lasts. The reason was missing, longer than 500 characters, or held a quotation mark, backslash or line '
+      + 'break, which this record cannot store. Nothing was written.',
+  },
+  RISK_TIER_UNCHANGED: {
+    check: 'C-90.4',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'The action already has that risk tier, so there is nothing to revise. The history records '
+      + 'changes; it has not been touched.',
+  },
+  RISK_TIER_HISTORY_UNSPLICEABLE: {
+    check: 'C-90.5',
+    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
+      + 'rewriting it, and the act only ever adds. Nothing was written.',
   },
 };
 
@@ -14947,16 +15518,27 @@ export function checkConnectionPairCovers(pair, side, extentKind, extent, covers
  *  basis the pair was selected on (FW-17), so only a mention the pair did not
  *  beat on grade — a TIE, or a stronger one from a resolution raised after the
  *  derivation — unsettles it, and only when it is not itself inside the part. */
-export function checkConnectionMentionUnchosen({ pairRef = null, pairGrade = null, pairReached = false,
+export function checkConnectionMentionUnchosen({ pairRef = null, pairOccurrence = null, pairGrade = null,
+                                                 pairReached = false,
                                                  mentions = [], cut = false, extentKind, extent,
                                                  covers, rank } = {}) {
   /* DEC-49 REGION is-mention-unchosen */
   const r = typeof rank === 'function' ? rank : () => 0;
   const place = (m) => (m && m.position && typeof covers === 'function')
     ? !!covers(m.position, extentKind, extent) : null;
+  /* D-454: the pair is ONE OCCURRENCE of its reference, not the reference. Excluding every mention
+     with the pair's ref — the rule until this — made a second read of the SAME string (page 9 of a
+     file number whose pair was read on page 3) invisible to the one check whose job is to notice
+     another mention bears on the part. With `pairOccurrence` named, only the pair's own place is
+     excluded and every other place its string was read at is another mention. A caller naming no
+     occurrence gets the old exclusion, which is what it could say. `occurrence` rides each mention
+     the check names so a member can choose it (C-74.4). */
+  const isPair = (m) => m.ref === pairRef
+    && (pairOccurrence == null || (m.occurrence ?? '') === pairOccurrence);
   const others = (Array.isArray(mentions) ? mentions : [])
-    .filter((m) => m && m.ref !== pairRef)
-    .map((m) => ({ ref: m.ref, grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
+    .filter((m) => m && !isPair(m))
+    .map((m) => ({ ref: m.ref, ...(m.occurrence !== undefined ? { occurrence: m.occurrence } : {}),
+                   grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
   const part = describeExtent({ kind: extentKind, ...(extent || {}) });
   const name = (list) => list.map((m) => `${m.ref} (${m.position
     ? `read at ${m.position.ref}` : 'where it was read is not recorded'})`).join(', ');

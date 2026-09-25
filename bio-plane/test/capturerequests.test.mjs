@@ -720,7 +720,9 @@ console.log("\n--- 7b. OVER-STRICTNESS: `acquire` is a truthful purpose too ---"
  *
  * WHAT IT CANNOT SEE: a render that SUCCEEDS through the drain. The allowance in
  * this fixture is zero, so the pair, the `render.*` fields and the authority rule
- * are `rendered-capture.test.mjs`'s subject and are asserted by nothing here; and
+ * are `rendered-capture.test.mjs`'s subject and are asserted by nothing here (the
+ * drain's SUCCESS is driven since D-522 in `d522-unattended-render.test.mjs`, whose
+ * fixture gives the day exactly one render's reservation); and
  * no instance has a renderer at all (2.rendered), so the LIVE behaviour of either
  * path is undetermined until DIST deploys one.
  *

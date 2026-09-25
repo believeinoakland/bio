@@ -167,6 +167,23 @@ export function entity(key, kind, label, facts, source) {
   return e;
 }
 
+/** D-454 — A REFERENCE READ AGAIN IS ANOTHER OCCURRENCE, NOT NOTHING. A reader keeps ONE
+ *  entity per key (its facts and label come from the first sighting, and `diffEntities`
+ *  diffs by key), and until this every later sighting was dropped whole — so a file
+ *  number listed on pages 3, 9 and 14 was recorded as read on page 3 alone, and a member
+ *  choosing which mention a connection rests on could not choose page 9. `occurrences`
+ *  is EVERY place the reference was read, in reading order, the first included; an entry
+ *  is null where the locator could not say. It is carried only once a second sighting
+ *  exists, so a reference read once has the shape it always had. `source` stays the first
+ *  sighting's, unchanged. The same rule as `source` binds each entry: only `ctx.locate`
+ *  may produce it. */
+export function readAgain(e, source) {
+  if (!e) return e;
+  if (!Array.isArray(e.occurrences)) e.occurrences = [e.source || null];
+  e.occurrences.push(source || null);
+  return e;
+}
+
 /** Referential and temporal connections are different things and must not be
  *  collapsed into one edge type.
  *

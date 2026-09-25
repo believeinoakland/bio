@@ -41,6 +41,7 @@
  *      two rows, requires the testimony row when a leg carries a testimony grade,
  *      and refuses anything else; the no-registry posture; the inherited rule.
  */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -360,15 +361,19 @@ const QREP = "INQ-2026-5302-replayed";
    asked for none. The question is seeded under ruth at the letter the write admits and the root of trust then
    replays the stronger historical letter over it. `surfaced_by` is carried forward verbatim because a revision may
    neither supply nor drop an origin (REC-179, C-66.5) — D-78 stamped `human` on ruth's creation, so the replayed
-   bytes say `human` too, and `replay` is no exemption from that rule. */
+   bytes say `human` too, and `replay` is no exemption from that rule.
+   CORRECTED AGAIN 2026-09-24 by D-512, never exempted: the root of trust's flag was itself still the caller's word
+   (D-511's stated residue). BOB #33's step (2) honours `replay` only over a drive-provenance capture the plane
+   verifies, so the replay now carries one (`withReplayProof`); a bare flag is refused REPLAY_UNVERIFIED (C-66.6). */
 const repSeed = await promoteQ(QREP, [{ target: OBS, grade: TESTIMONY_GRADE, axis: "testimony", source: "testimony" }]);
 const repMd = qMd(QREP, [{ target: OBS, grade: "B", axis: "testimony", source: "testimony" }])
   .replace("surfaced_by: agent", "surfaced_by: human");
-const rep = await post("promote", { bundleId: QREP, base: repSeed && repSeed.bundleSha, snapKey: snapKey(),
+const rep = await post("promote", await withReplayProof(mf, "token=adm-mk2", {
+  bundleId: QREP, base: repSeed && repSeed.bundleSha, snapKey: snapKey(),
   replay: true,
   meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
           current_state: "open", created: NOW, last_updated: NOW },
-  files: [fileOf("bundle.md", repMd)] }, "adm-mk2");
+  files: [fileOf("bundle.md", repMd)] }), "adm-mk2");
 const sRep = await strength(QREP);
 t("A REPLAYED revision holding testimony B is admitted (history is append-only) — and READ at D, saying why",
   [rep && rep.ok, sRep && sRep.testimony && sRep.testimony.grade,

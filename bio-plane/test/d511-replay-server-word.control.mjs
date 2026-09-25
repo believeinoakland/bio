@@ -39,8 +39,12 @@ const IX_ALL = [IX, "…and NOTHING landed: no bundle of that id exists to proje
                 "…and no search at risk:1 finds it either"];
 const BETA = "D-511 (β), THE SESSION HALF";
 const GAMMA = "D-511 (γ):";
-const DELTA = "D-511 (δ):";
-const RESIDUE = "RESIDUE, PINNED AND NOT SMOOTHED";
+/* D-512 INVERTED arm (δ) and its residue arm (BOB #33's step (2) built), so the labels this control names moved with
+   them: (δ) is now the admin's bare replay REFUSED C-66.6, the migration path is its over-strictness arm, and the
+   second condition is the member token carrying proof. */
+const DELTA = "D-512 (δ), THE INVERSION OF D-511'S RESIDUE ARM";
+const DELTA_PATH = "D-512 (δ) OVER-STRICTNESS, THE MIGRATION PATH";
+const DELTA_SECOND = "D-512 (δ), THE SECOND CONDITION";
 const EPSILON = "D-511 (ε) OVER-STRICTNESS";
 
 const ARMS = {
@@ -49,8 +53,15 @@ const ARMS = {
   /* THE ROW'S CONTROL, and the one its QUEUE row names: drop the class test, so no caller's `replay` is ever
      removed — the tree as it stood before D-511. Arm (ix) must fail BY NAME, which is what D-505 wrote it for.
      The session's flag then reaches the store too, so the history calls her act a replay (β); and the probe's
-     lands (γ). The admin arms (δ, ε) and the residue arm must NOT move: that class was always exempt. */
-  "no-fence": { patch: ['if (false) delete b.replay;'], mustFail: [...IX_ALL, BETA, GAMMA] },
+     lands (γ). The admin arms (δ, ε) and the residue arm must NOT move: that class was always exempt.
+     RE-DECLARED 2026-09-24 by D-512, after its first run on D-512's tree came back NOT AS DECLARED (86/4): with step
+     (2) built, a non-admin's flag that step (1) no longer removes reaches the verification, which is asked only for
+     the admin class, and is REFUSED REPLAY_UNVERIFIED (C-66.6) instead of reaching its fence. So arm (ix)'s NAMED
+     refusal fails (C-66.6, not C-32.19), (β) fails (the founder's act is refused, not recorded `promotion`), (γ)
+     fails, and (δ)'s second-condition arm fails (the member's proven replay is refused C-66.6, not C-32.19) — while
+     (ix)'s "nothing landed" and "no search finds it" arms now STAY GREEN, as declared: nothing lands, because the
+     second fence holds. That is step (2)'s defence in depth, measured, not a gap in this arm. */
+  "no-fence": { patch: ['if (false) delete b.replay;'], mustFail: [IX, BETA, GAMMA, DELTA_SECOND] },
 
   /* THE SESSION HALF ALONE, and this is the arm that proves `!viaSession` is load-bearing rather than belt and
      braces: an ADMIN-ROLE member's session arrives as `cls === "admin"` exactly as the deploy token does, so
@@ -60,7 +71,11 @@ const ARMS = {
   /* THE CLASS HALF ALONE — a fence TIGHTER than the rule, which is the direction "safer" hides in: every caller's
      flag is deleted, the migration's included. (δ) and the residue arm must fail; arm (ix), (β), (γ) and (ε) must
      NOT, because they are already about callers who never had the exemption. */
-  "any-class": { patch: ["delete b.replay;"], mustFail: [DELTA, RESIDUE] },
+  /* RE-DECLARED 2026-09-24 by D-512 (the labels moved with the inversion, above): the admin's bare flag is then
+     removed rather than refused, so it meets C-32.19 instead of C-66.6 (δ fails), and the admin's PROVEN replay
+     loses its flag too, so the migration path is refused C-32.19 (its over-strictness arm fails). The residue arm
+     ("nothing landed") stays green — a tighter fence writes nothing. */
+  "any-class": { patch: ["delete b.replay;"], mustFail: [DELTA, DELTA_PATH] },
 
   /* OVER-STRICTNESS: the SAME rule in a spelling the suite did not anticipate. Nothing may fail — the arms are
      coupled to behaviour, not to an expression, and arm (ζ) pins the delete's shape and not its guard. */

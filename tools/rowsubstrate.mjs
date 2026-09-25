@@ -125,9 +125,16 @@ export function symbolsOf(text) {
    anchor — `§"The mechanism…"` — is a legitimate citation this file cannot resolve numerically,
    so it yields NO numeric anchor and the document is judged whole rather than being scored as a
    broken pointer. Unresolvable is not wrong. */
+/* A LETTERED SECTION IS A SECTION (D-541, 2026-09-24). The capture read digits and dots only, so
+   `§6A` — `BIO_Publication_v0_1.md`'s review copy, a heading of its own — was read as `§6`, the
+   section BEFORE it, and three rows citing `§6A` or `§6A.4` (REC-213, REC-199, D-448) were noted
+   "substrate not evident" against §6's text, which none of them cites. A letter binds only where no
+   letter or digit follows it, so prose such as `§6and` still reads `6`; `§6A.4` and `§14c` read
+   whole. Read correctly, REC-213's note is gone; REC-199's and D-448's REMAIN, now against the
+   §6A.4 they do cite — a reading of the right text, not this defect. */
 export function anchorPairs(text) {
   const out = new Map();
-  const tok = /(`?)([A-Za-z0-9._-]+\.md)\1|§\s*(?:"[^"]*"|(\d+(?:\.\d+)*))/g;
+  const tok = /(`?)([A-Za-z0-9._-]+\.md)\1|§\s*(?:"[^"]*"|(\d+(?:[A-Za-z](?![A-Za-z0-9]))?(?:\.\d+(?:[A-Za-z](?![A-Za-z0-9]))?)*))/g;
   let current = null;
   for (const m of text.matchAll(tok)) {
     if (m[2]) { current = m[2]; if (!out.has(current)) out.set(current, new Set()); }
@@ -145,6 +152,7 @@ export function anchorPairs(text) {
    `BIO_Content_Framework_v0_10.md` numbers to `## 5.` but has no `5.2` heading, so a `§5.2`
    may name a part of §5 that simply has no heading of its own. **Both were reported as broken
    pointers by the first version, and both were false.** */
+/* Depth is counted on the DOTTED part alone: `6A` is depth 1 and `6A.1` depth 2 (D-541). */
 export function numbersAtDepth(doc, anchor) {
   const depth = anchor.split(".").length;
   const re = new RegExp(`^#{1,6}\\s+§?\\d+${"(?:\\.\\d+)".repeat(depth - 1)}[.)\\s]`, "m");
@@ -153,7 +161,9 @@ export function numbersAtDepth(doc, anchor) {
 
 export function sectionText(doc, anchor) {
   const lines = doc.split("\n");
-  const esc = anchor.replace(/\./g, "\\.");
+  /* The dot is escaped and a section LETTER matches in either case, so `§6a` finds `## 6A.` (D-541). */
+  const esc = anchor.replace(/\./g, "\\.")
+    .replace(/[A-Za-z]/g, (c) => `[${c.toLowerCase()}${c.toUpperCase()}]`);
   const head = new RegExp(`^(#{1,6})\\s.*?(?:§\\s*)?\\b${esc}[.\\s)]`);
   let start = -1, depth = 0;
   for (let i = 0; i < lines.length; i++) {

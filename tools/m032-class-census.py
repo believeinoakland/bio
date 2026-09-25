@@ -1298,6 +1298,12 @@ PLANE_TIMEOUT_S = 300
 UNUSABLE_PDF = ('no text layer', 'text too short', 'extracted bytes are not English')
 
 
+LAST_PLANE_ROW = {}
+# D-536: M032_KEEP=1 keeps each escalated PDF's bytes in <pen>/plane-keep/<sha>.pdf so `reread` can hand
+# the SAME bytes to the plane a second time. Off by default: M-143's walk kept nothing.
+KEEP = os.environ.get('M032_KEEP', '0') == '1'
+
+
 def plane_text(rec, data):
     """(text, reader, reason). Never raises; a failure is a REASON, named."""
     import hashlib, subprocess
@@ -1309,6 +1315,13 @@ def plane_text(rec, data):
     man = os.path.join(pdir, sha + '.json')
     with open(pdf, 'wb') as f:
         f.write(data)
+    if KEEP:
+        kdir = os.path.join(PEN, 'plane-keep')
+        os.makedirs(kdir, exist_ok=True)
+        kp = os.path.join(kdir, sha + '.pdf')
+        if not os.path.exists(kp):
+            with open(kp, 'wb') as f:
+                f.write(data)
     with open(man, 'w') as f:
         json.dump([{'key': rec['name'], 'sha': sha, 'bytes': len(data)}], f)
     row, reason = None, ''
@@ -1336,6 +1349,11 @@ def plane_text(rec, data):
     ip = os.path.join(tdir, sha + '.i2.json')
     if os.path.exists(ip):
         os.remove(ip)
+    # D-536: the row's provenance rides beside the text, so `read_one` can record WHICH tier and member
+    # produced the text this census classified, and `reread` can attribute a moved class.
+    LAST_PLANE_ROW.clear()
+    if row is not None:
+        LAST_PLANE_ROW.update(row)
     if row is None:
         return '', 'plane (no row)', reason or 'plane reader returned no row'
     if row.get('err'):
@@ -1343,6 +1361,11 @@ def plane_text(rec, data):
     tier = row.get('structure_tier') or row.get('text_tier')
     text, reflowed = reflow(text)
     return text, f'plane (text tier {tier}){" REFLOWED" if reflowed else ""}', ''
+
+
+def hashlib_sha(data):
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
 
 
 def reflow(text):
@@ -1421,10 +1444,14 @@ def read_one(rec, tmp):
     t1 = {'classes_t1': cs, 'reason_t1': reason or (
         OTHER_REASON if gate in ('prose', '') or cs else gate)}
     reader = 'instrument tier 1'
+    plane_prov = None
     if (PLANE and not cs and data is not None and not reason
             and (ext_of(rec['name']) == 'pdf' or data[:5] == b'%PDF-')
             and gate.startswith(UNUSABLE_PDF)):
         ptext, reader, preason = plane_text(rec, data)
+        plane_prov = {'sha': hashlib_sha(data),
+                      'structure_provenance': LAST_PLANE_ROW.get('structure_provenance'),
+                      'reading_provenance': LAST_PLANE_ROW.get('reading_provenance')}
         if preason:
             reason = preason
         else:
@@ -1438,7 +1465,8 @@ def read_one(rec, tmp):
              'gate': gate,
              'reason': reason or (OTHER_REASON if gate in ('prose', '') or cs else gate),
              'fams': {c: [k for k, v in d.items() if v] for c, d in fams.items()},
-             'name_classes': classify_name(rec['name'])}, text)
+             'name_classes': classify_name(rec['name']),
+             **({'plane_prov': plane_prov} if plane_prov else {})}, text)
 
 
 def cmd_bodies(n=600, seed=20260914):
@@ -1953,6 +1981,85 @@ CLASSIFICATION_PATH = (
     '_table_shape', '_block_shape', 'budget_arm', 'budget_arm_d66', 'dataset_arm',
     'financial_report_arm', 'is_financial_report', 'meets', 'FAMS', 'classify_body',
 )
+
+
+def cmd_reread():
+    """D-536 — RE-READ, THROUGH THE PLANE, EVERY DOCUMENT THE WALK ESCALATED, AND ATTRIBUTE EACH MOVE.
+
+    M-143 found that a re-walk of one sample is not a re-read of it: the same documents escalated in both
+    walks, and the classes of several moved, because the plane's tiers did not return the same text
+    twice — and nothing could say WHICH tier's text had moved. D-536 puts a provenance on the text
+    `op=pdfstructure` serves (tier and member per page, and a SHA-256 of each page's text). This mode
+    hands each escalated document's KEPT bytes (`M032_KEEP=1` on the walk) to the plane a second time,
+    re-judges the new text by the SAME `judge`, and for every document whose class moved says which
+    tier's text changed — by the plane's own `compareProvenance`, one rule, not a second spelling here.
+    Writes <pen>/reread.jsonl and prints the report. The thresholds are not touched (`classhash`)."""
+    import subprocess
+    body = [json.loads(l) for l in open(os.path.join(PEN, 'body-class.jsonl'))]
+    esc = [r for r in body if r.get('plane_prov') and r['plane_prov'].get('sha')]
+    kdir = os.path.join(PEN, 'plane-keep')
+    out = os.path.join(PEN, 'reread.jsonl')
+    done = {}
+    if os.path.exists(out):
+        for l in open(out):
+            try:
+                x = json.loads(l)
+                done[x['id']] = x
+            except Exception:
+                pass
+    print(f'RE-READ — {len(esc)} escalated documents in the walk; {len(done)} already re-read.', flush=True)
+    t0 = time.time()
+    with open(out, 'a') as f:
+        for i, r in enumerate(esc):
+            if r['id'] in done:
+                continue
+            kp = os.path.join(kdir, r['plane_prov']['sha'] + '.pdf')
+            if not os.path.exists(kp):
+                x = {'id': r['id'], 'name': r['name'], 'kept': False}
+            else:
+                data = open(kp, 'rb').read()
+                text, reader, reason = plane_text({'name': r['name']}, data)
+                cs, fams, rate, gate = judge(text, reason)
+                x = {'id': r['id'], 'name': r['name'], 'kept': True,
+                     'classes_before': r['classes'], 'classes_after': cs,
+                     'reader_before': r['reader'], 'reader_after': reader, 'reason_after': reason,
+                     'prov_before': r['plane_prov'].get('structure_provenance'),
+                     'prov_after': LAST_PLANE_ROW.get('structure_provenance')}
+            f.write(json.dumps(x) + '\n')
+            f.flush()
+            done[x['id']] = x
+            if (i + 1) % 25 == 0:
+                print(f'  {i + 1} re-read ({time.time() - t0:.0f}s)', flush=True)
+    rows = [done[r['id']] for r in esc if r['id'] in done]
+    kept = [x for x in rows if x.get('kept')]
+    pairs = [{'id': x['id'], 'a': x.get('prov_before'), 'b': x.get('prov_after')} for x in kept]
+    pj = os.path.join(PEN, 'reread-pairs.json')
+    json.dump(pairs, open(pj, 'w'))
+    rp = os.path.join(HERE, '..', 'bio-plane', 'src', 'readingprov.mjs')
+    js = ('import { readFileSync } from "node:fs"; import { compareProvenance } from "' + os.path.abspath(rp)
+          + '"; const ps = JSON.parse(readFileSync(process.argv[1], "utf8")); '
+          + 'console.log(JSON.stringify(ps.map((p) => ({ id: p.id, ...compareProvenance(p.a, p.b) }))));')
+    p = subprocess.run(['node', '--input-type=module', '-e', js, pj], capture_output=True, text=True)
+    if p.returncode != 0:
+        sys.exit('reread: the comparison failed: ' + p.stderr[:400])
+    cmp = {c['id']: c for c in json.loads(p.stdout)}
+    moved = [x for x in kept if sorted(x['classes_before']) != sorted(x['classes_after'])]
+    states = {}
+    for x in kept:
+        st = cmp[x['id']]['state']
+        states[st] = states.get(st, 0) + 1
+    print(f'\nRE-READ OF {len(rows)} ESCALATED DOCUMENTS — {len(kept)} with kept bytes, '
+          f'{len(rows) - len(kept)} without (walked before M032_KEEP)')
+    print('  the text the plane served, second read against first: '
+          + ', '.join(f'{k} {v}' for k, v in sorted(states.items())))
+    print(f'  CLASS MOVED on {len(moved)} document(s):')
+    for x in moved:
+        c = cmp[x['id']]
+        print(f"    {x['name']}: {x['classes_before']} -> {x['classes_after']} — {c['state']}: {c['says']}")
+    silent = [x for x in moved if cmp[x['id']]['state'] not in ('differs',)]
+    print(f'  moved with the text NOT attributed to a tier: {len(silent)}'
+          + ('' if not silent else ' — ' + ', '.join(x['name'] for x in silent)))
+    return 0
 
 
 def cmd_classhash():
@@ -2563,6 +2670,8 @@ if __name__ == '__main__':
         sys.exit(0 if cmd_derive() else 1)
     elif m == 'control':
         cmd_control()
+    elif m == 'reread':
+        sys.exit(cmd_reread())
     elif m == 'classhash':
         sys.exit(cmd_classhash())
     else:

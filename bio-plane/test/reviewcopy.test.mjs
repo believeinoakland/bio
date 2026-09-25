@@ -132,7 +132,58 @@
    the draft that asked for nothing and the fixed point catch it. AS DECLARED. (n) -> **82 pass, 0 fail**. AS
    DECLARED. ARMS (a)-(k) RE-RUN in the same driver run: a 77/5, b 81/1, c 80/2, d 80/2, e 80/2, f 81/1, g 74/8,
    h 81/1, i 76/6, j 79/3, k 82/0 — EVERY failure count unchanged from REC-198's measurement, the five new arms
-   landing whole in each tally's pass column. */
+   landing whole in each tally's pass column.
+
+   D-539 (a review copy's round trip must not demote a load-bearing finding the copy cannot show) ADDED BLOCK 11 AND
+   THREE ARMS. DECLARED 2026-09-25 BEFORE ARMING (results appended below when run):
+
+   (o) THE ROLE DROPPED — the absent branch of `findings[]` stops carrying `role`, which is the plane exactly as it
+   stood before D-539. MUST FAIL, by name: "THE COPY SAYS THE DESIGNATION BACK OF A FINDING IT CANNOT SHOW" and
+   "D-539 ACCEPTS-WHEN" (the trip writes both absent findings back undesignated, so once promoted they read `null`).
+   MUST NOT FAIL: the fixture arm, the trip-lands arm, and — THE ARM'S OWN FINDING about block 10's class property —
+   block 11's FIXED POINT, because a role the answer never says is absent before and after the trip and agrees for
+   free; nor any arm of blocks 1-10.
+
+   (p) OVER-STRICTNESS — the absent branch computes the same role in a spelling this suite did not write
+   (`(params.roles || {})[id] ?? null` inline, not the hoisted `role`). MUST PASS, every arm.
+
+   (q) THE LIAR'S CONSTANT — the absent branch answers `role: "load_bearing"` whatever the draft says. It agrees for
+   free about LATER_LB. MUST FAIL "THE COPY SAYS THE DESIGNATION BACK" and "D-539 ACCEPTS-WHEN" (LATER_SUP comes
+   back load_bearing: the liar's answer written into the draft, promoting a supporting finding into one the case
+   rests on). MUST NOT FAIL the fixture arm, the trip-lands arm or the fixed point.
+
+   MEASURED 2026-09-25 by WORKER D-539 (cloud session, SCHEDULER #21) with `node test/reviewcopy.control.mjs`, all
+   SEVENTEEN arms ALONE in one driver run, the pen in the session scratchpad via `BIO_NC_PEN`, 17 of 17 restores of
+   `src/store.mjs` (3,329,115 B) sha256 MATCH, content IDENTICAL, size ok: (0) BASELINE -> **87 pass, 0 fail**.
+   (o) -> **85 pass, 2 fail**: THE COPY SAYS THE DESIGNATION BACK and D-539 ACCEPTS-WHEN, by name; the fixture, the
+   trip-lands arm and the FIXED POINT GREEN — the fixed point's blindness measured, as declared. (p) -> **87 pass,
+   0 fail**. AS DECLARED. (q) -> **85 pass, 2 fail**: the same two by name. AS DECLARED. ARMS (a)-(n) RE-RUN in the
+   same driver run: a 82/5, b 86/1, c 85/2, d 85/2, e 85/2, f 86/1, g 79/8, h 86/1, i 81/6, j 84/3, k 87/0, l 84/3,
+   m 85/2, n 87/0 — EVERY failure count unchanged from REC-199's measurement.
+
+   D-538 (the identity sentence reads the draft's `newCase`; §6A.4 with BOB #32's 2026-09-23 23:08Z ruling) ADDED
+   BLOCK 12 (numbered 11 on its branch; renumbered by CONDUCT #21 at c21-batch28, where D-539 holds 11), CORRECTED block 2's new-case arm (it pinned the defect as the rule, see there) and RE-ANCHORED arm (l)
+   on the identity line that now passes `newCase`. TWO ARMS, DECLARED 2026-09-24 BEFORE ARMING:
+
+   (r) `newCase` IGNORED AGAIN (its branch's (o)) — `#caseIdentitySentence` takes `newCase = !caseId`, the plane before D-538. MUST FAIL,
+   by name: block 2's corrected arm (D2 told "a new case"), "D-538 ACCEPTS-WHEN" (DD told "a new case" in all four
+   answers) and "A DRAFT THAT NAMES C1 AND ASKS FOR A NEW CASE" (told "the next edition"). MUST NOT FAIL: the fixture
+   arm, the new-case-kept arm (DN IS a new case, so the liar agrees there for free), the naming-a-case arm, nor any
+   arm of blocks 1-10.
+
+   (s) OVER-STRICTNESS (its branch's (p)) — the derived sentence REWORDED ("an undetermined case: publication will derive it …"), the same
+   two facts in words this suite did not write. MUST PASS, every arm.
+
+   MEASURED 2026-09-24 by WORKER D-538 (cloud) with `node test/reviewcopy.control.mjs`, all SIXTEEN arms in one driver
+   run against the FINAL store, every arm ALONE, the pen in the session scratchpad via `BIO_NC_PEN`, every restore of
+   `src/store.mjs` (3,331,204 B, sha256 918d6411…) sha256 MATCH, content IDENTICAL, size ok (16 of 16): (0) BASELINE
+   -> **88 pass, 0 fail**. (o, now r) -> **85 pass, 3 fail**: block 2's corrected arm, "D-538 ACCEPTS-WHEN" and "A DRAFT THAT
+   NAMES C1 AND ASKS FOR A NEW CASE", by name; the fixture, new-case-kept, naming-a-case and no-code arms GREEN. AS
+   DECLARED, exactly. (p, now s) -> **88 pass, 0 fail**. AS DECLARED. ARMS (a)-(n) RE-RUN: a 83/5, b 87/1, c 86/2, d 86/2,
+   e 86/2, f 87/1, g 80/8, h 87/1, i 82/6, j 85/3, k 88/0, l 85/3 (re-anchored), m 86/2, n 88/0 — EVERY failure count
+   unchanged from REC-199's measurement, block 12's (then 11's) six arms landing whole in each tally's pass column. A FIRST RUN
+   (87/0 baseline, the same counts) measured a sentence that NAMED the refusal's code; civicos-ui's DEC-49 guards
+   refused it on the page, it was reworded, the no-code arm was added, and this is the re-run. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -413,9 +464,17 @@ const [D1, D2, D3, D5] = [D1r.draftId, D2r.draftId, D3r.draftId, D5r.draftId];
 t("a draft naming an existing case stands at THAT CASE'S NEXT EDITION — the edition is read from the "
 + "published record, never taken from the caller",
   [D1r.caseId, D1r.edition], [C1, 2]);
-t("a draft naming no case is a NEW case at edition 1, and its identity is STATED as not yet allocated "
-+ "rather than invented — a case id is minted only by publication",
-  [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /not yet allocated/i.test(D2r.caseIdentity)],
+/* CORRECTED by D-538: this arm read "a draft naming no case is a NEW case at edition 1" and pinned the
+   sentence *not yet allocated* on D2, which names no case and does NOT set `newCase`. That was the defect
+   pinned as the rule: `publishCase` DERIVES such a draft's case (a further edition of the one case its
+   findings serve, a new case only if they serve none), so "a new case" claimed an answer only publication
+   can give. D2's identity is stated as DERIVED and UNDETERMINED, never invented; block 11 drives all three
+   routes through every answer that prints the sentence. */
+t("a draft naming no case and not asking for a new one stands at edition 1 with no case id, and its identity "
++ "is STATED as derived at publication and UNDETERMINED here — never as a new case, which only publication "
++ "could establish",
+  [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /deriv/i.test(D2r.caseIdentity)
+     && /undetermined/i.test(D2r.caseIdentity) && !/not yet allocated/i.test(D2r.caseIdentity)],
   [null, 1, true]);
 /* CORRECTED by REC-133: the first label said the authority was publish's (DEC-72).
    It is the project's EDIT permission now (§6A.2); VIC is still refused, because she
@@ -949,6 +1008,144 @@ console.log("\n--- 10. REC-199: the copy says `newCase` back, so an edit does no
   + "verdict come back unchanged. A twelfth field the answer forgets fails this without a list to extend",
     [[okN, okD, ok1, ok2], JSON.stringify([bN, bD, b1, b2]) === JSON.stringify([aN, aD, a1, a2])],
     [[true, true, true, true], true]);
+}
+
+/* =========================================================================== 11
+ * D-539, `BIO_Publication_v0_1.md` §6A.4: A FINDING THE COPY CANNOT SHOW KEEPS ITS
+ * DESIGNATION. `findings[]`'s absent-target branch (`present: false` — the editor cannot
+ * read it, or it does not exist yet) answered `{target, present, detail}` and no `role`,
+ * so an edit written from the answer wrote the member's `load_bearing` back as NOTHING
+ * (`civicos-ui`'s `rvcFormFromCopy` files it under "undesignated"), and the designation
+ * was gone by the time the finding could be read.
+ *
+ * WHY BLOCK 10's FIXED POINT CANNOT SEE THIS, and so why this block reads the draft through
+ * a SECOND observer. The fixed point compares a copy with the copy after one trip; a field
+ * the answer NEVER says on this branch is absent on both sides and agrees for free. What
+ * differs is the STORED draft, and the one read that shows it is the copy AFTER THE FINDING
+ * EXISTS — so the target is named before it is promoted, the trip runs while it is absent,
+ * and the finding is promoted AFTERWARDS. Its role is then read on the present branch, which
+ * has always said it: a trip that lost it reads `null` there.
+ *
+ * TWO ABSENT TARGETS OF OPPOSITE ROLES, beside a present one, so a branch answering one
+ * constant designation cannot agree with both. The write-back is block 10's shape (the UI's
+ * `rvcFormFromCopy` + `rvcDraftBody` pair) restated here rather than shared, because it is
+ * block-scoped there: a finding with no role is written back with no role.
+ * ========================================================================= */
+console.log("\n--- 11. D-539: a finding the copy cannot show keeps its designation across an edit ---");
+{
+  const LATER_LB = "INQ-2026-1260-later-lb", LATER_SUP = "INQ-2026-1260-later-sup";
+  const writeBack = (c) => {
+    const b = { project: c?.project, draft: c?.draft };
+    const fs = Array.isArray(c?.findings) ? c.findings : [];
+    b.targets = fs.map((f) => f.target);
+    const roles = {};
+    for (const f of fs) if (f.role) roles[f.target] = f.role;
+    if (Object.keys(roles).length) b.roles = roles;
+    if (c?.case?.case_id) b.caseId = c.case.case_id;
+    if (c?.case?.newCase) b.newCase = c.case.newCase;
+    const a = c?.authored || {};
+    for (const k of ["scope", "statement", "subjectPosition", "subjectJustification", "biasAcknowledgement"])
+      if (a[k]) b[k] = a[k];
+    if (Array.isArray(a.excluded)) b.excluded = a.excluded;
+    return b;
+  };
+  const copyOf = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const pick = (c) => (Array.isArray(c?.findings) ? c.findings : []).map((f) => [f.target, f.present, f.role]);
+
+  const DAr = await draft(IRIS, { ...args(11), targets: [LEAD, LATER_LB, LATER_SUP],
+                                  roles: { [LEAD]: "supporting", [LATER_LB]: "load_bearing", [LATER_SUP]: "supporting" } });
+  if (!DAr?.ok) bail("casedraft DA (a draft naming two findings that do not exist yet)", DAr);
+  const DA1 = await copyOf(DAr.draftId);
+  t("D-539 (fixture): THE ABSENT BRANCH IS REACHED — the draft names LEAD, which exists, and two findings "
+  + "that do not, and the copy answers the two as `present: false` with the absent branch's own detail",
+    [pick(DA1).map(([id, p]) => [id, p]),
+     (DA1?.findings || []).filter((f) => f.present === false).map((f) => typeof f.detail === "string" && f.detail.length > 0)],
+    [[[LEAD, true], [LATER_LB, false], [LATER_SUP, false]], [true, true]]);
+  t("D-539: THE COPY SAYS THE DESIGNATION BACK OF A FINDING IT CANNOT SHOW — the member's own authored role, "
+  + "load_bearing and supporting, on the absent branch as on the present one",
+    pick(DA1), [[LEAD, true, "supporting"], [LATER_LB, false, "load_bearing"], [LATER_SUP, false, "supporting"]]);
+
+  const wrote = await draft(IRIS, writeBack(DA1));
+  t("D-539: THE ROUND TRIP — `op=casedraft`'s body rebuilt from the answer alone and written back to the "
+  + "same draft while both findings are still absent, and the edit lands",
+    [wrote?.ok, wrote?.draftId, wrote?.edited], [true, DAr.draftId, true]);
+  const DA2 = await copyOf(DAr.draftId);
+  t("D-539: AND THE COPY IS A FIXED POINT OF THE TRIP (block 10's property, over the absent branch) — "
+  + "which a copy that NEVER said the role would also pass; the arm below is the one that sees the store",
+    JSON.stringify(pick(DA2)), JSON.stringify(pick(DA1)));
+
+  for (const id of [LATER_LB, LATER_SUP]) {
+    const r = await promote(id, inquiryMd(id, `Was ${id} answered?`, INFO), "inquiry", "open");
+    if (r?.ok === false) bail(`promote ${id} (after the trip)`, r);
+  }
+  const DA3 = await copyOf(DAr.draftId);
+  t("D-539 ACCEPTS-WHEN: ONCE THE FINDINGS EXIST, THE DRAFT STILL DESIGNATES THEM AS ITS MEMBER DID — read on "
+  + "the present branch, after an edit made while they were absent. A trip that lost the role reads `null` "
+  + "here, and the load-bearing finding the case was to rest on has been demoted to undesignated",
+    pick(DA3), [[LEAD, true, "supporting"], [LATER_LB, true, "load_bearing"], [LATER_SUP, true, "supporting"]]);
+}
+
+/* =========================================================================== 12
+ * D-538 (`BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling of 2026-09-23 23:08Z): THE
+ * IDENTITY SENTENCE READS THE DRAFT'S `newCase`, IN EVERY ANSWER THAT PRINTS IT.
+ *
+ * THE MEASURED FAILURE IT MOVES is block 10's draft DD: it names no case and does not set `newCase`,
+ * its findings already serve C1, and its own gates DERIVE C1 and refuse ALREADY_A_CASE_MEMBER — while
+ * `#caseIdentitySentence(null, 1)` told the casedraft, casedrafts and reviewcopy answers (and the grant's
+ * `boundTo`) that it was *a new case, whose identity is not yet allocated*. That is the record asserting
+ * a new case where it will derive an existing one. Three drafts are read through FOUR answers each:
+ *   DN — `newCase` set          -> the new-case sentence (the only draft it is true of);
+ *   DD — nothing named or asked  -> DERIVED at publication, UNDETERMINED here, never "a new case";
+ *   D1 — names C1                -> the next edition (2) of C1, unchanged.
+ * And DB, which names C1 AND asks for a new case — a pair publication refuses together — is told so,
+ * rather than "the next edition" of a case it cannot become as it stands.
+ * ========================================================================= */
+console.log("\n--- 12. D-538: the identity sentence reads `newCase`, in every answer that prints it ---");
+{
+  /* Matched by what the sentence must SAY, not by its spelling: arm (p) rewords it and must pass. */
+  const NEW = /not yet allocated/i, DERIVED = (x) => typeof x === "string" && /deriv/i.test(x)
+    && /undetermined/i.test(x) && !NEW.test(x);
+  const DNr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], newCase: true }));
+  const DDr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD] }));
+  const DBr = await draft(IRIS, withRoles({ ...args(9), targets: [LEAD], caseId: C1, newCase: true }));
+  for (const [n, r] of [["DN", DNr], ["DD", DDr], ["DB", DBr]]) if (!r?.ok) bail(`casedraft ${n} (block 12)`, r);
+  const copy = async (id) => rP(await GET(`op=reviewcopy&draft=${id}&token=${IRIS}`));
+  const [cN, cD, c1, cB] = [await copy(DNr.draftId), await copy(DDr.draftId), await copy(D1), await copy(DBr.draftId)];
+  const list = rP(await GET(`op=casedrafts&token=${IRIS}&project=${encodeURIComponent(PROJ)}`));
+  const row = (id) => (list?.drafts || []).find((d) => d.draft_id === id)?.case?.identity;
+  const gN = await grant(IRIS, { draft: DNr.draftId, recipient: "D-538 reader, new case" });
+  const gD = await grant(IRIS, { draft: DDr.draftId, recipient: "D-538 reader, derived case" });
+  for (const [n, r] of [["DN", gN], ["DD", gD]]) if (!r?.ok) bail(`reviewgrant ${n} (block 12)`, r);
+
+  t("D-538: THE FIXTURE IS THE MEASURED FAILURE — DD's own gates derive C1 and refuse ALREADY_A_CASE_MEMBER, "
+  + "DN's mint and pass, and the list holds every draft this block reads (so a missing row cannot pass)",
+    [cD?.gates, cD?.missing?.[0]?.reason, cN?.gates, list?.truncated,
+     [DNr, DDr, DBr].every((r) => typeof row(r.draftId) === "string") && typeof row(D1) === "string"],
+    ["refused", "ALREADY_A_CASE_MEMBER", "passed", false, true]);
+  t("D-538 ACCEPTS-WHEN: DRAFT DD READS THE DERIVATION — DERIVED at publication and UNDETERMINED here, never "
+  + "\"a new case\" — in all three reads (casedraft, casedrafts, reviewcopy) and in its grant's boundTo",
+    [DERIVED(DDr.caseIdentity), DERIVED(row(DDr.draftId)), DERIVED(cD?.case?.identity), DERIVED(gD.boundTo)],
+    [true, true, true, true]);
+  t("D-538: AND THE NEW-CASE SENTENCE IS KEPT FOR THE ONE DRAFT IT IS TRUE OF — DN, which asked for a new case, "
+  + "in the same four answers (an arm that deleted the sentence everywhere fails here)",
+    [NEW.test(DNr.caseIdentity), NEW.test(row(DNr.draftId)), NEW.test(cN?.case?.identity), NEW.test(gN.boundTo)],
+    [true, true, true, true]);
+  /* The edition is read from the published record at each read (C1 has moved past 1 by this block), so the
+     sentence is pinned against the edition the SAME answer states, and that edition against "next". */
+  t("D-538: A DRAFT NAMING A CASE IS UNCHANGED — the next edition of C1, in its copy and its list row",
+    [c1?.case?.case_id, c1?.case?.edition >= 2, c1?.case?.identity, row(D1)],
+    [C1, true, `the next edition (${c1?.case?.edition}) of ${C1}`, `the next edition (${c1?.case?.edition}) of ${C1}`]);
+  t("D-538: A DRAFT THAT NAMES C1 AND ASKS FOR A NEW CASE is told publication refuses the pair "
+  + "(its gates' CASE_IDENTITY_AMBIGUOUS, said in words: the sentence is a reader's and carries no code) and that "
+  + "its case is UNDETERMINED — not \"the next edition\"",
+    [cB?.gates, cB?.missing?.[0]?.reason, /refuses/.test(cB?.case?.identity ?? ""),
+     /undetermined/i.test(DBr.caseIdentity ?? ""), /undetermined/i.test(row(DBr.draftId) ?? "")],
+    ["refused", "CASE_IDENTITY_AMBIGUOUS", true, true, true]);
+  t("D-538: NO SENTENCE CARRIES A CODE — members and recipients read it verbatim (DEC-49), so none of the "
+  + "four drafts' sentences, in any answer, holds a SHOUTY_CODE",
+    [DNr, DDr, DBr].flatMap((r) => [r.caseIdentity, row(r.draftId)])
+      .concat([cN, cD, c1, cB].map((c) => c?.case?.identity), [gN.boundTo, gD.boundTo])
+      .filter((x) => typeof x !== "string" || /\b[A-Z]{2,}(?:_[A-Z]+)+\b/.test(x)), []);
 }
 
 console.log(`\nreviewcopy: ${pass} pass, ${fail} fail`);

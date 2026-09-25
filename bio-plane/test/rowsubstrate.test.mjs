@@ -65,6 +65,9 @@
  *        reported as a finding.
  *   (A6) rows with no symbols scored as covered rather than UNJUDGED -> S7 fails: an unaskable
  *        question scored clean is the unearned-absence class.
+ *   (A7) D-541: the token capture restored to digits and dots only -> S8 fails at "`§6A` reads as
+ *        §6A": the review copy's §6A reads as §6 again. RUN 2026-09-24 by WORKER D-541: driver exit 0,
+ *        33 pass / 0 fail, both baselines 37 pass / 0 fail, every restore sha256 f85c884f… and `cmp`.
  */
 
 import "./stdio.mjs";
@@ -78,7 +81,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -212,6 +215,33 @@ section("7 — AN UNASKABLE QUESTION IS UNJUDGED, NEVER A PASS. Scoring it clean
     a.unjudged.some((u) => u.id === "CLOSED-1"), false);
   t("the unjudged count is REPORTED, so the silence is a shape and not an omission",
     a.counts.unjudged, 2);
+}
+
+/* ========================================================================== */
+section("8 — A LETTERED SECTION IS A SECTION (D-541). The capture read digits and dots only, so "
+      + "`§6A` read as `§6` and three rows were noted against a section none of them cites.");
+{
+  const text = "`docs/architecture/FAKE_Design.md` §6A with a ruling, and `docs/development/FAKE_Other.md` §6A.4";
+  const p = anchorPairs(text);
+  t("`§6A` reads as §6A, never as the §6 before it", p.get("FAKE_Design.md"), ["6A"]);
+  t("`§6A.4` reads whole — letter, dot and sub-number", p.get("FAKE_Other.md"), ["6A.4"]);
+  t("a letter binds only at a word's end: `§6and` still reads §6 (over-strictness arm)",
+    anchorPairs("`FAKE_Design.md` §6and more").get("FAKE_Design.md"), ["6"]);
+  const doc = "# Doc\n\n## 6. Audiences\n\ntext about SIX\n\n## 6A. The review copy\n\n"
+            + "text about `op=reviewcopy`\n\n### 6A.4 Completeness\n\nREUSED\n\n## 7. Next\n\nSEVEN\n";
+  t("`sectionText` finds the §6A heading, not §6's", /op=reviewcopy/.test(sectionText(doc, "6A") || ""), true);
+  t("...and §6 no longer swallows §6A's text", /op=reviewcopy/.test(sectionText(doc, "6") || ""), false);
+  t("...and §6A is bounded at §7", /SEVEN/.test(sectionText(doc, "6A") || ""), false);
+  t("a lower-case citation `§6a` finds the `## 6A.` heading (over-strictness arm)",
+    /op=reviewcopy/.test(sectionText(doc, "6a") || ""), true);
+  t("an absent lettered anchor is still null, not §6", sectionText(doc, "6B"), null);
+  /* THROUGH THE AUDIT — the measured failure: a row citing §6A whose §6A DOES name its symbol was
+     reported "substrate not evident", because §6 (which does not) was what got read. */
+  const queue = ["## BOB INBOX", "", "### LETTER-1 · queued — `op=reviewcopy`'s list", "milestone: M0",
+                 "design: `docs/architecture/FAKE_Design.md` §6A", "scope: teach `op=reviewcopy` a count", ""].join("\n");
+  const a = substrateAudit({ queue, governedSet: GOV, repo: process.cwd(), docReader: () => doc });
+  t("a row citing §6A, whose §6A names its symbol, is NOT noted", a.findings.map((f) => f.id), []);
+  t("...and it was judged, against the anchor §6A", a.judged.map((j) => j.anchors), [["6A"]]);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

@@ -91,6 +91,14 @@
  *   (A8) OVER-STRICTNESS — `saved` reduced to `onMain` only, dropping the reachability walk ->
  *        S3's carried-under-another-name row fails and the HOLD rows do NOT. D-399's defect one
  *        layer out, and the reason this predicate REUSES `strandedwork` rather than re-asking.
+ *
+ * NEGATIVE CONTROL (M0-170, RUN 2026-09-24 — cliHome's carried modules DERIVED): a probe module
+ * `tools/m0170probe.mjs` created and `import "./m0170probe.mjs";` added to `tools/strandedwork.mjs`, each arm ALONE,
+ * every touched file restored by sha256 AND `cmp` (all MATCH), probe removed. Baseline 84 / 0. (A3) the import with
+ * the derived list -> 84 / 0, AS DECLARED. (B3) the same import with the OLD hand list restored -> 73 / 11, among them
+ * "the fixture's COPIED CLI loads and exits 0 on every arm above". ITS FIRST RUN FOUND A DEFECT IN THIS SUITE: section 8
+ * drove the CLI through `execFileSync`, which THREW past every assertion, so the arm ended the module with NO TALLY;
+ * it is now `spawnSync` with that named assertion (the +1 above the 83 before).
  */
 
 import "./stdio.mjs";
@@ -102,6 +110,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
 import { classify, summarise, treeState, laneOf, isTaskRun, STANDING_LANES,
          DEFAULT_IDLE_HOURS, instanceOf, electHolders, UnknownSelf } from "../../tools/retirable.mjs";
+import { moduleClosure } from "./moduleclosure.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -153,8 +162,14 @@ function linked(root, name, { commits = 0, push = null, dirty = 0 } = {}) {
 function cliHome() {
   const { work } = scratch();
   mkdirSync(join(work, "tools"), { recursive: true });
-  for (const f of ["retirable.mjs", "strandedwork.mjs"])
-    writeFileSync(join(work, "tools", f), readFileSync(join(REPO, "tools", f)));
+  /* CORRECTED 2026-09-24 by M0-170: the modules were a HAND LIST (`["retirable.mjs", "strandedwork.mjs"]`), right
+     on the day and silent the day `retirable.mjs` or `strandedwork.mjs` gains an import: the copied CLI would not load
+     and every CLI arm would fail for the FIXTURE's reason. They are now derived by `moduleClosure`'s STATIC mode
+     (M0-169) from the tool itself, still read at run time so the control driver's patched copy is the one carried. */
+  for (const rel of moduleClosure({ repo: REPO, roots: ["tools/retirable.mjs"], dynamic: false })) {
+    mkdirSync(dirname(join(work, rel)), { recursive: true });
+    writeFileSync(join(work, rel), readFileSync(join(REPO, rel)));
+  }
   return { home: work, CLI: join(work, "tools/retirable.mjs") };
 }
 const HOUR = 3_600_000;
@@ -380,9 +395,15 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
     title: `s${i}`, cwd: "/tmp", isArchived: false, isRunning: false,
     lastActivityAt: "2026-09-01T00:00:00.000Z",
   })));
-  const run = (rows, ...extra) =>
-    execFileSync("node", [CLI, "--self", "local_none", ...extra],
-      { input: mk(rows), encoding: "utf8" });
+  /* CORRECTED 2026-09-24 by M0-170: this was `execFileSync`, which THROWS on a non-zero exit — so a CLI that could not
+     load (M0-170's negative control: an import the fixture did not carry) ended the MODULE with no tally at all, a
+     failure that went through no assertion. The exit-0 requirement is unchanged; it is now an assertion that names it. */
+  const cliFailures = [];
+  const run = (rows, ...extra) => {
+    const r = spawnSync("node", [CLI, "--self", "local_none", ...extra], { input: mk(rows), encoding: "utf8" });
+    if (r.status !== 0) cliFailures.push(`${[rows, ...extra].join(" ")}: exit ${r.status} — ${(r.stderr || "").split("\n").find((l) => /Error/.test(l)) || "no stderr"}`);
+    return r.stdout || "";
+  };
 
   /* An ordinary run says the bound even though nothing is wrong: a caveat that appears only on
      bad runs trains the reader to skip it, which is how the heartbeat's own reader missed four. */
@@ -408,6 +429,7 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
   const exact = run(50, "--total", "50");
   t("--total equal to judged clears the hint", /HINT, NOT A FINDING/.test(exact), false);
   t("--total equal to judged still prints the bound", /BOUND: this verdict covers the 50/.test(exact), true);
+  t("the fixture's COPIED CLI loads and exits 0 on every arm above — it carries its whole module closure", cliFailures, []);
 }
 
 /* SECTION 9 — M0-83 (BOB #23, 2026-09-21): four defects, each found by a lane acting on this tool's verdict,

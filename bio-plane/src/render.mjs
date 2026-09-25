@@ -18,11 +18,15 @@
  *
  * WHAT THE PLANE CANNOT CHECK, STATED BECAUSE IT IS LOAD-BEARING: the renderer's
  * list of requests and executed scripts is the RENDERER'S CLAIM. The plane hashes
- * the rendered document it is handed, and nothing else the renderer reports. A
- * `sha256` on a `render.data` entry is carried as the renderer reported it and
- * labelled `reported_by: "renderer"`; a missing one is `null`, never invented.
+ * the rendered document it is handed and, since D-529 (BOB #33, 2026-09-24 21:05Z),
+ * each subresource BODY the renderer hands over, which it keeps beside the capture
+ * (`keepRenderBodies`). CORRECTED by D-529: this read *"A `sha256` on a
+ * `render.data` entry is carried as the renderer reported it"* — the rule the ruling
+ * replaced. A digest the renderer only REPORTED is now `renderer_sha256`, its claim,
+ * and the digest itself reads `undetermined` with its reason. Whether the browser's
+ * bytes are what the ORIGIN served is still the renderer's claim.
  */
-import { originOf } from "./subresources.mjs";
+import { originOf, SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
 import { browserBindingRenderer } from "./browserrender.mjs";
 
 /* The environment this instance asks for. Recorded on every capture whether or not
@@ -49,6 +53,13 @@ export const RENDER_DEFAULTS = Object.freeze({
 
 /* The render method string BOB #32 ruled. The shell keeps its own method. */
 export const RENDERED_METHOD = "rendered";
+
+/* D-567 / BOB #34 (b), 2026-09-25: what every monitoring tick on a rendered capture states
+   about its CONTENT, in the ruling's words. A tick fetches the served shell and cannot render,
+   so a shell match is never evidence the document is stable. One copy, read by op=monitor and
+   by its suite. */
+export const RENDER_TICK_UNDETERMINED =
+  "content undetermined — not watched: this source renders its content in the browser";
 
 /* D-499 — WHICH WAIT FIRED, AND WHAT THAT SAYS ABOUT COMPLETENESS.
  *
@@ -168,9 +179,14 @@ export const NON_DATA_TYPES = Object.freeze({
  *   elapsed_ms     number: browser time this render spent
  *   navigated_to   string: the page address the browser ended on
  *   status         number: the navigation's HTTP status
- *   requests       [{url, type, outcome: completed|failed|blocked, status?, blocked_by?, sha256?}]
+ *   requests       [{url, type, outcome: completed|failed|blocked, status?, blocked_by?, sha256?,
+ *                    body_base64?, body_text?, body_unavailable?}]
  *                  every subresource request the page made; `null` when the renderer
- *                  could not record them
+ *                  could not record them. D-529: a completed request carries the BYTES
+ *                  the browser received — `body_base64` (exact) or `body_text` (the
+ *                  browser's own decoding, as CDP gives a text body) — or
+ *                  `body_unavailable`, a sentence saying why not. A `sha256` with no
+ *                  bytes is the renderer's claim and is recorded as nothing more.
  *   scripts        [{url}] every script resource EXECUTED; `null` when the renderer
  *                  could not record the set (BOB #31: then it is `undetermined`)
  *
@@ -179,6 +195,82 @@ export const NON_DATA_TYPES = Object.freeze({
 
 const isStr = (s) => typeof s === "string" && s.length > 0;
 const num = (n) => (typeof n === "number" && Number.isFinite(n) ? n : null);
+const HEX64 = /^[0-9a-f]{64}$/;
+
+/* D-529 — A DIGEST PER SUBRESOURCE THE RENDER LOADED, OVER BYTES THE PLANE KEPT.
+ *
+ * BOB #33, 2026-09-24 21:05Z (folded into CLIENT-RENDERED.md §"What must be recorded
+ * on a rendered capture" by this item): a per-subresource SHA-256 IS OWED on a rendered
+ * capture, and it reads UNDETERMINED where the bytes were not kept. A hop attests these
+ * bytes, this URL, this time (construct 2); BOB #31 ruled every script a render runs is
+ * recorded, and a script recorded by address alone says which code ran without saying
+ * WHAT code ran.
+ *
+ * THE DIGEST IS THE PLANE'S, NEVER THE RENDERER'S. The renderer hands over the bytes
+ * the browser received; the plane hashes them, KEEPS them content-addressed beside the
+ * capture (`<store>/captures/<sha>`, the same key subresource capture writes), and only
+ * then records the digest. So every hex digest on a rendered capture names bytes anyone
+ * holding the store can re-hash — which is what "verify independently" means — and a
+ * digest the renderer merely REPORTED (`sha256` with no bytes) is kept as
+ * `renderer_sha256`, labelled as its claim, with the digest itself `undetermined`: a
+ * number nobody can recompute is an equality that cost nothing to produce.
+ *
+ * WHICH REQUESTS OWE ONE: every request whose outcome is `completed` — the ones the
+ * render LOADED. A failed or blocked request supplied no bytes to the page and owes no
+ * digest (`render.requests` counts it); a request still pending when the wait ended is
+ * `outcome_unstated` there and is not a load either.
+ *
+ * WHAT THE DIGEST IS OF, STATED BECAUSE IT CAN DIFFER FROM A RE-FETCH: `body_as: "bytes"`
+ * is the response body exactly as the browser delivered it; `body_as: "decoded_text"`
+ * is the browser's DECODING of a text body re-encoded as UTF-8, which is what CDP gives
+ * for text, and equals the wire bytes only when they were UTF-8. The record says which,
+ * so a verifier who re-fetches and disagrees can tell which fact it is disagreeing with.
+ *
+ * THE CEILINGS ARE subresource capture's own (`SUBRESOURCE_MAX` per body,
+ * `SUBRESOURCE_BUDGET` per capture, `SUBRESOURCE_CAP` bodies), not new numbers: a
+ * rendered page's assets are the same kind of thing that path keeps. Past any of them
+ * the bytes are NOT KEPT, and the digest reads undetermined naming the ceiling — even
+ * though the plane holds the bytes in memory and could hash them, because a digest over
+ * bytes nobody can re-read is the claim this ruling exists to stop recording.
+ *
+ * `put(sha, bytes)` and `sha256(bytes)` are injected so this stays pure of R2; the
+ * answer is an array ALIGNED with `answer.requests` (null where no digest is owed). */
+function b64bytes(s) {
+  if (typeof s !== "string" || !/^[A-Za-z0-9+/]*={0,2}$/.test(s) || s.length % 4 !== 0) return null;
+  try { const bin = atob(s); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  catch { return null; }
+}
+
+export async function keepRenderBodies(answer, { put, sha256 }) {
+  if (!answer || !Array.isArray(answer.requests)) return null;
+  let kept = 0, spent = 0;
+  const out = [];
+  for (const r of answer.requests) {
+    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") { out.push(null); continue; }
+    const claim = HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
+    const undet = (why) => ({ sha256: "undetermined", digest_reason: why, ...claim });
+    let bytes = null, as = null;
+    if (typeof r.body_base64 === "string") {
+      bytes = b64bytes(r.body_base64); as = "bytes";
+      if (!bytes) { out.push(undet("the renderer's body for this request was not valid base64, so no bytes were kept")); continue; }
+    } else if (typeof r.body_text === "string") {
+      bytes = new TextEncoder().encode(r.body_text); as = "decoded_text";
+    } else {
+      out.push(undet(`the renderer did not deliver this response's bytes${isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""}, so none were kept`
+        + (claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "")));
+      continue;
+    }
+    if (bytes.length > SUBRESOURCE_MAX) { out.push(undet(`the body is ${bytes.length} bytes, over the ${SUBRESOURCE_MAX}-byte per-subresource ceiling, so it was not kept`)); continue; }
+    if (kept >= SUBRESOURCE_CAP) { out.push(undet(`past the ${SUBRESOURCE_CAP}-body per-capture ceiling, so it was not kept`)); continue; }
+    if (spent + bytes.length > SUBRESOURCE_BUDGET) { out.push(undet(`the capture's ${SUBRESOURCE_BUDGET}-byte subresource budget was spent, so it was not kept`)); continue; }
+    let digest = null;
+    try { digest = await sha256(bytes); await put(digest, bytes); }
+    catch (e) { out.push(undet(`the plane could not keep the bytes (${String((e && e.message) || e).slice(0, 200)})`)); continue; }
+    kept++; spent += bytes.length;
+    out.push({ sha256: digest, bytes: bytes.length, body_as: as, kept: true, ...claim });
+  }
+  return out;
+}
 
 /** The origin key the record names: scheme + host. `null` for an unparseable URL. */
 export function originKey(u) {
@@ -191,7 +283,7 @@ export function originKey(u) {
  *  a render at all (no document). Everything else short of that is RECORDED with
  *  its gaps named, because a render that happened and was partly observed is a
  *  fact, and refusing it would push a caller back to the shell. */
-export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at }) {
+export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, digests = null }) {
   if (!answer || typeof answer !== "object" || answer.ok !== true)
     return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
   if (typeof answer.html !== "string" || answer.html.length === 0)
@@ -201,8 +293,18 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
   const pageHost = (() => { try { return new URL(answer.navigated_to || pageUrl).hostname.toLowerCase(); } catch { return null; } })();
 
   /* REQUESTS — counted by outcome; blocked ones by the rule that blocked them. */
-  let requests = null, data = null;
+  let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
+    /* D-529: the digest for request i is `digests[i]`, from `keepRenderBodies`; a caller
+       that kept nothing passes none, and every loaded subresource then reads undetermined
+       saying so — never a hex digest the plane did not compute. */
+    const digestOf = (r) => {
+      const i = answer.requests.indexOf(r);
+      const d = Array.isArray(digests) ? digests[i] : null;
+      if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
+      return { sha256: "undetermined", digest_reason: "the plane did not keep this render's subresource bytes",
+               ...(HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}) };
+    };
     const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
     const by = (o) => rq.filter((r) => r.outcome === o).length;
     const blockedBy = {};
@@ -215,12 +317,30 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
                  blocked_by: blockedBy, outcome_unstated: unclassified };
     /* render.data: every DATA-bearing response the render CONSUMED — completed ones.
        A failed or blocked request supplied nothing to the page. */
+    /* D-529 — EVERY SUBRESOURCE THE RENDER LOADED, code and layout included (BOB #31:
+       a script that ran is recorded; BOB #33: with its digest). `render.data` below is
+       the DATA subset of the same loads and carries the same digest, looked up once. */
+    subresources = rq.filter((r) => r.outcome === "completed").map((r) => {
+      const d = digestOf(r);
+      return { address: r.url, type: isStr(r.type) ? r.type : null, sha256: d.sha256,
+               ...(d.sha256 === "undetermined" ? { digest_reason: d.digest_reason }
+                                               : { bytes: d.bytes, body_as: d.body_as, digest_by: "plane" }),
+               ...(d.renderer_sha256 ? { renderer_sha256: d.renderer_sha256 } : {}) };
+    });
+    const undigested = subresources.filter((x) => x.sha256 === "undetermined").length;
+    if (undigested)
+      undetermined.push(`subresources: ${undigested} of the ${subresources.length} subresources the render loaded carry no digest, because their bytes were not kept; each names its reason (BOB #33, 2026-09-24)`);
     data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()])
       .map((r) => {
         const o = originOf(r.url, pageHost);
+        const d = digestOf(r);
+        /* `reported_by` names whose word the ENTRY is (the renderer said this request
+           happened); the DIGEST is the plane's over bytes it kept, or `undetermined`. */
         return { address: r.url, type: isStr(r.type) ? r.type : null, origin: o.origin, host: o.host,
                  ...(o.approximate ? { approximate: true } : {}),
-                 sha256: /^[0-9a-f]{64}$/.test(String(r.sha256 || "")) ? r.sha256 : null,
+                 sha256: d.sha256,
+                 ...(d.sha256 === "undetermined" ? { digest_reason: d.digest_reason } : {}),
+                 ...(d.renderer_sha256 ? { renderer_sha256: d.renderer_sha256 } : {}),
                  reported_by: "renderer" };
       });
   } else {
@@ -287,6 +407,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     navigated_to: isStr(answer.navigated_to) ? answer.navigated_to : null,
     status: num(answer.status),
     requests,
+    subresources,
     data,
     scripts_executed: scriptsExecuted,
     third_party_executed: thirdParty,

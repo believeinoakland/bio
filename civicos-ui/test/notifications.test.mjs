@@ -80,6 +80,11 @@
  * liar: control offered, CASE form sent) fails "…AS THE ITEM FORM"; ARM 13b (the
  * report stops reading `mute.items`) fails "…SUPPRESSION READS UNDER mute.items";
  * ARM 14 (the class rule in another spelling) stays GREEN.
+ * D-528, RUN 2026-09-24: 20 of 20 as declared, exit 0, every restore verified by
+ * sha256 and cmp; baseline 88 pass, 0 fail. ARM 17 (the row's control: read
+ * `assignee` alone again) fails "§7 D-528 · THE NAMED RECIPIENT IS RENDERED" by
+ * name, with "…NOT TOLD IT IS ADDRESSED TO NOBODY". The real-plane half is
+ * `queue-recipients.control.mjs`.
  * UI-93, RUN 2026-09-24: 19 of 19 as declared, exit 0, every restore verified by
  * sha256 and cmp; baseline 85 pass, 0 fail. ARM 15 (the row's control: return ""
  * for a `run` subject again) fails "§7 THE RUN IS NAMED" by name and takes the
@@ -1059,9 +1064,24 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      + "subject is STATED and not drawn as a control that could only fail (the rule queueOptionsHtml "
      + "already states for a subject that is not a document)",
      !htmlA.includes('data-open="' + RUN_ID + '"'));
-  ok("§7 and where the plane NAMED recipients, this surface writes no sentence about who the item "
-     + "reaches — it has none of the record's to render there, and authoring one would be DEC-8's drift",
+  /* CORRECTED 2026-09-24 (D-528), never exempted. This arm read "this surface writes no
+     sentence about who the item reaches" and passed over a page that DID write one — the
+     assignee line's *"This is not addressed to anybody"*, told to m_alice on an item the
+     plane had named her on (`recipients: ["m_alice"]`). It checked the reach NOTE's class
+     and never the assignee line, so it asserted half of the rule and let the other half
+     state a falsehood. What stays true is the half it checked: no reach NOTE of the
+     plane's (that sentence exists only where nobody was named). What was wrong is the
+     rest, and the two arms after it now pin it: the named member is rendered, and the
+     "nobody" sentence is not. */
+  ok("§7 and where the plane NAMED recipients, the plane's could-name-nobody note is not rendered — "
+     + "that sentence exists only where the list is empty",
      !htmlA.includes("q-recip") && !htmlA.includes(BIAS_NOBODY));
+  ok("§7 D-528 · THE NAMED RECIPIENT IS RENDERED, as the record spells her, marked as the viewer — "
+     + "an obligation the plane addressed to m_alice says so to m_alice",
+     htmlA.includes("Addressed to <b>m_alice</b> (you)"));
+  ok("§7 D-528 · AND IT IS NOT TOLD IT IS ADDRESSED TO NOBODY — the sentence the surface printed "
+     + "before D-528 to every named recipient of a bias-debt obligation",
+     !htmlA.includes("This is not addressed to anybody"));
 
   /* PHASE B — the producer could name NOBODY inside the run's read gate. */
   const planeB = makePlane({ items:[BIAS(false)] });
@@ -1072,6 +1092,9 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   ok("§7 the run is named in this phase too — the reach note is ADDED beside the subject, never "
      + "INSTEAD of it",
      htmlB.includes(SAID(RUN_ID, RUN_CTX_TYPE, RUN_CTX)));
+  ok("§7 D-528 · with BOTH `assignee` and `recipients` empty, the line still says the item is "
+     + "addressed to nobody — the one case that sentence is true of",
+     htmlB.includes("This is not addressed to anybody") && !htmlB.includes("Addressed to <b>"));
   ok("§7 WHERE THE PLANE STATES NOBODY COULD BE NAMED, ITS OWN SENTENCE REACHES THE PAGE VERBATIM — "
      + "the item is offered to every member who can read the run, and that is the record's wording, "
      + "not a reading of an empty list made in this browser",

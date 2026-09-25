@@ -35,12 +35,16 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as CATALOG from "../checks/bio-checks.mjs";
+import { stripComments, dec49Codes, literalSites } from "./multisite-census.mjs";
 
 const src = (p) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8");
 /* Comment-stripped, so a code NAMED in a comment is not counted as a site. The
    stripper is guarded both ways below: a stripper that ate everything would
    report zero sites triumphantly. */
-const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+/* D-550: the walk moved to `multisite-census.mjs`, its ONE home, because
+   `civicos-ui/check-refusal-codes.mjs` arm G now GATES the figure this sweep only
+   printed — and two copies of one matcher are two figures. */
+const strip = stripComments;
 
 const FILES = { "src/store.mjs": strip(src("../src/store.mjs")),
                 "src/index.mjs": strip(src("../src/index.mjs")) };
@@ -62,48 +66,16 @@ if (FILES["src/store.mjs"].includes("THE SIXTH STATE MACHINE'S SIX MEMBER OPS"))
 if (!FILES["src/store.mjs"].includes('refuse("MACHINE_CANNOT_MOVE_VERSION"')) {
   console.log("FATAL: stripper removed a real return site"); process.exit(2); }
 
-/* THE RESERVED SUFFIX. Harvested rather than listed: a list of family names goes
-   stale the moment a seventh is written, which is the failure this repository
-   names as "invert, do not lengthen a list". */
-const families = Object.entries(CATALOG)
-  .filter(([k, v]) => /_CHECKS$/.test(k) && v && typeof v === "object" && !Array.isArray(v));
-const codes = new Map();   // code -> family
-for (const [fam, table] of families)
-  for (const [code, row] of Object.entries(table))
-    if (row && typeof row === "object" && typeof row.translation === "string") codes.set(code, { fam, row });
+/* THE RESERVED SUFFIX, harvested in `multisite-census.mjs` (D-550). */
+const { families, codes } = dec49Codes(CATALOG);
 
 if (codes.size === 0) { console.log("FATAL: empty corpus — no DEC-49 codes harvested"); process.exit(2); }
 if (families.length < 3) { console.log(`FATAL: only ${families.length} families harvested`); process.exit(2); }
 
-const lineOf = (text, i) => text.slice(0, i).split("\n").length;
-const sitesFor = (code) => {
-  const out = [];
-  for (const [file, text] of Object.entries(FILES)) {
-    /* ANY QUOTED OCCURRENCE, not a list of the three spellings the first draft
-       matched (`refuse(`, `reason:`, `code:`). THAT LIST WAS THE DEFECT THIS
-       REPOSITORY NAMES AS "invert, do not lengthen a list": measured, it scored
-       NINETY-FOUR codes as having no site at all, including the whole of
-       SUGGEST_CHECKS and VERSION_STRENGTH_CHECKS, which reach their rows through
-       locally-named helpers. Generous by design and deduped by line below; the
-       guard expression is printed so a reader can discard a non-site. */
-    const re = new RegExp(`["']${code}["']`, "g");
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      /* The 320 characters IN FRONT of the site, which is where the guard
-         expression that reached it lives. Printed, never classified. */
-      const before = text.slice(Math.max(0, m.index - 320), m.index);
-      const guard = (before.match(/if\s*\([\s\S]*$/) || [""])[0].replace(/\s+/g, " ").trim().slice(0, 200);
-      out.push({ file, line: lineOf(text, m.index), guard: guard || "(no `if` within 320 chars)" });
-    }
-  }
-  /* DEDUPE BY (file, line). One refusal object commonly names its code TWICE —
-     once as `reason:` and once as `code:` — and counting that as two sites would
-     manufacture candidates out of the correct shape. Measured: it did, on
-     `CAPTURE_NOT_DRAINING`, `SET_MOVED`, `VERSION_FROZEN` and
-     `VERSION_LEG_UNRESOLVED`, before this was added. */
-  const seen = new Set();
-  return out.filter((x) => { const k = `${x.file}:${x.line}`; return seen.has(k) ? false : (seen.add(k), true); });
-};
+/* ANY QUOTED OCCURRENCE, deduped by (file, line) — the reasoning (the spelling
+   list that scored 94 codes siteless; the `reason:`+`code:` double count) moved
+   with the walk to `multisite-census.mjs` (D-550). */
+const sitesFor = (code) => literalSites(code, FILES);
 
 console.log(`CORPUS: ${families.length} *_CHECKS families · ${codes.size} DEC-49 codes ·`
           + ` ${Object.values(FILES).reduce((a, t) => a + t.split("\n").length, 0)} comment-stripped lines walked`);

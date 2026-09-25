@@ -9,6 +9,10 @@
  * that carried no information, because CHECK 4 refuses every outcome except the
  * empty one. The arms below are what make the corrected sentence checkable.
  *
+ * D-525 CONTROL (2026-09-24, land/worker/D-525), for ARM C1's CORRECTED matcher: a second origin walk PLANTED in
+ *   store.mjs (the walk's own query as a string constant) — DECLARED C1 fails; ACTUAL 13/1, `2 locator walk(s)`, C1 named.
+ *   Restored by cp from a pristine copy and verified by cmp and sha256 (16293114…, 3,327,285 B). The narrower matcher
+ *   still sees what the pin exists for.
  * NEGATIVE CONTROL: seven arms, EVERY ONE RUN on 2026-08-09 by d271-independence, each armed ALONE with every other defence held OPEN, against a mechanically broken copy of the subject; every restore verified by sha256 AND by `cmp` (content) against a per-arm UNIQUELY-NAMED pristine copy, with a byte count printed and a minimum guarded. Re-run in one step: `node test/independence.control.mjs` from bio-plane/. The harness and its pen live INSIDE THIS WORKTREE and never in a shared scratchpad. CLEAN TREE: measured by the driver's own opening and closing BASELINE rows.
  *   CLEAN TREE: 14 pass, 0 fail — measured at the driver's OPENING and CLOSING baseline rows, which AGREE.
  *   (0) BASELINE, armed with nothing, run FIRST and LAST -> **14 pass, 0 fail.** Without it a harness reporting the same number for every arm cannot be told from six-arms-broken, which is a failure this repository has measured.
@@ -277,7 +281,13 @@ console.log("\n--- C. the gate and the ceremony cannot come to disagree ---");
   const CODE = decomment(STORE_SRC);
   const defs = (CODE.match(/#independenceOf\s*\(/g) || []).length;
   const calls = (CODE.match(/this\.#independenceOf\s*\(/g) || []).length;
-  const walks = (CODE.match(/FROM captured_locators WHERE capture_sha=\?/g) || []).length;
+  /* CORRECTED 2026-09-24 by D-525, never exempted: this matched `FROM captured_locators WHERE capture_sha=?`,
+     the TABLE AND ITS KEY, which is every read of that table by a sha and not the ORIGIN WALK the arm pins.
+     The walk reads ADDRESSES (`address_norm`) — what independence is derived from. D-525's `driveShells`
+     reads the same table by sha for a different question, `retrieval_locator` (which address the plane
+     fetched), and the old matcher counted it as a second origin walk. The pin now matches the walk's own
+     shape; a second inlined origin walk still reads `address_norm` by sha and still fails here. */
+  const walks = (CODE.match(/SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=\?/g) || []).length;
   console.log(`  reach: 1 definition expected, ${calls} call site(s) found, ${walks} locator walk(s) in the file`);
   /* CORRECTED 2026-09-23 by REC-161, never exempted: this pinned TWO call sites, which was the consumer
      count on the day D-271 wrote it and never the rule. The rule is ONE DEFINITION and ONE ORIGIN WALK;
