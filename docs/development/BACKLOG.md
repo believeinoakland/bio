@@ -347,6 +347,7 @@ accepts-when: a run's suggestion names the capture it read, and an accepted sugg
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
 ### D-597 · queued — **A CASE'S CITATION EDGE IS NOT PINNED INSIDE THE SIGNED DOCUMENT: `references[] rel: cites` names a bundle only.** D-579(a). BOB #34 RULED 2026-09-25 02:30Z (drained to `BOB-INBOX-drained.md`; cite until folded): pinned INSIDE the signed case document, riding REC-219's `bio-case-document/4` (ONE bump); a /3 document is never re-signed and its edges read "version undetermined (signed before capture pins)". REC-219 landed /4 without it (its report of 02:38Z). — owner RECORD.
+status: queued — HELD, DO NOT SPAWN: SCHEDULER #22 03:42Z: BUILT by REC-219's worker on land/worker/REC-219 @ b9528b03 (c2524ad8 + b9528b03 over REC-219's bf7e69ac), GATE 78/78 GREEN FULLREUSE on tree b191859d; C-41.15, signed case_citations[] in /4, CATALOG 1.30.0 (468 checks), derivation-bounds census 117->118; five-arm negative control. Take the branch at b9528b03 to land both.
 order: directly after REC-219, and trained WITH it if the batch allows: /4 must not be released twice (BOB #34 02:30Z) (SCHEDULER #21, 2026-09-25)
 milestone: M10
 interface: I3 — each cites edge in /4 carries `extent_capture`; the integrator classifies (with REC-219's /4 IC).
@@ -427,6 +428,16 @@ depends-on: D-485.
 scope: a *_CHECKS row (ACT_SHAPE_CHECKS the natural family) with a canned translation for each; consolidate NOT_CONCERNED and NO_REASON behind one mint site first; remove each from R4_OWED and lower CEILING.reachGap in the same landing.
 accepts-when: ARM H lists the five as reached AND translated, R4_OWED holds none of them (moves: five untranslated codes in panes). NEGATIVE CONTROL: strip one translation and ARM H fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-485's worker).
+
+### D-599 · queued — **`NOT_CONCLUDED` IS IN REACH (preauth-vocabulary's published-case mock) WITH NO CANNED TRANSLATION: `store.mjs`'s NOT_CONCLUDED site has no DEC-49 row, so a member can meet the plane's raw code.** Found by M0-148's worker (F4, 03:40Z), once its R3-fed walk followed bindings. NO_REVIEW_COPY, the other new gap code, is D-448's. — owner RECORD.
+order: after D-590, with the DEC-49 translation rows: the same class, one more code a member meets untranslated (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: none.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one governed helper, one region, one condition).
+depends-on: M0-148 (the walk that sees it; land/worker/M0-148 @ 07f38280, carrying D-485).
+scope: a DEC-49 row for store.mjs's NOT_CONCLUDED site in a *_CHECKS family, and CEILING.reachGap lowered by one from the guard's print (at union with D-448, re-read reach and reachGap from --strict).
+accepts-when: check-refusal-codes --strict reads NOT_CONCLUDED translated and reachGap one lower (moves: 1 code in reach untranslated). NEGATIVE CONTROL: drop the row and the guard fails naming NOT_CONCLUDED.
+added: 2026-09-25 · SCHEDULER #22 (id minted by M0-148's worker).
 
 ### D-560 · queued — **`tools/release-assemble.mjs` (~140) STILL NAMES THE ONE-BUNDLE COMMAND: its NO_ARTIFACT detail says "Run `npm run build` in <dir>/", and the assembler dies on the FIRST missing artifact, so a releaser fixes one bundle at a time.** M0-188's sibling site (found by M0-188's worker, via CONDUCT #20 23:45Z). — owner DIST (the path), M0.
 order: after D-548, with the process rows behind the product rows: it costs a release round, not a gate round, and no release is cut until the plan's current scope is done (BOB #34 22:30Z) (SCHEDULER #21, 2026-09-24)
@@ -1192,13 +1203,3 @@ depends-on: none.
 scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
 accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); RE-READ 2026-09-23 by SCHEDULER #16 on `0e7cc03e` (M0-131 landed): NARROWED — with the per-unit record on (the default) §2d does not take the shortcut and the never-cached units run; the bare shortcut stands only with `BIO_GATE_RESULTS=off` (or no `tools/gateresults.mjs`) and no `--with-never-cached`. — owner M0.
-order: behind the product rows, first of the process block (moved 2026-09-23 by SCHEDULER #16): re-read at the code, the default path already runs the never-cached units, so this closes a non-default mode, neither cutting gate time nor unblocking product — Bob, 2026-09-22: *"The goal is BIO work; process is overhead"* (was: directly after REC-176, SCHEDULER #15)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3a condition 1 (never-cached units always run) and §2 (M0-122's reuse), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-131 (its derived never-cached set and `--never-cached` run are reused).
-scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
-accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
