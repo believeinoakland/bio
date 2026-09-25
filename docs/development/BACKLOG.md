@@ -53,17 +53,6 @@ scope: refuse each of the three by a named DEC-49 code before the transaction, a
 accepts-when: each of the three answers its named code and no op=promote answer carries a stack (moves: three raw NOT NULL errors). NEGATIVE CONTROL: drop one refusal and its arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-628's worker).
 
-### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
-order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a driver cleans up after a clean run), with BOB #33's ruling of 17:12Z (cite until folded).
-depends-on: M0-155.
-scope: (1) status.control.mjs removes `.status-harness/` on a clean run; (2) `.gitignore`'s pen preamble says pens are a driver's mechanism, gitignored and item-named, distinct from session scratch; (3) WORKER.md's scratch bullet adds "a control driver's declared, gitignored pen is not scratch".
-accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGATIVE CONTROL: remove the cleanup and the pen-gone arm fails by name.
-added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
-scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
-
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
@@ -134,16 +123,6 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connectio
 depends-on: D-625 (integrated, a42ba046), UI-112 (integrated, bfd57de2) — both ride batch30; build on main after it.
 scope: offer the unplaced occurrence as its own choice and send `occurrence` whenever the attribute is PRESENT, including ''; correct UI-112's comment and the §14.5 / construct 6.on-point-ui sentences D-625's union names.
 accepts-when: a member chooses the unplaced occurrence of a many-place string from the page and op=connectionchoose records '' (moves: an accepted choice the surface cannot make). NEGATIVE CONTROL: restore the truthy test and the unplaced-choice arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
-
-### D-677 · queued — **THE CONTENT FRAMEWORK'S STATUS BULLET FOR D-454 IS SPLICED MID-SENTENCE INTO D-517's: "that figure is CONFIRMED [D-454's bullet] as its valley's midpoint", so both statements read garbled in the front matter.** Found by D-625's worker (minted on land/worker/D-625). — owner RECORD (docs).
-order: after D-676, a docs-only correction to the same document; it may ride any Framework landing (SCHEDULER #23, 2026-09-25)
-milestone: M4
-interface: none.
-design: `docs/architecture/CORPUS-STANDARD.md` (front matter states what a document contains), for `docs/architecture/BIO_Content_Framework_v0_10.md`'s front matter.
-depends-on: none.
-scope: move D-454's bullet after D-517's sentence ends; no other text changes.
-accepts-when: both bullets read whole in the front matter; corpuscheck 0 fail (moves: a spliced sentence). NEGATIVE CONTROL: none meaningful for prose; state so.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-625's worker).
 
 ### D-694 · queued — **A CSV CAPTURED THROUGH THE PROFILE-BRANCH PATH HOLDS NO SHEET LIST: that path carries no `container_extent`, so a sheet-range or sheet-cell citation naming a sheet the CSV lacks is SKIPPED as undetermined instead of refused, and a version notice reads "no sheet list" (measured: the key is absent on the acquired document).** Found by D-684's worker (minted on land/worker/D-684). — owner RECORD.
@@ -1101,4 +1080,24 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
+order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
+depends-on: M0-158.
+scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
+accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
+order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
+depends-on: none.
+scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
+accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
