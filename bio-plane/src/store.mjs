@@ -20458,13 +20458,12 @@ export class Store extends DurableObject {
                          why: "its author has chosen no level for this edition or any earlier one" };
       const g = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
       const m = g ? this.#one(`SELECT cover, handle FROM members WHERE member_id=?`, g.author) : null;
-      /* DEC-49 REGION is-attribution-shown — what each level PUBLISHES, and nothing else. */
+      /* WHAT EACH LEVEL PUBLISHES, and nothing else (a projection, not a refusal site, so it carries no DEC-49 marker). */
       const shown = act.level === "group" ? this.#producingGroup()
         : act.level === "project" ? project
         : act.level === "cover" ? (m && m.cover ? m.cover : null)
         : act.level === "name" ? (m && m.handle ? m.handle : null)
         : null;
-      /* END DEC-49 REGION is-attribution-shown */
       if (shown === null && act.level !== "group")
         return { observation: obs, level: null, shown: null, chosen_at_edition: null,
                  why: `its author chose '${act.level}' at edition ${act.edition}, and the record holds no `
