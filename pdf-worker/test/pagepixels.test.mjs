@@ -24,7 +24,7 @@
  * fixture only OUR reader can open cannot be independently checked, which is
  * the whole point of it.
  *
- * NEGATIVE CONTROL: SEVEN arms, each run ALONE by
+ * NEGATIVE CONTROL: EIGHT arms since D-585 (seven before; (h) is D-585's), each run ALONE by
  * `node pdf-worker/test/pagepixels.control.mjs`, which re-runs them in one step
  * and verifies every restore by sha256 AND by byte comparison against a
  * per-arm pristine copy whose byte count it prints and floors. RUN 2026-08-08
@@ -43,7 +43,14 @@
  *       catching it: the OCR arm scored 8.67% characters with 355 MINTED digits
  *       on a sideways page, and the engine announced nothing (probe, 2026-08-08).
  *   (e) drop the string/inline-image masking so a naive scan reads the whole
- *       content stream -> 61 pass, 2 fail. **THIS ARM CAME BACK A SURPRISING
+ *       content stream -> 61 pass, 2 fail. **CORRECTED BY D-585, 2026-09-25, not
+ *       exempted:** the text question left this module for the plane's shared
+ *       `pageShowsText`, whose tokenizer reads a string as a string, so dropping
+ *       the MASK no longer moves `hasTextOps` and the arm as written would arm at
+ *       nothing. Its subject is unchanged — an operator spelled inside a string
+ *       must not read as text — so it now breaks THAT: a naive `Tj` scan of the
+ *       UNMASKED content joins the answer again (see the driver). Re-run figures
+ *       are on the D-585 line below. **THIS ARM CAME BACK A SURPRISING
  *       GREEN THE FIRST TIME (63 pass, 0 fail) AND THAT WAS A FINDING ABOUT
  *       THIS SUITE, NOT ABOUT THE SUBJECT:** the real scanned page's content
  *       stream is `q … cm /Im0 Do Q` and contains no strings at all, so the
@@ -54,6 +61,13 @@
  *   (g) OVER-STRICTNESS ARM: add a real but irrelevant field to `analyzePage`'s
  *       return -> 63 pass, 0 fail, as declared. A suite that fails on any change
  *       at all is a suite nobody can edit.
+ * D-585 (2026-09-25) RE-RAN ALL EIGHT against a baseline of 65 pass / 0 fail, and
+ * ADDED (h): count a bare `BT` as text again (`SHOW_TEXT_BLOCK` rejoins
+ * `hasTextOps`) -> the two D-585 assertions fail by name. Figures from the run:
+ * (a) 61/4, (b) 61/4, (c) 54/11, (d) 59/6, (e) as corrected 63/2, (f) 64/1,
+ * (h) 63/2, (g) 65/0 as declared — 8 of 8 as declared, every restore sha256 AND
+ * byte-compare identical (42,153 B). The same break on the plane's side, and the
+ * two halves named separately, is `bio-plane/test/nc-d585.mjs`.
  * ONE MORE THING THE CONTROLS FOUND, kept because it is the instrument working:
  * arm (e)'s first hardened run ended through a TypeError rather than through an
  * assertion, and the FOOT SENTINEL printed `53 pass, 2 fail — SUITE ENDED
@@ -282,6 +296,24 @@ console.log("\n--- what the renderer will not pretend to do ---");
    * the sentinel working; the assertion is still hardened so the arm fails as
    * an ASSERTION rather than as a crash. */
   t("and the page is still reported as carrying no text", rst.page_marks?.hasTextOps ?? "REFUSED", false);
+
+  /* D-585 — AN EMPTY TEXT OBJECT IS NOT A TEXT LAYER. `0201-cafr-2002`'s scanned pages carry, beside the
+   * scan, a font dictionary and a second content stream that is exactly `BT\n\nET\n`: a text object opened
+   * and closed with no glyph shown. This module counted the bare `BT` as text and refused 161 such pages
+   * PAGE_HAS_TEXT_LAYER (M-157), so the OCR member could not read a page Tier 1 had nothing from. The page
+   * below is that shape: fonts declared, the paint stream and the empty text object as two streams. */
+  const cafrShape = mk([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
+    "<< /Length 26 >>\nstream\nq 8 0 0 8 0 0 cm /A Do Q\nendstream",
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 64 64] /Resources << /Font << /F1 7 0 R >> /XObject << /A 5 0 R >> >> /Contents [3 0 R 6 0 R] >>`,
+    `<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Length 512 >>\nstream\n${"\x00".repeat(512)}\nendstream`,
+    "<< /Length 7 >>\nstream\nBT\n\nET\nendstream",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ]);
+  const rcafr = await renderPageToPixels(cafrShape, 0);
+  t("D-585: an empty BT…ET beside the scan is NOT a text layer — the page renders", rcafr.ok ? "ok" : rcafr.reason, "ok");
+  t("D-585: and is reported as carrying no text", rcafr.page_marks?.hasTextOps ?? "REFUSED", false);
 
   const blank = await renderPageToPixels(mkRaw(false), 0);
   const inked = await renderPageToPixels(mkRaw(true), 0);

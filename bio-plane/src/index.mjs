@@ -4337,8 +4337,9 @@ function needsTier2(text) {
   const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   /* CPDF-10 — AND A SCAN DOES NOT ESCALATE TO TIER 2, because Tier 2 has
-     nothing to tell it. `no_text_layer` means the page declares no font and
-     draws an image: pdf.js would walk the same file and reach the same answer,
+     nothing to tell it. `no_text_layer` means the page draws an image and
+     shows no text — it declares no font, or (D-585) declares fonts and runs no
+     text-showing operator anywhere it paints: pdf.js would walk the same file and reach the same answer,
      one cross-worker hop later. The predicate above only started firing for
      this class when Tier 1 learned to NAME it (see pdfstructure.mjs) — before
      that a scan produced zero markers and zero chars and escalated to nothing,

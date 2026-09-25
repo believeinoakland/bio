@@ -131,7 +131,10 @@ const ARMS = [
 
   { name: "f. Tier 1 stops NAMING the image-only page (pdfstructure's marker)",
     file: "src/pdfstructure.mjs",
-    from: `  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {`,
+    /* CORRECTED BY D-585 (2026-09-25), never exempted: the marker's condition gained a second line (a page that
+       declares fonts and SHOWS nothing is marked too), so the one-line anchor matched zero times and this arm
+       would have reported DID-NOT-ARM. The break is the same — the marker never fires. */
+    from: `  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources)\n      && (!fontDict || (await pageShowsText(doc, pageMap)) === false)) {`,
     to:   `  if (false) {`,
     mustFail: "EVERY Tier-3 arm — the scan is no longer routed at all, which is the state this item found the plane in",
     mustNotFail: "the pure textchain unit arms (they import no PDF)" },

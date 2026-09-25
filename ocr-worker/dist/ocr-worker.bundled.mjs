@@ -531,12 +531,268 @@ var OCR_PRODUCER_MARKERS = Object.freeze([
      unrelated word that merely contains the letters does not fire. */
   Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i })
 ]);
+function tokenizeContent(s, opts = {}) {
+  const skipInline = opts.inlineImages === true;
+  const toks = [];
+  let i = 0;
+  const n = s.length;
+  while (i < n) {
+    const c = s.charCodeAt(i);
+    if (isWhitespace(c)) {
+      i++;
+      continue;
+    }
+    if (c === 37) {
+      while (i < n && s.charCodeAt(i) !== 10 && s.charCodeAt(i) !== 13) i++;
+      continue;
+    }
+    if (c === 40) {
+      const r = readLiteralBytes(s, i);
+      toks.push({ t: "str", bytes: r.bytes });
+      i = r.pos;
+      continue;
+    }
+    if (c === 60) {
+      if (s.charCodeAt(i + 1) === 60) {
+        toks.push({ t: "dict_open" });
+        i += 2;
+        continue;
+      }
+      const r = readHexBytes(s, i);
+      toks.push({ t: "str", bytes: r.bytes });
+      i = r.pos;
+      continue;
+    }
+    if (c === 62 && s.charCodeAt(i + 1) === 62) {
+      toks.push({ t: "dict_close" });
+      i += 2;
+      continue;
+    }
+    if (c === 91) {
+      toks.push({ t: "arr_open" });
+      i++;
+      continue;
+    }
+    if (c === 93) {
+      toks.push({ t: "arr_close" });
+      i++;
+      continue;
+    }
+    if (c === 47) {
+      const r = readContentName(s, i);
+      toks.push({ t: "name", v: r.v });
+      i = r.pos;
+      continue;
+    }
+    if (c === 43 || c === 45 || c === 46 || c >= 48 && c <= 57) {
+      const r = readContentNumber(s, i);
+      toks.push({ t: "num", v: r.v });
+      i = r.pos;
+      continue;
+    }
+    const start = i;
+    while (i < n) {
+      const cc = s.charCodeAt(i);
+      if (isWhitespace(cc) || isDelimiter(cc)) break;
+      i++;
+    }
+    if (i > start) {
+      const op = s.slice(start, i);
+      toks.push({ t: "op", v: op });
+      if (skipInline && op === "ID") {
+        const re = /\sEI(?=[\s/[<(]|$)/g;
+        re.lastIndex = i + 1;
+        const m = re.exec(s);
+        i = m ? m.index + 1 : n;
+      }
+    } else i++;
+  }
+  return toks;
+}
+function readLiteralBytes(s, pos) {
+  pos++;
+  const bytes = [];
+  let depth = 1;
+  const simple = { 110: 10, 114: 13, 116: 9, 98: 8, 102: 12, 40: 40, 41: 41, 92: 92 };
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if (c === 92) {
+      const nc = s.charCodeAt(pos + 1);
+      if (nc in simple) {
+        bytes.push(simple[nc]);
+        pos += 2;
+        continue;
+      }
+      if (nc >= 48 && nc <= 55) {
+        let oct = "", p = pos + 1;
+        while (p < s.length && oct.length < 3 && s.charCodeAt(p) >= 48 && s.charCodeAt(p) <= 55) {
+          oct += s[p];
+          p++;
+        }
+        bytes.push(parseInt(oct, 8) & 255);
+        pos = p;
+        continue;
+      }
+      if (nc === 10) {
+        pos += 2;
+        continue;
+      }
+      if (nc === 13) {
+        pos += s.charCodeAt(pos + 2) === 10 ? 3 : 2;
+        continue;
+      }
+      bytes.push(nc);
+      pos += 2;
+      continue;
+    }
+    if (c === 40) {
+      depth++;
+      bytes.push(40);
+      pos++;
+      continue;
+    }
+    if (c === 41) {
+      depth--;
+      if (depth === 0) {
+        pos++;
+        break;
+      }
+      bytes.push(41);
+      pos++;
+      continue;
+    }
+    bytes.push(c);
+    pos++;
+  }
+  return { bytes, pos };
+}
+function readHexBytes(s, pos) {
+  pos++;
+  let hex = "";
+  while (pos < s.length && s.charCodeAt(pos) !== 62) {
+    const ch = s[pos];
+    if (/[0-9a-fA-F]/.test(ch)) hex += ch;
+    pos++;
+  }
+  pos++;
+  if (hex.length % 2) hex += "0";
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+  return { bytes, pos };
+}
+function readContentName(s, pos) {
+  pos++;
+  let out = "";
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if (isWhitespace(c) || isDelimiter(c)) break;
+    if (c === 35 && pos + 2 < s.length) {
+      const h = parseInt(s.substr(pos + 1, 2), 16);
+      if (!Number.isNaN(h)) {
+        out += String.fromCharCode(h);
+        pos += 3;
+        continue;
+      }
+    }
+    out += s[pos];
+    pos++;
+  }
+  return { v: out, pos };
+}
+function readContentNumber(s, pos) {
+  const start = pos;
+  if (s.charCodeAt(pos) === 43 || s.charCodeAt(pos) === 45) pos++;
+  while (pos < s.length) {
+    const c = s.charCodeAt(pos);
+    if (c >= 48 && c <= 57 || c === 46) pos++;
+    else break;
+  }
+  const v = parseFloat(s.slice(start, pos));
+  return { v: Number.isNaN(v) ? 0 : v, pos };
+}
+function nameOf(doc, v) {
+  v = doc.resolve(v);
+  return v && v.t === "name" ? v.v : null;
+}
+function pageResources(doc, pageMap) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    const res = doc.dictOf(map.Resources);
+    if (res) return res;
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
 var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
+var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
+var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
+async function pageShowsText(doc, pageMap) {
+  if (!pageMap) return null;
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return null;
+  let unread = false;
+  const walk = async (content, resources, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    let lastName = null;
+    for (const tk of tokenizeContent(content, { inlineImages: true })) {
+      if (tk.t === "name") {
+        lastName = tk.v;
+        continue;
+      }
+      if (tk.t !== "op") continue;
+      if (TEXT_SHOWING.has(tk.v)) return true;
+      if (tk.v !== "Do") continue;
+      const ref = lastName != null && xobjects ? xobjects[lastName] : null;
+      const st = ref ? doc.resolve(ref) : null;
+      if (!st || st.t !== "stream") {
+        unread = true;
+        continue;
+      }
+      if (nameOf(doc, st.dict.Subtype) !== "Form") continue;
+      const key = ref && ref.t === "ref" ? ref.n : null;
+      if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+        unread = true;
+        continue;
+      }
+      const data = await doc.streamDecoded(st);
+      if (!data) {
+        unread = true;
+        continue;
+      }
+      const formRes = doc.dictOf(st.dict.Resources) || resources;
+      if (await walk(
+        LATIN1.decode(data),
+        formRes,
+        depth + 1,
+        key != null ? [...formChain, key] : formChain
+      )) return true;
+    }
+    return false;
+  };
+  if (await walk(top.text, pageResources(doc, pageMap), 0, [])) return true;
+  return unread ? null : false;
+}
 var IMAGE_FILE_MIME = Object.freeze({
   DCTDecode: "image/jpeg",
   DCT: "image/jpeg",
   JPXDecode: "image/jp2"
 });
+var FORM_DEPTH_LIMIT = 8;
+async function decodeContentStreams(doc, contents) {
+  const c = doc.resolve(contents);
+  if (!c) return { text: "" };
+  const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
+  const parts = [];
+  for (const st of streams) {
+    if (!st || st.t !== "stream") continue;
+    const data = await doc.streamDecoded(st);
+    if (!data) return { text: null };
+    parts.push(LATIN1.decode(data));
+  }
+  return { text: parts.join("\n") };
+}
 
 // ../pdf-worker/src/pagepixels.mjs
 var LATIN12 = new TextDecoder("latin1");
@@ -571,7 +827,7 @@ async function loadPdf(bytes) {
   doc.buildPageIndex();
   return doc;
 }
-var nameOf = (doc, v) => {
+var nameOf2 = (doc, v) => {
   v = doc.resolve(v);
   return v && v.t === "name" ? v.v : null;
 };
@@ -583,7 +839,7 @@ function filterNames(doc, dict) {
   const f = doc.resolve(dict.Filter);
   if (!f) return [];
   if (f.t === "name") return [f.v];
-  if (f.t === "arr") return f.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  if (f.t === "arr") return f.items.map((x) => nameOf2(doc, x)).filter(Boolean);
   return [];
 }
 function decodeParms(doc, dict, idx) {
@@ -591,12 +847,12 @@ function decodeParms(doc, dict, idx) {
   if (p && p.t === "arr") p = doc.resolve(p.items[idx] ?? p.items[p.items.length - 1]);
   return p && p.t === "dict" ? p.map : null;
 }
-function pageResources(doc, pageMap, depth = 0) {
+function pageResources2(doc, pageMap, depth = 0) {
   if (!pageMap || depth > 32) return null;
   const res = doc.dictOf(pageMap.Resources);
   if (res) return res;
   const parent = doc.dictOf(pageMap.Parent);
-  return parent ? pageResources(doc, parent, depth + 1) : null;
+  return parent ? pageResources2(doc, parent, depth + 1) : null;
 }
 async function pageContentText(doc, pageMap) {
   const c = doc.resolve(pageMap.Contents);
@@ -658,15 +914,13 @@ function maskedContent(s) {
   }
   return out;
 }
-var TEXT_OPS = /(^|[\s\]>)])(Tj|TJ|'|")(?=[\s]|$)/;
-var SHOW_TEXT_BLOCK = /(^|\s)BT(\s|$)/;
 var VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
 async function analyzePage(doc, pageIndex) {
   const order = doc._pageOrder || [];
   if (pageIndex < 0 || pageIndex >= order.length) return null;
   const pageMap = doc.dictOf({ t: "ref", n: order[pageIndex] });
   if (!pageMap) return null;
-  const res = pageResources(doc, pageMap);
+  const res = pageResources2(doc, pageMap);
   const xobjDict = res ? doc.dictOf(res.XObject) : null;
   const images = [];
   if (xobjDict) {
@@ -674,14 +928,14 @@ async function analyzePage(doc, pageIndex) {
       if (key.startsWith("__")) continue;
       const st = doc.resolve(xobjDict[key]);
       if (!st || st.t !== "stream") continue;
-      if (nameOf(doc, st.dict.Subtype) !== "Image") continue;
+      if (nameOf2(doc, st.dict.Subtype) !== "Image") continue;
       images.push({
         name: key,
         obj: st,
         width: numOf(doc, st.dict.Width),
         height: numOf(doc, st.dict.Height),
         bpc: numOf(doc, st.dict.BitsPerComponent),
-        colorSpace: nameOf(doc, st.dict.ColorSpace) || (st.dict.ColorSpace ? "\xABindirect\xBB" : null),
+        colorSpace: nameOf2(doc, st.dict.ColorSpace) || (st.dict.ColorSpace ? "\xABindirect\xBB" : null),
         isMask: doc.resolve(st.dict.ImageMask) === true,
         filters: filterNames(doc, st.dict)
       });
@@ -694,6 +948,12 @@ async function analyzePage(doc, pageIndex) {
     content = "";
   }
   const masked = maskedContent(content);
+  let textShown = null;
+  try {
+    textShown = await pageShowsText(doc, pageMap);
+  } catch {
+    textShown = null;
+  }
   const drawn = [...masked.matchAll(/\/([^\s/<>[\]()]+)\s+Do(?=[\s]|$)/g)].map((m) => m[1]);
   const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
   const mediaBox = (() => {
@@ -713,7 +973,8 @@ async function analyzePage(doc, pageIndex) {
     page: pageIndex,
     contentBytes: content.length,
     contentReadable: content.length > 0 || !pageMap.Contents,
-    hasTextOps: TEXT_OPS.test(masked) || SHOW_TEXT_BLOCK.test(masked),
+    hasTextOps: textShown === true,
+    textShown,
     hasVectorOps: VECTOR_OPS.test(masked),
     hasInlineImage: masked.includes("INLINEIMAGE"),
     images: images.map(({ obj, ...rest }) => rest),
