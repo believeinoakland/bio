@@ -1,55 +1,23 @@
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
-## WHY SCHEDULER #21 HANDED OVER (2026-09-25 ~02:55Z): CONTEXT 75%
-SCHEDULER #21 (`session_01EW169eb7SVoxFrivnk6P1f`, created by FLEET #4 at depth 1) measured 752,922 / 1,000,000 tokens at 02:52Z. Its workers sit at depth 2 and CAN report. Workers spawned by #21 report to "SCHEDULER (session_01EW169eb7SVoxFrivnk6P1f, or its successor named in SCHEDULER-NEXT)"; after #21 is archived their triggers to it are REFUSED, so the successor reads their `land/worker/<ID>` branches and `get_session` summaries, exactly as #21 did for #20's depth-8 workers.
+## WHY SCHEDULER #22 IS HANDING OVER (written 2026-09-25 ~06:27Z at 69% context, ahead of the 75% line)
+SCHEDULER #22 (`session_01RwrbKgduD6buQwTmKJodT3`, created by FLEET #4, root-created so its workers sit at depth 2). If this file's date is older than the latest coord commits, the successor re-reads QUEUE for current state.
 
 ## THE LANES (confirm with get_session)
-BOB #35 `session_01933kAN3JM2omheRacW6f9R` (BOB #34 is ARCHIVED; route BOB-lane questions and "SCHEDULER cannot fill: <why>" here) · CONDUCT #21 `session_01Np8wnAdDnRwswmAokZzNoY` (CONDUCT #20 is ARCHIVED; triggers to it are refused) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`. SCHEDULER creates its own WORKERS directly (create_session, title `WORKER <ID> (SCHEDULER #N)`, model claude-opus-5-5); workers create none.
+BOB #35 `session_01933kAN3JM2omheRacW6f9R` · CONDUCT #22 `session_01NdCepFRW8KzaQMyVjyFTqM` (CONDUCT #21 is ARCHIVED: triggers to it are refused, and workers briefed before ~04:25Z still name it, so their reports come here and are RELAYED to CONDUCT #22) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`.
 
-## STATE at 02:55Z — main 964da679 (c20-batch27, landed 01:12Z, archived by #21)
-CONDUCT #21 is gating **batch28** (44 rows, composed from every waiting land/* branch at 01:47Z); the 9+ branches pushed after 01:38Z ride batch29. When a train lands: verify each row's `land/worker/<ID>` tip is an ancestor of origin/main, then ONE write `--status <ID> done --archive <ID>` each, `--refill`, and spawn. Every `integrated` row carries its tip and GATE line on its own status note.
+## STATE — main 5e8a65a8 (c21-batch28, landed ~04:05Z; its 43 rows done and archived by #22). CONDUCT #22 is composing BATCH29 from every integrated row (74 at 06:27Z; each status: line carries tip and GATE).
+When batch29 lands: verify each row's tip is an ancestor of origin/main, then ONE write `--status <ID> done --archive <ID>` each and `--refill`. Rows that ride OTHER rows' branches: D-597 (on REC-219 b9528b03; held in BACKLOG marked BUILT, mark done with REC-219), D-601 (REC-196), D-602 (REC-150; its duplicate fix dropped at union), D-621 (closes with D-535; CONDUCT confirms statepaths arm b arms), D-619 (rides UI-106), D-321 (BLOCKED in backlog; D-321b 5ebea344 trains as a PARTIAL, row stays open).
 
-**HELD (do not spawn until the named event):**
-- D-521 — RETURNED from batch28 by CONDUCT #21 (REC-217 widened op=statementack's read). Re-spawn on main AFTER batch28 lands, rebased over REC-217, re-deriving "at most one row".
-- REC-197 — behind REC-196 (same discoverable setting).
-- D-597 (backlog) — D-579(a), the case cites-edge pin inside /4; must TRAIN WITH REC-219 (CONDUCT told). Needs REC-219 + REC-220 done.
+**Running (17, spawned by #22 unless noted):** D-612 (on D-473), D-578 (on D-563), D-627 (on D-608), D-616 (on D-606), D-617 (on UI-108), UI-106 (on D-568, carries D-619), D-623, D-575, UI-112, REC-215, M0-197, D-620, D-542 (carries D-562), D-574, D-560, D-566, D-564. Each worker reports to SCHEDULER #22 and CONDUCT #22 by trigger; after #22 is archived, read their `land/worker/<ID>` branches and summaries.
 
-**`running` — spawned by #21 (reports come to #21; read branches once #21 is archived):**
-| row | session |
-| --- | --- |
-| REC-203 | session_01RMLGzrd5418PyFmzN6gNoy (on Bob's amended §8.3 rule 3) |
-| D-455 | session_018LCBMpje4FByFCof9ZfV7C (branched FROM land/worker/REC-191) |
-| D-585 | session_01SRT6qZ3gQALtmBAuxJrYzj — INTEGRATED 03:00Z (82fda0bf, 79/79 GREEN; relayed to CONDUCT #21) |
-| UI-109 | session_01VdCN1mqxBibdBXtB3kJtSq |
-| D-535 | session_01KmuMWV3Te3jV6vGvpe1GZc |
-| D-589 | session_013HWL4mHJcPrQ9nbpx7ieBD |
-| M0-147 | session_015E334Cw3nsNmxw5QsGHHMo |
-| M0-148 | session_015ZSnTXmgR7Xr69Ctw8BL83 (branched FROM land/worker/D-485) |
-| M0-152 | session_01C4tVi1cHdk36gPfG5AJT2z |
-| UI-75 | session_01M9qmdnJvsHq2ErA7bSSTQ7 |
-| UI-78 | session_018W6TmbtEnuSoRHJRzMC1VH |
-| MK-7 | session_01G4B2pT1RFP1d8WX7wmfUgG (two PROVISIONALS may go to BOB) |
-| REC-147 | session_017yV98j4f5RZmdgwikRs8ET (a missed gate goes back to BOB) |
-| UI-69 | session_0182UKZivnZzDnC3rgbdHz38 |
-| D-147 | session_01GypSoYXcuGKoAqjxqLKK3P |
-| REC-196 | session_01VT22EC8pcE9PFqD29vXiUK |
-| REC-150 | session_01AuHmSEaaS5HbdcGjdwGu5b |
-| REC-207 | session_012hreL8FuducwEXycuG9P3E (SCHEDULER #19's; CONDUCT #20 renumbered its ids on land/conduct/c21-rec207-renumber 733dafe9) |
+**HELD:** D-546 (queued in cache) waits on D-578, then D-615 waits on D-546 (same promote function, one worker at a time). DIST-15 (queued) is DIST's own (the installer is out of bounds for workers); leave it for DIST #7. DIST-14 BLOCKED in backlog until a deploy carries FW-23 (DIST #7 told). D-321 BLOCKED (no scanned agenda held).
 
-**Stacked branches (tell CONDUCT on every relay):** D-547 carries D-526; D-455 is built on REC-191; M0-148 on D-485.
+**Cache mechanics learned by #22:** P3 caps the cache at 20 non-integrated rows; a new stacked row spawned by hand needs room (move an unstarted queued row back to the BACKLOG head in the same write). P4 refuses a cache row whose depends-on is still open: a row built on an integrated-not-done branch writes `depends-on: none (stacked on land/worker/<ID> @ <sha>)`. The refill treats a dependency placed EARLIER in the cache as met, so a held row returns unless its depends-on names the running row. LC-op-claims refuses a status note naming an op not yet on main (write "the new X act").
 
-**Union notes CONDUCT #21 already has:** CATALOG_VERSION claimed 1.29.0 by ~10 branches and 1.30.0 by REC-219; r3Fed 80->81 by UI-91 and UI-96; REGISTER_FLOOR.arms and derivation-bounds census moved by several; four branches change op=monitor (D-567, REC-191, D-338, D-455); UI-91 x D-454 is semantic (UI-112 placed).
+**Owed to Bob's lanes:** DIST #7 has the live checks owed at the next deploy (D-606's 32-invocation limit, D-320's DCT decode on the deployed member, D-605's setup page in a release, DIST-14's CSV arms). CATALOG_VERSION: eight branches claim 1.30.0/1.31.0; M0-195's A9 source pin lands first and each union records the merged `source` (CONDUCT #22 has this).
 
-## PLACED BY #21 (all on coord; each row's `order:` says why)
-D-542, D-547, D-548, D-560, D-563, D-569 (done→integrated), D-571, D-546 (BOB 23:55Z), D-556 (BOB 00:00Z), D-561, D-557, D-564, D-566, D-567 (BOB 00:25Z), D-568, D-570/D-572 (BOB 02:00/02:05Z), D-573 (BOB 01:05Z), D-574, D-575, D-576, D-578, D-579 (b) + D-595 (c) + D-597 (a) (BOB 02:30Z), D-580, D-581..D-584, D-585, D-586, D-587, D-588, D-589, D-590, D-591 (D-585's finding, after D-593), D-592, D-593, REC-220..REC-223 + UI-111 (Bob's 00:40Z version doctrine), REC-224 (BOB 02:35Z), UI-110, UI-112, UI-113. SUPERSEDED: REC-209 by REC-222. D-565 closed in fact (CLAIMS D-86 block). D-577 is UI-106's finding (noted on UI-106).
+**PLACED BY #22 (each row's order: says why):** D-598, D-594, D-600, D-596, D-599, D-601/D-602, D-603, D-604, D-605, D-606, D-607, D-608, D-609, D-610, D-611, D-612, D-613, D-614, D-615, D-616, D-617, D-618, D-619, D-620, D-621, D-622, D-623, D-624, D-627, D-635, D-665, M0-195, M0-196, M0-197, REC-225, REC-226, UI-114, UI-115. Minted by workers and not yet reported: D-633 (D-627's), D-631/632/634/636-639 (M0-197's) — place them when their reports arrive.
 
 ## ROUTED AND OPEN WITH BOB
-None awaiting a SCHEDULER placement at 02:55Z; the BOB INBOX is empty. Recently decided without a row: DIST-8's 14 scratch members stay (BOB 02:20Z); REC-191's cadence readings confirmed (02:05Z).
-
-## MECHANICS LEARNED BY #21 (read before your first write)
-- The cache cap is 20 non-`integrated` rows (P3). Returning a row to `queued` can push it to 21: move an unstarted queued row back to BACKLOG in the same write (`--row QUEUE <ID> empty` + `--insert BACKLOG`). **When extracting a row from QUEUE by awk, STOP at the next `^## ` as well as `^### `** — #21's 763d191d copied the TRACKED ELSEWHERE section into BACKLOG (fixed at 599429a1).
-- `--insert ... after|before <ID>` needs the anchor row in THAT file; a row the refill moved to QUEUE is not in BACKLOG.
-- LC-row-design refuses `VERIFICATION.md` as a design for a non-M0 milestone; for a DEC-49 product row cite "DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it".
-- BACKLOG rows are capped at 2048 B each (P5).
-- Backticks inside a bash-quoted python heredoc are command-substituted: write drain notes without backticks.
-- Worker brief template: see any #21 create_session prompt (steps 1-9 + CONTEXT); name CONDUCT #21, the D-569 plancheck note, base main 964da679 or later, and every neighbour touching the same file.
+MK-7's two provisionals (§4.4 narrow veto, §4.6 name = handle) are with Bob himself; they run as built. BOB INBOX empty at 06:27Z.
