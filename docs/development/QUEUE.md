@@ -821,8 +821,8 @@ scope: DISCLOSURE HALF ONLY: stamp the viewer; refuse a hidden source capture as
 accepts-when: a member of no project calling op=linkproject on a shared or hidden capture sees no hidden sha, project id or count (moves: disclosure). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-701's worker).
 
-### D-702 · running — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
-status: running — SCHEDULER #23 11:15Z: spawned, stacked on land/worker/D-701 @ 414439d2
+### D-702 · integrated — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
+status: integrated — CONDUCT #23 12:19Z: worker report — tip 71a5d050 (on D-701 414439d2), GATE 388/388 GREEN FULLREUSE (21964 assertions); navchanges recurred_on/page_content/undetermined; IC owed (narrower lost = MAJOR candidate); minted D-729; rides batch30 after D-701/D-706
 order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3/I5 — navchanges' judgement and the derived site_chrome; the integrator classifies.
