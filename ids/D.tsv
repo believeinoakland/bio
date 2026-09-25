@@ -253,3 +253,4 @@ D-724	2026-09-25T10:53:54.342Z	land/worker/D-685
 D-725	2026-09-25T11:00:53.412Z	SCHEDULER #24	D-703's stated gap: the writer read ignores draft=
 D-726	2026-09-25T11:03:59.913Z	land/worker/D-628	
 D-727	2026-09-25T11:04:04.813Z	WORKER M0-139	two producers' #queueSharedInquiry guards are witnessed by no assertion: #findingsVersionFromAnotherTeam (purge deletes inquiry_basis_versions, a second cause) and #findingsConcludedElsewhere (no suite purges a concluded question)
+D-728	2026-09-25T11:30:06.737Z	land/worker/D-708	
