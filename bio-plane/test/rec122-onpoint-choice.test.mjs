@@ -29,6 +29,10 @@
  * a member cannot choose between its occurrences. That is a precondition of the schema (FW-17's
  * `INSERT OR REPLACE`), not something this act can fix or detect; section 7 pins what the act DOES see
  * (it names mentions by reference, and each reference has exactly one position).
+ * CORRECTED BY D-454 (2026-09-25): (b) is LIFTED — `reading_refs` is keyed (capture_sha, ref,
+ * occurrence) and a member names the occurrence (C-74.4 where a string was read at several places).
+ * That is asserted in `reading-position-occurrences.test.mjs`; every reference in THIS fixture is read
+ * at one place, so each act here still records without naming one, which is REC-122's shape kept.
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282 */
@@ -268,7 +272,12 @@ t("page 6 of C through C-A (not chosen): still REC-120's C-49.4", [kC6A, entryFo
 console.log("\n--- 7. over-strictness: B's own portion answers are byte-identical (its end was never chosen) ---");
 t("page 5 of B: byte-identical to its answer before any choice", JSON.stringify(await grade(B, 5)), JSON.stringify(gB5pre));
 t("page 3 of B: byte-identical to its answer before any choice", JSON.stringify(await grade(B, 3)), JSON.stringify(gB3pre));
-t("the act names mentions by reference, and each reference has ONE position (reading_refs' limit, pinned not fixed)",
+/* CORRECTED BY D-454: this label read "each reference has ONE position (reading_refs' limit, pinned not
+   fixed)". The limit is fixed — one reference string may now be read at several places, each its own
+   occurrence (`reading-position-occurrences.test.mjs`) — so the old label asserted a limit the record no
+   longer has. What stays true here, and is what the value always measured: the choice is recorded at the
+   place its mention was read, and a reference read at ONE place needs no occurrence named. */
+t("the act records the chosen mention at the place it was read (p.9), with no occurrence named for a reference read once",
   chose.chosen?.position?.ref, "p.9");
 
 /* ======================= 8. PURGE TAKES THE CHOICES ======================= */

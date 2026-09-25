@@ -64,7 +64,7 @@
  * not treat a draft as final: `Meeting Minutes - DRAFT` is recorded as a fact so a
  * member can see that the record they are citing is one the body has not yet approved.
  */
-import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies }
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies }
   from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
@@ -311,7 +311,8 @@ export default {
     }
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
+    const seen = new Map();
     let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -337,8 +338,7 @@ export default {
       const file = MINUTES_FILE_LINE.exec(line);
       if (!file) continue;
       const key = file[1];
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
 
       /* A section item with no Subject block takes its heading from the nearest
          substantive line above; the item number was carried forward (see above). */
@@ -395,6 +395,7 @@ export default {
         moved_by, seconded_by,
         vote: Object.keys(vote).length ? vote : null,
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null; pendingItem = null;
     }
 

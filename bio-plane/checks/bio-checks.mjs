@@ -14762,6 +14762,17 @@ export const CONNECTION_CHOICE_CHECKS = {
       + 'reference as the reading recorded it; a mention the record never read cannot be the one '
       + 'a connection rests on.',
   },
+  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
+     string is not yet a choice between its mentions. Refused rather than defaulted: a default
+     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
+     member's name. The refusal lists the occurrences so the member can name one. */
+  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
+    check: 'C-74.4',
+    where: 'src/store.mjs chooseConnectionPair > is-connection-choice',
+    translation: 'That reference was read at more than one place in this document, and each place is '
+      + 'its own mention. Say which one is on point — by the occurrence the record lists for it, or by '
+      + 'the place as the record names it — and the choice will rest on that place alone.',
+  },
 };
 
 /* D-510 / C-86 — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE (`BIO_Case_Making_v0_1.md` §2; C-2.5 already
@@ -14853,16 +14864,27 @@ export function checkConnectionPairCovers(pair, side, extentKind, extent, covers
  *  basis the pair was selected on (FW-17), so only a mention the pair did not
  *  beat on grade — a TIE, or a stronger one from a resolution raised after the
  *  derivation — unsettles it, and only when it is not itself inside the part. */
-export function checkConnectionMentionUnchosen({ pairRef = null, pairGrade = null, pairReached = false,
+export function checkConnectionMentionUnchosen({ pairRef = null, pairOccurrence = null, pairGrade = null,
+                                                 pairReached = false,
                                                  mentions = [], cut = false, extentKind, extent,
                                                  covers, rank } = {}) {
   /* DEC-49 REGION is-mention-unchosen */
   const r = typeof rank === 'function' ? rank : () => 0;
   const place = (m) => (m && m.position && typeof covers === 'function')
     ? !!covers(m.position, extentKind, extent) : null;
+  /* D-454: the pair is ONE OCCURRENCE of its reference, not the reference. Excluding every mention
+     with the pair's ref — the rule until this — made a second read of the SAME string (page 9 of a
+     file number whose pair was read on page 3) invisible to the one check whose job is to notice
+     another mention bears on the part. With `pairOccurrence` named, only the pair's own place is
+     excluded and every other place its string was read at is another mention. A caller naming no
+     occurrence gets the old exclusion, which is what it could say. `occurrence` rides each mention
+     the check names so a member can choose it (C-74.4). */
+  const isPair = (m) => m.ref === pairRef
+    && (pairOccurrence == null || (m.occurrence ?? '') === pairOccurrence);
   const others = (Array.isArray(mentions) ? mentions : [])
-    .filter((m) => m && m.ref !== pairRef)
-    .map((m) => ({ ref: m.ref, grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
+    .filter((m) => m && !isPair(m))
+    .map((m) => ({ ref: m.ref, ...(m.occurrence !== undefined ? { occurrence: m.occurrence } : {}),
+                   grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
   const part = describeExtent({ kind: extentKind, ...(extent || {}) });
   const name = (list) => list.map((m) => `${m.ref} (${m.position
     ? `read at ${m.position.ref}` : 'where it was read is not recorded'})`).join(', ');

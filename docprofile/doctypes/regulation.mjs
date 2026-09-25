@@ -52,7 +52,7 @@
  * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
-import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms Oakland actually publishes plus
@@ -216,11 +216,13 @@ export default {
     const recitals = (flat.match(RECITAL) || []).length;
 
     const entities = [];
-    const seen = new Set();
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
+    const seen = new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     /* The instruments this one acts on or cites. Its OWN number, when it has one, is a
        document fact rather than an entity — an instrument is not a reference to

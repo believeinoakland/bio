@@ -818,6 +818,17 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- absence it is, so the null is never bare.
 -- The column arrives WITH its writer (schema.mjs's own standing rule): the
 -- agenda reader emits a position and op=promote projects it in the same landing.
+-- D-454: ONE ROW PER OCCURRENCE, keyed (capture_sha, ref, occurrence). Until this
+-- the key was (capture_sha, ref), so a reference string read on three pages was
+-- ONE row at the first page, and a member choosing a connection's on-point mention
+-- (REC-122) could not choose page 9. occurrence is the place (pos_kind:pos, the
+-- two columns beside it, so it is computable from them), and every unplaced read of
+-- one reference is the ONE row with an empty occurrence -- the record cannot tell
+-- apart reads it cannot place. seq is the reading order, and seq 0 is the FIRST read,
+-- which is exactly the one row every store held before this: a read asking about the
+-- REFERENCE (resolve, the name index, the frontier) reads seq 0, and a read asking
+-- about its MENTIONS reads every row. The re-key keeps every existing row (the
+-- migration renames, recreates and copies forward, store.mjs #migrate).
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -828,7 +839,9 @@ CREATE TABLE IF NOT EXISTS reading_refs (
   pos_kind     TEXT,   -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
   pos          TEXT,   -- the per-arm fields as canonical JSON, key-ordered so two reads of one place compare equal
   pos_ref      TEXT,   -- IC-1's REQUIRED human form, produced by the container that knows it
-  PRIMARY KEY (capture_sha, ref)
+  occurrence   TEXT NOT NULL DEFAULT '',  -- D-454: WHICH read of ref this row is, pos_kind:pos, empty = unplaced
+  seq          INTEGER NOT NULL DEFAULT 0, -- D-454: reading order among ref's occurrences, 0 = the first read
+  PRIMARY KEY (capture_sha, ref, occurrence)
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
@@ -1167,6 +1180,12 @@ CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
 -- about (D-113). No position is stored: WHERE the mention was read is the reading's
 -- fact (reading_refs), read at answer time, so a choice cannot freeze a position the
 -- record later corrects.
+-- D-454: the choice NAMES ITS OCCURRENCE, because one reference string may be read at
+-- several places and a choice of the string alone is not a choice between them. The key
+-- is stored, never the position read off it: the answer still joins reading_refs, so a
+-- re-read that no longer carries that occurrence LAPSES the choice rather than moving it
+-- to another. A row chosen before D-454 has NULL here and answers only while its
+-- reference has exactly one occurrence.
 CREATE TABLE IF NOT EXISTS connection_pair_choices (
   choice_id     INTEGER PRIMARY KEY AUTOINCREMENT,
   a_capture_sha TEXT NOT NULL,
@@ -1174,6 +1193,7 @@ CREATE TABLE IF NOT EXISTS connection_pair_choices (
   entity_id     TEXT NOT NULL,
   side          TEXT NOT NULL,  -- which end the choice is about, a or b
   ref           TEXT NOT NULL,  -- the chosen mention, as resolutions.ref holds it
+  occurrence    TEXT,           -- D-454: WHICH read of ref, reading_refs.occurrence. NULL = chosen before D-454, naming the string only
   a_bundle_id   TEXT,
   b_bundle_id   TEXT,
   chosen_by     TEXT NOT NULL,  -- the member, stamped by the control plane
@@ -14059,6 +14079,15 @@ var CONNECTION_CHOICE_CHECKS = {
     check: "C-74.3",
     where: "src/store.mjs chooseConnectionPair > is-connection-choice",
     translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
+  },
+  /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
+     string is not yet a choice between its mentions. Refused rather than defaulted: a default
+     (the first read, say) would be REC-122's own liar — the machine's selection wearing a
+     member's name. The refusal lists the occurrences so the member can name one. */
+  CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
+    check: "C-74.4",
+    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
   }
 };
 var PROMOTED_TYPE_CHECKS = {
@@ -14086,6 +14115,7 @@ function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
 }
 function checkConnectionMentionUnchosen({
   pairRef = null,
+  pairOccurrence = null,
   pairGrade = null,
   pairReached = false,
   mentions = [],
@@ -14097,7 +14127,14 @@ function checkConnectionMentionUnchosen({
 } = {}) {
   const r = typeof rank4 === "function" ? rank4 : () => 0;
   const place = (m) => m && m.position && typeof covers === "function" ? !!covers(m.position, extentKind, extent) : null;
-  const others = (Array.isArray(mentions) ? mentions : []).filter((m) => m && m.ref !== pairRef).map((m) => ({ ref: m.ref, grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
+  const isPair = (m) => m.ref === pairRef && (pairOccurrence == null || (m.occurrence ?? "") === pairOccurrence);
+  const others = (Array.isArray(mentions) ? mentions : []).filter((m) => m && !isPair(m)).map((m) => ({
+    ref: m.ref,
+    ...m.occurrence !== void 0 ? { occurrence: m.occurrence } : {},
+    grade: m.grade ?? null,
+    position: m.position ?? null,
+    inside: place(m)
+  }));
   const part = describeExtent({ kind: extentKind, ...extent || {} });
   const name = (list) => list.map((m) => `${m.ref} (${m.position ? `read at ${m.position.ref}` : "where it was read is not recorded"})`).join(", ");
   if (!pairReached) {
@@ -24722,6 +24759,10 @@ function readingSourceJson(source) {
   const { kind, ref, ...rest } = s;
   return JSON.stringify(rest);
 }
+function readingOccurrenceKey(source) {
+  const s = readingSource(source);
+  return s ? `${s.kind}:${readingSourceJson(s)}` : "";
+}
 function readingSourceFromColumns(posKind, pos, posRef) {
   if (!isNonEmptyString(posKind) || !isNonEmptyString(posRef) || typeof pos !== "string") return null;
   let fields;
@@ -25569,6 +25610,12 @@ function entity(key, kind, label, facts, source) {
   if (source) e.source = source;
   return e;
 }
+function readAgain(e, source) {
+  if (!e) return e;
+  if (!Array.isArray(e.occurrences)) e.occurrences = [e.source || null];
+  e.occurrences.push(source || null);
+  return e;
+}
 var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
   return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
@@ -26017,7 +26064,7 @@ var meeting_agenda_default = {
       if (date && body) break;
     }
     const entities = [];
-    const seen = /* @__PURE__ */ new Set();
+    const seen = /* @__PURE__ */ new Map();
     let pendingSubject = null, pendingFrom = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -26040,8 +26087,10 @@ var meeting_agenda_default = {
       const file = FILE_LINE.exec(line);
       if (!file) continue;
       const key = file[1];
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) {
+        readAgain(seen.get(key), locate(offsets[i]));
+        continue;
+      }
       let item = null, heading = null;
       for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
         const prev = lines[j];
@@ -26064,6 +26113,7 @@ var meeting_agenda_default = {
         from: pendingFrom || null,
         item: item || null
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null;
       pendingFrom = null;
     }
@@ -26293,7 +26343,7 @@ var meeting_minutes_default = {
       if (!roster[key]) roster[key] = above;
     }
     const entities = [];
-    const seen = /* @__PURE__ */ new Set();
+    const seen = /* @__PURE__ */ new Map();
     let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -26320,8 +26370,10 @@ var meeting_minutes_default = {
       const file = MINUTES_FILE_LINE.exec(line);
       if (!file) continue;
       const key = file[1];
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key)) {
+        readAgain(seen.get(key), locate(offsets[i]));
+        continue;
+      }
       const item = pendingItem;
       let heading = null;
       for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
@@ -26372,6 +26424,7 @@ var meeting_minutes_default = {
         seconded_by,
         vote: Object.keys(vote).length ? vote : null
       }, locate(offsets[i])));
+      seen.set(key, entities[entities.length - 1]);
       pendingSubject = null;
       pendingFrom = null;
       pendingItem = null;
@@ -26577,11 +26630,15 @@ var staff_report_default = {
       }
     }
     const entities = [];
-    const seen = /* @__PURE__ */ new Set();
+    const seen = /* @__PURE__ */ new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) {
+        readAgain(seen.get(key), locate(offset));
+        return;
+      }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     for (const m of raw.matchAll(INSTRUMENT_REF))
       take(
@@ -26747,11 +26804,15 @@ var regulation_default = {
     }
     const recitals = (flat.match(RECITAL) || []).length;
     const entities = [];
-    const seen = /* @__PURE__ */ new Set();
+    const seen = /* @__PURE__ */ new Map();
     const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) return;
-      seen.add(key);
-      entities.push(entity(key, kind, label, facts, locate(offset)));
+      if (seen.has(key)) {
+        readAgain(seen.get(key), locate(offset));
+        return;
+      }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
     };
     const ownKey = number ? `${instrument}:${number}` : null;
     for (const m of raw.matchAll(REG_INSTRUMENT_REF)) {
@@ -30707,6 +30768,14 @@ var Store = class _Store extends DurableObject {
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
     }
+    {
+      const cols = [...this.sql.exec(`PRAGMA table_info(reading_refs)`)].map((r) => r.name);
+      if (cols.length && !cols.includes("occurrence")) {
+        this.sql.exec(`ALTER TABLE reading_refs RENAME TO reading_refs_preoccurrence`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_ref`);
+        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_bundle`);
+      }
+    }
     const memberCols = [...this.sql.exec(`PRAGMA table_info(members)`)].map((r) => r.name);
     if (memberCols.includes("name") && !memberCols.includes("cover"))
       this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
@@ -30992,6 +31061,12 @@ var Store = class _Store extends DurableObject {
          that exists before this column did, and null is the TRUE value for them:
          their ties went to the scan's row order, which no read can recover. */
       ["connections", "pair_rule", "TEXT"],
+      /* D-454: WHICH OCCURRENCE a member's on-point choice names. Null on every choice made
+         before it, and null is the TRUE value: those choices named a string when the record
+         held one occurrence per string, and no backfill can know which read the member meant
+         once a re-read finds more. The read answers such a choice only while its reference
+         has exactly one occurrence (connectionGradeForContent says why). */
+      ["connection_pair_choices", "occurrence", "TEXT"],
       /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
@@ -31106,6 +31181,22 @@ var Store = class _Store extends DurableObject {
            FROM published_bundles_preeditions`
         );
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(reading_refs_preoccurrence)`)].map((r) => r.name);
+      if (old.length) {
+        const col = (c) => old.includes(c) ? c : "NULL";
+        this.sql.exec(
+          `INSERT OR IGNORE INTO reading_refs
+             (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+           SELECT capture_sha, bundle_id, ref, ${col("ref_kind")}, ${col("ref_key")}, ${col("label")},
+                  ${col("pos_kind")}, ${col("pos")}, ${col("pos_ref")},
+                  CASE WHEN ${col("pos_kind")} IS NOT NULL AND ${col("pos")} IS NOT NULL
+                       THEN ${col("pos_kind")} || ':' || ${col("pos")} ELSE '' END, 0
+             FROM reading_refs_preoccurrence`
+        );
+        this.sql.exec(`DROP TABLE reading_refs_preoccurrence`);
       }
     }
     addColumns();
@@ -42424,7 +42515,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
               EXISTS (SELECT 1 FROM resolutions r
                        WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref AND r.entity_id = ?) AS named
          FROM reading_refs rr
-        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref LIMIT ?`,
+        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref, rr.seq LIMIT ?`,
       subject ?? "",
       cap,
       max * 4 + 1
@@ -46676,20 +46767,31 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     for (const e of entities) {
       if (!e || e.key == null && e.kind == null) continue;
       const ref = typeof e.ref === "string" && e.ref ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
-      const pos = readingSource(e.source);
-      this.sql.exec(
-        `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-        sha,
-        bundleId,
-        ref,
-        e.kind == null ? null : String(e.kind),
-        e.key == null ? null : String(e.key),
-        e.label == null ? null : String(e.label),
-        pos ? pos.kind : null,
-        pos ? readingSourceJson(pos) : null,
-        pos ? pos.ref : null
-      );
+      const all = Array.isArray(e.occurrences) ? e.occurrences : [];
+      const listed = all.slice(0, _Store.#OCCURRENCES_PER_REF);
+      const places = (e.source || !listed.length ? [e.source] : []).concat(listed).map(readingSource);
+      if (all.length > listed.length) places.push(null);
+      const wrote = /* @__PURE__ */ new Set();
+      for (const pos of places) {
+        const occ = readingOccurrenceKey(pos);
+        if (wrote.has(occ)) continue;
+        this.sql.exec(
+          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+          sha,
+          bundleId,
+          ref,
+          e.kind == null ? null : String(e.kind),
+          e.key == null ? null : String(e.key),
+          e.label == null ? null : String(e.label),
+          pos ? pos.kind : null,
+          pos ? readingSourceJson(pos) : null,
+          pos ? pos.ref : null,
+          occ,
+          wrote.size
+        );
+        wrote.add(occ);
+      }
       for (const [src, text] of _Store.#refTermSources({
         ref,
         ref_key: e.key == null ? null : String(e.key),
@@ -50584,7 +50686,7 @@ ${words}`;
     const stale = this.#rows(
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
          FROM reading_refs rr
-        WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+        WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                            WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
         ORDER BY rr.capture_sha, rr.ref LIMIT ?`,
       limit
@@ -50621,7 +50723,7 @@ ${words}`;
       limit,
       remaining: this.#one(
         `SELECT count(*) c FROM reading_refs rr
-          WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+          WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
                              WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)`
       ).c
     };
@@ -51267,15 +51369,19 @@ ${words}`;
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
               rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
-        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`,
+        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha, rr.seq`,
       ref
     );
     const keep = this.#bundleRedactor(viewer);
-    return {
-      ok: true,
-      ref,
-      count: rows.length,
-      documents: rows.map((r) => ({
+    const byDoc = /* @__PURE__ */ new Map();
+    for (const r of rows) {
+      const position = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+      const cur = byDoc.get(r.capture_sha);
+      if (cur) {
+        (cur.occurrences ||= [cur.position]).push(position);
+        continue;
+      }
+      byDoc.set(r.capture_sha, {
         capture_sha: r.capture_sha,
         bundle_id: keep(r.bundle_id),
         ref: r.ref,
@@ -51283,9 +51389,11 @@ ${words}`;
         key: r.ref_key,
         label: r.label,
         content_type: r.content_type,
-        position: readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref)
-      }))
-    };
+        position
+      });
+    }
+    const documents = [...byDoc.values()];
+    return { ok: true, ref, count: documents.length, documents };
   }
   /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
    *  whose reading NAMES this subject, where the source assigned no reference the
@@ -51651,7 +51759,7 @@ ${words}`;
   static #refTermsSql(nTerms, gateSql) {
     return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
               FROM reading_ref_terms t
-              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
               LEFT JOIN readings r ON r.capture_sha = t.capture_sha
              WHERE t.term IN (${new Array(nTerms).fill("?").join(",")}) AND (${gateSql})
              GROUP BY t.capture_sha, t.ref, t.src
@@ -52066,6 +52174,14 @@ ${words}`;
    * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
   static #MEANING_LIMIT_DEFAULT = 500;
   static #MEANING_LIMIT_MAX = 5e3;
+  /* D-454: the most occurrences of ONE reference a promotion projects. A provenance document is
+     something a caller can author, so its `occurrences` list is bounded here like every list
+     this store takes from one; a real reader's list is the number of times one file number or
+     instrument is printed in one document. The figure is a CHOSEN bound, not a measured one:
+     no census of occurrences per reference has been taken. Past it the reading blob still
+     carries every entry, and the projection keeps the first 256 places and records the rest
+     as the one unplaced occurrence (`#writeReadings` says why). */
+  static #OCCURRENCES_PER_REF = 256;
   /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
      re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
      or weaker one is kept (idempotent, never a downgrade, never a duplicate row). Runs
@@ -52265,7 +52381,7 @@ ${words}`;
       if (typeof ref !== "string" || !ref)
         return { ok: false, reason: "NO_REF", detail: "resolve a single reference by its raw kind:key, or omit ref to resolve all" };
       const one = this.#one(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`,
         captureSha,
         ref
       );
@@ -52279,7 +52395,8 @@ ${words}`;
       refs = [one];
     } else {
       refs = this.#rows(
-        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? ORDER BY ref`,
+        /* D-454: seq 0 — a resolution is of the REFERENCE, and its occurrences are one reference. */
+        `SELECT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs WHERE capture_sha=? AND seq=0 ORDER BY ref`,
         captureSha
       );
     }
@@ -52652,7 +52769,7 @@ ${words}`;
       e.pos = null;
       if (!e.ref) continue;
       const rr = this.#one(
-        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT 1`,
         e.capture_sha,
         e.ref
       );
@@ -52898,9 +53015,13 @@ ${words}`;
     const mentionsOf = (entityId) => {
       if (mentionCache.has(entityId)) return mentionCache.get(entityId);
       const rows = this.#rows(
-        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        /* D-454: one row per OCCURRENCE — a reference read at three places is three mentions,
+           each carrying the `occurrence` a member names to choose it. A resolution whose
+           reading carries no row for it (re-read since) is one mention with no occurrence. */
+        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                rp.occurrence AS occurrence
            FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref LIMIT ?`,
+          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
         row.capture_sha,
         entityId,
         _Store.#MEANING_LIMIT_MAX + 1
@@ -52908,6 +53029,7 @@ ${words}`;
       const cut = rows.length > _Store.#MEANING_LIMIT_MAX;
       const got = { cut, mentions: (cut ? rows.slice(0, _Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
         ref: m.ref,
+        occurrence: m.occurrence ?? null,
         grade: m.grade,
         position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref)
       })) };
@@ -52933,21 +53055,40 @@ ${words}`;
       const mine = choices[side];
       let lapsed = null;
       if (mine) {
-        const m = this.#one(
-          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+        const reads = this.#rows(
+          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+                  rp.occurrence AS occurrence
              FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=?`,
+            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
           row.capture_sha,
           c.entity_id,
-          mine.ref
+          mine.ref,
+          _Store.#OCCURRENCES_PER_REF + 1
         );
-        if (!m) {
+        const ambiguous = mine.occurrence == null && reads.length > 1;
+        const m = mine.occurrence == null ? reads.length === 1 ? reads[0] : null : reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null;
+        const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
+        if (ambiguous) {
           lapsed = {
             ref: mine.ref,
             chosen_by: mine.chosen_by,
             at: mine.at,
             lapsed: true,
-            why: "a member chose this mention as on point, and this document no longer carries it for this subject, so the choice cannot answer and the machine's selection is read as unchosen"
+            ambiguous: true,
+            occurrences: reads.map((x) => ({
+              occurrence: x.occurrence ?? null,
+              position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
+            })),
+            why: `a member chose ${mine.ref} as on point before the record kept which read of a reference a choice meant, and this document reads it at ${reads.length} places, so the choice cannot say which and the machine's selection is read as unchosen. Choosing again, naming the occurrence, settles it`
+          };
+        } else if (!m) {
+          lapsed = {
+            ref: mine.ref,
+            ...occ,
+            chosen_by: mine.chosen_by,
+            at: mine.at,
+            lapsed: true,
+            why: "a member chose this mention as on point, and this document no longer carries it " + (mine.occurrence != null ? "at that place " : "") + "for this subject, so the choice cannot answer and the machine's selection is read as unchosen"
           };
         } else {
           const position = readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref);
@@ -52960,7 +53101,7 @@ ${words}`;
             theirs.ref
           )?.grade || (side === "a" ? c.b_grade : c.a_grade);
           const grade2 = _Store.#weakerGrade(m.grade, theirGrade);
-          const onPoint = { ref: m.ref, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
+          const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
           const chosenEntry = { ...entry, grade: grade2, on_point: onPoint };
           const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
           const verdict = checkConnectionPairCovers(
@@ -53000,6 +53141,8 @@ ${words}`;
       if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
         const unchosen = checkConnectionMentionUnchosen({
           pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
+          /* D-454: the pair's OWN place, so another read of its string is another mention. */
+          pairOccurrence: readingOccurrenceKey(side === "a" ? view.determining_pair.a_position : view.determining_pair.b_position),
           pairGrade: side === "a" ? c.a_grade : c.b_grade,
           pairReached: !bad,
           ...mentionsOf(c.entity_id),
@@ -53085,7 +53228,7 @@ ${words}`;
      choice answers — never an older one by scan order. */
   #currentPairChoices(aSha, bSha, entityId) {
     const rows = this.#rows(
-      `SELECT side, ref, chosen_by, at FROM connection_pair_choices
+      `SELECT side, ref, occurrence, chosen_by, at FROM connection_pair_choices
         WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
           AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`,
       aSha,
@@ -53093,7 +53236,8 @@ ${words}`;
       entityId
     );
     const out = { a: null, b: null };
-    for (const r of rows) if (!out[r.side]) out[r.side] = { ref: r.ref, chosen_by: r.chosen_by, at: r.at };
+    for (const r of rows)
+      if (!out[r.side]) out[r.side] = { ref: r.ref, occurrence: r.occurrence ?? null, chosen_by: r.chosen_by, at: r.at };
     return out;
   }
   /** op=connectionchoose — THE ACT. `capture` is the end the choice is about, `other` the
@@ -53117,6 +53261,7 @@ ${words}`;
     const other = String(args.other ?? "").trim().toLowerCase();
     const entityId = String(args.entity ?? "").trim();
     const ref = String(args.ref ?? "").trim();
+    const named = args.occurrence == null ? null : String(args.occurrence).trim() || null;
     const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
     const conn = capture && other && entityId && capture !== other ? this.#one(
       `SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
@@ -53133,6 +53278,20 @@ ${words}`;
       entityId,
       ref
     ) : null;
+    const reads = mention ? this.#rows(
+      `SELECT occurrence, seq, pos_kind, pos, pos_ref FROM reading_refs
+                     WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT ?`,
+      capture,
+      mention.ref,
+      _Store.#OCCURRENCES_PER_REF + 1
+    ) : [];
+    const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
+    const pick = named ? reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null) : reads.length <= 1 ? reads[0] || null : null;
+    const listed = () => reads.map((x) => ({
+      occurrence: x.occurrence,
+      position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
+    }));
+    const placeName = (x) => x.pos_ref || "a place the reading did not record";
     if (!who || isMachineIdentity(who))
       return refusal7(
         "CONNECTION_CHOICE_NOT_A_MEMBER",
@@ -53150,13 +53309,21 @@ ${words}`;
         ref ? `this document does not carry '${ref.slice(0, 80)}' as a mention of ${entityId}. Its mentions are the references the record resolved to that subject in it.` : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
         { capture, entity_id: entityId, ref: ref || null }
       );
+    if (named && !pick)
+      return refusal7(
+        "CONNECTION_CHOICE_NOT_A_MENTION",
+        `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'` + (byForm.length > 1 ? ` alone \u2014 that place is ${byForm.length} occurrences, so name one by its key` : ``) + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed() }
+      );
+    if (!named && reads.length > 1)
+      return refusal7(
+        "CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
+        `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places (${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming the one on point.`,
+        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed() }
+      );
     const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
-    const pos = this.#one(
-      `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
-      capture,
-      mention.ref
-    );
-    const position = pos ? readingSourceFromColumns(pos.pos_kind, pos.pos, pos.pos_ref) : null;
+    const occurrence = pick ? pick.occurrence : null;
+    const position = pick ? readingSourceFromColumns(pick.pos_kind, pick.pos, pick.pos_ref) : null;
     const answer = (wrote, prior) => ({
       ok: true,
       wrote,
@@ -53166,6 +53333,7 @@ ${words}`;
       side,
       chosen: {
         ref: mention.ref,
+        occurrence,
         grade: mention.grade,
         position,
         chosen_by: wrote ? who : cur.chosen_by,
@@ -53176,7 +53344,7 @@ ${words}`;
       says: (wrote ? `recorded: ` : `already the choice, so nothing was written: `) + `on end ${side.toUpperCase()} of this connection the on-point mention of ${entityId} is ${mention.ref}` + (position ? ` (read at ${position.ref})` : ` (the reading did not record where)`) + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged`
     });
     const at = (/* @__PURE__ */ new Date()).toISOString();
-    if (cur && cur.ref === mention.ref) return answer(false, null);
+    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer(false, null);
     this.ctx.storage.transactionSync(() => {
       if (cur)
         this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
@@ -53184,20 +53352,26 @@ ${words}`;
                           AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
       this.sql.exec(
         `INSERT INTO connection_pair_choices
-                       (a_capture_sha,b_capture_sha,entity_id,side,ref,a_bundle_id,b_bundle_id,chosen_by,at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`,
+                       (a_capture_sha,b_capture_sha,entity_id,side,ref,occurrence,a_bundle_id,b_bundle_id,chosen_by,at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
         aSha,
         bSha,
         entityId,
         side,
         mention.ref,
+        occurrence,
         conn.a_bundle_id,
         conn.b_bundle_id,
         who,
         at
       );
     });
-    return answer(true, cur ? { ref: cur.ref, chosen_by: cur.chosen_by, at: cur.at } : null);
+    return answer(true, cur ? {
+      ref: cur.ref,
+      ...cur.occurrence != null ? { occurrence: cur.occurrence } : {},
+      chosen_by: cur.chosen_by,
+      at: cur.at
+    } : null);
   }
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
      crucial one -- a lawful skip needs an exception document (slice B).
@@ -75269,6 +75443,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           other: body && body.other || url.searchParams.get("other"),
           entity: body && body.entity || url.searchParams.get("entity"),
           ref: body && body.ref || url.searchParams.get("ref"),
+          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4). */
+          occurrence: body && body.occurrence || url.searchParams.get("occurrence"),
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer")
         }),
