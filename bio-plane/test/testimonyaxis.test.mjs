@@ -44,6 +44,7 @@
 import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
+import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -475,9 +476,15 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const D = (pT && pT.caseDocument) || {};
   const cr = D.case_id ? await post("caseratify", { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
     sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }, RUTH) : { reason: "NO_CASE_DOCUMENT" };
-  t("MK-1's PUBLICATION FENCE STILL STANDS: the testimony case is refused at op=caseratify BY NAME (C-53.12) — lifting it is MK-3's act",
-    [sr && sr.ok, ...refusedAs(cr, "TESTIMONY_CASE_UNPUBLISHABLE")],
-    [true, "TESTIMONY_CASE_UNPUBLISHABLE", TESTIMONY_CHECKS.TESTIMONY_CASE_UNPUBLISHABLE.check, true]);
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: this arm pinned MK-1's fence as "still standing — lifting it is
+     MK-3's act". MK-7 (MK-3's replacement (ii)) IS that act: C-53.12 is lifted for an observation in §4.1's form and
+     the case is judged by the attribution gate instead. What this suite's subject needs is unchanged — a case frozen
+     over a testimony row does not reach publication by accident — and it is now refused because its observation's
+     author has chosen no level (C-92.10), by name, with its catalogue sentence. */
+  t("THE TESTIMONY CASE DOES NOT CROSS UNCHOSEN: refused at op=caseratify BY NAME — ATTRIBUTION_UNCHOSEN (C-92.10), MK-7's gate",
+    [sr && sr.ok, codeOf(cr), cr && cr.check,
+     !!(cr && cr.translation === ATTRIBUTION_CHECKS.ATTRIBUTION_UNCHOSEN.translation)],
+    [true, "ATTRIBUTION_UNCHOSEN", ATTRIBUTION_CHECKS.ATTRIBUTION_UNCHOSEN.check, true]);
 }
 
 /* ===================== 6. THE CATALOGUE ==================================== */

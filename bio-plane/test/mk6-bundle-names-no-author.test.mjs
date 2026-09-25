@@ -12,7 +12,12 @@
  * or cover. The reader walks EVERY object the bucket holds, whatever wrote it, so a site this suite never named
  * is still inside the population.
  *
- * WHY THE FIXTURE LIFTS MK-1'S FENCE, AND ONLY IN MEMORY. MK-1's publication fence (C-53.10–.12) still stands and
+ * CORRECTED 2026-09-25 by MK-7, never exempted: THE FIXTURE NO LONGER CUTS ANYTHING. MK-7 lifted MK-1's fence in
+ * `src/` for an observation in §4.1's form, so the plane below is the real plane, booted from `src/index.mjs`
+ * unchanged, and the observation's author takes the real `group`-level act (op=attribute). The cut this paragraph
+ * described would now remove MK-7's narrowed fence and leave its attribution gate reading an undefined binding
+ * (measured: a ReferenceError at op=caseratify). The paragraph is kept for the record:
+ * WHY THE FIXTURE LIFTED MK-1'S FENCE, AND ONLY IN MEMORY (until MK-7). MK-1's publication fence (C-53.10–.12) still stands and
  * MUST (the row: "Existing authored bundles stay fenced"; the lift is MK-3's replacement (ii)). With it standing,
  * nothing of an observation can be published, so a population read over the real plane is empty for free —
  * the equality that costs nothing (CLAUDE.md §5). So the plane is booted from `src/index.mjs`'s text with the
@@ -20,9 +25,9 @@
  * two regions and nothing else). Every other byte is the real plane, and `store.mjs` is the real file on disk,
  * so `op=testify` is the subject exactly as it ships. Nothing here lifts the fence in `src/`.
  *
- * THE LEVEL. The fixture case is the `group`-level case of the acceptance. No act records a level yet (that act
- * is MK-3's replacement (ii)), and §4.1's point is that the bundle's bytes do not depend on the level. So
- * `group` is the only level this item can be judged at: no person is published.
+ * THE LEVEL. The fixture case is the `group`-level case of the acceptance, now CHOSEN BY ITS AUTHOR through
+ * op=attribute (MK-7), and §4.1's point is that the bundle's bytes do not depend on the level. Every other level's
+ * round trip is `mk7-attribution.test.mjs`'s.
  *
  * WHAT THIS CANNOT SEE. (0) Section 1 reads the files a ratification can carry, not `_history/`, which names the
  * promoting member and is never published; section 2 would see it if it were. (1) The register's private resolution of `observer:<id>`: no op reads
@@ -57,22 +62,12 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   process.exit(0);
 }
 
-/* ------------------------------------------------ the fence-lifted fixture plane */
+/* ------------------------------------------------ the real plane (MK-7: nothing is cut) */
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const REAL = readFileSync(IDX, "utf8");
-const REGIONS = ["is-testimony-publish-case", "is-testimony-publish-bundle"];
-let lifted = REAL, cut = 0;
-const anchors = [];
-for (const r of REGIONS) {
-  const open = `/* DEC-49 REGION ${r}`, close = `/* END DEC-49 REGION ${r} */`;
-  anchors.push([REAL.split(open).length - 1, REAL.split(close).length - 1]);
-  const a = lifted.indexOf(open), b = lifted.indexOf(close);
-  if (a >= 0 && b > a) { cut += b + close.length - a; lifted = lifted.slice(0, a) + lifted.slice(b + close.length); }
-}
 
 const ADM = "adm-mk6";
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: IDX, script: lifted,
+  modules: true, modulesRoot: "/", scriptPath: IDX,
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -90,13 +85,7 @@ const NOW = "2026-09-18T00:00:00Z";
 
 try {
 
-console.log("\n--- 0. the fixture plane is the real plane with MK-1's two publication-fence regions cut out, and nothing else ---");
-t("each fence region's open and close anchor occurs EXACTLY ONCE in src/index.mjs",
-  anchors, [[1, 1], [1, 1]]);
-t("the cut removed those two regions and nothing else: the fixture is shorter by exactly their spans, and no fence code remains",
-  [REAL.length - lifted.length === cut, cut > 0, lifted.includes("TESTIMONY_CASE_UNPUBLISHABLE\", ...testimonyFenceRow"),
-   lifted.includes("reason: \"TESTIMONY_UNPUBLISHABLE\""), lifted.includes("reason: \"TESTIMONY_CITED_UNPUBLISHABLE\"")],
-  [true, true, false, false, false]);
+console.log("\n--- 0. the plane is the real plane: MK-7 lifted MK-1's fence in src/, so nothing is cut ---");
 
 /* THE OBSERVER, under a member id, a handle and a cover that are three distinct strings appearing nowhere else
    in the fixture — so any hit on any of them in a published part is theirs, and which one leaked is named. */
@@ -209,15 +198,20 @@ const pub = await POST(`op=publish&token=${IRIS}`, { project: PROJECT, targets: 
   excluded: [], subjectPosition: "sought_and_answered",
   subjectJustification: "We put the claim to the Clerk on 2026-06-20 and printed what came back.",
   biasAcknowledgement: "This group holds that contracts should be adopted in public session." });
-const D = pub && pub.caseDocument;
+/* MK-7: THE AUTHOR CHOOSES `group` for this edition (§4.2); the act re-authors the unsigned case document, and its
+   new hash is what the publisher signs. */
+const at = pub && pub.caseDocument ? await POST(`op=attribute&token=${OBSERVER}`, { caseId: pub.caseDocument.case_id,
+  edition: pub.caseDocument.edition, observation: OBS, level: "group" }) : null;
+const D = pub && pub.caseDocument
+  ? { ...pub.caseDocument, doc_sha: at && at.case_document && at.case_document.doc_sha || pub.caseDocument.doc_sha } : null;
 const cr = D ? await POST(`op=caseratify&token=${IRIS}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
   sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }) : null;
 /* The ceremony's own order (D-431): the case document, then its finding, then the observation as that case's evidence. */
 const rf = await ratify(F1);
 const ro = await ratify(OBS);
-t("THE PUBLICATION WAS DRIVEN, every act answering ok: signer, capture, finding, conclusion, case, case ratified, finding ratified, OBSERVATION RATIFIED",
-  [okOf(sr), put && put.ok !== false, okOf(pf), okOf(cc), !!D, okOf(cr), okOf(rf), okOf(ro)],
-  [[true, null], true, [true, null], [true, null], true, [true, null], [true, null], [true, null]]);
+t("THE PUBLICATION WAS DRIVEN, every act answering ok: signer, capture, finding, conclusion, case, the author's group-level act, case ratified, finding ratified, OBSERVATION RATIFIED",
+  [okOf(sr), put && put.ok !== false, okOf(pf), okOf(cc), !!D, okOf(at), okOf(cr), okOf(rf), okOf(ro)],
+  [[true, null], true, [true, null], [true, null], true, [true, null], [true, null], [true, null], [true, null]]);
 
 /* THE POPULATION: every object in the PUBLISHED bucket (key and bytes), and every public manifest record. */
 const bucket = await mf.getR2Bucket("PUBLISHED");

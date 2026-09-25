@@ -390,6 +390,10 @@ const CATALOG_CENSUS = {
      1.30.0 (REC-203, 2026-09-25): THREE ARRIVALS, NO DEPARTURES — C-91.1, C-91.2 and C-91.3, `op=idmatch`'s
      IDSPACE_CHECKS, 466 -> 469 over origin/main 964da679;
      "1.30.0": { count: 469, digest: "6da20e8de085e334d03f8d97e3211365179d5b427ec92d5e01e1a6d6e65d7f8c" } */
+  /* MK-7 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (MK-7, 2026-09-25): TWELVE ARRIVALS, no departures — ATTRIBUTION_CHECKS, C-92.1..C-92.12, 466 -> 478;
+     "1.30.0": { count: 478, digest: "7fb9adb53cb99f703ca909c8e27594906ee11ceac381b6e4d778f72e4370cf01" } */
   /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
      rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
      KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
@@ -684,6 +688,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* REC-203 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-91's three rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* D-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-94.1-11); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* MK-7 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-92's twelve rows); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

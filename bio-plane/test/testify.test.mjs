@@ -45,6 +45,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
 import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE } from "../checks/bio-checks.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
@@ -79,6 +80,10 @@ const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reaso
 const refusedAs = (r, code) => [codeOf(r), r && r.check,
   !!(r && TESTIMONY_CHECKS[code] && r.translation === TESTIMONY_CHECKS[code].translation)];
 const want = (code) => [code, TESTIMONY_CHECKS[code].check, true];
+/* MK-7: the attribution gate's refusals (C-92), which replaced three of this section's fence refusals. */
+const refusedAsA = (r, code) => [codeOf(r), r && r.check,
+  !!(r && ATTRIBUTION_CHECKS[code] && r.translation === ATTRIBUTION_CHECKS[code].translation)];
+const wantA = (code) => [code, ATTRIBUTION_CHECKS[code].check, true];
 
 const NOW = "2026-09-18T00:00:00Z";
 const WORDS = "On 10 September at the Clerk's counter I watched the deputy clerk stamp the amended "
@@ -447,7 +452,10 @@ if (d0 && head0) {
 }
 
 /* ===================== 6. THE PUBLICATION FENCE (A) ======================= */
-console.log("\n--- 6. nothing carrying an observation crosses into the published record (C-53.10–.12) ---");
+/* CORRECTED 2026-09-25 by MK-7: the section's claim was "nothing crosses" under C-53.10–.12. MK-7 lifted those for
+   an observation in §4.1's form, so the claim is now "nothing crosses WITHOUT ITS AUTHOR'S CHOSEN ATTRIBUTION"; the
+   crossing itself, per level, is `mk7-attribution.test.mjs`'s. */
+console.log("\n--- 6. nothing carrying an observation crosses into the published record without its author's attribution (C-92, C-58.2) ---");
 /* MEASURED BEFORE THE FENCE EXISTED (`test/mk1-publish-probe.mjs`): op=ratify
    on an observation whose bytes were in the working bucket PUBLISHED its words,
    its provenance document and the observer's handle; a finding resting on one
@@ -483,9 +491,15 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const put = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=${RUTH}&sha256=${OSHA}`,
     { method: "PUT", body: new TextEncoder().encode(OBYTES) })).json();
   const r1 = await ratify(OBS);
-  t("op=ratify on the OBSERVATION ITSELF (its bytes in the working bucket, a real member's signature): REFUSED BY NAME (C-53.10)",
-    [sr && sr.ok, put && put.ok, ...refusedAs(r1, "TESTIMONY_UNPUBLISHABLE")],
-    [true, true, ...want("TESTIMONY_UNPUBLISHABLE")]);
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: MK-7 LIFTED C-53.10 for an observation in §4.1's form (this one
+     names nobody in its files, MK-6) and narrowed it to one that still names its author, so TESTIMONY_UNPUBLISHABLE
+     is no longer this observation's answer and asserting it would pin the fence MK-7 exists to lift. What still
+     holds — and is what the fence protected — is that its words do NOT cross outside a signed case: op=ratify
+     refuses ATTRIBUTION_UNSTATED (C-92.12), because no ratified case document states whose words they are. The
+     narrowed C-53.10 is driven by `mk7-attribution.test.mjs` section 8, on an observation in the pre-§4.1 form. */
+  t("op=ratify on the OBSERVATION ITSELF (its bytes in the working bucket, a real member's signature): REFUSED BY NAME — ATTRIBUTION_UNSTATED (C-92.12), no signed case states whose words they are",
+    [sr && sr.ok, put && put.ok, ...refusedAsA(r1, "ATTRIBUTION_UNSTATED")],
+    [true, true, ...wantA("ATTRIBUTION_UNSTATED")]);
   /* READ THE PUBLISHED BUCKET ITSELF, object by object, rather than asking
      op=verify about a provenance sha: `op=image` hands back a rendering of
      data/provenance.json whose digest is not the stored file's, so a verify on
@@ -533,13 +547,16 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const PLAIN = "INFO-2026-5301-plain", F3 = "INQ-2026-5301-rests-on-plain";
   const mk = [await makeFinding(F1, OBS), await makeFinding(F2, F1, false)];
   const r2 = await ratify(F1);
-  t("op=ratify on a FINDING whose basis cites the observation: REFUSED BY NAME (C-53.11), naming what it rests on",
-    [mk, ...refusedAs(r2, "TESTIMONY_CITED_UNPUBLISHABLE"), r2 && Array.isArray(r2.rests_on) && r2.rests_on[0]?.observation],
-    [[[true, true], [true, true]], ...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: C-53.11 is LIFTED for a finding resting on an observation in
+     §4.1's form (narrowed to one resting on an observation that still names its author). Such a finding now
+     crosses on the ordinary rule — only as a member of a RATIFIED case (D-431 (a)) — and op=caseratify refuses that
+     case until every observation it reaches is chosen (C-92.10, driven in r4 below). So the loose finding is
+     refused by D-431's C-58.2, which is the true first refusal now; asserting C-53.11 would pin the lifted fence. */
+  t("op=ratify on a FINDING whose basis cites the observation, in no ratified case: REFUSED BY NAME (C-58.2, D-431) — it crosses only with a signed case",
+    [mk, codeOf(r2)], [[[true, true], [true, true]], "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
   const r3 = await ratify(F2);
-  t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-53.11)",
-    [...refusedAs(r3, "TESTIMONY_CITED_UNPUBLISHABLE"), r3 && r3.rests_on && r3.rests_on[0]?.observation],
-    [...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-58.2)",
+    codeOf(r3), "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE");
   /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the fixture takes a name and returns the minted id. */
   const PROJECT = await makePublishingProject({ post: (q, b) => rP(mf.dispatchFetch(`http://x/api/?${q}`,
       { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json())), mf, sha, machineToken: "adm-mk1",
@@ -558,8 +575,12 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
       sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }, RUTH);
   };
   const r4 = await caseRatify([F1]);
-  t("op=caseratify on a CASE whose finding rests on the observation: REFUSED BY NAME (C-53.12)",
-    refusedAs(r4, "TESTIMONY_CASE_UNPUBLISHABLE"), want("TESTIMONY_CASE_UNPUBLISHABLE"));
+  /* CORRECTED 2026-09-25 by MK-7, never exempted: C-53.12 is LIFTED for a case over an observation in §4.1's form
+     and replaced by the attribution gate. The case is still refused, now because its observation's author has
+     chosen no level (C-92.10, §4.4), and the refusal names the observation. */
+  t("op=caseratify on a CASE whose finding rests on the observation: REFUSED BY NAME — ATTRIBUTION_UNCHOSEN (C-92.10), naming it",
+    [...refusedAsA(r4, "ATTRIBUTION_UNCHOSEN"), r4 && Array.isArray(r4.unchosen) ? r4.unchosen.map((u) => u.observation) : null],
+    [...wantA("ATTRIBUTION_UNCHOSEN"), [OBS]]);
   const pubObs = await post("publish", pubBody([OBS]), RUTH);
   t("…and the observation itself cannot be a case member at all (op=publish: NOT_AN_INQUIRY, the existing rule)",
     codeOf(pubObs), "NOT_AN_INQUIRY");

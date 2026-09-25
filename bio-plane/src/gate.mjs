@@ -170,6 +170,9 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    C-33.47.) The integrator takes the union's number once and re-reads the census from the d470 suite's print. */
 export const CATALOG_VERSION = "1.30.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
+/* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
+   attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
+   466 -> 478, read from d470-catalog-census.test.mjs's own print on this tree. MINOR: arrivals only. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
