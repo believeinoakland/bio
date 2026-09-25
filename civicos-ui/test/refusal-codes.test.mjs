@@ -22,6 +22,19 @@
  * mkdtemp'd directory whose parent is this worktree.
  *
  * ============================================================================
+ * NEGATIVE CONTROL (D-542 / D-562, R5 BY OP and R6 PUBLIC OP, 2026-09-25): ARM 13b
+ *   takes the surface's call away and the called op's two codes leave reach BY NAME;
+ *   13d gates the public op and its two leave; 13c is the same tree as 13b failing
+ *   R5's floor. AGAINST THE REAL TREE, `refusal-codes.control.mjs` (o1): every call
+ *   app.html makes to a review-copy op (10 sites, 7 ops) made computed -> the guard
+ *   exits 1 on R5's floor (335 -> 316) and no R5 line names any of D-448's 11 codes,
+ *   the total reach holding at 595 (they are also R1 rows on main); (o2): the walk's
+ *   stop at another op's entry removed -> this suite fails at exactly ARM 13a, 13d,
+ *   13e. Both RUN 2026-09-25 on land/worker/D-542, restored, verified by hash and by
+ *   content. A SURPRISING GREEN, kept: removing `reviewcopy`'s own two calls ALONE
+ *   moved nothing (R5 335, exit 0) — the ten act codes are minted by `reviewAct`
+ *   (casedraft/reviewgrant/reviewrevoke), and NO_REVIEW_COPY rides three other ops.
+ *
  * NEGATIVE CONTROL: **remove the guard entirely — the file, its suite and its
  *   two lines in `test/run.mjs` -> a CODELESS REFUSAL IN `airun.mjs` PASSES,
  *   because nothing is looking. THE GUARD'S ABSENCE IS THE DEFECT**, so that is
@@ -423,6 +436,9 @@ export function record(platform, url) {
 }
 `);
 
+  /* D-542: extra plane files by name (ARM 13's dispatch table and store). */
+  for (const [f, text] of Object.entries(over.planeFiles || {})) fs.writeFileSync(path.join(src, f), text);
+
   fs.writeFileSync(path.join(ui, "app.html"), over.app || `<html><script>
 const PART_REASON = {
   NO_ADDRESS_GIVEN: "the page never said where it was",
@@ -488,6 +504,11 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        The default tree's one suite FEEDS one code the plane mints (its
        `reason:` literal), so the fixture's measured figure is 1. */
     r3Fed: 1,
+    /* D-542 / D-562's two, STATED for the reason every key above is: an absent floor
+       never fails. The default tree has no dispatch table (no `OPS`, no store `map`),
+       so the by-op walk reports that it did not run and both figures are 0. ARM 13
+       builds a tree that has one. */
+    r5Op: 0, r6Public: 0,
   }, over.floor || {}))};`);
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
     /* `inheritedVerdicts: 0` (REC-79) is STATED rather than omitted: an absent
@@ -1506,9 +1527,11 @@ withTree({}, tree => {
   t("ARM 11g: and prints `bodyLines` as EXEMPT with its reason, beside the slack it carries",
     /ratchet:\s+bodyLines\s+floor\s+6 · measured\s+\d+ · slack\s+[1-9]\d* · EXEMPT — DELIBERATELY NOT A RATCHET/.test(r.out), true);
   /* CORRECTED 2026-09-24 by D-550: 19 -> 20 keys and 3 -> 4 ceilings, because arm G added the ceiling
-     `multiSiteCodes`; the old figure was true of a guard with one ratchet fewer. */
-  t("ARM 11g: and all 20 of the fixture's keys — 16 floors and 4 ceilings — are accounted for",
-    /20 ratchet key\(s\) \(16 floor\(s\), 4 ceiling\(s\)\), EVERY one accounted for: 19 gated/.test(r.out), true);
+     `multiSiteCodes`; the old figure was true of a guard with one ratchet fewer.
+     CORRECTED 2026-09-25 by D-542: 20 -> 22 keys and 16 -> 18 floors, because R5 and R6 each added a
+     floor (`r5Op`, `r6Public`); the old figure was true of a guard with two ratchets fewer. */
+  t("ARM 11g: and all 22 of the fixture's keys — 18 floors and 4 ceilings — are accounted for",
+    /22 ratchet key\(s\) \(18 floor\(s\), 4 ceiling\(s\)\), EVERY one accounted for: 21 gated/.test(r.out), true);
 });
 
 console.log("\n--- ARM 11h · CEILING slack FAILS too — a ceiling above its subject lets the subject get worse ---");
@@ -1594,6 +1617,127 @@ withTree({ fixtureSrc: mutated("ARM 12d's double-named line",
     /arm G: ONE CODE, ONE MINT SITE — 0 of 3 DEC-49 codes/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 13 — D-542 / D-562: A CODE IS IN REACH BY THE OP THE SURFACE CALLS, AND BY
+   AN OP A STRANGER CAN CALL — whether or not anything spells the code.
+
+   The fixture gets a dispatch table: `OPS` in `index.mjs` (one gated op the
+   surface calls, one gated op nobody calls, one PUBLIC op) and a store `map`.
+   Each op mints one code with NO row, so a code the walk puts in reach shows up
+   as a reachGap failure naming it, and one it leaves out does not. The gated
+   op's entry calls a helper (followed) and ANOTHER op's entry method (not
+   followed: its codes are that op's). The public op also mints a code in the
+   control plane's own `if (op === …)` handler.
+   The same claim against the REAL tree is `refusal-codes.control.mjs`'s D-542 arm.
+   ============================================================ */
+const BYOP_INDEX = `
+const OPS = {
+  fixtureop:    { classes: ["member"], mutating: true  },
+  fixtureother: { classes: ["member"], mutating: true  },
+  fixturepub:   { classes: null,       mutating: false },
+};
+export async function handle(op) {
+  if (op === "fixturepub") return { ok: false, reason: "FIXTURE_CP_REFUSED", detail: "control plane" };
+  return null;
+}
+`;
+const BYOP_STORE = `
+export class Store {
+  fixtureAct() {
+    const other = this.fixtureOther();
+    if (!other) return this.#helper();
+    return { ok: false, reason: "FIXTURE_BY_OP", detail: "minted on the op the surface calls" };
+  }
+  #helper() {
+    return { ok: false, reason: "FIXTURE_BY_HELPER", detail: "minted one call down" };
+  }
+  fixtureOther() {
+    return { ok: false, reason: "FIXTURE_FOREIGN", detail: "another op's own refusal" };
+  }
+  fixturePub() {
+    return { ok: false, reason: "FIXTURE_PUBLIC", detail: "a stranger can meet this" };
+  }
+  async fetch(req) {
+    const map = {
+        fixtureop: () => this.fixtureAct(),
+        fixtureother: () => this.fixtureOther(),
+        fixturepub: () => this.fixturePub(),
+    };
+    return map;
+  }
+}
+`;
+const BYOP_APP = `<html><script>
+const PART_REASON = {
+  NO_ADDRESS_GIVEN: "the page never said where it was",
+  PART_TOO_LARGE: "too large to keep",
+  PART_PLATFORM_LIMIT: "no more requests could be made on this pass",
+  PART_FETCH_FAILED: "the site could not be reached",
+};
+async function recR(op, params){ return fetch("/api/?op=" + op); }
+async function act(){ const r = await recR("fixtureop", { x: 1 }); return r.detail; }
+</script></html>
+`;
+const byOpTree = (over = {}) => Object.assign({
+  planeFiles: { "index.mjs": BYOP_INDEX, "store.mjs": BYOP_STORE }, app: BYOP_APP,
+  /* Five new codes in the census and in the untranslated set; the reach is the default
+     tree's 7 plus the four this walk puts there. Figures READ from the guard's print on this
+     tree, then held here so a walk that loses sight fails its floor. */
+  floor: { census: 12, untranslated: 5, reach: 11, r5Op: 2, r6Public: 2 },
+  ceiling: { reachGap: 4 },
+}, over);
+const gapNames = out => ((/arm B: RATCHET — \d+ of \d+ codes in reach .* named: ([A-Z_, ]*)/.exec(out) || [])[1] || "")
+  .split(",").map(x => x.trim()).filter(Boolean).sort();
+
+console.log("\n--- ARM 13a · a code minted on an op the surface CALLS is in reach with no literal naming it; a PUBLIC op's too ---");
+withTree(byOpTree(), tree => {
+  const r = runGuard(tree);
+  t("ARM 13a: exits 0 at the tree's own figures", r.exit, 0);
+  t("ARM 13a: the gap names the op's code, its helper's, and the public op's store and control-plane codes",
+    gapNames(r.out), ["FIXTURE_BY_HELPER", "FIXTURE_BY_OP", "FIXTURE_CP_REFUSED", "FIXTURE_PUBLIC"]);
+  t("ARM 13a: and NOT the code of an op nobody calls, reached only through ANOTHER op's entry method",
+    gapNames(r.out).includes("FIXTURE_FOREIGN"), false);
+  t("ARM 13a: the by-op line names the helper it discovered and the op it resolved",
+    /arm B \/ D-542: R5 BY OP 2 code\(s\) over 1 op\(s\) app\.html calls through 1 request helper\(s\) \[recR\]/.test(r.out), true);
+});
+
+console.log("\n--- ARM 13b · NEGATIVE CONTROL: take the surface's CALL away and the op's codes leave reach BY NAME ---");
+withTree(byOpTree({ app: mutated("ARM 13b's removed call", BYOP_APP,
+  x => x.replace(`const r = await recR("fixtureop", { x: 1 }); return r.detail;`, `return null;`)),
+  floor: { census: 12, untranslated: 5, reach: 9, r5Op: 0, r6Public: 2 }, ceiling: { reachGap: 2 } }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13b: exits 0 at the control's own figures", r.exit, 0);
+  t("ARM 13b: FIXTURE_BY_OP and FIXTURE_BY_HELPER are OUT of reach; the public op's two stay",
+    gapNames(r.out), ["FIXTURE_CP_REFUSED", "FIXTURE_PUBLIC"]);
+});
+console.log("\n--- ARM 13c · ...and the same tree at 13a's figures FAILS its R5 floor, naming it ---");
+withTree(byOpTree({ app: mutated("ARM 13c's removed call", BYOP_APP,
+  x => x.replace(`const r = await recR("fixtureop", { x: 1 }); return r.detail;`, `return null;`)) }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13c: exits 1", r.exit, 1);
+  t("ARM 13c: naming R5's floor", /R5 BY OP is 0 code\(s\) minted on an op the surface calls, floor is 2/.test(r.out), true);
+});
+
+console.log("\n--- ARM 13d · D-562's control: GATE the public op and its codes leave reach BY NAME ---");
+withTree(byOpTree({ planeFiles: { "store.mjs": BYOP_STORE, "index.mjs": mutated("ARM 13d's gated op", BYOP_INDEX,
+  x => x.replace(`fixturepub:   { classes: null,`, `fixturepub:   { classes: ["member"],`)) },
+  floor: { census: 12, untranslated: 5, reach: 9, r5Op: 2, r6Public: 0 }, ceiling: { reachGap: 2 } }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13d: exits 0 at the control's own figures", r.exit, 0);
+  t("ARM 13d: the public op's two codes are OUT of reach; the called op's two stay",
+    gapNames(r.out), ["FIXTURE_BY_HELPER", "FIXTURE_BY_OP"]);
+});
+
+console.log("\n--- ARM 13e · OVER-STRICTNESS: a helper whose first parameter is `op` but spelt another way is still a helper ---");
+withTree(byOpTree({ app: mutated("ARM 13e's arrow helper", BYOP_APP, x => x
+  .replace(`async function recR(op, params){ return fetch("/api/?op=" + op); }`,
+           `const ask = async (op, params) => fetch("/api/?op=" + op);`)
+  .replace(`await recR("fixtureop", { x: 1 })`, `await ask( 'fixtureop' )`)) }), tree => {
+  const r = runGuard(tree);
+  t("ARM 13e: exits 0 — an arrow helper and a single-quoted op are read the same", r.exit, 0);
+  t("ARM 13e: and the op's codes are in reach", gapNames(r.out).includes("FIXTURE_BY_OP"), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1637,5 +1781,9 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j). AND SINCE `
   + `D-550 a catalogued code is held to ONE mint site: a second site fails naming the code (12a), a consolidated `
   + `candidate left in the set fails as slack (12b), a declared closure passes and a stale one fails (12c), and a `
-  + `code named twice on one line or in a comment is one site (12d)`);
+  + `code named twice on one line or in a comment is one site (12d). AND SINCE D-542 / D-562 a code minted on an op `
+  + `the surface CALLS is in reach with no literal naming it, and so is one minted on a PUBLIC op (13a), while the `
+  + `code of an op reached only through another op's entry is not; take the call away and the op's codes leave `
+  + `reach by name (13b) and R5's floor fails (13c); gate the public op and its codes leave (13d); an arrow helper `
+  + `and a single-quoted op are read the same (13e)`);
 if (bad) process.exit(1);

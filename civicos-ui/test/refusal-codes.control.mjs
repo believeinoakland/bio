@@ -54,6 +54,8 @@ const F = {
      guard's own text no longer holds those functions. */
   reader:  path.join(PLANE, "test", "verdict-reader.mjs"),
   runner:  path.join(HERE, "run.mjs"),
+  /* D-542: the guard's by-op walk (R5, R6). */
+  rbo:     path.join(UI, "reach-by-op.mjs"),
 };
 
 /* THE FLOOR ANCHORS ARE READ, NOT TYPED — corrected 2026-09-21 by D-254, never
@@ -749,6 +751,49 @@ arm("(g1)", [{
     what: `the guard exits 1 naming MACHINE_CANNOT_MOVE_VERSION at 2 sites, and nothing but arm G fails `
         + `(${f.length} FAIL line(s): ${f.map(l => l.slice(6, 60)).join(" | ")})`,
   };
+});
+
+/* ================================================================ D-542 / D-562
+   (o1) THE ROW'S NEGATIVE CONTROL, ARMED AGAINST THE REAL app.html: take away every call the surface makes
+   to a review-copy op (the seven UI-68 and D-150 built: casedraft, casedrafts, reviewgrant, reviewrevoke,
+   reviewcopy, reviewcomment, statementack) and D-448's eleven codes leave R5 BY NAME. Each call's quoted op
+   becomes `null`, so the helper still runs and the walk counts a computed op it cannot resolve.
+   DECLARED BEFORE ARMING: MUST FAIL on R5's floor, and NO per-op R5 line may name any of the eleven; MUST NOT
+   move the total reach — the eleven are D-448's family rows (R1) on main, which is why the control is read on
+   R5's own lines and not on the total. Two public ops keep NO_REVIEW_COPY and REVIEW_NO_COMMENT_TEXT in R6,
+   which is D-562's rule working, and is printed on the `D-562:` lines this check does not read.
+   MEASURED 2026-09-25 on the item's tree: R5 335 -> 316, exit 1 on the floor, all eleven gone from R5.
+   A FINDING ABOUT THE BRIEF'S ARM, kept: removing `reviewcopy`'s own two calls ALONE moved NOTHING (R5 335,
+   exit 0). The ten act codes are minted by `reviewAct`, reached from casedraft/reviewgrant/reviewrevoke, and
+   NO_REVIEW_COPY is carried by casedrafts, reviewcomment and statementack too; `reviewcopy`'s read mints one. */
+const RVC_CALL = /\b(?:recR|apiQ|recPostR|actAsk|actAskPost|intentAsk|apiR)\(\s*"(?:casedraft|casedrafts|reviewgrant|reviewrevoke|reviewcopy|reviewcomment|statementack)"/g;
+const rvcCalls = [...fs.readFileSync(F.app, "utf8").matchAll(RVC_CALL)].map(m => m[0]);
+const { REVIEW_COPY_CHECKS } = await import("file://" + F.catalog + "?d542=" + Date.now());
+const D448 = Object.keys(REVIEW_COPY_CHECKS);
+const r5Lines = out => [...out.matchAll(/^ {2}arm B \/ D-542: {3}[^\n]*$/gm)].map(m => m[0]).join("\n");
+console.log(`\n(o1) EVERY REVIEW-COPY OP CALL taken out of the real app.html (${rvcCalls.length} site(s)) — D-448's `
+  + `${D448.length} codes leave R5 by name`);
+arm("(o1)", rvcCalls.map(c => ({ file: F.app, from: c, to: c.replace(/"[a-z]+"/, "null") })), guard, r => {
+  const still = D448.filter(c => new RegExp(`\\b${c}\\b`).test(r5Lines(r.out)));
+  return {
+    ok: r.exit === 1 && rvcCalls.length >= 7 && D448.length === 11 && still.length === 0
+      && /R5 BY OP is \d+ code\(s\) minted on an op the surface calls, floor is \d+/.test(r.out)
+      && reachOf(r.out) === reachOf(clean.out),
+    what: `the guard exits 1 on R5's floor, no R5 line names any of D-448's ${D448.length} codes (still named: `
+        + `${still.join(", ") || "none"}), and the total reach holds at ${reachOf(clean.out)} (read ${reachOf(r.out)})`,
+  };
+});
+
+/* (o2) THE WALK'S ONE PRUNING DISARMED — the stop at ANOTHER op's entry method removed from
+   reach-by-op.mjs. DECLARED: the fixture suite MUST fail at exactly ARM 13a, 13d and 13e (the three
+   trees in which an op nobody calls is reached through the called op's entry and FIXTURE_FOREIGN leaks
+   into reach) and MUST NOT fail 13b/13c (no call, so nothing is followed) or any other arm.
+   MEASURED 2026-09-25 on the item's tree: exactly [ARM 13a, ARM 13d, ARM 13e]. */
+console.log("\n(o2) THE STOP AT ANOTHER OP'S ENTRY removed from reach-by-op.mjs — its suite must fail at exactly ARM 13a, 13d, 13e");
+arm("(o2)", [{ file: F.rbo, from: "      if (anyEntry.has(k) && !own.has(k)) continue;", to: "" }], () => run(SUITE), r => {
+  const got = suiteArmsFailing(r.out), want = ["ARM 13a", "ARM 13d", "ARM 13e"];
+  return { ok: r.exit === 1 && got.join(",") === want.join(","),
+           what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
 });
 
 /* ---------------------------------------------------------------- */

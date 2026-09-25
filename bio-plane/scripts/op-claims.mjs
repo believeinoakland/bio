@@ -128,6 +128,11 @@ export function readDispatch(planeDir = PLANE) {
      applied: one mechanism for one job. Every existing field of the returned
      table is untouched, because `test/op-claims.test.mjs` pins them. */
   const mutating = new Set(opRows.filter((m) => /mutating:\s*true/.test(m[2])).map((m) => m[1]));
+  /* D-542 / D-562: THE PUBLIC OPS OFF THE SAME ROWS, for the same reason as `mutating` above:
+     `classes: null` is how `OPS` says a caller needs NO credential of any kind, and the DEC-49
+     guard counts a code minted on such an op as one a stranger can meet. Additive; no existing
+     field moves. */
+  const ungated = new Set(opRows.filter((m) => /classes:\s*null/.test(m[2])).map((m) => m[1]));
 
   /* The public-name -> DO-path alias map. THE ONE PLACE that difference lives, and
      the reason existence alone is not a sufficient check. */
@@ -146,7 +151,7 @@ export function readDispatch(planeDir = PLANE) {
   for (const m of mapBody.matchAll(/^\s{8}([a-z][a-z0-9]*)\s*:\s*\(\)\s*=>\s*(?:this\.)?(#?[A-Za-z0-9_]+)/gm))
     routes.set(m[1], m[2]);
 
-  return { ops, mutating, doPath, routes };
+  return { ops, mutating, ungated, doPath, routes };
 }
 
 /* Where an op actually goes: the alias first, then the store's own table. */
