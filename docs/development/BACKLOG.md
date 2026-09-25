@@ -53,6 +53,16 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
+### D-680 · queued — **A DERIVATION DRAFT (no `caseId`, no `newCase`) IS REFUSED `PUBLISH_DRAFT_NOT_THIS_CASE` ON AN EXISTING CASE'S FURTHER EDITION: publishCase's is-publish-draft-this-case region passes it only when `predicted === 1`, refusing the very deferral D-538 names.** BOB #35 RULED 2026-09-25 07:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; the whole ruling there, cite until folded): it binds to the case publication derives, any edition; a named case binds only if it IS the derived one, else refused by name with both. Found by D-626's worker. — owner RECORD.
+order: with the corrections at the head of the backlog, after D-671 — it corrects just-landed D-626's region (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — a derivation draft admitted on a further edition; a new named refusal for a named case that differs from the derived one; the signed document's case-provenance statement; the integrator mints and classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 and §6A.4, with BOB #35's 07:35Z ruling, folded into §3 rule 13 by this row.
+depends-on: D-626 (integrated, land/worker/D-626 @ 2a5d4ed8 — build on it; its reworded refusal text then says what this row makes true).
+scope: in is-publish-draft-this-case, a draft with neither caseId nor newCase passes when the act's case equals the derived case; a named case differing from the derived one is refused by name with both; the signed document carries derived-at-publication or named-and-confirmed.
+accepts-when: a derivation draft publishes as a further edition of the derived case, and a mismatched named case is refused with both cases (moves: `predicted !== 1` refusing a further edition). NEGATIVE CONTROL: restore `predicted !== 1` for the derivation arm and rec217-draft-binding's new further-edition arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, on BOB #35's 07:35Z ruling).
+
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -1151,23 +1161,3 @@ depends-on: none — M0-110 is done.
 scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
 accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### M0-128 · queued — **`coord.mjs write` REBALANCES THE BACKLOG AFTER EVERY WRITE, A CLAIM OR A STATUS WORD INCLUDED, WHERE BOB #29 RULED THAT ONLY A WRITE CHANGING THE PLAN'S MEMBERSHIP OR SIZE MAY.** `write()` (`tools/coord.mjs`, re-read on `619dfa65`) runs `applyIntent(dir, { op: "rebalance", auto: true })` whenever its `rebalance` option is true, which is the default, whatever the intents; `WORK-PIPELINE.md` §2 names this *"the correction owed (M0)"*. Harmless today (a rebalance conserves every row verbatim), so it breaks M0-110's partition of writers only in principle: a lane's claim can move a plan row it never read. — owner M0.
-order: with the ledger tooling, directly after M0-120 and before LED-8: a ruled correction to a landed tool, but WORK-PIPELINE §2 itself says a stray rebalance is harmless, so it neither cuts gate time nor unblocks product and sits behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23; BOB #29's ruling of the same day)
-milestone: M0
-interface: none
-design: `docs/development/WORK-PIPELINE.md` §2, *"WHICH WRITES REBALANCE — RULED 2026-09-23 by BOB #29"*, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-119 is on `main`.
-scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
-accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
-
-### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
-order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
