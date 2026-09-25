@@ -618,7 +618,12 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      reads, and `derivation-bounds` and `meaning-bounds` each named it; it was fixed at the cause — LIMIT cap+1
      under DRIVE_SHELLS_LIMIT_DEFAULT/MAX, a keyset cursor, `limit` and `truncated` published. Its envelope is in
      the map below and its BITE in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
-  OPS.size, 46);
+  /* FELL 46 -> 45 on 2026-09-25 by D-521, from THIS ARM'S OWN FAILURE OUTPUT (`want 46 / got 45`), never by
+     subtracting. The departure is op=statementack. Its bound (STATEMENT_ACK_DOCUMENTS_MAX, 8, refused over as C-82.1)
+     guarded a read that returns at most two rows by its keys, so the bound could never fire and D-521 retired it.
+     The read is now two keyed `#one` reads, by identity and by draft link (rec217-draft-binding block 7 drives both).
+     The op leaves DRIVEN_ELSEWHERE, the envelope map and the named-constant arm in the same landing. */
+  OPS.size, 45);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1501,13 +1506,12 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      sixty-version fixture — so the bite, the clamp, `truncated` and total
                                      paging are driven there in section 15; the envelope arm is below. */
                                   "changedfromaudit",
-                                  /* IC-246 (c19-unionfix, 2026-09-24): neither takes a caller's `limit`.
+                                  /* IC-246 (c19-unionfix, 2026-09-24): takes no caller `limit`.
                                      op=groupidentity's CUT is driven above with a real bite (an enrolled
-                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims); op=statementack's
-                                     bound REFUSES and its bite lives in
-                                     `test/d150-statement-acknowledgement.test.mjs`; its named-constant arm is
-                                     above and its envelope below. */
-                                  "groupidentity", "statementack"]);
+                                     administrator's GROUP_DOMAIN_CHECKS_MAX + 1 claims). op=statementack sat
+                                     here beside it until D-521 (2026-09-25) retired its unreachable bound; it
+                                     is no longer a capped op, so it left this list. */
+                                  "groupidentity"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1710,20 +1714,9 @@ t("op=groupidentity: the PUBLIC projection is unchanged — no check log and no 
   ["domain_checks", "domain_checks_limit", "domain_checks_truncated"].map((k) => k in giPublic),
   [false, false, false]);
 
-/* op=statementack is an ACT, and its bound REFUSES (C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND): a cut would leave a
-   document listing fewer second readers than the record holds, and its owner would sign that absence. The bite —
-   STATEMENT_ACK_DOCUMENTS_MAX + 1 unsigned documents of one statement in one project, refused with nothing
-   written, and a same-sentence document in another project untouched — needs a project, joined participants and
-   authored case documents, which live in `test/d150-statement-acknowledgement.test.mjs`, where it is driven. Here:
-   the bound is a NAMED constant the statement reads, and the op answers an envelope. */
-const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
-const saBody = SRC_STORE.slice(SRC_STORE.indexOf("  acknowledgeStatement({"),
-                               SRC_STORE.indexOf("static STATEMENT_ACK_DOCUMENTS_MAX"));
-t("op=statementack: its bound is the NAMED constant STATEMENT_ACK_DOCUMENTS_MAX, read at `LIMIT ?` with max + 1 and "
-+ "no SQL literal left, and a success publishes it",
-  [Number.isInteger(SA_MAX) && SA_MAX > 0, /LIMIT \?`,[\s\S]{0,200}ackMax \+ 1\)/.test(saBody),
-   /FROM case_documents[^`]*LIMIT \d/.test(saBody), /case_documents_limit: ackMax, case_documents_truncated: false/.test(saBody)],
-  [true, true, false, true]);
+/* op=statementack's named-constant arm stood here (IC-246). D-521 (2026-09-25) RETIRED the bound it pinned,
+   STATEMENT_ACK_DOCUMENTS_MAX and its refusal C-82.1, because the read under it returns at most two rows by its keys
+   against a bound of 8. The arm is removed with the bound; the walk above no longer finds the op. */
 /* ------------------------------------------------------ D-479's ARMS (SCHEDULER #17's finding on REC-149).
    op=projectdirectory, the DISCOVERABLE projects a member is outside (Membership v2 §7.14, "The directory").
    REC-149 built it listing EVERY such project, unpaged, publishing no bound; both bounds ratchets counted it and
@@ -1967,10 +1960,9 @@ const answersByOp = new Map([
   /* D-479: driven above with its real bite and REUSED here rather than re-driven — the read is idempotent, and
      it is carried the same way as its neighbours so the roster reads as one list rather than two conventions. */
   ["projectdirectory", D479_WHOLE],
-  /* IC-246: groupidentity driven above with its real bite and REUSED here; statementack's envelope for a caller
-     neither door admits — the review copy's one dead answer, an object. */
+  /* IC-246: groupidentity driven above with its real bite and REUSED here. statementack's envelope sat beside it
+     until D-521 retired its bound and it left the roster. */
   ["groupidentity", GI_BITE],
-  ["statementack", await POST("op=statementack&token=mem-r57&draft=DRAFT-2026-0000")],
   /* D-525: the envelope of the Drive shell sweep over a store holding no Drive-linked bundle — an object with its
      named lists, never an array. The bite is driven in `test/d525-driveshells.test.mjs` (DRIVEN_ELSEWHERE). */
   ["driveshells", await GET("op=driveshells&token=mem-r57&limit=1")],

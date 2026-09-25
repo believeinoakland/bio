@@ -30,6 +30,43 @@
    was RE-RUN ALONE on the changed `src/store.mjs` (restored `sha256sum -c` OK e52d8160…0786c9, `cmp` identical,
    3,337,185 bytes): 8 pass, 15 FAIL, the same fifteen rows, block 2 GREEN — the control still bites.
 
+   NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-521 on land/worker/D-521b, over origin/main 5e8a65a8. D-521 retired
+   C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) and added block 7. Each arm ran ALONE and was declared before arming.
+   Every restore was by `cp` from per-arm pristine copies in the session scratchpad, verified by `sha256sum -c`
+   (store.mjs 4c49a0f2…12b2fd1, bio-checks.mjs bcffa6fc…0bc3e58a, both OK) and `cmp` (identical; 3,471,251 B and
+   1,005,816 B).
+   (0) BASELINE: this suite 26 pass, 0 fail; `civicos-ui/check-refusal-codes.mjs --strict` exit 0.
+   (a) THE ROW'S OWN: C-82.1's catalogue row restored in STATEMENT_ACK_CHECKS, and its DEC-49 region
+       `is-statement-ack-documents-bound` restored as an EMPTY marker pair at the read, with no refusal site in it.
+       DECLARED: check-refusal-codes MUST exit 1 naming the orphan; this suite and d507 MUST NOT move.
+       RESULT: exit 1, naming the orphan by its region-size floor ("region `is-statement-ack-documents-bound` …
+       (STATEMENT_ACK_DOCUMENTS_OVER_BOUND): the marked span is 2 line(s) / 0 characters"). NOT fully as declared,
+       in two ways, recorded rather than smoothed. The FLOOR SLACK lines for rows, census, reach and governedSites
+       also fired, because the floors had just moved down and one more row is slack. And d507 (62/1) and d150 (63/1)
+       each failed exactly their own "C-82.1 is GONE" arm, which is those arms working. My declaration was wrong
+       to say d507 would not move.
+   (a') the same, with the region widened past the size floor by a comment, so the guard judges the region's
+       CONTENT. DECLARED: MUST exit 1 naming the region as holding no refusal. RESULT: exit 1, "arm C judged NO
+       refusal inside the region `is-statement-ack-documents-bound` of acknowledgeStatement in src/store.mjs,
+       named by STATEMENT_ACK_DOCUMENTS_OVER_BOUND". AS DECLARED.
+   (b) THE COLLAPSE THE ROW'S SCOPE NAMED: `found.slice(0, 1)`, which is `#one` over the same ordered read.
+       DECLARED: block 7's "THE READ RETURNS TWO" MUST fail; blocks 1-6 MUST NOT. RESULT: 24 pass, 2 FAIL, both in
+       block 7. On this run X sorted first, so the read kept X's row and Y's document, the one the reading belongs
+       to, was NOT re-authored: the second block-7 row failed too, with Y listing nobody. That is the loss the
+       collapse would ship. Which row fails second depends on the opaque ids' order. AS DECLARED for block 7;
+       blocks 1-6 GREEN.
+   THE SUBJECT CHANGED AFTER THE CONTROL. The full gate's `derivation-bounds` (71/1) and `meaning-bounds` (95/1)
+   refused the one statement once its LIMIT was gone, counting it as an unbounded row source; they cannot see a
+   read bounded by its keys. So the read became TWO keyed `#one` reads, by identity and by link, merged once per
+   document. Both instruments went back to green, and no ceiling moved. RE-RUN ALONE on the changed store.mjs
+   (pristine 517ac29a…eba8b42, restores `sha256sum -c` OK and `cmp` identical, 3,472,115 B), with the suite now
+   27 pass at baseline because block 7 gained the same-document row:
+   (a') exit 1, naming `is-statement-ack-documents-bound` as holding no refusal, plus the same slack lines. AS BEFORE.
+   (b) 24 pass, 2 FAIL (the suite was 26 then), both block 7 rows, Y listing nobody. AS DECLARED.
+   (c) NEW — THE MERGE DROPPED: the once-per-document filter becomes `.filter((d) => d)`. DECLARED: block 7's
+       "identity and link name ONE document … ONCE" MUST fail; nothing else. RESULT: 26 pass, 1 FAIL, exactly that
+       row: the same document came back twice, both marked re-authored. AS DECLARED.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -426,6 +463,68 @@ console.log("\n--- 6. ONE SENTENCE READ ON TWO DRAFTS IS TWO READINGS ---");
     [(Pb?.completeness?.acknowledgements || []).map((a) => [a.by, a.draft]),
      Pb?.completeness?.acknowledgements_unbindable_to_this_case],
     [[["ella", Db]], 1]);
+}
+
+/* =========================================================================== 7 */
+console.log("\n--- 7. D-521: the draft door's read can return TWO documents, never more ---");
+/* WHY THIS BLOCK EXISTS (D-521, 2026-09-25). REC-194 left `acknowledgeStatement`'s document read keyed on
+   `(case_id, edition)`, `case_documents`' primary key, so it returned at most one row and IC-246's bound (8,
+   refusing over it as C-82.1) could not fire. D-521 was queued to collapse the read to one row and retire the
+   refusal. REC-217 then WIDENED the read to `edition=? AND (case_id IS ? OR draft_id = ?)`, a UNION of two
+   keys: the draft's own case identity, and the ONE document a publisher named the draft for. The second is
+   unique per draft (PUBLISH_DRAFT_ALREADY_BOUND); the first is unique by the primary key. So the read returns
+   at most TWO rows. They are two different documents when a bound draft is re-pointed at another case, which
+   `op=casedraft` does not refuse. This block drives that case through the ops: collapsing the read to one row
+   could drop the document the reading belongs to, and the bound of 8 is still unreachable (2 < 8).
+   MEASURED on 5e8a65a8, the tree D-521 was spawned on: TWO rows come back. Y's document is re-authored, since the
+   reading is at Y's identity. X's document is found and left alone (`reauthored: false`): its list binds a
+   draft's readings only where they were recorded at NO case identity, and ella's is at Y's. So the second row
+   is harmless today. The FIRST row is the risk. The read orders by `case_id`, and case ids are opaque, so a
+   read collapsed to `#one` would keep X instead of Y whenever X sorts first, and Y's document would then keep a
+   list without ella, with no refusal and nothing said. */
+{
+  const qx = await finding("rtX1"), qy = await finding("rtY1");
+  const pX = await publish("rtX1", [qx]), pY = await publish("rtY1", [qy]);
+  if (pX?.ok === false || !pX?.caseDocument?.doc_sha) bail("publish rtX1", pX);
+  if (pY?.ok === false || !pY?.caseDocument?.doc_sha) bail("publish rtY1", pY);
+  const X = pX.caseDocument.case_id, Y = pY.caseDocument.case_id;
+  for (const [c, s] of [[X, pX.caseDocument.doc_sha], [Y, pY.caseDocument.doc_sha]]) {
+    const r = await ratify(c, 1, s);
+    if (r?.ok === false) bail(`caseratify ${c}`, r);
+  }
+  const qx2 = await finding("rtX2"), qy2 = await finding("rtY2");
+  const SR = args(PROJ, "retarget").statement;
+  const DR = await draftOf("retarget", [qx2], { caseId: X });
+  const PX2 = await publish("retarget", [qx2], { caseId: X, draft: DR });
+  if (PX2?.ok === false || !PX2?.caseDocument?.doc_sha) bail("publish X edition 2 naming DR", PX2);
+  /* BOTH KEYS, ONE DOCUMENT: while DR still names X, its identity (X, 2) and its link (X, 2) are the same row.
+     The read asks by each key, and the answer must count that document once. */
+  const Ap = await ack(`draft=${DR}&token=${PAT}`);
+  t("while DR still names X, its identity and its link name ONE document, and pat's reading re-authors it ONCE",
+    [Ap?.ok, Ap?.acknowledgement?.case_id, (Ap?.case_documents || []).map((d) => [d.case_id, d.edition, d.reauthored])],
+    [true, X, [[X, 2, true]]]);
+  const moved = rP(await POST(`op=casedraft&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "retarget"), caseId: Y, targets: [qy2], draft: DR })));
+  const PY2 = await publish("retarget", [qy2], { caseId: Y });
+  if (PY2?.ok === false || !PY2?.caseDocument?.doc_sha) bail("publish Y edition 2", PY2);
+  const shaX = (await docOf(X, 2))?.doc_sha, shaY = PY2.caseDocument.doc_sha;
+  t("FIXTURE ARMS THE TRAP: DR was named for edition 2 of X, then re-pointed at Y (op=casedraft accepted it), and "
+  + "edition 2 of Y is authored, unsigned, carrying the SAME sentence (hash computed here)",
+    [PX2?.caseDocument?.edition, PX2?.completeness?.draft?.draft_id, moved?.ok, moved?.draftId,
+     PY2?.caseDocument?.edition, fmOf((await docOf(X, 2))?.text).completeness?.statement_sha === sha(SR),
+     fmOf((await docOf(Y, 2))?.text).completeness?.statement_sha === sha(SR)],
+    [2, DR, true, DR, 2, true, true]);
+  const Ar = await ack(`draft=${DR}&token=${ELLA}`);
+  t("THE READ RETURNS TWO: one reading of DR finds BOTH unsigned documents, Y's by the draft's identity and X's by "
+  + "the link, and re-authors Y's; nothing refuses, because 2 is under the bound of 8",
+    [Ar?.ok, Ar?.reason ?? null, Ar?.acknowledgement?.case_id, Ar?.acknowledgement?.edition,
+     (Ar?.case_documents || []).map((d) => [d.case_id, d.edition, d.reauthored]).sort()],
+    [true, null, Y, 2, [[X, 2, false], [Y, 2, true]].sort()]);
+  t("and only Y's bytes moved: Y lists ella, X lists pat alone, because ella's reading is Y's and not X's",
+    [(await docOf(X, 2))?.doc_sha === shaX, (await docOf(Y, 2))?.doc_sha !== shaY,
+     (fmOf((await docOf(X, 2))?.text).completeness_acknowledgements || []).map((a) => a.by),
+     (fmOf((await docOf(Y, 2))?.text).completeness_acknowledgements || []).map((a) => a.by)],
+    [true, true, ["pat"], ["ella"]]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);

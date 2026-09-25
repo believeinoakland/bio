@@ -146,7 +146,11 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-export const CATALOG_VERSION = "1.30.0";
+/* 1.31.0 (D-521, 2026-09-25, branch land/worker/D-521b): ONE DEPARTURE, NO ARRIVALS. C-82.1
+   STATEMENT_ACK_DOCUMENTS_OVER_BOUND is retired as unreachable (the read it guarded returns at most two rows against a
+   bound of 8). Rule 17 moves the stamp for a removed check. MINOR: nothing that passed now fails. The census is the
+   d470 suite's own print; CONDUCT re-reads it on the union if another branch moves this constant. */
+export const CATALOG_VERSION = "1.31.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

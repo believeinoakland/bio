@@ -161,9 +161,14 @@ for (const [code, check, region] of SIX) {
 }
 t("the six sentences are six DIFFERENT sentences — one sentence serving two codes is DEC-49's drift",
   new Set(SIX.map(([c]) => STATEMENT_ACK_CHECKS[c].translation)).size, 6);
-t("and C-82.1, the row that was already there, is untouched beside them",
-  [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.check,
-   Object.keys(STATEMENT_ACK_CHECKS).length], ["C-82.1", 7]);
+/* CORRECTED 2026-09-25 by D-521, never exempted. This arm asserted C-82.1 "untouched beside them" and a family of
+   seven. That was right while STATEMENT_ACK_DOCUMENTS_OVER_BOUND stood. D-521 RETIRED it: the read it guarded returns
+   at most two rows by its keys against a bound of 8, so no input could reach it. The family is now exactly the six
+   this suite translates, and C-82.1 is absent rather than renumbered. */
+t("and C-82.1, retired by D-521 as unreachable, is GONE: the family is exactly these six",
+  ["STATEMENT_ACK_DOCUMENTS_OVER_BOUND" in STATEMENT_ACK_CHECKS,
+   Object.values(STATEMENT_ACK_CHECKS).some((r) => r.check === "C-82.1"),
+   Object.keys(STATEMENT_ACK_CHECKS).sort()], [false, false, SIX.map(([c]) => c).sort()]);
 
 /* ============================================================================
    THE STRUCTURAL HALF — one site per code, inside the region its `where` claims,
@@ -206,11 +211,14 @@ for (const [code, , region] of SIX) {
      the arms under it go vacuous while reading true — the arm working, both times. Kept from the other
      resolution: its finding, recorded above, since the two together are what show the constant was the
      defect. */
-  const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-documents-bound", from);
+  /* CORRECTED 2026-09-25 by D-521, never exempted: the last governed region WAS `is-statement-ack-documents-bound`,
+     and D-521 retired it with its refusal. The last one now is `is-statement-ack-by-its-author`, and the floor asks
+     for the sixth code rather than the retired seventh. */
+  const bodyEnd = store.indexOf("END DEC-49 REGION is-statement-ack-by-its-author", from);
   const body = from < 0 || bodyEnd < 0 ? "" : store.slice(from, bodyEnd);
   t("acknowledgeStatement's body was found, reaches its LAST governed region, and is long enough to hold "
-  + "all seven refusals",
-    body.length > 6000 && body.includes("STATEMENT_ACK_DOCUMENTS_OVER_BOUND"), true);
+  + "all six refusals",
+    body.length > 6000 && SIX.every(([c]) => body.includes(`"${c}"`)), true);
   const helperAt = body.indexOf("const refusal = (code, detail, extra)");
   t("the `refusal` helper is declared EXACTLY ONCE in that body", body.split("const refusal = (code, detail, extra)").length - 1, 1);
   const firstUse = Math.min(...SIX.map(([c]) => { const i = body.indexOf(`refusal("${c}"`); return i < 0 ? Infinity : i; }));

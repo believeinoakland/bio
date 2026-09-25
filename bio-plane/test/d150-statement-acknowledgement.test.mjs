@@ -32,6 +32,9 @@
    in stores written before this landing, where the migration adds the column NULL. Block 9's last arm asserts the
    totality this suite CAN reach (every draft it authored with a statement carries an author) and prints its corpus.
 
+   NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-521 on block 8's corrected arms. C-82.1 restored beside an orphaned
+   region: this suite 63 pass, 1 FAIL, exactly "RETIRED, not orphaned: C-82.1 …", and check-refusal-codes exit 1 naming
+   the region. The full record, with every arm, is in `rec217-draft-binding.test.mjs`'s header.
    NEGATIVE CONTROL: RUN 2026-09-24 by the REC-194 worker on blocks 3, 6, 8, 10 and 11 (rule 13, the ONE-CASE-IDENTITY
    NARROWING), in /home/user/bio on land/worker/REC-194, each arm ALONE on `src/store.mjs`, DECLARED BEFORE ARMING,
    restored by `cp` from a UNIQUELY NAMED per-arm pristine copy verified by sha256 AND by `cmp` (content identical,
@@ -629,10 +632,17 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
    and the crowd-out are unreachable by construction rather than guarded. The bound's refusal
    (STATEMENT_ACK_DOCUMENTS_OVER_BOUND, C-82.1) is therefore UNREACHABLE and is retained as a guard over the read;
    its removal moves a DEC-49 floor and is reported by REC-194 as a nameable fix, not taken here. The arm below
-   asserts the unreachability as a MEASUREMENT rather than leaving it to be assumed. */
+   asserts the unreachability as a MEASUREMENT rather than leaving it to be assumed.
+   CORRECTED 2026-09-25 BY D-521, NEVER EXEMPTED: THE BOUND IS GONE, SO ITS ARMS ARE TOO. D-521 re-derived the count
+   on REC-217's wider read (a union of the case identity and the one document a draft is bound to): at most TWO
+   rows, driven in `rec217-draft-binding.test.mjs` block 7, against a bound of 8. So C-82.1, its region and
+   `STATEMENT_ACK_DOCUMENTS_MAX` are retired, and with them the envelope's `case_documents_limit` and
+   `case_documents_truncated`, which reported a bound that no longer exists. This block keeps its fixture, since it
+   is still the sharpest one for REC-194: NINE same-sentence documents, the figure that was max + 1, now a plain
+   count this suite owns. The arms that read the bound are removed. The arm that named C-82.1 now asserts it is
+   gone, so the catalogue's coverage cannot lose it silently. */
 {
-  const SA_MAX = Number((/static STATEMENT_ACK_DOCUMENTS_MAX = (\d+);/.exec(
-    readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8")) || [])[1]);
+  const SA_MAX = 8;   /* D-521: was read off STATEMENT_ACK_DOCUMENTS_MAX, now retired. The fixture holds SA_MAX + 1 = nine documents, a size this suite sets. */
   const MANY = Array.from({ length: SA_MAX + 1 }, (_, i) => `INQ-2026-1500-many${String(i).padStart(2, "0")}`);
   const OTHER = "INQ-2026-1500-manysolo";
   for (const [id, tok] of [...MANY.map((m) => [m, IRIS]), [OTHER, SOL]]) {
@@ -656,19 +666,19 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
   const shaNow = async () => [...(await Promise.all(pubs.map(async (x) => (await docOf(x.caseId, 1, IRIS))?.doc_sha))),
                               (await docOf(po.caseDocument.case_id, 1, SOL))?.doc_sha];
   const before = await shaNow();
-  t("FIXTURE ARMS THE TRAP: STATEMENT_ACK_DOCUMENTS_MAX is a number and there are MAX + 1 unsigned documents of this "
+  t("FIXTURE ARMS THE TRAP: there are NINE unsigned documents of this "
   + "one statement in this project, and one more of the same sentence in ANOTHER project",
     [Number.isInteger(SA_MAX) && SA_MAX > 0, pubs.length, new Set(pubs.map((x) => x.caseId)).size,
      before.every((x) => typeof x === "string"), fmOf((await docOf(po.caseDocument.case_id, 1, SOL))?.text).case_project],
     [true, SA_MAX + 1, SA_MAX + 1, true, SOLO]);
   const over = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
-  t("ACCEPTS-WHEN (second clause): with MAX + 1 unsigned edition-1 documents of this EXACT sentence in this "
+  t("ACCEPTS-WHEN (second clause): with nine unsigned edition-1 documents of this EXACT sentence in this "
   + "project, the draft door of a new case LANDS and re-authors NONE OF THEM — a draft that names no case has no "
-  + "document of its own, and none of those MAX + 1 cases is it",
+  + "document of its own, and none of those nine cases is it",
     [over?.ok, over?.existed, over?.bound_to_a_case, over?.acknowledgement?.case_id, over?.acknowledgement?.edition,
      over?.acknowledgement?.draft_id, (over?.case_documents || []).length, over?.reason ?? null],
     [true, false, false, null, 1, Dm.draftId, 0, null]);
-  t("and NOTHING WAS WRITTEN to any document: every one, this project's MAX + 1 and the other project's, holds the "
+  t("and NOTHING WAS WRITTEN to any document: every one, this project's nine and the other project's, holds the "
   + "bytes it was authored with",
     await shaNow(), before);
   /* The owner signs the bytes the document HOLDS NOW, read back, so an arm that re-authored one is measured here
@@ -677,28 +687,26 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
   if (signed?.ok === false) bail("caseratify many00", signed);
   const at = await ack(`draft=${Dm.draftId}&token=${ELLA}`);
   const after = await shaNow();
+  /* CORRECTED by D-521: this arm also read `case_documents_limit` (SA_MAX) and `case_documents_truncated` (false).
+     Both reported the retired bound and are gone from the envelope, so the arm now asserts their ABSENCE. */
   t("acknowledging again is the SAME act, still binds to no case, and still re-authors nothing — signing one of the "
-  + "MAX + 1 changes neither, because none of them was ever this draft's",
-    [at?.ok, at?.existed, (at?.case_documents || []).length, at?.case_documents_limit, at?.case_documents_truncated],
-    [true, true, 0, SA_MAX, false]);
+  + "nine changes neither, because none of them was ever this draft's; and no retired bound is reported",
+    [at?.ok, at?.existed, (at?.case_documents || []).length, "case_documents_limit" in (at || {}),
+     "case_documents_truncated" in (at || {})],
+    [true, true, 0, false, false]);
   t("every document is byte-identical to before the two acts, the OTHER project's included", after, before);
-  /* THE ORPHANED GUARD IS NAMED HERE RATHER THAN LEFT TO GO QUIET, and this arm is the reason the landing is
-     honest about it: `coverage.mjs` counts a catalogue check as covered when a suite NAMES it, and block 8's old
-     arms were C-82.1's only naming anywhere in the battery. Deleting them and saying nothing would have dropped
-     the catalogue from 449/449 to 448/449 — measured, and it is what first told REC-194 the guard had been
-     orphaned. So the row is asserted to STILL STAND with its canned translation, and its condition is asserted
-     UNREACHABLE through this door by measurement rather than by reasoning about the primary key. The retention
-     is deliberate: removing the refusal drops a DEC-49 catalogue row and moves the family, row, census, reach,
-     region and codesChecked floors, which is a landing of its own and is ROUTED by REC-194, not taken here. */
-  t("MEASURED, not assumed: C-82.1's row still stands with its canned translation, and the condition it guards is "
-  + "UNREACHABLE through this door — over MAX + 1 same-sentence documents the act neither refuses nor re-authors, "
-  + "and the most documents either act could reach is one",
-    [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.check,
-     typeof STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND?.translation === "string"
-       && STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.translation.trim().length > 20,
-     over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length <= 1,
-     (at?.case_documents || []).length <= 1],
-    ["C-82.1", true, null, null, true, true]);
+  /* THE ORPHANED GUARD WAS NAMED HERE BY REC-194 so the catalogue could not lose it silently: `coverage.mjs` counts a
+     check covered when a suite NAMES it, and this was C-82.1's only naming. CORRECTED 2026-09-25 by D-521, never
+     exempted: C-82.1 is RETIRED, so the arm now asserts it is gone from the catalogue and that neither act here was
+     refused by any code. The ceiling on what the draft door reaches is asserted in rec217 block 7, where two
+     documents are driven. */
+  t("RETIRED, not orphaned: C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) holds no catalogue row, and over nine "
+  + "same-sentence documents the act neither refuses nor re-authors",
+    ["STATEMENT_ACK_DOCUMENTS_OVER_BOUND" in STATEMENT_ACK_CHECKS,
+     Object.values(STATEMENT_ACK_CHECKS).some((r) => r.check === "C-82.1"),
+     over?.reason ?? null, at?.reason ?? null, (over?.case_documents || []).length,
+     (at?.case_documents || []).length],
+    [false, false, null, null, 0, 0]);
   /* THE RESIDUE, MEASURED AND STATED RATHER THAN SCORED AWAY (REC-194). These MAX + 1 documents were authored
      BEFORE any reading of this sentence existed, so each carries the flat "Nobody but its author acknowledged it"
      sentence — and nothing re-authors them now, because re-authoring them is precisely the cross-case reach this
