@@ -63,6 +63,16 @@ scope: `aiReachesAsMember` returns false for ops fenced to sessions, expressed a
 accepts-when: a machine-attest arm minting each of the five is refused by name, and a member op still mints (moves: a mint that records the impossible). NEGATIVE CONTROL: drop the session-fence test and the five arms mint, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-162's worker).
 
+### D-610 · queued — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
+order: after D-586, with the authority and attribution corrections ahead of features: a status stated under an actor who did not cause it is the record claiming more than it supports (CLAUDE.md §2); BOB #35: *"(c) is a DEFECT"* (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: I5 — `status_by` now written on every transition; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 and the REC-159 paragraph as BOB #35 folded it 04:00Z (land/bob/batch-0925c), with §4.7 for the vote.
+depends-on: none.
+scope: every writer of members.status writes status_by = the actor whose act caused that transition: enrolment the member; invitation and re-invitation the inviter; revocation its actor; a §4.7 vote the administrator whose vote completed it. Grep every writer by the column, not the three lines named. Rows written before read as they are; never back-fill.
+accepts-when: each transition read back names the actor that caused it (moves: 3 writers leaving a stale status_by). NEGATIVE CONTROL: drop the stamp from the enrolment writer and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 04:00Z).
+
 ### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
@@ -398,6 +408,16 @@ depends-on: REC-222, REC-223, UI-96.
 scope: where the member meets a reference, and in the queue, show "a newer version of this document exists", the grade in the plane's words, and ADOPT / KEEP; show nothing for A and B.
 accepts-when: an AFFECTED reference shows the notice and both acts, an A-graded one shows nothing (moves: no surface). NEGATIVE CONTROL: render for A and the silence arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
+### M0-195 · queued — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
+order: at the head of the process rows, before M0-142: it unblocks a product landing (D-598 takes its version bump only after this lands) and a check changed silently is a record claiming the old rule (BOB #35 04:00Z: *"rule 17 STANDS and its instrument is short"*) (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none (the census's own grammar gains two fields).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 17, as BOB #35 folded it 04:00Z (land/bob/batch-0925c @ 2e9d4f4e; rides the next train).
+depends-on: none.
+scope: the census row may declare `changed: [C-n.m, …]`, counted in the version's identity by (A4); the census pins each version to the digest of bio-checks.mjs's comment-stripped source, so a moved digest under an unmoved version fails by name unless the landing takes a new version or declares `behaviour: unchanged` against the new digest. In `bio-plane/test/d470-catalog-census.test.mjs` and its control.
+accepts-when: a check's body edited with no census row fails by name, and one declared in `changed:` under a new version passes (moves: behaviour-only changes invisible to the version). NEGATIVE CONTROL: edit a check's body without a census row, and the new arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:00Z).
 
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
 order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
@@ -1162,33 +1182,3 @@ depends-on: M0-131 (its derived never-cached set and `--never-cached` run are re
 scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
 accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
-
-### M0-137 · queued — **SUITES PASS ABBREVIATED COMMIT IDS TO GIT, SO A FETCH THAT BRINGS A COLLIDING PREFIX TURNS A GREEN SUITE RED WITH NO CODE CHANGE.** Re-read on `origin/main` @ `38b49c50`: `bio-plane/test/ledger.test.mjs` `PRE_MIGRATION = "9ea2eb02"` and `STATE_PIN = "de40aa56"`; `bio-plane/test/mergecarry.test.mjs` passes `"e241672"` to `git cat-file`, `auditMerge`, `git show` and the `tools/mergecarry.mjs --commit` CLI. — owner M0.
-order: first of the process block, directly after M0-135: a red on `main` from a git object, not the code, is TREE-SHARING §3's alarm to Bob, but no collision has happened, so it sits behind the product rows (SCHEDULER #16, 2026-09-23; M0-136's worker via CONDUCT #16)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch6`).
-scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
-accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
-order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
-depends-on: none — D-293 is on `main`.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
-order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word); RETURNED here by SCHEDULER #14 after M0-107 folded its ruling within budget (`VERIFICATION.md` 24,319 B at `14f1b75e`)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
-depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
-accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
