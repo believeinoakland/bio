@@ -40,6 +40,19 @@
  *        SAYS THE SWEEP ENFORCES A PROPERTY AND NOT A HABIT, and CONDUCT #20's correction of 22:25Z makes it
  *        load-bearing: a per-run `mkdtemp` is ONE acceptable shape, a gitignored item-named in-tree pen is
  *        ANOTHER, and neither may be gated as though it were the only one.
+ *   RE-RUN 2026-09-25 by the M0-196 worker after its change, anchor p3 moved to the new `code` line: 5 AS
+ *   DECLARED, 0 not; baseline 41/0; p1 38/3, p2 35/6, p3 34/7, p4 37/4, p5 41/0; closing 41/0.
+ *
+ * NEGATIVE CONTROL: RUN 2026-09-25 by the M0-196 worker, driver `test/nc-m0196.mjs all` — the TREE-ROOT READ
+ * of the copy-source drivers, 5 arms each ALONE and DECLARED, restores verified by sha256 AND `cmp` AND a
+ * floored byte count; BASELINE 41/0, CLOSING 41/0, 5 AS DECLARED, 0 not.
+ *   (n1) trailing-slash strip dropped -> 38/3: the ceiling (<= 13), the BY-NAME arm naming d510, d526, d547
+ *        and rec180, and (m1); (m4), (m5) and d548 held.
+ *   (n2) comma continuation dropped -> 38/3: the ceiling, BY-NAME naming d548-block, and (m4).
+ *   (n3) `join`'s below-the-first-root reading dropped -> 38/3: the ceiling, BY-NAME naming d526, and (m5).
+ *   (n4) THE ROW'S CONTROL, all three dropped -> 36/5: BY-NAME names all five drivers UNCLASSIFIED over the
+ *        lowered ceiling.
+ *   (n5) OVER-STRICTNESS, d526 rewritten to `/\/+$/` -> 41/0, nothing fails, as declared.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -47,7 +60,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { sweepPens, report, isDriver, FLOORED, UNIGNORED_PENS, PEN_LEDGER, ignoreProbe } from "../scripts/pensweep.mjs";
+import { sweepPens, report, isDriver, FLOORED, UNIGNORED_PENS, PEN_LEDGER, ignoreProbe, namedPaths } from "../scripts/pensweep.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -95,7 +108,20 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    `fileURLToPath(new URL("..", import.meta.url))`, and every write goes to a `mkdtempSync(join(tmpdir(), …))`
    mirror (read at each driver). The fix that lets this fall again is the walk resolving that expression as a
    tree READ; it is routed to SCHEDULER as a row, not taken here. */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547 and D-548 (<= 18)", g("UNCLASSIFIED").length <= 18, true);
+/* LOWERED 18 -> 13 by M0-196 (2026-09-25), TO THE PRINTED FIGURE, BY NAME: the walk now reads the copy-source
+   drivers' tree root. MEASURED, and it corrects the row's premise: `fileURLToPath(new URL("..", import.meta.url))`
+   itself ALREADY resolved (to `bio-plane/`). What was unread were three shapes around it — the trailing-slash
+   strip `PLANE.replace(/\/$/, "")` that `stripComments` blanks (D-510, D-526, D-547, and rec180-promote-rollback,
+   the same shape, which the batch28 note did not name), a comma-continued `const plane = …, test = …` (D-548),
+   and `join(PLANE, p)` where `p` is bound elsewhere in the file to a temp path (D-526). D-563's driver
+   (`d563-promoted-title-state.control.mjs`, not on main at this landing) is D-526's shape and resolves too, so
+   this ceiling holds at the union without its 18 -> 19. The 13 left are each a parameter-built pen, an
+   `arm.file` bound to several roots or a `.replace()` on an unknown: NAMED in the report, not this row's. */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 13)", g("UNCLASSIFIED").length <= 13, true);
+t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and REC-180 read their tree root and are classified",
+  ["d510-promoted-type", "d526-refusal-order", "d547-revision-retype", "d548-block", "rec180-promote-rollback"]
+    .map((n) => [n, (real.drivers.find((d) => d.file === `bio-plane/test/${n}.control.mjs`) || {}).grade])
+    .filter(([, gr]) => gr === "UNCLASSIFIED" || gr === undefined).map(([n, gr]) => `${n}: ${gr}`), []);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",
@@ -126,6 +152,30 @@ t("(b) the in-worktree pen paths named by more than one driver are the four meas
   [".d266-harness", "civicos-ui/app.html.pristine-*", "civicos-ui/test/.rec79-control-pristine", "pdf-worker/node_modules"]);
 t("(b) ...and no driver in the FLOORED class shares a pen with another driver as its own writing space",
   real.shared.filter((x) => x.drivers.filter((f) => FLOORED(f)).length > 1).map((x) => x.pen), []);
+
+/* ============== 1b. M0-196: THE TREE-ROOT READ, BOTH DIRECTIONS ============== */
+console.log("\n--- 1b. M0-196: the copy-source drivers' tree-root read resolves, and nothing broader does ---");
+{
+  const F = "bio-plane/test/x.control.mjs";
+  const roots = (src) => namedPaths(src, F, {}).map((p) => `${p.root}:${p.path ?? ""}`);
+  const head = `import { join, dirname, resolve } from "node:path";\nimport { fileURLToPath } from "node:url";\nimport { tmpdir } from "node:os";\n`;
+  t("(m1) `dirname(PLANE.replace(/\\/$/, \"\"))` over the plane-root URL resolves to the repository, so its copy source is a SUBJECT path",
+    roots(`${head}const PLANE = fileURLToPath(new URL("..", import.meta.url));\nconst REPO = dirname(PLANE.replace(/\\/$/, ""));\nconst x = join(REPO, "docprofile");\n`),
+    ["TREE:bio-plane/", "TREE:docprofile"]);
+  t("(m2) OVER-STRICTNESS: the `/\\/+$/` spelling, and `../..` chained straight onto `fileURLToPath(…)`, resolve alike",
+    roots(`${head}const ROOT = fileURLToPath(new URL("../..", import.meta.url)).replace(/\\/+$/, "");\nconst x = join(ROOT, "docprofile");\n`),
+    ["TREE:./", "TREE:docprofile"]);
+  t("(m3) STRICTNESS: any OTHER `.replace(…)` on a path is still unread — it can rewrite a path into anything",
+    roots(`${head}const PLANE = fileURLToPath(new URL("..", import.meta.url));\nconst REPO = dirname(PLANE.replace(/plane/, ""));\nconst x = join(REPO, "docprofile");\n`)
+      .filter((r) => r.startsWith("UNKNOWN")).length, 1);
+  t("(m4) a comma-continued declaration binds its later name: `const plane = join(root, …), test = join(plane, …)` is TEMP",
+    roots(`${head}const root = mkdtempSync(join(tmpdir(), "x-"));\nconst plane = join(root, "bio-plane"), test = join(plane, "test");\nwriteFileSync(join(test, "f.mjs"), "");\n`),
+    ["TEMP:", "TEMP:", "TEMP:", "TEMP:"]);
+  t("(m5) `join` keeps a later temp segment BELOW its first root; `resolve`, which re-roots, is still unread",
+    [roots(`${head}const PLANE = fileURLToPath(new URL("..", import.meta.url));\nconst p = join(tmpdir(), "x");\nconst a = join(PLANE, p);\n`).pop(),
+     roots(`${head}const PLANE = fileURLToPath(new URL("..", import.meta.url));\nconst p = join(tmpdir(), "x");\nconst a = resolve(PLANE, p);\n`).pop()],
+    ["TREE:bio-plane/*", "UNKNOWN:"]);
+}
 
 /* ============== 2. WHAT THE CLASSIFIER IS ============== */
 console.log("\n--- 2. the classifier, asked directly ---");
