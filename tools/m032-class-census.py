@@ -97,6 +97,20 @@
 #   used since FY2021); and an arm written `'<family>' in fams[c]` tested a DICT's
 #   KEYS, reporting families that never fired and unable to fail.
 #
+# FW-24 (2026-09-25) RAN THE CENSUS OVER THE WHOLE CORPUS, both halves named
+# (`M032_HALVES=bucket,legistar`, the same population as unset): 2,000 of 29,607
+# text-bearing items, seed 20260924, a NEW draw. Classification path unchanged
+# (`161d2ff9...`); one `derive` print corrected (the paired header's literal 600).
+# Figures: `docs/development/measurements/M-176.md`.
+#
+# NEGATIVE CONTROL: (FW-24, 2026-09-25, instrument sha d7434895... before the arm,
+#   restored by cp from a uniquely-named pristine copy, verified by sha256 AND cmp,
+#   145,557 bytes, floored at 100,000. Baseline on the whole-corpus sample 110 arms,
+#   0 failed.) N1 re-driven on that sample: BOB #32's conjunct folded back into
+#   `_fw22_budget` -> exit 1 at exactly "ON THE REAL SAMPLE the RECOUNT MOVES ..."
+#   (1 of 110), and `derive` prints the recounted budget arm at 20 not 14 with the six
+#   named financial reports gone from the moved list. Restored: 110 arms, 0 failed.
+#
 # WHAT A CLASS IS, AND WHY IT IS NOT A LIST OF SPELLINGS. Each class is defined by
 # what makes a document that class IN PRINCIPLE, and the recogniser implements the
 # principle as a THRESHOLD OVER INDEPENDENT EVIDENCE FAMILIES — never one literal.
@@ -1847,8 +1861,10 @@ def cmd_derive():
     # classes differ: the two counts come from the SAME 600 documents, so the honest
     # comparison is PAIRED. Only documents that are one class and not the other carry
     # any information about which is larger.
+    # FW-24: the sample size was printed as a literal 600 (M-18's n) through M-126, M-143 and M-152's
+    # n = 1,000 walks; it is the walk's own n.
     print('\nIS THE ORDER REAL? A PAIRED comparison of each adjacent pair — the two '
-          'counts come\n  from the same 600 documents, so only the DISCORDANT ones '
+          f'counts come\n  from the same {n:,} documents, so only the DISCORDANT ones '
           'carry information.')
     memb = {c: {r['id'] for r in bodies if c in r['classes']} for c in CLASSES}
     ranked = [c for c, a, p, sc, ci in sorted(est, key=lambda e: -e[1])]
