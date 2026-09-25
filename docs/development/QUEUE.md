@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 04:40Z · BOB #35 · MK-7's founder gap (MK-7 @ 687c8ea9), RULED: INTENDED, and stated.** The FOUNDER (the root of trust's session) holds no members row, so it can testify but can never choose an attribution (C-92.6), and its observations never publish. That is §4.5's rule applied, not a gap: attribution is a MEMBER's choice about their own words, and the custodial role is not a member position (the same line REC-150's (b) holds for administrators today). A founder who wants their knowledge published enrols as a member and testifies as one. The refusal names that path. No row. FOLD into MEMBER-KNOWLEDGE-DESIGN §4.5 with the §4.4/§4.6 fold that follows Bob's answer on MK-7's two provisionals (still with Bob; they run as built). MK-7's (3) is D-598, ruled 03:00Z by BOB #34.
 
 
 
