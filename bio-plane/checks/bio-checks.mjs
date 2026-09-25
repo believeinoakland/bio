@@ -4585,13 +4585,37 @@ export const CHECK_RETIREMENTS = {
  *  harder — it points at a registry subject) asserts one while wearing the
  *  label that says it does not. Both are the D-130 move in a different field,
  *  so both are refused here rather than left for a reader to notice. */
+/* D-717: SPLIT IN TWO, and the split is the row. `promote` refuses at the act every counterparty finding EXCEPT
+   the missing block (COUNTERPARTY_REFUSED, C-101.3): an absent counterparty asserts nothing — it is a draft that
+   has not said who it is addressed to yet, and the audit keeps naming it — while a placeholder, a bare string or
+   an incoherent block asserts something the record cannot support. `counterpartyFindings` is the half the act
+   runs; `checkCounterparty` is the audit's whole, the missing arm plus that half, so the act and the sweep say
+   the same sentence for every condition both judge. ABSENT is `undefined`, `null`, a blank string and an EMPTY
+   list — the restricted grammar reads a bare `counterparty:` line as `[]`, so an empty block and no block are
+   one fact; a list WITH items is a shape, not an absence. */
+export function counterpartyAbsent(cp) {
+  return cp === undefined || cp === null || (typeof cp === 'string' && cp.trim() === '')
+    || (Array.isArray(cp) && cp.length === 0);
+}
 function checkCounterparty(fm, findings) {
+  if (counterpartyAbsent(fm.counterparty)) {
+    findings.push(f('C-2.10', 'error',
+      'counterparty block is missing: an action names who it is addressed to, or states that it is undetermined and why',
+      COUNTERPARTY_REPAIRS));
+    return;
+  }
+  counterpartyFindings(fm, findings);
+}
+const COUNTERPARTY_REPAIRS = [
+  'name the counterparty: counterparty.state = named with counterparty.name',
+  'or state that it is undetermined: counterparty.state = undetermined with an authored counterparty.basis saying why',
+];
+/** D-717: every counterparty finding but the missing block — run by `promote` at the act and by the audit. */
+export function counterpartyFindings(fm, findings) {
+  if (counterpartyAbsent(fm.counterparty)) return;
   const isPlaceholder = (v) =>
     typeof v === 'string' && v.trim().toLowerCase() === COUNTERPARTY_PLACEHOLDER;
-  const REPAIRS = [
-    'name the counterparty: counterparty.state = named with counterparty.name',
-    'or state that it is undetermined: counterparty.state = undetermined with an authored counterparty.basis saying why',
-  ];
+  const REPAIRS = COUNTERPARTY_REPAIRS;
   const cp = fm.counterparty;
 
   /* The pre-REC-23 flat shape, and the one every action written before this
@@ -4605,9 +4629,11 @@ function checkCounterparty(fm, findings) {
       REPAIRS));
     return;
   }
-  if (!cp || typeof cp !== 'object' || Array.isArray(cp)) {
+  /* D-717: PRESENT and not a block — a list with items, a number, a boolean. Before the split this read "missing",
+     which it is not: something was written, in a shape that says nothing. */
+  if (typeof cp !== 'object' || Array.isArray(cp)) {
     findings.push(f('C-2.10', 'error',
-      'counterparty block is missing: an action names who it is addressed to, or states that it is undetermined and why',
+      `counterparty is ${Array.isArray(cp) ? 'a list' : `the ${typeof cp} '${String(cp).slice(0, 40)}'`}, not a block of {state, name, basis}: an action names who it is addressed to, or states that it is undetermined and why`,
       REPAIRS));
     return;
   }
@@ -4980,9 +5006,8 @@ function checkActionExtension(ctx, findings) {
   correspondenceFindings(fm, findings);
   /* The suite lives at module level as ACTION_KINDS (exported for REC-19's
      op=affordances) so the gate and the publication read one array. */
-  if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
-  /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
-  if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
+  actionKindFindings(fm, findings);
+  riskTierVocabularyFindings(fm, findings);
   checkCounterparty(fm, findings);
   governingLawsFindings(fm, findings);
   recordsLawFindings(fm, findings);
@@ -4994,12 +5019,38 @@ function checkActionExtension(ctx, findings) {
      words a second time inside the same statement that tested them, which is a
      copy at a distance of ten characters and is how a list and its own
      description come to disagree. */
+  actionResolutionFindings(fm, findings);
+  clockFindings(fm, findings, new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10));
+}
+
+/* D-717 — FIVE ARMS THIS FUNCTION HELD, EXPORTED AND RUN BY THE STORE AT THE WRITE, like actionBasisFindings and
+ * D-695's recordsLawFindings. `checkActionExtension` is reached from `checkBundle` — the audit sweep — and `promote`
+ * never reached it, so the act SAVED an action_kind outside the suite, a risk_tier outside its vocabulary, a
+ * placeholder or incoherent counterparty, a `resolved` with no resolution and a malformed clock entry, and the
+ * record held each until a sweep said so. One function per arm, because `promote` refuses each under its own name
+ * (ACTION_CATALOGUE_CHECKS, C-101) and the audit calls the same function, so the two cannot drift apart. */
+/** C-2.10's kind arm: the suite is ACTION_KINDS. Refused at the act as ACTION_KIND_REFUSED (C-101.1). */
+export function actionKindFindings(fm, findings) {
+  if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not in the suite`));
+}
+/** C-2.10's tier-vocabulary arm. D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are
+ *  RISK_TIERS'. Refused at the act as RISK_TIER_REFUSED (C-101.2) — WHO may set a tier is C-32.19's, and whether
+ *  it moved without the act is C-90.1's; this asks only whether the value is a tier at all. */
+export function riskTierVocabularyFindings(fm, findings) {
+  if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
+}
+/** C-2.10's resolution arm. Refused at the act as ACTION_RESOLUTION_REFUSED (C-101.4). */
+export function actionResolutionFindings(fm, findings) {
   if (fm.current_state === 'resolved' && !RESOLUTIONS.includes(fm.resolution)) {
     findings.push(f('C-2.10', 'error', `resolved state requires resolution in: ${RESOLUTIONS.join(', ')}`));
   }
-  // C-11: clock discipline
+}
+/** C-11.1: clock discipline. `today` (YYYY-MM-DD) arms the SILENTLY-PAST-DUE check; `promote` passes null, because
+ *  past-due is a fact about the day a sweep runs and not about the bytes — a write that was true yesterday is not
+ *  refused for today's date, and the audit keeps naming it. Every other finding is about the bytes, and the act
+ *  refuses it as CLOCK_REFUSED (C-101.5). */
+export function clockFindings(fm, findings, today) {
   const clock = Array.isArray(fm.clock) ? fm.clock : [];
-  const today = new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10);
   const STATUSES = ['pending', 'met', 'overdue', 'waived'];
   for (let i = 0; i < clock.length; i++) {
     const e = clock[i];
@@ -5011,7 +5062,7 @@ function checkActionExtension(ctx, findings) {
       findings.push(f('C-11.1', 'error', `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ['supply basis']));
     }
     if (!STATUSES.includes(e.status)) findings.push(f('C-11.1', 'error', `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(', ')}`));
-    if (DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
+    if (today && DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
       findings.push(f('C-11.1', 'error', `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
         ['mark overdue', 'mark met', 'mark waived with reason']));
     }
@@ -15597,6 +15648,59 @@ export const RISK_TIER_REVISION_CHECKS = {
     where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
     translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
       + 'rewriting it, and the act only ever adds. Nothing was written.',
+  },
+};
+
+/* =========================================================================
+ * D-717 — THE ACTION CATALOGUE AT THE ACT (C-101). `BIO_Case_Making_v0_1.md` §2, the action object: its kind from
+ * the suite, its risk tier from Bob's three words or undetermined, its counterparty named or undetermined with a
+ * reason (D-130), `resolved` naming how, and a clock whose every entry carries the basis its date derives from
+ * (C-11.1).
+ *
+ * Five arms of `checkActionExtension` ran only in the audit sweep, which `promote` never reached, so a member's
+ * write SAVED what each forbids — measured by D-695's worker, reproduced through op=promote by D-717's (16 of 16
+ * forbidden writes landed). These rows are the ACT's refusal of the same arms, each under its own name and its own
+ * region; `findings[]` carries the arm's own C-2.10 / C-11.1 sentences, so the act and the sweep say one thing.
+ *
+ * TWO CONDITIONS STAY WITH THE AUDIT, BY DESIGN (the row's scope): a MISSING counterparty — it asserts nothing, it
+ * is a draft that has not yet said who it addresses, and the audit keeps naming it — and a clock entry SILENTLY
+ * PAST-DUE, which is a fact about the day a sweep runs rather than about the bytes.
+ * ========================================================================= */
+export const ACTION_CATALOGUE_CHECKS = {
+  ACTION_KIND_REFUSED: {
+    check: 'C-101.1',
+    where: 'src/store.mjs promote > is-promote-action-kind',
+    translation: 'An action is one of a fixed set of kinds — a records request, a public comment, a media contact, '
+      + 'a referral and the rest the group\'s affordances list — or "other". This write named a kind outside that '
+      + 'set, so nothing was written. Choose one of the listed kinds, or "other".',
+  },
+  RISK_TIER_REFUSED: {
+    check: 'C-101.2',
+    where: 'src/store.mjs promote > is-promote-tier-vocabulary',
+    translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel), or it '
+      + 'is left unstated, which reads as not assessed. This write stated something else, so nothing was written.',
+  },
+  COUNTERPARTY_REFUSED: {
+    check: 'C-101.3',
+    where: 'src/store.mjs promote > is-promote-counterparty',
+    translation: 'An action says who it is addressed to: a counterparty that is named, with its name, or one that '
+      + 'is undetermined, with a few words on what is known and what would settle it. This write carried a '
+      + 'placeholder such as "to be named", a bare name outside that shape, or a counterparty that said both '
+      + 'things at once, so nothing was written. Leaving the counterparty out entirely is allowed while the action '
+      + 'is a draft.',
+  },
+  ACTION_RESOLUTION_REFUSED: {
+    check: 'C-101.4',
+    where: 'src/store.mjs promote > is-promote-action-resolution',
+    translation: 'A resolved action says how it ended: complied, denied, escalated or withdrawn. This write marked '
+      + 'the action resolved without one of those, so nothing was written.',
+  },
+  CLOCK_REFUSED: {
+    check: 'C-101.5',
+    where: 'src/store.mjs promote > is-promote-clock',
+    translation: 'Each deadline on an action carries a short label, a description, a date written year-month-day, '
+      + 'the statute, order or commitment the date comes from, and a status: pending, met, overdue or waived. An '
+      + 'entry in this write lacked one of those or held one in another form, so nothing was written.',
   },
 };
 

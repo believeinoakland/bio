@@ -153,7 +153,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    C-73.6 RECORDS_LAW_REFUSED in GOVERNING_LAW_CHECKS, `promote`'s refusal of C-2.10's `law` arm at the act. MINOR and
    additive; C-2.10 itself does not change (the arm is REC-201's, now also run at the write). 1.31.0-1.34.0 and 2.0.0
    are held by other branches; CONDUCT takes the union's one number and re-reads the census from the d470 print. */
-export const CATALOG_VERSION = "1.35.0";
+/* 1.36.0 (D-717, 2026-09-25, branch land/worker/D-717 stacked on D-695 @ b6ebf625): FIVE ARRIVALS, NO DEPARTURES —
+   the new ACTION_CATALOGUE_CHECKS family, C-101.1..5 (ACTION_KIND_REFUSED, RISK_TIER_REFUSED, COUNTERPARTY_REFUSED,
+   ACTION_RESOLUTION_REFUSED, CLOCK_REFUSED), `promote`'s refusal at the act of five arms C-2.10 / C-11.1 held only in
+   the audit. MINOR and additive; C-2.10's and C-11.1's findings are unchanged but for the counterparty sentence for a
+   PRESENT non-block (a list with items, a number), which read "missing". 1.31.0-1.35.0 and 2.0.0 are held by other
+   branches; CONDUCT takes the union's one number and re-reads the census from the d470 print. */
+export const CATALOG_VERSION = "1.36.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

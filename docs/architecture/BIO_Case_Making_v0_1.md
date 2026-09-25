@@ -151,6 +151,16 @@ here. The `action` object type has been in the check catalogue throughout:
 - headings `## Plan`, `## Status`, `## Correspondence`, `## Session Log`, `## Review Notes`
 - fields `action_kind`, `risk_tier`, `counterparty`
 
+**THE ACTION'S CATALOGUE ARMS BIND AT THE ACT (D-717, 2026-09-25).** C-2.10 and C-11.1 judge an action's kind, tier,
+counterparty, resolution and clock; five of those arms ran only in the audit sweep, so `op=promote` SAVED what each
+forbids and the record held it until a sweep said so. `promote` now refuses each by name, for a member's write and a
+machine's alike, carrying the catalogue's own sentences: a kind outside the suite (ACTION_KIND_REFUSED, C-101.1), a
+tier outside 1, 2, 3 and undetermined (RISK_TIER_REFUSED, C-101.2), a counterparty that is the placeholder, a bare
+string or incoherent (COUNTERPARTY_REFUSED, C-101.3), `resolved` without a resolution (ACTION_RESOLUTION_REFUSED,
+C-101.4), and a clock entry malformed or with no basis (CLOCK_REFUSED, C-101.5). **Two conditions stay with the audit
+by design:** a MISSING counterparty, which asserts nothing — a draft that has not yet said whom it addresses, named by
+the sweep — and a clock entry silently past-due, a fact about the day the sweep runs rather than about the bytes.
+
 **`risk_tier`, RULED 2026-09-21 by BOB #21 (D-182; SCHEDULER #6's Q4): both halves, in one row.** The three
 tiers already carry Bob's own meanings in the mission of record (`BIO_Complete_Roadmap_v5.md` §8): **1, file
 freely; 2, file with caution; 3, do not file without counsel** (evidence published, filing templates not

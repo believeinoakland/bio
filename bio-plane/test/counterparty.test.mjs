@@ -215,42 +215,52 @@ console.log("\n--- and a caller reaches the refusal: op=audit, the store's own c
     { method: "POST", body: JSON.stringify(body) })).json();
   const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-cp&" + qs)).json();
 
+  /* CORRECTED 2026-09-25 by D-717, never exempted. Two things were wrong here, and the second hid the first.
+     (1) The stance "promotion is NOT the gate … a draft may be written and corrected" held for every counterparty
+     shape; D-717 (C-101.3, COUNTERPARTY_REFUSED) moves every shape but the MISSING block to the act, because a
+     placeholder or an incoherent block ASSERTS something the record cannot support, where an absent one asserts
+     nothing. The draft half of the old stance survives exactly there: a missing counterparty still lands and the
+     audit still names it. (2) This helper's guard read `r.ok` on the ENVELOPE, `{result: {...}}`, where `ok` is
+     never present — so it could not throw, and a refusal would have passed as a landing. It now reads the result,
+     and returns it, so the refusal is asserted by name rather than thrown past. */
   const promoteAction = async (n, cpLines) => {
     const id = `ACTN-2026-${String(n).padStart(4, "0")}-records-request`;
     const text = actionMd(id, cpLines);
-    const r = await post("promote", {
+    const r = (await post("promote", {
       bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "seed",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: [],
-    });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
-    return id;
+    })).result;
+    return { id, r };
   };
 
-  /* Promotion is NOT the gate and deliberately does not become one here: a
-     draft may be written and corrected. What must be true is that the store's
-     own conformance pass NAMES the placeholder, which is the answer op=audit
-     gives an operator asking "is the record clean". */
   const honest = await promoteAction(1, CASES.undeterminedWithBasis);
   const placeholder = await promoteAction(2, CASES.placeholderFlat);
   const noBasis = await promoteAction(3, CASES.undeterminedNoBasis);
+  const missing = await promoteAction(4, CASES.missing);
+  t("the honest undetermined lands", honest.r?.ok, true);
+  t("the placeholder is refused AT THE ACT by name (D-717, C-101.3), with the placeholder sentence verbatim",
+    [placeholder.r?.reason, placeholder.r?.check,
+     /placeholder 'to be named'/.test((placeholder.r?.findings ?? []).map((e) => e.detail).join(" "))],
+    ["COUNTERPARTY_REFUSED", "C-101.3", true]);
+  t("undetermined with no basis is refused at the act by the same name", noBasis.r?.reason, "COUNTERPARTY_REFUSED");
+  t("a MISSING counterparty still lands — it asserts nothing, and stays the audit's (D-717's scope)", missing.r?.ok, true);
 
   const audit = (await get("op=audit&limit=1000")).result;
-  t("the pass sees all three actions", audit.checked, 3);
+  t("the pass sees the two actions that landed", audit.checked, 2);
   t("exactly one is clean, and it is the honest undetermined", audit.clean, 1);
-  t("two carry errors", audit.withErrors, 2);
-  t("and the check that caught them is C-2.10", Object.keys(audit.tally).sort(), ["C-2.10"]);
-  t("C-2.10 fired twice, once per offending action", audit.tally["C-2.10"], 2);
+  t("one carries errors", audit.withErrors, 1);
+  t("and the check that caught it is C-2.10", Object.keys(audit.tally).sort(), ["C-2.10"]);
   const offenders = audit.offenders.map((o) => o.bundleId).sort();
-  t("the offenders are named, and the honest action is not among them",
-    offenders, [placeholder, noBasis].sort());
-  t("the placeholder action is reported with the placeholder refusal verbatim",
-    /placeholder 'to be named'/.test(
-      audit.offenders.find((o) => o.bundleId === placeholder).errors.map((e) => e.detail).join(" ")), true);
+  t("the offender is named — the missing counterparty — and the honest action is not among them",
+    offenders, [missing.id]);
+  t("the missing action is reported with the missing-block finding verbatim",
+    /counterparty block is missing/.test(
+      (audit.offenders.find((o) => o.bundleId === missing.id)?.errors ?? []).map((e) => e.detail).join(" ")), true);
   t("and the honest one is genuinely in the store, not merely absent from the tally",
-    (await get(`op=image&id=${encodeURIComponent(honest)}`)).result["bundle.md"].includes("state: undetermined"), true);
+    (await get(`op=image&id=${encodeURIComponent(honest.id)}`)).result["bundle.md"].includes("state: undetermined"), true);
 
   await mf.dispose();
 }

@@ -70,6 +70,8 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             vocabulary cannot disagree about how an action may end. */
          RESOLUTIONS,
          ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings, recordsLawFindings,
+         /* D-717: five of C-2.10's / C-11.1's action arms, run at the act (ACTION_CATALOGUE_CHECKS, C-101). */
+         actionKindFindings, riskTierVocabularyFindings, counterpartyFindings, actionResolutionFindings, clockFindings,
          correspondenceFindings, respondsToEdgeFindings, consequenceState,
          divisionDisclosureFindings,
          /* REC-43 / DEC-39: the capture-axis ceiling, which used to be a static
@@ -18164,6 +18166,43 @@ export class Store extends DurableObject {
            `riskTierState`, so a respelling of the same value is not a change. A value outside the vocabulary
            is not this fence's — the catalogue refuses it by name. Before any write. Replay is exempt with the
            block: a replayed promotion is the record re-stating its own past. */
+        /* D-717 / C-101 — FIVE OF THE ACTION CATALOGUE'S ARMS, AT THE ACT (`BIO_Case_Making_v0_1.md` §2, the action
+           object; C-11.1). `checkActionExtension` ran them only in the audit sweep, which this write never reaches,
+           so it SAVED an action_kind outside the suite, a risk_tier outside its vocabulary, a placeholder, bare or
+           incoherent counterparty, a `resolved` with no resolution and a malformed clock entry (D-695's worker
+           measured it; 16 of 16 reproduced through this op). Each is refused under its own name, carrying the
+           catalogue's own sentences, so the act and the sweep say one thing. FIRST in the block, before the fences:
+           a value outside a vocabulary is named for what it is before any fence asks who changed it — the tier
+           fence below says so ("a value outside the vocabulary is not this fence's"). Every writer, member and
+           machine. LEFT TO THE AUDIT, by the row's scope: a MISSING counterparty (`counterpartyFindings` skips
+           it; `checkCounterparty` still names it) and a clock entry silently past-due (`today` is null here). */
+        const catErrs = (fn, ...args) => { const out = []; fn(docFmW, out, ...args); return out.filter((x) => x.severity === "error"); };
+        const catFindings = (errs) => errs.map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) }));
+        const kindErrs = catErrs(actionKindFindings);
+        /* DEC-49 REGION is-promote-action-kind */
+        if (kindErrs.length)
+          return { ok: false, reason: "ACTION_KIND_REFUSED", bundleId, findings: catFindings(kindErrs) };
+        /* END DEC-49 REGION is-promote-action-kind */
+        const tierVocabErrs = catErrs(riskTierVocabularyFindings);
+        /* DEC-49 REGION is-promote-tier-vocabulary */
+        if (tierVocabErrs.length)
+          return { ok: false, reason: "RISK_TIER_REFUSED", bundleId, findings: catFindings(tierVocabErrs) };
+        /* END DEC-49 REGION is-promote-tier-vocabulary */
+        const cpErrs = catErrs(counterpartyFindings);
+        /* DEC-49 REGION is-promote-counterparty */
+        if (cpErrs.length)
+          return { ok: false, reason: "COUNTERPARTY_REFUSED", bundleId, findings: catFindings(cpErrs) };
+        /* END DEC-49 REGION is-promote-counterparty */
+        const resErrs = catErrs(actionResolutionFindings);
+        /* DEC-49 REGION is-promote-action-resolution */
+        if (resErrs.length)
+          return { ok: false, reason: "ACTION_RESOLUTION_REFUSED", bundleId, findings: catFindings(resErrs) };
+        /* END DEC-49 REGION is-promote-action-resolution */
+        const clockErrs = catErrs(clockFindings, null);
+        /* DEC-49 REGION is-promote-clock */
+        if (clockErrs.length)
+          return { ok: false, reason: "CLOCK_REFUSED", bundleId, findings: catFindings(clockErrs) };
+        /* END DEC-49 REGION is-promote-clock */
         const nextTier = riskTierState(docFmW.risk_tier);
         const heldTierMd = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
         const heldTierFm = heldTierMd && typeof heldTierMd.content === "string" ? parseFrontmatter(heldTierMd.content).data : null;
