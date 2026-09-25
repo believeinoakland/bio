@@ -156,6 +156,16 @@ scope: bisect the store.mjs commit where the runaway stopped reaching #strengthW
 accepts-when: arm (3) run alone matches its declaration, with the commit that moved the subject named (moves: an arm 4 failures short of its declaration). NEGATIVE CONTROL: the arm itself, recorded on the driver's header.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-638's worker).
 
+### D-739 · queued — **A CONTROL DRIVER CAN DECLARE ASSERTION NAMES ITS SUITE NO LONGER DEFINES, SO ITS VERDICT IS VACUOUS AND NEITHER anchordrift NOR THE CENSUS SEES IT: nc-rec113's arms declared I2…I2f for months after D-500 (63aaf1b57b) renamed them L2…L2f, and `I2` now names a different assertion.** Found by D-646's worker, which corrected nc-rec113 in scope; M0-139 added the same check for current.control.mjs alone. How widespread: UNDETERMINED (not measured). — owner M0.
+order: after D-736, with the control-trust rows: a verdict judged against names nobody prints is a control that cannot fail (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — the instruments.
+design: `docs/development/VERIFICATION.md` (a negative control must be able to fail; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: M0-197 (tools/anchordrift.mjs and anchorTable; stack on land/worker/M0-197 until it lands).
+scope: extend anchorTable rows with each arm's mustFail/mustNotFail and the suite path, and have tools/anchordrift.mjs (or a sibling reader) fail when a declared name matches no assertion id in the suite source; measure the estate first and list every driver it names; fix none beyond what the reader needs to land green (each fix is its own row, or an allowance with a dated reason).
+accepts-when: the reader names nc-rec113 on D-646's base and passes on its tip; the estate count is recorded (moves: vacuous verdicts unseen). NEGATIVE CONTROL: restore an I2 declaration in nc-rec113 and the reader fails naming it.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-646's worker).
+
 ### D-653 · queued — **`nc-rec97` arm overstrict: ANCHOR DRIFT — matches 2, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-652, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1132,33 +1142,3 @@ depends-on: none.
 scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
 accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
-order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op).
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
-accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
-order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
-depends-on: none.
-scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
-accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
-order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a census states what it reads).
-depends-on: none.
-scope: add both to `UI_HELPERS` in `tools/status.mjs`.
-accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
