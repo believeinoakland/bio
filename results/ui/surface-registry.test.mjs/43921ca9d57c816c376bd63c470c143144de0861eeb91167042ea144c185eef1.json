@@ -1,0 +1,16 @@
+{
+ "unit": "ui:surface-registry.test.mjs",
+ "inputHash": "43921ca9d57c816c376bd63c470c143144de0861eeb91167042ea144c185eef1",
+ "verdict": "PASS",
+ "run": "7f29507d39a1453b7fb2140774f9230051660cd1.1790297558692.30459.json",
+ "tree": "7f29507d39a1453b7fb2140774f9230051660cd1",
+ "head": "17b3540a4ae39adb45c302083ea0258659016689",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 959,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d6303b47-e0e2-5d16-b4dc-78e97e135eee",
+ "at": "2026-09-25T00:52:38.704Z"
+}
