@@ -69,7 +69,7 @@ perform all four against the real plane, attributed; the member's renders none; 
 `bio-plane/test/d134-custodial-refusals.test.mjs` (each C-96 check named at the op). WHO INVITED: BOB #35 ruled it its
 own fact while this item ran, and it landed here — `members.invited_by`, written by every `memberadd` path, and each
 roster row says "invited by <who>", or "not recorded" where the plane says so. Controls and figures:
-`measurements/D-134.md`.
+`measurements/M-171.md`.
 
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number

@@ -40,7 +40,7 @@
  *   by name, founder and administrator arms green · (c) 41/44: FOUNDER signerset, ADMINISTRATOR signerset AND
  *   REFUSAL SIGNER_MEMBER_NOT_ACTIVE. The third was NOT declared; it reaches the plane through signerset, so it
  *   depends on the dropped call too. Recorded against the declaration, not smoothed. · (d) 44/44. app.html restored
- *   to sha256 b80829d8… (1,628,712 B) after each arm, cmp-identical. Full table: measurements/D-134.md.
+ *   to sha256 b80829d8… (1,628,712 B) after each arm, cmp-identical. Full table: measurements/M-171.md.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a suite's own exit must not discard its own output */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";

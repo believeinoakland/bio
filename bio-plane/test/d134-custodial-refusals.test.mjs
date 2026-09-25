@@ -7,7 +7,7 @@
    pristine copy, verified by sha256 AND cmp. RESULTS 2026-09-25: (a) 14/0 at the time, 16/0 with the invited_by arms ·
    (b) FIRST RUN GREEN 14/0 — the grade compared `undefined === undefined`; the grade was corrected to require the
    sentence, and the re-run read 13/1, `C-96.8` by name · (c) 13/1, `C-96.9` by name, C-96.1 green · (d) 14/2, both
-   invited_by arms by name. Every restore sha256- and cmp-verified. Table: measurements/D-134.md.
+   invited_by arms by name. Every restore sha256- and cmp-verified. Table: measurements/M-171.md.
  * =========================================================================
  * d134-custodial-refusals.test.mjs — D-134. §4.9's CUSTODIAL ACTS SAY THEIR REFUSALS IN WORDS.
  *
