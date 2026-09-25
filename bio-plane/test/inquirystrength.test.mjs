@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-04, rec34-agent, FOUR arms, each broken ALONE in src/store.mjs and restored byte-identically; 48 pass when whole) (a) THE ITEM'S OWN — ANSWER FROM THE CACHED COLUMNS: in inquiryStrength replace `const s = this.strengthOf(id);` with `const c = this.#one("SELECT inquiry_capture_strength AS cg, inquiry_capture_state AS cs, inquiry_connection_strength AS ng, inquiry_connection_state AS ns FROM bundles WHERE bundle_id=?", id); const ax = (a, gr, st) => ({ axis: a, state: st, grade: gr, determined: st === "graded", weakest: null, load_bearing: 0, population: 0, not_load_bearing: [], depth_bound: Store.QUEUE_ANCESTOR_DEPTH, detail: "" }); const s = { ok: true, depth_bound: Store.QUEUE_ANCESTOR_DEPTH, capture: ax("capture", c.cg, c.cs), connection: ax("connection", c.ng, c.ns) };` -> 17 assertions fail. THE STALE READ IS NAMED: block 3's "the op moves the INSTANT the leg beneath is raised" wants B and GETS C, while its sibling "the CACHE is genuinely stale (the column still answers capture:C)" still PASSES — which is what proves the two are different sources rather than one. The source assertions name the swap itself ("the op's own code calls the derivation" -> false; "names NONE of the five cached columns" -> lists four), both byte-equality assertions fail, every named leg reads null, the depth sentence and undetermined_at vanish, and block 6 has nothing left to redact. (b) THE PROSE SWEEP — `const prose = (v) => v;` in #redactAxis -> 3 fail, dave receiving PROJ-2026-0001-secret inside `detail`/`why` SENTENCES while every id FIELD is still correctly null (REC-14's measured leak shape reproduced), and the failure "one level up, the inherited answer names no secret either" is the id that appears in NO field of the answer at all — carried up from two levels down inside an inherited leg's `why`. (c) THE SUBJECT ROW — `if (!this.#viewerSees(id, viewer))` -> `if (false)` -> 5 fail: dave is handed the secret project's NOT_AN_INQUIRY answer with `object_type: "project"` and its id spelled out in the detail, hidden-vs-absent stops being byte-identical, the forged-viewer probe flips, and the unstamped read answers instead of failing closed. (d) THE FIELD REDACTION — `static #MEMBER_ID_FIELDS = [];` -> 5 fail, the same secret id standing in `weakest.target_id` and in both not_load_bearing lists while the prose is clean: the two defences are independently breakable and each is loud, which is why they are separate. */
 /* NEGATIVE CONTROL: section 8 (REC-105 / D-373) — RUN 2026-09-15 by the REC-105 worker, SIX arms, each armed ALONE in `src/store.mjs` and restored from its OWN uniquely-named pristine copy, every restore verified byte-identical by sha256 AND by `cmp` AND by size (2,149,389 bytes, sha256 80ddb449096ef564, floored at 100 kB). ONE COMMAND EACH: `node test/nc-rec105.mjs <none|a|b|c|d|e>` from `bio-plane/` — the driver holds the patch, the DECLARATION and the declared-vs-actual check, so the next session re-runs an arm in one step instead of re-deriving how to break the subject. BASELINE ARM `none` = 68 pass / 0 fail / exit 0, and it exists because a driver whose every arm reports one number cannot tell six-arms-broken from six-arms-working. (a) THE ITEM'S OWN — `#captureBoundsFor` returns null, so `strengthOf()` hands the walk no bound and every leg reports its stored letter as it did before this item (also IC-102's one-line reversal) -> 61 pass, 7 FAIL, AS DECLARED: the two reads disagree again and the failure NAMES BOTH ANSWERS, labelled — `want {"walk":"C","registry":"C"} got {"walk":"B","registry":"C"}` — because a failure naming one answer is one a reader cannot act on. (b) THE CEILING APPLIED AS A VALUE RATHER THAN AS A CAP (the `<=` short-circuit removed) -> 61 pass, 7 FAIL, AS DECLARED, and it bit HARDER than declared in the correct direction: raising a weaker authored letter to the ceiling moved this suite's OWN pre-existing fixtures in sections 1 and 3 as well as section 8's over-strictness arms. (c) THE UNDETERMINED ARM DROPPED (an unmeasured transcription falls through and keeps its authored letter) -> 66 pass, 2 FAIL, AS DECLARED, both in 8b. (d) THE RECURSION DROPS THE BOUND MAP -> 67 pass, 1 FAIL, AS DECLARED, and it is the ONLY arm 8e catches — without 8e this item would have had a hole that read as working. (e) OVER-STRICTNESS — the SAME rule written in the registry's own `BASIS_GRADES.indexOf` idiom instead of `#GRADE_RANK` -> 68 pass, 0 FAIL, exit 0: correct work in a spelling this item did not anticipate PASSES. THREE FINDINGS ABOUT THE ARMS THEMSELVES — recorded rather than smoothed, kept at each arm in the driver, and deliberately NOT written as an enumerated list, because `countArms` reads one and this declaration arms FIVE, so numbering them would put slack in a ratchet built to carry none (measured with the register itself: transitions 5, enumerations 8 before this wording). FINDING ONE: arm (a) was first declared to break “and the leg it is sent to check is the ACTUAL one” and did NOT: that assertion reads `inherited_from`/`through`, which name WHICH leg set the grade whatever LETTER is reached, so it is blind to this break BY CONSTRUCTION and belongs in the held-open half. FINDING TWO: arm (b) was first declared to break “a publisher-typed document's leg is byte-identical to the DO-internal derivation” and did NOT — and this is the useful one: that equality compares `op=inquirystrength` against the ungated `/strength` route and BOTH GO THROUGH `strengthOf()`, so a change to the arithmetic damages both sides equally and the equality survives. It is a real pin on the GATE and it is STRUCTURALLY BLIND to the derivation beneath it — the costs-nothing rule in miniature. The assertion that does see that break is “it carries NO new key”. FINDING THREE: arm (c)'s first spelling DID NOT ARM AS DECLARED: a bare `return null;` left the undetermined branch's object literal standing as an unconditional return, so every entry came back null — 51 pass / 17 fail, breaking THREE of its four declared held-open assertions, which is precisely the signal the held-open half exists to give. The arm was rewritten surgically and re-run. */
 /* NEGATIVE CONTROL: section 9 (D-177) — RUN 2026-09-25 by the D-177 worker, FOUR arms in `src/store.mjs`, each armed ALONE and restored from its own per-arm pristine copy in `controlPen` (outside the worktree), every restore verified byte-identical by sha256 AND `cmp` AND size (3,476,819 bytes, sha256 081b90ed3eb25863, floored at 100 kB; RE-RUN after the gate-driven rewording, every figure unchanged). ONE COMMAND EACH: `node test/nc-d177.mjs <none|a|b|c|d>` from `bio-plane/`; the driver holds each patch, its declaration and the declared-vs-actual check. BASELINE `none` = 77 pass / 0 fail / exit 0. (a) THE ROW'S OWN, READ THE AUTHORED GRADE AGAIN: the measured floor in `#capturedAt` never applies -> 75 pass, 2 FAIL, AS DECLARED, the headline naming both letters — `want {"walk":"B","authored":"C"} got {"walk":"C","authored":"C"}` — and the reason sentence. (b) THE ROUTE IGNORED: any recorded source counts as a direct fetch, so an archive replay earns the direct letter nobody ruled -> 75 pass, 2 FAIL, AS DECLARED, both in 9d. (c) THE CEILING READ AS A MEASUREMENT: the floor is taken from the ceiling for every document, fetched or not -> 69 pass, 8 FAIL, AS DECLARED and harder than declared in the correct direction: sections 1 and 3's own weaker-letter fixtures, 8c's weaker-than-ceiling arm and 9a's BEFORE all move, because the record would be grading a route it never saw. Its FIRST spelling did not arm as declared — it left the reason sentence reading a key the entry lacked, so the suite died in section 1 at -1/-1 without reaching one declared assertion; the arm was rewritten so only the floor's source moves, and the finding is kept at the arm in the driver. (d) OVER-STRICTNESS: the same floor in the registry's own `BASIS_GRADES.indexOf` idiom -> 77 pass, 0 FAIL, exit 0: correct work in a spelling this item did not use PASSES. */
+/* NEGATIVE CONTROL: section 9 (D-693) — RUN 2026-09-25 by the D-693 worker through `node test/nc-d177.mjs <arm>`, EIGHT arms plus the baseline, each armed ALONE in `src/store.mjs`, declared before running (must FAIL and must PASS, both checked), and restored from its own per-arm pristine copy in `controlPen`, every restore verified byte-identical by sha256 AND `cmp` AND size (3,481,062 bytes, sha256 ae82d6c62c2518c2…). baseline 84/0. (a) the floor disarmed -> 80/4, AS DECLARED — first declared with the archive headline held OPEN and it broke, because both routes are read through the ONE floor: a finding about the declaration, corrected at its site. (b) FLIPPED, not exempted — THE ROW'S OWN CONTROL: `ARCHIVE_VIA` renamed so archive.org is again a via no ruling names (CAPTURE_GRADE_VIA_UNRULED, as D-177 shipped it) -> 79/5, AS DECLARED, 9d failing BY NAME ("an archive-only document's capture grade is MEASURED", "A LEG ON AN ARCHIVE-ONLY CAPTURE READS THE MEASURED LETTER") while 9f's unruled-via pair and the direct headline held. (c) the ceiling read as the measurement -> 74/10, AS DECLARED after the same correction as (a). (d) OVER-STRICTNESS, the floor in the BASIS_GRADES.indexOf idiom -> 84/0. (e) the archive letter TYPED as its own literal -> 83/1, only the structural pin. (f) no cap from above -> 83/1, only 9e's ceiling-on-archive leg. (g) OVER-STRICTNESS, the letter derived by a slice -> 83/1, only the structural pin on the spelling; every behavioural assertion held. */
 /* REC-34: `op=inquirystrength` — the GATED control-plane read of REC-12's
  * derived pair. UI-11's delegation (measured: no op served the pair for a
  * WORKING inquiry) and UI-12's hard blocker (its live preview re-queries as a
@@ -785,23 +786,72 @@ console.log("\n--- 9. D-177: a DIRECT capture's grade is MEASURED from its fetch
   t("a leg stating exactly the measured letter reads it with NO reason attached",
     [atWalk.grade, atWalk.weakest?.why ?? null], [regAfter.fetch.earned, null]);
 
-  /* ---- 9d. A NON-DIRECT ROUTE IS UNDETERMINED, STATED, AND RAISES NOTHING.
-     What an archive-served capture earns is a doctrine value no ruling names
-     (REC-50's precedent; D-177's residue is with Bob). So the member's weaker
-     letter STANDS, and the registry names the route and why it cannot grade it. */
+  /* ---- 9d. AN ARCHIVE-ONLY CAPTURE EARNS ITS LETTER, MEASURED (D-693).
+     CORRECTED, NOT EXEMPTED: D-177 shipped this section asserting the archive
+     route UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED) and the member's weaker letter
+     STANDING, because no ruling then named what an archive replay earns. BOB #35
+     ruled it 2026-09-25 07:55Z from doctrine on record (ARCHIVE-FALLBACK's two-hop
+     GRADE-C chain; AUTHORITY-AND-TRUST's transitive trust "with disclosure and grade
+     adjustment"; grade tracks directness): it EARNS a measured letter strictly below
+     a direct capture. So the old assertion now describes a ruled case read as
+     undetermined — the exact defect D-693 exists to close. */
   const D_ARC = "INFO-2026-0923-archive-only";
   const I_ARC = "INQ-2026-0923-weaker-on-archive";
   await promote9(D_ARC, undefined);
   await locate(D_ARC, "archive.org");
-  await promote(carol, I_ARC, inquiryMd(I_ARC, { refs: [D_ARC], legs: [g(D_ARC, "C", "capture")] }), "inquiry");
+  await promote(carol, I_ARC, inquiryMd(I_ARC, { refs: [D_ARC], legs: [g(D_ARC, "D", "capture")] }), "inquiry");
   const arcReg = await reg9(I_ARC, D_ARC);
   const arcWalk = (await pair(carol, I_ARC)).body.result.capture;
-  t("an archive-only document's route is NAMED and its grade UNDETERMINED, with the reason coded",
-    [arcReg?.fetch?.determined, arcReg?.fetch?.earned, arcReg?.fetch?.other_via, arcReg?.fetch?.undetermined_because,
-     /no ruling names/.test(arcReg?.fetch?.why ?? "")],
-    [false, null, ["archive.org"], "CAPTURE_GRADE_VIA_UNRULED", true]);
+  /* THE LETTER, PINNED THREE WAYS. The store DERIVES it (one rank below the
+     ceiling in BASIS_GRADES — UNREACHABLE_CAPTURE_GRADE's pattern the other way);
+     the ruling NAMES it; op=acquire STAMPS it on every archive capture it files.
+     All three must be one letter, and the stamp is read as WRITTEN, by the same
+     reader acquire.test.mjs uses, so a divergence between the stamp and the
+     measurement is named here rather than found by a member. */
+  const ACQ_STAMP = /grade:\s*via === "archive\.org"\s*\?\s*("?[A-Za-z_$][\w$]*"?)\s*:/.exec(INDEX_SRC);
+  const stamped = ACQ_STAMP ? ACQ_STAMP[1].replace(/"/g, "") : "(stamp not found)";
+  t("the store DERIVES the archive letter one rank below the enforced ceiling, never types it",
+    /const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES\[BASIS_GRADES\.indexOf\(EARNED_CAPTURE_CEILING\) \+ 1\] \?\? null;/
+      .test(STORE_SRC), true);
+  t("an archive-only document's capture grade is MEASURED, at the ruled letter and at op=acquire's stamped archive letter",
+    { determined: arcReg?.fetch?.determined, earned: arcReg?.fetch?.earned, via: arcReg?.fetch?.earned_via,
+      archive: arcReg?.fetch?.archive, reason: arcReg?.fetch?.undetermined_because ?? null, stamped },
+    { determined: true, earned: "C", via: "archive.org", archive: 1, reason: null, stamped: "C" });
+  t("and it ranks STRICTLY BELOW what a direct capture of a document earns (grade tracks directness)",
+    [arcReg?.fetch?.earned !== regAfter?.fetch?.earned, /archive replay/.test(arcReg?.fetch?.why ?? "")],
+    [true, true]);
+  t("A LEG ON AN ARCHIVE-ONLY CAPTURE READS THE MEASURED LETTER, NOT THE AUTHORED ONE",
+    { walk: arcWalk.grade, authored: "D" }, { walk: arcReg?.fetch?.earned ?? "(no earned grade)", authored: "D" });
+  t("and the walk says it was fetched through an archive replay",
+    /fetched .* through an archive replay/.test(arcWalk.weakest?.why ?? ""), true);
+
+  /* 9e. FROM ABOVE TOO: the direct ceiling is not what the record holds for a
+     document it only ever read through an archive, so a leg stating that ceiling
+     is read at the archive letter, and the member's own letter is kept as written. */
+  const I_ARCUP = "INQ-2026-0924-ceiling-on-archive";
+  const ceilingLetter = regAfter.grade;
+  await promote(carol, I_ARCUP, inquiryMd(I_ARCUP, { refs: [D_ARC], legs: [g(D_ARC, ceilingLetter, "capture")] }), "inquiry");
+  const upWalk = (await pair(carol, I_ARCUP)).body.result.capture;
+  t("a leg stating the DIRECT ceiling on an archive-only capture is read at the archive letter, and says why",
+    [upWalk.grade, /from how this instance fetched it/.test(upWalk.weakest?.why ?? "")], [arcReg?.fetch?.earned, true]);
+  t("and its AUTHORED letter is untouched in the record",
+    (await doGet(`basis?id=${I_ARCUP}`)).legs.map((l) => l.grade), [ceilingLetter]);
+
+  /* 9f. A VIA NO RULING NAMES stays UNDETERMINED, NAMED, and raises nothing: the
+     code CAPTURE_GRADE_VIA_UNRULED is kept for exactly this case. */
+  const D_UNR = "INFO-2026-0925-unruled-via";
+  const I_UNR = "INQ-2026-0925-weaker-on-unruled";
+  await promote9(D_UNR, undefined);
+  await locate(D_UNR, "some-other-mirror");
+  await promote(carol, I_UNR, inquiryMd(I_UNR, { refs: [D_UNR], legs: [g(D_UNR, "D", "capture")] }), "inquiry");
+  const unrReg = await reg9(I_UNR, D_UNR);
+  const unrWalk = (await pair(carol, I_UNR)).body.result.capture;
+  t("a route NO ruling names is NAMED and its grade UNDETERMINED, with the reason coded",
+    [unrReg?.fetch?.determined, unrReg?.fetch?.earned, unrReg?.fetch?.other_via, unrReg?.fetch?.undetermined_because,
+     /no ruling names/.test(unrReg?.fetch?.why ?? "")],
+    [false, null, ["some-other-mirror"], "CAPTURE_GRADE_VIA_UNRULED", true]);
   t("and the member's weaker letter on it STANDS — nothing is invented for an unruled route",
-    [arcWalk.grade, arcWalk.weakest?.why ?? null], ["C", null]);
+    [unrWalk.grade, unrWalk.weakest?.why ?? null], ["D", null]);
 }
 
 await mf.dispose();

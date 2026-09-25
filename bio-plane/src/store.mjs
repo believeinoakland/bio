@@ -700,6 +700,24 @@ function actNoProjectScope(detail, extra = {}) {
  * root of trust, and the gate runs over a byte-complete image.
  */
 
+/* D-693 · WHAT AN ARCHIVE-ONLY CAPTURE EARNS ON THE CAPTURE AXIS — RULED, and so
+   DERIVED here rather than typed. BOB #35, 2026-09-25 07:55Z, from doctrine already
+   on record: a capture whose only source is an archive replay EARNS a letter, as a
+   MEASURED value with the same shape as the direct case, strictly below a direct
+   capture. AUTHORITY-AND-TRUST accepts transitive trust "with disclosure and grade
+   adjustment"; ARCHIVE-FALLBACK.md's built arm writes that capture as a two-hop
+   chain; and grade tracks directness, so the archive hop is ONE MORE PARTY between
+   us and the publisher and the letter is ONE RANK below the direct ceiling in the
+   same BASIS_GRADES array `checkEarnedLeg` compares against — UNREACHABLE_CAPTURE_GRADE's
+   pattern, one rank the other way. Deriving it means the ordering the ruling rests on
+   cannot drift from the ceiling: move the ceiling and this letter moves with it.
+   inquirystrength.test.mjs section 9d pins the value to the ruled letter AND to the
+   letter op=acquire stamps on an archive capture, so a divergence is named.
+   The grade is about the FETCH PATH only (DEC-75; BOB #35's second answer): the
+   issuing authority's D-97 state is a different axis and is never read for it. */
+const ARCHIVE_VIA = "archive.org";
+const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
+
 /* The SHA-256 of the empty string: the canonical base of a creation, as the
    accelerator recorded it and as the check catalog recognises it. */
 const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -28271,7 +28289,8 @@ export class Store extends DurableObject {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
         perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0,
-                                     direct: 0, measured: null, otherVia: new Set() });
+                                     direct: 0, archive: 0, unrecorded: 0, measured: null,
+                                     measuredVia: null, otherVia: new Set() });
       const e = perBundle.get(r.bundle_id);
       /* MK-1 / D-184: A MEMBER'S AUTHORED WORDS ARE NOT A CAPTURE ON THIS AXIS.
          The capture axis measures the act of reading a document in (DEC-21's
@@ -28300,21 +28319,29 @@ export class Store extends DurableObject {
          is worth, bounded by its chain as the ceiling is (DEC-4) — so it is
          `b`, measured rather than authored, and it becomes the FLOOR a leg is
          read at as well as sitting under the ceiling.
-         A capture whose only recorded source is NOT direct (an archive replay)
-         earns a letter NO RULING NAMES: op=acquire's typed archive letter is
-         open by decision (REC-50), so it contributes no floor here and its
-         route is NAMED on the entry, undetermined, never guessed. A capture
+         D-693 (BOB #35, 2026-09-25 07:55Z): A CAPTURE WHOSE ONLY RECORDED SOURCE
+         IS AN ARCHIVE REPLAY is measured the same way one rank down — its letter
+         is `captureBound(chain, ARCHIVE_CAPTURE_GRADE)`, the archive letter
+         bounded by the same chain (DEC-4), so an unmeasured transcription still
+         bounds it to nothing. A capture whose recorded source is a via NO ruling
+         names earns nothing here: its route is NAMED on the entry as
+         CAPTURE_GRADE_VIA_UNRULED, undetermined, never guessed. A capture
          with NO locator row — bytes a provenance document carried, a member's
          upload — has no recorded fetch path at all, and the entry for it is
          byte-identical to what it was before this item. The ISSUING authority
          (D-97's three-valued state) is not read: it gates publication, and
          capture grade tracks directness, never who issued the document. */
       const vias = String(r.vias || "").split(",").filter(Boolean);
-      if (vias.includes("direct")) {
-        e.direct++;
-        if (b != null) e.measured = e.measured == null ? b
-          : (BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured);
-      } else if (vias.length) e.otherVia.add(String(r.vias));  /* split once, after the scan, never per row */
+      const routed = vias.includes("direct") ? b
+        : vias.includes(ARCHIVE_VIA) ? captureBound(chain, ARCHIVE_CAPTURE_GRADE) : null;
+      if (vias.includes("direct")) e.direct++;
+      else if (vias.includes(ARCHIVE_VIA)) e.archive++;
+      else if (!vias.length) e.unrecorded++;
+      if (!vias.includes("direct") && vias.length) e.otherVia.add(String(r.vias));  /* split once, after the scan, never per row */
+      if (routed != null && (e.measured == null || BASIS_GRADES.indexOf(routed) < BASIS_GRADES.indexOf(e.measured))) {
+        e.measured = routed;
+        e.measuredVia = vias.includes("direct") ? "direct" : ARCHIVE_VIA;
+      }
       if (b == null) continue;          /* undetermined contributes no letter; `e.bound` stays null unless another capture supplies one */
       /* THE STRONGEST OVER THE DOCUMENT'S CAPTURES, which is the collapse this
          same function already makes on the connection axis ("the strongest
@@ -28472,31 +28499,45 @@ export class Store extends DurableObject {
        the record holds a locator for one of the document's captures, so every
        entry the record cannot say this about is byte-identical to the pre-item
        answer (REC-88's over-strictness rule, one fact over). `earned` is the
-       MEASURED letter — the strongest a direct capture of this document supports
-       — and `#capturedAt` reads a leg at no LESS than it; the ceiling above it is
-       unchanged and still caps. A document whose only recorded route is not
-       direct gets the route NAMED and the letter UNDETERMINED, with the reason
-       in words: that value is a doctrine question (REC-50's precedent), sent to
-       Bob as D-177's residue, and inventing it here would be the ruling. */
+       MEASURED letter — the strongest a direct or archive capture of this
+       document supports — and `#capturedAt` reads a leg at no LESS than it; the
+       ceiling above it is unchanged and still caps.
+       D-693 (BOB #35, 2026-09-25 07:55Z): an ARCHIVE-ONLY document's letter is
+       measured too, at ARCHIVE_CAPTURE_GRADE under its chain, and where EVERY
+       capture of the document sits on a measured route (`whole`) that letter is
+       also the most a leg is read at — an archive capture ranks strictly below a
+       direct one, and the direct ceiling above it is not what this record holds.
+       A document whose recorded route is a via NO ruling names gets the route
+       NAMED and the letter UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED); a capture
+       with NO recorded via stays undetermined and is counted as `unrecorded`
+       wherever the entry carries a route at all. */
     for (const [bundleId, e] of perBundle) {
       const entry = out.earned.capture[bundleId];
       if (!entry || entry.captures === 0 || (!e.direct && !e.otherVia.size)) continue;
       const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
+      const unrecorded = e.unrecorded;
+      const byArchive = e.measured != null && e.measuredVia === ARCHIVE_VIA;
       entry.fetch = {
-        direct: e.direct, other_via: other,
-        earned: e.measured,
+        direct: e.direct, archive: e.archive, other_via: other, unrecorded,
+        earned: e.measured, earned_via: e.measured != null ? e.measuredVia : null,
         determined: e.measured != null,
-        ...(e.measured == null ? { undetermined_because: e.direct
+        whole: e.measured != null && e.direct + e.archive === e.n,
+        ...(e.measured == null ? { undetermined_because: e.direct || e.archive
           ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {}),
-        why: e.measured != null
+        why: byArchive
+          ? `this instance fetched ${bundleId} only through an archive replay (${ARCHIVE_VIA}, `
+            + `${e.archive} capture(s)), never from its publisher: one more party stands between the record and `
+            + `the publisher, so its capture grade is ${e.measured}, measured from how it was fetched and ranked below a `
+            + `direct capture (ARCHIVE-FALLBACK's two-hop chain; transitive trust with its grade adjusted).`
+          : e.measured != null
           ? `this instance fetched ${bundleId} directly from its own address `
             + `(${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by `
             + `a member's account: a leg on it is read at that letter, never below it.`
-          : e.direct
-          ? `this instance fetched ${bundleId} directly, but every direct capture's text is `
+          : e.direct || e.archive
+          ? `this instance fetched ${bundleId}, but the text of every capture it fetched is `
             + `unmeasured, so no capture grade is measured for it.`
-          : `every capture of ${bundleId} the record holds was served by someone other than its `
-            + `publisher (${other.join(", ")}), and what such a capture earns on the capture axis is `
+          : `every capture of ${bundleId} the record holds was served by a route no ruling grades `
+            + `(${other.join(", ")}), and what such a capture earns on the capture axis is `
             + `UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its `
             + `author gave, under the ceiling.`,
       };
@@ -33971,9 +34012,22 @@ export class Store extends DurableObject {
        ever from a fetch the record holds, never from the ceiling: a document whose
        route is unrecorded or undetermined keeps the letter its author gave. */
     const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    /* D-693: AN ARCHIVE-ONLY DOCUMENT IS READ AT ITS MEASURED LETTER FROM ABOVE
+       TOO. Where every capture the record holds sits on a measured route and that
+       letter is BELOW the direct ceiling, the ceiling is not what the record holds
+       for this document, so a stronger stated letter is read at the route's. The
+       member's own letter is kept as written; the read states the measured one. */
+    if (routeGrade != null && earned.fetch.whole
+        && Store.#GRADE_RANK[routeGrade] < Store.#GRADE_RANK[earned.grade]
+        && Store.#GRADE_RANK[stated] > Store.#GRADE_RANK[routeGrade])
+      return { grade: routeGrade,
+               why: `the record holds ${targetId}'s capture grade at ${routeGrade}, from how this instance `
+                  + `fetched it, so this leg is read at ${routeGrade} here and not at the ${stated} it carries. `
+                  + `${earned.fetch.why}`.trimEnd() };
     if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])
       return { grade: routeGrade,
-               why: `this instance fetched ${targetId} itself, so the record holds its capture grade at `
+               why: `this instance fetched ${targetId} ${earned.fetch.earned_via === "direct" ? "itself" : "through an archive replay"}, `
+                  + `so the record holds its capture grade at `
                   + `${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. `
                   + `${earned.fetch.why}`.trimEnd() };
     if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
