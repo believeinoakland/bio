@@ -1377,7 +1377,15 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    seeing row sources — the graded truncation roster still reads this method, and `projectDirectory:projects`
    ARRIVES in the in-memory truncation rosters below in the same edit, CUT GRADED at the published cap. A fall
    with no such arrival anywhere would be the shrunken measurement this pair of arms exists to refuse. */
-const SCANNING_MEASURED_2026_09_15 = 117;
+/* 117 -> 118, 2026-09-25 by D-523, READ FROM THE CENSUS ROSTER THIS RUN PRINTED (118) and diffed by name against
+   the 117 above. ONE ARRIVAL, NO DEPARTURE: `#conditionsRenderDeferred`, op=queue's `render-deferred` producer (BOB
+   #33's ruling of 2026-09-24 19:54Z). ADMITTED, NOT FIXED, AND THE ADMISSION IS A DEFECT NAMED RATHER THAN A CLEAN
+   BILL: it is `#conditionsCaptureRequested`'s shape one producer down — a walk over `capture_requests` gated at the
+   target, with no SQL bound, whose EXPIRED rows (like that sibling's CAPTURED ones) stay in the table and in the
+   answer for as long as the request row exists. Bounding one of the two alone would leave the feed's two readers of
+   one table under two rules; the class fix (both producers bounded, the cut published on op=queue) is minted in
+   D-523's report, not taken here. */
+const SCANNING_MEASURED_2026_09_15 = 118;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
