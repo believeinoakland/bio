@@ -516,6 +516,10 @@
    {
     "driver": "bio-plane/test/nc-d177.mjs",
     "branch": "land/worker/D-177 (c22-batch30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "civicos-ui/test/onpoint-occurrence.control.mjs",
+    "branch": "land/worker/UI-112 (c22-batch30 union; written before the M0-197 convention)"
    }
   ]
  }

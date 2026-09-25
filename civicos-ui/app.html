@@ -18117,6 +18117,7 @@ async function docKnowsPanel(captureSha){
   try{ resolutions = await recR("resolutions", { sha256:captureSha, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ resolutions = { _err:true }; }
   try{ connections = await recR("connections", { sha256:captureSha, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ connections = { _err:true }; }
   const prog = await docProgressions(captureSha);
+  const occ = await docMentionPlaces(captureSha, connections, resolutions);
   /* pre-resolve subject labels for the resolutions rows (bounded, deduped) */
   const labels = new Map();
   for(const r of (resolutions && resolutions.resolutions) || [])
@@ -18125,7 +18126,7 @@ async function docKnowsPanel(captureSha){
     <h2 class="sec">What the record knows about this document</h2>
     <p class="lede" style="margin:0 0 18px">Beyond the document itself: the subjects it names, the documents it connects to, and the institutional processes it is part of. Each carries a grade, and a grade says how the link was established — a shared identifier, a corresponding name, a member's testimony — never how much to trust the document.</p>
     ${docResolutionsHtml(resolutions, labels)}
-    ${docConnectionsHtml(connections, captureSha, resolutions)}
+    ${docConnectionsHtml(connections, captureSha, resolutions, occ)}
     ${docProgressionsHtml(prog)}
   </div>`;
 }
@@ -18167,7 +18168,7 @@ function docResolutionsHtml(res, labels){
    as the entity arm — the plane says so at the site, because an answer whose
    shape depended on which key you held would be a second thing to know — so the
    figure is read off this answer's own wire and stated over CONNECTIONS. */
-function docConnectionsHtml(c, captureSha, res){
+function docConnectionsHtml(c, captureSha, res, occ){
   const head = `<section class="tsec"><h2>Documents this one connects to</h2>`
     + `<p class="subj-note">Two documents that concern the same subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${!c || c._err ? "" : connectionsBoundHtml(c, "this list")}</p>`;
   if(!c || c._err) return head + `<div class="empty">The record could not read this document's connections.</div></section>`;
@@ -18183,7 +18184,7 @@ function docConnectionsHtml(c, captureSha, res){
       <div class="ends">Connected to ${target?`<a onclick="openBundle('${esc(target)}')">${esc(other)}</a>`:`<span class="mono">${esc(other)}</span>`}</div>
       <div class="weaker">Ends resolved at Grade ${esc(x.a_grade)} and Grade ${esc(x.b_grade)} — the connection takes the weaker.</div>
       <div class="top">${subjGradeBadge(x.grade, x.established, x.needs_confirmation)}</div>
-      ${docConnPairHtml(x, captureSha, res)}
+      ${docConnPairHtml(x, captureSha, res, occ)}
     </div>`;
   }).join("");
   return head + out + `</section>`;
@@ -18231,7 +18232,52 @@ function canChooseOnPoint(){
 function docConnPairPlace(p){
   return (p && p.ref) ? ` (read at ${esc(p.ref)})` : ` (where it was read is not recorded)`;
 }
-function docConnPairHtml(x, captureSha, res){
+/* UI-112 · D-454: A MENTION IS AN OCCURRENCE. One reference string read on three pages is three
+   mentions, and `op=connectionchoose` refuses a string read at several places named alone (C-74.4
+   CONNECTION_CHOICE_OCCURRENCE_UNNAMED) — so an offer of STRINGS would offer an act the plane refuses
+   in the common case. The offer is therefore of PLACES: this document's places for each of its
+   mentions of a connected subject, as `op=readingref` lists them (this capture's entry; its
+   `occurrences`, in reading order, where it read the reference at more than one place, else its one
+   `position`). Read only for a member who could act (the act's capability, C-74.1), once per mention,
+   and each read caught: a mention whose places could not be read is offered as the string, and the
+   plane then answers for it. */
+async function docMentionPlaces(captureSha, conns, res){
+  const out = new Map();
+  if(!canChooseOnPoint() || !conns || conns._err || !res || res._err) return out;
+  const subjects = new Set((conns.connections || []).map(x => x && x.entity_id).filter(Boolean));
+  for(const r of res.resolutions || []){
+    if(!r || !r.ref || !subjects.has(r.entity_id) || out.has(r.ref)) continue;
+    let ans = null;
+    try{ ans = await recR("readingref", { ref:r.ref }); }catch(_){ ans = null; }
+    const doc = ans && !ans._err && (ans.documents || []).find(d => d && d.capture_sha === captureSha);
+    if(doc) out.set(r.ref, Array.isArray(doc.occurrences) ? doc.occurrences : [doc.position || null]);
+  }
+  return out;
+}
+/* One offer: a mention, and where the place is known and names ONE of this mention's places, that
+   place's human form as `occurrence` — the spelling the plane accepts where exactly one occurrence
+   carries it (C-74.4's own rule). A place with no human form, or one this document reads the mention
+   at twice, is offered WITHOUT an occurrence: the plane accepts it where the mention has one place and
+   otherwise refuses C-74.4 listing every occurrence by its key, which `docChooseOnPoint` then offers. */
+function docOnPointOffers(refs, occ){
+  const offers = [];
+  for(const ref of refs){
+    const places = (occ && occ.get(ref)) || null;
+    if(!places){ offers.push({ ref, place:undefined, occurrence:"" }); continue; }
+    const forms = places.map(p => (p && p.ref) || "");
+    places.forEach((p, i) => {
+      const form = forms[i];
+      const nameable = places.length > 1 && form && forms.indexOf(form) === forms.lastIndexOf(form);
+      offers.push({ ref, place:p || null, occurrence: nameable ? form : "", many: places.length > 1 });
+    });
+  }
+  return offers;
+}
+function docOnPointButton(o, captureSha, other, entity, marks){
+  const where = o.place === undefined ? "" : (o.place && o.place.ref ? ` — read at ${esc(o.place.ref)}` : ` — where it was read is not recorded`);
+  return `<button class="tbtn" data-onpoint-capture="${esc(captureSha)}" data-onpoint-other="${esc(other)}" data-onpoint-entity="${esc(entity)}" data-onpoint-ref="${esc(o.ref)}" data-onpoint-occurrence="${esc(o.occurrence || "")}" onclick="docChooseOnPoint(this)">${esc(o.ref)}${where}${marks || ""}</button>`;
+}
+function docConnPairHtml(x, captureSha, res, occ){
   if(!x) return "";
   const side = x.a_capture_sha === captureSha ? "a" : "b", far = side === "a" ? "b" : "a";
   const dp = x.determining_pair || null;
@@ -18242,16 +18288,23 @@ function docConnPairHtml(x, captureSha, res){
     ? `<div class="subj-ref conn-machine" data-pair="machine">The machine&rsquo;s pair: none recorded &mdash; this connection was derived before the record kept which reference established it.</div>`
     : `<div class="subj-ref conn-machine" data-pair="machine">The machine&rsquo;s pair${sel && sel.method ? ` (${esc(sel.method)})` : ""}: on this document <span class="mono">${esc(dp[side+"_ref"] || "no reference")}</span>${docConnPairPlace(dp[side+"_position"])}; on the other <span class="mono">${esc(dp[far+"_ref"] || "no reference")}</span>${docConnPairPlace(dp[far+"_position"])}.${sel && sel.says && !mine && !theirs ? ` ${esc(sel.says)}.` : ""}</div>`;
   const choiceLine = (c, where) => !c ? "" : (c.lapsed === true
-    ? `<div class="subj-ref conn-onpoint" data-pair="member" data-lapsed="1">A member&rsquo;s choice ${where}, <span class="mono">${esc(c.ref || "")}</span>, has lapsed: ${esc(c.why || "the record says so and says nothing further")}.</div>`
+    ? `<div class="subj-ref conn-onpoint" data-pair="member" data-lapsed="1"${c.ambiguous === true ? ` data-ambiguous="1"` : ""}>A member&rsquo;s choice ${where}, <span class="mono">${esc(c.ref || "")}</span>, has lapsed: ${esc(c.why || "the record says so and says nothing further")}.</div>`
     : `<div class="subj-ref conn-onpoint" data-pair="member">On point ${where}, as a member chose: <span class="mono">${esc(c.ref || "")}</span>${c.chosen_by ? `, chosen by ${esc(c.chosen_by)}` : ""}${c.at ? ` on ${esc(String(c.at).slice(0,10))}` : ""}.</div>`);
   const other = x[far+"_capture_sha"] || "";
   const refs = [];
   for(const r of (res && !res._err && res.resolutions) || [])
     if(r && r.entity_id === x.entity_id && r.ref && !refs.includes(r.ref)) refs.push(r.ref);
-  const ctl = (!canChooseOnPoint() || refs.length < 2 || !other) ? ""
+  /* UI-112: the marks name a PLACE only where the record says which: the machine's pair by its
+     position, the member's choice by its `position` where the plane publishes one. A mention read at
+     several places whose chosen place this answer does not state is marked at none of them. */
+  const offers = docOnPointOffers(refs, occ);
+  const at = (o, ref, pos) => o.ref === ref && (!o.many || (o.place && pos && o.place.ref === pos.ref));
+  const ctl = (!canChooseOnPoint() || offers.length < 2 || !other) ? ""
     : `<div class="conn-choose" data-onpoint-for="${esc(other)}">
       <div class="subj-ref">Which of this document&rsquo;s mentions of the subject is on point for this connection? Your choice is recorded in your name beside the machine&rsquo;s pair, which stays as it is.</div>
-      ${refs.map(ref=>`<button class="tbtn" data-onpoint-capture="${esc(captureSha)}" data-onpoint-other="${esc(other)}" data-onpoint-entity="${esc(x.entity_id||"")}" data-onpoint-ref="${esc(ref)}" onclick="docChooseOnPoint(this)">${esc(ref)}${dp && dp[side+"_ref"] === ref ? " — the machine&rsquo;s pair" : ""}${mine && mine.ref === ref ? " — the current choice" : ""}</button>`).join(" ")}
+      ${offers.map(o => docOnPointButton(o, captureSha, other, x.entity_id||"",
+          (dp && at(o, dp[side+"_ref"], dp[side+"_position"]) ? " — the machine&rsquo;s pair" : "")
+          + (mine && !mine.lapsed && at(o, mine.ref, mine.position) ? " — the current choice" : ""))).join(" ")}
       <div class="conn-choose-out" data-onpoint-out="${esc(other)}|${esc(x.entity_id||"")}"></div>
     </div>`;
   return `<div class="conn-pair">${machine}${choiceLine(mine, "on this document")}${choiceLine(theirs, "on the other document")}${ctl}</div>`;
@@ -18259,13 +18312,28 @@ function docConnPairHtml(x, captureSha, res){
 /* THE ACT. It asks and renders what came back — the plane's `says` on success, its
    refusal verbatim otherwise — and then re-reads the panel so the choice a member sees
    is the one the RECORD now holds, never the one this page believes it sent. */
+/* UI-112: `occurrence=` goes on the act whenever the offer names one. A refusal that lists the
+   mention's `occurrences` BY KEY (C-74.4, or a place named ambiguously) is rendered in its DEC-49 words
+   and followed by one offer per listed occurrence, sending its key — the plane's own list, never one
+   this page assembled. An occurrence the plane lists with no key is shown and not offered: the act
+   reads an empty `occurrence=` as none named. */
 async function docChooseOnPoint(btn){
   const d = (btn && btn.dataset) || {};
   const body = { capture:d.onpointCapture, other:d.onpointOther, entity:d.onpointEntity, ref:d.onpointRef };
+  if(d.onpointOccurrence) body.occurrence = d.onpointOccurrence;
   const r = await actAskPost("connectionchoose", body);
   const key = `${d.onpointOther}|${d.onpointEntity}`;
   const outFor = () => [...document.querySelectorAll("[data-onpoint-out]")].find(e => e.dataset && e.dataset.onpointOut === key);
-  if(!r.accepted){ const o = outFor(); if(o) o.innerHTML = actRefusalHtml(r.refusal); return r; }
+  if(!r.accepted){
+    const o = outFor();
+    const listed = (r.refusal && Array.isArray(r.refusal.occurrences)) ? r.refusal.occurrences : [];
+    const ref = (r.refusal && r.refusal.ref) || d.onpointRef || "";
+    const again = !listed.length ? "" : `<div class="conn-choose-again">${listed.map(x => (x && x.occurrence)
+      ? docOnPointButton({ ref, place:(x.position || null), occurrence:x.occurrence }, d.onpointCapture || "", d.onpointOther || "", d.onpointEntity || "", "")
+      : `<span class="subj-ref">${esc(ref)}${x && x.position && x.position.ref ? ` — read at ${esc(x.position.ref)}` : ` — where it was read is not recorded`}</span>`).join(" ")}</div>`;
+    if(o) o.innerHTML = actRefusalHtml(r.refusal) + again;
+    return r;
+  }
   const host = document.querySelector("#docknows");
   if(host && d.onpointCapture) host.outerHTML = await docKnowsPanel(d.onpointCapture);
   const o = outFor(); if(o) o.innerHTML = `<div class="subj-ref">${esc((r.result && r.result.says) || "")}</div>`;
