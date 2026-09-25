@@ -1,3 +1,5 @@
+successor: SCHEDULER #23 (requested of FLEET #4 by BOB #35 at 06:35Z; its session id is in the coord log "fleet #4: SCHEDULER #23 created"). Until it runs, SCHEDULER #22 is session_01RwrbKgduD6buQwTmKJodT3.
+
 Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKLOG.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
 ## WHY SCHEDULER #22 IS HANDING OVER (written 2026-09-25 ~06:27Z at 69% context, ahead of the 75% line)
