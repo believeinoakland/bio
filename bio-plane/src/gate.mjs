@@ -122,6 +122,13 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    The figures are the d470 suite's print on this branch; the integrator re-reads them on the union. */
 /* D-448 (2026-09-24): 1.28.0 -> 1.29.0. C-87 REVIEW_COPY_CHECKS added eleven rows, so the catalogue
    census moved 461 -> 472 and the census arm (d470 A3/A5) forces the MINOR step. */
+/* 1.29.0 (D-468, 2026-09-24): ONE arrival, C-26.12 BIAS_ILLEGAL_TRANSITION — `op=promote` holding a bias set to
+   the declared STATES edges read from its head, which STATES.bias described and nothing enforced. MINOR: one
+   arrival, no departures. THE FIGURE IS THE MERGED TREE'S: this item took 1.26.0 over origin/main 1a7f0bcc0 and
+   then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a different catalogue), so the stamp moves once
+   more from the catalogue that actually runs and the census is RE-READ from d470-catalog-census.test.mjs's own
+   print — never either base's figure plus one. THREE PLACES MOVE WITH THIS CONSTANT and the gate names each if
+   one is missed: the census row in d470, that suite's (A5) literal, and ratify.test.mjs's gateVersion literal. */
 export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request

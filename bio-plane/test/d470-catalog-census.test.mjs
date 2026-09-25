@@ -352,6 +352,11 @@ const CATALOG_CENSUS = {
      1.28.0's row STAYS: each row is the census of the catalogue that stamped it. Count and digest are
      THIS SUITE'S OWN PRINT on the item's tree; CONDUCT re-reads both at integration, where neither
      branch's figure is the union's. */
+  /* 1.29.0 (D-468, 2026-09-24): ONE arrival -- C-26.12 BIAS_ILLEGAL_TRANSITION, `op=promote` holding a bias
+     set to the declared STATES edges read from its head. MINOR: one arrival, no departures. This item took
+     1.26.0 over origin/main 1a7f0bcc0 and then MERGED a main already at 1.28.0 (whose own 1.26.0 row is a
+     DIFFERENT catalogue), so the stamp moves once more and the count and digest are THIS SUITE'S OWN PRINT on
+     the merged tree -- never either base's figure plus one. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the

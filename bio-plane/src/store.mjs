@@ -18046,6 +18046,70 @@ export class Store extends DurableObject {
         /* END DEC-49 REGION is-basis-acyclic */
       }
 
+      /* D-468 / C-26.12 — THE BIAS MACHINE, ASKED OF THE HEAD, AT THE WRITE PATH.
+         `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": a bias set is a BUNDLE so that it
+         inherits *"append-only history, member-authored transitions, convergent promotion"* without
+         inventing governance — and `STATES.bias`'s own comment says *"NO EDGE OUT OF `adopted` EXCEPT
+         `retired`"*, with the reason: a published case names the revision it was held to, so a set that
+         could slide backwards makes *"the lens this case was produced under"* unresolvable after the fact.
+         NOTHING ASKED THE TABLE. `promote` writes `meta.current_state` into the bundles row, and the only
+         state questions it carried were entry requirements for ONE destination (`retired` for information,
+         the project 7.11 pair). So `adopted -> proposed` was accepted and moved the head — REC-187's worker
+         found it (F4), and `d84-case-manifest.test.mjs` §4 DROVE it and read the new head back, which is
+         the measurement this row opens on rather than a reading of the comment.
+         THE TABLE IS THE CATALOGUE'S AND THIS PATH HOLDS NO COPY, through `vocabFor` over the DECLARED
+         spelling (the MAP RULE), exactly as op=actionmove and op=conclude take it. Only a MOVE is asked: `from ===
+         to` is a revision and not a transition, which is the doctrine's own way to amend an adopted set —
+         *"Amending an adopted set is a NEW REVISION of the same bundle under append-only history — which
+         re-pins"* — and `bias.test.mjs` §11 and `d84-case-manifest.test.mjs` §3 both drive that amendment.
+         A CREATION IS NOT A TRANSITION EITHER (`cur` is null and there is no head to move from), so this
+         does not decide which state a set may be BORN in; that question is the gate's and is NOT asked here.
+         THE TYPE IS D-510's `promotedType` AND THIS HOLDS NO SECOND DERIVATION OF IT. D-510 (2026-09-24,
+         reached by merging main into this branch) made the DOCUMENT's own type the one value every projection
+         reads and refuses an envelope contradicting it (`is-promoted-type-disagrees`) ahead of this line, so
+         the document-versus-envelope question is already answered here and re-deriving it would be the
+         two-readings drift this repository has measured five times. This item's first spelling DID re-derive
+         it, and folding it onto `promotedType` is what the merge was for.
+         ASKED WHENEVER THE PROMOTED TYPE IS BIAS **OR** THE HEAD IS A BIAS SET, so a promotion that also
+         retypes the bundle cannot step around the machine by renaming it: from a bias head the legal moves
+         are the bias table's whatever the incoming document calls itself. (That a revision can retype a
+         bundle AT ALL is a separate, wider defect D-510 did NOT close — `promotedType` is written into
+         `bundles.object_type` with no comparison anywhere to `cur.object_type` — and is reported rather than
+         fixed here.)
+         `replay` IS NOT AN EXEMPTION, on REC-179's reasoning and not by oversight: `index.mjs` verifies a
+         replay only for a CREATION (REC-173), so on a revision the flag is a caller's assertion, and a fence
+         a caller can turn off by asserting is not a fence. The gathering check's exemption exists because a
+         faithfully replayed history must be holdable verbatim; a backwards move was never legally written,
+         so an honest replay does not meet this.
+         REFUSED BEFORE ANY WRITE of this transaction, beside its `BIAS_REFUSED` sibling and for that
+         refusal's reason: a refusal returned inside `transactionSync` rolls nothing back, so a state the
+         record will not honour must be refused before it can land in append-only history. */
+      /* DEC-49 REGION bias-state-edge */
+      const biasSpelling = promotedType === "bias" ? promotedType
+                         : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
+      if (cur && biasSpelling) {
+        const from = cur.current_state, to = meta.current_state;
+        const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
+        /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
+           INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
+           it reads this span as a governed region containing no refusal at all. Its ceiling on such
+           returns may only ever move DOWN. The code is a STRING LITERAL at its site and the check and
+           the translation are read from the catalogue's own row — one place, as `BIAS_REFUSED` does it
+           four hundred lines below. */
+        if (to !== from && !legalFrom.includes(to))
+          return { ok: false, reason: "BIAS_ILLEGAL_TRANSITION",
+                   check: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check,
+                   translation: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.translation,
+                   from, to: to ?? null, object_type: biasSpelling, legal_from: legalFrom,
+                   detail: `${bundleId} stands at '${from}' and this promotion names `
+                     + `'${to === undefined || to === null ? "no state" : to}'. `
+                     + `A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}`
+                     + `${legalFrom.length ? "" : " — it is terminal"}, and a revision that leaves it where it stands is `
+                     + `how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. `
+                     + `Nothing was written.` };
+      }
+      /* END DEC-49 REGION bias-state-edge */
+
       /* REC-176 — THE HISTORY LAW AT THE WRITE (§2.4: "History is append-only; nothing in _history/ is ever modified
          or deleted"). The two manifest writes below, and the history snapshot, are keyed (bundle_id, snap_key) and
          were INSERT OR REPLACE: a second promotion naming a key this bundle already held REPLACED the first
