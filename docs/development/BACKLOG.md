@@ -813,6 +813,16 @@ scope: read the date ONCE in the driver and hand it to the child (a `--today` fl
 accepts-when: under M0-147's clockpin at 23:59:59.999 local, A6 stays green across the straddle (moves: a midnight false red). NEGATIVE CONTROL: restore the driver's own date read under the pin and A6 fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by M0-147's worker).
 
+### D-600 · queued — **`bio-plane/test/nc-cap12.mjs` ARM `dropslides` NEVER ARMS (its patch matches 0 times, on origin/main too): its anchor `slides: sl ? slideExtents(sl) : null,` in `index.mjs` now reads `slides: sl || deckLen ? slideExtents(sl || []) : null,`, so capture-container-extent's slides control refutes nothing.** Found by D-535's worker (03:16Z). The control fails loudly (ARMED NO), so no gate result is wrong today. — owner M0.
+order: after D-594, with the control-driver rows behind the product rows: a control that cannot arm is loud, not false (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative control: break the subject, watch the suite fail at a NAMED assertion).
+depends-on: none.
+scope: re-anchor `dropslides` on the current line (prefer an anchor keyed on `slideExtents(` so the next rewording is caught), re-run nc-cap12, and record the result on capture-container-extent's NEGATIVE CONTROL line.
+accepts-when: nc-cap12 reports `dropslides` ARMED and the slides arm fails by name (moves: 1 arm that never armed). NEGATIVE CONTROL: the re-anchored patch itself; revert the anchor and the driver reports ARMED NO again.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-535's worker).
+
 ### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
 order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
 milestone: M0

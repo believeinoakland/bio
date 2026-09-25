@@ -776,8 +776,8 @@ scope: append M0-187's per-run `nth` to `snapKey`; clear the run cache only when
 accepts-when: two fixture projects opened in one second get distinct snapKeys, and a refused purge leaves the cache (the measured failure it moves: a shared key and a cache cleared by a refusal, each driven by a planted arm). NEGATIVE CONTROL: drop `nth` from the key and clear on any attempt, and both arms fail by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs M0`).
 
-### D-535 · running — **THE PLANE'S MEMBER-FACING STRINGS CITE `MEASUREMENTS.md` BY NAME, so every suite importing the check catalogue or the plane's index counts as a MEASUREMENTS reader and a MEASUREMENTS-only diff selects it: `bio-plane/checks/bio-checks.mjs` and `bio-plane/src/index.mjs` carry four citations (one DEC-49 refusal translation, three OCR cost sentences), and gates.mjs §2e reads a directly-imported runtime module's text for path mentions.** Found by M0-176's worker (M-146 §"D-535, ISOLATED HERE"); M0-176 is NARROWED to this. — owner RECORD (index.mjs), CHECKS (bio-checks.mjs).
-status: running — SCHEDULER #21 02:13Z spawns WORKER D-535 (depth 2)
+### D-535 · integrated — **THE PLANE'S MEMBER-FACING STRINGS CITE `MEASUREMENTS.md` BY NAME, so every suite importing the check catalogue or the plane's index counts as a MEASUREMENTS reader and a MEASUREMENTS-only diff selects it: `bio-plane/checks/bio-checks.mjs` and `bio-plane/src/index.mjs` carry four citations (one DEC-49 refusal translation, three OCR cost sentences), and gates.mjs §2e reads a directly-imported runtime module's text for path mentions.** Found by M0-176's worker (M-146 §"D-535, ISOLATED HERE"); M0-176 is NARROWED to this. — owner RECORD (index.mjs), CHECKS (bio-checks.mjs).
+status: integrated — SCHEDULER #22 03:20Z: tip 03f34d18, GATE 105/105 GREEN FULLREUSE (8149 assertions), tree 9032853f; M-161 (40->32 of 43); hygiene walk floor 44->45; statepaths.control arm b now arms; minted D-600
 order: after M0-193, with the process rows behind the product rows: it trims the doc-facing selection by two units (39 → 37, M-146), which is not an appreciable gate-time effect (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24; via CONDUCT #20 22:31Z)
 milestone: M0
 interface: I3 — one DEC-49 translation's words change; the integrator classifies.
@@ -985,7 +985,8 @@ scope: `kind` in each version of the answer. Extend `bio-plane/test/suggest.test
 accepts-when: a version with a kind reads the same kind from both ops. NEGATIVE CONTROL: drop the key, and the cross-op arm fails on `kind`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-191 · queued — **A CAPTURE ASSEMBLED FROM REUSED PARTS DOES NOT STATE ITS TEMPORAL SPREAD: `subresources.mjs` records each part's `reused_from_fetched_at`, and nothing computes the earliest and latest fetch instants of the composite.** — owner CAPTURE.
+### D-191 · running — **A CAPTURE ASSEMBLED FROM REUSED PARTS DOES NOT STATE ITS TEMPORAL SPREAD: `subresources.mjs` records each part's `reused_from_fetched_at`, and nothing computes the earliest and latest fetch instants of the composite.** — owner CAPTURE.
+status: running — SCHEDULER #22 03:20Z spawns WORKER D-191 (depth 2)
 order: after D-235, with the product rows before the M0 group: the record holds the instants and does not say what they add up to (SCHEDULER #17, 2026-09-23, LED-7 S17-2; verified at the code on `02603e88`)
 milestone: M2
 interface: I5 additive — the manifest's spread; the integrator mints and classifies the IC.
