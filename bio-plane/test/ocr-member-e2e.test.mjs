@@ -36,7 +36,9 @@
  *     That is asserted below rather than worked around, and the gap is filed as
  *     D-321.** D-313 measured why there is no second real page to reach for: the
  *     image-only class is rare and clumped, and two harvests of 1,377 pages
- *     hours apart returned ZERO of it. So the
+ *     hours apart returned ZERO of it. D-321 then searched every byte held in
+ *     git (M-170, 2026-09-25: 52 pages, ONE image-only, and it is this
+ *     resolution); the instance's own captures stay unsearched. So the
  *     `reading_refs` arm draws agenda text as PIXELS and sends them through the
  *     SAME real engine over the SAME real wire. **What is synthetic is the ink,
  *     never the engine, the renderer, the binding or the chain** — and the arm
