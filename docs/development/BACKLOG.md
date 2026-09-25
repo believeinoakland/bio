@@ -823,6 +823,16 @@ accepts-when: a clean status.control.mjs run leaves no `.status-harness/`. NEGAT
 added: 2026-09-24 · SCHEDULER #18 (BOB #33 inbox 17:12Z; `node tools/mintid.mjs M0`).
 scope-add: 2026-09-24 by SCHEDULER #19 (via CONDUCT #20, 17:25Z and 18:17Z): control drivers writing `${file}.pristine-<arm>` beside the source, an UNDECLARED pen BOB's ruling does not stand — battery-residue, contradiction-overstrict, d249-port, d301-census, d389-fullfetch, dec65-strength-reach, m041-instrument-census, m057-authority, rec174-supplyfetch, tally-through-pipe, walkfloor, and every `nc-*.mjs` harness (D-499 fixed nc-d64). Fix: a PEN from `mkdtempSync(join(tmpdir(), "<tag>-control-"))`.
 
+### D-594 · queued — **`bio-plane/test/delegations.control.mjs` ARM A6 (~265) READS TODAY'S LOCAL DATE IN THE DRIVER AND COMPARES IT WITH THE DATE ITS CHILD `plancheck` READS FOR ITSELF (the cohort regex ~287), so the control fails on a correct tool across local midnight.** Found by M0-147's worker's class sweep (03:15Z). Latent; control driver only. — owner M0.
+order: after M0-172, with the control-driver rows behind the product rows: no gate verdict is false today, it only reddens a control run that straddles midnight (SCHEDULER #22, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a negative control refutes only when it breaks ONE thing; the instant-dependent class, D-231, D-487, M0-147).
+depends-on: none.
+scope: read the date ONCE in the driver and hand it to the child (a `--today` flag on plancheck), or accept iso or iso+1 in the cohort regex; prefer the flag.
+accepts-when: under M0-147's clockpin at 23:59:59.999 local, A6 stays green across the straddle (moves: a midnight false red). NEGATIVE CONTROL: restore the driver's own date read under the pin and A6 fails by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by M0-147's worker).
+
 ### M0-174 · queued — **`mintid`'s `D` NAMESPACE STILL GRADES DUPLICATES ACROSS TWO SHAPES AS ONE: since DEBT's retirement (M0-140) a `D-` is minted as a PLAN ROW, so its allocation site is the heading `### D-n ·`; the DEBT-table rows `| D-n |` are LEGACY allocations frozen at D-443. A heading and a legacy row for one id (M-57's 17 pairs) are the item and the row it closed, never a duplicate.** BOB #33 RULED, 2026-09-24 17:35Z (drained to `BOB-INBOX-drained.md`; cite until folded). — owner M0.
 order: low in the M0 group, beside M0-172: small; fold into an open M0 batch if one fits (BOB #33, 17:35Z; SCHEDULER #19)
 milestone: M0
@@ -1201,14 +1211,4 @@ design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a 
 depends-on: none.
 scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
 accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).

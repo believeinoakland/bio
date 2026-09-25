@@ -798,8 +798,8 @@ scope: narrow every aiRunOpen catalogue row's `where` into its own DEC-49 region
 accepts-when: a new region added inside aiRunOpen is judged once and passes (moves: a double judgement). NEGATIVE CONTROL: restore one whole-function `where` and the planted region's arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
-### M0-147 · running — **TWO SUITES READ THE YEAR OFF THEIR OWN CLOCK: `mint-ledger.test.mjs` (line 76) and `opaque-ids.test.mjs` (line 67) set `YEAR = new Date()…slice(0, 4)`, so a run straddling New Year's midnight UTC compares ids minted in one year with the next.** Found by D-487's worker's sweep (the instant-dependent class, D-231, D-487). — owner M0.
-status: running — SCHEDULER #21 02:23Z spawns WORKER M0-147 (depth 2)
+### M0-147 · integrated — **TWO SUITES READ THE YEAR OFF THEIR OWN CLOCK: `mint-ledger.test.mjs` (line 76) and `opaque-ids.test.mjs` (line 67) set `YEAR = new Date()…slice(0, 4)`, so a run straddling New Year's midnight UTC compares ids minted in one year with the next.** Found by D-487's worker's sweep (the instant-dependent class, D-231, D-487). — owner M0.
+status: integrated — SCHEDULER #22 03:17Z: tip 8db5d2f8, GATE 74/74 GREEN TARGETED (5669 assertions), clean tree 520f11ec; new bio-plane/test/clockpin.preload.mjs; minted D-594
 order: low in the M0 group: latent, fires only across a year boundary (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:25Z)
 milestone: M0
 interface: none.
@@ -963,7 +963,8 @@ accepts-when: against the real plane, the founder's and an enrolled administrato
 added: 2026-09-22 · SCHEDULER #13 (LED-7 batch S13-1; D-134's DEBT row of 2026-08-01, BOB #17's order and BOB #18's discharge; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-134» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### UI-76 · queued — **NO SURFACE LETS A MEMBER DECLARE, TEST OR PLACE A THEME, OR SHOWS WHOSE LENS A THEME IS.** D-162's surface half, item 2 of BOB #23's entry. — owner UI.
+### UI-76 · running — **NO SURFACE LETS A MEMBER DECLARE, TEST OR PLACE A THEME, OR SHOWS WHOSE LENS A THEME IS.** D-162's surface half, item 2 of BOB #23's entry. — owner UI.
+status: running — SCHEDULER #22 03:17Z spawns WORKER UI-76 (depth 2)
 order: directly after D-162, which it consumes (BOB #23: *"UI (M8), after 1"*) (SCHEDULER #9, 2026-09-21)
 milestone: M8
 interface: I3 consumer (D-162's IC).
