@@ -1018,6 +1018,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "stamp in index.mjs and asks viewerPredicate of each capture's bundle INSIDE the statement; a capture the "
       + "caller cannot see is refused exactly as one the record does not hold (C-91.3), so the judgement is no "
       + "oracle for a document in a project the caller was never invited to. A single value names no document.",
+    leadlist: "D-681: the LEADS this caller may read, each once with its own latest state. GATED by the one "
+      + "lead predicate op=leadread and op=frontier's internet level ask (#leadReach, inside the statement): its "
+      + "AUTHOR, the JOINED participants of a project the author SHARED it to, a machine credential only within a "
+      + "member's minted scope. It takes the fail-closed viewer stamp beside op=leadread in index.mjs. A caller "
+      + "who reaches no lead gets an empty list, never a refusal — a lead's existence is not disclosed outside "
+      + "its reach, so the answer names no lead it may not read and no count of them.",
     themeread: "D-162: one THEME by id — a member's declared idea, its test, its declarer, and the documents "
       + "and passages placed in it (members) or proposed for it (hunches) — or the list of themes, searchable. "
       + "GATED PER PLACEMENT: a theme itself is not existence-private (framework §8.4: it may be searched, shown "

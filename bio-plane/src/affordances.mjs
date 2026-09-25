@@ -1946,6 +1946,7 @@ export const NON_ACTS = {
      about their OWN words in ONE case edition, and whether an edition reaches an observation is the case's, not the
      observation's. The surface that offers it is Program B's (MEMBER-KNOWLEDGE-DESIGN.md §8). */
   attribute: "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
+  leadlist: "read: the leads this viewer may read, each once with its own latest state, newest first, bounded; the same reach as leadread, and an empty list for a viewer who reaches none",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
      no object's facts could say when to offer, and a placement names a document without acting on

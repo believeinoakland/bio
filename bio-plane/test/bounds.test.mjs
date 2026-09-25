@@ -637,6 +637,9 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      The read is now two keyed `#one` reads, by identity and by draft link (rec217-draft-binding block 7 drives both).
      The op leaves DRIVEN_ELSEWHERE, the envelope map and the named-constant arm in the same landing. The c22-batch29 union carries this departure beside REC-150's and REC-203's arrivals;
      its figure is re-read from this arm's own failure output. */
+  /* D-681 side, kept as history: MOVED 46 -> 47 on 2026-09-25 by D-681 on its own branch, from THIS ARM'S OWN FAILURE OUTPUT (`want 46 / got 47`): op=leadlist,
+     the leads a viewer may read, capped at LEAD_LIST_LIMIT_DEFAULT/MAX beside `LIMIT ?` with `limit` and `truncated`
+     published. Its envelope is in the map below and its BITE in `test/leadlist.test.mjs` (DRIVEN_ELSEWHERE). The c22-batch30 union carries this arrival beside c22-batch29's; its figure is re-read from this arm's own failure output. */
   /* MOVED 46 -> 47 at the c22-batch29 union (CONDUCT #22, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
      tree (`want 46 / got 47`; the corpus line printed `71 carrying a cap, reaching 47 ops`), never by arithmetic: main's
      46 (D-525's driveshells) plus REC-150's projectrequests and REC-203's idmatch, less D-521b's statementack. */
@@ -1479,6 +1482,11 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      tokens only. The bite, the clamp and `truncated` both ways are driven
                                      in `test/lead.test.mjs` section 7; the envelope arm is below. */
                                   "leadread",
+                                  /* D-681: op=leadlist's BITE arms need LEADS, which only a signed-in
+                                     member can write (C-54.2), so on `leadread`'s reason the bite, the
+                                     clamp and `truncated` both ways are driven in `test/leadlist.test.mjs`;
+                                     the envelope arm is below. */
+                                  "leadlist",
                                   /* D-162 / IC-241: op=themeread's BITE arms need a THEME, which only a
                                      signed-in member can declare (C-81.2), and this suite drives machine
                                      tokens only. The bite on both pages (the list and a theme's members), the
@@ -1985,6 +1993,8 @@ const answersByOp = new Map([
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
   /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
+  /* D-681: the envelope of the lead list for a caller who reaches no lead — an answer object, never an array. */
+  ["leadlist", await GET("op=leadlist&token=mem-r57&limit=1")],
   /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
   ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
   /* REC-203: the envelope of a RECOGNITION (one value, no capture to read) — an answer object, never an array. */
