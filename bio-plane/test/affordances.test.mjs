@@ -237,8 +237,11 @@ t("the published action_kind vocabulary IS the array C-2.10 enforces (one import
    `request_for_comment` and this assertion states eight. The pin itself is the
    point and is unchanged: the published vocabulary is the array C-2.10
    enforces, so a kind added in one place cannot go unpublished in the other. */
-t("action_kind is the eight-value suite (DEC-13 adds request_for_comment)",
-  ACTION_KINDS, ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"]);
+/* CORRECTED 2026-09-25 (REC-201), never exempted: eight was right until BOB #32 (2026-09-23 23:08Z) adopted a
+   law-neutral `records_request` kind, since `cpra_request` names California's law in the kind and a sovereign
+   group may sit outside California. The pin is unchanged in purpose and now states nine; `cpra_request` stays. */
+t("action_kind is the nine-value suite (DEC-13 adds request_for_comment; REC-201 adds records_request)",
+  ACTION_KINDS, ["cpra_request", "records_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES, and this pair of assertions is
    the drift guard itself rather than a description of it.
@@ -652,9 +655,11 @@ t("and each is the constant from the module that owns it, never a copy",
   [true, true]);
 /* CORRECTED 2026-08-05 (REC-24): eight kinds, for the reason stated at the
    ACTION_KINDS pin above. */
-t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the eight action kinds",
+/* CORRECTED 2026-09-25 (REC-201), never exempted: nine, for the reason at the ACTION_KINDS pin above — BOB #32
+   adopted a law-neutral `records_request` kind beside `cpra_request`. */
+t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the nine action kinds",
   [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
-  [["deferred", "dismissed"], 8]);
+  [["deferred", "dismissed"], 9]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES OVER THE WIRE, and then held
    against WHAT THE STORE ACTUALLY REFUSES.

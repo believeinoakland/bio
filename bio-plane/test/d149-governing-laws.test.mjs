@@ -3,7 +3,13 @@
    (B) THE LIAR'S PASS — in src/store.mjs promote, `if (was !== now)` -> `if (false && was !== now)` in is-promote-governing-laws. DECLARED: §2's three creation refusals and §6's two revision refusals fail; §1, §3, §4, §5 hold. RESULT 39/9, AS DECLARED for all five, plus four §6 arms downstream of the edit that then landed (the list really changed, so the carried-forward and restated expectations moved). §1, §3, §4, §5 held.
    (C) THE MACHINE FENCE — in src/store.mjs actionLaws, `if (!who || isMachineIdentity(who))` -> `if (!who)`. DECLARED: §4's three arms fail; §1-§3 hold. RESULT 40/8, AS DECLARED, plus five §6 arms downstream of the machine's list having landed. §1-§3 held.
    (D) OVER-STRICTNESS — the promote fence applied to the act itself: `if (!pkg[LAWS_ACT] && ((cur …` -> `if (((cur …`. DECLARED: §3's member act fails (refused GOVERNING_LAWS_REWRITTEN); §1, §2 and §4's refusal hold. RESULT 35/13, AS DECLARED: "op=actionlaws by a member lands" fails first and every arm resting on a list having been set follows; §1, §2 and §4's machine refusal held.
-   (E) THE LITERAL ROW IDS (c18-batch7fix, 2026-09-23, on land/conduct/c18-batch7fix) — in §5's case table, BAD_LAW_LEVEL's literal `"C-73.3"` -> `"C-73.4"`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: that one §5 arm fails; every other arm holds. RESULT 47/1, AS DECLARED: "a level outside the three is refused BAD_LAW_LEVEL, with its C-73 row (C-73.4)". */
+   (E) THE LITERAL ROW IDS (c18-batch7fix, 2026-09-23, on land/conduct/c18-batch7fix) — in §5's case table, BAD_LAW_LEVEL's literal `"C-73.3"` -> `"C-73.4"`, anchor asserted once, restored by cp and verified by sha256 AND cmp. DECLARED: that one §5 arm fails; every other arm holds. RESULT 47/1, AS DECLARED: "a level outside the three is refused BAD_LAW_LEVEL, with its C-73 row (C-73.4)".
+   REC-201 (2026-09-25, worker REC-201, branch land/worker/REC-201 over origin/main 5e8a65a8), §8, each arm ALONE, anchor asserted once, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp (checks/bio-checks.mjs 1,010,212 B sha256 4469b0baae29…, src/store.mjs 3,472,035 B sha256 630010fd1ab7…); baseline 59/0, and 59/0 after the last restore.
+   (F) THE ROW'S NAMED CONTROL — rewrite cpra_request on read: in src/store.mjs #actionDerived, `kind: row.action_kind ?? null` -> `kind: row.action_kind === "cpra_request" ? "records_request" : …`. DECLARED: §8's unchanged arm and §1's cpra_request arm fail; the rest hold. RESULT 57/2, AS DECLARED, and the unchanged arm fails BY NAME ("an old cpra_request reads UNCHANGED …").
+   (G) SYNTHESISE A CITATION FROM THE KIND: recordsLawOf answers a cpra_request `{ state: 'stated', law: 'Cal. Gov. Code § 7920.000' }`. DECLARED: §8's unchanged arm fails. RESULT 58/1, AS DECLARED — and §1's regex arm on the sentence HELD while the sentence gained a clause, which is why §8 asserts D-149's sentence as a literal.
+   (H) THE READ DROPS THE LAW: `law: recordsLawOf(fm)` -> `law: null`. DECLARED: §8's reads-its-law, no-law-undetermined and unchanged arms fail. RESULT 56/3, AS DECLARED.
+   (I) C-2.10'S ARM OFF: the `recordsLawFindings(fm, findings);` call removed. DECLARED: the two C-2.10 error arms fail; both over-strictness arms hold. RESULT 57/2, AS DECLARED.
+   (J) OVER-STRICTNESS — every `law` refused as if on another kind (`if (fm.action_kind !== 'records_request')` -> `if (true)`). DECLARED: §8's catalog-clean arm and the section-sign arm fail. RESULT 56/3: as declared, plus the length arm, because the refusal it expects is never reached when the first branch returns. */
 /* D-149: A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT (Bob, 2026-09-22;
  * `docs/architecture/BIO_Case_Making_v0_1.md` §2).
  *
@@ -24,6 +30,9 @@
  *      refused by its own code before anything is written; the catalog (C-2.10) judges the same shape on bytes.
  *   6. OVER-STRICTNESS: a revision that carries the list forward unchanged lands; the act restates the list and
  *      says what it replaced; `op=actionmove` carries the list forward.
+ *
+ *   8. REC-201: a `records_request` under a non-California law files and reads its `law`; an old `cpra_request`
+ *      reads unchanged — kind, sentence and bytes — and no citation is synthesised from its kind.
  *
  * WHAT IT CANNOT SEE: whether a citation is the RIGHT law for the agency — by design nobody but a member can,
  * and the plane does not try. It drives no machine PROPOSAL of a list, because none is built.
@@ -89,7 +98,7 @@ const errorsOf = async (id, text) => {
 const lawErrors = (errs) => errs.filter((e) => /governing_laws/.test(e));
 
 const actionMd = (id, { kind = "other", title = "Records request", laws = null, lawsBy = null,
-                        lawsAt = null, plan = "Ask for the transfer ledger." } = {}) => ["---",
+                        lawsAt = null, plan = "Ask for the transfer ledger.", law = null } = {}) => ["---",
   `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "${title}"`, "current_state: planned", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -99,6 +108,7 @@ const actionMd = (id, { kind = "other", title = "Records request", laws = null, 
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
   `action_kind: ${kind}`, "risk_tier: 1",
+  ...(law === null ? [] : [`law: "${law}"`]),
   "counterparty:", "  state: named", "  name: City Clerk",
   ...(laws === null ? [] : laws.length
     ? ["governing_laws:", ...laws.flatMap((l) => [`  - level: ${l.level}`, `    citation: "${l.citation}"`])]
@@ -322,6 +332,66 @@ console.log("\n--- 7. one vocabulary, one reader ---");
   t("and it reaches a caller on the wire", vocab, LAW_LEVELS);
   t("the reader is total: a document with no frontmatter reads undetermined, never throws",
     governingLawsOf(null).state, "undetermined");
+}
+
+/* ===================================================================== */
+console.log("\n--- 8. REC-201: a records request under any law, and cpra_request read as written ---");
+{
+  /* BOB #32, 2026-09-23 23:08Z: a law-neutral `records_request` kind carrying a `law` field; `cpra_request` stays
+     readable as written. A Washington request is the fixture because it is the plainest non-California case: the
+     agency asked is governed by that state's act, and no California law is implied anywhere. */
+  const WA = "ACTN-2026-1496-washington-request";
+  const WA_LAW = "Wash. Rev. Code ch. 42.56 (Public Records Act)";
+  const waText = actionMd(WA, { kind: "records_request", law: WA_LAW, title: "Request to the Port of Seattle" });
+  const filed = await promote(NADIA, WA, waText);
+  t("a records_request under a NON-California law FILES through op=promote", filed?.ok, true);
+  const wa = rP(await GET(`op=projection&token=${PILAR}&id=${WA}`))?.action ?? null;
+  t("...and READS ITS LAW: kind records_request, the law stated, verbatim as written",
+    [wa?.kind, wa?.law?.state, wa?.law?.law], ["records_request", "stated", WA_LAW]);
+  t("its stored bytes are the bytes filed, and the catalog finds nothing to refuse in them",
+    [sha(await textOf(NADIA, WA)), await errorsOf(WA, waText)], [sha(waText), []]);
+  t("the law is NOT the governing-laws list: that stays undetermined, and its sentence names the kind's law as the "
+  + "author's statement and infers nothing else",
+    [wa?.governing_laws?.state, wa?.governing_laws?.laws,
+     wa?.governing_laws?.stated?.endsWith(`This action's kind, records_request, states the law it is made under — ${WA_LAW} — as its author's statement; nothing else is inferred from it.`),
+     /California/.test(wa?.governing_laws?.stated ?? "")],
+    ["undetermined", [], true, false]);
+
+  const NOLAW = "ACTN-2026-1497-records-no-law";
+  const nl = await promote(NADIA, NOLAW, actionMd(NOLAW, { kind: "records_request" }));
+  const nlr = rP(await GET(`op=projection&token=${PILAR}&id=${NOLAW}`))?.action?.law ?? null;
+  t("OVER-STRICTNESS: a records_request stating NO law files, and reads UNDETERMINED in words, never a default",
+    [nl?.ok, nlr?.state, nlr?.law, /^UNDETERMINED: this records request states no law/.test(nlr?.stated ?? "")],
+    [true, "undetermined", null, true]);
+
+  /* THE UNCHANGED ARM (the row's NEGATIVE CONTROL names it): the §1 cpra_request fixture, filed before this kind
+     existed in any fixture, read against the literal sentence D-149 shipped — not against a regex that a
+     rewritten read could still satisfy — and against the bytes it was filed with. */
+  const cpraFiled = actionMd(CPRA, { kind: "cpra_request" });
+  const c = rP(await GET(`op=projection&token=${PILAR}&id=${CPRA}`))?.action ?? null;
+  t("an old cpra_request reads UNCHANGED: kind cpra_request, law answered by the KIND, no citation synthesised, "
+  + "the D-149 sentence byte-for-byte, and the stored bytes identical to those filed",
+    [c?.kind, c?.law?.state, c?.law?.law, c?.governing_laws?.state, c?.governing_laws?.stated,
+     sha(await textOf(NADIA, CPRA))],
+    ["cpra_request", "kind", null, "undetermined",
+     "UNDETERMINED: no member has stated which laws govern this action. The record assumes none — not federal "
+     + "law, not state law, not a local ordinance. Which laws apply follows the agency asked, and a member states "
+     + "them, each by citation. This action's kind, cpra_request, is its member's statement that the California "
+     + "Public Records Act governs it; nothing else is inferred from the kind.",
+     sha(cpraFiled)]);
+  const other = rP(await GET(`op=projection&token=${PILAR}&id=${ACT}`))?.action ?? null;
+  t("a kind that is not a records request has no law to read (null, not undetermined)", other?.law, null);
+
+  const lawOn = (kind, law) => errorsOf(WA, actionMd(WA, { kind, law })).then((e) => e.filter((x) => /\blaw\b/.test(x)));
+  t("C-2.10: a law on a cpra_request is an error — the kind already names its law",
+    (await lawOn("cpra_request", WA_LAW)).some((e) => /carried by a records_request only/.test(e)), true);
+  t("C-2.10: a law longer than a citation is an error",
+    (await lawOn("records_request", "x".repeat(201))).some((e) => /longer than 200/.test(e)), true);
+  t("C-2.10 OVER-STRICTNESS: a federal citation with its section sign is clean",
+    await lawOn("records_request", "5 U.S.C. § 552"), []);
+  t("records_request is published in the kind vocabulary a surface reads",
+    (rP(await GET(`op=affordances&token=${NADIA}&id=${WA}`))?.vocabularies?.action_kind ?? []).includes("records_request"),
+    true);
 }
 
 await mf.dispose();

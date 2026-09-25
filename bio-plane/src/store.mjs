@@ -214,7 +214,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
 
          /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
             catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
-         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf,
+         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf, recordsLawOf,
 
          /* REC-195: the LABEL a proposal of those laws is read under — machine work or a member's, composed in
             the catalogue so the act and the read publish one answer and no surface judges an identity. */
@@ -2309,6 +2309,9 @@ export class Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* REC-201: THE LAW A records_request IS MADE UNDER, verbatim from its bytes, or UNDETERMINED in words; a
+         cpra_request answers `kind` and is read as written; null for a kind that is not a records request. */
+      law: recordsLawOf(fm),
       /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
