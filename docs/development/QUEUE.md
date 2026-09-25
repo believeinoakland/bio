@@ -848,7 +848,7 @@ accepts-when: a unit over the remaining budget is carried truncated and marked s
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
 
 ### D-709 · integrated — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
-status: integrated — SCHEDULER #24 12:52Z: tip 97e2925c (on D-698 c0f7a56f), GATE 385/385 GREEN FULLREUSE (21887 assertions; excludes 3 untallied), tree bc6204a3; a no-locator capture entry states fetch route unrecorded (CAPTURE_ROUTE_UNRECORDED), its leg reads the author letter under the ceiling and says so, no letter moves; seven suites corrected; IC-355 proposed I3 additive (CONDUCT classifies)
+status: integrated — CONDUCT #23 12:47Z: worker report — tip 97e2925c (on D-698 c0f7a56f), GATE 385/385 GREEN (21887 assertions); no-locator capture states fetch route unrecorded; IC-355 PROPOSED on the branch (resolve at union); rides batch30 after D-698
 order: after D-698 (running on D-693), the same earned-basis entries (SCHEDULER #23, 2026-09-25)
 milestone: M9
 interface: I5 — additive `fetch.route: "unrecorded"` on every no-locator capture entry; an IC required; the integrator mints and classifies.
