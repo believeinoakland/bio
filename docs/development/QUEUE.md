@@ -534,8 +534,8 @@ scope: (1) measure navigation times over the client-rendered sources already cap
 accepts-when: the bound reads from a measurement id, and a burst above the cap renders no more than the cap at once with the rest completing later (the measured failure it moves: an unmeasured 30,000 ms and an uncapped burst). NEGATIVE CONTROL: remove the cap and the burst arm counts more concurrent renders than the cap, failing by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs D`).
 
-### D-547 · running — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
-status: running — SCHEDULER #21 00:49Z spawns WORKER D-547 on land/worker/D-526 (both edit promote's act)
+### D-547 · integrated — **A PROMOTE REVISION CAN RETYPE A BUNDLE IN PLACE: `#projectRow`'s write (store.mjs ~17747, `const projectedType = promotedType`) never compares the new type with `cur.object_type`, so after a retyping revision every type-scoped fence asks the wrong machine.** Found by D-468's worker (via CONDUCT #20 23:45Z). — owner RECORD.
+status: integrated — SCHEDULER #21 01:37Z: tip a1a56e0a CARRIES D-526 (d1622057); GATE 362/362 GREEN; M-156 retype census 0/31 bio, 0/17 scratch; new governed region; CATALOG 1.29.0 unions
 order: before D-538, at the head of the backlog with the promote corrections: a record whose type silently changes under its own fences claims more than it can support (CLAUDE.md §2), and it outranks new features (SCHEDULER #21, 2026-09-24)
 milestone: M7
 interface: I3 — a new refusal code on op=promote; the integrator classifies.
@@ -863,6 +863,16 @@ depends-on: none.
 scope: sweep today's residue from scratch with `store=scratch` named on every call, the record's counters read before and after; add the sweep to DIST's cut verification.
 accepts-when: scratch reads empty after the sweep and `bio`'s counters are unchanged. NEGATIVE CONTROL: a sweep call without `store=scratch` is refused (D-456) or moves `bio`'s counters, and the witness arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs DIST`).
+
+### D-485 · queued — **THE DEC-49 GUARD CANNOT SEE REACH THROUGH THE REAL PLANE: under D-433 its R3 counts only codes a MOCK feeds a surface, so "every code a surface can receive carries a canned translation" was false of `NO_CITATION` for months.** Found by UI-83's worker. D-484 closes the instance; this closes the class. — owner the plane estate.
+order: after M0-140, with the M0 instruments: it catches a class of defects that reach members (SCHEDULER #18, 2026-09-24; via CONDUCT #19 02:30Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
+depends-on: D-484 (else the new arm reads RED on its first run).
+scope: a real-plane reach arm in `civicos-ui/check-refusal-codes.mjs`: a code a real-plane UI suite observes in a surface pane counts toward reach.
+accepts-when: the arm lists reached codes and all carry translations. NEGATIVE CONTROL: strip `NO_CITATION`'s translation and the arm fails by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
