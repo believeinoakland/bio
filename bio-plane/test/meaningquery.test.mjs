@@ -784,10 +784,13 @@ console.log("\n--- 11. hidden and absent answer identically ---");
      to the envelope.
      PIN CORRECTED AGAIN 2026-09-24 BY D-526, NEVER EXEMPTED: the derivation MOVED to the top of `promote`, where
      every fence reads it too, and its fallback now guards a missing envelope — so the second half names that line.
-     The old line pinned a spelling D-526 removed, not a behaviour: the claim is unchanged. */
+     The old line pinned a spelling D-526 removed, not a behaviour: the claim is unchanged.
+     PIN CORRECTED AGAIN 2026-09-25 BY D-578, NEVER EXEMPTED: the derivation is now `let` (a revision stating no type
+     carries its head's) and its envelope fallback asks `typeStated`, as the document's does — so the second half names
+     that line. Still the DOCUMENT's type first; the claim is unchanged. */
   t("promote writes legs only for inquiries, which is WHY the project half cannot be staged THROUGH `leg:`",
     [/const isInquiry = promotedType === "inquiry"/.test(STORE_SRC),
-     /const promotedType = documentType \?\? \(meta && typeof meta === "object" \? normalizeType\(meta\.object_type\) : undefined\);/.test(STORE_SRC)],
+     /let promotedType = documentType \?\? envelopeType \?\? undefined;/.test(STORE_SRC)],
     [true, true]);
 }
 

@@ -17944,7 +17944,10 @@ export class Store extends DurableObject {
     const sentFm = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
     const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
     const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
-    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
+    /* D-578: `let`, because a REVISION stating no type anywhere takes the head's (below, once `cur` is read); and the
+       envelope's fallback asks the same `typeStated` question the document's does, so a blank or non-string
+       `meta.object_type` is no statement on either side rather than a type of '' or 7 written into the record. */
+    let promotedType = documentType ?? envelopeType ?? undefined;
     /* ===== END D-526 derivation ===== */
     /* ===== D-563 (`BIO_Case_Making_v0_1.md` §2; C-2.5 and D-510's derivation, C-86.3, C-86.4) — THE DOCUMENT ALSO
        STATES WHAT IT IS CALLED AND WHERE IT STANDS, AND THE ENVELOPE IS A LABEL FOR THOSE TOO. D-510/D-526 derived the
@@ -18249,6 +18252,33 @@ export class Store extends DurableObject {
         if (prev && prev.title) promotedTitle = prev.title;
       }
 
+      /* ===== D-578 (`BIO_Case_Making_v0_1.md` §2; C-2.5, D-510's derivation, D-547's fence C-86.2, C-86.5) — A TYPE IS
+         NEVER LOST BY A REVISION, AND NEVER INVENTED FOR A CREATION. `bundles.object_type` is NOT NULL, and a promotion
+         whose document and envelope both state no type left `promotedType` undefined: the INSERT below threw "NOT NULL
+         constraint failed: bundles.object_type" and the caller met a raw error with a store.mjs stack (measured through
+         op=promote on land/worker/D-563 30cac9a6, for a revision AND for a creation; the transaction rolled back, so
+         nothing landed). A REVISION takes the head's type — the only type D-547's fence admits, so carrying it asserts
+         nothing the record does not already hold — and the answer SAYS so (`type_carried`), because a type the caller
+         did not state must not look like one it did. A CREATION has no head: nothing the record holds says what it
+         is, so it is refused by name before the first write, never defaulted. Placed here, before 7.1's name scan, so
+         a typeless revision of a project is still asked the project's questions. ===== */
+      let typeCarried = null;
+      if (cur && promotedType === undefined) {
+        promotedType = normalizeType(cur.object_type);
+        typeCarried = promotedType;
+      }
+      /* DEC-49 REGION is-promote-type-unstated */
+      if (!cur && promotedType === undefined) {
+        const utRow = PROMOTED_TYPE_CHECKS.PROMOTED_TYPE_UNSTATED;
+        return { ok: false, reason: "PROMOTED_TYPE_UNSTATED", code: "PROMOTED_TYPE_UNSTATED",
+                 check: utRow.check, translation: utRow.translation,
+                 detail: `neither the document being promoted nor this request's meta states an object_type, and `
+                       + `${String(bundleId).slice(0, 80)} is new, so the record holds nothing that says what kind `
+                       + `of thing it is. State the type in the document. Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promote-type-unstated */
+      /* ===== END D-578 ===== */
+
       /* 7.1: a project's name is unique across the instance.
        *
        * HERE, at the write path, and not only at fork. Enforcing it at fork
@@ -18362,8 +18392,8 @@ export class Store extends DurableObject {
          run here, so that pin was never an answer at the write. Asked after the compare-and-swap (a stale base
          answers CAS_STALE: the head it would be compared with is not the one the caller saw) and before the first
          write. Both sides go through `normalizeType`, so `focus`/`problem` revised as `inquiry` is not a retype.
-         Only a STATED type is compared: a revision stating none anywhere leaves `promotedType` undefined, which is
-         not this refusal's question. REPLAY IS EXEMPT for D-510's reason — the record's own history must stay
+         Only a STATED type is compared: a revision stating none anywhere has, since D-578, carried the head's type
+         into `promotedType` above (`type_carried` on the answer), so it is never this refusal's question. REPLAY IS EXEMPT for D-510's reason — the record's own history must stay
          holdable verbatim, and a replay's claim to be one is caller-asserted (D-511). A bundle ALREADY retyped
          before this line is not rewritten (M-156 counted none, in either register, on 2026-09-25). ===== */
       /* DEC-49 REGION is-promote-retypes-bundle */
@@ -20049,6 +20079,11 @@ export class Store extends DurableObject {
            `#visibilityOf` (the one reader) rather than echoed from the request, so an absent field answers
            `hidden` because the record says so. */
         ...(!cur && meta.object_type === "project" ? { visibility: this.#visibilityOf(bundleId) } : {}),
+        /* D-578: present ONLY on a revision that stated no type anywhere, naming the head's type it carried — so no
+           caller who stated one gains a key, and none who did not is left to think it did. */
+        ...(typeCarried ? { type_carried: { object_type: typeCarried, from: "head",
+          says: "neither the document nor the request stated a type, so this revision keeps the type the record "
+              + "already held for it" } } : {}),
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...(testimonyWrote ? { testimony: testimonyWrote } : {}),

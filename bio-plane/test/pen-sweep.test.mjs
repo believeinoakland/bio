@@ -117,6 +117,9 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    (`d563-promoted-title-state.control.mjs`, not on main at this landing) is D-526's shape and resolves too, so
    this ceiling holds at the union without its 18 -> 19. The 13 left are each a parameter-built pen, an
    `arm.file` bound to several roots or a `.replace()` on an unknown: NAMED in the report, not this row's. */
+/* D-578 side, kept as history (c22-batch30): its branch MOVED this ceiling 19 -> 20 BY NAME for
+   `d578-typeless-revision.control.mjs`, D-547's driver derived verbatim; M0-196's walk classifies D-547's shape, so ours
+   (<= 13) is kept and the print on the union decides. NUMBER TO RE-READ. */
 t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 13)", g("UNCLASSIFIED").length <= 13, true);
 t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and REC-180 read their tree root and are classified",
   ["d510-promoted-type", "d526-refusal-order", "d547-revision-retype", "d548-block", "rec180-promote-rollback"]
