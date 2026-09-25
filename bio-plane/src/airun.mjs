@@ -526,6 +526,11 @@ export function contentAxisFor({ observed = null, unitIndex = false,
  *  `NEVER_LOOKED` and `NEVER_LOOKED` is the absence of a row — arriving at the
  *  content level.
  *
+ *  CORRECTED IN PLACE 2026-09-25 BY D-375, NOT DELETED: the paragraph below was
+ *  true when REC-94 wrote it. The reading now carries `text_chars` / `text_glyphs`
+ *  (`textCountsOf` in `index.mjs`), and the fourth row HAS a producer — the D-375
+ *  branch in the body, which also says which zero-text readings are NOT absent.
+ *
  *  THE FOURTH ROW OF §4.2's TABLE HAS NO PRODUCER HERE, AND THAT IS STATED
  *  RATHER THAN APPROXIMATED. *The document has no text (a scan, and tier 3 read
  *  nothing above the floor)* is `LOOKED_ABSENT`, and telling it apart from *text
@@ -552,6 +557,62 @@ export function contentObservationsFor(reading, captureSha, tiersOf) {
      one flag on the reading that says *there is more text in here than we got*,
      and it is what turns an otherwise whole-document PRESENT into `partial`. */
   const shortfall = reading.tier3_candidate === true;
+
+  /* D-375 — §4.2 ROW 4, AND WHICH ABSENCE (`CLAUDE.md` §2). The reading now carries
+     the count of the text its reader was handed (`textCountsOf` in `index.mjs`), so
+     a reading whose text holds NO GLYPH is told apart from one that holds text —
+     and it is not one fact, it is three, and only one of them is LOOKED_ABSENT:
+       - TIER 3 RAN AND LEFT NOTHING UNREAD, and the text is still empty with NO
+         undetermined residue: the engine that reads pixels read every page it was
+         sent and returned no region at all. That is *a scan, and tier 3 read
+         nothing above the floor* — LOOKED_ABSENT, on the tier-3 row. A region the
+         engine returned BELOW the floor is kept as residue (`ocr_below_floor`), so
+         a page with ink nobody could read is not filed as a page with no text;
+         that is narrower than the design's parenthetical and is reported as a
+         DESIGN GAP against §4.2 rather than decided silently.
+       - PAGES WERE LEFT UNREAD — `tier3_candidate`, D-418's `stillWanting`: no OCR
+         member bound, a member that failed, or a tail past D-606's per-acquire
+         budget (D-606 keeps `stillWanting` true for exactly that tail). The pages
+         were never READ, so this is §4.2 row 3, *no text possible*,
+         LOOKED_INDETERMINATE. D-627's `image_content_unread` page reaches here the
+         same way, because it is routed by `needsTier3` and an unanswered page
+         keeps `stillWanting` true. NEVER ABSENT: a page nobody read is not a page
+         with no text.
+       - NO TIER THAT READS IMAGES RAN AT ALL (a layer or an office container read
+         to nothing, an HTML page with no text in its served bytes): the text in
+         hand is empty and nothing looked at the pictures, so whether the document
+         has text is UNDETERMINED — LOOKED_INDETERMINATE, never ABSENT.
+     IT PRECEDES ROW 3 ON PURPOSE, measured through the op (section K): the reader
+     DECLINES empty text (`readText`: *no text was supplied*), so a scan OCR'd to
+     nothing arrives `read_from_text: false` — and placed after row 3 this branch
+     was never reached by the one reading it exists for.
+     A reading with NO count (persisted before this landing) falls through to rows
+     1-3 exactly as it did: a re-promotion or a re-read is what gives it one. */
+  const empty = Number.isInteger(reading.text_glyphs) ? reading.text_glyphs === 0
+              : Number.isInteger(reading.text_chars) && reading.text_chars === 0 ? true
+              : null;
+  if (empty === true) {
+    const ranTier3 = tiers.some((t) => t.tier === 3);
+    const rowsOf = (tierList) => tierList.map((t, i) => {
+      const last = i === tierList.length - 1;
+      const absent = last && ranTier3 && !shortfall && reading.text_undetermined === 0;
+      return { tier: t.tier, state: absent ? "LOOKED_ABSENT" : "LOOKED_INDETERMINATE",
+               condition: absent ? null : "text-undetermined",
+               resultKind: null, resultRef: null,
+               detail: detailFor(t.steps ? t : null, terminal, reading,
+                 absent ? "no text: the engine that reads page images read every page it was sent "
+                        + "and found nothing above the floor"
+                 : shortfall ? "no text read, and pages were left UNREAD — a page nobody read is not "
+                             + "a page with no text"
+                 : last && ranTier3 ? "no text read above the floor, and the tiers left an undetermined "
+                             + "residue (or did not count one), so what is on the page is undetermined"
+                 : last ? "no text read, and no tier that reads page images ran, so whether this "
+                        + "document has text is undetermined"
+                 : "no text read by this tier; a later tier looked") };
+    });
+    return { rows: rowsOf(tiers.length ? tiers : [{ tier: null, covers: "all", steps: null }]),
+             unclassified, why: null };
+  }
 
   if (reading.read_from_text !== true) {
     /* §4.2 row 3 — no text possible. The condition is the record's existing

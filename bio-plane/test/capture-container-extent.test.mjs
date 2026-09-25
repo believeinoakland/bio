@@ -1094,6 +1094,14 @@ delete pdfReadingSansNew.provenance;
 t("D-374: the PDF reading carries its page boxes, and the HTML reading none",
   ["page_boxes" in pdfdoc.reading, "page_boxes" in html.reading], [true, false]);
 delete pdfReadingSansNew.page_boxes;
+/* CORRECTED 2026-09-25 by D-375, never exempted and never re-pinned, by D-536's rule above: every reading
+   whose reader was handed text now carries THREE more keys, the count of that text (`text_chars`,
+   `text_glyphs`, `text_undetermined` — OBSERVATION-LOG-DESIGN.md §4.2's fourth row needs it). They are
+   removed by NAME, and their presence asserted first so removing them cannot hide their absence. */
+const D375_KEYS = ["text_chars", "text_glyphs", "text_undetermined"];
+t("D-375: both readings carry the count of the text their reader was handed",
+  [D375_KEYS.every((k) => k in html.reading), D375_KEYS.every((k) => k in pdfdoc.reading)], [true, true]);
+for (const k of D375_KEYS) { delete htmlReadingSansD536[k]; delete pdfReadingSansNew[k]; }
 t("an HTML capture's whole reading is BYTE-IDENTICAL to CAP-9's landing (pristine digest pin)",
   normDigest(htmlReadingSansD536), PRISTINE.html);
 t("and a PDF capture's is too, once the ONE key this item adds is removed — nothing else "

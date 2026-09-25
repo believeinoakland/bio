@@ -5722,6 +5722,43 @@ const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
   source: readingSource(e && e.source),
 })).filter((e) => e.key != null || e.kind != null);
 
+/* D-375 — HOW MUCH TEXT THE READER WAS HANDED, CARRIED ONTO THE READING THE PLANE
+   PERSISTS. `OBSERVATION-LOG-DESIGN.md` §4.2's fourth outcome — *the document has no
+   text (a scan, and tier 3 read nothing above the floor)* — is `LOOKED_ABSENT`, and
+   telling it from *text was produced* takes a count. I2's `counts.chars` existed here
+   and was dropped, so `contentObservationsFor` could not tell a scan read to nothing
+   from a document read whole, and filed the first as PRESENT.
+   *
+   * THREE FIGURES, BECAUSE THEY ARE THREE FACTS. `text_chars` is I2's `counts.chars`, the
+   * PRODUCER'S claim; `text_glyphs` is D-514's glyph count of the text IN HAND, which
+   * is what "holds text" means in this record (D-531: a page of whitespace holds
+   * none). The judgement reads the glyphs and falls back to the claim only where no
+   * text string exists to count. `text_undetermined` is I2's `counts.undetermined`,
+   * the residue — see below.
+   *
+   * THE THREE-STATE ABSENCE RULE CAP-9 FIXED FOR `page_count`: no text surface
+   * answered → the keys are ABSENT (nothing was counted); a surface answered with no
+   * usable figure → NULL; otherwise the integer. NEVER A ZERO THAT NOTHING COUNTED:
+   * zero is exactly the value that files a document as having no text. */
+function textCountsOf(text) {
+  if (text == null) return null;
+  /* A bare string (an HTML page's text, read at intake) carries no marker vocabulary, so its
+     residue is not a figure it has — null, never a zero it did not count. */
+  if (typeof text === "string")
+    return { text_chars: text.length, text_glyphs: glyphCount(text), text_undetermined: null };
+  if (typeof text !== "object") return null;
+  const c = text.counts;
+  const n = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
+  return {
+    text_chars: n(c && c.chars),
+    text_glyphs: typeof text.document === "string" ? glyphCount(text.document) : null,
+    /* THE RESIDUE: regions the producing tiers marked undetermined — a page with no text layer
+       nobody transcribed, an OCR region below the floor. Text that exists and was not read is
+       not an absence of text, so a non-zero residue keeps an empty reading from LOOKED_ABSENT. */
+    text_undetermined: n(c && c.undetermined),
+  };
+}
+
 /* CPDF-19: THE READING A WIRED TEXT PRODUCES, as one function. MOVED VERBATIM
    out of `op=acquire` — the `determined` branch and the failed branch — so a
    read-time re-extraction (D-319) persists a reading composed by exactly the rule
@@ -8055,6 +8092,9 @@ export default {
              say WHICH tier's text moved. */
           reading.provenance = await readingProvenance({ text: t3.i2text, chain, tier: t3.wiredTier,
                                                          container: "pdf", planeVersion: env.VERSION || null });
+          /* D-375: the re-read's count, by the acquire path's rule — a re-read to nothing is the
+             scan §4.2's fourth row names, and without the count it would read PRESENT. */
+          { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
           structureChain = chain;
           /* THE RE-READ, STATED ON THE READING ITSELF: when, at whose request, by
              which engine, over which pages. It is also what `Store.#heldByReextraction`
@@ -10087,6 +10127,8 @@ export default {
         tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
         container: typeof reading.text_container === "string" ? reading.text_container : null,
         planeVersion: env.VERSION || null, member: canRead ? "plane" : null });
+      /* D-375: the count of the text that reading was handed — `textCountsOf` says why. */
+      { const n = textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
 
       /* REC-218 — THE DIALECT, CARRIED ONTO THE READING THE PLANE PERSISTS, a key of its
          OWN (BOB #33, 2026-09-24 21:55Z, option (b)). THE SHARED SITE: the reading's
