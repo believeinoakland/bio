@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d470-catalog-census.test.mjs",
+ "inputHash": "b10a76f1ee6e9c4d8a623fe4f9b1a8a423d0799d33e75e00a89baa0deb320ba3",
+ "verdict": "PASS",
+ "run": "82d22c7871dff935af9dbe9a23d3a8b9eb9ab625.1790303034104.25962.json",
+ "tree": "82d22c7871dff935af9dbe9a23d3a8b9eb9ab625",
+ "head": "548566fa968408b5e724156e8404d86f70fcf0d2",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "19d6974e-1cd0-5685-a2de-39f820f7993d",
+ "at": "2026-09-25T02:23:54.123Z"
+}
