@@ -56128,7 +56128,7 @@ ${words}`;
       if (vias.includes("direct")) {
         e.direct++;
         if (b != null) e.measured = e.measured == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured;
-      } else for (const v of vias) e.otherVia.add(v);
+      } else if (vias.length) e.otherVia.add(String(r.vias));
       if (b == null) continue;
       e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
     }
@@ -56211,14 +56211,14 @@ ${words}`;
     for (const [bundleId, e] of perBundle) {
       const entry = out.earned.capture[bundleId];
       if (!entry || entry.captures === 0 || !e.direct && !e.otherVia.size) continue;
-      const other = [...e.otherVia].sort();
+      const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
       entry.fetch = {
         direct: e.direct,
         other_via: other,
         earned: e.measured,
         determined: e.measured != null,
         ...e.measured == null ? { undetermined_because: e.direct ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {},
-        why: e.measured != null ? `this instance fetched ${bundleId} directly from its own address (${e.direct} capture(s)), so the record MEASURES its capture grade at ${e.measured} rather than taking it from a member: a leg on it is read at that letter, never below it.` : e.direct ? `this instance fetched ${bundleId} directly, but every direct capture's text is unmeasured, so no capture grade is measured for it.` : `every capture of ${bundleId} the record holds was served by someone other than its publisher (${other.join(", ")}), and what such a capture earns on the capture axis is UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its author gave, under the ceiling.`
+        why: e.measured != null ? `this instance fetched ${bundleId} directly from its own address (${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by a member's account: a leg on it is read at that letter, never below it.` : e.direct ? `this instance fetched ${bundleId} directly, but every direct capture's text is unmeasured, so no capture grade is measured for it.` : `every capture of ${bundleId} the record holds was served by someone other than its publisher (${other.join(", ")}), and what such a capture earns on the capture axis is UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its author gave, under the ceiling.`
       };
     }
     if (Array.isArray(contentIds) && contentIds.length)
@@ -61186,11 +61186,11 @@ ${words}`;
         grade: null,
         why: earned.why ?? `what this document's capture can support is undetermined, so this leg claims nothing on the capture axis`
       };
-    const measured = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
-    if (measured != null && _Store.#GRADE_RANK[stated] < _Store.#GRADE_RANK[measured])
+    const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    if (routeGrade != null && _Store.#GRADE_RANK[stated] < _Store.#GRADE_RANK[routeGrade])
       return {
-        grade: measured,
-        why: `the record measured ${targetId} at ${measured} on the capture axis, so this leg is read at ${measured} here and not at the ${stated} it carries. ${earned.fetch.why}`
+        grade: routeGrade,
+        why: `this instance fetched ${targetId} itself, so the record holds its capture grade at ${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. ` + `${earned.fetch.why}`.trimEnd()
       };
     if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade]) return null;
     return {

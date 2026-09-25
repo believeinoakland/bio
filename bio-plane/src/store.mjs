@@ -26794,7 +26794,7 @@ export class Store extends DurableObject {
         e.direct++;
         if (b != null) e.measured = e.measured == null ? b
           : (BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured);
-      } else for (const v of vias) e.otherVia.add(v);
+      } else if (vias.length) e.otherVia.add(String(r.vias));  /* split once, after the scan, never per row */
       if (b == null) continue;          /* undetermined contributes no letter; `e.bound` stays null unless another capture supplies one */
       /* THE STRONGEST OVER THE DOCUMENT'S CAPTURES, which is the collapse this
          same function already makes on the connection axis ("the strongest
@@ -26961,7 +26961,7 @@ export class Store extends DurableObject {
     for (const [bundleId, e] of perBundle) {
       const entry = out.earned.capture[bundleId];
       if (!entry || entry.captures === 0 || (!e.direct && !e.otherVia.size)) continue;
-      const other = [...e.otherVia].sort();
+      const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
       entry.fetch = {
         direct: e.direct, other_via: other,
         earned: e.measured,
@@ -26970,8 +26970,8 @@ export class Store extends DurableObject {
           ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {}),
         why: e.measured != null
           ? `this instance fetched ${bundleId} directly from its own address `
-            + `(${e.direct} capture(s)), so the record MEASURES its capture grade at ${e.measured} `
-            + `rather than taking it from a member: a leg on it is read at that letter, never below it.`
+            + `(${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by `
+            + `a member's account: a leg on it is read at that letter, never below it.`
           : e.direct
           ? `this instance fetched ${bundleId} directly, but every direct capture's text is `
             + `unmeasured, so no capture grade is measured for it.`
@@ -32352,14 +32352,15 @@ export class Store extends DurableObject {
                   + `on the capture axis` };
     /* D-177: THE MEASURED FLOOR. Where the record fetched the document itself,
        its capture grade is a FACT and not the member's account of a route, so
-       a WEAKER stated letter is read at the measured one and says why. Only
-       ever from a measured letter, never from the ceiling: a document whose
+       a stated letter below it is read at the route's own letter and says why. Only
+       ever from a fetch the record holds, never from the ceiling: a document whose
        route is unrecorded or undetermined keeps the letter its author gave. */
-    const measured = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
-    if (measured != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[measured])
-      return { grade: measured,
-               why: `the record measured ${targetId} at ${measured} on the capture axis, so this leg is `
-                  + `read at ${measured} here and not at the ${stated} it carries. ${earned.fetch.why}` };
+    const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])
+      return { grade: routeGrade,
+               why: `this instance fetched ${targetId} itself, so the record holds its capture grade at `
+                  + `${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. `
+                  + `${earned.fetch.why}`.trimEnd() };
     if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
     /* THE LETTERS ARE INTERPOLATED AND NEVER TYPED. hygiene.test.mjs detector
        (B) refuses any module spelling the capture rule's own letters beside the

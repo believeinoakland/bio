@@ -24,8 +24,8 @@ const ARMS = {
     what: "THE ROW'S OWN — READ THE AUTHORED GRADE AGAIN. The measured floor in `#capturedAt` never "
         + "applies, so a weaker letter a member authored on a document this instance fetched directly "
         + "reads as authored, exactly as before this item.",
-    find: "    if (measured != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[measured])",
-    with: "    if (false && measured != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[measured])",
+    find: "    if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])",
+    with: "    if (false && routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])",
     mustFail: [HEADLINE, "and the walk says WHY, in the registry's own words"],
     mustPass: ["BEFORE the fetch is recorded the route is unrecorded",
                "the registry now MEASURES the document's capture grade",
@@ -48,14 +48,14 @@ const ARMS = {
   c: {
     what: "THE CEILING READ AS A MEASUREMENT — the floor is taken from the ceiling for every document, "
         + "fetched or not, so a route the record never saw is graded as if it had.",
-    find: "    const measured = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;",
+    find: "    const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;",
     /* FINDING, 2026-09-25, RECORDED RATHER THAN SMOOTHED — THE ARM DID NOT ARM AS DECLARED ON ITS FIRST
-       SPELLING. `const measured = earned.grade;` alone left the reason sentence reading `earned.fetch.why` on
+       SPELLING. `const routeGrade = earned.grade;` alone left the reason sentence reading `earned.fetch.why` on
        an entry with no fetch key, so `#capturedAt` THREW inside the promote's projection writer and the suite
        died in section 1 at -1/-1 without reaching one declared assertion: a second variable (a crash) moved
        with the first, which refutes nothing. The arm now gives the sentence an empty reason so ONLY the
        floor's source moves. */
-    with: "    const measured = earned.grade; if (!earned.fetch) earned.fetch = { why: \"\" };",
+    with: "    const routeGrade = earned.grade; if (!earned.fetch) earned.fetch = { why: \"\" };",
     mustFail: ["BEFORE the fetch is recorded the route is unrecorded",
                "and the member's weaker letter on it STANDS",
                "a leg stating a WEAKER letter than the ceiling keeps its own"],
@@ -66,8 +66,8 @@ const ARMS = {
     what: "OVER-STRICTNESS. The same floor written in the registry's own `BASIS_GRADES.indexOf` idiom "
         + "(a SMALLER index is the STRONGER letter). Correct work in a spelling this item did not use "
         + "must PASS.",
-    find: "    if (measured != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[measured])",
-    with: "    if (measured != null && BASIS_GRADES.indexOf(stated) > BASIS_GRADES.indexOf(measured))",
+    find: "    if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])",
+    with: "    if (routeGrade != null && BASIS_GRADES.indexOf(stated) > BASIS_GRADES.indexOf(routeGrade))",
     mustFail: [],
     mustPass: [HEADLINE, "and the walk says WHY, in the registry's own words",
                "an archive-only document's route is NAMED",
