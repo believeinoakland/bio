@@ -2836,11 +2836,10 @@ const MULTI_SITE_CLOSED = new Map([
   ["NO_PUBLISHED_STORE", "D-549: minted once, in `publishedStoreAbsent`; the helper spells the code twice on adjacent lines — the row lookup `installationRow(\"NO_PUBLISHED_STORE\")` and the `reason` — one site, one condition (no published store bound)"],
   ["NO_REVIEW_COPY", "D-448: minted once, in store.mjs's review-copy read; index.mjs's second site READS the code to choose the 404 (`r?.reason === \"NO_REVIEW_COPY\"`), it does not mint it — RATE_IP's shape"],
   ["CONNECTION_CHOICE_NOT_A_MENTION", "D-454: since D-454 a mention is a (ref, occurrence) pair, and the two sites are the two halves of naming one — the ref never read in this document, or read but not at the occurrence named. C-74.3's translation (`a mention the record never read cannot be the one a connection rests on`) is true of both, so they are ONE condition; the second site's detail names the places it WAS read"],
+  /* D-561 (2026-09-25, WORKER D-561): STORE_DID_NOT_ANSWER became a DEC-49 code (C-69.2) and was READ at its two sites.
+     Declared, so the ceiling stays at 59. */
+  ["STORE_DID_NOT_ANSWER", "D-561: minted once as a refusal, in `storeSilent` (C-69.2); the constant `STORE_SILENT_REASON` spells the same code for the store-did-not-answer sub-reports inside ratify's and recordcasemanifest's answers — one condition (the store did not answer), stated inside an answer rather than refused"],
 ]);
-/* D-561 (2026-09-25, WORKER D-561, branch land/worker/D-561): STORE_DID_NOT_ANSWER became a DEC-49 code (C-69.2) and
-   READ at its two sites: `storeSilent`'s governed region mints the refusal, and `STORE_SILENT_REASON` names the SAME
-   condition for three post-commit sub-reports inside answers. Declared, so the ceiling stays at 59. */
-MULTI_SITE_CLOSED.set("STORE_DID_NOT_ANSWER", "D-561: minted once as a refusal, in `storeSilent` (C-69.2); the constant `STORE_SILENT_REASON` spells the same code for the store-did-not-answer sub-reports inside ratify's and recordcasemanifest's answers — one condition (the store did not answer), stated inside an answer rather than refused");
 const MULTI_SITE_CANDIDATES = new Set([
   "AI_BEYOND_TASK_SCOPE", "BAD_CITATION", "BIAS_ADOPTION_NOT_PROPOSED", "BOOTSTRAP_CREDENTIAL_UNSET",
   "CAL_CANNOT_REGRADE", "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", "CAPTURE_CONDUCT_UA_ILLEGIBLE", "CAPTURE_REQUEST_NOT_PUBLIC",

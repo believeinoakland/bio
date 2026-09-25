@@ -1135,6 +1135,11 @@ console.log("\n--- D-561: C-98, the public door's refusals, each translated, as 
     ["NO_PUBLISHED_PART", "OBJECT_MISSING", "NOT_A_CONTAINER", "MANIFEST_UNREADABLE", "PART_MISSING",
      "DUPLICATE_PATH", "CONTAINER_TOO_LARGE", "NOT_PUBLISHED"].map((k) => [k, true, true]));
 
+  /* Each row's check id PINNED as a literal, so the coverage register sees every C-98 check named by an assertion. */
+  t("D-561: each public-door code holds its own check id — C-98.1 to C-98.8",
+    Object.fromEntries(Object.entries(PUBLISHED_READ_CHECKS).map(([k, r]) => [k, r.check])),
+    { NO_PUBLISHED_PART: "C-98.1", OBJECT_MISSING: "C-98.2", NOT_A_CONTAINER: "C-98.3", MANIFEST_UNREADABLE: "C-98.4",
+      PART_MISSING: "C-98.5", DUPLICATE_PATH: "C-98.6", CONTAINER_TOO_LARGE: "C-98.7", NOT_PUBLISHED: "C-98.8" });
   graded("a hash nothing published answers to", await got(await anonBytes(`sha256=${sha("D-561 never published")}`)),
     404, "NO_PUBLISHED_PART");
   graded("a case id nothing published answers to", await got(await anonRaw("op=publishedcase&id=CASE-2026-D561-never")),
