@@ -2282,6 +2282,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        leave the pen standing, which the driver's own exit line reports. Provenance would tell it something true and
        useless. */
     "bio-plane/test/occupancy.control.mjs",       // its own pen, read for emptiness before rmdir; discovers nothing
+    /* ADDED 2026-09-24 by D-548's item; the ratchet caught it on the item's first gate. NAMED AND NOT GUARDED: the
+       control driver lists the repository root and `bio-plane/` only to SYMLINK each entry into its own `mkdtemp`
+       mirror, where an armed copy of d84-case-manifest.test.mjs runs. It counts nothing and floors on nothing; a
+       phantom entry is one more symlink the armed suite never imports, and each arm's verdict is the suite's own
+       per-section tallies against a declaration. */
+    "bio-plane/test/d548-block.control.mjs",      // mirrors the repo into its own mkdtemp by symlink; discovers nothing
     /* ADDED 2026-09-23 by REC-175's item; the ratchet caught it on the item's first battery, before anyone read the diff.
        NAMED AND NOT GUARDED: its one walk is of ITS OWN `mkdtemp` persist root (`rec175-persist-*`, inside the sandbox
        `sandbox.mjs` owns), after `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the row the old
