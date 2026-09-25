@@ -1131,8 +1131,8 @@ scope: a defined name and a table part each emit a `sheet-range` unit; a multi-a
 accepts-when: a fixture's defined name emits its unit. NEGATIVE CONTROL: before the fix the defined-name arm emits none and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-419 · running — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
-status: running — SCHEDULER #23 07:12Z: spawned
+### D-419 · integrated — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
+status: integrated — SCHEDULER #23 08:48Z: tip 914bb380 on 5e8a65a8, GATE 386/386 GREEN FULLREUSE (21904 assertions), tree d0073437; pdf-worker POST /crop (I6 additive), the new content-crop read (I3 additive), C-99.1-5; CATALOG 1.30.0->1.31.0; census 223->224; construct 5.image-crop BUILT; two new governed regions (regionLines re-read at union); minted D-675
 order: after D-416; display only, behind every over-claim (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I6 — a `POST /crop` route; I3 — a read-only op; the integrator mints and classifies the ICs.
@@ -1361,6 +1361,17 @@ depends-on: none (stacked on land/worker/D-194 @ 45437e4d, integrated — the su
 scope: op=leadread and frontier level=internet carry `vocabulary: { states: <the five>, outcomes: LEAD_LOOK_OUTCOMES }` with member-safe wording for `partial`; the surface reads it and deletes LEAD_STATE_WORDS.
 accepts-when: the surface renders every state from the plane's vocabulary with no client mirror (moves: a mirrored vocabulary). NEGATIVE CONTROL: drop `vocabulary` from the op and the surface's state arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-194's worker).
+
+### D-675 · running — **op=content REFUSES THE PLANE'S OWN `store=` PARAMETER AS A PREDICATE: `op=content&id=<row>&store=bio` answers FIXED_KEY_ONLY rejected ["store"], so op=content cannot be called with store=scratch — which CLAUDE.md §5 requires on EVERY live-verification call, leaving the choice between touching the real record and not verifying.** Driven in miniflare by D-419's worker (minted on land/worker/D-419). — owner RECORD.
+status: running — SCHEDULER #23 08:48Z: spawned from main
+order: at the head, spawned directly — a verification-safety defect on main (a live check forced into `bio`) outranks features (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — op=content (and any other fixed-key read found) admits store=; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §17 (organization and access — the content read op=content serves), with CLAUDE.md §5's scratch rule (every live-verification call names store=scratch) and D-325's `scopeFor`.
+depends-on: none (on main today).
+scope: the generic DO forward (index.mjs, the `inner` URL build) stops passing `store` into the store's predicate set for op=content, as the new content-crop read already strips it — OR Store.CONTENT_READ_PARAMS admits it; SWEEP every other fixed-key read for the same refusal and fix each found; list them by name.
+accepts-when: op=content&id=<row>&store=scratch answers the scratch row, and store=bio the bio row, through the op (moves: FIXED_KEY_ONLY on store=). NEGATIVE CONTROL: pass `store` through again and the scratch arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-419's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
