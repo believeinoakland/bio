@@ -1,0 +1,16 @@
+{
+ "unit": "plane:fw19-extent-arms.test.mjs",
+ "inputHash": "3925d848eb0d9cc1ac2d7c3ce79492bdf6aac0e2243925d11ad158752967a515",
+ "verdict": "PASS",
+ "run": "827d50a6c9b37ec8779ba1eaf0dfe44cb1cc6307.1790335924422.2321.json",
+ "tree": "827d50a6c9b37ec8779ba1eaf0dfe44cb1cc6307",
+ "head": "3109a29b93f16a9a824f5703061bb25719ae0ad8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "716695f7-57e8-5de2-8d37-f40f02664030",
+ "at": "2026-09-25T11:32:04.436Z"
+}
