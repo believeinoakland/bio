@@ -688,8 +688,8 @@ scope: a revision carries the head's value for each field; a creation missing on
 accepts-when: each of the four fields absent on a creation is refused by name and on a revision is carried, with no stack in any answer (moves: a raw NOT NULL stack from promote). NEGATIVE CONTROL: remove the pre-write check and the creation arms fail by name, reading a stack.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
 
-### D-618 · running — **A DRAFT THAT NAMES A CASE AND ALSO SETS `newCase` STILL ANSWERS THAT CASE'S NEXT EDITION beside a sentence saying its case is UNDETERMINED (publication refuses the pair CASE_IDENTITY_AMBIGUOUS), so the answer states an edition for a case the record has not chosen.** Found by D-568's worker (05:36Z). — owner RECORD.
-status: running — SCHEDULER #23 10:05Z: spawned from main 95fe7bc7
+### D-618 · integrated — **A DRAFT THAT NAMES A CASE AND ALSO SETS `newCase` STILL ANSWERS THAT CASE'S NEXT EDITION beside a sentence saying its case is UNDETERMINED (publication refuses the pair CASE_IDENTITY_AMBIGUOUS), so the answer states an edition for a case the record has not chosen.** Found by D-568's worker (05:36Z). — owner RECORD.
+status: integrated — SCHEDULER #23 11:05Z: tip dc4c41f9 on main 95fe7bc7, GATE 409/409 GREEN FULLREUSE (22930 assertions), tree 6ca8ddfc; #statedEdition null for the caseId+newCase pair across six answers (sixth: the live grant row); dead grants keep their stored edition; reviewcopy.control arms x,y,z (may collide at union); minted D-708
 order: after D-613, with the review-copy corrections: D-568's class, one branch over (SCHEDULER #22, 2026-09-25)
 milestone: M10
 interface: I3 — `edition` reads null for that pair; the integrator classifies.
@@ -793,6 +793,16 @@ depends-on: none (stacked on land/worker/D-686 @ 8c55a9c2, integrated, on D-635 
 scope: chainKindFor answers `mixed` for a no-page unit whose covering steps differ; every machine-read-text reader treats it as containing machine-read text; the search grammar and reader sentences name it.
 accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
+
+### D-708 · running — **op=statementack's `listed` SENTENCE STATES AN EDITION AND A LISTING FOR A CASE THE RECORD HAS NOT CHOSEN: for a draft naming C1 AND asking for a new case, `#caseIdentitySentence(ident.caseId, ident.edition)` is called WITHOUT newCase and says "the completeness block of the next edition (N) of C1 lists this acknowledgement…", though publication refuses the pair.** Found by D-618's worker (minted on land/worker/D-618). — owner RECORD.
+order: spawned directly after D-618, the same both-identity class one sentence over (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — the listed sentence for the pair; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's newCase ruling and D-618's `#statedEdition`.
+depends-on: none (stacked on land/worker/D-618 @ dc4c41f9, integrated, on main 95fe7bc7).
+scope: pass draftNewCase to `#caseIdentitySentence` at that call (or branch the pair to a sentence saying no case document can list it until one instruction is withdrawn); sweep the other callers D-618 read and state any left alone (publish's draft-mismatch detail is D-626/D-680's region).
+accepts-when: for a both-identity draft the acknowledgement's listed sentence names no edition and no listing (moves: an edition stated for an unchosen case). NEGATIVE CONTROL: drop newCase from the call and the pair arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-618's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
