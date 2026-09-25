@@ -589,8 +589,8 @@ scope: take the tier-3 walk documents M-121 names as agendas or minutes that rea
 accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-596 · running — **THE SETUP PAGE SERVED AT `/` READS THE GROUP'S SLUG ALONE (`index.mjs` `publicInstanceGroup` -> `setup.mjs` `groupLine`), so it shows neither the display name nor the verified domain, while `store.mjs` `groupNameSet`'s answer tells the administrator "every public surface shows it beside the slug".** Found by UI-78's worker (03:28Z). The construct's last NOT BUILT trace. — owner RECORD.
-status: running — SCHEDULER #22 03:33Z spawns WORKER D-596 (depth 2)
+### D-596 · integrated — **THE SETUP PAGE SERVED AT `/` READS THE GROUP'S SLUG ALONE (`index.mjs` `publicInstanceGroup` -> `setup.mjs` `groupLine`), so it shows neither the display name nor the verified domain, while `store.mjs` `groupNameSet`'s answer tells the administrator "every public surface shows it beside the slug".** Found by UI-78's worker (03:28Z). The construct's last NOT BUILT trace. — owner RECORD.
+status: integrated — SCHEDULER #22 04:30Z: tip 37430658, GATE 78/78 GREEN FULLREUSE over tree ed441dc9's full run (365/366, its one red fixed), tree f161a127; setup page shows name + slug + dated domain; at union with UI-78 13.group-identity is BUILT (conjunction); live half owed after DIST's deploy
 order: after D-561, with the public-surface corrections ahead of features: an answer claiming a surface shows what it does not is the record claiming more than it supports (CLAUDE.md §2) (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: I3 consumer (op=groupidentity's public projection); the integrator classifies.
@@ -741,6 +741,16 @@ depends-on: D-536.
 scope: the census judges the text the acquire reading classified (its `text_units`), or calls `op=pdfstructure&ocr=1` for a document read at tier 3; the reader label comes from `structure_provenance.producers`, never `text_tier`; re-run the sample and record the moved figures in a new measurement.
 accepts-when: the 34 documents are judged on their tier-3 text, and no document is labelled tier 3 unless tier-3 text was judged (moves: 34 of 38 judged on empty text). NEGATIVE CONTROL: judge the plain answer again and the tier-3 arm reads empty, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-536's worker).
+
+### D-573 · queued — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
+order: after D-557, with the corrections: a date that claims an order it cannot know is the record claiming more than it holds (CLAUDE.md §2; BOB #33's D-516 band rule) (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 additive — two keys on `last_change`; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 1, with BOB #34's 01:05Z ruling, folded by this row.
+depends-on: D-543.
+scope: when the two newest candidates fall in one second and one is whole-second, keep the pick, add the statement and the tied act; acts in different seconds carry no statement.
+accepts-when: a legacy whole-second ack and a millisecond comment in one second give the pick PLUS the statement; acts in different seconds give none (moves: a silent pick). NEGATIVE CONTROL: drop the statement and the tie arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-543's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

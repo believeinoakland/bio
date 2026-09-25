@@ -53,16 +53,6 @@ scope: one UPDATE through `Store#closeJoinRequests` in projectInvite, one suite 
 accepts-when: after an owner invites a member with an open request, the request reads granted by that owner (moves: a stale open request). NEGATIVE CONTROL: drop the UPDATE and the request reads open after the invite, by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs REC`; BOB #35 04:30Z).
 
-### D-573 · queued — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
-order: after D-557, with the corrections: a date that claims an order it cannot know is the record claiming more than it holds (CLAUDE.md §2; BOB #33's D-516 band rule) (SCHEDULER #21, 2026-09-25)
-milestone: M10
-interface: I3 additive — two keys on `last_change`; the integrator classifies.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 1, with BOB #34's 01:05Z ruling, folded by this row.
-depends-on: D-543.
-scope: when the two newest candidates fall in one second and one is whole-second, keep the pick, add the statement and the tied act; acts in different seconds carry no statement.
-accepts-when: a legacy whole-second ack and a millisecond comment in one second give the pick PLUS the statement; acts in different seconds give none (moves: a silent pick). NEGATIVE CONTROL: drop the statement and the tie arm fails by name.
-added: 2026-09-25 · SCHEDULER #21 (id minted by D-543's worker).
-
 ### D-570 · queued — **`networkidle` NEVER FIRES ON THE FOUNDING CLIENT-RENDERED SOURCE: on oaklandca.opengov.com it fired in 0 of 16 runs (60 s cap; load at 3.6-9.0 s), so every render of it ends on its timeout reading "may be incomplete" and burns its whole reservation.** Found by D-520's worker (M-151). BOB #34 RULED (c) 2026-09-25 02:00Z (drained to `BOB-INBOX-drained.md`; cite until folded): load, then a 500 ms quiet window with no request YOUNGER than N seconds in flight, N MEASURED; `render.wait` records which rule fired (`networkidle` / `quiet_excluding_long_lived` / `timeout`), N, and the ignored requests' count and URLs; a quiet-window settle reads "settled; N long-lived request(s) still open were not waited for", never "complete". — owner CAPTURE.
 order: after D-585, with the capture corrections: a render stated incomplete that the record could settle says less than it knows (BOB #34 02:00Z) (SCHEDULER #21, 2026-09-25)
 milestone: M2
@@ -1202,3 +1192,13 @@ depends-on: M0-136 (touches the same history readers; on `land/conduct/c16-batch
 scope: every commit id a suite passes to git in CODE is the full 40-hex id (`9ea2eb022b5d6490c9e9e96b93037040193084d3`, `de40aa56f5d397666228502132d56756f51ff6b9`, `e2416725d2504485443ea24bb68a00009e886570`); a sweep of `bio-plane/test/` and `tools/` for other short ids passed to git, each lengthened or listed. Prose citations may stay short.
 accepts-when: `ledger.test.mjs` and `mergecarry.test.mjs` green with only 40-hex ids in their git calls, and a hygiene arm in `mergecarry.test.mjs` that fails by name on a short id passed to git. NEGATIVE CONTROL: shorten one id back, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (M0-136's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs M0`).
+
+### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
+order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree … (whole text: the cut archive)
+depends-on: none — D-293 is on `main`.
+accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
