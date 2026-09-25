@@ -100,6 +100,19 @@
    exit 0 — ALL FOUR AS DECLARED, every restore verified by sha256, content AND `cmp`, pen removed. The
    union disarmed none of it.
 
+   (d) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+   `block()` (D-548's recorder, from `d84-case-manifest.test.mjs`), and the subject is the SUITE, so the arms break a
+   section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs d150-statement-acknowledgement` from
+   bio-plane/. BASELINE -> **64 pass, 0 fail**, per section 0 (setup) 0/0, 0b (corpus) 0/0, 1 11/0, 2 1/0, 3 6/0,
+   4 4/0, 5 8/0, 6 2/0, 7 4/0, 8 7/0, 9 9/0, 10 8/0, 11 4/0, foot reached.
+   (d) SECTION 6's FIXTURE BROKEN — its draft authored by pat (invited, NOT joined) instead of ella, which the plane
+   refuses REVIEW_NOT_PROJECT_OWNER. Declared: section 6 DIES by name with tally -1, every other section reports its
+   baseline tally -> **62 pass, 1 fail**, `BLOCK 6 DIED: (fixture) casedraft De: {"ok":false,"reason":
+   "REVIEW_NOT_PROJECT_OWNER"`, every other section at its baseline tally, foot reached, as declared. Before D-564
+   the same break ended the run at `[FIXTURE ABORTED]` and sections 7-11 went unmeasured.
+   (e) THE RECORDER DISARMED (`block()` rethrows) over (d)'s fixture — declared: NO foot and no section tally, exit 1
+   -> (see d564-block.control.mjs run).
+
    D-150 / BIO_Publication_v0_1.md §3 rule 11 (BOB #27, 2026-09-22) — THE EXCLUSION STATEMENT IS
    CHECKED BY A SECOND PERSON, AND THE CHECK IS DISCLOSED, NEVER ENFORCED.
 
@@ -165,12 +178,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -202,22 +233,25 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
+let OMAR, IRIS, ELLA, PAT, SOL, PROJ, SOLO;
+console.log("\n--- 0. setup: members, signers, the two projects ---");
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-150", "admin", ["contribute", "publish", "create_projects"]);
 /* iris OWNS PROJ and signs; ella is a JOINED participant (the second reader); pat is INVITED and
    NOT joined; omar is an ADMINISTRATOR with sight of every project and a place in none; sol OWNS a
    project of ONE member (Design Requirement 2). */
-const OMAR = await enrol("omar", "omar-passphrase-150", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "iris-passphrase-150", "member", ["contribute", "publish"]);
-const ELLA = await enrol("ella", "ella-passphrase-150", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-150", "member", ["contribute", "publish"]);
-const SOL = await enrol("sol", "sol-passphrase-150", "member", ["contribute", "publish"]);
+OMAR = await enrol("omar", "omar-passphrase-150", "admin", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-150", "member", ["contribute", "publish"]);
+ELLA = await enrol("ella", "ella-passphrase-150", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-150", "member", ["contribute", "publish"]);
+SOL = await enrol("sol", "sol-passphrase-150", "member", ["contribute", "publish"]);
 for (const who of ["iris", "sol"])
   rP(await POST("op=signeradd&token=adm-d150", { keyB64: mkKey(who), memberId: who, comment: `${who} laptop` }));
 
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-d150", owner: "iris",
   name: "PROJ-2026-1500-second-reader", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
-const SOLO = await makePublishingProject({
+SOLO = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-d150", owner: "sol",
   name: "PROJ-2026-1501-one-member", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 for (const [h, tok, join] of [["ella", ELLA, true], ["pat", PAT, false]]) {
@@ -228,6 +262,7 @@ for (const [h, tok, join] of [["ella", ELLA, true], ["pat", PAT, false]]) {
     if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
   }
 }
+});
 
 /* ---- the corpus: reviewcopy.test.mjs's shapes, lifted rather than invented ---- */
 let snapSeq = 0;
@@ -285,6 +320,9 @@ const PUBQ = "INQ-2026-1500-publisher"; /* the case whose publisher had acknowle
 const SOLQ = "INQ-2026-1500-solo";      /* the one-member project's case */
 const Q = { [LEAD]: "Was the transfer authorised?", [DOCQ]: "Was notice given?",
             [PUBQ]: "Was the auditor told?", [SOLQ]: "Who signed the memo?" };
+console.log("\n--- 0b. the corpus: the memo and the four inquiries, concluded ---");
+await block("0b (corpus)", async () => {
+needs("0 (setup)", { IRIS, SOL });
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
 for (const id of Object.keys(Q)) {
   const r = await promote(id, withAdoptableReading(inquiryMd(id, Q[id], INFO)), "inquiry", "open");
@@ -297,6 +335,7 @@ for (const [id, tok] of [[LEAD, IRIS], [DOCQ, IRIS], [PUBQ, IRIS], [SOLQ, SOL]])
     + adoptedVersionParam()));
   if (!r.ok) bail(`conclude ${id}`, r);
 }
+});
 
 const args = (project, tag, over = {}) => ({
   project, scope: `Whether the transfer was authorised (${tag}).`,
@@ -318,13 +357,16 @@ const ratify = async (who, token, caseId, edition, docSha) =>
 console.log("\n--- d150-statement-acknowledgement ---");
 
 /* =========================================================================== 1 */
+let G1, STMT, CA, CB;
 console.log("\n--- 1. who may acknowledge: a second person with a place in the project, or a recipient ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, PAT, OMAR, SOL, ELLA, PROJ });
 const D1r = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "lead"), targets: [LEAD] })));
 if (!D1r?.ok) bail("casedraft D1", D1r);
 const D1 = D1r.draftId;
-const G1 = rP(await POST(`op=reviewgrant&token=${IRIS}`, { draft: D1, recipient: "Dana Ruiz, City Auditor's office" }));
+G1 = rP(await POST(`op=reviewgrant&token=${IRIS}`, { draft: D1, recipient: "Dana Ruiz, City Auditor's office" }));
 if (!G1?.ok || !G1.secret) bail("reviewgrant D1", G1);
-const STMT = args(PROJ, "lead").statement;
+STMT = args(PROJ, "lead").statement;
 
 t("THE AUTHOR'S OWN ACKNOWLEDGEMENT IS REFUSED BY NAME — iris wrote the draft's statement, and rule 11 is a "
 + "SECOND person",
@@ -374,9 +416,12 @@ t("a secret that was never issued gets the dead answer",
      (copy?.statement_acknowledgements?.acknowledgements || []).map((a) => [a.kind, a.by])],
     [true, [["participant", "ella"], ["recipient", G1.grantId]]]);
 }
+});
 
 /* =========================================================================== 2 */
 console.log("\n--- 2. an acknowledgement is of ONE sentence: an edited statement starts with none ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 {
   const Dx = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args(PROJ, "edited"), targets: [DOCQ] })));
   if (!Dx?.ok) bail("casedraft Dx", Dx);
@@ -394,9 +439,13 @@ console.log("\n--- 2. an acknowledgement is of ONE sentence: an edited statement
      after?.statement_acknowledgements?.statement_sha === sha("A different sentence about what is left out.")],
     [1, 0, true]);
 }
+});
 
 /* =========================================================================== 3 */
 console.log("\n--- 3. the SIGNED completeness block lists them ---");
+await block("3", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
+needs("1", { G1, STMT });
 /* CORRECTED 2026-09-24 BY REC-194, NEVER EXEMPTED, AND THE OLD ASSERTION WAS WRONG RATHER THAN STALE.
    It read: a NEW case's `op=publish` lists the acknowledgements taken through the DRAFT it was prepared
    from — and the mechanism that made it pass matched every acknowledgement of the same SENTENCE in the
@@ -418,7 +467,7 @@ console.log("\n--- 3. the SIGNED completeness block lists them ---");
    the acknowledgement is therefore bound. */
 const pubA = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "lead"), targets: [LEAD] })));
 if (pubA?.ok === false || !pubA?.caseDocument?.doc_sha) bail("publish lead", pubA);
-const CA = pubA.caseDocument.case_id;
+CA = pubA.caseDocument.case_id;
 t("REC-194: op=publish of a NEW case lists NOBODY — ella's and the recipient's readings were given for a draft "
 + "that names no case, so no case document may claim them — and the act SAYS how many it could not bind",
   [pubA?.completeness?.statement_sha === sha(STMT),
@@ -472,9 +521,12 @@ t("ella then acknowledges THIS CASE's prepared document — the case door, whose
     (pc?.completeness?.acknowledgements || pc?.case?.completeness?.acknowledgements || []).map((a) => [a.kind, a.by]),
     [["participant", "ella"]]);
 }
+});
 
 /* =========================================================================== 4 */
 console.log("\n--- 4. THE ONE-MEMBER ARM: a case nobody else acknowledged publishes, and says so ---");
+await block("4", async () => {
+needs("0 (setup)", { SOL, SOLO });
 {
   const Ds = rP(await POST(`op=casedraft&token=${SOL}`, withRoles({ ...args(SOLO, "solo"), targets: [SOLQ] })));
   t("in a project of one, the only member is the statement's author, and cannot be its second reader",
@@ -496,12 +548,15 @@ console.log("\n--- 4. THE ONE-MEMBER ARM: a case nobody else acknowledged publis
   + "that says nothing about acknowledgements",
     pc?.completeness?.acknowledgements ?? pc?.case?.completeness?.acknowledgements ?? "absent", []);
 }
+});
 
 /* =========================================================================== 5 */
 console.log("\n--- 5. an unsigned case document can be acknowledged; a signed one cannot ---");
+await block("5", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 const pubB = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(PROJ, "doc"), targets: [DOCQ] })));
 if (pubB?.ok === false || !pubB?.caseDocument?.doc_sha) bail("publish doc", pubB);
-const CB = pubB.caseDocument.case_id;
+CB = pubB.caseDocument.case_id;
 pubB.__text = (await docOf(CB, 1, IRIS))?.text;
 t("published with nobody else's acknowledgement: the unsigned document says 0 and lists none",
   [fmOf((await docOf(CB, 1, IRIS))?.text).completeness?.acknowledged,
@@ -541,9 +596,12 @@ t("a signature over the bytes as FIRST authored is refused as stale — the owne
 }
 t("SIGNED, the edition refuses a further acknowledgement by name — the list is inside a signature now",
   (await ack(`case=${CB}&edition=1&token=${ELLA}`))?.reason, "STATEMENT_ACK_ALREADY_SIGNED");
+});
 
 /* =========================================================================== 6 */
 console.log("\n--- 6. the member who publishes becomes the statement's author, and their own is left out ---");
+await block("6", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 {
   const De = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...args(PROJ, "publisher"), targets: [PUBQ] })));
   if (!De?.ok) bail("casedraft De", De);
@@ -574,9 +632,13 @@ console.log("\n--- 6. the member who publishes becomes the statement's author, a
      /UNDETERMINED/.test(doc6?.text || "")],
     ["iris", 0, [], null, null, true, false]);
 }
+});
 
 /* =========================================================================== 7 */
 console.log("\n--- 7. the gate: bytes listing the author as their own second reader are refused (C-41.10) ---");
+await block("7", async () => {
+needs("0 (setup)", { IRIS });
+needs("3", { CA });
 {
   const good = fmOf((await docOf(CA, 1, IRIS))?.text);
   const errs = (fm) => checkCaseDocument(fm, { caseId: CA, edition: 1 })
@@ -612,9 +674,12 @@ console.log("\n--- 7. the gate: bytes listing the author as their own second rea
   t("a /2 document with NO list (authored before acknowledgements were recorded) is not refused — what already "
   + "crossed stays crossed", errs(legacy), []);
 }
+});
 
 /* =========================================================================== 8 */
 console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other case's document ---");
+await block("8", async () => {
+needs("0 (setup)", { IRIS, SOL, ELLA, PROJ, SOLO });
 /* WAS block 8 of IC-246 (c19-unionfix, 2026-09-24): MAX + 1 unsigned edition-1 case documents of ONE statement in
    ONE project, reached THROUGH A DRAFT naming no case, plus a document of the same sentence in another project. Its
    arms asserted that the act re-authored all MAX of them and refused over the bound.
@@ -713,9 +778,12 @@ console.log("\n--- 8. REC-194: the draft door of a NEW case re-authors NO other 
      (await docOf(pubs[1].caseId, 1, IRIS))?.doc_sha === before[1]],
     [true, false, true]);
 }
+});
 
 /* =========================================================================== 9 */
 console.log("\n--- 9. REC-193 / §3 rule 13: the statement's author is WHO WROTE ITS CURRENT BYTES ---");
+await block("9", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 /* THE DEFECT THIS BLOCK EXISTS TO CATCH, and D-150 named it PROVISIONAL at the site: the author was read
    from `case_drafts.updated_by`, which is the last editor of ANY field. So a participant who corrected the
    SCOPE after somebody else wrote the statement was refused as its author, and the member who actually wrote
@@ -819,9 +887,12 @@ console.log("\n--- 9. REC-193 / §3 rule 13: the statement's author is WHO WROTE
       [true, true, []]);
   }
 }
+});
 
 /* ========================================================================== 10 */
 console.log("\n--- 10. REC-194 / §3 rule 13: AN ACKNOWLEDGEMENT BINDS TO ONE CASE IDENTITY ---");
+await block("10", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
 /* THE ROW'S FIRST ACCEPTS-WHEN CLAUSE, AND THE DEFECT IT NAMES. Two cases of ONE project whose exclusion
    statements are BYTE-IDENTICAL, one acknowledged. Before this landing the listing read matched
    `(case_id IS ? OR (case_id IS NULL AND edition=1))`, so ella's reading of TWIN-A's draft was listed in
@@ -932,9 +1003,13 @@ console.log("\n--- 10. REC-194 / §3 rule 13: AN ACKNOWLEDGEMENT BINDS TO ONE CA
       [["ella"], []]);
   }
 }
+});
 
 /* ========================================================================== 11 */
 console.log("\n--- 11. REC-194: a BOUND acknowledgement at an existing case's next edition ---");
+await block("11", async () => {
+needs("0 (setup)", { IRIS, ELLA, PROJ });
+needs("5", { CB });
 /* WHAT THE NARROWING LEAVES REACHABLE, DRIVEN RATHER THAN ASSUMED. After it, only an acknowledgement recorded
    AT a case identity reaches a case document — through the case door, or through a draft that NAMES AN EXISTING
    CASE, which stands at that case's next edition (`#draftIdentity`). Two properties this suite would otherwise
@@ -999,7 +1074,18 @@ console.log("\n--- 11. REC-194: a BOUND acknowledgement at an existing case's ne
       [true, 1, [["recipient", G2.grantId]], true, false, ["ella"]]);
   }
 }
+});
 
-console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0b (corpus)", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd150-statement-acknowledgement: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

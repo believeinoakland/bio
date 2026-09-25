@@ -72,6 +72,21 @@
    section 8 pins the correct behaviour in both directions as positive assertions,
    so a future session tightening it goes red rather than shipping the defect.
 
+   (e) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs
+   in `block()`, and the subject is the SUITE, so the arms break a section's FIXTURE. Re-run in one step:
+   `node test/d564-block.control.mjs casesearched` from bio-plane/. BASELINE -> **26 pass, 0 fail**, per section
+   0 (setup) 0/0, 0 1/0, 1 1/0, 2 5/0, 3 4/0, 4 2/0, 5 2/0, 6 4/0, 7 3/0, 8 4/0, foot reached, exit 0.
+
+   (f) SECTION 7's FIXTURE BROKEN — its re-promote of the case's document names the envelope type `nosuchtype`,
+   which the plane refuses ENVELOPE_TYPE_DISAGREES; no later section reads section 7. Declared: 7 DIES by name
+   with tally -1, every other section reports its baseline tally -> **23 pass, 1 fail**, `BLOCK 7 DIED: (fixture)
+   promote INFO-2026-9600-cased: {"ok":false,"reason":"ENVELOPE_TYPE_DISAGREES"`, section 8 still 4/0, foot
+   reached with `DIED: 7`, as declared. Before D-564 the same break ended the run at section 7 and section 8's
+   four assertions never ran.
+
+   (g) THE RECORDER DISARMED (`block()` rethrows) over the fixture arm above — declared: NO foot and no section
+   tally, exit 1 -> (see d564-block.control.mjs run).
+
    ---
 
    REC-96 / D-196 / IC-112 — THE COMPLETENESS STATEMENT'S `searched` SECTION,
@@ -139,12 +154,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\ncasesearched: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -181,16 +214,20 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
+/* D-564: values a later section reads are declared here and ASSIGNED inside the block that produces them. */
+let IRIS, PUBLISHING_PROJECT, contentSubjects, CASE_ID, doc, FM, LV;
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-r96", "admin", ["contribute", "publish", "create_projects"]);
 await enrol("omar", "omar-passphrase-r96", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "iris-passphrase-r96", "member", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-r96", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r96", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
    the fixture takes a `name` and returns the minted id. */
-const PUBLISHING_PROJECT = await makePublishingProject({
+PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r96", owner: "iris",
   name: "PROJ-2026-9600-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+});
 
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
@@ -272,8 +309,6 @@ const mustPromote = async (id, text, type, opts = {}) => {
 /* ===========================================================================
    0. THE GROUND — two documents that are deliberately NOT alike.
    =========================================================================== */
-console.log("\n--- 0. the ground: one document the record READ, one it only HOLDS ---");
-
 const SHA_SEEDED = sha("rec96-seeded-bytes");
 const SHA_CASED = sha("rec96-cased-bytes");
 const SEEDED = "INFO-2026-9600-seeded";
@@ -296,6 +331,10 @@ const readingOf = (over) => ({ content_type: "meeting_calendar", reader_version:
                                read_from_text: true, found: false, entities: [], facts: {},
                                at: NOW, text_container: "pdf", ...over });
 const WHOLE1 = [{ step: "layer", tier: 1, container: "pdf" }];
+
+console.log("\n--- 0. the ground: one document the record READ, one it only HOLDS ---");
+await block("0", async () => {
+needs("0 (setup)", { IRIS, PUBLISHING_PROJECT });
 
 await mustPromote(SEEDED, infoMd(SEEDED), "information", {
   register: reg(SHA_SEEDED),
@@ -331,7 +370,7 @@ const shaOf = async (id) => {
    `#missingContentCause` answers `purged` for everything (an empty table is
    equally the never-written case and the purged one) and this suite would assert
    `undetermined` while believing it had asserted `never_looked`. */
-const contentSubjects = async () => {
+contentSubjects = async () => {
   const f = rP(await GET(`op=frontier&level=content&token=${IRIS}&limit=500`));
   return (f && Array.isArray(f.looked) ? f.looked : []).map((r) => r.subject);
 };
@@ -341,11 +380,14 @@ const contentSubjects = async () => {
   + "observation and the case's own document has NONE — the asymmetry section 5.1's cause (3) needs",
     [seen.includes(SHA_SEEDED), seen.includes(SHA_CASED)], [true, false]);
 }
+});
 
 /* ===========================================================================
    1. THE CEREMONY — publish and sign a case resting on the unread document.
    =========================================================================== */
 console.log("\n--- 1. the case is published and signed, resting on a document nobody has read inside ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, PUBLISHING_PROJECT });
 
 const CASE = "CASE-2026-9600-transfer";
 const STMT = "This case does not cover the 2025 transfers.";
@@ -361,23 +403,26 @@ const pub = rP(await POST(`op=publish&token=${IRIS}`, {
 }));
 if (pub.ok === false || !pub.caseDocument?.doc_sha) bail("publish case", pub);
 
-const CASE_ID = pub.caseDocument.case_id;
+CASE_ID = pub.caseDocument.case_id;
 const rat = rP(await POST(`op=caseratify&token=${IRIS}`, {
   caseId: CASE_ID, edition: 1, expectedSha: pub.caseDocument.doc_sha,
   sig: signCase("iris", CASE_ID, 1, pub.caseDocument.doc_sha) }));
 if (rat.ok === false) bail("caseratify", rat);
 
-const doc = await anon(`op=casedocument&case=${CASE_ID}&edition=1`);
-const FM = parseFrontmatter(doc.text).data;
-const LV = (lvl) => (FM.searched_levels || []).find((r) => r.level === lvl) || {};
+doc = await anon(`op=casedocument&case=${CASE_ID}&edition=1`);
+FM = parseFrontmatter(doc.text).data;
+LV = (lvl) => (FM.searched_levels || []).find((r) => r.level === lvl) || {};
 
 t("the case is SIGNED and the document a stranger reads is the ratified one",
   [doc.ratified, typeof doc.sig_armored === "string"], [true, true]);
+});
 
 /* ===========================================================================
    2. THE SECTION IS IN THE SIGNED BYTES, IN BOTH SURFACES.
    =========================================================================== */
 console.log("\n--- 2. the searched section is in the signed bytes, and a PERSON can read it ---");
+await block("2", async () => {
+needs("1", { doc, FM });
 
 t("the signed frontmatter carries the searched block with the source it was computed from",
   [typeof FM.searched === "object", FM.searched?.subject_source], [true, "case_basis"]);
@@ -403,11 +448,14 @@ t("every level's published `detail` OPENS WITH THE VOCABULARY'S OWN SENTENCE for
 + "signed document and `SEARCHED_LEVEL_OUTCOMES` cannot drift apart into two meanings for one word",
   (FM.searched_levels || []).map((r) => r.detail.startsWith(SEARCHED_LEVEL_OUTCOMES[r.outcome])),
   (FM.searched_levels || []).map(() => true));
+});
 
 /* ===========================================================================
    3. THE ACCEPTS-WHEN. This is the item.
    =========================================================================== */
 console.log("\n--- 3. THE ITEM: a case whose subjects were never looked for at the content level SAYS SO ---");
+await block("3", async () => {
+needs("1", { doc, FM, LV });
 
 t("THE CONTENT LEVEL REPORTS never_looked FOR THIS CASE'S OWN DOCUMENT — the record holds the bytes "
 + "and has never looked inside them, and the SIGNED document says so rather than leaving a "
@@ -435,11 +483,13 @@ t("the document level does NOT claim coverage it cannot support: a capture regis
 t("the section names ONE subject at the content level and it is the case's own capture, not every "
 + "capture the store holds — the seeded document the record DID read is NOT in this case's set",
   [LV("content").subjects, FM.searched.subjects >= 1], [1, true]);
+});
 
 /* ===========================================================================
    4. ZERO OF ZERO IS NOT 100%.
    =========================================================================== */
 console.log("\n--- 4. an empty level is `no_subjects`, never `searched` ---");
+await block("4", async () => {
 
 t("a level with no subjects and nothing unidentified reports no_subjects — zero of zero is not "
 + "coverage, and reporting it as searched is the costs-nothing rule wearing a percentage",
@@ -454,11 +504,13 @@ t("and an unidentified referent CAPS its level at partial however clean the iden
     levels: [{ level: "content", subject_kind: "capture",
                subjects: [{ subject: "a", state: "PRESENT" }], unidentified: 1 }] })
     .levels[0].outcome, "partial");
+});
 
 /* ===========================================================================
    5. THE SUBJECT SET IS THE FENCE.
    =========================================================================== */
 console.log("\n--- 5. the subject set is the fence, and it is structural rather than conventional ---");
+await block("5", async () => {
 
 t("a section computed from the OBSERVATION LOG's own subjects is REFUSED rather than published — the "
 + "log is deliberately not a member of the vocabulary, so the cheapest lie is unrepresentable and "
@@ -469,11 +521,13 @@ t("and the refusal SAYS WHY, naming the failure mode, so a caller meets the reas
 + "rejected enum",
   /100% searched by construction/.test(
     searchedSection({ at: NOW, subjectSource: "observation_log", levels: [] }).why), true);
+});
 
 /* ===========================================================================
    6. THE ONE-SIDED COERCION (REC-95's finding, consumed rather than re-derived).
    =========================================================================== */
 console.log("\n--- 6. where the evidence is one-sided, `never_looked` is refused and stated as undetermined ---");
+await block("6", async () => {
 
 t("REC-95's finding is CONSUMED and not re-spelled: at two of the meaning level's three subject kinds "
 + "the pre-log evidence exists only where the answer was YES",
@@ -506,11 +560,15 @@ t("and a meaning subject kind this record has no evidence answer for is FAIL-CLO
     levels: [{ level: "meaning", subject_kind: "description",
                subjects: [{ subject: "d", state: null, cause: "never_looked" }], unidentified: 0 }] })
     .levels[0].outcome, "undetermined");
+});
 
 /* ===========================================================================
    7. THE SIGNED SECTION DOES NOT MOVE (design section 9's own control).
    =========================================================================== */
 console.log("\n--- 7. alter the log after signing and the signed section does not move ---");
+await block("7", async () => {
+needs("0", { contentSubjects });
+needs("1", { doc, CASE_ID });
 
 const BEFORE = doc.text;
 await mustPromote(CASED, infoMd(CASED), "information", {
@@ -533,6 +591,7 @@ t("and the SIGNED section does not move: it was computed once, at authoring, and
 
 t("the document's digest is unchanged too, which is the property the signature actually rests on",
   after.doc_sha === doc.doc_sha, true);
+});
 
 /* ===========================================================================
    8. THE GATE REFUSES SILENCE AND PUBLISHES AN HONEST NEGATIVE — BOTH DIRECTIONS,
@@ -554,6 +613,8 @@ t("the document's digest is unchanged too, which is the property the signature a
    OVERCLAIMS is worse than no case — never that a weak case is.
    =========================================================================== */
 console.log("\n--- 8. the gate refuses SILENCE about coverage and publishes an HONEST NEGATIVE ---");
+await block("8", async () => {
+needs("1", { doc, CASE_ID, LV });
 {
   /* `checkCaseDocument(fm, ctx)` TAKES THE FRONTMATTER POSITIONALLY. This
      harness's first draft passed `{caseId, edition, fm, priorCase}` as `fm` —
@@ -589,7 +650,18 @@ console.log("\n--- 8. the gate refuses SILENCE about coverage and publishes an H
   + "meets the distinction rather than being told to produce a number",
     /SILENCE is not/.test(findingsOf(muted).map((f) => f.message).join(" ")), true);
 }
+});
 
-console.log(`\ncasesearched: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0", "1", "2", "3", "4", "5", "6", "7", "8"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\ncasesearched: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

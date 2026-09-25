@@ -40,6 +40,17 @@
    sha256 `sha256sum -c` OK fa247397…c730f9, `cmp` identical, 3,244,593 bytes): 33 pass, 8 FAIL, the same eight rows
    — the control still bites on the changed subject. `provenance-marker.test.mjs`'s OWN ceiling arm was re-run for
    the move to 39 and is recorded on that suite's header, not here.
+   (e) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+   `block()` (setup split in two, "0 (setup)" and "0b (corpus)", because the corpus promotes need helpers defined
+   after the enrolments), and the subject is the SUITE, so the arm breaks a section's FIXTURE. Re-run with
+   `node test/d564-block.control.mjs rec212-statement-writer` from bio-plane/. BASELINE -> **45 pass, 0 fail**, per
+   section 0 (setup) 0/0, 0b (corpus) 0/0, 1 5/0, 2 5/0, 3 12/0, 4 4/0, 5 10/0, 5b 4/0, 6 3/0, 7 2/0, foot reached.
+   (e) SECTION 4's FIXTURE BROKEN (its publish pointed at a bundle that does not exist) — declared: section 4 DIES by
+   name with tally -1 and every other section reports its baseline tally, since none reads section 4 -> **41 pass,
+   1 fail**, `BLOCK 4 DIED: (fixture) publish own: {"ok":false,"reason":"NO_SUCH_BUNDLE",...}`, foot reached, as
+   declared; restored by `cp` from a pristine copy, `sha256sum -c` OK.
+   (e) THE RECORDER DISARMED (`block()` rethrows) over the fixture arm — declared: NO foot, no section tally, exit 1
+   -> (see d564-block.control.mjs run).
    NOT DRIVEN, AND SAID RATHER THAN SCORED: no arm reaches `#statementWriter`'s `drafts_unbounded` answer
    (it needs more than REVIEW_LIST_MAX drafts of one project), and none produces a draft holding a statement
    with no `statement_by` — REC-193 measured that state unreachable through any act on a store this code
@@ -135,12 +146,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 700)}`);
-  fail++;
-  console.log(`\nrec212-statement-writer: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -173,6 +202,9 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
+/* D-564: the values later sections read are hoisted, and assigned inside the block that produces them. */
+let IRIS, ELLA, PAT, PROJ, CC, fmC, SPLIT_CASE;
+await block("0 (setup)", async () => {
 await enrol("nadia", "nadia-passphrase-212", "admin", ["contribute", "publish", "create_projects"]);
 /* ADMINS_FIRST: administrative access is shared among at least two people before any ordinary member
    exists, so the second enrolment is an administrator too. omar takes no part in any block below. */
@@ -180,12 +212,12 @@ await enrol("omar", "omar-passphrase-212", "admin", ["contribute", "publish"]);
 /* iris OWNS the project and signs; ella and pat are JOINED participants — ella writes statements, pat
    is the THIRD member the over-strictness arm needs, and both writing one sentence is what makes the
    writer UNDETERMINED in block 5. */
-const IRIS = await enrol("iris", "iris-passphrase-212", "member", ["contribute", "publish"]);
-const ELLA = await enrol("ella", "ella-passphrase-212", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-212", "member", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-212", "member", ["contribute", "publish"]);
+ELLA = await enrol("ella", "ella-passphrase-212", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-212", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r212", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
-const PROJ = await makePublishingProject({
+PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r212", owner: "iris",
   name: "PROJ-2026-2120-two-acts", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
@@ -194,6 +226,7 @@ for (const [h, tok] of [["ella", ELLA], ["pat", PAT]]) {
   const jn = rP(await GET(`op=projectjoin&token=${tok}&projectId=${encodeURIComponent(PROJ)}`));
   if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
 }
+});
 
 /* ---- the corpus: d150's shapes, lifted rather than invented ---- */
 let snapSeq = 0;
@@ -250,6 +283,7 @@ const OWNSTMT = "INQ-2026-2120-own";   /* block 4: no draft holds the sentence *
 const SPLIT = "INQ-2026-2120-split";   /* block 5: two drafts, two authors, one sentence */
 const Q = { [CARRY]: "Was the transfer authorised?", [OWNSTMT]: "Was notice given?",
             [SPLIT]: "Was the auditor told?" };
+await block("0b (corpus)", async () => {
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
 for (const id of Object.keys(Q)) {
   const r = await promote(id, withAdoptableReading(inquiryMd(id, Q[id], INFO)), "inquiry", "open");
@@ -260,6 +294,7 @@ for (const id of Object.keys(Q)) {
     + adoptedVersionParam()));
   if (!c.ok) bail(`conclude ${id}`, c);
 }
+});
 
 const args = (tag, over = {}) => ({
   project: PROJ, scope: `Whether the transfer was authorised (${tag}).`,
@@ -306,6 +341,8 @@ console.log("\n--- rec212-statement-writer ---");
 
 /* =========================================================================== 1 */
 console.log("\n--- 1. THE CARRY: ella writes the statement, iris publishes, and the signed bytes name both ---");
+await block("1", async () => {
+needs("0 (setup)", { ELLA, IRIS, PROJ });
 const CARRY_ARGS = args("carry");
 const Dc = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...CARRY_ARGS, targets: [CARRY] })));
 if (!Dc?.ok) bail("casedraft by ella", Dc);
@@ -317,9 +354,9 @@ if (!Dc?.ok) bail("casedraft by ella", Dc);
 }
 const Pc = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...CARRY_ARGS, targets: [CARRY] })));
 if (!Pc?.ok) bail("publish carry", Pc);
-const CC = Pc.caseDocument.case_id;
+CC = Pc.caseDocument.case_id;
 const docC = await docOf(CC, 1, IRIS);
-const fmC = fmOf(docC?.text);
+fmC = fmOf(docC?.text);
 t("ACCEPTS-WHEN, first clause: the SIGNED-FOR-REVIEW bytes name the WRITER and the PUBLISHER APART — "
 + "completeness.statement_by is ella, completeness.author is iris",
   [fmC.completeness?.statement_by, fmC.completeness?.author], ["ella", "iris"]);
@@ -334,9 +371,12 @@ t("op=publish's own answer carries both, with the sentence that says how the rec
   ["ella", "iris", true]);
 t("and the gate accepts the document this plane authored — no finding at all",
   [gate(fmC, docC.text).ok, checksOf(fmC, docC.text)], [true, []]);
+});
 
 /* =========================================================================== 2 */
 console.log("\n--- 2. ACCEPTS-WHEN: the statement's WRITER cannot acknowledge a case another member published ---");
+await block("2", async () => {
+needs("0 (setup) and 1", { ELLA, PAT, IRIS, CC });
 {
   const aE = await ack(`case=${CC}&edition=1&token=${ELLA}`);
   t("ELLA, WHO WROTE THE STATEMENT, IS REFUSED BY NAME AT THE CASE-DOCUMENT DOOR, and the refusal names HER "
@@ -361,9 +401,12 @@ t("pat's acknowledgement RE-AUTHORED the unsigned document, which now lists her 
   [1, [["participant", "pat"]], "ella"]);
 t("and those re-authored bytes pass the gate: a list the splice wrote can never say what C-41.10 refuses",
   [gate(fmC2, docC2.text).ok, checksOf(fmC2, docC2.text)], [true, []]);
+});
 
 /* =========================================================================== 3 */
 console.log("\n--- 3. THE GATE: C-41.10 excludes the WRITER; C-41.13 refuses a /3 silent about them ---");
+await block("3", async () => {
+needs("1", { fmC });
 {
   const AT = "2026-09-24T00:00:00Z";
   const listing = (fm, by) => {
@@ -432,9 +475,12 @@ console.log("\n--- 3. THE GATE: C-41.10 excludes the WRITER; C-41.13 refuses a /
   + "for the documents it was the reading OF",
     [checksOf(legacySelf)], [["C-41.10"]]);
 }
+});
 
 /* =========================================================================== 4 */
 console.log("\n--- 4. NO DRAFT HOLDS THE SENTENCE: the publisher wrote those bytes at the publishing act ---");
+await block("4", async () => {
+needs("0 (setup)", { ELLA, IRIS, PROJ });
 {
   const OWN = args("own-statement");
   const p = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...OWN, targets: [OWNSTMT] })));
@@ -455,10 +501,12 @@ console.log("\n--- 4. NO DRAFT HOLDS THE SENTENCE: the publisher wrote those byt
   + "sentence, never the member",
     [(await ack(`case=${p.caseDocument.case_id}&edition=1&token=${ELLA}`))?.ok], [true]);
 }
+});
 
 /* =========================================================================== 5 */
 console.log("\n--- 5. UNDETERMINED IS STATED, NEVER BACK-FILLED — and the case publishes anyway ---");
-let SPLIT_CASE = null;
+await block("5", async () => {
+needs("0 (setup)", { ELLA, PAT, IRIS, PROJ });
 {
   const SP = args("split");
   const dE = rP(await POST(`op=casedraft&token=${ELLA}`, withRoles({ ...SP, targets: [SPLIT] })));
@@ -529,9 +577,12 @@ let SPLIT_CASE = null;
     [r?.ok, r?.statement?.by, /^UNDETERMINED: this case document states/.test(r?.statement?.stated || "")],
     [true, null, true]);
 }
+});
 
 /* ========================================================================= 5b */
 console.log("\n--- 5b. REC-194 at the union: the writer withholding, driven through a BOUND acknowledgement ---");
+await block("5b", async () => {
+needs("0 (setup) and 5", { ELLA, PAT, IRIS, PROJ, SPLIT_CASE });
 /* ADDED 2026-09-24 BY REC-194 AT THE UNION, because the narrowing took block 5's row out of the writer
    withholding's reach and a mechanism nobody drives is the defect this project meets most often. After the
    narrowing, `withheldWriterUndetermined` needs a row BOUND to the case identity, which means a draft that
@@ -584,9 +635,12 @@ console.log("\n--- 5b. REC-194 at the union: the writer withholding, driven thro
      p2.completeness?.acknowledgements_withheld_writer_undetermined ?? null],
     [null, 1]);
 }
+});
 
 /* =========================================================================== 6 */
 console.log("\n--- 6. BOTH NAMES IN BOTH ANSWERS — op=caseratify's own, and op=publishedcase's from signed bytes ---");
+await block("6", async () => {
+needs("0 (setup), 1 and 5", { IRIS, CC, SPLIT_CASE });
 {
   const d = await docOf(CC, 1, IRIS);
   const r = await ratify("iris", IRIS, CC, 1, d.doc_sha);
@@ -608,9 +662,12 @@ console.log("\n--- 6. BOTH NAMES IN BOTH ANSWERS — op=caseratify's own, and op
      /iris/.test((pubS?.completeness?.statement_by_stated || "").split("NOT read off")[0])],
     [null, "iris", true, false]);
 }
+});
 
 /* =========================================================================== 7 */
 console.log("\n--- 7. TOTALITY over a printed corpus: every case document this suite published carries the key ---");
+await block("7", async () => {
+needs("0 (setup), 1 and 5", { IRIS, CC, SPLIT_CASE });
 {
   const cases = [];
   for (const cid of [CC, SPLIT_CASE]) {
@@ -644,7 +701,18 @@ console.log("\n--- 7. TOTALITY over a printed corpus: every case document this s
   console.log("         NOT DRIVEN (said, never scored): a pre-REC-193 draft's NULL stamp (unreachable through "
     + "any act), and the drafts_unbounded answer (needs more than REVIEW_LIST_MAX drafts of one project).");
 }
+});
 
-console.log(`\nrec212-statement-writer: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "0b (corpus)", "1", "2", "3", "4", "5", "5b", "6", "7"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nrec212-statement-writer: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

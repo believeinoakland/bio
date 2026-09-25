@@ -79,6 +79,18 @@
  *   (c) OVER-STRICTNESS — `is-statement-ack-subject`'s two markers re-spelled with extra asterisks,
  *     whitespace and prose inside the marker comment -> 63/0, guard exit 0, `regionLines` unmoved at 3797.
  *     A marker's own prose is not part of the span it opens, and this arm is what says so by measurement.
+ *
+ *   D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+ *   `block()` (D-548's recorder, d84-case-manifest.test.mjs), and the subject is the SUITE, so the arms break a
+ *   section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs d507-statement-ack-translation` from
+ *   bio-plane/. BASELINE -> **63 pass, 0 fail**, per section (1..6) 21/0, 23/0, 1/0, 15/0, 2/0, 1/0, foot reached.
+ *   (d) SECTION 3's FIXTURE BROKEN — the INFO promote's type `"information"` -> `"nosuchtype"`. Declared: 3 DIES by
+ *     name with tally -1, and 4 and 5, which read its drafts and case, die NAMING the section they rest on; 1, 2
+ *     and 6 report their baseline tallies -> **45 pass, 3 fail**, `BLOCK 3 DIED: (fixture) promote info`,
+ *     `BLOCK 4 DIED: rests on section 3, which did not produce D1, DNOSTMT, CS`, `BLOCK 5 DIED: rests on
+ *     section 3, which did not produce D1`; 1, 2, 6 at 21/0, 23/0, 1/0, foot reached, exit 1, as declared.
+ *   (e) THE RECORDER DISARMED (`block()` rethrows) over (d)'s fixture — declared: NO foot and no section tally,
+ *     exit 1 -> (see d564-block.control.mjs run).
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -118,12 +130,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nd507-statement-ack-translation: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -132,14 +162,18 @@ const GET = async (q) => (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
 const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json();
 const ack = async (q) => rP(await POST(`op=statementack&${q}`, {}));
+/* D-564: the values a later section reads, declared once here and ASSIGNED inside the section that makes them. */
+let SIX, store, IRIS, ELLA, PAT, D1, DNOSTMT, CS;
+const ROW = (c) => STATEMENT_ACK_CHECKS[c];   /* moved up from section 4 unchanged: section 6 reads it too */
 
 /* ============================================================================
    THE CATALOGUE HALF — the six rows exist, each with a real sentence of its own.
    ============================================================================ */
 console.log("\n--- d507-statement-ack-translation ---");
 console.log("\n--- 1. the catalogue holds a row for each of the six, with a sentence of its own ---");
+await block("1", async () => {
 
-const SIX = [
+SIX = [
   ["STATEMENT_ACK_NO_SUBJECT",          "C-82.2", "is-statement-ack-subject"],
   ["STATEMENT_ACK_ALREADY_SIGNED",      "C-82.3", "is-statement-ack-signed"],
   ["STATEMENT_ACK_NOT_A_PARTICIPANT",   "C-82.4", "is-statement-ack-participant"],
@@ -164,13 +198,16 @@ t("the six sentences are six DIFFERENT sentences — one sentence serving two co
 t("and C-82.1, the row that was already there, is untouched beside them",
   [STATEMENT_ACK_CHECKS.STATEMENT_ACK_DOCUMENTS_OVER_BOUND.check,
    Object.keys(STATEMENT_ACK_CHECKS).length], ["C-82.1", 7]);
+});
 
 /* ============================================================================
    THE STRUCTURAL HALF — one site per code, inside the region its `where` claims,
    and the helper ABOVE the first refusal, which is the defect itself.
    ============================================================================ */
 console.log("\n--- 2. ONE site per code, inside its region, and the helper stands ABOVE them all ---");
-const store = readFileSync(SRC, "utf8");
+await block("2", async () => {
+needs("1", { SIX });
+store = readFileSync(SRC, "utf8");
 console.log(`  CORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").length} lines`);
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
   store.length > 1_000_000 && /class Store\b/.test(store) && /acknowledgeStatement\(\{/.test(store), true);
@@ -219,11 +256,13 @@ for (const [code, , region] of SIX) {
   t("no `reason: \"STATEMENT_ACK_` object literal is left in the file: every one goes through the helper",
     (store.match(/reason: "STATEMENT_ACK_/g) || []).length, 0);
 }
+});
 
 /* ============================================================================
    THE WIRE HALF — five of the six driven through op=statementack.
    ============================================================================ */
 console.log("\n--- 3. the fixture: a project with an author, a joined second reader and an invited non-member ---");
+await block("3", async () => {
 const dir = mkdtempSync(join(tmpdir(), "d507-"));
 const mkKey = (who) => {
   execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", who, "-f", join(dir, who), "-q"]);
@@ -252,9 +291,9 @@ await enrol("nadia", "nadia-passphrase-507", "admin", ["contribute", "publish", 
 await enrol("omar", "omar-passphrase-507", "admin", ["contribute", "publish"]);
 /* iris OWNS the project, writes the statement and signs; ella has JOINED (the second reader); pat is
    INVITED and has not joined, which is sight of a project and no place in it. */
-const IRIS = await enrol("iris", "iris-passphrase-507", "member", ["contribute", "publish"]);
-const ELLA = await enrol("ella", "ella-passphrase-507", "member", ["contribute", "publish"]);
-const PAT = await enrol("pat", "pat-passphrase-507", "member", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-507", "member", ["contribute", "publish"]);
+ELLA = await enrol("ella", "ella-passphrase-507", "member", ["contribute", "publish"]);
+PAT = await enrol("pat", "pat-passphrase-507", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-d507", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
 const PROJ = await makePublishingProject({
@@ -344,14 +383,14 @@ const args = (tag, over = {}) => ({
 });
 const withRoles = (b) => ({ ...b, roles: allLoadBearing(b) });
 
-const D1 = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args("draft"), targets: [DRFT] })));
+D1 = rP(await POST(`op=casedraft&token=${IRIS}`, withRoles({ ...args("draft"), targets: [DRFT] })));
 if (!D1?.draftId) bail("casedraft", D1);
-const DNOSTMT = rP(await POST(`op=casedraft&token=${IRIS}`,
+DNOSTMT = rP(await POST(`op=casedraft&token=${IRIS}`,
   withRoles({ ...args("nostatement"), targets: [DRFT], statement: "" })));
 if (!DNOSTMT?.draftId) bail("casedraft without a statement", DNOSTMT);
 const pub = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args("signed"), targets: [SIGN] })));
 if (pub?.ok === false || !pub?.caseDocument?.doc_sha) bail("publish", pub);
-const CS = pub.caseDocument.case_id;
+CS = pub.caseDocument.case_id;
 {
   const r = rP(await POST(`op=caseratify&token=${IRIS}`, { caseId: CS, edition: 1,
     expectedSha: pub.caseDocument.doc_sha, sig: signCase("iris", CS, 1, pub.caseDocument.doc_sha) }));
@@ -359,9 +398,11 @@ const CS = pub.caseDocument.case_id;
 }
 t("the fixture stands: a draft, a statement-less draft, and a SIGNED edition 1 of another case",
   [!!D1.draftId, !!DNOSTMT.draftId, !!CS], [true, true, true]);
+});
 
 console.log("\n--- 4. five of the six, driven through op=statementack, arrive translated ---");
-const ROW = (c) => STATEMENT_ACK_CHECKS[c];
+await block("4", async () => {
+needs("3", { IRIS, ELLA, PAT, D1, DNOSTMT, CS });
 const wire = async (code, label, q, extraGot, extraWant, detailNeedle) => {
   const r = await ack(q);
   t(`${label}: THE OLD ANSWER IS STILL THERE — ok and reason unchanged, and the per-site keys with them`,
@@ -389,8 +430,11 @@ await wire("STATEMENT_ACK_NO_STATEMENT", "C-82.5 a draft that says nothing about
   `draft=${DNOSTMT.draftId}&token=${ELLA}`, () => [], [], "states nothing about what its case excludes");
 await wire("STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6 the statement's own author",
   `draft=${D1.draftId}&token=${IRIS}`, (r) => [r?.author], ["iris"], "you wrote this statement");
+});
 
 console.log("\n--- 5. OVER-STRICTNESS: the act that SHOULD work still works, carrying no refusal keys ---");
+await block("5", async () => {
+needs("3", { D1, ELLA });
 {
   const ok = await ack(`draft=${D1.draftId}&token=${ELLA}`);
   t("the joined second reader's acknowledgement is RECORDED, and carries none of the three refusal keys — "
@@ -400,17 +444,31 @@ console.log("\n--- 5. OVER-STRICTNESS: the act that SHOULD work still works, car
   t("and the five refusals above wrote nothing: this is the FIRST acknowledgement of that statement",
     ok?.existed, false);
 }
+});
 
 /* THE SIXTH IS STATED, NOT SCORED. */
 console.log("\n--- 6. C-82.7 is NOT driven, and that is a fact about the plane, not a gap in this suite ---");
+await block("6", async () => {
+needs("2", { store });
 t("STATEMENT_ACK_AUTHOR_UNDETERMINED needs a draft with a statement and a NULL `statement_by`, which no "
 + "sequence of ops can produce since REC-193 stamps that column at every statement write. It is pinned "
 + "structurally above and its row is asserted above; it is NOT driven here.",
   [typeof ROW("STATEMENT_ACK_AUTHOR_UNDETERMINED").translation, /statement_by = \?|statement_by/.test(store)],
   ["string", true]);
+});
 
-await mf.dispose();
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT (D-93, D-413): `scripts/battery.mjs` reads `N pass, M fail`
    off it, and the COMMA is load-bearing. */
-console.log(`\nd507-statement-ack-translation: ${pass} pass, ${fail} fail`);
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["1", "2", "3", "4", "5", "6"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd507-statement-ack-translation: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
+await mf.dispose();
 process.exit(fail ? 1 : 0);
