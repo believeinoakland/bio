@@ -401,6 +401,10 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
               changed: ["C-41.12"] },
+  /* 1.31.0 (D-670, 2026-09-25, WORKER D-670, branch land/worker/D-670): ONE ARRIVAL, NO DEPARTURES — C-45.13
+     CONTENT_EXTENT_NOT_USER_SPACE. 502 -> 503, count AND digest from THIS SUITE'S OWN PRINT on the item's tree over
+     land/worker/D-374 c7703c3d. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S. */
+  "1.31.0": { count: 503, digest: "fab9c4d6128e1c03462812da7c0eed4d0af1d7ae090b786e47a8e854c82858fa" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -506,8 +510,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
 /* CORRECTED at c21-batch28 (CONDUCT #21): 1.29.0 -> 1.30.0, the union's one number for this batch's rows. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.30.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.30.0)", "1.30.0"]);
+/* CORRECTED by D-670 (2026-09-25), never exempted: 1.30.0 was the catalogue's version until C-45.13 arrived. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
    `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under

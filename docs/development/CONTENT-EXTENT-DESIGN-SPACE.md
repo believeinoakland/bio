@@ -9,7 +9,7 @@
 - §4 and §6 — the mechanism was decided as option (c), contracted as IC-83 (I5) and IC-84 (I3) and BUILT by REC-82 to REC-85 (`node tools/status.mjs 4`); the two sections are the design as decided and are not rewritten to the as-built, so a builder reads the IC and the code for the shape that landed (corrected 2026-09-22 by BOB #26; this bullet said the IC was still to be written).
 - §6 — the `pdf-page` arm's rect bound (D-374) and its coordinate space (D-670) are recorded there as
   built. A non-user-space rect is REFUSED, not converted, so an OCR region is citable as a region only once
-  something produces its user-space rect; that conversion is not designed here (it waits on D-671).
+  something produces its user-space rect; that conversion is not designed here (it waits on D-671; checked 2026-09-25).
 
 **Contents**
 - [1. The fixed constraints](#1-the-fixed-constraints)
