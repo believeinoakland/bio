@@ -4379,8 +4379,12 @@ __export(bio_checks_exports, {
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
+  CORRESPONDENCE_OUTCOMES: () => CORRESPONDENCE_OUTCOMES,
+  CORRESPONDENCE_STAGES: () => CORRESPONDENCE_STAGES,
+  DECISION_STAGES: () => DECISION_STAGES,
   DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
+  DUE_UNDETERMINED_SAYS: () => DUE_UNDETERMINED_SAYS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
@@ -4404,6 +4408,8 @@ __export(bio_checks_exports, {
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
   LEGACY_TYPE_ALIASES: () => LEGACY_TYPE_ALIASES,
+  LIFECYCLE_CHECKS: () => LIFECYCLE_CHECKS,
+  LIFECYCLE_KEYS: () => LIFECYCLE_KEYS,
   MACHINE_AUTHOR_PREFIX: () => MACHINE_AUTHOR_PREFIX,
   MACHINE_CLASS_PREFIX: () => MACHINE_CLASS_PREFIX,
   MACHINE_FENCE_CHECKS: () => MACHINE_FENCE_CHECKS,
@@ -4519,6 +4525,7 @@ __export(bio_checks_exports, {
   legContentId: () => legContentId,
   legExtent: () => legExtent,
   legHasAuthoredExtent: () => legHasAuthoredExtent,
+  lifecycleFindings: () => lifecycleFindings,
   mintUndetermined: () => mintUndetermined,
   normalizeRootKey: () => normalizeRootKey,
   normalizeType: () => normalizeType,
@@ -4531,6 +4538,7 @@ __export(bio_checks_exports, {
   quoteValue: () => quoteValue,
   rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
+  requestLifecycleOf: () => requestLifecycleOf,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   riskTierState: () => riskTierState,
   sectionText: () => sectionText,
@@ -7421,6 +7429,7 @@ function correspondenceFindings(fm, findings) {
       ));
     }
     for (const q of quoteFindings(entries, i)) findings.push(f("C-2.10", "error", q.message, null, q.code));
+    for (const q of lifecycleFindings(entries, i)) findings.push(f("C-2.10", "error", q.message, null, q.code));
   });
 }
 var QUOTE_KEYS = ["quote_amount", "quote_currency", "quote_basis", "quote_answers", "quote_revises"];
@@ -7462,6 +7471,136 @@ function quoteFindings(entries, i) {
     }
   }
   return out;
+}
+var CORRESPONDENCE_STAGES = {
+  sent: ["request", "fee_waiver_request", "appeal", "court_filing"],
+  received: [
+    "acknowledgement",
+    "fee_estimate",
+    "fee_waiver_decision",
+    "extension_notice",
+    "production",
+    "denial",
+    "appeal_decision",
+    "court_decision"
+  ]
+};
+var CORRESPONDENCE_OUTCOMES = ["granted", "denied", "partial", "reversed", "affirmed", "none_stated"];
+var DECISION_STAGES = ["fee_waiver_decision", "denial", "appeal_decision", "court_decision"];
+var LIFECYCLE_KEYS = ["stage", "follows", "outcome", "exemptions", "due_by", "due_cite"];
+function lifecycleFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!e || typeof e !== "object" || Array.isArray(e)) return out;
+  const str = (v) => v === null || v === void 0 ? "" : String(v).trim();
+  const stage = str(e.stage), follows = str(e.follows), outcome = str(e.outcome);
+  const exemptions = str(e.exemptions), dueBy = str(e.due_by), dueCite = str(e.due_cite);
+  if (stage) {
+    const legal = CORRESPONDENCE_STAGES[e.direction] || [];
+    if (!legal.includes(stage)) {
+      out.push({ code: "STAGE_NOT_OF_DIRECTION", message: `correspondence[${i}].stage '${stage.slice(0, 40)}' is not a stage of a '${e.direction}' entry: ` + (legal.length ? `one of ${legal.join(", ")}` : "a non-response carries no stage, it names what it awaited by follows") });
+    }
+  }
+  let prior = null;
+  if (follows) {
+    const n = /^\d+$/.test(follows) ? Number(follows) : null;
+    prior = n !== null && n < i ? entries[n] : null;
+    if (!prior || typeof prior !== "object") {
+      out.push({ code: "FOLLOWS_NO_ENTRY", message: `correspondence[${i}].follows '${follows.slice(0, 20)}' names no earlier entry of this ledger: a stage names the entry it answers or follows by its position, counted from zero` });
+      prior = null;
+    }
+  } else if (stage && stage !== "request") {
+    out.push({ code: "FOLLOWS_NO_ENTRY", message: `correspondence[${i}] is a '${stage}' naming no entry it follows: each stage after the request names the entry it answers or follows, so the lifecycle reads as one chain` });
+  }
+  if (stage === "appeal" && follows && prior && !(prior.direction === "received" && str(prior.outcome))) {
+    out.push({ code: "APPEAL_NAMES_NO_DECISION", message: `correspondence[${i}] is an appeal following entry ${follows}, which is not a decision: an appeal names the decision it appeals, a received entry carrying an outcome` });
+  }
+  if (outcome) {
+    if (e.direction !== "received") {
+      out.push({ code: "OUTCOME_NOT_ON_RECEIVED", message: `correspondence[${i}] carries an outcome on a '${e.direction}' entry: an outcome is what the body decided and sent back, so it rides a received entry` });
+    } else if (!CORRESPONDENCE_OUTCOMES.includes(outcome)) {
+      out.push({ code: "OUTCOME_NOT_IN_VOCABULARY", message: `correspondence[${i}].outcome '${outcome.slice(0, 40)}' is not one of: ${CORRESPONDENCE_OUTCOMES.join(", ")}` });
+    }
+  } else if (DECISION_STAGES.includes(stage) && e.direction === "received") {
+    out.push({ code: "DECISION_WITHOUT_OUTCOME", message: `correspondence[${i}] is a '${stage}' with no outcome: a decision carries its outcome as the body gave it, and none_stated when it gave none` });
+  }
+  if (exemptions && e.direction !== "received") {
+    out.push({ code: "OUTCOME_NOT_ON_RECEIVED", message: `correspondence[${i}] carries exemptions on a '${e.direction}' entry: the exemptions are the ones the body cited, so they ride a received entry` });
+  }
+  if (stage === "fee_estimate" && e.direction === "received" && !isQuoteEntry(e)) {
+    out.push({ code: "FEE_ESTIMATE_WITHOUT_QUOTE", message: `correspondence[${i}] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and currency as quoted` });
+  }
+  if (!!dueBy !== !!dueCite) {
+    out.push({ code: "DUE_HALF_STATED", message: `correspondence[${i}] states ${dueBy ? "a due date with no citation" : "a citation with no due date"}: a due date is stated with the citation it comes from, one of the action's governing laws, or not at all` });
+  } else if (dueBy && !/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) {
+    out.push({ code: "DUE_NOT_A_DATE", message: `correspondence[${i}].due_by '${dueBy.slice(0, 40)}' is not a date (YYYY-MM-DD)` });
+  }
+  return out;
+}
+var DUE_UNDETERMINED_SAYS = "UNDETERMINED: no member has stated when the next stage is due. The record encodes no law's clock, so it computes none \u2014 not from the action's kind, not from a law, not from the stage. A member states a due date with the citation it comes from.";
+var dayNumber = (d) => {
+  const s = String(d ?? "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const ms = Date.parse(`${s}T00:00:00Z`);
+  return Number.isFinite(ms) ? Math.round(ms / 864e5) : null;
+};
+function requestLifecycleOf(fm, today) {
+  const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+  const laws = governingLawsOf(fm).laws.map((l) => l.citation);
+  const day = String(today ?? "").slice(0, 10);
+  const todayN = dayNumber(day);
+  const str = (v) => v === null || v === void 0 ? "" : String(v).trim();
+  const ordOf = (v, i) => /^\d+$/.test(str(v)) && Number(str(v)) < i ? Number(str(v)) : null;
+  const followers = entries.map(() => []);
+  entries.forEach((e, i) => {
+    const p = e && typeof e === "object" ? ordOf(e.follows, i) : null;
+    if (p !== null) followers[p].push(i);
+  });
+  const chain2 = entries.map((e, i) => {
+    if (!e || typeof e !== "object" || Array.isArray(e)) return { ord: i, unreadable: true };
+    const at = str(e.at).slice(0, 10);
+    const follows = ordOf(e.follows, i);
+    const prevAt = follows !== null && entries[follows] ? str(entries[follows].at).slice(0, 10) : "";
+    const elapsed = follows !== null && dayNumber(at) !== null && dayNumber(prevAt) !== null ? dayNumber(at) - dayNumber(prevAt) : null;
+    const next = followers[i];
+    const dueBy = str(e.due_by), dueCite = str(e.due_cite);
+    let due;
+    if (dueBy && dueCite && dayNumber(dueBy) !== null) {
+      const firstAt = next.length ? str(entries[next[0]].at).slice(0, 10) : "";
+      const status = next.length ? dayNumber(firstAt) !== null && dayNumber(firstAt) <= dayNumber(dueBy) ? "followed_by_due" : "followed_after_due" : todayN !== null && dayNumber(dueBy) < todayN ? "passed_unanswered" : "open";
+      due = {
+        state: "stated",
+        by: dueBy,
+        cite: dueCite,
+        on_list: laws.includes(dueCite),
+        status,
+        ...status === "passed_unanswered" ? { days_past: todayN - dayNumber(dueBy) } : {}
+      };
+    } else {
+      due = { state: "undetermined", says: DUE_UNDETERMINED_SAYS };
+    }
+    return {
+      ord: i,
+      direction: e.direction ?? null,
+      at,
+      stage: str(e.stage) || null,
+      stage_stated: !!str(e.stage),
+      follows,
+      elapsed_days: elapsed,
+      outcome: str(e.outcome) || null,
+      ...str(e.exemptions) ? { exemptions: str(e.exemptions) } : {},
+      ...isQuoteEntry(e) ? { quote: { amount: str(e.quote_amount), currency: str(e.quote_currency) } } : {},
+      followed_by: next,
+      ...!next.length && todayN !== null && dayNumber(at) !== null ? { days_since: todayN - dayNumber(at) } : {},
+      due
+    };
+  });
+  return {
+    entries: chain2,
+    passed_unanswered: chain2.filter((c) => c.due && c.due.status === "passed_unanswered").map((c) => c.ord),
+    as_of: day,
+    says: "Each entry is dated as recorded and names the entry it follows. The plane derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgement about the body."
+  };
 }
 function consequenceState(fm) {
   const c = fm?.consequence;
@@ -13482,6 +13621,63 @@ var QUOTE_CHECKS = {
     check: "C-72.8",
     where: "src/store.mjs actionQuotes > is-quote-read-axis",
     translation: "A request is named by its position in the action's correspondence, which is a whole number counted from zero. Give that number to see only the quotes answering that request."
+  }
+};
+var LIFECYCLE_CHECKS = {
+  STAGE_NOT_OF_DIRECTION: {
+    check: "C-94.1",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "That stage does not belong to this kind of entry. A request, a fee-waiver request, an appeal or a court filing is something sent; an acknowledgement, a fee estimate, a decision, an extension notice, a production or a denial is something received. A non-response carries no stage."
+  },
+  FOLLOWS_NO_ENTRY: {
+    check: "C-94.2",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "Every stage after the request names the earlier entry it answers or follows, by its position in the correspondence counted from zero. Give the position of an entry already recorded."
+  },
+  APPEAL_NAMES_NO_DECISION: {
+    check: "C-94.3",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "An appeal names the decision it appeals. The entry named is not a decision: record the decision as received with its outcome, then name it."
+  },
+  OUTCOME_NOT_ON_RECEIVED: {
+    check: "C-94.4",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "An outcome, and the exemptions a body cited, are what the body sent back, so they belong on an entry recording something received."
+  },
+  OUTCOME_NOT_IN_VOCABULARY: {
+    check: "C-94.5",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body stated none."
+  },
+  DECISION_WITHOUT_OUTCOME: {
+    check: "C-94.6",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "A decision carries its outcome as the body gave it. If the body stated none, record none_stated so the record says so rather than leaving it blank."
+  },
+  FEE_ESTIMATE_WITHOUT_QUOTE: {
+    check: "C-94.7",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "A fee estimate is a quote: record the amount and the currency as quoted, and the request it answers."
+  },
+  DUE_HALF_STATED: {
+    check: "C-94.8",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "A due date is stated together with the citation it comes from, or not at all. With none stated the record reads it as undetermined, which is honest."
+  },
+  DUE_NOT_A_DATE: {
+    check: "C-94.9",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-grammar",
+    translation: "A due date is written as a calendar date, YYYY-MM-DD."
+  },
+  DUE_CITE_NOT_GOVERNING: {
+    check: "C-94.10",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-due-cite",
+    translation: "A due date names the law it comes from, and that law must be one of those a member has stated govern this action. State the governing laws first, then cite one of them exactly as listed."
+  },
+  LIFECYCLE_TEXT_UNWRITABLE: {
+    check: "C-94.11",
+    where: "src/store.mjs actionCorrespond > is-lifecycle-writable",
+    translation: "The exemptions or the citation is too long, or holds a quotation mark, a backslash or a line break, which the record cannot store. Shorten it or leave those characters out."
   }
 };
 var VERSION_NOTICE_CHECKS = {
@@ -20503,6 +20699,11 @@ var VOCABULARIES = {
      direction `action_kind` and `basis_roles` above already take. One array. */
   action_basis_kinds: ACTION_BASIS_KINDS,
   correspondence_directions: CORRESPONDENCE_DIRECTIONS,
+  /* D-147: THE RECORDS-REQUEST LIFECYCLE's closed sets — the stages an entry may state, by direction, and the
+     outcomes a decision carries as the body gave it. Published so a surface offers them before a member is
+     refused, the REC-39 reasoning below; the SAME objects C-94 judges against. */
+  correspondence_stages: CORRESPONDENCE_STAGES,
+  correspondence_outcomes: CORRESPONDENCE_OUTCOMES,
   /* REC-39, UI-24's second measured gap and the LAST of the action loop's closed
      sets to reach here. How an action ENDED: C-2.10 requires one of these four
      the moment an action's state is `resolved`, and `op=actionmove` refuses
@@ -32139,6 +32340,10 @@ var Store = class _Store extends DurableObject {
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
       governing_laws: governingLawsOf(fm),
+      /* D-147: THE RECORDS-REQUEST LIFECYCLE, read back as one dated chain by the catalog's one reader at
+         the same `now` as the clock above. Each entry's due date is the member's STATED date with its
+         citation, or UNDETERMINED with its sentence — never computed from the kind, a law or a stage. */
+      lifecycle: requestLifecycleOf(fm, new Date(now).toISOString().slice(0, 10)),
       /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
@@ -36783,7 +36988,15 @@ Reason: ${why}
    * `quoteFindings`, run here over the ledger as it WOULD stand, so a member is
    * refused by the C-72 name before anything is written, and the same function
    * reports C-2.10 over the document that lands. An entry with no quote
-   * parameter writes exactly the bytes it wrote before D-148. */
+   * parameter writes exactly the bytes it wrote before D-148.
+   *
+   * D-147: AND IT MAY CARRY ITS PLACE IN THE RECORDS-REQUEST LIFECYCLE (`stage`,
+   * `follows`, `outcome`, `exemptions`, `due_by`, `due_cite`) — the catalog's
+   * `lifecycleFindings`, run here the same way. A due date's citation is judged
+   * HERE against the action's governing laws as they stand when it is stated
+   * (DUE_CITE_NOT_GOVERNING), and only here: see the catalog's comment for why
+   * the document-level rule does not. No due date is ever computed. An entry
+   * with no lifecycle parameter writes exactly the bytes it wrote before. */
   actionCorrespond({
     target,
     direction = "",
@@ -36797,6 +37010,12 @@ Reason: ${why}
     quoteBasis = "",
     quoteAnswers = "",
     quoteRevises = "",
+    stage = "",
+    follows = "",
+    outcome = "",
+    exemptions = "",
+    dueBy = "",
+    dueCite = "",
     viewer = null,
     author = null
   } = {}) {
@@ -36868,8 +37087,20 @@ Reason: ${why}
       const t = String(v ?? "").trim();
       if (t) quote[k] = t;
     }
+    const life = {};
+    for (const [k, v] of [
+      ["stage", stage],
+      ["follows", follows],
+      ["outcome", outcome],
+      ["exemptions", exemptions],
+      ["due_by", dueBy],
+      ["due_cite", dueCite]
+    ]) {
+      const t = String(v ?? "").trim();
+      if (t) life[k] = t;
+    }
     const refusal7 = (code, detail, extra) => {
-      const row = QUOTE_CHECKS[code];
+      const row = QUOTE_CHECKS[code] || LIFECYCLE_CHECKS[code];
       return {
         ok: false,
         reason: code,
@@ -36881,6 +37112,20 @@ Reason: ${why}
         ...extra || {}
       };
     };
+    for (const [k, max] of [["exemptions", _Store.RELEASE_ACK_MAX], ["due_cite", CITATION_MAX]])
+      if (life[k] !== void 0 && (life[k].length > max || /["\\\r\n]/.test(life[k])))
+        return refusal7(
+          "LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is at most ${max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
+          { field: k }
+        );
+    for (const k of ["stage", "follows", "outcome", "due_by"])
+      if (life[k] !== void 0 && !/^[a-z0-9_-]{1,40}$/.test(life[k]))
+        return refusal7(
+          "LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is a single token of lower-case letters, digits, underscores or hyphens`,
+          { field: k }
+        );
     for (const k of ["quote_currency", "quote_basis"])
       if (quote[k] !== void 0 && (quote[k].length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(quote[k])))
         return refusal7(
@@ -36942,6 +37187,7 @@ Reason: ${why}
       ...sha ? { artifact_sha: sha } : {},
       ...acct ? { account: acct } : {},
       ...quote,
+      ...life,
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
@@ -36963,6 +37209,41 @@ Reason: ${why}
       if (has("QUOTE_REVISES_NO_QUOTE"))
         return refusal7("QUOTE_REVISES_NO_QUOTE", has("QUOTE_REVISES_NO_QUOTE").message, all);
     }
+    const lf = lifecycleFindings([...ledgerNow, entryFm], ord);
+    if (lf.length) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      const has = (c) => lf.find((x) => x.code === c);
+      const all = { findings: lf };
+      if (has("STAGE_NOT_OF_DIRECTION"))
+        return refusal7("STAGE_NOT_OF_DIRECTION", has("STAGE_NOT_OF_DIRECTION").message, all);
+      if (has("FOLLOWS_NO_ENTRY"))
+        return refusal7("FOLLOWS_NO_ENTRY", has("FOLLOWS_NO_ENTRY").message, all);
+      if (has("APPEAL_NAMES_NO_DECISION"))
+        return refusal7("APPEAL_NAMES_NO_DECISION", has("APPEAL_NAMES_NO_DECISION").message, all);
+      if (has("OUTCOME_NOT_ON_RECEIVED"))
+        return refusal7("OUTCOME_NOT_ON_RECEIVED", has("OUTCOME_NOT_ON_RECEIVED").message, all);
+      if (has("OUTCOME_NOT_IN_VOCABULARY"))
+        return refusal7("OUTCOME_NOT_IN_VOCABULARY", has("OUTCOME_NOT_IN_VOCABULARY").message, all);
+      if (has("DECISION_WITHOUT_OUTCOME"))
+        return refusal7("DECISION_WITHOUT_OUTCOME", has("DECISION_WITHOUT_OUTCOME").message, all);
+      if (has("FEE_ESTIMATE_WITHOUT_QUOTE"))
+        return refusal7("FEE_ESTIMATE_WITHOUT_QUOTE", has("FEE_ESTIMATE_WITHOUT_QUOTE").message, all);
+      if (has("DUE_HALF_STATED"))
+        return refusal7("DUE_HALF_STATED", has("DUE_HALF_STATED").message, all);
+      if (has("DUE_NOT_A_DATE"))
+        return refusal7("DUE_NOT_A_DATE", has("DUE_NOT_A_DATE").message, all);
+    }
+    const cited = life.due_cite;
+    const listed = governingLawsOf(fm).laws.map((l) => l.citation);
+    const onList = cited ? listed.includes(cited) : true;
+    if (!onList) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      return refusal7(
+        "DUE_CITE_NOT_GOVERNING",
+        `due_cite '${cited.slice(0, 60)}' is not one of this action's stated governing laws`,
+        { governing_laws: listed }
+      );
+    }
     let text = _Store.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text)
       return {
@@ -36978,7 +37259,8 @@ Reason: ${why}
 Trigger: op=actioncorrespond on ${target}
 Changes: correspondence[${ord}] recorded, dated ${day}${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.
 Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}
-`
+${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following correspondence[${life.follows}]` : ""}.
+` : ""}`
     );
     const carried = [];
     for (const r of this.sql.exec(
@@ -37022,6 +37304,7 @@ Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who
       held_as: sha ? "capture" : "testimony",
       ...sha ? { artifact_sha: sha } : { account: acct },
       ...Object.keys(quote).length ? { quote } : {},
+      ...Object.keys(life).length ? { lifecycle: life } : {},
       ...responded ? { responds_to: responded } : {},
       weight: "single"
     };
@@ -37635,6 +37918,15 @@ Changes: responds_to edge added to ${actionId}.
       ...e.quote_basis !== void 0 ? [`    quote_basis: "${e.quote_basis}"`] : [],
       ...e.quote_answers !== void 0 ? [`    quote_answers: ${e.quote_answers}`] : [],
       ...e.quote_revises !== void 0 ? [`    quote_revises: ${e.quote_revises}`] : [],
+      /* D-147: the lifecycle keys, each only if carried. Stage, follows and
+         outcome are bare tokens (judged tokens before this splice); the date and
+         the two prose values are quoted so the parser keeps them as written. */
+      ...e.stage !== void 0 ? [`    stage: ${e.stage}`] : [],
+      ...e.follows !== void 0 ? [`    follows: ${e.follows}`] : [],
+      ...e.outcome !== void 0 ? [`    outcome: ${e.outcome}`] : [],
+      ...e.exemptions !== void 0 ? [`    exemptions: "${e.exemptions}"`] : [],
+      ...e.due_by !== void 0 ? [`    due_by: "${e.due_by}"`] : [],
+      ...e.due_cite !== void 0 ? [`    due_cite: "${e.due_cite}"`] : [],
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`
     ];
@@ -76516,6 +76808,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           quoteBasis: url.searchParams.get("quote_basis"),
           quoteAnswers: url.searchParams.get("quote_answers"),
           quoteRevises: url.searchParams.get("quote_revises"),
+          /* D-147: the entry's place in the records-request lifecycle. */
+          stage: url.searchParams.get("stage"),
+          follows: url.searchParams.get("follows"),
+          outcome: url.searchParams.get("outcome"),
+          exemptions: url.searchParams.get("exemptions"),
+          dueBy: url.searchParams.get("due_by"),
+          dueCite: url.searchParams.get("due_cite"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
         }),

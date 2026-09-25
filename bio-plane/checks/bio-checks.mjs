@@ -4612,6 +4612,8 @@ export function correspondenceFindings(fm, findings) {
     }
     /* D-148: the QUOTE arm, one rule shared with op=actioncorrespond (quoteFindings below). */
     for (const q of quoteFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
+    /* D-147: the LIFECYCLE arm, one rule shared with op=actioncorrespond (lifecycleFindings below). */
+    for (const q of lifecycleFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
   });
 }
 
@@ -4697,6 +4699,189 @@ export function quoteFindings(entries, i) {
     }
   }
   return out;
+}
+
+/** D-147 — THE RECORDS-REQUEST LIFECYCLE (BOB #27, 2026-09-22; `BIO_Case_Making_v0_1.md` §2,
+ *  *THE RECORDS-REQUEST LIFECYCLE*), on D-148's pattern and bound by D-149.
+ *
+ *  `awaiting_response` hid every stage after the request. Each stage is now its OWN correspondence
+ *  entry naming the entry it answers or follows, so the lifecycle reads as a chain of dated entries.
+ *  FLAT keys on the entry, as D-148's quote is written, because the restricted grammar has no nested
+ *  map inside an array element:
+ *
+ *    stage       what this entry IS in the round trip, by direction (CORRESPONDENCE_STAGES). Optional:
+ *                an entry written before this row carries none and reads "not stated", never guessed.
+ *    follows     the ORD of the earlier entry this one answers or follows. Required on every stage but
+ *                `request`; an appeal names the DECISION it appeals (a received entry carrying an outcome).
+ *    outcome     a decision's OUTCOME in the closed vocabulary (CORRESPONDENCE_OUTCOMES), as the body gave
+ *                it — `none_stated` when it gave none. Only on a received entry; REQUIRED on the four
+ *                decision stages, so a decision never reads as one whose outcome nobody recorded.
+ *    exemptions  the exemptions a denial cited, VERBATIM as the body cited them. Received only.
+ *    due_by      the date by which the NEXT stage is due, as a MEMBER states it, with
+ *    due_cite    the citation it comes from — one of the action's D-149 governing laws (checked at the op,
+ *                where the list is read; see below). Both or neither.
+ *
+ *  THE CLOCK IS NEVER ENCODED (D-149: the plane encodes no law's rules). Nothing here computes a due
+ *  date from a kind, a law or a stage; with none stated it is UNDETERMINED, and `requestLifecycleOf`
+ *  says so. What the plane derives is only what costs nothing to invent: days elapsed between dated
+ *  entries, and that a stated date passed with no entry following it.
+ *
+ *  WHY `due_cite` IS JUDGED AGAINST THE LIST AT THE OP AND NOT HERE. This rule runs over every version
+ *  of the document at promote, and the governing-law list is a member's act that may later change. A
+ *  catalog arm refusing an entry whose cited law was later taken off the list would make op=actionlaws
+ *  fail on history — an earlier dated statement made unwritable by a later one. So the op refuses a
+ *  citation that is not on the list WHEN IT IS STATED (DUE_CITE_NOT_GOVERNING), and the read states,
+ *  per entry, whether the citation is on the list NOW. A direct promote carrying a citation that was
+ *  never on the list is therefore not refused here; the read says `on_list: false` for it.
+ *
+ *  @returns {{code: string, message: string}[]} */
+export const CORRESPONDENCE_STAGES = {
+  sent: ['request', 'fee_waiver_request', 'appeal', 'court_filing'],
+  received: ['acknowledgement', 'fee_estimate', 'fee_waiver_decision', 'extension_notice', 'production',
+             'denial', 'appeal_decision', 'court_decision'],
+};
+export const CORRESPONDENCE_OUTCOMES = ['granted', 'denied', 'partial', 'reversed', 'affirmed', 'none_stated'];
+export const DECISION_STAGES = ['fee_waiver_decision', 'denial', 'appeal_decision', 'court_decision'];
+export const LIFECYCLE_KEYS = ['stage', 'follows', 'outcome', 'exemptions', 'due_by', 'due_cite'];
+export function lifecycleFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return out;
+  const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
+  const stage = str(e.stage), follows = str(e.follows), outcome = str(e.outcome);
+  const exemptions = str(e.exemptions), dueBy = str(e.due_by), dueCite = str(e.due_cite);
+  if (stage) {
+    const legal = CORRESPONDENCE_STAGES[e.direction] || [];
+    if (!legal.includes(stage)) {
+      out.push({ code: 'STAGE_NOT_OF_DIRECTION', message:
+        `correspondence[${i}].stage '${stage.slice(0, 40)}' is not a stage of a '${e.direction}' entry: `
+        + (legal.length ? `one of ${legal.join(', ')}` : 'a non-response carries no stage, it names what it awaited by follows') });
+    }
+  }
+  let prior = null;
+  if (follows) {
+    const n = /^\d+$/.test(follows) ? Number(follows) : null;
+    prior = n !== null && n < i ? entries[n] : null;
+    if (!prior || typeof prior !== 'object') {
+      out.push({ code: 'FOLLOWS_NO_ENTRY', message:
+        `correspondence[${i}].follows '${follows.slice(0, 20)}' names no earlier entry of this ledger: a stage `
+        + 'names the entry it answers or follows by its position, counted from zero' });
+      prior = null;
+    }
+  } else if (stage && stage !== 'request') {
+    out.push({ code: 'FOLLOWS_NO_ENTRY', message:
+      `correspondence[${i}] is a '${stage}' naming no entry it follows: each stage after the request names the `
+      + 'entry it answers or follows, so the lifecycle reads as one chain' });
+  }
+  if (stage === 'appeal' && follows && prior
+      && !(prior.direction === 'received' && str(prior.outcome))) {
+    out.push({ code: 'APPEAL_NAMES_NO_DECISION', message:
+      `correspondence[${i}] is an appeal following entry ${follows}, which is not a decision: an appeal names the `
+      + 'decision it appeals, a received entry carrying an outcome' });
+  }
+  if (outcome) {
+    if (e.direction !== 'received') {
+      out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
+        `correspondence[${i}] carries an outcome on a '${e.direction}' entry: an outcome is what the body decided `
+        + 'and sent back, so it rides a received entry' });
+    } else if (!CORRESPONDENCE_OUTCOMES.includes(outcome)) {
+      out.push({ code: 'OUTCOME_NOT_IN_VOCABULARY', message:
+        `correspondence[${i}].outcome '${outcome.slice(0, 40)}' is not one of: ${CORRESPONDENCE_OUTCOMES.join(', ')}` });
+    }
+  } else if (DECISION_STAGES.includes(stage) && e.direction === 'received') {
+    out.push({ code: 'DECISION_WITHOUT_OUTCOME', message:
+      `correspondence[${i}] is a '${stage}' with no outcome: a decision carries its outcome as the body gave it, `
+      + 'and none_stated when it gave none' });
+  }
+  if (exemptions && e.direction !== 'received') {
+    out.push({ code: 'OUTCOME_NOT_ON_RECEIVED', message:
+      `correspondence[${i}] carries exemptions on a '${e.direction}' entry: the exemptions are the ones the body `
+      + 'cited, so they ride a received entry' });
+  }
+  if (stage === 'fee_estimate' && e.direction === 'received' && !isQuoteEntry(e)) {
+    out.push({ code: 'FEE_ESTIMATE_WITHOUT_QUOTE', message:
+      `correspondence[${i}] is a fee_estimate carrying no quote: a fee estimate IS D-148's quote, the amount and `
+      + 'currency as quoted' });
+  }
+  if (!!dueBy !== !!dueCite) {
+    out.push({ code: 'DUE_HALF_STATED', message:
+      `correspondence[${i}] states ${dueBy ? 'a due date with no citation' : 'a citation with no due date'}: a `
+      + 'due date is stated with the citation it comes from, one of the action\'s governing laws, or not at all' });
+  } else if (dueBy && !/^\d{4}-\d{2}-\d{2}$/.test(dueBy)) {
+    out.push({ code: 'DUE_NOT_A_DATE', message:
+      `correspondence[${i}].due_by '${dueBy.slice(0, 40)}' is not a date (YYYY-MM-DD)` });
+  }
+  return out;
+}
+
+/** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
+ *  the store's read and any other reader agree by construction. Every entry answers with its stage (or
+ *  that none was stated), the entry it follows, the days elapsed since that entry, what followed it, and
+ *  its due date: STATED with its citation and whether that citation is on the action's list now, or
+ *  UNDETERMINED with the sentence saying so. `due.status` is DERIVED against `today` and nothing else:
+ *  `open` (not yet passed, nothing followed), `passed_unanswered`, `followed_by_due`, `followed_after_due`.
+ *  It never derives a due date, and it states no rate, pattern or judgement about the body. */
+export const DUE_UNDETERMINED_SAYS = 'UNDETERMINED: no member has stated when the next stage is due. The record '
+  + 'encodes no law\'s clock, so it computes none — not from the action\'s kind, not from a law, not from the '
+  + 'stage. A member states a due date with the citation it comes from.';
+const dayNumber = (d) => {
+  const s = String(d ?? '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const ms = Date.parse(`${s}T00:00:00Z`);
+  return Number.isFinite(ms) ? Math.round(ms / 86400000) : null;
+};
+export function requestLifecycleOf(fm, today) {
+  const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+  const laws = governingLawsOf(fm).laws.map((l) => l.citation);
+  const day = String(today ?? '').slice(0, 10);
+  const todayN = dayNumber(day);
+  const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
+  const ordOf = (v, i) => (/^\d+$/.test(str(v)) && Number(str(v)) < i ? Number(str(v)) : null);
+  const followers = entries.map(() => []);
+  entries.forEach((e, i) => {
+    const p = e && typeof e === 'object' ? ordOf(e.follows, i) : null;
+    if (p !== null) followers[p].push(i);
+  });
+  const chain = entries.map((e, i) => {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return { ord: i, unreadable: true };
+    const at = str(e.at).slice(0, 10);
+    const follows = ordOf(e.follows, i);
+    const prevAt = follows !== null && entries[follows] ? str(entries[follows].at).slice(0, 10) : '';
+    const elapsed = follows !== null && dayNumber(at) !== null && dayNumber(prevAt) !== null
+      ? dayNumber(at) - dayNumber(prevAt) : null;
+    const next = followers[i];
+    const dueBy = str(e.due_by), dueCite = str(e.due_cite);
+    let due;
+    if (dueBy && dueCite && dayNumber(dueBy) !== null) {
+      const firstAt = next.length ? str(entries[next[0]].at).slice(0, 10) : '';
+      const status = next.length
+        ? (dayNumber(firstAt) !== null && dayNumber(firstAt) <= dayNumber(dueBy) ? 'followed_by_due' : 'followed_after_due')
+        : (todayN !== null && dayNumber(dueBy) < todayN ? 'passed_unanswered' : 'open');
+      due = { state: 'stated', by: dueBy, cite: dueCite, on_list: laws.includes(dueCite), status,
+              ...(status === 'passed_unanswered' ? { days_past: todayN - dayNumber(dueBy) } : {}) };
+    } else {
+      due = { state: 'undetermined', says: DUE_UNDETERMINED_SAYS };
+    }
+    return {
+      ord: i, direction: e.direction ?? null, at,
+      stage: str(e.stage) || null, stage_stated: !!str(e.stage),
+      follows, elapsed_days: elapsed,
+      outcome: str(e.outcome) || null,
+      ...(str(e.exemptions) ? { exemptions: str(e.exemptions) } : {}),
+      ...(isQuoteEntry(e) ? { quote: { amount: str(e.quote_amount), currency: str(e.quote_currency) } } : {}),
+      followed_by: next,
+      ...(!next.length && todayN !== null && dayNumber(at) !== null ? { days_since: todayN - dayNumber(at) } : {}),
+      due,
+    };
+  });
+  return {
+    entries: chain,
+    passed_unanswered: chain.filter((c) => c.due && c.due.status === 'passed_unanswered').map((c) => c.ord),
+    as_of: day,
+    says: 'Each entry is dated as recorded and names the entry it follows. The plane derives only the days '
+      + 'between entries and whether a STATED due date passed with nothing following it; it encodes no law\'s '
+      + 'clock and states no judgement about the body.',
+  };
 }
 
 /** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
@@ -13699,6 +13884,79 @@ export const QUOTE_CHECKS = {
     where: 'src/store.mjs actionQuotes > is-quote-read-axis',
     translation: 'A request is named by its position in the action\'s correspondence, which is a whole number '
       + 'counted from zero. Give that number to see only the quotes answering that request.',
+  },
+};
+
+/* D-147 / C-94 — THE RECORDS-REQUEST LIFECYCLE (`BIO_Case_Making_v0_1.md` §2). The refusals of the lifecycle
+ * grammar (`lifecycleFindings`, which C-2.10 also reports over the document, each finding carrying the same code)
+ * and the two the op alone can judge: a due date's citation against the action's governing laws as they stand
+ * when it is stated, and the writability of the prose a stage carries. None of them encodes a law's clock. */
+export const LIFECYCLE_CHECKS = {
+  STAGE_NOT_OF_DIRECTION: {
+    check: 'C-94.1',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'That stage does not belong to this kind of entry. A request, a fee-waiver request, an appeal or a '
+      + 'court filing is something sent; an acknowledgement, a fee estimate, a decision, an extension notice, a '
+      + 'production or a denial is something received. A non-response carries no stage.',
+  },
+  FOLLOWS_NO_ENTRY: {
+    check: 'C-94.2',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'Every stage after the request names the earlier entry it answers or follows, by its position in '
+      + 'the correspondence counted from zero. Give the position of an entry already recorded.',
+  },
+  APPEAL_NAMES_NO_DECISION: {
+    check: 'C-94.3',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An appeal names the decision it appeals. The entry named is not a decision: record the decision '
+      + 'as received with its outcome, then name it.',
+  },
+  OUTCOME_NOT_ON_RECEIVED: {
+    check: 'C-94.4',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An outcome, and the exemptions a body cited, are what the body sent back, so they belong on an '
+      + 'entry recording something received.',
+  },
+  OUTCOME_NOT_IN_VOCABULARY: {
+    check: 'C-94.5',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body '
+      + 'stated none.',
+  },
+  DECISION_WITHOUT_OUTCOME: {
+    check: 'C-94.6',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A decision carries its outcome as the body gave it. If the body stated none, record none_stated '
+      + 'so the record says so rather than leaving it blank.',
+  },
+  FEE_ESTIMATE_WITHOUT_QUOTE: {
+    check: 'C-94.7',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A fee estimate is a quote: record the amount and the currency as quoted, and the request it '
+      + 'answers.',
+  },
+  DUE_HALF_STATED: {
+    check: 'C-94.8',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A due date is stated together with the citation it comes from, or not at all. With none stated '
+      + 'the record reads it as undetermined, which is honest.',
+  },
+  DUE_NOT_A_DATE: {
+    check: 'C-94.9',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-grammar',
+    translation: 'A due date is written as a calendar date, YYYY-MM-DD.',
+  },
+  DUE_CITE_NOT_GOVERNING: {
+    check: 'C-94.10',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-due-cite',
+    translation: 'A due date names the law it comes from, and that law must be one of those a member has stated '
+      + 'govern this action. State the governing laws first, then cite one of them exactly as listed.',
+  },
+  LIFECYCLE_TEXT_UNWRITABLE: {
+    check: 'C-94.11',
+    where: 'src/store.mjs actionCorrespond > is-lifecycle-writable',
+    translation: 'The exemptions or the citation is too long, or holds a quotation mark, a backslash or a line '
+      + 'break, which the record cannot store. Shorten it or leave those characters out.',
   },
 };
 

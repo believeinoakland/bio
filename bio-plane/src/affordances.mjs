@@ -69,6 +69,8 @@
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
          CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS, LAW_LEVELS,
+         /* D-147: the lifecycle's two closed sets, from the catalog that judges them (C-94). */
+         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -587,6 +589,11 @@ export const VOCABULARIES = {
      direction `action_kind` and `basis_roles` above already take. One array. */
   action_basis_kinds: ACTION_BASIS_KINDS,
   correspondence_directions: CORRESPONDENCE_DIRECTIONS,
+  /* D-147: THE RECORDS-REQUEST LIFECYCLE's closed sets — the stages an entry may state, by direction, and the
+     outcomes a decision carries as the body gave it. Published so a surface offers them before a member is
+     refused, the REC-39 reasoning below; the SAME objects C-94 judges against. */
+  correspondence_stages: CORRESPONDENCE_STAGES,
+  correspondence_outcomes: CORRESPONDENCE_OUTCOMES,
   /* REC-39, UI-24's second measured gap and the LAST of the action loop's closed
      sets to reach here. How an action ENDED: C-2.10 requires one of these four
      the moment an action's state is `resolved`, and `op=actionmove` refuses
