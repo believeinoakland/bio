@@ -1,0 +1,16 @@
+{
+ "unit": "plane:repair-reachability.test.mjs",
+ "inputHash": "5f81ef4c1d343ffa207824518f1b6916a1a16d6b7d5b2f6536ecbdf0307b1594",
+ "verdict": "PASS",
+ "run": "6edd786ca847469ab8cad1978bc3c8deb72bf850.1790302423062.4360.json",
+ "tree": "6edd786ca847469ab8cad1978bc3c8deb72bf850",
+ "head": "7bf1ca9923c749596d9ddffb566f53b3b50277cf",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 142,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "93c9b260-cdf6-547d-b38d-328a5a430b45",
+ "at": "2026-09-25T02:13:43.080Z"
+}
