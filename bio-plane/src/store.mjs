@@ -553,6 +553,8 @@ import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-203 / C-91: op=idmatch's refusals, and the identifier spaces it judges under Framework §8.3. */
 import { IDSPACE_CHECKS } from "../checks/bio-checks.mjs";
 import { ID_SPACES, recognise as recogniseIdentifier, apnStanding, systemOfAddresses, judgePair } from "./idspaces.mjs";
+/* D-546: the date each type's state-edge fence was written, and the one sentence a stored move outside it is read with. */
+import { stateMoveFencedSince, stateMoveOutsideRules } from "../checks/bio-checks.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
@@ -19217,6 +19219,46 @@ export class Store extends DurableObject {
       }
       /* END DEC-49 REGION bias-state-edge */
 
+      /* D-546 / C-86.6 — D-468'S FENCE, LIFTED TO EVERY TYPE WITH A HEAD (BOB #34, 2026-09-24 23:55Z; State Rules v1.5
+         §4, "Moves are fenced from now on"). The region above asked the bias table and NOTHING asked any other: a
+         promotion naming `collected` over a verified item, `matured` over a closed project, `active` over a resolved
+         action, moved the head, because the only state questions here were entry requirements for one destination
+         (REC-181's `retired`, 7.11's owner pair). Every op that moves a state on purpose (dispose, retire, conclude,
+         reopen, divide, actionmove) already asks `vocabFor(STATES, …)` for its own move; a caller naming the state in
+         the document asked nobody. Now every move is asked here, for every caller, on the terms D-468 set and for its
+         reasons, which the comment above states and this one does not repeat: only a MOVE (`to !== from`, so a revision
+         in place is how any item is amended), never a creation (no head to move from), `replay` no exemption, refused
+         before any write. A bias set is the region above's and never reaches this one with a different answer.
+         THE TABLE IS READ FOR THE NORMALISED TYPE, deliberately NOT the declared spelling the READERS use (the MAP
+         RULE): a legacy spelling keeps the vocabulary it was written under for READING (`checkStateLegality`, the
+         census), but a MOVE made now is made in the machine this plane runs, so `focus`'s `elevated` and `inquiry`'s
+         legacy `published` — valid in old bytes, named by no live edge — are unreachable by promote (the row's scope
+         4). The head's type AND the promoted type are both asked where they differ (a replay is the only path that
+         still retypes, D-547), so a promotion cannot step around one machine by naming another.
+         A promotion that states NO state is not asked: carrying or refusing it is D-628's question, not this row's.
+         THE HISTORY IS NOT TOUCHED: a stored move this table does not declare stays as it was written and is counted
+         and said by `op=statemovecensus`, never rewritten, reversed or repaired. */
+      /* DEC-49 REGION is-promote-state-edge */
+      if (cur && promotedState !== undefined && promotedState !== null && promotedState !== cur.current_state) {
+        const machines = [...new Set([normalizeType(cur.object_type), promotedType])]
+          .filter((t) => typeof t === "string" && t !== "bias" && vocabFor(STATES, t));
+        for (const mt of machines) {
+          /* An OWN key only: a head standing at `constructor` must read no edges, never Object's function. */
+          const mEdges = vocabFor(STATES, mt).edges;
+          const legalFrom = Object.prototype.hasOwnProperty.call(mEdges, cur.current_state) ? mEdges[cur.current_state] : [];
+          if (!legalFrom.includes(promotedState))
+            return { ok: false, reason: "STATE_MOVE_UNDECLARED", code: "STATE_MOVE_UNDECLARED",
+                     check: PROMOTED_TYPE_CHECKS.STATE_MOVE_UNDECLARED.check,
+                     translation: PROMOTED_TYPE_CHECKS.STATE_MOVE_UNDECLARED.translation,
+                     from: cur.current_state, to: promotedState, object_type: mt, legal_from: legalFrom,
+                     detail: `${String(bundleId).slice(0, 80)} stands at '${cur.current_state}' and this promotion `
+                       + `names '${String(promotedState).slice(0, 40)}'. A ${mt} at '${cur.current_state}' moves to `
+                       + `${legalFrom.length ? legalFrom.join(" or ") : "no other state"}, and a revision that leaves `
+                       + `it where it stands is always allowed. The table is the catalogue's. Nothing was written.` };
+        }
+      }
+      /* END DEC-49 REGION is-promote-state-edge */
+
       /* REC-176 — THE HISTORY LAW AT THE WRITE (§2.4: "History is append-only; nothing in _history/ is ever modified
          or deleted"). The two manifest writes below, and the history snapshot, are keyed (bundle_id, snap_key) and
          were INSERT OR REPLACE: a second promotion naming a key this bundle already held REPLACED the first
@@ -36577,6 +36619,85 @@ export class Store extends DurableObject {
      base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
      Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
      Bounded by `limit` bundles listed (the counts are always whole). */
+  /* D-546 (BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on"): THE CENSUS OF RECORDED
+     STATE MOVES — every move the record holds, per type, and each one whose edge the catalogue's CURRENT table does not
+     declare, listed with its date and read in `stateMoveOutsideRules`'s words: made by a path the current rules do not
+     allow, NEITHER VALID NOR INVALID. READ-ONLY and never a repair: ratified bytes are immutable, so a stored move is
+     never rewritten, reversed or "repaired" (the ruling), and the answer's `rewritten: 0` is that fact.
+     WHAT A MOVE IS HERE: two consecutive recorded versions of a bundle's `bundle.md` whose `current_state` differs.
+     The versions are the `history` snapshot each promotion took of the version BEFORE it (the manifest's
+     `snapshotted`), in WRITE order (`rowid`), and the head; a move is dated by the promotion that wrote the later
+     version. NOT REC-182's `created` order, which this census's own suite measured wrong for this question: `created`
+     is the writer's `last_updated` where it sent one — a caller's statement — so an amendment its writer dated
+     earlier than the move before it was paired out of order and read as a move nobody made. And the write order is
+     not trusted either: a pair is DETERMINED only when the later promotion's `base` is the `bundle.md` digest the
+     EARLIER promotion's manifest row says it wrote — the chain the compare-and-swap enforced when it was written. (Its
+     first spelling compared the later promotion's `base` with the digest of the snapshot that same promotion took,
+     which is equal by construction and joined nothing; the suite's `census-created-order` arm caught it.) A pair either side of which is unrecorded (a
+     promotion that snapshotted nothing, a blob-held or unparsable version), or whose chain does not join, is
+     UNDETERMINED and counted apart, never classified either way — so the finding is never larger or smaller than the
+     count. A version stating no `current_state` is undetermined too. The DATE is the writer's, and the answer says
+     so (`dated_by`).
+     THE TABLE IS READ FOR THE DECLARED SPELLING (the MAP RULE, `checkStateLegality`'s): a legacy `problem`'s
+     `surfaced -> elevated` was a declared move of the machine it was written under, and is counted as one. `promote`
+     reads the NORMALISED type for a move made NOW; the two answer different questions, and the comment at
+     `is-promote-state-edge` says why. A type with no table is counted apart (`no_table`). Bounded by `limit` moves
+     listed (the counts are always whole). The `state_history` a document carries in its own bytes is NOT read here:
+     that is a caller-written claim about moves, and the gate's C-4.2 is its reader. */
+  stateMoveCensus({ limit } = {}) {
+    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const out = { ok: true, bundles: 0, pairs: 0, moves: 0, revisions_in_place: 0, undeclared: 0, undetermined: 0,
+                  no_table: 0, per_type: {}, listed: [], rewritten: 0 };
+    const tally = (t, k) => {
+      const row = out.per_type[t] || (out.per_type[t] = { moves: 0, undeclared: 0, revisions_in_place: 0, undetermined: 0 });
+      row[k]++;
+    };
+    const fmOf = (text) => {
+      if (typeof text !== "string") return null;
+      const fm = parseFrontmatter(text).data;
+      return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm : null;
+    };
+    for (const b of this.#rows(`SELECT bundle_id, object_type FROM bundles ORDER BY bundle_id`)) {
+      out.bundles++;
+      const t = normalizeType(b.object_type);
+      const man = this.#rows(`SELECT snap_key, base, created, author, files_json FROM manifest WHERE bundle_id=? ORDER BY rowid`,
+                             b.bundle_id);
+      const snaps = new Map(this.#rows(`SELECT snap_key, content, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`,
+                                       b.bundle_id).map((r) => [r.snap_key, r]));
+      const head = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, b.bundle_id);
+      const versionAfter = man.map((r, j) => (j === man.length - 1 ? head ?? null : snaps.get(man[j + 1].snap_key) ?? null));
+      /* The `bundle.md` digest a promotion's manifest row says it WROTE (null when it names none). */
+      const wrote = (r) => {
+        const f = Store.#manifestFiles(r.files_json).find((x) => x.name === "bundle.md");
+        return f && typeof f.sha256 === "string" && f.sha256 !== "" ? f.sha256.toLowerCase() : null;
+      };
+      for (let j = 1; j < man.length; j++) {
+        out.pairs++;
+        const joined = wrote(man[j - 1]) !== null && wrote(man[j - 1]) === String(man[j].base ?? "").toLowerCase();
+        const a = joined ? fmOf(versionAfter[j - 1]?.content) : null, z = fmOf(versionAfter[j]?.content);
+        if (!a || !z) { out.undetermined++; tally(t, "undetermined"); continue; }
+        if (a.current_state === z.current_state) { out.revisions_in_place++; tally(t, "revisions_in_place"); continue; }
+        out.moves++; tally(t, "moves");
+        const spec = vocabFor(STATES, typeof a.object_type === "string" ? a.object_type : b.object_type);
+        if (!spec) { out.no_table++; continue; }
+        const edges = spec.edges;
+        const legal = Object.prototype.hasOwnProperty.call(edges, a.current_state) ? edges[a.current_state] : [];
+        if (legal.includes(z.current_state)) continue;
+        out.undeclared++; tally(t, "undeclared");
+        const fence = stateMoveFencedSince(t);
+        if (out.listed.length < cap)
+          out.listed.push({ bundle_id: b.bundle_id, object_type: t, from: a.current_state, to: z.current_state,
+                            date: man[j].created ?? null, snap_key: man[j].snap_key, author: man[j].author ?? null,
+                            fenced_since: fence, reading: stateMoveOutsideRules(fence, man[j].created) });
+      }
+    }
+    out.dated_by = "the manifest's created: the writer's last_updated where it sent one, else the plane's clock";
+    out.note = "read-only: a recorded move whose edge the current table does not declare is made by a path the current "
+      + "rules do not allow — neither valid nor invalid — and is never rewritten. A pair with a side unrecorded is "
+      + "undetermined and is not classified. The fence governs moves made from its date on (BOB #34, 2026-09-24).";
+    return out;
+  }
   snapKeyCensus({ limit } = {}) {
     const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -53252,6 +53373,7 @@ export class Store extends DurableObject {
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        statemovecensus: () => this.stateMoveCensus({ limit: url.searchParams.get("limit") }),
         /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({

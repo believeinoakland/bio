@@ -492,9 +492,13 @@ export const STATES = {
      reads this table through `vocabFor` and refuses any move it does not declare
      (BIAS_ILLEGAL_TRANSITION, C-26.12). A revision that leaves a set where it
      stands is not a move and is not asked: that is how an adopted set is amended
-     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). This fence is
-     THIS machine's alone — `promote` still asks no edge table for any other
-     object_type. */
+     (`BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption"). CORRECTED by
+     D-546 (2026-09-25): this said the fence was THIS machine's alone and that
+     `promote` asked no edge table for any other object_type, which was true on
+     the day. BOB #34 (2026-09-24 23:55Z) lifted it to every type with a head:
+     `promote`'s `is-promote-state-edge` region asks every OTHER machine in this
+     table the same question (STATE_MOVE_UNDECLARED, C-86.6), and a bias set
+     keeps its own code here. */
   bias: {
     legal: ['draft', 'proposed', 'adopted', 'retired'],
     edges: {
@@ -16520,7 +16524,33 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'names a type. What it is decides which rules protect it, so the record will not guess. Nothing was written. '
       + 'Say in the document what kind of thing it is, and send it again.',
   },
+  /* D-546 (2026-09-25; BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on") — D-468's
+   * fence, LIFTED TO EVERY TYPE WITH A HEAD. `op=promote` asked a state-edge table for a bias set alone, so every other
+   * machine could be moved along an edge its table does not declare (a verified item back to `collected`, a closed
+   * project straight to `matured`, a resolved action reopened). The table is `STATES`, read for the NORMALISED type,
+   * so a state a machine keeps only for READING old records (`focus`'s `elevated`, `inquiry`'s legacy `published`) is
+   * named by no edge and no promotion reaches it. A bias set keeps its own code, C-26.12, and its own translation. */
+  STATE_MOVE_UNDECLARED: {
+    check: 'C-86.6',
+    where: 'src/store.mjs promote > is-promote-state-edge',
+    translation: 'That is not a move this item can make from where it stands. Each kind of thing has a set of moves '
+      + 'its rules allow, and this one is not among them, so nothing was written. Move it by a step the rules allow, '
+      + 'or leave it where it stands and record what changed.',
+  },
 };
+
+/* D-546 — THE DATE EACH TYPE'S STATE-EDGE FENCE WAS WRITTEN (BOB #34, 2026-09-24 23:55Z: *the fence governs moves MADE
+ * FROM NOW ON; the history stays as it was written, and is COUNTED and SAID*). A stored move its type's table does not
+ * declare is never rewritten; `op=statemovecensus` states it in `stateMoveOutsideRules`'s words, with this date. It is
+ * the date the fence was WRITTEN into this catalogue, not the date an instance began running it, which no record
+ * holds: a move dated on or after it is said to be so rather than placed "before" it. `bias` is D-468's. */
+export const STATE_MOVE_FENCED_SINCE = { bias: '2026-09-24', '*': '2026-09-25' };
+export const stateMoveFencedSince = (t) => STATE_MOVE_FENCED_SINCE[normalizeType(t)] ?? STATE_MOVE_FENCED_SINCE['*'];
+export const stateMoveOutsideRules = (fence, date) =>
+  typeof date === 'string' && date.slice(0, 10) < fence
+    ? `made by a path the current rules do not allow (before ${fence})`
+    : `made by a path the current rules do not allow (dated ${typeof date === 'string' ? date : 'undetermined'}, `
+      + `not before the fence of ${fence}: which plane accepted it is not recorded)`;
 
 /* REC-214 / C-90 — A MEMBER REVISES AN ACTION'S RISK TIER BY AN AUTHORED, APPEND-ONLY ACT (BOB #33, 2026-09-24,
  * "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2, `risk_tier`). The field carries legal exposure: the record
