@@ -1,0 +1,16 @@
+{
+ "unit": "plane:risk-tier.test.mjs",
+ "inputHash": "85c44354e8c5145ad5cb2b99a3506b0404be52c7447b8c6edd3b03c9ef6442e8",
+ "verdict": "PASS",
+ "run": "59cbdf3ab16588e0ca0905bcb6cace4f77691a56.1790315024706.6135.json",
+ "tree": "59cbdf3ab16588e0ca0905bcb6cace4f77691a56",
+ "head": "f93fa87677f0d8e17eee51f4db50bd6866b2a00a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 149,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2c6f643e-8caf-5ad3-889d-fa75834dded6",
+ "at": "2026-09-25T05:43:44.718Z"
+}

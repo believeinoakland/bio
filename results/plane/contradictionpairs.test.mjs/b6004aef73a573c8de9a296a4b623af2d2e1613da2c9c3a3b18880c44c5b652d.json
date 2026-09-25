@@ -1,0 +1,16 @@
+{
+ "unit": "plane:contradictionpairs.test.mjs",
+ "inputHash": "b6004aef73a573c8de9a296a4b623af2d2e1613da2c9c3a3b18880c44c5b652d",
+ "verdict": "PASS",
+ "run": "59cbdf3ab16588e0ca0905bcb6cace4f77691a56.1790315024706.6135.json",
+ "tree": "59cbdf3ab16588e0ca0905bcb6cace4f77691a56",
+ "head": "f93fa87677f0d8e17eee51f4db50bd6866b2a00a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 146,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "2c6f643e-8caf-5ad3-889d-fa75834dded6",
+ "at": "2026-09-25T05:43:44.718Z"
+}
