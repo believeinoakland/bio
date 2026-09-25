@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d507-statement-ack-translation.test.mjs",
+ "inputHash": "349e3718e63c0e1c8d0a9438e9b6fab68f6f12ad9af3511946bffe8f45e72515",
+ "verdict": "PASS",
+ "run": "9d51b463fc4bef36a4239057c2bb87a1558d6e28.1790294681088.25124.json",
+ "tree": "9d51b463fc4bef36a4239057c2bb87a1558d6e28",
+ "head": "0a46b6ad2edfe169113b42c4b10cd94880036ff5",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 159,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d9e29159-e088-5893-a93b-3e05c1d45c32",
+ "at": "2026-09-25T00:04:41.107Z"
+}
