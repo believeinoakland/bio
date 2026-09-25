@@ -190,6 +190,96 @@ export function usedSheetRange(name, usedRows, usedCols) {
 }
 
 /* ------------------------------------------------------------------ *
+ * D-415 — A WORKBOOK'S NAMED UNITS (EXTRACTION-BREADTH §3.3 item 1).
+ * ------------------------------------------------------------------ *
+ *
+ * `usedSheetRange` names the WHOLE sheet. A workbook also names FINER units
+ * itself: a DEFINED NAME (`<definedName>` in workbook.xml; `.ods`'s
+ * `<table:named-range>`) and a TABLE (`xl/tables/tableN.xml` reached through a
+ * sheet's rels; `.ods`'s `<table:database-range>`). Each that names ONE
+ * rectangle on ONE sheet of THIS workbook is emitted as a `sheet-range` unit
+ * through the one builder, carrying the name its author gave it. Everything
+ * else a name can hold — several areas, a formula or constant, `#REF!`, a
+ * whole row or column, another workbook, a sheet this workbook does not have,
+ * an address past the grid — is SKIPPED WITH ITS REASON, never dropped and
+ * never approximated: a unit this reader widened or guessed would be the
+ * record claiming an extent the author did not name.
+ *
+ * `rangeUnitFor` is the one place a rectangle becomes a unit, for both
+ * containers: `a` and `b` are corners already parsed to {col,row}, `sheets`
+ * the workbook's sheet names, `grid` the format's bound or null (`.ods` fixes
+ * none). A sheet name matches exactly, else case-insensitively when exactly
+ * one sheet answers (both formats resolve sheet names without case); the
+ * unit carries the WORKBOOK's spelling, the form C-45.1 matches.
+ */
+/** One A1 corner (`$B$14`, `b14`) -> {col,row}, or null. */
+export function a1Corner(s) {
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
+
+export function rangeUnitFor(sheetName, a, b, sheets, grid) {
+  let sheet = sheets.includes(sheetName) ? sheetName : null;
+  if (sheet == null) {
+    const ci = sheets.filter((s) => s.toLowerCase() === String(sheetName).toLowerCase());
+    if (ci.length === 1) sheet = ci[0];
+  }
+  if (sheet == null) return { why: "no_such_sheet" };
+  const c1 = Math.min(a.col, b.col), c2 = Math.max(a.col, b.col);
+  const r1 = Math.min(a.row, b.row), r2 = Math.max(a.row, b.row);
+  if (grid && (c2 > grid.cols || r2 > grid.rows)) return { why: "outside_grid" };
+  return { unit: sheetRangeRef(sheet, `${columnLetters(c1)}${r1}:${columnLetters(c2)}${r2}`) };
+}
+
+/** Split at every top-level `sep` — outside a quoted sheet name and outside
+ *  parentheses — so `'a,b'!A1` is one area and `A1,B2` is two. */
+function splitTopLevel(s, sep) {
+  const out = [];
+  let depth = 0, quoted = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted && s[i + 1] === "'") { cur += "''"; i++; continue; }
+      quoted = !quoted;
+    } else if (!quoted && ch === "(") depth++;
+    else if (!quoted && ch === ")") depth--;
+    else if (!quoted && depth === 0 && ch === sep) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+/** An XLSX defined name's formula text -> {unit} or {why}. The ONE grammar
+ *  read is `Sheet!A1` / `Sheet!A1:B2` / `'Quoted ''Sheet'''!$A$1:$B$2`;
+ *  anything else is a stated reason. A sheet name cannot hold `:` or `[`
+ *  in either format, so a `:` before the `!` is a 3-D (multi-sheet)
+ *  reference and a `[..]` is another workbook. */
+export function xlsxDefinedNameUnit(formula, sheets) {
+  const f = String(formula ?? "").trim();
+  if (!f) return { why: "empty_reference" };
+  if (/#REF!/i.test(f)) return { why: "broken_reference" };
+  if (splitTopLevel(f, ",").length > 1 || /^\(.*\)$/.test(f)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f);
+  if (!m) return { why: "not_a_range_reference" };
+  const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+  if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
+  if (sheetName.includes(":")) return { why: "multi_sheet_reference" };
+  const corners = m[3].split(":");
+  if (corners.length > 2) return { why: "not_a_range_reference" };
+  const a = a1Corner(corners[0]);
+  const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+  if (!a || !b) {
+    if (corners.every((c) => /^\$?(?:[A-Za-z]{1,3}|\d+)$/.test(c.trim()))) return { why: "whole_row_or_column" };
+    return { why: "not_a_range_reference" };
+  }
+  return rangeUnitFor(sheetName, a, b, sheets, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS });
+}
+
+/* ------------------------------------------------------------------ *
  * COFF-11 / IC-100 / D-359 — A SHEET'S BOUND, AND THE DECISION IT CARRIES.
  * ------------------------------------------------------------------ *
  *
@@ -314,10 +404,39 @@ async function xlsxParts(bytes) {
     };
   });
 
-  /* Defined names -> anchor material (workbook-scoped). */
+  /* Defined names -> anchor material (workbook-scoped). `localSheetId` and
+   * `hidden` ride along for D-415's units; the anchor links read name/ref
+   * only, as before. */
   const definedNames = elements(wbXml, "definedName")
     .filter((d) => d.attrs.name != null)
-    .map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities(d.inner).trim() }));
+    .map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities(d.inner).trim(),
+      localSheetId: /^\d+$/.test(d.attrs.localSheetId ?? "") ? parseInt(d.attrs.localSheetId, 10) : null,
+      hidden: d.attrs.hidden === "1" || d.attrs.hidden === "true" }));
+
+  /* D-415 — TABLE PARTS, reached through each sheet's OWN rels (the target
+   * lives there, as a hyperlink's does). Workbook metadata, so read even over
+   * the text bound, as hidden SHEETS are: a table part is a few hundred bytes
+   * and names an address, not text. An unreadable sheet rels part is stated
+   * by structure(); an unreadable TABLE part is stated here, as a skip. */
+  const tables = [];
+  for (const sheet of sheets) {
+    if (!sheet.part) continue;
+    const relsPart = relsPartFor(sheet.part);
+    if (!container.byName.has(relsPart)) continue;
+    const rr = await readPart(b, container, relsPart);
+    const parsed = rr.ok ? parseRels(UTF8.decode(rr.bytes)) : null;
+    if (!parsed || !parsed.ok) continue;
+    for (const r of parsed.relationships) {
+      if (r.external || !/\/relationships\/table$/.test(String(r.type ?? ""))) continue;
+      const part = resolveTarget(sheet.part, r.target);
+      const tr = await readPart(b, container, part);
+      if (!tr.ok) { tables.push({ sheet: sheet.name, part, name: null, ref: null, why: `table_part_unreadable:${tr.why}` }); continue; }
+      const t = elements(UTF8.decode(tr.bytes), "table")[0];
+      tables.push({ sheet: sheet.name, part,
+        name: t ? (t.attrs.displayName ?? t.attrs.name ?? null) : null, ref: t ? (t.attrs.ref ?? null) : null,
+        why: t ? null : "table_element_absent" });
+    }
+  }
 
   /* THE MEASURED BOUND (COFF-6, enacted in ooxml.mjs): declared uncompressed
    * text-part bytes — the sheets and sharedStrings — summed from the central
@@ -362,7 +481,7 @@ async function xlsxParts(bytes) {
 
   return {
     ok: true, format: "xlsx", bytes: b, container,
-    sheets, definedNames, sharedStrings, core, declared, guard, undetermined,
+    sheets, definedNames, tables, sharedStrings, core, declared, guard, undetermined,
   };
 }
 
@@ -631,6 +750,36 @@ async function xlsxStructure(parts) {
  * text(parts) -> the I2 text shape
  * ------------------------------------------------------------------ */
 
+/* D-415 — the workbook's NAMED units: every defined name and every table part
+ * that names one rectangle on one sheet of this workbook, as a `sheet-range`
+ * unit carrying its author's name; every other one SKIPPED with its reason.
+ * `scope` is the sheet a sheet-scoped name belongs to (`localSheetId`), null
+ * for a workbook-scoped one; `hidden` is the file's own flag (Excel hides the
+ * names it manages itself, e.g. `_xlnm._FilterDatabase`) — carried, not a
+ * reason to omit, the hidden-sheet rule. Emitted over the text bound too:
+ * none of it is read from a text part. */
+export function xlsxRangeUnits(parts) {
+  const names = parts.sheets.map((s) => s.name);
+  const units = [], skipped = [];
+  for (const dn of parts.definedNames) {
+    const r = xlsxDefinedNameUnit(dn.ref, names);
+    const scope = dn.localSheetId != null ? (parts.sheets[dn.localSheetId]?.name ?? null) : null;
+    if (r.unit) units.push({ source: "defined-name", name: dn.name, scope, hidden: dn.hidden, unit: r.unit });
+    else skipped.push({ source: "defined-name", name: dn.name, ref: dn.ref, why: r.why });
+  }
+  for (const t of parts.tables ?? []) {
+    if (t.why) { skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: t.why }); continue; }
+    const corners = String(t.ref ?? "").split(":");
+    const a = corners.length <= 2 ? a1Corner(corners[0]) : null;
+    const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+    const r = a && b ? rangeUnitFor(t.sheet, a, b, names, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS })
+                     : { why: "not_a_range_reference" };
+    if (r.unit) units.push({ source: "table", name: t.name, scope: t.sheet, hidden: false, unit: r.unit });
+    else skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: r.why });
+  }
+  return { rangeUnits: units, rangeUnitsSkipped: skipped };
+}
+
 function xlsxText(parts) {
   /* The shapes below are IC-2's pageless degenerate form AS ACCEPTED from
    * docx.mjs (paragraphs[] there, sheets[] here — the per-unit list named for
@@ -647,6 +796,7 @@ function xlsxText(parts) {
      * exactly this), never a silent truncation. */
     return {
       ok: true, container: "xlsx", document: null, sheets: [],
+      ...xlsxRangeUnits(parts),
       undetermined: [guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
     };
@@ -709,6 +859,9 @@ function xlsxText(parts) {
     container: "xlsx",
     document,
     sheets: outSheets,
+    /* D-415: the defined names and tables as `sheet-range` units, beside
+       each sheet's whole-sheet `range`. */
+    ...xlsxRangeUnits(parts),
     undetermined: allUndetermined,
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount,
       undetermined: allUndetermined.length },

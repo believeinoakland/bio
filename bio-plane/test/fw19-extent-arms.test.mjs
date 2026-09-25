@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: SIX arms and a baseline in `test/nc-fw19.mjs`, re-runnable in one step with `node test/nc-fw19.mjs [arm]` from `bio-plane/`. Each arm edits ONE real source ALONE, declares BEFORE it runs what MUST fail AND what MUST NOT, and is restored from a uniquely-named pristine copy verified by sha256 (never `git checkout --`). (a) `baseline` — nothing armed, MUST be green. (b) `rangeoob` — neuter `coversSheetRange` (answer null) in checks/bio-checks.mjs: an impossible sheet-range MINTS and the sheet-range out-of-range arms fail BY NAME, while the doc-table and image arms hold. (c) `tableoob` — neuter `coversDocTable`: table 99 of a two-table document mints and the doc-table arms fail by name. (d) `imageoob` — neuter `coversImage`: an image part the container does not hold mints. (e) `bytesnull` — drop the `cited_as !== 'bytes'` exemption from the chain arm: the same bytes row that must NOT be refused is refused — §8's "the two nulls are different facts" in the direction that refuses correct work. (f) `textnochain` — drop the `{part}` + `text` refusal: an image cited as TEXT with no transcription of its media mints, the overclaim. (g) `rec85canon` — the over-strictness direction on the arms this item must NOT move: perturb `canonicalExtent`'s `sheet-cell` arm (stop upper-casing the cell) and the REC-85 byte-identity pin MUST fail while every FW-19 arm holds. RUN 2026-09-18 by the FW-19 worker, ALL SIX AS DECLARED, every restore byte-identical (`checks/bio-checks.mjs` 713,080 B sha256 ef70bb1fe631…), 0 held-open assertions broken in any arm: baseline 36/0 GREEN · rangeoob 34/2 (2/2) · tableoob 34/2 (2/2) · imageoob 33/3 (3/3) · bytesnull 35/1 (1/1) · textnochain 35/1 (1/1) · rec85canon 35/1 (1/1). THE SIBLING HARNESSES WERE RE-RUN ON THIS TREE because FW-19 edits lines they anchor on, and TWO HAD GONE DEAD: `nc-cap12.mjs notion` read `ARMED NO` (FW-19 split the `levels` line) and `nc-rec85.mjs overstrict` read `ARMED NO (matched 2x)` (`coversSheetRange` had copied `coversSheetCell`'s two anchor lines) — both corrected, both then AS DECLARED. A third, `nc-rec85.mjs onebased`, read `-1 pass` for a PRE-EXISTING reason (a bare `.check` on a null refusal threw in `content-extent-arms.test.mjs`) and is AS DECLARED after a defensive read. `nc-coff11`, `nc-coff12`, `nc-rec84` all AS DECLARED unchanged. */
+/* NEGATIVE CONTROL: SIX arms and a baseline in `test/nc-fw19.mjs`, re-runnable in one step with `node test/nc-fw19.mjs [arm]` from `bio-plane/`. Each arm edits ONE real source ALONE, declares BEFORE it runs what MUST fail AND what MUST NOT, and is restored from a uniquely-named pristine copy verified by sha256 (never `git checkout --`). (a) `baseline` — nothing armed, MUST be green. (b) `rangeoob` — neuter `coversSheetRange` (answer null) in checks/bio-checks.mjs: an impossible sheet-range MINTS and the sheet-range out-of-range arms fail BY NAME, while the doc-table and image arms hold. (c) `tableoob` — neuter `coversDocTable`: table 99 of a two-table document mints and the doc-table arms fail by name. (d) `imageoob` — neuter `coversImage`: an image part the container does not hold mints. (e) `bytesnull` — drop the `cited_as !== 'bytes'` exemption from the chain arm: the same bytes row that must NOT be refused is refused — §8's "the two nulls are different facts" in the direction that refuses correct work. (f) `textnochain` — drop the `{part}` + `text` refusal: an image cited as TEXT with no transcription of its media mints, the overclaim. (g) `rec85canon` — the over-strictness direction on the arms this item must NOT move: perturb `canonicalExtent`'s `sheet-cell` arm (stop upper-casing the cell) and the REC-85 byte-identity pin MUST fail while every FW-19 arm holds. RUN 2026-09-18 by the FW-19 worker, ALL SIX AS DECLARED, every restore byte-identical (`checks/bio-checks.mjs` 713,080 B sha256 ef70bb1fe631…), 0 held-open assertions broken in any arm: baseline 36/0 GREEN · rangeoob 34/2 (2/2) · tableoob 34/2 (2/2) · imageoob 33/3 (3/3) · bytesnull 35/1 (1/1) · textnochain 35/1 (1/1) · rec85canon 35/1 (1/1). THE SIBLING HARNESSES WERE RE-RUN ON THIS TREE because FW-19 edits lines they anchor on, and TWO HAD GONE DEAD: `nc-cap12.mjs notion` read `ARMED NO` (FW-19 split the `levels` line) and `nc-rec85.mjs overstrict` read `ARMED NO (matched 2x)` (`coversSheetRange` had copied `coversSheetCell`'s two anchor lines) — both corrected, both then AS DECLARED. A third, `nc-rec85.mjs onebased`, read `-1 pass` for a PRE-EXISTING reason (a bare `.check` on a null refusal threw in `content-extent-arms.test.mjs`) and is AS DECLARED after a defensive read. `nc-coff11`, `nc-coff12`, `nc-rec84` all AS DECLARED unchanged. D-415 (2026-09-25) ADDED SIX ARMS to the same harness, over `src/formats-xlsx.mjs` and `src/odf.mjs`: (h) `d415prefix` — the row's declared control: BOTH readers restored whole from `5e8a65a837` (before D-415): the defined-name, table-part, .ods and through-the-op arms fail BY NAME; FIRST RUN restored the xlsx reader ALONE and the suite died at link time (-1/-1, odf.mjs imports D-415's helpers) — a control that moved a second variable, so it restores both. (i) `d415names` — skip the defined-name walk: the name arms fail, the table arm holds. (j) `d415tables` — skip the table-part walk: the table arm fails, every name holds. (k) `d415multi` — drop the multi-area guard: the two-area name's stated reason is wrong and fails by name. (l) `d415exact` — OVER-STRICTNESS: sheet names matched only exactly, the lower-cased spelling of a sheet the workbook HAS is skipped and fails by name. (m) `d415ods` — skip the .ods named-range walk: only the .ods arm fails. RUN 2026-09-25 by the D-415 worker, ALL TWELVE AS DECLARED, every restore byte-identical (`src/formats-xlsx.mjs` 43,874 B sha256 79d1714c0368…, `src/odf.mjs` 80,759 B sha256 620a802e568e…): baseline 46/0 · d415prefix 36/10 (4/4) · d415names 38/8 (5/5) · d415tables 43/3 (2/2) · d415multi 44/2 (1/1) · d415exact 42/4 (2/2) · d415ods 45/1 (1/1); the six FW-19 arms unchanged in verdict, each now over 46. */
 
 /* FW-19 / IC-124 / IC-125 — EXTRACTION-BREADTH §3.2 / §7 row 3: THE TWO ARMS AND
  * THE IMAGE REFERENCE, DRIVEN END TO END.
@@ -127,6 +127,24 @@ const DOCX = zip([
 const SHEETS = [["Summary", [["Department", "FY26"], ["Police", "2.2M"], ["Fire", "2.0M"]]],
                 ["Detail", [["Fund 1010"]]]];
 const XLSX_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+/* D-415 — the workbook's OWN named units, and the ones it must SKIP. Each
+ * entry: [name, the formula text as Excel writes it, extra attributes]. The
+ * units and reasons the reader must produce are written out BY HAND below
+ * (XLSX_UNITS_WANT / XLSX_SKIPS_WANT), not derived from this list. `Recast`
+ * is the over-strictness case: a lower-cased, quoted sheet name and corners
+ * given bottom-right first are still ONE rectangle on a sheet the workbook has. */
+const XLSX_DEFINED_NAMES = [
+  ["Appropriations", "Summary!$A$2:$B$3"],
+  ["Fund", "Detail!$A$1", ' localSheetId="1"'],
+  ["_xlnm._FilterDatabase", "Summary!$A$1:$B$3", ' localSheetId="0" hidden="1"'],
+  ["Recast", "'summary'!$B$3:$A$2"],
+  ["Split", "Summary!$A$1:$A$2,Summary!$B$3"],
+  ["Rate", "0.05"],
+  ["Gone", "#REF!"],
+  ["WholeCol", "Summary!$A:$A"],
+  ["Elsewhere", "[1]Summary!$A$1"],
+  ["Nowhere", "Missing!$A$1"],
+];
 const sheetXml = (rows) => `<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>`
   + rows.map((cells, i) => `<row r="${i + 1}">`
       + cells.map((v, j) => `<c r="${String.fromCharCode(65 + j)}${i + 1}" t="inlineStr"><is><t>${v}</t></is></c>`).join("")
@@ -135,7 +153,10 @@ const XLSX = zip([
   { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/></Types>` },
   { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
   { name: "xl/workbook.xml", data: `<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`
-      + SHEETS.map(([n], i) => `<sheet name="${n}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("") + `</sheets></workbook>` },
+      + SHEETS.map(([n], i) => `<sheet name="${n}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("") + `</sheets>`
+      + `<definedNames>${XLSX_DEFINED_NAMES.map(([n, ref, attrs = ""]) => `<definedName name="${n}"${attrs}>${ref}</definedName>`).join("")}</definedNames></workbook>` },
+  { name: "xl/worksheets/_rels/sheet1.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdT1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/></Relationships>` },
+  { name: "xl/tables/table1.xml", data: `<?xml version="1.0"?><table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1" name="Table1" displayName="DeptBudget" ref="A1:B3" totalsRowShown="0"><autoFilter ref="A1:B3"/><tableColumns count="2"><tableColumn id="1" name="Department"/><tableColumn id="2" name="FY26"/></tableColumns></table>` },
   { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
       + SHEETS.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("")
       + `</Relationships>` },
@@ -171,6 +192,10 @@ const ODS = zip([
   { name: "content.xml", data: `<?xml version="1.0" encoding="UTF-8"?><office:document-content ${ODF_NS} office:version="1.3"><office:automatic-styles/><office:body><office:spreadsheet>`
       + `<table:table table:name="Appropriations"><table:table-row>${odsCell("Dept")}${odsCell("FY26")}</table:table-row>`
       + `<table:table-row>${odsCell("Police")}${odsCell("2.2M")}</table:table-row></table:table>`
+      /* D-415: a named range, a two-area named range, and a database range. */
+      + `<table:named-expressions><table:named-range table:name="PoliceLine" table:base-cell-address="$Appropriations.$A$1" table:cell-range-address="$Appropriations.$A$2:.$B$2"/>`
+      + `<table:named-range table:name="TwoAreas" table:base-cell-address="$Appropriations.$A$1" table:cell-range-address="$Appropriations.$A$1:.$A$1 $Appropriations.$B$2:.$B$2"/></table:named-expressions>`
+      + `<table:database-ranges><table:database-range table:name="DeptDB" table:target-range-address="Appropriations.A1:Appropriations.B2"/></table:database-ranges>`
       + `</office:spreadsheet></office:body></office:document-content>` },
   { name: "styles.xml", data: `<?xml version="1.0"?><office:document-styles ${ODF_NS}/>` },
 ]);
@@ -207,6 +232,48 @@ t("the ODT's image is read off the package's Pictures/ directory, content-addres
 const sText = await odsEntry.text(ODS);
 t("the ODS sheet carries its `sheet-range` unit through the same builder",
   (sText.sheets || []).map((s) => s.range), [sheetRangeRef("Appropriations", "A1:B2")]);
+
+/* D-415 — A WORKBOOK'S NAMED UNITS (EXTRACTION-BREADTH §3.3 item 1). The
+   ground truth is written HERE, by hand, from the fixture above. */
+const XLSX_UNITS_WANT = [
+  ["defined-name", "Appropriations", null, false, "Summary!A2:B3"],
+  ["defined-name", "Fund", "Detail", false, "Detail!A1:A1"],
+  ["defined-name", "_xlnm._FilterDatabase", "Summary", true, "Summary!A1:B3"],
+  ["defined-name", "Recast", null, false, "Summary!A2:B3"],
+  ["table", "DeptBudget", "Summary", false, "Summary!A1:B3"],
+];
+const XLSX_SKIPS_WANT = [["defined-name", "Split", "multi_area"], ["defined-name", "Rate", "not_a_range_reference"],
+  ["defined-name", "Gone", "broken_reference"], ["defined-name", "WholeCol", "whole_row_or_column"],
+  ["defined-name", "Elsewhere", "external_workbook"], ["defined-name", "Nowhere", "no_such_sheet"]];
+const unitRows = (u) => (u || []).map((x) => [x.source, x.name, x.scope, x.hidden, x.unit.ref]);
+t("D-415 a workbook's DEFINED NAME emits its `sheet-range` unit, carrying the name its author gave it",
+  unitRows(xText.rangeUnits).filter((r) => r[1] === "Appropriations"),
+  [XLSX_UNITS_WANT[0]]);
+t("D-415 a sheet-scoped name carries its sheet, and a name the file HIDES is emitted and flagged, not omitted",
+  unitRows(xText.rangeUnits).filter((r) => r[1] === "Fund" || r[1] === "_xlnm._FilterDatabase"),
+  [XLSX_UNITS_WANT[1], XLSX_UNITS_WANT[2]]);
+t("D-415 OVER-STRICTNESS: a lower-cased quoted sheet name and corners given far-corner first are ONE "
+  + "rectangle on a sheet the workbook has, emitted in the workbook's spelling, top-left first",
+  unitRows(xText.rangeUnits).filter((r) => r[1] === "Recast"), [XLSX_UNITS_WANT[3]]);
+t("D-415 a workbook's TABLE PART emits its `sheet-range` unit on the sheet whose rels reach it",
+  unitRows(xText.rangeUnits).filter((r) => r[0] === "table"), [XLSX_UNITS_WANT[4]]);
+t("D-415 exactly these units and no others — nothing a name cannot honestly name is emitted",
+  unitRows(xText.rangeUnits), XLSX_UNITS_WANT);
+t("D-415 a MULTI-AREA name is SKIPPED with its stated reason, never widened to one rectangle",
+  (xText.rangeUnitsSkipped || []).filter((x) => x.name === "Split").map((x) => [x.source, x.name, x.why]),
+  [XLSX_SKIPS_WANT[0]]);
+t("D-415 every name that is not one rectangle on one sheet of THIS workbook is SKIPPED with its reason, "
+  + "the formula text carried verbatim",
+  (xText.rangeUnitsSkipped || []).map((x) => [x.source, x.name, x.why]).concat(
+    [[(xText.rangeUnitsSkipped || []).every((x) => x.ref === XLSX_DEFINED_NAMES.find(([n]) => n === x.name)?.[1])]]),
+  [...XLSX_SKIPS_WANT, [true]]);
+t("D-415 every unit's human form IS the checker's derived form (IC-1's parity, the new producers)",
+  (xText.rangeUnits || []).map((x) => describeExtent(x.unit) === x.unit.ref), XLSX_UNITS_WANT.map(() => true));
+t("D-415 the .ods NAMED RANGE and DATABASE RANGE each emit a `sheet-range` unit; the two-area name is SKIPPED",
+  [unitRows(sText.rangeUnits), (sText.rangeUnitsSkipped || []).map((x) => [x.source, x.name, x.why])],
+  [[["named-range", "PoliceLine", null, false, "Appropriations!A2:B2"],
+    ["database-range", "DeptDB", "Appropriations", false, "Appropriations!A1:B2"]],
+   [["named-range", "TwoAreas", "multi_area"]]]);
 
 /* IC-1's PARITY: the builder's human form IS the checker's derived form. */
 t("PARITY: the human form each producer builds is EXACTLY the checker's derived form for the "
@@ -354,6 +421,12 @@ t("a sheet-range reaching one row PAST the XLSX grid is REFUSED C-45.1, with the
 const rangeEmpty = await citeLeg(BOOK, { kind: "sheet-range", sheet: "Summary", range: "C40:D90" }).run();
 t("a range past the USED range but inside the grid MINTS — the bound is the grid (an empty cell exists)",
   [rangeEmpty.ok, rangeEmpty.content?.[0]?.extent_kind], [true, "sheet-range"]);
+const dnUnit = (xText.rangeUnits || []).find((x) => x.name === "Appropriations")?.unit ?? {};
+const dnCite = await citeLeg(BOOK, { kind: "sheet-range", sheet: dnUnit.sheet, range: dnUnit.range }).run();
+const dnRow = dnCite.ok ? await get("content", `id=${dnCite.content?.[0]?.content_id}`) : {};
+t("D-415 THROUGH THE OP: the unit a DEFINED NAME emitted is cited through op=promote, mints, and reads "
+  + "back through op=content with the producer's own human form",
+  [dnCite.ok, dnCite.content?.[0]?.minted, dnRow.ref], [true, true, "Summary!A2:B3"]);
 const rangeBad = await citeLeg(BOOK, { kind: "sheet-range", sheet: "Summary", range: "A1-B3" }).run();
 t("an unreadable range is REFUSED C-45.3 and never minted",
   [rangeBad.ok, codes(rangeBad)], [false, ["C-2.8"]]);

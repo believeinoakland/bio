@@ -169,7 +169,7 @@ import {
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { docParaRef, docTableRef } from "./docx.mjs";
-import { sheetCellRef, usedSheetRange } from "./formats-xlsx.mjs";
+import { sheetCellRef, usedSheetRange, a1Corner, rangeUnitFor } from "./formats-xlsx.mjs";
 import { slideShapeRef } from "./pptx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -1116,6 +1116,84 @@ function odsStructure(parts) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * D-415 — the spreadsheet's NAMED units: `<table:named-range>` and
+ * `<table:database-range>` (ODF's table analogue), as `sheet-range` units
+ * through the builder `formats-xlsx.mjs` owns, and every one that does not
+ * name ONE rectangle on ONE sheet of this document SKIPPED with its reason —
+ * the xlsx rule, stated there. No grid: OpenDocument fixes none (COFF-11).
+ * ------------------------------------------------------------------ */
+
+/** Split at every `sep` outside a quoted sheet name (`'a b'` and `'it''s'`). */
+function splitUnquoted(s, sepRe) {
+  const out = [];
+  let quoted = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted && s[i + 1] === "'") { cur += "''"; i++; continue; }
+      quoted = !quoted;
+    } else if (!quoted && sepRe.test(ch)) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+/** One ODF cell address (`$Sheet1.$A$1`, `$'My Sheet'.B2`, `.B2`) ->
+ *  { sheet (null when omitted), corner } or null. */
+function odfCellAddress(s) {
+  const m = /^\$?(?:'((?:[^']|'')*)'|([^'.\s]*))\.(\S+)$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  const corner = a1Corner(m[3]);
+  if (!corner) return null;
+  const sheet = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+  return { sheet: sheet === "" ? null : sheet, corner };
+}
+
+/** An ODF range address (`table:cell-range-address`, `target-range-address`)
+ *  -> {unit} or {why}. A space-separated list is several areas; the second
+ *  corner may omit its sheet (`$S.$A$1:.$B$3`), meaning the first's. */
+export function odsRangeAddressUnit(address, sheets) {
+  const a = String(address ?? "").trim();
+  if (!a) return { why: "empty_reference" };
+  if (/#REF/i.test(a)) return { why: "broken_reference" };
+  if (splitUnquoted(a, /\s/).filter((x) => x !== "").length > 1) return { why: "multi_area" };
+  /* another document: `'file:///x.ods'#$Sheet1.A1` */
+  if (/^(?:'(?:[^']|'')*'|[^'.\s]*)#/.test(a)) return { why: "external_workbook" };
+  const ends = splitUnquoted(a, /:/);
+  if (ends.length > 2) return { why: "not_a_range_reference" };
+  const first = odfCellAddress(ends[0]);
+  const second = ends.length === 2 ? odfCellAddress(ends[1]) : first;
+  if (!first || !second || first.sheet == null) return { why: "not_a_range_reference" };
+  if (second.sheet != null && second.sheet !== first.sheet) return { why: "multi_sheet_reference" };
+  return rangeUnitFor(first.sheet, first.corner, second.corner, sheets, null);
+}
+
+/** Every named range and database range the spreadsheet body declares.
+ *  A named range inside a `<table:table>` is scoped to that sheet (ODF 1.2+);
+ *  one outside every table belongs to the document. */
+export function odsRangeUnits(bodyXml, sheets) {
+  const names = sheets.map((s) => s.name);
+  const units = [], skipped = [];
+  const found = [];
+  for (const nr of elementsNested(stripElement(bodyXml, "table"), "named-range")) found.push({ el: nr, scope: null });
+  for (const sh of sheets) for (const nr of elementsNested(sh.xml, "named-range")) found.push({ el: nr, scope: sh.name });
+  for (const { el, scope } of found) {
+    const ref = el.attrs["cell-range-address"] ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) units.push({ source: "named-range", name: el.attrs.name ?? null, scope, hidden: false, unit: r.unit });
+    else skipped.push({ source: "named-range", name: el.attrs.name ?? null, ref, why: r.why });
+  }
+  for (const dr of elementsNested(bodyXml, "database-range")) {
+    const ref = dr.attrs["target-range-address"] ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) units.push({ source: "database-range", name: dr.attrs.name ?? null, scope: r.unit.sheet, hidden: false, unit: r.unit });
+    else skipped.push({ source: "database-range", name: dr.attrs.name ?? null, ref, why: r.why });
+  }
+  return { rangeUnits: units, rangeUnitsSkipped: skipped };
+}
+
 function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
@@ -1123,6 +1201,7 @@ function odsText(parts) {
   if (parts.guard) {
     return {
       ok: true, container: "ods", document: null, sheets: [],
+      rangeUnits: null, rangeUnitsSkipped: null,   /* D-415: content.xml not read — NOT LOOKED, never none */
       undetermined: [parts.guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
     };
@@ -1133,6 +1212,7 @@ function odsText(parts) {
     const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
     return {
       ok: true, container: "ods", document: null, sheets: [],
+      rangeUnits: null, rangeUnitsSkipped: null,   /* D-415: content.xml not read — NOT LOOKED, never none */
       undetermined: [marker],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
     };
@@ -1140,7 +1220,8 @@ function odsText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const outSheets = [];
   let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
+  const odsSheets = sheetsOf(body, styles);
+  for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
     for (const row of walked.rows) {
@@ -1201,6 +1282,8 @@ function odsText(parts) {
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
   return {
     ok: true, container: "ods", document, sheets: outSheets,
+    /* D-415: named ranges and database ranges as `sheet-range` units. */
+    ...odsRangeUnits(body, odsSheets),
     undetermined: [],
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 },
   };
