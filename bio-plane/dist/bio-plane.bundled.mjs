@@ -47507,7 +47507,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
     const chainKind = terminalStep(chain2) || "layer";
     const list = Array.isArray(units) ? units : [];
-    const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && u.text.length).map((u, i) => ({
+    const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0).map((u, i) => ({
       extent: u.extent,
       text: u.text,
       seq: Number.isInteger(u.seq) ? u.seq : i
@@ -80450,7 +80450,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
 function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0;
   if (i2text) {
-    const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && u.text.length ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
+    const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
     const units = Array.isArray(i2text.pages) ? arm(
       i2text.pages,
       "pdf-page",

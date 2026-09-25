@@ -395,7 +395,10 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
             above it is — the extent vocabulary is ONE construct and a second
             copy here is the drift D-164 names. */
          readingSource, readingSourceJson, readingSourceFromColumns,
-         readingPositionInExtent } from "./textchain.mjs";
+         readingPositionInExtent,
+         /* D-531: whether a unit carries text is a GLYPH question (D-514's
+            rule), asked here where the index decides what to write. */
+         glyphCount } from "./textchain.mjs";
 /* CPDF-13 / D-183 / D-253: THE CALIBRATION CONSTRUCT, imported for exactly the
    reason `textchain.mjs` is imported above — the rules about what a measurement
    must carry, how two measurements compare and what each direction may cause
@@ -19145,8 +19148,18 @@ export class Store extends DurableObject {
        taken from each unit's own `seq` rather than from the array's order --
        otherwise "the first 2 MiB in reading order" would mean whatever a caller
        shuffled the array to. */
+    /* D-531 -- A UNIT WITH NO GLYPH IS NOT A UNIT WITH TEXT. This filter read
+       `u.text.length`, so a unit of pure whitespace was written, indexed and
+       COUNTED toward `PRESENT` -- the record saying it holds a searchable passage
+       where it holds none, and a capture whose every unit was blank reading as
+       fully indexed rather than as `LOOKED_ABSENT`. It is the same judgment
+       D-514 moved onto `glyphCount` at every other site that asks it, and this
+       is the site a caller's authored `provenance.json` reaches directly, so the
+       acquire-side filter in `index.mjs` cannot stand in for it. A dropped blank
+       unit is not counted in `offered`, exactly as an empty one never was. */
     const ordered = list
-      .filter((u) => u && typeof u === "object" && typeof u.text === "string" && u.text.length)
+      .filter((u) => u && typeof u === "object" && typeof u.text === "string"
+                     && glyphCount(u.text) > 0)
       .map((u, i) => ({ extent: u.extent, text: u.text,
                         seq: Number.isInteger(u.seq) ? u.seq : i }))
       .sort((a, b) => a.seq - b.seq);
