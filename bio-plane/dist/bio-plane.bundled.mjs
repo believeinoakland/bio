@@ -14822,10 +14822,15 @@ var HEADINGS_JSON = JSON.stringify(HEADINGS);
 var RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
 var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">This copy could not read its group just now</p>';
+var verifiedDay = (x) => typeof x === "string" && /^\d{4}-\d\d-\d\d/.test(x) ? x.slice(0, 10) : null;
 function groupLine(read) {
   const r = read && read.answered === true && read.result && read.result.ok === true ? read.result : null;
-  if (r && typeof r.group === "string" && r.group)
-    return '<p class="eyebrow" id="instance-group" data-group="recorded"><span class="slug">' + escGroup(r.group) + "</span> &middot; group instance</p>";
+  if (r && typeof r.group === "string" && r.group) {
+    const name = typeof r.display_name === "string" && r.display_name.trim() ? r.display_name : null;
+    const day = verifiedDay(r.domain_verified_at);
+    const domain = typeof r.domain === "string" && r.domain && day ? r.domain : null;
+    return '<p class="eyebrow" id="instance-group" data-group="recorded">' + (name ? '<span class="name">' + escGroup(name) + "</span> &middot; " : "") + '<span class="slug">' + escGroup(r.group) + "</span> &middot; group instance" + (domain ? ' &middot; <span class="domain">' + escGroup(domain) + '</span> verified <time datetime="' + escGroup(day) + '">' + escGroup(day) + "</time>" : "") + "</p>";
+  }
   if (r && r.group === null)
     return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
   return GROUP_LINE_UNREAD;
@@ -14854,7 +14859,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
-.eyebrow .slug{text-transform:none;letter-spacing:.04em}
+.eyebrow .slug,.eyebrow .name,.eyebrow .domain{text-transform:none;letter-spacing:.04em}
 h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
   line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
 h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
@@ -82522,7 +82527,9 @@ async function caseReader(url, env, storeName, presentedAi) {
   }
   return { viewer: "" };
 }
-async function publicInstanceGroup(env, storeName) {
+var PUBLIC_GROUP_PROJECTIONS = ["instancegrouppublic", "groupidentitypublic"];
+async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic") {
+  if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: void 0 };
   let stub = null;
   try {
     stub = env.STORE.get(env.STORE.idFromName(storeName));
@@ -82530,7 +82537,7 @@ async function publicInstanceGroup(env, storeName) {
     stub = null;
   }
   if (!stub) return { answered: false, result: void 0 };
-  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
+  return doAnswer(stub.fetch(`http://do/${projection}`));
 }
 var json = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
   status,
@@ -83523,7 +83530,7 @@ var index_default = {
       if (pageNamespace) return pageNamespace;
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(
-        setupPage(await publicInstanceGroup(env, pageStore)),
+        setupPage(await publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
       );
     }
