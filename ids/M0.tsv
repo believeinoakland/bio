@@ -53,3 +53,4 @@ M0-193	2026-09-24T22:16:30.341Z	HEAD	SCHEDULER #20: surfacing-run.mjs snapKey pe
 M0-194	2026-09-24T22:43:49.775Z	HEAD	SCHEDULER #20: WORKER.md states current rules one line each (BOB #34 22:50Z)
 M0-195	2026-09-25T04:03:57.948Z	SCHEDULER-22	census changed: + source-digest backstop (BOB #35 04:00Z, rule 17)
 M0-196	2026-09-25T04:07:19.973Z	SCHEDULER-22	pensweep cannot resolve fileURLToPath(new URL('..', import.meta.url)) (CONDUCT #21 batch28)
+M0-197	2026-09-25T04:23:19.119Z	SCHEDULER-22	BOB #35 04:20-04:30Z: control-anchor drift instrument
