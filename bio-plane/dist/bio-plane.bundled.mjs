@@ -4608,10 +4608,12 @@ __export(bio_checks_exports, {
   mintUndetermined: () => mintUndetermined,
   normalizeRootKey: () => normalizeRootKey,
   normalizeType: () => normalizeType,
+  pageBoxesOf: () => pageBoxesOf,
   parseAllowedSigners: () => parseAllowedSigners,
   parseFrontmatter: () => parseFrontmatter,
   parseSignerTimestamp: () => parseSignerTimestamp,
   parseSshSig: () => parseSshSig,
+  pdfPageBoxUndetermined: () => pdfPageBoxUndetermined,
   projectNameKey: () => projectNameKey,
   quoteFindings: () => quoteFindings,
   quoteValue: () => quoteValue,
@@ -13079,7 +13081,9 @@ var CONTENT_EXTENT_CHECKS = {
        not a fifth one — minting a second code for a rule that already has one is
        how a vocabulary comes to hold two answers, which is the argument this
        family's own header makes about the machine-credential fence. */
-    translation: "This citation points at a part of the document that is not there \u2014 a page, a sheet or cell, a paragraph, or a slide or shape that falls outside what this record holds of the document. A reference nobody can follow is worse than no reference: it looks like evidence and resolves to nothing. Check the address against the document as this record holds it \u2014 pages and paragraphs are counted from the start of the captured file, which is not always the number printed on it, and a sheet or slide the file renamed or removed is a real finding rather than a typo."
+    /* D-374 widened the sentence to a REGION of a page, for the reason REC-85
+       widened it to three containers: the fact is the same one. */
+    translation: "This citation points at a part of the document that is not there \u2014 a page, a region of a page, a sheet or cell, a paragraph, or a slide or shape that falls outside what this record holds of the document. A reference nobody can follow is worse than no reference: it looks like evidence and resolves to nothing. Check the address against the document as this record holds it \u2014 pages and paragraphs are counted from the start of the captured file, which is not always the number printed on it; a region is measured in points from the corner of the page as the file lays it out, before any turning for display; and a sheet or slide the file renamed or removed is a real finding rather than a typo."
   },
   CONTENT_EXTENT_NO_CHAIN: {
     check: "C-45.2",
@@ -14210,6 +14214,8 @@ function checkContentExtent(extent, ctx = {}) {
         "CONTENT_EXTENT_OUT_OF_RANGE",
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the extent names page ${e.page}`
       );
+    const offPage = ctx.known !== false ? rectOffPage(e, ctx.pageBoxes) : null;
+    if (offPage) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", offPage);
   }
   if (e.kind === "sheet-cell") {
     if (typeof e.sheet !== "string" || !e.sheet.trim())
@@ -14442,7 +14448,61 @@ function imagePageUndetermined(extent, ctx = {}) {
   return { level: "page_images", why: c.page_images_why };
 }
 function mintUndetermined(extent, ctx = {}) {
-  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx);
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx) || pdfPageBoxUndetermined(extent, ctx);
+}
+function pageBoxesOf(v) {
+  if (!v || typeof v !== "object" || !Array.isArray(v.boxes) || !Array.isArray(v.of_page)) return null;
+  const fin = (n) => typeof n === "number" && Number.isFinite(n);
+  const boxes = [];
+  for (const b of v.boxes) {
+    const m = b && Array.isArray(b.media_box) && b.media_box.length === 4 && b.media_box.every(fin) ? b.media_box : null;
+    if (!m || !(m[2] > m[0] && m[3] > m[1])) return null;
+    const rotate = [0, 90, 180, 270].includes(b.rotate) ? b.rotate : null;
+    boxes.push({ media_box: m.slice(), w: m[2] - m[0], h: m[3] - m[1], rotate });
+  }
+  const of_page = [];
+  for (const i of v.of_page) {
+    if (i === null) {
+      of_page.push(null);
+      continue;
+    }
+    if (!(Number.isInteger(i) && i >= 0 && i < boxes.length)) return null;
+    of_page.push(i);
+  }
+  return { boxes, of_page };
+}
+function rectOffPage(e, pageBoxes) {
+  if (!(Array.isArray(e.rect) && e.rect.length === 4)) return null;
+  const held = pageBoxesOf(pageBoxes);
+  const i = held && Number.isInteger(e.page) && e.page < held.of_page.length ? held.of_page[e.page] : null;
+  if (i === null || i === void 0) return null;
+  const b = held.boxes[i], m = b.media_box, TOL = 1e-3 + 1e-9;
+  const r = [
+    Math.min(e.rect[0], e.rect[2]),
+    Math.min(e.rect[1], e.rect[3]),
+    Math.max(e.rect[0], e.rect[2]),
+    Math.max(e.rect[1], e.rect[3])
+  ];
+  if (r[0] >= m[0] - TOL && r[1] >= m[1] - TOL && r[2] <= m[2] + TOL && r[3] <= m[3] + TOL) return null;
+  return `page ${e.page} of this capture is ${b.w} x ${b.h} pt, its MediaBox [${m.join(", ")}] in default user space, and the extent's rect [${r.join(", ")}] reaches outside it` + (b.rotate ? `. The page is shown rotated ${b.rotate} degrees; a rect is measured on the unrotated page, from its MediaBox corners, not from the turned view` : "");
+}
+function pdfPageBoxUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === "object" ? extent : null;
+  if (!e || e.kind !== "pdf-page" || !Number.isInteger(e.page) || !(Array.isArray(e.rect) && e.rect.length === 4)) return null;
+  if (!ctx || ctx.known === false) return null;
+  const held = pageBoxesOf(ctx.pageBoxes);
+  if (!held)
+    return {
+      level: "page_box",
+      why: `this record holds no page boxes for this capture \u2014 it was acquired before the wire carried them (D-374), or no PDF structure read answered one \u2014 so whether the rect lies on page ${e.page} is UNDETERMINED, admitted and stated rather than guessed`
+    };
+  const i = e.page < held.of_page.length ? held.of_page[e.page] : null;
+  if (i === null || i === void 0)
+    return {
+      level: "page_box",
+      why: `the file states no readable MediaBox for page ${e.page} (none on the page or any ancestor, or not four numbers enclosing an area), so whether the rect lies on the page is UNDETERMINED, admitted and stated rather than guessed`
+    };
+  return null;
 }
 function coversImagePlacement(e, container) {
   if (!container || container.container_name !== "pdf" || !Array.isArray(container.images)) return null;
@@ -24246,6 +24306,28 @@ function pageResources(doc, pageMap) {
   }
   return null;
 }
+function inheritedAttr(doc, pageMap, key) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    if (map[key] !== void 0) return doc.resolve(map[key]);
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const m = inheritedAttr(doc, pageMap, "MediaBox");
+  if (!m || m.t !== "arr" || m.items.length !== 4) return null;
+  const v = m.items.map((x) => numOf(doc, x));
+  if (v.some((x) => x == null || !Number.isFinite(x))) return null;
+  const box = [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+  if (!(box[2] > box[0] && box[3] > box[1])) return null;
+  const r = numOf(doc, inheritedAttr(doc, pageMap, "Rotate"));
+  const rotate = r == null ? 0 : Number.isInteger(r) && r % 90 === 0 ? (r % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
 async function pageContent(doc, pageMap) {
   const c = doc.resolve(pageMap.Contents);
   if (!c) return "";
@@ -24798,6 +24880,24 @@ async function extractImages(doc, pageOrder) {
   }
   return { images: all, why: null };
 }
+function extractPageBoxes(doc, pageOrder) {
+  if (!pageOrder.length) return null;
+  const boxes = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const b = pdfPageBox(doc, doc.dictOf({ t: "ref", n: pageOrder[idx] }));
+    if (!b) {
+      of_page.push(null);
+      continue;
+    }
+    const k = JSON.stringify(b);
+    if (!key.has(k)) {
+      key.set(k, boxes.length);
+      boxes.push(b);
+    }
+    of_page.push(key.get(k));
+  }
+  return { boxes, of_page };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -24875,6 +24975,9 @@ async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* D-374: each page's MediaBox, top-level for `images`' reason (Tier 2
+       replaces `text`). The bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc, pageOrder),
     notes: doc.notes
   };
 }
@@ -49728,6 +49831,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     return {
       chain: this.#chainOfReading(reading),
       pageCount: this.#pageSetForCapture(captureSha, reading),
+      /* D-374: each page's MediaBox as the acquire wire persisted it, off the
+         SAME parsed reading (CAP-9's one-read rule). Handed on as stored —
+         absent, null or `{boxes, of_page}` — and read by the checker's one
+         reader (`pageBoxesOf`); a box the record does not hold is admitted
+         and stated there, never supplied here. */
+      pageBoxes: reading && typeof reading === "object" ? reading.page_boxes ?? null : null,
       container
     };
   }
@@ -67631,7 +67740,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const has = (v) => Array.isArray(v) && v.length > 0;
     switch (extent.kind) {
       case "pdf-page":
-        return Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture";
+        if (!Number.isInteger(ctx.pageCount)) return "the record holds no page set for the newer capture";
+        return pdfPageBoxUndetermined(extent, ctx) ? "the record holds no box for that page of the newer capture, so its rect was not bounded" : null;
       case "doc-para":
         return Number.isInteger(c.paragraphs) ? null : "the record holds no paragraph count for the newer capture";
       case "sheet-cell":
@@ -84345,6 +84455,11 @@ var index_default = {
             tier3Candidate: t3.stillWanting
           });
           reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0 ? structure.pages : Number.isInteger(stored.page_count) ? stored.page_count : null;
+          {
+            const pb = pageBoxesOf(structure.pageBoxes);
+            if (pb) reading.page_boxes = pb;
+            else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes;
+          }
           reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent") ? stored.container_extent : null;
           reading.provenance = await readingProvenance({
             text: t3.i2text,
@@ -85330,7 +85445,7 @@ var index_default = {
           basis: `the ${docType.type.key} content type declares no reader, so this document has no reading`
         };
       } else {
-        let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
+        let wired = null, wiredTier = null, pageCount = null, containerExtent = null, pageBoxes = null;
         let pdfPaints = null;
         let chain2 = null, ocrNote = null, tier2note = null, tier2PerPage = null;
         let t3Wanting = false;
@@ -85355,6 +85470,7 @@ var index_default = {
                   i2text = st.text || null;
                   wiredTier = 1;
                   if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+                  pageBoxes = pageBoxesOf(st.pageBoxes);
                   pdfPaints = {
                     images: Array.isArray(st.images) ? st.images : null,
                     why: typeof st.imagesWhy === "string" ? st.imagesWhy : null
@@ -85511,6 +85627,7 @@ var index_default = {
           };
         }
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+        reading.page_boxes = pageBoxes;
         reading.container_extent = containerExtent;
       }
       reading.provenance = await readingProvenance({

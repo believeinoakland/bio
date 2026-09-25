@@ -69,7 +69,9 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          caseDocumentStatesMemberBlocks,
          /* D-513: the doorbell's own family, read AS A VALUE by the three governed
             helpers below — the rows that give an anonymous knocker a sentence. */
-         KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+         KNOCK_CHECKS,
+         /* D-374: the one reader of a structure op's per-page boxes, shared with the checker. */
+         pageBoxesOf } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -7519,6 +7521,11 @@ export default {
             tier2note: readT2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
           reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
             ? structure.pages : (Number.isInteger(stored.page_count) ? stored.page_count : null);
+          /* D-374: the re-read carries the boxes by the count's rule — the structure
+             op's own answer, else what the reading it replaces held, else absent. */
+          { const pb = pageBoxesOf(structure.pageBoxes);
+            if (pb) reading.page_boxes = pb;
+            else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
           reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent")
             ? stored.container_extent : null;
           /* D-536: the re-read's own provenance, by the acquire path's rule — digested over the text
@@ -8966,7 +8973,7 @@ export default {
            reason the page count does — it is a fact the FORMAT wire learned
            about this document on this pass — and it stays null until an entry
            that actually itemises a container answers. */
-        let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
+        let wired = null, wiredTier = null, pageCount = null, containerExtent = null, pageBoxes = null;
         /* D-420: what `structure()` answered about the images a PDF's pages
            PAINT, `{ images, why }`, kept from the one call that produced it and
            read at the container-extent site below. `null` means the structure
@@ -9031,6 +9038,11 @@ export default {
                      zero is NOT a page count — it is a document with no pages
                      the structure reader could order — and it stays null. */
                   if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+                  /* D-374: each page's MediaBox, READ from I2 like the count one
+                     line up and never re-derived; the store bounds a `pdf-page`
+                     rect by it. A shape this wire cannot read is NULL, never a
+                     partial figure. */
+                  pageBoxes = pageBoxesOf(st.pageBoxes);
                   /* D-420: the image list rides the STRUCTURE object, not
                      `text`, so the Tier-2 and Tier-3 replacements of `i2text`
                      below cannot drop it (pdfstructure.mjs's CPDF-18 note). */
@@ -9489,6 +9501,13 @@ export default {
            * FRAMEWORK's). `#writeTextSource`'s columns exist because the chain
            * had to be filterable; this number does not. */
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+        /* D-374 — EACH PAGE'S BOX, under `page_count`'s three-state absence rule
+           one line up: ABSENT, nothing tried (a capture acquired before D-374, a
+           page read at intake); NULL, the wire ran and no producer answered a box
+           (an office container, a PDF with no page order); an OBJECT, the
+           structure op's `{boxes, of_page}` in which a page whose MediaBox could
+           not be read is itself NULL. What bounds a `pdf-page` rect (C-45.1). */
+        reading.page_boxes = pageBoxes;
         /* CAP-12 / D-354 — THE CONTAINER EXTENT, CARRIED ONTO THE READING THE
            PLANE PERSISTS, at the same ONE site and under the same three-state
            absence rule IC-87 fixed for `page_count` one line up.

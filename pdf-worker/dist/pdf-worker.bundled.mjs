@@ -40733,6 +40733,28 @@ function pageResources(doc, pageMap) {
   }
   return null;
 }
+function inheritedAttr(doc, pageMap, key) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    if (map[key] !== void 0) return doc.resolve(map[key]);
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const m2 = inheritedAttr(doc, pageMap, "MediaBox");
+  if (!m2 || m2.t !== "arr" || m2.items.length !== 4) return null;
+  const v2 = m2.items.map((x2) => numOf(doc, x2));
+  if (v2.some((x2) => x2 == null || !Number.isFinite(x2))) return null;
+  const box = [Math.min(v2[0], v2[2]), Math.min(v2[1], v2[3]), Math.max(v2[0], v2[2]), Math.max(v2[1], v2[3])];
+  if (!(box[2] > box[0] && box[3] > box[1])) return null;
+  const r2 = numOf(doc, inheritedAttr(doc, pageMap, "Rotate"));
+  const rotate = r2 == null ? 0 : Number.isInteger(r2) && r2 % 90 === 0 ? (r2 % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
 async function pageContent(doc, pageMap) {
   const c2 = doc.resolve(pageMap.Contents);
   if (!c2) return "";
@@ -41285,6 +41307,24 @@ async function extractImages(doc, pageOrder) {
   }
   return { images: all, why: null };
 }
+function extractPageBoxes(doc, pageOrder) {
+  if (!pageOrder.length) return null;
+  const boxes = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const b2 = pdfPageBox(doc, doc.dictOf({ t: "ref", n: pageOrder[idx] }));
+    if (!b2) {
+      of_page.push(null);
+      continue;
+    }
+    const k2 = JSON.stringify(b2);
+    if (!key.has(k2)) {
+      key.set(k2, boxes.length);
+      boxes.push(b2);
+    }
+    of_page.push(key.get(k2));
+  }
+  return { boxes, of_page };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -41362,6 +41402,9 @@ async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* D-374: each page's MediaBox, top-level for `images`' reason (Tier 2
+       replaces `text`). The bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc, pageOrder),
     notes: doc.notes
   };
 }

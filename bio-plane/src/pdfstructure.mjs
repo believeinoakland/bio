@@ -1305,6 +1305,58 @@ function pageResources(doc, pageMap) {
   return null;
 }
 
+/** D-374 — AN INHERITABLE PAGE ATTRIBUTE, read up the page tree. /MediaBox and
+ *  /Rotate are inheritable (ISO 32000-1 §7.7.3.4, a claim of the standard's):
+ *  a page that omits one uses its nearest /Pages ancestor's. `pageResources`'
+ *  walk, for any key. */
+function inheritedAttr(doc, pageMap, key) {
+  let map = pageMap, seen = 0;
+  while (map && seen < 64) {
+    if (map[key] !== undefined) return doc.resolve(map[key]);
+    const parent = doc.resolve(map.Parent);
+    map = parent && parent.t === "dict" ? parent.map : null;
+    seen++;
+  }
+  return null;
+}
+
+/** D-374 — ONE PAGE'S BOX, `{media_box:[x0,y0,x1,y1], w, h, rotate}`, or NULL
+ *  when the file does not let it be read. Never a default: a page with no
+ *  readable /MediaBox has an UNDETERMINED extent, and inventing US Letter for it
+ *  would bound a member's citation by a box the document never stated.
+ *
+ *  WHICH BOX, AND WHY THE MEDIABOX. A `pdf-page` rect is in default user space
+ *  (IC-203), the space the file's own content is laid out in. The MediaBox is
+ *  that space's page: the medium the content sits on. The CropBox is only the
+ *  part a viewer SHOWS, and content outside it is still in the file — text
+ *  cropped out of view is exactly the kind of thing a citation may need to point
+ *  at. Bounding by the CropBox would refuse a true address of content the
+ *  document holds, a fence tighter than its rule; so the CropBox is not read.
+ *
+ *  THE BOX KEEPS ITS ORIGIN. A MediaBox need not start at 0,0 (`[-9 -9 621 801]`
+ *  is legal), and a rect is compared against the box's own corners, not against
+ *  `[0, 0, w, h]`. `w`/`h` are carried beside it for a reader who wants a size.
+ *
+ *  /ROTATE IS CARRIED AND DOES NOT MOVE THE BOX. Rotation is how a viewer turns
+ *  the page for display (D-320 applies it at render); user space is the
+ *  UNROTATED space, so `w`/`h` are the unrotated width and height and a rect is
+ *  bounded in that space. `rotate` is carried so a refusal can tell a member
+ *  whose coordinates came from a turned view why they do not fit. A /Rotate that
+ *  is not a multiple of 90 is not a rotation the format admits; it reads NULL. */
+export function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const m = inheritedAttr(doc, pageMap, "MediaBox");
+  if (!m || m.t !== "arr" || m.items.length !== 4) return null;
+  const v = m.items.map((x) => numOf(doc, x));
+  if (v.some((x) => x == null || !Number.isFinite(x))) return null;
+  const box = [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+  /* A box with no area bounds nothing a member could cite; it is unreadable, not a zero page. */
+  if (!(box[2] > box[0] && box[3] > box[1])) return null;
+  const r = numOf(doc, inheritedAttr(doc, pageMap, "Rotate"));
+  const rotate = r == null ? 0 : Number.isInteger(r) && r % 90 === 0 ? ((r % 360) + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
+
 /** Concatenate a page's content stream(s) into one decoded latin1 string. */
 async function pageContent(doc, pageMap) {
   const c = doc.resolve(pageMap.Contents);
@@ -2156,6 +2208,25 @@ async function extractImages(doc, pageOrder) {
   return { images: all, why: null };
 }
 
+/** D-374 — EVERY PAGE'S BOX, `{ boxes: [box…], of_page: [index|null…] }`:
+ *  `of_page[i]` indexes the distinct box page `i` has, or is NULL where that
+ *  page's box could not be read (`pdfPageBox`). Distinct boxes are stored once,
+ *  because a 3,000-page budget book is almost always one box 3,000 times and the
+ *  reading this rides is persisted whole. NULL for the whole document only when
+ *  there is no page order to walk. */
+function extractPageBoxes(doc, pageOrder) {
+  if (!pageOrder.length) return null;
+  const boxes = [], key = new Map(), of_page = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const b = pdfPageBox(doc, doc.dictOf({ t: "ref", n: pageOrder[idx] }));
+    if (!b) { of_page.push(null); continue; }
+    const k = JSON.stringify(b);
+    if (!key.has(k)) { key.set(k, boxes.length); boxes.push(b); }
+    of_page.push(key.get(k));
+  }
+  return { boxes, of_page };
+}
+
 /* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
@@ -2281,6 +2352,9 @@ export async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...(imgs.images ? {} : { imagesWhy: imgs.why }),
+    /* D-374: each page's MediaBox, top-level for `images`' reason (Tier 2
+       replaces `text`). The bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc, pageOrder),
     notes: doc.notes,
   };
 }
