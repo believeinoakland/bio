@@ -9,6 +9,36 @@ ever cut to fit. No whole-file budget; a row is held to 2 KiB, as in the backlog
 
 ## Rows
 
+### M0-177 · queued — **A SUITE CAN NAME A `docs/` BASENAME ONLY IN A SLASH-FREE STRING, which the gate reads as a reader edge (M0-165: "MEASUREMENTS" alone is a quoted token); the worker's sweep lists 40 candidates, none confirmed.** Found by M0-165's worker. — owner M0.
+order: after M0-175, behind the product rows: a sweep of candidates after M0-176 narrows the door (Bob's 17:41Z rule; SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-176.
+scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
+accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-185 · queued — **`derivation-bounds`' TRUNCATION GRADER CANNOT SEE A `this.#rows(` WRAPPED IN A TERNARY, so a capped read written that way leaves the graded roster silently (REC-194 fixed its own instance).** Found by REC-194's worker (F2). — owner M0.
+order: after M0-177, behind the product rows: latent, no live instance (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: none.
+scope: the grader follows each branch of a ternary to the rows call.
+accepts-when: a ternary-wrapped capped read is graded (the measured failure it moves: REC-194's read leaving the roster unseen). NEGATIVE CONTROL: plant a ternary-wrapped read and the roster names it.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-186 · queued — **A BATTERY RUN BY HAND OUTSIDE THE GATE IS UNPINNED: nothing records which `origin/main` it measured.** Found by M0-173's worker (D), the half M0-173 left. — owner M0.
+order: after M0-185, behind the product rows (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate measures ONE tree), with M0-173's coord pin as the precedent.
+depends-on: M0-173.
+scope: a hand-run battery prints and records the `origin/main` (and coord) sha it read, as M0-173's gate does.
+accepts-when: a hand run's completion line names the main sha (the measured failure it moves: an unpinned hand verdict). NEGATIVE CONTROL: drop the pin and the provenance arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
 ### D-532 · queued — **`bio-plane/test/d280-strengthbar.control.mjs` ARM C2 HAS BEEN STALE SINCE CASE-2 AND UNTRACKED: three of its mustFail entries name d280's §3 shapes, which no longer exist; REC-141 reported it on 2026-09-19 (the note at d280-strengthbar.test.mjs:4) and no row was made.** Id minted by its finder (via CONDUCT #20 21:21Z). — owner RECORD (the control).
 order: after M0-186, behind the product rows: a hand-run driver, no battery effect (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24)
 milestone: M0

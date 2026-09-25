@@ -76,6 +76,16 @@ scope: mergeTier2Text carries `image_unread` with image_content_*; mergeTier3Tex
 accepts-when: a tier-2-won page keeps its image_unread, and an OCR-appended page loses it (moves: a dropped true marker, a kept false one). NEGATIVE CONTROL: drop either change and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-665's union notes).
 
+### D-710 · queued — **A WHOLE-DOCUMENT UNIT OF A MIXED DOCUMENT READS `ocr` (the chain's last step), which is the overstatement D-686 exists to remove.** BOB #35 RULED 2026-09-25 09:35Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): a new value, `mixed` — chainKindFor answers the single kind when every derivation step covering the unit is one kind, and `mixed` when they differ; not NULL, since the record KNOWS it was read both ways; every reader that labels machine-read text treats `mixed` as CONTAINING machine-read text (DEC-4); an office unit with one kind reads that kind. D-686 (integrated) shipped the provisional last-step answer. — owner CONTENT-PDF, RECORD.
+order: at the backlog head after D-697 — it corrects just-integrated D-686 and rides its IC (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I5 — the chain-kind vocabulary gains `mixed`; rides D-686's IC; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (as D-686 folded BOB #35's 09:05Z ruling), with the 09:35Z ruling folded there by this row.
+depends-on: D-686 (integrated, land/worker/D-686 @ 8c55a9c2, on D-635).
+scope: chainKindFor answers `mixed` for a no-page unit whose covering steps differ; every machine-read-text reader treats it as containing machine-read text; the search grammar and reader sentences name it.
+accepts-when: the mixed fixture's whole-document unit reads `mixed`, and a one-kind document reads its kind (moves: a whole-document unit read as ocr). NEGATIVE CONTROL: the old last-step answer (`ocr`) fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:35Z ruling).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -105,6 +115,16 @@ depends-on: D-684 (running; the same acquire wire).
 scope: MEASURE first (a fixture over the budget) in measurements/<id>.md; charge min(bytes, CAPTURE_TEXT_UNIT_CAP) and carry the prefix with `truncated: true`, which the store honours; state what is still dropped when even prefixes exceed the budget.
 accepts-when: a unit over the remaining budget is carried truncated and marked so, and search finds its prefix (moves: a unit silently dropped). NEGATIVE CONTROL: charge the whole unit again and the carried-prefix arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-672's worker).
+
+### D-709 · queued — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
+order: after D-698 (running on D-693), the same earned-basis entries (SCHEDULER #23, 2026-09-25)
+milestone: M9
+interface: I5 — additive `fetch.route: "unrecorded"` on every no-locator capture entry; an IC required; the integrator mints and classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (the fetch-path table D-693 added), with BOB #35's 10:05Z ruling, folded there by this row.
+depends-on: D-698 (running; the same entries, stacked on D-693).
+scope: every capture entry with no locator carries fetch {route: "unrecorded"}; its leg grade reads authored-under-ceiling and says so; the ~30 suites that pin whole entries are CORRECTED with a comment saying why, never exempted.
+accepts-when: a no-locator capture's entry states route unrecorded and its leg reads authored-under-ceiling (moves: a silent entry). NEGATIVE CONTROL: omit the key again and the stated-route arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 10:05Z ruling).
 
 ### D-692 · queued — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
 order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
@@ -1091,34 +1111,4 @@ design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot
 depends-on: M0-159.
 scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
 accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-177 · queued — **A SUITE CAN NAME A `docs/` BASENAME ONLY IN A SLASH-FREE STRING, which the gate reads as a reader edge (M0-165: "MEASUREMENTS" alone is a quoted token); the worker's sweep lists 40 candidates, none confirmed.** Found by M0-165's worker. — owner M0.
-order: after M0-175, behind the product rows: a sweep of candidates after M0-176 narrows the door (Bob's 17:41Z rule; SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
-depends-on: M0-176.
-scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
-accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-185 · queued — **`derivation-bounds`' TRUNCATION GRADER CANNOT SEE A `this.#rows(` WRAPPED IN A TERNARY, so a capped read written that way leaves the graded roster silently (REC-194 fixed its own instance).** Found by REC-194's worker (F2). — owner M0.
-order: after M0-177, behind the product rows: latent, no live instance (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
-depends-on: none.
-scope: the grader follows each branch of a ternary to the rows call.
-accepts-when: a ternary-wrapped capped read is graded (the measured failure it moves: REC-194's read leaving the roster unseen). NEGATIVE CONTROL: plant a ternary-wrapped read and the roster names it.
-added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
-
-### M0-186 · queued — **A BATTERY RUN BY HAND OUTSIDE THE GATE IS UNPINNED: nothing records which `origin/main` it measured.** Found by M0-173's worker (D), the half M0-173 left. — owner M0.
-order: after M0-185, behind the product rows (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a gate measures ONE tree), with M0-173's coord pin as the precedent.
-depends-on: M0-173.
-scope: a hand-run battery prints and records the `origin/main` (and coord) sha it read, as M0-173's gate does.
-accepts-when: a hand run's completion line names the main sha (the measured failure it moves: an unpinned hand verdict). NEGATIVE CONTROL: drop the pin and the provenance arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
