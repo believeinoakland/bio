@@ -23,6 +23,26 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-701 · queued — **op=links AND D-340's navchanges DISCLOSE GATED CAPTURES: both name capture shas and page addresses to any member with no viewer stamp, so a member outside a gated bundle's project learns that the bundle exists and what it holds.** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): FILTER BY THE VIEWER, not intended — every row passes the viewer predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see (the lead rule, MEMBER-KNOWLEDGE-DESIGN §5). Raised by D-340's worker. — owner RECORD.
+order: HEAD of the backlog — a disclosure defect outranks every feature (SCHEDULER.md loop step 3) (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — both ops' answers filtered by the viewer; the integrator classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (a caller who cannot see receives exactly the answer a nonexistent row would give), with BOB #35's 09:30Z ruling.
+depends-on: D-340 (integrated, land/worker/D-340 @ fdf6c8c9 — navchanges; op=links is on main).
+scope: op=links and navchanges pass every row through the viewer predicate before grouping or counting; counts move only with visible rows; sweep the other link-family reads for the same.
+accepts-when: a member outside a gated bundle's project sees neither its shas nor its addresses from either op, nor any count that moves with them (moves: disclosure). NEGATIVE CONTROL: a member outside a gated bundle's project calls both ops and must see neither its shas nor its addresses, nor any count that moves with them — drop the filter and it fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
+
+### D-702 · queued — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
+order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3/I5 — navchanges' judgement and the derived site_chrome; the integrator classifies.
+design: `docs/development/LINK-FIDELITY.md` §"Chrome: rendering and connection are different problems", with BOB #35's 09:30Z ruling, folded there by this row.
+depends-on: D-340 (integrated, land/worker/D-340 @ fdf6c8c9).
+scope: a link is chrome when contained in a chrome region AND recurring across the host's held pages; a single held page reads chrome undetermined; a varying sidebar's links are content; navchanges names a loss only for chrome by both tests.
+accepts-when: a varying page-local sidebar reports no lost chrome link, and a one-page host reads undetermined (moves: a sidebar read as lost chrome). NEGATIVE CONTROL: judge by containment alone and the sidebar arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
+
 ### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
@@ -1071,34 +1091,4 @@ design: `docs/development/VERIFICATION.md` (an instrument reads the forms the le
 depends-on: none.
 scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
 accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
-order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
-scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
-accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-150 · queued — **AN OP LEAVING THE BARE ROSTER INTO THE UNJUDGED BUCKET IS INVISIBLE TO THE FLOOR, which counts only what it still sees: `op=caseratify` was lost that way on `main`, found only by c20-batch11fix's RETURN-DELEGATE rule.** — owner M0.
-order: after M0-149, the same suite; the class behind a silent loss (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
-depends-on: land/conduct/c20-batch11fix on `main`.
-scope: an arm asserting every op the walk files is in exactly one judged bucket, or a ratchet on the UNJUDGED bucket's size.
-accepts-when: the walk's buckets partition its ops. NEGATIVE CONTROL: hide one op's body behind an unfollowed delegate and the arm names it.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-156 · queued — **`check-refusal-codes` ARM C READS ONLY THE SPANS A `where` NAMES, so a code re-minted OUTSIDE every governed region is invisible, for all 170 governed sites.** Found by D-484's worker. — owner M0 (RECORD reviews).
-order: after M0-155, the same class (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:53Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
-depends-on: D-484.
-scope: an arm counting `reason:"CODE"` / `code:"CODE"` literals across `bio-plane/src` per region row, failing on any outside its claimed span.
-accepts-when: every governed code's literals sit inside its region. NEGATIVE CONTROL: D-484's arm 1 (a mint outside the helper) fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
