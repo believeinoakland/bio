@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-702 · queued — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
-order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
-milestone: M4
-interface: I3/I5 — navchanges' judgement and the derived site_chrome; the integrator classifies.
-design: `docs/development/LINK-FIDELITY.md` §"Chrome: rendering and connection are different problems", with BOB #35's 09:30Z ruling, folded there by this row.
-depends-on: D-340 (integrated, land/worker/D-340 @ fdf6c8c9).
-scope: a link is chrome when contained in a chrome region AND recurring across the host's held pages; a single held page reads chrome undetermined; a varying sidebar's links are content; navchanges names a loss only for chrome by both tests.
-accepts-when: a varying page-local sidebar reports no lost chrome link, and a one-page host reads undetermined (moves: a sidebar read as lost chrome). NEGATIVE CONTROL: judge by containment alone and the sidebar arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
-
 ### M0-172 · queued — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
@@ -1111,4 +1101,14 @@ design: `docs/development/VERIFICATION.md` (an instrument reads the forms the le
 depends-on: none.
 scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
 accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-149 · queued — **A PUBLISHED `limit` HAS ONE GUARD: only `bounds.test` checks it; `meaning-bounds` grades the row source, not whether an op in the BOUNDED roster publishes its bound.** Found by D-479's worker. — owner M0.
+order: after M0-142, the same suite (SCHEDULER #18, 2026-09-24; via CONDUCT #20 04:49Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the negative-control register).
+depends-on: land/conduct/c20-batch11fix on `main` (it rewrites meaning-bounds' segmenter).
+scope: a meaning-bounds arm asserting every op in the BOUNDED roster publishes a non-empty `bound`.
+accepts-when: the arm lists the roster and passes. NEGATIVE CONTROL: drop the directory's published bound and the arm names it.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

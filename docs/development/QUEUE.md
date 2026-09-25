@@ -711,7 +711,8 @@ scope: the review-copy form round-trips a both-valued draft unchanged, renders b
 accepts-when: a both-valued draft loads, shows both, and a save without an owner's choice keeps both (moves: the form drops `newCase` silently). NEGATIVE CONTROL: restore the silent drop, and the arm that round-trips a both-valued draft fails by name, reading `newCase` gone.
 added: 2026-09-25 · SCHEDULER #23 (BOB #35's inbox entry of 06:45Z).
 
-### D-698 · running — **op=acquire STILL TYPES ITS ARCHIVE GRADE LETTER (index.mjs: `grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING`) — a second copy of a RULED value (D-693's ARCHIVE_CAPTURE_GRADE), pinned equal only by suite 9d; and acquire.test.mjs asserts the arm is "a TYPED letter, OPEN BY DECISION", which is now false.** Found by D-693's worker (minted on land/worker/D-693). — owner RECORD.
+### D-698 · integrated — **op=acquire STILL TYPES ITS ARCHIVE GRADE LETTER (index.mjs: `grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING`) — a second copy of a RULED value (D-693's ARCHIVE_CAPTURE_GRADE), pinned equal only by suite 9d; and acquire.test.mjs asserts the arm is "a TYPED letter, OPEN BY DECISION", which is now false.** Found by D-693's worker (minted on land/worker/D-693). — owner RECORD.
+status: integrated — SCHEDULER #23 11:15Z: tip c0f7a56f (on D-693 c55e4419), GATE 385/385 GREEN FULLREUSE (21885 assertions), tree 049024b0; ARCHIVE_CAPTURE_GRADE exported from the catalogue, imported by store and index; acquire.test corrected; release/ and newgroup/dist carry the old stamp until DIST s next cut
 order: spawned directly after D-693, which it completes (one ruled value, one definition) (SCHEDULER #23, 2026-09-25)
 milestone: M9
 interface: none (the same letter, one source).
@@ -814,6 +815,17 @@ depends-on: none (stacked on land/worker/D-701 @ 414439d2, integrated, on D-340 
 scope: DISCLOSURE HALF ONLY: stamp the viewer; refuse a hidden source capture as the record's not-held answer; keep invisible targets out of the answer and its counts (projected, skipped_*, unresolved). THE WRITE HALF (may an outsider's act write an edge to or from a bundle they cannot see) is with BOB #36 — do not decide it; state it.
 accepts-when: a member of no project calling op=linkproject on a shared or hidden capture sees no hidden sha, project id or count (moves: disclosure). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-701's worker).
+
+### D-702 · running — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
+status: running — SCHEDULER #23 11:15Z: spawned, stacked on land/worker/D-701 @ 414439d2
+order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
+milestone: M4
+interface: I3/I5 — navchanges' judgement and the derived site_chrome; the integrator classifies.
+design: `docs/development/LINK-FIDELITY.md` §"Chrome: rendering and connection are different problems", with BOB #35's 09:30Z ruling, folded there by this row.
+depends-on: none (stacked on land/worker/D-701 @ 414439d2, integrated, on D-340 @ fdf6c8c9; D-706 runs on the same base).
+scope: a link is chrome when contained in a chrome region AND recurring across the host's held pages; a single held page reads chrome undetermined; a varying sidebar's links are content; navchanges names a loss only for chrome by both tests.
+accepts-when: a varying page-local sidebar reports no lost chrome link, and a one-page host reads undetermined (moves: a sidebar read as lost chrome). NEGATIVE CONTROL: judge by containment alone and the sidebar arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
