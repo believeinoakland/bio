@@ -709,6 +709,16 @@ scope: (1) publication copies a parted capture part by part and re-verifies each
 accepts-when: a parted capture ratifies AND publishes, byte-verified; one missing a part is refused naming it (moves: PLANE_HELD_IN_PARTS on sound bytes). NEGATIVE CONTROL: drop the part-copy from publication and the publish arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-533's worker).
 
+### D-561 · queued — **FIVE REFUSAL CODES STILL REACH AN ANONYMOUS CALLER UNTRANSLATED ON THE PUBLIC `op=publishedbytes` AND `op=publishedcase`, after D-549 translated NO_PUBLISHED_STORE (C-68.5).** Found by D-549's worker (land/worker/D-549 @ afcf1128; codes named in its report, not on the branch). Its sibling D-562 (check-refusal-codes grades public-op codes out of reach) is D-542's reach-by-op class and rides D-542. — owner RECORD.
+order: after D-567, with the corrections: a public caller shown a machine token is DEC-49's failure on the surface a stranger meets (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 additive — code, check and translation on the two public ops' refusals; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the public door), with DEC-49 (every refusal a member or the public can meet carries a canned translation).
+depends-on: D-549.
+scope: enumerate at the code every code the two ops mint to an anonymous caller that has no catalogue row (D-549 counted five), and mint each at one governed site with a DEC-49 row written for a member of the public.
+accepts-when: each of the enumerated codes reaches a stranger with its translation, driven through the op (moves: five untranslated public codes). NEGATIVE CONTROL: strip one translation and that code's arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-549's worker).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
