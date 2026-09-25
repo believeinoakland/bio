@@ -1,0 +1,16 @@
+{
+ "unit": "plane:conclude-project.test.mjs",
+ "inputHash": "d7b21b7d94d834d8ed5e08b5f990e89b7bc65b9c25ccbd2bfd81ce781df45f8d",
+ "verdict": "PASS",
+ "run": "193f99a7dbb65bc63575d528cb15e0760001d034.1790327130534.1889.json",
+ "tree": "193f99a7dbb65bc63575d528cb15e0760001d034",
+ "head": "2f8ea68b8313dda50521bd2094102f497017b45a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "4e7972f6-322c-5d87-934c-aa13c4ed95da",
+ "at": "2026-09-25T09:05:30.545Z"
+}
