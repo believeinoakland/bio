@@ -799,6 +799,32 @@ export function lawProposalLabel(proposedBy) {
            says: LAW_PROPOSAL_STATES[state] };
 }
 
+/* REC-215 (BOB #33's risk-tier ruling, item 3; BIO_Case_Making_v0_1.md §2, `risk_tier`): A PROPOSAL OF A RISK
+ * TIER, read under the SAME three states as a proposal of governing laws — `lawProposalState` answers who proposed,
+ * and it is not re-spelled here — with sentences of its own, because what the proposal is NOT is a different
+ * thing: not the action's tier, and never written into its tier history. A member's proposal is a proposal too,
+ * and the label says so rather than calling it machine work (REC-195's over-strictness finding, one field over). */
+export const RISK_PROPOSAL_STATES = {
+  machine_proposed: 'a machine credential proposed this risk tier. That is machine work, labelled as machine work: '
+    + 'it can suggest that the tier be reconsidered and it can never set it. This is not the action\'s risk tier, '
+    + 'it is not in the tier\'s history, and nothing changes until a member revises the tier themselves',
+  member_proposed: 'a member proposed this risk tier to whoever revises it. It is a proposal and not the tier: only '
+    + 'the risk-tier act sets that, with a reason, and the record holds who made it',
+  unstated: 'the record does not say who proposed this risk tier',
+};
+
+/** The label block a reader is shown beside a proposed risk tier. ONE composer, `lawProposalLabel`'s reason. */
+export function riskProposalLabel(proposedBy) {
+  const state = lawProposalState(proposedBy);
+  return { by: proposedBy ?? null, state, machine_work: state === 'machine_proposed',
+           says: RISK_PROPOSAL_STATES[state] };
+}
+
+/* REC-215: the longest BASIS a risk-tier proposal may carry, in characters — what the proposer read the tier off.
+   `RISK_TIER_REASON_MAX`'s bound and grammar (no quote, backslash or line break), for the store's reason: the
+   proposal's basis is the proposer's own words, stored as written. */
+export const RISK_PROPOSAL_BASIS_MAX = 500;
+
 /* The longest `why` a proposal may carry against one citation, in characters. A why says what the proposer
    read the citation off — "the counterparty is a California city agency" — and is never the law's text. */
 export const LAW_PROPOSAL_WHY_MAX = 240;
@@ -16655,9 +16681,12 @@ export const RISK_TIER_REVISION_CHECKS = {
       + 'who changed it, when and why, and keeps every earlier tier readable. This write would have changed the '
       + 'tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act.',
   },
+  /* WHERE MOVED 2026-09-25 (REC-215) from `actionRiskTier > is-risk-tier-act` to the one grammar both the act and
+     the proposal ask, for C-73's reason at REC-195: a `where` names THE smallest span, and one condition enforced in
+     two bodies would be two spans for one row. The code, the C-number and the translation are unchanged. */
   BAD_RISK_TIER: {
     check: 'C-90.2',
-    where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
+    where: 'src/store.mjs #riskTierAsked > is-risk-tier-grammar',
     translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The '
       + 'act states one of those three; "not assessed" is what an action reads when nobody has stated one, and '
       + 'is not something to set. Nothing was written.',
@@ -16680,6 +16709,18 @@ export const RISK_TIER_REVISION_CHECKS = {
     where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
     translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
       + 'rewriting it, and the act only ever adds. Nothing was written.',
+  },
+  /* REC-215 (BOB #33's ruling, item 3): `op=actionriskpropose`, a PROPOSAL of a tier with its basis, stored apart
+     from the member's value and never setting it. A proposed tier that is not 1, 2 or 3 meets C-90.2's own code
+     through the one grammar both acts ask (`#riskTierAsked`) — the same condition, so the same row. The basis is
+     the proposal's own field and gets its own row. */
+  RISK_PROPOSAL_BASIS_REFUSED: {
+    check: 'C-90.6',
+    where: 'src/store.mjs actionRiskPropose > is-risk-propose-basis',
+    translation: 'A proposed risk tier carries its basis: what the proposer read the tier from, in its own words, '
+      + 'kept beside the proposal. The basis was missing, longer than 500 characters, or held a quotation mark, '
+      + 'backslash or line break, which this record cannot store. Nothing was written, and the action\'s tier '
+      + 'was never going to change.',
   },
 };
 

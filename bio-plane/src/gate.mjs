@@ -210,6 +210,10 @@ export const CATALOG_VERSION = "1.31.0";
    C-87.6's, which D-626 changed below this branch without a census row (its base lacked M0-195's pin). MINOR and
    additive on this constant's own rule (Publication §3 rule 17). If another branch takes 1.31.0 first, CONDUCT takes
    the next number and re-reads the census from the d470 suite's print on the merged tree. */
+/* REC-215 side, kept as history — took 1.31.0 on its own base; the union's 1.31.0 (c22-batch30) names a different catalogue. (REC-215, 2026-09-25, branch land/worker/REC-215): ONE ARRIVAL, NO DEPARTURES — C-90.6
+   RISK_PROPOSAL_BASIS_REFUSED, `op=actionriskpropose`'s basis. MINOR and additive on this constant's own rule. C-90.2's
+   row changed only its `where` (into `#riskTierAsked`), not its condition. The census is the d470 suite's own print;
+   if another branch in the batch also takes 1.31.0, CONDUCT re-reads the union's census. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

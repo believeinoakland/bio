@@ -882,6 +882,7 @@ export const RUNG_ABSENT = {
   actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
   actionrisktier:       { ground: "undetermined", is: "a member's authored revision of an action's risk tier with a REQUIRED reason (REC-214, BOB #33); APPEND-ONLY — every earlier tier, its author and its reason stay readable in risk_tier_history, and nothing clears it" },
   actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
+  actionriskpropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis (REC-215, BOB #33), stored apart from the member's tier and its history and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the tier" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
   projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
@@ -1960,6 +1961,11 @@ export const NON_ACTS = {
      record offering a member the machine's half of a ruling that exists to keep the two apart. */
   actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
   idmatch: "read: one identifier recognised in its space (C.M.S., project, fund, APN) — its form, its normalised value, a C.M.S. number's reach against Legistar's floor, an APN's standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
+  /* REC-215: NOT AN ACT ON THE ACTION, for `actionlawspropose`'s reason one field over (BOB #33, 21:55Z: every
+     `*propose` op is NON_ACTS). What it writes is not on the action — the tier is the member's and moves only by
+     `actionrisktier`, which IS an ACTS row — so publishing it as an act would offer a member the machine's half of
+     a ruling that exists to keep the two apart. Its surface shows it beside the tier with no adopt control. */
+  actionriskpropose: "action-directed: a machine (or a member) proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row labelled machine work and never the action's tier or its history",
   themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
