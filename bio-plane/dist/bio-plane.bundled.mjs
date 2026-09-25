@@ -24574,7 +24574,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     stack.length = 0;
   }
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
-  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {
+  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
       page: pageIdx,
       reason: "no_text_layer",
@@ -24584,6 +24584,54 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     });
   }
   return { text, undetermined };
+}
+var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
+var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
+async function pageShowsText(doc, pageMap) {
+  if (!pageMap) return null;
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return null;
+  let unread = false;
+  const walk = async (content, resources, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    let lastName = null;
+    for (const tk of tokenizeContent(content, { inlineImages: true })) {
+      if (tk.t === "name") {
+        lastName = tk.v;
+        continue;
+      }
+      if (tk.t !== "op") continue;
+      if (TEXT_SHOWING.has(tk.v)) return true;
+      if (tk.v !== "Do") continue;
+      const ref = lastName != null && xobjects ? xobjects[lastName] : null;
+      const st = ref ? doc.resolve(ref) : null;
+      if (!st || st.t !== "stream") {
+        unread = true;
+        continue;
+      }
+      if (nameOf(doc, st.dict.Subtype) !== "Form") continue;
+      const key = ref && ref.t === "ref" ? ref.n : null;
+      if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+        unread = true;
+        continue;
+      }
+      const data = await doc.streamDecoded(st);
+      if (!data) {
+        unread = true;
+        continue;
+      }
+      const formRes = doc.dictOf(st.dict.Resources) || resources;
+      if (await walk(
+        LATIN12.decode(data),
+        formRes,
+        depth + 1,
+        key != null ? [...formChain, key] : formChain
+      )) return true;
+    }
+    return false;
+  };
+  if (await walk(top.text, pageResources(doc, pageMap), 0, [])) return true;
+  return unread ? null : false;
 }
 function pageDrawsImage(doc, resources) {
   const xo = resources ? doc.dictOf(resources.XObject) : null;

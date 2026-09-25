@@ -1864,12 +1864,83 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
    * `no_text_layer` is I2's EXISTING vocabulary (the Tier-2 reason), used here
    * by a different tier rather than minted afresh — a second spelling for one
    * finding is D-164's lesson and this item is not going to repeat it. */
-  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {
+  /* D-585 — AND "NO FONT DECLARED" WAS TOO NARROW A SPELLING OF "BEARS NO TEXT".
+   * A font dictionary is a RESOURCE, and a page can inherit one from its /Pages
+   * parent without ever using it: `0201-cafr-2002` is 175 scanned pages, and 161
+   * of them inherit a 12-font dictionary and carry an EMPTY `BT … ET` beside the
+   * scan image (M-157). No glyph is shown on any of them, and this line read all
+   * 161 as zero characters of TEXT — read, and empty — rather than UNREAD, and
+   * `needsTier3` never heard of them. What bears text is a text-SHOWING
+   * operator, so that is now what is asked, by the one predicate the OCR
+   * member's renderer asks too (`pageShowsText`, below). The structural no-font
+   * half is KEPT beside it, not replaced: a page with no font resource cannot
+   * show a glyph whatever its content says, so it stays sufficient on its own,
+   * and every page this line marked before it still marks. What is added is the
+   * page that declares fonts and DEFINITELY shows nothing — `false`, never
+   * `null`: a content stream or a Form XObject this reader could not read is not
+   * evidence that nothing was shown there. */
+  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources)
+      && (!fontDict || (await pageShowsText(doc, pageMap)) === false)) {
     undetermined.push({
       page: pageIdx, reason: "no_text_layer", font: null, codes: "", count: 0,
     });
   }
   return { text, undetermined };
+}
+
+/* D-585 — THE TEXT-SHOWING OPERATORS, and the ONE predicate built on them.
+ *
+ * ISO 32000-1 §9.4.3 names four operators that show text: `Tj`, `TJ`, `'` and
+ * `"`. Every glyph on a page is painted by one of them; `BT`/`ET` only open and
+ * close a text object, `Tf` only selects a font, and a font in the resource
+ * dictionary is only AVAILABLE. So "does this page bear text" is "does one of
+ * these four run", and it is asked in exactly one place, here, by both of its
+ * askers: Tier 1's `no_text_layer` marker above, and the OCR member's renderer
+ * (`pdf-worker/src/pagepixels.mjs`, `analyzePage`, which imports it). Before
+ * D-585 the two asked two different wrong questions — "is a font declared" and
+ * "is a text object opened" — and a scan with an inherited font dictionary and
+ * an empty `BT … ET` failed both, independently (M-157: 161 of `0201-cafr-2002`'s
+ * 175 pages). One predicate is what keeps them from disagreeing again. */
+export const TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
+const TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
+
+/** Does this page SHOW text — run a text-showing operator — anywhere it paints:
+ *  its own content streams and every Form XObject it draws, however deep (to
+ *  `FORM_DEPTH_LIMIT`)? `true` or `false` is MEASURED; `null` is UNDETERMINED
+ *  and says so — a content stream or a drawn form that could not be decoded or
+ *  resolved, a form nested past the limit or in a cycle. A caller must not read
+ *  `null` as `false`: the part this reader could not see is exactly the part
+ *  that might have held the text. The tokenizer skips inline-image data, so a
+ *  sample byte run that happens to spell `Tj` is not an operator. */
+export async function pageShowsText(doc, pageMap) {
+  if (!pageMap) return null;
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return null;
+  let unread = false;
+  const walk = async (content, resources, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    let lastName = null;
+    for (const tk of tokenizeContent(content, { inlineImages: true })) {
+      if (tk.t === "name") { lastName = tk.v; continue; }
+      if (tk.t !== "op") continue;
+      if (TEXT_SHOWING.has(tk.v)) return true;
+      if (tk.v !== "Do") continue;
+      const ref = lastName != null && xobjects ? xobjects[lastName] : null;
+      const st = ref ? doc.resolve(ref) : null;
+      if (!st || st.t !== "stream") { unread = true; continue; }
+      if (nameOf(doc, st.dict.Subtype) !== "Form") continue;
+      const key = ref && ref.t === "ref" ? ref.n : null;
+      if (depth >= FORM_DEPTH_LIMIT || (key != null && formChain.includes(key))) { unread = true; continue; }
+      const data = await doc.streamDecoded(st);
+      if (!data) { unread = true; continue; }
+      const formRes = doc.dictOf(st.dict.Resources) || resources;
+      if (await walk(LATIN1.decode(data), formRes, depth + 1,
+                     key != null ? [...formChain, key] : formChain)) return true;
+    }
+    return false;
+  };
+  if (await walk(top.text, pageResources(doc, pageMap), 0, [])) return true;
+  return unread ? null : false;
 }
 
 /** Does this page's resource dictionary declare an image XObject? The second

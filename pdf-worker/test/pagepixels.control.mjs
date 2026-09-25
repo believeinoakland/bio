@@ -46,12 +46,19 @@ const ARMS = [
     mustFail: true,
     edit: (s) => s.replace("const rot = rotateBilevel(normalisePacked(packed0, columns, im.height), columns, im.height, opts.rotate || 0);",
                            "const rot = rotateBilevel(normalisePacked(packed0, columns, im.height), columns, im.height, 0);") },
-  { id: "e", file: SRC, declared: "the string/inline-image masking is dropped -> the scanned page reads as carrying text and is refused",
+  /* (e) CORRECTED BY D-585, never exempted. It dropped the MASK (`const masked = content`); since D-585 the text
+     question is the plane's `pageShowsText`, whose tokenizer never reads a string as an operator, so dropping the
+     mask moves nothing the suite reads and the arm would arm at nothing. Its subject — an operator spelled inside
+     a string must not read as text — is the same; it now breaks that directly. */
+  { id: "e", file: SRC, declared: "a naive Tj scan of the UNMASKED content joins the text answer -> the string-carrying page reads as carrying text and is refused",
     mustFail: true,
-    edit: (s) => s.replace("  const masked = maskedContent(content);", "  const masked = content;") },
+    edit: (s) => s.replace("    hasTextOps: textShown === true,", "    hasTextOps: textShown === true || /(^|\\s)Tj(\\s|$)/.test(content),") },
   { id: "f", file: SRC, declared: "JPXDecode is allowed to fall through -> the UNSUPPORTED_FILTER assertion fails",
     mustFail: true,
     edit: (s) => s.replace('if (last === "JBIG2Decode" || last === "JPXDecode") {', 'if (last === "JBIG2Decode") {') },
+  { id: "h", file: SRC, declared: "D-585: a bare BT counts as text again -> the empty-BT scan page is refused PAGE_HAS_TEXT_LAYER",
+    mustFail: true,
+    edit: (s) => s.replace("    hasTextOps: textShown === true,", "    hasTextOps: textShown === true || /(^|\\s)BT(\\s|$)/.test(masked),") },
   { id: "g", file: SRC, declared: "OVER-STRICTNESS ARM: a change that is real but must NOT break the suite — the `notes` field is removed from analyzePage's return. Declared MUST NOT FAIL.",
     mustFail: false,
     edit: (s) => s.replace("    contentBytes: content.length,\n", "    contentBytes: content.length, spuriousExtraField: true,\n") },

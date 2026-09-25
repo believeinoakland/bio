@@ -66,7 +66,7 @@
  * its ceiling). Not making the RGBA frame is the whole reason this fits.
  */
 
-import { PdfDoc } from "../../bio-plane/src/pdfstructure.mjs";
+import { PdfDoc, pageShowsText } from "../../bio-plane/src/pdfstructure.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -211,8 +211,18 @@ function maskedContent(s) {
   return out;
 }
 
-const TEXT_OPS = /(^|[\s\]>)])(Tj|TJ|'|")(?=[\s]|$)/;
-const SHOW_TEXT_BLOCK = /(^|\s)BT(\s|$)/;
+/* D-585: WHETHER THE PAGE SHOWS TEXT IS NOT ASKED HERE ANY MORE. This module
+ * held two regexes, `TEXT_OPS` (Tj, TJ, ', ") and `SHOW_TEXT_BLOCK` (a bare
+ * `BT`), and counted EITHER as text. A `BT` opens a text object and shows
+ * nothing: `0201-cafr-2002` carries an empty `BT … ET` beside the scan on 161 of
+ * its 175 pages, and every one of them was refused `PAGE_HAS_TEXT_LAYER` — a
+ * scan with no glyph on it, refused OCR for having text (M-157). The question is
+ * now the plane's `pageShowsText`, the ONE predicate Tier 1's `no_text_layer`
+ * marker also asks, so the page Tier 1 sends here is the page this admits. It
+ * reads the page's content AND the Form XObjects it draws, which the regex never
+ * did; an UNDETERMINED answer (a stream or form it could not read) is not
+ * counted as text here, which is this module's behaviour before the change for
+ * the same input, and is recorded as `textShown: null` for a reader to see. */
 /* Painting operators that put non-image marks on the page. `sh` is a shading;
  * the rest are path fills and strokes. `W`/`n` (clip, no-op) are excluded on
  * purpose — a clip path paints nothing and every scanned page has one. */
@@ -254,6 +264,8 @@ export async function analyzePage(doc, pageIndex) {
   let content = "";
   try { content = await pageContentText(doc, pageMap); } catch { content = ""; }
   const masked = maskedContent(content);
+  let textShown = null;
+  try { textShown = await pageShowsText(doc, pageMap); } catch { textShown = null; }
 
   const drawn = [...masked.matchAll(/\/([^\s/<>[\]()]+)\s+Do(?=[\s]|$)/g)].map((m) => m[1]);
   const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
@@ -272,7 +284,8 @@ export async function analyzePage(doc, pageIndex) {
     page: pageIndex,
     contentBytes: content.length,
     contentReadable: content.length > 0 || !pageMap.Contents,
-    hasTextOps: TEXT_OPS.test(masked) || SHOW_TEXT_BLOCK.test(masked),
+    hasTextOps: textShown === true,
+    textShown,
     hasVectorOps: VECTOR_OPS.test(masked),
     hasInlineImage: masked.includes("INLINEIMAGE"),
     images: images.map(({ obj, ...rest }) => rest),
