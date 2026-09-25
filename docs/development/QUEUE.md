@@ -854,8 +854,8 @@ scope: render progFindingDecisionHtml(f) (or a sibling) inside each docprog-find
 accepts-when: against the real plane a dismissed finding on the document page renders its decision beside it (moves: an answered question shown as open). NEGATIVE CONTROL: render the findings without the disposition and the decided-finding arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by UI-108's worker).
 
-### D-605 · running — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
-status: running — SCHEDULER #22 05:19Z spawns WORKER D-605 (depth 2), stacked on land/worker/D-596 @ 37430658 (same setup page)
+### D-605 · integrated — **REGISTERING A SIGNING KEY FROM THE SETUP PAGE IS ALWAYS REFUSED BAD_KEY: `bio-plane/src/setup.mjs`'s key form posts the WHOLE `ssh-ed25519 AAAA… label` line as keyB64, and `Store#signerAdd`'s `/^AAAA[A-Za-z0-9+/=]+$/` can never match it.** Found by D-134's worker (05:15Z), by reading describeKey and the regex; D-134's suite shows a whole line refused. — owner DIST (the plane's setup page).
+status: integrated — SCHEDULER #22 06:06Z: tip 8dcf0f2b (CARRIES D-596 37430658; land after it), GATE 367/367 GREEN (21084 assertions); setup page posts the key's second token + label; no wire change; the released bundle and newgroup's embedded page carry the old form until DIST's next release
 order: after D-586, with the corrections to acts a group needs: a setup act that can never succeed blocks a new group's first signer (SCHEDULER #22, 2026-09-25)
 milestone: M8
 interface: none on the wire (the page's request is corrected; signeradd is unchanged).
@@ -985,6 +985,16 @@ depends-on: none.
 scope: a shared comparator whose serialiser maps undefined to a distinct sentinel; adopt it in every suite that asserts a null (grep assertions naming null), not all 363.
 accepts-when: each null-asserting suite uses the comparator and fails on a dropped key (moves: stated-null arms blind to a dropped key). NEGATIVE CONTROL: drop a stated-null key in one fixture and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-568's worker).
+
+### D-542 · queued — **THE DEC-49 GUARD SCORES A CODE "OUT OF REACH" WHEN ITS SURFACE RENDERS THE PLANE'S OWN WORDS: `check-refusal-codes.mjs` puts a code in reach only by R1 (a catalogue row), R2 (a code LITERAL in `app.html`) or R3 (a harness mock), so UI-68's review-copy surface, which renders `detail` and keys on no literal, left TEN of D-448's eleven codes scored out of reach for a day while a member could meet them.** Found by D-448's worker (branch `land/worker/D-448` 5eadd905: the Publication front matter and `13.review-copy` both carry "D-542 carries that fix (reach-by-op) and is NOT BUILT"). — owner M0 (the guard).
+order: after D-550, with the DEC-49 instrument rows behind the product rows: it makes a false gate result (a reachable code read as unreachable) visible, which is product quality, but nothing regresses today since D-448 catalogues all eleven (Bob's 17:41Z rule) (SCHEDULER #21, 2026-09-24)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a guard's verdict is a statement about its walk, never about the member), with DEC-49's rule that every refusal a member can meet carries a canned translation.
+depends-on: D-448.
+scope: teach the walk REACH-BY-OP: a code minted on an op that a surface in `civicos-ui/app.html` calls (by the op's name through its request helpers) is IN REACH whether or not the surface names the code literally; an op no surface calls stays out of reach.
+accepts-when: on D-448's parent (origin/main 9f8b69e6's review-copy mints) the walk sorts the ten review-copy codes IN REACH rather than F6 (the measured failure it moves: ten of eleven scored out of reach while UI-68's surface existed). NEGATIVE CONTROL: remove the surface's call to `reviewcopy`, and those codes fall back to out of reach by name.
+added: 2026-09-24 · SCHEDULER #21 (id minted by D-448's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
