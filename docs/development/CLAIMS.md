@@ -20233,8 +20233,7 @@ second reading, in the plane's words. RECORD does not edit `civicos-ui/**`. The 
 
 ## DELEGATION 2026-09-24 RECORD (WORKER REC-205) -> UI — **THE QUEUE STILL CANNOT SELECT A PROJECT-SCOPED FINDING: the plane takes it in a set, `queueSetOpFor` returns null for one**
 
-**open as of 2026-09-24** — the plane half landed on `land/worker/REC-205` and is driven
-(`bio-plane/test/peritem.test.mjs` block 9, 50/0); no surface offers the selection, so a member cannot reach it.
+**DISCHARGED 2026-09-25 by UI-110 (WORKER of SCHEDULER #22), on `land/worker/UI-110` @ `ba126d29a`, pending the train.** `queueSetOpsFor` (UI-94's name for `queueSetOpFor`) offers `proposedispose` for a project-scoped finding wherever `disposition.projects` names a home, and `queueApplySet` sends it as `{ project, finding }` (`finding` = `disposition.finding`). One home is taken as this block allowed, and SAID on the item; SEVERAL are asked on the item and never defaulted — until the member names one the item stays selected, is counted in the bar as held back, and is not sent (`queueHomeFor` answers null). Driven against the real plane in `civicos-ui/test/queue-projectscope.test.mjs` (23/0, each decision read back under its case), control `queue-projectscope.control.mjs` every arm as declared. Two things this block did not ask for, minted rather than folded in: D-623 (the plane mints `NO_PROJECT_SCOPE` with no DEC-49 translation) and D-624 (the single-item Defer/Dismiss dialog still sends `key` alone — the 2026-08-10 D-266 delegation above, still open).
 
 REC-205's row read *"its act names a project per item, so D-126's set has no way to carry one"*. MEASURED AT
 `1a7f0bcc0` BEFORE ANY CHANGE, THAT IS FALSE OF THE PLANE: `op=proposedispose` with
