@@ -237,7 +237,7 @@ t("attested by the key's member", rat.attestor, "sparky");
 /* CORRECTED at c20-batch23 (CONDUCT #20): 1.24.0 -> 1.25.0. REC-211's two rows (C-33.42, C-33.43) land on a
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
-/* CORRECTED 2026-09-25 by REC-186 (branch land/worker/REC-186): 1.28.0 -> 1.29.0 — C-33.47 LAST_OWNER_CANNOT_LEAVE joined
+/* CORRECTED 2026-09-25 by REC-186 (branch land/worker/REC-186): 1.28.0 -> 1.29.0 — C-33.48 LAST_OWNER_CANNOT_LEAVE joined
    ACT_SHAPE_CHECKS, so the catalogue the stamp names moved. Other branches also take 1.29.0 for other rows; the
    integrator re-reads the union's figure. */
 t("the catalog's version is recorded, not the gate's own", rat.gateVersion, "plane-gate/1.0 (bio-checks 1.29.0)");

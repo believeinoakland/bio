@@ -317,7 +317,7 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
-  /* 1.29.0 (REC-186, 2026-09-25, branch land/worker/REC-186): C-33.47 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS
+  /* 1.29.0 (REC-186, 2026-09-25, branch land/worker/REC-186): C-33.48 LAST_OWNER_CANNOT_LEAVE joined ACT_SHAPE_CHECKS
      (BOB #31's ruling: op=projectleave refuses a project's only owner). 461 -> 462, THIS SUITE'S PRINT on this tree.
      SEVERAL BRANCHES TAKE 1.29.0 FOR OTHER ROWS: the union re-reads its own figure and keeps one row. */
   "1.29.0": { count: 462, digest: "679731bf482feb496fa2c6fdd0443fc6d503cf8375b52cb6cf98142fd361d73a" },

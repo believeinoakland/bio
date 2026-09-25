@@ -452,10 +452,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        when they landed, which is this pair of arms doing its job. */
     ["C-33.42", "NO_DEFINITION_VERSION"],
     ["C-33.43", "DEFINITION_MOVED"],
-    /* REC-186, 2026-09-25 (BOB #31's ruling): op=projectleave refuses a project's ONLY owner. C-33.47, not
+    /* REC-186, 2026-09-25 (BOB #31's ruling): op=projectleave refuses a project's ONLY owner. C-33.48, not
        .44, because REC-205/REC-207's unmerged branches hold .44-.46. D-PIN-B failed naming exactly this
        row when it landed — the arm doing its job. */
-    ["C-33.47", "LAST_OWNER_CANNOT_LEAVE"],
+    ["C-33.48", "LAST_OWNER_CANNOT_LEAVE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -567,7 +567,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        item's tree over origin/main 58293bf31, and never 61 + 2: C-33.42 NO_DEFINITION_VERSION and
        C-33.43 DEFINITION_MOVED. */
     /* MOVED 63 -> 64 on 2026-09-25 (REC-186), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 64 rows across 2 families") on the item's
-       tree over origin/main 8bdf20e6, never 63 + 1: C-33.47 LAST_OWNER_CANNOT_LEAVE. */
+       tree over origin/main 8bdf20e6, never 63 + 1: C-33.48 LAST_OWNER_CANNOT_LEAVE. */
     rowsSeen, 64);
 }
 

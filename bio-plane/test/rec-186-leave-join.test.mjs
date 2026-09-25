@@ -2,7 +2,7 @@
    RESULTS, RUN 2026-09-25 by the REC-186 worker (sources affordances.mjs 170,877 B sha256 11c85f98a2c6…, store.mjs 3,329,890 B sha256 c7e283dae0c8…, each restored after every arm and verified by sha256, by content and by `cmp` x2): BASELINE 8/0 · (1) 7/1 — "THE REFUSAL" alone · (2) 6/2 — "THE JOIN OFFER" and "THE OFFERED JOIN LANDS" (olga, once joined, is still offered join: WIDER than declared, kept — it is the same overclaim met from the other side) · (3) 7/1 — "A CO-OWNER'S LEAVE LANDS" alone · (4) 7/1 — "THE LEAVE OFFER" alone. 4 arms, 0 other than declared. */
 /* REC-186 — MEMBERSHIP v2 §7.6 and §7.10's two unruled edges, RULED by BOB #31 on 2026-09-23 21:37Z:
  *   (a) THE PROJECT'S ONLY OWNER CANNOT "ASK TO LEAVE": `projectLeave` refuses the last owner by name
- *       (LAST_OWNER_CANNOT_LEAVE, C-33.47: "transfer ownership first"), `op=affordances` does not offer it,
+ *       (LAST_OWNER_CANNOT_LEAVE, C-33.48: "transfer ownership first"), `op=affordances` does not offer it,
  *       and a non-last owner may leave.
  *   (b) A JOINED PARTICIPANT IS NOT OFFERED "JOIN": `projectJoin` stays idempotent, but an offer that does
  *       nothing is an overclaim.
@@ -133,7 +133,7 @@ t("THE REFUSAL IS CATALOGUED: LAST_OWNER_CANNOT_LEAVE has a DEC-49 row — its c
   [ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.check, ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.where,
    /Add another owner first/.test(ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.translation ?? ""),
    /Nothing was recorded/.test(ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.translation ?? "")],
-  ["C-33.47", "src/store.mjs projectLeave > is-leave-owner-floor", true, true]);
+  ["C-33.48", "src/store.mjs projectLeave > is-leave-owner-floor", true, true]);
 t("THE LEAVE OFFER: op=affordances does NOT offer projectleave to PA's only owner, and still offers her the "
 + "owner's acts (projectinvite), so the withholding is the floor and not a lost position",
   [irisPA.includes("projectleave"), irisPA.includes("projectinvite")], [false, true]);

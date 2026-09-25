@@ -33887,7 +33887,7 @@ export class Store extends DurableObject {
        would record a departure the record can never carry out — an overclaim. The floor is asked through the
        SAME arithmetic `projectOwnerRemove`'s LAST_OWNER runs (`Store.ownerMath` over `#owners`), so the two
        cannot disagree about who is last; a co-owner's request is recorded as before. Nothing is written. */
-    /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.47. */
+    /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.48. */
     const floor = p.owner ? Store.ownerMath(this.#owners(projectId).length) : null;
     if (floor && !floor.possible)
       return { ok: false, reason: "LAST_OWNER_CANNOT_LEAVE", owners: floor.owners,
