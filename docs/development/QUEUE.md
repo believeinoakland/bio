@@ -921,7 +921,8 @@ scope: the field on both acts, the fail-closed default, the machine refusal. Ext
 accepts-when: an absent field creates HIDDEN; a machine's `discoverable` is refused by name. NEGATIVE CONTROL: default to discoverable, and the fail-closed arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
+### REC-150 · running — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
+status: running — SCHEDULER #21 02:53Z spawns WORKER REC-150 (depth 2); REC-196 runs beside it on the discoverable setting
 order: after REC-149, whose EXISTENCE level it needs (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC`)
