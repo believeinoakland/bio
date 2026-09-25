@@ -118,7 +118,10 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
 /* MOVED 23 -> 24 by D-707 (2026-09-25), BY NAME, never as slack: `d707-promote-request-fields.control.mjs` is D-628's
    driver derived verbatim below its ARMS table (the same plane-root READ and `dirname` of it; every write goes to a
    `mkdtempSync(join(tmpdir(), …))` mirror, removed after the arm; the real sources are hashed before and after). */
-t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547, D-548, D-563, D-578, D-546, D-615, D-628 and D-707 (<= 24)", g("UNCLASSIFIED").length <= 24, true);
+/* MOVED 24 -> 25 by D-726 (2026-09-25), BY NAME, never as slack: `d726-revision-regroups.control.mjs` is D-615's driver
+   derived verbatim below its ARMS table (the same plane-root READ and `dirname` of it; every write goes to a
+   `mkdtempSync(join(tmpdir(), …))` mirror, removed after the arm; the real sources are hashed before and after). */
+t("the estate's UNCLASSIFIED drivers have not grown past what M0-182 left, plus the copy sources of D-510, D-526, D-547, D-548, D-563, D-578, D-546, D-615, D-628, D-707 and D-726 (<= 25)", g("UNCLASSIFIED").length <= 25, true);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
   ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",

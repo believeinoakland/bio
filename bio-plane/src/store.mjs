@@ -17927,6 +17927,33 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-promote-redates-creation */
       /* ===== END D-692 ===== */
 
+      /* ===== D-726 (D-436's rule, the producer of a document this instance creates is this instance's group; C-86.14) —
+         A REVISION DOES NOT REGROUP ITS BUNDLE, D-692's fence one column over. `bundles.group_id` is written by the
+         creation alone (the ON CONFLICT arm below never touches it), and nothing compared a revision's document `group:`
+         with the head's: a revision whose bytes restated a DIFFERENT group landed and the row kept the creation's, so
+         the row and the head bytes disagreed (measured through op=promote on land/worker/D-707 95839afa: row group_id
+         believe-in-oakland, head bytes `group: some-other-group`). Moving the row instead would let any writer
+         re-attribute a document to another producer, so the revision is REFUSED by name, after the compare-and-swap
+         and before the first write, as C-86.9 is. Asked of the DOCUMENT's `group` only — a revision's meta names no
+         group (D-436 reads `meta.group` at a creation alone) — and of any value it states, trimmed, so a scalar that is
+         not a string is a statement too; a revision stating none carries the head's and is never asked. REPLAY IS
+         EXEMPT for D-510's reason, as for C-86.2. A head ALREADY disagreeing with its bytes is not rewritten. ===== */
+      const revisionGroup = sentFm && typeof sentFm === "object" && sentFm.group !== undefined && sentFm.group !== null
+        && String(sentFm.group).trim() !== "" ? String(sentFm.group).trim() : null;
+      /* DEC-49 REGION is-promote-regroups-bundle */
+      if (cur && revisionGroup !== null && revisionGroup !== String(cur.group_id).trim() && !pkg.replay) {
+        const rgRow = PROMOTED_TYPE_CHECKS.REVISION_REGROUPS_BUNDLE;
+        return { ok: false, reason: "REVISION_REGROUPS_BUNDLE", code: "REVISION_REGROUPS_BUNDLE",
+                 check: rgRow.check, translation: rgRow.translation,
+                 head_group: String(cur.group_id).slice(0, 80), revision_group: revisionGroup.slice(0, 80),
+                 detail: `${String(bundleId).slice(0, 80)} was produced by '${String(cur.group_id).slice(0, 40)}' and `
+                       + `this revision says '${revisionGroup.slice(0, 40)}'. A revision changes what a document says, `
+                       + `never whose it is. Send it again with the group the record holds, or with none. `
+                       + `Nothing was written.` };
+      }
+      /* END DEC-49 REGION is-promote-regroups-bundle */
+      /* ===== END D-726 ===== */
+
       /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
          write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
          refuses `CITED` while a live edge cites the item; `promote` is the write path it runs

@@ -15517,6 +15517,18 @@ export const PROMOTED_TYPE_CHECKS = {
       + 'file and checks it against the bytes it holds, and it will not guess one. Nothing was written. Give each '
       + 'stored file its size in bytes, and send it again.',
   },
+  /* D-726 (2026-09-25; D-436: the producer of a document this instance creates is this instance's group) — C-86.9's rule
+   * one column over: `bundles.group_id` is written by the creation alone, so a revision whose document restated a
+   * DIFFERENT `group` landed and the row and the head bytes disagreed; moving the row would let any writer re-attribute
+   * a document to another producer. A revision stating no group carries the head's. Replay is exempt, as for C-86.2. */
+  REVISION_REGROUPS_BUNDLE: {
+    check: 'C-86.14',
+    where: 'src/store.mjs promote > is-promote-regroups-bundle',
+    translation: 'This change says the item was produced by a different group than the record holds. A change can alter '
+      + 'what a document says, but not whose it is: the record keeps who produced each thing so it can be held to '
+      + 'account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it '
+      + 'again with the group the record holds, or with none.',
+  },
   /* D-546 (2026-09-25; BOB #34, 2026-09-24 23:55Z; State Rules v1.5 §4, "Moves are fenced from now on") — D-468's
    * fence, LIFTED TO EVERY TYPE WITH A HEAD. `op=promote` asked a state-edge table for a bias set alone, so every other
    * machine could be moved along an edge its table does not declare (a verified item back to `collected`, a closed
