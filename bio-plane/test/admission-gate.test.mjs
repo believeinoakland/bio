@@ -45,6 +45,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+import { unruledOpPlane, unruledOpMemberSession, UNRULED_OP } from "./unruled-op-fixture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -192,19 +193,48 @@ console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RA
      names beside the three this item just discharged. The omission arm is
      derived rather than listed in `d270-refusal-truth.test.mjs` and floored
      non-empty there, so this exemplar going stale is caught by name. */
-  const r = await POST(`op=provenanceroute&${CAI}`, {});
-  admits("a member's session on an op no session reaches and no decision explains", r, "SESSION_ROUTE_NOT_RECORDED");
+  /* RE-POINTED AGAIN 2026-09-25 (REC-155), NEVER EXEMPTED, AND THE ROW IS STILL THE SAME ROW. BOB #19
+     RULED all seven ops that produced this sentence (`BIO_Membership_Architecture_v2.md` §4.10): the
+     provenance pair and the three calibration writes joined BOTH session sets, `livefire` and `reproject`
+     were recorded in `UNATTENDED_BY_DECISION`. So `op=provenanceroute` answers a member's session with the
+     op's own result now, and on the real plane NO op produces C-38.8 — which is §4.10 working, not the row
+     going dead: C-38.8 is the answer owed to the next op somebody adds without a ruling. It is therefore
+     driven through `unruled-op-fixture.mjs` — the real gate and the real row over ONE op the real tables
+     have never heard of, built in memory — and `op=provenanceroute` is asserted at its NEW answer below,
+     so this re-pointing is a MOVE and a revert of REC-155 fails here by name. */
+  const fx = unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
+                              VERSION: "test" });
+  let r, m;
+  try {
+    const FXS = await unruledOpMemberSession(fx, "t-admin-1");
+    const fxPost = async (q) => (await fx.dispatchFetch("http://x/api/?" + q,
+      { method: "POST", body: "{}" })).json();
+    r = await fxPost(`op=${UNRULED_OP}&${FXS}`);
+    m = await fxPost(`op=${UNRULED_OP}&token=t-admin-1`);
+  } finally { await fx.dispose(); }
+  admits("a member's session on an op no session reaches and no decision explains (the unruled fixture op)",
+    r, "SESSION_ROUTE_NOT_RECORDED");
   /* THE ASSERTION THIS ROW EXISTS FOR, and it is a NEGATIVE about the wording
      rather than a positive about the code. */
-  t("and it makes NO design claim — it never says the verb is not for a person, because this op's "
-  + "own OPS row says the opposite and a false rationale suppresses its own bug report",
+  t("and it makes NO design claim — it never says the verb is not for a person, because nobody has "
+  + "ruled on this op and a false rationale suppresses its own bug report",
     /not for a person|unattended writer|not by a person/i.test(`${r.translation} ${r.detail}`), false);
   t("and it says plainly that the record holds no decision, which is an invitation to report the "
   + "gap rather than a wall in front of it",
     /no recorded decision/i.test(r.translation || ""), true);
-  const m = await POST("op=provenanceroute&token=t-admin-1", {});
-  t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential",
-    m.reason === "SESSION_ROUTE_NOT_RECORDED", false);
+  /* The fixture op has a row and no handler, so the bearer passing admission is shown POSITIVELY — it reaches
+     dispatch and meets `unknown op` — rather than by the absence of one code, which a refusal of any other
+     kind would also satisfy. */
+  t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential — it passes the gate "
+  + "and reaches dispatch, where a row with no handler is an unknown op",
+    [m.reason ?? null, /^unknown op: /.test(String(m.error))], [null, true]);
+  /* REC-155: THE OP THIS ARM DROVE UNTIL §4.10, AT ITS NEW ANSWER. `cai` holds no capability, and
+     `provenanceroute` NEEDS `contribute` — so passing the SESSION gate is shown by meeting the
+     CAPABILITY gate behind it, by name, rather than any session-gate code. */
+  const pr = await POST(`op=provenanceroute&${CAI}`, {});
+  t("and op=provenanceroute, which this arm drove until §4.10, now PASSES the session gate for a member "
+  + "(REC-155) and meets the capability gate behind it — NOT_CAPABLE, needing contribute",
+    [pr.reason, pr.needs], ["NOT_CAPABLE", "contribute"]);
   /* AND THE OP THIS ARM USED TO DRIVE IS ASSERTED AT ITS NEW ANSWER, so the
      re-pointing above is a MOVE rather than a deletion, and a revert of D-136
      fails HERE as well as in the suite that grades the arms.

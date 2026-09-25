@@ -77862,6 +77862,8 @@ var PROJECT_ACTIONS = [
 var GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 var IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
 var CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
+var PROVENANCE_JUDGEMENT_ACTIONS = ["provenancechain", "provenanceroute"];
+var CALIBRATION_WRITE_ACTIONS = ["calibrate", "calibrationsubject", "calibrationsignal"];
 var EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 var REGISTRY_ACTIONS = [
   "entitycreate",
@@ -78012,6 +78014,11 @@ var SESSION_OPS = {
        above — the roster decides them, asked by the store against the
        stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
     ...CUSTODIAL_ACTIONS,
+    /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
+       of them is the founder's act, and an enrolled administrator is a
+       `member` kind. */
+    ...PROVENANCE_JUDGEMENT_ACTIONS,
+    ...CALIBRATION_WRITE_ACTIONS,
     /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
        their accepted readings and the documents those rest on, so the
        viewer decides what it may pair at all — the session route is the
@@ -78150,6 +78157,8 @@ var SESSION_OPS = {
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
+    ...PROVENANCE_JUDGEMENT_ACTIONS,
+    ...CALIBRATION_WRITE_ACTIONS,
     "governorstate",
     "governorconfig",
     "aicredentialmint",
@@ -78670,7 +78679,18 @@ var NEEDS = {
      put a lens over other people's work; the capability is what says so.
      `biasinhale` carries NONE, like every other read in this file, and it is a
      read precisely because it writes nothing. */
-  biasadopt: "contribute"
+  biasadopt: "contribute",
+  /* REC-155 / §4.10: NO FIFTH CAPABILITY TOKEN. Repairing a provenance chain and recording a route marker are
+     corrections to the working record in a member's name, and recording a calibration, an engine to probe or a
+     vendor's announcement puts a row in the record — each rides `contribute`, as `attesttext` does, and a
+     VIEW-ONLY member does neither. PROVISIONAL, and stated: `provenancechain`'s REPORT arm writes nothing, but
+     this table gates an op rather than an arm (only `capture`'s GET is exempted, at the check), so a view-only
+     member does not reach the report through a session either. §4.10 ruled reach and is silent on capability. */
+  provenancechain: "contribute",
+  provenanceroute: "contribute",
+  calibrate: "contribute",
+  calibrationsubject: "contribute",
+  calibrationsignal: "contribute"
 };
 var decorateAct = (a) => ({
   id: a.id,
@@ -79266,7 +79286,11 @@ var UNATTENDED_BY_DECISION = {
   taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S \u2014 a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'",
   /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
      the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
-  instancegroupseed: "src/index.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT \u2014 THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY \u2014 AND NO SESSION OF ANY ROLE REACHES IT.'"
+  instancegroupseed: "src/index.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT \u2014 THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY \u2014 AND NO SESSION OF ANY ROLE REACHES IT.'",
+  /* REC-155: the two §4.10 RULES unattended by decision (BOB #19, 2026-09-21). Each citation is the one §4.10
+     quotes, re-read at the artifact by this landing; the ruling is cited beside it so a caller can find both. */
+  livefire: "BIO_Membership_Architecture_v2.md \xA74.10 (BOB #19), citing src/livefire.mjs, header: 'the only channel available for reaching a deployment may be a plain fetch of a URL. Confined to the scratch namespace' \u2014 the deployment's live-fire battery, addressed to the operator's credential.",
+  reproject: "BIO_Membership_Architecture_v2.md \xA74.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed because a deploy runs the bounded pass once at construction and a large store may need more than one' \u2014 a deploy's maintenance pass, addressed to the operator's credential."
 };
 function sessionOpGate(kind, op, spec, method) {
   const refusal7 = (code, error, detail, extra) => json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...extra || {} }, 403);

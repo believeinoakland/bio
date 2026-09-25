@@ -58,7 +58,12 @@ const ARMS = [
      `memberadd` and `signeradd` joined BOTH session sets, so the gate returns early for them and
      collapsing the split changes nothing they are told. `governorconfig` (the ROLE arm's one op now)
      and `provenanceroute` (an OMISSION) replace them — still two ops, from two different arms. */
-  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["governorconfig", "provenanceroute"],
+  /* CORRECTED 2026-09-25 (REC-155), a third time and for the same reason: §4.10 (BOB #19) put
+     `provenanceroute` in BOTH session sets, so the gate returns early for it and the collapse changes
+     nothing it is told — and the real plane's omission arm is now EMPTY. Sentence (c) is driven through
+     `unruled-op-fixture.mjs`, which reads THIS file's patched `src/index.mjs` from disk, so the fixture op
+     `rec155unruled` replaces it: still two ops, from two different arms. */
+  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["governorconfig", "rec155unruled"],
     what: "THE SPLIT COLLAPSED — sessionOpGate's three outcomes reduced to the single "
         + "MACHINE_CREDENTIAL_REQUIRED `main` sent before D-270. This is the arm the row's "
         + "accepts-when demands: it proves the suite grades the DISTINCTION, not a code's presence.",
@@ -72,7 +77,10 @@ const ARMS = [
       return [out, n];
     } },
 
-  { id: "c", file: SRC, expect: "RED", mustName: ["purge", "cpuprobe", "taskdrain", "capturerequestdrain"],
+  /* WIDENED 2026-09-25 (REC-155): §4.10 recorded `livefire` and `reproject`, so emptying the record must
+     name them too. */
+  { id: "c", file: SRC, expect: "RED", mustName: ["purge", "cpuprobe", "taskdrain", "capturerequestdrain",
+                                                  "livefire", "reproject"],
     what: "THE DECLARATION EMPTIED — UNATTENDED_BY_DECISION made empty, so the four ops with a "
         + "recorded decision are told it is an omission. THE ARM FOR BOB'S RULE ITSELF: the plane "
         + "may say 'not for a person' only where a decision is recorded, so emptying the record "

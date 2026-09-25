@@ -53,7 +53,10 @@
  *       old sentence was a design claim this plane holds no decision behind, and
  *       op=provenancechain's own OPS row says the opposite of it in as many
  *       words. The unreachability this paragraph rests on is UNCHANGED; only the
- *       words the caller meets have moved); every machine class that CAN reach it
+ *       words the caller meets have moved. CORRECTED AGAIN 2026-09-25 BY REC-155: §4.10 (BOB #19) put
+ *       `provenancechain` in BOTH session sets, so a signed-in member now REACHES it — and arrives stamped
+ *       with their own name, `sessMember`, which is never blank either; the unreachability of `!who` is
+ *       unchanged, its reason for a session has moved from "refused" to "named"); every machine class that CAN reach it
  *       arrives stamped `token:<class>` by the control plane, which is never
  *       blank. So no caller of the op can make the store's `!who` true. It is
  *       driven here at the Durable Object route where it IS reachable, and the
@@ -579,8 +582,11 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
   /* (b) THE OP-LEVEL FACT, and it is the finding rather than the decoration.
      Asserted structurally AND behaviourally, because either alone is the defect
      this project meets most: a mechanism believed on its existence. */
+  /* CORRECTED 2026-09-25 BY REC-155, never exempted: the label said the op "appears in NO session op set",
+     which §4.10 made false — and which this assertion never checked. What it checks, and what makes `!who`
+     unreachable, is the stamp: a session's author is `sessMember`, a bearer's `token:<class>`. */
   t("  STRUCTURALLY: `provenancechain` is stamped with a server-decided author on every route into "
-  + "it, and appears in NO session op set — so the store's `!who` cannot be made true by any caller",
+  + "it — a session's own member, a bearer's `token:<class>` — so the store's `!who` cannot be made true by any caller",
     [/op === "provenancechain"/.test(INDEX_BARE),
      /inner\.searchParams\.set\("author",\s*viaSession \? sessMember/.test(INDEX_BARE)], [true, true]);
   const answers = {};
@@ -588,8 +594,8 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
                              ["the member class", "mem-rec78"], ["the probe class", "prb-rec78"]])
     answers[name] = codeOf(await GET(`op=provenancechain&token=${tok}&bundleId=${DOC}`))
                  ?? (await GET(`op=provenancechain&token=${tok}&bundleId=${DOC}`))?.error ?? null;
-  t("  BEHAVIOURALLY: NOT ONE caller class reaches NO_AUTHOR through the op — the session is refused "
-  + "the op outright and every machine class arrives already named",
+  t("  BEHAVIOURALLY: NOT ONE caller class reaches NO_AUTHOR through the op — since REC-155 the session "
+  + "reaches the op under its own member's name, and every machine class arrives already named",
     Object.entries(answers).filter(([, v]) => v === "NO_AUTHOR"), []);
   console.log(`  what each caller class actually answers at op=provenancechain: ${JSON.stringify(answers)}`);
 }
