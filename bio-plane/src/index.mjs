@@ -3598,12 +3598,23 @@ async function caseReader(url, env, storeName, presentedAi) {
    the slug is PUBLIC. It asks the store's `instanceGroupPublic`, which selects nothing but the slug through the one
    reader every stamp uses, so the page, the op and the bytes of every document this store creates name ONE group.
    Answers `doAnswer`'s `{ answered, result }`, and a silence is the caller's to state AS a silence. An instance with
-   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served. */
-async function publicInstanceGroup(env, storeName) {
+   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served.
+
+   D-596 — WHICH PUBLIC PROJECTION IS THE CALLER'S TO NAME, AND THERE ARE EXACTLY TWO. op=instancegroup's public arm
+   keeps `instancegrouppublic`, the slug and nothing else (REC-163's contract, its key set pinned by group-public's
+   G1/G2/C3/C5). The setup page names `groupidentitypublic`, the projection op=groupidentity answers a stranger
+   (REC-164): the slug, the display name only beside a slug, and a domain only while its latest verdict is `verified`,
+   dated. Both read the slug through the store's one `#producingGroup()` reader, so the page and the op still name
+   ONE group. THE DEFECT: the page read `instancegrouppublic` alone, so it showed the slug and never the name or the
+   verified domain, while op=groupnameset's answer told the administrator every public surface shows the name beside
+   the slug. Any other value is answered as a silence rather than forwarded, so a typo cannot reach a DO path. */
+const PUBLIC_GROUP_PROJECTIONS = ["instancegrouppublic", "groupidentitypublic"];
+async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic") {
+  if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
   let stub = null;
   try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
   if (!stub) return { answered: false, result: undefined };
-  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
+  return doAnswer(stub.fetch(`http://do/${projection}`));
 }
 
 const json = (o, status = 200) =>
@@ -5638,7 +5649,8 @@ export default {
        SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
        or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
        never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
-       seed would go on saying none is recorded.
+       seed would go on saying none is recorded. D-596: the read is op=groupidentity's PUBLIC projection, so the line
+       carries the display name beside the slug and a verified domain with its date (`setup.mjs` `groupLine`).
 
        D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
        HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
@@ -5661,7 +5673,7 @@ export default {
       const pageNamespace = namespaceGate(url);
       if (pageNamespace) return pageNamespace;
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),
+      return new Response(setupPage(await publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     }
 

@@ -35,7 +35,7 @@ const DISPLAY = ["Believe", "in", "Oakland"].join(" ");
 /* Anchors, each a line of the subject quoted verbatim. */
 const TEMPLATE_LINE = "<main>\n${GROUP_LINE_UNREAD}\n";
 const RECORDED_OPEN = "<span class=\"slug\">'";
-const RECORDED_TAIL = "</span> &middot; group instance</p>\";";
+const RECORDED_TAIL = "</span> &middot; group instance\"";
 const NONE_WORDS = "No group is recorded for this copy yet";
 const UNREAD_WORDS = "This copy could not read its group just now";
 const UNREAD_FALLBACK = "  return GROUP_LINE_UNREAD;\n}";
@@ -43,7 +43,7 @@ const UNREAD_FALLBACK = "  return GROUP_LINE_UNREAD;\n}";
    (`namespaceGate` then `pageStore`), so the page and op=instancegroup, the two surfaces over one reader, answer for
    the same namespace. PAGE_READ follows the line; `page-reads-scratch` can no longer be spelled by swapping a literal
    inside it and now arms on PAGE_STORE, which is where the namespace is decided. The arms are otherwise unchanged. */
-const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),";
+const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, pageStore, \"groupidentitypublic\")),";
 const PAGE_STORE = "      const pageStore = url.searchParams.get(\"store\") === SCRATCH ? SCRATCH : \"bio\";";
 const OPS_ROW = "  instancegroup:       { classes: null,                         mutating: false },";
 const PUBLIC_SELECT = "    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: Store.NO_GROUP_RECORDED };";
@@ -67,7 +67,7 @@ const ARMS = {
      read the served BYTES see it, which is the whole reason they read bytes. */
   "css-hidden": {
     patches: [["setup.mjs", RECORDED_TAIL,
-               "</span><span style='display:none'>\" + [\"Believe\", \"in\", \"Oakland\"].join(\" \") + \"</span> &middot; group instance</p>\";"]],
+               "</span><span style='display:none'>\" + [\"Believe\", \"in\", \"Oakland\"].join(\" \") + \"</span> &middot; group instance\""]],
     mustFail: ["P1b:", "P2b:"],
   },
 
@@ -124,7 +124,7 @@ const ARMS = {
      non-ASCII character here would land as a byte that is not UTF-8.) */
   "over-strict": {
     patches: [["setup.mjs", RECORDED_OPEN, "<strong class=\"group\">'"],
-              ["setup.mjs", RECORDED_TAIL, "</strong> &#183; the group this copy records</p>\";"],
+              ["setup.mjs", RECORDED_TAIL, "</strong> &#183; the group this copy records\""],
               ["setup.mjs", NONE_WORDS, "This copy has not recorded its group yet"],
               ["setup.mjs", UNREAD_WORDS, "Could not read this copy's group at the moment"]],
     mustFail: [],
