@@ -39,13 +39,24 @@ export const BUDGET = {
      own budget, set above its 45 KB size with room for a row per construct, and armed from the day it is set. */
   /* 48 KiB -> 50 KiB (c19-unionfix stopgap, BOB #32 ruling (a), 2026-09-24 02:10Z) -> BACK TO 48 KiB with (b): status.mjs caps
      each cell's first sentence at CELL_CAP (240) at a word boundary, so the map read 44,617 B at 130 claims on 548eb2c5. */
-  map: 48 * 1024,
+  /* 48 KiB -> 52 KiB (BOB #34, 2026-09-25): the map grows as constructs are BUILT, each §3 cell up to CELL_CAP, so a
+     budget the product's own progress breaks blocks trains for finishing work. c21-batch28 read 50,427 B. */
+  map: 52 * 1024,
 };
+
+/* A WORD budget for one file, on top of its class's byte budget (M0-194, BOB #34 2026-09-24 22:50Z): WORKER.md, read by
+   every worker, was cut to one line per rule at HALF its 3,959 words, 1,979. The ruling set it in words, so it is
+   measured in words AS `wc -w` COUNTS THEM, the instrument behind the 3,959: a whitespace-separated token is a word only
+   if it holds a printable ASCII character, so a lone `·` or `→` is not one. A plain whitespace split counted 2,004 where
+   `wc -w` counts 1,899 on the same file (M0-194, measured; `wordCount` matches `wc -w` on five files, M-147). The byte
+   budget still applies beside it. */
+export const wordCount = (text) => text.split(/\s+/).filter((w) => /[\x21-\x7e]/.test(w)).length;
+export const WORD_BUDGET = { "docs/development/kickoffs/WORKER.md": 1979 };
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
 export const CUT = new Set(["CLAUDE.md", "docs/development/kickoffs/BOB.md", "docs/development/kickoffs/CONDUCT.md",
                             "docs/development/ORCHESTRATION.md", "docs/architecture/BIO_System_Design.md",
-                            "docs/development/VERIFICATION.md"]);
+                            "docs/development/VERIFICATION.md", "docs/development/kickoffs/WORKER.md"]);
 
 /* Read-whole documents outside the kickoffs directory. */
 export const READ_WHOLE_DOCS = ["docs/development/ORCHESTRATION.md", "docs/development/VERIFICATION.md"];
@@ -66,7 +77,7 @@ export function readSet(root = ROOT) {
   return out;
 }
 
-export function check(root = ROOT, { budget = BUDGET, cut = CUT } = {}) {
+export function check(root = ROOT, { budget = BUDGET, cut = CUT, words = WORD_BUDGET } = {}) {
   const over = [];
   for (const r of readSet(root)) {
     const text = readState(root, r.file);
@@ -78,14 +89,21 @@ export function check(root = ROOT, { budget = BUDGET, cut = CUT } = {}) {
     const bytes = Buffer.byteLength(text, "utf8");
     if (bytes > b) over.push({ file: r.file, bytes, budget: b,
                                verdict: cut.has(r.file) ? "FAIL" : "WARN" });
+    const w = words[r.file];
+    if (w !== undefined) {
+      const n = wordCount(text);
+      if (n > w) over.push({ file: r.file, words: n, budget: w, unit: "words",
+                             verdict: cut.has(r.file) ? "FAIL" : "WARN" });
+    }
   }
-  return over.sort((a, b) => b.bytes - a.bytes);
+  return over.sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0));
 }
 
 if (process.argv[1] && process.argv[1].endsWith("readbudget.mjs")) {
   const over = check();
   for (const o of over)
-    console.log(`${o.verdict}  ${o.file} is ${o.bytes} B against ${o.budget} B`);
+    console.log(o.unit === "words" ? `${o.verdict}  ${o.file} is ${o.words} words against ${o.budget} words`
+                                   : `${o.verdict}  ${o.file} is ${o.bytes} B against ${o.budget} B`);
   console.log(`readbudget: ${readSet().length} read-whole file(s), ${over.length} over budget, `
             + `${over.filter((o) => o.verdict === "FAIL").length} failing`);
   process.exit(over.some((o) => o.verdict === "FAIL") ? 1 : 0);

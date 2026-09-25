@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec173-migration-replay.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec173-migration-replay.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the REC-173 worker (CONDUCT #15's, cloud) on b41d1edb + this item (real src/index.mjs 721,147 B sha256 ad0a07edbfbd…, src/store.mjs 2,845,117 B 4b9549039830…, src/schema.mjs 222,289 B 49bc8c76824d…, checks/bio-checks.mjs 827,501 B 5b70a1c0a110…, untouched: YES), ALL ELEVEN ARMS AS DECLARED AT THE FIRST RUN, and again, same figures, after the exemption moved to its own line so REC-171's stamp stands byte-for-byte (the hashes are the second run's): baseline -> 19/0 · **no-sha — THE ROW'S CONTROL, the SHA-256 comparison dropped from the record match -> 16/3: ARM N3 (ALTERED BYTES) BY NAME, with N0 (the altered replay wrote a replay row) and N7 (a failed replay inside a run landed as a replay instead); N3b stays green, the computed-sha guard is a second fence** · no-bundle -> 17/2: ARM N2 (ANOTHER BUNDLE's CAPTURE) and N0 · **any-class — THE MEMBER-TOKEN LIAR, the admin condition dropped -> 16/3: ARM N4 (MEMBER) and N4b (PROBE) by name, and N0** · **no-register — THE CALLER-MADE CAPTURE, the registration check dropped -> 16/3: ARM N5b and N5c by name, and N0** (N5a — never held — stays refused: nothing to read) · **trust-caller-sha — THE STALE SHA, the caller's `sha256` field taken for the text's -> 17/2: ARM N3b by name, and N0** · restamp-replay (D-78 applied to a verified replay) -> 18/1: ARM R1b · gate-replay (rule 2 still stamped on a replay) -> 14/5: every R arm · trust-caller-stamp (`migrationReplay` not deleted first) -> 18/1: ARM N6 (a member session's forged stamp read as migrated) · first-record-only (a fence TIGHTER than the rule) -> 18/1: ARM R2 · reversed-search (over-strictness, the same rule spelled last-first) -> 19/0. BEFORE THIS ITEM (b41d1edb's src/): 12 pass, 7 fail — every R arm (the admin's replay refused SURFACE_NO_RUN) and the counters that did not exist.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec173-migration-replay.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec173-migration-replay.control.mjs [arm]`. RESULTS, RUN 2026-09-23 by the REC-173 worker (CONDUCT #15's, cloud) on b41d1edb + this item (real src/index.mjs 721,147 B sha256 ad0a07edbfbd…, src/store.mjs 2,845,117 B 4b9549039830…, src/schema.mjs 222,289 B 49bc8c76824d…, checks/bio-checks.mjs 827,501 B 5b70a1c0a110…, untouched: YES), ALL ELEVEN ARMS AS DECLARED AT THE FIRST RUN, and again, same figures, after the exemption moved to its own line so REC-171's stamp stands byte-for-byte (the hashes are the second run's): baseline -> 19/0 · **no-sha — THE ROW'S CONTROL, the SHA-256 comparison dropped from the record match -> 16/3: ARM N3 (ALTERED BYTES) BY NAME, with N0 (the altered replay wrote a replay row) and N7 (a failed replay inside a run landed as a replay instead); N3b stays green, the computed-sha guard is a second fence** · no-bundle -> 17/2: ARM N2 (ANOTHER BUNDLE's CAPTURE) and N0 · **any-class — THE MEMBER-TOKEN LIAR, the admin condition dropped -> 16/3: ARM N4 (MEMBER) and N4b (PROBE) by name, and N0** · **no-register — THE CALLER-MADE CAPTURE, the registration check dropped -> 16/3: ARM N5b and N5c by name, and N0** (N5a — never held — stays refused: nothing to read) · **trust-caller-sha — THE STALE SHA, the caller's `sha256` field taken for the text's -> 17/2: ARM N3b by name, and N0** · restamp-replay (D-78 applied to a verified replay) -> 18/1: ARM R1b · gate-replay (rule 2 still stamped on a replay) -> 14/5: every R arm · trust-caller-stamp (`migrationReplay` not deleted first) -> 18/1: ARM N6 (a member session's forged stamp read as migrated) · first-record-only (a fence TIGHTER than the rule) -> 18/1: ARM R2 · reversed-search (over-strictness, the same rule spelled last-first) -> 19/0. BEFORE THIS ITEM (b41d1edb's src/): 12 pass, 7 fail — every R arm (the admin's replay refused SURFACE_NO_RUN) and the counters that did not exist. RE-RUN 2026-09-24 BY D-512, which CORRECTED this suite (the admin's claimed-but-unverified replay is now refused REPLAY_UNVERIFIED, C-66.6; ARM N7 split into N7 and N7b; ARM N3c added) and moved one anchor of the driver (`any-class`, the admin condition now fronts `(replayAsserted || creatingInquiry)`), on origin/main 9f8b69e6 + D-512 (real src/index.mjs 837,801 B sha256 cbd39b7220af…, src/store.mjs 3,321,231 B b1398c2d4762…, checks/bio-checks.mjs 959,549 B 1b1847df33d3…, untouched: YES): baseline -> 21/0 · no-sha -> 17/4: N3, N0, N7 and N7b by name (N7b: the no-claim creation then verifies as a replay and skips its run — declared) · no-bundle -> 19/2 · any-class -> 18/3: N4, N4b, N0 · no-register -> 18/3 · **trust-caller-sha -> 18/3, NOT AS DECLARED AT ITS FIRST RUN: N3c failed undeclared — the arm disarms REC-175's store door as well, and N3c drives exactly that door with no replay claimed; the DECLARATION was incomplete, not the arm, and N3c was added to it: re-run AS DECLARED, N3b, N0, N3c** · restamp-replay -> 20/1 · gate-replay -> 16/5 · trust-caller-stamp -> 20/1 · first-record-only -> 20/1 · reversed-search -> 21/0. Eleven of eleven as declared after the one re-declaration, recorded here as the second measurement, never as the first.
  * =========================================================================
  * REC-173 — A MIGRATION IS A REPLAY, NOT A SURFACING.
  *
@@ -151,6 +151,11 @@ const stats = (store = "bio") => GET(`op=stats&token=${ADM}&store=${store}`);
 const S = SURFACE_CHECKS.SURFACE_NO_RUN;
 const refused = (x) => [x?.ok, x?.code, x?.check, x?.translation];
 const NO_RUN = [false, "SURFACE_NO_RUN", S?.check, S?.translation];
+/* D-512 (BOB #33's step (2)): a promotion that ASSERTS `replay` — as every package in `migrate.mjs`'s shape does — and
+   fails the verification is refused by name, REPLAY_UNVERIFIED (C-66.6), before the store is called. An inquiry
+   creation that asserts nothing and fails it is still an ORDINARY creation (ARM N7b), exactly as REC-173 built it. */
+const U = SURFACE_CHECKS.REPLAY_UNVERIFIED;
+const UNVERIFIED = [false, "REPLAY_UNVERIFIED", U?.check, U?.translation];
 const promote = (who, pkg) => POST(`op=promote&${who}`, pkg);
 const ADMIN = `token=${ADM}&store=bio`;
 
@@ -198,14 +203,22 @@ console.log("\n--- ARM R · THE REPLAY IS ADMITTED ---");
     [true, true, sha(cap2), null]);
 }
 
-console.log("\n--- ARM N · EVERYTHING ELSE IS AN ORDINARY CREATION, REFUSED OUTSIDE A RUN ---");
+console.log("\n--- ARM N · EVERYTHING ELSE IS NOT A REPLAY: refused by name when it says it is one ---");
+/* CORRECTED 2026-09-24 by D-512, never exempted. Arms N1, N2, N3, N5a, N5b and N5c drive packages in `migrate.mjs`'s
+   shape, which ASSERT `replay: true`, under the ADMIN token, and asserted SURFACE_NO_RUN: on REC-173's tree the
+   failed verification left the root of trust's flag standing and the creation fell to rule 2 (D-511's residue: the
+   admin's `replay` was still its own word). BOB #33's step (2) honours `replay` only where the plane verifies it, and
+   an admin that asserts one it cannot show is refused REPLAY_UNVERIFIED (C-66.6) before the store is called. What
+   each arm protects is unchanged — THAT verification condition, alone, refuses the liar, and nothing lands — and the
+   refusal now names the claim that failed. N4 and N4b are not admin: D-511 removes their flag and they still meet
+   rule 2 (SURFACE_NO_RUN), which is the class test kept as the second condition. */
 {
   const before = await stats();
 
   const q1 = await driveQuestion("PROB-2026-9173-names-no-capture");
   const x1 = await promote(ADMIN, replayPkg(q1.id, q1.md, q1.capSha, q1.cap, { provenanceCapture: undefined }));
   t("ARM N1 (NAMES NO CAPTURE): the admin's creation that registers the capture but names none is refused "
-    + "SURFACE_NO_RUN, and nothing landed", [...refused(x1), await exists(q1.id)], [...NO_RUN, false]);
+    + "REPLAY_UNVERIFIED, and nothing landed", [...refused(x1), await exists(q1.id)], [...UNVERIFIED, false]);
 
   const q2 = await driveQuestion("PROB-2026-9173-borrowed-capture");
   const other = "PROB-2026-9173-some-other-question";
@@ -213,15 +226,15 @@ console.log("\n--- ARM N · EVERYTHING ELSE IS AN ORDINARY CREATION, REFUSED OUT
   await put(`token=${ADM}`, "bio", cap2);
   const x2 = await promote(ADMIN, replayPkg(q2.id, q2.md, sha(cap2), cap2));
   t("ARM N2 (ANOTHER BUNDLE'S CAPTURE): a capture whose records list THESE very bytes but name ANOTHER bundle is "
-    + "refused SURFACE_NO_RUN — the bundle check, alone — and nothing landed", [...refused(x2), await exists(q2.id)],
-    [...NO_RUN, false]);
+    + "refused REPLAY_UNVERIFIED — the bundle check, alone — and nothing landed", [...refused(x2), await exists(q2.id)],
+    [...UNVERIFIED, false]);
 
   const q3 = await driveQuestion("PROB-2026-9173-altered-bytes");
   const altered = questionMd(q3.id, { ask: "Did the council vote to approve it unanimously?" });
   const x3 = await promote(ADMIN, replayPkg(q3.id, altered, q3.capSha, q3.cap));
   t("ARM N3 (ALTERED BYTES — THE SHA CHECK): the right capture for the right bundle, replaying bytes whose SHA-256 its "
-    + "records do not list, is refused SURFACE_NO_RUN, and nothing landed", [...refused(x3), await exists(q3.id)],
-    [...NO_RUN, false]);
+    + "records do not list, is refused REPLAY_UNVERIFIED, and nothing landed", [...refused(x3), await exists(q3.id)],
+    [...UNVERIFIED, false]);
 
   const q3b = await driveQuestion("PROB-2026-9173-stale-sha");
   const alt3b = questionMd(q3b.id, { surfacedBy: "human", ask: "Who ordered the audit?" });
@@ -233,11 +246,23 @@ console.log("\n--- ARM N · EVERYTHING ELSE IS AN ORDINARY CREATION, REFUSED OUT
      stale figure is now refused `FILE_DIGEST_MISMATCH` (C-33.38) at the door, not `SURFACE_NO_RUN` at the replay check.
      The old assertion was right on its own tree (REC-173 alone) and wrong after REC-175: the refusal is EARLIER and
      STRICTER, and "nothing landed" still holds. What this arm protects — the plane never takes the caller's figure — is
-     unchanged; ARM N3 still drives the replay check's own SHA comparison (a true digest of altered bytes). */
+     unchanged; ARM N3 still drives the replay check's own SHA comparison (a true digest of altered bytes).
+     CORRECTED AGAIN 2026-09-24 by D-512, never exempted: the package ASSERTS `replay`, and the plane now verifies that
+     claim in `op=promote`'s stamp block BEFORE the store's digest check runs; `migrationReplayOf` computes the figure
+     itself and finds the caller's stale one unequal, so the replay is refused REPLAY_UNVERIFIED (C-66.6). Still
+     refused, still nothing landed, and still the plane never takes the caller's figure. The same stale figure on a
+     package that asserts NO replay still meets REC-175's door (FILE_DIGEST_MISMATCH) — ARM N3c. */
   const DM = ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH;
-  t("ARM N3b (A STALE SHA): altered text carrying the LISTED SHA-256 in its `sha256` field is refused — since REC-175 at the "
-    + "door, FILE_DIGEST_MISMATCH: the plane computes the figure, it never takes it — and nothing landed",
-    [...refused(x3b), await exists(q3b.id)], [false, "FILE_DIGEST_MISMATCH", DM?.check, DM?.translation, false]);
+  t("ARM N3b (A STALE SHA): altered text carrying the LISTED SHA-256 in its `sha256` field is refused — since D-512 as "
+    + "a replay the plane could not verify, REPLAY_UNVERIFIED: the plane computes the figure, it never takes it — and "
+    + "nothing landed", [...refused(x3b), await exists(q3b.id)], [...UNVERIFIED, false]);
+  const q3c = await driveQuestion("PROB-2026-9173-stale-sha-no-claim");
+  const pkg3c = replayPkg(q3c.id, questionMd(q3c.id, { ask: "Who signed the audit?" }), q3c.capSha, q3c.cap, { replay: undefined });
+  pkg3c.files[0].sha256 = sha(q3c.md);
+  const x3c = await promote(ADMIN, pkg3c);
+  t("ARM N3c (A STALE SHA, NO CLAIM): the same liar asserting no replay meets REC-175's door, FILE_DIGEST_MISMATCH, "
+    + "and nothing landed", [...refused(x3c), await exists(q3c.id)],
+    [false, "FILE_DIGEST_MISMATCH", DM?.check, DM?.translation, false]);
 
   const q4 = await driveQuestion("PROB-2026-9173-member-token");
   const x4 = await promote(`token=${MEM}&store=bio`, replayPkg(q4.id, q4.md, q4.capSha, q4.cap));
@@ -253,17 +278,17 @@ console.log("\n--- ARM N · EVERYTHING ELSE IS AN ORDINARY CREATION, REFUSED OUT
   const capA = provenanceOf(idA, [record(idA, EMPTY_SHA, [{ name: "bundle.md", sha256: sha(mdA) }])]);
   const x5a = await promote(ADMIN, replayPkg(idA, mdA, sha(capA), capA));   // never PUT
   t("ARM N5a (CALLER-MADE: NOT HELD): a capture named and registered in the request but never uploaded is refused "
-    + "SURFACE_NO_RUN, and nothing landed", [...refused(x5a), await exists(idA)], [...NO_RUN, false]);
+    + "REPLAY_UNVERIFIED, and nothing landed", [...refused(x5a), await exists(idA)], [...UNVERIFIED, false]);
   const q5b = await driveQuestion("PROB-2026-9173-wrong-path");
   const pkg5b = replayPkg(q5b.id, q5b.md, q5b.capSha, q5b.cap);
   pkg5b.register = [{ path: "data/provenance.json", sha256: q5b.capSha, bytes: q5b.cap.length, encoding: "utf8" }];
   const x5b = await promote(ADMIN, pkg5b);
   t("ARM N5b (CALLER-MADE: NOT THE DRIVE PROVENANCE): a held capture registered at another path is refused "
-    + "SURFACE_NO_RUN, and nothing landed", [...refused(x5b), await exists(q5b.id)], [...NO_RUN, false]);
+    + "REPLAY_UNVERIFIED, and nothing landed", [...refused(x5b), await exists(q5b.id)], [...UNVERIFIED, false]);
   const q5c = await driveQuestion("PROB-2026-9173-unregistered");
   const x5c = await promote(ADMIN, replayPkg(q5c.id, q5c.md, q5c.capSha, q5c.cap, { register: [] }));
   t("ARM N5c (CALLER-MADE: REGISTERED NOWHERE): a held capture the creation names but does not register is refused "
-    + "SURFACE_NO_RUN, and nothing landed", [...refused(x5c), await exists(q5c.id)], [...NO_RUN, false]);
+    + "REPLAY_UNVERIFIED, and nothing landed", [...refused(x5c), await exists(q5c.id)], [...UNVERIFIED, false]);
 
   const after = await stats();
   t("ARM N0: none of the refused creations wrote a migration-replay row or a surfacing row",
@@ -283,7 +308,7 @@ console.log("\n--- ARM N6 · THE STAMP IS THE SERVER's ---");
       "migrated" in (p?.surfaced_in ?? {})], [true, false, "not recorded", false]);
 }
 
-console.log("\n--- ARM N7 · A FAILED REPLAY IS AN ORDINARY CREATION: rule 2 and D-78 unchanged ---");
+console.log("\n--- ARM N7 · A FAILED REPLAY DOES NOT SKIP A RUN: refused if it claimed one, ordinary if it did not ---");
 {
   const Q = "INQ-2026-9173-context";
   const qc = await promote(`${RUTH}&store=bio`, { ...replayPkg(Q, questionMd(Q), null, null), replay: undefined });
@@ -294,14 +319,26 @@ console.log("\n--- ARM N7 · A FAILED REPLAY IS AN ORDINARY CREATION: rule 2 and
     bounds: [{ bound: "fetches", allowed: 50, unit: "requests" }, { bound: "surfaces", allowed: 3, unit: "questions" }],
     leaseMs: 600000 });
   t("REACH: the context question exists and the admin token holds a running run over it", [qc?.ok, op?.started], [true, true]);
+  /* CORRECTED 2026-09-24 by D-512, never exempted, and SPLIT so neither half of REC-173's rule is lost. This drove a
+     package ASSERTING `replay` that failed the SHA check inside the admin's run, and asserted it LANDED as an ordinary
+     creation: on REC-173's tree a failed verification left the root of trust's flag standing. BOB #33's step (2)
+     refuses that claim by name (ARM N7, now). The ordinary-creation half REC-173 built — an inquiry creation that
+     claims nothing and fails the verification is rule 2's and D-78's, unchanged — is ARM N7b, the same bytes with no
+     claim. Both keep the arm's subject: the door does not skip a run. */
   const q = await driveQuestion("PROB-2026-9173-inside-a-run");
   const altered = questionMd(q.id, { ask: "Did the vote happen twice?" });
   const x = await promote(ADMIN, replayPkg(q.id, altered, q.capSha, q.cap, { run }));
-  const md = await bytesOf(q.id);
-  const p = await projection(q.id);
   t("ARM N7 (THE DOOR DOES NOT SKIP A RUN): a replay that fails the SHA check but names the admin's own running run "
-    + "lands INSIDE the run, as an ordinary creation — surfacing row, no replay — and D-78 restamps it `agent`",
-    [x?.ok, x?.surfaced_in?.run, "migration_replay" in (x ?? {}), /\nsurfaced_by: agent\n/.test(md),
+    + "is refused REPLAY_UNVERIFIED — a claimed replay the plane cannot verify is not quietly made an ordinary one — "
+    + "and nothing landed", [...refused(x), await exists(q.id)], [...UNVERIFIED, false]);
+  const q7 = await driveQuestion("PROB-2026-9173-inside-a-run-no-claim");
+  const altered7 = questionMd(q7.id, { ask: "Did the vote happen three times?" });
+  const x7 = await promote(ADMIN, replayPkg(q7.id, altered7, q7.capSha, q7.cap, { run, replay: undefined }));
+  const md = await bytesOf(q7.id);
+  const p = await projection(q7.id);
+  t("ARM N7b (NO CLAIM, AN ORDINARY CREATION): the same failed provenance with NO replay claimed lands INSIDE the run, "
+    + "as an ordinary creation — surfacing row, no replay — and D-78 restamps it `agent`",
+    [x7?.ok, x7?.surfaced_in?.run, "migration_replay" in (x7 ?? {}), /\nsurfaced_by: agent\n/.test(md),
      p?.surfaced_in?.recorded, p?.surfaced_in?.run], [true, run, false, true, true, run]);
 }
 

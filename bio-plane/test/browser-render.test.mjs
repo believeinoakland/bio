@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: re-run with `node test/nc-d490.mjs` (one arm: `node test/nc-d490.mjs <arm>`); pristine copies go to `BIO_NC_SCRATCH` or a run-unique temp directory, never into the worktree (BOB #32). Run 2026-09-24 on base origin/main 58293bf31 plus this item, EIGHT rows — six arms each armed ALONE, a baseline first and last — every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (6 of 6 MATCH/IDENTICAL). BASELINE 44 pass 0 fail; BASELINE-LAST 44/0. (1) `nodriver` — THE ROW'S CONTROL — `rendererFor`'s BROWSER branch put back to `{kind:"browser-binding-without-driver", render:null}`, so a bound browser is again a binding with nothing behind it: DECLARED red on A1 A2 A3 A3b A4 A5 A6 A7 A8 A8b A8c A8d A8e A8f A8g and nothing else; ACTUAL 29/15, exactly those, AS DECLARED — A9/A10 (the UNBOUND arm, which is the row's named control as an arm rather than a patch) and B-H (the driver reached directly through the harness worker) stay green, which is what tells a missing DRIVER from a missing binding. (2) `emptyrequests` — a ledger nobody could record read as `[]`: DECLARED C1; ACTUAL 43/1 C1, AS DECLARED. (3) `emptyscripts` — a script set nobody could record read as `[]` (BOB #31's exact case): DECLARED C3; ACTUAL 43/1 C3, AS DECLARED. (4) `blockedasfailed` — a rule that stopped a request reported as the request failing: DECLARED B1; ACTUAL 43/1 B1, AS DECLARED. (5) `noclose` — the session left open: DECLARED F2 F3; ACTUAL 42/2 F2 F3, AS DECLARED. (6) `lowercasetypes` — OVER-STRICTNESS — CDP resource types arriving lowercase, a correct spelling this driver did not anticipate: DECLARED nothing fails; ACTUAL 44/0, AS DECLARED. THAT ARM EARNED ITS PLACE: its FIRST run, before the fix, failed A8c, because the driver compared `p.type === "Document"` against the capitalised literal and the main document's status read `null` on a correct render. The comparison now goes through `resourceType`. RE-RUN 2026-09-24 after this suite's foot gained the comma `battery.mjs`'s tally needs (and `nc-d490.mjs`'s own matcher with it): the same eight rows, the same six verdicts, baseline and baseline-last 44/0 — recorded because a control whose READER changed is a control that has to be re-run, not one whose old transcript still stands. */
+/* NEGATIVE CONTROL (D-529): `node test/nc-d490.mjs`, RE-RUN IN FULL 2026-09-25 on base origin/main 8bdf20e6 plus this item, NINE rows — seven arms each ALONE, a baseline first and last, every patch matched EXACTLY ONCE, every restore sha256 MATCH and cmp IDENTICAL (26535 / 35512 bytes). BASELINE 47/0; BASELINE-LAST 47/0. NEW ARM `nobodies` — the driver never asks the browser for a body: DECLARED A8h A8i B7; ACTUAL 44/3 A8h A8i B7, AS DECLARED. `nodriver` WIDENED by A8h A8i (the digests of the same render): ACTUAL 30/17, AS DECLARED. emptyrequests C1, emptyscripts C3, blockedasfailed B1, noclose F2 F3, lowercasetypes none: each AS DECLARED, unchanged. */
 /* D-490 — THE IN-PLANE RENDERER OVER THE BROWSER RENDERING BINDING, driven THROUGH
  * THE OP and, for the driver's own rules, through a harness worker that imports it.
  *
@@ -70,17 +71,24 @@ const SHELL_SHA = sha(Buffer.from(SHELL, "utf-8"));
 const RENDERED = (p) => `<!DOCTYPE html>\n<html><head><title>Portal</title></head><body><main>`
   + `<h1>Council agenda</h1><p>Rendered for ${p}.</p></main></body></html>`;
 
+/* D-529's bytes, this file's: the verify arm hashes THESE, never what the plane kept. */
+const APP_JS = "window.app = { agenda: true };\n";
+const APP_CSS = "main { color: #222; } /* café */\n";
+
 /* ------------------------------------------------------------------ the fake */
 /* One worker, three MODEs. `ok` keys its CDP behaviour off the navigate URL's
    pathname, so a suite arm picks a page rather than a new miniflare instance. */
 const BROWSER_FAKE = `
 const PAGES = ${JSON.stringify({
+  /* D-529: `/same`'s loads carry the bodies `Network.getResponseBody` answers with —
+     base64 for the script, text for the document and stylesheet — and the XHR is one the
+     browser has EVICTED, so its body is refused in the browser's own words. */
   "/same": {
     requests: [
-      { url: `https://${HOST}/same`, type: "Document", status: 200, end: "finished" },
-      { url: `https://${HOST}/app.js`, type: "Script", status: 200, end: "finished" },
-      { url: `https://${HOST}/app.css`, type: "Stylesheet", status: 200, end: "finished" },
-      { url: `https://${HOST}/api/agenda.json`, type: "XHR", status: 200, end: "finished" },
+      { url: `https://${HOST}/same`, type: "Document", status: 200, end: "finished", bodyText: SHELL },
+      { url: `https://${HOST}/app.js`, type: "Script", status: 200, end: "finished", bodyB64: Buffer.from(APP_JS).toString("base64") },
+      { url: `https://${HOST}/app.css`, type: "Stylesheet", status: 200, end: "finished", bodyText: APP_CSS },
+      { url: `https://${HOST}/api/agenda.json`, type: "XHR", status: 200, end: "finished", evicted: true },
     ],
     scripts: [{ url: `https://${HOST}/app.js` }],
   },
@@ -172,6 +180,15 @@ export default {
               ev("Debugger.scriptParsed", { url: s.url, scriptId: "s" });
             if (!page.noLoad) ev("Page.loadEventFired", { timestamp: 1 });
             return;
+          }
+          /* D-529: the body the browser holds for request R<i>, in the two forms CDP gives
+             it — or its refusal, in the words a browser uses for an evicted resource. */
+          case "Network.getResponseBody": {
+            const r = page && page.requests[Number(String(m.params.requestId).slice(1))];
+            if (!r || r.evicted || (r.bodyText === undefined && r.bodyB64 === undefined))
+              return err("No resource with given identifier found");
+            return r.bodyB64 !== undefined ? ok({ body: r.bodyB64, base64Encoded: true })
+                                           : ok({ body: r.bodyText, base64Encoded: false });
           }
           case "Runtime.evaluate":
             if (page && page.noHtml) return ok({ result: { value: undefined } });
@@ -296,6 +313,26 @@ const acquire = acq(mf), capture = held(mf);
   t("A8f the script set is NAMED, not undetermined", d.render?.scripts_executed, [`https://${HOST}`]);
   t("A8g elapsed_ms is a number the driver measured, not a default",
     typeof d.render?.elapsed_ms === "number" && d.render.elapsed_ms >= 0, true);
+
+  /* D-529 — THE DRIVER'S HALF OF THE DIGEST, through the op: the driver asks the browser
+     for each loaded body, the PLANE hashes and keeps it, and every digest VERIFIES — the
+     bytes come back through op=capture by that digest and re-hash to it, and it equals
+     this file's hash of what the fake SERVED. The evicted XHR reads undetermined in the
+     browser's own words. */
+  const subs = d.render?.subresources || [];
+  const want = { [`https://${HOST}/same`]: SHELL_SHA, [`https://${HOST}/app.js`]: sha(Buffer.from(APP_JS)),
+                 [`https://${HOST}/app.css`]: sha(Buffer.from(APP_CSS, "utf-8")) };
+  const verified = [];
+  for (const x of subs.filter((y) => /^[0-9a-f]{64}$/.test(String(y.sha256)))) {
+    const b = await capture(x.sha256);
+    verified.push([x.address, !!b && sha(b) === x.sha256, x.sha256 === want[x.address], x.body_as]);
+  }
+  t("A8h D-529 VERIFY: each body the browser gave verifies by digest, as the plane's hash of bytes it kept",
+    verified.sort(), [[`https://${HOST}/app.css`, true, true, "decoded_text"], [`https://${HOST}/app.js`, true, true, "bytes"],
+                      [`https://${HOST}/same`, true, true, "decoded_text"]]);
+  t("A8i D-529: the body the browser would not give reads undetermined, in the browser's own words",
+    subs.filter((x) => x.sha256 === "undetermined").map((x) => [x.address, /browser would not give the body: CDP No resource with given identifier found/.test(x.digest_reason || "")]),
+    [[`https://${HOST}/api/agenda.json`, true]]);
 }
 /* THE NEGATIVE CONTROL THE ROW NAMES, as an ARM rather than a patch: the same
    plane with the binding taken away answers RENDER_NO_RENDERER by name. */
@@ -339,6 +376,11 @@ const render = drive(h);
   t("B6 a redirect keeps BOTH hops, with their own statuses",
     (answer.requests || []).map((r) => [r.url, r.outcome, r.status]).sort(),
     [[`https://${HOST}/landed`, "completed", 200], [`https://${HOST}/redirected`, "completed", 301]]);
+  /* D-529: a redirect hop has no body the browser keeps, and the driver says so rather
+     than asking for one by an id that now names the NEXT hop's body. */
+  t("B7 D-529: the redirect hop's body is unavailable, and says why; no bytes are claimed for it",
+    (answer.requests || []).filter((r) => r.status === 301).map((r) => [r.body_unavailable, "body_base64" in r || "body_text" in r]),
+    [["a redirect hop, whose body the browser does not keep", false]]);
 }
 
 /* ====================================================================== C */

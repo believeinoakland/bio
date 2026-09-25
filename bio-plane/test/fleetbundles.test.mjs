@@ -13,6 +13,10 @@
    (7) **THE GENERATED-INPUT LOOP** — append one HTML comment to `tools/sign-release.html`, re-render nothing -> **55 pass, 1 FAIL, exit 1**, EXACTLY the render assertion naming the stale render; every input-hash and byte arm held, because no hashed input moved. This is the staleness class the manifest cannot see and the arm exists for.
    (8) **OVER-STRICTNESS, PLANE HALF** — a legitimate `npm run build` of the unchanged plane must leave the tree byte-identical (`git status --porcelain` empty; run after the commit, like (5a)) and the suite green at the baseline figure.
    (5) **OVER-STRICTNESS, and these must all PASS.** (a) Rebuild BOTH members from unchanged sources — a legitimately rebuilt, byte-identical bundle must still pass and the tree must be UNCHANGED afterwards (`git status --porcelain` empty). **RUN AFTER THE COMMIT, deliberately: the tree-unchanged half is only a statement about a clean tree.** (b) A docs-only change must not fail the build — `tools/gates.mjs` derives its doc-facing set from whether a suite's own source or its sibling control mentions the prose directory, and NEITHER of this pair does, so a DOCS-class run does not select this suite at all. **STATED AS THE FENCE IT IS: the DERIVATION is asserted over the real files; a full DOCS-class run of `gates.mjs` was NOT driven from this branch, because the branch's own committed diff makes every classification FULL.** (c) `node scripts/coverage.mjs --strict` exits 0, read from the process's own status.
+   ---- M0-188's ARMS (the remedy a finding hands its reader), RUN 2026-09-24 IN THIS WORKTREE, APPENDED — no earlier arm edited. **BASELINE 96 pass / 0 fail, exit 0** before each arm; every restore verified by CONTENT and by sha256 at 31888 B.
+   (10) **THE ROW'S OWN ARM — RESTORE ONE SITE'S PRE-M0-188 SENTENCE.** Put `Run \`npm run build\` in ${member.dir}/ and commit the artifact with the change.` back on the (b) input-hash finding, ALONE, leaving that finding's DIAGNOSIS half untouched -> **92 pass, 4 FAIL, exit 1**, and all four are (j): the behavioural `npm run build` arm, the behavioural at-least-four-name-`node tools/bundles.mjs` arm (3, not >= 4), the TOTAL over the guard's source (1, not 0), and the TOTAL's corpus floor (11, not >= 12). **Every DIAGNOSIS assertion HELD as declared** — (b) STALE BUNDLE, (d) the manifest mismatch, (g)/(h)/(i) the upload parts, every byte-identity arm: the remedy is the only thing that moved. The anchor is the remedy sentence PLUS the line above it, because the sentence alone occurs TWICE (here and in `verifyFresh`) and an anchor matching both would arm two sites. **THE ARM'S OWN PROBES WERE WRONG FIRST AND `m025-arm-anchor-witness.test.mjs` CAUGHT IT IN THE GATE — recorded, not smoothed:** they read the suite's output through `r.out.includes("FAIL  (b) and says it is a STALE BUNDLE")`, and that literal exists in NO candidate subject (the `FAIL  ` prefix is a runtime marking, not text in this file), so A4 fired at the D-276 class — a quote that could never match. The probes now select FAIL lines with the driver's own `failingLabels` helper and quote this suite's LABEL text, each occurring EXACTLY ONCE here, so the quote dies loudly if a label is ever changed in place. A control's probes are held to the rule the control exists to enforce.
+   (10b) **OVER-STRICTNESS, A SPELLING THE ARM WAS NOT WRITTEN FOR** — the same site reworded around the SAME command (`Rebuild with \`node tools/bundles.mjs\` — it rebuilds every bundle this change staled — and commit the artifacts.`) -> **96 pass, 0 fail, exit 0**. **THIS ARM CAME BACK WRONG THE FIRST TIME AND IS RECORDED RATHER THAN SMOOTHED, and it is the most useful thing this control found:** (j)'s first draft SELECTED its corpus with a filter for the SENTENCE SHAPE of a remedy (`/\bRun \`|\band run \`/`), the reworded site fell OUT of that corpus, and a PASSING over-strictness arm went red at **95 pass, 1 FAIL** on the corpus floor. A filter of sentence shapes is the list-of-spellings defect one layer in from the defect this row exists to fix, so the filter was REMOVED: (j) now asserts over EVERY finding produced, which no rewording can move.
+   (10c) **OVER-STRICTNESS, AND IT ASSERTS THE MATCHER'S DECLARED BLIND SPOT RATHER THAN PROMISING IT** — append a plain COMMENT to the guard naming `npm run build` unescaped -> **96 pass, 0 fail, exit 0**. The TOTAL arm's stated reach is the backtick-ESCAPED spelling inside a template literal, which is what a remedy looks like and what a comment is not; this arm is that sentence driven instead of asserted.
    ---- ARM 9 (FLEET #4 on BOB #29's diagnosis, 2026-09-23), APPENDED. **BASELINE 91 pass / 0 fail, exit 0.** (9) **THE INSTALL LAYOUT** — remove the `preserveSymlinks: true,` line from `optionsFor` in `scripts/fleet-bundle.mjs` and build through a SYMLINKED `pdf-worker/node_modules` (ambient in a worktree sharing another install; otherwise the harness parks the real directory and symlinks it) -> **84 pass, 7 FAIL, exit 1**: all four `… preserves symlinks …` recipe assertions, and pdf-worker's byte-identity, manifest-sha and comment-only assertions. agent-worker, ocr-worker and bio-plane byte arms held (none vendors from `node_modules`). Run on BOTH layouts, same tally; both restores verified by content and sha256. With the flag dropped on a REAL install (no symlink) the tally is **87 pass, 4 FAIL**, the four recipe assertions only, measured the same day: the byte arm cannot see the defect there, which is why they exist.
    ======================================================================== */
 /* THE FLEET'S BUILD GUARD (FL-9, BOB 2026-09-10, answering DIST's DELEGATION).
@@ -362,6 +366,63 @@ console.log("\n--- 4 · THE GUARD PROVES IT CAN FAIL, on a subject this suite fu
       verifyStatic(probe).findings.some((f) => /no longer declares/.test(f) && f.includes("assets/model.bin")), true);
     t("(i) while the DECLARED-and-recorded member is still GREEN (over-strictness)",
       verifyStatic(withAsset).findings, []);
+
+    /* ---- (j) M0-188's ARM — THE REMEDY A FINDING HANDS THE READER ----------
+     * A gate message names the act that fixes it (`VERIFICATION.md`), and until
+     * M0-188 every staleness finding here named `npm run build` in ONE member's
+     * directory. **One `bio-plane/src/` edit stales THREE artifacts** (M0-178,
+     * measured), so a worker who did as told rebuilt one and met the next at the
+     * next gate — a red round per stale member, for a remedy that was never
+     * wrong about the command, only about the SET.
+     *
+     * NO QUOTED ASSERTION ABOVE WAS SUPERSEDED BY THAT CHANGE, and that is
+     * recorded rather than assumed: (b), (d), (g), (h) and (i) quote the
+     * DIAGNOSIS half of a finding (`STALE BUNDLE`, `does not match its own
+     * manifest`, `records NO hash for it`, `no longer declares`, `measurement
+     * OF these bytes`), never its remedy, so all five still assert exactly what
+     * they asserted before. The header's arm (8) does still say `npm run build`
+     * and is CORRECT there: it is the member's own build being run legitimately,
+     * not a remedy a finding hands out.
+     *
+     * TWO HALVES, because either alone is a green that costs too little:
+     *   - BEHAVIOURAL, over findings this suite really produced from armed
+     *     states above. It proves the new sentence reaches a reader.
+     *   - TOTAL, over the source of `scripts/fleet-bundle.mjs`, because the
+     *     behavioural half reaches only the arms this suite arms and the
+     *     accepts-when is about EVERY site. **WHAT THIS MATCHER CAN SEE:** the
+     *     backtick-quoted command spelling \`npm run build\` inside a template
+     *     literal — which is what a finding's remedy looks like and what a plain
+     *     comment does not (a comment writes the command unescaped). **WHAT IT
+     *     CANNOT:** a remedy that spells the command without backticks, one
+     *     assembled from variables, or one in any other file. `release-assemble.mjs`
+     *     carries the same class and is NOT in this matcher's reach — named in
+     *     M0-188's report rather than silently scored zero. */
+    /* **THE FIRST DRAFT OF THIS ARM WAS WRONG AND ARM (10b) CAUGHT IT — recorded
+     * rather than smoothed.** It selected its corpus with a filter for the
+     * SENTENCE SHAPE of a remedy (/\bRun `|\band run `/) and then asserted over
+     * what that filter returned. (10b) rewords one site to "Rebuild with `node
+     * tools/bundles.mjs` …" — correct work in a spelling the filter did not
+     * anticipate — and the site fell OUT of the corpus, taking the corpus below
+     * its floor and turning a PASSING over-strictness arm red. A filter of
+     * sentence shapes is the list-of-spellings defect `kickoffs/WORKER.md` names,
+     * one layer in from the defect this row exists to fix. So there is no filter:
+     * the arms assert over EVERY finding produced, which no rewording can move. */
+    const produced = [...armed, ...swapped, ...missing, ...verifyStatic(gainsOne).findings];
+    t("(j) the arms above really did produce findings — an empty corpus asserts nothing",
+      produced.length >= 4, true);
+    t("(j) NONE of them names the one-bundle command `npm run build` — asserted over every finding, unfiltered, so no spelling of a remedy can slip past it (M0-178's measured failure: one src edit stales three)",
+      produced.filter((f) => f.includes("npm run build")), []);
+    t("(j) and at least four DO name `node tools/bundles.mjs`, which rebuilds EVERY bundle the change staled — the positive half, so a finding that merely LOST its remedy cannot pass the arm above",
+      produced.filter((f) => f.includes("node tools/bundles.mjs")).length >= 4, true);
+
+    const guardSrc = readFileSync(join(REPO_ROOT, "bio-plane/scripts/fleet-bundle.mjs"), "utf8");
+    const oneBundle = (guardSrc.match(/\\`npm run build\\`/g) || []).length;
+    const everyBundle = (guardSrc.match(/\\`node tools\/bundles\.mjs\\`/g) || []).length;
+    console.log(`        fleet-bundle.mjs remedies: ${everyBundle} name \`node tools/bundles.mjs\`, ${oneBundle} name \`npm run build\``);
+    t("(j) TOTAL: no finding in scripts/fleet-bundle.mjs names the one-bundle command — the accepts-when, over every site and not only the armed ones",
+      oneBundle, 0);
+    t("(j) and the corpus is non-empty — a total that passed over no remedies at all would be the emptiest possible green",
+      everyBundle >= 12, true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

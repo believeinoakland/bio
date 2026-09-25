@@ -58,14 +58,14 @@
  * LOAD-TIME dependencies reached exactly that way; it OVER-derives for a module whose
  * `await import("./x.mjs")` is a lazy branch. MEASURED 2026-09-24 (M0-154): `tools/coord.mjs` has
  * twelve such branches, so a dynamic walk from `tools/decided.mjs` derives THIRTEEN files where its
- * static closure is the three that `pushguard.test.mjs` copies by hand. Those hand lists are M0-170's,
- * and static mode is what they need.
+ * static closure is the three that `pushguard.test.mjs` copied by hand. Those hand lists were M0-170's,
+ * and static mode is what they read now: `pushguard.test.mjs` (scratchRepo), `pushguard-check.test.mjs`
+ * and `retirable.test.mjs` (cliHome) each derive what they carry from this walk (2026-09-24).
  *
- * A THIRD DERIVATION EXISTS AND IS NOT FOLDED HERE: `bio-plane/test/instrument-deps.mjs` (D-265)
- * derives `scripts/coverage.mjs`'s closure for two suites, static-only, returning BASENAMES rather
- * than repo-relative paths and asserting its `outside` set. It is the same class and is reported by
- * M0-169 rather than taken, because its return shape is a second contract and changing it is not this
- * row's scope.
+ * THE THIRD DERIVATION IS FOLDED TOO, SINCE M0-170: `bio-plane/test/instrument-deps.mjs` (D-265), which
+ * derived `scripts/coverage.mjs`'s closure for three suites with a regex of its own and no lexer, is now
+ * an adapter over static mode that keeps its two contracts (BASENAMES, and the `outside` set its callers
+ * assert). Measured the same six modules under the old walk and this one.
  */
 import { readFileSync, statSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";

@@ -395,7 +395,7 @@ export function verifyStatic(member) {
   try { manifest = JSON.parse(readFileSync(join(member.abs, member.bundle.manifest), "utf8")); }
   catch (e) {
     add(`its committed manifest ${member.bundle.manifest} is missing or unreadable (${e.message}). `
-      + `Run \`npm run build\` in ${member.dir}/.`);
+      + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
     return { findings, manifest: null, committed: null };
   }
 
@@ -403,7 +403,7 @@ export function verifyStatic(member) {
   try { committed = readFileSync(join(member.abs, member.bundle.outfile)); }
   catch (e) {
     add(`its committed artifact ${member.bundle.outfile} is missing (${e.message}). `
-      + `Run \`npm run build\` in ${member.dir}/.`);
+      + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
     return { findings, manifest, committed: null };
   }
 
@@ -422,14 +422,14 @@ export function verifyStatic(member) {
     try { live = readFileSync(join(member.abs, inp.path)); }
     catch {
       add(`a recorded build input has vanished: ${inp.path}. The committed bundle cannot be `
-        + `reproduced, so it is STALE by definition. Run \`npm run build\` in ${member.dir}/.`);
+        + `reproduced, so it is STALE by definition. Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
       continue;
     }
     const liveSha = sha256(live);
     if (liveSha !== inp.sha256)
       add(`STALE BUNDLE — the source ${inp.path} has changed since ${member.bundle.outfile} was built `
         + `(source is now sha256 ${liveSha}, the bundle was built from ${inp.sha256}). `
-        + `Run \`npm run build\` in ${member.dir}/ and commit the artifact with the change.`);
+        + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled, and commit the artifacts with the change.`);
   }
   if (!Array.isArray(manifest.inputs) || manifest.inputs.length === 0)
     add("its manifest records NO first-party inputs, so the dependency-free staleness arm would "
@@ -447,7 +447,7 @@ export function verifyStatic(member) {
     if (liveSha !== inp.sha256)
       add(`STALE BUNDLE — the vendored input ${inp.path} has changed since ${member.bundle.outfile} `
         + `was built (now sha256 ${liveSha}, the bundle was built from ${inp.sha256}). `
-        + `Run \`npm run build\` in ${member.dir}/.`);
+        + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
   }
 
   /* (b3) CPDF-10 — THE UPLOAD PARTS. Dependency-free like (b), and it is the
@@ -473,7 +473,7 @@ export function verifyStatic(member) {
     const rec = recordedAssets.find((a) => a && a.path === rel);
     if (!rec) {
       add(`it declares the upload asset ${rel} and its committed manifest records NO hash for it, `
-        + `so nothing would notice those bytes changing. Run \`npm run build\` in ${member.dir}/.`);
+        + `so nothing would notice those bytes changing. Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
       continue;
     }
     let live = null;
@@ -481,7 +481,7 @@ export function verifyStatic(member) {
     if (!live) {
       add(`STALE BUNDLE — the declared upload asset ${rel} is MISSING. An upload part is committed, `
         + `so an absent one means this member cannot be installed or reproduced. `
-        + `Restore it and run \`npm run build\` in ${member.dir}/.`);
+        + `Restore it and run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
       continue;
     }
     const liveSha = sha256(live);
@@ -489,7 +489,7 @@ export function verifyStatic(member) {
       add(`STALE BUNDLE — the upload asset ${rel} has changed since ${member.bundle.outfile} was built `
         + `(now sha256 ${liveSha}, the manifest records ${rec.sha256}). This member's stated fidelity `
         + `is a measurement OF these bytes, so a swap here is a claim about something else. `
-        + `Re-measure the engine and run \`npm run build\` in ${member.dir}/.`);
+        + `Re-measure the engine and run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
     if (rec.bytes != null && live.length !== rec.bytes)
       add(`STALE BUNDLE — the upload asset ${rel} is ${live.length} B, the manifest says ${rec.bytes} B.`);
   }
@@ -497,7 +497,7 @@ export function verifyStatic(member) {
     if (rec && !declaredAssets.includes(rec.path))
       add(`its committed manifest records an upload asset ${rec.path} the member no longer declares. `
         + `An asset that stops being declared stops being shipped, which is a change nobody stated. `
-        + `Run \`npm run build\` in ${member.dir}/.`);
+        + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
 
   /* (c) the lock moved without a rebuild */
   let liveLock = null;
@@ -506,7 +506,7 @@ export function verifyStatic(member) {
   if (liveLock !== recordedLock)
     add(`STALE BUNDLE — package-lock.json has changed since the bundle was built `
       + `(lock is now ${liveLock ?? "absent"}, the bundle was built against ${recordedLock ?? "no lock"}). `
-      + `Run \`npm run build\` in ${member.dir}/.`);
+      + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
 
   /* (d) the recipe the manifest records is the recipe the member declares, and
      the toolchain that built it is the toolchain in the tree. A bundle built by
@@ -526,7 +526,7 @@ export function verifyStatic(member) {
         + (k === "esbuild"
           ? "A bundle built by a toolchain that is no longer installed cannot be reproduced. "
           : "")
-        + `Run \`npm run build\` in ${member.dir}/.`);
+        + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled.`);
   }
 
   /* (e) INSTALLABLE WITHOUT BUNDLING — the property `newgroup` needs, asserted
@@ -561,7 +561,7 @@ export async function verifyFresh(member, committed) {
     findings.push(`${member.name}: STALE BUNDLE — a fresh build of ${member.bundle.entry} is `
       + `${built.bytes.length} B / sha256 ${built.sha256}, the committed ${member.bundle.outfile} is `
       + `${committed.length} B / sha256 ${sha256(committed)}. They must be byte-identical. `
-      + `Run \`npm run build\` in ${member.dir}/ and commit the artifact with the change.`);
+      + `Run \`node tools/bundles.mjs\`, which rebuilds every bundle this change staled, and commit the artifacts with the change.`);
 
   /* THE PARSER'S OWN ANSWER to "what does this output still import", which is the
      half a lexical scan of the bytes cannot give honestly — it covers DYNAMIC

@@ -48,6 +48,7 @@
  *   the record has to be able to hold its own past.
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
+import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -197,14 +198,18 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const promote = async (id, md, type, state, tok = "mem-rec31", extra = {}) =>
-  rP(await POST(`op=promote&token=${tok}`, {
+/* `proof: true` (D-512) carries the drive-provenance capture a replay must name to be honoured (`replay-proof.mjs`). */
+const promote = async (id, md, type, state, tok = "mem-rec31", { proof = false, ...extra } = {}) => {
+  let pkg = {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "seed",
     meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [], ...extra,
-  }));
+  };
+  if (proof) pkg = await withReplayProof(mf, `token=${tok}`, pkg);
+  return rP(await POST(`op=promote&token=${tok}`, pkg));
+};
 const seed = async (id, md, type, state, tok, extra) => {
   const r = await promote(id, md, type, state, tok, extra);
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
@@ -664,14 +669,18 @@ console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no refe
      here, because that fixture is shared by dozens of suites). A REVISION meets none of that, and the subject is a
      revision: the record's own past may hold such a leg, and a plane that could not carry it verbatim would be
      rewriting history to suit a rule made later. So the question is seeded under the member token with a leg the
-     write admits, and the root of trust then replays the historical shape over it. */
+     write admits, and the root of trust then replays the historical shape over it.
+     CORRECTED AGAIN 2026-09-24 by D-512, never exempted: the root of trust's `replay: true` was itself still the
+     caller's word (D-511's stated residue). BOB #33's step (2) honours it only over a drive-provenance capture the
+     plane verifies, so the replay now carries one (`withReplayProof`) — the record's own past, SHOWN — and without it
+     is refused REPLAY_UNVERIFIED (`d512-replay-verified.test.mjs` drives that). */
   const histSeed = await seed(HIST, inquiryMd(HIST, { question: "A row written before the refusal existed?",
     ...legTo(INQ_OPEN, "connection", "hunch", HUNCH) }), "inquiry", "open");
   t("REACH: the question exists to be revised, so the arm below is about the replay and not about a missing base",
     typeof histSeed.bundleSha, "string");
   t("a REPLAYED revision carrying the same leg is ADMITTED: the record must be able to hold its own past",
     (await promote(HIST, histMd, "inquiry", "open", "adm-rec31",
-                   { replay: true, base: histSeed.bundleSha, snapKey: `${HIST}-replay` })).ok, true);
+                   { replay: true, proof: true, base: histSeed.bundleSha, snapKey: `${HIST}-replay` })).ok, true);
   /* D-511, the other half of the rule driven HERE, where the replay exemption is what the arm above rests on: the
      SAME package under the MEMBER deploy token is refused, because the flag is deleted before the store sees it
      and the leg is judged by REC-12's rule again. Without this arm the one above would pass over a plane that had

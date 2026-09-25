@@ -500,10 +500,13 @@ const caseprodRoster = armRosters.find((r) => r.driver === CASEPROD);
 t(`A8 the walk actually found the registration shape — an empty roster would make the pin below vacuous, `
 + `which is this estate's most-repeated instrument defect (${armRosters.length} driver(s) with a roster)`,
   armRosters.length >= 1 && (caseprodRoster?.ids.length ?? 0) > 0, true);
-t(`A8 caseproduction.control.mjs still REGISTERS ALL EIGHT ARMS, BY NAME — M0-78 repaired (C) and (H), `
+/* CORRECTED 2026-09-25 by D-450, never exempted: the driver gained (J) and (K), D-450's own controls (C-41.12's
+   both-axes demand put back; the unset bar axis written as a blank). The pin was right for the roster it named,
+   and it still names every id BY ID, so a deletion of any of the ten is caught and an addition cannot mask one. */
+t(`A8 caseproduction.control.mjs still REGISTERS ALL TEN ARMS, BY NAME — M0-78 repaired (C) and (H), `
 + `whose declared assertions had never once been evaluated, and the cheapest way to pass every check `
 + `that row adds is to delete them. Pinned by id so a deletion cannot be masked by an addition`,
-  caseprodRoster?.ids ?? null, ["A", "B", "C", "D", "E", "F", "G", "H"]);
+  caseprodRoster?.ids ?? null, ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"]);
 
 /* --------------------------------------------------------------- THE SELF-TEST
    M0-14's rule: naming alone would be a walk that never counts anything new, so

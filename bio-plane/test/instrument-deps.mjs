@@ -30,50 +30,66 @@
  * own; a module it starts importing arrives on its own.  Neither needs a human to
  * notice, which is the whole property the hand-kept arrays did not have.
  *
- * WHAT IT CAN AND CANNOT SEE, because a resolver that hides its limits is read as
- * though it had none:
- *  - CAN: static `import … from "./x.mjs"` and `export … from "./x.mjs"`, at any
- *    depth, including a cycle (the fixpoint terminates on the seen set).
- *  - CANNOT: `await import()` with a computed specifier, `require()`, a bare
- *    specifier resolved through `node_modules` (deliberately — those are installed
- *    in the scratch repository rather than copied), or an import that reaches OUT
- *    of `scripts/`.  The last is asserted rather than assumed: `outside` is
- *    returned so a caller can fail on it instead of copying a truncated set.
- *  - It reads NAMED FILES and walks no directory, so it is invisible to the class
- *    census in `hygiene.test.mjs` by construction rather than by exemption.
+ * SINCE M0-170 THE WALK IS NOT HERE. This file was the THIRD derivation of "a
+ * fixture's module closure" that M0-169 reported and did not take (its own header,
+ * `./moduleclosure.mjs`, "A THIRD DERIVATION EXISTS"): the same class, with its own
+ * regex and no comment lexer.  It is now a thin adapter over `moduleClosure`'s
+ * STATIC mode, which keeps THIS file's two contracts and drops its second spelling
+ * of "a static relative import":
+ *  - `files` are BASENAMES of the modules under `bio-plane/scripts/`, as the three
+ *    callers (`coverage-provenance`, `owed-controls`, `m051-driver-census`) copy
+ *    them into a scratch `bio-plane/scripts/`.
+ *  - `outside` is still returned and still asserted by the callers: a module in the
+ *    closure that is NOT under `scripts/` is named there (relative to `scripts/`)
+ *    instead of being copied as a truncated set.  One difference, stated: the old
+ *    walk stopped at such a module, the shared one walks THROUGH it, so `outside`
+ *    now names its dependencies too — a strictly larger, never smaller, refusal.
+ *    A module in a SUBDIRECTORY of `scripts/` is named in `outside` as well: the
+ *    callers copy by basename into one flat directory, so it could not be carried.
+ *  - an import naming a file that does not exist was SKIPPED silently here (a bare
+ *    `catch { continue; }`); `moduleClosure`'s default THROWS naming it.  Kept the
+ *    loud way: a fixture cannot copy what it cannot find, and the old silence was
+ *    the hand-list failure again.  MEASURED 2026-09-24 over `coverage.mjs`: the
+ *    closure is the same six modules under the old walk and the new, in either
+ *    `unresolved` mode, with `outside` empty — so the fold moved nothing today.
+ *
+ * WHAT IT CAN AND CANNOT SEE is `./moduleclosure.mjs`'s REACH, static mode: a
+ * relative literal specifier in a static `import`/`export` statement, with
+ * comments blanked by the estate's one lexer.  NOT a dynamic or computed import, a
+ * `require()`, or a bare specifier (those are installed in the scratch repository
+ * rather than copied).  It reads NAMED FILES and walks no directory, so it is
+ * invisible to the class census in `hygiene.test.mjs` by construction rather than
+ * by exemption.
+ *
+ * NEGATIVE CONTROL (M0-170, RUN 2026-09-24): a probe module `bio-plane/scripts/m0170probe.mjs` created and
+ * `import "./m0170probe.mjs";` added to `scripts/walkfloor.mjs`, each arm ALONE, restored by sha256 AND `cmp` (MATCH).
+ * Baselines coverage-provenance 38 / 0, owed-controls 49 / 0, m051-driver-census 9 / 0. (A4) the import, this file
+ * DERIVING -> 38 / 0, 49 / 0, 9 / 0, AS DECLARED. (B4) the same import with `instrumentDeps` replaced by a HAND LIST
+ * of today's six basenames -> 19 / 19 (first "(a) it still states the provenance question was ASKED and answered"),
+ * 38 / 11 (first "B1 the undeclared FLEET suite is NAMED"), 2 / 7 (first "(A1) a suite whose ONLY driver …") — the
+ * D-265 signatures, to the assertion.
  */
 
-import { readFileSync } from "node:fs";
-import { dirname, join, basename, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { moduleClosure } from "./moduleclosure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const SCRIPTS = join(HERE, "..", "scripts");
-
-/* Relative specifiers only. Comments are not stripped: a specifier is a string
-   literal in an import STATEMENT, and the anchor below requires the statement. */
-const SPEC = /(?:^|\n)\s*(?:import|export)[^;\n]*?from\s*["'](\.[^"'\n]+)["']/g;
+const REPO = resolve(HERE, "..", "..");
 
 export function instrumentDeps(entry = "coverage.mjs", scripts = SCRIPTS) {
-  const seen = new Set();
-  const outside = [];
-  const queue = [join(scripts, entry)];
-  while (queue.length) {
-    const file = queue.shift();
-    const key = resolve(file);
-    if (seen.has(key)) continue;
-    let src;
-    try { src = readFileSync(file, "utf8"); } catch { continue; }
-    seen.add(key);
-    for (const m of src.matchAll(SPEC)) {
-      const target = resolve(dirname(file), m[1]);
-      const rel = relative(scripts, target);
-      if (rel.startsWith("..")) { outside.push(rel); continue; }
-      queue.push(target);
-    }
+  const rels = moduleClosure({
+    repo: REPO,
+    roots: [relative(REPO, join(scripts, entry)).split(sep).join("/")],
+    dynamic: false,
+    includeRoots: true,             /* the fixture copies the instrument itself as well */
+  });
+  const files = [], outside = [];
+  for (const rel of rels) {
+    const fromScripts = relative(scripts, resolve(REPO, rel));
+    if (fromScripts.startsWith("..") || fromScripts.includes(sep)) outside.push(fromScripts);
+    else files.push(basename(rel));
   }
-  return {
-    files: [...seen].map((f) => basename(f)).sort(),
-    outside: [...new Set(outside)].sort(),
-  };
+  return { files: files.sort(), outside: outside.sort() };
 }

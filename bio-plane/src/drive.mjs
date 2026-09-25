@@ -344,3 +344,108 @@ export function callerSuppliedHopFacts(body) {
   if (!body || typeof body !== "object") return [];
   return DRIVE_HOP_FACT_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(body, k));
 }
+
+/* ================================================================== *
+ * D-525 — WHICH DRIVE BASELINES ARE CAPTURES OF GOOGLE'S SHELL
+ * ================================================================== *
+ *
+ * THE DEFECT THIS NAMES. Before CAP-8 (2026-09-14) `op=acquire` fetched a Drive
+ * link ITSELF, so the capture it filed is Google's client-rendered application
+ * page, not the document. D-472 made the monitor fetch the OpenDocument export;
+ * against a shell baseline that comparison can never agree, so such a bundle
+ * reads `modified` on every tick, permanently, and nothing listed which bundles
+ * carry one. This is the classifier `op=driveshells` sweeps with. It is pure, so
+ * the sweep and its suite read ONE definition.
+ *
+ * WHICH ROW IS "THE BASELINE". The row `op=monitor` compares against, chosen by
+ * the SAME rule (D-472, as it stands on 9f8b69e6): the row naming the export
+ * address first, else the row naming the bundle's own locator. The sweep does
+ * NOT share code with the monitor's lookup, deliberately and for a stated
+ * reason: D-524 is changing that lookup in the same hour, and one shared helper
+ * would be a merge collision in the one place both must be right. What keeps the
+ * two rules equal is BEHAVIOURAL — `test/d525-driveshells.test.mjs` asserts that
+ * for every bundle the sweep names, `op=monitor`'s own `baseline` is the sha the
+ * sweep named — so a drift in either fails that suite by name.
+ *
+ * WHAT TELLS A SHELL FROM A DOCUMENT, and it is NOT the handler key alone. The
+ * register row's `profile.handler` is docprofile's STACK, and every stack
+ * docprofile registers (client_rendered, aspnet_webforms, wordpress,
+ * conservative) is an HTML stack — `conservative` is also what an OpenDocument
+ * export identifies as, because it is the fallthrough. So the handler is REPORTED
+ * and the discrimination rests on two facts that do differ:
+ *   1. THE PLANE'S OWN RECORD of which address it fetched — `captured_locators`
+ *      `.retrieval_locator` for the baseline's sha, which acquire writes and no
+ *      caller can hand it (D-112's rule: a fact a caller can supply is one a
+ *      caller can invent). A CAP-8 capture names the export address; a pre-CAP-8
+ *      direct capture names the document address, which serves the application.
+ *   2. THE REGISTER'S PROFILE, which is caller-carried: the format axis
+ *      (`profile.format.format`), the declared type (`profile.source_content_type`
+ *      or `capture.content_type`) and docprofile's `document_kind: "shell"`.
+ * When the two disagree, or neither speaks, the verdict is `undetermined` and the
+ * answer says which facts it had — never a guess in either direction. */
+const HTML_TYPE = /^\s*(text\/html|application\/xhtml\+xml)\s*(;|$)/i;
+
+/** The register row `op=monitor` compares a Drive-linked bundle against. */
+export function driveBaselineRow(rows, drive, locator) {
+  const docs = (Array.isArray(rows) ? rows : []).filter((d) => d && typeof d.locator === "string");
+  return (drive && drive.harvestable ? docs.find((d) => d.locator === drive.exportAddress) : null)
+    || docs.find((d) => d.locator === locator) || null;
+}
+
+/** Classify one Drive-linked bundle's baseline. `retrievals` are the store's
+ *  `captured_locators` rows for the baseline's sha ({ address, via,
+ *  retrieval_locator }). Returns { verdict, basis, ...facts }, verdict one of
+ *  `shell`, `export`, `undetermined`, `no_baseline`. */
+export function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
+  const row = driveBaselineRow(rows, drive, locator);
+  if (!row) return { verdict: "no_baseline", baseline: null,
+    basis: "the register holds no row naming the document or its export address, so there is no baseline to judge" };
+  const profile = row.profile && typeof row.profile === "object" ? row.profile : {};
+  const format = profile.format && typeof profile.format === "object" && typeof profile.format.format === "string"
+    ? profile.format.format : null;
+  const declared = typeof profile.source_content_type === "string" ? profile.source_content_type
+    : typeof row.capture?.content_type === "string" ? row.capture.content_type : null;
+  const kind = typeof profile.document_kind === "string" ? profile.document_kind : null;
+  const htmlSaid = format === "html" || (declared !== null && HTML_TYPE.test(declared)) || kind === "shell";
+  const docSaid = !htmlSaid && format !== null && format !== "html" && format !== "undetermined";
+
+  /* The plane's own record of what it fetched. A null retrieval_locator on a
+     direct row is the D-96 reading: the document address and the retrieval
+     locator were the same string. An archive row is not this item's question. */
+  const fetched = (Array.isArray(retrievals) ? retrievals : []).map((r) =>
+    r.via && r.via !== "direct" ? { via: r.via, at: r.retrieval_locator || null }
+      : { via: "direct", at: r.retrieval_locator || r.address || null });
+  const fromExport = fetched.some((f) => f.via === "direct" && f.at === drive.exportAddress);
+  const fromPage = fetched.some((f) => f.via === "direct" && f.at && f.at !== drive.exportAddress);
+  const fetchedAddress = fromExport ? drive.exportAddress
+    : (fetched.find((f) => f.via === "direct" && f.at) || {}).at || null;
+
+  const facts = {
+    baseline: { sha256: row.capture?.sha256 || null, locator: row.locator,
+                retrieved: typeof row.retrieved === "string" ? row.retrieved : null },
+    handler: typeof profile.handler === "string" ? profile.handler : null,
+    document_kind: kind, format, declared_content_type: declared,
+    fetched_address: fetchedAddress,
+    fetched_record: fetched.length ? (fromExport && fromPage ? "both" : fromExport ? "export" : fromPage ? "page" : "other")
+                                   : "none",
+  };
+  const said = htmlSaid ? "the register's profile says HTML"
+    : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
+  if (fromExport && !fromPage) return { verdict: htmlSaid ? "undetermined" : "export", ...facts,
+    basis: htmlSaid
+      ? `the plane recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other`
+      : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}` };
+  if (fromPage && !fromExport) return { verdict: docSaid ? "undetermined" : "shell", ...facts,
+    basis: docSaid
+      ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other`
+      : `the plane recorded fetching ${fetchedAddress}, not the export address — Google serves the application there, not the document — and ${said}` };
+  if (fromExport && fromPage) return { verdict: "undetermined", ...facts,
+    basis: `the plane recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told` };
+  /* No direct retrieval on record: the register alone. */
+  if (row.locator === drive.exportAddress && !htmlSaid) return { verdict: "export", ...facts,
+    basis: `the register row names the export address and ${said}; the plane holds no retrieval record for these bytes` };
+  if (htmlSaid && row.locator !== drive.exportAddress) return { verdict: "shell", ...facts,
+    basis: `${said} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone` };
+  return { verdict: "undetermined", ...facts,
+    basis: `the plane holds no direct retrieval record for these bytes and ${said}` };
+}

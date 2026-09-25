@@ -1,3 +1,6 @@
+/* NEGATIVE CONTROL: RE-RUN 2026-09-24 by D-559's worker, `node test/nc-rec129.mjs` whole (19 of 19 arms armed, 0 findings):
+ * the eight frontier arms needed no re-anchoring and read exactly as the 2026-09-18 line below records: baseline 33/0,
+ * nofence 25/8, grouplate 32/1, tallywide 27/6, neverwide 27/6, nocause 28/5, refleak 32/1, overstrict 31/2, all AS DECLARED. */
 /* NEGATIVE CONTROL: (run 2026-09-18) `node test/nc-rec129.mjs` from `bio-plane/`: (a) `baseline` 33/0 green.
  * (b) `nofence` — THE ROW'S CONTROL, the visibility filter removed from the internet arm: 25/8, incl. C1
  * sam/vera/otto and C3. (c) `grouplate` — fence applied after the latest-per-subject grouping: 32/1, C3.

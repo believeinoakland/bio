@@ -858,8 +858,17 @@ export const RUNG_ABSENT = {
   inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id" },
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
+  /* REC-207 (BOB #32, 2026-09-23 23:42Z). BESIDE `taskresolve` AND FOR ITS REASON, which is this block's
+     shape word for word: a member performs it ONCE, the record keeps it attributed and dated, and it is
+     APPEND-ONLY by construction — `bias_debt_settlements` is never updated and never deleted, so there is
+     no way back and nothing to move forward either. `reversible` would promise a way back that does not
+     exist; `attested` would claim a signature that does not exist. Undetermined, STATED, and the ladder's
+     gap is named rather than papered over. If the lens moves ONWARDS the obligation is raised again as
+     NEW debt — which is a new fact about the lens and not this act being undone. */
+  biasdebtresolve:      { ground: "undetermined", is: "a member's authored settlement of the bias debt a lens change left on a run, with a REQUIRED stated reason; append-only, never cleared (BOB #32, 2026-09-23)" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
   actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
+  actionrisktier:       { ground: "undetermined", is: "a member's authored revision of an action's risk tier with a REQUIRED reason (REC-214, BOB #33); APPEND-ONLY — every earlier tier, its author and its reason stay readable in risk_tier_history, and nothing clears it" },
   actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
   projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
@@ -1548,6 +1557,11 @@ export const ACTS = [
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
   { id: "actionlaws", label: "State governing laws", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
+  /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
+     guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
+     as much as a planned one. Weight `single`: one revision, one act, appended. NO RUNG, for actionmove's reason. */
+  { id: "actionrisktier", label: "Revise risk tier", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
    * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
@@ -1801,6 +1815,9 @@ export const MACHINE_REFUSALS = {
      was OFFERED "State governing laws" and refused at the act, the DEC-8 disagreement this map exists to
      prevent. Found when `d311-roster-affordances.test.mjs` gained the drive its fixture guard demanded. */
   actionlaws:         "MACHINE_CANNOT_SET_LAWS",
+  /* REC-214: the store refuses a machine at the member's revision act by C-32.19's own code, through the one
+     helper `promote`'s action block also asks (`#machineRiskTierRefusal`). */
+  actionrisktier:     "MACHINE_CANNOT_SET_RISK_TIER",
   versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
   versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
   versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",
@@ -2070,6 +2087,14 @@ export const NON_ACTS = {
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",
   taskresolve: "task act, assignee-fenced; travels with the task via op=tasks",
+  /* REC-207 (BOB #32, 2026-09-23 23:42Z). The bias-debt pair, NON-ACTS for the RUN verbs' reason one
+     table down rather than the task acts' above: a bias debt is keyed by the RUN whose lens moved, and
+     settling it changes nothing about the inquiry or project that run's context names. The surface for
+     both is the QUEUE ITEM — `#obligationsBiasDebt` publishes the obligation and `#dispositionOf`
+     publishes the act it takes (`instead: "biasdebtresolve"`), so the act travels with the item exactly
+     as a task act travels with its task, and no surface renders either beside a bundle. */
+  biasdebtresolve: "bias-debt act, keyed by the RUN whose lens moved and gated by that run's read; travels with the queue item via op=queue, never beside a bundle",
+  biasdebt: "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object",
   /* REC-20. A READ, and one whose subject is a MEMBER rather than an object:
      op=queue answers "what has this record put in front of me", keyed by the
      member the control plane stamps. It is not an act on a bundle and no
@@ -2194,9 +2219,16 @@ export const NON_ACTS = {
  * is the one the act enforces. */
 export const PER_ITEM_MAX = 100;
 export const PER_ITEM_ACTS = [
+  /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
+     `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
+     item that named another, which is what lets a project-scoped finding and a progression finding be
+     handled in the same call. `definitionVersion` JOINS `shared_keys` (REC-211/IC-273): the act has
+     taken it as a shared field since REC-211 — a set over one progression names the version once — and
+     it was published in neither list, so a surface holding only this table could not complete an
+     instance-scoped item in a set. It is an identity of nothing, so it is shared and never narrowed. */
   { id: "proposedispose", label: "Defer or dismiss the selected findings", weight: "per-item",
     set_key: "items", item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
-    shared_keys: ["to", "reason", "kind"] },
+    shared_keys: ["to", "reason", "kind", "definitionVersion"] },
   { id: "taskresolve", label: "Resolve the selected obligations", weight: "per-item",
     set_key: "items", item_keys: [["id"]], shared_keys: [] },
   { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",

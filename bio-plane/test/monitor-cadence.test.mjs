@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (a) delete the #claimFire guard in store.mjs #monitorTick -> a retry re-fires a succeeded address and observations goes 1->2 (risk 2 reproduced), 5 assertions fail; (b) in #monitorCadencePlan use `Store.MONITOR_CADENCE_MS.daily` instead of `Store.monitorIntervalMs(r.monitor_frequency)` -> every document is checked at one global interval and per_meeting gets an interval nobody derived, 6 assertions fail. Both RUN 2026-08-04, restored 59/59 green. (c) D-518, RUN 2026-09-24: in #monitorTick restore `if (!failed.length)` in place of `if (!failed.length && !skipped.length)` -> the REAL-clock wake closes an epoch it did not finish, the retry mints a new one and re-fires the address that already succeeded, and observations goes 1->2 for one check; 5 assertions fail by name, listed in full in the header. Restored and verified by sha256 and cmp, 64/64 green. */
+/* NEGATIVE CONTROL: (a) delete the #claimFire guard in store.mjs #monitorTick -> a retry re-fires a succeeded address and observations goes 1->2 (risk 2 reproduced), 5 assertions fail; (b) in #monitorCadencePlan use `Store.MONITOR_CADENCE_MS.daily` instead of `Store.monitorIntervalMs(r.monitor_frequency)` -> every document is checked at one global interval and per_meeting gets an interval nobody derived, 6 assertions fail. Both RUN 2026-08-04, restored 59/59 green. (c) D-518, RUN 2026-09-24: in #monitorTick restore `if (!failed.length)` in place of `if (!failed.length && !skipped.length)` -> the REAL-clock wake closes an epoch it did not finish, the retry mints a new one and re-fires the address that already succeeded, and observations goes 1->2 for one check; 5 assertions fail by name, listed in full in the header. Restored and verified by sha256 and cmp, 64/64 green. (d) D-571, RUN 2026-09-25: delete the refill wait before the final tick (`await new Promise((r) => setTimeout(r, ms));`) -> the tick meets the archive bucket this suite just spent, A's replay hop is refused on appetite, and 3 assertions fail by name: "the bucket holds a grant for every fetch BEFORE the tick asks", "and re-checks the address, which is what a monitor is for" (want [A] got []) and "so the second genuine check is a second genuine observation" (want 2 got 1) — the two CONDUCT #20 saw red under load; 64 pass, 3 fail, twice. Over-strictness: the wait spelled as a bounded poll of the bucket PASSES 67/67; the Archive's answers delayed 2.5s each through the final tick PASSES 67/67. Restored by sha256 and cmp, 67/67 green. */
 /* REC-26: the two live M1 gaps — env.SELF bound nowhere, op=monitor with no caller.
  *
  * MILESTONES.md's corrected M1 note names exactly two things that did not close
@@ -89,6 +89,20 @@
  *      `if (!skipped.length && !failed.length)` — the two clauses in the other
  *      order — PASSES 64/64, so the arm is coupled to the behaviour and not to the
  *      source's shape.
+ *
+ *  (d) D-571 — LET THE FINAL TICK MEET A SPENT ARCHIVE BUCKET. The last section
+ *      now spends web.archive.org's governor bucket and waits the refill the
+ *      governor's own state names (the reason is at the site). RUN 2026-09-25:
+ *      delete that wait and the tick's replay hop for A is refused "appetite",
+ *      so 3 assertions FAIL by name — the refill guard, "and re-checks the
+ *      address, which is what a monitor is for" (want [A] got []) and "so the
+ *      second genuine check is a second genuine observation" (want 2 got 1) —
+ *      while "a tick one whole cadence later mints a NEW epoch" PASSES: the same
+ *      two-red, epoch-green shape CONDUCT #20 measured under two concurrent full
+ *      gates. 64 pass, 3 fail, on both of two runs, because the spend makes the
+ *      worst case the EVERY-run case. OVER-STRICTNESS: the wait spelled as a
+ *      bounded poll of the bucket passes 67/67, and the Archive's answers delayed
+ *      2.5s each through the final tick pass 67/67. Restored by sha256 and cmp.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -519,6 +533,43 @@ const pkg = (id, n, frequency) => {
     console.log("\n--- the key is idempotence, not amnesia: the next CADENCE really re-checks ---");
     /* One whole MONITOR_TICK_MS on, the open epoch is spent. Without this the key
        would mute a document for good the first time a tick failed beside it. */
+    /* D-571 — THE ARCHIVE HOST'S BUCKET IS PUT UNDER THIS SUITE'S CONTROL, because
+       it runs on the REAL clock and nothing else in this tick does. The tick's
+       `now` is virtual, but each of its fetches passes the per-host governor, and
+       archiveSelect (index.mjs) pins web.archive.org to ITS OWN appetite of 24 a
+       minute on first contact — a host row, which OUTRANKS this suite's
+       GOVERNOR_APPETITE_PER_MIN binding, so that binding never unpaced this host.
+       Tick 1 spends the 3-token burst; what the bucket holds when this tick asks
+       again is real elapsed time times 0.4 a second, spaced by Math.random jitter.
+       MEASURED 2026-09-25: a spent bucket at this point fails EXACTLY the two arms
+       CONDUCT #20 saw red under two concurrent full gates — A's replay hop is
+       refused "appetite", A is reported failed, observations stays 1 — while the
+       epoch arm beside them passes (62/2). Whether the bucket is what fired under
+       that load is UNDETERMINED (no got-values were kept, and 16 runs under two
+       concurrent batteries here stayed green); the signature matches and it is the
+       one real-clock input this tick has. So the suite no longer races it: it
+       SPENDS the bucket — the worst case the real clock can hand this tick — and
+       then waits the time the governor's own state says refills a grant for every
+       fetch the tick will make. A later wake only adds tokens, so load can only
+       lengthen that wait, never change the verdict. */
+    const ARCHIVE_HOST = "web.archive.org";
+    const BURST = Number(/burstTokens:\s*(\d+)/.exec(STORE_SRC)[1]);
+    const GRANTS = 3;                          // A's lookup, A's replay, B's lookup
+    const bucket = async () => {
+      const h = (await obj.governorState({ host: ARCHIVE_HOST })).hosts[0];
+      return Math.min(BURST, h.tokens + ((Date.now() - h.refilled_at) / 60000) * h.appetite_per_min);
+    };
+    for (let i = 0; i < 10 && (await obj.governorAdmit({ host: ARCHIVE_HOST })).admitted; i++) { /* spend it */ }
+    t("the archive host's bucket is SPENT first, so this section meets the worst real clock every run",
+      (await bucket()) < 1, true);
+    t("and the burst can hold a grant for every fetch this tick makes", BURST >= GRANTS, true);
+    {
+      const h = (await obj.governorState({ host: ARCHIVE_HOST })).hosts[0];
+      const ms = Math.ceil(((GRANTS - (await bucket())) / h.appetite_per_min) * 60000) + 50;
+      await new Promise((r) => setTimeout(r, ms));
+    }
+    t("the bucket holds a grant for every fetch BEFORE the tick asks, so no fetch is refused on timing",
+      (await bucket()) >= GRANTS, true);
     const later = (await obj.onAlarm(T1 + 3600000 + 1)).monitor;
     t("a tick one whole cadence later mints a NEW epoch", later.epoch !== first.epoch, true);
     t("and re-checks the address, which is what a monitor is for",

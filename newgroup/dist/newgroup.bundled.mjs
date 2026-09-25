@@ -585,11 +585,14 @@ var INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 var INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 var instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
+var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
 async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   const meta = {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
+    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
+    limits: { ...PLANE_LIMITS },
     bindings: [
       { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
       { type: "plain_text", name: "VERSION", text: release.version },
@@ -637,6 +640,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
     compatibility_flags: ["nodejs_compat"],
+    /* DIST-7 (D-54): the plane's subrequest ceiling, a decision the release states, never Cloudflare's default. */
+    limits: { ...PLANE_LIMITS },
     bindings: [
       { type: "plain_text", name: "VERSION", text: release.version },
       /* D-102: bound on UPDATE as well as install, which is what retro-names
@@ -1398,6 +1403,7 @@ export {
   CFG,
   INSTANCE_AI_BINDING,
   MEMBER_BINDINGS,
+  PLANE_LIMITS,
   index_default as default,
   instanceAiOk,
   reportsBuilds
