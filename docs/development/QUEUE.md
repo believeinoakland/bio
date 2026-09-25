@@ -625,7 +625,8 @@ scope: give each of the five conditions its own code, catalogue row and translat
 accepts-when: each of the five conditions answers its own code whose words are true of it, through the op (moves: five false translations). NEGATIVE CONTROL: route one condition back to its old code and arm G fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-574's worker).
 
-### D-679 · running — **THREE PUBLIC OPS ANSWER A STORE FAILURE AT HTTP 200: index.mjs's op=invitelook, enroll and login read the store's answer as `json(await r.json(), 200)` and never read `ok`, so an anonymous caller is told success-status for a failure (since D-629 it at least carries a named code, not a stack).** REC-52's class. Found by D-629's worker (minted on land/worker/D-629). — owner RECORD.
+### D-679 · integrated — **THREE PUBLIC OPS ANSWER A STORE FAILURE AT HTTP 200: index.mjs's op=invitelook, enroll and login read the store's answer as `json(await r.json(), 200)` and never read `ok`, so an anonymous caller is told success-status for a failure (since D-629 it at least carries a named code, not a stack).** REC-52's class. Found by D-629's worker (minted on land/worker/D-629). — owner RECORD.
+status: integrated — SCHEDULER #23 10:30Z: tip 8894350b (on D-629 5e202b33), GATE 387/387 GREEN FULLREUSE (21908 assertions), tree 673b179f; FOUR public doors (claim, login, invitelook, enroll) now answer a store silence 502 STORE_DID_NOT_ANSWER via doAnswer; bytes on success unchanged; plane-envelope DETECTOR C widened to bound reads (61->62); d629 U1/L3 corrected
 order: spawned directly after D-629, which it completes: the public door must not say 200 for a failure (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I3 — the three public ops' failure status; the integrator classifies.
@@ -742,6 +743,17 @@ depends-on: none (stacked on land/worker/D-680 @ 0d17eb0e, integrated, on D-626;
 scope: the publish act can name its draft (`draft=`), nothing preselected; a published case page states its `draft_case` in the plane's words; C-44.4 and C-44.6 render in their DEC-49 words with both cases named.
 accepts-when: a member publishes from a named draft and the case page states how its case was bound (moves: a signed statement no surface shows). NEGATIVE CONTROL: drop draft_case from the page and the statement arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-680's report).
+
+### D-667 · running — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
+status: running — SCHEDULER #23 10:30Z: spawned, stacked on land/worker/D-564 @ ae807e25
+order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares), with D-548's block() recorder as built.
+depends-on: none (stacked on land/worker/D-564 @ ae807e25, integrated — its d564-block.control.mjs SUITES table is extended here).
+scope: adopt D-548's block() recorder and needs() in the eleven suites; add each to d564-block.control.mjs's SUITES table; state the matcher's blind spot (an abort under another name, an inline top-level process.exit) on the control's line.
+accepts-when: each of the eleven, with one fixture broken, names the sections that never ran and its totals are unchanged when whole (moves: an abort that hides unrun sections). NEGATIVE CONTROL: disarm the recorder in one suite and its broken-fixture arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-564's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

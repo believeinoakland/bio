@@ -116,16 +116,6 @@ scope: refuse by name a non-replay revision whose document's `created` differs f
 accepts-when: a revision restating a different `created` is refused by name, and one restating the same lands (moves: row and bytes disagreeing). NEGATIVE CONTROL: drop the check and the backdated-revision arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-615's worker).
 
-### D-667 · queued — **ELEVEN MORE SUITES CAN ABORT A FIXTURE WITHOUT REPORTING WHICH SECTIONS NEVER RAN: four print "FIXTURE ABORTED" (d448-review-copy-translation, d543-instant-precision, rec213-reviewcopy-writer, rec217-draft-binding) and seven reach `process.exit` through a bail/abort/die const (case-edition-conclusion, case-project-conclusion, caselifecycle, caseratify-conclusion, current-shared-question, d442-publish-writes-nothing, rec170-manifest-pair).** D-548 and D-564 fixed eight; this is the sweep's remainder. Found by D-564's worker (minted on land/worker/D-564). — owner M0 (the suites).
-order: after D-628, behind the head's product corrections: a process row that cuts false-green risk in the gate, placed near the head but never above product (CLAUDE.md §2, Bob 2026-09-22; SCHEDULER #23, 2026-09-25)
-milestone: M0
-interface: none (test-only).
-design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares), with D-548's block() recorder as built.
-depends-on: D-564 (integrated, land/worker/D-564 @ ae807e25; its d564-block.control.mjs SUITES table is extended here).
-scope: adopt D-548's block() recorder and needs() in the eleven suites; add each to d564-block.control.mjs's SUITES table; state the matcher's blind spot (an abort under another name, an inline top-level process.exit) on the control's line.
-accepts-when: each of the eleven, with one fixture broken, names the sections that never ran and its totals are unchanged when whole (moves: an abort that hides unrun sections). NEGATIVE CONTROL: disarm the recorder in one suite and its broken-fixture arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-564's worker).
-
 ### D-630 · queued — **`suggest.control` arm 7: ANCHOR DRIFT — `    if (prior) {` matches 2 since D-536, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
 order: after D-667, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
@@ -1111,4 +1101,24 @@ design: `docs/development/VERIFICATION.md` (the gate runs the class the diff mea
 depends-on: M0-176.
 scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
 accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-185 · queued — **`derivation-bounds`' TRUNCATION GRADER CANNOT SEE A `this.#rows(` WRAPPED IN A TERNARY, so a capped read written that way leaves the graded roster silently (REC-194 fixed its own instance).** Found by REC-194's worker (F2). — owner M0.
+order: after M0-177, behind the product rows: latent, no live instance (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a floor that cannot see a departure is not a floor).
+depends-on: none.
+scope: the grader follows each branch of a ternary to the rows call.
+accepts-when: a ternary-wrapped capped read is graded (the measured failure it moves: REC-194's read leaving the roster unseen). NEGATIVE CONTROL: plant a ternary-wrapped read and the roster names it.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-186 · queued — **A BATTERY RUN BY HAND OUTSIDE THE GATE IS UNPINNED: nothing records which `origin/main` it measured.** Found by M0-173's worker (D), the half M0-173 left. — owner M0.
+order: after M0-185, behind the product rows (Bob's 17:41Z rule: tracked and built) (SCHEDULER #19, 2026-09-24; via CONDUCT #20 19:16Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a gate measures ONE tree), with M0-173's coord pin as the precedent.
+depends-on: M0-173.
+scope: a hand-run battery prints and records the `origin/main` (and coord) sha it read, as M0-173's gate does.
+accepts-when: a hand run's completion line names the main sha (the measured failure it moves: an unpinned hand verdict). NEGATIVE CONTROL: drop the pin and the provenance arm fails by name.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
