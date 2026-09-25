@@ -73,6 +73,16 @@ scope: the census judges the text the acquire reading classified (its `text_unit
 accepts-when: the 34 documents are judged on their tier-3 text, and no document is labelled tier 3 unless tier-3 text was judged (moves: 34 of 38 judged on empty text). NEGATIVE CONTROL: judge the plain answer again and the tier-3 arm reads empty, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-536's worker).
 
+### D-573 · queued — **A REVIEW COPY'S `last_change` PICKS SILENTLY BETWEEN TWO ACTS IN THE SAME SECOND when one carries a whole-second stamp from before D-543, so the one in-band date claims an order the record cannot support.** Found by D-543's worker. BOB #34 RULED (1) 2026-09-25 01:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): keep the instant-order pick as the ONE in-band date (DEC-31), and STATE the tie in `last_change.stated` ("which of <act A> and <act B> came later is undetermined: <act A> was recorded to the second"), naming the tied act in `last_change.undetermined_within`. — owner RECORD.
+order: after D-557, with the corrections: a date that claims an order it cannot know is the record claiming more than it holds (CLAUDE.md §2; BOB #33's D-516 band rule) (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 additive — two keys on `last_change`; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 1, with BOB #34's 01:05Z ruling, folded by this row.
+depends-on: D-543.
+scope: when the two newest candidates fall in one second and one is whole-second, keep the pick, add the statement and the tied act; acts in different seconds carry no statement.
+accepts-when: a legacy whole-second ack and a millisecond comment in one second give the pick PLUS the statement; acts in different seconds give none (moves: a silent pick). NEGATIVE CONTROL: drop the statement and the tie arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-543's worker).
+
 ### D-540 · queued — **`#statementAcknowledgements`' `unbound` COUNT INCLUDES THE STATEMENT WRITER'S OWN READING (measured 3 where the honest count is 2), so the record claims one more unbound second reading than exists.** Found by REC-213's worker (via CONDUCT #20 22:11Z): REC-212's residue — REC-212 excluded the publisher in the NOT clause, and the writer was left in. — owner RECORD.
 order: after D-543, with the corrections to just-landed work: a count that overclaims second readings (CLAUDE.md §2) (SCHEDULER #20, 2026-09-24)
 milestone: M10
@@ -1190,23 +1200,3 @@ depends-on: D-394 (`integrated` on c18-batch8).
 scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
 accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
-order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
-depends-on: none.
-scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
-accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
-order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a census states what it reads).
-depends-on: none.
-scope: add both to `UI_HELPERS` in `tools/status.mjs`.
-accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
