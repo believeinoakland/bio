@@ -1346,9 +1346,10 @@ def plane_text(rec, data):
     if os.path.exists(tp):
         text = open(tp, encoding='utf-8', errors='replace').read()
         os.remove(tp)
-    ip = os.path.join(tdir, sha + '.i2.json')
-    if os.path.exists(ip):
-        os.remove(ip)
+    for x in (sha + '.i2.json', sha + '.plain.txt'):
+        ip = os.path.join(tdir, x)
+        if os.path.exists(ip):
+            os.remove(ip)
     # D-536: the row's provenance rides beside the text, so `read_one` can record WHICH tier and member
     # produced the text this census classified, and `reread` can attribute a moved class.
     LAST_PLANE_ROW.clear()
@@ -1358,9 +1359,13 @@ def plane_text(rec, data):
         return '', 'plane (no row)', reason or 'plane reader returned no row'
     if row.get('err'):
         return text, 'plane (acquire refused)', 'plane acquire: ' + str(row['err'])[:160]
-    tier = row.get('structure_tier') or row.get('text_tier')
+    # D-557: the text above is the text the acquire READING classified (its `text_units`), and the label
+    # names the tiers of the producers of exactly those pages, never the document's `text_tier` — which
+    # labelled 34 documents "tier 3" that were judged on EMPTY plain text (M-152). No text judged, no tier.
+    # The label is the census row's own (`judged.reader`), composed in ONE place.
+    label = (row.get('judged') or {}).get('reader') or 'plane (no text judged)'
     text, reflowed = reflow(text)
-    return text, f'plane (text tier {tier}){" REFLOWED" if reflowed else ""}', ''
+    return text, label + (' REFLOWED' if reflowed else ''), ''
 
 
 def hashlib_sha(data):
@@ -2023,8 +2028,9 @@ def cmd_reread():
                 x = {'id': r['id'], 'name': r['name'], 'kept': True,
                      'classes_before': r['classes'], 'classes_after': cs,
                      'reader_before': r['reader'], 'reader_after': reader, 'reason_after': reason,
-                     'prov_before': r['plane_prov'].get('structure_provenance'),
-                     'prov_after': LAST_PLANE_ROW.get('structure_provenance')}
+                     # D-557: the provenance of the text JUDGED, which is the acquire reading's.
+                     'prov_before': r['plane_prov'].get('reading_provenance'),
+                     'prov_after': LAST_PLANE_ROW.get('reading_provenance')}
             f.write(json.dumps(x) + '\n')
             f.flush()
             done[x['id']] = x
