@@ -604,8 +604,8 @@ scope: on `changed` the tick captures the served bytes with monitor provenance t
 accepts-when: a changed tick leaves a capture whose sha the observation names, and that sha resolves in the register. NEGATIVE CONTROL: skip the capture, and the "result names a held capture" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-338 · running — **THE `unmonitorable` CONTRACT IS DECLARED AND UNTESTED: D-65 maps a shell to UNMONITORABLE (`CONTRACT_FREQUENCY.unmonitorable: null`, with its why), and no suite drives it; whether the monitor still reports a hash delta for such a document is UNDETERMINED.** — owner RECORD.
-status: running — SCHEDULER #21 01:19Z spawns WORKER D-338 (depth 2); new suite, beside REC-191/D-571
+### D-338 · integrated — **THE `unmonitorable` CONTRACT IS DECLARED AND UNTESTED: D-65 maps a shell to UNMONITORABLE (`CONTRACT_FREQUENCY.unmonitorable: null`, with its why), and no suite drives it; whether the monitor still reports a hash delta for such a document is UNDETERMINED.** — owner RECORD.
+status: integrated — SCHEDULER #21 02:29Z: tip 61c52b6e, GATE 360/360 GREEN; op=monitor withdrew a false hash delta on an unmonitorable shell (index.mjs after monitorCadence; store monitorObservationFor 'unmonitorable'); unions with D-567 and REC-191 on op=monitor
 order: after D-455, the same monitor path (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M3
 interface: none — an arm.
@@ -821,6 +821,16 @@ design: `docs/development/VERIFICATION.md` (the DEC-49 guard).
 depends-on: UI-84 (its train).
 scope: teach the walk to follow a const to its catalogue value; failing that, record the undercount at the walk. WIDENED 2026-09-24 (UI-100's F1): the same walk OVERcounts too — `partitionSuiteLiterals` harvests quoted codes from comments (r3Fed read 81 vs 80): blank /* */ and // spans first (the obsSpans technique). Also correct UI-84's control arm C declaration (declared GREEN; the rename in fact stops the plane — M-139 §7).
 accepts-when: r3Fed counts REQUIRED_ARGUMENT_MISSING. NEGATIVE CONTROL: inline-break the const's resolution and the arm names the missed code. A code named only in a comment is not counted.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-152 · queued — **`fleetbundles.control.mjs` ARM 5(b) JUDGES "OUTSIDE THE DOC-FACING SET" BY READING THE SUITE WHOLE (`suiteSrc.includes(needle)`, line ~291), while `gates.mjs` now strips comments (M0-143): the driver and the gate disagree the moment either file grows a `docs/` comment.** Found by M0-143's worker. — owner FLEET.
+order: low in the M0 group: a hand-run driver line, not a battery assertion (SCHEDULER #18, 2026-09-24; via CONDUCT #20 05:15Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a control coupled to shape must read what the gate reads).
+depends-on: M0-143.
+scope: read the suite through the same `stripComments` M0-143 uses before the check. WIDENED 2026-09-24 (M0-153's finding b): the doc-facing rule arm 5(b) restates is also stale on comment-blanking and the edge rule — read through `stripComments` (`bio-plane/scripts/walkfloor.mjs`) and assert the derivation THROUGH `gates.mjs`, not a restatement.
+accepts-when: the driver's verdict equals `gates.mjs --explain`'s for fleetbundles. NEGATIVE CONTROL: add a `docs/` comment to the suite and the old whole-read line disagrees, the new one does not.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
