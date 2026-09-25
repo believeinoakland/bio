@@ -4,30 +4,47 @@
 
 **P1 · Purpose.** The process exists to put correct, working product behaviour that meets every defined requirement onto `main`. Nothing else is output. A rule, a record or a test has value only as far as it serves that.
 
-**P2 · The process and the product are separate.** Each has its own correctness. The process is defined in its own repository. It keeps the product's **build state** in one subtree of the product repository, and only the process writes there. The build state holds the architecture (layers, modules, dependencies), the plans, and the record of jobs.
+**P2 · The process and the product are separate.** Each has its own correctness. The process is defined in its own repository. It keeps the product's **build state** in one subtree of the product repository, and only the process writes there. The build state holds the architecture (layers, modules, their order and dependencies), each module's requirements, the plans, and the record of jobs.
 
 **P3 · The process is correct before it is used.** A meaningful flaw in the process stops all product work until the process is fixed and **certified**: the fix is checked against these principles, then proven on a small dry-run tranche. The process is never patched in reaction while it runs.
 
-**P4 · The architecture is explicit and enforced.** The build state defines the layers and the modules. Each module belongs to exactly one layer. A module uses modules in lower layers, and declared peers in its own layer without cycles, and never a module in a higher layer. The declared dependencies are checked against the actual imports, and a violation fails the build.
+**P4 · The architecture is owned by BOB, with Bob.** BOB, working with Bob, defines the layers and the modules. Only BOB, with Bob, adds, removes or reorders them. The modules are arranged in one **total order**. Each module belongs to exactly one layer. A layer's modules are adjacent in the order, and every lower layer's modules come before every higher layer's. A module may use the services of modules earlier in the order, and never of a module later in it. That is acyclic by construction. The declared use is checked against the actual imports, and a violation fails the build.
 
-**P5 · A module fits in one reading.** A module is sized so that one session can read, in full, its code, its requirements, its layer's contract and the contracts of the modules it uses. Requirements are read whole, never scanned.
+**P5 · Requirements are owned by BOB, with Bob.** BOB, working with Bob, writes each module's requirements:
+- the services the module **provides**: each interface and its behaviour;
+- the services it **uses**, named by module;
+- the invariants it keeps;
+- the product requirements and design sections it satisfies, cited by section.
 
-**P6 · Requirements are traceable.** Each module lists the requirements and design sections it satisfies, by section. Its tests show each one met.
+Requirements may suggest an implementation but never require one. The module is free to choose and change its implementation. Because requirements are read whole, never scanned, they are concise and unambiguous. Only BOB, with Bob, changes a module's requirements. BOB communicates a change to a requirement, or to the interface of a provided service, to every module that uses that service.
 
-**P7 · The unit of work is the module job.** A module has at most one job at a time. A job applies every plan entry for its module. A problem found in the module during the job is fixed in that job.
+**P6 · A module fits in one reading.** A module is sized so that one session can read, in full, its code, its requirements, and the requirements of the services it uses.
 
-**P8 · Bottom-up.** A tranche runs its jobs lowest layer first, then in dependency order within a layer. A job that changes what its module provides adds entries for the modules that depend on it; those jobs run later in the same tranche.
+**P7 · Only module jobs change module code, and every change meets every requirement.** A change to a module meets all of that module's requirements as they stand at that moment. A module's tests rigorously confirm that the module meets every one of its requirements: each requirement is shown by at least one test. The tests check behaviour at the module's interface, never its source text.
 
-**P9 · Tranches are frozen.** A tranche's plan is fixed when it starts. Anything found outside the current job's module goes into the **next** plan. When a tranche is merged, its plan is archived and the next plan becomes current. Only Bob can admit an entry into a running tranche.
+**P8 · The unit of work is the module job.** A module has at most one job at a time. A job applies every plan entry for its module. When the job finds a problem in its own module (a requirement not met, an inefficiency, a gap or error in its tests, or anything else), it fixes the problem in the job, or it adds an entry for it to the next tranche. Which one is the job's choice.
 
-**P10 · Tests follow the architecture.** Each module has tests of its behaviour at its interface, never of its source text. Each layer has layer tests. A job runs its module's tests and its layer's tests, plus the tests of every dependent module when it changes what it provides. The full regression runs only at release, or when Bob asks.
+**P9 · A flaw in another module goes through BOB.** A job that believes it has found a flaw in another module reports it to BOB, described in terms of that module's requirements or its efficiency. BOB confirms the flaw, then:
+- if that module's job is running, BOB forwards the flaw to it, and that job fixes it now or adds an entry to the next tranche, depending on its complexity and how far the job has gone;
+- if no job is running for that module, BOB adds an entry to the next tranche.
 
-**P11 · Done means merged.** A job is done when its tests pass and it is merged to `main`. A tranche is done when every one of its jobs is merged.
+A flaw in the requirements themselves goes to BOB and Bob.
 
-**P12 · Sessions are short and single-purpose.** A session does one job, or one planning step, and ends. State lives in the build state, never in a long-running context. Long-lived sessions that are woken repeatedly re-read their whole context on every wake, and that was the largest hidden cost of the old process.
+**P10 · Builds happen in tranches.** A tranche's plan is fixed when the tranche starts. Its jobs run in module order: lowest layer first, and in order within a layer. An entry that arises during a tranche goes to the **next** plan. The one exception is a change to a provided service. BOB carries it to the modules that use the service, and those modules come later in the order, so their jobs in this tranche pick it up. When every job of a tranche is merged, its plan is archived and the next plan becomes current.
 
-**P13 · Usage is measured and bounded.** Every session is tagged with its tranche and job. Its reported cost is summed per job and per tranche. Each tranche starts with an estimate Bob approves. A job or tranche that overruns stops and reports why, before it spends more.
+**P11 · Tests follow the architecture.** Each module has its own tests, and each layer may have layer tests. A job runs its module's tests and its layer's tests. When it changes what its module provides, it also runs the tests of every module that uses the change. The full regression runs only at release, or when Bob asks.
 
-**P14 · A ruling is made once.** A decision is recorded once, in its home document, and it is not reopened without new evidence named in writing.
+**P12 · Done means merged.** A job is done when its tests pass and it is merged to `main`. A tranche is done when every one of its jobs is merged.
 
-**P15 · Rules derive from principles.** Every process rule names the principle it serves. A rule is never added in reaction to an incident unless it can be derived from a principle. These principles change only with Bob's approval.
+**P13 · Sessions are short and single-purpose.** A session does one job, or one planning step, and ends. State lives in the build state, never in a long-running context. A session's cost grows with its context size multiplied by its number of turns: re-reading its own context is most of what it spends. A long-lived session woken again and again is the most expensive thing the process can run.
+
+**P14 · Usage is measured, bounded, and explained.**
+- **The authoritative measure** is Bob's plan meter: the share of the weekly limit used, as Bob reads it.
+- **The process measures TOKENS PROCESSED per session** (cache reads plus cache writes plus input plus output), summed by tag per job and per tranche. It never uses dollar estimates, which understate and are unreliable across container restarts. Each session records its counts before it ends.
+- **Each tranche is calibrated:** tokens processed against the change in Bob's weekly meter, so every estimate can be stated as a share of the week.
+- **Each tranche starts with an estimate**, as a share of the week, that Bob approves.
+- **A job that passes twice its estimate stops and reports why** before it spends more: its context size, its number of turns, and its test attempts.
+
+**P15 · A ruling is made once.** A decision is recorded once, in its home document, and it is not reopened without new evidence named in writing.
+
+**P16 · Rules derive from principles.** Every process rule names the principle it serves. A rule is never added in reaction to an incident unless it can be derived from a principle. These principles change only with Bob's approval.
