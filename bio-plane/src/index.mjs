@@ -10185,9 +10185,9 @@ export default {
       if (attr.legacy.length)
         return json({ ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
           caseId: facts.doc.case_id, edition: facts.doc.edition, observations: attr.legacy.slice(0, 50),
-          detail: `a finding in ${facts.doc.case_id} rests on an observation written before §4.1 that still names `
-                + `its author in its own files (${attr.legacy.slice(0, 5).join(", ")}); publishing it would publish `
-                + `that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
+          detail: `a finding in ${facts.doc.case_id} rests on an observation whose own files name its author (written `
+                + `before §4.1) or cannot be read to show they do not (${attr.legacy.slice(0, 5).join(", ")}); `
+                + `publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-case */
       /* DEC-49 REGION is-attribution-gate — MK-7 / C-92.10, C-92.11 (MEMBER-KNOWLEDGE-DESIGN.md §4.4). THE
@@ -10459,13 +10459,15 @@ export default {
       if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
         return json({ ok: false, reason: "TESTIMONY_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
           bundleId: body.bundleId,
-          detail: `${body.bundleId} is a member's observation written before §4.1, and its own files still name its `
-                + `author; publishing it would publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
+          detail: `${body.bundleId} is a member's observation whose own files name its author (written before §4.1), or `
+                + `cannot be read to show they do not; publishing it could publish that name at any level `
+                + `(MEMBER-KNOWLEDGE-DESIGN.md §4.1)`,
           store: storeName, tokenClass: cls }, 409);
       if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
         return json({ ok: false, reason: "TESTIMONY_CITED_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
           bundleId: body.bundleId, rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
-          detail: `${body.bundleId} rests on an observation written before §4.1 whose own files still name its author `
+          detail: `${body.bundleId} rests on an observation whose own files name its author (written before §4.1) or `
+                + `cannot be read to show they do not `
                 + `(${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
           store: storeName, tokenClass: cls }, 409);
       /* END DEC-49 REGION is-testimony-publish-bundle */

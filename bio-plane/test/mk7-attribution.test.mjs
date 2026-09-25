@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: (recorded after the arms are run — see the line below this header when present)
+/* NEGATIVE CONTROL: RUN 2026-09-25 by the MK-7 worker from `bio-plane/` through a driver in the session scratchpad (`nc-mk7.mjs`), each arm ALONE, by editing the REAL source (`src/store.mjs` 3,373,677 B sha256 d4d7f67df69a…, `src/index.mjs` 863,470 B sha256 d69685dc9784…), each anchor asserted to occur exactly once, restored by `cp` from a uniquely-named per-arm pristine copy and verified by sha256 AND `cmp` (6 of 6 restores IDENTICAL; never `git checkout --`). ONE ARM PER LEVEL, each dropping that level's handling in the `is-attribution-shown` region, as the row asks. Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 33/0. (b) `group` — group publishes the author's handle: "LEVEL group" MUST FAIL, with both statement arms — 30/3 AS DECLARED. (c) `project` — project publishes the cover: "LEVEL project" MUST FAIL, with both statement arms — 30/3 AS DECLARED. (d) `cover` — cover publishes the handle: "LEVEL cover" MUST FAIL, with both statement arms (and the edition-2 arm, which reaches cover, and the C-92.11 drift arm, whose no-handle author's cover now reads unchosen rather than stale) — 28/5 AS DECLARED. (e) `name` — name publishes the MEMBER ID: "LEVEL name" MUST FAIL, with both statement arms (and the act's own `shown`) — 29/4 AS DECLARED. (f) `veto` — C-92.10 disarmed at op=caseratify (`if (false)`): the unchosen arm MUST FAIL by name — 20/13; its FIRST RUN ended the module on a TypeError after the named failure (a later line read an act's answer bare), recorded as a finding about the instrument and fixed (`docShaOf`), then re-run to the suite's foot. With the veto disarmed the case ratified with four null levels and C-92.12 still refused every observation's own bytes (group and project publish nothing either way), which is the second line holding. (g) `author` — C-92.5 disarmed: the refusal roster MUST FAIL, and the byte-identical arm with it (the owner's act landed and re-authored the document) — 30/3 AS DECLARED. Figures are the FINAL suite's (33 assertions); the first run, before the C-92.11 and C-53.10/.11 arms were added, read 31/0 and the same named failures. The over-strictness side is in the suite: `cover` IS found for the cover observer and the handle IS found for the name observer, and the publisher's own name is found, so the matcher is shown to see names.
+ *
  *
  * MK-7 — THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE (`docs/development/MEMBER-KNOWLEDGE-DESIGN.md`
  * §4.2–§4.6, BOB #19, 2026-09-21; §8's row for MK-3's replacement (ii)).
@@ -19,7 +20,7 @@
  * any level. The ratified case document states each level and its published value, read back through the op.
  *
  * TWO PLANES. Section 1–6 run on the REAL plane (`src/` as it ships; nothing cut). Section 7 boots a copy of `src/`
- * and `checks/` in this suite's sandbox with TWO edits, each asserted to occur exactly once, to reach two states
+ * and `checks/` in this suite's sandbox with THREE edits, each asserted to occur exactly once, to reach three states
  * the ops of this build cannot produce: a member with NO HANDLE (a member enrolled before handles existed, which
  * `members.handle`'s additive column still admits) and an observation in the PRE-§4.1 form (written before MK-6,
  * naming its author in its own files). Neither edit touches the subject (`attributeObservation`, the gate regions).
@@ -63,13 +64,13 @@ const okOf = (r) => [r && r.ok, codeOf(r)];
 const NOW = "2026-09-18T00:00:00Z";
 const ADM = "adm-mk7";
 
-const boot = (scriptPath) => new Miniflare({
+const boot = (scriptPath, instanceName = "believe-in-oakland") => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath,
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: ADM, VERSION: "test" },
+  bindings: { INSTANCE_NAME: instanceName, ADMIN_TOKEN: ADM, VERSION: "test" },
 });
 
 /* Everything one plane needs to drive the ceremony, over that plane's dispatch. */
@@ -162,6 +163,10 @@ const mf = boot(IDX); mfs.push(mf);
 const P = driver(mf, "real");
 const IRIS = await P.enrol("iris", "iris", "cover for iris", ["contribute", "publish", "create_projects"], "admin");
 const GUS = await P.enrol("gus", "gus", "cover for gus", ["contribute"], "admin");
+/* THE FOUNDER claims the instance (after the two first administrators, whose consensus a third would need) (the root of trust, D-421) — it holds a session and is NO `members` row. */
+const claimed = await P.POST("op=claim", { bootstrapToken: ADM, password: "founder-passphrase-mk7" });
+const flog = await P.POST("op=login", { role: "admin", password: "founder-passphrase-mk7" });
+const FOUNDER = flog && flog.token;
 /* FOUR OBSERVERS, one per level, each under three strings found nowhere else in the fixture. */
 const LEVELS = ["group", "project", "cover", "name"];
 const OBSERVER = {};
@@ -254,6 +259,15 @@ t("every refusal carries its canned translation, the catalogue's own sentence",
 t("no refusal wrote anything: the prepared document is byte-identical after all nine",
   docText(await docOf(P, IRIS, D)) === d0, true);
 
+/* §4.5 THROUGH THE OPS: the only author a session can carry who is not an active member is the FOUNDER, which is no
+   member row at all (a revoked member's sessions die with the revocation, memberSet). Its observation is its own,
+   so the author check passes, and the act is refused by name: nobody chooses for an author who is not a member. */
+const ftx = FOUNDER ? await P.POST(`op=testify&token=${FOUNDER}`, { words: "MK7-FOUNDER: I saw it as well.", observedAt: "2026-09-10" }) : null;
+const fAct = ftx && ftx.ok ? await attribute(FOUNDER, { observation: ftx.bundle_id, level: "group" }) : null;
+t("§4.5: an author who is not an active member (the founder, who holds a session and no member row) cannot take the act — ATTRIBUTION_AUTHOR_NOT_ACTIVE (C-92.6)",
+  [okOf(claimed), !!FOUNDER, okOf(ftx), codeOf(fAct), fAct && fAct.check],
+  [[true, null], true, [true, null], "ATTRIBUTION_AUTHOR_NOT_ACTIVE", "C-92.6"]);
+
 console.log("\n--- 4. each author chooses; the act re-authors the unsigned document; the last unchosen is named alone ---");
 const acts = {};
 for (const lv of ["group", "project", "cover"]) acts[lv] = await attribute(OBSERVER[lv].token, { observation: OBS[lv], level: lv });
@@ -262,7 +276,10 @@ t("three authors choose group, project and cover — each act ok and each re-aut
     !!(acts[lv] && acts[lv].case_document && acts[lv].case_document.reauthored)]),
   ["group", "project", "cover"].map((lv) => [[true, null], lv, true]));
 const d3 = docText(await docOf(P, IRIS, D));
-const D3 = { ...D, doc_sha: acts.cover.case_document.doc_sha };
+/* NULL-TOLERANT (measured by this suite's `veto` control arm: with the gate disarmed the case RATIFIED, every later act
+   was refused, and a bare read here ended the module on a TypeError after the arm had already failed by name). */
+const docShaOf = (r) => (r && r.case_document && r.case_document.doc_sha) || null;
+const D3 = { ...D, doc_sha: docShaOf(acts.cover) };
 const cr3 = await caseratify(D3);
 t("with three chosen, op=caseratify still refuses ATTRIBUTION_UNCHOSEN — naming ONLY the one observation left",
   [codeOf(cr3), cr3 && Array.isArray(cr3.unchosen) ? cr3.unchosen.map((u) => u.observation) : null],
@@ -271,13 +288,13 @@ acts.name = await attribute(OBSERVER.name.token, { observation: OBS.name, level:
 const again = await attribute(OBSERVER.name.token, { observation: OBS.name, level: "name" });
 t("the fourth chooses name; the same choice again is a retry (existed), and moves no byte",
   [okOf(acts.name), acts.name && acts.name.shown, okOf(again), again && again.existed,
-   again && again.case_document && again.case_document.doc_sha === acts.name.case_document.doc_sha],
+   docShaOf(again) !== null && docShaOf(again) === docShaOf(acts.name)],
   [[true, null], OBSERVER.name.handle, [true, null], true, true]);
 const staleSigned = await caseratify(D3);
 t("a signature over the bytes as they stood before the last act is refused CASE_RATIFY_STALE — the owner signs "
   + "what now states every level, never a document the author's act did not reach",
   codeOf(staleSigned), "CASE_RATIFY_STALE");
-const DF = { ...D, doc_sha: acts.name.case_document.doc_sha };
+const DF = { ...D, doc_sha: docShaOf(acts.name) };
 const dF = docText(await docOf(P, IRIS, DF));
 t("THE PREPARED DOCUMENT STATES EACH LEVEL AND WHAT IT PUBLISHES, derived from the acts: the group's slug, the "
   + "project, the cover, the handle",
@@ -390,12 +407,16 @@ const E1 = "this.sql.exec(`UPDATE members SET status='active', handle=?, invite_
 /* EDIT 2 — the pre-§4.1 form: an observation written by `mk7legacy` names its member in its own files, as every
    observation did before MK-6. */
 const E2 = "const observer = Store.observerRef(id);";
-const counts = [st.split(E1).length - 1, st.split(E2).length - 1];
+/* EDIT 3 — a FUTURE op that changes a member's cover (none exists in this build): re-affirming `mk7nohandle` as active
+   through op=memberset also moves their cover. It is the one lever that can make a prepared statement drift (C-92.11). */
+const E3 = "this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);";
+const counts = [st.split(E1).length - 1, st.split(E2).length - 1, st.split(E3).length - 1];
 st = st.replace(E1, E1.replace("h,", "h === \"zz-nohandle\" ? null : h,"))
-        .replace(E2, "const observer = who === \"mk7legacy\" ? who : Store.observerRef(id);");
+        .replace(E2, "const observer = who === \"mk7legacy\" ? who : Store.observerRef(id);")
+        .replace(E3, E3 + "\n    if (memberId === \"mk7nohandle\") this.sql.exec(`UPDATE members SET cover='the renamed volunteer' WHERE member_id=?`, memberId);");
 writeFileSync(storePath, st);
 t("each legacy-state edit's anchor occurs EXACTLY ONCE in the real store.mjs, and neither touches the subject",
-  [counts, st.includes("attributeObservation({"), E1.includes("attribute") || E2.includes("attribute")], [[1, 1], true, false]);
+  [counts, st.includes("attributeObservation({"), [E1, E2, E3].some((e) => e.includes("attribute"))], [[1, 1, 1], true, false]);
 const mf2 = boot(join(SB, "bio-plane", "src", "index.mjs")); mfs.push(mf2);
 const L = driver(mf2, "legacy");
 const IRIS2 = await L.enrol("iris", "iris", "cover for iris", ["contribute", "publish", "create_projects"], "admin");
@@ -405,10 +426,24 @@ const LEG = await L.enrol("mk7legacy", "mk7legacy-h", "the legacy volunteer", ["
 await L.POST(`op=signeradd&token=${ADM}`, { keyB64: L.keyB64, memberId: "iris", comment: "iris laptop" });
 const txN = await L.POST(`op=testify&token=${NOH}`, { words: "MK7-NOHANDLE: I saw it.", observedAt: "2026-09-10" });
 const c2 = await prepareCase(L, { IRIS: IRIS2, fid: "INQ-2026-5702-nohandle", snap: "20260918T570002Z_mk7bbbb2", obs: [txN.bundle_id], mf: mf2 });
+if (!c2.D) throw new Error(`legacy case: ${JSON.stringify([c2.pf, c2.cc, c2.pub]).slice(0, 600)}`);
 const noName = await L.POST(`op=attribute&token=${NOH}`, { caseId: c2.D.case_id, edition: c2.D.edition, observation: txN.bundle_id, level: "name" });
 const noCover = await L.POST(`op=attribute&token=${NOH}`, { caseId: c2.D.case_id, edition: c2.D.edition, observation: txN.bundle_id, level: "cover" });
 t("`name` chosen by a member with NO HANDLE is refused ATTRIBUTION_NAME_NO_HANDLE (C-92.9); `cover` is not",
   [codeOf(noName), noName && noName.check, okOf(noCover)], ["ATTRIBUTION_NAME_NO_HANDLE", "C-92.9", [true, null]]);
+/* C-92.11. A STATEMENT THAT DRIFTED FROM WHAT THE ACT NOW PUBLISHES is unreachable through this build's ops BY
+   CONSTRUCTION — a cover, a handle and a producing group are each written once (MEASURED: memberAdd INSERTs, enroll
+   sets the handle once, instancegroupseed records once, and op=testify refuses a store recording no group) and every
+   act re-authors the document. It is retained as the gate's guard for the day an op changes one of them, and driven
+   here through EDIT 3 below, which models exactly that day: op=memberset re-affirming `mk7nohandle` also changes their
+   cover. The author chose `cover` above; the cover then changes; the prepared bytes still print the old one. */
+const recover = await L.POST(`op=memberset&token=${IRIS2}`, { memberId: "mk7nohandle", status: "active" });
+const D2S = { ...c2.D, doc_sha: (noCover && noCover.case_document && noCover.case_document.doc_sha) || c2.D.doc_sha };
+const stale = await L.POST(`op=caseratify&token=${IRIS2}`, { caseId: D2S.case_id, edition: D2S.edition, expectedSha: D2S.doc_sha,
+  sig: L.signBytes(`bio-ratify-case ${D2S.case_id} ${D2S.edition} ${D2S.doc_sha}\n`) });
+t("a statement that drifted from what the act now publishes (cover chosen, then the cover changed — EDIT 3) is refused ATTRIBUTION_STATEMENT_STALE (C-92.11), naming the observation",
+  [okOf(recover), codeOf(stale), stale && stale.check, stale && stale.observations],
+  [[true, null], "ATTRIBUTION_STATEMENT_STALE", "C-92.11", [txN.bundle_id]]);
 const txL = await L.POST(`op=testify&token=${LEG}`, { words: "MK7-LEGACY: I saw it too.", observedAt: "2026-09-10" });
 const imgL = await L.GET(`op=image&token=${LEG}&id=${encodeURIComponent(txL.bundle_id)}`);
 t("the legacy observation names its member in its own files (the state MK-6 ended), so the arm is armed",
@@ -422,6 +457,22 @@ t("AN OBSERVATION WRITTEN BEFORE §4.1 STAYS FENCED even with a level chosen: it
   + "TESTIMONY_CASE_UNPUBLISHABLE (C-53.12, narrowed), naming it",
   [okOf(legAct), codeOf(legCase), legCase && legCase.check, legCase && legCase.observations],
   [[true, null], "TESTIMONY_CASE_UNPUBLISHABLE", TESTIMONY_CHECKS.TESTIMONY_CASE_UNPUBLISHABLE.check, [txL.bundle_id]]);
+const lshaOf = async (id) => {
+  const l = await L.GET(`op=list&token=${IRIS2}&limit=1000`);
+  return (Array.isArray(l) ? l : (l && l.bundles) || []).find((b) => b.bundle_id === id)?.bundle_sha ?? null;
+};
+const lratify = async (id) => {
+  const s = await lshaOf(id);
+  return L.POST(`op=ratify&token=${IRIS2}`, { bundleId: id, expectedSha: s, sig: L.signBytes(`bio-ratify ${id} ${s}\n`) });
+};
+const legObs = await lratify(txL.bundle_id);
+const legFinding = await lratify("INQ-2026-5703-legacy");
+t("…and at op=ratify: the legacy observation itself is refused TESTIMONY_UNPUBLISHABLE (C-53.10, narrowed) and a "
+  + "finding resting on it TESTIMONY_CITED_UNPUBLISHABLE (C-53.11, narrowed), each naming the observation",
+  [codeOf(legObs), legObs && legObs.check, codeOf(legFinding), legFinding && legFinding.check,
+   legFinding && Array.isArray(legFinding.rests_on) ? legFinding.rests_on.map((v) => v.observation) : null],
+  ["TESTIMONY_UNPUBLISHABLE", TESTIMONY_CHECKS.TESTIMONY_UNPUBLISHABLE.check,
+   "TESTIMONY_CITED_UNPUBLISHABLE", TESTIMONY_CHECKS.TESTIMONY_CITED_UNPUBLISHABLE.check, [txL.bundle_id]]);
 
 console.log(`\n  corpus: 4 observers x 1 observation, 1 finding, 1 case, ${bucketCount} published objects; `
   + `legacy plane: 2 observations, 2 cases; needles: member id, handle, cover per observer`);

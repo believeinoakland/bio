@@ -956,6 +956,10 @@ export const RUNG_ABSENT = {
      later look is a new row, never a rewrite of the earlier one. */
   lead:                 { ground: "undetermined", is: "a member writes a LEAD in their own words — what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
   leadshare:            { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  /* MK-7 / IC-319 — THE ATTRIBUTION ACT. Ground `undetermined` on `testify`'s measurement: none of its refusals
+     (C-92.1–.9) are in `JUSTIFICATION_REFUSALS`. NOT `reversible` as a rung: a later act replaces the level for an
+     unsigned edition, and a signed edition's statement answers forever — nothing takes a published level back. */
+  attribute:            { ground: "undetermined", is: "an observation's AUTHOR chooses what one case edition publishes of who said it — group, project, cover or name — never prefilled, and re-authors that edition's unsigned case document (MEMBER-KNOWLEDGE-DESIGN.md §4.2)" },
   /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
      `credential`: their whole subject is WHO MAY READ one draft, and they write
      nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
@@ -1895,6 +1899,10 @@ export const NON_ACTS = {
   lead: "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
   leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
   leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
+  /* MK-7 / IC-319. The ATTRIBUTION ACT is not offered against an object's facts: its subject is a member's choice
+     about their OWN words in ONE case edition, and whether an edition reaches an observation is the case's, not the
+     observation's. The surface that offers it is Program B's (MEMBER-KNOWLEDGE-DESIGN.md §8). */
+  attribute: "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
      no object's facts could say when to offer, and a placement names a document without acting on

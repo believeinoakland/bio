@@ -615,7 +615,14 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
        the method's FIRST cut returned `false` for an unreadable draft, which is the smoothed non-match this
        class is about, and would have credited the publisher with a sentence an editor may have written. The
        stated answer above is the correction, and it exists because the gate went RED on this arm. */
-  const CEILING = 39;
+  /* MOVED 39 -> 40 by MK-7 (2026-09-25, land/worker/MK-7), FROM THE FIGURE THIS WALK PRINTED on this item's own
+     tree (`origin/main` @ 964da679 prints 39, this branch 40). THE ONE NEW SITE IS THIS ITEM'S OWN AND WAS LOOKED AT:
+     - MK-7, `observationsNamingAuthor`: an observation's `data/provenance.json` that will not PARSE is read as NOT in
+       §4.1's reference form — so it stays FENCED (C-53.10–.12), and the refusal SAYS so: "names its author … or
+       cannot be read to show they do not". Undetermined is fenced and stated, never let through and never smoothed
+       into "names nobody". WHY A CATCH AND NOT A THROW: the read serves op=caseratify's facts over every observation
+       a case reaches, so a throw would take down the facts read for the whole case over one unreadable file. */
+  const CEILING = 40;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 
