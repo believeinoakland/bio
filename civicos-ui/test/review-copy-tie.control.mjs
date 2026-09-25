@@ -3,6 +3,7 @@
  * Each arm ALONE on `civicos-ui/app.html`: its anchor must match EXACTLY ONCE (an arm that did not arm is a
  * finding, never a pass), the suite runs, and app.html is restored from a per-arm pristine copy in a fresh
  * temporary directory (never the worktree) and verified by sha256 AND `cmp`. Declared before arming, below. */
+import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard its own output. */
 import fs from "fs";
 import os from "os";
 import path from "path";

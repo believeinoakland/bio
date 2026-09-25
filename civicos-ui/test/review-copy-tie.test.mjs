@@ -23,6 +23,9 @@
  *   (d) LEAK A RECIPIENT'S NAME TO SAY THE TIE — the plane's sentence names who made each act. So a draft whose
  *       tie involves a recipient's COMMENT must make no file, say why in the page, and hand the browser nothing.
  *
+ * GATE: reads bio-plane/src/ bio-plane/checks/bio-checks.mjs docprofile/
+ *   (the plane is loaded by a probe module that imports `./index.mjs`, so the derivation cannot see the path.)
+ *
  * NEGATIVE CONTROL: DECLARED BEFORE ARMING, each arm ALONE on `civicos-ui/app.html`, anchor matched EXACTLY ONCE,
  * restored by cp from a per-arm pristine copy in the session scratchpad and verified by sha256 AND cmp.
  *   (0) BASELINE -> all green.
