@@ -721,8 +721,8 @@ scope: render `derivation.says` whenever `derivation.cut` is true or the state i
 accepts-when: a cut derivation shows its sentence; a whole one shows none. NEGATIVE CONTROL: drop the render, and the cut-set arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
-### UI-96 · running — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS STILL NEVER TOLD A NEWER VERSION EXISTS: D-394 built the plane's cross-version notice (`versionnotice`, C-80; construct 4.cross-version BUILT), and 4.cross-version-ui is ABSENT: no surface shows it where a member meets a citation.** — owner UI.
-status: running — SCHEDULER #21 00:44Z spawns WORKER UI-96 (depth 2)
+### UI-96 · integrated — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS STILL NEVER TOLD A NEWER VERSION EXISTS: D-394 built the plane's cross-version notice (`versionnotice`, C-80; construct 4.cross-version BUILT), and 4.cross-version-ui is ABSENT: no surface shows it where a member meets a citation.** — owner UI.
+status: integrated — SCHEDULER #21 01:42Z: tip 013d80c2, full battery 221/221 GREEN then 59/59 recorded; shares basisLegRow's leg line; r3Fed 80->81 (UI-91 moved it too)
 order: after UI-95: the plane half's member surface (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
 milestone: M4
 interface: I3 consumer (IC-239).
@@ -885,6 +885,16 @@ depends-on: none.
 scope: add `"` and `'` to the class; an over-strictness arm reading a quoted column.
 accepts-when: a quoted column is read. NEGATIVE CONTROL: drop the quotes from the class and that arm fails by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### D-588 · queued — **`civicos-ui/test/member-respect.test.mjs` ARM 3b MATCHES THE DEC-68 DILIGENCE STEM "unread" AS A RAW SUBSTRING OF app.html's CODE, so the plane's own state codes `chain_unread` and `newer_capture_unread` in a comparison fail the suite as a "rendered diligence phrase".** Found by UI-96's worker (01:41Z), who worked around it by branching on `newer`. — owner UI (the suite).
+order: after D-564, with the process rows behind the product rows: an over-strict instrument that bends correct code around it, no false green (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument states what it reads: prose, not identifiers), with DEC-68's diligence phrasing rule.
+depends-on: none.
+scope: ARM 3b matches stems at word boundaries that exclude `_` and identifier characters, or only inside string text that reaches markup.
+accepts-when: a snake_case state code in a comparison passes and the prose "unread" in markup still fails (moves: identifiers read as prose). NEGATIVE CONTROL: restore the raw substring match and the snake_case over-strictness arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by UI-96's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
