@@ -23,26 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-625 · queued — **AN UNPLACED OCCURRENCE OF A STRING READ AT SEVERAL PLACES CAN NEVER BE CHOSEN: the choose act reads an empty `occurrence=` as NONE NAMED (`String(args.occurrence).trim() || null`), so the empty key an unplaced read carries is unreachable, and the member is refused C-74.4 for a place the plane itself listed.** Found by UI-112's worker (D-625 minted on land/worker/UI-112). — owner RECORD.
-order: head of the backlog — a correction to just-landed work (D-454 done, UI-112 integrated) outranks new work (SCHEDULER #23, 2026-09-25; verified at the code on origin/main store.mjs, the `named` line of the connection-choose act)
-milestone: M4
-interface: I3 — the choose act treats a PRESENT-but-empty `occurrence=` as the empty key; an ABSENT one is still none named. The integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; UI-112's sentence naming D-625 as not built).
-depends-on: none (D-454 done; UI-112 integrated, rides its batch — the surface already sends what the op lists).
-scope: distinguish `occurrence` absent from `occurrence` present and empty in the choose act; the empty key selects the unplaced read; §14.5's and construct `6.on-point-ui`'s "an unplaced occurrence cannot be chosen" sentences corrected in the same commit.
-accepts-when: a fixture string read at two places, one unplaced, is chosen at its unplaced occurrence and the portion grade answers from it. NEGATIVE CONTROL: restore the `|| null` collapse and the unplaced-choice arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (from SCHEDULER #22's hand-over; fix named by UI-112's worker).
-
-### D-629 · queued — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
-order: near the head — a disclosure defect outranks features (SCHEDULER.md loop step 3), behind D-625 only because that corrects just-landed work (SCHEDULER #23, 2026-09-25)
-milestone: M7
-interface: I3 — every op's unhandled-error answer becomes a named internal-error code with no stack; the integrator classifies (BREAKING-shaped for any caller reading the text).
-design: `docs/architecture/BIO_System_Design.md` §2 (trustworthiness of the record; DEC-49's named refusals), with CLAUDE.md §2 "less narrative binds us first".
-depends-on: none.
-scope: both outermost catches answer a named internal-error code and a correlation id, never the stack or message text; the stack is logged server-side; no op's named refusal changes.
-accepts-when: a forced throw on a public op and on a member op answers the named code with no stack, path or line text (moves: String(e.stack) to the caller). NEGATIVE CONTROL: return the stack again and the no-stack arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
-
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -580,16 +560,6 @@ depends-on: D-419 (renderings reach the plane).
 scope: when renderings join `published_shas`, the verifying value is `pixels_sha256`, the file hash beside it labelled; `imagecrop.mjs` already emits both.
 accepts-when: a rendering published from workerd verifies against a Pillow-computed pixel hash. NEGATIVE CONTROL: verify by the file hash, and the cross-runtime arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### REC-206 · queued — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
-order: with the M2 extraction rows, after D-246; I2 PROVISIONAL, RECORD after PDF, as ruled (SCHEDULER #17, 2026-09-23, LED-7 S17-4; CPDF-3's worker)
-milestone: M2
-interface: I2 PROVISIONAL — positions and anchors; I3 — the derived membership; the integrator mints and classifies the ICs.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (BOB folds it), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded).
-depends-on: CPDF-3 (`integrated`).
-scope: the PDF member emits page and rect per tier-1 unit and anchor text plus rect per link; the plane derives item-to-file membership by containment, labelled and graded inferred.
-accepts-when: an agenda's item-to-file membership reads derived, labelled machine work, graded inferred. NEGATIVE CONTROL: present it as a publisher link, and the labelling arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### D-340 · queued — **CHROME IS A PROPERTY OF THE SITE AND THE PLANE RECORDS IT NOWHERE: `site_chrome` exists only in `LINK-FIDELITY.md`, which RATIFIES it as a derived table regenerable by scan; no table and no per-host navigation-change read are built.** — owner CAPTURE, then RECORD.
 order: after D-419, with the M4 extraction rows (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
@@ -1181,3 +1151,33 @@ depends-on: none.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-154» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions … (whole text: the cut archive)
+order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a … (whole text: the cut archive)
+depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
+accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CPDF-21» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The … (whole text: the cut archive)
+order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget … (whole text: the cut archive)
+depends-on: none. Sequence after M0-81.
+accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-120 · queued — **`mintid --audit --base` DIFFS `main` ONLY, SO AN ID ALLOCATED ON `coord` IS INVISIBLE TO THE INTEGRATION-SIDE CHECK.** `audit()` (`tools/mintid.mjs`) reads `git diff <base>...HEAD`; since M0-110's cutover every DEBT row, plan heading and ledger archive — the allocation sites — lands on `coord`. Found by M0-110's worker (CONDUCT #14). — owner M0.
+order: first of the ledger tooling, before LED-8: an id collision check blind to where ids are now minted is the costs-nothing green, latent until two lanes mint the same id on `coord`; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-110's finding)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §1 (the state moves to `coord`; every reader follows it), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-110 is done.
+scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
+accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).

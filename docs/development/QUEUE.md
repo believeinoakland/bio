@@ -1076,8 +1076,8 @@ scope: reword C-87.6's translation to say leaving the name off lets publication 
 accepts-when: neither sentence calls a derived draft new, and a new-case draft's refusal reads the new-case sentence (moves: 2 sentences claiming a new case). NEGATIVE CONTROL: drop newCase from the call and the new-case arm reads the derivation sentence, failing by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by UI-106's worker).
 
-### D-346 · running — **THE THREE OPENDOCUMENT ENTRIES EMIT NO `core-properties` AND NO `intra` LINK: `odf.mjs` never reads `meta.xml` or the manifest and says so with `outside_content_xml_not_read` markers, while Content Framework §16 says the formats "preserve the same evidence".** — owner COFF.
-status: running — SCHEDULER #22 06:37Z spawns WORKER D-346 (depth 2)
+### D-346 · integrated — **THE THREE OPENDOCUMENT ENTRIES EMIT NO `core-properties` AND NO `intra` LINK: `odf.mjs` never reads `meta.xml` or the manifest and says so with `outside_content_xml_not_read` markers, while Content Framework §16 says the formats "preserve the same evidence".** — owner COFF.
+status: integrated — SCHEDULER #23 07:12Z: tip 96eeb2d5 (stacked on D-612 f2dcbc6c on D-473 737913b0), GATE 367/367 GREEN FULLREUSE (21129 assertions), tree 4ee5b0c9; ODF meta.xml core-properties + manifest intra links; construct 5.odf-envelope; I2 IC the integrator's; design gap (no ODF column in OFFICE-FORMATS part-map table) to BOB
 order: after D-320 (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
 interface: I2 — the ODF part-map gains two item kinds; the integrator mints and classifies the IC.
@@ -1131,7 +1131,8 @@ scope: a defined name and a table part each emit a `sheet-range` unit; a multi-a
 accepts-when: a fixture's defined name emits its unit. NEGATIVE CONTROL: before the fix the defined-name arm emits none and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-419 · queued — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
+### D-419 · running — **THE CROP OF A CITED PDF IMAGE EXISTS AND NOTHING CAN ASK FOR IT: `cropImage` lives only in `pdf-worker/src/imagecrop.mjs`, with no route and no plane op.** — owner CONTENT-PDF, then RECORD; a UI item renders it.
+status: running — SCHEDULER #23 07:12Z: spawned
 order: after D-416; display only, behind every over-claim (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I6 — a `POST /crop` route; I3 — a read-only op; the integrator mints and classifies the ICs.
@@ -1140,6 +1141,36 @@ depends-on: none.
 scope: the member route and a read-only plane op returning the crop for a cited image extent. Extend `pdf-worker/test/` and a plane suite.
 accepts-when: a cited image extent returns its crop through the op. NEGATIVE CONTROL: route to the whole page, and the crop-dimensions arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-625 · queued — **AN UNPLACED OCCURRENCE OF A STRING READ AT SEVERAL PLACES CAN NEVER BE CHOSEN: the choose act reads an empty `occurrence=` as NONE NAMED (`String(args.occurrence).trim() || null`), so the empty key an unplaced read carries is unreachable, and the member is refused C-74.4 for a place the plane itself listed.** Found by UI-112's worker (D-625 minted on land/worker/UI-112). — owner RECORD.
+order: head of the backlog — a correction to just-landed work (D-454 done, UI-112 integrated) outranks new work (SCHEDULER #23, 2026-09-25; verified at the code on origin/main store.mjs, the `named` line of the connection-choose act)
+milestone: M4
+interface: I3 — the choose act treats a PRESENT-but-empty `occurrence=` as the empty key; an ABSENT one is still none named. The integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; UI-112's sentence naming D-625 as not built).
+depends-on: none (D-454 done; UI-112 integrated, rides its batch — the surface already sends what the op lists).
+scope: distinguish `occurrence` absent from `occurrence` present and empty in the choose act; the empty key selects the unplaced read; §14.5's and construct `6.on-point-ui`'s "an unplaced occurrence cannot be chosen" sentences corrected in the same commit.
+accepts-when: a fixture string read at two places, one unplaced, is chosen at its unplaced occurrence and the portion grade answers from it. NEGATIVE CONTROL: restore the `|| null` collapse and the unplaced-choice arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (from SCHEDULER #22's hand-over; fix named by UI-112's worker).
+
+### D-629 · queued — **THE STORE ANSWERS ANY THROWN ERROR WITH ITS STACK: `Store.fetch`'s catch (store.mjs, the outermost handler) returns `String(e.stack)` to the caller for ANY throw on ANY op, and `index.mjs` has the same shape — so file paths, line numbers and constraint text reach a caller, and a constraint error reads as a stack instead of a refusal.** Found by D-578's worker (minted on land/worker/D-578). — owner RECORD.
+order: near the head — a disclosure defect outranks features (SCHEDULER.md loop step 3), behind D-625 only because that corrects just-landed work (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — every op's unhandled-error answer becomes a named internal-error code with no stack; the integrator classifies (BREAKING-shaped for any caller reading the text).
+design: `docs/architecture/BIO_System_Design.md` §2 (trustworthiness of the record; DEC-49's named refusals), with CLAUDE.md §2 "less narrative binds us first".
+depends-on: none.
+scope: both outermost catches answer a named internal-error code and a correlation id, never the stack or message text; the stack is logged server-side; no op's named refusal changes.
+accepts-when: a forced throw on a public op and on a member op answers the named code with no stack, path or line text (moves: String(e.stack) to the caller). NEGATIVE CONTROL: return the stack again and the no-stack arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-578's worker).
+
+### REC-206 · queued — **AN AGENDA ITEM'S MEMBERSHIP IN A FILE EXISTS ONLY AS RECT CO-LOCATION AN INSTRUMENT INFERS: tier-1 text units carry no position and a LinkRecord carries no anchor text.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *DESIGN IT — I2 gains position on tier-1 text units (page and rect) and anchor text plus a rect on LinkRecord; membership is DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.* — owner CONTENT-PDF, then RECORD.
+order: with the M2 extraction rows, after D-246; I2 PROVISIONAL, RECORD after PDF, as ruled (SCHEDULER #17, 2026-09-23, LED-7 S17-4; CPDF-3's worker)
+milestone: M2
+interface: I2 PROVISIONAL — positions and anchors; I3 — the derived membership; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (BOB folds it), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded).
+depends-on: CPDF-3 (`integrated`).
+scope: the PDF member emits page and rect per tier-1 unit and anchor text plus rect per link; the plane derives item-to-file membership by containment, labelled and graded inferred.
+accepts-when: an agenda's item-to-file membership reads derived, labelled machine work, graded inferred. NEGATIVE CONTROL: present it as a publisher link, and the labelling arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
