@@ -3643,7 +3643,7 @@ CREATE TABLE IF NOT EXISTS capture_text (
   extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | sheet-range (one per sheet, D-672)
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
-  seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
+  seq          INTEGER NOT NULL,   -- reading order within the capture. A partial index holds every unit that fit, with GAPS, named in capture_text_skipped (D-724)
   text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
   truncated    INTEGER NOT NULL DEFAULT 0,
   chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
@@ -3668,6 +3668,44 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- a query that exists; quoting it for a query nobody has written would be
 -- borrowing evidence rather than having it. REC-92 adds the index with its own
 -- measurement, the way REC-90 did for the content table.
+-- =========================================================================
+
+-- =========================================================================
+-- D-724 / BOB #36 2026-09-25 11:20Z, option (b) -- THE UNITS A PARTIAL CAPTURE
+-- DID NOT INDEX, NAMED. Both budget loops (the acquire wire's textUnitsFor and
+-- the store's writer) go ON past a unit over the bound and index a later unit
+-- that fits, so a partial capture holds every unit that fit, in reading order,
+-- WITH GAPS. Until this table only the NUMBER of gaps was kept, so a search
+-- that found nothing in sheet 4 could not say sheet 4 was NEVER INDEXED rather
+-- than that it holds no match (CLAUDE.md section 2). op=contentaxis serves
+-- these rows as not indexed: over the bound.
+--
+-- ONE ROW PER RUN, NOT PER UNIT: a maximal stretch of consecutive skipped
+-- units in reading order, named by its first and last unit (extent, human
+-- ref, seq) and counted. The wire sends runs because the keys ride in
+-- data/provenance.json under INLINE_MAX, and the store writes the same shape
+-- so one read answers both. A run holding one unit has first equal to last.
+--
+-- DERIVED, AND PURGED ON BOTH ARMS, exactly as capture_text: it carries
+-- bundle_id, rides purge's TABLES list, and is DELETED and rewritten with the
+-- capture's units whenever they are, so it never names a gap a later write
+-- filled.
+CREATE TABLE IF NOT EXISTS capture_text_skipped (
+  capture_sha   TEXT    NOT NULL,   -- the document
+  bundle_id     TEXT    NOT NULL,   -- purge's per-bundle arm
+  first_seq     INTEGER NOT NULL,   -- the run's first unit, in reading order
+  last_seq      INTEGER NOT NULL,   -- the run's last unit
+  units         INTEGER NOT NULL,   -- how many units the run holds
+  first_extent  TEXT    NOT NULL,   -- canonicalExtent of the first unit
+  first_ref     TEXT    NOT NULL,   -- describeExtent of the first unit
+  last_extent   TEXT    NOT NULL,
+  last_ref      TEXT    NOT NULL,
+  side          TEXT    NOT NULL    -- wire or store, which loop skipped it
+);
+-- By CAPTURE: the one read (op=contentaxis) and the rewrite's delete.
+CREATE INDEX IF NOT EXISTS capture_text_skipped_capture ON capture_text_skipped(capture_sha, first_seq);
+-- By BUNDLE: purge's per-bundle arm.
+CREATE INDEX IF NOT EXISTS capture_text_skipped_bundle ON capture_text_skipped(bundle_id);
 -- =========================================================================
 
 -- =========================================================================
@@ -32313,6 +32351,7 @@ var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+var CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
@@ -48979,7 +49018,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     this.#writeTextSource(bundleId, sha, reading.text_source);
     const staled = this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
     const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
-    const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
+    const indexed = this.#writeCaptureText(
+      bundleId,
+      sha,
+      textUnits,
+      reading.text_source,
+      Array.isArray(doc && doc.text_units_skipped) ? doc.text_units_skipped : null
+    );
     if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
       indexed.over_bound += doc.text_units_over_bound;
       indexed.offered += doc.text_units_over_bound;
@@ -49111,7 +49156,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         capture: { sha256: sha },
         reading,
         ...Array.isArray(pkg.textUnits) ? { text_units: pkg.textUnits } : {},
-        ...Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0 ? { text_units_over_bound: pkg.textUnitsOverBound } : {}
+        ...Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0 ? { text_units_over_bound: pkg.textUnitsOverBound } : {},
+        ...Array.isArray(pkg.textUnitsSkipped) ? { text_units_skipped: pkg.textUnitsSkipped } : {}
       };
       const author = typeof pkg.author === "string" && pkg.author ? pkg.author : null;
       const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
@@ -49342,10 +49388,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_BOUND` (2,097,152 B) across a
    *     capture's units. It admits 100 % of M-20's measured 1,000-PDF sample
    *     fully, with 54.8 % headroom over the worst document in it. Over the
-   *     bound the capture is indexed TO the bound IN READING ORDER and its
-   *     `indexed` observation reads `partial` -- which is why `seq` exists and
-   *     why the units are sorted before they are written: a partial index must
-   *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *     bound the capture's `indexed` observation reads `partial` and the
+   *     index holds EVERY UNIT THAT FIT, IN READING ORDER, WITH GAPS -- which
+   *     is why `seq` exists and why the units are sorted before they are
+   *     written. **IT IS NOT A PREFIX, and this sentence said it was until
+   *     D-724** (BOB #36, 2026-09-25 11:20Z, option (b)): the loop below goes
+   *     ON past a unit that does not fit and writes a later one that does, and
+   *     so does the acquire wire's (`textUnitsFor`). What makes the subset
+   *     one a reader can reason about is that every gap is NAMED, not only
+   *     counted: the skipped units are written to `capture_text_skipped` as
+   *     runs of keys, and `op=contentaxis` serves them as *not indexed: over
+   *     the bound*. Breaking at the first skip (option a) was REJECTED: it
+   *     would discard readable text to protect a prefix property nothing
+   *     reads.
    *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` (4,096 units), REC-111.
    *     The index costs ROWS AND FTS ENTRIES and the two bounds above count
    *     BYTES, so until this one existed a container of many tiny units was
@@ -49354,7 +49409,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *     rather than section 4.1's chunk-across-ticks. Over it the capture is
    *     indexed TO it IN READING ORDER and reads `partial`, exactly as the byte
    *     bound does: one state, one vocabulary, and the sentence says which bound
-   *     bit. **It bites nothing the product's own wire can send** (that wire
+   *     bit. (Once the unit bound is reached every later unit is skipped, so
+   *     under THIS bound alone the index is a prefix; under the byte bound it
+   *     is not.) **It bites nothing the product's own wire can send** (that wire
    *     admits at most 4,064 units), which is deliberate -- a bound that refused
    *     a document the record accepts today would be a regression wearing the
    *     costume of caution, and section 4.3 has already shipped one of those.
@@ -49363,8 +49420,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  surface. It refuses nothing and can fail no promotion: a document whose
    *  container has no unit arm is a document with no units, which is a STATED
    *  absence and not an error. */
-  #writeCaptureText(bundleId, captureSha, units, chain2) {
+  #writeCaptureText(bundleId, captureSha, units, chain2, wireSkipped = null) {
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
+    this.sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);
     const chainKind = terminalStep(chain2) || "layer";
     const list = Array.isArray(units) ? units : [];
     const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0).map((u, i) => ({
@@ -49375,6 +49433,28 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     })).sort((a, b) => a.seq - b.seq);
     let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
     const seen = /* @__PURE__ */ new Set();
+    const runs = [];
+    let run = null;
+    const skip = (u, extent) => {
+      if (run) {
+        run.last = u.extent;
+        run.lastExtent = extent;
+        run.last_seq = u.seq;
+        run.units++;
+        return;
+      }
+      run = {
+        first: u.extent,
+        firstExtent: extent,
+        first_seq: u.seq,
+        last: u.extent,
+        lastExtent: extent,
+        last_seq: u.seq,
+        units: 1,
+        side: "store"
+      };
+      runs.push(run);
+    };
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
       if (!kind) {
@@ -49392,9 +49472,11 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const size = new TextEncoder().encode(capped).length;
       if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {
         overBound++;
+        skip(u, extent);
         continue;
       }
       bytes += size;
+      run = null;
       const cut = capped.length < full.length || u.wireCut;
       if (cut) truncatedUnits++;
       this.sql.exec(
@@ -49413,6 +49495,39 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       );
       written++;
     }
+    for (const w of Array.isArray(wireSkipped) ? wireSkipped : []) {
+      const ok = (e) => e && typeof e === "object" && typeof e.kind === "string";
+      if (!w || !ok(w.first) || !ok(w.last) || !Number.isInteger(w.first_seq) || !Number.isInteger(w.last_seq) || !Number.isInteger(w.units) || w.units < 1) continue;
+      runs.push({
+        first: w.first,
+        firstExtent: canonicalExtent(w.first),
+        first_seq: w.first_seq,
+        last: w.last,
+        lastExtent: canonicalExtent(w.last),
+        last_seq: w.last_seq,
+        units: w.units,
+        side: "wire"
+      });
+    }
+    let skippedNamed = 0;
+    for (const r of runs) {
+      this.sql.exec(
+        `INSERT INTO capture_text_skipped
+           (capture_sha,bundle_id,first_seq,last_seq,units,first_extent,first_ref,last_extent,last_ref,side)
+         VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        captureSha,
+        bundleId,
+        r.first_seq,
+        r.last_seq,
+        r.units,
+        r.firstExtent,
+        describeExtent(r.first),
+        r.lastExtent,
+        describeExtent(r.last),
+        r.side
+      );
+      skippedNamed += r.units;
+    }
     return {
       written,
       bytes,
@@ -49420,7 +49535,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       over_bound: overBound,
       unaddressable,
       offered: ordered.length,
-      chain_kind: chainKind
+      chain_kind: chainKind,
+      skipped_named: skippedNamed
     };
   }
   /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
@@ -49495,7 +49611,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       state = "partial";
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
       bound = (byUnits ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on` : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)`) + " or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces";
-      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; ${r.over_bound} unit(s) past the bound are NOT indexed`;
+      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; ${r.over_bound} unit(s) past the bound are NOT indexed` + (Number.isInteger(r.skipped_named) ? ` (${r.skipped_named} named on op=contentaxis's index.skipped` + (r.over_bound > r.skipped_named ? `, ${r.over_bound - r.skipped_named} not named` : "") + ")" : "");
     } else if (r.written > 0) {
       state = "PRESENT";
       detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
@@ -61914,7 +62030,10 @@ ${words}`;
          belt-and-braces over the whole-store arm only, and its
          PLACEMENT is load-bearing -- see it. hygiene.test.mjs
          holds this list against schema.mjs. */
-      "capture_text"
+      "capture_text",
+      /* D-724: the named gaps of a partial capture's index -- derived beside
+         `capture_text`, carrying `bundle_id`, cleared with it in both arms. */
+      "capture_text_skipped"
     ];
     const before = this.#counts({ proof: true });
     this.ctx.storage.transactionSync(() => {
@@ -72173,6 +72292,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ORDER BY seq DESC LIMIT 1`,
       sha
     );
+    const skipped = indexRow ? this.#rows(`SELECT first_seq, last_seq, units, first_extent, first_ref, last_extent, last_ref
+                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq`, sha) : [];
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
       /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
@@ -72244,7 +72365,24 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         actor_class: indexRow.actor_class,
         actor: indexRow.actor,
         at: indexRow.at,
-        seq: indexRow.seq
+        seq: indexRow.seq,
+        /* D-724 / BOB #36 2026-09-25 11:20Z -- WHICH UNITS ARE NOT INDEXED, BY NAME. A `partial`
+           index holds every unit that fit, in reading order, with gaps, and a member whose search
+           found nothing in sheet 4 must be able to learn that sheet 4 was NEVER INDEXED rather
+           than that it holds no match -- the absence CLAUDE.md section 2 makes first-class. One
+           entry per run of consecutive skipped units (both loops' shape), in reading order, each
+           stated in the record's words. An EMPTY list on a capture whose index row reads whole
+           means no unit was skipped. A `partial` count some run does not name (a caller that
+           carried the count and not the keys) is said in `detail` -- "K not named" -- beside
+           the count it qualifies, rather than recomputed here out of that sentence. */
+        skipped: skipped.map((k) => ({
+          says: CAPTURE_TEXT_SKIPPED_SAYS,
+          from: k.first_ref,
+          to: k.last_ref,
+          units: k.units,
+          first: { extent: safeJson(k.first_extent), seq: k.first_seq },
+          last: { extent: safeJson(k.last_extent), seq: k.last_seq }
+        }))
       } : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,
@@ -82945,7 +83083,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
   return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, engine, stillWanting };
 }
 function textUnitsFor(i2text) {
-  let textUnits = null, textUnitsOverBound = 0;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
     const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
     const units = Array.isArray(i2text.pages) ? arm(
@@ -82966,21 +83104,36 @@ function textUnitsFor(i2text) {
       (u) => ({ sheet: u.range.sheet, range: u.range.range })
     ) : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+    const runs = [];
+    let run = null;
+    const skip = (u) => {
+      if (run) {
+        run.last = u.extent;
+        run.last_seq = u.seq;
+        run.units++;
+        return;
+      }
+      run = { first: u.extent, first_seq: u.seq, last: u.extent, last_seq: u.seq, units: 1 };
+      runs.push(run);
+    };
     for (const u of units || []) {
       const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;
       const text = cut ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
       const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
+        skip(u);
         continue;
       }
       budget -= size;
       kept.push(cut ? { ...u, text, truncated: true } : u);
+      run = null;
     }
     textUnits = kept.length ? kept : null;
     textUnitsOverBound = dropped;
+    textUnitsSkipped = runs.length ? runs : null;
   }
-  return { textUnits, textUnitsOverBound };
+  return { textUnits, textUnitsOverBound, textUnitsSkipped };
 }
 var readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
   key: e && e.key != null ? String(e.key) : null,
@@ -84578,7 +84731,8 @@ var index_default = {
               author: reAuthor,
               reading,
               textUnits: u.textUnits,
-              textUnitsOverBound: u.textUnitsOverBound
+              textUnitsOverBound: u.textUnitsOverBound,
+              textUnitsSkipped: u.textUnitsSkipped
             })
           }));
           if (!wOut.answered) return storeSilent(op);
@@ -85486,7 +85640,7 @@ var index_default = {
       }
       profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
       let reading;
-      let textUnits = null, textUnitsOverBound = 0;
+      let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
       let classifiedText = null;
       const canRead = !!profileText && typeof docType.type.parse === "function";
       if (canRead) classifiedText = profileText;
@@ -85666,6 +85820,7 @@ var index_default = {
                 const u = textUnitsFor(i2text);
                 textUnits = u.textUnits;
                 textUnitsOverBound = u.textUnitsOverBound;
+                textUnitsSkipped = u.textUnitsSkipped;
               }
               if (i2text) wired = readText(i2text, {
                 headers: profHeaders,
@@ -85726,7 +85881,7 @@ var index_default = {
             const pparts = typeof pentry.parts === "function" ? await pentry.parts(profileBytes) : profileBytes;
             const ptext = await pentry.text(pparts);
             if (ptext && ptext.ok !== false) {
-              ({ textUnits, textUnitsOverBound } = textUnitsFor(ptext));
+              ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(ptext));
               reading.text_container = pfmt;
             }
           } catch {
@@ -85798,6 +85953,10 @@ var index_default = {
              only when it is non-zero, so a document nothing was dropped from
              carries exactly the keys it carried before. */
           ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
+          /* D-724: and WHICH units it dropped, as runs of keys (see `textUnitsFor`), so the store can
+             say "not indexed: over the bound" about a named sheet or page rather than only a count.
+             Absent exactly when the count is, so an unbounded document's keys do not move. */
+          ...textUnitsSkipped ? { text_units_skipped: textUnitsSkipped } : {},
           /*__REC91_TEXT_UNITS_WIRE_END__*/
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was

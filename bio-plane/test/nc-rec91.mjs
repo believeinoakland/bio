@@ -120,7 +120,9 @@ const ARMS = {
     alsoWhy: "hygiene's D-113 census must ALSO go red — it is the check that would have caught "
            + "this at the moment the mistake was made, and a control that only the item's own "
            + "suite can see is a control that does not protect the next item",
-    patch: () => arm(STORE, `                    "capture_text"];`, `                    ];`),
+    /* D-724 added `capture_text_skipped` after it, so the anchor is the entry and its comma now. */
+    patch: () => arm(STORE, `                    "capture_text",\n                    /* D-724`,
+                            `                    /* D-724`),
   },
 
   /* THE CHAIN-MOVE ARM, and it is the one that is INVISIBLE on a first
@@ -464,6 +466,63 @@ const ARMS = {
     patch: () => arm(INDEX,
       "      budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u);",
       "      budget -= size; kept.push({ ...u, text, truncated: true } /* ARMED */);"),
+  },
+
+  /* D-724's OWN CONTROL (BOB #36, 2026-09-25 11:20Z): drop the skipped-key write, and the Z5 arm fails
+     naming S4. The runs are still COMPUTED by both loops and the count still says `partial`; only the
+     write to `capture_text_skipped` is gone, so the read's list is empty and the sentence says the
+     skipped units are not named. */
+  d724nowrite: {
+    files: [STORE], suite: SUBJECT,
+    why: "drop the skipped-key write: the gaps are counted and not named",
+    mustFail: ["G6b: and the detail carries BOTH counts", "G6c: the store's own loop NAMES",
+               "Z5d: promoted, op=contentaxis reads S5 INDEXED and names S4",
+               "Z5e: and the observation's sentence says"],
+    mustPass: "`Z5c` (the wire still names S4), `Z3b`/`G7b`/`Z5f` (nothing to name), `Z5b` (still "
+            + "PARTIAL), and every earlier arm",
+    patch: () => arm(STORE, "    for (const r of runs) {\n      this.sql.exec(",
+                            "    for (const r of [] /* ARMED */) {\n      this.sql.exec("),
+  },
+
+  /* THE WIRE'S HALF ALONE: its loop stops naming what it drops. The store's own loop still names its
+     skips, so G6c must stay green — which is what separates the two loops. */
+  d724wire: {
+    files: [INDEX], suite: SUBJECT,
+    why: "the acquire wire drops a unit without naming it",
+    mustFail: ["Z5c: the wire NAMES the sheet it dropped",
+               "Z5d: promoted, op=contentaxis reads S5 INDEXED and names S4",
+               "Z5e: and the observation's sentence says"],
+    mustPass: "`G6b`/`G6c` (the store's loop), `Z5b`, `Z5f`, and every earlier arm",
+    patch: () => arm(INDEX, "      if (size > budget) { dropped++; skip(u); continue; }",
+                            "      if (size > budget) { dropped++; /* ARMED */ continue; }"),
+  },
+
+  /* THE GAPS OUTLIVE THEIR UNITS: the rewrite deletes the units and not the named gaps. Invisible on a
+     first promotion, like REC-91's own `nodelete`. */
+  d724nodelete: {
+    files: [STORE], suite: SUBJECT,
+    why: "the rewrite leaves the previous write's named gaps standing",
+    mustFail: ["Z5f: re-promoted with S4 carried"],
+    mustPass: "every first-promote arm, `G6c` and `Z5d` included",
+    patch: () => arm(STORE, "    this.sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);",
+                            "    /* ARMED */"),
+  },
+
+  /* D-724's OVER-STRICTNESS DIRECTION: name a CUT unit as skipped too, the "safe-looking" way to be sure
+     nothing incomplete goes unsaid. It is not safe: the unit's prefix IS indexed and found, so naming it
+     "not indexed" tells a member a sheet was never read when its first 131,072 characters were. */
+  d724cutisskip: {
+    files: [INDEX], suite: SUBJECT,
+    why: "the wire names a unit it CUT (and carried) as skipped",
+    mustFail: ["Z3b: D-724 — a capture UNDER the bound names NO skipped unit",
+               "Z5c: the wire NAMES the sheet it dropped"],
+    mustPass: "`Z1`-`Z5b` (what is carried and found does not move), `G6c`, and every earlier arm",
+    /* RUN 2026-09-25: 82/4 — the two declared AND `Z5d`/`Z5e`, UNDECLARED. Recorded, not smoothed: the cut
+       sheets S1-S3 are named beside S4, so the read's list and the sentence's count both move. That is
+       the arm's own subject reaching the read, not a second cause; the declaration is left as written. */
+    patch: () => arm(INDEX, "      const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;\n",
+                            "      const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;\n"
+                            + "      if (cut) { skip(u); run = null; } /* ARMED */\n"),
   },
 };
 

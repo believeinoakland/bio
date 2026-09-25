@@ -3636,7 +3636,7 @@ CREATE TABLE IF NOT EXISTS capture_text (
   extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | sheet-range (one per sheet, D-672)
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
-  seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
+  seq          INTEGER NOT NULL,   -- reading order within the capture. A partial index holds every unit that fit, with GAPS, named in capture_text_skipped (D-724)
   text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
   truncated    INTEGER NOT NULL DEFAULT 0,
   chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
@@ -3661,6 +3661,44 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- a query that exists; quoting it for a query nobody has written would be
 -- borrowing evidence rather than having it. REC-92 adds the index with its own
 -- measurement, the way REC-90 did for the content table.
+-- =========================================================================
+
+-- =========================================================================
+-- D-724 / BOB #36 2026-09-25 11:20Z, option (b) -- THE UNITS A PARTIAL CAPTURE
+-- DID NOT INDEX, NAMED. Both budget loops (the acquire wire's textUnitsFor and
+-- the store's writer) go ON past a unit over the bound and index a later unit
+-- that fits, so a partial capture holds every unit that fit, in reading order,
+-- WITH GAPS. Until this table only the NUMBER of gaps was kept, so a search
+-- that found nothing in sheet 4 could not say sheet 4 was NEVER INDEXED rather
+-- than that it holds no match (CLAUDE.md section 2). op=contentaxis serves
+-- these rows as not indexed: over the bound.
+--
+-- ONE ROW PER RUN, NOT PER UNIT: a maximal stretch of consecutive skipped
+-- units in reading order, named by its first and last unit (extent, human
+-- ref, seq) and counted. The wire sends runs because the keys ride in
+-- data/provenance.json under INLINE_MAX, and the store writes the same shape
+-- so one read answers both. A run holding one unit has first equal to last.
+--
+-- DERIVED, AND PURGED ON BOTH ARMS, exactly as capture_text: it carries
+-- bundle_id, rides purge's TABLES list, and is DELETED and rewritten with the
+-- capture's units whenever they are, so it never names a gap a later write
+-- filled.
+CREATE TABLE IF NOT EXISTS capture_text_skipped (
+  capture_sha   TEXT    NOT NULL,   -- the document
+  bundle_id     TEXT    NOT NULL,   -- purge's per-bundle arm
+  first_seq     INTEGER NOT NULL,   -- the run's first unit, in reading order
+  last_seq      INTEGER NOT NULL,   -- the run's last unit
+  units         INTEGER NOT NULL,   -- how many units the run holds
+  first_extent  TEXT    NOT NULL,   -- canonicalExtent of the first unit
+  first_ref     TEXT    NOT NULL,   -- describeExtent of the first unit
+  last_extent   TEXT    NOT NULL,
+  last_ref      TEXT    NOT NULL,
+  side          TEXT    NOT NULL    -- wire or store, which loop skipped it
+);
+-- By CAPTURE: the one read (op=contentaxis) and the rewrite's delete.
+CREATE INDEX IF NOT EXISTS capture_text_skipped_capture ON capture_text_skipped(capture_sha, first_seq);
+-- By BUNDLE: purge's per-bundle arm.
+CREATE INDEX IF NOT EXISTS capture_text_skipped_bundle ON capture_text_skipped(bundle_id);
 -- =========================================================================
 
 -- =========================================================================

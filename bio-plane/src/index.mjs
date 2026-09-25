@@ -5027,7 +5027,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
    the SAME wire budget as the acquire path. The assignments below are to this
    function's locals; the caller copies them. */
 function textUnitsFor(i2text) {
-  let textUnits = null, textUnitsOverBound = 0;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
    * UNITS OF THIS CAPTURE'S TEXT, taken off the I2 shape at the one
    * place `i2text` is final, exactly where CAP-12's container extent
@@ -5200,6 +5200,28 @@ function textUnitsFor(i2text) {
        * member reads absence from. Reported as a DESIGN GAP against
        * §4.3: the bound the design sets is not the bound that binds. */
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+    /* D-724 / BOB #36 2026-09-25 11:20Z, option (b) -- A SKIPPED UNIT IS NAMED, NOT ONLY COUNTED.
+       This loop goes ON past a unit that does not fit and carries a later one that does, so a
+       `partial` capture holds every unit that fit, in reading order, WITH GAPS -- and until this
+       line only the NUMBER of gaps reached the store, so a member whose search found nothing in
+       sheet 4 could not learn that sheet 4 was never indexed rather than that it holds no match
+       (CLAUDE.md section 2: saying WHICH absence is true). Stopping at the first skip (option a)
+       was REJECTED: it throws away readable text to protect a prefix property nothing reads.
+       THE KEYS TRAVEL AS RUNS -- each maximal stretch of consecutive skipped units, in reading
+       order, as its first and last unit's extent and seq and a count -- and NOT one entry per unit,
+       because the keys ride in the same `data/provenance.json` whose `INLINE_MAX` this budget
+       exists to protect: M-20's worst docx skips ~17,700 paragraphs here, which at one extent each
+       would blow the file and refuse the promote this list describes. A run can only END at a unit
+       that was carried, and after the first skip what is carried is bounded by what remained of
+       the budget (under one capped unit, 131,200 B, at 129 B the smallest unit), so a capture
+       sends at most ~1,018 runs whatever its unit count. */
+    const runs = [];
+    let run = null;
+    const skip = (u) => {
+      if (run) { run.last = u.extent; run.last_seq = u.seq; run.units++; return; }
+      run = { first: u.extent, first_seq: u.seq, last: u.extent, last_seq: u.seq, units: 1 };
+      runs.push(run);
+    };
     for (const u of (units || [])) {
       /* THE ENVELOPE IS CHARGED WITH THE TEXT, AND THAT IS NOT
          FASTIDIOUSNESS — a unit costs the wire its JSON STRUCTURE as
@@ -5233,13 +5255,14 @@ function textUnitsFor(i2text) {
       const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;
       const text = cut ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
       const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
-      if (size > budget) { dropped++; continue; }
-      budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u);
+      if (size > budget) { dropped++; skip(u); continue; }
+      budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u); run = null;
     }
     textUnits = kept.length ? kept : null;
     textUnitsOverBound = dropped;
+    textUnitsSkipped = runs.length ? runs : null;
   }
-  return { textUnits, textUnitsOverBound };
+  return { textUnits, textUnitsOverBound, textUnitsSkipped };
 }
 /*__REC91_TEXT_UNITS_END__*/
 
@@ -7592,7 +7615,8 @@ export default {
           const reStore = env.STORE.get(env.STORE.idFromName(storeName));
           const wOut = await doAnswer(reStore.fetch("http://do/reextract", {
             method: "POST", body: JSON.stringify({ captureSha: sha, viewer: reViewer, author: reAuthor, reading,
-                                                   textUnits: u.textUnits, textUnitsOverBound: u.textUnitsOverBound }) }));
+                                                   textUnits: u.textUnits, textUnitsOverBound: u.textUnitsOverBound,
+                                                   textUnitsSkipped: u.textUnitsSkipped }) }));
           if (!wOut.answered) return storeSilent(op);
           const w = wOut.result || {};
           structure.text = t3.i2text;
@@ -8938,7 +8962,7 @@ export default {
          wire rather than a field on it (see the answer's own note), so it has to
          outlive that block, and declaring it inside was a ReferenceError on every
          acquire until this suite drove one. */
-      let textUnits = null, textUnitsOverBound = 0;
+      let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
       /* D-536: THE TEXT THE CONTENT-TYPE READER WAS HANDED, kept for the reading's provenance, which
          digests exactly it (`readingprov.mjs`). Declared here for REC-91's reason above: the format
          wire's block closes before the provenance is composed. Null when no reader was handed text. */
@@ -9445,7 +9469,8 @@ export default {
                 };
               }
               /* REC-91's units, by `textUnitsFor` (CPDF-19: one rule for both paths). */
-              { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
+              { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound;
+                textUnitsSkipped = u.textUnitsSkipped; }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* D-536: the reader was handed `i2text` — digested as such on the reading's provenance. */
@@ -9583,7 +9608,7 @@ export default {
             const pparts = typeof pentry.parts === "function" ? await pentry.parts(profileBytes) : profileBytes;
             const ptext = await pentry.text(pparts);
             if (ptext && ptext.ok !== false) {
-              ({ textUnits, textUnitsOverBound } = textUnitsFor(ptext));
+              ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(ptext));
               reading.text_container = pfmt;
             }
           } catch { /* the entry could not read what the profile read: no unit, no container claimed */ }
@@ -9659,6 +9684,10 @@ export default {
              only when it is non-zero, so a document nothing was dropped from
              carries exactly the keys it carried before. */
           ...(textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {}),
+          /* D-724: and WHICH units it dropped, as runs of keys (see `textUnitsFor`), so the store can
+             say "not indexed: over the bound" about a named sheet or page rather than only a count.
+             Absent exactly when the count is, so an unbounded document's keys do not move. */
+          ...(textUnitsSkipped ? { text_units_skipped: textUnitsSkipped } : {}),
           /*__REC91_TEXT_UNITS_WIRE_END__*/
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was

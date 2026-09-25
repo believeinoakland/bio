@@ -651,8 +651,11 @@ section("S9", "over-strictness: six correct spellings that MUST still work");
   t("THE DECLINED `chain_kind` INDEX: this arm compiles no predicate over that column, "
     + "so the index would still have no reader — and this assertion is the tripwire if that changes",
     chainPlan.statements.meaning({ mode: "count" }).sql.includes("chain_kind ="), false);
+  /* CORRECTED by D-724: this counted indexes whose NAME begins `capture_text_`, so D-724's two indexes on
+     a DIFFERENT table (`capture_text_skipped`) read as three on this one. The question is what is ON
+     `capture_text`, so that is what the pattern now reads. */
   t("...and the schema still declares exactly ONE index on `capture_text`, by bundle",
-    (SCHEMA_SRC.match(/CREATE INDEX IF NOT EXISTS capture_text_\w+/g) || []).length, 1);
+    (SCHEMA_SRC.match(/CREATE INDEX IF NOT EXISTS \w+ ON capture_text\(/g) || []).length, 1);
 }
 
 /* ==================================================================== 10

@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: D-724 (a partial capture NAMES the units it skipped over the bound; BOB #36 2026-09-25 11:20Z, option (b)), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, FOUR NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/store.mjs` 3,480,187 B sha256 dfc6659a4284…, `src/index.mjs` 895,904 B sha256 43616b2ba8f3…). Baseline 86/0. Declared before arming: (q) `d724nowrite` — THE ROW'S CONTROL: drop the skipped-key write; MUST fail G6b, G6c, Z5d (naming S4), Z5e → 82/4, exactly those four, as declared. (r) `d724wire` — the wire drops a unit without naming it; MUST fail Z5c, Z5d, Z5e and MUST NOT move G6b/G6c (the store's loop) → 83/3, as declared. (s) `d724nodelete` — the rewrite leaves the named gaps standing; MUST fail Z5f alone → 85/1, as declared. (t) `d724cutisskip` — OVER-STRICTNESS: name a unit the wire CUT (and carried) as skipped; declared Z3b and Z5c → 82/4: both, AND Z5d/Z5e UNDECLARED — recorded, not smoothed: S1–S3 are named beside S4, the arm's own subject reaching the read. The seventeen earlier arms re-run on this tree, every one AS DECLARED; the new assertions each reaches are the arm's own subject: `noobs`/`overstrict` G6b G6c G7b Z3b Z5d Z5e Z5f (no index row / a 64 B bound), `d685whole` Z3b Z5c Z5d Z5e (the whole-unit wire skips different sheets), `d672nosheets` Z5c Z5d Z5e, `d672storeset` Z5e Z5f, `nowire` Z5d. First run found an INSTRUMENT defect, fixed: Z5e's pattern required the `;` of a trailing truncated clause, so `d685storeflag` failed it; it now reads the clause it tests. REC-91's `nopurge` anchor moved with the purge list (D-724 appends an entry) and arms once, as before. */
 /* NEGATIVE CONTROL: D-685 (a unit over the acquire wire's budget is carried as its capped prefix, marked truncated), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (first on `src/index.mjs` 893,432 B sha256 cdf667478865… / `src/store.mjs` 3,473,715 B sha256 03139705cbdb…; RE-RUN, the four arms here with the same verdicts, after the cap moved to `checks/bio-checks.mjs` — `src/index.mjs` 893,527 B sha256 6298c78c9352…, `src/store.mjs` 3,473,965 B sha256 d26738241468…). Baseline 78/0. Declared before arming: (n) `d685whole` — THE ROW'S CONTROL: charge and carry the WHOLE unit again (the pre-D-685 wire); MUST fail Z1, Z2, Z3, Z4, Z4b, Z5 and MUST NOT move Z5b or Z6 → 72/6, exactly those six BY NAME, as declared. (o) `d685storeflag` — the writer ignores the wire's `truncated: true`; MUST fail Z2 and Z4b alone (the prefix arrives AT the cap, so the writer's own comparison calls it whole) → 76/2, as declared. (p) `d685flagall` — OVER-STRICTNESS: mark every carried unit truncated, cut or not; MUST fail Z5, Z5b, Z6 → 75/3, as declared. Zero undeclared failures on any arm. The fourteen earlier arms re-run on this tree, every one AS DECLARED; their new failures in §Z are each the arm's own subject reaching the new section and are recorded, not smoothed: `noobs` adds Z3/Z5b (the axis reads), `overstrict` Z2/Z3/Z4b (a 64 B capture bound), `d672storeset` Z3/Z5b (no sheet arm in the store's set), `nowire` and `d672nosheets` Z1–Z6 (no units at all). Those last two first THREW at Z6 (`bookDoc.text_units.some` over an absent list) — a finding about the suite, fixed with `?.` so the arm fails Z6 BY NAME instead: `nowire` 53/25, `d672nosheets` 61/17. The BEFORE reading (the HEAD sources swapped in) is M-184: 71/7. */
 /* NEGATIVE CONTROL: D-684 (a text/csv capture read as text at intake reaches its format entry), run 2026-09-25 through `node test/nc-rec91.mjs <arm>` from `bio-plane/`, THREE NEW ARMS, each ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 892,191 B sha256 da5f850111be…, re-run after the D-70 comment rewording). Baseline 70/0. Declared before arming: (k) `d684shortcircuit` — THE ROW'S CONTROL: skip D-684's block so the content-type reader's branch short-circuits again (the pre-D-684 tree); MUST fail Y1 and Y3 and MUST NOT move Y2 (the profile reading is the same either way) or Y4 → 68/2, exactly Y1 and Y3 BY NAME, as declared. (l) `d684certain` — OVER-STRICTNESS: admit the entry only on a CERTAIN detection, which a csv never has (no magic bytes; `likely` by construction); MUST fail Y1 and Y3 → 68/2, as declared. (m) `d684overreach` — SCOPE: write `text_container` for any detected format before the `text()` guard; MUST fail Y4 alone (an HTML reading claiming a container the wire never read) → 69/1, as declared. Zero undeclared failures on any arm. */
 /* NEGATIVE CONTROL: D-672 (the workbook's sheet unit), run 2026-09-25 through `node test/nc-rec91.mjs` from `bio-plane/`, THREE NEW ARMS beside REC-91's seven, every arm ALONE, every restore byte-identical by sha256 AND content (`src/index.mjs` 889,784 B sha256 d62623fb8d0c…; `src/store.mjs` 3,472,630 B sha256 764a2df0f8b1…). Declared before arming: (h) `d672nosheets` — THE ROW'S CONTROL: drop the `sheets[]` arm from `textUnitsFor`; MUST fail B3, B3b, C1, C3c, X1 (the workbook passage search returns 0 rows), X2, X2b and MUST NOT move the document, deck or no-arm arms → 59/7, exactly those seven BY NAME, as declared. (i) `d672storeset` — revert the store's container set to its pre-D-672 five; MUST fail C3c, X2b, X3 and MUST NOT move B3, C1 or X1 — the units are emitted, WRITTEN and FOUND while the observation says the container has no unit arm, the record contradicting itself → 63/3, as declared. (j) `d672strict` — OVER-STRICTNESS: admit a sheet only when its grid bound is stated, dropping the .ods sheet (bound NULL by format, used range measured); MUST fail X2, X2b and MUST NOT move the .xlsx arms → 64/2, as declared. REC-91's arms re-run on this tree: baseline 66/0; `nowire` had NOT ARMED since CPDF-19 moved its anchor line from sixteen spaces of indent to four (matched 0×, a control that could never fail) — re-anchored, now 51/15, 8/8 declared; `armsopen` 64/2 (C3b and X3, X3 newly declared because it reads the set this arm replaces); `noobs` 51/15, `overstrict` 49/17, `replace` 58/8, `nopurge` and `nodelete` -1 (THREW, declared) — every arm AS DECLARED. `d672nosheets` IS the pre-D-672 wire, so it is the before-the-fix reading. */
@@ -428,7 +429,9 @@ t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block
      three regexes against a region that contains none of them — and it went RED,
      which is the only reason it was found. A structural pin over the wrong
      region is the failure mode that usually goes the other way. */
-  const i0 = STORE_SRC.indexOf("  #writeCaptureText(bundleId, captureSha, units, chain) {");
+  /* D-724 moved the signature (the wire's named skips arrive as a fifth parameter), so the anchor
+     moved with it; A6a is what would have caught a stale anchor, and did. */
+  const i0 = STORE_SRC.indexOf("  #writeCaptureText(bundleId, captureSha, units, chain, wireSkipped = null) {");
   const w = STORE_SRC.slice(i0, STORE_SRC.indexOf("  #observeIndexed(bundleId, captureSha, result,"));
   t("A6a: the writer method was FOUND in the source — a structural pin over a failed slice would "
   + "pass over an empty string, which is the blind-by-construction shape this file refuses",
@@ -451,6 +454,8 @@ t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block
   const tables = /const TABLES\s*=\s*\[([\s\S]*?)\]/.exec(src);
   t("A7: `capture_text` is in purge's TABLES, so it clears in BOTH arms (it carries bundle_id)",
     !!tables && /"capture_text"/.test(tables[1]), true);
+  t("A7b: D-724 — `capture_text_skipped` (the named gaps) is in purge's TABLES too, beside the units",
+    !!tables && /"capture_text_skipped"/.test(tables[1]), true);
   const loop = src.indexOf("for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`)");
   const sweep = src.indexOf("DELETE FROM capture_text_fts");
   t("A8: and the whole-store sweep of the FTS table comes AFTER the base rows are cleared — "
@@ -901,13 +906,29 @@ console.log("\n--- G · the unit bound: bytes do not bound the unit count (REC-1
      COUNT — "a failure naming one is a failure a reader cannot act on" — and a
      regex pair fails with `[false, false]`, which names neither. Compared whole,
      the failure line PRINTS the record's own sentence with both numbers in it. */
+  /* D-724 CORRECTED THIS ASSERTION'S TITLE AND ITS EXPECTED SENTENCE. The title said a partial index
+     "must be a PREFIX", which was never true of the product: both budget loops go ON past a unit over
+     the bound and index a later one that fits (M-184, Z5), and BOB #36 ruled 2026-09-25 11:20Z that
+     this is right, with the skipped units NAMED. What makes the subset one a reader can reason about
+     is the naming, so the sentence now also says how many skipped units are named on the read. */
   t("G6b: and the detail carries BOTH counts — how many of how many units, and how many bytes, in "
-  + "reading order. A partial index must be a PREFIX a reader can reason about and not an "
-  + "arbitrary subset, which is why `seq` exists and why the units are sorted before they are "
-  + "written",
+  + "reading order — and says the skipped units are NAMED on the read. A partial index is every "
+  + "unit that fit, in reading order, with gaps, and a gap a reader cannot name is the arbitrary "
+  + "subset this sentence exists to refuse",
     String(axOver.index?.detail),
     `${storeUnits} of ${OVER} unit(s) indexed in reading order, ${storeUnits} B; `
-    + `${OVER - storeUnits} unit(s) past the bound are NOT indexed`);
+    + `${OVER - storeUnits} unit(s) past the bound are NOT indexed `
+    + `(${OVER - storeUnits} named on op=contentaxis's index.skipped)`);
+  /* D-724 — THE STORE'S LOOP NAMES WHAT IT SKIPPED. Under the unit bound every later unit is skipped,
+     so the gap is ONE run, from the (bound+1)th paragraph to the last, and it is stated in the
+     record's words. */
+  t("G6c: the store's own loop NAMES the units it skipped — one run, paragraph 4096 through 4599, "
+  + "stated `not indexed: over the bound` (moves: a silent gap)",
+    (axOver.index?.skipped || []).map((k) => [k.says, k.from, k.to, k.units, k.first.seq, k.last.seq,
+                                               k.first.extent?.kind]),
+    [["not indexed: over the bound", describeExtent({ kind: "doc-para", para: storeUnits, run: null }),
+      describeExtent({ kind: "doc-para", para: OVER - 1, run: null }), OVER - storeUnits,
+      storeUnits, OVER - 1, "doc-para"]]);
 
   /* ---- THE OFF-BY-ONE, IN THE DIRECTION THAT OVER-REPORTS. A capture at EXACTLY
      the bound is whole, and reporting it `partial` would make a member re-extract
@@ -923,6 +944,8 @@ console.log("\n--- G · the unit bound: bytes do not bound the unit count (REC-1
   + "reading this `partial` would tell a member to re-extract a document the record holds whole",
     [axExact.indexed, axExact.determined, /unit\(s\) indexed,/.test(String(axExact.index?.detail))],
     [FULL, true, true]);
+  t("G7b: and a capture of exactly the bound NAMES NO skipped unit — an empty list, not an absent key",
+    axExact.index?.skipped, []);
 }
 
 /* ---- THE ARM THAT DECIDES THIS ITEM IS SAFE TO SHIP, and it is the
@@ -1266,6 +1289,9 @@ console.log("\n--- Z · D-685: a unit over the acquire wire's budget is carried 
   t("Z3: and search does NOT find the sheet's last row, which is past the cap — the prefix is a prefix, and "
   + "the capture reads indexed with every offered unit written",
     [close.length, ax.indexed], [0, FULL]);
+  t("Z3b: D-724 — a capture UNDER the bound names NO skipped unit: the wire carries no key list and the "
+  + "read serves an empty one (a CUT unit is not a SKIPPED one)",
+    ["text_units_skipped" in hugeDoc, ax.index?.skipped], [false, []]);
 
   const restDoc = (await acquire("/rest-sheet.xlsx")).document;
   const ru = restDoc?.text_units || [];
@@ -1294,6 +1320,33 @@ console.log("\n--- Z · D-685: a unit over the acquire wire's budget is carried 
     [ax4.indexed, ((await passageRows(FOURTH_OPEN))?.rows || []).length,
      ((await passageRows(FIFTH_TERM))?.rows || []).map((r) => [r.ref, r.truncated])],
     [PARTIAL, 0, [["S5!A1:A1", 0]]]);
+  /* D-724 / BOB #36 2026-09-25 11:20Z, option (b) — THE SKIPPED SHEET IS NAMED, NOT ONLY COUNTED. The
+     capture holds every unit that fit, in reading order, with a GAP at S4; a member whose search finds
+     nothing in S4 must be able to learn S4 was NEVER INDEXED rather than that it holds no match. */
+  const S4 = { kind: "sheet-range", sheet: "S4", range: "A1:A200" };
+  t("Z5c: the wire NAMES the sheet it dropped — one run, S4 alone, at its producer position",
+    fourDoc?.text_units_skipped, [{ first: S4, first_seq: 3, last: S4, last_seq: 3, units: 1 }]);
+  t("Z5d: promoted, op=contentaxis reads S5 INDEXED and names S4 `not indexed: over the bound` "
+  + "(moves: a silent gap — a search miss in S4 could not say S4 was never indexed)",
+    [((await passageRows(FIFTH_TERM))?.rows || []).length,
+     (ax4.index?.skipped || []).map((k) => [k.says, k.from, k.to, k.units, canonicalExtent(k.first.extent),
+                                            k.first.seq])],
+    [1, [["not indexed: over the bound", "S4!A1:A200", "S4!A1:A200", 1, canonicalExtent(S4), 3]]]);
+  console.log(`  four-sheets.xlsx index detail: ${ax4.index?.detail}`);
+  t("Z5e: and the observation's sentence says the one skipped unit is named on the read",
+    / past the bound are NOT indexed \(1 named on op=contentaxis's index\.skipped\)(;|$)/.test(String(ax4.index?.detail)),
+    true);
+  /* THE GAPS ARE REWRITTEN WITH THE UNITS. The same capture re-promoted with S4 carried (as though a
+     later wire fit it) must stop naming S4 — a gap left standing after the unit was indexed is the
+     record claiming LESS than it holds, and it is the DELETE beside the units' own that prevents it. */
+  await promote("INFO-2026-9310-four", { document: { ...fourDoc,
+    text_units: [...fu.slice(0, 3), { extent: S4, seq: 3, text: FOURTH_OPEN }, ...fu.slice(3)],
+    text_units_over_bound: undefined, text_units_skipped: undefined } });
+  const ax4b = await axisOf(fourDoc.capture.sha256);
+  t("Z5f: re-promoted with S4 carried, the capture reads whole and names NO skipped unit — the gaps are "
+  + "rewritten with the units, never left standing",
+    [ax4b.indexed, ax4b.index?.skipped, ((await passageRows(FOURTH_OPEN))?.rows || []).map((r) => r.ref)],
+    [FULL, [], ["S4!A1:A200"]]);
   const s5 = fu.find((u) => u.extent.sheet === "S5");   /* by NAME: its position moves with what was dropped */
   /* OVER-STRICTNESS: a unit UNDER the cap is carried whole and carries NO flag — the wire marks only what
      it cut, so an ordinary document's units are unchanged byte for byte. */

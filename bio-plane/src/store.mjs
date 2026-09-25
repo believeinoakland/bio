@@ -772,6 +772,9 @@ const TASK_KINDS = ["authority-undetermined"];
 import { CAPTURE_TEXT_UNIT_CAP } from "../checks/bio-checks.mjs";
 const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+/* D-724 (BOB #36, 2026-09-25 11:20Z): the words a skipped unit is served in, one constant so the read
+   and any surface that renders it say the same thing. */
+const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
  * into it. An HTML page with no `dom` producer is the none-with-a-reason member of the content-axis vocabulary
@@ -19505,7 +19508,9 @@ export class Store extends DurableObject {
          * makes a re-extraction that recovers LESS text honest rather than
          * stale. */
       const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
-      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
+      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source,
+                                             Array.isArray(doc && doc.text_units_skipped)
+                                               ? doc.text_units_skipped : null);
       /* WHAT THE ACQUIRE WIRE ITSELF DROPPED BEFORE THIS STORE EVER SAW IT, and
          it is FOLDED INTO the store's own over-bound count rather than reported
          separately. Two bounds bit the same capture for the same reason — its
@@ -19733,7 +19738,8 @@ export class Store extends DurableObject {
       const doc = { capture: { sha256: sha }, reading,
                     ...(Array.isArray(pkg.textUnits) ? { text_units: pkg.textUnits } : {}),
                     ...(Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0
-                      ? { text_units_over_bound: pkg.textUnitsOverBound } : {}) };
+                      ? { text_units_over_bound: pkg.textUnitsOverBound } : {}),
+                    ...(Array.isArray(pkg.textUnitsSkipped) ? { text_units_skipped: pkg.textUnitsSkipped } : {}) };
       const author = typeof pkg.author === "string" && pkg.author ? pkg.author : null;
       const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
       const ex = out.extraction || {};
@@ -19931,10 +19937,19 @@ export class Store extends DurableObject {
    *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_BOUND` (2,097,152 B) across a
    *     capture's units. It admits 100 % of M-20's measured 1,000-PDF sample
    *     fully, with 54.8 % headroom over the worst document in it. Over the
-   *     bound the capture is indexed TO the bound IN READING ORDER and its
-   *     `indexed` observation reads `partial` -- which is why `seq` exists and
-   *     why the units are sorted before they are written: a partial index must
-   *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *     bound the capture's `indexed` observation reads `partial` and the
+   *     index holds EVERY UNIT THAT FIT, IN READING ORDER, WITH GAPS -- which
+   *     is why `seq` exists and why the units are sorted before they are
+   *     written. **IT IS NOT A PREFIX, and this sentence said it was until
+   *     D-724** (BOB #36, 2026-09-25 11:20Z, option (b)): the loop below goes
+   *     ON past a unit that does not fit and writes a later one that does, and
+   *     so does the acquire wire's (`textUnitsFor`). What makes the subset
+   *     one a reader can reason about is that every gap is NAMED, not only
+   *     counted: the skipped units are written to `capture_text_skipped` as
+   *     runs of keys, and `op=contentaxis` serves them as *not indexed: over
+   *     the bound*. Breaking at the first skip (option a) was REJECTED: it
+   *     would discard readable text to protect a prefix property nothing
+   *     reads.
    *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` (4,096 units), REC-111.
    *     The index costs ROWS AND FTS ENTRIES and the two bounds above count
    *     BYTES, so until this one existed a container of many tiny units was
@@ -19943,7 +19958,9 @@ export class Store extends DurableObject {
    *     rather than section 4.1's chunk-across-ticks. Over it the capture is
    *     indexed TO it IN READING ORDER and reads `partial`, exactly as the byte
    *     bound does: one state, one vocabulary, and the sentence says which bound
-   *     bit. **It bites nothing the product's own wire can send** (that wire
+   *     bit. (Once the unit bound is reached every later unit is skipped, so
+   *     under THIS bound alone the index is a prefix; under the byte bound it
+   *     is not.) **It bites nothing the product's own wire can send** (that wire
    *     admits at most 4,064 units), which is deliberate -- a bound that refused
    *     a document the record accepts today would be a regression wearing the
    *     costume of caution, and section 4.3 has already shipped one of those.
@@ -19952,13 +19969,16 @@ export class Store extends DurableObject {
    *  surface. It refuses nothing and can fail no promotion: a document whose
    *  container has no unit arm is a document with no units, which is a STATED
    *  absence and not an error. */
-  #writeCaptureText(bundleId, captureSha, units, chain) {
+  #writeCaptureText(bundleId, captureSha, units, chain, wireSkipped = null) {
     /* The capture's previous units go whatever happens next, INCLUDING when the
        new reading carries none. A re-extraction that recovers nothing must not
        leave the previous engine's text standing as though it were current --
        that is the staleness this whole method exists to refuse, and writing the
        delete inside a `units.length` branch is how it would be lost. */
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
+    /* D-724: and the gaps named beside them go with them, for the same reason -- a
+       rewrite that now fits a unit must not leave it named as skipped. */
+    this.sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);
 
     const chainKind = terminalStep(chain) || "layer";
     const list = Array.isArray(units) ? units : [];
@@ -19993,6 +20013,18 @@ export class Store extends DurableObject {
        own sentence, so a producer that ever emits a colliding or unnamed
        address is NAMED rather than scored zero. */
     const seen = new Set();
+    /* D-724 -- EVERY UNIT THIS LOOP SKIPS OVER THE BOUND IS NAMED, as a run of consecutive skips in
+       reading order (the wire's shape, `textUnitsFor`), so one table answers for both loops. A run
+       ends at the next unit WRITTEN; a unit skipped as unaddressable is not over the bound, is
+       counted on its own tally, and neither ends nor joins a run. */
+    const runs = [];
+    let run = null;
+    const skip = (u, extent) => {
+      if (run) { run.last = u.extent; run.lastExtent = extent; run.last_seq = u.seq; run.units++; return; }
+      run = { first: u.extent, firstExtent: extent, first_seq: u.seq,
+              last: u.extent, lastExtent: extent, last_seq: u.seq, units: 1, side: "store" };
+      runs.push(run);
+    };
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string"
         ? u.extent.kind : null;
@@ -20021,8 +20053,8 @@ export class Store extends DurableObject {
          `>=` and not `>`: `written` is the count already in the table, so the
          unit now being considered would be the (bound + 1)th. */
       if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND
-          || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
-      bytes += size;
+          || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; skip(u, extent); continue; }
+      bytes += size; run = null;
       /* D-685 -- A UNIT THE WIRE ALREADY CUT IS A TRUNCATED UNIT, AND THIS WRITER CANNOT SEE THAT FOR
          ITSELF. The acquire wire now carries a unit over the cap as its first `CAPTURE_TEXT_UNIT_CAP`
          characters marked `truncated: true` (it used to drop it whole), so the text arriving here is AT
@@ -20040,8 +20072,34 @@ export class Store extends DurableObject {
         capped, cut ? 1 : 0, chainKind);
       written++;
     }
+    /* D-724 -- THE WIRE'S RUNS, as the acquire document carried them (`text_units_skipped`). They are
+       units the store never received, so they are READ, never re-derived, and taken only when each
+       names two addressable extents, two integer seqs and a positive count; a malformed run is left
+       out and the COUNT (`text_units_over_bound`, folded by the caller) still says `partial`, so the
+       read states how many skipped units it cannot name rather than scoring them zero. The list is a
+       thing a caller's authored `provenance.json` can carry: it can make a capture read LESS indexed
+       than it is, never more. */
+    for (const w of (Array.isArray(wireSkipped) ? wireSkipped : [])) {
+      const ok = (e) => e && typeof e === "object" && typeof e.kind === "string";
+      if (!w || !ok(w.first) || !ok(w.last) || !Number.isInteger(w.first_seq) || !Number.isInteger(w.last_seq)
+          || !Number.isInteger(w.units) || w.units < 1) continue;
+      runs.push({ first: w.first, firstExtent: canonicalExtent(w.first), first_seq: w.first_seq,
+                  last: w.last, lastExtent: canonicalExtent(w.last), last_seq: w.last_seq,
+                  units: w.units, side: "wire" });
+    }
+    let skippedNamed = 0;
+    for (const r of runs) {
+      this.sql.exec(
+        `INSERT INTO capture_text_skipped
+           (capture_sha,bundle_id,first_seq,last_seq,units,first_extent,first_ref,last_extent,last_ref,side)
+         VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        captureSha, bundleId, r.first_seq, r.last_seq, r.units, r.firstExtent, describeExtent(r.first),
+        r.lastExtent, describeExtent(r.last), r.side);
+      skippedNamed += r.units;
+    }
     return { written, bytes, truncated: truncatedUnits, over_bound: overBound,
-             unaddressable, offered: ordered.length, chain_kind: chainKind };
+             unaddressable, offered: ordered.length, chain_kind: chainKind,
+             skipped_named: skippedNamed };
   }
 
   /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
@@ -20129,7 +20187,13 @@ export class Store extends DurableObject {
             + " or the acquire answer's own budget, whichever bit first -- the last is "
             + "the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
-             + `${r.over_bound} unit(s) past the bound are NOT indexed`;
+             + `${r.over_bound} unit(s) past the bound are NOT indexed`
+             /* D-724: WHICH ones is a read, not a sentence -- op=contentaxis's `index.skipped`. */
+             + (Number.isInteger(r.skipped_named)
+                 ? ` (${r.skipped_named} named on op=contentaxis's index.skipped`
+                   + (r.over_bound > r.skipped_named ? `, ${r.over_bound - r.skipped_named} not named` : "")
+                   + ")"
+                 : "");
     } else if (r.written > 0) {
       state = "PRESENT";
       detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
@@ -33042,7 +33106,10 @@ export class Store extends DurableObject {
                        belt-and-braces over the whole-store arm only, and its
                        PLACEMENT is load-bearing -- see it. hygiene.test.mjs
                        holds this list against schema.mjs. */
-                    "capture_text"];
+                    "capture_text",
+                    /* D-724: the named gaps of a partial capture's index -- derived beside
+                       `capture_text`, carrying `bundle_id`, cleared with it in both arms. */
+                    "capture_text_skipped"];
                     /*__REC91_PURGE_END__*/
     const before = this.#counts({ proof: true });
     this.ctx.storage.transactionSync(() => {
@@ -44403,6 +44470,11 @@ export class Store extends DurableObject {
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
           AND authority_kind = 'derive'
         ORDER BY seq DESC LIMIT 1`, sha);
+    /* D-724: the named gaps, read beside the index row they qualify (served on `index` below). */
+    const skipped = indexRow
+      ? this.#rows(`SELECT first_seq, last_seq, units, first_extent, first_ref, last_extent, last_ref
+                      FROM capture_text_skipped WHERE capture_sha = ? ORDER BY first_seq`, sha)
+      : [];
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
       /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
@@ -44460,7 +44532,21 @@ export class Store extends DurableObject {
         ? { state: indexRow.state, bound: indexRow.bound, detail: indexRow.detail,
             authority_kind: "derive",
             actor_class: indexRow.actor_class, actor: indexRow.actor,
-            at: indexRow.at, seq: indexRow.seq }
+            at: indexRow.at, seq: indexRow.seq,
+            /* D-724 / BOB #36 2026-09-25 11:20Z -- WHICH UNITS ARE NOT INDEXED, BY NAME. A `partial`
+               index holds every unit that fit, in reading order, with gaps, and a member whose search
+               found nothing in sheet 4 must be able to learn that sheet 4 was NEVER INDEXED rather
+               than that it holds no match -- the absence CLAUDE.md section 2 makes first-class. One
+               entry per run of consecutive skipped units (both loops' shape), in reading order, each
+               stated in the record's words. An EMPTY list on a capture whose index row reads whole
+               means no unit was skipped. A `partial` count some run does not name (a caller that
+               carried the count and not the keys) is said in `detail` -- "K not named" -- beside
+               the count it qualifies, rather than recomputed here out of that sentence. */
+            skipped: skipped.map((k) => ({
+              says: CAPTURE_TEXT_SKIPPED_SAYS,
+              from: k.first_ref, to: k.last_ref, units: k.units,
+              first: { extent: safeJson(k.first_extent), seq: k.first_seq },
+              last: { extent: safeJson(k.last_extent), seq: k.last_seq } })) }
         : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,
