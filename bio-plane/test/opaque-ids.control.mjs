@@ -17,7 +17,7 @@
  *
  * RESULTS: see the header of `test/opaque-ids.test.mjs` and IC-164.
  */
-import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, readdirSync, mkdirSync, symlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync, symlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -117,15 +117,16 @@ const run = (name) => {
       if (n !== 1) return { name, armed: false, why: `anchor in ${file} occurs ${n} times: ${from.slice(0, 70)}` };
       writeFileSync(p, s.replace(from, () => to));
     }
-    /* A patched SUITE runs from the copy's own `test/`, beside a link to every other file of the real one (its helpers),
-       with `node_modules/` and `scripts/` linked, so its relative imports and its `../src` resolve as they do in place. */
+    /* A patched SUITE runs from the copy's own `test/`, beside a link to each helper it imports by `./` (a link resolves to
+       the real file, so the helpers' own imports resolve in place — no directory is walked), with `node_modules/` and
+       `scripts/` linked, so its relative imports and its `../src` resolve as they do in place. */
     let suite = SUITE;
     if (arm.suite) {
       const dir = join(tree, "bio-plane", "test");
       mkdirSync(dir, { recursive: true });
-      for (const f of readdirSync(join(PLANE, "test"))) if (f !== "opaque-ids.test.mjs") symlinkSync(join(PLANE, "test", f), join(dir, f));
-      for (const f of ["node_modules", "scripts", "package.json"]) symlinkSync(join(PLANE, f), join(tree, "bio-plane", f));
       let s = readFileSync(SUITE, "utf8");
+      for (const m of s.matchAll(/(?:from|import) "\.\/([^"/]+)"/g)) symlinkSync(join(PLANE, "test", m[1]), join(dir, m[1]));
+      for (const f of ["node_modules", "scripts", "package.json"]) symlinkSync(join(PLANE, f), join(tree, "bio-plane", f));
       for (const [from, to] of arm.suite) {
         const n = s.split(from).length - 1;
         if (n !== 1) return { name, armed: false, why: `anchor in the suite occurs ${n} times: ${from.slice(0, 70)}` };
