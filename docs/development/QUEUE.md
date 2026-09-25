@@ -800,7 +800,8 @@ scope: keep the internal (case_id NULL, edition 1) key that grants and statement
 accepts-when: DD answers `edition: null` in all four while its grant and acknowledgements still bind (moves: edition 1 stated for a derived case). NEGATIVE CONTROL: answer the internal edition again and the DD edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-538's worker).
 
-### UI-108 · queued — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
+### UI-108 · running — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
+status: running — SCHEDULER #22 04:57Z spawns WORKER UI-108 (depth 2)
 order: directly after D-552, which it consumes (SCHEDULER #20, 2026-09-24)
 milestone: M4
 interface: I3 consumer (D-552's IC).
