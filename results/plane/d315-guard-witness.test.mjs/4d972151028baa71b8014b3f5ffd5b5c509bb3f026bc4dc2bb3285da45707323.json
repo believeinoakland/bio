@@ -1,0 +1,16 @@
+{
+ "unit": "plane:d315-guard-witness.test.mjs",
+ "inputHash": "4d972151028baa71b8014b3f5ffd5b5c509bb3f026bc4dc2bb3285da45707323",
+ "verdict": "PASS",
+ "run": "64ad0306c42ffe122904cd9f10d6a0e89d890843.1790317706562.2068.json",
+ "tree": "64ad0306c42ffe122904cd9f10d6a0e89d890843",
+ "head": "bcc0cdc1fb33b965df100f57807edc7d6b183f3a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 140,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "7cc66d83-bbf9-5758-808a-9f2804182394",
+ "at": "2026-09-25T06:28:26.576Z"
+}
