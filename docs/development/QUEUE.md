@@ -983,6 +983,16 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
+### D-632 · queued — **`aicredential.control` arms 3 and 5: ANCHOR DRIFT — arm 3 matches 0; arm 5 matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+order: after D-631, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (the negative control; admitted for M0 by name), with M0-197's anchor-drift reader.
+depends-on: none (M0-197, integrated at land/worker/M0-197 @ 11818309, holds this driver's dated allowance in `tools/anchordrift.json`; a fix landing after it deletes that allowance).
+scope: re-anchor the named arm(s) on the subject line as it now reads, or lengthen to a unique span where the count is above 1; delete its allowance from `tools/anchordrift.json`.
+accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
+added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
