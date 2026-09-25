@@ -1,0 +1,16 @@
+{
+ "unit": "plane:formats-docx.test.mjs",
+ "inputHash": "3eb3f046c04bf518c422efa6eb82ead701d1f421591ed61cc992a7f3fc4d373f",
+ "verdict": "PASS",
+ "run": "24263c6533e9a571d986ae753e615d826084572e.1790303718624.4651.json",
+ "tree": "24263c6533e9a571d986ae753e615d826084572e",
+ "head": "9bf818ee3a844823b0723ce40bd952e64d562422",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 135,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "94cfe2cf-d8e4-534f-b452-c35fbc9d2fa1",
+ "at": "2026-09-25T02:35:18.639Z"
+}
