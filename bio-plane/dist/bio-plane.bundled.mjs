@@ -10673,37 +10673,37 @@ var BIAS_CHECKS = {
        lookup, where an unseen debt and an absent one are deliberately ONE answer.
        --------------------------------------------------------------------------- */
   BIAS_DEBT_NO_RUN: {
-    check: "C-26.12",
+    check: "C-26.13",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
     translation: "Nothing was settled, because the request did not say which piece of work it is about. A bias debt belongs to one assistant run \u2014 the one whose lens changed \u2014 so settling it has to name that run."
   },
   BIAS_DEBT_NO_ACTOR: {
-    check: "C-26.13",
+    check: "C-26.14",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
     translation: "Nothing was settled, because this request has no member behind it. Deciding that a change in the group's declared lens does not affect a piece of work is somebody's judgement, and the record keeps whose it was. Sign in and do it as yourself."
   },
   BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
-    check: "C-26.14",
+    check: "C-26.15",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
     translation: "Nothing was settled. This was asked by a machine credential, and saying that a lens change does not affect a finding is a person's judgement about the work \u2014 not something an automated account can decide on anyone's behalf. A machine may raise this and show it to you; answering it is yours."
   },
   BIAS_DEBT_NO_REASON: {
-    check: "C-26.15",
+    check: "C-26.16",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
     translation: "Nothing was settled, because no reason was given. The whole of what this act puts on the record is why you judged that the change in the lens does not bear on this work \u2014 without it the record would say only that somebody decided, and a later reader could not tell whether the question was answered or waved away. Say why, and it is settled."
   },
   BIAS_DEBT_REASON_TOO_LONG: {
-    check: "C-26.16",
+    check: "C-26.17",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
     translation: "Nothing was settled, because the reason given is longer than this record holds for one. Nothing about it was wrong \u2014 it is a size limit and not a judgement about what you wrote. Put the reasoning where it belongs in the work and give the short form of it here."
   },
   BIAS_DEBT_NO_SUCH_DEBT: {
-    check: "C-26.17",
+    check: "C-26.18",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
     translation: "Nothing was settled, because there is no open bias debt on that run here. Either the run never carried one, or it has already been settled, or it is not a run you can open."
   },
   BIAS_DEBT_ALREADY_SETTLED: {
-    check: "C-26.18",
+    check: "C-26.19",
     where: "src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
     translation: "Nothing was added, because this one has already been settled \u2014 by the lens moving back, by a re-run under the lens now in force, or by a member who gave their reason. What settled it is on the record and is not overwritten. If the lens changes again, the obligation is raised again as a new one."
   }
@@ -11607,17 +11607,17 @@ var ACT_SHAPE_CHECKS = {
        left for the next reader to rediscover from a red guard.
        --------------------------------------------------------------------------- */
   AI_RUN_RERUN_SELF: {
-    check: "C-33.44",
+    check: "C-33.45",
     where: "src/store.mjs aiRunOpen, reached from op=airunopen",
     translation: "Nothing was run, because this run was told it is a re-run of itself. A re-run says which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its own outstanding re-run. Name the earlier run, or leave the field out."
   },
   AI_RUN_RERUN_UNKNOWN: {
-    check: "C-33.45",
+    check: "C-33.46",
     where: "src/store.mjs aiRunOpen, reached from op=airunopen",
     translation: "Nothing was run, because the earlier run it says it repeats is not one this record holds for you. It may never have existed, it may have been removed, or it may belong to work you have not been brought into. Check the name."
   },
   AI_RUN_RERUN_OTHER_CONTEXT: {
-    check: "C-33.46",
+    check: "C-33.47",
     where: "src/store.mjs aiRunOpen, reached from op=airunopen",
     translation: "Nothing was run, because the earlier run it says it repeats belongs to a different question or project. Repeating work means asking the same question again under the lens that is in force for it \u2014 somewhere else the group's declared lens can be a different one, so the two runs would not be comparable and settling anything on that basis would be wrong."
   },

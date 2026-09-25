@@ -285,8 +285,8 @@ const CATALOG_CENSUS = {
      number, MINOR (two arrivals, no departures), and its count and digest are THIS SUITE'S OWN PRINT on the merged
      tree. REC-211's branch row is DROPPED (its comment kept as history). */
   "1.25.0": { count: 457, digest: "b333cf2716ad870d295d9373e081076a15e1a7543e1beda28ab312fad77ca3c5" },
-  /* 1.26.0 (REC-207, 2026-09-24, branch land/worker/REC-207): ten arrivals, no departures — C-26.12 to
-     C-26.18 (the member's resolve of a bias debt) and C-33.44 to C-33.46 (the re-run link's three
+  /* 1.26.0 (REC-207, 2026-09-24, branch land/worker/REC-207): ten arrivals, no departures — C-26.13 to
+     C-26.19 (the member's resolve of a bias debt) and C-33.45 to C-33.47 (the re-run link's three
      refusals at op=airunopen). MINOR on the rule above. The count and the digest below are THIS SUITE'S
      OWN PRINT on this tree and never 457 + 10: the figure is a measurement of the catalogue that is
      here, and the arithmetic would agree with it for free. */

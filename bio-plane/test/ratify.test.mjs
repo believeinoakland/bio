@@ -238,7 +238,7 @@ t("attested by the key's member", rat.attestor, "sparky");
    main whose 1.24.0 already names the D-507 + D-508 catalogue, so the union's catalogue is 1.25.0; the literal
    names the catalogue that actually runs. */
 /* MOVED 1.25.0 -> 1.26.0 by REC-207 (2026-09-24): BOB #32's ruling of 2026-09-23 23:42Z added ten rows to
-   the catalogue (C-26.12..C-26.18, C-33.44..C-33.46), so `CATALOG_VERSION` took a MINOR bump and the stamp
+   the catalogue (C-26.13..C-26.19, C-33.45..C-33.47), so `CATALOG_VERSION` took a MINOR bump and the stamp
    moves with it. The LITERAL is kept rather than read from `gate.mjs`, and that is the point of this arm:
    a pin that imported the constant would agree with whatever the constant says and would assert nothing
    about the stamp ever having been recorded. It is moved by hand in the landing that bumps the version. */

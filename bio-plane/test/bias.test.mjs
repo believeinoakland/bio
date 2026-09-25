@@ -475,7 +475,7 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
        translation. Corrected here rather than exempted.
        EIGHTEEN, not eleven, 2026-09-24 (REC-207): BOB #32's ruling of 2026-09-23
        23:42Z gave a bias debt two settling acts it did not have, and the member's
-       resolve brought SEVEN refusals with it (C-26.12 to C-26.18, the two regions
+       resolve brought SEVEN refusals with it (C-26.13 to C-26.19, the two regions
        in `biasDebtResolve`). CORRECTED HERE RATHER THAN EXEMPTED, and the old
        figure was not WRONG — it was true of its family on its day, which is what
        a count like this one is for: it is the arm that made the C-25 -> C-26

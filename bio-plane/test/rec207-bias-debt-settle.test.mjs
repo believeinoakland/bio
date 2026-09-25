@@ -243,7 +243,7 @@ console.log("\n--- ARM S · DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED S
     + "translation a surface can render",
     [noReason?.ok, noReason?.code, noReason?.reason, noReason?.check, (noReason?.translation ?? "").length > 60,
      blank?.code],
-    [false, "BIAS_DEBT_NO_REASON", "BIAS_DEBT_NO_REASON", "C-26.15", true, "BIAS_DEBT_NO_REASON"]);
+    [false, "BIAS_DEBT_NO_REASON", "BIAS_DEBT_NO_REASON", "C-26.16", true, "BIAS_DEBT_NO_REASON"]);
   t("ARM S2b (AND NOTHING WAS SETTLED): the obligation the refused act named is still open and still in the queue",
     [(await readDebt(RES.run))?.open, debtOf(await queue(ALICE), RES.run).length], [true, 1]);
 
@@ -251,7 +251,7 @@ console.log("\n--- ARM S · DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED S
   t("ARM S3 (A MACHINE MAY NOT, BY SHAPE): an admin CREDENTIAL — no session, so the server stamps `token:admin` "
     + "— is refused MACHINE_CANNOT_RESOLVE before the row is read, and the debt stands",
     [machine?.code, machine?.check, (await readDebt(RES.run))?.open],
-    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.14", true]);
+    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.15", true]);
 
   const REASON = "The lens change narrows which claims need a second record, and this run cited none from "
                 + "that office, so nothing it concluded turns on the change.";
@@ -277,7 +277,7 @@ console.log("\n--- ARM S · DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED S
   t("ARM S7 (APPENDED, NEVER REPLACED): a second resolve of a settled obligation is refused by name and says "
     + "what settled it — the row is not overwritten",
     [again?.code, again?.check, again?.settled?.kind, (await readDebt(RES.run))?.settlements?.length],
-    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.18", "resolved", 1]);
+    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.19", "resolved", 1]);
 
   const unseen = await resolve(PIA, { run: PROJ.run, reason: "I would like this to go away" });
   const absent = await resolve(PIA, { run: "RUN-that-never-existed", reason: "I would like this to go away" });
@@ -367,7 +367,7 @@ console.log("\n--- ARM O · A RE-RUN UNDER ANY OTHER LENS DISCHARGES NOTHING ---
     [closedPlain?.terminated, "bias_debt" in (closedPlain ?? {})], [true, false]);
 }
 
-console.log("\n--- ARM G · THE LINK IS JUDGED AT THE DOOR (C-33.44 to C-33.46) ---");
+console.log("\n--- ARM G · THE LINK IS JUDGED AT THE DOOR (C-33.45 to C-33.47) ---");
 {
   const self = `RUN-2026-0924-rec207-self`;
   const s = await POST(`op=airunopen&${ALICE}`, { run: self, contextType: "inquiry", contextId: Q,
@@ -377,15 +377,15 @@ console.log("\n--- ARM G · THE LINK IS JUDGED AT THE DOOR (C-33.44 to C-33.46) 
   const elsewhere = await openAs(ALICE, Q2, "inquiry", { rerunOf: RES.run });
   t("ARM G1 (SELF): a run cannot be the re-run of itself — refused by name, with its C-number and a canned "
     + "translation", [s?.started, s?.code, s?.check, (s?.translation ?? "").length > 60],
-    [false, "AI_RUN_RERUN_SELF", "C-33.44", true]);
+    [false, "AI_RUN_RERUN_SELF", "C-33.45", true]);
   t("ARM G2 (UNKNOWN): a link to a run that is not there is refused by name, and the run is NOT opened",
     [unknown.started, unknown.r?.code, unknown.r?.check,
      (await GET(`op=airun&token=${ADM}&run=${E(unknown.run)}`))?.found],
-    [false, "AI_RUN_RERUN_UNKNOWN", "C-33.45", false]);
+    [false, "AI_RUN_RERUN_UNKNOWN", "C-33.46", false]);
   t("ARM G3 (ANOTHER CONTEXT): a link to a run in a different question is refused by name — the lens a debt "
     + "is owed against is the INDEBTED run's context's",
     [elsewhere.started, elsewhere.r?.code, elsewhere.r?.check],
-    [false, "AI_RUN_RERUN_OTHER_CONTEXT", "C-33.46"]);
+    [false, "AI_RUN_RERUN_OTHER_CONTEXT", "C-33.47"]);
   t("ARM G4 (OVER-STRICTNESS): a link to a real run in the SAME context is accepted — the three refusals "
     + "above are the link being judged, not the field being refused",
     [hidden.started, hidden.r?.rerun_of], [true, RES.run]);
@@ -411,15 +411,15 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
      never used. */
   const CAT = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
   const rows = [
-    ["BIAS_DEBT_NO_RUN", "C-26.12", CAT.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.13", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.14", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_NO_REASON", "C-26.15", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_REASON_TOO_LONG", "C-26.16", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.17", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.18", CAT.BIAS_CHECKS],
-    ["AI_RUN_RERUN_SELF", "C-33.44", CAT.ACT_SHAPE_CHECKS],
-    ["AI_RUN_RERUN_UNKNOWN", "C-33.45", CAT.ACT_SHAPE_CHECKS],
-    ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.46", CAT.ACT_SHAPE_CHECKS],
+    ["BIAS_DEBT_NO_RUN", "C-26.13", CAT.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.14", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.15", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_REASON", "C-26.16", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_REASON_TOO_LONG", "C-26.17", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.18", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.19", CAT.BIAS_CHECKS],
+    ["AI_RUN_RERUN_SELF", "C-33.45", CAT.ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_UNKNOWN", "C-33.46", CAT.ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.47", CAT.ACT_SHAPE_CHECKS],
   ];
   t("ARM C1 (TEN CODES, TEN ROWS): every refusal this item mints carries its declared C-number, a `where` "
     + "naming where it fires, and a canned translation a surface can render instead of the machine word",
@@ -441,7 +441,7 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
     [CAT.BIAS_CHECKS.BIAS_DEBT_NO_ACTOR.check,
      (await resolve(ALICE, { run: RES.run, reason: "a member on this call always has a name" }))?.code,
      (await readDebt(RES.run))?.settlements?.length],
-    ["C-26.13", "BIAS_DEBT_ALREADY_SETTLED", 1]);
+    ["C-26.14", "BIAS_DEBT_ALREADY_SETTLED", 1]);
 }
 
 console.log("\n--- ARM L · THE LENS MOVING BACK IS STILL A DISCHARGE, AND NOW IT IS RECORDED ---");

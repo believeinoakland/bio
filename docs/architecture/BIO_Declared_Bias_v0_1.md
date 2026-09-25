@@ -337,14 +337,14 @@ reader could see THAT the obligation had gone and never WHY; it now records that
 no actor and no reason, because a sweep is not a person and attributing it to one would be an invented
 attribution. **(2) A re-run under the CURRENT lens.** The link is AUTHORED at the open — `op=airunopen`
 takes `rerun_of`, the opener's own word about which run this one re-runs, judged at the door (a self
-reference, a run this caller cannot see, and a run in another context are each refused by name, C-33.44 to
-C-33.46) — and the DISCHARGE is taken at that run's own `op=airunclose`, because a run that was opened and
+reference, a run this caller cannot see, and a run in another context are each refused by name, C-33.45 to
+C-33.47) — and the DISCHARGE is taken at that run's own `op=airunclose`, because a run that was opened and
 never ran has not re-run anything. "Under the current lens" is ONE comparison and it is `op=airun`'s, never
 a second one: the lens the run was FORMED under (the manifest it was handed) against the lens in force for
 its context now. Where either side has no hash the answer is UNDETERMINED and nothing is discharged — two
 absent hashes agree on nothing. The obligation is closed with the discharging run's id and both lens pins.
-**(3) A member's resolve**, `op=biasdebtresolve`, which refuses a missing reason by name (C-26.15) and
-refuses a machine credential by SHAPE (C-26.14), and records the member, the date, the reason and the pins.
+**(3) A member's resolve**, `op=biasdebtresolve`, which refuses a missing reason by name (C-26.16) and
+refuses a machine credential by SHAPE (C-26.15), and records the member, the date, the reason and the pins.
 A settlement is APPENDED and never replaced, so a lens that moves ONWARDS raises NEW debt with the old
 settlement still on record, while a sweep that finds the SAME lens delta leaves an authored settlement
 standing — a member is not asked the same question twice (DEC-69). `op=biasdebt` reads all of it back, which
