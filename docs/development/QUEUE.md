@@ -1241,8 +1241,8 @@ scope: the `records_request` kind with its `law` field alongside D-149's governi
 accepts-when: a `records_request` under a non-California law files and reads its law; an old `cpra_request` reads byte-identically. NEGATIVE CONTROL: rewrite `cpra_request` on read, and the unchanged arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### REC-202 · running — **A MEMBER CANNOT TAKE UP OR SET ASIDE AT THE INQUIRY'S GRAIN: the code declares an `options_grain` gap (offered at document grain, missing at inquiry grain) in `store.mjs`'s findings producers, and no row carried it.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *row it — a missing member door.* — owner RECORD if an op is missing, UI otherwise; check at the code at spawn.
-status: running — SCHEDULER #23 07:50Z: spawned
+### REC-202 · integrated — **A MEMBER CANNOT TAKE UP OR SET ASIDE AT THE INQUIRY'S GRAIN: the code declares an `options_grain` gap (offered at document grain, missing at inquiry grain) in `store.mjs`'s findings producers, and no row carried it.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *row it — a missing member door.* — owner RECORD if an op is missing, UI otherwise; check at the code at spawn.
+status: integrated — SCHEDULER #23 09:15Z: tip 1716321d on 5e8a65a8, GATE 386/386 GREEN (21886 assertions), tree e98dd230; NARROWED as BOB #35 ruled 08:10Z: inquiry grain closed (lead publishes inquiry_acts: take up = cite, set aside = project-scoped proposedispose), stance/version stay §7 closures; UI doors, and the queue no longer offers acts the plane refuses NO_PROJECT_SCOPE; construct 12.lead-inquiry-acts BUILT; I3 additive IC the integrator's
 order: behind the current M9/M10 product rows, before the M0 group (SCHEDULER #17, 2026-09-23; D-213's residue)
 milestone: M9
 interface: I3 — possibly an act; the integrator mints and classifies the IC.
@@ -1424,6 +1424,17 @@ depends-on: none (stacked on land/worker/D-177 @ 406ab5c1, integrated).
 scope: derive the archive letter in store.mjs from BASIS_GRADES, one rank below EARNED_CAPTURE_CEILING (UNREACHABLE_CAPTURE_GRADE's pattern), pinned in the suite to C and to op=acquire's stamped archive letter; captureBound(chain, thatLetter) is the measured letter for an archive-only capture; keep CAPTURE_GRADE_VIA_UNRULED for a via no ruling names; flip suite 9d and nc-d177 arm (b); move the construct probe; fold both 07:55Z rulings into §14.2 and clear its "routed to BOB" bullet.
 accepts-when: a leg on an archive-only capture reads C as measured, and a no-via capture reads undetermined by name (moves: a ruled case read undetermined). NEGATIVE CONTROL: return the archive via to CAPTURE_GRADE_VIA_UNRULED and 9d fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-177's report).
+
+### D-686 · running — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `content.chain_kind` is the WHOLE chain's last step, so a text-layer page of a document OCR also touched is labelled as OCR'd.** Predates D-635. Found by D-635's worker. BOB #35 RULED 2026-09-25 09:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): REPLACE on content, KEEP on capture_text, ONE function — `content.chain_kind` becomes the kind of the last derivation step covering the unit's page (partKeyOf / stepCovers), stored at mint or computed at read (the builder's choice, no second computation); existing rows are derived values, recomputing them is not a rewrite; `capture_text.chain_kind` stays document-level and its reader text says "the last step of this document's chain, not how any given page was read". — owner CONTENT-PDF, RECORD.
+status: running — SCHEDULER #23 09:15Z: spawned, stacked on land/worker/D-635 @ d31c52bf
+order: after D-671 with the PDF corrections, UNBLOCKED by BOB #35 09:05Z (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I5 — content.chain_kind changes meaning (IC REQUIRED; readers change); the integrator mints and classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (the derivation chain and its parts), with BOB #35's 09:05Z ruling, folded into Part II (the content object, extraction method) by this row.
+depends-on: none (stacked on land/worker/D-635 @ d31c52bf, integrated, on D-627 — its overlapping parts and partKeyOf).
+scope: one function computing a unit's chain kind from the last step covering its page; every reader and writer calls it; recompute existing rows; capture_text's reader text as ruled.
+accepts-when: on a mixed fixture a text-layer page's unit reads its layer kind and an OCR'd page's reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: revert to the generated whole-chain column and the text-layer arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

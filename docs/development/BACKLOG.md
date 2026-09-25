@@ -56,16 +56,6 @@ scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBo
 accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
 
-### D-686 · queued — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `content.chain_kind` is the WHOLE chain's last step, so a text-layer page of a document OCR also touched is labelled as OCR'd.** Predates D-635. Found by D-635's worker. BOB #35 RULED 2026-09-25 09:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): REPLACE on content, KEEP on capture_text, ONE function — `content.chain_kind` becomes the kind of the last derivation step covering the unit's page (partKeyOf / stepCovers), stored at mint or computed at read (the builder's choice, no second computation); existing rows are derived values, recomputing them is not a rewrite; `capture_text.chain_kind` stays document-level and its reader text says "the last step of this document's chain, not how any given page was read". — owner CONTENT-PDF, RECORD.
-order: after D-671 with the PDF corrections, UNBLOCKED by BOB #35 09:05Z (SCHEDULER #23, 2026-09-25)
-milestone: M2
-interface: I5 — content.chain_kind changes meaning (IC REQUIRED; readers change); the integrator mints and classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (the derivation chain and its parts), with BOB #35's 09:05Z ruling, folded into Part II (the content object, extraction method) by this row.
-depends-on: D-635 (integrated, land/worker/D-635 @ d31c52bf — its overlapping parts and partKeyOf).
-scope: one function computing a unit's chain kind from the last step covering its page; every reader and writer calls it; recompute existing rows; capture_text's reader text as ruled.
-accepts-when: on a mixed fixture a text-layer page's unit reads its layer kind and an OCR'd page's reads 'ocr' (moves: every unit 'ocr'). NEGATIVE CONTROL: revert to the generated whole-chain column and the text-layer arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
-
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -1082,4 +1072,14 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
+added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
+
+### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
+order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
+depends-on: M0-158.
+scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
+accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
