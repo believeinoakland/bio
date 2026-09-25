@@ -650,6 +650,7 @@ const CHOOSERS = {
   "elicPaint":             "per-leg answers composing ONE grounding; the commit is one act over the whole answer",
   "citePaint":             "radios choosing the ONE citing object, and the ONE basis role, for one cite",
   "edgePaint":             "radios choosing the ONE edge to sever or reinstate",
+  "docConnPairHtml":       "UI-91: buttons choosing the ONE on-point mention on this document's end of ONE connection (op=connectionchoose takes one `ref`; acting consumes the choice, and a re-choice supersedes it)",
   "finderPaintScopes":     "scope chips filtering ONE query; a chip narrows the question, it decides nothing",
   "finderPaintSelection":  "the acts the record publishes over ONE held selection",
   "disposePaint":          "radios choosing the ONE disposition token for one act",

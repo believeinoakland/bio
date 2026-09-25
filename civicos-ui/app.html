@@ -16976,7 +16976,7 @@ async function docKnowsPanel(captureSha){
     <h2 class="sec">What the record knows about this document</h2>
     <p class="lede" style="margin:0 0 18px">Beyond the document itself: the subjects it names, the documents it connects to, and the institutional processes it is part of. Each carries a grade, and a grade says how the link was established — a shared identifier, a corresponding name, a member's testimony — never how much to trust the document.</p>
     ${docResolutionsHtml(resolutions, labels)}
-    ${docConnectionsHtml(connections, captureSha)}
+    ${docConnectionsHtml(connections, captureSha, resolutions)}
     ${docProgressionsHtml(prog)}
   </div>`;
 }
@@ -17018,7 +17018,7 @@ function docResolutionsHtml(res, labels){
    as the entity arm — the plane says so at the site, because an answer whose
    shape depended on which key you held would be a second thing to know — so the
    figure is read off this answer's own wire and stated over CONNECTIONS. */
-function docConnectionsHtml(c, captureSha){
+function docConnectionsHtml(c, captureSha, res){
   const head = `<section class="tsec"><h2>Documents this one connects to</h2>`
     + `<p class="subj-note">Two documents that concern the same subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${!c || c._err ? "" : connectionsBoundHtml(c, "this list")}</p>`;
   if(!c || c._err) return head + `<div class="empty">The record could not read this document's connections.</div></section>`;
@@ -17034,9 +17034,93 @@ function docConnectionsHtml(c, captureSha){
       <div class="ends">Connected to ${target?`<a onclick="openBundle('${esc(target)}')">${esc(other)}</a>`:`<span class="mono">${esc(other)}</span>`}</div>
       <div class="weaker">Ends resolved at Grade ${esc(x.a_grade)} and Grade ${esc(x.b_grade)} — the connection takes the weaker.</div>
       <div class="top">${subjGradeBadge(x.grade, x.established, x.needs_confirmation)}</div>
+      ${docConnPairHtml(x, captureSha, res)}
     </div>`;
   }).join("");
   return head + out + `</section>`;
+}
+
+/* UI-91 · D-161 ACT (3) · REC-122 / IC-232: WHICH MENTION A CONNECTION RESTS ON, AND A
+   MEMBER'S CHOICE OF THE ONE ON POINT — BESIDE THE MACHINE'S PAIR, NEVER IN ITS PLACE.
+
+   `determining_pair` is the MACHINE's selection (the strongest-graded mention on each end,
+   ties by sort order — `selection.method`, never chosen) and `on_point` is the MEMBER's
+   (`{a, b}`, present only where somebody chose). Framework §14.5: *"the machine's
+   strongest-graded pair is kept beside the choice and never rewritten"*. So this block
+   renders the machine's pair FIRST and ALWAYS, and the member's choice as a second,
+   separately labelled line after it. A page that showed the choice in the pair's place
+   would tell a member the machine had selected what a person chose — or, worse, erase
+   the record of what the machine selected — and `onpoint-choice.test.mjs` fails BY NAME
+   on exactly that (its NEGATIVE CONTROL).
+
+   THE WORDS ARE THE PLANE'S WHERE THE PLANE HAS SPOKEN: `selection.says`, a lapsed
+   choice's `why`, the act's `says` and any refusal (`actRefusalHtml`) are rendered
+   verbatim. Two limits of the plane are stated here rather than papered over, both D-575:
+     - `selection.says` ends *"…which nobody has chosen"* on EVERY row, including one that
+       carries a current `on_point` (`#pairSelection` is static). Rendered beside a choice
+       it would contradict the line under it, so where either end carries a choice the
+       pair is labelled by its `method` alone and the sentence is withheld — never
+       re-worded.
+     - the id/sha arm this page reads never states a LAPSE (`on_point.lapsed` is published
+       by the `content=` arm only). The page renders `lapsed` and `why` wherever the plane
+       states them and infers nothing from a mention's absence in the bounded
+       resolutions read: an absence there is not a lapse.
+
+   WHAT IS OFFERED, AND WHY NOT "THE C-49.4 ENTRIES' BEARING MENTIONS" (the row's wording,
+   narrowed at the code): no surface reads `op=connections&content=`, and this page has no
+   portion to ask it about, while the act is DOCUMENT-WIDE — `op=connectionchoose` accepts
+   any mention of the subject this document carries (C-74.3) and every portion then answers
+   from it. So the offer is this document's mentions of the connection's subject as
+   `op=resolutions` lists them in "Subjects this document names" above (bounded, and that
+   section states its own bound), drawn only where there are at least two to choose among,
+   and only for a signed-in member holding `contribute` (the act's capability; the plane
+   refuses a token BY NAME, C-74.1, and that refusal is rendered if it ever comes back). */
+function canChooseOnPoint(){
+  return !!(PLANE.session && PLANE.me && PLANE.me.session
+            && (PLANE.me.capabilities||[]).includes("contribute"));
+}
+function docConnPairPlace(p){
+  return (p && p.ref) ? ` (read at ${esc(p.ref)})` : ` (where it was read is not recorded)`;
+}
+function docConnPairHtml(x, captureSha, res){
+  if(!x) return "";
+  const side = x.a_capture_sha === captureSha ? "a" : "b", far = side === "a" ? "b" : "a";
+  const dp = x.determining_pair || null;
+  const op = (x.on_point && typeof x.on_point === "object") ? x.on_point : null;
+  const mine = op ? op[side] : null, theirs = op ? op[far] : null;
+  const sel = (dp && dp.selection) || null;
+  const machine = !dp
+    ? `<div class="subj-ref conn-machine" data-pair="machine">The machine&rsquo;s pair: none recorded &mdash; this connection was derived before the record kept which reference established it.</div>`
+    : `<div class="subj-ref conn-machine" data-pair="machine">The machine&rsquo;s pair${sel && sel.method ? ` (${esc(sel.method)})` : ""}: on this document <span class="mono">${esc(dp[side+"_ref"] || "no reference")}</span>${docConnPairPlace(dp[side+"_position"])}; on the other <span class="mono">${esc(dp[far+"_ref"] || "no reference")}</span>${docConnPairPlace(dp[far+"_position"])}.${sel && sel.says && !mine && !theirs ? ` ${esc(sel.says)}.` : ""}</div>`;
+  const choiceLine = (c, where) => !c ? "" : (c.lapsed === true
+    ? `<div class="subj-ref conn-onpoint" data-pair="member" data-lapsed="1">A member&rsquo;s choice ${where}, <span class="mono">${esc(c.ref || "")}</span>, has lapsed: ${esc(c.why || "the record says so and says nothing further")}.</div>`
+    : `<div class="subj-ref conn-onpoint" data-pair="member">On point ${where}, as a member chose: <span class="mono">${esc(c.ref || "")}</span>${c.chosen_by ? `, chosen by ${esc(c.chosen_by)}` : ""}${c.at ? ` on ${esc(String(c.at).slice(0,10))}` : ""}.</div>`);
+  const other = x[far+"_capture_sha"] || "";
+  const refs = [];
+  for(const r of (res && !res._err && res.resolutions) || [])
+    if(r && r.entity_id === x.entity_id && r.ref && !refs.includes(r.ref)) refs.push(r.ref);
+  const ctl = (!canChooseOnPoint() || refs.length < 2 || !other) ? ""
+    : `<div class="conn-choose" data-onpoint-for="${esc(other)}">
+      <div class="subj-ref">Which of this document&rsquo;s mentions of the subject is on point for this connection? Your choice is recorded in your name beside the machine&rsquo;s pair, which stays as it is.</div>
+      ${refs.map(ref=>`<button class="tbtn" data-onpoint-capture="${esc(captureSha)}" data-onpoint-other="${esc(other)}" data-onpoint-entity="${esc(x.entity_id||"")}" data-onpoint-ref="${esc(ref)}" onclick="docChooseOnPoint(this)">${esc(ref)}${dp && dp[side+"_ref"] === ref ? " — the machine&rsquo;s pair" : ""}${mine && mine.ref === ref ? " — the current choice" : ""}</button>`).join(" ")}
+      <div class="conn-choose-out" data-onpoint-out="${esc(other)}|${esc(x.entity_id||"")}"></div>
+    </div>`;
+  return `<div class="conn-pair">${machine}${choiceLine(mine, "on this document")}${choiceLine(theirs, "on the other document")}${ctl}</div>`;
+}
+/* THE ACT. It asks and renders what came back — the plane's `says` on success, its
+   refusal verbatim otherwise — and then re-reads the panel so the choice a member sees
+   is the one the RECORD now holds, never the one this page believes it sent. */
+async function docChooseOnPoint(btn){
+  const d = (btn && btn.dataset) || {};
+  const body = { capture:d.onpointCapture, other:d.onpointOther, entity:d.onpointEntity, ref:d.onpointRef };
+  const r = await actAskPost("connectionchoose", body);
+  const key = `${d.onpointOther}|${d.onpointEntity}`;
+  const outFor = () => [...document.querySelectorAll("[data-onpoint-out]")].find(e => e.dataset && e.dataset.onpointOut === key);
+  if(!r.accepted){ const o = outFor(); if(o) o.innerHTML = actRefusalHtml(r.refusal); return r; }
+  const host = document.querySelector("#docknows");
+  if(host && d.onpointCapture) host.outerHTML = await docKnowsPanel(d.onpointCapture);
+  const o = outFor(); if(o) o.innerHTML = `<div class="subj-ref">${esc((r.result && r.result.says) || "")}</div>`;
+  return r;
 }
 
 /* (3)+(4) The PROGRESSIONS this document sits in and at which stage, and any
