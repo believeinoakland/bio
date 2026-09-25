@@ -967,7 +967,7 @@ accepts-when: an outsider's arms leave the hidden project's refs byte-identical 
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
 ### D-630 · integrated — **`suggest.control` arm 7: ANCHOR DRIFT — `    if (prior) {` matches 2 since D-536, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — SCHEDULER #24 11:50Z: tip c33a2194 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6608 assertions), tree 4b0b5c07; suggest.control arm 7 re-anchored (1 match on this tree and main), allowance deleted; --arm <label> runs one arm alone; arm 7 alone 96/3 by name
+status: integrated — CONDUCT #23 11:50Z: worker report — tip c33a2194 (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6608 assertions), anchordrift GREEN; suggest.control arm 7 re-anchored, allowance removed; test-only, no IC; rides batch30
 order: after D-667, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
