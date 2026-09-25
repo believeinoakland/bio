@@ -788,8 +788,8 @@ scope: MEASURE FIRST over the FY23-25 budget book and M-174's corpus each page's
 accepts-when: those 9 pages carry the marker with their figures and route to OCR; text pages do not (moves: 9 unread pages routed nowhere). NEGATIVE CONTROL: drop the coverage arm and INFO-2026-0301's pages 633/634/645-651 read no marker and route nowhere, by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 05:50Z).
 
-### D-606 · running — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
-status: running — SCHEDULER #22 04:42Z spawns WORKER D-606 (depth 2)
+### D-606 · integrated — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
+status: integrated — SCHEDULER #22 06:18Z: tip f04460ab (CARRIES D-460 72879f23, main merged at 51970f65), GATE 80/80 GREEN FULLREUSE over a 385/386 full run (owed-controls grammar fixed); per-page OCR capped at 24 invocations (M-175; the 32 is Cloudflare's claim, DIST to measure deployed); 5.tier3-perpage BUILT; REGISTER_FLOOR +3 unraised (CONDUCT at union); minted D-616
 order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
 milestone: M2
 interface: I6 — more pages transcribed per acquire; the member contract is unchanged; the integrator classifies.
@@ -798,6 +798,17 @@ depends-on: none.
 scope: tier3Extend re-asks the member for each page in `deferred`, one invocation per page, sequential, each merged by mergeTier3Text; a refused page keeps its marker. MEASURE FIRST the per-acquire CPU and subrequest budget for a 58-page scan on the deployed runtime's limits (miniflare wall 80 s shipped vs 858 s per page over the 21); if it exceeds them, the tail goes to a deferred task, stated.
 accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
+
+### D-616 · running — **PAGES PAST THE PER-REQUEST OCR BUDGET ARE NEVER READ ON A LATER REQUEST: D-606 caps each acquire at 24 member invocations (M-175), and the re-read (op=pdfstructure&ocr=1) starts from tier-1 text, so it asks for the SAME first pages again; a 58-page scan leaves 34 pages unread for good.** Found by D-606's worker (06:06Z). Affects every scan over 24 image-only pages. — owner CONTENT-PDF.
+status: running — SCHEDULER #22 06:18Z spawns WORKER D-616 (depth 2), stacked on land/worker/D-606 @ f04460ab
+order: at the head of the reader corrections, directly after D-606 which it completes: most of a long scan unread with no path to read it (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 — a re-read advances through the unread tail; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with D-606's per-page loop and budget.
+depends-on: none (stacked on D-606's branch).
+scope: seed tier3Extend with the pages the stored reading already transcribed, so each re-read (or a deferred task) asks only for the untranscribed tail and advances by up to the budget; the reading states how many pages remain; transcribed pages are never re-asked.
+accepts-when: a 30-image-page fixture reads 24 pages on the first acquire and the remaining 6 on one re-read, with no page asked twice (moves: pages past the budget unread for good). NEGATIVE CONTROL: start the re-read from tier-1 text again and the second pass re-asks page 1, failing by name.
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-606's worker).
 
 ### D-607 · integrated — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
 status: integrated — SCHEDULER #22 05:28Z: tip 3206221a, GATE 385/385 GREEN FULLREUSE (21873 assertions), tree b093f1a2; union with D-606 keeps layerPages at tier3Note's call; re-run nc-rec102 after; minted D-614
