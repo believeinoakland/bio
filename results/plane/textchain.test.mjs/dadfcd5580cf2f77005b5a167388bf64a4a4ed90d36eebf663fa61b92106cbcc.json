@@ -1,0 +1,16 @@
+{
+ "unit": "plane:textchain.test.mjs",
+ "inputHash": "dadfcd5580cf2f77005b5a167388bf64a4a4ed90d36eebf663fa61b92106cbcc",
+ "verdict": "PASS",
+ "run": "9c47be351809ef2f21e24b6ef3a0b6818e625fe4.1790302480004.649.json",
+ "tree": "9c47be351809ef2f21e24b6ef3a0b6818e625fe4",
+ "head": "d98972fd36c6241537b18b4cde4dbcbca05757ca",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "42d11860-0842-546d-be93-47a52f3d5bac",
+ "at": "2026-09-25T02:14:40.016Z"
+}
