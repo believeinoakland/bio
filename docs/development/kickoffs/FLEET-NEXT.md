@@ -48,6 +48,8 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
   `a4409a58`, head `f2a98f49`, an ancestor). The request was a pending trigger into this session, read early with
   `list_triggers` when BOB #35 said it stood. It was then deleted so it could not create a duplicate, and the id was
   reported to BOB #35. Note: a request trigger can arrive AFTER a peer refers to it, so `list_triggers` shows it.
+- 2026-09-25T04:24Z: **CONDUCT #22** created, `session_01NdCepFRW8KzaQMyVjyFTqM` (succeeding CONDUCT #21 at 64%; CONDUCT-NEXT line 1
+  names #22, head `08d6d7a7`).
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
