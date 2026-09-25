@@ -53,8 +53,8 @@
  *     bytes yet), `absent` (looked for, part of no case) and `present` (a
  *     reading carries it) — because an instrument that only ever sees absence
  *     is the empty-corpus walk reporting its verdict triumphantly.
- *  6. A REAL `basis` AND A REAL `options[]`, with the inquiry-grain gap DECLARED
- *     on the item rather than hidden behind an empty array (D-222).
+ *  6. A REAL `basis` AND A REAL `options[]`, with the grain ACCOUNTED FOR on the
+ *     item (REC-202 closed PL-15's declared inquiry-grain gap, CORRECTED below).
  *  7. THE MINT REFUSES AN UNKNOWN KIND, and the fence covers EVERY class rather
  *     than CONDITION alone — the sweep, asserted structurally here and DRIVEN
  *     by the control harness.
@@ -589,7 +589,7 @@ const INQ_D = "INQ-2026-4400-does-northbay-perform";
 /* ====================================================================== 6
  * A REAL `basis`, A REAL `options[]`, AND THE GRAIN GAP DECLARED (D-222).
  * ====================================================================== */
-console.log("\n--- 6. a real basis and a real options[], with the inquiry-grain gap DECLARED ---");
+console.log("\n--- 6. a real basis and a real options[], with the grain accounted for (no gap declared, REC-202) ---");
 {
   const lead = leadsIn(await queueOf(CAROL)).find((i) => g(i, "basis.address") === VENDOR) || {};
   t("the basis names its source table, the request, the run and the address — nothing here is a "
@@ -605,9 +605,16 @@ console.log("\n--- 6. a real basis and a real options[], with the inquiry-grain 
     g(lead, "age.state"), "determined");
   t("options[] is REAL — acts this record can actually perform, on inquiry B",
     (g(lead, "options") || []).length > 0, true);
-  t("and the grain gap is DECLARED on the item rather than hidden behind an empty array: the acts a "
-  + "member would most want here are at INQUIRY grain and do not exist yet (D-222)",
-    [g(lead, "options_grain.offered"), g(lead, "options_grain.missing")], ["document", "inquiry"]);
+  /* CORRECTED 2026-09-25 (REC-202; BOB #32, 2026-09-23 23:08Z). This asserted `missing: "inquiry"` —
+     that taking the lead up and setting it aside "do not exist yet". It was true on 2026-08-08 and false
+     from 2026-08-10, when D-266 built the project-scoped `op=proposedispose` (set aside) beside REC-37's
+     `op=cite` into a question (take up): the assertion pinned a record claiming less than it can do. The
+     item now publishes both doors in `inquiry_acts` and declares no gap; `rec202-lead-inquiry-acts`
+     drives them through the ops. */
+  t("and the grain is ACCOUNTED FOR on the item: `options` is document grain, and the inquiry-grain acts "
+  + "are published beside it with no gap declared (REC-202)",
+    [g(lead, "options_grain.offered"), g(lead, "options_grain.missing"), g(lead, "options_grain.inquiry")],
+    ["document", null, ["take_up", "set_aside"]]);
   /* THE SIBLING PRODUCER STILL FIRES. PL-4's `#conditionsCaptureRequested` walks
      the SAME table and files on `target`. Two producers, one table, two homes,
      and a surface assuming one producer per kind reads the second as a
