@@ -28627,50 +28627,59 @@ export class Store extends DurableObject {
              `disposition` — called here, not re-derived — so the two cannot disagree.
          `options_grain` stays on the item, because a surface still owes the member the
          account of which acts are at which grain, and it now DECLARES NO GAP. */
-      const takeDoc = basisEntry.bundle_id;
-      const aside = this.#dispositionOf(item);
-      item.inquiry_acts = [
-        takeDoc
-          ? { id: "take_up", op: "cite", available: true, inquiry: r.lead_inquiry,
-              project: r.lead_inquiry, document: takeDoc,
-              requires: ["handle", "role"], select: { op: "select", ids: [takeDoc] },
-              detail: `take this up under ${r.lead_inquiry}: select ${takeDoc} and cite it into that `
-                    + "question with the role you judge it plays (op=select, then op=cite naming the "
-                    + "question as `project`). The document then becomes a leg of that question's "
-                    + "basis, in your name and with your role — the one act that makes it evidence, "
-                    + "and a member's, never the session's (D-213). The act judges your position "
-                    + "and the leg; this says only that there is a document to cite." }
-          : { id: "take_up", op: "cite", available: false, inquiry: r.lead_inquiry,
-              project: r.lead_inquiry, document: null,
-              reason: "no_document_to_cite", basis_entry_reason: basisEntry.reason,
-              detail: "there is nothing to take up yet: the captured bytes are held, and no document "
-                    + "in this store carries them, so there is no document to cite into the question "
-                    + "(the basis entry says which absence it is). Registering the capture under a "
-                    + "document is what makes this door open; nothing is offered that would be refused." },
-        { id: "set_aside", op: "proposedispose", available: aside.available === true,
-          scope: aside.scope ?? null, finding: aside.finding ?? null, projects: aside.projects ?? [],
-          dispositions: DISPOSITIONS, requires: ["project", "finding", "to", "reason"],
-          ...(aside.available === true ? {} : { reason: aside.reason ?? null }),
-          detail: aside.available === true
-            ? "set it aside for your team: op=proposedispose naming the project you act for (one of "
-            + "`projects`), this `finding`, deferred or dismissed, and your reason. It ages the lead "
-            + "out of THAT team's open list and moves no other team's (D-266); it deletes nothing, "
-            + "and it stands until it is re-triaged (D-79)."
-            : String(aside.detail || "") },
-      ];
-      item.options_grain = {
-        offered: "document",
-        missing: null,
-        inquiry: item.inquiry_acts.map((a) => a.id),
-        detail: "the acts in `options` are the ones on the QUESTION this lead is filed under, at "
-              + "document grain. The acts on THIS LEAD, at inquiry grain — take it up under that "
-              + "question, or set it aside for your team — are published in `inquiry_acts` with the "
-              + "arguments each takes, and each says whether it is open to you here and why not. "
-              + "Nothing at inquiry grain is missing (REC-202; BOB #32, 2026-09-23).",
-      };
+      /* The doors are composed by `#leadInquiryActs`, which READS NOTHING: `#dispositionOf` is a pure
+         function of the item, and the take-up reads the basis entry this loop already measured. Said
+         here because `derivation-bounds` scores row sources inside this loop and that helper adds none. */
+      this.#leadInquiryActs(item, basisEntry, r.lead_inquiry);
       out.push(item);
     }
     return out;
+  }
+
+  /** REC-202 — the lead's two inquiry-grain doors and its closed `options_grain`, written onto `item`.
+   *  Pure: no read happens here (see the producer's banner for what each door is and why). */
+  #leadInquiryActs(item, basisEntry, leadInquiry) {
+    const takeDoc = basisEntry.bundle_id;
+    const aside = this.#dispositionOf(item);
+    item.inquiry_acts = [
+      takeDoc
+        ? { id: "take_up", op: "cite", available: true, inquiry: leadInquiry,
+            project: leadInquiry, document: takeDoc,
+            requires: ["handle", "role"], select: { op: "select", ids: [takeDoc] },
+            detail: `take this up under ${leadInquiry}: select ${takeDoc} and cite it into that `
+                  + "question with the role you judge it plays (op=select, then op=cite naming the "
+                  + "question as `project`). The document then becomes a leg of that question's "
+                  + "basis, in your name and with your role — the one act that makes it evidence, "
+                  + "and a member's, never the session's (D-213). The act judges your position "
+                  + "and the leg; this says only that there is a document to cite." }
+        : { id: "take_up", op: "cite", available: false, inquiry: leadInquiry,
+            project: leadInquiry, document: null,
+            reason: "no_document_to_cite", basis_entry_reason: basisEntry.reason,
+            detail: "there is nothing to take up yet: the captured bytes are held, and no document "
+                  + "in this store carries them, so there is no document to cite into the question "
+                  + "(the basis entry says which absence it is). Registering the capture under a "
+                  + "document is what makes this door open; nothing is offered that would be refused." },
+      { id: "set_aside", op: "proposedispose", available: aside.available === true,
+        scope: aside.scope ?? null, finding: aside.finding ?? null, projects: aside.projects ?? [],
+        dispositions: DISPOSITIONS, requires: ["project", "finding", "to", "reason"],
+        ...(aside.available === true ? {} : { reason: aside.reason ?? null }),
+        detail: aside.available === true
+          ? "set it aside for your team: op=proposedispose naming the project you act for (one of "
+          + "`projects`), this `finding`, deferred or dismissed, and your reason. It ages the lead "
+          + "out of THAT team's open list and moves no other team's (D-266); it deletes nothing, "
+          + "and it stands until it is re-triaged (D-79)."
+          : String(aside.detail || "") },
+    ];
+    item.options_grain = {
+      offered: "document",
+      missing: null,
+      inquiry: item.inquiry_acts.map((a) => a.id),
+      detail: "the acts in `options` are the ones on the QUESTION this lead is filed under, at "
+            + "document grain. The acts on THIS LEAD, at inquiry grain — take it up under that "
+            + "question, or set it aside for your team — are published in `inquiry_acts` with the "
+            + "arguments each takes, and each says whether it is open to you here and why not. "
+            + "Nothing at inquiry grain is missing (REC-202; BOB #32, 2026-09-23).",
+    };
   }
 
   /* ======================================================================

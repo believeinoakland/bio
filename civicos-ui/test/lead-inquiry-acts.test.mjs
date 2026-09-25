@@ -110,17 +110,17 @@ function makePlane(items){
     if(op === "select") return R({ handle:"H-202", count:(body.ids || []).length });
     if(op === "cite") return R({ ok:true, project:p.project, cited:[DOC], role:p.role || null });
     if(op === "proposedispose"){
-      /* THE REAL `proposeDispose`'s two arms, reproduced: a caller naming project + finding is the judgment-layer
-         act; one naming a FINDING's id as `key` is refused NO_PROJECT_SCOPE — which is what the surface sent
-         for this item before REC-202. */
+      /* THE REAL `proposeDispose`'s judgment-layer arm: a caller naming project + finding. */
       if(body.project && body.finding){
         GONE.add(String(body.finding));
         return R({ ok:true, scope:"project", project:body.project, finding:body.finding,
                    key:`${body.project}::${body.finding}`, to:body.to, state:body.to, reason:body.reason,
                    decided_by:"m_alice", at:"2026-09-25T09:00:00Z", bundle:null });
       }
-      return R({ ok:false, reason:"NO_PROJECT_SCOPE", requires:["project","finding"],
-                 detail:"this names a FINDING that carries no progression stage" });
+      /* THE OTHER ARM IS NOT ANSWERED HERE, deliberately: the real plane refuses a finding's id sent as
+         `key` (NO_PROJECT_SCOPE), and a mock that fed that code would put an untranslated code in the
+         surface's reach (check-refusal-codes R3) for a path the surface no longer takes. §3 asserts no
+         `key` travels; an unscoped call gets the mock's own "unexpected" answer below. */
     }
     return { ok:false, json:async()=>({ ok:false, error:"unexpected op " + op }) };
   }

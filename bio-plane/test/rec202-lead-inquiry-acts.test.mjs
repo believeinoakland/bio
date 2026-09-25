@@ -1,10 +1,12 @@
-/* NEGATIVE CONTROL: withhold the inquiry-grain option, in src/store.mjs #findingsOutOfInquiryLead, each arm ALONE,
-   restored by sha256 AND cmp against a per-arm pristine copy (3,476,109 bytes). ARMED 2026-09-25 by REC-202's worker.
-   (W1) delete the `set_aside` entry from `item.inquiry_acts`. DECLARED MUST FAIL: "§2 SET ASIDE IS PUBLISHED", "§4 THE
+/* NEGATIVE CONTROL: withhold the inquiry-grain option, in src/store.mjs #leadInquiryActs (the doors'
+   composer, called per lead by #findingsOutOfInquiryLead), each arm ALONE, restored by sha256 AND cmp against a per-arm
+   pristine copy. ARMED 2026-09-25 by REC-202's worker on the inline form (3,476,109 bytes) and RE-ARMED on the helper
+   form (3,476,646 bytes) after the move: the same assertions failed in both.
+   (1) W1 — delete the `set_aside` entry from `item.inquiry_acts` -> DECLARED MUST FAIL: "§2 SET ASIDE IS PUBLISHED", "§4 THE
         PUBLISHED SET-ASIDE DOOR COMPLETES". MUST NOT: §1, §2 TAKE UP, §3. ACTUAL: 6 failed, the two declared plus their
         consequences (§2 agrees-with-disposition, §2 NO DECLARED GAP — `options_grain.inquiry` is derived from the doors —
         §4 left-the-list, §5 set-aside-closed); §1, §2 TAKE UP and §3 stayed green. RESTORED identical.
-   (W2) make the take-up's condition `false ? … : …` (withheld behind its closed branch). DECLARED MUST FAIL: "§2 TAKE UP
+   (2) W2 — make the take-up's condition `false ? … : …` (withheld behind its closed branch) -> DECLARED MUST FAIL: "§2 TAKE UP
         IS PUBLISHED", "§3 THE PUBLISHED TAKE-UP DOOR COMPLETES". MUST NOT: §4. ACTUAL: 4 failed, the two declared plus §3's
         basis-entry measurement and §5's take-up door; §4 stayed green. RESTORED identical.
    OVER-STRICTNESS: §5 — a member of NO project gets the take-up door (the act, not the feed, judges his position) and
