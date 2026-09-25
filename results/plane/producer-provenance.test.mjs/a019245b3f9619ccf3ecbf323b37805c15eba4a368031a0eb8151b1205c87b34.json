@@ -1,0 +1,16 @@
+{
+ "unit": "plane:producer-provenance.test.mjs",
+ "inputHash": "a019245b3f9619ccf3ecbf323b37805c15eba4a368031a0eb8151b1205c87b34",
+ "verdict": "PASS",
+ "run": "128f0b4efaf7ae19ef47ef3e6ae155dafbecccbd.1790305022677.9244.json",
+ "tree": "128f0b4efaf7ae19ef47ef3e6ae155dafbecccbd",
+ "head": "ee49cf7e951996b072ecae6495d13cefb1541a73",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b6f78efc-b83e-5a70-aead-7e06457591cc",
+ "at": "2026-09-25T02:57:02.690Z"
+}

@@ -1,0 +1,16 @@
+{
+ "unit": "plane:machinefences-dec49.test.mjs",
+ "inputHash": "5a780b25e7015cfa7ba41dbf06931af3ec7d353d7d19bf932e929b4ff58add69",
+ "verdict": "PASS",
+ "run": "128f0b4efaf7ae19ef47ef3e6ae155dafbecccbd.1790305022677.9244.json",
+ "tree": "128f0b4efaf7ae19ef47ef3e6ae155dafbecccbd",
+ "head": "ee49cf7e951996b072ecae6495d13cefb1541a73",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 836,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "b6f78efc-b83e-5a70-aead-7e06457591cc",
+ "at": "2026-09-25T02:57:02.690Z"
+}
