@@ -103,7 +103,7 @@ const ARMS = {
   "refuse-unlabelled": {
     patches: [[S, 'if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {',
                   'if (documentType !== null && documentType !== envelopeType && !pkg.replay) {']],
-    mustFail: ["OVER-STRICTNESS UNLABELLED: an action stating no laws LANDS",
+    mustFail: ["an action stating no laws LANDS",
                "OVER-STRICTNESS UNLABELLED: a project by a free name LANDS", "UNLABELLED: LANDS with surfaced_by"],
     mustPass: [...LABELLED_ALL.filter((l) => !l.includes("surfaced_by")), "UNLABELLED: refused GOVERNING_LAWS_REWRITTEN",
                "UNLABELLED: refused SURFACE_NO_RUN", "UNLABELLED: refused NAME_TAKEN"] },
