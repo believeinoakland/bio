@@ -35,6 +35,16 @@ performed by hand by the lane that owns the plan.
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
 | FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist), PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |
 
+### D-741 · queued — **op=promote ANSWERS GOVERNING_LAWS_REWRITTEN TO AN ACTION REVISION THAT SENT NOTHING READABLE (no files; no bundle.md; a blob-held bundle.md; no front-matter block): `lawsOf` returns the string "unreadable" as a VALUE and the laws fence compares it with the head's, an equality that costs nothing (CLAUDE.md §5), ahead of NO_BUNDLE_MD — a refusal naming a false cause.** Measured by D-707's worker. BOB #36 RULED 2026-09-25 12:40Z: (a) with (b) as the backstop (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+order: behind D-726, the same promote function, one worker at a time (BOB #36, 12:40Z) (SCHEDULER #24, 2026-09-25)
+milestone: M7
+interface: I3 — a different refusal code for four request shapes; the integrator classifies.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (the promote corrections), with BOB #36's 12:40Z ruling.
+depends-on: D-726 (same function; stack on its branch once integrated).
+scope: (a) promote judges READABILITY before ANY content fence: the four spellings are refused NO_BUNDLE_MD (or a front-matter-unreadable refusal if NO_BUNDLE_MD cannot honestly name all four — the builder states which), for an action as for a non-action. (b) backstop: lawsOf answers UNDETERMINED when it cannot read and the laws fence ABSTAINS on it (never refuses, never passes).
+accepts-when: each of the four spellings as an action revision gets the readability refusal and never GOVERNING_LAWS_REWRITTEN; a readable revision that rewrites the laws still does (moves: four refusals naming a false cause). NEGATIVE CONTROL: move the readability check behind the fence and the four arms fail naming GOVERNING_LAWS_REWRITTEN.
+added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, BOB #36 inbox).
+
 ### D-671 · queued — **`pdf-worker/src/pagepixels.mjs` READS `/Rotate` FROM THE LEAF PAGE ONLY, though `/Rotate` is inheritable: a page inheriting `/Rotate 270` from `/Pages` renders un-turned — CPDF-12's 8.67%-character failure.** Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF.
 order: after D-670, with the PDF corrections at the head; after D-320, which moves the same line (SCHEDULER #23, 2026-09-25)
 milestone: M2
@@ -104,6 +114,16 @@ depends-on: D-685 (the same assembly; stacked on D-684).
 scope: lift the containerExtent projection out of the wire block into one function both paths call (as textUnitsFor was, CPDF-19); a CSV's sheet list is held; an out-of-range sheet citation is refused by name.
 accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
+
+### D-742 · queued — **MEASURE, READ-ONLY: HOW MANY LIVE statement_acknowledgements WERE GIVEN ON A PAIR DRAFT (names C1 AND sets newCase) BEFORE D-720 and still sit at C1's key — C1's next signed edition would list them, a binding nobody made (Publication §3 rule 13).** The released 0.79.0 (RELEASE.json commit dd324152) already carries newCase and CASE_IDENTITY_AMBIGUOUS, so such rows can exist. BOB #36 RULED 2026-09-25 12:35Z (drained by SCHEDULER #24; cite until folded). — owner RECORD; instrument by DIST or a worker with DIST's reach.
+order: LOW, after the product rows at the backlog head (BOB #36, 12:35Z): a measurement that closes at 0 (SCHEDULER #24, 2026-09-25)
+milestone: M10
+interface: none — read-only.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (REC-194: reading A's statement is not reading B's), with BOB #36's 12:35Z ruling.
+depends-on: D-720 (its rule defines the rows; landed on its branch 8e04cbe9).
+scope: on each live instance DIST can reach (biosmoke7; name any other) count acknowledgements whose draft CURRENTLY names a case AND sets newCase, and those whose draft history shows it did at the ack's time where history records it; each a number or UNDETERMINED with its reason, in measurements/M-<n>.md. Read-only: no write; the record's counters witnessed before and after. At 0 everywhere, close; above 0, NAME the rows and bring the fix (re-key to the draft, D-720's rule retroactively) to BOB before any write.
+accepts-when: a measurement file states each instance's count or UNDETERMINED with its reason, and the before/after witness shows no write (moves: an undetermined residue). NEGATIVE CONTROL: none meaningful for a read-only count; state so.
+added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, BOB #36 inbox).
 
 ### D-737 · queued — **`casesign.control.mjs`'s HEAD DECLARES "five arms plus a baseline, and REC-130's four (e)-(h)"; the census (armdecay.mjs readDeclaredArms) reads 5 while the driver announces 10, so `m025-arm-census --only casesign.control.mjs` exits 1 (TALLY NOT AS DECLARED) on the unmodified tree — and has since rec-130 (119c9a53b1, 2026-09-18).** Found by D-640's worker, which moved m025-anchor-witness T1 off casesign for this reason. — owner RECORD (casesign's owner); test-only.
 order: with D-735 at the head of the anchor-drift group: a census that fails on an unmodified tree cannot witness a real decay (SCHEDULER #24, 2026-09-25)
@@ -1142,33 +1162,3 @@ depends-on: none.
 scope: add both to `UI_HELPERS` in `tools/status.mjs`.
 accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
 added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
-order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures).
-depends-on: REC-189 (finished; rides the train after c19-batch9).
-scope: re-run the driver and move its declared figures to 14 fences.
-accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-477 · queued — **`existed`-STYLE ANSWERS COMPUTED FROM THE DURABLE OBJECT'S SQLITE (`INSERT OR IGNORE` then `changes()`) IN `store.mjs` WERE NEVER SWEPT FOR D-469's CLASS: an answer read after the write that decides it.** — owner RECORD.
-order: with the M0 sweeps, after D-474: D-469's class may recur where no suite looks (SCHEDULER #17, 2026-09-24; D-469's worker via CONDUCT #19)
-milestone: M0 (a class sweep)
-interface: none unless a site is wrong.
-design: `docs/development/VERIFICATION.md` (a class is swept, not one site).
-depends-on: none.
-scope: enumerate every `existed`/`created`/`new` answer in `store.mjs` derived after its own write; for each, show it is read before the write or fix it; name each site in the sweep's verdict list.
-accepts-when: the verdict list names every site with its evidence, and any wrong site is fixed with a first-call arm. NEGATIVE CONTROL: for a fixed site, move the read after the write again, and its first-call arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
-order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
-milestone: M0 (the record of what is built)
-interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
-design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
-depends-on: none.
-scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
-accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
