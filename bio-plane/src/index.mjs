@@ -12789,7 +12789,7 @@ const PLANE = {
   },
 };
 
-/* D-629 / DEC-49 (C-69.3) — THE CONTROL PLANE'S OUTERMOST CATCH, which it did not have. A throw anywhere in
+/* D-629 / DEC-49 (C-69.4) — THE CONTROL PLANE'S OUTERMOST CATCH, which it did not have. A throw anywhere in
    `PLANE.fetch` reached the Workers runtime as an uncaught exception (the platform's own "error code: 1101"
    page), which is no BIO answer at all; and the pass-through route directly above relayed the store's envelope
    verbatim, which until D-629 carried the Durable Object's stack (see `storeInternalError` in store.mjs). Now a

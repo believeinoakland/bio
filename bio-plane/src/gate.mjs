@@ -146,8 +146,8 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    CONNECTION_CHOICE_CHECKS (a reference read at several places names which one is on point). MINOR and additive
    on this constant's own rule. If another branch in the same batch also moves this constant, CONDUCT takes the next
    number and re-reads the census from the d470 suite's print on the merged tree. */
-/* 1.31.0 (D-629, 2026-09-25, branch land/worker/D-629): TWO ARRIVALS, NO DEPARTURES — C-69.2 STORE_INTERNAL_ERROR
-   and C-69.3 PLANE_INTERNAL_ERROR joined DISPATCH_CHECKS (an op that threw answers a named code, never its stack).
+/* 1.31.0 (D-629, 2026-09-25, branch land/worker/D-629): TWO ARRIVALS, NO DEPARTURES — C-69.3 STORE_INTERNAL_ERROR
+   and C-69.4 PLANE_INTERNAL_ERROR joined DISPATCH_CHECKS (an op that threw answers a named code, never its stack).
    MINOR and additive on this constant's own rule; 502 -> 504, the d470 suite's own print. If another branch in the
    batch also moves this constant, CONDUCT takes the next number and re-reads the census on the union. */
 export const CATALOG_VERSION = "1.31.0";

@@ -524,7 +524,7 @@ import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
 /* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
    refusal surface whose reader is guaranteed not to be a member. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
-/* D-629 / C-69.2: the one internal-error row the outermost catch answers with (see `storeInternalError`). */
+/* D-629 / C-69.3: the one internal-error row the outermost catch answers with (see `storeInternalError`). */
 import { DISPATCH_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.mjs";
@@ -52174,7 +52174,7 @@ export class Store extends DurableObject {
   }
 }
 
-/* D-629 / DEC-49 (C-69.2) — WHAT THE STORE ANSWERS WHEN AN OP THREW, and the ONLY place it is built.
+/* D-629 / DEC-49 (C-69.3) — WHAT THE STORE ANSWERS WHEN AN OP THREW, and the ONLY place it is built.
    THE DEFECT: `Store.fetch`'s outermost catch returned `String(e && e.stack || e)` as `error`, so every
    unhandled throw on every op handed the caller this file's path, its line numbers and SQLite's constraint
    text, and the control plane relays the store's envelope verbatim on its pass-through route. The stack is

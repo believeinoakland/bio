@@ -239,7 +239,7 @@ t("and a refused claim claimed nothing — the right token still claims afterwar
 console.log("\n--- 6. the rows' `where` resolve ---");
 const regionOf = (where) => (String(where).match(/> ([a-z0-9-]+)$/) || [])[1];
 /* CORRECTED BY D-629 (2026-09-25), not exempted: this read every C-68/C-69 row's region out of `src/index.mjs`,
-   which was true while all five of D-278's rows fired in the control plane. D-629 added C-69.2
+   which was true while all five of D-278's rows fired in the control plane. D-629 added C-69.3
    (STORE_INTERNAL_ERROR), whose smallest span is in the STORE (`src/store.mjs internalAnswer`), so "in index.mjs"
    was an assumption about where the family's rows live rather than the rule. The rule is that the region is in the
    file the row's `where` names, and that is what is asserted now. */

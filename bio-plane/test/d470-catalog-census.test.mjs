@@ -401,7 +401,7 @@ const CATALOG_CENSUS = {
      Count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.30.0": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f",
               changed: ["C-41.12"] },
-  /* 1.31.0 (D-629, 2026-09-25, branch land/worker/D-629): C-69.2 STORE_INTERNAL_ERROR and C-69.3
+  /* 1.31.0 (D-629, 2026-09-25, branch land/worker/D-629): C-69.3 STORE_INTERNAL_ERROR and C-69.4
      PLANE_INTERNAL_ERROR joined DISPATCH_CHECKS. Count and digest are THIS SUITE'S PRINT on the item's tree over
      origin/main 5e8a65a8. IF ANOTHER BRANCH IN THE SAME BATCH ALSO ADDS ROWS, THIS ROW IS NOT THE UNION'S. */
   "1.31.0": { count: 504, digest: "908b2e716592d3ee40422dddef428c8cd863cccfa8326dc37792699949d490d7" },

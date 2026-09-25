@@ -150,7 +150,7 @@ try {
 
   /* MEMBER OP, STORE THROWS: the pass-through route. */
   const m = await call(`op=index&token=${MEM}`);
-  t("M1: a member op whose store throws answers 500 STORE_INTERNAL_ERROR (C-69.2) with its row",
+  t("M1: a member op whose store throws answers 500 STORE_INTERNAL_ERROR (C-69.3) with its row",
     [m.status, facts(m.j)], [500, rowFacts("STORE_INTERNAL_ERROR")]);
   t("M2: and its body carries no stack, path, line or SQLite text", tellsIn(m.text), []);
 
@@ -181,7 +181,7 @@ try {
 
   /* CONTROL PLANE THROWS, on a public op and on a member op. */
   const p1 = await call("op=bootstrap", { planeThrow: true });
-  t("P1: a PUBLIC op whose control plane throws answers 500 PLANE_INTERNAL_ERROR (C-69.3) with its row, no stack",
+  t("P1: a PUBLIC op whose control plane throws answers 500 PLANE_INTERNAL_ERROR (C-69.4) with its row, no stack",
     [p1.status, facts(p1.j), tellsIn(p1.text)], [500, rowFacts("PLANE_INTERNAL_ERROR"), []]);
   const p2 = await call(`op=index&token=${MEM}`, { planeThrow: true });
   t("P2: a MEMBER op whose control plane throws answers 500 PLANE_INTERNAL_ERROR with its row, no stack",
