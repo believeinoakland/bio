@@ -25558,6 +25558,13 @@ function pageList(pages) {
   }
   return `${pages.length === 1 ? "page" : "pages"} ` + runs.map(([a, b]) => a === b ? `${a}` : `${a}-${b}`).join(", ");
 }
+function stepCovers(step, page) {
+  if (!step || typeof step !== "object") return false;
+  const ext = extentOf(step);
+  if (ext === "all") return true;
+  if (ext === "unreadable") return false;
+  return Number.isInteger(page) && ext.includes(page);
+}
 function mergedChain(parts) {
   if (!Array.isArray(parts) || parts.length === 0) return null;
   if (parts.length === 1) {
@@ -48897,10 +48904,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
     const docs = (safeJson(f2 && f2.content) || {}).documents;
     const doc = Array.isArray(docs) ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
+    const units = [];
+    for (const u of this.sql.exec(
+      `SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND truncated=0`,
+      sha
+    )) {
+      const e = safeJson(u.extent);
+      if (e && Number.isInteger(e.page) && typeof u.text === "string") units.push({ page: e.page, text: u.text });
+    }
     return {
       held: true,
       reading: safeJson(row.reading) || {},
-      locator: doc && typeof doc.locator === "string" ? doc.locator : null
+      locator: doc && typeof doc.locator === "string" ? doc.locator : null,
+      units
     };
   }
   reextract(pkg = {}) {
@@ -82725,7 +82741,7 @@ function tier3LoopNote(loop) {
   if (!loop) return null;
   const say = [];
   if (loop.notAsked.length)
-    say.push(`${loop.notAsked.length} of them (from page ${loop.notAsked[0]}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime)`);
+    say.push(`${loop.notAsked.length} of them (from page ${loop.notAsked[0]}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
   if (loop.threw)
     say.push(`the call for page ${loop.threw.at} failed, so ${loop.threw.rest.length} page(s) from it on were not transcribed in this request`);
   if (loop.refused.length)
@@ -82740,16 +82756,50 @@ var withLoopNote = (note, loop) => {
   const extra = tier3LoopNote(loop);
   return extra ? note ? `${note}; ${extra}` : extra : note;
 };
-async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt }) {
+function tier3SeedFrom(reading, units) {
+  const chain2 = reading && Array.isArray(reading.text_source) ? reading.text_source : null;
+  if (!chain2 || checkChain(chain2) || !Array.isArray(units) || !units.length) return null;
+  const groups = /* @__PURE__ */ new Map();
+  for (const step of chain2) {
+    if (step.step !== "pixels" && step.step !== "ocr") continue;
+    const key = JSON.stringify(step.extent ?? null);
+    if (!groups.has(key)) groups.set(key, { extent: step.extent ?? null, chain: [] });
+    const { extent, ...bare } = step;
+    groups.get(key).chain.push(bare);
+  }
+  const parts = [];
+  for (const g of groups.values()) {
+    if (!g.chain.some((x) => x.step === "ocr") || checkChain(g.chain)) continue;
+    if (g.extent == null && chain2.some((x) => x.step !== "pixels" && x.step !== "ocr")) continue;
+    parts.push({ chain: g.chain, covers: (p) => stepCovers({ step: "ocr", extent: g.extent ?? void 0 }, p) });
+  }
+  const text = /* @__PURE__ */ new Map(), pagesOf = parts.map(() => []);
+  for (const u of units) {
+    if (!u || !Number.isInteger(u.page) || typeof u.text !== "string" || !(glyphCount(u.text) > 0)) continue;
+    const owners = parts.map((pt, i) => pt.covers(u.page) ? i : -1).filter((i) => i >= 0);
+    if (owners.length !== 1) continue;
+    text.set(u.page, u.text);
+    pagesOf[owners[0]].push(u.page);
+  }
+  const kept = parts.map((pt, i) => ({ chain: pt.chain, pages: pagesOf[i] })).filter((pt) => pt.pages.length);
+  return kept.length ? { parts: kept, text } : null;
+}
+async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, seed = null }) {
   let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
+  let seeded = [];
   const wanted = !!(i2text && needsTier3(i2text));
   if (i2text && needsTier3(i2text)) {
     const wantPages = tier3Pages(i2text);
     const baseTier = wiredTier;
     const baseText = i2text;
-    if (env.OCR_WORKER) {
+    const kept = seed ? wantPages.filter((p) => seed.text.has(p)) : [];
+    const askPages = wantPages.filter((p) => !kept.includes(p));
+    if (env.OCR_WORKER && kept.length && !askPages.length) {
+      seeded = kept;
+      ocrNote = `every page of this document without a text layer (${kept.length}) was already transcribed by an earlier reading of this capture, so the OCR member was not asked again`;
+    } else if (env.OCR_WORKER) {
       try {
-        const asked = await askMemberPerPage(env, { sha, storeName, wantPages });
+        const asked = await askMemberPerPage(env, { sha, storeName, wantPages: askPages });
         loop = asked.loop || null;
         const r = {
           ok: asked.status >= 200 && asked.status < 300,
@@ -82773,7 +82823,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
           const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
           if (built.ok) {
             engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
-            const m = mergeTier3Text(baseText, built.text, wantPages);
+            const m = mergeTier3Text(baseText, withKeptPages(built.text, kept, seed), wantPages);
             if (!m.ok) ocrNote = m.why;
             else {
               i2text = m.text;
@@ -82797,14 +82847,32 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
                   pages: unspoken,
                   chain: layerChainFor(baseText, { tier: baseTier, container: fmt })
                 });
-              if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
+              const keptIn = m.filled.filter((p) => kept.includes(p));
+              const fresh = m.filled.filter((p) => !kept.includes(p));
+              const t3parts = [];
+              for (const pt of [
+                ...(seed ? seed.parts : []).map((x) => ({
+                  chain: x.chain,
+                  pages: x.pages.filter((p) => keptIn.includes(p))
+                })),
+                { chain: built.chain, pages: fresh }
+              ]) {
+                if (!pt.pages.length) continue;
+                const same = t3parts.find((q) => JSON.stringify(q.chain) === JSON.stringify(pt.chain));
+                if (same) same.pages = [...same.pages, ...pt.pages].sort((a, b) => a - b);
+                else t3parts.push({ chain: pt.chain, pages: [...pt.pages] });
+              }
+              parts.push(...t3parts);
               const merged = mergedChain(parts);
               chain2 = Array.isArray(merged) ? merged : null;
               chainSet = true;
               if (m.filled.length) wiredTier = 3;
-              filled = m.filled;
+              filled = fresh;
+              seeded = keptIn;
               unanswered = m.unanswered || [];
               ocrNote = withLoopNote(tier3Note(m, built.note), loop);
+              if (keptIn.length)
+                ocrNote = `${ocrNote}; ${keptIn.length} of them were transcribed by an earlier reading of this capture and kept, not asked for again`;
             }
           } else ocrNote = withLoopNote(built.why, loop);
         }
@@ -82815,8 +82883,22 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
       ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
     }
   }
-  const stillWanting = wanted && (!filled.length || unanswered.length > 0);
-  return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, engine, stillWanting };
+  const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
+  return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, seeded, engine, stillWanting };
+}
+function withKeptPages(text, kept, seed) {
+  if (!kept.length) return text;
+  const pages = [
+    ...Array.isArray(text.pages) ? text.pages : [],
+    ...kept.map((p) => ({ page: p, text: seed.text.get(p), undetermined: [] }))
+  ].sort((a, b) => a.page - b.page);
+  const document = pages.map((p) => p.text).filter(Boolean).join("\n");
+  return {
+    ...text,
+    document,
+    pages,
+    counts: { ...text.counts || {}, chars: pages.reduce((n, p) => n + (p.text || "").length, 0) }
+  };
 }
 function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0;
@@ -84386,7 +84468,8 @@ var index_default = {
           i2text: structure.text,
           wiredTier: structureTier,
           tier2PerPage: readT2PerPage,
-          fmt: "pdf"
+          fmt: "pdf",
+          seed: tier3SeedFrom(stored, reBasis.units)
         });
         const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
         if (!t3.filled.length) {
@@ -84394,7 +84477,9 @@ var index_default = {
             performed: false,
             written: false,
             cost,
-            candidate: needsTier3(structure.text),
+            /* D-616: every image-only page already transcribed is not a candidate. Equal to
+               `needsTier3(structure.text)` whenever nothing was kept. */
+            candidate: t3.stillWanting,
             why: t3.ocrNote || "no page of this document lacks a text layer, so there is nothing for OCR to read; the engine was not called and nothing about this capture was changed"
           };
         } else {

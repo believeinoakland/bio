@@ -19697,8 +19697,19 @@ export class Store extends DurableObject {
     const docs = (safeJson(f && f.content) || {}).documents;
     const doc = Array.isArray(docs)
       ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
+    /* D-616 -- THE PAGES THIS RECORD ALREADY HOLDS TEXT FOR, so a re-read can ask the OCR member for the
+       untranscribed tail only instead of starting over from tier 1. Whole pages only: a unit the index TRUNCATED
+       (`truncated = 1`) is not the page's text and is left out, so that page is asked again rather than kept
+       short. Which of these pages a transcription produced is the READING's chain to say, not this table's;
+       the control plane asks the chain (`tier3SeedFrom`). */
+    const units = [];
+    for (const u of this.sql.exec(
+      `SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND truncated=0`, sha)) {
+      const e = safeJson(u.extent);
+      if (e && Number.isInteger(e.page) && typeof u.text === "string") units.push({ page: e.page, text: u.text });
+    }
     return { held: true, reading: safeJson(row.reading) || {},
-             locator: doc && typeof doc.locator === "string" ? doc.locator : null };
+             locator: doc && typeof doc.locator === "string" ? doc.locator : null, units };
   }
 
   reextract(pkg = {}) {
