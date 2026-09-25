@@ -26,22 +26,6 @@
    "why": "bio-plane/src/index.mjs: matches 3 times where the arm edits ONE site — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/caseflip.control.mjs",
-   "arm": "c",
-   "anchor": "      if (!r) { awaiting.push(m.bundle_id); cont",
-   "row": "D-634",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
-   "driver": "bio-plane/test/caseflip.control.mjs",
-   "arm": "f",
-   "anchor": "      if (!r) { awaiting.push(m.bundle_id); cont",
-   "row": "D-634",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/current.control.mjs",
    "arm": "8",
    "anchor": "      const q = this.#queueSharedInquiry(inq, vi",

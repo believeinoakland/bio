@@ -145,11 +145,15 @@ const ARMS = {
             + "agree, so check'). It must go RED: BETA is LEGITIMATELY at its own edition 1 inside case "
             + "edition 2, and a case that verifies must keep verifying. A fence wider than its ruling is an "
             + "undeclared contract change wearing the costume of caution",
+       /* RE-ANCHORED 2026-09-25 by D-634: the anchor quoted this line AND the `findings.push` line after it, and
+          D-442 put `const frozenHere = …` between them, so it matched 0 times and the arm never armed. It now
+          quotes the gate line alone, which occurs once in store.mjs; the edit is the same edit.
+          NEGATIVE CONTROL (D-634, 2026-09-25, arm run alone): baseline 59 passed, 0 failed; (c) 37 passed, 22 failed,
+          as declared; store.mjs restored sha256 MATCH. `tools/anchordrift.mjs` reads (c) and (f) LIVE with no allowance,
+          and reads the pre-D-634 anchor RED naming both arms. */
        apply: () => edit(STORE,
-         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,",
-         "      if (!r || Number(r.edition) !== Number(ed)) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,") },
+         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n",
+         "      if (!r || Number(r.edition) !== Number(ed)) { awaiting.push(m.bundle_id); continue; }\n") },
 
   d: { files: [STORE],
        label: "(d) RE-SLAVE THE EDITION — stamp the CASE's edition as the member's `edition:` again. This "
@@ -163,6 +167,10 @@ const ARMS = {
          '      const memberEdition = already ? Number(already.edition) : memberEditions.get(target);',
          '      const memberEdition = already ? Number(already.edition) : edition;') },
 
+  /* D-733 (2026-09-25, measured by D-634's worker): the label below says publishedcase and caseobject hold this
+     fallback. They do not: with (e) armed, publishedcase read 114 pass, 0 fail and caseobject 19 pass, 0 fail, and
+     no suite in test/ writes a roster row with a NULL pin. The method is also `#casesOfSha` now. The label is left
+     as its author wrote it until D-733 lands the fixture that makes it true. */
   e: { files: [STORE],
        label: "(e) DROP THE LEGACY FALLBACK in #caseOfSha, so a pre-CASE-3 roster row with a NULL pin "
             + "stops resolving to its case. EXPECTED GREEN HERE, and that expectation is the arm's whole "
@@ -185,11 +193,13 @@ const ARMS = {
             + "NULL pin HONESTLY and would be withdrawn by this tightening, but this fixture writes no "
             + "unpinned row, so THIS suite cannot see it. Recorded as an instrument limit rather than left "
             + "to read as a defence that held",
+       /* RE-ANCHORED 2026-09-25 by D-634, as (c) and for the same reason: D-442's `frozenHere` line split the
+          two-line anchor. Run alone (D-634, 2026-09-25): 59 passed, 0 failed, AS DECLARED. The edit lands (the anchor
+          counts 1 and the patched line counts 1), and it also stays green in publishedcase (114/0), caseobject (19/0)
+          and casepin (34/0): NO suite writes an unpinned roster row, so no instrument holds (f). That is D-733. */
        apply: () => edit(STORE,
-         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,",
-         "      if (!r || !m.version_sha) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,") },
+         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n",
+         "      if (!r || !m.version_sha) { awaiting.push(m.bundle_id); continue; }\n") },
 };
 anchorEach(ARMS, (a) => a.apply());   /* M0-197: tools/anchordrift.mjs reads the arms' anchors; a no-op otherwise */
 
