@@ -2075,8 +2075,17 @@ if(S("case-address-at-load") && !HID("case-verify")){
         does not carry the sentence rather than writing one. `draft-binding.test.mjs` drives it against the real plane
         and its control arm (D) removes the read. The old pin was right about `apiQ` and the discipline; its set
         predates the ninth read. */
-     && APIQ_CALLERS.length === 9
-     && APIQ_CALLERS.join(",") === "casedocument,instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
+     /* CORRECTED 2026-09-25 (D-712 / D-731 (a), BOB #36 11:50Z), never exempted: TEN callers. The signed case
+        document's "Verify this hash" (`pubVerifyCaseDoc`) asks `op=casedocument`, not `op=verify`, which answers only
+        for parts in the published bucket and so read a RATIFIED document as "NOT PUBLISHED". It keeps its OWN error
+        path as this sweep requires, and it is a SHAPE test: ONLY `ok` not false, `ratified: true` AND `doc_sha` equal
+        to the printed sha reads SIGNED AND HELD; a ratified document at another sha reads DIFFERENT HASH; an answer
+        with no ratified document reads NOT RATIFIED; an `ok:false` this non-throwing seam returns reads NOT ANSWERED
+        in the plane's own words; a thrown transport error reads "Could not ask". `draft-binding.test.mjs` drives it
+        against the real plane, and its arms G and H break the call and the sha comparison. The old pin was right
+        about `apiQ` and the discipline; its set predates the tenth read. */
+     && APIQ_CALLERS.length === 10
+     && APIQ_CALLERS.join(",") === "casedocument,casedocument,instancegroup,publishedcase,publishedcase,publishedmanifest,reviewcomment,reviewcopy,statementack,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the
