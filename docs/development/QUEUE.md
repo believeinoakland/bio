@@ -1010,9 +1010,9 @@ scope: classifyDivergence walks historyWriteOrder(hist.entries).entries (D-700's
 accepts-when: a divergence whose anchor was written before a later-keyed edit names the write-order anchor and intervening set (moves: a wrong anchor). NEGATIVE CONTROL: sort by key again and the write-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-700's worker).
 
-### D-719 · running — **THE BUNDLE VIEW'S HISTORY LIST (src/setup.mjs, #b-history) SORTS ENTRIES BY SNAP KEY, so a member reads a bundle's history in an order other than the one it was written in, since D-700 made write order the record's.** Found by D-700's worker. — owner UI.
+### D-719 · integrated — **THE BUNDLE VIEW'S HISTORY LIST (src/setup.mjs, #b-history) SORTS ENTRIES BY SNAP KEY, so a member reads a bundle's history in an order other than the one it was written in, since D-700 made write order the record's.** Found by D-700's worker. — owner UI.
+status: integrated — CONDUCT #23 12:29Z: worker report — tip 8ab99e48 (on D-700 50116ded), GATE 388/388 GREEN FULLREUSE (21912 assertions); setup history list in write order; no IC (served page); minted D-732; rides batch30 after D-700 (keep both 3.write-order amendments with D-718)
 order: after D-718, the same write-order field; a surface showing an order the record does not hold (SCHEDULER #24, 2026-09-25)
-status: running — SCHEDULER #24 11:47Z: spawned, stacked on land/worker/D-700 @ 50116ded (D-718 runs beside it on bio-checks.mjs)
 milestone: M7
 interface: none — reads D-700's additive `seq`.
 design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, write order, as D-700 amended it).
