@@ -28259,7 +28259,9 @@ export class Store extends DurableObject {
     const perBundle = new Map();
     for (const r of this.#rows(
       `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
-              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
+              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored,
+              (SELECT group_concat(DISTINCT cl.via) FROM captured_locators cl
+                WHERE cl.capture_sha = u.capture_sha) AS vias FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (SELECT value FROM json_each(?))
@@ -28268,7 +28270,8 @@ export class Store extends DurableObject {
       JSON.stringify(ids), JSON.stringify(ids))) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0,
+                                     direct: 0, measured: null, otherVia: new Set() });
       const e = perBundle.get(r.bundle_id);
       /* MK-1 / D-184: A MEMBER'S AUTHORED WORDS ARE NOT A CAPTURE ON THIS AXIS.
          The capture axis measures the act of reading a document in (DEC-21's
@@ -28289,6 +28292,29 @@ export class Store extends DurableObject {
       const chain = safeJson(r.chain);
       const b = captureBound(chain, EARNED_CAPTURE_CEILING);
       if (isTranscribed(chain)) e.transcribed++;
+      /* D-177 · THE PER-CAPTURE GRADE, FROM THE FETCH PATH (DEC-75: *capture grade
+         is about the fetch path*). `captured_locators.via` is the record's own
+         fact about WHO SERVED these bytes, written by the fetch that received
+         them, never by a member. A capture this instance fetched `direct` from
+         the document's address earns EXACTLY what R2-g says a direct capture
+         is worth, bounded by its chain as the ceiling is (DEC-4) — so it is
+         `b`, measured rather than authored, and it becomes the FLOOR a leg is
+         read at as well as sitting under the ceiling.
+         A capture whose only recorded source is NOT direct (an archive replay)
+         earns a letter NO RULING NAMES: op=acquire's typed archive letter is
+         open by decision (REC-50), so it contributes no floor here and its
+         route is NAMED on the entry, undetermined, never guessed. A capture
+         with NO locator row — bytes a provenance document carried, a member's
+         upload — has no recorded fetch path at all, and the entry for it is
+         byte-identical to what it was before this item. The ISSUING authority
+         (D-97's three-valued state) is not read: it gates publication, and
+         capture grade tracks directness, never who issued the document. */
+      const vias = String(r.vias || "").split(",").filter(Boolean);
+      if (vias.includes("direct")) {
+        e.direct++;
+        if (b != null) e.measured = e.measured == null ? b
+          : (BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured);
+      } else if (vias.length) e.otherVia.add(String(r.vias));  /* split once, after the scan, never per row */
       if (b == null) continue;          /* undetermined contributes no letter; `e.bound` stays null unless another capture supplies one */
       /* THE STRONGEST OVER THE DOCUMENT'S CAPTURES, which is the collapse this
          same function already makes on the connection axis ("the strongest
@@ -28441,6 +28467,39 @@ export class Store extends DurableObject {
            + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
            + `grade, and it is not a separate measurement a member can cite instead.`,
         ceiling };
+    }
+    /* D-177 · THE FETCH PATH, PUBLISHED ON THE ENTRY IT GRADES. Added ONLY where
+       the record holds a locator for one of the document's captures, so every
+       entry the record cannot say this about is byte-identical to the pre-item
+       answer (REC-88's over-strictness rule, one fact over). `earned` is the
+       MEASURED letter — the strongest a direct capture of this document supports
+       — and `#capturedAt` reads a leg at no LESS than it; the ceiling above it is
+       unchanged and still caps. A document whose only recorded route is not
+       direct gets the route NAMED and the letter UNDETERMINED, with the reason
+       in words: that value is a doctrine question (REC-50's precedent), sent to
+       Bob as D-177's residue, and inventing it here would be the ruling. */
+    for (const [bundleId, e] of perBundle) {
+      const entry = out.earned.capture[bundleId];
+      if (!entry || entry.captures === 0 || (!e.direct && !e.otherVia.size)) continue;
+      const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
+      entry.fetch = {
+        direct: e.direct, other_via: other,
+        earned: e.measured,
+        determined: e.measured != null,
+        ...(e.measured == null ? { undetermined_because: e.direct
+          ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {}),
+        why: e.measured != null
+          ? `this instance fetched ${bundleId} directly from its own address `
+            + `(${e.direct} capture(s)), so its capture grade is ${e.measured} by that fact rather than by `
+            + `a member's account: a leg on it is read at that letter, never below it.`
+          : e.direct
+          ? `this instance fetched ${bundleId} directly, but every direct capture's text is `
+            + `unmeasured, so no capture grade is measured for it.`
+          : `every capture of ${bundleId} the record holds was served by someone other than its `
+            + `publisher (${other.join(", ")}), and what such a capture earns on the capture axis is `
+            + `UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its `
+            + `author gave, under the ceiling.`,
+      };
     }
     /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
        row, added only when the caller named rows — so the answer every existing
@@ -33906,6 +33965,17 @@ export class Store extends DurableObject {
                why: earned.why
                  ?? `what this document's capture can support is undetermined, so this leg claims nothing `
                   + `on the capture axis` };
+    /* D-177: THE MEASURED FLOOR. Where the record fetched the document itself,
+       its capture grade is a FACT and not the member's account of a route, so
+       a stated letter below it is read at the route's own letter and says why. Only
+       ever from a fetch the record holds, never from the ceiling: a document whose
+       route is unrecorded or undetermined keeps the letter its author gave. */
+    const routeGrade = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    if (routeGrade != null && Store.#GRADE_RANK[stated] < Store.#GRADE_RANK[routeGrade])
+      return { grade: routeGrade,
+               why: `this instance fetched ${targetId} itself, so the record holds its capture grade at `
+                  + `${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. `
+                  + `${earned.fetch.why}`.trimEnd() };
     if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
     /* THE LETTERS ARE INTERPOLATED AND NEVER TYPED. hygiene.test.mjs detector
        (B) refuses any module spelling the capture rule's own letters beside the

@@ -512,6 +512,10 @@
    {
     "driver": "civicos-ui/test/ui104-risk-tier.control.mjs",
     "branch": "land/worker/UI-104 (c22-batch29/30 union; written before the M0-197 convention)"
+   },
+   {
+    "driver": "bio-plane/test/nc-d177.mjs",
+    "branch": "land/worker/D-177 (c22-batch30 union; written before the M0-197 convention)"
    }
   ]
  }
