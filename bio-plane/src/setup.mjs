@@ -1353,13 +1353,29 @@ $("#m-add").addEventListener("click", async ()=>{
    deserves to be told what the machine thinks they just handed it, BEFORE
    they commit it. */
 function describeKey(line){
-  const t = String(line||"").trim().split(" ").filter(function(x){ return x; });
+  const t = String(line||"").trim().split(/\\s+/).filter(function(x){ return x; });
   if (t.length < 2 || t[0] !== "ssh-ed25519" || !/^AAAA/.test(t[1]))
     return { ok:false, why:"That does not look like a public key line. It should be one line starting with ssh-ed25519." };
   const label = t.slice(2).join(" ");
   if (label === "bio-release")
     return { ok:false, why:"That is the RELEASE key, which signs software. This box wants the ratification key, the one labelled bio-ratify." };
   return { ok:true, label: label || "(no label)", fp: t[1].slice(0,16) };
+}
+/* D-605: what op=signeradd is sent for a pasted key LINE. The op takes the line's
+   base64 field alone as keyB64 (Store#signerAdd refuses anything else BAD_KEY), so
+   the line is split, as the member UI's custodial dialog splits it (D-134): the
+   second token is the key, and whatever follows it, the label, is the comment.
+   Before D-605 the whole line went as keyB64 and every registration from this
+   page was refused. Anything that is not such a line is sent as it was pasted,
+   and the plane says what it makes of it. */
+function signerAddBody(line, who){
+  const raw = String(line||"").trim();
+  const t = raw.split(/\\s+/).filter(function(x){ return x; });
+  const isLine = t.length >= 2 && t[0] === "ssh-ed25519";
+  const body = { keyB64: isLine ? t[1] : raw, memberId: String(who||"").trim().toLowerCase() };
+  const label = isLine ? t.slice(2).join(" ") : "";
+  if (label) body.comment = label;
+  return body;
 }
 $("#k-key").addEventListener("input", ()=>{
   const v = $("#k-key").value.trim();
@@ -1374,8 +1390,7 @@ $("#k-add").addEventListener("click", async ()=>{
   const e = $("#k-err"); e.textContent = "";
   const d = describeKey($("#k-key").value);
   if (!d.ok) { e.textContent = d.why; return; }
-  const r = await post("signeradd", { keyB64: $("#k-key").value.trim(),
-    memberId: $("#k-who").value.trim().toLowerCase() });
+  const r = await post("signeradd", signerAddBody($("#k-key").value, $("#k-who").value));
   if (!r.result || !r.result.ok) {
     e.textContent = r.result && r.result.reason === "BAD_KEY"
       ? "That is not a public key this system can read. Copy the whole line from the signing page."
