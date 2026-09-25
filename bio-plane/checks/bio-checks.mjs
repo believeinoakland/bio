@@ -11798,6 +11798,103 @@ export const DISPATCH_CHECKS = {
     translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
       + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
+  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
+     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
+     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
+     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
+     went silent, and whether that write took effect is exactly what a silence cannot say. */
+  STORE_DID_NOT_ANSWER: {
+    check: 'C-69.2',
+    where: 'src/index.mjs storeSilent > is-store-silent',
+    translation: 'This copy of the record could not consult its own records just now, so nothing in this reply is a '
+      + 'statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your '
+      + 'request was meant to change something, look before repeating it, because this reply cannot say whether it did.',
+  },
+};
+
+/* ===========================================================================
+   D-561 (C-98) — THE PUBLIC DOOR'S OWN REFUSALS: `op=publishedbytes` AND `op=publishedcase`.
+
+   `BIO_Publication_v0_1.md` §4 lists both as the reads a published case is served through, and both are
+   UNGATED (`classes: null`): the reader these sentences are written for is a MEMBER OF THE PUBLIC holding no
+   credential. D-549 translated NO_PUBLISHED_STORE (C-68.5); D-561 enumerated at the code every other code the
+   two ops hand an anonymous caller and found these eight bare, plus STORE_DID_NOT_ANSWER (C-69.2, above).
+
+   EVERY SENTENCE HERE IS WRITTEN FOR A STRANGER, AND THREE RULES HOLD FOR ALL OF THEM:
+     - PLAIN, no internal name: no bucket, binding, manifest key, op name or parameter spelled as code. A hash is
+       "the fingerprint"; a container is "the case file as one download"; its manifest is "the list of its
+       contents".
+     - NEVER MORE THAN THE SITE ALREADY DISCLOSES. NO_PUBLISHED_PART and NOT_PUBLISHED keep their sites' doctrine:
+       never-published and never-existed are ONE answer, and the sentence says so rather than hinting at either.
+       The other six are reached only after the thing asked for was verified PUBLISHED, which is itself a public
+       fact, so saying "it is published" discloses nothing.
+     - A CONDITION OF THIS COPY IS STATED AS ONE, with who can cure it — never as a fact about the document.
+
+   TWO CODES WERE RENAMED TO GET HERE, and that is the non-additive part of this family (I3): the public door
+   answered `NOT_FOUND` and the container `TOO_LARGE`, and both spellings are minted elsewhere in the plane for
+   DIFFERENT conditions (a capture absent from working storage, a progression version, an inbox item; a
+   subresource, a knock). `dec49Attach` decorates by code, so a row under either old spelling would have put the
+   public door's sentence on every other site's refusal — false there. One condition, one code, one row.
+   A third site that answered `NOT_FOUND` — a hash VERIFIED published whose bytes are absent — said "no published
+   part answers to that hash", which was FALSE of it; it now answers OBJECT_MISSING, the code `publishedcase`
+   already used for the same condition, minted at one shared site.
+   =========================================================================== */
+export const PUBLISHED_READ_CHECKS = {
+  NO_PUBLISHED_PART: {
+    check: 'C-98.1',
+    where: 'src/index.mjs noPublishedPart > is-no-published-part',
+    translation: 'Nothing this copy of the record has published matches that fingerprint. Something that was never '
+      + 'published and something that never existed get this same answer, so it says nothing about anything '
+      + 'unpublished. Check that the fingerprint was copied whole. Nothing was changed.',
+  },
+  OBJECT_MISSING: {
+    check: 'C-98.2',
+    where: 'src/index.mjs publishedObjectMissing > is-published-object-missing',
+    translation: 'This document is published, but this copy of the record cannot find its contents in its storage, '
+      + 'so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. '
+      + 'Whoever runs this copy can restore the missing contents.',
+  },
+  NOT_A_CONTAINER: {
+    check: 'C-98.3',
+    where: 'src/index.mjs fetch > is-not-a-container',
+    translation: 'You asked for a whole case file as one download, but that fingerprint belongs to a single '
+      + 'document inside a case file. Ask for it without the download-as-one-file option to get that document, or '
+      + 'use the fingerprint of the case file\'s list of contents to get the whole case file. Nothing was changed.',
+  },
+  MANIFEST_UNREADABLE: {
+    check: 'C-98.4',
+    where: 'src/index.mjs fetch > is-manifest-unreadable',
+    translation: 'This case file is published, but this copy of the record cannot read the list of its contents, '
+      + 'so it cannot put the case file together as one download. Nothing was changed. Whoever runs this copy can '
+      + 'repair it.',
+  },
+  PART_MISSING: {
+    check: 'C-98.5',
+    where: 'src/container.mjs containerEntries > is-part-missing',
+    translation: 'This case file is published, but this copy of the record cannot find one of the documents it '
+      + 'lists, and it will not hand over a case file with a piece missing. The reply names the missing document; '
+      + 'the others can still be asked for one at a time. Nothing was changed. Whoever runs this copy can restore it.',
+  },
+  DUPLICATE_PATH: {
+    check: 'C-98.6',
+    where: 'src/container.mjs serialiseContainer > is-duplicate-path',
+    translation: 'The list of this case file\'s contents puts two documents under the same name, so one download '
+      + 'could be read two ways. This copy will not hand over a case file that says two things about one name. '
+      + 'Each document can still be asked for on its own. Nothing was changed.',
+  },
+  CONTAINER_TOO_LARGE: {
+    check: 'C-98.7',
+    where: 'src/container.mjs serialiseContainer > is-container-too-large',
+    translation: 'This case file is too large to hand over as one download. Every document in it can still be asked '
+      + 'for on its own, which gives the same contents. Nothing was changed.',
+  },
+  NOT_PUBLISHED: {
+    check: 'C-98.8',
+    where: 'src/store.mjs publishedCase > is-not-published',
+    translation: 'Nothing this copy of the record has published answers to what you asked for. A case that was '
+      + 'never published, an edition that does not exist and a name that never existed all get this same answer, '
+      + 'so it says nothing about anything unpublished. Nothing was changed.',
+  },
 };
 
 /* ===========================================================================

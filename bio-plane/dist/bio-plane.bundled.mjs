@@ -4505,6 +4505,7 @@ __export(bio_checks_exports, {
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
+  PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
@@ -12502,6 +12503,58 @@ var DISPATCH_CHECKS = {
     check: "C-69.1",
     where: "src/index.mjs fetch > is-unknown-op",
     translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
+  },
+  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
+     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
+     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
+     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
+     went silent, and whether that write took effect is exactly what a silence cannot say. */
+  STORE_DID_NOT_ANSWER: {
+    check: "C-69.2",
+    where: "src/index.mjs storeSilent > is-store-silent",
+    translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
+  }
+};
+var PUBLISHED_READ_CHECKS = {
+  NO_PUBLISHED_PART: {
+    check: "C-98.1",
+    where: "src/index.mjs noPublishedPart > is-no-published-part",
+    translation: "Nothing this copy of the record has published matches that fingerprint. Something that was never published and something that never existed get this same answer, so it says nothing about anything unpublished. Check that the fingerprint was copied whole. Nothing was changed."
+  },
+  OBJECT_MISSING: {
+    check: "C-98.2",
+    where: "src/index.mjs publishedObjectMissing > is-published-object-missing",
+    translation: "This document is published, but this copy of the record cannot find its contents in its storage, so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. Whoever runs this copy can restore the missing contents."
+  },
+  NOT_A_CONTAINER: {
+    check: "C-98.3",
+    where: "src/index.mjs fetch > is-not-a-container",
+    translation: "You asked for a whole case file as one download, but that fingerprint belongs to a single document inside a case file. Ask for it without the download-as-one-file option to get that document, or use the fingerprint of the case file's list of contents to get the whole case file. Nothing was changed."
+  },
+  MANIFEST_UNREADABLE: {
+    check: "C-98.4",
+    where: "src/index.mjs fetch > is-manifest-unreadable",
+    translation: "This case file is published, but this copy of the record cannot read the list of its contents, so it cannot put the case file together as one download. Nothing was changed. Whoever runs this copy can repair it."
+  },
+  PART_MISSING: {
+    check: "C-98.5",
+    where: "src/container.mjs containerEntries > is-part-missing",
+    translation: "This case file is published, but this copy of the record cannot find one of the documents it lists, and it will not hand over a case file with a piece missing. The reply names the missing document; the others can still be asked for one at a time. Nothing was changed. Whoever runs this copy can restore it."
+  },
+  DUPLICATE_PATH: {
+    check: "C-98.6",
+    where: "src/container.mjs serialiseContainer > is-duplicate-path",
+    translation: "The list of this case file's contents puts two documents under the same name, so one download could be read two ways. This copy will not hand over a case file that says two things about one name. Each document can still be asked for on its own. Nothing was changed."
+  },
+  CONTAINER_TOO_LARGE: {
+    check: "C-98.7",
+    where: "src/container.mjs serialiseContainer > is-container-too-large",
+    translation: "This case file is too large to hand over as one download. Every document in it can still be asked for on its own, which gives the same contents. Nothing was changed."
+  },
+  NOT_PUBLISHED: {
+    check: "C-98.8",
+    where: "src/store.mjs publishedCase > is-not-published",
+    translation: "Nothing this copy of the record has published answers to what you asked for. A case that was never published, an edition that does not exist and a name that never existed all get this same answer, so it says nothing about anything unpublished. Nothing was changed."
   }
 };
 var KNOCK_CHECKS = {
@@ -16991,18 +17044,26 @@ function serialiseContainer(entries, { maxBytes = CONTAINER_MAX_BYTES } = {}) {
   const seen = /* @__PURE__ */ new Set();
   let total = 0;
   for (const e of entries) {
-    if (seen.has(e.name)) return { ok: false, reason: "DUPLICATE_PATH", path: e.name };
+    if (seen.has(e.name)) {
+      return {
+        ok: false,
+        reason: "DUPLICATE_PATH",
+        path: e.name,
+        detail: "two parts in this container claim one path, so an archive of it would say two things about one name. Each part is still answerable individually by hash."
+      };
+    }
     seen.add(e.name);
     total += e.bytes.length + enc.encode(e.name).length * 2 + 76;
   }
-  if (total > maxBytes)
+  if (total > maxBytes) {
     return {
       ok: false,
-      reason: "TOO_LARGE",
+      reason: "CONTAINER_TOO_LARGE",
       bytes: total,
       maxBytes,
       detail: "this container is larger than the plane will serialise in one response. Its parts remain individually answerable by hash at op=publishedbytes, which is the same material by the same mechanism."
     };
+  }
   const chunks = [];
   const central = [];
   let offset = 0;
@@ -17094,13 +17155,15 @@ async function containerEntries(manifest, manifestBytes, read) {
     if (!part || typeof part.path !== "string" || typeof part.sha256 !== "string") continue;
     if (part.path === layout.manifestAt) continue;
     const bytes = await read(part.sha256);
-    if (!bytes) return {
-      ok: false,
-      reason: "PART_MISSING",
-      path: part.path,
-      sha256: part.sha256,
-      detail: "a part named in the manifest is not in the published object store, so this container cannot be assembled whole. Its other parts are still answerable individually by hash."
-    };
+    if (!bytes) {
+      return {
+        ok: false,
+        reason: "PART_MISSING",
+        path: part.path,
+        sha256: part.sha256,
+        detail: "a part named in the manifest is not in the published object store, so this container cannot be assembled whole. Its other parts are still answerable individually by hash."
+      };
+    }
     entries.push({ name: layout.root + part.path, bytes });
   }
   return { ok: true, entries, layout };
@@ -66521,12 +66584,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         }
       }
     }
-    if (!state)
+    if (!state) {
       return {
         ok: false,
         reason: "NOT_PUBLISHED",
         detail: "no published edition answers to that. A case that was never published, an edition that does not exist and an id that never existed are one answer here, because the published projection is the only thing this read can see."
       };
+    }
     const editions = theCase ? this.#rows(
       `SELECT edition, ratified_at, manifest_sha FROM published_cases WHERE case_id=? ORDER BY edition`,
       theCase
@@ -83227,7 +83291,15 @@ async function captureRequestArm(env, storeName, body, cls) {
     render: d.render === true
   };
 }
-var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+function storeSilent(op) {
+  return json({
+    ok: false,
+    reason: "STORE_DID_NOT_ANSWER",
+    ...dispatchRow("STORE_DID_NOT_ANSWER"),
+    op,
+    detail: STORE_SILENT_DETAIL
+  }, 502);
+}
 var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
 var MEMBER_VERSION_WAIT_MS = 4e3;
 async function memberVersions(env) {
@@ -83408,6 +83480,29 @@ function publishedStoreAbsent(env) {
   if (typeof env.PUBLISHED?.get === "function") return null;
   const row = installationRow("NO_PUBLISHED_STORE");
   return { ok: false, reason: "NO_PUBLISHED_STORE", code: row.code, check: row.check, translation: row.translation };
+}
+var publishedReadRow = (code) => {
+  const row = PUBLISHED_READ_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`publishedReadRow: ${code} has no PUBLISHED_READ_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member of the public.`);
+  return { code, check: row.check, translation: row.translation };
+};
+function noPublishedPart(sha2562) {
+  return json({
+    ok: false,
+    reason: "NO_PUBLISHED_PART",
+    ...publishedReadRow("NO_PUBLISHED_PART"),
+    sha256: sha2562,
+    detail: "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."
+  }, 404);
+}
+function publishedObjectMissing() {
+  return {
+    ok: false,
+    reason: "OBJECT_MISSING",
+    ...publishedReadRow("OBJECT_MISSING"),
+    detail: "that hash is published, and this instance's published store holds no bytes for it, so they cannot be handed over. The hash is genuine."
+  };
 }
 var StoreSilent = class extends Error {
   constructor(op) {
@@ -84365,13 +84460,7 @@ var index_default = {
           const vOut = await doAnswer(stub2.fetch(`http://do/verify?sha256=${shaParam}`));
           if (!vOut.answered) return storeSilent("publishedbytes");
           const v = vOut.result;
-          const notFound = () => json({
-            ok: false,
-            reason: "NOT_FOUND",
-            sha256: shaParam,
-            detail: "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."
-          }, 404);
-          if (!v || !v.published) return notFound();
+          if (!v || !v.published) return noPublishedPart(shaParam);
           const storeAbsent = publishedStoreAbsent(env);
           if (storeAbsent)
             return json({
@@ -84381,15 +84470,17 @@ var index_default = {
             }, 503);
           const wantZip = (url.searchParams.get("format") || "") === "zip";
           const isManifest = v.matches.some((m) => m.kind === "manifest");
-          if (wantZip && !isManifest)
+          if (wantZip && !isManifest) {
             return json({
               ok: false,
               reason: "NOT_A_CONTAINER",
+              ...publishedReadRow("NOT_A_CONTAINER"),
               sha256: shaParam,
               detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. This hash names a part inside a container, not a container."
             }, 400);
+          }
           const raw = await pubBytes(shaParam);
-          if (!raw) return notFound();
+          if (!raw) return json({ ok: false, ...publishedObjectMissing(), sha256: shaParam }, 404);
           if (!wantZip) {
             const m = v.matches[0] || {};
             return new Response(raw, { status: 200, headers: {
@@ -84409,8 +84500,14 @@ var index_default = {
           } catch {
             manifest = null;
           }
-          if (!manifest || typeof manifest !== "object")
-            return json({ ok: false, reason: "MANIFEST_UNREADABLE", sha256: shaParam }, 500);
+          if (!manifest || typeof manifest !== "object") {
+            return json({
+              ok: false,
+              reason: "MANIFEST_UNREADABLE",
+              ...publishedReadRow("MANIFEST_UNREADABLE"),
+              sha256: shaParam
+            }, 500);
+          }
           const built = await containerEntries(manifest, raw, pubBytes);
           if (!built.ok) return json({ ok: false, ...built }, 409);
           const zip = serialiseContainer(built.entries);
@@ -84447,7 +84544,7 @@ var index_default = {
           const md = await pubBytes(fnd.bundle_sha);
           const text = md ? new TextDecoder().decode(md) : null;
           const fm = text ? parseFrontmatter(text).data || {} : null;
-          const { ok: _refused, ...whyUnavailable } = text ? {} : publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" };
+          const { ok: _refused, ...whyUnavailable } = text ? {} : publishedStoreAbsent(env) ?? publishedObjectMissing();
           const body2 = text ? {
             state: "published",
             from_sha: fnd.bundle_sha,

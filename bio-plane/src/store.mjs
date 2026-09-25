@@ -39418,11 +39418,17 @@ export class Store extends DurableObject {
         if (st) { theCase = null; ed = r.edition; state = st; }
       }
     }
-    if (!state)
+    /* D-561 (C-98.8): THE CODE CARRIES ITS CANNED TRANSLATION, attached on the wire by the control plane's
+       `json()` (`dec49Attach`, by code), so the return below is BYTE-IDENTICAL: civicos-ui's
+       preauth-vocabulary suite reads this sentence out of this file by its exact shape. */
+    if (!state) {
+      /* DEC-49 REGION is-not-published */
       return { ok: false, reason: "NOT_PUBLISHED",
                detail: "no published edition answers to that. A case that was never published, an edition "
                      + "that does not exist and an id that never existed are one answer here, because the "
                      + "published projection is the only thing this read can see." };
+      /* END DEC-49 REGION is-not-published */
+    }
 
     /* Every edition of this CASE, so a reader holding an older one learns that a
        newer one exists WITHOUT this surface deciding on their behalf that the

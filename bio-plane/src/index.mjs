@@ -69,7 +69,10 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          caseDocumentStatesMemberBlocks,
          /* D-513: the doorbell's own family, read AS A VALUE by the three governed
             helpers below — the rows that give an anonymous knocker a sentence. */
-         KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+         KNOCK_CHECKS,
+         /* D-561 / C-98: the public door's own family, read AS A VALUE by the
+            governed helpers of op=publishedbytes and op=publishedcase. */
+         PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -4025,8 +4028,17 @@ async function captureRequestArm(env, storeName, body, cls) {
    is the store BEHIND it, which is precisely the distinction this refusal
    exists to draw. `op` is named so an operator reading a log knows which read
    went silent without the answer implying anything about what it was reading. */
-const storeSilent = (op) =>
-  json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+/* D-561 (C-69.2): THE CODE IS NOW A STRING LITERAL AT THIS SITE and carries its canned translation, because every
+   public read meets this refusal and its reader is often a member of the public. `STORE_SILENT_REASON` still names
+   the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
+   (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
+   spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
+function storeSilent(op) {
+  /* DEC-49 REGION is-store-silent */
+  return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
+                op, detail: STORE_SILENT_DETAIL }, 502);
+  /* END DEC-49 REGION is-store-silent */
+}
 
 /* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
  *
@@ -4479,6 +4491,42 @@ function publishedStoreAbsent(env) {
   const row = installationRow("NO_PUBLISHED_STORE");
   return { ok: false, reason: "NO_PUBLISHED_STORE", code: row.code, check: row.check, translation: row.translation };
   /* END DEC-49 REGION is-published-store-absent */
+}
+
+/* D-561 / C-98: the public door's row reader, `installationRow`'s shape and its refusal to invent. */
+const publishedReadRow = (code) => {
+  const row = PUBLISHED_READ_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`publishedReadRow: ${code} has no PUBLISHED_READ_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member of the public.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* D-561 (C-98.1): NO PUBLISHED PART ANSWERS TO THAT HASH, at `publishedbytes`. It answered `NOT_FOUND` until
+ * D-561, a code the plane also mints for three other conditions, so no row could be written for it without
+ * putting this sentence on theirs. `detail` is the site's own sentence, BYTE-IDENTICAL to what it said before:
+ * a hash that was never ratified and a hash that never existed stay ONE answer, and the translation keeps that. */
+function noPublishedPart(sha256) {
+  /* DEC-49 REGION is-no-published-part */
+  return json({ ok: false, reason: "NO_PUBLISHED_PART", ...publishedReadRow("NO_PUBLISHED_PART"), sha256,
+    detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
+          + "never existed are the same answer here, deliberately." }, 404);
+  /* END DEC-49 REGION is-no-published-part */
+}
+
+/* D-561 (C-98.2): A PUBLISHED HASH WHOSE BYTES THIS COPY'S STORE DOES NOT HOLD — the store bound and the object
+ * absent. ONE condition met at both public ops: `publishedcase` states one finding's body unavailable with it
+ * (D-549 left it bare there), and `publishedbytes` refuses with it where it used to answer `NOT_FOUND` with the
+ * sentence "no published part answers to that hash" — FALSE of a hash the line above had just verified published.
+ * Returns the refusal OBJECT so each site chooses its envelope; `NO_PUBLISHED_STORE` is the other condition and
+ * is never this one. */
+function publishedObjectMissing() {
+  /* DEC-49 REGION is-published-object-missing
+   * THE SPAN C-98.2 names: its one mint, the code a STRING LITERAL at its site, the row's fields beside it. */
+  return { ok: false, reason: "OBJECT_MISSING", ...publishedReadRow("OBJECT_MISSING"),
+           detail: "that hash is published, and this instance's published store holds no bytes for it, so "
+                 + "they cannot be handed over. The hash is genuine." };
+  /* END DEC-49 REGION is-published-object-missing */
 }
 
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
@@ -6301,10 +6349,8 @@ export default {
           const vOut = await doAnswer(stub.fetch(`http://do/verify?sha256=${shaParam}`));
           if (!vOut.answered) return storeSilent("publishedbytes");
           const v = vOut.result;
-          const notFound = () => json({ ok: false, reason: "NOT_FOUND", sha256: shaParam,
-            detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
-                  + "never existed are the same answer here, deliberately." }, 404);
-          if (!v || !v.published) return notFound();
+          /* D-561: NO_PUBLISHED_PART (C-98.1) from its one governed site; it was `NOT_FOUND`. */
+          if (!v || !v.published) return noPublishedPart(shaParam);
           /* D-549: the code, its check and its canned translation come from the ONE governed site;
              `detail` is this site's own sentence, byte-identical to what it said before. */
           const storeAbsent = publishedStoreAbsent(env);
@@ -6320,12 +6366,18 @@ export default {
              serving the part instead. */
           const wantZip = (url.searchParams.get("format") || "") === "zip";
           const isManifest = v.matches.some((m) => m.kind === "manifest");
-          if (wantZip && !isManifest)
-            return json({ ok: false, reason: "NOT_A_CONTAINER", sha256: shaParam,
+          if (wantZip && !isManifest) {
+            /* DEC-49 REGION is-not-a-container
+             * D-561 (C-98.3): the code a STRING LITERAL here, its translation from its row. */
+            return json({ ok: false, reason: "NOT_A_CONTAINER", ...publishedReadRow("NOT_A_CONTAINER"), sha256: shaParam,
               detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. "
                     + "This hash names a part inside a container, not a container." }, 400);
+            /* END DEC-49 REGION is-not-a-container */
+          }
           const raw = await pubBytes(shaParam);
-          if (!raw) return notFound();
+          /* D-561: VERIFIED published above and absent from a bound store — OBJECT_MISSING (C-98.2), never the
+             "no published part answers" sentence, which is false of this hash. */
+          if (!raw) return json({ ok: false, ...publishedObjectMissing(), sha256: shaParam }, 404);
           if (!wantZip) {
             const m = v.matches[0] || {};
             return new Response(raw, { status: 200, headers: {
@@ -6339,8 +6391,13 @@ export default {
           }
           let manifest = null;
           try { manifest = JSON.parse(new TextDecoder().decode(raw)); } catch { manifest = null; }
-          if (!manifest || typeof manifest !== "object")
-            return json({ ok: false, reason: "MANIFEST_UNREADABLE", sha256: shaParam }, 500);
+          if (!manifest || typeof manifest !== "object") {
+            /* DEC-49 REGION is-manifest-unreadable
+             * D-561 (C-98.4): the code a STRING LITERAL here, its translation from its row. */
+            return json({ ok: false, reason: "MANIFEST_UNREADABLE", ...publishedReadRow("MANIFEST_UNREADABLE"),
+                          sha256: shaParam }, 500);
+            /* END DEC-49 REGION is-manifest-unreadable */
+          }
           const built = await containerEntries(manifest, raw, pubBytes);
           if (!built.ok) return json({ ok: false, ...built }, 409);
           const zip = serialiseContainer(built.entries);
@@ -6420,12 +6477,12 @@ export default {
           const fm = text ? (parseFrontmatter(text).data || {}) : null;
           /* D-549: WHICH CODE UNDER WHICH CONDITION, when the bytes are unavailable. No published store
              bound -> NO_PUBLISHED_STORE, with its check and canned translation, from its one governed
-             site. A store bound and no object at this finding's hash -> OBJECT_MISSING, a bare code as
-             before (untranslated, and counted so by check-refusal-codes). The two never share a site
-             again. The helper's `ok: false` is dropped here: this is one finding's body stated
-             unavailable inside a case that answered, not a refusal of the request. */
+             site. A store bound and no object at this finding's hash -> OBJECT_MISSING, since D-561 with
+             its own check and canned translation (C-98.2) from ITS one governed site, shared with
+             publishedbytes. The two never share a site again. Each helper's `ok: false` is dropped here:
+             this is one finding's body stated unavailable inside a case that answered, not a refusal. */
           const { ok: _refused, ...whyUnavailable } = text ? {}
-            : (publishedStoreAbsent(env) ?? { reason: "OBJECT_MISSING" });
+            : (publishedStoreAbsent(env) ?? publishedObjectMissing());
           const body = text
             ? { state: "published", from_sha: fnd.bundle_sha,
                 question: sectionText(text, "## Question"),

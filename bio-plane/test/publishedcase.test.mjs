@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (D-561's three arms on C-98, RUN 2026-09-25 by WORKER D-561, each armed ALONE in checks/bio-checks.mjs and restored to sha256 a521a6b7… (1,012,904 B), cmp-identical to a uniquely-named per-arm pristine copy; BASELINE 128 pass, 0 fail) (A) THE ROW'S NAMED ARM — PART_MISSING's translation stripped (`'' && '…'`) -> 126/2, EXACTLY as declared: "D-561 PART_MISSING: the manifest names a part the store does not hold" and the C-98 fixture floor, nothing else; the wire's translation is graded against the imported row AND as a non-empty string, because a stripped row and a stripped wire agree for free. (B) OBJECT_MISSING's translation stripped -> fails by name at "D-561 OBJECT_MISSING: a published hash whose bytes this copy's store does not hold" and the fixture floor, and then the suite DIES before its foot (tally -1): `publishedReadRow` throws on a row with no sentence (its refusal to invent), the Worker answers a non-JSON 500, and the next `anonCase` cannot parse it. Declared as failing; the crash is recorded rather than smoothed — the helper's throw is the design (a code with no sentence must not reach a stranger), and the arm the row names is (A). (C) OVER-STRICTNESS — CONTAINER_TOO_LARGE's translation reworded as a question with an em-dash, wording nothing here wrote -> 128/0 GREEN, because every arm reads the row, never a copy. */
 /* NEGATIVE CONTROL: (D-549's three arms on C-68.5, RUN 2026-09-24, each broken ALONE in src/index.mjs and restored to sha256 c32b52cc… (835,824 B), cmp-identical to a uniquely-named per-arm pristine copy; 114 pass, 0 fail when whole) (1) THE ROW'S NAMED ARM — publishedbytes' site mints the code as a literal again (the helper's spread replaced by the bare reason) -> 113/1, the ONE-SITE pin alone. DECLARED AND MEASURED: the wire stays translated, because json() decorates every top-level refusal with its catalogue row by code (dec49Attach, D-262), so no driven arm can see a second site; AND check-refusal-codes STAYS GREEN (exit 0): the row declared it would name the second site, and it cannot — its multi-site partition counts only UNTRANSLATED codes, so a translated code minted twice is invisible to it. That instrument is D-550's, not this item's. (2) publishedcase's ternary restored (the code minted beside the missing-object code again) -> 112/2, the one-site pin and (ii) publishedcase's check-and-translation arm; guard green, as (1). (3) THE CONDITION'S OTHER DIRECTION — publishedcase's site asks an empty env, so a BOUND store missing one object is answered as if unbound -> 112/2, both (i) arms (the code, and the store-absent sentence that would be false there); (ii) and the pin green. A FIRST DRAFT OF ARM 3, recorded rather than smoothed: dropping the helper's condition broke publishedbytes for every caller and the suite died with a TypeError at the manifest block before reaching this block (tally -1) — too broad an arm, narrowed to the one site. */
 /* NEGATIVE CONTROL: (REC-117's arm on THIS surface, RUN 2026-09-17, broken alone and restored byte-identical by sha256 AND cmp; 105 pass, 0 fail when whole): THE PUBLISHED SURFACE GOES SILENT — in src/index.mjs the publishedcase `authored` block, replace the `falsifier_override:` expression with a bare `null` -> 104 pass, 1 FAIL at "REC-117: and it STATES the override beside it, naming the member and the date — the published record is where Bob said this must be visible". The conclude suite stays 68/0 under this arm, which is exactly why the published surface needs an arm of its own: a finding can conclude correctly and still reach a reader with the condition stripped out, and that is a silent override on the one surface where silence costs most. OVER-STRICTNESS, in the block itself: the ordinary case published at the top of this suite states a real falsifier and NOTHING about its answer moves — its falsifier is served verbatim and its override reads PRESENT-AND-NULL, never absent, because a renderer telling the two cases apart by a missing key would be inferring the condition this item exists to state. */
 /* NEGATIVE CONTROL: (REC-22's three arms, each broken ALONE and restored; 72 pass when whole; ALL RUN 2026-08-04, rec22-agent, and the numbers below are what they MEASURED) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 70 pass, 2 FAIL: the object PLANTED in the published bucket that no published_shas row names STREAMS 200 to an anonymous caller and the assertion reports the working capture's own sha where it wanted a 404. NOTE WHAT ELSE THIS MEASURED, because it is the reason block 3 has an adversary in it at all: "a working capture that was never ratified is not reachable" STILL PASSES under the broken guard, because the working corpus lives under <store>/captures/ and the published corpus under <store>/published/ — the key is not there to fetch. BUILD-ORDER's wording ("a working-corpus capture sha streams") is therefore unreachable by removing the guard alone, and what the guard actually defends is anything in the published bucket that ratification did not put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 69 pass, 3 FAIL: the published child names NEITHER its parent NOR its sibling, because the store's restriction then drops both (neither is published) — R4's disclosure vanishes from the exact surface R4 was written for, which is RECONCILED R4-e reproduced. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 71 pass, 1 FAIL naming all three working targets admitted as SERVE edges, the terminal parent among them (supersedes -> INQ-...-mixed): the published graph starts asserting it can serve material that was never published. (b2) FAILED TO FAIL ON THE FIRST RUN and that is why unresolved[] exists: serves[] was empty either way, so "every served edge names a published edition" passed on an empty list — an outcome that costs nothing to produce. The store now REPORTS an edge it classified servable and cannot resolve instead of dropping it, and the control bites. Restore after each. (d) UI-40 / IC-22, RUN 2026-08-05 by ui40-agent — `opened` RESTORED TO THE PUBLISHED SHAPE: put `opened: state.opened,` back into `Store.publishedCase()`'s success return in src/store.mjs -> 77 pass, 1 FAIL, naming it ("IC-22: `opened` is NOT PUBLISHED — removed from the answer, not blanked (the key is absent)"). THE ASSERTION IS `"opened" in c` AND NOT A VALUE COMPARISON, deliberately: `c.opened === undefined` is true of an answer that never carried the key AND of one carrying it set to undefined, so a value test cannot tell REMOVED from BLANKED, which is the entire distinction REC-41's form of removal rests on. It is also driven THROUGH THE OP rather than against source, because index.mjs answers `{ok:true, ...c, findings, verification}` — a SPREAD — so the field reached the wire without the control plane ever naming it and a source-level grep would have proved nothing. civicos-ui/test/publishedcase.test.mjs catches the same restoration independently at the surface (225 pass, 1 fail). src/store.mjs restored byte-identically, sha256 795d4f27… compared before and after. (M0-11, 2026-08-08, m011-loose-branch) BLOCK 8 — `#looseEditionState`, the LOOSE branch, driven through the op for the first time in this battery. FIVE ARMS, EACH RUN ALONE against a pristine `src/store.mjs` with the others held open, plus a BASELINE row that ran with NO patch at all so six-arms-failing-for-the-wrong-reason is distinguishable from six arms working; the harness printed each arm's ARMED state and its patch-match count, and restored the file after every arm against a PRE-ARM COPY NAMED PER ARM, verified by sha256 AND by `cmp` (final store.mjs sha256 64948896d038… identical to pristine). BASELINE ROW: 123/123 green, 7,774 assertions, publishedcase 100 pass, `civicos-ui` harness exit 0. (e) THE LOOSE BRANCH IS SWITCHED OFF — in `Store.publishedCase()` replace `if (st) { theCase = null; ed = r.edition; state = st; }` with `if (false) { … }` -> 85 pass, 15 FAIL, headed by "the LOOSE branch is REACHED THROUGH THE OP by an anonymous caller, and it ANSWERS". AND THIS ARM CARRIES THE MEASUREMENT THE ITEM EXISTS FOR: the `civicos-ui` harness stayed GREEN (exit 0) all the way through it, because the surface asserts this shape against a MOCK — so before block 8, switching this branch off turned NOTHING RED ANYWHERE IN THE REPOSITORY, which is sharper than the item's own premise that "today only the UI harness would". THE FIRST RUN OF THIS ARM ALSO FOUND A DEFECT IN BLOCK 8 ITSELF and it is recorded rather than smoothed: `c.findings.length` on the refusal threw a TypeError, the module died at the first assertion, and the battery reported `assertions unknown` — a crash NAMES NOTHING, and the acceptance is that the plane's own battery fails NAMING the branch. The block now reads defensively and the same arm reports 15 named failures with the suite reaching its own foot. (f) THE BRANCH MANUFACTURES A SCOPE — in `#looseEditionState` set `scope: "the ratified bytes and everything they touch"` -> 99 pass, 1 FAIL naming it ("it manufactures NO case identity, NO scope, NO completeness and NO bias acknowledgement"), which is D-187's conflation arriving one level down. (g) THE SUCCESS RETURN SPREADS THE STATE — add `...state,` to `publishedCase()`'s success return -> THREE PLANE SUITES catch it independently: publishedcase 97 pass / 3 FAIL (the key-set arm, the dropped-sentence arm, and IC-22's own), case-opened 25/3 and multifinding 73/1 — AND the `civicos-ui` harness at exit 1, the one arm of the five the surface does catch. (h) OVER-STRICTNESS I — the loose state's own `detail` sentence rewritten in wording nothing in this suite wrote -> 123/123 GREEN at 7,774, UI exit 0. That arm is also the FINDING's own control: the sentence reaches no caller, so rewriting it moves nothing anywhere. (i) OVER-STRICTNESS II — the PUBLISHED keys REORDERED in the success return, `bias_acknowledgement` ahead of `caseId`, same key set and same values, nothing changed on the wire -> block 8 stays at 100 pass, because the key set is compared SORTED and not as a sequence. The arm's measurement is that `case-opened.test.mjs` (25/3) and the UI's mock-envelope check go RED on a purely cosmetic reorder: REC-58's anchor is order-sensitive and reports its return as NOT FOUND, which is the SAFE direction — an anchor refusing to read what it cannot locate rather than passing on an empty slice — and it is DELEGATED rather than changed here. */
@@ -72,7 +73,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { INSTALLATION_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5, read from the row, never a hand copy */
+import { INSTALLATION_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5; D-561: C-98 — read from the rows, never a hand copy */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* D-431: the loose branch's bundle is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
@@ -499,8 +500,10 @@ console.log("\n--- 3. op=publishedbytes: answer by hash, never by path, and the 
   const never = sha("a document this instance has never seen");
   const [a, b] = [await anonBytes(`sha256=${WORKING_SHA}`), await anonBytes(`sha256=${never}`)];
   const [aj, bj] = [await a.json(), await b.json()];
+  /* CORRECTED by D-561, not exempted: this refusal's code was `NOT_FOUND`, minted elsewhere in the plane for other
+     conditions and so untranslatable; it is NO_PUBLISHED_PART (C-98.1), same status, same sentence. */
   t("a WORKING capture that was never ratified is not reachable",
-    [a.status, aj.reason], [404, "NOT_FOUND"]);
+    [a.status, aj.reason], [404, "NO_PUBLISHED_PART"]);
   t("and it answers IDENTICALLY to a hash that never existed — status and body, sha aside",
     [a.status === b.status, JSON.stringify({ ...aj, sha256: "X" }) === JSON.stringify({ ...bj, sha256: "X" })],
     [true, true]);
@@ -531,7 +534,8 @@ console.log("\n--- 3. op=publishedbytes: answer by hash, never by path, and the 
   };
   const planted = await readAnswer(await anonBytes(`sha256=${WORKING_SHA}`));
   t("an object in the PUBLISHED bucket that no published_shas row names is STILL not servable",
-    [planted.status, planted.reason, planted.served], [404, "NOT_FOUND", null]);
+    /* CORRECTED by D-561: NO_PUBLISHED_PART, was NOT_FOUND (see block 3's first arm). */
+    [planted.status, planted.reason, planted.served], [404, "NO_PUBLISHED_PART", null]);
   t("the table is the authority on what was published; the bucket only holds what somebody put there",
     planted.detail?.includes("never existed are the same answer") ?? planted.served, true);
 }
@@ -1102,6 +1106,101 @@ console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifi
     [("falsifier_override" in oAu), oAu.falsifier_override], [true, null]);
 }
 
+/* D-561 / C-98 — EVERY REFUSAL THE PUBLIC DOOR HANDS A STRANGER CARRIES ITS CANNED TRANSLATION, DRIVEN THROUGH THE OP.
+   D-561 enumerated at the code every code `op=publishedbytes` and `op=publishedcase` return to a caller holding no
+   credential that had no row: EIGHT here (C-98.1..8) and STORE_DID_NOT_ANSWER (C-69.2, driven in plane-envelope,
+   the suite that can make the store fail). Each arm below is a stranger's request, and each is graded against the
+   IMPORTED row — code, check and translation — never a copy. The failures that need a damaged copy are made by
+   tampering with the PUBLISHED bucket's bytes only (the record's rows are never touched), and every tampered object
+   is put back and the untouched container re-served byte-identical at the end: the over-strictness arm, a genuine
+   container must still serialise after all of this. Runs before D-549's block, which unbinds the store. */
+console.log("\n--- D-561: C-98, the public door's refusals, each translated, as a stranger ---");
+{
+  const bucket = await mf.getR2Bucket("PUBLISHED");
+  const got = async (r) => { const status = r.status; let body = {};
+    try { body = await r.json(); } catch { body = {}; } return { status, body }; };
+  /* One grading function, so every arm asks the same four things of the wire. */
+  /* The last element is NOT redundant with the row comparison: a row whose translation was stripped would make the
+     wire and the row agree on NOTHING for free — the equality that costs nothing (CLAUDE.md §5). */
+  const graded = (label, ans, status, code) => {
+    const row = PUBLISHED_READ_CHECKS[code] || {};
+    t(`D-561 ${code}: ${label} — ${status}, the code, ${row.check}'s check and its canned translation`,
+      [ans.status, ans.body.reason, ans.body.code, ans.body.check, ans.body.translation,
+       typeof ans.body.translation === "string" && ans.body.translation.length > 60],
+      [status, code, code, row.check, row.translation, true]);
+  };
+  /* THE FIXTURE FLOOR: every C-98 row exists with a non-empty translation, so no arm below can pass on an empty row. */
+  t("D-561 fixture: C-98 holds eight rows, each with a check and a translation",
+    Object.entries(PUBLISHED_READ_CHECKS).map(([k, r]) => [k, /^C-98\.\d$/.test(r.check), (r.translation || "").length > 60]),
+    ["NO_PUBLISHED_PART", "OBJECT_MISSING", "NOT_A_CONTAINER", "MANIFEST_UNREADABLE", "PART_MISSING",
+     "DUPLICATE_PATH", "CONTAINER_TOO_LARGE", "NOT_PUBLISHED"].map((k) => [k, true, true]));
+
+  /* Each row's check id PINNED as a literal, so the coverage register sees every C-98 check named by an assertion. */
+  t("D-561: each public-door code holds its own check id — C-98.1 to C-98.8",
+    Object.fromEntries(Object.entries(PUBLISHED_READ_CHECKS).map(([k, r]) => [k, r.check])),
+    { NO_PUBLISHED_PART: "C-98.1", OBJECT_MISSING: "C-98.2", NOT_A_CONTAINER: "C-98.3", MANIFEST_UNREADABLE: "C-98.4",
+      PART_MISSING: "C-98.5", DUPLICATE_PATH: "C-98.6", CONTAINER_TOO_LARGE: "C-98.7", NOT_PUBLISHED: "C-98.8" });
+  graded("a hash nothing published answers to", await got(await anonBytes(`sha256=${sha("D-561 never published")}`)),
+    404, "NO_PUBLISHED_PART");
+  graded("a case id nothing published answers to", await got(await anonRaw("op=publishedcase&id=CASE-2026-D561-never")),
+    404, "NOT_PUBLISHED");
+  graded("format=zip on a part's hash", await got(await anonBytes(`sha256=${SHA1}&format=zip`)), 400, "NOT_A_CONTAINER");
+
+  /* The container arms: the manifest's published BYTES are replaced, its published_shas row untouched. */
+  const zipBefore = sha(new Uint8Array(await (await anonBytes(`sha256=${MANIFEST1}&format=zip`)).arrayBuffer()));
+  const mKey = `bio/published/${MANIFEST1}`;
+  const mBytes = new Uint8Array(await (await bucket.get(mKey)).arrayBuffer());
+  const manifest = JSON.parse(new TextDecoder().decode(mBytes));
+  t("D-561 fixture: the container's manifest is in the bucket and names parts",
+    [sha(mBytes), manifest.parts.length > 0], [MANIFEST1, true]);
+  const zipWith = async (bytes) => { await bucket.put(mKey, bytes); return got(await anonBytes(`sha256=${MANIFEST1}&format=zip`)); };
+  const asJson = (o) => new TextEncoder().encode(JSON.stringify(o));
+  graded("the manifest's bytes are not readable", await zipWith(new TextEncoder().encode("not a manifest")),
+    500, "MANIFEST_UNREADABLE");
+  graded("the manifest names a part the store does not hold",
+    await zipWith(asJson({ ...manifest, parts: [...manifest.parts, { path: "d561/absent.md", sha256: sha("D-561 absent part") }] })),
+    409, "PART_MISSING");
+  graded("the manifest names two parts at one path",
+    await zipWith(asJson({ ...manifest, parts: [...manifest.parts, { ...manifest.parts[0] }] })),
+    /* 413, MEASURED: the control plane answers EVERY serialiser refusal at 413 (`if (!zip.ok)`), this one included.
+       The status predates D-561 and is not this item's; the code and its sentence are. */
+    413, "DUPLICATE_PATH");
+  /* Over the 64 MiB bound with 33 MiB stored: one object, named twice at two paths. */
+  const bigSha = sha("D-561 one large part");
+  await bucket.put(`bio/published/${bigSha}`, new Uint8Array(33 * 1024 * 1024));
+  graded("the container would exceed what one response serialises",
+    await zipWith(asJson({ ...manifest, parts: [...manifest.parts, { path: "d561/big-a.bin", sha256: bigSha },
+                                                               { path: "d561/big-b.bin", sha256: bigSha }] })),
+    413, "CONTAINER_TOO_LARGE");
+  await bucket.delete(`bio/published/${bigSha}`);
+  await bucket.put(mKey, mBytes);
+
+  /* OBJECT_MISSING at BOTH ops: a hash VERIFIED published whose bytes the bound store does not hold. */
+  const kase = await anonCase(`id=${CASE}`);
+  const pin = ((kase.findings || [])[0] || {}).bundle_sha;
+  const pinKey = `bio/published/${pin}`;
+  const pinBytes = new Uint8Array(await (await bucket.get(pinKey)).arrayBuffer());
+  t("D-561 fixture: the case's first finding is published and its bytes are in the bucket",
+    [/^[0-9a-f]{64}$/.test(pin || ""), sha(pinBytes)], [true, pin]);
+  await bucket.delete(pinKey);
+  const ob = await got(await anonBytes(`sha256=${pin}`));
+  graded("a published hash whose bytes this copy's store does not hold", ob, 404, "OBJECT_MISSING");
+  t("D-561 OBJECT_MISSING at publishedbytes: and it no longer says NO published part answers — false of this hash",
+    /no published part answers/.test(ob.body.detail || ""), false);
+  const body = (((await anonCase(`id=${CASE}`)).findings || [])[0] || {}).body || {};
+  const om = PUBLISHED_READ_CHECKS.OBJECT_MISSING;
+  t("D-561 OBJECT_MISSING at publishedcase: the finding's body is stated unavailable with C-98.2's check and translation",
+    [body.state, body.reason, body.code, body.check, body.translation],
+    ["unavailable", "OBJECT_MISSING", "OBJECT_MISSING", om.check, om.translation]);
+  await bucket.put(pinKey, pinBytes);
+
+  /* OVER-STRICTNESS: after every tamper is put back, the genuine container serialises again, byte-identical. */
+  const z = await anonBytes(`sha256=${MANIFEST1}&format=zip`);
+  const zb = new Uint8Array(await z.arrayBuffer());
+  t("D-561 over-strictness: the genuine container still answers 200 as a zip, byte-identical to before the arms",
+    [z.status, z.headers.get("content-type"), sha(zb) === zipBefore, zb.length > 0], [200, "application/zip", true, true]);
+}
+
 /* D-549 / C-68.5 — THE PUBLISHED-STORE COMPLAINT, AT BOTH PUBLIC SITES, DRIVEN AS A STRANGER.
    Until D-549 the code for "this copy has no store for its published documents" reached an anonymous caller BARE,
    minted at two sites (one of them a ternary it shared with the missing-object code) with no sentence behind it.
@@ -1142,8 +1241,12 @@ console.log("\n--- D-549: C-68.5, the published store absent, at both public ops
   const miss = ((((await anonCase(`id=${CASE}`)).findings) || [])[0] || {}).body || {};
   t("D-549 (i): a bound store missing the finding's object answers the missing-object code, not NO_PUBLISHED_STORE",
     [miss.state, miss.reason, miss.from_sha], ["unavailable", "OBJECT_MISSING", pinned]);
+  /* CORRECTED by D-561, not exempted: D-549 asserted this body carried NO check or translation at all, which was
+     true while OBJECT_MISSING was bare. It now carries ITS OWN row (C-98.2), so the arm asks what it always meant:
+     never C-68.5's store-absent sentence, which would be false of a bound store. */
   t("D-549 (i) over-strictness: and carries NO C-68.5 check or translation — the store-absent sentence would be false here",
-    [miss.check ?? null, miss.translation ?? null], [null, null]);
+    [miss.check !== INSTALLATION_CHECKS.NO_PUBLISHED_STORE.check,
+     miss.translation !== INSTALLATION_CHECKS.NO_PUBLISHED_STORE.translation], [true, true]);
 
   /* (ii) the SAME record, rebooted with no published store bound. */
   await mf.setOptions({ ...MF_OPTS, r2Buckets: ["CAPTURES"] });
