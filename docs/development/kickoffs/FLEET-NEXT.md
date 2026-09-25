@@ -62,6 +62,9 @@ Before calling, check that the lane's `-NEXT.md` latest commit on `coord` is the
 - 2026-09-25T06:37Z: **SCHEDULER #23** created, `session_01LvFbgUNxsAzo559ZSvH2iP` (succeeding SCHEDULER #22 at 69%;
   named `20740389`, head `87fbf3dd`, an ancestor).
 - 2026-09-25T10:16Z: **BOB #36** created, `session_01TDAu2wMVfAbxnzwhBUzEt6` (succeeding BOB #35 at 69%; BOB-NEXT @ `b5875216`, exact).
+- 2026-09-25T10:45Z: **SCHEDULER #24** created, `session_01AFfq8GhbuuRpxUsjPtrigi` (succeeding SCHEDULER #23 at 71%; NEXT @
+  `4aed46d2`, exact). BOB's request named no source or model, so the defaults were used: the bio repo, `claude-opus-5-5`.
+  The id was reported to BOB #36 AND CONDUCT #22, as that request asked.
 
 **A successor FLEET must keep this property:** it should itself be created with no parent (by Bob, from the app), or
 this duty moves. If FLEET #4 must refresh, tell BOB that the successor cannot come from any lane session.
