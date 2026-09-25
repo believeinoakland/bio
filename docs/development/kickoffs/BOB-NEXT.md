@@ -1,4 +1,4 @@
-# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~09:47Z at 65% (a checkpoint; refresh near 70%); successor: **BOB #36**
+# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~10:12Z at 69%, at REFRESH; successor: **BOB #36**
 
 Read `CLAUDE.md`, `kickoffs/BOB.md` and `BIO_System_Design.md`, then this. Every line is a POINTER, measured at the time it names.
 
@@ -21,6 +21,7 @@ Last built after batch27 (964da679). Batch28 landed at 5e8a65a8, so a rebuild is
 - MK-7's two provisionals: §4.4 the narrow veto (an unchosen observation blocks ratification of an edition that reaches it) and §4.6 `name` = the member's HANDLE. Recommendation: keep both. When he answers: inbox, tell SCHEDULER, and fold §4.4/§4.6 plus the founder ruling (inbox 04:40Z) into MEMBER-KNOWLEDGE-DESIGN.
 - THE RELEASE HOLD (DIST #7 04:20Z and 09:40Z): main now carries D-512 (admin replay) PLUS batch29's REC-196 (a hidden project's existence leaks to a non-participant MEMBER), D-134/D-610 (server-stamped custodial by/status_by) and D-561; none is live on biosmoke7 (0.79.0). UPDATED recommendation (09:45Z): ship if anyone besides Bob is a member of biosmoke7 or his installed instance, else keep the hold. The act is Bob's: he types the ask in DIST #7's session.
 - The builder permission (§3).
+- DEC-33's re-entry (UI-121, 10:09Z): may a member-facing publish act be built now (UI-17 woken)? Recommendation: keep DEC-33; UI-121 lands only the published page's binding sentence, and the publish control plus the C-44.4/C-44.6 rendering wait for UI-17.
 
 ## 5. IN FLIGHT
 - land/bob/batch-0925c @ 820d4fd7 (merges main 5e8a65a8; carries batch-0925a's content): Publication §6A.3 point 3 (UI-69) and §3 rule 17 (D-598), Membership v2's REC-159 paragraph (D-134), Framework §8.3 (REC-203), CAPTURE-SCALING (D-191). Docs gate 41/41 green. It rides batch29 (CONDUCT #22 is assembling it).
@@ -30,3 +31,5 @@ Last built after batch27 (964da679). Batch28 landed at 5e8a65a8, so a rebuild is
 - OWED BY ME: once D-346 is on main, fold its ODF column into OFFICE-FORMATS.md §"What each part-map offers" (the meaning-based metadata map; draw:object intra links source:null).
 - Batch29 LANDED 09:23Z at main 95fe7bc7 (409/409), carrying land/bob/batch-0925c. Batch30 composing (CONDUCT #22). D-346 (ODF) is NOT on main yet; fold when it lands.
 - Rulings 08:20Z–09:35Z in the BOB INBOX: D-189 confirmed; REC-201 (b) fence machine law statements; D-689 removal fence confirmed; D-686 per-unit chain_kind plus `mixed`; CONDUCT #22's three rendered-capture calls confirmed; REC-206 grade C confirmed; D-665 pixel routing deferred; navchanges/links viewer filter (D row); chrome needs recurrence (D row).
+- Rulings 09:55Z–10:12Z: D-673 fence-day ("before", not "at or before"); D-693 no-locator (state `fetch.route: unrecorded` on every entry, D row + I5 IC); UI-121 carried to Bob (above).
+- FIRST TURN for BOB #36: delete BOB #35's timers from YOUR list_triggers (the "BOB #35 slot probe" chain; the dead-man trig_01Kj5NiTf8zz3PaaHo9TC4MC), arm your own, archive BOB #35 under D-398 (every land/bob branch it pushed is on main: batch-0925c landed in batch29), and tell SCHEDULER #23, CONDUCT #22, DIST #7 and FLEET #4 your id.
