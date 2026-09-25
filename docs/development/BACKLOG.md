@@ -105,6 +105,16 @@ scope: lift the containerExtent projection out of the wire block into one functi
 accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
 
+### D-737 · queued — **`casesign.control.mjs`'s HEAD DECLARES "five arms plus a baseline, and REC-130's four (e)-(h)"; the census (armdecay.mjs readDeclaredArms) reads 5 while the driver announces 10, so `m025-arm-census --only casesign.control.mjs` exits 1 (TALLY NOT AS DECLARED) on the unmodified tree — and has since rec-130 (119c9a53b1, 2026-09-18).** Found by D-640's worker, which moved m025-anchor-witness T1 off casesign for this reason. — owner RECORD (casesign's owner); test-only.
+order: with D-735 at the head of the anchor-drift group: a census that fails on an unmodified tree cannot witness a real decay (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a control's declaration is what it runs; admitted for M0 by name).
+depends-on: none.
+scope: restate casesign.control.mjs's head as "nine arms plus a baseline" (CASE-5b's five plus REC-130's four); do NOT teach the reader to add up clauses (broader, and the reader has a false-finding history).
+accepts-when: `m025-arm-census --only casesign.control.mjs` exits 0 on the unmodified tree (moves: a census red on an untouched driver). NEGATIVE CONTROL: restore the old head and the census names casesign TALLY NOT AS DECLARED.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-640's worker).
+
 ### D-735 · queued — **FOUR CONTROL DRIVERS HAVE DECAYED AGAINST MOVED SUBJECTS (identical at base 95fe7bc7), so their arms no longer break what they name: dec65-strength-reach arm 2 anchors on #strengthWalk's full signature (it gained captureBounds; throws mid-arm); m057-authority arm 6 hard-codes "1 cited pair(s) evaluated" (corpuscheck now evaluates 6); corpuscheck.control arm 6 rewrites a MILESTONES.md UNDECIDED row D-388 moved; m041-instrument-census arms 2/3 plant into corpora that left main or were frozen (M0-110, M0-100).** Found by M0-172's worker. — owner M0.
 order: at the head of the anchor-drift group: a control that cannot fail is worse than none (SCHEDULER #24, 2026-09-25)
 milestone: M0
@@ -1161,14 +1171,4 @@ design: `docs/development/VERIFICATION.md` (the construct record is checked agai
 depends-on: none.
 scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
 accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-458 · queued — **C-77 EXISTS AND NOTHING RUNS IT OVER A RECORD: Membership §11 item 9's live recheck of project-name uniqueness has a check (D-50) and no op hands the store's project bundles to `checkProjectNameUniqueness`.** — owner RECORD.
-order: after D-457, with the record-hygiene rows (SCHEDULER #17, 2026-09-23; D-50's worker via CONDUCT #18 23:55Z)
-milestone: M7
-interface: I3 additive — one admin/probe read; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.1) and §11 item 9.
-depends-on: D-50 (`integrated` on c18-batch8).
-scope: a read-only op running C-77 over the instance's project bundles and naming each collision.
-accepts-when: two projects with one name are named; a clean record reads none; counters unchanged. NEGATIVE CONTROL: feed the check one bundle, and the collision arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).

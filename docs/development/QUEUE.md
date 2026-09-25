@@ -220,7 +220,8 @@ scope: DIST decides the format first and records it in Distribution: a SEPARATEL
 accepts-when: `newgroup/test/` asserts both uploads send the RELEASE's `limits.subrequests`, a release without it is refused by name, and an older installer still verifies its fleet signature (the measured failure it moves: the value read from `wrangler.jsonc`, not the signed release). NEGATIVE CONTROL: strip the field from a signed release and the refusal arm fails by name.
 added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs DIST`).
 
-### D-734 · queued — **op=verify ANSWERS "NOT PUBLISHED" FOR A RATIFIED CASE DOCUMENT's doc_sha (measured on 6 ratified editions): only bundle parts and MANIFEST.json are in published_shas, and op=verify's own sentence equates "not published" with "never ratified" — false, on the no-account verify surface.** D-731's part (b); its part (a), the page's button checking op=casedocument, rides inside D-712. BOB #36 RULED 2026-09-25 11:50Z (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+### D-734 · running — **op=verify ANSWERS "NOT PUBLISHED" FOR A RATIFIED CASE DOCUMENT's doc_sha (measured on 6 ratified editions): only bundle parts and MANIFEST.json are in published_shas, and op=verify's own sentence equates "not published" with "never ratified" — false, on the no-account verify surface.** D-731's part (b); its part (a), the page's button checking op=casedocument, rides inside D-712. BOB #36 RULED 2026-09-25 11:50Z (drained by SCHEDULER #24; cite until folded). — owner RECORD.
+status: running — SCHEDULER #24 13:00Z: spawned, stacked on land/worker/D-712 @ f10b1024
 order: FIRST queued in the cache, directly after D-712, whose button it lets switch back to op=verify: the record claiming LESS than it holds on the public surface (CLAUDE.md §2) (SCHEDULER #24, 2026-09-25)
 milestone: M10
 interface: I3 — additive published_shas kind `case_document`; op=verify answers published:true naming it; op=publishedbytes serves the bytes; the integrator classifies.
@@ -1079,7 +1080,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-637 · integrated — **`d85-surface-run.control` arm no-lens-at-open: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — CONDUCT #23 12:50Z: worker report — tip 1c4a573e (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6556 assertions); d85-surface-run.control no-lens-at-open re-anchored, allowance removed; test-only, no IC; rides batch30
+status: integrated — SCHEDULER #24 13:00Z: tip 1c4a573e (on M0-197 11818309), GATE 81/81 GREEN FULLREUSE (6556 assertions), tree 5a6c4389; d85-surface-run no-lens-at-open re-anchored (1 match here and on main), allowance deleted, arm alone 40/7 as declared
 order: after D-636, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1112,7 +1113,7 @@ accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, a
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
 ### D-640 · integrated — **`m025-anchor-witness.control` arm T1: ANCHOR DRIFT — matches 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: integrated — CONDUCT #23 12:51Z: worker report — tip fbf2e6a4 (on M0-197 11818309), GATE 80/80 GREEN FULLREUSE (6509 assertions); m025-anchor-witness.control T1 re-anchored, allowance removed; test-only, no IC; minted D-737; rides batch30
+status: integrated — SCHEDULER #24 13:00Z: tip fbf2e6a4 (on M0-197 11818309), GATE 80/80 GREEN FULLREUSE (6509 assertions), tree 7257f343; m025-anchor-witness T1 moved to casepin head (casesign census already red on the unmodified tree, so not a control), allowance deleted, arm alone as declared; minted D-737
 order: after D-639, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -1265,7 +1266,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-650 · queued — **`nc-rec82` arms oob/nochain/overstrict: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-650 · running — **`nc-rec82` arms oob/nochain/overstrict: ANCHOR DRIFT — match 0, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 13:00Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-649, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
