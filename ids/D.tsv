@@ -244,3 +244,4 @@ D-715	2026-09-25T10:13:45.948Z	SCHEDULER-23	reviewcopy-inband.control preflight 
 D-716	2026-09-25T10:13:50.246Z	SCHEDULER-23	capturerequests.test fails 2 under parallel load (CONDUCT #22 batch30 union)
 D-717	2026-09-25T10:21:50.130Z	land/worker/D-695	
 D-718	2026-09-25T10:29:35.185Z	WORKER D-700	C-17.2 classifyDivergence walks _history/manifest.json in snap-key order; D-700 gave the image seq (write order) and historyWriteOrder; the ladder's intervening set should walk it
+D-719	2026-09-25T10:29:39.219Z	WORKER D-700	setup.mjs bundle view lists _history entries sorted by snap key, not write order (seq since D-700)
