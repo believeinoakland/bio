@@ -50475,8 +50475,10 @@ ${words}`;
       label: ID_SPACES[sp].label,
       evidence: false,
       ...j,
+      /* Each end's cut is published as the page measured it (one row past the cap), never combined. */
       limit: _Store.IDMATCH_ADDRESS_LIMIT,
-      truncated: addrA.truncated || addrB.truncated,
+      a_truncated: addrA.truncated,
+      b_truncated: addrB.truncated,
       a: {
         ...view(ra),
         capture: String(aCapture).trim().toLowerCase(),

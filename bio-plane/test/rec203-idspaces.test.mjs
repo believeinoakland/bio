@@ -251,13 +251,13 @@ console.log("\n--- the three refusals (C-91), each with its catalogue row ---");
 console.log("\n--- the BOUND: a system is judged from EVERY address, and a cut read judges none ---");
 {
   const within = await idmatch({ space: "project", a: "C329142", a_capture: CAP.odp, b: "C329142", b_capture: CAP.leg, referent: "agrees" });
-  t("under the bound: the bound is published and the read is not cut", [within.limit, within.truncated], [32, false]);
+  t("under the bound: the bound is published and the read is not cut", [within.limit, within.a_truncated, within.b_truncated], [32, false, false]);
   for (let i = 1; i <= 32; i++) {
     const r = await POST("op=acquire&token=adm-r203", { locator: `${MANY}${i}`, authority: "REC-203 fixture" });
     if (!r || !r.ok || r.document.capture.sha256 !== CAP.odp) throw new Error(`bite acquire ${i}: ${JSON.stringify(r).slice(0, 300)}`);
   }
   const cut = await idmatch({ space: "project", a: "C329142", a_capture: CAP.odp, b: "C329142", b_capture: CAP.leg, referent: "agrees" });
-  t("33 addresses for one capture: the read is CUT, and says so", [cut.limit, cut.truncated], [32, true]);
+  t("33 addresses for one capture: the read is CUT, and says so", [cut.limit, cut.a_truncated, cut.b_truncated], [32, true, false]);
   t("and a cut capture's system is UNDETERMINED, never judged off the addresses that fit",
     [cut.verdict, cut.counts, cut.a.system.origin], ["SYSTEM_UNDETERMINED", false, null]);
 }

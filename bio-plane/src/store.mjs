@@ -21726,7 +21726,8 @@ export class Store extends DurableObject {
           provenance_stated: e.system.provenance_stated, basis: e.system.basis }
       : { origin: null, why: e.system.why });
     return { ok: true, space: sp, label: ID_SPACES[sp].label, evidence: false, ...j,
-             limit: Store.IDMATCH_ADDRESS_LIMIT, truncated: addrA.truncated || addrB.truncated,
+             /* Each end's cut is published as the page measured it (one row past the cap), never combined. */
+             limit: Store.IDMATCH_ADDRESS_LIMIT, a_truncated: addrA.truncated, b_truncated: addrB.truncated,
              a: { ...view(ra), capture: String(aCapture).trim().toLowerCase(), system: sys(endA),
                   ...(sp === "fund" ? { name: aName ?? null } : {}) },
              b: { ...view(rb), capture: String(bCapture).trim().toLowerCase(), system: sys(endB),
