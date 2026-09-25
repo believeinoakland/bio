@@ -1,0 +1,16 @@
+{
+ "unit": "plane:formats-pptx.test.mjs",
+ "inputHash": "d92b6b01b77cfb0fc4550f9cdfb090f3b9b2822f9d3dd36f9da8687064777816",
+ "verdict": "PASS",
+ "run": "58472a68bb03b3b51241959928294c4892823f77.1790296136091.1874.json",
+ "tree": "58472a68bb03b3b51241959928294c4892823f77",
+ "head": "25335ae95833272022bc0f0b495f3c701263aaf7",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 133,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "86c70b12-2873-5264-b0e7-a49cef8be68f",
+ "at": "2026-09-25T00:28:56.103Z"
+}
