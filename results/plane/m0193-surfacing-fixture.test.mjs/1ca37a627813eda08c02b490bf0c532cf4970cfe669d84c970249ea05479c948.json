@@ -1,0 +1,16 @@
+{
+ "unit": "plane:m0193-surfacing-fixture.test.mjs",
+ "inputHash": "1ca37a627813eda08c02b490bf0c532cf4970cfe669d84c970249ea05479c948",
+ "verdict": "PASS",
+ "run": "5b637947145f0f912713d573aa57b9f6730a8c86.1790335088072.2354.json",
+ "tree": "5b637947145f0f912713d573aa57b9f6730a8c86",
+ "head": "656b0817312c1b8c7e1b3b4a990e1cb8880a3b1c",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 153,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "8ac5185e-985a-53b6-b588-abf17ea666d5",
+ "at": "2026-09-25T11:18:08.086Z"
+}
