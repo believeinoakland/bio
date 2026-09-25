@@ -350,6 +350,8 @@ const MACHINE_OPS = ["release", "conclude", "reopen", "publish", "actionmove", "
                      "actionlaws",
                      /* REC-189 / C-32.19 (minted C-32.18): the substrate write, so the risk-tier fence is reached. */
                      "promote",
+                     /* D-689 / C-32.20: the proposal a machine is pointed at when it may not state the law. */
+                     "actionlawspropose",
                      /* `select` is not one of the twelve. It is here because a
                         selection is readable ONLY by the credential that made
                         it (`owner` is server-stamped, `class:ai` for this one),
@@ -917,6 +919,31 @@ const fence = (code, payload, machineAnswer) => {
     [ra && ra.ok, (await view()).tier], [true, 2]);
 }
 
+/* ------------------------------------------- (xvi) STATE_RECORDS_LAW */
+{
+  /* D-689 / C-32.20 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH): which law governs a records request is the member's
+     characterization, so a machine may neither CREATE a cpra_request (the kind names the CPRA) nor state a
+     records_request's `law`. NOT an act: the fence stands in `promote`'s action block beside C-32.19. The payload is
+     a whole action a signed-in member creates on the next line — tier left undetermined, so the tier fence cannot be
+     what answers — and the refusal points at the one thing the machine MAY do, which the arm after it does. The
+     full set of arms (carry-forward, change, removal, the pre-fence row read MACHINE-STATED) is
+     `d689-records-law-fence.test.mjs`'s. */
+  const ACT = "ACTN-2026-7302-cpra-by-machine";
+  const cpraMd = actionMd(ACT).replace("risk_tier: 1", "risk_tier: undetermined");
+  const m = await promote(ACT, cpraMd, "action", AI, { current_state: "planned" });
+  fence("MACHINE_CANNOT_STATE_RECORDS_LAW",
+    "a whole, well-formed action CREATED as a cpra_request, tier undetermined — the creation a signed-in member "
+    + "lands on the next line",
+    codeOf(m));
+  t("  and nothing landed under the machine's call — no such action can be read",
+    rP(await (await mf.dispatchFetch(`http://x/api/?op=projection&token=${RUTH}&id=${ACT}`)).json())?.bundle_sha ?? null,
+    null);
+  t("  and the refusal names the path the machine MAY take: a proposal, for a member to adopt",
+    m?.propose ?? null, "op=actionlawspropose");
+  const r = await promote(ACT, cpraMd, "action", RUTH, { current_state: "planned" });
+  t("  and the SAME payload creates the cpra_request for a signed-in member", r?.ok, true);
+}
+
 /* ====================================================================== 3
  * THE SWEEP AND THE COMPLETENESS ARM.
  * ==================================================================== */
@@ -925,9 +952,10 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
   const drivenCodes = DRIVEN.map((d) => d.code).sort();
   /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii).
      MOVED 13 -> 14 on 2026-09-23 by D-149 (C-32.18 MACHINE_CANNOT_SET_LAWS, block xiv).
-     MOVED 14 -> 15 at c19-batch10 by REC-189 (C-32.19 MACHINE_CANNOT_SET_RISK_TIER, minted C-32.18, block xv). */
-  t("(fifteen fences were actually driven — the guard before the equality, because two empty sets are "
-  + "equal and prove nothing)", drivenCodes.length, 15);
+     MOVED 14 -> 15 at c19-batch10 by REC-189 (C-32.19 MACHINE_CANNOT_SET_RISK_TIER, minted C-32.18, block xv).
+     MOVED 15 -> 16 on 2026-09-25 by D-689 (C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW, block xvi). */
+  t("(sixteen fences were actually driven — the guard before the equality, because two empty sets are "
+  + "equal and prove nothing)", drivenCodes.length, 16);
   /* CORRECTED 2026-09-24 by D-503, never exempted: this label read "EVERY MACHINE_CANNOT_* THE PLANE
      can mint", and that is wider than the arm can support. `HARVEST` reads `src/store.mjs` ALONE, and
      the plane mints five more fence codes in `src/index.mjs` (the two MACHINE_CANNOT_RATIFY* and the

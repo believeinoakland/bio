@@ -85,7 +85,8 @@ const actionMd = (id) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []",
-  "action_kind: cpra_request", "risk_tier: undetermined",
+  /* CORRECTED 2026-09-25 by D-689, never exempted: this fixture created a `cpra_request` through an operator bearer token — a machine identity — and C-32.20 now refuses a machine stating the law a records request is made under (BOB #35, 2026-09-25: only a member's act states it; a machine may only propose). The kind is not this suite's subject, so the fixture is the law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", "risk_tier: undetermined",
   "action_basis:", `  - target: ${INQ_FIXTURE}`, "    kind: advances",
   "    note: the question this request serves", "    date: 2026-07-24",
   /* An entry that satisfies capture-or-testify (DEC-13) by ACCOUNT, so the action block's own shape checks
@@ -251,7 +252,7 @@ t("…and its CORRESPONDENCE ledger too, from the document's own correspondence[
   (p?.action?.correspondence ?? []).map((e) => [e.direction, e.party]),
   [["sent", "City Clerk"]]);
 t("…and the action's kind reads from the same bytes, so column and type no longer disagree",
-  [p?.action_kind, p?.action?.kind], ["cpra_request", "cpra_request"]);
+  [p?.action_kind, p?.action?.kind], ["records_request", "records_request"]);   /* D-689: the fixture's kind, corrected above */
 
 /* ================================================== 4. OVER-STRICTNESS */
 console.log("\n--- 4. over-strictness: what agreed before still lands, and an alias is not a disagreement ---");

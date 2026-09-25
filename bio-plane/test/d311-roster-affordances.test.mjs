@@ -249,7 +249,8 @@ const actnMd = (id) => ["---", `id: ${id}`, "object_type: action", "schema: acti
   "current_state: planned", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: human", "  capability_tier: member", "group: believe-in-oakland", "references: []",
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
-  "visuals: []", "action_kind: cpra_request", "target_body:", "  name: City Clerk", "---", "", "## Request", "",
+  "visuals: []", /* CORRECTED 2026-09-25 by D-689, never exempted: this fixture created a `cpra_request` through an operator bearer token — a machine identity — and C-32.20 now refuses a machine stating the law a records request is made under (BOB #35, 2026-09-25: only a member's act states it; a machine may only propose). The kind is not this suite's subject, so the fixture is the law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", "target_body:", "  name: City Clerk", "---", "", "## Request", "",
   "Records.", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const promote = async (id, text, type, state) => must(`promote ${id}`, await POST(`op=promote&token=${ADM}`, {
   bundleId: id, base: null, snapKey: `d311-${++snapSeq}-${sha(id).slice(0, 6)}`,

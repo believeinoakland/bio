@@ -415,7 +415,8 @@ const actnMd = (id) => [
      legal flat string until C-2.10 made the field three-valued. The FACT this
      fixture asserts is unchanged — this action is addressed to the City Clerk —
      so it is corrected into the block that states it, not exempted. */
-  "action_kind: cpra_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
+  /* CORRECTED 2026-09-25 by D-689, never exempted: this fixture created a `cpra_request` through an operator bearer token — a machine identity — and C-32.20 now refuses a machine stating the law a records request is made under (BOB #35, 2026-09-25: only a member's act states it; a machine may only propose). The kind is not this suite's subject, so the fixture is the law-neutral `records_request` stating no law, which a machine may create. */
+  "action_kind: records_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
      fixture states through a DEPLOY token — a machine identity — and C-32.19 now refuses a machine
      setting 1, 2 or 3 (D-182: only a member's authored act does). The tier is not this suite's subject,
      so the fixture states what an unassessed action honestly is. */
@@ -1289,7 +1290,7 @@ t("every published resolution is one op=actionmove ACCEPTS (the publication is n
 const BADRES = "ACTN-2026-0005-rec39";
 const badResMd = actnMd(BADRES)
   .replace("current_state: planned", "current_state: resolved")
-  .replace("action_kind: cpra_request", "action_kind: cpra_request\nresolution: __not_a_resolution__");
+  .replace("action_kind: records_request", "action_kind: records_request\nresolution: __not_a_resolution__");   /* D-689: the fixture's kind, corrected above */
 await promote(BADRES, badResMd, "action", "resolved");
 /* Read through op=audit, which is the sweep that runs the catalogue over what
    LANDED — the "audit clean before you call anything done" gate — rather than by

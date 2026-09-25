@@ -4617,6 +4617,7 @@ __export(bio_checks_exports, {
   quoteValue: () => quoteValue,
   rangeCorners: () => rangeCorners,
   recordsLawOf: () => recordsLawOf,
+  recordsLawStatement: () => recordsLawStatement,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   riskTierHistoryOf: () => riskTierHistoryOf,
@@ -5055,7 +5056,7 @@ function riskTierHistoryFindings(fm, findings) {
 var LAW_LEVELS = ["federal", "state", "local"];
 var GOVERNING_LAWS_MAX = 12;
 var CITATION_MAX = 200;
-function governingLawsOf(fm) {
+function governingLawsOf(fm, statedBy = null) {
   const raw = fm && Array.isArray(fm.governing_laws) ? fm.governing_laws : [];
   const laws = raw.filter((l) => l && typeof l === "object" && !Array.isArray(l)).map((l) => ({ level: String(l.level ?? ""), citation: String(l.citation ?? "") }));
   if (laws.length) {
@@ -5069,34 +5070,46 @@ function governingLawsOf(fm) {
   }
   const kindNames = fm && fm.action_kind === "cpra_request";
   const lawNamed = recordsLawOf(fm)?.law ?? null;
+  const cls = statedBy && typeof statedBy === "object" ? statedBy.class : "member";
+  const machineBy = cls === "machine" ? `an automated credential (${String(statedBy.by ?? "unnamed").slice(0, 80)})` : null;
   return {
     state: "undetermined",
     laws: [],
     by: null,
     at: null,
-    stated: "UNDETERMINED: no member has stated which laws govern this action. The record assumes none \u2014 not federal law, not state law, not a local ordinance. Which laws apply follows the agency asked, and a member states them, each by citation." + (kindNames ? " This action's kind, cpra_request, is its member's statement that the California Public Records Act governs it; nothing else is inferred from the kind." : "") + (lawNamed ? ` This action's kind, records_request, states the law it is made under \u2014 ${lawNamed} \u2014 as its author's statement; nothing else is inferred from it.` : "")
+    stated: "UNDETERMINED: no member has stated which laws govern this action. The record assumes none \u2014 not federal law, not state law, not a local ordinance. Which laws apply follows the agency asked, and a member states them, each by citation." + (kindNames ? cls === "machine" ? ` This action's kind, cpra_request, was written by ${machineBy}: it is MACHINE-STATED, not a member's statement that the California Public Records Act governs it; nothing else is inferred from the kind.` : cls === "undetermined" ? " This action's kind, cpra_request, names the California Public Records Act; who wrote that kind is not recorded, so it is not read as a member's statement; nothing else is inferred from the kind." : " This action's kind, cpra_request, is its member's statement that the California Public Records Act governs it; nothing else is inferred from the kind." : "") + (lawNamed ? cls === "machine" ? ` This action's kind, records_request, states the law it is made under \u2014 ${lawNamed} \u2014 as ${machineBy} wrote it: it is MACHINE-STATED, not a member's statement; nothing else is inferred from it.` : cls === "undetermined" ? ` This action's kind, records_request, states the law it is made under \u2014 ${lawNamed} \u2014 and who wrote it is not recorded, so it is not read as a member's statement; nothing else is inferred from it.` : ` This action's kind, records_request, states the law it is made under \u2014 ${lawNamed} \u2014 as its author's statement; nothing else is inferred from it.` : "")
   };
 }
-function recordsLawOf(fm) {
+function recordsLawOf(fm, statedBy = null) {
   const kind = fm && fm.action_kind;
+  const by = statedBy && typeof statedBy === "object" ? { class: statedBy.class, by: statedBy.by ?? null, at: statedBy.at ?? null } : null;
+  const whose = !by || by.class === "member" ? "" : by.class === "machine" ? ` MACHINE-STATED: an automated credential (${String(by.by ?? "unnamed").slice(0, 80)}) wrote it, and it is not a member's statement of the law that governs this request.` : " Who wrote it is not recorded, so it is not read as a member's statement.";
+  const withBy = (o) => by ? { ...o, stated_by: by } : o;
   if (kind === "cpra_request")
-    return {
+    return withBy({
       state: "kind",
       law: null,
-      stated: "This action's kind, cpra_request, names the California Public Records Act, read as written; no citation is synthesised from the kind."
-    };
+      stated: "This action's kind, cpra_request, names the California Public Records Act, read as written; no citation is synthesised from the kind." + whose
+    });
   if (kind !== "records_request") return null;
   const law = typeof fm.law === "string" && fm.law.trim() ? fm.law : null;
-  if (law) return {
+  if (law) return withBy({
     state: "stated",
     law,
-    stated: `This records request is made under ${law}, as its author stated it; the record holds the citation as written and encodes none of that law's rules.`
-  };
+    stated: `This records request is made under ${law}, as its author stated it; the record holds the citation as written and encodes none of that law's rules.` + whose
+  });
   return {
     state: "undetermined",
     law: null,
-    stated: "UNDETERMINED: this records request states no law it is made under. The record assumes none \u2014 not the California Public Records Act, not federal law; its author states one, by citation, in the action's law field."
+    stated: "UNDETERMINED: this records request states no law it is made under. The record assumes none \u2014 not the California Public Records Act, not federal law; a member states one, by citation, in the action's law field (a machine may only propose one: D-689)."
   };
+}
+function recordsLawStatement(fm) {
+  const kind = fm && typeof fm === "object" ? fm.action_kind : null;
+  if (kind === "cpra_request") return JSON.stringify(["cpra_request", null]);
+  if (kind !== "records_request") return null;
+  const law = typeof fm.law === "string" && fm.law.trim() ? fm.law : null;
+  return law ? JSON.stringify(["records_request", law]) : null;
 }
 function recordsLawFindings(fm, findings) {
   if (!Object.prototype.hasOwnProperty.call(fm, "law") || fm.law === null || fm.law === "") return;
@@ -11582,6 +11595,18 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.18",
     where: "src/store.mjs actionLaws > is-machine-set-laws",
     translation: "Which laws govern a request is a statement a member makes and is named beside: the laws follow the agency asked, and somebody has to have read them. The credential that asked here is an automated one, so it can gather what the agency is and cannot state which laws apply. Sign in to set the list yourself."
+  },
+  /* D-689 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149; BIO_Case_Making_v0_1.md §2): which
+     law governs a records request is the member's characterization. A machine credential may neither CREATE a
+     cpra_request (the kind names the CPRA) nor state, change or remove a records_request's `law` — BOB #32's rule
+     for the risk tier, applied: removing a statement is a change. It may create a records_request stating no law
+     and PROPOSE the law (op=actionlawspropose, REC-195's shape); a member's own act adopts. Carrying the statement
+     forward unchanged is not refused, so a machine-created cpra_request from before the fence is never rewritten —
+     it reads MACHINE-STATED from its recorded author. Asked of a CHANGE, in ONE helper, C-32.19's shape. */
+  MACHINE_CANNOT_STATE_RECORDS_LAW: {
+    check: "C-32.20",
+    where: "src/store.mjs #machineRecordsLawRefusal > is-machine-state-records-law",
+    translation: "Which law governs a records request is a judgement a member makes and answers for. The credential that asked here is an automated one: it can write the request as a records request that names no law, and it can propose the law for a member to consider, but it cannot state the law \u2014 neither by the California Public Records Act kind nor by a citation \u2014 and cannot change or remove one. Sign in to state the law yourself."
   }
 };
 var GOVERNING_LAW_CHECKS = {
@@ -33171,6 +33196,7 @@ var Store = class _Store extends DurableObject {
       `SELECT ord, target_id, target_type, kind, note, at FROM action_basis WHERE bundle_id=? ORDER BY ord`,
       row.bundle_id
     );
+    const lawBy = this.#recordsLawStatedBy(row.bundle_id, fm);
     return {
       kind: row.action_kind ?? null,
       /* D-182: read from the stored DOCUMENT through the catalogue's own function, never defaulted. An
@@ -33192,10 +33218,12 @@ var Store = class _Store extends DurableObject {
       /* D-149: WHICH LAWS GOVERN THIS ACTION — stated by a member, or UNDETERMINED with its sentence. Read by
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
-      governing_laws: governingLawsOf(fm),
+      governing_laws: governingLawsOf(fm, lawBy),
       /* REC-201: THE LAW A records_request IS MADE UNDER, verbatim from its bytes, or UNDETERMINED in words; a
-         cpra_request answers `kind` and is read as written; null for a kind that is not a records request. */
-      law: recordsLawOf(fm),
+         cpra_request answers `kind` and is read as written; null for a kind that is not a records request.
+         D-689: with WHO WROTE IT (`stated_by`), read from the record's own author stamps, so a statement a machine
+         wrote reads MACHINE-STATED and is never presented as a member's. */
+      law: recordsLawOf(fm, lawBy),
       /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
@@ -38338,6 +38366,81 @@ Replaced: ${before.state === "stated" ? before.laws.map((e) => `${e.level} ${e.c
         detail: (act ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).` : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + ` A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.`
       };
     return null;
+  }
+  /* D-689 / C-32.20 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149; `BIO_Case_Making_v0_1.md`
+   * §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*) — WHICH LAW GOVERNS A RECORDS REQUEST IS THE MEMBER'S
+   * CHARACTERIZATION, and a machine may only PROPOSE it.
+   *
+   * `recordsLawStatement` is the one key: a cpra_request states the CPRA in its kind, a records_request states its
+   * `law`, and anything else states nothing. Asked of a CHANGE, never a presence — C-32.19's shape: a machine's
+   * creation that states a law (a cpra_request, or a records_request with a `law`) is a change from nothing, and a
+   * machine's revision that sets, changes or REMOVES the statement is refused (BOB #32's rule for the risk tier,
+   * applied: removing a member's statement is writing it). A machine revision that carries the statement forward
+   * unchanged lands, so a cpra_request a machine created before this fence is never rewritten — its read says
+   * MACHINE-STATED (`#recordsLawStatedBy`). REC-46's one predicate: a write nobody stamped is not a member's act. */
+  #machineRecordsLawRefusal({ who: who2, nextKey, heldKey, cur }) {
+    if ((!who2 || isMachineIdentity(who2)) && nextKey !== heldKey)
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_STATE_RECORDS_LAW",
+        stated: nextKey === null ? null : JSON.parse(nextKey)[0],
+        held: cur ? heldKey === null ? null : JSON.parse(heldKey)[0] : null,
+        propose: "op=actionlawspropose",
+        detail: (cur ? "this revision " + (nextKey === null ? "removes" : "changes") + " what the action states about the law its request is made under." : `this creation states the law its request is made under (as a ${JSON.parse(nextKey)[0]}).`) + " Which law governs a records request is a member's characterization (D-149, BOB #35), and only a member's own act states it. A machine credential may write the action as a records_request that names no law, and may PROPOSE the law with op=actionlawspropose, labelled as machine work, for a member to adopt. Nothing was written."
+      };
+    return null;
+  }
+  /* D-689: WHO WROTE THE STATEMENT OF THE LAW THIS ACTION'S REQUEST IS MADE UNDER — read from the record, never
+   * assumed. BOB #35: *a cpra_request a machine created reads as MACHINE-STATED (the author's class is already
+   * recorded), never as a member's statement.* The class is recorded per promotion in `manifest.author`, and the
+   * statement is the one `recordsLawStatement` key over each version's own `bundle.md`.
+   *
+   * THE STATER IS THE AUTHOR OF THE VERSION THAT INTRODUCED THE CURRENT STATEMENT, not the creator and not the
+   * latest writer: a member revising the plan of a machine's cpra_request carries the machine's statement forward
+   * and does not adopt it, and a machine's carry-forward of a member's statement does not make it machine work.
+   * So the walk goes back from the live version while each earlier version states the same thing. Version i's
+   * bytes are the `history` snapshot taken under promotion i+1's snap key (promote snapshots the outgoing state),
+   * and the last version's are the live file; `manifest` is read in INSERTION order (rowid), because `created` is
+   * the revision's own claimed time and may be backdated.
+   *
+   * THREE ANSWERS, AND UNDETERMINED IS STATED: `member` (a named person's stamp), `machine` (REC-46's one
+   * predicate), `undetermined` — no author recorded, a version whose bytes cannot be read, or a walk cut at
+   * `LAW_STATED_BY_WALK_MAX` versions without reaching the one that introduced it. Returns null when the action
+   * states no law, because there is nobody to name for nothing. */
+  static LAW_STATED_BY_WALK_MAX = 64;
+  #recordsLawStatedBy(bundleId, liveFm) {
+    const key = recordsLawStatement(liveFm);
+    if (key === null) return null;
+    const cap = _Store.LAW_STATED_BY_WALK_MAX;
+    const entries = this.#rows(
+      `SELECT rowid AS r, snap_key, author, created FROM manifest WHERE bundle_id=? ORDER BY rowid DESC LIMIT ?`,
+      bundleId,
+      cap + 1
+    ).reverse();
+    const cut = entries.length > cap;
+    const walk = cut ? entries.slice(1) : entries;
+    const undetermined = { class: "undetermined", by: null, at: null };
+    if (!walk.length) return undetermined;
+    let stater = null;
+    for (let i = walk.length - 1; i >= 0; i--) {
+      let fmI = liveFm;
+      if (i < walk.length - 1) {
+        const h = this.#one(
+          `SELECT content FROM history WHERE bundle_id=? AND snap_key=? AND path='bundle.md'`,
+          bundleId,
+          walk[i + 1].snap_key
+        );
+        if (!h || typeof h.content !== "string") break;
+        fmI = parseFrontmatter(h.content).data || {};
+      }
+      if (recordsLawStatement(fmI) !== key) break;
+      stater = walk[i];
+      if (i === 0 && cut) stater = null;
+    }
+    if (!stater) return undetermined;
+    const who2 = String(stater.author ?? "").trim();
+    if (!who2) return { ...undetermined, at: stater.created ?? null };
+    return { class: isMachineIdentity(who2) ? "machine" : "member", by: who2, at: stater.created ?? null };
   }
   /** op=actionrisktier — REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2,
    *  `risk_tier`): A MEMBER REVISES AN ACTION'S RISK TIER, AS AN AUTHORED, APPEND-ONLY ACT.
@@ -47855,6 +47958,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
         const machineTier = this.#machineRiskTierRefusal({ who: tierWho, nextTier, heldTier, cur: !!cur, act: false });
         if (machineTier) return machineTier;
+        const machineLaw = this.#machineRecordsLawRefusal({
+          who: tierWho,
+          nextKey: recordsLawStatement(docFmW),
+          heldKey: cur ? recordsLawStatement(heldTierFm) : null,
+          cur: !!cur
+        });
+        if (machineLaw) return machineLaw;
         if (!pkg[RISK_TIER_ACT]) {
           const histKey = (fmX) => JSON.stringify(fmX && typeof fmX === "object" && Array.isArray(fmX.risk_tier_history) ? fmX.risk_tier_history : fmX && typeof fmX === "object" && fmX.risk_tier_history !== void 0 && fmX.risk_tier_history !== null ? fmX.risk_tier_history : []);
           const tierMoved = cur ? nextTier !== heldTier : false;

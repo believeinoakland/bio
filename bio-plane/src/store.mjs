@@ -211,6 +211,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
             catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf, recordsLawOf,
+         /* D-689: the ONE key for what an action states about the law its request is made under — the fence in
+            `promote` and the attribution walk ask it and nothing else. */
+         recordsLawStatement,
 
          /* REC-195: the LABEL a proposal of those laws is read under — machine work or a member's, composed in
             the catalogue so the act and the read publish one answer and no surface judges an identity. */
@@ -2186,6 +2189,8 @@ export class Store extends DurableObject {
     const legs = this.#rows(
       `SELECT ord, target_id, target_type, kind, note, at FROM action_basis WHERE bundle_id=? ORDER BY ord`,
       row.bundle_id);
+    /* D-689: who wrote this action's statement of the law (null when it states none). */
+    const lawBy = this.#recordsLawStatedBy(row.bundle_id, fm);
     return {
       kind: row.action_kind ?? null,
       /* D-182: read from the stored DOCUMENT through the catalogue's own function, never defaulted. An
@@ -2208,10 +2213,12 @@ export class Store extends DurableObject {
       /* D-149: WHICH LAWS GOVERN THIS ACTION — stated by a member, or UNDETERMINED with its sentence. Read by
          the catalog's one reader from the document's own bytes, so an action nobody set a list on cannot read
          as governed by anything, federal law included. */
-      governing_laws: governingLawsOf(fm),
+      governing_laws: governingLawsOf(fm, lawBy),
       /* REC-201: THE LAW A records_request IS MADE UNDER, verbatim from its bytes, or UNDETERMINED in words; a
-         cpra_request answers `kind` and is read as written; null for a kind that is not a records request. */
-      law: recordsLawOf(fm),
+         cpra_request answers `kind` and is read as written; null for a kind that is not a records request.
+         D-689: with WHO WROTE IT (`stated_by`), read from the record's own author stamps, so a statement a machine
+         wrote reads MACHINE-STATED and is never presented as a member's. */
+      law: recordsLawOf(fm, lawBy),
       /* REC-214: EVERY TIER THIS ACTION HAS HELD, oldest first — each revision's tier, the tier it replaced, who,
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
@@ -7336,6 +7343,83 @@ export class Store extends DurableObject {
                      + `Nothing was written.` };
     /* END DEC-49 REGION is-machine-set-risk-tier */
     return null;
+  }
+
+  /* D-689 / C-32.20 (BOB #35, 2026-09-25 08:25Z, (b) FENCE BOTH, from DEC-24 and D-149; `BIO_Case_Making_v0_1.md`
+   * §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*) — WHICH LAW GOVERNS A RECORDS REQUEST IS THE MEMBER'S
+   * CHARACTERIZATION, and a machine may only PROPOSE it.
+   *
+   * `recordsLawStatement` is the one key: a cpra_request states the CPRA in its kind, a records_request states its
+   * `law`, and anything else states nothing. Asked of a CHANGE, never a presence — C-32.19's shape: a machine's
+   * creation that states a law (a cpra_request, or a records_request with a `law`) is a change from nothing, and a
+   * machine's revision that sets, changes or REMOVES the statement is refused (BOB #32's rule for the risk tier,
+   * applied: removing a member's statement is writing it). A machine revision that carries the statement forward
+   * unchanged lands, so a cpra_request a machine created before this fence is never rewritten — its read says
+   * MACHINE-STATED (`#recordsLawStatedBy`). REC-46's one predicate: a write nobody stamped is not a member's act. */
+  #machineRecordsLawRefusal({ who, nextKey, heldKey, cur }) {
+    /* DEC-49 REGION is-machine-state-records-law */
+    if ((!who || isMachineIdentity(who)) && nextKey !== heldKey)
+      return { ok: false, reason: "MACHINE_CANNOT_STATE_RECORDS_LAW",
+               stated: nextKey === null ? null : JSON.parse(nextKey)[0],
+               held: cur ? (heldKey === null ? null : JSON.parse(heldKey)[0]) : null,
+               propose: "op=actionlawspropose",
+               detail: (cur ? "this revision " + (nextKey === null ? "removes" : "changes")
+                              + " what the action states about the law its request is made under."
+                            : `this creation states the law its request is made under (as a ${JSON.parse(nextKey)[0]}).`)
+                     + " Which law governs a records request is a member's characterization (D-149, BOB #35), and "
+                     + "only a member's own act states it. A machine credential may write the action as a "
+                     + "records_request that names no law, and may PROPOSE the law with op=actionlawspropose, "
+                     + "labelled as machine work, for a member to adopt. Nothing was written." };
+    /* END DEC-49 REGION is-machine-state-records-law */
+    return null;
+  }
+
+  /* D-689: WHO WROTE THE STATEMENT OF THE LAW THIS ACTION'S REQUEST IS MADE UNDER — read from the record, never
+   * assumed. BOB #35: *a cpra_request a machine created reads as MACHINE-STATED (the author's class is already
+   * recorded), never as a member's statement.* The class is recorded per promotion in `manifest.author`, and the
+   * statement is the one `recordsLawStatement` key over each version's own `bundle.md`.
+   *
+   * THE STATER IS THE AUTHOR OF THE VERSION THAT INTRODUCED THE CURRENT STATEMENT, not the creator and not the
+   * latest writer: a member revising the plan of a machine's cpra_request carries the machine's statement forward
+   * and does not adopt it, and a machine's carry-forward of a member's statement does not make it machine work.
+   * So the walk goes back from the live version while each earlier version states the same thing. Version i's
+   * bytes are the `history` snapshot taken under promotion i+1's snap key (promote snapshots the outgoing state),
+   * and the last version's are the live file; `manifest` is read in INSERTION order (rowid), because `created` is
+   * the revision's own claimed time and may be backdated.
+   *
+   * THREE ANSWERS, AND UNDETERMINED IS STATED: `member` (a named person's stamp), `machine` (REC-46's one
+   * predicate), `undetermined` — no author recorded, a version whose bytes cannot be read, or a walk cut at
+   * `LAW_STATED_BY_WALK_MAX` versions without reaching the one that introduced it. Returns null when the action
+   * states no law, because there is nobody to name for nothing. */
+  static LAW_STATED_BY_WALK_MAX = 64;
+  #recordsLawStatedBy(bundleId, liveFm) {
+    const key = recordsLawStatement(liveFm);
+    if (key === null) return null;
+    const cap = Store.LAW_STATED_BY_WALK_MAX;
+    const entries = this.#rows(
+      `SELECT rowid AS r, snap_key, author, created FROM manifest WHERE bundle_id=? ORDER BY rowid DESC LIMIT ?`,
+      bundleId, cap + 1).reverse();
+    const cut = entries.length > cap;
+    const walk = cut ? entries.slice(1) : entries;
+    const undetermined = { class: "undetermined", by: null, at: null };
+    if (!walk.length) return undetermined;
+    let stater = null;
+    for (let i = walk.length - 1; i >= 0; i--) {
+      let fmI = liveFm;
+      if (i < walk.length - 1) {
+        const h = this.#one(`SELECT content FROM history WHERE bundle_id=? AND snap_key=? AND path='bundle.md'`,
+                            bundleId, walk[i + 1].snap_key);
+        if (!h || typeof h.content !== "string") break;
+        fmI = parseFrontmatter(h.content).data || {};
+      }
+      if (recordsLawStatement(fmI) !== key) break;
+      stater = walk[i];
+      if (i === 0 && cut) stater = null;
+    }
+    if (!stater) return undetermined;
+    const who = String(stater.author ?? "").trim();
+    if (!who) return { ...undetermined, at: stater.created ?? null };
+    return { class: isMachineIdentity(who) ? "machine" : "member", by: who, at: stater.created ?? null };
   }
 
   /** op=actionrisktier — REC-214 (BOB #33, 2026-09-24, "Risk-tier revision"; `BIO_Case_Making_v0_1.md` §2,
@@ -18092,6 +18176,14 @@ export class Store extends DurableObject {
         const heldTierSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
         const machineTier = this.#machineRiskTierRefusal({ who: tierWho, nextTier, heldTier, cur: !!cur, act: false });
         if (machineTier) return machineTier;
+        /* D-689 / C-32.20 — ONLY A MEMBER'S ACT STATES THE LAW A RECORDS REQUEST IS MADE UNDER (BOB #35, 2026-09-25
+           08:25Z): a machine credential creating a cpra_request, or setting, changing or removing a
+           records_request's `law`, is refused by name, on the same author stamp and the same held version as the
+           tier fence above. A carry-forward lands. Replay is exempt with the block. */
+        const machineLaw = this.#machineRecordsLawRefusal({
+          who: tierWho, nextKey: recordsLawStatement(docFmW),
+          heldKey: cur ? recordsLawStatement(heldTierFm) : null, cur: !!cur });
+        if (machineLaw) return machineLaw;
         /* REC-214 / C-90.1 — AFTER INTAKE, A TIER CHANGES THROUGH `op=actionrisktier` AND NOTHING ELSE (BOB #33,
            2026-09-24: a revision is an AUTHORED act with a REQUIRED reason, APPEND-ONLY, never a silent overwrite).
            Asked of a MEMBER's revision here, after the machine fence above answered the machine's: a revision that
