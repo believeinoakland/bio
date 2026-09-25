@@ -1,0 +1,16 @@
+{
+ "unit": "plane:slots.test.mjs",
+ "inputHash": "cb8dec894e2d674df3fe2c8e35362daad185cac1531a25e5d332e1e5a0c12e9c",
+ "verdict": "PASS",
+ "run": "2a85abc676c34f32ebfd860268aa5bef51dedb95.1790340849652.1827.json",
+ "tree": "2a85abc676c34f32ebfd860268aa5bef51dedb95",
+ "head": "099fcf198dc7f2fdfcc028ff46959c6a6c191b9e",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 492,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "fc153d28-186b-5398-a614-684ef85cb952",
+ "at": "2026-09-25T12:54:09.664Z"
+}
