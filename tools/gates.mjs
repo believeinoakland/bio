@@ -1298,7 +1298,10 @@ if (NEVER_CACHED) {
     + `${NEVER_SET.length ? `; ${NEVER_SET.length - NEVER_ADDED.length} already in the plan, ${NEVER_ADDED.length} added` : " — NONE DERIVED: no unit carries `GATE: never-cache` or runs plancheck"}; plancheck always runs`);
   for (const u of NEVER_SET) console.log(`gates:   NEVER-CACHED ${u.id}  <- ${neverCacheOf(u)}${NEVER_ADDED.includes(u.id) ? "" : " (already planned)"}`);
 }
-if (cls === "DOCS")
+/* M0-152: `--explain` prints the derived set in EVERY class, not only DOCS. It is derived above whatever the class, and
+   a caller asking "is this suite doc-facing?" (`fleetbundles.control.mjs` arm 5b) must read THIS derivation rather than
+   restate it — which it cannot do while a code edit (its own negative control, for one) moves the class off DOCS. */
+if (cls === "DOCS" || EXPLAIN)
   console.log(`gates: doc-facing suites derived fresh, read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"} — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
 /* M0-176: and WHICH of them this diff's own prose selects — printed beside the derived set, so a narrowing is as
    auditable as the derivation it narrows, and a selection that collapsed to nothing says so by name. */
