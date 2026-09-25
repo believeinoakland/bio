@@ -580,8 +580,8 @@ scope: derive the archive letter in store.mjs from BASIS_GRADES, one rank below 
 accepts-when: a leg on an archive-only capture reads C as measured, and a no-via capture reads undetermined by name (moves: a ruled case read undetermined). NEGATIVE CONTROL: return the archive via to CAPTURE_GRADE_VIA_UNRULED and 9d fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-177's report).
 
-### D-686 · running — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `content.chain_kind` is the WHOLE chain's last step, so a text-layer page of a document OCR also touched is labelled as OCR'd.** Predates D-635. Found by D-635's worker. BOB #35 RULED 2026-09-25 09:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): REPLACE on content, KEEP on capture_text, ONE function — `content.chain_kind` becomes the kind of the last derivation step covering the unit's page (partKeyOf / stepCovers), stored at mint or computed at read (the builder's choice, no second computation); existing rows are derived values, recomputing them is not a rewrite; `capture_text.chain_kind` stays document-level and its reader text says "the last step of this document's chain, not how any given page was read". — owner CONTENT-PDF, RECORD.
-status: running — SCHEDULER #23 09:15Z: spawned, stacked on land/worker/D-635 @ d31c52bf
+### D-686 · integrated — **EVERY UNIT OF A MIXED DOCUMENT READS `chain_kind` 'ocr': `content.chain_kind` is the WHOLE chain's last step, so a text-layer page of a document OCR also touched is labelled as OCR'd.** Predates D-635. Found by D-635's worker. BOB #35 RULED 2026-09-25 09:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): REPLACE on content, KEEP on capture_text, ONE function — `content.chain_kind` becomes the kind of the last derivation step covering the unit's page (partKeyOf / stepCovers), stored at mint or computed at read (the builder's choice, no second computation); existing rows are derived values, recomputing them is not a rewrite; `capture_text.chain_kind` stays document-level and its reader text says "the last step of this document's chain, not how any given page was read". — owner CONTENT-PDF, RECORD.
+status: integrated — SCHEDULER #23 10:25Z: tip 8c55a9c2 (on D-635 d31c52bf), GATE 388/388 GREEN FULLREUSE (21983 assertions), tree 02b54447; chainKindFor, content.chain_kind a plain per-unit column (REC-104 store REBUILT, not DROP COLUMN, which bricks workerd); capture_text kept document-level with reader text; IC REQUIRED (content.chain_kind changes meaning, 4 readers named); whole-document unit provisional with BOB; minted D-699
 order: after D-671 with the PDF corrections, UNBLOCKED by BOB #35 09:05Z (SCHEDULER #23, 2026-09-25)
 milestone: M2
 interface: I5 — content.chain_kind changes meaning (IC REQUIRED; readers change); the integrator mints and classifies.
@@ -730,6 +730,17 @@ depends-on: none (UI-69 and D-573 done, on main 95fe7bc7 via batch29).
 scope: the export renders the tie statement beside its Date line in the plane's words whenever undetermined_within is non-empty; nothing when empty.
 accepts-when: an exported copy of a draft with a tie shows the statement by its Date line (moves: a single date beside a tie). NEGATIVE CONTROL: drop last_change from the export and the tie arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
+
+### UI-121 · running — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
+status: running — SCHEDULER #23 10:25Z: spawned, stacked on land/worker/D-680 @ 0d17eb0e
+order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (as D-680 folded BOB #35's 07:35Z and 08:15Z rulings).
+depends-on: none (stacked on land/worker/D-680 @ 0d17eb0e, integrated, on D-626; D-683 runs on the same base).
+scope: the publish act can name its draft (`draft=`), nothing preselected; a published case page states its `draft_case` in the plane's words; C-44.4 and C-44.6 render in their DEC-49 words with both cases named.
+accepts-when: a member publishes from a named draft and the case page states how its case was bound (moves: a signed statement no surface shows). NEGATIVE CONTROL: drop draft_case from the page and the statement arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-680's report).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

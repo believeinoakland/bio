@@ -476,6 +476,16 @@ scope: set an explicit maxBuffer (or stream to a file) for every child check-moc
 accepts-when: an armed suite emitting over 1 MiB delivers its tally through check-mock-envelope (moves: a killed child). NEGATIVE CONTROL: remove the maxBuffer and the overflow arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-690's report).
 
+### D-699 · queued — **THE M-23 INSTRUMENT `bio-plane/test/content-index-probe.mjs` CRASHES "no such column: cited_as": its synthetic content table lacks REC-121's cited_as, so the measurement it exists to repeat cannot run.** Pre-existing (identical at D-635's base). Found by D-686's worker (minted on land/worker/D-686). — owner M0 (the instrument).
+order: after D-704, with the control-hygiene group — an instrument that cannot run measures nothing (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (instrument only).
+design: `docs/development/VERIFICATION.md` (measure; do not recall — admitted for M0 by name), with M-23.
+depends-on: none.
+scope: add `cited_as TEXT NOT NULL DEFAULT 'text'` to the probe's CREATE TABLE content; derive the probe's schema from schema.mjs if that is simpler and say which; re-run M-23 and record the figures with date.
+accepts-when: the probe runs to its final line and M-23's figures are re-recorded (moves: a crashed instrument). NEGATIVE CONTROL: drop the column again and the probe fails by name at the insert.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-686's worker).
+
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
 milestone: M8
@@ -505,16 +515,6 @@ depends-on: D-561 (land/worker/D-561 @ 1ab197c5; it renames container TOO_LARGE 
 scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_PATH, 413 only for CONTAINER_TOO_LARGE; grep the path for any other code it returns and give each its own status.
 accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
-
-### UI-121 · queued — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
-order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
-milestone: M10
-interface: I3 consumer.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (as D-680 folded BOB #35's 07:35Z and 08:15Z rulings).
-depends-on: D-680 (integrated, land/worker/D-680 @ 0d17eb0e).
-scope: the publish act can name its draft (`draft=`), nothing preselected; a published case page states its `draft_case` in the plane's words; C-44.4 and C-44.6 render in their DEC-49 words with both cases named.
-accepts-when: a member publishes from a named draft and the case page states how its case was bound (moves: a signed statement no surface shows). NEGATIVE CONTROL: drop draft_case from the page and the statement arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-680's report).
 
 ### REC-226 · queued — **AN OWNER'S `projectinvite` OF A MEMBER WHOSE REQUEST TO JOIN IS OPEN LEAVES THE REQUEST OPEN, so the record holds a stale request the owner has in fact answered.** BOB #35 RULED 04:30Z on REC-150's gap (a), CHANGING the provisional: the invite CLOSES the request as `granted`, by the inviting owner, at that act. — owner RECORD.
 order: after D-586, with the membership corrections: a request the owner answered still reading open is the record claiming less than happened (SCHEDULER #22, 2026-09-25)
