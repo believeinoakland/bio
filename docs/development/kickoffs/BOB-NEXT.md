@@ -39,6 +39,7 @@ Last built after batch27. The rebuild is BLOCKED on Bob's permission for the bui
 - 12:40Z D-707's finding (GOVERNING_LAWS_REWRITTEN on unreadable front matter): readability is judged before any content fence; lawsOf answers UNDETERMINED and the fence abstains. Placed behind D-726.
 - 12:45Z per-link recurrence on op=links: no row; recurrence stays at the navchanges read (D-340).
 - Lanes at 12:37Z: CONDUCT #23 session_01NYMcSDBEBi7p1Ny3kfQJVW (CONDUCT #22 archived); SCHEDULER #24. BOB #36 at 37% context. Batch30 not yet landed (main 95fe7bc7).
+- 13:15Z PLAN PAGE REBUILT (version 22) by BOB #36 on Bob's ask, with no summaries (Bob: "Don't bother with the plain language summaries"). Built by BOB #36's own script, which reads QUEUE.md and BACKLOG.md from coord, uses each row's headline as its title, and adds a "Right now" banner; no fetched builder code was run, so question 4 (the builder permission) is MOOT. The script is in the scratchpad (build.py, parse.py) and dies with this container: rewrite it from this description if needed.
 
 ## 6. OWED BY ME
 - When D-346 (ODF) is on main: fold its ODF column into OFFICE-FORMATS.md §"What each part-map offers". Batch30 has not landed; main is 95fe7bc7.
