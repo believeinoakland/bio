@@ -130,8 +130,10 @@ const SUITES = {
     base: { "0 (setup)": [0, 0], "1": [4, 0], "2": [13, 0], "3": [4, 0], "4": [7, 0], "5": [7, 0] },
     fixture: ["makeCurrent(B, V2.name)", 'makeCurrent(B, "nosuch reading")'],
     died: { "2": "(fixture) B stands on reading 2", "3": "rests on section 2, which did not produce pubB",
-            "4": "rests on section 2, which did not produce pubB, fmB",
-            "5": "rests on section 2, which did not produce pubB, fmB, bodyB" } },
+            "4": "rests on section 2, which did not produce pubB", "5": "rests on section 2, which did not produce pubB" } },
+  /* ^ D-667: 4 and 5 are declared by the invariant head their message shares with 3 (a prefix: the driver matches with
+     `includes`). The full lists ("pubB, fmB", "pubB, fmB, bodyB") are fragments of `needs()`'s composed label with the
+     section in its slot, which m025-arm-anchor-witness L3 refuses a driver to quote (D-329's rule). */
   /* D-667. Section 7's project P is made current on a question id that does not exist (VERSION_ACT_NO_SUCH_VERSION); no
      later section reads 7 (8 and 9 own their projects), so every other section reports its baseline tally. */
   "case-edition-conclusion": {
