@@ -33,6 +33,26 @@ scope: in `textchain.mjs`, carry the base page's `image_content_*` markers onto 
 accepts-when: a page carrying `image_content_unread` that tier 2 wins keeps the marker and still routes to OCR through op=acquire (moves: the marker dropped at the tier-2 merge). NEGATIVE CONTROL: drop the carry and the tier-2-wins arm fails by name, reading no marker.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-627's worker).
 
+### D-670 · queued — **A `pdf-page` RECT CARRIES NO COORDINATE SPACE IN THE CONTENT GRAMMAR: OCR anchors are image pixels (the ocr member's §2) while content extents and image placements are default user space (IC-203); `#posFields` passes `space` through and `legExtent` / `canonicalExtent` / `extentCovers` drop or ignore it — so an OCR region's pixel rect proposed through `op=extractpropose` is addressed as user space, refused C-45.1 when off the page since D-374 and passed BY ACCIDENT when it fits.** Attestation regions cannot be bounded either. Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF, RECORD.
+order: near the head, after D-633 — the record claiming a region it does not address is the over-claim CLAUDE.md §2 ranks worst, and it corrects just-landed D-374 (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: I3/I5 — the pdf-page arm gains `space`; a non-user space refused by name (or converted); the integrator mints and classifies.
+design: `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6 (the pdf-page rect and its bound, D-374), with IC-203's user-space convention.
+depends-on: D-374 (integrated, land/worker/D-374 @ c7703c3d).
+scope: add `space` to the pdf-page arm; the checker refuses by name any space other than user space, OR converts image-px with the image dims, /Rotate and the MediaBox (state which, and why); `extentCovers` answers false across spaces; existing extents without `space` read as user space, stated.
+accepts-when: an OCR pixel rect proposed through op=extractpropose is refused or converted by name, never admitted as user space (moves: a pixel rect addressed as points). NEGATIVE CONTROL: drop `space` at `#posFields` and the pixel-rect arm admits it, failing by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
+
+### D-671 · queued — **`pdf-worker/src/pagepixels.mjs` READS `/Rotate` FROM THE LEAF PAGE ONLY, though `/Rotate` is inheritable: a page inheriting `/Rotate 270` from `/Pages` renders un-turned — CPDF-12's 8.67%-character failure.** Found by D-374's worker (minted on land/worker/D-374). — owner CONTENT-PDF.
+order: after D-670, with the PDF corrections at the head; after D-320, which moves the same line (SCHEDULER #23, 2026-09-25)
+milestone: M2
+interface: none expected (a rendering corrected, not a wire change).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 (tier-3 OCR rendering), with D-374's inherited-box reading as built.
+depends-on: D-374 (integrated, c7703c3d — exports `pdfPageBox`); D-320 (integrated, 46b43c35 — edits the same function).
+scope: read /Rotate up the page tree, reusing pdfstructure's exported `pdfPageBox(doc, pageMap).rotate`; no second reader.
+accepts-when: a fixture page inheriting /Rotate 270 from /Pages renders turned and OCRs its text (moves: an inherited rotation ignored). NEGATIVE CONTROL: read the leaf only and the inherited-rotate arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-374's worker).
+
 ### D-635 · queued — **A PAGE ROUTED TO OCR WHOSE FOLIO DECODED LOSES ITS DERIVATION-PART PLACEMENT: BOB #35 RULED 06:25Z APPEND — the page keeps its layer text, the transcription is appended, and the page is listed in BOTH derivation parts, because D-252's guarantee that layer text is never lost outranks the parts' partition.** Minted by D-627's worker (its full finding rides its report). — owner CONTENT-PDF.
 order: directly after D-627, which creates the routed-with-folio pages it concerns (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -1151,23 +1171,3 @@ depends-on: none — M0-110 is done.
 scope: the audit also diffs the `origin/coord` range (the ids a branch's coord writes added since its base), reading through `tools/coord.mjs`, and says which side each allocation came from.
 accepts-when: an id allocated twice, once on `main` and once on `coord`, is reported as a collision by name. NEGATIVE CONTROL: drop the coord range, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-110's finding, via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### M0-128 · queued — **`coord.mjs write` REBALANCES THE BACKLOG AFTER EVERY WRITE, A CLAIM OR A STATUS WORD INCLUDED, WHERE BOB #29 RULED THAT ONLY A WRITE CHANGING THE PLAN'S MEMBERSHIP OR SIZE MAY.** `write()` (`tools/coord.mjs`, re-read on `619dfa65`) runs `applyIntent(dir, { op: "rebalance", auto: true })` whenever its `rebalance` option is true, which is the default, whatever the intents; `WORK-PIPELINE.md` §2 names this *"the correction owed (M0)"*. Harmless today (a rebalance conserves every row verbatim), so it breaks M0-110's partition of writers only in principle: a lane's claim can move a plan row it never read. — owner M0.
-order: with the ledger tooling, directly after M0-120 and before LED-8: a ruled correction to a landed tool, but WORK-PIPELINE §2 itself says a stray rebalance is harmless, so it neither cuts gate time nor unblocks product and sits behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23; BOB #29's ruling of the same day)
-milestone: M0
-interface: none
-design: `docs/development/WORK-PIPELINE.md` §2, *"WHICH WRITES REBALANCE — RULED 2026-09-23 by BOB #29"*, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-119 is on `main`.
-scope: `write()` adds its automatic rebalance only when an intent changes a plan file's membership or size: `insert`, `row`, `refill`, `archive`, or an `append`, `line` or `replace` whose file is `QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`; a `status` word, a claim, a handoff or a DELEGATION does not. The explicit `rebalance` intent is unchanged; `coord.test.mjs` gains the arms.
-accepts-when: a write of only a `CLAIMS.md` append or a `-NEXT.md` replace leaves both plan files byte-identical even when the backlog is over budget; an `insert` over budget still moves the tail. NEGATIVE CONTROL: rebalance on every write again, and the claim-only arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (BOB #29's ruling in WORK-PIPELINE §2; `node tools/mintid.mjs M0`).
-
-### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two … (whole text: the cut archive)
-order: behind the product rows, first of the ledger tooling (Bob, 2026-09-22: *process is overhead*; SCHEDULER #12): AMBIGUITY STATED, not the record over-claiming — the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), and LED-7 folds around the two rows (SCHEDULER #2 + BOB #17, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «LED-8» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

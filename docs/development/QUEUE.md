@@ -1110,8 +1110,8 @@ scope: persist `counts.chars` on the reading at `op=acquire`; add the LOOKED_ABS
 accepts-when: a scan read to zero characters writes LOOKED_ABSENT. NEGATIVE CONTROL: drop the count, and that arm reads PRESENT and fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
-### D-374 · running — **A `pdf-page` EXTENT'S `rect` IS BOUNDED BY NOTHING: `checkContentExtent` asks only for four finite numbers, while `pagepixels.mjs` already computes each page's MediaBox and the plane never receives it.** — owner CONTENT-PDF, CAPTURE, RECORD.
-status: running — SCHEDULER #22 06:50Z spawns WORKER D-374 (depth 2)
+### D-374 · integrated — **A `pdf-page` EXTENT'S `rect` IS BOUNDED BY NOTHING: `checkContentExtent` asks only for four finite numbers, while `pagepixels.mjs` already computes each page's MediaBox and the plane never receives it.** — owner CONTENT-PDF, CAPTURE, RECORD.
+status: integrated — SCHEDULER #23 07:40Z: tip c7703c3d on 5e8a65a8, GATE 84/84 GREEN FULLREUSE (6852 assertions; reuses 384/386 full run, reds fixed), tree ac4c7545; reading.page_boxes, C-45.1 bounds a pdf-page rect by MediaBox; construct 5.pdf-page-rect-bound; I5/I6 IC the integrator's; adjacent-line merge with D-375 at the acquire assembly; minted D-670, D-671
 order: after D-375: content minted on a region the page does not have (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M4
 interface: I5/I6 — per-page `{w,h}` on the reading (nullable); the integrator mints and classifies the IC.
@@ -1220,7 +1220,8 @@ scope: the project and publication surfaces read the manifest at project scope a
 accepts-when: a project with an adopted set shows it; an empty manifest shows no indicator. NEGATIVE CONTROL: render the indicator on an empty manifest, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-664 · queued — **`civicos-ui/test/refusal-codes.control.mjs` IS STALE ON MAIN: on 5e8a65a8 arms (c), (e) and (r2) fail and (r5) THROWS on a moved anchor (store.mjs ~18517), so no arm after (r5) runs — the negative control for the refusal-code guard is not controlling anything.** Found by D-542's worker (minted on land/worker/D-542). — owner M0.
+### D-664 · running — **`civicos-ui/test/refusal-codes.control.mjs` IS STALE ON MAIN: on 5e8a65a8 arms (c), (e) and (r2) fail and (r5) THROWS on a moved anchor (store.mjs ~18517), so no arm after (r5) runs — the negative control for the refusal-code guard is not controlling anything.** Found by D-542's worker (minted on land/worker/D-542). — owner M0.
+status: running — SCHEDULER #23 07:40Z: spawned
 order: after D-641 — the control of the guard D-641 moves; a check that cannot fail is worse than none, so it precedes the rest of the process rows (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
