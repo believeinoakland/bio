@@ -208,6 +208,13 @@ in force"* is true of such a moment and is unchanged; the marker sits beside it.
 revision still signs *"no manifest was in force"* — true of that moment, silent about the replacement. Carrying the
 marker into the signed bytes is a document-format change (a `/4`) and C-41.13's, and is not REC-210's.
 
+**How a reader is shown the bias — CONFIRMED as built by BOB #35, 2026-09-25 08:20Z (D-189's gap; D-189 @
+4a9d1b21).** (1) A published case page shows the bias sets in force AT SIGNING inside DEC-34's "Declared bias" field,
+read from the FROZEN case document and never recomputed from today's adoptions. What travels with publication is what
+was signed. (2) An invited-not-joined member does NOT see the project's working lens. Membership §7.9 withholds work
+product from the invited skeleton, and an unpublished lens is work product. What the public, and therefore the
+invitee, can see is the lens frozen into any published case.
+
 ### RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint
 
 **Every kind the SUBJECT REGISTRY carries is a legal subject for a bias statement.**
