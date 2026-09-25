@@ -50,6 +50,31 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v120, 2026-09-25 session, thread UI, D-189 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-189` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
+PROVISIONAL and CONDUCT renumbers at integration if another UI landing takes v120 first. SURFACES: **the project
+workspace and the published case page now say when a project carries its own bias.**
+
+**WHAT IT CLOSES.** `op=biasmanifest` computed the effective set at project scope (DEC-46, `BIO_Declared_Bias_v0_1.md`
+§"Bias bundles and adoption") and no line of `app.html` called it — construct 7.ui read ABSENT — while the published
+page's DEC-34 `Declared bias` field printed the hunch legs alone under a comment saying that was all declared bias
+is. D-84 had meanwhile stamped the sets in force into every signed case document, so a case published under a
+project's own set was shown to a stranger as carrying none.
+
+**WHAT MOVED.** (1) The WORKSPACE (`projectBiasHtml`, full view only — the set governs the work product 7.9 withholds
+from the invited skeleton) reads `op=biasmanifest` at project scope and renders the plane's answer: the project's
+own sets apart from the instance's, the statements in force, lock violations, REC-210's `pins_proposed` with the
+plane's sentence. It says *"This project carries its own bias"* exactly when a set is in force at scope `project`,
+tells a project under the instance's sets alone that it carries none of its own, and draws NOTHING for an empty
+answer. (2) The PUBLISHED PAGE (`pubCaseLens`, `pubLensHtml`) reads D-84's frozen block out of the signed case
+document the container already carries (`manifest.case_document.text`) — no new op, no credential, never today's
+lens — and appends it to `Declared bias`; an empty block draws nothing, a case with no container yet says so.
+
+**MEASURED** against the real plane, `civicos-ui/test/project-bias.test.mjs` 26/0 (two cases published and signed
+with `ssh-keygen`, one before any adoption and one after); `project-bias.control.mjs` 6 arms as declared, the row's
+*"render the indicator on an empty manifest"* failing by name on each surface. NOT BUILT: adopting or inhaling a set
+from the UI; REC-219's `pins_proposed` in the frozen block (not on main) is not read and should be once it lands.
+
 v120, 2026-09-25 session, thread UI, UI-112 (a WORKER of SCHEDULER #22, cloud session). Landed on
 `land/worker/UI-112` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
 PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took it. SURFACE: **the document page's
