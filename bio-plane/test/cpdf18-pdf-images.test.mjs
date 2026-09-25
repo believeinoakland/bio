@@ -342,15 +342,24 @@ t("a crop asked of a page that paints nothing is refused NO_IMAGE_AT_RECT with a
    `image_unread` marker per painted image above M-182's floor. The pin's question is whether the IMAGE WALK moved
    what the text walk decodes, so the digest is taken over the text with those markers taken back out: it must be
    the pre-D-665 digest exactly. The markers themselves are pinned in `d665-image-unread.test.mjs`. */
+/* CORRECTED 2026-09-25 by REC-206, never exempted and NOT re-pinned: tier-1 text pages now carry
+   their positioned `lines` (and `linesWhy` when there are none) — framework §16, "Positional text".
+   Those keys are removed BY NAME before the digest, so the pin still binds every byte the text walk
+   emitted before; that the lines are the text again, character for character, is asserted beside it. */
+/* c22-batch30 union: both corrections apply — REC-206's lines are removed by name and D-665's markers taken
+   back out, and what remains is still the pinned pre-image-walk text. */
 const withoutImageUnread = (tx) => {
   const keep = (a) => (Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a);
   const undetermined = keep(tx.undetermined);
   return { ...tx, pages: tx.pages.map((p) => ({ ...p, undetermined: keep(p.undetermined) })), undetermined,
            counts: { ...tx.counts, undetermined: undetermined.length } };
 };
+const sansLines = (tx) => ({ ...tx, pages: (tx.pages || []).map(({ lines, linesWhy, ...p }) => p) });
+t("REC-206: every tier-1 page's positioned lines rejoin to its text",
+  [st.text, agenda.text].every((tx) => tx.pages.every((p) => Array.isArray(p.lines) && p.lines.map((l) => l.text).join("\n") === p.text)), true);
 t("TIER 1's TEXT over the image fixture and over a real agenda is unchanged by the image walk "
-  + "(the tokenizer's inline-image option is off for text) — pinned by digest, D-665's per-image markers aside",
-  [sha(JSON.stringify(withoutImageUnread(st.text))), sha(JSON.stringify(withoutImageUnread(agenda.text)))],
+  + "(the tokenizer's inline-image option is off for text) — pinned by digest, D-665's per-image markers and REC-206's lines aside",
+  [sha(JSON.stringify(withoutImageUnread(sansLines(st.text)))), sha(JSON.stringify(withoutImageUnread(sansLines(agenda.text))))],
   [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
 t("  and D-665 did add per-image markers to the image fixture (the correction above is not vacuous)",
   st.text.undetermined.some((m) => m && m.reason === "image_unread"), true);

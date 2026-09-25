@@ -40781,6 +40781,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const content = await pageContent(doc, pageMap);
   const toks = tokenizeContent(content);
   const pieces = [];
+  const boxes = [];
+  const undecodedCenters = [];
+  let unpositioned = 0;
   const undetermined = [];
   let curFont = null;
   let curFontName = null;
@@ -40802,6 +40805,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!curFont) {
       penKnown = false;
       inkValid = false;
+      unpositioned += bytes.length;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -40812,7 +40816,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
-      advanceOver(bytes);
+      {
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -40825,9 +40834,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u2 = curFont.toUni.get(code);
       if (u2 == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -40838,9 +40851,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       } else {
         if (softAt === pieces.length && /^\s/.test(u2)) {
           pieces.pop();
+          boxes.pop();
           softAt = -1;
         }
         pieces.push(u2);
+        boxes.push(box);
       }
     }
     endRun();
@@ -40875,9 +40890,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const breakLine = () => {
     if (softAt === pieces.length && pieces.length) {
       pieces.pop();
+      boxes.pop();
       softAt = -1;
     }
     pieces.push("\n");
+    boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
   let tmat = IDENTITY_MATRIX.slice();
@@ -40895,11 +40912,22 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m2 = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m2[0], m2[1]);
   };
+  const glyphBox = (m0, m1) => {
+    const a2 = matMul(m0, ctm), b2 = matMul(m1, ctm);
+    const pt2 = (m2, x2, y2) => [x2 * m2[0] + y2 * m2[2] + m2[4], x2 * m2[1] + y2 * m2[3] + m2[5]];
+    const p0 = pt2(a2, 0, 0), p1 = pt2(b2, 0, 0), q0 = pt2(a2, 0, tfs), q1 = pt2(b2, 0, tfs);
+    const xs2 = [p0[0], p1[0], q0[0], q1[0]], ys2 = [p0[1], p1[1], q0[1], q1[1]];
+    return {
+      r: [Math.min(...xs2), Math.min(...ys2), Math.max(...xs2), Math.max(...ys2)],
+      c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])]
+    };
+  };
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
     pieces.push(" ");
+    boxes.push(null);
     softAt = pieces.length;
   };
   const judgeGap = (toX) => {
@@ -41161,7 +41189,71 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text, undetermined };
+  const lines = linesOf(pageIdx, pieces, boxes, text);
+  return {
+    text,
+    undetermined,
+    lines,
+    placed: { pieces, boxes, undecodedCenters, unpositioned }
+  };
+}
+var round3 = (v2) => Math.round(v2 * 1e3) / 1e3;
+function linesOf(pageIdx, pieces, boxes, text) {
+  const out = [];
+  let chunk = [], placeable = true, r2 = null;
+  const flush = () => {
+    const t2 = chunk.join("");
+    if (t2.length) out.push({
+      page: pageIdx,
+      text: t2,
+      rect: placeable && r2 ? r2.map(round3) : null
+    });
+    chunk = [];
+    placeable = true;
+    r2 = null;
+  };
+  for (let i2 = 0; i2 < pieces.length; i2++) {
+    const p2 = pieces[i2], b2 = boxes[i2];
+    if (p2 === "\n" && b2 === null) {
+      flush();
+      continue;
+    }
+    chunk.push(p2);
+    if (b2 === null) {
+      if (p2 !== " ") placeable = false;
+      continue;
+    }
+    if (/^\s*$/.test(p2)) continue;
+    r2 = r2 ? [Math.min(r2[0], b2.r[0]), Math.min(r2[1], b2.r[1]), Math.max(r2[2], b2.r[2]), Math.max(r2[3], b2.r[3])] : b2.r.slice();
+  }
+  flush();
+  return out.map((l2) => l2.text).join("\n") === text ? out : null;
+}
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a2, b2, c2, d2] = source.rect;
+  const x0 = Math.min(a2, c2), x1 = Math.max(a2, c2), y0 = Math.min(b2, d2), y1 = Math.max(b2, d2);
+  const inside = (pt2) => pt2[0] >= x0 && pt2[0] <= x1 && pt2[1] >= y0 && pt2[1] <= y1;
+  let out = "", gap = false;
+  for (let i2 = 0; i2 < placed.pieces.length; i2++) {
+    const p2 = placed.pieces[i2], bx = placed.boxes[i2];
+    if (bx && !/^\s*$/.test(p2) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p2;
+      gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown" : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return {
+    text: out,
+    why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+    tier: 1
+  };
 }
 var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
 var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
@@ -41220,7 +41312,7 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText2(doc, pageOrder) {
+async function extractText2(doc, pageOrder, placedByPage = /* @__PURE__ */ new Map()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -41239,7 +41331,7 @@ async function extractText2(doc, pageOrder) {
   for (let idx = 0; idx < pageOrder.length; idx++) {
     const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
     if (!pageMap) {
-      pages.push({ page: idx, text: "", undetermined: [] });
+      pages.push({ page: idx, text: "", undetermined: [], lines: null, linesWhy: "text_not_read" });
       continue;
     }
     let res;
@@ -41249,7 +41341,14 @@ async function extractText2(doc, pageOrder) {
       doc.note("text_extraction_error");
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
-    pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    pages.push({
+      page: idx,
+      text: res.text,
+      undetermined: res.undetermined,
+      lines: res.lines ?? null,
+      ...res.lines ? {} : { linesWhy: res.placed ? "lines_do_not_rejoin_to_text" : "text_not_read" }
+    });
+    if (res.placed) placedByPage.set(idx, res.placed);
     for (const u2 of res.undetermined) allUndetermined.push(u2);
   }
   const document2 = pages.map((p2) => p2.text).filter((t2) => t2.length).join("\n");
@@ -41605,7 +41704,9 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l2 of links) counts[l2.partition]++;
-  const text = await extractText2(doc, pageOrder);
+  const placedByPage = /* @__PURE__ */ new Map();
+  const text = await extractText2(doc, pageOrder, placedByPage);
+  for (const l2 of links) l2.anchor = anchorOf(l2.source ? placedByPage.get(l2.source.page) : null, l2.source);
   const imgs = await extractImages(doc, pageOrder);
   if (imgs.images) markImageContent(doc, pageOrder, text, imgs.images);
   if (imgs.images) markImagesUnread(doc, pageOrder, text, imgs.images);

@@ -276,6 +276,21 @@ const PRE_ITEM_DIGEST = {
   scan: "1e4cbd3831b83aa9ffa74db37c0cc7aad90b4a35a4791fe805d3d200a16f2d8d",
   layer: "d167a73e91f333b56e84f968c01da4a5ebe76e1711e1f0c44cf9ba0362d65abb",
 };
+/* CORRECTED 2026-09-25 by REC-206, never exempted and NOT re-taken: `op=pdfstructure` now serves
+   positional text (`text.pages[].lines`, `linesWhy`), each link's `anchor` and the derived
+   `membership` / `membershipWhy` (framework §16, "Positional text"). Those keys are REMOVED BY NAME
+   and the answer re-serialised exactly as the op's `json` does (one-space indent); what remains must
+   hash to the SAME two literals as before, so the old default path stays pinned to its bytes rather
+   than to a printout. The additions' presence is asserted beside it.
+   c22-batch30: placed beside the literals it serves; D-374's and D-665's proof arms below (which REC-206's base
+   did not have) take the answer through it too. */
+const sansRec206 = (text) => {
+  const o = JSON.parse(text);
+  delete o.membership; delete o.membershipWhy;
+  for (const l of (o.links || [])) delete l.anchor;
+  for (const p of ((o.text && o.text.pages) || [])) { delete p.lines; delete p.linesWhy; }
+  return JSON.stringify(o, null, 1);
+};
 
 try {
 
@@ -311,12 +326,15 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
   const plainScan = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${S}`);
   const plainLayer = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${L}`);
   console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`);
-  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(plainScan.text), PRE_ITEM_DIGEST.scan);
+  t("REC-206: the plain read carries its positional additions (anchors, membership or its reason)",
+    [plainScan.body, plainLayer.body].every((b) => b && ("membership" in b) && (b.links || []).every((l) => "anchor" in l)), true);
+  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(sansRec206(plainScan.text)), PRE_ITEM_DIGEST.scan);
   /* D-665's proof that its markers are the WHOLE difference, kept as an assertion (the pattern of the RE-TAKEN
      notes above): the scan's plain answer with every `image_unread` marker taken out, and its count lowered by
-     as many, re-serialised as `json()` does, hashes to the literal D-536 pinned. */
+     as many, re-serialised as `json()` does, hashes to the literal D-536 pinned. (c22-batch30: taken over the answer
+     with REC-206's positional keys already removed by name, `sansRec206` above.) */
   {
-    const o = JSON.parse(plainScan.text);
+    const o = JSON.parse(sansRec206(plainScan.text));
     /* c22-batch30: D-374's `pageBoxes` key is the other whole difference (its RE-TAKEN note above), so it is
        taken out too before comparing with D-536's answer. */
     delete o.pageBoxes;
@@ -332,7 +350,7 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
       [true, "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8"]);
   }
   t("the plain read of the text-layer document is BYTE-IDENTICAL to the pre-item answer (digest)",
-    sha(plainLayer.text), PRE_ITEM_DIGEST.layer);
+    sha(sansRec206(plainLayer.text)), PRE_ITEM_DIGEST.layer);
   t("the plain read of the scan does NOT reach tier 3 — the seam is opt-in, never automatic",
     plainScan.body?.tier !== 3, true);
   t("and it carries no re-extraction key at all", "reextraction" in (plainScan.body || {}), false);
