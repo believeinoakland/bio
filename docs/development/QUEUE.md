@@ -732,7 +732,7 @@ accepts-when: an exported copy of a draft with a tie shows the statement by its 
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
 
 ### UI-121 · running — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
-status: running — SCHEDULER #23 10:25Z: spawned, stacked on land/worker/D-680 @ 0d17eb0e
+status: running — SCHEDULER #23 10:58Z: narrowed by BOB #35 10:12Z to part (2) only (the case page states its draft_case); parts (1)+(3) are UI-122, blocked on DEC-33
 order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 consumer.

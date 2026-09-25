@@ -106,6 +106,16 @@ scope: render action.law.stated (the plane's sentence, including MACHINE-STATED)
 accepts-when: a records_request with a stated law shows it on its page, and a machine-stated one says so (moves: a stated law no page shows). NEGATIVE CONTROL: drop the render and the stated-law arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
 
+### UI-122 · blocked — **THE PUBLISH ACT CANNOT NAME ITS DRAFT FROM ANY SURFACE, AND C-44.4 / C-44.6 ARE RENDERED NOWHERE: UI-121's parts (1) (the publish act sends `draft=`) and (3) (the two refusals in their DEC-49 words, both cases named), split off because no surface calls op=publish — the ceremony (UI-17) sleeps under DEC-33.** BOB #35 RULED 2026-09-25 10:12Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23): re-row (1)+(3) BLOCKED on DEC-33's re-entry ("the chain through UI-18 has landed and a group needs to publish without its operator" — the second clause is Bob's priority call); never built piecemeal; if Bob rules the ceremony awake, UI-17 is rowed whole with these inside it. UI-121 builds part (2) only. — owner UI.
+order: provisional, after D-696 — BLOCKED on DEC-33's re-entry (Bob's priority), carried to BOB (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (as D-680 folded BOB #35's rulings), with DEC-33's deferral of the publish ceremony.
+depends-on: none — BLOCKED on DEC-33's re-entry (Bob), not on a row.
+scope: when unblocked, inside UI-17's ceremony: the publish act names its draft (nothing preselected, DEC-69); C-44.4 and C-44.6 render in their DEC-49 words with both cases named.
+accepts-when: a member publishes from a named draft through the ceremony and a mismatched case is refused in words naming both (moves: no surface calls op=publish). NEGATIVE CONTROL: drop `draft=` from the act and the named-draft arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, BOB #35's 10:12Z entry).
+
 ### D-676 · queued — **THE ON-POINT CHOOSER DOES NOT OFFER AN UNPLACED OCCURRENCE, THOUGH THE ACT NOW ACCEPTS IT: app.html sends `occurrence` only when it is truthy (`if(d.onpointOccurrence)`), so the '' key D-625 made choosable is never sent, and UI-112's comment "the act reads an empty occurrence= as none named" becomes false.** Found by D-625's worker (minted on land/worker/D-625). — owner UI.
 order: at the backlog head after D-682 — a correction joining two just-landed rows (D-625, UI-112) (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -1091,24 +1101,4 @@ design: `docs/development/VERIFICATION.md` "The negative-control register" (brea
 depends-on: M0-157.
 scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
 accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-162 · queued — **M0-99's DELEGATION BLOCK STAYS OPEN ON THREE STALE SENTENCES: `kickoffs/DIST.md` lesson 20, `kickoffs/SKILL.md`'s "Design sources" list, and FLEET-NEXT's "Carried memory" ("Regenerate docs/DECIDED.md; never merge it") still describe DECIDED.md as it was.** M0-158's one residue; the candidate words are written in the block on coord `CLAIMS.md`. — owner M0.
-order: after M0-160, small: the last open item of a closed contradiction sweep (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a claim to keep true).
-depends-on: M0-158.
-scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
-accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
-order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
-depends-on: none.
-scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
-accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
