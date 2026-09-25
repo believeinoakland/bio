@@ -20825,6 +20825,11 @@ var RUNG_ABSENT = {
   projectinvite: { ground: "credential", is: "roster act on a project, position-enforced by the store" },
   projectjoin: { ground: "credential", is: "roster act on a project" },
   projectleave: { ground: "credential", is: "roster act on a project" },
+  /* REC-150 (Membership v2 §7.14): the request to join is participation — WHO may act in a project — exactly as the
+     roster acts beside it are; a GRANT writes the same `invited` row `projectinvite` does. */
+  projectrequest: { ground: "credential", is: "a member outside a discoverable project asks to be added (\xA77.14); one open at a time, withdrawn by the requester" },
+  projectrequestwithdraw: { ground: "credential", is: "the requester closes their own open request to join" },
+  projectrequestanswer: { ground: "credential", is: "an owner grants a request to join (an invitation: `invited`, never `joined`) or declines it" },
   projectremove: { ground: "credential", is: "roster act on a project" },
   projectowneradd: { ground: "credential", is: "roster act on a project" },
   /* ---- caller-owned: the caller's own state, never the record's. */
