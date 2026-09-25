@@ -922,7 +922,7 @@ accepts-when: versions.test's table census equals M0-155's 114. NEGATIVE CONTROL
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
 
 ### M0-172 · integrated — **`status.control.mjs` LEAVES ITS PEN BEHIND (`.status-harness/`, 25 KB `pristine.status`), and `.gitignore`'s pen preamble mis-cites WORKER.md.** BOB #33 RULED (17:12Z): a control driver's PEN is not a session's SCRATCH; in-worktree, gitignored, item-named pens STAND. — owner M0 (fold into any open M0 batch).
-status: integrated — SCHEDULER #24 12:28Z: tip 2f64cd95 on main 95fe7bc7, GATE 90/90 GREEN FULLREUSE (6949 assertions; excludes 1 untallied), tree f8738090; status.control removes its pen on a clean run (asserted), .gitignore preamble corrected, WORKER.md unchanged (W16 already says it; budget full); 15 drivers moved to controlPen; readbudget word overrun printed; DELEGATION to UI filed; minted D-730, D-735
+status: integrated — CONDUCT #23 12:29Z: worker report — tip 2f64cd95 (on main 95fe7bc7), GATE 90/90 GREEN FULLREUSE (6949 assertions); 15 controls to controlPen, readbudget describe; no IC; minted D-730, D-735; rides batch30
 order: after M0-171, small; fold into an open M0 batch rather than its own gate (BOB #33, 17:12Z; SCHEDULER #18) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
 milestone: M0
 interface: none.
