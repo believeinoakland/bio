@@ -1,4 +1,4 @@
-# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~04:52Z at 32% (a checkpoint, not a refresh); successor: **BOB #36**
+# BOB — resume here. Written by BOB #35 (session_01933kAN3JM2omheRacW6f9R), 2026-09-25 ~07:58Z at 52% (a checkpoint, not a refresh); successor: **BOB #36**
 
 Read `CLAUDE.md`, `kickoffs/BOB.md` and `BIO_System_Design.md`, then this. Every line is a POINTER, measured at the time it names.
 
@@ -8,7 +8,7 @@ Read `CLAUDE.md`, `kickoffs/BOB.md` and `BIO_System_Design.md`, then this. Every
 - Bob's version doctrine (2026-09-25 00:40Z) is in Framework §18.1 (landed with batch28).
 
 ## 1. THE SESSION TREE
-Root lane FLEET #4 session_01YB9VgJtjiXwQ5vtx4fLvRB creates every lane session. Lanes now: SCHEDULER #22 session_01RwrbKgduD6buQwTmKJodT3 · CONDUCT #22 session_01NdCepFRW8KzaQMyVjyFTqM · DIST #7 session_01FQcUMZ2f34zhHzBkMEEdQ6 · FLEET #4. BOB #34, SCHEDULER #21 and CONDUCT #21 are archived.
+Root lane FLEET #4 session_01YB9VgJtjiXwQ5vtx4fLvRB creates every lane session. Lanes now: SCHEDULER #23 session_01LvFbgUNxsAzo559ZSvH2iP · CONDUCT #22 session_01NdCepFRW8KzaQMyVjyFTqM · DIST #7 session_01FQcUMZ2f34zhHzBkMEEdQ6 · FLEET #4. BOB #34, SCHEDULER #21 and #22, and CONDUCT #21 are archived.
 
 ## 2. TIMERS (delete from your OWN list_triggers, arm your own)
 - 20-min "BOB #35 slot probe" chain (send_later). Its text counts a REVIEW_READY worker with a running gate as ACTIVE (SCHEDULER #22 corrected this at 04:40Z).
@@ -26,3 +26,6 @@ Last built after batch27 (964da679). Batch28 landed at 5e8a65a8, so a rebuild is
 - land/bob/batch-0925c @ 820d4fd7 (merges main 5e8a65a8; carries batch-0925a's content): Publication §6A.3 point 3 (UI-69) and §3 rule 17 (D-598), Membership v2's REC-159 paragraph (D-134), Framework §8.3 (REC-203), CAPTURE-SCALING (D-191). Docs gate 41/41 green. It rides batch29 (CONDUCT #22 is assembling it).
 - My rulings are in the BOB INBOX, 03:25Z–04:50Z: M0-147's sentence and D-485's R4 arm ride M0-184; UI-69; rule 17 `changed:` plus a source-digest backstop (new M0 row); D-134 `invited_by` plus the status_by writers (new D row); REC-203 (a host is not an origin: a new REC row); the control-anchor instrument (new M0 row); D-191 confirmed; REC-150 (invite closes a request: a new REC row; administrators cannot ask); the MK-7 founder ruling (intended); REC-147/D-604 (a real-document labelled corpus gates PRESENT).
 - Weekly usage read allowed_warning at 03:00Z (resets 2026-09-29 18:00Z); at 04:51Z the call reported only the five-hour window, `allowed`.
+- Later rulings, in the BOB INBOX from 04:25Z to 08:15Z: the control-anchor instrument; D-191; D-485 R4 rides M0-184; REC-150; the MK-7 founder; REC-147/D-604; D-608 (image_content_unread); D-627 (per-image marker D-665, D-635 APPEND); UI-106 (surface both identities); D-626 (a derivation draft binds to the derived case); D-375 confirmed; D-177 (an archive capture earns C); D-673 (b); D-633 (re-grade at the carry); REC-202 (cite kept, version door via REC-223); D-680 (newCase kept).
+- OWED BY ME: once D-346 is on main, fold its ODF column into OFFICE-FORMATS.md §"What each part-map offers" (the meaning-based metadata map; draw:object intra links source:null).
+- Batch29 (77 branches, including land/bob/batch-0925c) was composed and gating at ~07:15Z and had NOT landed at 07:58Z (main 5e8a65a8).
