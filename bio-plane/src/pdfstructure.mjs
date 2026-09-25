@@ -956,6 +956,20 @@ function tokenizeContent(s, opts = {}) {
   return toks;
 }
 
+/** D-608: the bytes a token list's text-showing operators (`Tj`, `TJ`, `'`,
+ *  `"`) carry — what a form this walk could not enter would have shown. Bytes,
+ *  not characters: no font is selected to say how wide a code is. */
+function textShowBytes(toks) {
+  let n = 0;
+  const pending = [];
+  for (const tk of toks) {
+    if (tk.t !== "op") { if (tk.t === "str") pending.push(tk.bytes.length); continue; }
+    if (tk.v === "Tj" || tk.v === "TJ" || tk.v === "'" || tk.v === '"') for (const b of pending) n += b;
+    pending.length = 0;
+  }
+  return n;
+}
+
 /** Read a literal ( … ) string as RAW BYTES (0-255), honouring PDF escapes and
  *  nested parens. Unlike parseLiteralString this does not decode to text — the
  *  bytes are the codes the font maps. */
@@ -1454,10 +1468,19 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let curFontName = null;  // the resource name last selected by Tf
   const stack = [];
 
+  /* D-608: the font dictionary and resources IN SCOPE. A Form XObject names
+     its fonts in its OWN /Resources, so these move when the walk descends into
+     one (`paintForm`) and come back when it returns. `scopeTag` keeps a font
+     written as a DIRECT dict in a form from sharing a cache slot with a
+     same-named direct font on the page; the page's own tag is empty, so every
+     key the walk made before D-608 is spelled as it was. */
+  let curResources = resources;
+  let curFontDict = fontDict;
+  let scopeTag = "";
   const getFont = async (name) => {
-    if (!fontDict || !(name in fontDict)) return null;
-    const ref = fontDict[name];
-    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + name;
+    if (!curFontDict || !(name in curFontDict)) return null;
+    const ref = curFontDict[name];
+    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
     const f = await loadFont(doc, ref);
     fontCache.set(key, f);
@@ -1708,9 +1731,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
    *  is known again whatever went before. */
   const penToLine = () => { tmat = tlm.slice(); penKnown = true; markInk(); };
 
+  const run = async (toks, depth, formChain) => {
   for (const tk of toks) {
     if (tk.t !== "op") { stack.push(tk); continue; }
     switch (tk.v) {
+      case "Do": {
+        /* D-608: the operator this walk did not interpret until now. A Form
+           XObject is a content stream of its own, and the text it shows is on
+           the page exactly as the page's own text is (M-166: ACFR FY2023-24
+           p38 shows 34 of its 40 text runs inside forms). */
+        const nameTok = lastOfType("name");
+        stack.length = 0;
+        await paintForm(nameTok ? nameTok.v : null, depth, formChain);
+        break;
+      }
       case "Tf": {
         const nameTok = lastOfType("name");
         curFontName = nameTok ? nameTok.v : null;
@@ -1807,6 +1841,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
         if (ty !== 0) breakLine();
         else if (lineY === null) lineY = baselineOf(tlm, ctm);
+        /* D-608: `ty = 0` is along the baseline only if the CTM did not move
+           it. A form is entered through its `cm` and /Matrix and typically
+           starts `BT 0 0 Td`, which read as a continuation of the page's last
+           line (`PAGE HEADform label`, the suite's FORM ARM). `Tm` has always
+           asked the device baseline; `Td` now asks it too. Measured inert on
+           everything else: 0 of 1,840 real pages moved (M-174). */
+        else if (Math.abs(baselineOf(tlm, ctm) - lineY) > BASELINE_EPS) breakLine();
         else judgeGap(deviceX(tlm));
         penToLine();
         break;
@@ -1831,6 +1872,78 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     stack.length = 0; // operands are consumed by their operator
   }
+  };
+
+  /* D-608 — TEXT INSIDE A FORM XOBJECT IS READ, THE WAY CPDF-18's IMAGE WALK
+   * ALREADY DESCENDS (`pdfPageImages`).
+   *
+   * MEASURED, not assumed (M-166). This walk interpreted no `Do`, so a page
+   * whose text sits in a Form XObject read as fully decoded with none of that
+   * text and NO marker: ACFR FY2023-24 p38 gave tier 1 80 glyphs, its running
+   * header, and tier 2 546, the header plus every label of two pie charts. All
+   * 9 held pages where tier 2 read 10% or more beyond an unflagged tier 1
+   * carried form text. The record claimed a page it had not read.
+   *
+   * WHAT `Do` DOES HERE, and it is ISO 32000-1 §8.10.1's own sequence: save
+   * the graphics state, premultiply the CTM by the form's /Matrix, paint the
+   * form's content with its OWN /Resources (the enclosing ones when it has
+   * none — the image walk's fallback), restore. The text state (font, size,
+   * Tc, Tw, Tz, TL) is part of the graphics state and is restored with it. The
+   * text matrices are not, but a `Do` inside `BT` is outside the grammar, so
+   * they are restored too rather than letting a form a producer wrongly nested
+   * there move the page's line. The BASELINE and the INK are not restored: they
+   * are held in device space, so a line the form wrote is compared with the
+   * page's next line exactly as two page lines are. `/BBox` clipping is not
+   * modelled; neither is clipping of the page's own text.
+   *
+   * WHAT IT CANNOT READ, IT SAYS, COUNTED. A form nested past
+   * FORM_DEPTH_LIMIT, or one that paints itself, is not walked; if it shows
+   * text, a `form_text_unread` marker counts the bytes its text-showing
+   * operators carry (the unit `no_current_font` already counts in: no font is
+   * in hand to say how wide a code is). A form whose stream cannot be decoded
+   * is `form_stream_undecodable` with a count of 0: whether it held text is
+   * undetermined, and a figure for it would be invented. A `Do` naming nothing
+   * this scope resolves, or naming an image, adds nothing: there is no text
+   * there that any reader could have. */
+  const paintForm = async (name, depth, formChain) => {
+    const xobjects = curResources ? doc.dictOf(curResources.XObject) : null;
+    const ref = name != null && xobjects ? xobjects[name] : null;
+    const st = ref ? doc.resolve(ref) : null;
+    if (!st || st.t !== "stream" || nameOf(doc, st.dict.Subtype) !== "Form") return;
+    const key = ref.t === "ref" ? ref.n : null;
+    const data = await doc.streamDecoded(st);
+    if (!data) {
+      doc.note("form_stream_undecodable");
+      undetermined.push({ page: pageIdx, reason: "form_stream_undecodable", font: null, codes: "", count: 0 });
+      return;
+    }
+    const formToks = tokenizeContent(LATIN1.decode(data));
+    if (depth >= FORM_DEPTH_LIMIT || (key != null && formChain.includes(key))) {
+      const unread = textShowBytes(formToks);
+      if (unread > 0) {
+        undetermined.push({ page: pageIdx, reason: "form_text_unread", font: null, codes: "", count: unread });
+      }
+      return;
+    }
+    const saved = { ctm, curResources, curFontDict, scopeTag, curFont, curFontName,
+                    tfs, tc, tw, th, leading, tlm, tmat, penKnown };
+    const m = matrixOf(doc, st.dict.Matrix) || IDENTITY_MATRIX;
+    ctm = matMul(m, ctm);
+    const formRes = doc.dictOf(st.dict.Resources);
+    if (formRes) {
+      curResources = formRes;
+      curFontDict = doc.dictOf(formRes.Font);
+      scopeTag = "f" + (key ?? "?" + depth) + ":";
+    }
+    try {
+      await run(formToks, depth + 1, key != null ? [...formChain, key] : formChain);
+    } finally {
+      ({ ctm, curResources, curFontDict, scopeTag, curFont, curFontName,
+         tfs, tc, tw, th, leading, tlm, tmat, penKnown } = saved);
+    }
+  };
+
+  await run(toks, 0, []);
 
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
 
