@@ -774,16 +774,16 @@ function decodeScan(e2, t2, n2, r2, i2, a2, o2, s2, c2, l2, u2 = false) {
     let r4 = n3 % e3.blocksPerLine;
     t3(e3, getBlockBufferOffset(e3, y2, r4));
   }
-  let b2 = i2.length, x2, S2, C2, w2, T2, E2;
+  let b3 = i2.length, x2, S2, C2, w2, T2, E2;
   E2 = f2 ? o2 === 0 ? c2 === 0 ? decodeDCFirst : decodeDCSuccessive : c2 === 0 ? decodeACFirst : decodeACSuccessive : decodeBaseline;
-  let D2 = 0, O2, k2 = b2 === 1 ? i2[0].blocksPerLine * i2[0].blocksPerColumn : d2 * r2.mcusPerColumn, j2, ee2;
+  let D2 = 0, O2, k2 = b3 === 1 ? i2[0].blocksPerLine * i2[0].blocksPerColumn : d2 * r2.mcusPerColumn, j2, ee2;
   for (; D2 <= k2; ) {
     let r4 = a2 ? Math.min(k2 - D2, a2) : k2;
     if (r4 > 0) {
-      for (S2 = 0; S2 < b2; S2++) i2[S2].pred = 0;
-      if (g2 = 0, b2 === 1) for (x2 = i2[0], T2 = 0; T2 < r4; T2++) decodeBlock(x2, E2, D2), D2++;
+      for (S2 = 0; S2 < b3; S2++) i2[S2].pred = 0;
+      if (g2 = 0, b3 === 1) for (x2 = i2[0], T2 = 0; T2 < r4; T2++) decodeBlock(x2, E2, D2), D2++;
       else for (T2 = 0; T2 < r4; T2++) {
-        for (S2 = 0; S2 < b2; S2++) for (x2 = i2[S2], j2 = x2.h, ee2 = x2.v, C2 = 0; C2 < ee2; C2++) for (w2 = 0; w2 < j2; w2++) decodeMcu(x2, E2, D2, C2, w2);
+        for (S2 = 0; S2 < b3; S2++) for (x2 = i2[S2], j2 = x2.h, ee2 = x2.v, C2 = 0; C2 < ee2; C2++) for (w2 = 0; w2 < j2; w2++) decodeMcu(x2, E2, D2, C2, w2);
         D2++;
       }
     }
@@ -794,21 +794,21 @@ function decodeScan(e2, t2, n2, r2, i2, a2, o2, s2, c2, l2, u2 = false) {
   return n2 - p2;
 }
 function quantizeAndInverse(e2, t2, n2) {
-  let r2 = e2.quantizationTable, i2 = e2.blockData, a2, o2, s2, c2, l2, u2, d2, f2, p2, m2, h2, g2, _2, v2, y2, b2, x2;
+  let r2 = e2.quantizationTable, i2 = e2.blockData, a2, o2, s2, c2, l2, u2, d2, f2, p2, m2, h2, g2, _2, v2, y2, b3, x2;
   if (!r2) throw new JpegError(`missing required Quantization Table.`);
   for (let e3 = 0; e3 < 64; e3 += 8) {
-    if (p2 = i2[t2 + e3], m2 = i2[t2 + e3 + 1], h2 = i2[t2 + e3 + 2], g2 = i2[t2 + e3 + 3], _2 = i2[t2 + e3 + 4], v2 = i2[t2 + e3 + 5], y2 = i2[t2 + e3 + 6], b2 = i2[t2 + e3 + 7], p2 *= r2[e3], (m2 | h2 | g2 | _2 | v2 | y2 | b2) === 0) {
+    if (p2 = i2[t2 + e3], m2 = i2[t2 + e3 + 1], h2 = i2[t2 + e3 + 2], g2 = i2[t2 + e3 + 3], _2 = i2[t2 + e3 + 4], v2 = i2[t2 + e3 + 5], y2 = i2[t2 + e3 + 6], b3 = i2[t2 + e3 + 7], p2 *= r2[e3], (m2 | h2 | g2 | _2 | v2 | y2 | b3) === 0) {
       x2 = Ie * p2 + 512 >> 10, n2[e3] = x2, n2[e3 + 1] = x2, n2[e3 + 2] = x2, n2[e3 + 3] = x2, n2[e3 + 4] = x2, n2[e3 + 5] = x2, n2[e3 + 6] = x2, n2[e3 + 7] = x2;
       continue;
     }
-    m2 *= r2[e3 + 1], h2 *= r2[e3 + 2], g2 *= r2[e3 + 3], _2 *= r2[e3 + 4], v2 *= r2[e3 + 5], y2 *= r2[e3 + 6], b2 *= r2[e3 + 7], a2 = Ie * p2 + 128 >> 8, o2 = Ie * _2 + 128 >> 8, s2 = h2, c2 = y2, l2 = Le * (m2 - b2) + 128 >> 8, f2 = Le * (m2 + b2) + 128 >> 8, u2 = g2 << 4, d2 = v2 << 4, a2 = a2 + o2 + 1 >> 1, o2 = a2 - o2, x2 = s2 * Fe + c2 * Pe + 128 >> 8, s2 = s2 * Pe - c2 * Fe + 128 >> 8, c2 = x2, l2 = l2 + d2 + 1 >> 1, d2 = l2 - d2, f2 = f2 + u2 + 1 >> 1, u2 = f2 - u2, a2 = a2 + c2 + 1 >> 1, c2 = a2 - c2, o2 = o2 + s2 + 1 >> 1, s2 = o2 - s2, x2 = l2 * Ne + f2 * Me + 2048 >> 12, l2 = l2 * Me - f2 * Ne + 2048 >> 12, f2 = x2, x2 = u2 * 799 + d2 * je + 2048 >> 12, u2 = u2 * je - d2 * 799 + 2048 >> 12, d2 = x2, n2[e3] = a2 + f2, n2[e3 + 7] = a2 - f2, n2[e3 + 1] = o2 + d2, n2[e3 + 6] = o2 - d2, n2[e3 + 2] = s2 + u2, n2[e3 + 5] = s2 - u2, n2[e3 + 3] = c2 + l2, n2[e3 + 4] = c2 - l2;
+    m2 *= r2[e3 + 1], h2 *= r2[e3 + 2], g2 *= r2[e3 + 3], _2 *= r2[e3 + 4], v2 *= r2[e3 + 5], y2 *= r2[e3 + 6], b3 *= r2[e3 + 7], a2 = Ie * p2 + 128 >> 8, o2 = Ie * _2 + 128 >> 8, s2 = h2, c2 = y2, l2 = Le * (m2 - b3) + 128 >> 8, f2 = Le * (m2 + b3) + 128 >> 8, u2 = g2 << 4, d2 = v2 << 4, a2 = a2 + o2 + 1 >> 1, o2 = a2 - o2, x2 = s2 * Fe + c2 * Pe + 128 >> 8, s2 = s2 * Pe - c2 * Fe + 128 >> 8, c2 = x2, l2 = l2 + d2 + 1 >> 1, d2 = l2 - d2, f2 = f2 + u2 + 1 >> 1, u2 = f2 - u2, a2 = a2 + c2 + 1 >> 1, c2 = a2 - c2, o2 = o2 + s2 + 1 >> 1, s2 = o2 - s2, x2 = l2 * Ne + f2 * Me + 2048 >> 12, l2 = l2 * Me - f2 * Ne + 2048 >> 12, f2 = x2, x2 = u2 * 799 + d2 * je + 2048 >> 12, u2 = u2 * je - d2 * 799 + 2048 >> 12, d2 = x2, n2[e3] = a2 + f2, n2[e3 + 7] = a2 - f2, n2[e3 + 1] = o2 + d2, n2[e3 + 6] = o2 - d2, n2[e3 + 2] = s2 + u2, n2[e3 + 5] = s2 - u2, n2[e3 + 3] = c2 + l2, n2[e3 + 4] = c2 - l2;
   }
   for (let e3 = 0; e3 < 8; ++e3) {
-    if (p2 = n2[e3], m2 = n2[e3 + 8], h2 = n2[e3 + 16], g2 = n2[e3 + 24], _2 = n2[e3 + 32], v2 = n2[e3 + 40], y2 = n2[e3 + 48], b2 = n2[e3 + 56], (m2 | h2 | g2 | _2 | v2 | y2 | b2) === 0) {
+    if (p2 = n2[e3], m2 = n2[e3 + 8], h2 = n2[e3 + 16], g2 = n2[e3 + 24], _2 = n2[e3 + 32], v2 = n2[e3 + 40], y2 = n2[e3 + 48], b3 = n2[e3 + 56], (m2 | h2 | g2 | _2 | v2 | y2 | b3) === 0) {
       x2 = Ie * p2 + 8192 >> 14, x2 = x2 < -2040 ? 0 : x2 >= 2024 ? 255 : x2 + 2056 >> 4, i2[t2 + e3] = x2, i2[t2 + e3 + 8] = x2, i2[t2 + e3 + 16] = x2, i2[t2 + e3 + 24] = x2, i2[t2 + e3 + 32] = x2, i2[t2 + e3 + 40] = x2, i2[t2 + e3 + 48] = x2, i2[t2 + e3 + 56] = x2;
       continue;
     }
-    a2 = Ie * p2 + 2048 >> 12, o2 = Ie * _2 + 2048 >> 12, s2 = h2, c2 = y2, l2 = Le * (m2 - b2) + 2048 >> 12, f2 = Le * (m2 + b2) + 2048 >> 12, u2 = g2, d2 = v2, a2 = (a2 + o2 + 1 >> 1) + 4112, o2 = a2 - o2, x2 = s2 * Fe + c2 * Pe + 2048 >> 12, s2 = s2 * Pe - c2 * Fe + 2048 >> 12, c2 = x2, l2 = l2 + d2 + 1 >> 1, d2 = l2 - d2, f2 = f2 + u2 + 1 >> 1, u2 = f2 - u2, a2 = a2 + c2 + 1 >> 1, c2 = a2 - c2, o2 = o2 + s2 + 1 >> 1, s2 = o2 - s2, x2 = l2 * Ne + f2 * Me + 2048 >> 12, l2 = l2 * Me - f2 * Ne + 2048 >> 12, f2 = x2, x2 = u2 * 799 + d2 * je + 2048 >> 12, u2 = u2 * je - d2 * 799 + 2048 >> 12, d2 = x2, p2 = a2 + f2, b2 = a2 - f2, m2 = o2 + d2, y2 = o2 - d2, h2 = s2 + u2, v2 = s2 - u2, g2 = c2 + l2, _2 = c2 - l2, p2 < 16 ? p2 = 0 : p2 >= 4080 ? p2 = 255 : p2 >>= 4, m2 < 16 ? m2 = 0 : m2 >= 4080 ? m2 = 255 : m2 >>= 4, h2 < 16 ? h2 = 0 : h2 >= 4080 ? h2 = 255 : h2 >>= 4, g2 < 16 ? g2 = 0 : g2 >= 4080 ? g2 = 255 : g2 >>= 4, _2 < 16 ? _2 = 0 : _2 >= 4080 ? _2 = 255 : _2 >>= 4, v2 < 16 ? v2 = 0 : v2 >= 4080 ? v2 = 255 : v2 >>= 4, y2 < 16 ? y2 = 0 : y2 >= 4080 ? y2 = 255 : y2 >>= 4, b2 < 16 ? b2 = 0 : b2 >= 4080 ? b2 = 255 : b2 >>= 4, i2[t2 + e3] = p2, i2[t2 + e3 + 8] = m2, i2[t2 + e3 + 16] = h2, i2[t2 + e3 + 24] = g2, i2[t2 + e3 + 32] = _2, i2[t2 + e3 + 40] = v2, i2[t2 + e3 + 48] = y2, i2[t2 + e3 + 56] = b2;
+    a2 = Ie * p2 + 2048 >> 12, o2 = Ie * _2 + 2048 >> 12, s2 = h2, c2 = y2, l2 = Le * (m2 - b3) + 2048 >> 12, f2 = Le * (m2 + b3) + 2048 >> 12, u2 = g2, d2 = v2, a2 = (a2 + o2 + 1 >> 1) + 4112, o2 = a2 - o2, x2 = s2 * Fe + c2 * Pe + 2048 >> 12, s2 = s2 * Pe - c2 * Fe + 2048 >> 12, c2 = x2, l2 = l2 + d2 + 1 >> 1, d2 = l2 - d2, f2 = f2 + u2 + 1 >> 1, u2 = f2 - u2, a2 = a2 + c2 + 1 >> 1, c2 = a2 - c2, o2 = o2 + s2 + 1 >> 1, s2 = o2 - s2, x2 = l2 * Ne + f2 * Me + 2048 >> 12, l2 = l2 * Me - f2 * Ne + 2048 >> 12, f2 = x2, x2 = u2 * 799 + d2 * je + 2048 >> 12, u2 = u2 * je - d2 * 799 + 2048 >> 12, d2 = x2, p2 = a2 + f2, b3 = a2 - f2, m2 = o2 + d2, y2 = o2 - d2, h2 = s2 + u2, v2 = s2 - u2, g2 = c2 + l2, _2 = c2 - l2, p2 < 16 ? p2 = 0 : p2 >= 4080 ? p2 = 255 : p2 >>= 4, m2 < 16 ? m2 = 0 : m2 >= 4080 ? m2 = 255 : m2 >>= 4, h2 < 16 ? h2 = 0 : h2 >= 4080 ? h2 = 255 : h2 >>= 4, g2 < 16 ? g2 = 0 : g2 >= 4080 ? g2 = 255 : g2 >>= 4, _2 < 16 ? _2 = 0 : _2 >= 4080 ? _2 = 255 : _2 >>= 4, v2 < 16 ? v2 = 0 : v2 >= 4080 ? v2 = 255 : v2 >>= 4, y2 < 16 ? y2 = 0 : y2 >= 4080 ? y2 = 255 : y2 >>= 4, b3 < 16 ? b3 = 0 : b3 >= 4080 ? b3 = 255 : b3 >>= 4, i2[t2 + e3] = p2, i2[t2 + e3 + 8] = m2, i2[t2 + e3 + 16] = h2, i2[t2 + e3 + 24] = g2, i2[t2 + e3 + 32] = _2, i2[t2 + e3 + 40] = v2, i2[t2 + e3 + 48] = y2, i2[t2 + e3 + 56] = b3;
   }
 }
 function buildComponentData(e2, t2) {
@@ -1388,13 +1388,13 @@ function compileType3Glyph({ data: e2, width: t2, height: n2 }) {
   }
   for (f2 = u2 * (n2 - 1), l2 = s2 * a2, d2[f2] !== 0 && (o2[l2] = 8, ++p2), c2 = 1; c2 < t2; c2++) d2[f2] !== d2[f2 + 1] && (o2[l2 + c2] = d2[f2] ? 4 : 8, ++p2), f2++;
   if (d2[f2] !== 0 && (o2[l2 + c2] = 4, ++p2), p2 > r2) return null;
-  let m2 = new Int32Array([0, a2, -1, 0, -a2, 0, 0, 0, 1]), h2 = [], { a: g2, b: _2, c: v2, d: y2, e: b2, f: x2 } = new DOMMatrix().scaleSelf(1 / t2, -1 / n2).translateSelf(0, -n2);
+  let m2 = new Int32Array([0, a2, -1, 0, -a2, 0, 0, 0, 1]), h2 = [], { a: g2, b: _2, c: v2, d: y2, e: b3, f: x2 } = new DOMMatrix().scaleSelf(1 / t2, -1 / n2).translateSelf(0, -n2);
   for (s2 = 0; p2 && s2 <= n2; s2++) {
     let e3 = s2 * a2, n3 = e3 + t2;
     for (; e3 < n3 && !o2[e3]; ) e3++;
     if (e3 === n3) continue;
     let r4 = e3 % a2, i3 = s2;
-    h2.push(E.moveTo, g2 * r4 + v2 * i3 + b2, _2 * r4 + y2 * i3 + x2);
+    h2.push(E.moveTo, g2 * r4 + v2 * i3 + b3, _2 * r4 + y2 * i3 + x2);
     let c3 = e3, l3 = o2[e3];
     do {
       let t3 = m2[l3];
@@ -1402,7 +1402,7 @@ function compileType3Glyph({ data: e2, width: t2, height: n2 }) {
         e3 += t3;
       while (!o2[e3]);
       let n4 = o2[e3];
-      n4 !== 5 && n4 !== 10 ? (l3 = n4, o2[e3] = 0) : (l3 = n4 & 51 * l3 >> 4, o2[e3] &= l3 >> 2 | l3 << 2), r4 = e3 % a2, i3 = e3 / a2 | 0, h2.push(E.lineTo, g2 * r4 + v2 * i3 + b2, _2 * r4 + y2 * i3 + x2), o2[e3] || --p2;
+      n4 !== 5 && n4 !== 10 ? (l3 = n4, o2[e3] = 0) : (l3 = n4 & 51 * l3 >> 4, o2[e3] &= l3 >> 2 | l3 << 2), r4 = e3 % a2, i3 = e3 / a2 | 0, h2.push(E.lineTo, g2 * r4 + v2 * i3 + b3, _2 * r4 + y2 * i3 + x2), o2[e3] || --p2;
     } while (c3 !== e3);
     --s2;
   }
@@ -1618,7 +1618,7 @@ function compileCharString(e2, t2, n2, r2) {
   function parse(e3) {
     let c3 = new DataView(e3.buffer, e3.byteOffset, e3.byteLength), l2 = 0;
     for (; l2 < e3.length; ) {
-      let u2 = false, d2 = e3[l2++], f2, p2, m2, h2, g2, _2, v2, y2, b2;
+      let u2 = false, d2 = e3[l2++], f2, p2, m2, h2, g2, _2, v2, y2, b3;
       switch (d2) {
         case 1:
           s2 += i2.length >> 1, u2 = true;
@@ -1642,14 +1642,14 @@ function compileCharString(e2, t2, n2, r2) {
           for (; i2.length > 0; ) f2 = a2 + i2.shift(), m2 = o2 + i2.shift(), p2 = f2 + i2.shift(), h2 = m2 + i2.shift(), a2 = p2 + i2.shift(), o2 = h2 + i2.shift(), bezierCurveTo(f2, m2, p2, h2, a2, o2);
           break;
         case 10:
-          if (y2 = i2.pop(), b2 = null, n2.isCFFCIDFont) {
+          if (y2 = i2.pop(), b3 = null, n2.isCFFCIDFont) {
             let e4 = n2.fdSelect.getFDIndex(r2);
             if (e4 >= 0 && e4 < n2.fdArray.length) {
               let t3 = n2.fdArray[e4], r4;
-              t3.privateDict?.subrsIndex && (r4 = t3.privateDict.subrsIndex.objects), r4 && (y2 += getSubroutineBias(r4), b2 = r4[y2]);
+              t3.privateDict?.subrsIndex && (r4 = t3.privateDict.subrsIndex.objects), r4 && (y2 += getSubroutineBias(r4), b3 = r4[y2]);
             } else warn$1(`Invalid fd index for glyph index.`);
-          } else b2 = n2.subrs[y2 + n2.subrsBias];
-          b2 && parse(b2);
+          } else b3 = n2.subrs[y2 + n2.subrsBias];
+          b3 && parse(b3);
           break;
         case 11:
           return;
@@ -1716,7 +1716,7 @@ function compileCharString(e2, t2, n2, r2) {
           i2.push(c3.getInt16(l2)), l2 += 2;
           break;
         case 29:
-          y2 = i2.pop() + n2.gsubrsBias, b2 = n2.gsubrs[y2], b2 && parse(b2);
+          y2 = i2.pop() + n2.gsubrsBias, b3 = n2.gsubrs[y2], b3 && parse(b3);
           break;
         case 30:
           for (; i2.length > 0 && (f2 = a2, m2 = o2 + i2.shift(), p2 = f2 + i2.shift(), h2 = m2 + i2.shift(), a2 = p2 + i2.shift(), o2 = h2 + (i2.length === 1 ? i2.shift() : 0), bezierCurveTo(f2, m2, p2, h2, a2, o2), i2.length !== 0); ) f2 = a2 + i2.shift(), m2 = o2, p2 = f2 + i2.shift(), h2 = m2 + i2.shift(), o2 = h2 + i2.shift(), a2 = p2 + (i2.length === 1 ? i2.shift() : 0), bezierCurveTo(f2, m2, p2, h2, a2, o2);
@@ -1951,7 +1951,7 @@ function createCmapTable(e2, t2, n2) {
   for (a2 = r2.length - 1; a2 >= 0 && !(r2[a2][0] <= 65535); --a2) ;
   let l2 = a2 + 1;
   r2[a2][0] < 65535 && r2[a2][1] === 65535 && (r2[a2][1] = 65534);
-  let u2 = +(r2[a2][1] < 65535), d2 = l2 + u2, f2 = Qt.getSearchParams(d2, 2), p2 = l2 * 2 + u2 * 2, m2 = new DataBuilder({ exactLength: p2 }), h2 = new DataBuilder({ exactLength: p2 }), g2 = new DataBuilder({ exactLength: p2 }), _2 = new DataBuilder({ exactLength: p2 }), v2 = new DataBuilder({}), y2 = 0, b2 = false;
+  let u2 = +(r2[a2][1] < 65535), d2 = l2 + u2, f2 = Qt.getSearchParams(d2, 2), p2 = l2 * 2 + u2 * 2, m2 = new DataBuilder({ exactLength: p2 }), h2 = new DataBuilder({ exactLength: p2 }), g2 = new DataBuilder({ exactLength: p2 }), _2 = new DataBuilder({ exactLength: p2 }), v2 = new DataBuilder({}), y2 = 0, b3 = false;
   for (a2 = 0, o2 = l2; a2 < o2; a2++) {
     let [e3, t3, n3] = r2[a2];
     m2.setInt16(e3), h2.setInt16(t3);
@@ -1965,13 +1965,13 @@ function createCmapTable(e2, t2, n2) {
       g2.setInt16(t4 - e3 & 65535), _2.skip(2);
     } else {
       let r4 = (d2 - a2) * 2 + y2 * 2;
-      for (y2 += t3 - e3 + 1, g2.skip(2), r4 > 65535 ? (b2 = true, _2.skip(2)) : _2.setInt16(r4), s2 = 0, c2 = n3.length; s2 < c2; ++s2) v2.setInt16(n3[s2]);
+      for (y2 += t3 - e3 + 1, g2.skip(2), r4 > 65535 ? (b3 = true, _2.skip(2)) : _2.setInt16(r4), s2 = 0, c2 = n3.length; s2 < c2; ++s2) v2.setInt16(n3[s2]);
     }
   }
   u2 > 0 && (h2.setArray([255, 255]), m2.setArray([255, 255]), g2.setArray([0, 1]), _2.skip(2));
   let x2 = new DataBuilder({ exactLength: 12 + m2.length + h2.length + g2.length + _2.length + v2.length });
   x2.skip(2), x2.setInt16(2 * d2), x2.setInt16(f2.range), x2.setInt16(f2.entry), x2.setInt16(f2.rangeShift), x2.setArray(h2.data), x2.skip(2), x2.setArray(m2.data), x2.setArray(g2.data), x2.setArray(_2.data), x2.setArray(v2.data);
-  let S2 = !b2 && x2.length + 4 <= 65535, C2 = i2 || !S2, w2 = +!!S2 + +!!C2, T2 = null, E2 = null;
+  let S2 = !b3 && x2.length + 4 <= 65535, C2 = i2 || !S2, w2 = +!!S2 + +!!C2, T2 = null, E2 = null;
   if (C2) {
     T2 = new DataBuilder({});
     for (let e3 of r2) {
@@ -2684,8 +2684,8 @@ async function createImage(e2, t2, { closeBitmap: n2 = false } = {}) {
     let n3 = createImageDict(t2, r2, i2, `DeviceGray`), a3 = createImageDict(t2, r2, i2, `DeviceGray`);
     _2 = createPNGLikeImage(e3, r2, i2, n3), v2 = createRawImage(e3, a3);
   }
-  let [y2, b2] = await Promise.all([h2, _2]);
-  return { imageStream: y2, imageRenderStream: g2, smaskStream: b2, smaskRenderStream: v2, width: r2, height: i2 };
+  let [y2, b3] = await Promise.all([h2, _2]);
+  return { imageStream: y2, imageRenderStream: g2, smaskStream: b3, smaskRenderStream: v2, width: r2, height: i2 };
 }
 function mayHaveChildren(e2) {
   return e2 instanceof L || e2 instanceof F || e2 instanceof BaseStream || Array.isArray(e2);
@@ -3420,12 +3420,12 @@ function calculateSHA512(e2, t2, n2, r2 = false) {
   m2 < g2 && (m2 = g2), m2 += 11, p2[m2++] = n2 >>> 29 & 255, p2[m2++] = n2 >> 21 & 255, p2[m2++] = n2 >> 13 & 255, p2[m2++] = n2 >> 5 & 255, p2[m2++] = n2 << 3 & 255;
   let _2 = Array(80);
   for (m2 = 0; m2 < 80; m2++) _2[m2] = new Word64(0, 0);
-  let { k: v2 } = co, y2 = new Word64(0, 0), b2 = new Word64(0, 0), x2 = new Word64(0, 0), S2 = new Word64(0, 0), C2 = new Word64(0, 0), w2 = new Word64(0, 0), T2 = new Word64(0, 0), E2 = new Word64(0, 0), D2 = new Word64(0, 0), O2 = new Word64(0, 0), k2 = new Word64(0, 0), j2 = new Word64(0, 0), ee2;
+  let { k: v2 } = co, y2 = new Word64(0, 0), b3 = new Word64(0, 0), x2 = new Word64(0, 0), S2 = new Word64(0, 0), C2 = new Word64(0, 0), w2 = new Word64(0, 0), T2 = new Word64(0, 0), E2 = new Word64(0, 0), D2 = new Word64(0, 0), O2 = new Word64(0, 0), k2 = new Word64(0, 0), j2 = new Word64(0, 0), ee2;
   for (m2 = 0; m2 < f2; ) {
     for (h2 = 0; h2 < 16; ++h2) _2[h2].high = p2[m2] << 24 | p2[m2 + 1] << 16 | p2[m2 + 2] << 8 | p2[m2 + 3], _2[h2].low = p2[m2 + 4] << 24 | p2[m2 + 5] << 16 | p2[m2 + 6] << 8 | p2[m2 + 7], m2 += 8;
     for (h2 = 16; h2 < 80; ++h2) ee2 = _2[h2], littleSigmaPrime(ee2, _2[h2 - 2], j2), ee2.add(_2[h2 - 7]), littleSigma(k2, _2[h2 - 15], j2), ee2.add(k2), ee2.add(_2[h2 - 16]);
-    for (y2.assign(i2), b2.assign(a2), x2.assign(o2), S2.assign(s2), C2.assign(c2), w2.assign(l2), T2.assign(u2), E2.assign(d2), h2 = 0; h2 < 80; ++h2) D2.assign(E2), sigmaPrime(k2, C2, j2), D2.add(k2), ch(k2, C2, w2, T2, j2), D2.add(k2), D2.add(v2[h2]), D2.add(_2[h2]), sigma(O2, y2, j2), maj(k2, y2, b2, x2, j2), O2.add(k2), ee2 = E2, E2 = T2, T2 = w2, w2 = C2, S2.add(D2), C2 = S2, S2 = x2, x2 = b2, b2 = y2, ee2.assign(D2), ee2.add(O2), y2 = ee2;
-    i2.add(y2), a2.add(b2), o2.add(x2), s2.add(S2), c2.add(C2), l2.add(w2), u2.add(T2), d2.add(E2);
+    for (y2.assign(i2), b3.assign(a2), x2.assign(o2), S2.assign(s2), C2.assign(c2), w2.assign(l2), T2.assign(u2), E2.assign(d2), h2 = 0; h2 < 80; ++h2) D2.assign(E2), sigmaPrime(k2, C2, j2), D2.add(k2), ch(k2, C2, w2, T2, j2), D2.add(k2), D2.add(v2[h2]), D2.add(_2[h2]), sigma(O2, y2, j2), maj(k2, y2, b3, x2, j2), O2.add(k2), ee2 = E2, E2 = T2, T2 = w2, w2 = C2, S2.add(D2), C2 = S2, S2 = x2, x2 = b3, b3 = y2, ee2.assign(D2), ee2.add(O2), y2 = ee2;
+    i2.add(y2), a2.add(b3), o2.add(x2), s2.add(S2), c2.add(C2), l2.add(w2), u2.add(T2), d2.add(E2);
   }
   let M2;
   return r2 ? (M2 = new Uint8Array(48), i2.copyTo(M2, 0), a2.copyTo(M2, 8), o2.copyTo(M2, 16), s2.copyTo(M2, 24), c2.copyTo(M2, 32), l2.copyTo(M2, 40)) : (M2 = new Uint8Array(64), i2.copyTo(M2, 0), a2.copyTo(M2, 8), o2.copyTo(M2, 16), s2.copyTo(M2, 24), c2.copyTo(M2, 32), l2.copyTo(M2, 40), u2.copyTo(M2, 48), d2.copyTo(M2, 56)), M2;
@@ -3464,9 +3464,9 @@ function calculateSHA256(e2, t2, n2) {
   for (p2 = 0; p2 < d2; ) {
     for (m2 = 0; m2 < 16; ++m2) g2[m2] = f2[p2] << 24 | f2[p2 + 1] << 16 | f2[p2 + 2] << 8 | f2[p2 + 3], p2 += 4;
     for (m2 = 16; m2 < 64; ++m2) g2[m2] = calculate_sha256_littleSigmaPrime(g2[m2 - 2]) + g2[m2 - 7] + calculate_sha256_littleSigma(g2[m2 - 15]) + g2[m2 - 16] | 0;
-    let e3 = r2, t3 = i2, n3 = a2, d3 = o2, h3 = s2, v2 = c2, y2 = l2, b2 = u2, x2, S2;
-    for (m2 = 0; m2 < 64; ++m2) x2 = b2 + calculate_sha256_sigmaPrime(h3) + calculate_sha256_ch(h3, v2, y2) + _2[m2] + g2[m2], S2 = calculate_sha256_sigma(e3) + calculate_sha256_maj(e3, t3, n3), b2 = y2, y2 = v2, v2 = h3, h3 = d3 + x2 | 0, d3 = n3, n3 = t3, t3 = e3, e3 = x2 + S2 | 0;
-    r2 = r2 + e3 | 0, i2 = i2 + t3 | 0, a2 = a2 + n3 | 0, o2 = o2 + d3 | 0, s2 = s2 + h3 | 0, c2 = c2 + v2 | 0, l2 = l2 + y2 | 0, u2 = u2 + b2 | 0;
+    let e3 = r2, t3 = i2, n3 = a2, d3 = o2, h3 = s2, v2 = c2, y2 = l2, b3 = u2, x2, S2;
+    for (m2 = 0; m2 < 64; ++m2) x2 = b3 + calculate_sha256_sigmaPrime(h3) + calculate_sha256_ch(h3, v2, y2) + _2[m2] + g2[m2], S2 = calculate_sha256_sigma(e3) + calculate_sha256_maj(e3, t3, n3), b3 = y2, y2 = v2, v2 = h3, h3 = d3 + x2 | 0, d3 = n3, n3 = t3, t3 = e3, e3 = x2 + S2 | 0;
+    r2 = r2 + e3 | 0, i2 = i2 + t3 | 0, a2 = a2 + n3 | 0, o2 = o2 + d3 | 0, s2 = s2 + h3 | 0, c2 = c2 + v2 | 0, l2 = l2 + y2 | 0, u2 = u2 + b3 | 0;
   }
   return new Uint8Array([r2 >> 24 & 255, r2 >> 16 & 255, r2 >> 8 & 255, r2 & 255, i2 >> 24 & 255, i2 >> 16 & 255, i2 >> 8 & 255, i2 & 255, a2 >> 24 & 255, a2 >> 16 & 255, a2 >> 8 & 255, a2 & 255, o2 >> 24 & 255, o2 >> 16 & 255, o2 >> 8 & 255, o2 & 255, s2 >> 24 & 255, s2 >> 16 & 255, s2 >> 8 & 255, s2 & 255, c2 >> 24 & 255, c2 >> 16 & 255, c2 >> 8 & 255, c2 & 255, l2 >> 24 & 255, l2 >> 16 & 255, l2 >> 8 & 255, l2 & 255, u2 >> 24 & 255, u2 >> 16 & 255, u2 >> 8 & 255, u2 & 255]);
 }
@@ -4156,17 +4156,17 @@ function drawTriangle(e2, t2, n2, r2, i2, a2, o2, s2) {
   c2[n2 * 2 + 1] > c2[r2 * 2 + 1] && (f2 = n2, n2 = r2, r2 = f2, f2 = a2, a2 = o2, o2 = f2), c2[r2 * 2 + 1] > c2[i2 * 2 + 1] && (f2 = r2, r2 = i2, i2 = f2, f2 = o2, o2 = s2, s2 = f2), c2[n2 * 2 + 1] > c2[r2 * 2 + 1] && (f2 = n2, n2 = r2, r2 = f2, f2 = a2, a2 = o2, o2 = f2);
   let p2 = (c2[n2 * 2] + t2.offsetX) * t2.scaleX, m2 = (c2[n2 * 2 + 1] + t2.offsetY) * t2.scaleY, h2 = (c2[r2 * 2] + t2.offsetX) * t2.scaleX, g2 = (c2[r2 * 2 + 1] + t2.offsetY) * t2.scaleY, _2 = (c2[i2 * 2] + t2.offsetX) * t2.scaleX, v2 = (c2[i2 * 2 + 1] + t2.offsetY) * t2.scaleY;
   if (m2 >= v2) return;
-  let y2 = l2[a2 * 4], b2 = l2[a2 * 4 + 1], x2 = l2[a2 * 4 + 2], S2 = l2[o2 * 4], C2 = l2[o2 * 4 + 1], w2 = l2[o2 * 4 + 2], T2 = l2[s2 * 4], E2 = l2[s2 * 4 + 1], D2 = l2[s2 * 4 + 2], O2 = Math.round(m2), k2 = Math.round(v2), j2, ee2, M2, te2, ne2, re2, ie2, N2;
+  let y2 = l2[a2 * 4], b3 = l2[a2 * 4 + 1], x2 = l2[a2 * 4 + 2], S2 = l2[o2 * 4], C2 = l2[o2 * 4 + 1], w2 = l2[o2 * 4 + 2], T2 = l2[s2 * 4], E2 = l2[s2 * 4 + 1], D2 = l2[s2 * 4 + 2], O2 = Math.round(m2), k2 = Math.round(v2), j2, ee2, M2, te2, ne2, re2, ie2, N2;
   for (let e3 = O2; e3 <= k2; e3++) {
     if (e3 < g2) {
       let t4 = e3 < m2 ? 0 : (m2 - e3) / (m2 - g2);
-      j2 = p2 - (p2 - h2) * t4, ee2 = y2 - (y2 - S2) * t4, M2 = b2 - (b2 - C2) * t4, te2 = x2 - (x2 - w2) * t4;
+      j2 = p2 - (p2 - h2) * t4, ee2 = y2 - (y2 - S2) * t4, M2 = b3 - (b3 - C2) * t4, te2 = x2 - (x2 - w2) * t4;
     } else {
       let t4;
       t4 = e3 > v2 ? 1 : g2 === v2 ? 0 : (g2 - e3) / (g2 - v2), j2 = h2 - (h2 - _2) * t4, ee2 = S2 - (S2 - T2) * t4, M2 = C2 - (C2 - E2) * t4, te2 = w2 - (w2 - D2) * t4;
     }
     let t3;
-    t3 = e3 < m2 ? 0 : e3 > v2 ? 1 : (m2 - e3) / (m2 - v2), ne2 = p2 - (p2 - _2) * t3, re2 = y2 - (y2 - T2) * t3, ie2 = b2 - (b2 - E2) * t3, N2 = x2 - (x2 - D2) * t3;
+    t3 = e3 < m2 ? 0 : e3 > v2 ? 1 : (m2 - e3) / (m2 - v2), ne2 = p2 - (p2 - _2) * t3, re2 = y2 - (y2 - T2) * t3, ie2 = b3 - (b3 - E2) * t3, N2 = x2 - (x2 - D2) * t3;
     let n3 = Math.round(Math.min(j2, ne2)), r4 = Math.round(Math.max(j2, ne2)), i3 = d2 * e3 + n3 * 4;
     for (let e4 = n3; e4 <= r4; e4++) t3 = (j2 - e4) / (j2 - ne2), t3 < 0 ? t3 = 0 : t3 > 1 && (t3 = 1), u2[i3++] = ee2 - (ee2 - re2) * t3 | 0, u2[i3++] = M2 - (M2 - ie2) * t3 | 0, u2[i3++] = te2 - (te2 - N2) * t3 | 0, u2[i3++] = 255;
   }
@@ -4199,11 +4199,11 @@ function mirrorContextOperations(e2, t2) {
 function drawImageAtIntegerCoords(e2, t2, n2, r2, i2, a2, o2, s2, c2, l2) {
   let [u2, d2, f2, p2, m2, h2] = getCurrentTransform(e2);
   if (d2 === 0 && f2 === 0) {
-    let g3 = o2 * u2 + m2, _3 = Math.round(g3), v2 = s2 * p2 + h2, y2 = Math.round(v2), b2 = (o2 + c2) * u2 + m2, x2 = Math.abs(Math.round(b2) - _3) || 1, S2 = (s2 + l2) * p2 + h2, C2 = Math.abs(Math.round(S2) - y2) || 1;
+    let g3 = o2 * u2 + m2, _3 = Math.round(g3), v2 = s2 * p2 + h2, y2 = Math.round(v2), b3 = (o2 + c2) * u2 + m2, x2 = Math.abs(Math.round(b3) - _3) || 1, S2 = (s2 + l2) * p2 + h2, C2 = Math.abs(Math.round(S2) - y2) || 1;
     return e2.setTransform(Math.sign(u2), 0, 0, Math.sign(p2), _3, y2), e2.drawImage(t2, n2, r2, i2, a2, 0, 0, x2, C2), e2.setTransform(u2, d2, f2, p2, m2, h2), [x2, C2];
   }
   if (u2 === 0 && p2 === 0) {
-    let g3 = s2 * f2 + m2, _3 = Math.round(g3), v2 = o2 * d2 + h2, y2 = Math.round(v2), b2 = (s2 + l2) * f2 + m2, x2 = Math.abs(Math.round(b2) - _3) || 1, S2 = (o2 + c2) * d2 + h2, C2 = Math.abs(Math.round(S2) - y2) || 1;
+    let g3 = s2 * f2 + m2, _3 = Math.round(g3), v2 = o2 * d2 + h2, y2 = Math.round(v2), b3 = (s2 + l2) * f2 + m2, x2 = Math.abs(Math.round(b3) - _3) || 1, S2 = (o2 + c2) * d2 + h2, C2 = Math.abs(Math.round(S2) - y2) || 1;
     return e2.setTransform(0, Math.sign(d2), Math.sign(f2), 0, _3, y2), e2.drawImage(t2, n2, r2, i2, a2, 0, 0, C2, x2), e2.setTransform(u2, d2, f2, p2, m2, h2), [C2, x2];
   }
   e2.drawImage(t2, n2, r2, i2, a2, o2, s2, c2, l2);
@@ -4382,11 +4382,11 @@ function getNetworkStream(e2) {
   return isValidFetchUrl(e2) ? PDFFetchStream : vo ? PDFNodeStream : PDFNetworkStream;
 }
 function getDocument(e2 = {}) {
-  let t2 = new Ns(), { docId: n2 } = t2, r2 = e2.url ? getUrlProp(e2.url) : null, i2 = e2.data ? getDataProp(e2.data) : null, a2 = e2.httpHeaders || null, o2 = e2.withCredentials === true, s2 = e2.password ?? null, c2 = e2.range instanceof PDFDataRangeTransport ? e2.range : null, l2 = Number.isInteger(e2.rangeChunkSize) && e2.rangeChunkSize > 0 ? e2.rangeChunkSize : 2 ** 16, u2 = e2.worker instanceof Is ? e2.worker : null, d2 = e2.verbosity, f2 = typeof e2.docBaseUrl == `string` && !isDataScheme(e2.docBaseUrl) ? e2.docBaseUrl : null, p2 = getFactoryUrlProp(e2.cMapUrl), m2 = e2.cMapPacked !== false, h2 = getFactoryUrlProp(e2.iccUrl), g2 = getFactoryUrlProp(e2.standardFontDataUrl), _2 = getFactoryUrlProp(e2.wasmUrl), v2 = e2.stopAtErrors !== true, y2 = Number.isInteger(e2.maxImageSize) && e2.maxImageSize > -1 ? e2.maxImageSize : -1, b2 = typeof e2.isOffscreenCanvasSupported == `boolean` ? e2.isOffscreenCanvasSupported : !vo, x2 = typeof e2.isImageDecoderSupported == `boolean` ? e2.isImageDecoderSupported : !vo, S2 = Number.isInteger(e2.canvasMaxAreaInBytes) ? e2.canvasMaxAreaInBytes : -1, C2 = typeof e2.disableFontFace == `boolean` ? e2.disableFontFace : vo, w2 = e2.fontExtraProperties === true, T2 = e2.enableXfa === true, E2 = e2.ownerDocument || globalThis.document, D2 = e2.disableRange === true, O2 = e2.disableStream === true, k2 = e2.disableAutoFetch === true, j2 = e2.pdfBug === true, ee2 = e2.CanvasFactory || (vo ? NodeCanvasFactory : DOMCanvasFactory), M2 = e2.FilterFactory || (vo ? NodeFilterFactory : DOMFilterFactory), te2 = e2.BinaryDataFactory || (vo ? NodeBinaryDataFactory : DOMBinaryDataFactory), ne2 = e2.enableHWA === true, re2 = e2.enableWebGPU === true ? initGPU() : Promise.resolve(false), ie2 = e2.useWasm !== false, N2 = e2.pagesMapper || new PagesMapper(), ae2 = typeof e2.useSystemFonts == `boolean` ? e2.useSystemFonts : !vo && !C2, oe2 = typeof e2.useWorkerFetch == `boolean` ? e2.useWorkerFetch : !!(te2 === DOMBinaryDataFactory && p2 && m2 && g2 && _2 && isValidFetchUrl(p2, document.baseURI) && isValidFetchUrl(g2, document.baseURI) && isValidFetchUrl(_2, document.baseURI));
+  let t2 = new Ns(), { docId: n2 } = t2, r2 = e2.url ? getUrlProp(e2.url) : null, i2 = e2.data ? getDataProp(e2.data) : null, a2 = e2.httpHeaders || null, o2 = e2.withCredentials === true, s2 = e2.password ?? null, c2 = e2.range instanceof PDFDataRangeTransport ? e2.range : null, l2 = Number.isInteger(e2.rangeChunkSize) && e2.rangeChunkSize > 0 ? e2.rangeChunkSize : 2 ** 16, u2 = e2.worker instanceof Is ? e2.worker : null, d2 = e2.verbosity, f2 = typeof e2.docBaseUrl == `string` && !isDataScheme(e2.docBaseUrl) ? e2.docBaseUrl : null, p2 = getFactoryUrlProp(e2.cMapUrl), m2 = e2.cMapPacked !== false, h2 = getFactoryUrlProp(e2.iccUrl), g2 = getFactoryUrlProp(e2.standardFontDataUrl), _2 = getFactoryUrlProp(e2.wasmUrl), v2 = e2.stopAtErrors !== true, y2 = Number.isInteger(e2.maxImageSize) && e2.maxImageSize > -1 ? e2.maxImageSize : -1, b3 = typeof e2.isOffscreenCanvasSupported == `boolean` ? e2.isOffscreenCanvasSupported : !vo, x2 = typeof e2.isImageDecoderSupported == `boolean` ? e2.isImageDecoderSupported : !vo, S2 = Number.isInteger(e2.canvasMaxAreaInBytes) ? e2.canvasMaxAreaInBytes : -1, C2 = typeof e2.disableFontFace == `boolean` ? e2.disableFontFace : vo, w2 = e2.fontExtraProperties === true, T2 = e2.enableXfa === true, E2 = e2.ownerDocument || globalThis.document, D2 = e2.disableRange === true, O2 = e2.disableStream === true, k2 = e2.disableAutoFetch === true, j2 = e2.pdfBug === true, ee2 = e2.CanvasFactory || (vo ? NodeCanvasFactory : DOMCanvasFactory), M2 = e2.FilterFactory || (vo ? NodeFilterFactory : DOMFilterFactory), te2 = e2.BinaryDataFactory || (vo ? NodeBinaryDataFactory : DOMBinaryDataFactory), ne2 = e2.enableHWA === true, re2 = e2.enableWebGPU === true ? initGPU() : Promise.resolve(false), ie2 = e2.useWasm !== false, N2 = e2.pagesMapper || new PagesMapper(), ae2 = typeof e2.useSystemFonts == `boolean` ? e2.useSystemFonts : !vo && !C2, oe2 = typeof e2.useWorkerFetch == `boolean` ? e2.useWorkerFetch : !!(te2 === DOMBinaryDataFactory && p2 && m2 && g2 && _2 && isValidFetchUrl(p2, document.baseURI) && isValidFetchUrl(g2, document.baseURI) && isValidFetchUrl(_2, document.baseURI));
   setVerbosityLevel(d2);
   let F2 = { canvasFactory: new ee2({ ownerDocument: E2, enableHWA: ne2 }), filterFactory: new M2({ docId: n2, ownerDocument: E2 }), binaryDataFactory: oe2 ? null : new te2({ cMapUrl: p2, standardFontDataUrl: g2, wasmUrl: _2 }) };
   u2 || (u2 = Is.create({ verbosity: d2, port: GlobalWorkerOptions.workerPort }), t2._worker = u2);
-  let L2 = { docId: n2, apiVersion: `6.1.200`, data: i2, password: s2, disableAutoFetch: k2, rangeChunkSize: l2, docBaseUrl: f2, enableXfa: T2, evaluatorOptions: { maxImageSize: y2, disableFontFace: C2, ignoreErrors: v2, isOffscreenCanvasSupported: b2, isImageDecoderSupported: x2, canvasMaxAreaInBytes: S2, fontExtraProperties: w2, useSystemFonts: ae2, useWasm: ie2, useWorkerFetch: oe2, cMapUrl: p2, cMapPacked: m2, iccUrl: h2, standardFontDataUrl: g2, wasmUrl: _2, hasGPU: false } }, se2 = { ownerDocument: E2, pdfBug: j2, styleElement: null, enableHWA: ne2, loadingParams: { disableAutoFetch: k2, enableXfa: T2 } };
+  let L2 = { docId: n2, apiVersion: `6.1.200`, data: i2, password: s2, disableAutoFetch: k2, rangeChunkSize: l2, docBaseUrl: f2, enableXfa: T2, evaluatorOptions: { maxImageSize: y2, disableFontFace: C2, ignoreErrors: v2, isOffscreenCanvasSupported: b3, isImageDecoderSupported: x2, canvasMaxAreaInBytes: S2, fontExtraProperties: w2, useSystemFonts: ae2, useWasm: ie2, useWorkerFetch: oe2, cMapUrl: p2, cMapPacked: m2, iccUrl: h2, standardFontDataUrl: g2, wasmUrl: _2, hasGPU: false } }, se2 = { ownerDocument: E2, pdfBug: j2, styleElement: null, enableHWA: ne2, loadingParams: { disableAutoFetch: k2, enableXfa: T2 } };
   return Promise.all([u2.promise, re2]).then(function([, e3]) {
     if (u2.destroyed) throw Error(`Worker was destroyed`);
     L2.evaluatorOptions.hasGPU = e3;
@@ -4598,12 +4598,12 @@ var init_pdfjs = __esm({
         e2[0] = (n2 * t2[3] - r2 * t2[2] + t2[2] * t2[5] - t2[4] * t2[3]) / i2, e2[1] = (-n2 * t2[1] + r2 * t2[0] + t2[4] * t2[1] - t2[5] * t2[0]) / i2;
       }
       static axialAlignedBoundingBox(e2, t2, n2) {
-        let r2 = t2[0], i2 = t2[1], a2 = t2[2], o2 = t2[3], s2 = t2[4], c2 = t2[5], l2 = e2[0], u2 = e2[1], d2 = e2[2], f2 = e2[3], p2 = r2 * l2 + s2, m2 = p2, h2 = r2 * d2 + s2, g2 = h2, _2 = o2 * u2 + c2, v2 = _2, y2 = o2 * f2 + c2, b2 = y2;
+        let r2 = t2[0], i2 = t2[1], a2 = t2[2], o2 = t2[3], s2 = t2[4], c2 = t2[5], l2 = e2[0], u2 = e2[1], d2 = e2[2], f2 = e2[3], p2 = r2 * l2 + s2, m2 = p2, h2 = r2 * d2 + s2, g2 = h2, _2 = o2 * u2 + c2, v2 = _2, y2 = o2 * f2 + c2, b3 = y2;
         if (i2 !== 0 || a2 !== 0) {
           let e3 = i2 * l2, t3 = i2 * d2, n3 = a2 * u2, r4 = a2 * f2;
-          p2 += n3, g2 += n3, h2 += r4, m2 += r4, _2 += e3, b2 += e3, y2 += t3, v2 += t3;
+          p2 += n3, g2 += n3, h2 += r4, m2 += r4, _2 += e3, b3 += e3, y2 += t3, v2 += t3;
         }
-        n2[0] = Math.min(n2[0], p2, h2, m2, g2), n2[1] = Math.min(n2[1], _2, y2, v2, b2), n2[2] = Math.max(n2[2], p2, h2, m2, g2), n2[3] = Math.max(n2[3], _2, y2, v2, b2);
+        n2[0] = Math.min(n2[0], p2, h2, m2, g2), n2[1] = Math.min(n2[1], _2, y2, v2, b3), n2[2] = Math.max(n2[2], p2, h2, m2, g2), n2[3] = Math.max(n2[3], _2, y2, v2, b3);
       }
       static inverseTransform(e2) {
         let t2 = e2[0] * e2[3] - e2[1] * e2[2];
@@ -6015,8 +6015,8 @@ var init_pdfjs = __esm({
             case `DeviceN`:
               let y2 = n2.fetchIfRef(e2[1]);
               s2 = Array.isArray(y2) ? y2.length : 1, c2 = this.#e(e2[2], t2);
-              let b2 = i2.create(e2[3]);
-              return new AlternateCS(s2, c2, b2);
+              let b3 = i2.create(e2[3]);
+              return new AlternateCS(s2, c2, b3);
             case `Lab`:
               o2 = n2.fetchIfRef(e2[1]), l2 = o2.getArray(`WhitePoint`), u2 = o2.getArray(`BlackPoint`);
               let x2 = o2.getArray(`Range`);
@@ -6129,8 +6129,8 @@ var init_pdfjs = __esm({
             case 65499:
               let y2 = n2.getUint16(i2);
               i2 += 2;
-              let b2 = y2 + i2 - 2, x2;
-              for (; i2 < b2; ) {
+              let b3 = y2 + i2 - 2, x2;
+              for (; i2 < b3; ) {
                 let t3 = e2[i2++], r4 = new Uint16Array(64);
                 if (!(t3 >> 4)) for (h2 = 0; h2 < 64; h2++) x2 = Ae[h2], r4[x2] = e2[i2++];
                 else if (t3 >> 4 == 1) for (h2 = 0; h2 < 64; h2++) x2 = Ae[h2], r4[x2] = n2.getUint16(i2), i2 += 2;
@@ -6219,13 +6219,13 @@ var init_pdfjs = __esm({
         this.numComponents = this.components.length;
       }
       #e(e2, t2, n2) {
-        let r2 = this.width / e2, i2 = this.height / t2, a2, o2, s2, c2, l2, u2, d2, f2, p2, m2, h2 = 0, g2, _2 = this.components.length, v2 = e2 * t2 * _2, y2 = new Uint8ClampedArray(v2), b2 = new Uint32Array(e2), x2 = 4294967288, S2;
+        let r2 = this.width / e2, i2 = this.height / t2, a2, o2, s2, c2, l2, u2, d2, f2, p2, m2, h2 = 0, g2, _2 = this.components.length, v2 = e2 * t2 * _2, y2 = new Uint8ClampedArray(v2), b3 = new Uint32Array(e2), x2 = 4294967288, S2;
         for (d2 = 0; d2 < _2; d2++) {
           if (a2 = this.components[d2], o2 = a2.scaleX * r2, s2 = a2.scaleY * i2, h2 = d2, g2 = a2.output, c2 = a2.blocksPerLine + 1 << 3, o2 !== S2) {
-            for (l2 = 0; l2 < e2; l2++) f2 = 0 | l2 * o2, b2[l2] = (f2 & x2) << 3 | f2 & 7;
+            for (l2 = 0; l2 < e2; l2++) f2 = 0 | l2 * o2, b3[l2] = (f2 & x2) << 3 | f2 & 7;
             S2 = o2;
           }
-          for (u2 = 0; u2 < t2; u2++) for (f2 = 0 | u2 * s2, m2 = c2 * (f2 & x2) | (f2 & 7) << 3, l2 = 0; l2 < e2; l2++) y2[h2] = g2[m2 + b2[l2]], h2 += _2;
+          for (u2 = 0; u2 < t2; u2++) for (f2 = 0 | u2 * s2, m2 = c2 * (f2 & x2) | (f2 & 7) << 3, l2 = 0; l2 < e2; l2++) y2[h2] = g2[m2 + b3[l2]], h2 += _2;
         }
         let C2 = this._decodeTransform;
         if (C2) for (d2 = 0; d2 < v2; ) for (f2 = 0, p2 = 0; f2 < _2; f2++, d2++, p2 += 2) y2[d2] = (y2[d2] * C2[p2] >> 8) + C2[p2 + 1];
@@ -6704,7 +6704,7 @@ var init_pdfjs = __esm({
           info$1(`Bad shading domain.`);
           return;
         }
-        let v2 = new Float32Array(s2.numComps), y2 = new Float32Array(1), b2 = 0;
+        let v2 = new Float32Array(s2.numComps), y2 = new Float32Array(1), b3 = 0;
         y2[0] = c2, h2(y2, 0, v2, 0);
         let x2 = new Uint8ClampedArray(3);
         s2.getRgb(v2, 0, x2);
@@ -6715,10 +6715,10 @@ var init_pdfjs = __esm({
         let [E2, D2, O2] = x2, k2 = E2 - S2 + 1, j2 = D2 - C2 + 1, ee2 = O2 - w2 + 1, M2 = E2 - S2 - 1, te2 = D2 - C2 - 1, ne2 = O2 - w2 - 1;
         for (let e3 = 2; e3 < 840; e3++) {
           y2[0] = c2 + e3 * g2, h2(y2, 0, v2, 0), s2.getRgb(v2, 0, x2);
-          let [t3, n3, r4] = x2, i3 = e3 - b2;
+          let [t3, n3, r4] = x2, i3 = e3 - b3;
           if (k2 = Math.min(k2, (t3 - S2 + 1) / i3), j2 = Math.min(j2, (n3 - C2 + 1) / i3), ee2 = Math.min(ee2, (r4 - w2 + 1) / i3), M2 = Math.max(M2, (t3 - S2 - 1) / i3), te2 = Math.max(te2, (n3 - C2 - 1) / i3), ne2 = Math.max(ne2, (r4 - w2 - 1) / i3), !(M2 <= k2 && te2 <= j2 && ne2 <= ee2)) {
             let e4 = Util$1.makeHexColor(E2, D2, O2);
-            _2.push([T2 / 840, e4]), k2 = t3 - E2 + 1, j2 = n3 - D2 + 1, ee2 = r4 - O2 + 1, M2 = t3 - E2 - 1, te2 = n3 - D2 - 1, ne2 = r4 - O2 - 1, b2 = T2, S2 = E2, C2 = D2, w2 = O2;
+            _2.push([T2 / 840, e4]), k2 = t3 - E2 + 1, j2 = n3 - D2 + 1, ee2 = r4 - O2 + 1, M2 = t3 - E2 - 1, te2 = n3 - D2 - 1, ne2 = r4 - O2 - 1, b3 = T2, S2 = E2, C2 = D2, w2 = O2;
           }
           T2 = e3, E2 = t3, D2 = n3, O2 = r4;
         }
@@ -6741,7 +6741,7 @@ var init_pdfjs = __esm({
         if (!c2) throw new FormatError$1(`FunctionBasedShading: missing /Function`);
         let l2 = i2.create(c2, true), [u2, d2, p2, m2] = lookupRect(e2.getArray(`Domain`), [0, 1, 0, 1]), h2 = lookupMatrix(e2.getArray(`Matrix`), ue);
         this.bounds = t.slice(), Util$1.axialAlignedBoundingBox([u2, p2, d2, m2], h2, this.bounds);
-        let g2 = this.bounds[2] - this.bounds[0], _2 = this.bounds[3] - this.bounds[1], v2 = MathClamp$1(Math.ceil(g2), 1, FunctionBasedShading.MAX_STEP_COUNT), y2 = MathClamp$1(Math.ceil(_2), 1, FunctionBasedShading.MAX_STEP_COUNT), b2 = v2 + 1, x2 = (y2 + 1) * b2, S2 = this.coords = new Float32Array(x2 * 2), C2 = this.colors = new Uint8ClampedArray(x2 * 4), w2 = new Float32Array(2), T2 = new Float32Array(s2.numComps), E2 = (d2 - u2) / v2, D2 = (m2 - p2) / y2, O2 = E2 / 2, k2 = D2 / 2, j2 = 0, ee2 = 0;
+        let g2 = this.bounds[2] - this.bounds[0], _2 = this.bounds[3] - this.bounds[1], v2 = MathClamp$1(Math.ceil(g2), 1, FunctionBasedShading.MAX_STEP_COUNT), y2 = MathClamp$1(Math.ceil(_2), 1, FunctionBasedShading.MAX_STEP_COUNT), b3 = v2 + 1, x2 = (y2 + 1) * b3, S2 = this.coords = new Float32Array(x2 * 2), C2 = this.colors = new Uint8ClampedArray(x2 * 4), w2 = new Float32Array(2), T2 = new Float32Array(s2.numComps), E2 = (d2 - u2) / v2, D2 = (m2 - p2) / y2, O2 = E2 / 2, k2 = D2 / 2, j2 = 0, ee2 = 0;
         for (let e3 = 0; e3 <= y2; e3++) {
           let t2 = p2 + D2 * e3;
           w2[1] = e3 === y2 ? t2 - k2 : t2;
@@ -6752,7 +6752,7 @@ var init_pdfjs = __esm({
         }
         let M2 = new Uint32Array(x2);
         for (let e3 = 0; e3 < x2; e3++) M2[e3] = e3;
-        this.figures = [{ type: f.LATTICE, coords: M2, colors: new Uint32Array(M2), verticesPerRow: b2 }];
+        this.figures = [{ type: f.LATTICE, coords: M2, colors: new Uint32Array(M2), verticesPerRow: b3 }];
       }
       getIR() {
         let { posData: e2, colData: t2, vertexCount: n2 } = buildMeshVertexData(this.coords, this.colors, this.figures);
@@ -6933,9 +6933,9 @@ var init_pdfjs = __esm({
         u2 = MathClamp$1(u2, MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT, MeshShading.MAX_SPLIT_PATCH_CHUNKS_AMOUNT);
         let d2 = Math.ceil((l2 - s2) * MeshShading.TRIANGLE_DENSITY / (this.bounds[3] - this.bounds[1]));
         d2 = MathClamp$1(d2, MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT, MeshShading.MAX_SPLIT_PATCH_CHUNKS_AMOUNT);
-        let p2 = u2 + 1, m2 = new Int32Array((d2 + 1) * p2), h2 = new Int32Array((d2 + 1) * p2), g2 = 0, _2 = new Uint8Array(3), v2 = new Uint8Array(3), y2 = r2[a2[0]], b2 = r2[a2[1]], x2 = r2[a2[2]], S2 = r2[a2[3]], C2 = getB(d2), w2 = getB(u2);
+        let p2 = u2 + 1, m2 = new Int32Array((d2 + 1) * p2), h2 = new Int32Array((d2 + 1) * p2), g2 = 0, _2 = new Uint8Array(3), v2 = new Uint8Array(3), y2 = r2[a2[0]], b3 = r2[a2[1]], x2 = r2[a2[2]], S2 = r2[a2[3]], C2 = getB(d2), w2 = getB(u2);
         for (let e3 = 0; e3 <= d2; e3++) {
-          _2[0] = (y2[0] * (d2 - e3) + x2[0] * e3) / d2 | 0, _2[1] = (y2[1] * (d2 - e3) + x2[1] * e3) / d2 | 0, _2[2] = (y2[2] * (d2 - e3) + x2[2] * e3) / d2 | 0, v2[0] = (b2[0] * (d2 - e3) + S2[0] * e3) / d2 | 0, v2[1] = (b2[1] * (d2 - e3) + S2[1] * e3) / d2 | 0, v2[2] = (b2[2] * (d2 - e3) + S2[2] * e3) / d2 | 0;
+          _2[0] = (y2[0] * (d2 - e3) + x2[0] * e3) / d2 | 0, _2[1] = (y2[1] * (d2 - e3) + x2[1] * e3) / d2 | 0, _2[2] = (y2[2] * (d2 - e3) + x2[2] * e3) / d2 | 0, v2[0] = (b3[0] * (d2 - e3) + S2[0] * e3) / d2 | 0, v2[1] = (b3[1] * (d2 - e3) + S2[1] * e3) / d2 | 0, v2[2] = (b3[2] * (d2 - e3) + S2[2] * e3) / d2 | 0;
           for (let t3 = 0; t3 <= u2; t3++, g2++) {
             if ((e3 === 0 || e3 === d2) && (t3 === 0 || t3 === u2)) continue;
             let a3 = 0, o3 = 0, s3 = 0;
@@ -7571,9 +7571,9 @@ var init_pdfjs = __esm({
             e3.j = 0, e3.runningState = 8;
             continue;
           case 8:
-            let g3 = e3.pos - e3.distance & a3, _2 = e3.pos, v2 = e3.copyLength - e3.j, y2 = g3 + v2, b2 = _2 + v2;
-            if (y2 < a3 && b2 < a3) {
-              if (v2 < 12 || y2 > _2 && b2 > g3) {
+            let g3 = e3.pos - e3.distance & a3, _2 = e3.pos, v2 = e3.copyLength - e3.j, y2 = g3 + v2, b3 = _2 + v2;
+            if (y2 < a3 && b3 < a3) {
+              if (v2 < 12 || y2 > _2 && b3 > g3) {
                 let e4 = v2 + 3 >> 2;
                 for (let t4 = 0; t4 < e4; ++t4) o3[_2++] = o3[g3++], o3[_2++] = o3[g3++], o3[_2++] = o3[g3++], o3[_2++] = o3[g3++];
               } else o3.copyWithin(_2, g3, y2);
@@ -7629,12 +7629,12 @@ var init_pdfjs = __esm({
 #]# for # a # that #. # with #'# from # by #. The # on # as # is #ing #
 	#:#ed #(# at #ly #="# of the #. This #,# not #er #al #='#ful #ive #less #est #ize #ous #`, `     !! ! ,  *!  &!  " !  ) *   * -  ! # !  #!*!  +  ,$ !  -  %  .  / #   0  1 .  "   2  3!*   4%  ! # /   5  6  7  8 0  1 &   $   9 +   :  ;  < '  !=  >  ?! 4  @ 4  2  &   A *# (   B  C& ) %  ) !*# *-% A +! *.  D! %'  & E *6  F  G% ! *A *%  H! D  I!+!  J!+   K +- *4! A  L!*4  M  N +6  O!*% +.! K *G  P +%(  ! G *D +D  Q +# *K!*G!+D!+# +G +A +4!+% +K!+4!*D!+K!*K`);
       function transformDictionaryWord(e3, t3, n3, r4, i3, a3, o3) {
-        let s3 = t3, c3 = a3.triplets, l3 = a3.prefixSuffixStorage, u3 = a3.prefixSuffixHeads, d3 = 3 * o3, f3 = c3[d3], p3 = c3[d3 + 1], m3 = c3[d3 + 2], h3 = u3[f3], g3 = u3[f3 + 1], _2 = u3[m3], v2 = u3[m3 + 1], y2 = p3 - 11, b2 = p3;
-        for ((y2 < 1 || y2 > 9) && (y2 = 0), (b2 < 1 || b2 > 9) && (b2 = 0); h3 !== g3; ) e3[s3++] = l3[h3++];
+        let s3 = t3, c3 = a3.triplets, l3 = a3.prefixSuffixStorage, u3 = a3.prefixSuffixHeads, d3 = 3 * o3, f3 = c3[d3], p3 = c3[d3 + 1], m3 = c3[d3 + 2], h3 = u3[f3], g3 = u3[f3 + 1], _2 = u3[m3], v2 = u3[m3 + 1], y2 = p3 - 11, b3 = p3;
+        for ((y2 < 1 || y2 > 9) && (y2 = 0), (b3 < 1 || b3 > 9) && (b3 = 0); h3 !== g3; ) e3[s3++] = l3[h3++];
         let x2 = i3;
         y2 > x2 && (y2 = x2);
         let S2 = r4 + y2;
-        x2 -= y2, x2 -= b2;
+        x2 -= y2, x2 -= b3;
         let C2 = x2;
         for (; C2 > 0; ) e3[s3++] = n3[S2++], C2--;
         if (p3 === 10 || p3 === 11) {
@@ -10712,7 +10712,7 @@ var init_pdfjs = __esm({
           if (n3 !== d2) return null;
           _2 = e3;
         }
-        let v2 = n2.get(`lenIV`), y2 = o2 + s2, b2 = [];
+        let v2 = n2.get(`lenIV`), y2 = o2 + s2, b3 = [];
         function readUint(e3, t3) {
           let n3 = 0;
           for (let r4 = 0; r4 < t3; r4++) n3 = n3 << 8 | _2[e3 + r4];
@@ -10728,17 +10728,17 @@ var init_pdfjs = __esm({
           for (let t3 = 0; t3 < u2; t3++) {
             let n3 = e3[t3], r4 = e3[t3 + 1];
             if (r4 > _2.length || r4 < n3) {
-              b2[t3] = new Uint8Array();
+              b3[t3] = new Uint8Array();
               continue;
             }
-            b2[t3] = this.readCharStrings(_2.subarray(n3, r4), v2);
+            b3[t3] = this.readCharStrings(_2.subarray(n3, r4), v2);
           }
         }
         let x2 = [], S2 = readUint(a2 + o2, s2);
         for (let e3 = 0; e3 < i2; e3++) {
           let t3 = readUint(a2 + (e3 + 1) * y2 + o2, s2), n3 = e3 === 0 ? `.notdef` : `cid${e3}`;
           if (t3 > S2 && t3 <= _2.length) {
-            let e4 = this.readCharStrings(_2.subarray(S2, t3), v2), r4 = new Type1CharString(), i3 = r4.convert(e4, b2, this.seacAnalysisEnabled);
+            let e4 = this.readCharStrings(_2.subarray(S2, t3), v2), r4 = new Type1CharString(), i3 = r4.convert(e4, b3, this.seacAnalysisEnabled);
             x2.push({ glyphName: n3, charstring: i3 ? [14] : r4.output, width: r4.width, lsb: r4.lsb, seac: r4.seac });
           } else {
             let e4 = x2[0];
@@ -10746,7 +10746,7 @@ var init_pdfjs = __esm({
           }
           S2 = t3;
         }
-        return r2.subrs = b2, r2.charstrings = x2, r2;
+        return r2.subrs = b3, r2.charstrings = x2, r2;
       }
       extractFontHeader(e2) {
         let t2;
@@ -11195,8 +11195,8 @@ var init_pdfjs = __esm({
             }
           }
           if (y3 === 0) return o3;
-          let b3 = m3 + y3;
-          return b3 > s3.length ? o3 : !a3 && _3 > 0 ? (r4.set(s3.subarray(0, g3), i3), r4.set([0, 0], i3 + g3), r4.set(s3.subarray(v3, b3), i3 + g3 + 2), b3 -= _3, s3.length - b3 > 3 && (b3 = b3 + 3 & -4), o3.length = b3, o3) : s3.length - b3 > 3 ? (b3 = b3 + 3 & -4, r4.set(s3.subarray(0, b3), i3), o3.length = b3, o3) : (r4.set(s3, i3), o3.length = s3.length, o3);
+          let b4 = m3 + y3;
+          return b4 > s3.length ? o3 : !a3 && _3 > 0 ? (r4.set(s3.subarray(0, g3), i3), r4.set([0, 0], i3 + g3), r4.set(s3.subarray(v3, b4), i3 + g3 + 2), b4 -= _3, s3.length - b4 > 3 && (b4 = b4 + 3 & -4), o3.length = b4, o3) : s3.length - b4 > 3 ? (b4 = b4 + 3 & -4, r4.set(s3.subarray(0, b4), i3), o3.length = b4, o3) : (r4.set(s3, i3), o3.length = s3.length, o3);
         }
         function sanitizeHead(e3, t3, n3) {
           let { data: r4, view: i3 } = e3, a3 = i3.getInt32(0);
@@ -11240,9 +11240,9 @@ var init_pdfjs = __esm({
           }
           let y3 = v3.at(-2);
           y3.offset !== 0 && y3.endOffset === 0 && (y3.endOffset = m3);
-          let b3 = pruneCompositeGlyphCycles(p3, v3, n3), x3 = /* @__PURE__ */ Object.create(null), S3 = 0;
+          let b4 = pruneCompositeGlyphCycles(p3, v3, n3), x3 = /* @__PURE__ */ Object.create(null), S3 = 0;
           for (l3(f3, 0, S3), g3 = 0, _3 = s3; g3 < n3; g3++, _3 += s3) {
-            let e4 = b3.has(g3) ? { length: 0, sizeOfInstructions: 0 } : sanitizeGlyph(p3, v3[g3].offset, v3[g3].endOffset, h3, S3, i3), t4 = e4.length;
+            let e4 = b4.has(g3) ? { length: 0, sizeOfInstructions: 0 } : sanitizeGlyph(p3, v3[g3].offset, v3[g3].endOffset, h3, S3, i3), t4 = e4.length;
             t4 === 0 && (x3[g3] = true), e4.sizeOfInstructions > o3 && (o3 = e4.sizeOfInstructions), S3 += t4, l3(f3, _3, S3);
           }
           if (S3 === 0) {
@@ -11502,7 +11502,7 @@ var init_pdfjs = __esm({
         o2.hhea.data[10] === 0 && o2.hhea.data[11] === 0 && (o2.hhea.data[10] = 255, o2.hhea.data[11] = 255);
         let y2 = { unitsPerEm: int16(o2.head.data[18], o2.head.data[19]), yMax: signedInt16(o2.head.data[42], o2.head.data[43]), yMin: signedInt16(o2.head.data[38], o2.head.data[39]), ascent: signedInt16(o2.hhea.data[4], o2.hhea.data[5]), descent: signedInt16(o2.hhea.data[6], o2.hhea.data[7]), lineGap: signedInt16(o2.hhea.data[8], o2.hhea.data[9]) };
         this.ascent = y2.ascent / y2.unitsPerEm, this.descent = y2.descent / y2.unitsPerEm, this.lineGap = y2.lineGap / y2.unitsPerEm, this.cssFontInfo?.lineHeight ? (this.lineHeight = this.cssFontInfo.metrics.lineHeight, this.lineGap = this.cssFontInfo.metrics.lineGap) : this.lineHeight = this.ascent - this.descent + this.lineGap, o2.post && readPostScriptTable(o2.post, n2, d2), o2.post = { tag: `post`, data: createPostTable(n2) };
-        let b2 = /* @__PURE__ */ Object.create(null);
+        let b3 = /* @__PURE__ */ Object.create(null);
         function hasGlyph(e3) {
           return !v2[e3];
         }
@@ -11511,7 +11511,7 @@ var init_pdfjs = __esm({
           n2.cMap.forEach(function(n3, r4) {
             if (typeof r4 == `string` && (r4 = convertCidString(n3, r4, true)), r4 > 65535) throw new FormatError$1(`Max size of CID is 65,535`);
             let i3 = -1;
-            t3 ? i3 = r4 : e3[r4] !== void 0 && (i3 = e3[r4]), i3 >= 0 && i3 < d2 && hasGlyph(i3) && (b2[n3] = i3);
+            t3 ? i3 = r4 : e3[r4] !== void 0 && (i3 = e3[r4]), i3 >= 0 && i3 < d2 && hasGlyph(i3) && (b3[n3] = i3);
           });
         } else {
           let e3 = readCmapTable(o2.cmap, t2, this.isSymbolicFont, n2.hasEncoding), r4 = e3.platformId, i3 = e3.encodingId, a3 = e3.mappings, s3 = [], c3 = false;
@@ -11529,31 +11529,31 @@ var init_pdfjs = __esm({
                 if (l3 === void 0) continue;
               }
               for (let e5 of a3) if (e5.charCode === l3) {
-                b2[t3] = e5.glyphId;
+                b3[t3] = e5.glyphId;
                 break;
               }
             }
           } else if (r4 === 0) {
-            for (let e4 of a3) b2[e4.charCode] = e4.glyphId;
+            for (let e4 of a3) b3[e4.charCode] = e4.glyphId;
             c3 = true;
           } else if (r4 === 3 && i3 === 0) for (let e4 of a3) {
             let t3 = e4.charCode;
-            t3 >= 61440 && t3 <= 61695 && (t3 &= 255), b2[t3] = e4.glyphId;
+            t3 >= 61440 && t3 <= 61695 && (t3 &= 255), b3[t3] = e4.glyphId;
           }
-          else for (let e4 of a3) b2[e4.charCode] = e4.glyphId;
+          else for (let e4 of a3) b3[e4.charCode] = e4.glyphId;
           if (n2.glyphNames && (s3.length || this.differences.length)) for (let e4 = 0; e4 < 256; ++e4) {
-            if (!c3 && b2[e4] !== void 0) continue;
+            if (!c3 && b3[e4] !== void 0) continue;
             let t3 = this.differences[e4] || s3[e4];
             if (!t3) continue;
             let r5 = n2.glyphNames.indexOf(t3);
-            r5 > 0 && hasGlyph(r5) && (b2[e4] = r5);
+            r5 > 0 && hasGlyph(r5) && (b3[e4] = r5);
           }
-          !n2.isInternalFont && b2[0] === void 0 && hasGlyph(0) && (b2[0] = 0);
+          !n2.isInternalFont && b3[0] === void 0 && hasGlyph(0) && (b3[0] = 0);
         }
-        b2.length === 0 && (b2[0] = 0);
+        b3.length === 0 && (b3[0] = 0);
         let x2 = m2 ? p2 - 1 : 0;
         if (!n2.cssFontInfo) {
-          let e3 = adjustMapping(b2, hasGlyph, x2, this.toUnicode);
+          let e3 = adjustMapping(b3, hasGlyph, x2, this.toUnicode);
           this.toFontChar = e3.toFontChar, o2.cmap = { tag: `cmap`, data: createCmapTable(e3.charCodeToGlyphId, e3.toUnicodeExtraMap, p2) }, (!o2[`OS/2`] || !validateOS2Table(o2[`OS/2`], t2)) && (o2[`OS/2`] = { tag: `OS/2`, data: createOS2Table(n2, e3.charCodeToGlyphId, y2) });
         }
         if (!o2.name) o2.name = { tag: `name`, data: createNameTable(this.name) };
@@ -13376,8 +13376,8 @@ var init_pdfjs = __esm({
           for (h2 = 0; h2 < a2; ++h2) {
             let n4 = r2[2 * h2], i3 = r2[2 * h2 + 1], a3 = interpolate(MathClamp$1(e3[t3 + h2], n4, i3), n4, i3, u2[2 * h2], u2[2 * h2 + 1]), o3 = s2[h2];
             a3 = MathClamp$1(a3, 0, o3 - 1);
-            let c4 = a3 < o3 - 1 ? Math.floor(a3) : a3 - 1, d3 = c4 + 1 - a3, f3 = a3 - c4, y2 = c4 * _2, b2 = y2 + _2;
-            for (g2 = 0; g2 < l3; g2++) g2 & v2 ? (p2[g2] *= f3, m2[g2] += b2) : (p2[g2] *= d3, m2[g2] += y2);
+            let c4 = a3 < o3 - 1 ? Math.floor(a3) : a3 - 1, d3 = c4 + 1 - a3, f3 = a3 - c4, y2 = c4 * _2, b3 = y2 + _2;
+            for (g2 = 0; g2 < l3; g2++) g2 & v2 ? (p2[g2] *= f3, m2[g2] += b3) : (p2[g2] *= d3, m2[g2] += y2);
             _2 *= o3, v2 <<= 1;
           }
           for (g2 = 0; g2 < o2; ++g2) {
@@ -13681,23 +13681,23 @@ var init_pdfjs = __esm({
             }
           }
         }
-        let d2 = await this.getImageBytes(s2 * l2, { internal: true }), f2 = 0 | d2.length / l2 * r2 / s2, p2 = this.getComponents(d2), h2, g2, _2, v2, y2, b2;
-        return t2 && !u2 && (_2 = new OffscreenCanvas(n2, r2), v2 = _2.getContext(`2d`), y2 = v2.createImageData(n2, r2), b2 = y2.data), i2.kind = m.RGBA_32BPP, !e2 && !this.smask && !this.mask ? (!t2 || u2 ? (i2.kind = m.RGB_24BPP, b2 = new Uint8ClampedArray(n2 * r2 * 3), h2 = 0) : (new Uint32Array(b2.buffer).fill(FeatureTest$1.isLittleEndian ? 4278190080 : 255), h2 = 1), g2 = false) : ((!t2 || u2) && (b2 = new Uint8ClampedArray(n2 * r2 * 4)), h2 = 1, g2 = true, await this.fillOpacity(b2, n2, r2, f2, p2)), this.needsDecode && this.decodeBuffer(p2), this.colorSpace.fillRgb(b2, o2, s2, n2, r2, f2, c2, p2, h2), g2 && this.undoPreblend(b2, n2, f2), t2 && !u2 ? (v2.putImageData(y2, 0, 0), { data: null, width: n2, height: r2, bitmap: _2.transferToImageBitmap(), interpolate: this.interpolate }) : (i2.data = b2, u2 ? Oe.createImage(i2) : i2);
+        let d2 = await this.getImageBytes(s2 * l2, { internal: true }), f2 = 0 | d2.length / l2 * r2 / s2, p2 = this.getComponents(d2), h2, g2, _2, v2, y2, b3;
+        return t2 && !u2 && (_2 = new OffscreenCanvas(n2, r2), v2 = _2.getContext(`2d`), y2 = v2.createImageData(n2, r2), b3 = y2.data), i2.kind = m.RGBA_32BPP, !e2 && !this.smask && !this.mask ? (!t2 || u2 ? (i2.kind = m.RGB_24BPP, b3 = new Uint8ClampedArray(n2 * r2 * 3), h2 = 0) : (new Uint32Array(b3.buffer).fill(FeatureTest$1.isLittleEndian ? 4278190080 : 255), h2 = 1), g2 = false) : ((!t2 || u2) && (b3 = new Uint8ClampedArray(n2 * r2 * 4)), h2 = 1, g2 = true, await this.fillOpacity(b3, n2, r2, f2, p2)), this.needsDecode && this.decodeBuffer(p2), this.colorSpace.fillRgb(b3, o2, s2, n2, r2, f2, c2, p2, h2), g2 && this.undoPreblend(b3, n2, f2), t2 && !u2 ? (v2.putImageData(y2, 0, 0), { data: null, width: n2, height: r2, bitmap: _2.transferToImageBitmap(), interpolate: this.interpolate }) : (i2.data = b3, u2 ? Oe.createImage(i2) : i2);
       }
       async fillGrayBuffer(e2, { destWidth: t2, destHeight: n2, invertOutput: r2, maxRows: i2, offset: a2 = 0, stride: o2 = 1 } = {}) {
         let s2 = this.numComps;
         if (s2 !== 1) throw new FormatError$1(`Reading gray scale from a color image: ${s2}`);
-        let c2 = this.width, l2 = this.height, u2 = this.bpc, d2 = c2 * s2 * u2 + 7 >> 3, f2 = await this.getImageBytes(l2 * d2, { internal: true }), p2 = this.getComponents(f2), m2 = t2 ?? c2, h2 = n2 ?? l2, g2 = m2 !== c2 || h2 !== l2, _2 = i2 === void 0 ? h2 : Math.min(h2, i2), v2 = c2, y2 = 0, b2 = null;
+        let c2 = this.width, l2 = this.height, u2 = this.bpc, d2 = c2 * s2 * u2 + 7 >> 3, f2 = await this.getImageBytes(l2 * d2, { internal: true }), p2 = this.getComponents(f2), m2 = t2 ?? c2, h2 = n2 ?? l2, g2 = m2 !== c2 || h2 !== l2, _2 = i2 === void 0 ? h2 : Math.min(h2, i2), v2 = c2, y2 = 0, b3 = null;
         if (g2) {
           v2 = m2, y2 = l2 / h2;
           let e3 = c2 / m2;
-          b2 = new Uint32Array(m2);
-          for (let t3 = 0; t3 < m2; t3++) b2[t3] = Math.floor(t3 * e3);
+          b3 = new Uint32Array(m2);
+          for (let t3 = 0; t3 < m2; t3++) b3[t3] = Math.floor(t3 * e3);
         }
         let x2 = r2 ? 255 : 0;
         if (u2 === 1) {
-          if (b2) {
-            let t3 = b2, n3 = a2;
+          if (b3) {
+            let t3 = b3, n3 = a2;
             if (this.needsDecode) for (let r4 = 0; r4 < _2; r4++) {
               let i3 = Math.floor(r4 * y2) * c2;
               for (let r5 = 0; r5 < v2; r5++) e2[n3] = p2[i3 + t3[r5]] - 1 & 255 ^ x2, n3 += o2;
@@ -13715,8 +13715,8 @@ var init_pdfjs = __esm({
         }
         this.needsDecode && this.decodeBuffer(p2);
         let S2 = 255 / ((1 << u2) - 1);
-        if (b2) {
-          let t3 = b2, n3 = a2;
+        if (b3) {
+          let t3 = b3, n3 = a2;
           for (let r4 = 0; r4 < _2; r4++) {
             let i3 = Math.floor(r4 * y2) * c2;
             for (let r5 = 0; r5 < v2; r5++) e2[n3] = S2 * p2[i3 + t3[r5]] ^ x2, n3 += o2;
@@ -13906,22 +13906,22 @@ var init_pdfjs = __esm({
           }
           return;
         }
-        let b2 = `img_${this.idFactory.createObjId()}`, x2 = false, S2 = null;
-        if (this.parsingType3Font ? b2 = `${this.idFactory.getDocId()}_type3_${b2}` : i2 && d2 && (x2 = this.globalImageCache.shouldCache(d2, this.pageIndex), x2 && (assert$1(!n2, `Cannot cache an inline image globally.`), b2 = `${this.idFactory.getDocId()}_${b2}`)), r2.addDependency(b2), _2 = T.paintImageXObject, v2 = [b2, f2, p2], r2.addImageOps(_2, v2, m2, y2), x2) {
-          if (S2 = { objId: b2, fn: _2, args: v2, optionalContent: m2, hasMask: y2, byteSize: 0 }, this.globalImageCache.hasDecodeFailed(d2)) {
-            this.globalImageCache.setData(d2, S2), this._sendImgData(b2, null, x2);
+        let b3 = `img_${this.idFactory.createObjId()}`, x2 = false, S2 = null;
+        if (this.parsingType3Font ? b3 = `${this.idFactory.getDocId()}_type3_${b3}` : i2 && d2 && (x2 = this.globalImageCache.shouldCache(d2, this.pageIndex), x2 && (assert$1(!n2, `Cannot cache an inline image globally.`), b3 = `${this.idFactory.getDocId()}_${b3}`)), r2.addDependency(b3), _2 = T.paintImageXObject, v2 = [b3, f2, p2], r2.addImageOps(_2, v2, m2, y2), x2) {
+          if (S2 = { objId: b3, fn: _2, args: v2, optionalContent: m2, hasMask: y2, byteSize: 0 }, this.globalImageCache.hasDecodeFailed(d2)) {
+            this.globalImageCache.setData(d2, S2), this._sendImgData(b3, null, x2);
             return;
           }
           if (f2 * p2 > 25e4 || y2) {
-            let e3 = await this.handler.sendWithPromise(`commonobj`, [b2, `CopyLocalImage`, { imageRef: d2 }]);
+            let e3 = await this.handler.sendWithPromise(`commonobj`, [b3, `CopyLocalImage`, { imageRef: d2 }]);
             if (e3) {
               this.globalImageCache.setData(d2, S2), this.globalImageCache.addByteSize(d2, e3);
               return;
             }
           }
         }
-        if (br.buildImage({ xref: this.xref, res: e2, image: t2, isInline: n2, pdfFunctionFactory: this._pdfFunctionFactory, globalColorSpaceCache: this.globalColorSpaceCache, localColorSpaceCache: o2 }).then(async (e3) => (g2 = await e3.createImageData(false, l2), g2.dataLen = g2.bitmap ? g2.width * g2.height * 4 : g2.data.length, g2.ref = d2, x2 && this.globalImageCache.addByteSize(d2, g2.dataLen), this._sendImgData(b2, g2, x2))).catch((e3) => (warn$1(`Unable to decode image "${b2}": "${e3}".`), d2 && this.globalImageCache.addDecodeFailed(d2), this._sendImgData(b2, null, x2))), i2) {
-          let e3 = { objId: b2, fn: _2, args: v2, optionalContent: m2, hasMask: y2 };
+        if (br.buildImage({ xref: this.xref, res: e2, image: t2, isInline: n2, pdfFunctionFactory: this._pdfFunctionFactory, globalColorSpaceCache: this.globalColorSpaceCache, localColorSpaceCache: o2 }).then(async (e3) => (g2 = await e3.createImageData(false, l2), g2.dataLen = g2.bitmap ? g2.width * g2.height * 4 : g2.data.length, g2.ref = d2, x2 && this.globalImageCache.addByteSize(d2, g2.dataLen), this._sendImgData(b3, g2, x2))).catch((e3) => (warn$1(`Unable to decode image "${b3}": "${e3}".`), d2 && this.globalImageCache.addDecodeFailed(d2), this._sendImgData(b3, null, x2))), i2) {
+          let e3 = { objId: b3, fn: _2, args: v2, optionalContent: m2, hasMask: y2 };
           a2.set(i2, d2, e3), d2 && (this._regionalImageCache.set(null, d2, e3), x2 && (assert$1(S2, `The global cache-data must be available.`), this.globalImageCache.setData(d2, S2)));
         }
       }
@@ -14206,9 +14206,9 @@ var init_pdfjs = __esm({
           l2.put(c2);
         }
         if (r2 ||= F.empty, a2 ||= new EvalState(), !i2) throw Error(`getOperatorList: missing "operatorList" parameter`);
-        let u2 = this, d2 = this.xref, f2 = new LocalImageCache(), p2 = new LocalColorSpaceCache(), m2 = new LocalGStateCache(), h2 = new LocalTilingPatternCache(), g2 = /* @__PURE__ */ new Map(), _2 = r2.get(`XObject`) || F.empty, v2 = r2.get(`Pattern`) || F.empty, y2 = new StateManager(a2), b2 = new Er(e2, d2, y2), x2 = new wr();
+        let u2 = this, d2 = this.xref, f2 = new LocalImageCache(), p2 = new LocalColorSpaceCache(), m2 = new LocalGStateCache(), h2 = new LocalTilingPatternCache(), g2 = /* @__PURE__ */ new Map(), _2 = r2.get(`XObject`) || F.empty, v2 = r2.get(`Pattern`) || F.empty, y2 = new StateManager(a2), b3 = new Er(e2, d2, y2), x2 = new wr();
         function closePendingRestoreOPS(e3) {
-          for (let e4 = 0, t2 = b2.savedStatesDepth; e4 < t2; e4++) i2.addOp(T.restore, []);
+          for (let e4 = 0, t2 = b3.savedStatesDepth; e4 < t2; e4++) i2.addOp(T.restore, []);
         }
         return new Promise(function promiseBody(e3, a3) {
           let next = function(t2) {
@@ -14222,7 +14222,7 @@ var init_pdfjs = __esm({
           };
           n2.ensureNotTerminated(), x2.reset();
           let s3 = {}, c3, S2, C2, w2, D2, O2;
-          for (; !(c3 = x2.check()) && (s3.args = null, b2.read(s3)); ) {
+          for (; !(c3 = x2.check()) && (s3.args = null, b3.read(s3)); ) {
             let e4 = s3.args, a4 = s3.fn;
             switch (a4 | 0) {
               case T.paintXObject:
@@ -14297,9 +14297,9 @@ var init_pdfjs = __esm({
                   u2.ensureStateFont(y2.state);
                   continue;
                 }
-                let b3 = [], x3 = y2.state;
-                for (let t2 of e4[0]) typeof t2 == `string` ? b3.push(...u2.handleText(t2, x3)) : typeof t2 == `number` && b3.push(t2);
-                e4[0] = b3, a4 = T.showText;
+                let b4 = [], x3 = y2.state;
+                for (let t2 of e4[0]) typeof t2 == `string` ? b4.push(...u2.handleText(t2, x3)) : typeof t2 == `number` && b4.push(t2);
+                e4[0] = b4, a4 = T.showText;
                 break;
               case T.nextLineShowText:
                 if (!y2.state.font) {
@@ -14551,16 +14551,16 @@ var init_pdfjs = __esm({
           g2.put(h2);
         }
         n2 ||= F.empty, i2 ||= new StateManager(new TextState()), a2 && (u2 ||= { level: 0 });
-        let _2 = { items: [], styles: /* @__PURE__ */ Object.create(null), lang: l2 }, v2 = { initialized: false, str: [], totalWidth: 0, totalHeight: 0, width: 0, height: 0, vertical: false, prevTransform: null, prevTextRise: 0, textAdvanceScale: 0, spaceInFlowMin: 0, spaceInFlowMax: 0, trackingSpaceMin: 1 / 0, negativeSpaceMax: -1 / 0, notASpace: -1 / 0, transform: null, fontName: null, hasEOL: false }, y2 = [` `, ` `], b2 = 0;
+        let _2 = { items: [], styles: /* @__PURE__ */ Object.create(null), lang: l2 }, v2 = { initialized: false, str: [], totalWidth: 0, totalHeight: 0, width: 0, height: 0, vertical: false, prevTransform: null, prevTextRise: 0, textAdvanceScale: 0, spaceInFlowMin: 0, spaceInFlowMax: 0, trackingSpaceMin: 1 / 0, negativeSpaceMax: -1 / 0, notASpace: -1 / 0, transform: null, fontName: null, hasEOL: false }, y2 = [` `, ` `], b3 = 0;
         function saveLastChar(e3) {
-          let t3 = (b2 + 1) % 2, n3 = y2[b2] !== ` ` && y2[t3] === ` `;
-          return y2[b2] = e3, b2 = t3, !f2 && n3;
+          let t3 = (b3 + 1) % 2, n3 = y2[b3] !== ` ` && y2[t3] === ` `;
+          return y2[b3] = e3, b3 = t3, !f2 && n3;
         }
         function shouldAddWhitepsace() {
-          return !f2 && y2[b2] !== ` ` && y2[(b2 + 1) % 2] === ` `;
+          return !f2 && y2[b3] !== ` ` && y2[(b3 + 1) % 2] === ` `;
         }
         function resetLastChars() {
-          y2[0] = y2[1] = ` `, b2 = 0;
+          y2[0] = y2[1] = ` `, b3 = 0;
         }
         let x2 = 0.25, S2 = this, C2 = this.xref, w2 = [], E2 = null, D2 = new LocalImageCache(), O2 = new LocalGStateCache(), k2 = new Er(e2, C2, i2), j2, ee2;
         function pushWhitespace({ width: e3 = 0, height: t3 = 0, transform: n3 = v2.prevTransform, fontName: r2 = v2.fontName }) {
@@ -14801,8 +14801,8 @@ var init_pdfjs = __esm({
                     D2.set(h3, m5.objId, true), e6();
                     return;
                   }
-                  let y4 = new StateManager(i2.state.clone()), b3 = lookupMatrix(m5.getArray(`Matrix`), null);
-                  b3 && y4.transform(b3);
+                  let y4 = new StateManager(i2.state.clone()), b4 = lookupMatrix(m5.getArray(`Matrix`), null);
+                  b4 && y4.transform(b4);
                   let x3 = m5.get(`Resources`);
                   enqueueChunk();
                   let w3 = textSinkWrapper(o2);
@@ -15235,7 +15235,7 @@ var init_pdfjs = __esm({
         typeof d2 == `string` && (d2 = N.get(d2)), typeof f2 == `string` && (f2 = N.get(f2));
         let p2 = d2?.name, m2 = f2?.name;
         if (u2 ? p2 || (d2 = N.get(a2)) : p2 !== m2 && (info$1(`The FontDescriptor's FontName is "${p2}" but should be the same as the Font's BaseFont "${m2}".`), p2 && m2 && (m2.startsWith(p2) || !isKnownFontName(p2) && isKnownFontName(m2)) && (d2 = null), d2 ||= f2), !(d2 instanceof N)) throw new FormatError$1(`invalid font name`);
-        let h2, g2, _2, v2, y2, b2;
+        let h2, g2, _2, v2, y2, b3;
         try {
           for (let t3 of [`FontFile`, `FontFile2`, `FontFile3`]) if (h2 = e2.get(t3), h2) {
             g2 = t3;
@@ -15256,7 +15256,7 @@ var init_pdfjs = __esm({
         if (h2) {
           if (h2.dict) {
             let e3 = h2.dict.get(`Subtype`);
-            e3 instanceof N && (_2 = e3.name), v2 = h2.dict.get(`Length1`), y2 = h2.dict.get(`Length2`), b2 = h2.dict.get(`Length3`);
+            e3 instanceof N && (_2 = e3.name), v2 = h2.dict.get(`Length1`), y2 = h2.dict.get(`Length2`), b3 = h2.dict.get(`Length3`);
           }
         } else if (l2) {
           let e3 = getXfaFontName(d2.name);
@@ -15277,7 +15277,7 @@ var init_pdfjs = __esm({
         Number.isInteger(j2) || (j2 = 0);
         let ee2 = e2.get(`ItalicAngle`);
         typeof ee2 != `number` && (ee2 = 0);
-        let M2 = { type: a2, name: d2.name, subtype: _2, file: h2, fontFileN: g2, length1: v2, length2: y2, length3: b2, isInternalFont: x2, loadedName: n2.loadedName, composite: i2, fixedPitch: false, fontMatrix: w2, firstChar: o2, lastChar: s2, toUnicode: c2, bbox: T2, ascent: E2, descent: D2, xHeight: O2, capHeight: k2, flags: j2, italicAngle: ee2, isType3Font: u2, cssFontInfo: l2, scaleFactors: S2, systemFontInfo: C2 };
+        let M2 = { type: a2, name: d2.name, subtype: _2, file: h2, fontFileN: g2, length1: v2, length2: y2, length3: b3, isInternalFont: x2, loadedName: n2.loadedName, composite: i2, fixedPitch: false, fontMatrix: w2, firstChar: o2, lastChar: s2, toUnicode: c2, bbox: T2, ascent: E2, descent: D2, xHeight: O2, capHeight: k2, flags: j2, italicAngle: ee2, isType3Font: u2, cssFontInfo: l2, scaleFactors: S2, systemFontInfo: C2 };
         if (i2) {
           let e3 = n2.get(`Encoding`);
           e3 instanceof N && (M2.cidEncoding = e3.name), M2.cMap = await CMapFactory.create({ encoding: e3, fetchBuiltInCMap: this._fetchBuiltInCMapBound, useCMap: null }), M2.vertical = M2.cMap.vertical;
@@ -15723,9 +15723,9 @@ var init_pdfjs = __esm({
         u2 *= r2 / 1e3;
         let [d2, f2, p2, m2] = t2, h2 = p2 - d2, g2 = m2 - f2;
         n2 % 180 != 0 && ([h2, g2] = [g2, h2]);
-        let _2 = u2 > h2 ? h2 / u2 : 1, v2 = 1, y2 = i * r2, b2 = a * r2, x2 = y2 * l2.length;
+        let _2 = u2 > h2 ? h2 / u2 : 1, v2 = 1, y2 = i * r2, b3 = a * r2, x2 = y2 * l2.length;
         x2 > g2 && (v2 = g2 / x2);
-        let S2 = r2 * Math.min(_2, v2), C2 = [`q`, `0 0 ${numberToString(h2)} ${numberToString(g2)} re W n`, `BT`, `1 0 0 1 0 ${numberToString(g2 + b2)} Tm 0 Tc ${getPdfColor(o2, true)}`, `/${this.fontName.name} ${numberToString(S2)} Tf`], { resources: w2 } = this;
+        let S2 = r2 * Math.min(_2, v2), C2 = [`q`, `0 0 ${numberToString(h2)} ${numberToString(g2)} re W n`, `BT`, `1 0 0 1 0 ${numberToString(g2 + b3)} Tm 0 Tc ${getPdfColor(o2, true)}`, `/${this.fontName.name} ${numberToString(S2)} Tf`], { resources: w2 } = this;
         if (s2 = typeof s2 == `number` && s2 >= 0 && s2 <= 1 ? s2 : 1, s2 !== 1) {
           C2.push(`/R0 gs`);
           let e3 = new F(this.xref), t3 = new F(this.xref);
@@ -16303,10 +16303,10 @@ var init_pdfjs = __esm({
               }
             }
             u2 = Math.max(u2, _2);
-            let y2 = a2.getNewTemporaryRef(), b2 = new F(a2);
-            StructTreeRoot.#n(b2, o3), await this.#i({ structTreeParent: v2, tagDict: b2, newTagRef: y2, structTreeRootRef: t2, fallbackKids: r2, xref: a2, cache: c2 });
+            let y2 = a2.getNewTemporaryRef(), b3 = new F(a2);
+            StructTreeRoot.#n(b3, o3), await this.#i({ structTreeParent: v2, tagDict: b3, newTagRef: y2, structTreeRootRef: t2, fallbackKids: r2, xref: a2, cache: c2 });
             let x2 = new F(a2);
-            b2.set(`K`, x2), x2.set(`Type`, l2), h2 && x2.set(`Pg`, m2), x2.set(`Obj`, g2), c2.put(y2, b2), i2.push(_2, y2);
+            b3.set(`K`, x2), x2.set(`Type`, l2), h2 && x2.set(`Pg`, m2), x2.set(`Obj`, g2), c2.put(y2, b3), i2.push(_2, y2);
           }
         }
         return u2 + 1;
@@ -17396,9 +17396,9 @@ var init_pdfjs = __esm({
               t2.setOCGState = { state: v2, preserveRB: typeof _2 != `boolean` || _2 };
               break;
             case `JavaScript`:
-              let y2 = i2.get(`JS`), b2;
-              y2 instanceof BaseStream ? b2 = y2.getString() : typeof y2 == `string` && (b2 = y2);
-              let x2 = b2 && recoverJsURL(stringToPDFString(b2, true));
+              let y2 = i2.get(`JS`), b3;
+              y2 instanceof BaseStream ? b3 = y2.getString() : typeof y2 == `string` && (b3 = y2);
+              let x2 = b3 && recoverJsURL(stringToPDFString(b3, true));
               if (x2) {
                 a2 = x2.url, t2.newWindow = x2.newWindow;
                 break;
@@ -23013,12 +23013,12 @@ var init_pdfjs = __esm({
           let c2 = Object.assign(/* @__PURE__ */ Object.create(null), this.data.defaultAppearanceData);
           this.data.defaultAppearanceData.fontSize = 0, this.data.defaultAppearanceData.fontName = s3, [h2, g2, _2] = this._computeFontSize(p2 - 2, f2 - 4, a2, m2, u2), this.data.defaultAppearanceData = c2;
         } else this._isOffscreenCanvasSupported || warn$1(`_getAppearance: OffscreenCanvas is not supported, annotation may not render correctly.`), [h2, g2, _2] = this._computeFontSize(p2 - 2, f2 - 4, a2, m2, u2);
-        let b2 = m2.descent;
-        b2 = isNaN(b2) ? o * _2 : Math.max(o * _2, Math.abs(b2) * g2);
+        let b3 = m2.descent;
+        b3 = isNaN(b3) ? o * _2 : Math.max(o * _2, Math.abs(b3) * g2);
         let x2 = Math.min(Math.floor((p2 - g2) / 2), 1), S2 = this.data.textAlignment;
-        if (this.data.multiLine) return this._getMultilineAppearance(h2, v2, m2, g2, f2, p2, S2, 2, x2, b2, _2, r2);
+        if (this.data.multiLine) return this._getMultilineAppearance(h2, v2, m2, g2, f2, p2, S2, 2, x2, b3, _2, r2);
         if (this.data.comb) return this._getCombAppearance(h2, m2, v2[0], g2, f2, p2, S2, bidi(d2[0]).dir === `rtl`, r2);
-        let C2 = x2 + b2;
+        let C2 = x2 + b3;
         if (S2 === 0 || S2 > 2) return `/Tx BMC q ${l2}BT ` + h2 + ` 1 0 0 1 ${numberToString(2)} ${numberToString(C2)} Tm (${escapeString(v2[0])}) Tj ET Q EMC`;
         let w2 = this._renderText(v2[0], m2, g2, f2, S2, { shift: 0 }, 2, C2);
         return `/Tx BMC q ${l2}BT ` + h2 + ` 1 0 0 1 0 0 Tm ${w2} ET Q EMC`;
@@ -23418,18 +23418,18 @@ var init_pdfjs = __esm({
           let e3 = Math.min(...d2), t3 = Math.max(...d2);
           v2 = Math.max(0, t3 - _2 + 1), v2 > e3 && (v2 = e3);
         }
-        let y2 = Math.min(v2 + _2 + 1, u2), b2 = [`/Tx BMC q`, `1 1 ${c2} ${l2} re W n`];
+        let y2 = Math.min(v2 + _2 + 1, u2), b3 = [`/Tx BMC q`, `1 1 ${c2} ${l2} re W n`];
         if (d2.length) {
-          b2.push(`0.600006 0.756866 0.854904 rg`);
-          for (let e3 of d2) v2 <= e3 && e3 < y2 && b2.push(`1 ${l2 - (e3 - v2 + 1) * h2} ${c2} ${h2} re f`);
+          b3.push(`0.600006 0.756866 0.854904 rg`);
+          for (let e3 of d2) v2 <= e3 && e3 < y2 && b3.push(`1 ${l2 - (e3 - v2 + 1) * h2} ${c2} ${h2} re f`);
         }
-        b2.push(`BT`, p2, `1 0 0 1 0 ${l2} Tm`);
+        b3.push(`BT`, p2, `1 0 0 1 0 ${l2} Tm`);
         let x2 = { shift: 0 };
         for (let e3 = v2; e3 < y2; e3++) {
           let { displayValue: t3 } = this.data.options[e3], n3 = e3 === v2 ? g2 : 0;
-          b2.push(this._renderText(t3, f2, m2, c2, 0, x2, 2, -h2 + n3));
+          b3.push(this._renderText(t3, f2, m2, c2, 0, x2, 2, -h2 + n3));
         }
-        return b2.push(`ET Q EMC`), b2.join(`
+        return b3.push(`ET Q EMC`), b3.join(`
 `);
       }
     };
@@ -23528,8 +23528,8 @@ var init_pdfjs = __esm({
           e3.setIfName(`BaseFont`, `Helvetica`), e3.setIfName(`Type`, `Font`), e3.setIfName(`Subtype`, `Type1`), e3.setIfName(`Encoding`, `WinAnsiEncoding`), m2.set(`Helv`, e3);
         }
         p2.set(`Font`, m2);
-        let h2 = await ro._getFontData(o2, s2, { fontName: `Helv`, fontSize: l2 }, p2), [g2, _2, v2, y2] = u2, b2 = v2 - g2, x2 = y2 - _2;
-        d2 % 180 != 0 && ([b2, x2] = [x2, b2]);
+        let h2 = await ro._getFontData(o2, s2, { fontName: `Helv`, fontSize: l2 }, p2), [g2, _2, v2, y2] = u2, b3 = v2 - g2, x2 = y2 - _2;
+        d2 % 180 != 0 && ([b3, x2] = [x2, b3]);
         let S2 = f2.split(`
 `), C2 = l2 / 1e3, w2 = -1 / 0, T2 = [];
         for (let e3 of S2) {
@@ -23540,21 +23540,21 @@ var init_pdfjs = __esm({
           for (let e4 of r4) n3 += e4.width * C2;
           w2 = Math.max(w2, n3);
         }
-        let E2 = w2 > b2 ? b2 / w2 : 1, D2 = 1, O2 = i * l2, k2 = (i - a) * l2, j2 = O2 * S2.length;
+        let E2 = w2 > b3 ? b3 / w2 : 1, D2 = 1, O2 = i * l2, k2 = (i - a) * l2, j2 = O2 * S2.length;
         j2 > x2 && (D2 = x2 / j2);
         let ee2 = l2 * Math.min(E2, D2), M2, te2, ne2;
         switch (d2) {
           case 0:
-            ne2 = [1, 0, 0, 1], te2 = [u2[0], u2[1], b2, x2], M2 = [u2[0], u2[3] - k2];
+            ne2 = [1, 0, 0, 1], te2 = [u2[0], u2[1], b3, x2], M2 = [u2[0], u2[3] - k2];
             break;
           case 90:
-            ne2 = [0, 1, -1, 0], te2 = [u2[1], -u2[2], b2, x2], M2 = [u2[1], -u2[0] - k2];
+            ne2 = [0, 1, -1, 0], te2 = [u2[1], -u2[2], b3, x2], M2 = [u2[1], -u2[0] - k2];
             break;
           case 180:
-            ne2 = [-1, 0, 0, -1], te2 = [-u2[2], -u2[3], b2, x2], M2 = [-u2[2], -u2[1] - k2];
+            ne2 = [-1, 0, 0, -1], te2 = [-u2[2], -u2[3], b3, x2], M2 = [-u2[2], -u2[1] - k2];
             break;
           case 270:
-            ne2 = [0, -1, 1, 0], te2 = [-u2[3], u2[0], b2, x2], M2 = [-u2[3], u2[2] - k2];
+            ne2 = [0, -1, 1, 0], te2 = [-u2[3], u2[0], b3, x2], M2 = [-u2[3], u2[2] - k2];
             break;
         }
         let re2 = [`q`, `${ne2.join(` `)} 0 0 cm`, `${te2.join(` `)} re W n`, `BT`, `${getPdfColor(c2, true)}`, `0 Tc /Helv ${numberToString(ee2)} Tf`];
@@ -25069,8 +25069,8 @@ var init_pdfjs = __esm({
           v2 = v2.concat(y2);
         }
         if (v2.length === 0 || r2 & c.ANNOTATIONS_DISABLE) return _2.flush(true), { length: _2.totalLength };
-        let b2 = !!(r2 & c.ANNOTATIONS_FORMS), x2 = !!(r2 & c.IS_EDITING), S2 = !!(r2 & c.ANY), C2 = !!(r2 & c.DISPLAY), w2 = !!(r2 & c.PRINT), T2 = [];
-        for (let e3 of v2) (S2 || C2 && e3.mustBeViewed(o2, b2) && e3.mustBeViewedWhenEditing(x2, s2) || w2 && e3.mustBePrinted(o2)) && T2.push(e3.getOperatorList(f2, n2, r2, o2).catch(function(e4) {
+        let b3 = !!(r2 & c.ANNOTATIONS_FORMS), x2 = !!(r2 & c.IS_EDITING), S2 = !!(r2 & c.ANY), C2 = !!(r2 & c.DISPLAY), w2 = !!(r2 & c.PRINT), T2 = [];
+        for (let e3 of v2) (S2 || C2 && e3.mustBeViewed(o2, b3) && e3.mustBeViewedWhenEditing(x2, s2) || w2 && e3.mustBePrinted(o2)) && T2.push(e3.getOperatorList(f2, n2, r2, o2).catch(function(e4) {
           return warn$1(`getOperatorList - ignoring annotation data during "${n2.name}" task: "${e4}".`), { opList: null, separateForm: false, separateCanvas: false };
         }));
         let E2 = await Promise.all(T2), D2 = false, O2 = false;
@@ -26056,10 +26056,10 @@ var init_pdfjs = __esm({
           let e3 = stringToPDFString(y2, false), t3 = i2.get(e3);
           g2.set(`ID`, t3 ? stringToAsciiOrUTF16BE(t3) : y2);
         }
-        let b2 = g2.get(`A`);
-        if (b2) {
-          Array.isArray(b2) || (b2 = [b2]);
-          for (let e3 of b2) if (e3 = this.xrefWrapper.fetchIfRef(e3), isName(e3.get(`O`), `Table`) && e3.has(`Headers`)) {
+        let b3 = g2.get(`A`);
+        if (b3) {
+          Array.isArray(b3) || (b3 = [b3]);
+          for (let e3 of b3) if (e3 = this.xrefWrapper.fetchIfRef(e3), isName(e3.get(`O`), `Table`) && e3.has(`Headers`)) {
             let t3 = this.xrefWrapper.fetchIfRef(e3.getRaw(`Headers`));
             if (Array.isArray(t3)) for (let e4 = 0, n3 = t3.length; e4 < n3; e4++) {
               let n4 = i2.get(stringToPDFString(t3[e4], false));
@@ -26285,13 +26285,13 @@ var init_pdfjs = __esm({
           this.currentDocument = t3;
           let y2 = new RefSet();
           for (let [e4, t4] of u2 || []) !d2.has(e4) && t4 instanceof L && y2.put(t4);
-          let b2 = /* @__PURE__ */ new Map();
+          let b3 = /* @__PURE__ */ new Map();
           for (let [e4, t4] of p2 || []) {
             let n4 = e4;
             if (i2.has(e4)) for (let t5 = 1; ; t5++) {
               let r4 = `${e4}_${t5}`;
               if (!i2.has(r4)) {
-                b2.set(e4, r4), n4 = r4;
+                b3.set(e4, r4), n4 = r4;
                 break;
               }
             }
@@ -26339,11 +26339,11 @@ var init_pdfjs = __esm({
               let n4 = t4 instanceof L ? t4 : null;
               if (n4 && y2.has(n4)) continue;
               t4 = await e3.fetchIfRefAsync(t4);
-              let i3 = await this.#d(n4, t4, e3, y2, b2, x2, S2);
+              let i3 = await this.#d(n4, t4, e3, y2, b3, x2, S2);
               i3 && r2.push(i3);
             }
             for (let [e4, t4] of p2 || []) {
-              let r4 = t4 instanceof L && n3.get(t4), a3 = b2.get(e4) || e4;
+              let r4 = t4 instanceof L && n3.get(t4), a3 = b3.get(e4) || e4;
               r4 ? i2.set(a3, r4) : i2.delete(a3);
             }
           }
@@ -26749,8 +26749,8 @@ var init_pdfjs = __esm({
         v2.set(`Im0`, _2);
         let y2 = new F(this.xrefWrapper);
         y2.set(`XObject`, v2), y2.set(`ProcSet`, [N.get(`PDF`), N.get(`ImageC`)]);
-        let b2 = new StringStream(`q ${numberToString(p2)} 0 0 ${numberToString(m2)} ${numberToString(h2)} ${numberToString(g2)} cm /Im0 Do Q`, new F(this.xrefWrapper)), x2 = this.newRef;
-        this.xref[x2.num] = b2;
+        let b3 = new StringStream(`q ${numberToString(p2)} 0 0 ${numberToString(m2)} ${numberToString(h2)} ${numberToString(g2)} cm /Im0 Do Q`, new F(this.xrefWrapper)), x2 = this.newRef;
+        this.xref[x2.num] = b3;
         let S2 = this.newRef, C2 = this.xref[S2.num] = new F(this.xrefWrapper);
         if (C2.setIfName(`Type`, `Page`), C2.set(`MediaBox`, [0, 0, n2, r2]), C2.set(`Resources`, y2), C2.set(`Contents`, x2), this.useObjectStreams) {
           let e3 = this.newRefCount, t3 = [];
@@ -27313,7 +27313,7 @@ var init_pdfjs = __esm({
           if (e3) {
             if (y2 = v2[0], !y2) return l3.bytes;
           } else if (o3.size === 0) return l3.bytes;
-          let b2 = f2 && d2 instanceof F && o3.values().some((e4) => e4.needAppearances), x2 = d2 instanceof F && d2.get(`XFA`) || null, S2 = null, C2 = false;
+          let b3 = f2 && d2 instanceof F && o3.values().some((e4) => e4.needAppearances), x2 = d2 instanceof F && d2.get(`XFA`) || null, S2 = null, C2 = false;
           if (Array.isArray(x2)) {
             for (let e4 = 0, t4 = x2.length; e4 < t4; e4 += 2) x2[e4] === `datasets` && (S2 = x2[e4 + 1], C2 = true);
             S2 === null && (S2 = m2.getNewTemporaryRef());
@@ -27324,7 +27324,7 @@ var init_pdfjs = __esm({
             if (t4 instanceof F) for (let [n3, r5] of t4) typeof r5 == `string` && e4.set(n3, stringToPDFString(r5));
             w2 = { rootRef: g2, encryptRef: m2.trailer.getRaw(`Encrypt`) || null, newRef: m2.getNewTemporaryRef(), infoRef: m2.trailer.getRaw(`Info`) || null, infoMap: e4, fileIds: m2.trailer.get(`ID`) || null, startXRef: p2, filename: i3 };
           }
-          return incrementalUpdate({ originalData: l3.bytes, xrefInfo: w2, changes: o3, xref: m2, hasXfa: !!x2, xfaDatasetsRef: S2, hasXfaDatasetsEntry: C2, needAppearances: b2, acroFormRef: f2, acroForm: d2, xfaData: y2, useXrefStream: isDict(m2.topDict, `XRef`) }).finally(() => {
+          return incrementalUpdate({ originalData: l3.bytes, xrefInfo: w2, changes: o3, xref: m2, hasXfa: !!x2, xfaDatasetsRef: S2, hasXfaDatasetsEntry: C2, needAppearances: b3, acroFormRef: f2, acroForm: d2, xfaData: y2, useXrefStream: isDict(m2.topDict, `XRef`) }).finally(() => {
             m2.resetNewTemporaryRef();
           });
         }), u2.on(`GetOperatorList`, function(e3, t3) {
@@ -27505,12 +27505,12 @@ var init_pdfjs = __esm({
         e2[0] = (n2 * t2[3] - r2 * t2[2] + t2[2] * t2[5] - t2[4] * t2[3]) / i2, e2[1] = (-n2 * t2[1] + r2 * t2[0] + t2[4] * t2[1] - t2[5] * t2[0]) / i2;
       }
       static axialAlignedBoundingBox(e2, t2, n2) {
-        let r2 = t2[0], i2 = t2[1], a2 = t2[2], o2 = t2[3], s2 = t2[4], c2 = t2[5], l2 = e2[0], u2 = e2[1], d2 = e2[2], f2 = e2[3], p2 = r2 * l2 + s2, m2 = p2, h2 = r2 * d2 + s2, g2 = h2, _2 = o2 * u2 + c2, v2 = _2, y2 = o2 * f2 + c2, b2 = y2;
+        let r2 = t2[0], i2 = t2[1], a2 = t2[2], o2 = t2[3], s2 = t2[4], c2 = t2[5], l2 = e2[0], u2 = e2[1], d2 = e2[2], f2 = e2[3], p2 = r2 * l2 + s2, m2 = p2, h2 = r2 * d2 + s2, g2 = h2, _2 = o2 * u2 + c2, v2 = _2, y2 = o2 * f2 + c2, b3 = y2;
         if (i2 !== 0 || a2 !== 0) {
           let e3 = i2 * l2, t3 = i2 * d2, n3 = a2 * u2, r4 = a2 * f2;
-          p2 += n3, g2 += n3, h2 += r4, m2 += r4, _2 += e3, b2 += e3, y2 += t3, v2 += t3;
+          p2 += n3, g2 += n3, h2 += r4, m2 += r4, _2 += e3, b3 += e3, y2 += t3, v2 += t3;
         }
-        n2[0] = Math.min(n2[0], p2, h2, m2, g2), n2[1] = Math.min(n2[1], _2, y2, v2, b2), n2[2] = Math.max(n2[2], p2, h2, m2, g2), n2[3] = Math.max(n2[3], _2, y2, v2, b2);
+        n2[0] = Math.min(n2[0], p2, h2, m2, g2), n2[1] = Math.min(n2[1], _2, y2, v2, b3), n2[2] = Math.max(n2[2], p2, h2, m2, g2), n2[3] = Math.max(n2[3], _2, y2, v2, b3);
       }
       static inverseTransform(e2) {
         let t2 = e2[0] * e2[3] - e2[1] * e2[2];
@@ -29719,7 +29719,7 @@ var init_pdfjs = __esm({
             p2 = true, getPoint = (e3, t3) => [0, t3 / 2], getOpposite = (e3, t3) => [e3, t3 / 2];
             break;
         }
-        let m2 = getPoint(o2, s2), h2 = getOpposite(o2, s2), g2 = transf(...h2), _2 = AnnotationEditor._round(i2 + g2[0]), v2 = AnnotationEditor._round(a2 + g2[1]), y2 = 1, b2 = 1, x2, S2;
+        let m2 = getPoint(o2, s2), h2 = getOpposite(o2, s2), g2 = transf(...h2), _2 = AnnotationEditor._round(i2 + g2[0]), v2 = AnnotationEditor._round(a2 + g2[1]), y2 = 1, b3 = 1, x2, S2;
         if (t2.fromKeyboard) ({ deltaX: x2, deltaY: S2 } = t2);
         else {
           let { screenX: e3, screenY: n3 } = t2, [r4, i3] = this.#l;
@@ -29727,9 +29727,9 @@ var init_pdfjs = __esm({
         }
         if ([x2, S2] = invTransf(x2 / n2, S2 / r2), f2) {
           let e3 = Math.hypot(o2, s2);
-          y2 = b2 = Math.max(Math.min(Math.hypot(h2[0] - m2[0] - x2, h2[1] - m2[1] - S2) / e3, 1 / o2, 1 / s2), c2 / o2, l2 / s2);
-        } else p2 ? y2 = MathClamp(Math.abs(h2[0] - m2[0] - x2), c2, 1) / o2 : b2 = MathClamp(Math.abs(h2[1] - m2[1] - S2), l2, 1) / s2;
-        let C2 = AnnotationEditor._round(o2 * y2), w2 = AnnotationEditor._round(s2 * b2);
+          y2 = b3 = Math.max(Math.min(Math.hypot(h2[0] - m2[0] - x2, h2[1] - m2[1] - S2) / e3, 1 / o2, 1 / s2), c2 / o2, l2 / s2);
+        } else p2 ? y2 = MathClamp(Math.abs(h2[0] - m2[0] - x2), c2, 1) / o2 : b3 = MathClamp(Math.abs(h2[1] - m2[1] - S2), l2, 1) / s2;
+        let C2 = AnnotationEditor._round(o2 * y2), w2 = AnnotationEditor._round(s2 * b3);
         g2 = transf(...getOpposite(C2, w2));
         let T2 = _2 - g2[0], E2 = v2 - g2[1];
         this.#h ||= [this.x, this.y, this.width, this.height], this.width = C2, this.height = w2, this.x = T2, this.y = E2, this.setDims(), this.fixAndSetPosition(), this._onResizing();
@@ -31876,8 +31876,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         c2.queue.writeBuffer(h2, 0, new Float32Array([l2, u2, d2, f2, a2, o2, s2, 0]));
         let g2 = c2.createBindGroup({ layout: this.#n.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: h2 } }] }), _2 = new OffscreenCanvas(a2, o2), v2 = _2.getContext(`webgpu`);
         v2.configure({ device: c2, format: this.#r, alphaMode: i2 ? `opaque` : `premultiplied` });
-        let y2 = i2 ? { r: i2[0] / 255, g: i2[1] / 255, b: i2[2] / 255, a: 1 } : { r: 0, g: 0, b: 0, a: 0 }, b2 = c2.createCommandEncoder(), x2 = b2.beginRenderPass({ colorAttachments: [{ view: v2.getCurrentTexture().createView(), clearValue: y2, loadOp: `clear`, storeOp: `store` }] });
-        return n2 > 0 && (x2.setPipeline(this.#n), x2.setBindGroup(0, g2), x2.setVertexBuffer(0, p2), x2.setVertexBuffer(1, m2), x2.draw(n2)), x2.end(), c2.queue.submit([b2.finish()]), p2.destroy(), m2.destroy(), h2.destroy(), _2.transferToImageBitmap();
+        let y2 = i2 ? { r: i2[0] / 255, g: i2[1] / 255, b: i2[2] / 255, a: 1 } : { r: 0, g: 0, b: 0, a: 0 }, b3 = c2.createCommandEncoder(), x2 = b3.beginRenderPass({ colorAttachments: [{ view: v2.getCurrentTexture().createView(), clearValue: y2, loadOp: `clear`, storeOp: `store` }] });
+        return n2 > 0 && (x2.setPipeline(this.#n), x2.setBindGroup(0, g2), x2.setVertexBuffer(0, p2), x2.setVertexBuffer(1, m2), x2.draw(n2)), x2.end(), c2.queue.submit([b3.finish()]), p2.destroy(), m2.destroy(), h2.destroy(), _2.transferToImageBitmap();
       }
     };
     vs = new WebGPU();
@@ -32034,8 +32034,8 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         if (m2 || h2) {
           let t3 = v2.canvas;
           m2 && (f2 = c2), h2 && (p2 = l2);
-          let i3 = this.getSizeAndScale(f2, this.ctx.canvas.width, u2), a3 = this.getSizeAndScale(p2, this.ctx.canvas.height, d2), g3 = i3.size, _3 = a3.size, y2 = e2.canvasFactory.create(g3, _3), b2 = y2.context, x2 = m2 ? Math.floor(o2 / c2) : 0, S2 = h2 ? Math.floor(s2 / l2) : 0;
-          for (let e3 = 0; e3 <= x2; e3++) for (let n3 = 0; n3 <= S2; n3++) b2.drawImage(t3, g3 * e3, _3 * n3, g3, _3, 0, 0, g3, _3);
+          let i3 = this.getSizeAndScale(f2, this.ctx.canvas.width, u2), a3 = this.getSizeAndScale(p2, this.ctx.canvas.height, d2), g3 = i3.size, _3 = a3.size, y2 = e2.canvasFactory.create(g3, _3), b3 = y2.context, x2 = m2 ? Math.floor(o2 / c2) : 0, S2 = h2 ? Math.floor(s2 / l2) : 0;
+          for (let e3 = 0; e3 <= x2; e3++) for (let n3 = 0; n3 <= S2; n3++) b3.drawImage(t3, g3 * e3, _3 * n3, g3, _3, 0, 0, g3, _3);
           return e2.canvasFactory.destroy(v2), { canvas: y2.canvas, canvasEntry: y2, scaleX: i3.scale, scaleY: a3.scale, offsetX: n2, offsetY: r2 };
         }
         return { canvas: v2.canvas, canvasEntry: v2, scaleX: g2.scale, scaleY: _2.scale, offsetX: n2, offsetY: r2 };
@@ -32243,7 +32243,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         f2 = Util.transform(f2, [1, 0, 0, 1, 0, -i2]);
         let p2 = bo.slice();
         Util.axialAlignedBoundingBox([0, 0, r2, i2], f2, p2);
-        let [m2, h2, g2, _2] = p2, v2 = Math.round(g2 - m2) || 1, y2 = Math.round(_2 - h2) || 1, b2 = this.canvasFactory.create(v2, y2), x2 = b2.context, S2 = m2, C2 = h2;
+        let [m2, h2, g2, _2] = p2, v2 = Math.round(g2 - m2) || 1, y2 = Math.round(_2 - h2) || 1, b3 = this.canvasFactory.create(v2, y2), x2 = b3.context, S2 = m2, C2 = h2;
         x2.translate(-S2, -C2), x2.transform(...f2);
         let w2 = null;
         if (!u2) {
@@ -32252,7 +32252,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         }
         x2.imageSmoothingEnabled = getImageSmoothingEnabled(getCurrentTransform(x2), t2.interpolate), drawImageAtIntegerCoords(x2, u2, 0, 0, u2.width, u2.height, 0, 0, r2, i2), w2 && this.canvasFactory.destroy(w2), d2 && this.canvasFactory.destroy(d2), x2.globalCompositeOperation = `source-in`;
         let T2 = Util.transform(getCurrentTransformInverse(x2), [1, 0, 0, 1, -S2, -C2]);
-        return x2.fillStyle = o2 ? a2.getPattern(n2, this, T2, ys.FILL, e2) : a2, x2.fillRect(0, 0, r2, i2), c2 && !o2 && c2.set(l2, b2.canvas), this.dependencyTracker?.recordDependencies(e2, ps.transformAndFill), { canvas: b2.canvas, canvasEntry: c2 && !o2 ? null : b2, offsetX: Math.round(S2), offsetY: Math.round(C2) };
+        return x2.fillStyle = o2 ? a2.getPattern(n2, this, T2, ys.FILL, e2) : a2, x2.fillRect(0, 0, r2, i2), c2 && !o2 && c2.set(l2, b3.canvas), this.dependencyTracker?.recordDependencies(e2, ps.transformAndFill), { canvas: b3.canvas, canvasEntry: c2 && !o2 ? null : b3, offsetX: Math.round(S2), offsetY: Math.round(C2) };
       }
       setLineWidth(e2, t2) {
         this.dependencyTracker?.recordSimpleData(`lineWidth`, e2), t2 !== this.current.lineWidth && (this._cachedScaleForStroking[0] = -1), this.current.lineWidth = t2, this.ctx.lineWidth = t2;
@@ -32665,7 +32665,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         }
         let a2 = this.#h(n2.fillAlpha), o2 = this.ctx, s2 = n2.fontSizeScale, c2 = n2.charSpacing, l2 = n2.wordSpacing, u2 = n2.fontDirection, d2 = n2.textHScale * u2, f2 = t2.length, p2 = r2.vertical, m2 = p2 ? 1 : -1, h2 = r2.defaultVMetrics, g2 = i2 * n2.fontMatrix[0], _2 = n2.textRenderingMode === jo.FILL && !r2.disableFontFace && !n2.patternFill;
         o2.save(), n2.textMatrix && o2.transform(...n2.textMatrix), o2.translate(n2.x, n2.y + n2.textRise), u2 > 0 ? o2.scale(d2, -1) : o2.scale(d2, 1);
-        let v2, y2, b2 = n2.textRenderingMode & jo.FILL_STROKE_MASK, x2 = b2 === jo.FILL || b2 === jo.FILL_STROKE, S2 = b2 === jo.STROKE || b2 === jo.FILL_STROKE, C2 = n2.lineWidth, w2 = n2.textMatrixScale;
+        let v2, y2, b3 = n2.textRenderingMode & jo.FILL_STROKE_MASK, x2 = b3 === jo.FILL || b3 === jo.FILL_STROKE, S2 = b3 === jo.STROKE || b3 === jo.FILL_STROKE, C2 = n2.lineWidth, w2 = n2.textMatrixScale;
         if (w2 === 0 || C2 === 0 ? S2 && (C2 = this.getSinglePixelWidth()) : C2 /= w2, s2 !== 1 && (o2.scale(s2, s2), C2 /= s2), o2.lineWidth = C2, x2 && n2.patternFill) {
           o2.save();
           let t3 = n2.fillColor.getPattern(o2, this, getCurrentTransformInverse(o2), ys.FILL, e2);
@@ -32694,7 +32694,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
             T2 += m2 * n3 * i2 / 1e3;
             continue;
           }
-          let a3 = false, d3 = (n3.isSpace ? l2 : 0) + c2, f3 = n3.fontChar, b3 = n3.accent, x3, S3, C3 = n3.width;
+          let a3 = false, d3 = (n3.isSpace ? l2 : 0) + c2, f3 = n3.fontChar, b4 = n3.accent, x3, S3, C3 = n3.width;
           if (p2) {
             let e3 = n3.vmetric || h2, t3 = -(n3.vmetric ? e3[1] : C3 * 0.5) * g2, r4 = e3[2] * g2;
             C3 = e3 ? -e3[0] : C3, x3 = t3 / s2, S3 = (T2 + r4) / s2;
@@ -32709,10 +32709,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
             } else C3 !== e3 && (x3 += (C3 - e3) / 2e3 * i2 / s2);
           }
           if (this.contentVisible && (n3.isInFont || r2.missingFile)) {
-            if (_2 && !b3) o2.fillText(f3, x3, S3), this.dependencyTracker?.recordCharacterBBox(e2, o2, w3 ? { bbox: null } : r2, i2 / s2, x3, S3, () => w3 ?? o2.measureText(f3));
-            else if (this.paintChar(e2, f3, x3, S3, v2, y2), b3) {
-              let t3 = x3 + i2 * b3.offset.x / s2, n4 = S3 - i2 * b3.offset.y / s2;
-              this.paintChar(e2, b3.fontChar, t3, n4, v2, y2);
+            if (_2 && !b4) o2.fillText(f3, x3, S3), this.dependencyTracker?.recordCharacterBBox(e2, o2, w3 ? { bbox: null } : r2, i2 / s2, x3, S3, () => w3 ?? o2.measureText(f3));
+            else if (this.paintChar(e2, f3, x3, S3, v2, y2), b4) {
+              let t3 = x3 + i2 * b4.offset.x / s2, n4 = S3 - i2 * b4.offset.y / s2;
+              this.paintChar(e2, b4.fontChar, t3, n4, v2, y2);
             }
           }
           let D2 = p2 ? C3 * g2 - d3 * u2 : C3 * g2 + d3 * u2;
@@ -34238,14 +34238,14 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         v2.streamReaderCancelTimeout &&= (clearTimeout(v2.streamReaderCancelTimeout), null);
         let y2 = !!(g2 & wo.PRINT);
         v2.displayReadyCapability || (v2.displayReadyCapability = Promise.withResolvers(), v2.operatorList = { fnArray: [], argsArray: [], lastChunk: false, separateAnnots: null }, this._stats?.time(`Page Request`), this._pumpOperatorList(h2));
-        let b2 = !!(this._pdfBug && globalThis.StepperManager?.enabled), x2 = !!t2 && !this.recordedBBoxes && (p2 || b2), S2 = !!t2 && !this.imageCoordinates && f2, complete = (e3) => {
+        let b3 = !!(this._pdfBug && globalThis.StepperManager?.enabled), x2 = !!t2 && !this.recordedBBoxes && (p2 || b3), S2 = !!t2 && !this.imageCoordinates && f2, complete = (e3) => {
           if (v2.renderTasks.delete(T2), x2) {
             let e4 = T2.gfx?.dependencyTracker.take();
             e4 && (T2.stepper?.setOperatorBBoxes(e4, T2.gfx.dependencyTracker.takeDebugMetadata()), p2 && (this.recordedBBoxes = e4));
           }
           S2 && !e3 && (this.imageCoordinates = T2.gfx?.imagesTracker.take()), y2 && (this.#e = true), this.#n(), e3 ? (T2.capability.reject(e3), this._abortOperatorList({ intentState: v2, reason: e3 instanceof Error ? e3 : Error(e3) })) : T2.capability.resolve(), this._stats && (this._stats.timeEnd(`Rendering`), this._stats.timeEnd(`Overall`), globalThis.Stats?.enabled && globalThis.Stats.add(this.pageNumber, this._stats));
         }, C2 = null, w2 = null;
-        (x2 || S2) && (w2 = new CanvasBBoxTracker(t2, v2.operatorList.length)), x2 && (C2 = new CanvasDependencyTracker(w2, b2));
+        (x2 || S2) && (w2 = new CanvasBBoxTracker(t2, v2.operatorList.length)), x2 && (C2 = new CanvasDependencyTracker(w2, b3));
         let T2 = new Ls({ callback: complete, params: { canvas: t2, canvasContext: e2, dependencyTracker: C2 ?? w2, imagesTracker: S2 ? new ms(t2) : null, viewport: n2, transform: a2, background: o2 }, objs: this.objs, commonObjs: this.commonObjs, annotationCanvasMap: c2, operatorList: v2.operatorList, pageIndex: this._pageIndex, canvasFactory: this._transport.canvasFactory, filterFactory: this._transport.filterFactory, useRequestAnimationFrame: !y2, pdfBug: this._pdfBug, pageColors: l2, enableHWA: this._transport.enableHWA, operationsFilter: m2 });
         (v2.renderTasks ||= /* @__PURE__ */ new Set()).add(T2);
         let E2 = T2.task;
@@ -36941,7 +36941,7 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         if (f2 < this.#c) return false;
         let p2 = f2 - this.#l, m2 = p2 / f2, h2 = m2 * u2, g2 = m2 * d2, _2 = o2, v2 = s2;
         o2 = c2, s2 = l2, c2 += h2, l2 += g2, this.#f?.push(e2, t2);
-        let y2 = -g2 / p2, b2 = h2 / p2, x2 = y2 * this.#d, S2 = b2 * this.#d;
+        let y2 = -g2 / p2, b3 = h2 / p2, x2 = y2 * this.#d, S2 = b3 * this.#d;
         return this.#a.set(this.#a.subarray(2, 8), 0), this.#a.set([c2 + x2, l2 + S2], 4), this.#a.set(this.#a.subarray(14, 18), 12), this.#a.set([c2 - x2, l2 - S2], 16), isNaN(this.#a[6]) ? (this.#i.length === 0 && (this.#a.set([o2 + x2, s2 + S2], 2), this.#i.push(NaN, NaN, NaN, NaN, (o2 + x2 - n2) / i2, (s2 + S2 - r2) / a2), this.#a.set([o2 - x2, s2 - S2], 14), this.#t.push(NaN, NaN, NaN, NaN, (o2 - x2 - n2) / i2, (s2 - S2 - r2) / a2)), this.#a.set([_2, v2, o2, s2, c2, l2], 6), !this.isEmpty()) : (this.#a.set([_2, v2, o2, s2, c2, l2], 6), Math.abs(Math.atan2(v2 - s2, _2 - o2) - Math.atan2(g2, h2)) < Math.PI / 2 ? ([o2, s2, c2, l2] = this.#a.subarray(2, 6), this.#i.push(NaN, NaN, NaN, NaN, ((o2 + c2) / 2 - n2) / i2, ((s2 + l2) / 2 - r2) / a2), [o2, s2, _2, v2] = this.#a.subarray(14, 18), this.#t.push(NaN, NaN, NaN, NaN, ((_2 + o2) / 2 - n2) / i2, ((v2 + s2) / 2 - r2) / a2), true) : ([_2, v2, o2, s2, c2, l2] = this.#a.subarray(0, 6), this.#i.push(((_2 + 5 * o2) / 6 - n2) / i2, ((v2 + 5 * s2) / 6 - r2) / a2, ((5 * o2 + c2) / 6 - n2) / i2, ((5 * s2 + l2) / 6 - r2) / a2, ((o2 + c2) / 2 - n2) / i2, ((s2 + l2) / 2 - r2) / a2), [c2, l2, o2, s2, _2, v2] = this.#a.subarray(12, 18), this.#t.push(((_2 + 5 * o2) / 6 - n2) / i2, ((v2 + 5 * s2) / 6 - r2) / a2, ((5 * o2 + c2) / 6 - n2) / i2, ((5 * s2 + l2) / 6 - r2) / a2, ((o2 + c2) / 2 - n2) / i2, ((s2 + l2) / 2 - r2) / a2), true));
       }
       toSVGPath() {
@@ -38306,17 +38306,17 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
             }
             let g2 = this.#n[2 * h2], _2 = this.#n[2 * h2 + 1], v2 = e3 + g2, y2 = n3 + _2;
             l2 = v2, u2 = y2;
-            let b2 = e3, x2 = n3;
+            let b3 = e3, x2 = n3;
             for (; ; ) {
-              let i4 = this.#i(a2, t2, b2, x2, l2, u2, 1);
+              let i4 = this.#i(a2, t2, b3, x2, l2, u2, 1);
               g2 = this.#n[2 * i4], _2 = this.#n[2 * i4 + 1];
-              let c3 = b2 + g2, f3 = x2 + _2;
+              let c3 = b3 + g2, f3 = x2 + _2;
               d2.push(f3, c3);
-              let p3 = b2 * t2 + x2;
-              if (a2[p3 + 1] === 0 ? a2[p3] = -o2 : a2[p3] === 1 && (a2[p3] = o2), c3 === e3 && f3 === n3 && b2 === v2 && x2 === y2) {
+              let p3 = b3 * t2 + x2;
+              if (a2[p3 + 1] === 0 ? a2[p3] = -o2 : a2[p3] === 1 && (a2[p3] = o2), c3 === e3 && f3 === n3 && b3 === v2 && x2 === y2) {
                 a2[r4] !== 1 && (s2 = Math.abs(a2[r4]));
                 break;
-              } else l2 = b2, u2 = x2, b2 = c3, x2 = f3;
+              } else l2 = b3, u2 = x2, b3 = c3, x2 = f3;
             }
           }
         }
@@ -38327,12 +38327,12 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
           for (let i3 = t2; i3 < n2 - 2; i3 += 2) r2.push(e2[i3], e2[i3 + 1]);
           return;
         }
-        let i2 = e2[t2], a2 = e2[t2 + 1], o2 = e2[n2 - 4] - i2, s2 = e2[n2 - 3] - a2, c2 = Math.hypot(o2, s2), l2 = o2 / c2, u2 = s2 / c2, d2 = l2 * a2 - u2 * i2, f2 = s2 / o2, p2 = 1 / c2, m2 = Math.atan(f2), h2 = Math.cos(m2), g2 = Math.sin(m2), _2 = p2 * (Math.abs(h2) + Math.abs(g2)), v2 = p2 * (1 - _2 + _2 ** 2), y2 = Math.max(Math.atan(Math.abs(g2 + h2) * v2), Math.atan(Math.abs(g2 - h2) * v2)), b2 = 0, x2 = t2;
+        let i2 = e2[t2], a2 = e2[t2 + 1], o2 = e2[n2 - 4] - i2, s2 = e2[n2 - 3] - a2, c2 = Math.hypot(o2, s2), l2 = o2 / c2, u2 = s2 / c2, d2 = l2 * a2 - u2 * i2, f2 = s2 / o2, p2 = 1 / c2, m2 = Math.atan(f2), h2 = Math.cos(m2), g2 = Math.sin(m2), _2 = p2 * (Math.abs(h2) + Math.abs(g2)), v2 = p2 * (1 - _2 + _2 ** 2), y2 = Math.max(Math.atan(Math.abs(g2 + h2) * v2), Math.atan(Math.abs(g2 - h2) * v2)), b3 = 0, x2 = t2;
         for (let r4 = t2 + 2; r4 < n2 - 2; r4 += 2) {
           let t3 = Math.abs(d2 - l2 * e2[r4 + 1] + u2 * e2[r4]);
-          t3 > b2 && (x2 = r4, b2 = t3);
+          t3 > b3 && (x2 = r4, b3 = t3);
         }
-        b2 > (c2 * y2) ** 2 ? (this.#o(e2, t2, x2 + 2, r2), this.#o(e2, x2, n2, r2)) : r2.push(i2, a2);
+        b3 > (c2 * y2) ** 2 ? (this.#o(e2, t2, x2 + 2, r2), this.#o(e2, x2, n2, r2)) : r2.push(i2, a2);
       }
       static #s(e2) {
         let t2 = [], n2 = e2.length;
@@ -38406,10 +38406,10 @@ fn fs_main(in : VertexOutput) -> @location(0) vec4<f32> {
         return [this.#u(c2), a2, o2];
       }
       static extractContoursFromText(e2, { fontFamily: t2, fontStyle: n2, fontWeight: r2 }, i2, a2, o2, s2) {
-        let c2 = new OffscreenCanvas(1, 1), l2 = c2.getContext(`2d`, { alpha: false }), u2 = l2.font = `${n2} ${r2} 200px ${t2}`, { actualBoundingBoxLeft: d2, actualBoundingBoxRight: f2, actualBoundingBoxAscent: p2, actualBoundingBoxDescent: m2, fontBoundingBoxAscent: h2, fontBoundingBoxDescent: g2, width: _2 } = l2.measureText(e2), v2 = 1.5, y2 = Math.ceil(Math.max(Math.abs(d2) + Math.abs(f2) || 0, _2) * v2), b2 = Math.ceil(Math.max(Math.abs(p2) + Math.abs(m2) || 200, Math.abs(h2) + Math.abs(g2) || 200) * v2);
-        c2 = new OffscreenCanvas(y2, b2), l2 = c2.getContext(`2d`, { alpha: true, willReadFrequently: true }), l2.font = u2, l2.filter = `grayscale(1)`, l2.fillStyle = `white`, l2.fillRect(0, 0, y2, b2), l2.fillStyle = `black`, l2.fillText(e2, y2 * (v2 - 1) / 2, b2 * (3 - v2) / 2);
-        let x2 = this.#u(l2.getImageData(0, 0, y2, b2).data), S2 = this.#l(x2), C2 = this.#d(S2), w2 = this.#a(x2, y2, b2, C2);
-        return this.processDrawnLines({ lines: { curves: w2, width: y2, height: b2 }, pageWidth: i2, pageHeight: a2, rotation: o2, innerMargin: s2, mustSmooth: true, areContours: true });
+        let c2 = new OffscreenCanvas(1, 1), l2 = c2.getContext(`2d`, { alpha: false }), u2 = l2.font = `${n2} ${r2} 200px ${t2}`, { actualBoundingBoxLeft: d2, actualBoundingBoxRight: f2, actualBoundingBoxAscent: p2, actualBoundingBoxDescent: m2, fontBoundingBoxAscent: h2, fontBoundingBoxDescent: g2, width: _2 } = l2.measureText(e2), v2 = 1.5, y2 = Math.ceil(Math.max(Math.abs(d2) + Math.abs(f2) || 0, _2) * v2), b3 = Math.ceil(Math.max(Math.abs(p2) + Math.abs(m2) || 200, Math.abs(h2) + Math.abs(g2) || 200) * v2);
+        c2 = new OffscreenCanvas(y2, b3), l2 = c2.getContext(`2d`, { alpha: true, willReadFrequently: true }), l2.font = u2, l2.filter = `grayscale(1)`, l2.fillStyle = `white`, l2.fillRect(0, 0, y2, b3), l2.fillStyle = `black`, l2.fillText(e2, y2 * (v2 - 1) / 2, b3 * (3 - v2) / 2);
+        let x2 = this.#u(l2.getImageData(0, 0, y2, b3).data), S2 = this.#l(x2), C2 = this.#d(S2), w2 = this.#a(x2, y2, b3, C2);
+        return this.processDrawnLines({ lines: { curves: w2, width: y2, height: b3 }, pageWidth: i2, pageHeight: a2, rotation: o2, innerMargin: s2, mustSmooth: true, areContours: true });
       }
       static process(e2, t2, n2, r2, i2) {
         let [a2, o2, s2] = this.#f(e2), [c2, l2] = this.#c(a2, o2, s2, Math.hypot(o2, s2) * this.#e.sigmaSFactor, this.#e.sigmaR, this.#e.kernelSize), u2 = this.#d(l2), d2 = this.#a(c2, o2, s2, u2);
@@ -39684,7 +39684,7 @@ function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {
     const cur = out.subarray(r2 * rowLen, r2 * rowLen + rowLen);
     for (let i2 = 0; i2 < rowLen; i2++) {
       const a2 = i2 >= bpp ? cur[i2 - bpp] : 0;
-      const b2 = prev[i2];
+      const b3 = prev[i2];
       const c2 = i2 >= bpp ? prev[i2 - bpp] : 0;
       let v2 = src[i2];
       switch (filter) {
@@ -39694,15 +39694,15 @@ function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {
           v2 = v2 + a2 & 255;
           break;
         case 2:
-          v2 = v2 + b2 & 255;
+          v2 = v2 + b3 & 255;
           break;
         case 3:
-          v2 = v2 + (a2 + b2 >> 1) & 255;
+          v2 = v2 + (a2 + b3 >> 1) & 255;
           break;
         case 4: {
-          const p2 = a2 + b2 - c2;
-          const pa2 = Math.abs(p2 - a2), pb = Math.abs(p2 - b2), pc = Math.abs(p2 - c2);
-          v2 = v2 + (pa2 <= pb && pa2 <= pc ? a2 : pb <= pc ? b2 : c2) & 255;
+          const p2 = a2 + b3 - c2;
+          const pa2 = Math.abs(p2 - a2), pb = Math.abs(p2 - b3), pc = Math.abs(p2 - c2);
+          v2 = v2 + (pa2 <= pb && pa2 <= pc ? a2 : pb <= pc ? b3 : c2) & 255;
           break;
         }
         default:
@@ -40067,7 +40067,7 @@ var PdfDoc = class {
         const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
         if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
       }
-      pages.sort((a2, b2) => a2 - b2);
+      pages.sort((a2, b3) => a2 - b3);
       pages.forEach((num, i2) => this.pageIndexByObj.set(num, i2));
       this.pageCount = pages.length;
       this._pageOrder = pages;
@@ -40139,7 +40139,7 @@ var PdfDoc = class {
       if (!(type && type.t === "name" && type.v === "XRef")) continue;
       if (v2.dict.Info && v2.dict.Info.t === "ref") cands.push([v2.start, v2.dict.Info]);
     }
-    cands.sort((a2, b2) => a2[0] - b2[0]);
+    cands.sort((a2, b3) => a2[0] - b3[0]);
     for (let i2 = cands.length - 1; i2 >= 0; i2--) {
       const map = this.dictOf(cands[i2][1]);
       if (map) return this._info = map;
@@ -40761,14 +40761,14 @@ async function pageContent(doc, pageMap) {
   return parts.join("\n");
 }
 var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
-function matMul(a2, b2) {
+function matMul(a2, b3) {
   return [
-    a2[0] * b2[0] + a2[1] * b2[2],
-    a2[0] * b2[1] + a2[1] * b2[3],
-    a2[2] * b2[0] + a2[3] * b2[2],
-    a2[2] * b2[1] + a2[3] * b2[3],
-    a2[4] * b2[0] + a2[5] * b2[2] + b2[4],
-    a2[4] * b2[1] + a2[5] * b2[3] + b2[5]
+    a2[0] * b3[0] + a2[1] * b3[2],
+    a2[0] * b3[1] + a2[1] * b3[3],
+    a2[2] * b3[0] + a2[3] * b3[2],
+    a2[2] * b3[1] + a2[3] * b3[3],
+    a2[4] * b3[0] + a2[5] * b3[2] + b3[4],
+    a2[4] * b3[1] + a2[5] * b3[3] + b3[5]
   ];
 }
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
@@ -41756,6 +41756,762 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   return acc;
 }
 
+// src/pagepixels.mjs
+var LATIN12 = new TextDecoder("latin1");
+var REFUSALS = {
+  NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
+  NO_SUCH_PAGE: "the page index is outside the document",
+  PAGE_UNREADABLE: "the page object could not be read",
+  PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
+  NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
+  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
+  IMAGE_UNREADABLE: "the image XObject's stream could not be read",
+  UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
+  UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
+  TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
+  DECODE_FAILED: "the decoder could not read the image data"
+};
+var refuse = (reason, detail = {}) => {
+  if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
+  return { ok: false, reason, why: REFUSALS[reason], ...detail };
+};
+async function loadPdf(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (!/%PDF-\d+\.\d+/.test(LATIN12.decode(bytes.subarray(0, 1024)))) return null;
+  const doc = new PdfDoc(bytes);
+  doc.scanTopLevel();
+  await doc.loadObjectStreams();
+  for (const [num, v2] of doc.objects) {
+    if (v2 && v2.t === "dict") v2.map.__objnum = { t: "ref", n: num };
+  }
+  doc.buildPageIndex();
+  return doc;
+}
+var numOf2 = (doc, v2) => {
+  v2 = doc.resolve(v2);
+  return typeof v2 === "number" ? v2 : null;
+};
+function decodeParms(doc, dict, idx) {
+  let p2 = doc.resolve(dict.DecodeParms) ?? doc.resolve(dict.DP);
+  if (p2 && p2.t === "arr") p2 = doc.resolve(p2.items[idx] ?? p2.items[p2.items.length - 1]);
+  return p2 && p2.t === "dict" ? p2.map : null;
+}
+async function decodeImage(doc, im, opts) {
+  const dict = im.obj.dict;
+  const filters = im.filters;
+  const last = filters[filters.length - 1] || null;
+  if (last === "JBIG2Decode" || last === "JPXDecode") {
+    return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+  }
+  if (last === "DCTDecode" || last === "DCT") {
+    if (filters.length > 1) return refuse("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
+    const raw = doc.streamRawBytes(im.obj);
+    if (!raw || raw.length < 4) return refuse("IMAGE_UNREADABLE", { filters });
+    if (!(raw[0] === 255 && raw[1] === 216)) {
+      return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
+    }
+    return {
+      ok: true,
+      route: "passthrough-dct",
+      mediaType: "image/jpeg",
+      bytes: raw,
+      upright: (opts.rotate || 0) === 0
+    };
+  }
+  if (!im.width || !im.height) return refuse("IMAGE_UNREADABLE", { filters });
+  if (last === "CCITTFaxDecode" || last === "CCF") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (filters.slice(0, -1).every((f2) => f2 === "FlateDecode" || f2 === "Fl")) {
+        const st2 = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
+        data = await doc.streamDecoded(st2);
+      } else return refuse("UNSUPPORTED_FILTER", { filters });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const p2 = decodeParms(doc, dict, filters.length - 1) || {};
+    const K2 = numOf2(doc, p2.K) ?? 0;
+    const columns = numOf2(doc, p2.Columns) ?? 1728;
+    const rows = numOf2(doc, p2.Rows) ?? im.height;
+    const blackIs1 = doc.resolve(p2.BlackIs1) === true;
+    const byteAlign = doc.resolve(p2.EncodedByteAlign) === true;
+    let bits;
+    try {
+      bits = ccittDecode(data, { K: K2, columns, rows, byteAlign });
+    } catch (e2) {
+      return refuse("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+    }
+    if (bits.rowsDecoded < im.height) {
+      return refuse("TRUNCATED_IMAGE_DATA", {
+        filters,
+        declaredHeight: im.height,
+        rowsDecoded: bits.rowsDecoded,
+        columns
+      });
+    }
+    const dec = doc.resolve(dict.Decode);
+    const decodeInverts = dec && dec.t === "arr" && numOf2(doc, dec.items[0]) === 1;
+    let invert = false;
+    if (blackIs1) invert = !invert;
+    if (decodeInverts) invert = !invert;
+    const packed0 = invert ? bits.packed.map((b3) => ~b3 & 255) : bits.packed;
+    const rot = rotateBilevel(normalisePacked(packed0, columns, im.height), columns, im.height, opts.rotate || 0);
+    const png = await encodePng1(rot.packed, rot.width, rot.height);
+    return {
+      ok: true,
+      route: "decoded-ccitt-g4",
+      mediaType: "image/png",
+      bytes: png,
+      width: rot.width,
+      height: rot.height,
+      upright: true,
+      pixelsSha256: await sha256Hex2(normalisePacked(rot.packed, rot.width, rot.height)),
+      ccitt: { K: K2, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded }
+    };
+  }
+  if (filters.length === 0 || filters.every((f2) => f2 === "FlateDecode" || f2 === "Fl")) {
+    const data = await doc.streamDecoded(im.obj);
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const bpc = im.isMask ? 1 : im.bpc ?? 8;
+    const cs2 = im.colorSpace;
+    const comps = im.isMask ? 1 : cs2 === "DeviceRGB" ? 3 : cs2 === "DeviceGray" ? 1 : null;
+    if (comps == null) return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs2, bpc, filters });
+    const rowBytes = Math.ceil(im.width * comps * bpc / 8);
+    const need = rowBytes * im.height;
+    if (data.length < need) {
+      return refuse("TRUNCATED_IMAGE_DATA", {
+        filters,
+        declaredHeight: im.height,
+        haveBytes: data.length,
+        needBytes: need
+      });
+    }
+    if (bpc === 1 && comps === 1) {
+      const dec = doc.resolve(dict.Decode);
+      const decOne = dec && dec.t === "arr" && numOf2(doc, dec.items[0]) === 1;
+      const invert = im.isMask ? !decOne : decOne;
+      const src = data.subarray(0, need);
+      const packed0 = invert ? Uint8Array.from(src, (b3) => ~b3 & 255) : Uint8Array.from(src);
+      const rot = rotateBilevel(normalisePacked(packed0, im.width, im.height), im.width, im.height, opts.rotate || 0);
+      return {
+        ok: true,
+        route: "raw-samples-1bit",
+        mediaType: "image/png",
+        width: rot.width,
+        height: rot.height,
+        upright: true,
+        pixelsSha256: await sha256Hex2(normalisePacked(rot.packed, rot.width, rot.height)),
+        bytes: await encodePng1(rot.packed, rot.width, rot.height)
+      };
+    }
+    if (bpc === 8) {
+      return {
+        ok: true,
+        route: comps === 3 ? "raw-samples-rgb8" : "raw-samples-grey8",
+        mediaType: "image/png",
+        upright: (opts.rotate || 0) === 0,
+        bytes: await encodePng8(data.subarray(0, need), im.width, im.height, comps)
+      };
+    }
+    return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs2, bpc, comps, filters });
+  }
+  return refuse("UNSUPPORTED_FILTER", { filters });
+}
+var WHITE_CODES = {
+  "8:00110101": 0,
+  "6:000111": 1,
+  "4:0111": 2,
+  "4:1000": 3,
+  "4:1011": 4,
+  "4:1100": 5,
+  "4:1110": 6,
+  "4:1111": 7,
+  "5:10011": 8,
+  "5:10100": 9,
+  "5:00111": 10,
+  "5:01000": 11,
+  "6:001000": 12,
+  "6:000011": 13,
+  "6:110100": 14,
+  "6:110101": 15,
+  "6:101010": 16,
+  "6:101011": 17,
+  "7:0100111": 18,
+  "7:0001100": 19,
+  "7:0001000": 20,
+  "7:0010111": 21,
+  "7:0000011": 22,
+  "7:0000100": 23,
+  "7:0101000": 24,
+  "7:0101011": 25,
+  "7:0010011": 26,
+  "7:0100100": 27,
+  "7:0011000": 28,
+  "8:00000010": 29,
+  "8:00000011": 30,
+  "8:00011010": 31,
+  "8:00011011": 32,
+  "8:00010010": 33,
+  "8:00010011": 34,
+  "8:00010100": 35,
+  "8:00010101": 36,
+  "8:00010110": 37,
+  "8:00010111": 38,
+  "8:00101000": 39,
+  "8:00101001": 40,
+  "8:00101010": 41,
+  "8:00101011": 42,
+  "8:00101100": 43,
+  "8:00101101": 44,
+  "8:00000100": 45,
+  "8:00000101": 46,
+  "8:00001010": 47,
+  "8:00001011": 48,
+  "8:01010010": 49,
+  "8:01010011": 50,
+  "8:01010100": 51,
+  "8:01010101": 52,
+  "8:00100100": 53,
+  "8:00100101": 54,
+  "8:01011000": 55,
+  "8:01011001": 56,
+  "8:01011010": 57,
+  "8:01011011": 58,
+  "8:01001010": 59,
+  "8:01001011": 60,
+  "8:00110010": 61,
+  "8:00110011": 62,
+  "8:00110100": 63,
+  "5:11011": 64,
+  "5:10010": 128,
+  "6:010111": 192,
+  "7:0110111": 256,
+  "8:00110110": 320,
+  "8:00110111": 384,
+  "8:01100100": 448,
+  "8:01100101": 512,
+  "8:01101000": 576,
+  "8:01100111": 640,
+  "9:011001100": 704,
+  "9:011001101": 768,
+  "9:011010010": 832,
+  "9:011010011": 896,
+  "9:011010100": 960,
+  "9:011010101": 1024,
+  "9:011010110": 1088,
+  "9:011010111": 1152,
+  "9:011011000": 1216,
+  "9:011011001": 1280,
+  "9:011011010": 1344,
+  "9:011011011": 1408,
+  "9:010011000": 1472,
+  "9:010011001": 1536,
+  "9:010011010": 1600,
+  "6:011000": 1664,
+  "9:010011011": 1728
+};
+var BLACK_CODES = {
+  "10:0000110111": 0,
+  "3:010": 1,
+  "2:11": 2,
+  "2:10": 3,
+  "3:011": 4,
+  "4:0011": 5,
+  "4:0010": 6,
+  "5:00011": 7,
+  "6:000101": 8,
+  "6:000100": 9,
+  "7:0000100": 10,
+  "7:0000101": 11,
+  "7:0000111": 12,
+  "8:00000100": 13,
+  "8:00000111": 14,
+  "9:000011000": 15,
+  "10:0000010111": 16,
+  "10:0000011000": 17,
+  "10:0000001000": 18,
+  "11:00001100111": 19,
+  "11:00001101000": 20,
+  "11:00001101100": 21,
+  "11:00000110111": 22,
+  "11:00000101000": 23,
+  "11:00000010111": 24,
+  "11:00000011000": 25,
+  "12:000011001010": 26,
+  "12:000011001011": 27,
+  "12:000011001100": 28,
+  "12:000011001101": 29,
+  "12:000001101000": 30,
+  "12:000001101001": 31,
+  "12:000001101010": 32,
+  "12:000001101011": 33,
+  "12:000011010010": 34,
+  "12:000011010011": 35,
+  "12:000011010100": 36,
+  "12:000011010101": 37,
+  "12:000011010110": 38,
+  "12:000011010111": 39,
+  "12:000001101100": 40,
+  "12:000001101101": 41,
+  "12:000011011010": 42,
+  "12:000011011011": 43,
+  "12:000001010100": 44,
+  "12:000001010101": 45,
+  "12:000001010110": 46,
+  "12:000001010111": 47,
+  "12:000001100100": 48,
+  "12:000001100101": 49,
+  "12:000001010010": 50,
+  "12:000001010011": 51,
+  "12:000000100100": 52,
+  "12:000000110111": 53,
+  "12:000000111000": 54,
+  "12:000000100111": 55,
+  "12:000000101000": 56,
+  "12:000001011000": 57,
+  "12:000001011001": 58,
+  "12:000000101011": 59,
+  "12:000000101100": 60,
+  "12:000001011010": 61,
+  "12:000001100110": 62,
+  "12:000001100111": 63,
+  "10:0000001111": 64,
+  "12:000011001000": 128,
+  "12:000011001001": 192,
+  "12:000001011011": 256,
+  "12:000000110011": 320,
+  "12:000000110100": 384,
+  "12:000000110101": 448,
+  "13:0000001101100": 512,
+  "13:0000001101101": 576,
+  "13:0000001001010": 640,
+  "13:0000001001011": 704,
+  "13:0000001001100": 768,
+  "13:0000001001101": 832,
+  "13:0000001110010": 896,
+  "13:0000001110011": 960,
+  "13:0000001110100": 1024,
+  "13:0000001110101": 1088,
+  "13:0000001110110": 1152,
+  "13:0000001110111": 1216,
+  "13:0000001010010": 1280,
+  "13:0000001010011": 1344,
+  "13:0000001010100": 1408,
+  "13:0000001010101": 1472,
+  "13:0000001011010": 1536,
+  "13:0000001011011": 1600,
+  "13:0000001100100": 1664,
+  "13:0000001100101": 1728
+};
+var EXT_CODES = {
+  "11:00000001000": 1792,
+  "11:00000001100": 1856,
+  "11:00000001101": 1920,
+  "12:000000010010": 1984,
+  "12:000000010011": 2048,
+  "12:000000010100": 2112,
+  "12:000000010101": 2176,
+  "12:000000010110": 2240,
+  "12:000000010111": 2304,
+  "12:000000011100": 2368,
+  "12:000000011101": 2432,
+  "12:000000011110": 2496,
+  "12:000000011111": 2560
+};
+var WHITE_ALL = { ...WHITE_CODES, ...EXT_CODES };
+var BLACK_ALL = { ...BLACK_CODES, ...EXT_CODES };
+var MAX_CODE_BITS = 14;
+var BitReader = class {
+  constructor(data) {
+    this.d = data;
+    this.pos = 0;
+  }
+  get eof() {
+    return this.pos >= this.d.length * 8;
+  }
+  peek(n2) {
+    let v2 = "";
+    for (let i2 = 0; i2 < n2; i2++) {
+      const p2 = this.pos + i2;
+      const byte = this.d[p2 >> 3];
+      v2 += byte === void 0 ? "0" : byte >> 7 - (p2 & 7) & 1 ? "1" : "0";
+    }
+    return v2;
+  }
+  skip(n2) {
+    this.pos += n2;
+  }
+  align() {
+    this.pos = this.pos + 7 & ~7;
+  }
+};
+function readRun(br2, table) {
+  let total = 0;
+  for (; ; ) {
+    let hit = null;
+    const window2 = br2.peek(MAX_CODE_BITS);
+    for (let len = 2; len <= MAX_CODE_BITS; len++) {
+      const key = `${len}:${window2.slice(0, len)}`;
+      if (key in table) {
+        hit = { len, run: table[key] };
+        break;
+      }
+    }
+    if (!hit) return null;
+    br2.skip(hit.len);
+    total += hit.run;
+    if (hit.run < 64) return total;
+    if (br2.eof) return total;
+  }
+}
+function ccittDecode(data, { K: K2 = 0, columns = 1728, rows = 0, byteAlign = false }) {
+  const br2 = new BitReader(data);
+  const rowBytes = Math.ceil(columns / 8);
+  const out = [];
+  let ref = [columns, columns];
+  const maxRows = rows && rows > 0 ? rows : 1 << 20;
+  const eol = () => br2.peek(12) === "000000000001";
+  if (K2 > 0) throw new Error("mixed-mode (K>0) CCITT is not decoded here");
+  for (let r2 = 0; r2 < maxRows; r2++) {
+    if (byteAlign) br2.align();
+    while (eol()) {
+      br2.skip(12);
+      if (K2 > 0) br2.skip(1);
+    }
+    if (br2.eof) break;
+    const twoD = K2 < 0;
+    const cur = [];
+    let a0 = -1;
+    let color = 0;
+    let guard = 0;
+    while (a0 < columns) {
+      if (++guard > columns * 4 + 64) throw new Error("row did not terminate");
+      if (br2.eof) break;
+      if (twoD) {
+        const w2 = br2.peek(7);
+        let a1;
+        if (w2[0] === "1") {
+          br2.skip(1);
+          a1 = b1(ref, a0, color);
+        } else if (w2.startsWith("011")) {
+          br2.skip(3);
+          a1 = b1(ref, a0, color) + 1;
+        } else if (w2.startsWith("010")) {
+          br2.skip(3);
+          a1 = b1(ref, a0, color) - 1;
+        } else if (w2.startsWith("001")) {
+          br2.skip(3);
+          const s2 = a0 < 0 ? 0 : a0;
+          const r1 = readRun(br2, color === 0 ? WHITE_ALL : BLACK_ALL);
+          const r22 = readRun(br2, color === 0 ? BLACK_ALL : WHITE_ALL);
+          if (r1 == null || r22 == null) {
+            a0 = columns;
+            break;
+          }
+          const m1 = Math.min(columns, s2 + r1);
+          const m2 = Math.min(columns, m1 + r22);
+          cur.push(m1, m2);
+          a0 = m2;
+          continue;
+        } else if (w2.startsWith("0001")) {
+          br2.skip(4);
+          a0 = b2(ref, a0, color);
+          continue;
+        } else if (w2.startsWith("000011")) {
+          br2.skip(6);
+          a1 = b1(ref, a0, color) + 2;
+        } else if (w2.startsWith("000010")) {
+          br2.skip(6);
+          a1 = b1(ref, a0, color) - 2;
+        } else if (w2.startsWith("0000011")) {
+          br2.skip(7);
+          a1 = b1(ref, a0, color) + 3;
+        } else if (w2.startsWith("0000010")) {
+          br2.skip(7);
+          a1 = b1(ref, a0, color) - 3;
+        } else {
+          a0 = columns;
+          break;
+        }
+        a1 = Math.max(0, Math.min(columns, a1));
+        cur.push(a1);
+        a0 = a1;
+        color ^= 1;
+      } else {
+        const s2 = a0 < 0 ? 0 : a0;
+        const run = readRun(br2, color === 0 ? WHITE_ALL : BLACK_ALL);
+        if (run == null) {
+          a0 = columns;
+          break;
+        }
+        const m2 = Math.min(columns, s2 + run);
+        cur.push(m2);
+        a0 = m2;
+        color ^= 1;
+      }
+    }
+    if (cur.length === 0 && br2.eof) break;
+    const row = new Uint8Array(rowBytes).fill(255);
+    let pos = 0, c2 = 0;
+    for (const t2 of cur) {
+      if (c2 === 1) for (let x2 = pos; x2 < t2 && x2 < columns; x2++) row[x2 >> 3] &= ~(128 >> (x2 & 7));
+      pos = t2;
+      c2 ^= 1;
+      if (pos >= columns) break;
+    }
+    if (c2 === 1 && pos < columns) {
+      for (let x2 = pos; x2 < columns; x2++) row[x2 >> 3] &= ~(128 >> (x2 & 7));
+    }
+    out.push(row);
+    ref = cur.length ? cur.concat([columns, columns]) : [columns, columns];
+  }
+  const packed = new Uint8Array(out.length * rowBytes);
+  out.forEach((row, i2) => packed.set(row, i2 * rowBytes));
+  return { packed, rowsDecoded: out.length };
+}
+function b1(ref, a0, color) {
+  let i2 = 0;
+  while (i2 < ref.length && ref[i2] <= a0) i2++;
+  while (i2 < ref.length && (i2 & 1) !== color) i2++;
+  return i2 < ref.length ? ref[i2] : ref[ref.length - 1];
+}
+function b2(ref, a0, color) {
+  let i2 = 0;
+  while (i2 < ref.length && ref[i2] <= a0) i2++;
+  while (i2 < ref.length && (i2 & 1) !== color) i2++;
+  return i2 + 1 < ref.length ? ref[i2 + 1] : ref[ref.length - 1];
+}
+function getBit(packed, rowBytes, x2, y2) {
+  return packed[y2 * rowBytes + (x2 >> 3)] >> 7 - (x2 & 7) & 1;
+}
+function setBit(packed, rowBytes, x2, y2, v2) {
+  const i2 = y2 * rowBytes + (x2 >> 3), m2 = 128 >> (x2 & 7);
+  if (v2) packed[i2] |= m2;
+  else packed[i2] &= ~m2;
+}
+function rotateBilevel(packed, width, height, deg) {
+  const d2 = (deg % 360 + 360) % 360;
+  if (d2 === 0) return { packed, width, height };
+  if (d2 !== 90 && d2 !== 180 && d2 !== 270) throw new Error(`unsupported rotation ${deg}`);
+  const srcRow = Math.ceil(width / 8);
+  const [w2, h2] = d2 === 180 ? [width, height] : [height, width];
+  const dstRow = Math.ceil(w2 / 8);
+  const out = new Uint8Array(dstRow * h2);
+  for (let Y2 = 0; Y2 < h2; Y2++) {
+    for (let X2 = 0; X2 < w2; X2++) {
+      let sx, sy;
+      if (d2 === 90) {
+        sx = Y2;
+        sy = height - 1 - X2;
+      } else if (d2 === 180) {
+        sx = width - 1 - X2;
+        sy = height - 1 - Y2;
+      } else {
+        sx = width - 1 - Y2;
+        sy = X2;
+      }
+      setBit(out, dstRow, X2, Y2, getBit(packed, srcRow, sx, sy));
+    }
+  }
+  return { packed: out, width: w2, height: h2 };
+}
+async function sha256Hex2(u8) {
+  const d2 = await crypto.subtle.digest("SHA-256", u8);
+  return [...new Uint8Array(d2)].map((b3) => b3.toString(16).padStart(2, "0")).join("");
+}
+var CRC_TABLE = (() => {
+  const t2 = new Uint32Array(256);
+  for (let n2 = 0; n2 < 256; n2++) {
+    let c2 = n2;
+    for (let k2 = 0; k2 < 8; k2++) c2 = c2 & 1 ? 3988292384 ^ c2 >>> 1 : c2 >>> 1;
+    t2[n2] = c2 >>> 0;
+  }
+  return t2;
+})();
+function crc32(buf) {
+  let c2 = 4294967295;
+  for (let i2 = 0; i2 < buf.length; i2++) c2 = CRC_TABLE[(c2 ^ buf[i2]) & 255] ^ c2 >>> 8;
+  return (c2 ^ 4294967295) >>> 0;
+}
+async function deflateZlib(bytes) {
+  const cs2 = new CompressionStream("deflate");
+  const w2 = cs2.writable.getWriter();
+  w2.write(bytes);
+  w2.close();
+  const chunks = [];
+  const rd = cs2.readable.getReader();
+  for (; ; ) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const total = chunks.reduce((n2, c2) => n2 + c2.length, 0);
+  const out = new Uint8Array(total);
+  let o2 = 0;
+  for (const c2 of chunks) {
+    out.set(c2, o2);
+    o2 += c2.length;
+  }
+  return out;
+}
+function chunk(type, data) {
+  const out = new Uint8Array(12 + data.length);
+  const dv = new DataView(out.buffer);
+  dv.setUint32(0, data.length);
+  for (let i2 = 0; i2 < 4; i2++) out[4 + i2] = type.charCodeAt(i2);
+  out.set(data, 8);
+  dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+  return out;
+}
+async function buildPng(raw, width, height, bitDepth, colorType) {
+  const ihdr = new Uint8Array(13);
+  const dv = new DataView(ihdr.buffer);
+  dv.setUint32(0, width);
+  dv.setUint32(4, height);
+  ihdr[8] = bitDepth;
+  ihdr[9] = colorType;
+  const idat = await deflateZlib(raw);
+  const parts = [
+    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk("IHDR", ihdr),
+    chunk("IDAT", idat),
+    chunk("IEND", new Uint8Array(0))
+  ];
+  const total = parts.reduce((n2, p2) => n2 + p2.length, 0);
+  const png = new Uint8Array(total);
+  let o2 = 0;
+  for (const p2 of parts) {
+    png.set(p2, o2);
+    o2 += p2.length;
+  }
+  return png;
+}
+async function encodePng1(packed, width, height) {
+  const rowBytes = Math.ceil(width / 8);
+  const pad = rowBytes * 8 - width;
+  const mask = pad ? 255 << pad & 255 : 255;
+  const raw = new Uint8Array((rowBytes + 1) * height);
+  for (let y2 = 0; y2 < height; y2++) {
+    raw[y2 * (rowBytes + 1)] = 0;
+    raw.set(packed.subarray(y2 * rowBytes, (y2 + 1) * rowBytes), y2 * (rowBytes + 1) + 1);
+    if (pad) raw[(y2 + 1) * (rowBytes + 1) - 1] &= mask;
+  }
+  return buildPng(raw, width, height, 1, 0);
+}
+function normalisePacked(packed, width, height) {
+  const rowBytes = Math.ceil(width / 8);
+  const pad = rowBytes * 8 - width;
+  const out = Uint8Array.from(packed);
+  if (!pad) return out;
+  const mask = 255 << pad & 255;
+  for (let y2 = 0; y2 < height; y2++) out[(y2 + 1) * rowBytes - 1] &= mask;
+  return out;
+}
+async function encodePng8(samples, width, height, comps) {
+  const rowBytes = width * comps;
+  const raw = new Uint8Array((rowBytes + 1) * height);
+  for (let y2 = 0; y2 < height; y2++) {
+    raw[y2 * (rowBytes + 1)] = 0;
+    raw.set(samples.subarray(y2 * rowBytes, (y2 + 1) * rowBytes), y2 * (rowBytes + 1) + 1);
+  }
+  return buildPng(raw, width, height, 8, comps === 3 ? 2 : 0);
+}
+
+// src/imagecrop.mjs
+var CROP_REFUSALS = Object.freeze({
+  NOT_AN_IMAGE_EXTENT: "the extent is not an `image` extent in its PDF form ({kind:'image', page, rect})",
+  RECT_REQUIRED: "the extent names a page and no rectangle, so it names no one image to crop",
+  NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
+  NO_SUCH_PAGE: "the page index is outside the document",
+  PAGE_UNWALKABLE: "the page's content could not be interpreted, so what it paints is undetermined",
+  NO_IMAGE_AT_RECT: "the page paints no image at exactly that rectangle",
+  AMBIGUOUS_RECT: "the page paints more than one image at exactly that rectangle",
+  INLINE_IMAGE: "the image at that rectangle is inline in the content stream; extracting inline images is not built",
+  DECODE_REFUSED: "the image was found and its samples could not be decoded here"
+});
+var refuse2 = (reason, detail = {}) => {
+  if (!(reason in CROP_REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
+  return { ok: false, derived: true, reason, why: CROP_REFUSALS[reason], ...detail };
+};
+var RECT_TOL = 1e-3;
+var sameRect = (a2, b3) => a2.every((v2, i2) => Math.abs(v2 - b3[i2]) <= RECT_TOL);
+var normRect = (r2) => [Math.min(r2[0], r2[2]), Math.min(r2[1], r2[3]), Math.max(r2[0], r2[2]), Math.max(r2[1], r2[3])];
+async function sha256Hex3(u8) {
+  const d2 = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  return [...d2].map((b3) => b3.toString(16).padStart(2, "0")).join("");
+}
+async function cropImage(bytes, extent) {
+  const e2 = extent && typeof extent === "object" ? extent : {};
+  if (e2.kind !== "image" || !Number.isInteger(e2.page) || e2.part != null)
+    return refuse2("NOT_AN_IMAGE_EXTENT", { extent: e2 });
+  if (!(Array.isArray(e2.rect) && e2.rect.length === 4 && e2.rect.every((n3) => typeof n3 === "number" && Number.isFinite(n3))))
+    return refuse2("RECT_REQUIRED", { page: e2.page });
+  const doc = await loadPdf(bytes);
+  if (!doc) return refuse2("NOT_A_PDF");
+  if (doc.isEncrypted()) return refuse2("ENCRYPTED");
+  const n2 = (doc._pageOrder || []).length;
+  if (e2.page < 0 || e2.page >= n2) return refuse2("NO_SUCH_PAGE", { page: e2.page, pageCount: n2 });
+  const got = await pdfPageImages(doc, e2.page);
+  if (!got.images) return refuse2("PAGE_UNWALKABLE", { page: e2.page, detail: got.why });
+  const want = normRect(e2.rect);
+  const hits = got.images.filter((im2) => Array.isArray(im2.rect) && sameRect(im2.rect, want));
+  if (hits.length === 0)
+    return refuse2("NO_IMAGE_AT_RECT", { page: e2.page, rect: want, painted: got.images.map((im2) => im2.rect) });
+  if (hits.length > 1) return refuse2("AMBIGUOUS_RECT", { page: e2.page, rect: want, count: hits.length });
+  const hit = hits[0];
+  if (hit.inline || !hit._stream) return refuse2("INLINE_IMAGE", { page: e2.page, rect: want });
+  const st2 = hit._stream;
+  const num = (v2) => {
+    v2 = doc.resolve(v2);
+    return typeof v2 === "number" ? v2 : null;
+  };
+  const cs2 = doc.resolve(st2.dict.ColorSpace);
+  const im = {
+    name: hit.name,
+    obj: st2,
+    width: hit.width,
+    height: hit.height,
+    bpc: num(st2.dict.BitsPerComponent),
+    colorSpace: cs2 && cs2.t === "name" ? cs2.v : st2.dict.ColorSpace ? "\xABindirect\xBB" : null,
+    isMask: doc.resolve(st2.dict.ImageMask) === true,
+    filters: hit.filters
+  };
+  const out = await decodeImage(doc, im, { rotate: 0 });
+  if (!out.ok) return refuse2("DECODE_REFUSED", { page: e2.page, rect: want, decoder: out.reason, decoderWhy: out.why });
+  return {
+    ok: true,
+    derived: true,
+    rendition: "crop",
+    why: "a DERIVED rendition for display: the evidence is the capture's bytes plus this extent, and this file can be re-derived from them (EXTRACTION-BREADTH \xA73.4)",
+    of: { kind: "image", page: e2.page, rect: want },
+    capture_sha256: await sha256Hex3(bytes),
+    placement: { name: hit.name, axis_aligned: hit.axis_aligned, filters: hit.filters },
+    route: out.route,
+    mediaType: out.mediaType,
+    bytes: out.bytes,
+    width: out.width ?? hit.width,
+    height: out.height ?? hit.height,
+    /* Upright only when the placement is a plain scale-and-translate with
+       POSITIVE scales (no rotation, skew or flip — a PDF commonly paints an
+       image through a negative y-scale) AND the decoder itself reports its
+       samples upright; otherwise this module does not know, and says null
+       rather than true. */
+    upright: (() => {
+      const m2 = hit._ctm;
+      const plain = Array.isArray(m2) && m2[1] === 0 && m2[2] === 0 && m2[0] > 0 && m2[3] > 0;
+      return plain && out.upright === true ? true : null;
+    })(),
+    /* Both hashes, each labelled (D-246's recommendation, CPDF-12): the FILE
+       hash says "is this the copy that was served", the PIXEL hash (decoded
+       routes only) says "is this the same picture" and survives a runtime
+       whose deflate differs. */
+    file_sha256: await sha256Hex3(out.bytes),
+    ...out.pixelsSha256 ? { pixels_sha256: out.pixelsSha256 } : {}
+  };
+}
+
 // src/index.mjs
 if (typeof Math.sumPrecise !== "function") {
   Math.sumPrecise = (values) => {
@@ -41766,6 +42522,7 @@ if (typeof Math.sumPrecise !== "function") {
 }
 var SURFACE = {
   structure: { method: "POST", mutating: false },
+  crop: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
 var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
@@ -41797,31 +42554,36 @@ async function tier2Text(bytes) {
   const document2 = pages.map((p2) => p2.text).filter((t2) => t2.length).join("\n");
   return { document: document2, pages, undetermined, counts: { chars: document2.length, undetermined: undetermined.length } };
 }
-async function handleStructure(req, env) {
+async function readCapture(req, env) {
   if (typeof env.CAPTURES?.get !== "function")
-    return json({ ok: false, reason: "R2_NOT_CONFIGURED" }, 503);
+    return { refusal: json({ ok: false, reason: "R2_NOT_CONFIGURED" }, 503) };
   const body = await req.json().catch(() => null);
   const sha = typeof body?.capture_sha === "string" ? body.capture_sha.toLowerCase() : "";
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
-    return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
+    return { refusal: json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400) };
   if (typeof body?.store !== "string")
-    return json({
+    return { refusal: json({
       ok: false,
       reason: "BAD_STORE",
       detail: "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one."
-    }, 400);
+    }, 400) };
   if (!NAMESPACES.includes(store))
-    return json({
+    return { refusal: json({
       ok: false,
       reason: "NAMESPACE_UNKNOWN",
       detail: "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
       asked: store.slice(0, 80),
       namespaces: [...NAMESPACES]
-    }, 400);
+    }, 400) };
   const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
-  if (!obj) return json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404);
-  const bytes = new Uint8Array(await obj.arrayBuffer());
+  if (!obj) return { refusal: json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404) };
+  return { bytes: new Uint8Array(await obj.arrayBuffer()), body };
+}
+async function handleStructure(req, env) {
+  const got = await readCapture(req, env);
+  if (got.refusal) return got.refusal;
+  const { bytes } = got;
   const structure = await extractPdfStructure(bytes);
   if (!structure.ok) return json(structure, 422);
   const max = Number(env.MAX_PDF_BYTES) || DEFAULT_MAX_PDF_BYTES;
@@ -41846,6 +42608,28 @@ async function handleStructure(req, env) {
   }
   return json(structure);
 }
+async function handleCrop(req, env) {
+  const got = await readCapture(req, env);
+  if (got.refusal) return got.refusal;
+  const { bytes, body } = got;
+  const max = Number(env.MAX_PDF_BYTES) || DEFAULT_MAX_PDF_BYTES;
+  if (bytes.length > max)
+    return json({
+      ok: false,
+      derived: true,
+      reason: "OVER_ENVELOPE",
+      bytes: bytes.length,
+      limit: max,
+      why: "the document is larger than this member loads whole, and finding one image means loading the document; nothing was cropped"
+    }, 413);
+  const out = await cropImage(bytes, body?.extent);
+  if (!out.ok) return json(out, 422);
+  const { bytes: cropBytes, ...rest } = out;
+  let bin = "";
+  for (let i2 = 0; i2 < cropBytes.length; i2 += 32768)
+    bin += String.fromCharCode.apply(null, cropBytes.subarray(i2, i2 + 32768));
+  return json({ ...rest, byte_length: cropBytes.length, bytes_base64: btoa(bin) });
+}
 function handleVersion(env) {
   return json({ ok: true, name: "pdf-worker", version: env.VERSION || "0.0.0" });
 }
@@ -41857,7 +42641,8 @@ var index_default = {
     if (req.method === "POST" && (path === "structure" || path === "")) {
       return handleStructure(req, env);
     }
-    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" }, 404);
+    if (req.method === "POST" && path === "crop") return handleCrop(req, env);
+    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure, POST /crop or GET /version only" }, 404);
   }
 };
 export {

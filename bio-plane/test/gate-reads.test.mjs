@@ -839,6 +839,10 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "answer is WITHHELD (NO_SUCH_CONTENT, byte-identical to an id that does not exist) rather than "
       + "the reference redacted, because the id is CONTENT-ADDRESSED and therefore computable by a "
       + "caller who never saw the row",
+    /* D-419, classified by the item that adds it. */
+    contentcrop: "D-419: the crop of the image one content row cites — it resolves the row through op=content's "
+      + "own store route with the server-stamped viewer, so it is GATED exactly as `content` is: a row the viewer "
+      + "may not see is WITHHELD (NO_SUCH_CONTENT, byte-identical to an absent id) before any member is asked",
     /* SK-8's read, classified by the item that adds it. It takes the ROW-FILTER
        shape rather than `content`'s withhold-the-whole-answer one, and the
        difference is the key: this read is scoped to a RUN or a DOCUMENT, so an

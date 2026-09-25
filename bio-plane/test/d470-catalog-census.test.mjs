@@ -580,6 +580,10 @@ const CATALOG_CENSUS = {
      CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
      1.31.0 (REC-215, 2026-09-25, branch land/worker/REC-215): ONE ARRIVAL, NO DEPARTURES — C-90.6 RISK_PROPOSAL_BASIS_REFUSED in RISK_TIER_REVISION_CHECKS; C-90.2 changed only its where. 502 -> 503 by this suite's print on the item's tree over origin/main 5e8a65a8.
      "1.31.0": { count: 503, digest: "09239cfca95d61558d253e79daa3dbaf257cafe95bad71f11a4130f7e091a62e" }, */
+  /* D-419 side, kept as history (branch row DROPPED at c22-batch30 — ours holds "1.31.0" for the union catalogue;
+     CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.31.0 (D-419, 2026-09-25, branch land/worker/D-419): FIVE ARRIVALS, NO DEPARTURES — the new family C-99 CONTENT_CROP_CHECKS (C-99.1..5), op=contentcrop's refusals. 502 -> 507 by this suite's print on the item's tree over origin/main 5e8a65a8.
+     "1.31.0": { count: 507, digest: "fb185dc52f70417621131047a86bcdcaefd47c679f4a64fbf0f7cb8cc0ec2f5a" }, */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -813,6 +817,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* D-680 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-44.6, one arrival; C-44.4 and C-87.6 changed); ours is
    kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
 /* REC-215 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-90.6, one arrival); ours is
+   kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
+/* D-419 side, kept as history — its A5 pin read 1.31.0 on its own branch (C-99.1..5, five arrivals); ours is
    kept at c22-batch30 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives

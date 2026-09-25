@@ -50,6 +50,7 @@ if (typeof Math.sumPrecise !== "function") {
 
 import { getDocumentProxy, extractText } from "unpdf";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
+import { cropImage } from "./imagecrop.mjs";
 
 /* The member's surface, declared for the fleet-coverage instrument to read the
  * same way it reads the plane's OPS table (scripts/coverage.mjs, D-117). Hand it
@@ -62,6 +63,7 @@ import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
  * env var, so it could not be anything else. */
 export const SURFACE = {
   structure: { method: "POST", mutating: false },
+  crop:      { method: "POST", mutating: false },
   version:   { method: "GET",  mutating: false },
 };
 
@@ -135,38 +137,48 @@ async function tier2Text(bytes) {
   return { document, pages, undetermined, counts: { chars: document.length, undetermined: undetermined.length } };
 }
 
-async function handleStructure(req, env) {
+/* The capture read BOTH routes make, in one place: the sha and the namespace checked (D-478's set), then the
+   bytes read from R2 under the one key shape I1 §2 names. Answers `{ bytes, body }` or `{ refusal }`, a Response
+   the route returns as is. D-419 moved it here unchanged from `handleStructure` when `/crop` became the second
+   reader — a second copy of the namespace test is the copy that ages. */
+async function readCapture(req, env) {
   if (typeof env.CAPTURES?.get !== "function")
-    return json({ ok: false, reason: "R2_NOT_CONFIGURED" }, 503);
+    return { refusal: json({ ok: false, reason: "R2_NOT_CONFIGURED" }, 503) };
 
   const body = await req.json().catch(() => null);
   const sha = typeof body?.capture_sha === "string" ? body.capture_sha.toLowerCase() : "";
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
-    return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
+    return { refusal: json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400) };
   if (typeof body?.store !== "string")
-    return json({ ok: false, reason: "BAD_STORE",
+    return { refusal: json({ ok: false, reason: "BAD_STORE",
                   detail: "a capture lives inside one namespace and this member guesses none: the caller must "
                         + "say which. A default namespace here would read the real record for a caller who "
-                        + "believed it was reading a scratch one." }, 400);
+                        + "believed it was reading a scratch one." }, 400) };
   /* D-478: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, the empty string — is
      refused by the plane's own code, with `asked` and `namespaces` beside it, and R2 was never touched. Before
      this, such a name reached R2 as a key prefix and came back NOT_FOUND: a statement about the capture where the
      truth was a statement about the namespace. */
   if (!NAMESPACES.includes(store))
-    return json({ ok: false, reason: "NAMESPACE_UNKNOWN",
+    return { refusal: json({ ok: false, reason: "NAMESPACE_UNKNOWN",
                   detail: "a capture is read from the namespace the caller names, and no namespace by that name "
                         + "exists on any instance this member can be bound to, so nothing was read. There are "
                         + "two: the record itself and a scratch area kept apart for testing, and the name must "
                         + "match one of them exactly; they are listed beside this message. This is NOT the same "
                         + "answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
-                  asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
+                  asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400) };
 
   // I1 §2: the R2 key shape, promoted here from documentation to a load-bearing
   // dependency with a second consumer. READ ONLY — never head/put/delete.
   const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
-  if (!obj) return json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404);
-  const bytes = new Uint8Array(await obj.arrayBuffer());
+  if (!obj) return { refusal: json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404) };
+  return { bytes: new Uint8Array(await obj.arrayBuffer()), body };
+}
+
+async function handleStructure(req, env) {
+  const got = await readCapture(req, env);
+  if (got.refusal) return got.refusal;
+  const { bytes } = got;
 
   // The full I2 baseline (links + structure) from the shared pure-JS extractor.
   const structure = await extractPdfStructure(bytes);
@@ -197,6 +209,39 @@ async function handleStructure(req, env) {
   return json(structure);
 }
 
+/* D-419 — THE CROP OF A CITED IMAGE, ASKED FOR (EXTRACTION-BREADTH §3.4; I6).
+ *
+ * `cropImage` (CPDF-18, `imagecrop.mjs`) was built and driven and nothing could ask for it: no route here and no
+ * op on the plane. This is the route. It reads the capture exactly as `/structure` does (`readCapture`, the same
+ * namespace set and key shape) and hands the bytes and the caller's extent to `cropImage` UNCHANGED — the module
+ * decides what the extent names and refuses by name when it names no one image; this route adds no judgement.
+ *
+ * WHAT COMES BACK IS A DERIVED RENDITION AND SAYS SO: `cropImage`'s own answer, with its bytes carried as base64
+ * (`bytes_base64`) because the answer is JSON and the plane forwards it whole. `capture_sha256` is the hash of the
+ * bytes THIS member read, so the plane can check the crop was taken from the capture the row names rather than
+ * trusting the key it asked under. A refusal from the module is its named `reason` at 422 — a well-formed answer
+ * about an extent that cannot be cropped, not a server fault.
+ *
+ * THE ENVELOPE `/structure` holds applies here for the same reason: the whole document is loaded to find one
+ * image, so a document over it is declined BY NAME (`OVER_ENVELOPE`) rather than risked. */
+async function handleCrop(req, env) {
+  const got = await readCapture(req, env);
+  if (got.refusal) return got.refusal;
+  const { bytes, body } = got;
+  const max = Number(env.MAX_PDF_BYTES) || DEFAULT_MAX_PDF_BYTES;
+  if (bytes.length > max)
+    return json({ ok: false, derived: true, reason: "OVER_ENVELOPE", bytes: bytes.length, limit: max,
+                  why: "the document is larger than this member loads whole, and finding one image means loading "
+                     + "the document; nothing was cropped" }, 413);
+  const out = await cropImage(bytes, body?.extent);
+  if (!out.ok) return json(out, 422);
+  const { bytes: cropBytes, ...rest } = out;
+  let bin = "";
+  for (let i = 0; i < cropBytes.length; i += 0x8000)
+    bin += String.fromCharCode.apply(null, cropBytes.subarray(i, i + 0x8000));
+  return json({ ...rest, byte_length: cropBytes.length, bytes_base64: btoa(bin) });
+}
+
 /* Fleet rule 4: each member versions and rolls out on its own, so "a deploy
    verified is not a build serving" (D-108) has a second face — the plane can be
    current while the sibling it calls is still serving the previous build, and
@@ -218,6 +263,7 @@ export default {
     if (req.method === "POST" && (path === "structure" || path === "")) {
       return handleStructure(req, env);
     }
-    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" }, 404);
+    if (req.method === "POST" && path === "crop") return handleCrop(req, env);
+    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure, POST /crop or GET /version only" }, 404);
   },
 };
