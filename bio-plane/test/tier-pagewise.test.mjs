@@ -43,7 +43,11 @@
  *   second condition is still load-bearing — it is what stops a whitespace
  *   "gain" from moving a page — but a page where Tier 2 genuinely loses text is
  *   NOT among these four PDFs, and the synthetic arms at the foot are the only
- *   place that case is driven.
+ *   place that case is driven. D-515 (M-166, 2026-09-25) widened the search to
+ *   every PDF the record holds: all 8 committed and all 11 captured in
+ *   `biosmoke7`'s `bio` store, 19 documents and 2,107 pages. Tier 2 decodes
+ *   fewer glyphs on NONE of them, so no real page exists to commit, and the
+ *   synthetic arms remain the only drive of this case until a capture supplies one.
  *   IT CANNOT see the wire. CORRECTED 2026-09-24 (D-501): this paragraph read
  *   "the rule is NOT called by `index.mjs` — that is a DELEGATION", and that has
  *   been false since the delegation was discharged. `index.mjs` imports
