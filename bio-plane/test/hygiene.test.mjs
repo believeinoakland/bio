@@ -2291,6 +2291,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        phantom entry is one more symlink the armed suite never imports, and each arm's verdict is the suite's own
        per-section tallies against a declaration. */
     "bio-plane/test/d548-block.control.mjs",      // mirrors the repo into its own mkdtemp by symlink; discovers nothing
+    /* ADDED 2026-09-25 by D-564's item: d548-block.control.mjs generalised to the seven suites D-564 moved onto the
+       same recorder. NAMED AND NOT GUARDED for d548's reason: it lists the repository root and `bio-plane/` only to
+       SYMLINK each entry into its own `mkdtemp` mirror, counts nothing and floors on nothing; each arm's verdict is the
+       armed suite's own per-section tallies against a declaration. */
+    "bio-plane/test/d564-block.control.mjs",      // mirrors the repo into its own mkdtemp by symlink; discovers nothing
     /* ADDED 2026-09-23 by REC-175's item; the ratchet caught it on the item's first battery, before anyone read the diff.
        NAMED AND NOT GUARDED: its one walk is of ITS OWN `mkdtemp` persist root (`rec175-persist-*`, inside the sandbox
        `sandbox.mjs` owns), after `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the row the old

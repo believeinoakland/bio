@@ -114,6 +114,19 @@
    MEMBER binding's arm stays green under it, which is why it cannot be the only
    standing arm. AS DECLARED.
 
+   (i) D-564 (declared and RUN 2026-09-25, WORKER D-564 (SCHEDULER #22)), THE RECORDER — every section now runs in
+   `block()` (D-548's, from `d84-case-manifest.test.mjs`), and the subject is the SUITE, so the arm breaks a
+   section's FIXTURE. Re-run in one step: `node test/d564-block.control.mjs casesign` from bio-plane/. BASELINE ->
+   **75 pass, 0 fail**, per section 0 (setup) 0/0, 1 4/0, 1b 15/0, 2 12/0, 3 9/0, 4 9/0, 5 7/0, 6 3/0, 7 16/0, foot
+   reached. (i) SECTION 6's FIXTURE BROKEN — SOLO's promote type (the one anchor carrying the REC-136 comment)
+   made "nosuchtype" (section 6 is read by no later section) — declared: section 6 DIES by name with tally -1, every
+   other section reports its baseline tally -> **72 pass, 1 fail**, `BLOCK 6 DIED: (fixture) promote
+   INQ-2026-7700-solo: {"ok":false,"reason":"SURFACE_NO_RUN",…`, foot reached, every other section at its baseline
+   tally, as declared. Before D-564 the same break ended the run at `bail()` [FIXTURE ABORTED], and section 7's
+   sixteen assertions never ran.
+   (j) THE RECORDER DISARMED (`block()` rethrows) over (i)'s fixture — declared: NO foot and no section tally, exit
+   1 -> **no foot, exit 1, no section tally**, as declared (run 2026-09-25 by `d564-block.control.mjs`; the real suite hashed unchanged before and after).
+
    See `test/casesign.control.mjs` for each arm's exact edit and its reasoning. */
 
 /* CASE-5b / DEC-72 — THE CASE-LEVEL SIGNING CEREMONY, AND THEN THE DELETION IT IS
@@ -207,16 +220,30 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-/* A FIXTURE THAT FAILS QUIETLY PRODUCES A SUITE WHOSE ASSERTIONS ALL MEASURE THE
-   WRONG THING, and a bare `throw` names nothing (CASE-4's arm (d) measured
-   exactly that: no tally at all). `bail` prints, tallies the failure and exits
-   with the suite's own foot reached. */
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 500)}`);
-  fail++;
-  console.log(`\ncasesign: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-564: EVERY SECTION RUNS INSIDE `block()` — D-548's recorder (d84-case-manifest.test.mjs), adopted. Before it,
+   `bail()` disposed the sandbox and exited on the FIRST fixture failure ("FIXTURE ABORTED"), so one broken fixture
+   ended the run and every later section went unmeasured. Now a fixture failure is a THROW that `block()` records as
+   ONE failure naming its section, and the sections after it still run and report. Each section's own tally is
+   printed at the foot; a section that DIED prints -1, never the partial count it reached; a section expected but
+   never reported fails by name. A section resting on an earlier one's values asks for them with `needs()` and dies
+   naming the section it rests on. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -258,24 +285,6 @@ const enrol = async (memberId, password, role, capabilities) => {
   if (!lg.token) bail(`login ${memberId}`, lg);
   return lg.token;
 };
-/* TWO administrators before any ordinary member (ADMINS_FIRST), which is the
-   roster rule and not a fixture preference — `op=memberadd` refuses to mint an
-   ordinary member's invitation while the instance has fewer than two admins. */
-await enrol("nadia", "nadia-passphrase-5b", "admin", ["contribute", "publish", "create_projects"]);
-const OMAR = await enrol("omar", "omar-passphrase-5b", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "iris-passphrase-5b", "member", ["contribute", "publish"]);
-/* REC-130: A MEMBER OF ANOTHER PROJECT — signed in, holding `publish`, owning a
-   project of her own, and with NO standing in the one that produces this suite's
-   case. She is the caller the no-existence-leak block asks on behalf of. */
-const VIC = await enrol("vic", "vic-passphrase-5b", "member", ["contribute", "publish"]);
-/* REC-130: and a PLAIN member who will be invited into the owning project, for the
-   over-strictness arm — standing is participation, not ownership. */
-const WEN = await enrol("wen", "wen-passphrase-5b", "member", ["contribute"]);
-rP(await POST("op=signeradd&token=adm-c5b", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
-/* A SECOND REGISTERED SIGNER, for one arm only: the second-attestation refusal
-   cannot be reached with one key, because re-signing the same statement with the
-   same ed25519 key is byte-identical and is therefore a retry by construction. */
-rP(await POST("op=signeradd&token=adm-c5b", { keyB64: mkKey("omar"), memberId: "omar", comment: "omar laptop" }));
 
 const listRow = async (id) => ((await GET(`op=list&token=${IRIS}&limit=1000`)).result?.bundles
   || (await GET(`op=list&token=${IRIS}&limit=1000`)).result || []).find((b) => b.bundle_id === id);
@@ -284,15 +293,6 @@ const imageOf = async (id) => {
   const im = rP(await GET(`op=image&token=${IRIS}&id=${encodeURIComponent(id)}`));
   return String(im?.files?.["bundle.md"] ?? im?.["bundle.md"] ?? "");
 };
-
-/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
-   the fixture takes a `name` and returns the minted id. */
-const PUBLISHING_PROJECT = await makePublishingProject({
-  post: POST, mf, sha, machineToken: "adm-c5b", owner: "iris",
-  name: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
-const VICS_PROJECT = await makePublishingProject({
-  post: POST, mf, sha, machineToken: "adm-c5b", owner: "vic",
-  name: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 /* REC-130: THE RAW ANSWER — status, content type and the BODY'S BYTES, read as
    text and never parsed. "The same response" means the same bytes; two JSON
@@ -383,11 +383,46 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs 
    higher, because DEC-15 permits no authored grade above it but a hunch. */
 const LEGS = [{ target: INFO, grade: "D", axis: "connection", source: "testimony" }];
 
+const conclude = async (target, conclusion, falsifier) =>
+  rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(target)}`
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
+
+let OMAR, IRIS, VIC, WEN, PUBLISHING_PROJECT, VICS_PROJECT;
+await block("0 (setup)", async () => {
+/* TWO administrators before any ordinary member (ADMINS_FIRST), which is the
+   roster rule and not a fixture preference — `op=memberadd` refuses to mint an
+   ordinary member's invitation while the instance has fewer than two admins. */
+await enrol("nadia", "nadia-passphrase-5b", "admin", ["contribute", "publish", "create_projects"]);
+OMAR = await enrol("omar", "omar-passphrase-5b", "admin", ["contribute", "publish"]);
+IRIS = await enrol("iris", "iris-passphrase-5b", "member", ["contribute", "publish"]);
+/* REC-130: A MEMBER OF ANOTHER PROJECT — signed in, holding `publish`, owning a
+   project of her own, and with NO standing in the one that produces this suite's
+   case. She is the caller the no-existence-leak block asks on behalf of. */
+VIC = await enrol("vic", "vic-passphrase-5b", "member", ["contribute", "publish"]);
+/* REC-130: and a PLAIN member who will be invited into the owning project, for the
+   over-strictness arm — standing is participation, not ownership. */
+WEN = await enrol("wen", "wen-passphrase-5b", "member", ["contribute"]);
+rP(await POST("op=signeradd&token=adm-c5b", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
+/* A SECOND REGISTERED SIGNER, for one arm only: the second-attestation refusal
+   cannot be reached with one key, because re-signing the same statement with the
+   same ed25519 key is byte-identical and is therefore a retry by construction. */
+rP(await POST("op=signeradd&token=adm-c5b", { keyB64: mkKey("omar"), memberId: "omar", comment: "omar laptop" }));
+
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id. */
+PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-c5b", owner: "iris",
+  name: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+VICS_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-c5b", owner: "vic",
+  name: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+
 await mustPromote(INFO, infoMd(INFO), "information", "collected");
 await mustPromote(LEFT, infoMd(LEFT), "information", "collected");
 /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
    conclusion drawn with no project NAMES the accepted reading whose claim it
-   adopts, and an unnamed one is refused NO_CLAIM. `conclude` below concluded
+   adopts, and an unnamed one is refused NO_CLAIM. `conclude` (above) concluded
    with no reading because the act took none; every inquiry it concludes (LEAD,
    SUPP, and block 6's SOLO) now carries one (`withAdoptableReading`) and the call
    names it. */
@@ -396,10 +431,6 @@ await mustPromote(LEAD, withAdoptableReading(inquiryMd(LEAD, { question: "Was th
 await mustPromote(SUPP, withAdoptableReading(inquiryMd(SUPP, { question: "Was notice given?",
   refs: [INFO], legs: LEGS })), "inquiry", "open");
 
-const conclude = async (target, conclusion, falsifier) =>
-  rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
-    + adoptedVersionParam()));
 for (const [id, c, fz] of [[LEAD, "The transfer rests on a memo nobody adopted.",
                             "An adopted resolution naming the transfer would overturn this."],
                            [SUPP, "No notice was published before the transfer.",
@@ -407,6 +438,7 @@ for (const [id, c, fz] of [[LEAD, "The transfer rests on a memo nobody adopted."
   const r = await conclude(id, c, fz);
   if (!r.ok) bail(`conclude ${id}`, r);
 }
+});
 
 /* ===== THE AUTHORED ARGUMENTS. Every one of these strings is typed HERE, passed
    to `op=publish`, and then demanded back out of the case document verbatim. That
@@ -430,12 +462,15 @@ const CEREMONY = {
 const publish = async (body) => rP(await POST(`op=publish&token=${IRIS}`,
   { ...CEREMONY, roles: allLoadBearing(body), ...body }));
 
+let idless, NEVER_READ, NEVER_RATIFY, pub, CASE, doc1, SIGNED_DOC_SHA;
 console.log("\n--- casesign ---");
 
 /* =========================================================================== 1
  * THE WINDOW: op=publish AUTHORS AND COMMITS NOTHING.
  * ========================================================================= */
 console.log("\n--- 1. op=publish authors a case document and commits NOT ONE case fact ---");
+await block("1", async () => {
+needs("0 (setup)", { IRIS, VIC, PUBLISHING_PROJECT });
 /* REC-130: THE ENUMERATOR'S VIEW, TAKEN BEFORE THE CASE EXISTS. Case ids come off
    a sequence, so the id this publish will mint is PREDICTABLE — which is the
    whole exposure. Reading that id now gives the answer for a case that genuinely
@@ -450,11 +485,11 @@ console.log("\n--- 1. op=publish authors a case document and commits NOT ONE cas
    placeholder — the only thing the two differ in by construction (`ratify-authority.test.mjs` §0's precedent);
    every other byte must match. */
 const NEVER_ID = `CASE-${new Date().toISOString().slice(0, 4)}-never`;
-const idless = (raw, id) => ({ ...raw, body: String(raw.body).split(id).join("<CASE-ID>") });
-const NEVER_READ = idless(await rawOf(`op=casedocument&case=${NEVER_ID}&edition=1`), NEVER_ID);
-const NEVER_RATIFY = idless(await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
+idless = (raw, id) => ({ ...raw, body: String(raw.body).split(id).join("<CASE-ID>") });
+NEVER_READ = idless(await rawOf(`op=casedocument&case=${NEVER_ID}&edition=1`), NEVER_ID);
+NEVER_RATIFY = idless(await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
   body: JSON.stringify({ caseId: NEVER_ID, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) }), NEVER_ID);
-const pub = await publish({ targets: [LEAD, SUPP],
+pub = await publish({ targets: [LEAD, SUPP],
   roles: { [LEAD]: "load_bearing", [SUPP]: "supporting" } });
 if (!pub.ok) bail("publish the two-finding case", pub);
 if (!/^CASE-\d{4}-\d{4}$/.test(String(pub.caseId))) bail(`the minted case id is not of the case shape`, pub.caseId);
@@ -472,7 +507,7 @@ if (!/^CASE-\d{4}-\d{4}$/.test(String(pub.caseId))) bail(`the minted case id is 
    read-back is the right design and the guard has to match it. */
 if (!pub.caseDocument || !/^[0-9a-f]{64}$/.test(String(pub.caseDocument.doc_sha)))
   bail("op=publish authored no case document — there is no ceremony to perform", pub);
-const CASE = pub.caseId;
+CASE = pub.caseId;
 {
   t("op=publish answers the CASE DOCUMENT to review, with its hash and its byte length",
     [/^CASE-\d{4}-\d{4}$/.test(CASE), pub.caseDocument.case_id === CASE, pub.caseDocument.edition,
@@ -505,6 +540,7 @@ const CASE = pub.caseId;
     [rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`)).ratified,
      rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`)).sig_armored], [false, null]);
 }
+});
 
 /* ========================================================================== 1b
  * REC-130 — AN UNSIGNED CASE DOCUMENT ANSWERS ONLY TO STANDING, AND EVERYONE
@@ -518,7 +554,9 @@ const CASE = pub.caseId;
  * the SAME id before `op=publish` minted it.
  * ========================================================================= */
 console.log("\n--- 1b. an unsigned case answers only to standing; a stranger cannot tell it from no case ---");
-{
+await block("1b", async () => {
+needs("0 (setup)", { IRIS, OMAR, VIC, WEN, PUBLISHING_PROJECT, VICS_PROJECT });
+needs("1", { CASE, idless, NEVER_READ, NEVER_RATIFY });
   t("the baseline is a genuine not-found, so the comparisons below are against something real",
     [NEVER_READ.status, JSON.parse(NEVER_READ.body).reason, NEVER_RATIFY.status,
      JSON.parse(NEVER_RATIFY.body).reason], [404, "NO_CASE_DOCUMENT", 404, "NO_CASE_DOCUMENT"]);
@@ -581,16 +619,19 @@ console.log("\n--- 1b. an unsigned case answers only to standing; a stranger can
     [VICS_PROJECT !== PUBLISHING_PROJECT,
      JSON.stringify(idless(await rawOf(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`), CASE)) === JSON.stringify(NEVER_READ)],
     [true, true]);
-}
+});
 
 /* =========================================================================== 2
  * WHAT IS SIGNED IS A THING A MEMBER REVIEWED.
  * ========================================================================= */
 console.log("\n--- 2. the document carries what a person AUTHORED, not a summary this plane composed ---");
+await block("2", async () => {
+needs("0 (setup)", { IRIS });
+needs("1", { CASE });
 /* REC-130, 2026-09-18: read by the OWNER, who is who reviews it before signing.
    It was read anonymously, which only worked because an unsigned document
    answered anybody — the defect block 1b now refuses. */
-const doc1 = rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`));
+doc1 = rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`));
 /* Named rather than left to throw forty lines down: control arm (h) narrows
    standing until the owner cannot read, and a bare TypeError here would end the
    suite with NO TALLY — CASE-4's arm (d) shape, which this file already paid for. */
@@ -671,12 +712,17 @@ if (!doc1?.ok || typeof doc1.text !== "string") bail("the OWNER could not read t
     parseFrontmatter(doc1.text).data.searched.unidentified,
     Math.max(...(parseFrontmatter(doc1.text).data.searched_levels || []).map((r) => r.unidentified)));
 }
+});
 
 /* =========================================================================== 3
  * THE SIGNATURE COMMITS THE CASE.
  * ========================================================================= */
 console.log("\n--- 3. a member signs it, and THAT is what commits the case's own assertions ---");
-const SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratification */
+await block("3", async () => {
+needs("0 (setup)", { IRIS, OMAR, VIC, PUBLISHING_PROJECT });
+needs("1", { pub, CASE });
+needs("2", { "doc1.text": doc1?.text });
+SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratification */
 {
   /* THE REFUSALS FIRST, so the success below cannot be read as a door that never
      shuts. Each is driven through the op with everything else held right. */
@@ -775,6 +821,7 @@ const SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratificati
      signedVic.ok, signedVic.doc_sha === SIGNED_DOC_SHA],
     [true, true, true, true, true, true]);
 }
+});
 
 /* =========================================================================== 4
  * AND THE FINDING'S BYTES STOP NAMING A CASE.
@@ -785,7 +832,9 @@ const ratifyMember = async (id) => {
   return rP(await POST(`op=ratify&token=${IRIS}`,
     { bundleId: id, expectedSha: s, sig: signRatify("iris", id, s) }));
 };
-{
+await block("4", async () => {
+needs("0 (setup)", { IRIS });
+needs("1", { CASE });
   const r1 = await ratifyMember(LEAD);
   const r2 = await ratifyMember(SUPP);
   if (!r1.ok || !r2.ok) bail("ratify the members", { r1, r2 });
@@ -888,13 +937,16 @@ const ratifyMember = async (id) => {
   t("(fixture) restoring the CONTENT restores the SHA, so the member re-enters the case it left",
     [(await shaOf(SUPP)) === r2.bundleSha,
      (await anon(`op=publishedcase&id=${CASE}`)).complete], [true, true]);
-}
+});
 
 /* =========================================================================== 5
  * THE STRANGER, WITH THE INSTANCE UNREACHABLE.
  * ========================================================================= */
 console.log("\n--- 5. a stranger verifies the CASE and its members with the instance UNREACHABLE ---");
-{
+await block("5", async () => {
+needs("0 (setup)", { PUBLISHING_PROJECT });
+needs("1", { CASE });
+needs("3", { SIGNED_DOC_SHA });
   const cs = await anon(`op=publishedcase&id=${CASE}`);
   if (!cs || !cs.manifest_sha) bail("the container was not assembled", cs);
   const manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(
@@ -964,13 +1016,14 @@ console.log("\n--- 5. a stranger verifies the CASE and its members with the inst
   mf.dispatchFetch = realFetch;
   t("(fixture) the instance is restored, so the arms below are not measuring a dead harness",
     (await anon(`op=publishedcase&id=${CASE}`))?.caseId, CASE);
-}
+});
 
 /* =========================================================================== 6
  * OVER-STRICTNESS: correct work still publishes.
  * ========================================================================= */
 console.log("\n--- 6. OVER-STRICTNESS: a legitimately signed case publishes, and DEC-44's one-finding case stays legal ---");
-{
+await block("6", async () => {
+needs("0 (setup)", { IRIS, PUBLISHING_PROJECT });
   const SOLO = "INQ-2026-7700-solo";
   await mustPromote(SOLO, withAdoptableReading(inquiryMd(SOLO, { question: "Was the index kept?", refs: [INFO], legs: LEGS })),
     "inquiry", "open");   /* REC-136: concluded below, so it carries a reading to adopt */
@@ -1002,13 +1055,15 @@ console.log("\n--- 6. OVER-STRICTNESS: a legitimately signed case publishes, and
   + "read as the gate having stopped asking",
     (await publish({ targets: [SOLO], roles: { [SOLO]: "supporting" },
       scope: "x", statement: "y", excluded: [] })).ok, false);
-}
+});
 
 /* =========================================================================== 7
  * THE CATALOG FAMILY, EVERY ARM NAMED AND FIRED.
  * ========================================================================= */
 console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a real document ---");
-{
+await block("7", async () => {
+needs("1", { CASE });
+needs("2", { "doc1.text": doc1?.text });
   const fm = parseFrontmatter(doc1.text).data;
   const ctx = { caseId: CASE, edition: 1 };
   const fires = (mutate, check) => checkCaseDocument(mutate({ ...fm }), ctx)
@@ -1071,7 +1126,7 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
      checkCaseDocument(fm, { ...ctx, priorCase: { edition: 0, statement: "different",
        bias_acknowledgement: "also different" } }).filter((x) => x.check === "C-21.1").length],
     [2, 0]);
-}
+});
 
 /* ===========================================================================
  * NEGATIVE CONTROL — RUN 2026-09-10, four arms plus a baseline, each armed ALONE
@@ -1081,6 +1136,16 @@ console.log("\n--- 7. C-41: every arm of the case document's gate, driven over a
  * driver itself, beside each arm, so the arm and its receipt cannot drift apart.
  * ========================================================================= */
 
+/* D-564: every section's own tally, -1 for one that DIED; a section that never recorded at all is named missing
+   rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "1b", "2", "3", "4", "5", "6", "7"];
+console.log("\n--- per-section tallies (D-564: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\ncasesign: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
-console.log(`\ncasesign: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
 process.exit(fail ? 1 : 0);
