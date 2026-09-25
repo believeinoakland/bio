@@ -15,14 +15,21 @@
  *     reported and skipped, never run green;
  *   - each arm DECLARES before arming what MUST fail and what MUST NOT, and both
  *     are checked; the BASELINE row is first.
+ *
+ * REC-147 ADDED SIX ARMS (2026-09-25), for the judgement and the candidate table this suite now also holds:
+ * `twosites` is the row's own named control (a second append site, and the one-site arm fails); `idempotent`,
+ * `unformed`, `prompt`, `recorded` and `abstain` each break one other property §5/§8 or BOB #32's ruling rests on.
+ * `abstain` is the one the gate alone cannot see: every recorded answer becomes `precision`, the gate PASSES, and
+ * only the recall line fails — which is why BOB #32 made recall a reported figure beside the gate.
  */
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
 const SRC = { store: "src/store.mjs", judge: "test/contradiction-judge-baseline.mjs",
-              gate: "test/contradiction-gate.mjs" };
-const MIN_BYTES = { store: 100000, judge: 3000, gate: 3000 };
+              gate: "test/contradiction-gate.mjs",
+              /* REC-147 */ prompt: "src/contradiction.mjs", recorded: "test/contradiction-judge-recorded.mjs" };
+const MIN_BYTES = { store: 100000, judge: 3000, gate: 3000, prompt: 3000, recorded: 8000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = {
@@ -58,6 +65,43 @@ const ARMS = {
     why: "THE GATE TIGHTER THAN ITS RULE: a rate EQUAL to the threshold now fails. MUST fail: the "
        + "oracle (correct work) arm. MUST NOT fail: the always-world arm, which fails either way",
     must_fail: "OVER-STRICTNESS OF THE GATE ITSELF", must_pass: "AN ALWAYS-`world` JUDGEMENT FAILS" },
+  /* ---- REC-147 ---- */
+  twosites: { file: "store",
+    find: `      for (const row of rows) written.push(this.#appendContradictionCandidate(row));`,
+    to:   `      for (const row of rows) { const had = this.#one(\`SELECT 1 AS x FROM contradiction_candidates WHERE candidate=?\`, row.candidate); if (!had) this.sql.exec(\`INSERT INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\`, row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle, row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at); written.push(!had); }  /* ARMED */`,
+    why: "THE ROW'S CONTROL — a SECOND append site, behaviourally identical, written inline in the op. MUST fail: "
+       + "the one-site arm. MUST NOT fail: the re-run arm, which the second site honours",
+    must_fail: "§8's ONE APPEND SITE", must_pass: "A RE-RUN OVER UNCHANGED REFERENTS WRITES NOTHING NEW" },
+  idempotent: { file: "store",
+    find: `sides: [handle(x), handle(y)] }))`,
+    to:   `sides: [handle(x), handle(y)], nonce: Math.random() }))  /* ARMED */`,
+    why: "THE KEY NO LONGER NAMES ONLY WHAT WAS COMPARED — a re-run duplicates. MUST fail: the re-run arm. MUST NOT "
+       + "fail: the one-site arm",
+    must_fail: "A RE-RUN OVER UNCHANGED REFERENTS WRITES NOTHING NEW", must_pass: "§8's ONE APPEND SITE" },
+  unformed: { file: "store",
+    find: 'const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);',
+    to:   'const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`) || { key, a, b };  /* ARMED */',
+    why: "THE CALLER'S PAIR IS TAKEN ON ITS WORD — the provenance hop a caller can invent. MUST fail: the invented "
+       + "pair refusal. MUST NOT fail: the first write",
+    must_fail: "REFUSED BY NAME — an invented pair", must_pass: "THE RECORDED JUDGEMENT ENTERS AS CANDIDATES" },
+  prompt: { file: "prompt",
+    find: `A FALSE CONFLICT IS THE WORST ERROR.`,
+    to:   `A FALSE CONFLICT IS A BAD ERROR.`,
+    why: "THE PROMPT EDITED WITHOUT A NEW MEASUREMENT. MUST fail: the pinned digest. MUST NOT fail: the recorded "
+       + "runs' gate, which is about the answers already recorded",
+    must_fail: "THE PROMPT MEASURED IS THE PROMPT SHIPPED", must_pass: "R2: THE MACHINE JUDGEMENT PASSES" },
+  recorded: { file: "recorded",
+    find: `{"n":1,"key":"K1","a":"The Sewer Fund transferred $4.2 million to the general fund in March.","b":"The Sewer Fund transferred about $4 million to the general fund in March.","labels":[["precision"`,
+    to:   `{"n":1,"key":"K1","a":"The Sewer Fund transferred $4.2 million to the general fund in March.","b":"The Sewer Fund transferred about $4 million to the general fund in March.","labels":[["world"`,
+    why: "ONE FALSE CONFLICT IN RUN R1 (a rounded figure called a contradiction). MUST fail: R1's gate. MUST NOT "
+       + "fail: R2's gate",
+    must_fail: "R1: THE MACHINE JUDGEMENT PASSES", must_pass: "R2: THE MACHINE JUDGEMENT PASSES" },
+  abstain: { file: "recorded",
+    find: `return hit ? { label: hit.labels[i][0]`,
+    to:   `return hit ? { label: "precision"`,
+    why: "BOB #32's BLIND SPOT — every run answers `precision`. The gate CANNOT see it. MUST fail: R1's recall "
+       + "line. MUST NOT fail: R1's gate, which an abstaining detector passes",
+    must_fail: "R1: AND ITS RECALL IS REPORTED AND BEATS", must_pass: "R1: THE MACHINE JUDGEMENT PASSES" },
 };
 
 const run = () => {
@@ -79,7 +123,7 @@ for (const [name, arm] of Object.entries(ARMS)) {
   if (only && only !== name) continue;
   if (!arm.file) { rows.push({ name, patched: 0, ...tally(run()), restored: true, bytes: 0, sha: "n/a" }); continue; }
   const path = SRC[arm.file];
-  const pristine = `test/.m071-pristine-${name}-${arm.file}.mjs`;
+  const pristine = `test/.m071-pristine-${name}-${arm.file}.mjs`;  /* REC-147's arms share M0-71's transient pen */
   copyFileSync(path, pristine);
   const before = sha(path);
   const src = readFileSync(path, "utf8");
@@ -103,7 +147,7 @@ for (const [name, arm] of Object.entries(ARMS)) {
   unlinkSync(pristine);
 }
 
-console.log("\nM0-71 NEGATIVE CONTROL — declared vs actual\n");
+console.log("\nM0-71 + REC-147 NEGATIVE CONTROL — declared vs actual\n");
 for (const r of rows) {
   if (r.note) { console.log(`  ${r.name.padEnd(11)} ${r.note}`); continue; }
   const ok = r.name === "baseline" ? r.fail === 0 && r.pass > 0 : r.saw_fail && r.kept_pass;
