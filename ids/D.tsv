@@ -217,3 +217,4 @@ D-688	2026-09-25T08:15:20.437Z	SCHEDULER-23	LIFECYCLE_TEXT_UNWRITABLE two condit
 D-689	2026-09-25T08:24:55.979Z	SCHEDULER-23	machine credential fenced from stating records-request law (BOB #35 08:25Z, REC-201)
 D-690	2026-09-25T08:48:35.519Z	land/worker/D-664	
 D-691	2026-09-25T09:02:17.458Z	land/worker/D-690	
+D-692	2026-09-25T09:03:24.383Z	WORKER D-615	a revision restating created lands; bundles.created keeps the creation's, so row and head bytes disagree
