@@ -23,14 +23,14 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-722 · queued — **op=linkproject's WRITE HALF: REC-134's positional act list never reached it (it sits in index.mjs's `EDGE_ACTIONS` beside cite/sever/reinstate), so an outsider's act can write through a source they cannot see or a project they have not joined.** BOB #36 RULED 2026-09-25 10:50Z as CORRECTED 10:58Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded). — owner RECORD.
+### D-722 · queued — **op=linkproject's WRITE HALF: it resolves a second time WITHOUT the viewer, so an outsider's act writes an edge into a project they cannot see (measured by D-706's worker: a hidden-plus-visible address writes the HIDDEN edge, leaving op=links' tally one short; the edge sits unattributed).** BOB #36 FINAL RULING 2026-09-25 11:15Z, (A)+(C) (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded; supersedes 10:50Z/10:58Z part 3). — owner RECORD.
 order: directly behind D-706, whose disclosure half it completes; a write across the viewer fence is a disclosure defect and outranks every feature (SCHEDULER #24, 2026-09-25)
 milestone: M7
-interface: I3 — linkproject refusals and counts; the integrator classifies.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (REC-138 sight before position; REC-134's joined test), with BOB #36's 10:58Z ruling.
+interface: I3 — linkproject writes only the edges its answer names; bundle= naming a hidden bundle answers NO_SUCH_BUNDLE; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (REC-138 "not its existence" at the ACTS; REC-134's joined test), with BOB #36's 11:15Z ruling.
 depends-on: D-706 (same op; stack on land/worker/D-706 once integrated).
-scope: (1) a SOURCE capture the caller cannot see answers not-held and writes nothing; (2) the JOINED test (as cite) applies only where the source bundle belongs to a PROJECT — shared Information stays under the contribute gate; (3) a resolved link from a visible source to a hidden TARGET is WRITTEN WHOLE, and the answer and its counts read exactly as an unresolved link. Move §7.9's REC-134 act list to include linkproject. STATE, do not decide: whether any other read serves links_to edges without D-701's filter (sweep the edge-reading ops).
-accepts-when: an outsider's linkproject on a hidden source writes nothing and answers not-held; on a shared source linking into a hidden project it writes the edge and its answer and counts are byte-identical to an unresolved link; a later links read by that outsider shows no hidden target (moves: an outsider acting through a hidden source). NEGATIVE CONTROL: drop the viewer stamp and the outsider arm names the hidden project by name.
+scope: (A) resolve ONCE through the viewer's #captureGate and write exactly the edges the answer names; remove the unfiltered second resolution. (C) bundle= naming a bundle the caller cannot see answers NO_SUCH_BUNDLE. (1) a hidden source answers not-held and writes nothing; (2) the JOINED test (as cite) applies where the source bundle is a project's. Fold into LINK-FIDELITY.md and add linkproject to §7.9's REC-134 act list; option B is NOT rowed.
+accepts-when: an outsider's arms leave the hidden project's refs byte-identical (witness before and after); a hidden-plus-visible address writes the VISIBLE edge and op=links' tally equals linkproject's counts; a member who sees both ends still writes the hidden target's edge (moves: an outsider's write into a hidden project). NEGATIVE CONTROL: restore the unfiltered write resolution and the outsider arm fails by name.
 added: 2026-09-25 · SCHEDULER #24 (BOB #36 inbox).
 
 ### D-723 · queued — **A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-layer part machine-read.** BOB #36 RULED 2026-09-25 11:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #24; cite until folded): D-686's 09:05Z page rule is SUPERSEDED for this case only. — owner CONTENT.
@@ -145,16 +145,6 @@ depends-on: D-685 (the same assembly; stacked on D-684).
 scope: lift the containerExtent projection out of the wire block into one function both paths call (as textUnitsFor was, CPDF-19); a CSV's sheet list is held; an out-of-range sheet citation is refused by name.
 accepts-when: a CSV citation naming a sheet it lacks is refused by name, and its version notice reads its sheet list (moves: an undetermined skip where a refusal is owed). NEGATIVE CONTROL: call the projection on the wire path only again and the CSV refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-684's worker).
-
-### D-709 · queued — **A CAPTURE WITH NO RECORDED FETCH ROUTE IS SILENT: a document with no locator carries no `fetch` key, so a reader cannot tell "the route was measured and is absent" from "nobody measured it".** BOB #35 RULED 2026-09-25 10:05Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): STATE IT ON EVERY ENTRY — a no-locator capture carries `fetch: {route: "unrecorded"}`, and its grade reads authored-under-ceiling, never as measured (CLAUDE.md §4: undetermined is first-class and stated). Raised by D-693's worker. — owner RECORD.
-order: after D-698 (running on D-693), the same earned-basis entries (SCHEDULER #23, 2026-09-25)
-milestone: M9
-interface: I5 — additive `fetch.route: "unrecorded"` on every no-locator capture entry; an IC required; the integrator mints and classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.2 (the fetch-path table D-693 added), with BOB #35's 10:05Z ruling, folded there by this row.
-depends-on: D-698 (running; the same entries, stacked on D-693).
-scope: every capture entry with no locator carries fetch {route: "unrecorded"}; its leg grade reads authored-under-ceiling and says so; the ~30 suites that pin whole entries are CORRECTED with a comment saying why, never exempted.
-accepts-when: a no-locator capture's entry states route unrecorded and its leg reads authored-under-ceiling (moves: a silent entry). NEGATIVE CONTROL: omit the key again and the stated-route arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 10:05Z ruling).
 
 ### D-692 · queued — **A REVISION WHOSE BYTES RESTATE `created` LANDS, and bundles.created keeps the creation's value (the ON CONFLICT arm never writes it), so the row and the head bytes disagree — measured: a creation dated 2026-07-24 revised to bytes saying 2020-01-01 landed, and the row still says 2026-07-24.** None live (M-181). Found by D-615's worker (minted on land/worker/D-615). — owner RECORD.
 order: after D-628, the same promote function, one worker at a time (SCHEDULER #23, 2026-09-25)
@@ -555,6 +545,16 @@ depends-on: none.
 scope: reproduce under parallel load (name the instrument and the count of runs), find the shared state or timing the two assertions read (clock, store name, port, a module-level cache), fix at the cause, and record the measurement.
 accepts-when: N parallel runs pass with the cause named and removed (moves: a load-dependent verdict). NEGATIVE CONTROL: reintroduce the cause and the parallel trial fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, CONDUCT #22's batch30 finding).
+
+### D-711 · queued — **A THROWN FIXTURE IN 65 SUITES ENDS THE RUN UNNAMED: they wrap the whole module in one try/catch printing "FAIL  the suite threw" with fail+1, so the sections after the throw are never run and never named (RED, not falsely green, but silent about what went unmeasured); casepin.test.mjs (~375) exits inline the same way.** Found by D-667's worker; the D-548/D-564/D-667 matcher sees neither shape. — owner M0.
+order: after D-716, with the test-trust rows: a run that does not say what it left unmeasured is the same class as the block() rows (SCHEDULER #24, 2026-09-25)
+milestone: M0
+interface: none — test-only.
+design: `docs/development/VERIFICATION.md` (a suite states what it measured; D-548's block()/needs() recorder, as D-564 and D-667 adopted it).
+depends-on: D-667 (the recorder text and the control's SUITES table; stack on land/worker/D-667 until it lands).
+scope: adopt D-548's block()/needs() recorder (D-564's text verbatim) in each suite `git grep -l "FAIL  the suite threw" bio-plane/test/*.test.mjs` lists, wrapping each section; replace casepin's inline exit with a throw inside its block; add each suite to d564-block.control.mjs's SUITES table with its three arms, totals unchanged when whole. Work in batches of about 10 suites per landing. Minimum if a batch cannot finish: the module-wide catch names the last section reached and those never reached. Not in the class: refusal-wire's corpus-floor HALT, observation-meaning's foot guard, a suite with no catch (the battery reads it RED, M0-107).
+accepts-when: in each converted suite a broken fixture DIES by name with tally -1 while the other sections keep their baseline (moves: 65 suites silent past a throw). NEGATIVE CONTROL: the control's disarmed-recorder arm per suite, no foot and no section tally.
+added: 2026-09-25 · SCHEDULER #24 (id minted by D-667's worker).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -1091,14 +1091,4 @@ design: `docs/development/VERIFICATION.md` "The negative-control register".
 depends-on: none.
 scope: break only where `markerPositions` says a marker BEGINS (the phrase followed by one of MARKER_SEPARATORS); re-read the coverage floor from the print. ALSO (REC-199's worker, via CONDUCT #20 21:43Z): `declarationAt` ends a declaration at the first blank line whose next paragraph does not open with an ordinal; measured reviewcopy.test.mjs credited 5 arms of 14 + baseline (`arms: 5, lines: 38`, main and branch), REC-133's and REC-198's arms never counted. Cross a blank line when ANY later paragraph of the same comment opens a list item; reviewcopy 5 -> 15 is its negative control; re-read REGISTER_FLOOR from the print. ALSO (M0-176 F3, CONDUCT #20 22:40Z): only a suite's FIRST `NEGATIVE CONTROL:` block is read, so `gates.test.mjs`'s later blocks go uncounted; count every block.
 accepts-when: coverage --strict counts the full arms again, later blocks included. NEGATIVE CONTROL: a citation mid-declaration does not truncate it, and a real second marker still ends it — each arm by name.
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-167 · queued — **`gates.control.mjs` NEVER ASSERTS THE ABSENCE OF UNDECLARED FAILURES: an arm measuring more than its subject is described, not caught — G2 fails 29 where 3 are declared, G17 fails 11 where 5 are.** Found by M0-157's worker. — owner M0.
-order: after M0-166, with the gate instruments (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:36Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` "The negative-control register" (break only the thing).
-depends-on: M0-157.
-scope: enumerate each arm's true failure set, then adopt nc-rec111.mjs's subset check (s.failed ⊆ mustBreak ∪ alsoBreak ∪ a per-arm alsoExpected).
-accepts-when: every arm's failures are declared and the check passes. NEGATIVE CONTROL: widen one arm's break and the subset check names the undeclared failure.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
