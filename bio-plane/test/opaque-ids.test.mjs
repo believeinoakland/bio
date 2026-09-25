@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/opaque-ids.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/opaque-ids.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-19 in worktree agent-a59a4cdfa1b3d4dd3 on base 0cb784ab + REC-151 merged with origin/main at 20b7412f (real src/index.mjs 663,895 B sha256 b23d4325df07…, src/store.mjs 2,666,041 B sha256 05544429b20c…, untouched: YES), every arm AS DECLARED on the first run and again after the REVIEW_NO_SECRET pin was added (figures below are the second run): (a) baseline 35/0 · (b) counter-restored-case — THE ROW'S CONTROL, a new case's id taken from allocId's CASE counter again -> 31/4, exactly CASE's two NO COUNT arms and the two structural pins that see the site (the counter pin and the CASE-calls-the-minter pin); DRAFT, RVG, TASK and PROJ stay green · (c) math-random — the liar, Math.random for the CSPRNG -> 33/2, ONLY the two source-by-name arms; every behavioural arm stays green, which is why they exist · (d) counter-derived — the liar, the counter's value through a fixed permutation -> 34/1, ONLY `nothing weaker or counted` (the minter steps #nextSeq); the behavioural arms stay green · (e) allocid-open, the refusal removed -> 29/6, the five refusal arms and the dash arm · (f) allocid-overstrict, a prefix gated by its first letters -> 34/1, the PROJECTX arm · (g) csprng-other-spelling, a 32-bit CSPRNG draw — correct work -> 35/0.
+   M0-147, RUN 2026-09-25 on origin/main 964da679 + M0-147 (real sources and this suite untouched: YES), every arm AS DECLARED, the seven above unchanged: (h) clock-pinned — the suite under `test/clockpin.preload.mjs` frozen 1 ms before the New Year that began the plane's year (2025-12-31T23:59:59.999Z; workerd keeps the true wall), THE ROW'S ACCEPTANCE -> 35/0 · (i) clock-read-restored — THE ROW'S CONTROL, `YEAR` read off this process's clock again, under the pin -> 31/4, exactly the CASE, DRAFT, RVG and TASK "three mints were made and read back" arms by name; the NO COUNT arms read only the suffix and §3's allocid year is the caller's, so they stay green · (j) clock-read-restored-no-pin, the same edit without the pin -> 35/0.
  * =========================================================================
  * REC-151 / IC-164 — A MINTED ID CARRIES NO COUNT, FOR EVERY GATED PREFIX. Membership Architecture v2 §7, the
  * bullet *"A MINTED ID CARRIES NO COUNT"* (BOB #16, 2026-09-19): `allocId`'s sequence is PER PREFIX PER YEAR, so
@@ -64,7 +65,11 @@ const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
 const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json();
-const YEAR = new Date().toISOString().slice(0, 4);
+/* THE PLANE'S YEAR, read off the first id it mints (the fixture's PROJ, below) — never off this process's clock.
+   CORRECTED 2026-09-25 by M0-147: this read `new Date().toISOString().slice(0, 4)` at load, and the plane stamps an id
+   with ITS clock's year when it mints, so a run that loaded before midnight UTC on 31 December and minted after it
+   failed every "three mints were made" arm on a correct plane. */
+let YEAR = null;
 const suffixOf = (id) => Number(String(id ?? "").split("-")[2]);
 /* THE TWO BEHAVIOURAL QUESTIONS, asked of three consecutive mints of one prefix on a fresh store. A random
    four-digit suffix fails (i) with odds 10^-12 and (ii) with odds 10^-8 — never by chance. */
@@ -121,6 +126,7 @@ await enrol("omar", "omar-passphrase-151", "admin", ["contribute", "publish"]); 
 const IRIS = await enrol("iris", "iris-passphrase-151", "member", ["contribute", "publish"]);
 const PROJ = await makePublishingProject({ post: POST, mf, sha, machineToken: ADM, owner: "iris",
   name: "Opaque Ids", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+YEAR = /^PROJ-(\d{4})-/.exec(String(PROJ ?? ""))?.[1] ?? null;
 
 let snapSeq = 0;
 const promote = async (id, text, objectType, state) => rP(await POST(`op=promote&token=${ADM}`, {

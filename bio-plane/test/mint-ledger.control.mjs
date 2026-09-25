@@ -12,9 +12,13 @@
  * `src/schema.mjs` are hashed (sha256 and byte length) before the first arm and after the last; the run fails if any
  * moved. What each arm MUST fail (by label fragment) is DECLARED before it arms; every other assertion MUST stay green.
  *
+ * M0-147 added the CLOCK arms: `pin` runs the suite under `test/clockpin.preload.mjs` (node's clock frozen 1 ms before
+ * the New Year that began the plane's year), and `suite` patches a COPY of the suite, run from the copy's own `test/`
+ * beside links to the real one's helpers. The suite itself is hashed with the sources, before and after.
+ *
  * RESULTS: see the header of `test/mint-ledger.test.mjs` and IC-170.
  */
-import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, readdirSync, mkdirSync, symlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -25,7 +29,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "mint-ledger.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "test/mint-ledger.test.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const READ = "    const spent = (id) => !!this.#one(`SELECT 1 FROM minted_ids WHERE id=?`, id) || taken(id);";
@@ -105,6 +109,23 @@ const ARMS = {
     patches: [["store.mjs", "SELECT 1 FROM minted_ids WHERE id=?", "SELECT id FROM minted_ids WHERE id = ?"]],
     mustFail: [],
   },
+
+  /* M0-147 — THE SUITE MUST NOT READ THE YEAR OFF ITS OWN CLOCK. `pin` runs the suite under `test/clockpin.preload.mjs`
+     frozen 1 ms before the New Year that BEGAN the plane's current year (the plane's workerd keeps the true wall), so the
+     suite's clock reads the year before and every id the plane mints carries the year after: a run that straddled
+     midnight UTC on 31 December, reproduced without touching the machine's clock. `suite` patches a COPY of the suite. */
+  "clock-pinned": { pin: true, patches: [], mustFail: [] },
+  /* THE ROW'S CONTROL: the clock read RESTORED, under the pin. F2 fails BY NAME (the plane minted CASE-<its year>-7316, the suite expected the year before). U1 and U7 stay
+     green: `op=allocid` takes the suite's year, so the counter ids carry it and U7's forced draw (the plane's year) cannot
+     collide with them — U7 passes VACUOUSLY under this arm, which is the silent half of the defect and why the arm names
+     only F2. */
+  "clock-read-restored": { pin: true, patches: [],
+    suite: [["  YEAR = yearOf(P1);\n", "  YEAR = new Date().toISOString().slice(0, 4);\n"]],
+    mustFail: ["F2: THE ROLLBACK"] },
+  /* BREAK ONLY THE THING: the same restored read WITHOUT the pin — on any day but a straddle the suite's clock and the
+     plane's agree, so nothing may fail. The arm above fails because of the pin, not because of the edit. */
+  "clock-read-restored-no-pin": { pin: false, patches: [],
+    suite: [["  YEAR = yearOf(P1);\n", "  YEAR = new Date().toISOString().slice(0, 4);\n"]], mustFail: [] },
 };
 
 const run = (name) => {
@@ -122,7 +143,26 @@ const run = (name) => {
       if (n !== 1) return { name, armed: false, why: `anchor in ${file} occurs ${n} times: ${from.slice(0, 70)}` };
       writeFileSync(p, s.replace(from, () => to));
     }
-    const r = spawnSync(process.execPath, [SUITE], { env: { ...process.env, MINT_LEDGER_SRC: join(tree, "bio-plane", "src") },
+    /* A patched SUITE runs from the copy's own `test/`, beside a link to every other file of the real one (its helpers),
+       with `node_modules/` and `scripts/` linked, so its relative imports and its `../src` resolve as they do in place. */
+    let suite = SUITE;
+    if (arm.suite) {
+      const dir = join(tree, "bio-plane", "test");
+      mkdirSync(dir, { recursive: true });
+      for (const f of readdirSync(join(PLANE, "test"))) if (f !== "mint-ledger.test.mjs") symlinkSync(join(PLANE, "test", f), join(dir, f));
+      for (const f of ["node_modules", "scripts", "package.json"]) symlinkSync(join(PLANE, f), join(tree, "bio-plane", f));
+      let s = readFileSync(SUITE, "utf8");
+      for (const [from, to] of arm.suite) {
+        const n = s.split(from).length - 1;
+        if (n !== 1) return { name, armed: false, why: `anchor in the suite occurs ${n} times: ${from.slice(0, 70)}` };
+        s = s.replace(from, () => to);
+      }
+      suite = join(dir, "mint-ledger.test.mjs");
+      writeFileSync(suite, s);
+    }
+    const pin = arm.pin ? ["--import", join(PLANE, "test", "clockpin.preload.mjs")] : [];
+    const pinEnv = arm.pin ? { CLOCK_PIN_MS: String(Date.UTC(new Date().getUTCFullYear(), 0, 1) - 1) } : {};
+    const r = spawnSync(process.execPath, [...pin, suite], { env: { ...process.env, ...pinEnv, MINT_LEDGER_SRC: join(tree, "bio-plane", "src") },
                                                      encoding: "utf8", maxBuffer: 64 << 20 });
     const out = r.stdout || "";
     const tally = /mint-ledger: (\d+) passed, (\d+) failed/.exec(out);
