@@ -1459,7 +1459,8 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  * judgment §5 licenses: `meta.xml` (generation timestamps, the producer's
  * stamp — mechanical), `settings.xml` (view state — mechanical), the ZIP
  * envelope (per-request timestamps and order — mechanical, MEASURED to move),
- * `styles.xml` and `Thumbnails/` (page styles and a preview — presentational).
+ * `styles.xml`, `Thumbnails/` and the font faces content.xml names (page
+ * styles, a preview and glyph shapes — presentational; D-612, below).
  *
  * WHY content.xml CAN SPEAK FOR THE SUBSTANCE, AND WHEN IT CANNOT. OpenDocument
  * puts the whole body — every cell, its formula beside its value, every
@@ -1512,7 +1513,21 @@ const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
  *  the container actually holds. Every href-bearing attribute is read, in any
  *  namespace prefix (`attrsOf` keys by local name); a scheme-bearing URL or a
  *  bare fragment is not a package member. A directory reference (`./Object 1`)
- *  matches the members under it. */
+ *  matches the members under it.
+ *
+ *  D-612 — ONE ELEMENT IS NOT COUNTED: `font-face-uri` (by local name, any
+ *  prefix; Google writes `svg:font-face-uri`). Every real Google Doc export
+ *  embeds its fonts as `Fonts/fontN.ttf` and names them from
+ *  `office:font-face-decls` (M-167: 8 of 8 Docs, 8–9 fonts each), so counting
+ *  them refused the digest on every real Doc. A font face is presentational —
+ *  how a glyph is drawn, not what the document says — the same §5 judgment that
+ *  discounts `styles.xml`. The exemption is the ELEMENT, not the `Fonts/`
+ *  directory: an image or embedded object (`Pictures/`, `Object N/`) is
+ *  referenced from `draw:image` / `draw:object` and still refuses, wherever the
+ *  producer puts it. WHAT IT DOES NOT SEE: a font whose glyphs were redrawn
+ *  under an unchanged name would render differently with content.xml
+ *  unchanged; the rule discounts that as it discounts a restyled styles.xml. */
+const PRESENTATIONAL_REF = new Set(["font-face-uri"]);
 function referencedMembers(contentXml, container) {
   const names = container.entries.map((e) => normalizePartName(e.name));
   const hit = new Set();
@@ -1520,6 +1535,7 @@ function referencedMembers(contentXml, container) {
   let m;
   while ((m = RE.exec(contentXml)) !== null) {
     if (m[1] === undefined || m[0][1] === "/") continue;
+    if (PRESENTATIONAL_REF.has(localOf(m[1]))) continue;
     const href = attrsOf(m[2]).href;
     if (typeof href !== "string" || !href || href.startsWith("#")) continue;
     if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
@@ -1618,6 +1634,6 @@ export async function odfEvidentiaryDigest(bytes, sha256Hex) {
   return {
     determined: true, flavour, over: CONTENT_PART,
     evidentiary: await sha256Hex(digested),
-    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
   };
 }
