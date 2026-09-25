@@ -2,7 +2,7 @@
  * and `test/content-arm.test.mjs`, run from `bio-plane/` in one step:
  *
  *     node test/nc-rec104.mjs             # every arm, in order, baseline first
- *     node test/nc-rec104.mjs firststep   # one arm
+ *     node test/nc-rec104.mjs parseback   # one arm
  *
  * NOT a `.test.mjs` and NOT a fleet suite, deliberately: it EDITS REAL SOURCES
  * while it runs, so neither the battery's discovery nor `coverage.mjs`'s fleet
@@ -88,6 +88,15 @@ function arm(file, find, replace) {
   return { armed: true, matches: n };
 }
 
+/* D-686 (BOB #35, 2026-09-25) SUPERSEDED FOUR OF THIS HARNESS'S ARMS, and they are MOVED, not dropped.
+   `firststep` and `nowriter` broke REC-104's GENERATED column — made it read the chain's first step, or
+   made it a plain column nobody writes — and D-686 replaced that column with a plain one written at mint
+   by `textchain.mjs` `chainKindFor`, so the text they patched no longer exists. `nomigrate` and `xinfo`
+   anchored on a migration block D-686 rewrote. Their properties are D-686's now and are armed in
+   `test/nc-d686.mjs`: the column untrue of its unit (`generated`, `wholechain`), the unwritten plain
+   column (`nowrite`), the migration disabled (`nomigrate`) and the guard reading `table_info` (`xinfo`).
+   What REMAINS here is REC-104's own: the parse kept beside the column (`parseback`) and the pre-item
+   over-strictness digest (`preitem`). */
 const ARMS = {
   baseline: {
     files: [], why: "nothing armed — the row that distinguishes arms-broken from arms-working",
@@ -98,34 +107,6 @@ const ARMS = {
        + "two untouched runs, or a digest that differs under `preitem` proves nothing",
     mustFail: [], mustPass: "everything, and the SAME digest as `baseline`",
     patch: () => ({ armed: true, matches: 0 }),
-  },
-  firststep: {
-    files: [SCHEMA],
-    why: "THE COLUMN MADE UNTRUE OF THE CHAIN IT DESCRIBES — the row's own arm. It is a generated "
-       + "column, so it cannot be left behind by a writer; the only way to make it disagree with "
-       + "`chain` is to make it describe something else. Here it reads the chain's FIRST step. "
-       + "A query must then return a row whose chain no longer matches, and the suite must say so "
-       + "BY NAME — the arm that proves the column is not merely faster but still TRUE",
-    mustFail: ["`content:ocr` names the OCR'd document and not the text-layer one",
-               "`chain_last` agrees with the LAST STEP of the chain `op=content` reads, row for row",
-               "the rows the store ALREADY HELD carry their last step"],
-    mustPass: "`content:layer` on the fixture — a one-step chain's first step IS its last, so an arm "
-            + "that took that down too would be breaking something other than the column's meaning",
-    patch: () => arm(SCHEMA, `json_extract(chain, '$[#-1].step')) VIRTUAL`, `json_extract(chain, '$[0].step')) VIRTUAL`),
-  },
-  nowriter: {
-    files: [SCHEMA],
-    why: "A PLAIN COLUMN WITH NO WRITER — the implementation this item did NOT choose, and the stale "
-       + "state it would reach the day a mint path forgot it. Every row reads NULL; the fixture's "
-       + "chain filters must fail by name and the engine-guarantee section must fail, because a "
-       + "plain column ACCEPTS the write a generated one refuses",
-    mustFail: ["`content:ocr` names the OCR'd document and not the text-layer one",
-               "`content:layer` filters on the chain's LAST STEP",
-               "an INSERT that NAMES chain_kind is refused by the engine itself"],
-    mustPass: "`content:chain=undetermined` — it reads `chain IS NULL`, not the column, and must stay "
-            + "green; that is what shows undetermined was kept on the question it always asked",
-    patch: () => arm(SCHEMA, `chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL`,
-                             `chain_kind     TEXT`),
   },
   parseback: {
     files: [QUERY],
@@ -141,27 +122,6 @@ const ARMS = {
        ZERO times and this arm would have read ARMED NO. The parse goes back into
        the text-row branch, which is where it would bite. */
     patch: () => arm(QUERY, "+ `ELSE m.chain_kind END`,", "+ `ELSE json_extract(m.chain, '$[#-1].step') END`,"),
-  },
-  nomigrate: {
-    files: [STORE],
-    why: "THE MIGRATION DISABLED. A store created before this item keeps its old table; the schema's "
-       + "CREATE INDEX on the column then fails inside blockConcurrencyWhile, which does not fail a "
-       + "request politely — it bricks the Durable Object. The migration section must fail by name",
-    mustFail: ["the reboot ADDS the column to the existing table",
-               "THROUGH THE OP: `content:ocr` names the legacy OCR'd document"],
-    mustPass: "`content-arm.test.mjs` entire — a fresh store gets the column from CREATE TABLE and never "
-            + "needs the migration, so an arm that took that suite down would be breaking the schema",
-    patch: () => arm(STORE, `if (have.length && !have.includes("chain_kind"))`, `if (false && have.length && !have.includes("chain_kind"))`),
-  },
-  xinfo: {
-    files: [STORE],
-    why: "THE MIGRATION READS table_info INSTEAD OF table_xinfo — the spelling every other additive "
-       + "migration in #migrate uses, and the wrong one here: a generated column is HIDDEN from "
-       + "table_info, so the guard never sees the column it added and re-ALTERs on EVERY boot",
-    mustFail: ["a SECOND boot does not re-add it"],
-    mustPass: "the FIRST boot's assertions — the first migration succeeds either way, which is why this "
-            + "defect would ship green from any suite that booted once",
-    patch: () => arm(STORE, "PRAGMA table_xinfo(content)", "PRAGMA table_info(content)"),
   },
   preitem: {
     files: [QUERY, SCHEMA, STORE],

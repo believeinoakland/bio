@@ -3364,7 +3364,7 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL  -- REC-104. the LAST step kind of chain, derived by the engine and never written. See the index block below
+  chain_kind     TEXT               -- D-686. the kind of the last derivation step covering THIS unit's page, written at mint by chainKindFor. NULL = undetermined. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -3416,18 +3416,22 @@ CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bun
 -- DESIGN GAP against section 4.2, because section 4.1 gives capture_text a
 -- chain_kind COLUMN for the identical question. REC-104 gives content the same.
 --
--- IT IS A GENERATED COLUMN, AND THAT IS THE DECISION RATHER THAN A DETAIL. The
--- row asked that a stale chain_kind be impossible by construction or refused by
--- name, and a generated column is the first: the engine computes it from chain
--- in the same statement that writes chain, an INSERT or UPDATE that names it is
--- REFUSED by SQLite itself, and there is ONE definition of the last step in the
--- whole plane -- the expression on the column line above. A plain column written
--- by mintContent would have needed a second definition in JS, a backfill that is
--- a third, and a promise that no later writer forgets it. VIRTUAL rather than
--- STORED because SQLite cannot ADD a STORED column to an existing table, and a
--- fresh store and a migrated one must have the same shape (store.mjs #migrate
--- adds it to a table created before REC-104, reading THIS line to do so). The
--- index below stores the value, so the filter seeks it and parses nothing at read.
+-- D-686 (BOB #35, 2026-09-25 09:05Z) -- IT IS THE UNIT'S KIND, NOT THE DOCUMENT'S,
+-- AND SO IT IS NO LONGER A GENERATED COLUMN. REC-104 made it one over the whole
+-- chain's last step, and on a MIXED document that labelled every unit -- a
+-- text-layer page of a document OCR also touched -- as OCR'd. The extraction
+-- method is one of a content unit's two intrinsic facts (Content Framework Part
+-- II section 14.2), so the column now holds the kind of the last DERIVATION step
+-- covering the unit's page, and the question needs the step extents and the
+-- unit's page, which no SQL expression over this row can ask without becoming a
+-- second definition of textchain.mjs's partKeyOf / stepCovers. It is therefore a
+-- PLAIN column written by mintContent, and there is still ONE definition:
+-- textchain.mjs chainKindFor, which mintContent and the store.mjs #migrate
+-- recompute both call and nothing else computes. A row is never rewritten (the
+-- rule at the head of this block), so a value written at mint cannot go stale
+-- against its own chain. A store created before D-686 holds the generated column,
+-- #migrate drops it and recomputes every row -- the values are DERIVED from the
+-- chain, so recomputing them is not a rewrite of history (the ruling's words).
 --
 -- undetermined STAYS ON chain (chain IS NULL): it asks whether the record holds
 -- a chain AT ALL, which is not the same question as a chain with no last step.
@@ -3609,8 +3613,11 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- and searching mints nothing.
 --
 -- chain_kind IS A COLUMN AND NOT A PARSE, so "every OCR'd unit" is a predicate.
--- It holds the LAST step kind of the chain that produced this unit (layer, ocr,
--- member). Section 4.2 asks the identical question of the content table, whose
+-- It holds the last step of this document's chain, not how any given page was
+-- read (D-686, BOB #35 2026-09-25: KEPT document-level here, computed by the
+-- same textchain.mjs chainKindFor that gives content.chain_kind its per-unit
+-- value), so on a mixed document every unit reads the kind of the part the
+-- chain ends on (layer, ocr, typed). Section 4.2 asks the identical question of the content table, whose
 -- chain column holds the WHOLE chain as JSON, and that filter measured as the
 -- slowest on the table at M-23 -- so the column here is the same question
 -- answered the cheap way, and the difference is stated in SEARCH's own
@@ -3646,7 +3653,7 @@ CREATE TABLE IF NOT EXISTS capture_text (
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
   text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
   truncated    INTEGER NOT NULL DEFAULT 0,
-  chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
+  chain_kind   TEXT    NOT NULL,   -- D-686: the last step of this document's chain, not how any given page was read
   PRIMARY KEY (capture_sha, extent_kind, extent)
 );
 -- By BUNDLE: the join every arm makes, and purge's per-bundle arm.
@@ -25959,6 +25966,19 @@ function unionExtent(a, b) {
 function terminalStep(chain2) {
   return checkChain(chain2) ? null : chain2[chain2.length - 1].step;
 }
+function chainKindFor(chain2, target = null) {
+  if (!Array.isArray(chain2) || !chain2.length || !chain2.every((s) => s && typeof s === "object" && Object.hasOwn(STEP_KINDS, s.step))) return null;
+  const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
+  for (let i = chain2.length - 1; i >= 0; i--) {
+    const step = chain2[i];
+    if (STEP_KINDS[step.step].role !== "derivation") continue;
+    if (page == null) return step.step;
+    const ext = extentOf(step);
+    if (ext === "unreadable") return null;
+    if (ext === "all" || ext.includes(page)) return step.step;
+  }
+  return null;
+}
 function describeChain(chain2) {
   if (checkChain(chain2)) return "this text's provenance was not recorded";
   return chain2.map((s) => {
@@ -29589,15 +29609,17 @@ var MEANING = {
         vocab: [],
         pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CAP_DOES_NOT_APPLY.toUpperCase() ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : null
       },
-      /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
+      /* HOW THE UNIT WAS READ (D-686: the last step covering its page) — "every OCR'd region below cap C" is §1's
          own example and this is its first half. REC-104: IT READS THE
          `chain_kind` COLUMN, and the read-time JSON parse it replaced is RETIRED
          rather than kept beside it. Until REC-104 this compiled to a parse of the
          whole chain per row — unindexable, the slowest filter on the table
          (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
          `capture_text` a `chain_kind` column for the identical question.
-         `chain_kind` is a GENERATED column over `chain` (schema.mjs says why), so
-         it cannot disagree with the chain it describes.
+         D-686 (BOB #35): `chain_kind` is the kind of the last derivation step
+         covering the UNIT's page, written at mint by `textchain.mjs`
+         `chainKindFor` (schema.mjs says why), so on a mixed document a
+         text-layer page answers `layer` and an OCR'd page `ocr`.
          ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:
          `chain:undetermined` is `chain IS NULL` — the record holds NO chain, a
          different fact from a chain with no last step, so it stays on the
@@ -29765,7 +29787,8 @@ var MEANING = {
          report, which declines that index for exactly that reason. */
       text: { col: "text", fts: true }
     },
-    /* §4.2's row: the unit's extent and `ref`, its `chain_kind`, its
+    /* §4.2's row: the unit's extent and `ref`, its `chain_kind` (D-686: the
+       last step of this document's chain, not how any given page was read), its
        `truncated` flag. `seq` rides with them because a PARTIAL index is a
        PREFIX in reading order (`schema.mjs`) — without it a member cannot tell
        whether the passage they are reading sits before or after the point the
@@ -32366,6 +32389,7 @@ var safeJson = (s) => {
     return null;
   }
 };
+var unitTargetOf = (extent) => extent && (extent.kind === "pdf-page" || extent.kind === "image" && Number.isInteger(extent.page)) ? { page: extent.page, rect: extent.rect ?? null } : null;
 var Store = class _Store extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
@@ -32794,11 +32818,26 @@ var Store = class _Store extends DurableObject {
     };
     addColumns();
     {
-      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
-      if (have.length && !have.includes("chain_kind")) {
-        const stmt = bare.split(";").map((x) => x.trim()).find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
-        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
-        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      const info = [...this.sql.exec(`PRAGMA table_xinfo(content)`)];
+      const had = info.find((r) => r.name === "chain_kind");
+      const stmt = bare.split(";").map((x) => x.trim()).find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+      if (info.length && stmt && (!had || had.hidden)) {
+        if (had) {
+          const cols = info.filter((r) => !r.hidden && r.name !== "chain_kind").map((r) => r.name).join(",");
+          this.sql.exec(stmt.replace("CREATE TABLE IF NOT EXISTS content (", "CREATE TABLE content__d686 ("));
+          this.sql.exec(`INSERT INTO content__d686 (${cols}) SELECT ${cols} FROM content`);
+          this.sql.exec(`DROP TABLE content`);
+          this.sql.exec(`ALTER TABLE content__d686 RENAME TO content`);
+        } else {
+          const col = stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
+          if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+        }
+        for (const r of [...this.sql.exec(`SELECT content_id, chain, extent FROM content`)])
+          this.sql.exec(
+            `UPDATE content SET chain_kind=? WHERE content_id=?`,
+            chainKindFor(safeJson(r.chain), unitTargetOf(safeJson(r.extent))),
+            r.content_id
+          );
       }
     }
     for (const s of bare.split(";")) {
@@ -33958,7 +33997,7 @@ var Store = class _Store extends DurableObject {
            rather than only in the design, because a member reading this list is
            exactly the reader who would otherwise take an empty `content:` answer
            for an empty record (CONTENT-SEARCH-DESIGN.md sections 1 and 3). */
-        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
+        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by how the passage's page was read (D-686: the last step covering it), content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
         "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
         /* REC-121 / IC-131: the chain's THIRD answer, stated in the published grammar
@@ -49391,7 +49430,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  absence and not an error. */
   #writeCaptureText(bundleId, captureSha, units, chain2) {
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
-    const chainKind = terminalStep(chain2) || "layer";
+    const chainKind = chainKindFor(chain2) || "layer";
     const list = Array.isArray(units) ? units : [];
     const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0).map((u, i) => ({
       extent: u.extent,
@@ -50203,8 +50242,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.sql.exec(
         `INSERT OR IGNORE INTO content
            (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
-            page_count,minted_by,at,stale,cited_as)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)`,
+            page_count,minted_by,at,stale,cited_as,chain_kind)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
         id,
         captureSha,
         bundleId,
@@ -50219,14 +50258,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            undetermined and STATED, never "fine" — except on a `bytes` row,
            where it is `cited_as` speaking (above). An image cited as TEXT on a
            PDF page asks about its page and rectangle, like `pdf-page`. */
-        citedAs === "bytes" ? null : derivationCap(
-          chain2,
-          extent.kind === "pdf-page" || extent.kind === "image" && Number.isInteger(extent.page) ? { page: extent.page, rect: extent.rect ?? null } : null
-        ),
+        citedAs === "bytes" ? null : derivationCap(chain2, unitTargetOf(extent)),
         ctx.pageCount,
         mintedBy,
         at || (/* @__PURE__ */ new Date()).toISOString(),
-        citedAs
+        citedAs,
+        /* D-686: HOW THIS UNIT WAS READ -- the last derivation step covering its page, asked of the same
+           target as the cap. A bytes row's chain is NULL, so its kind is too, as it always was. */
+        chainKindFor(chain2, unitTargetOf(extent))
       );
     }
     const undetermined = mintUndetermined(extent, ctx);

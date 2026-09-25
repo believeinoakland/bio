@@ -13002,7 +13002,8 @@ function passageRowHtml(row, i){
     <div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(row.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${passageJumpHtml(row)}</div>
     ${snip ? `<div class="pass-snip" data-snippet="1" style="margin-top:8px">${esc(snip)}</div>` : ""}
     <div class="subj-ref" style="margin-top:6px">
-      ${row.chain_kind ? `read by <span class="mono">${esc(String(row.chain_kind))}</span> &middot; ` : ""}unit ${esc(String(row.seq))} in reading order${
+      ${/* D-686 (BOB #35): `capture_text.chain_kind` is DOCUMENT-level, so it is never worded as how THIS page was read. */
+        row.chain_kind ? `the document&rsquo;s chain ends in <span class="mono">${esc(String(row.chain_kind))}</span> (the last step of this document&rsquo;s chain, not how any given page was read) &middot; ` : ""}unit ${esc(String(row.seq))} in reading order${
         row.truncated ? ` &middot; <b>this unit&rsquo;s text was cut short</b> when the record indexed it, so words past that point are not searched and are not shown here` : ""}</div>
     ${row.content_id
       ? `<div class="subj-ref" data-minted="1">The record already holds a citable passage at this address &mdash; <span class="mono">${esc(String(row.content_id))}</span>. Citing it uses that one rather than making a second.</div>`

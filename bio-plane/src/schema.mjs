@@ -3357,7 +3357,7 @@ CREATE TABLE IF NOT EXISTS content (
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
   cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
-  chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL  -- REC-104. the LAST step kind of chain, derived by the engine and never written. See the index block below
+  chain_kind     TEXT               -- D-686. the kind of the last derivation step covering THIS unit's page, written at mint by chainKindFor. NULL = undetermined. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -3409,18 +3409,22 @@ CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bun
 -- DESIGN GAP against section 4.2, because section 4.1 gives capture_text a
 -- chain_kind COLUMN for the identical question. REC-104 gives content the same.
 --
--- IT IS A GENERATED COLUMN, AND THAT IS THE DECISION RATHER THAN A DETAIL. The
--- row asked that a stale chain_kind be impossible by construction or refused by
--- name, and a generated column is the first: the engine computes it from chain
--- in the same statement that writes chain, an INSERT or UPDATE that names it is
--- REFUSED by SQLite itself, and there is ONE definition of the last step in the
--- whole plane -- the expression on the column line above. A plain column written
--- by mintContent would have needed a second definition in JS, a backfill that is
--- a third, and a promise that no later writer forgets it. VIRTUAL rather than
--- STORED because SQLite cannot ADD a STORED column to an existing table, and a
--- fresh store and a migrated one must have the same shape (store.mjs #migrate
--- adds it to a table created before REC-104, reading THIS line to do so). The
--- index below stores the value, so the filter seeks it and parses nothing at read.
+-- D-686 (BOB #35, 2026-09-25 09:05Z) -- IT IS THE UNIT'S KIND, NOT THE DOCUMENT'S,
+-- AND SO IT IS NO LONGER A GENERATED COLUMN. REC-104 made it one over the whole
+-- chain's last step, and on a MIXED document that labelled every unit -- a
+-- text-layer page of a document OCR also touched -- as OCR'd. The extraction
+-- method is one of a content unit's two intrinsic facts (Content Framework Part
+-- II section 14.2), so the column now holds the kind of the last DERIVATION step
+-- covering the unit's page, and the question needs the step extents and the
+-- unit's page, which no SQL expression over this row can ask without becoming a
+-- second definition of textchain.mjs's partKeyOf / stepCovers. It is therefore a
+-- PLAIN column written by mintContent, and there is still ONE definition:
+-- textchain.mjs chainKindFor, which mintContent and the store.mjs #migrate
+-- recompute both call and nothing else computes. A row is never rewritten (the
+-- rule at the head of this block), so a value written at mint cannot go stale
+-- against its own chain. A store created before D-686 holds the generated column,
+-- #migrate drops it and recomputes every row -- the values are DERIVED from the
+-- chain, so recomputing them is not a rewrite of history (the ruling's words).
 --
 -- undetermined STAYS ON chain (chain IS NULL): it asks whether the record holds
 -- a chain AT ALL, which is not the same question as a chain with no last step.
@@ -3602,8 +3606,11 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- and searching mints nothing.
 --
 -- chain_kind IS A COLUMN AND NOT A PARSE, so "every OCR'd unit" is a predicate.
--- It holds the LAST step kind of the chain that produced this unit (layer, ocr,
--- member). Section 4.2 asks the identical question of the content table, whose
+-- It holds the last step of this document's chain, not how any given page was
+-- read (D-686, BOB #35 2026-09-25: KEPT document-level here, computed by the
+-- same textchain.mjs chainKindFor that gives content.chain_kind its per-unit
+-- value), so on a mixed document every unit reads the kind of the part the
+-- chain ends on (layer, ocr, typed). Section 4.2 asks the identical question of the content table, whose
 -- chain column holds the WHOLE chain as JSON, and that filter measured as the
 -- slowest on the table at M-23 -- so the column here is the same question
 -- answered the cheap way, and the difference is stated in SEARCH's own
@@ -3639,7 +3646,7 @@ CREATE TABLE IF NOT EXISTS capture_text (
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
   text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
   truncated    INTEGER NOT NULL DEFAULT 0,
-  chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
+  chain_kind   TEXT    NOT NULL,   -- D-686: the last step of this document's chain, not how any given page was read
   PRIMARY KEY (capture_sha, extent_kind, extent)
 );
 -- By BUNDLE: the join every arm makes, and purge's per-bundle arm.

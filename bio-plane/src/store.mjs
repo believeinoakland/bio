@@ -382,7 +382,7 @@ import { checkConsume } from "./airun.mjs";
    the reason nothing below re-derives any of it. */
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
          terminalStep, describeChain, gradeCeiling, STEP_KINDS,
-         calibrationsOf,
+         calibrationsOf, chainKindFor,
          /* REC-94: WHICH TIERS A CHAIN EVIDENCES, read off the step kinds' own
             declared tier. It lives in `textchain.mjs` because it is a question
             about a chain and a chain has ONE home -- the same boundary the
@@ -841,6 +841,13 @@ const isHttpsPublic = (u) => isPublicHttpsLocator(u);
    answer at all, and a null that a caller can see is a better finding than a
    500 nobody can attribute. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+
+/* D-686 -- WHAT A CONTENT UNIT IS ASKED ABOUT: its page, when it has one (a `pdf-page`, or an `image` on a
+   PDF page), else the whole document. ONE answer, read by `derivationCap` and `chainKindFor` at mint and by
+   `#migrate`'s recompute, so a unit's cap and its kind are asked of the same page. */
+const unitTargetOf = (extent) =>
+  extent && (extent.kind === "pdf-page" || (extent.kind === "image" && Number.isInteger(extent.page)))
+    ? { page: extent.page, rect: extent.rect ?? null } : null;
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
@@ -1366,32 +1373,55 @@ export class Store extends DurableObject {
     };
     addColumns();
 
-    /* REC-104: `content.chain_kind`, a GENERATED column (schema.mjs says why), added
-       to a `content` table created before it existed. THREE THINGS ABOUT THIS BLOCK
-       ARE LOAD-BEARING AND NONE IS STYLE.
+    /* REC-104: `content.chain_kind` -- and D-686 (BOB #35, 2026-09-25 09:05Z), which changed what it is.
+       REC-104 made it a GENERATED column over the whole chain's last step; D-686 makes it the kind of the
+       last derivation step covering the UNIT's page, a PLAIN column written at mint by `chainKindFor`
+       (schema.mjs says why). A store may hold either earlier shape, and this block brings both to the
+       current one. FOUR THINGS ARE LOAD-BEARING AND NONE IS STYLE.
        (1) IT RUNS BEFORE THE SCHEMA, not in the additive ALTER list further down,
            because the schema's CREATE INDEX on the column would otherwise hit the
            OLD table and throw inside blockConcurrencyWhile — the failure the DROP
            loop above records, which bricks the Durable Object rather than failing
            a request.
        (2) IT READS `table_xinfo`, NOT `table_info`. A generated column is HIDDEN
-           from `table_info`, which is what every other additive migration here
-           reads — so that spelling would never see the column it had added and
-           would re-ALTER on every boot, which SQLite refuses as a duplicate.
-       (3) THE COLUMN'S DEFINITION IS READ OUT OF THE SCHEMA TEXT, never restated.
-           A fresh store gets the column from CREATE TABLE and a migrated one from
-           this ALTER; a second copy of the expression here would be two
-           definitions of one column that could disagree, which is the exact
-           drift the generated column was chosen to make impossible.
-       No backfill: the engine computes the value for every existing row. */
+           from `table_info`, so that spelling would never see REC-104's column and
+           would ALTER on every boot, which SQLite refuses as a duplicate. `hidden`
+           is what tells the generated column (2 or 3) from the plain one (0).
+       (3) THE COLUMN'S DEFINITION IS READ OUT OF THE SCHEMA TEXT, never restated -- the column line
+           for an ADD, the whole table statement for the rebuild -- so a fresh store and a migrated one
+           cannot differ in its declaration.
+       (4) THE RECOMPUTE CALLS `chainKindFor` THROUGH `unitTargetOf`, exactly as `mintContent`
+           does, so there is no second computation of the value. It runs ONCE, on the boot that
+           converts the column, and never again: the values are DERIVED from each row's own chain
+           (which never moves), so recomputing them is not a rewrite of history. */
     {
-      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
-      if (have.length && !have.includes("chain_kind")) {
-        const stmt = bare.split(";").map((x) => x.trim())
-          .find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
-        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim())
-          .find((l) => /^chain_kind\s/.test(l));
-        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      const info = [...this.sql.exec(`PRAGMA table_xinfo(content)`)];
+      const had = info.find((r) => r.name === "chain_kind");
+      const stmt = bare.split(";").map((x) => x.trim())
+        .find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+      if (info.length && stmt && (!had || had.hidden)) {
+        if (had) {
+          /* REC-104's GENERATED column is REPLACED BY A REBUILD, NOT `DROP COLUMN`. MEASURED inside workerd
+             (content-chain-kind.test.mjs 2b): its SQLite rewrites the stored CREATE TABLE text to drop the
+             table's LAST column through the closing paren, which then sits inside that line's trailing `--`
+             comment, and the schema no longer parses ("error in table content after drop column: incomplete
+             input") -- the Durable Object bricks. So: the table as the schema declares it today, every row
+             copied by the columns both shapes hold, the old one dropped and the new one renamed into place.
+             Nothing references `content` by key, no trigger sits on it, and its indexes go with the old
+             table and are re-created by the schema pass below. */
+          const cols = info.filter((r) => !r.hidden && r.name !== "chain_kind").map((r) => r.name).join(",");
+          this.sql.exec(stmt.replace("CREATE TABLE IF NOT EXISTS content (", "CREATE TABLE content__d686 ("));
+          this.sql.exec(`INSERT INTO content__d686 (${cols}) SELECT ${cols} FROM content`);
+          this.sql.exec(`DROP TABLE content`);
+          this.sql.exec(`ALTER TABLE content__d686 RENAME TO content`);
+        } else {
+          const col = stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim())
+            .find((l) => /^chain_kind\s/.test(l));
+          if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+        }
+        for (const r of [...this.sql.exec(`SELECT content_id, chain, extent FROM content`)])
+          this.sql.exec(`UPDATE content SET chain_kind=? WHERE content_id=?`,
+            chainKindFor(safeJson(r.chain), unitTargetOf(safeJson(r.extent))), r.content_id);
       }
     }
 
@@ -2871,7 +2901,7 @@ export class Store extends DurableObject {
            for an empty record (CONTENT-SEARCH-DESIGN.md sections 1 and 3). */
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
         + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
-        + "record has replaced, content:machine by who minted it, content:ocr by the chain's last step, "
+        + "record has replaced, content:machine by who minted it, content:ocr by how the passage's page was read (D-686: the last step covering it), "
         + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked "
         + "citable in them, so an empty answer is a fact about citation and never about what a document says",
@@ -19943,7 +19973,10 @@ export class Store extends DurableObject {
        delete inside a `units.length` branch is how it would be lost. */
     this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
 
-    const chainKind = terminalStep(chain) || "layer";
+    /* D-686: KEPT DOCUMENT-LEVEL (BOB #35) -- the last step of this document's chain, not how any given
+       page was read -- and computed by the SAME function that gives `content.chain_kind` its per-unit
+       value, asked about no page. */
+    const chainKind = chainKindFor(chain) || "layer";
     const list = Array.isArray(units) ? units : [];
     /* READING ORDER IS THE RECORD'S, NOT THE CALLER'S. `provenance.json` is a
        document a caller can AUTHOR, so the order the units are indexed in is
@@ -20868,8 +20901,8 @@ export class Store extends DurableObject {
       this.sql.exec(
         `INSERT OR IGNORE INTO content
            (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
-            page_count,minted_by,at,stale,cited_as)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)`,
+            page_count,minted_by,at,stale,cited_as,chain_kind)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
         id, captureSha, bundleId, extent.kind, canonicalExtent(extent), describeExtent(extent),
         chain == null ? null : JSON.stringify(chain),
         /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document — D-252's
@@ -20879,11 +20912,11 @@ export class Store extends DurableObject {
            undetermined and STATED, never "fine" — except on a `bytes` row,
            where it is `cited_as` speaking (above). An image cited as TEXT on a
            PDF page asks about its page and rectangle, like `pdf-page`. */
-        citedAs === "bytes" ? null
-          : derivationCap(chain,
-              extent.kind === "pdf-page" || (extent.kind === "image" && Number.isInteger(extent.page))
-                ? { page: extent.page, rect: extent.rect ?? null } : null),
-        ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs);
+        citedAs === "bytes" ? null : derivationCap(chain, unitTargetOf(extent)),
+        ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs,
+        /* D-686: HOW THIS UNIT WAS READ -- the last derivation step covering its page, asked of the same
+           target as the cap. A bytes row's chain is NULL, so its kind is too, as it always was. */
+        chainKindFor(chain, unitTargetOf(extent)));
     }
     /* D-440 / D-420 / CPDF-22: AN IMAGE ADMITTED WITHOUT THE BOUND IT WOULD BE
        CHECKED AGAINST SAYS SO, in ONE shape (BOB #31). A `{part}` on an office

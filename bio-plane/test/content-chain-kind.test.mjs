@@ -1,33 +1,31 @@
-/* NEGATIVE CONTROL: the arms live in `test/nc-rec104.mjs` and are re-run in one step with `node test/nc-rec104.mjs [arm]` from `bio-plane/`; that harness drives THIS suite and `content-arm.test.mjs` together, because the construct is proved in two places (here: the engine and the migration; there: the committed fixture through the op). Each arm edits ONE real source, is armed ALONE, and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content, with a byte count printed and a minimum guarded (never `git checkout --`). Run 2026-09-18 by the REC-104 worker, every arm AS DECLARED on the final tree, every restore byte-identical: (a) `baseline` — nothing armed -> both suites green (content-arm 110/0, this suite 28/0). (b) `baseline2` — nothing armed again -> the section-11 answer digest is IDENTICAL across two untouched runs (the A/A arm). (c) `firststep` — the generated column reads `$[0]` instead of `$[#-1]` -> content-arm's `chain_last` witness and `content:ocr` FAIL by name, and this suite's legacy-row and follow-the-chain assertions FAIL; `content:layer` stays green (a one-step chain's first step is its last). (d) `nowriter` — `chain_kind` becomes a plain column nobody writes -> every chain filter FAILS and the engine-refusal assertion FAILS, because a plain column accepts the write. (e) `parseback` — `chain_last` goes back to parsing the blob -> ONLY the two structural pins in section 1 FAIL; every behavioural assertion stays green, which is why the pins exist. (f) `nomigrate` — the #migrate block disabled -> the reboot-adds-the-column assertion and every legacy through-op assertion FAIL by name. (g) `xinfo` — the guard reads `table_info` -> the SECOND-boot assertion FAILS while the first boot's stay green. (h) `preitem` — the three plane sources as at the base commit -> the column assertions FAIL and content-arm's section-11 digest is IDENTICAL to (a)'s, the over-strictness arm the row names; run at base 92f4c64e (33 questions) and again after rebasing onto 694f0a7f, which `PRE_ITEM` now pins (38 questions, FW-19 having added extent kinds), IDENTICAL both times. FIRST RUN, RECORDED RATHER THAN SMOOTHED: (f) and (g) came back NOT AS DECLARED — the Durable Object bricked exactly as declared, but this suite's helpers threw on the non-JSON error page and ended with no tally; responses are now parsed as text so the failure is NAMED. */
-/* REC-104 / CONTENT-SEARCH-DESIGN.md §4.2 — `content.chain_kind`: THE `chain` FILTER
- * ANSWERS OFF A COLUMN, AND THE COLUMN CANNOT GO STALE.
+/* NEGATIVE CONTROL: two harnesses drive this suite, each run from `bio-plane/` in one step. D-686's arms live in `test/nc-d686.mjs` (`node test/nc-d686.mjs [arm]`), declared there before arming, each edits ONE real source ALONE and is restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content with a byte count floored: (a) `baseline` — nothing armed -> green. (b) `generated` — THE ROW'S OWN ARM: `schema.mjs` and `store.mjs` as they stood at D-686's base (d31c52bf, the generated whole-chain column) -> section 3's "a TEXT-LAYER page's unit reads `layer`" FAILS BY NAME, and the pure-function section 1b stays green. (c) `wholechain` — `chainKindFor` ignores the page -> the text-layer-page arms of 1b, 2b and 3 FAIL by name and every OCR-page and document-level arm stays green. (d) `nowrite` — `mintContent` stops writing the column -> section 3's minted rows read NULL and FAIL by name. (e) `nomigrate` — the recompute loop removed -> section 2b's recomputed-row assertions FAIL. (f) `xinfo` — the guard reads `table_info` -> section 2b's migration of a REC-104 store FAILS by name (the generated column is hidden from `table_info`, so the ALTER duplicates it and the Durable Object bricks). (g) `overstrict` — `chainKindFor` rewritten as a forward scan keeping the last covering step, a different correct spelling -> MUST PASS. RUN 2026-09-25 by D-686's worker on the final sources: EVERY ARM AS DECLARED, every restore byte-identical by sha256 and content (figures at the foot of `nc-d686.mjs`). Under (c) the undetermined arms of 1b also fail (a page-blind function has no page to leave uncovered), which the declaration did not name and is recorded here rather than smoothed. REC-104's surviving arms (`baseline`, `baseline2`, `parseback`, `preitem`) stay in `test/nc-rec104.mjs`; its `firststep` and `nowriter` arms were SUPERSEDED by D-686 (they broke a generated column that no longer exists) and are carried by (b) and (d) here. */
+/* REC-104 / CONTENT-SEARCH-DESIGN.md §4.2, AND D-686 (BOB #35, 2026-09-25 09:05Z) — `content.chain_kind`:
+ * THE `chain` FILTER ANSWERS OFF A COLUMN, AND THE COLUMN SAYS HOW THE UNIT WAS READ.
  *
- * `content-arm.test.mjs` owns the FILTER'S ANSWERS on its committed fixture, and
- * this item changed how those answers are produced and never which rows produce
- * them — so that suite's assertions are the over-strictness arm and they are not
- * restated here. THIS suite owns the three properties the fixture cannot reach:
+ * `content-arm.test.mjs` owns the FILTER'S ANSWERS on its committed fixture (no mixed document, so D-686
+ * moves none of them) — its assertions are the over-strictness arm and are not restated here. THIS suite
+ * owns what the fixture cannot reach:
  *
- *   1. THE COLUMN IS THE ENGINE'S AND NOBODY ELSE'S. `chain_kind` is a GENERATED
- *      column over `chain`, so a stale value is impossible BY CONSTRUCTION rather
- *      than by a writer remembering to write it. That is a claim about SQLite
- *      and it is DRIVEN inside workerd, the plane's own engine, not argued: an
- *      INSERT that names the column is REFUSED by the engine, and an UPDATE that
- *      moves the chain moves the kind with it in the same statement.
+ *   1. THE PARSE IS RETIRED, NOT KEPT BESIDE. The compiled statement carries no JSON parse of the chain,
+ *      and its plan inside workerd SEEKS the index rather than scanning the table.
+ *   1b. THE ONE FUNCTION. `textchain.mjs` `chainKindFor` answers a page by the last derivation step
+ *      covering it, and the document by the chain's last derivation step.
+ *   2. A STORE CREATED BEFORE REC-104 MIGRATES: the column is added, plain, and every row recomputed.
+ *   2b. A STORE CREATED BEFORE D-686 MIGRATES: REC-104's GENERATED whole-chain column is dropped, re-added
+ *      plain, and every row RECOMPUTED per unit — a derived value, so not a rewrite of history — ONCE.
+ *   3. ON A MIXED DOCUMENT, THROUGH THE OP: a text-layer page's unit reads `layer`, an OCR'd page's reads
+ *      `ocr` (D-686's accepts-when), on a partitioned chain and on D-635's overlapping parts.
  *
- *   2. A STORE CREATED BEFORE THIS ITEM MIGRATES. A store booted on the pre-item
- *      schema, holding content rows, is rebooted on the current one; the rows it
- *      already held answer the filter, and a SECOND boot does not re-add the
- *      column (a generated column is HIDDEN from `PRAGMA table_info`, which is
- *      what every other additive migration in `#migrate` reads — reading it here
- *      would re-ALTER on every boot and brick the Durable Object).
+ * CORRECTED BY D-686, NOT EXEMPTED: this suite asserted that the column was GENERATED — that an INSERT
+ * naming it was refused by the engine and an UPDATE of `chain` moved it. That was right for REC-104's
+ * definition (the whole chain's last step, which an SQL expression over the row can compute) and became
+ * wrong when BOB #35 ruled the column is the UNIT's kind: that needs the steps' extents and the unit's
+ * page, which only `chainKindFor` computes, so the column is plain and written at mint. What REC-104's
+ * engine guarantee protected — one definition, no stale value — is now section 1b's one function and
+ * the rule that a content row is never rewritten.
  *
- *   3. THE PARSE IS RETIRED, NOT KEPT BESIDE. The compiled statement carries no
- *      JSON parse of the chain, and its plan inside workerd SEEKS the index
- *      rather than scanning the table.
- *
- * WHAT THIS SUITE DOES NOT CLAIM: the size of the improvement. That is
- * `test/content-index-probe.mjs` at two corpus sizes, recorded in
- * `MEASUREMENTS.md`, because a battery is no place to time anything.
+ * WHAT THIS SUITE DOES NOT CLAIM: the size of the improvement. That is `test/content-index-probe.mjs`,
+ * recorded in `MEASUREMENTS.md`, because a battery is no place to time anything.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -37,6 +35,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { compile, MEANING } from "../src/query.mjs";
 import { SCHEMA } from "../src/schema.mjs";
+import { chainKindFor, mergedChain } from "../src/textchain.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
@@ -63,8 +62,18 @@ const OLD_CONTENT = NEW_CONTENT
 const OLD_SCHEMA = SCHEMA.replace(NEW_CONTENT, OLD_CONTENT)
   .replace(/CREATE INDEX IF NOT EXISTS content_chain_kind ON[^\n]*\n/, "");
 
+/* D-686 — THE PRE-D-686 SCHEMA: REC-104's GENERATED whole-chain column in place of today's plain one.
+   The expression is TYPED here because it is history — REC-104's definition, which the current source no
+   longer holds anywhere — and it is asserted to replace exactly the one column line. */
+const REC104_COLUMN = "  chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL";
+const GEN_SCHEMA = SCHEMA.replace(/\n[ \t]*chain_kind[ \t]+TEXT[ \t]*--[^\n]*/, `\n${REC104_COLUMN}`);
+
 console.log("\n--- 0. the fixture: a pre-item schema, derived rather than typed ---");
-t("ARMED: the current content table declares chain_kind", /\n\s*chain_kind\s/.test(NEW_CONTENT), true);
+t("ARMED: the current content table declares chain_kind as a PLAIN column (D-686)",
+  /\n\s*chain_kind\s+TEXT\s*--/.test(NEW_CONTENT) && !/GENERATED/.test(NEW_CONTENT), true);
+t("ARMED: the derived REC-104 schema differs from today's by exactly the one column line",
+  [GEN_SCHEMA !== SCHEMA, /GENERATED ALWAYS AS/.test(contentStmt(GEN_SCHEMA)),
+   GEN_SCHEMA.split("\n").filter((l, i) => l !== SCHEMA.split("\n")[i]).length], [true, true, 1]);
 t("ARMED: the derived OLD content table does not, and still ends on a well-formed column list",
   [/chain_kind/.test(OLD_CONTENT), /,\s*(--[^\n]*)?\n\);$/.test(OLD_CONTENT)], [false, false]);
 t("ARMED: the derived OLD schema carries no chain_kind index", /content_chain_kind/.test(OLD_SCHEMA), false);
@@ -123,6 +132,40 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
     /chain_last:\s*`CASE WHEN m\.cited_as = '\$\{CONTENT_CITED_AS_BYTES\}' THEN '\$\{CHAIN_DOES_NOT_APPLY\}' `\s*\+\s*`ELSE m\.chain_kind END`/.test(QUERY_SRC), true);
 }
 
+/* ==================================================================== 1b
+ * D-686 — THE ONE FUNCTION, driven directly. The chains are built by `mergedChain`, the product's own
+ * builder, never typed, so they are the shapes the record actually holds.
+ * ================================================================== */
+console.log("\n--- 1b. chainKindFor: the last derivation step covering the unit's page ---");
+const LAYER = [{ step: "layer" }];
+const OCR = [{ step: "pixels" },
+             { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
+/* A mixed document whose parts PARTITION the pages (D-252): the text layer on 0-1, OCR on 2. */
+const MIXED = mergedChain([{ chain: LAYER, pages: [0, 1] }, { chain: OCR, pages: [2] }]);
+/* D-635's OVERLAP: page 2's folio decoded from the layer AND its transcription appended, so page 2 is in
+   BOTH parts and each part carries its index. */
+const OVERLAP = mergedChain([{ chain: LAYER, pages: [0, 1, 2] }, { chain: OCR, pages: [2] }]);
+t("ARMED: both chains are real mergedChain output — scoped, and the overlap carries part indices",
+  [Array.isArray(MIXED) && MIXED.every((x) => x.extent?.kind === "pages"),
+   Array.isArray(OVERLAP) && OVERLAP.map((x) => x.extent?.part)], [true, [0, 1, 1]]);
+t("a TEXT-LAYER page of a mixed document reads `layer` — the defect D-686 closes",
+  [chainKindFor(MIXED, { page: 0 }), chainKindFor(MIXED, { page: 1 })], ["layer", "layer"]);
+t("the OCR'd page of the same document reads `ocr`", chainKindFor(MIXED, { page: 2 }), "ocr");
+t("a page two parts share answers the part appended LAST (D-635), and its other pages their layer",
+  [chainKindFor(OVERLAP, { page: 2 }), chainKindFor(OVERLAP, { page: 0 })], ["ocr", "layer"]);
+t("the DOCUMENT is asked about no page and answers the chain's last derivation step — capture_text's fact",
+  [chainKindFor(MIXED), chainKindFor(OVERLAP), chainKindFor(LAYER), chainKindFor(OCR)],
+  ["ocr", "ocr", "layer", "ocr"]);
+t("an UNSCOPED chain answers every page alike, so a one-provenance document reads as it always did",
+  [chainKindFor(OCR, { page: 7 }), chainKindFor(LAYER, { page: 0 })], ["ocr", "layer"]);
+t("UNDETERMINED, stated as null: a page no step covers, a step of no known kind, no chain",
+  [chainKindFor(MIXED, { page: 9 }), chainKindFor([{ step: "nope" }], { page: 0 }), chainKindFor(null)],
+  [null, null, null]);
+t("an extent this module cannot read, met before a covering step, could cover the page: undetermined",
+  chainKindFor([{ step: "layer", extent: { kind: "pages", pages: [0] } },
+                { step: "ocr", engine: "t", version: "1", confidence: { basis: "none" }, extent: { kind: "rows" } }],
+               { page: 0 }), null);
+
 /* ==================================================================== 2
  * THE MIGRATION, AND THE ENGINE'S OWN GUARANTEE, INSIDE WORKERD.
  * ================================================================== */
@@ -157,7 +200,7 @@ const opts = (schema) => ({
   bindings: { ADMIN_TOKEN: "adm-r104", MEMBER_TOKEN: "mem-r104", PROBE_TOKEN: "prb-r104",
               AI_TOKEN: "ai-r104", VERSION: "test", ...(schema ? { SCHEMA: schema } : {}) },
 });
-const mf = new Miniflare(opts(OLD_SCHEMA));
+let mf = new Miniflare(opts(OLD_SCHEMA));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 /* A RESPONSE THAT IS NOT JSON IS AN ANSWER, NOT A CRASH. A Durable Object whose
    #migrate threw inside blockConcurrencyWhile answers every request with an error
@@ -209,7 +252,7 @@ const INS = `INSERT INTO content (content_id,capture_sha,bundle_id,extent_kind,e
                derivation_cap,page_count,minted_by,at,stale) VALUES (?,?,?,?,?,?,?,?,?,?,?,0)`;
 const chainOf = (...steps) => JSON.stringify(steps.map((s) => ({ step: s })));
 
-console.log("\n--- 2. a store created BEFORE this item migrates, and its rows answer ---");
+console.log("\n--- 2. a store created BEFORE REC-104 migrates, and its rows answer ---");
 const DOC_OCR = "INFO-2026-9104-ocr", DOC_LAYER = "INFO-2026-9104-layer", DOC_BARE = "INFO-2026-9104-bare";
 await promoteInfo(DOC_OCR); await promoteInfo(DOC_LAYER); await promoteInfo(DOC_BARE);
 const before = await xinfo();
@@ -218,7 +261,7 @@ t("ARMED: the store booted on the pre-item schema has a content table WITHOUT ch
 for (const [id, doc, chain] of [["c-ocr", DOC_OCR, chainOf("pixels", "ocr")],
                                 ["c-layer", DOC_LAYER, chainOf("layer")],
                                 ["c-bare", DOC_BARE, null]]) {
-  const w = await raw(INS, id, "sha-" + id, doc, "document", "{}", "the whole document", chain,
+  const w = await raw(INS, id, "sha-" + id, doc, "document", '{"kind":"document"}', "the whole document", chain,
                       null, null, "plane", NOW);
   if (!w.ok) throw new Error(`legacy insert ${id}: ${w.error}`);
 }
@@ -228,11 +271,14 @@ t("ARMED: three legacy rows are held, one per answer the filter can give",
 await mf.setOptions(opts(null));            // same storage, the CURRENT schema
 const after = await xinfo();
 t("the reboot ADDS the column to the existing table", after.includes("chain_kind"), true);
-t("and adds it as a GENERATED column — hidden from table_info, which is why #migrate must read table_xinfo",
+/* CORRECTED BY D-686, NOT EXEMPTED: this asserted the column arrived GENERATED (hidden from
+   `table_info`). D-686 makes it a plain column written at mint, so it arrives visible, and the
+   rows' values are written by the recompute rather than by the engine. */
+t("and adds it as a PLAIN column (D-686) — visible to table_info, `hidden` 0 in table_xinfo",
   [((await raw("PRAGMA table_info(content)")).rows || []).some((r) => r.name === "chain_kind"),
-   ((await raw("PRAGMA table_xinfo(content)")).rows || []).find((r) => r.name === "chain_kind")?.hidden > 0],
-  [false, true]);
-t("the rows the store ALREADY HELD carry their last step, with no backfill anyone wrote",
+   ((await raw("PRAGMA table_xinfo(content)")).rows || []).find((r) => r.name === "chain_kind")?.hidden],
+  [true, 0]);
+t("the rows the store ALREADY HELD carry their kind, recomputed by chainKindFor",
   ((await raw("SELECT content_id, chain_kind FROM content ORDER BY content_id")).rows || [])
     .map((r) => `${r.content_id}=${r.chain_kind}`),
   ["c-bare=null", "c-layer=layer", "c-ocr=ocr"]);
@@ -247,35 +293,118 @@ t("THROUGH THE OP: `rows=content` publishes `chain_last` off the column for lega
 await mf.setOptions(opts(null));            // a SECOND boot on the current schema
 t("a SECOND boot does not re-add it — the op still answers, so #migrate did not throw on a duplicate column",
   [await ids("content:ocr"), (await xinfo()).filter((n) => n === "chain_kind").length], [[DOC_OCR], 1]);
+await mf.dispose();
 
-console.log("\n--- 3. a stale chain_kind is impossible BY CONSTRUCTION, driven in workerd ---");
+/* ==================================================================== 2b
+ * D-686 — A STORE CREATED UNDER REC-104'S GENERATED COLUMN, holding a MIXED document's rows.
+ * ================================================================== */
+console.log("\n--- 2b. a store created BEFORE D-686 (REC-104's generated column) migrates, per unit ---");
+mf = new Miniflare(opts(GEN_SCHEMA));
+const DOC_MIX_OLD = "INFO-2026-9686-mixed-legacy";
+await promoteInfo(DOC_MIX_OLD);
+const genCol = ((await raw("PRAGMA table_xinfo(content)")).rows || []).find((r) => r.name === "chain_kind");
+t("ARMED: the store booted on REC-104's schema holds chain_kind as a GENERATED column", (genCol?.hidden ?? 0) > 0, true);
+const LEGACY = [["m-page0", '{"kind":"pdf-page","page":0,"rect":null}', "page 1"],
+                ["m-page2", '{"kind":"pdf-page","page":2,"rect":null}', "page 3"],
+                ["m-doc", '{"kind":"document"}', "the whole document"]];
+for (const [id, extent, ref] of LEGACY) {
+  const w = await raw(INS, id, "sha-mixed-legacy", DOC_MIX_OLD, JSON.parse(extent).kind, extent, ref,
+                      JSON.stringify(MIXED), null, 3, "plane", NOW);
+  if (!w.ok) throw new Error(`legacy insert ${id}: ${w.error}`);
+}
+const kinds = async () => ((await raw("SELECT content_id, chain_kind FROM content ORDER BY content_id")).rows || [])
+  .map((r) => `${r.content_id}=${r.chain_kind}`);
+t("ARMED: under REC-104 the TEXT-LAYER page's unit reads `ocr` — the defect, present before the migration",
+  await kinds(), ["m-doc=ocr", "m-page0=ocr", "m-page2=ocr"]);
+
+await mf.setOptions(opts(null));            // same storage, the CURRENT schema
+
+const plain = ((await raw("PRAGMA table_xinfo(content)")).rows || []).filter((r) => r.name === "chain_kind");
+t("the reboot REPLACES the generated column with a plain one — one column, `hidden` 0",
+  plain.map((r) => r.hidden), [0]);
+t("every row is RECOMPUTED per unit: the text-layer page reads `layer`, the OCR'd page `ocr`, the document its last step",
+  await kinds(), ["m-doc=ocr", "m-page0=layer", "m-page2=ocr"]);
+t("and the index the filter seeks is back on the new column",
+  ((await raw("SELECT name FROM sqlite_master WHERE type='index' AND name='content_chain_kind'")).rows || []).length, 1);
+t("THROUGH THE OP: `content:layer` now names the mixed document, by its text-layer page",
+  await ids("content:layer"), [DOC_MIX_OLD]);
+/* THE RECOMPUTE RUNS ONCE. A sentinel written after the migration must survive a second boot: a
+   recompute on every boot would be a full-table rewrite per cold start, and the guard (`hidden`) is
+   what prevents it. */
+await raw("UPDATE content SET chain_kind='typed' WHERE content_id='m-doc'");
+await mf.setOptions(opts(null));
+t("a SECOND boot does not recompute — the converted store is left as it is",
+  await kinds(), ["m-doc=typed", "m-page0=layer", "m-page2=ocr"]);
+await mf.dispose();
+
+/* ==================================================================== 3
+ * D-686's ACCEPTS-WHEN, THROUGH THE OP, on a store created today.
+ * ================================================================== */
+console.log("\n--- 3. on a mixed document, through the op: each unit says how IT was read ---");
+mf = new Miniflare(opts(null));
+const memberSession = async (id) => {
+  const add = await post("memberadd", { memberId: id, cover: `cover for ${id}`, role: "admin",
+                                        capabilities: ["contribute"] }, "adm-r104");
+  const en = await post("enroll", { invite: add.invite, handle: id, password: `${id}-passphrase-1` });
+  if (!en.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en).slice(0, 300)}`);
+  const lg = await post("login", { role: `member:${id}`, password: `${id}-passphrase-1` });
+  if (!lg.token) throw new Error(`login ${id}: ${JSON.stringify(lg).slice(0, 300)}`);
+  return lg.token;
+};
+const MINA = await memberSession("mina");
+const promoteRead = async (id, captureSha, chain) => {
+  const text = infoMd(id);
+  const prov = JSON.stringify({ documents: [{
+    capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW,
+               entities: [], facts: {}, text_source: chain } }] });
+  const r = await post("promote", {
+    bundleId: id, base: null,
+    snapKey: `20260925T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+            current_state: "collected", created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+    register: [{ path: `snapshots/${id}.bin`, sha256: captureSha, encoding: "binary", bytes: 10 }] });
+  if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 500)}`);
+};
+const DOC_MIX = "INFO-2026-9686-mixed", DOC_OVER = "INFO-2026-9686-overlap";
+await promoteRead(DOC_MIX, sha("d686-mixed-bytes"), MIXED);
+await promoteRead(DOC_OVER, sha("d686-overlap-bytes"), OVERLAP);
+const minted = {};
+for (const [doc, tag] of [[DOC_MIX, "mix"], [DOC_OVER, "over"]])
+  for (const [extent, name] of [[{ kind: "pdf-page", page: 0 }, "page0"], [{ kind: "pdf-page", page: 2 }, "page2"],
+                                [{ kind: "document" }, "doc"]]) {
+    const m = await post("contentmint", { bundleId: doc, extent }, MINA);
+    if (!m.ok) throw new Error(`contentmint ${tag}.${name}: ${JSON.stringify(m).slice(0, 400)}`);
+    minted[m.content_id] = `${tag}.${name}`;
+  }
+t("ARMED: six units minted through `op=contentmint`, three on each mixed document", Object.keys(minted).length, 6);
+const labelled = async (q) => (await rowsOf(q)).filter((r) => minted[r.content_id])
+  .map((r) => `${minted[r.content_id]}=${r.chain_last}`).sort();
+const LABELS = await labelled("has:content");
+console.log(`    units: ${LABELS.join(" · ")}`);
+t("a TEXT-LAYER page's unit reads `layer` on a partitioned mixed document (D-686's accepts-when)",
+  LABELS.filter((x) => x.startsWith("mix.page0")), ["mix.page0=layer"]);
+t("and on D-635's overlapping parts, a page only the layer read reads `layer`",
+  LABELS.filter((x) => x.startsWith("over.page0")), ["over.page0=layer"]);
+t("an OCR'd page's unit reads `ocr`, and so does the page both parts read (the part appended last)",
+  LABELS.filter((x) => /page2/.test(x)), ["mix.page2=ocr", "over.page2=ocr"]);
+t("the whole-document unit reads the chain's last derivation step — the document-level fact",
+  LABELS.filter((x) => /\.doc=/.test(x)), ["mix.doc=ocr", "over.doc=ocr"]);
+t("THROUGH THE SEARCH: `content:layer` and `content:ocr` BOTH name each mixed document",
+  [await ids("content:layer"), await ids("content:ocr")],
+  [[DOC_MIX, DOC_OVER].sort(), [DOC_MIX, DOC_OVER].sort()]);
+/* The cap and the kind are asked of ONE target (`unitTargetOf`), so they cannot describe different
+   pages: a text-layer page is undetermined (its layer is unmeasured), the OCR-only page is the engine's C. */
+const caps = (await rowsOf("has:content")).filter((r) => minted[r.content_id] && minted[r.content_id].startsWith("mix."))
+  .map((r) => `${minted[r.content_id]}=${r.derivation_cap}`).sort();
+t("and the unit's cap is asked of the same page as its kind",
+  caps, ["mix.doc=null", "mix.page0=null", "mix.page2=C"]);
+
+/* THE PLAN, on workerd's engine, for the statement a member actually produces — compiled here and not
+   typed. A seek on the index is the evidence the question is answered off the column. */
 {
-  /* THE ENGINE REFUSES A WRITE, which is the half that makes "a writer forgot"
-     unrepresentable rather than merely unlikely. The refusal is SQLite's and it
-     is read back verbatim rather than paraphrased. */
-  const w = await raw(`INSERT INTO content (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,
-                         minted_by,at,stale,chain_kind) VALUES (?,?,?,?,?,?,?,?,?,0,?)`,
-                      "c-lie", "sha-lie", DOC_OCR, "document", "{}", "x", chainOf("pixels", "ocr"),
-                      "plane", NOW, "layer");
-  t("an INSERT that NAMES chain_kind is refused by the engine itself", w.ok, false);
-  t("and the refusal says why, in SQLite's words", /generated column/i.test(w.error || ""), true);
-  t("and no row was written by the refused statement",
-    (await raw("SELECT count(*) AS n FROM content WHERE content_id='c-lie'")).rows?.[0]?.n, 0);
-  /* AN UPDATE THAT MOVES THE CHAIN MOVES THE KIND IN THE SAME STATEMENT. Content
-     rows are never rewritten (REC-82: a better engine makes a row STALE, it does
-     not rewrite it), so no product path does this — which is exactly why it is
-     driven here: it is the one way a stored copy could drift, and it cannot. */
-  const u = await raw("UPDATE content SET chain=? WHERE content_id='c-ocr'", chainOf("pixels", "ocr", "ai"));
-  t("ARMED: the chain of the OCR'd row was moved", u.ok, true);
-  t("and chain_kind followed it with no second write", (await raw(
-    "SELECT chain_kind FROM content WHERE content_id='c-ocr'")).rows?.[0]?.chain_kind, "ai");
-  t("THROUGH THE OP: the filter follows too — the row answers its NEW last step and not its old one",
-    [await ids("content:chain=ai"), await ids("content:ocr")], [[DOC_OCR], []]);
-  await raw("UPDATE content SET chain=? WHERE content_id='c-ocr'", chainOf("pixels", "ocr"));
-
-  /* THE PLAN, on workerd's engine, for the statement a member actually produces —
-     compiled here and not typed. A seek on the index is the evidence the question
-     is answered off the column; the milliseconds are the probe's. */
   const st = compile({ q: "content:ocr", viewer: M, facets: [] }).statements.page();
   const plan = await raw("EXPLAIN QUERY PLAN " + st.sql, ...st.args);
   const lines = (plan.rows || []).map((r) => r.detail).filter((d) => /content/.test(d));

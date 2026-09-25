@@ -1754,6 +1754,19 @@ A leg citing the content may claim no more than the weaker of the two. Where a s
 fidelity was never measured the cap is undetermined and is *stated* as such, never resolved
 into a letter (Part I's invariant 5, in a column). OCR never raises a capture grade.
 
+**The extraction method is asked of the UNIT, not the document (BOB #35, 2026-09-25 09:05Z; BUILT
+2026-09-25, D-686).** The method is one of the content's two intrinsic facts, so it says how THAT content
+was read. `content.chain_kind` is the kind of the last derivation step covering the unit's page, and a
+unit with no page (a whole document, an office paragraph) is asked about the document, whose answer is
+the chain's last derivation step. On a mixed document a text-layer page's unit therefore reads `layer`
+and an OCR'd page's reads `ocr`; a page two parts share (D-635) reads the part appended last. One
+function computes it, `textchain.mjs` `chainKindFor`, asked of the same target as the derivation cap.
+`mintContent` writes it, and `#migrate` recomputes rows from before this rule, because the value is
+derived from each row's own chain and recomputing it is not a rewrite of history. A page no step
+covers, or one a step with an unreadable extent might cover, is undetermined (NULL) and stated.
+`capture_text.chain_kind` is KEPT document-level, from the same function asked about no page: it is
+the last step of this document's chain, not how any given page was read, and its reader says so.
+
 **"Every derivation step weakens" is a rule about machines transforming a machine's output,
 and it is the reason a human is the route up, not an exception to it.** A derivation step
 works on the previous step's output, so it cannot recover what that output lost — an AI
@@ -2182,9 +2195,10 @@ untaken; they are stale and rowed for correction.
   parts by `extent.part`, so two parts with one page list stay two; `readingProvenance` names both producers of
   such a page (`producers`, added only when there are two), credits the page to both, and `compareProvenance`
   attributes a change to both; `tiersEvidenced` and `contentObservationsFor` union pages per tier and were
-  proven unchanged; `#pageSetForCapture` reads the highest page named and is unchanged. **NOT BUILT:** the
-  `chain_kind` column on `capture_text` and `content` is the whole chain's last step, so every unit of a mixed
-  document reads `ocr`, including its text-layer pages (D-686, older than D-635).
+  proven unchanged; `#pageSetForCapture` reads the highest page named and is unchanged. `content.chain_kind`
+  was the whole chain's last step, so every unit of a mixed document read `ocr`, including its text-layer
+  pages. That defect was older than D-635 and is **CLOSED 2026-09-25 by D-686** (§14.2): the column is the
+  unit's own. `capture_text.chain_kind` stays the document's, as ruled.
 
 **EVERY CORPUS-SCALE FIDELITY FIGURE IS AGREEMENT, NOT ACCURACY — A STATED, PERMANENT LIMITATION AS OF
 2026-09-19 (BOB #17, D-306), and the purchase that would close it is NOT FUNDED on DEC-74's own pattern.**

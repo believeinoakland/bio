@@ -662,15 +662,17 @@ export const MEANING = {
                     ? { sql: `derivation_cap IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : v === CAP_DOES_NOT_APPLY.toUpperCase() ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : null },
-      /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
+      /* HOW THE UNIT WAS READ (D-686: the last step covering its page) — "every OCR'd region below cap C" is §1's
          own example and this is its first half. REC-104: IT READS THE
          `chain_kind` COLUMN, and the read-time JSON parse it replaced is RETIRED
          rather than kept beside it. Until REC-104 this compiled to a parse of the
          whole chain per row — unindexable, the slowest filter on the table
          (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
          `capture_text` a `chain_kind` column for the identical question.
-         `chain_kind` is a GENERATED column over `chain` (schema.mjs says why), so
-         it cannot disagree with the chain it describes.
+         D-686 (BOB #35): `chain_kind` is the kind of the last derivation step
+         covering the UNIT's page, written at mint by `textchain.mjs`
+         `chainKindFor` (schema.mjs says why), so on a mixed document a
+         text-layer page answers `layer` and an OCR'd page `ocr`.
          ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:
          `chain:undetermined` is `chain IS NULL` — the record holds NO chain, a
          different fact from a chain with no last step, so it stays on the
@@ -825,7 +827,8 @@ export const MEANING = {
          report, which declines that index for exactly that reason. */
       text: { col: "text", fts: true },
     },
-    /* §4.2's row: the unit's extent and `ref`, its `chain_kind`, its
+    /* §4.2's row: the unit's extent and `ref`, its `chain_kind` (D-686: the
+       last step of this document's chain, not how any given page was read), its
        `truncated` flag. `seq` rides with them because a PARTIAL index is a
        PREFIX in reading order (`schema.mjs`) — without it a member cannot tell
        whether the passage they are reading sits before or after the point the
