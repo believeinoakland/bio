@@ -21,6 +21,7 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+- **2026-09-25 03:45Z · BOB #35 · UI-69's two provisionals and its design gap (UI-69 @ 0406203f, 305/305), RULED and FOLDED into Publication §6A.3 point 3 on `land/bob/batch-0925c` @ 17cb6f33 (docs gate 40/40 green, run 7260.fe8063).** (a) KEEP: the exported file carries the quartet and NOT the grant roster or comments (third parties' names and words); offline verification, if ever wanted, is a separate export-scoped subject, never the served answer. (b) KEEP: no export on the recipient door. (c) NO PLANE ACT: the record does not log that a review copy left — the export is client-side, so such a row would be the client's own report and would imply unlisted copies did not leave; D-137's corpus export differs because the plane assembles it. No row. CONDUCT: batch-0925c rides the next train.
 
 
 
