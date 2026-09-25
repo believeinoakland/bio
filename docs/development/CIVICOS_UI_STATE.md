@@ -50,9 +50,32 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
-v120, 2026-09-25 session, thread UI, UI-120 (a WORKER of SCHEDULER #23, cloud session). Landed on
-`land/worker/UI-120`, STACKED on `land/worker/D-419` @ `914bb380` (integrated, not yet on `main`), in the commit
-that carries this entry; the version number is PROVISIONAL and CONDUCT renumbers at integration. SURFACE: **the
+v135, 2026-09-25 session, thread UI, UI-119 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-119`, stacked on `land/worker/REC-201` @ `45ce0bc5`, in the commit that
+carries this entry; numbered by CONDUCT #23 at c23-batch30 (the batch's last UI landing, so it heads the list). SURFACES: **the app's
+action intake and the plane's setup page let a member state the law a records request is made under.**
+
+**WHAT IT CLOSES.** REC-201 gave the record a `records_request` kind and a `law` field read verbatim onto
+`op=projection`'s action block, and no surface wrote one: every records request filed read its law UNDETERMINED,
+and the setup page could not file the kind at all — it wrote every action as `other`. Now the app draws a `law`
+field when the member chooses `records_request` (EMPTY, no placeholder naming a law — DEC-69) and writes it on
+that kind only; the setup page gains a kind chooser over the catalogue's own list and the same field, and renders
+a refusal in the plane's words instead of `Refused: <CODE>`. Driven through a real plane by
+`civicos-ui/test/ui119-records-law.test.mjs` (37 assertions), its control 7 of 7 AS DECLARED.
+
+**WHAT IT MEASURED AND DID NOT FIX.** C-2.10's `law` arm refuses nothing at the act: `op=promote` lands a 250-character
+law, and the catalogue reports it only in the audit sweep (D-695, RECORD's). So the row's *"C-2.10 renders in its
+DEC-49 words"* has nothing to render yet; the suite pins the landing so D-695's fix turns it red. The action page
+shows `action.law` only inside governing_laws' undetermined sentence, which a stated list replaces (D-696). A
+machine-proposed law is not shown because nothing on this base stores one (D-689).
+
+*[c23-batch30 union, 2026-09-25 (CONDUCT #23): D-695 and D-689 are merged beside this entry — `op=promote` now refuses
+C-2.10's `law` arm at the act (RECORDS_LAW_REFUSED, C-73.6), so the suite's §5 arm that pinned the landing is CORRECTED to
+assert that refusal in the plane's own words; a machine stating `law` is refused C-32.20. D-696 stands as measured.]*
+
+v134, 2026-09-25 session, thread UI, UI-120 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/UI-120`, STACKED on `land/worker/D-419` @ `914bb380`, in the commit
+that carries this entry; numbered by CONDUCT #23 at c23-batch30, which landed v130–v135 together. SURFACE: **the
 inquiry page's leg row shows the image a leg cites.** D-419 built `op=contentcrop` (C-99, `EXTRACTION-BREADTH-DESIGN.md`
 §3.4) and no page asked for it.
 
@@ -78,9 +101,9 @@ fixture's two crops are both `upright: true`) and was replaced by a ground-truth
 **WHAT IT CANNOT SEE, stated.** It drives `basisLegRow` and the ask, not the whole `openInquiry` page; it runs on
 Miniflare, not a deployed build; and a container `{part}` leg is asserted no-control on a synthetic referent only.
 
-v121, 2026-09-25 session, thread UI, D-682 (a WORKER of SCHEDULER #23, cloud session). Landed on
-`land/worker/D-682` (stacked on `land/worker/D-194` @ `45437e4d`, integrated, not on `main`), in the commit that carries
-this entry; the version number is PROVISIONAL, as v120's is. SURFACE: **the lead surface's words for a look's state are
+v133, 2026-09-25 session, thread UI, D-682 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-682` (stacked on `land/worker/D-194` @ `45437e4d`, `v132`), in the commit that carries
+this entry; numbered by CONDUCT #23 at c23-batch30. SURFACE: **the lead surface's words for a look's state are
 the plane's, read off the answer.** `op=leadread` and `op=frontier&level=internet` now carry `vocabulary: { states,
 outcomes }` (`Store.LEAD_VOCABULARY`; the states from `airun.mjs`'s `OBSERVATION_STATE_WORDS`, which is
 `OBSERVATION_STATES` with a maintainer's trailing note cut, so `partial` reaches a member as *we looked and got part of
@@ -91,9 +114,9 @@ CORRECTED (the comment at section 6 says why) into a STATE ARM — each drawn st
 check over the block. Negative control 11/11 as declared; the row's own arm drops `vocabulary` from the ops in
 `store.mjs` and the state arm fails by name.
 
-v120, 2026-09-25 session, thread UI, D-194 (a WORKER of SCHEDULER #23, cloud session). Landed on
-`land/worker/D-194` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
-PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took v120 first. SURFACE: **a member's LEAD
+v132, 2026-09-25 session, thread UI, D-194 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-194` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; numbered by CONDUCT #23
+at c23-batch30. SURFACE: **a member's LEAD
 has a surface** (`MEMBER-KNOWLEDGE-DESIGN.md` §5). The plane half (MK-4, REC-129) was built and `app.html` made no lead call.
 
 **WHAT MOVED.** A rail entry, *Leads*, and two addresses, `#leads` and `#lead/<LEAD-…>` (`leadRouteFromHash`, in
@@ -117,9 +140,9 @@ repeat another's that was looked at later is not listed; **D-682** — no lead o
 so this surface MIRRORS `OBSERVATION_STATES` (`LEAD_STATE_WORDS`, guarded by the suite against the plane's table).
 `status.mjs 9.ui` moves ABSENT → PARTIAL: the frontier's internet level has a member surface, the other three do not.
 
-v120, 2026-09-25 session, thread UI, D-189 (a WORKER of SCHEDULER #23, cloud session). Landed on
-`land/worker/D-189` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
-PROVISIONAL and CONDUCT renumbers at integration if another UI landing takes v120 first. SURFACES: **the project
+v131, 2026-09-25 session, thread UI, D-189 (a WORKER of SCHEDULER #23, cloud session). Landed on
+`land/worker/D-189` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; numbered by CONDUCT #23
+at c23-batch30. SURFACES: **the project
 workspace and the published case page now say when a project carries its own bias.**
 
 **WHAT IT CLOSES.** `op=biasmanifest` computed the effective set at project scope (DEC-46, `BIO_Declared_Bias_v0_1.md`
@@ -142,9 +165,9 @@ with `ssh-keygen`, one before any adoption and one after); `project-bias.control
 *"render the indicator on an empty manifest"* failing by name on each surface. NOT BUILT: adopting or inhaling a set
 from the UI; REC-219's `pins_proposed` in the frozen block (not on main) is not read and should be once it lands.
 
-v120, 2026-09-25 session, thread UI, UI-112 (a WORKER of SCHEDULER #22, cloud session). Landed on
-`land/worker/UI-112` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; the version number is
-PROVISIONAL — CONDUCT renumbers at integration if a concurrent UI worker took it. SURFACE: **the document page's
+v130, 2026-09-25 session, thread UI, UI-112 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-112` (base `origin/main` @ `5e8a65a8`), in the commit that carries this entry; numbered by CONDUCT #23
+at c23-batch30. SURFACE: **the document page's
 on-point chooser (UI-91) offers PLACES, not strings.** D-454 made `op=connectionchoose` refuse C-74.4 where a string
 read at several places is named alone, and `docChooseOnPoint` sent no occurrence, so the chooser offered, in the
 common case, an act the plane refuses — and for a subject named by ONE string on three pages it drew no chooser at
@@ -384,29 +407,6 @@ touched. Negative control 6/6 AS DECLARED (its first run 5/6, recorded in the su
 minted, not fixed here (plane paths): **D-626**, two plane sentences of D-538's class — `REVIEW_NO_SUCH_CASE`'s
 canned translation still says *"Leave the name off and the draft is a new case"*, and `PUBLISH_DRAFT_NOT_THIS_CASE`
 builds its identity sentence without the draft's `newCase`.
-
-v120, 2026-09-25 session, thread UI, UI-119 (a WORKER of SCHEDULER #23, cloud session). Landed on
-`land/worker/UI-119`, stacked on `land/worker/REC-201` @ `45ce0bc5` (integrated, not on `main`), in the commit that
-carries this entry; the version number is PROVISIONAL — CONDUCT renumbers at integration. SURFACES: **the app's
-action intake and the plane's setup page let a member state the law a records request is made under.**
-
-**WHAT IT CLOSES.** REC-201 gave the record a `records_request` kind and a `law` field read verbatim onto
-`op=projection`'s action block, and no surface wrote one: every records request filed read its law UNDETERMINED,
-and the setup page could not file the kind at all — it wrote every action as `other`. Now the app draws a `law`
-field when the member chooses `records_request` (EMPTY, no placeholder naming a law — DEC-69) and writes it on
-that kind only; the setup page gains a kind chooser over the catalogue's own list and the same field, and renders
-a refusal in the plane's words instead of `Refused: <CODE>`. Driven through a real plane by
-`civicos-ui/test/ui119-records-law.test.mjs` (37 assertions), its control 7 of 7 AS DECLARED.
-
-**WHAT IT MEASURED AND DID NOT FIX.** C-2.10's `law` arm refuses nothing at the act: `op=promote` lands a 250-character
-law, and the catalogue reports it only in the audit sweep (D-695, RECORD's). So the row's *"C-2.10 renders in its
-DEC-49 words"* has nothing to render yet; the suite pins the landing so D-695's fix turns it red. The action page
-shows `action.law` only inside governing_laws' undetermined sentence, which a stated list replaces (D-696). A
-machine-proposed law is not shown because nothing on this base stores one (D-689).
-
-*[c23-batch30 union, 2026-09-25 (CONDUCT #23): D-695 and D-689 are merged beside this entry — `op=promote` now refuses
-C-2.10's `law` arm at the act (RECORDS_LAW_REFUSED, C-73.6), so the suite's §5 arm that pinned the landing is CORRECTED to
-assert that refusal in the plane's own words; a machine stating `law` is refused C-32.20. D-696 stands as measured.]*
 
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
