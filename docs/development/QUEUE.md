@@ -670,8 +670,8 @@ scope: every writer of members.status writes status_by = the actor whose act cau
 accepts-when: each transition read back names the actor that caused it (moves: 3 writers leaving a stale status_by). NEGATIVE CONTROL: drop the stamp from the enrolment writer and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 04:00Z).
 
-### M0-195 · running — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
-status: running — SCHEDULER #22 04:12Z spawns WORKER M0-195 (depth 2)
+### M0-195 · integrated — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
+status: integrated — SCHEDULER #22 04:56Z: tip 891a2087, GATE 76/76 GREEN TARGETED (5847 assertions), tree f944bd62; A9 source pin (esbuild-printed behaviour source), changed: widened by source; every bio-checks code edit now needs a census row with source or an unchanged declaration; D-598 takes changed C-21.2 + source at union
 order: at the head of the process rows, before M0-142: it unblocks a product landing (D-598 takes its version bump only after this lands) and a check changed silently is a record claiming the old rule (BOB #35 04:00Z: *"rule 17 STANDS and its instrument is short"*) (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none (the census's own grammar gains two fields).
@@ -799,6 +799,16 @@ depends-on: D-538.
 scope: keep the internal (case_id NULL, edition 1) key that grants and statement acknowledgements bind to, and answer `edition: null` (undetermined) on the wire for a derived draft in all four answers.
 accepts-when: DD answers `edition: null` in all four while its grant and acknowledgements still bind (moves: edition 1 stated for a derived case). NEGATIVE CONTROL: answer the internal edition again and the DD edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-538's worker).
+
+### UI-108 · queued — **THE PROGRESSION PAGE SHOWS A DISMISSED FINDING AS AN OPEN QUESTION: `progPaintInstance()` renders `inst.findings` verbatim and cannot say a member decided it.** The surface half of D-552. — owner UI.
+order: directly after D-552, which it consumes (SCHEDULER #20, 2026-09-24)
+milestone: M4
+interface: I3 consumer (D-552's IC).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §12 "age rather than vanish" (D-79), with D-552's published view.
+depends-on: D-552.
+scope: on the progression page, render each finding's disposition as the plane states it (who, when, the reason, and whether the decision still applies to the current definition_version), in the plane's words; the finding stays listed.
+accepts-when: against a real-plane suite a dismissed finding renders its decision beside it (the measured failure it moves: an answered question shown as open). NEGATIVE CONTROL: render `inst.findings` without the view and the decided-finding arm fails by name.
+added: 2026-09-24 · SCHEDULER #20 (`node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
