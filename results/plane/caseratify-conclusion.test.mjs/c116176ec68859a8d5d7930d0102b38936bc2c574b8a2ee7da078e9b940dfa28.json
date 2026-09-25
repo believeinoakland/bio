@@ -1,0 +1,16 @@
+{
+ "unit": "plane:caseratify-conclusion.test.mjs",
+ "inputHash": "c116176ec68859a8d5d7930d0102b38936bc2c574b8a2ee7da078e9b940dfa28",
+ "verdict": "PASS",
+ "run": "190b28c67478442b3a48ab385aff97cea8342070.1790321220580.1620.json",
+ "tree": "190b28c67478442b3a48ab385aff97cea8342070",
+ "head": "48245247fedd94ad38ef212b2d3e4bb9410cd23a",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "72ff06c6-4329-5122-b377-307b236a8baf",
+ "at": "2026-09-25T07:27:00.596Z"
+}
