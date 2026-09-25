@@ -42477,6 +42477,16 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     if (ident.caseId && newCase) return null;
     return ident.caseId || newCase ? ident.edition : null;
   }
+  /* D-720 (BIO_Publication_v0_1.md §3 rule 13, BOB #36 2026-09-25 11:30Z, option (1)): THE KEY A DRAFT'S STATEMENT
+     READING IS WRITTEN AND MATCHED AT. A draft that names a case AND asks for a new one has an UNDETERMINED case
+     (D-618), so its reading is keyed at NO case identity — (NULL, 1), bound to the draft, as a derived draft's is —
+     and binds only at REC-217's act, a publish naming the draft. It was written at the named case's next edition, and
+     `#statementAcknowledgements`' '*' match then listed it in that case's document: a binding nobody made. Every other
+     draft keeps `#draftIdentity`'s key. `review_grants` are not keyed through this (D-618: the grant binds at the
+     identity key, unchanged). */
+  static #ackKey(ident, newCase) {
+    return ident.caseId && newCase ? { caseId: null, edition: 1 } : ident;
+  }
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
      off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
      when), signed or not — or null where no publisher has named it. One row at most by construction: `op=publish`
@@ -42935,10 +42945,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
     const writer = { by: d.statement_by ?? null };
+    const ackKey = _Store.#ackKey(ident, !!params.newCase);
     const acks = this.#statementAcknowledgements(
       d.project_id,
-      ident.caseId,
-      ident.edition,
+      ackKey.caseId,
+      ackKey.edition,
       params.statement ?? "",
       null,
       writer,
@@ -43236,19 +43247,26 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const projectLine = `
 case_project: ${project}
 `;
+    const key = _Store.#ackKey(ident, draftNewCase);
     const docCols = `case_id, edition, doc_sha, text, draft_id, authored_by, authored_at`;
-    const docMatch = `sig_armored IS NULL AND edition=? AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
-    const byIdentity = ident.caseId == null ? null : this.#one(
+    const docText = `sig_armored IS NULL AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
+    const docMatch = `edition=? AND ${docText}`;
+    const byIdentity = key.caseId == null ? null : this.#one(
       `SELECT ${docCols} FROM case_documents WHERE case_id=? AND ${docMatch}`,
-      ident.caseId,
-      ident.edition,
+      key.caseId,
+      key.edition,
       needle,
       projectLine
     );
-    const byLink = !draftId ? null : this.#one(
+    const byLink = !draftId ? null : key.caseId == null ? this.#one(
+      `SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docText}`,
+      draftId,
+      needle,
+      projectLine
+    ) : this.#one(
       `SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docMatch}`,
       draftId,
-      ident.edition,
+      key.edition,
       needle,
       projectLine
     );
@@ -43260,11 +43278,11 @@ case_project: ${project}
                               AND (? IS NOT NULL OR draft_id IS ?)`,
       project,
       statementSha,
-      ident.caseId ?? null,
-      ident.edition,
+      key.caseId ?? null,
+      key.edition,
       kind,
       by,
-      ident.caseId ?? null,
+      key.caseId ?? null,
       draftId
     );
     const when = same ? same.at : stampInstant("millisecond");
@@ -43273,8 +43291,8 @@ case_project: ${project}
         `INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
         project,
-        ident.caseId ?? null,
-        ident.edition,
+        key.caseId ?? null,
+        key.edition,
         statementSha,
         draftId,
         kind,
@@ -43284,7 +43302,7 @@ case_project: ${project}
       );
     const docs = found.filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
-    const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
+    const linkedTo = key.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return {
       ok: true,
       existed: !!same,
@@ -43295,7 +43313,7 @@ case_project: ${project}
         grant_id: grantId,
         at: when,
         project,
-        case_id: ident.caseId ?? null,
+        case_id: key.caseId ?? null,
         edition: _Store.#statedEdition(ident, draftNewCase),
         draft_id: draftId,
         statement_sha: statementSha
@@ -43309,7 +43327,7 @@ case_project: ${project}
          other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
          lists it, and no case document can — a case id is minted only by publication, so nothing
          here can say which case the draft became, and naming one would be inventing a referent. */
-      bound_to_a_case: ident.caseId != null || !!linkedTo,
+      bound_to_a_case: key.caseId != null || !!linkedTo,
       ...linkedTo ? { draft_link: {
         case_id: linkedTo.case_id,
         edition: Number(linkedTo.edition),
@@ -43317,7 +43335,7 @@ case_project: ${project}
         named_at: linkedTo.authored_at ?? null,
         signed: !!linkedTo.sig_armored
       } } : {},
-      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedTo.sig_armored ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null && draftNewCase ? `this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case \u2014 publication refuses those two instructions together, so which case this draft becomes stays UNDETERMINED until one of them is withdrawn, and this answer states no edition for it and promises no listing. op=reviewcopy lists it for this draft. No case document can be authored from this draft while both instructions stand (op=publish refuses it). ` + (reauthored.length ? `The unsigned case document${reauthored.length > 1 ? "s" : ""} returned beside this answer (case_documents) carr${reauthored.length > 1 ? "y" : "ies"} this exact statement at the key this draft names, and now list${reauthored.length > 1 ? "" : "s"} it, re-authored; ${reauthored.length > 1 ? "their owners sign" : "its owner signs"} the new bytes. ` : ``) + `A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.` : ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
+      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedTo.sig_armored ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null && draftNewCase ? `this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case \u2014 publication refuses those two instructions together, so which case this draft becomes stays UNDETERMINED until one of them is withdrawn, and this answer states no edition for it and promises no listing. This acknowledgement is bound to NO case identity yet: it is recorded for this draft, op=reviewcopy lists it for this draft, and NO case document lists it \u2014 not ${ident.caseId}'s either, even one carrying this exact statement, because naming ${ident.caseId} is not a choice while the draft also asks for a new case (BIO_Publication \xA73 rule 13). When one instruction is withdrawn and the case is published naming this draft (op=publish&draft=${draftId}), this reading binds at that act to the case it produced, and its document lists it with the link stated (REC-217). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.` : ident.caseId != null ? `the completeness block of ${_Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
   /* THE TWO RENDERINGS OF THE LIST, ONE SPELLING EACH — written by `#caseDocumentText` when
@@ -43529,8 +43547,8 @@ case_project: ${project}
     const rows = this.#rows(
       `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
                               FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=?
-                               AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
+                             WHERE project_id=? AND statement_sha=?
+                               AND ((edition=? AND case_id IS ? AND (? = '*' OR draft_id = ?))
                                     OR (case_id IS NULL AND draft_id = ?))
                              ORDER BY at, ack_id LIMIT ?`,
       project,
@@ -43559,7 +43577,8 @@ case_project: ${project}
                                             WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
                                             ELSE 0 END), 0) AS u
                    FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                   WHERE project_id=? AND statement_sha=? AND case_id IS NULL
+                     AND (edition=? OR draft_id IN (SELECT draft_id FROM case_drafts WHERE case_id=?))
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
@@ -43571,6 +43590,7 @@ case_project: ${project}
       project,
       sha,
       edition,
+      caseId,
       linked
     );
     return {

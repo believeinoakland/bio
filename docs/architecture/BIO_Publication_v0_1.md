@@ -149,6 +149,24 @@ Three consequences give the construct its shape. The record must be able to prov
     (`bio-plane/test/rec217-draft-binding.test.mjs`). NOT BUILT: any surface that sends `draft=` or shows the link;
     and REC-212's writer read still reads every no-case draft of the project that holds the sentence, not the named
     draft alone.
+    **RULED 2026-09-25 11:30Z by BOB #36 on D-720 — A DRAFT THAT NAMES A CASE AND ALSO ASKS FOR A NEW ONE KEYS ITS
+    READING AT NO CASE IDENTITY** (option (1)). Such a draft's case is UNDETERMINED (D-618: publication refuses the pair
+    together, CASE_IDENTITY_AMBIGUOUS, and every answer states `edition: null`), so a reading given on it is keyed as a
+    derived draft's is — case_id NULL, bound to the draft — and binds only by REC-217's act, a publish naming the draft
+    (`draft=`). Keying it under the named case's next edition let that case's signed document list a reading given on a
+    draft that may become ANOTHER case: the record claiming a binding nobody made. Rejected: refusing the
+    acknowledgement, which loses a recipient's real reading because the publisher's instructions conflict; and treating
+    the named case as chosen, which `newCase` contradicts. **BUILT (D-720, 2026-09-25; I3):** `op=statementack` writes
+    and matches such a reading at (NULL, 1) through the draft door and the review-copy door alike; the named case's next
+    edition, authored from another draft or at the case door with a byte-identical statement, does not list it and is
+    not re-authored by it — and COUNTS it as UNDETERMINED under REC-194's provisional, never printing "Nobody but its
+    author", because it may still become that case's (the count reaches a no-case reading given on a draft that names
+    the case, at any edition, until that draft is bound); the '*' match never lists a NULL-case row under a case identity; the pair draft's review
+    copy lists its own readings and not the named case's; and a publish naming the draft binds it WHICHEVER instruction
+    was withdrawn — a new case's edition 1, or the named case's next edition, because the link is read by the draft and
+    not by the edition (`bio-plane/test/rec217-draft-binding.test.mjs` block 8). The answer's `listed` sentence says
+    so. NOT RE-KEYED: a reading a pair draft recorded before this landing stays at the named case's key; its row does
+    not record that the draft was a pair when it was given, so which rows those are is UNDETERMINED.
 
 14. **THE BAR IS A PAIR, AND AN AXIS NOBODY SET IS NULL** (BOB #32, 2026-09-23, D-450 on SCHEDULER #17's 22:56Z questions). A project may
     set a bar on one axis only. Both keys are always present, the unset one is `null`, and the case document says in
@@ -241,7 +259,7 @@ precision nobody asserted.
   SECRET generated at the control plane and stored only as a SHA-256), `reviewrevoke`, `reviewcopy` (the copy,
   MARKED, never signed, with each finding's document, the authored arguments, the comments, and `missing` — the
   publish gates' own refusal, obtained by running `publishCase` inside a transaction that is always rolled back)
-  and `reviewcomment` (a recipient's comment stored as a recipient's). **The copy's `case` block carries `newCase` since REC-199 (IC-285, 2026-09-24):** a boolean, always present, `true` only where the draft asked for a new case, answered as the gates READ it (`publishCase` consults it for truthiness alone), so a body rebuilt from the answer reproduces the draft's identity route instead of dropping it. **The `edition` these answers state is `null` for a draft whose case publication DERIVES** (D-568, 2026-09-25): the stored (no case, 1) key is unchanged and grants and acknowledgements bind at it; only the answer stops stating the minted-case edition for a case the record has not chosen. **It is `null` too for a draft that names a case AND asks for a new one** (D-618, 2026-09-25): publication refuses that pair together, so the named case's next edition is not an edition the draft stands at; the key it binds at is unchanged, and a live grant's roster row states the same null. **So does the acknowledgement's `listed` sentence** (D-708, 2026-09-25): for that pair `op=statementack` says the reading is of the draft, that publication refuses the two instructions together and the case stays UNDETERMINED until one is withdrawn, and names no edition and promises no listing (it still says so of any unsigned document it re-authored at the key the draft names). The last two are UNGATED and answer every
+  and `reviewcomment` (a recipient's comment stored as a recipient's). **The copy's `case` block carries `newCase` since REC-199 (IC-285, 2026-09-24):** a boolean, always present, `true` only where the draft asked for a new case, answered as the gates READ it (`publishCase` consults it for truthiness alone), so a body rebuilt from the answer reproduces the draft's identity route instead of dropping it. **The `edition` these answers state is `null` for a draft whose case publication DERIVES** (D-568, 2026-09-25): the stored (no case, 1) key is unchanged and grants and acknowledgements bind at it; only the answer stops stating the minted-case edition for a case the record has not chosen. **It is `null` too for a draft that names a case AND asks for a new one** (D-618, 2026-09-25): publication refuses that pair together, so the named case's next edition is not an edition the draft stands at; the key it binds at is unchanged, and a live grant's roster row states the same null. **So does the acknowledgement's `listed` sentence** (D-708, 2026-09-25): for that pair `op=statementack` says the reading is of the draft, that publication refuses the two instructions together and the case stays UNDETERMINED until one is withdrawn, and names no edition and promises no listing. D-708's sentence also reported any unsigned document it re-authored at the key the draft names; since D-720 (§3 rule 13, BOB #36) the reading is keyed at NO case identity and re-authors none, and the sentence says it binds at a publish naming the draft. The last two are UNGATED and answer every
   caller without a live grant or standing with ONE byte-identical refusal; a grant is dead when revoked AND when its
   draft moves to another edition. `casedocument` admits a live grant holder to the unsigned document of exactly the
   bound edition — §6A.2's precondition's second party. **Who may act is §6A.2's decision, BUILT by REC-133 (IC-151,

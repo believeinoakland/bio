@@ -67,6 +67,32 @@
        "identity and link name ONE document … ONCE" MUST fail; nothing else. RESULT: 26 pass, 1 FAIL, exactly that
        row: the same document came back twice, both marked re-authored. AS DECLARED.
 
+   NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-720 on land/worker/D-720, stacked on land/worker/D-708 @ 656b0817.
+   D-720 added block 8 (BOB #36, 11:30Z: a draft naming a case AND asking for a new one keys its reading at NO case).
+   REPRODUCED FIRST through `op=statementack` on 656b0817's unchanged store, before any change: block 8's first five
+   rows ran 27 pass, 5 FAIL. Each arm below ran ALONE, declared before arming, over the FINAL block 8 (eight rows);
+   every restore by `cp` from a per-arm pristine copy in the session scratchpad, verified by sha256
+   (bdc07c14…cbfb5dd, MATCH) AND `cmp` (IDENTICAL), 3,661,091 B each time.
+   (0) BASELINE: 34 pass, 0 fail.
+   (R) THE REPRODUCTION — 656b0817's store.mjs whole. DECLARED: every block-8 row that states the defect fails.
+       RESULT: 28 pass, 6 FAIL — keyed-at-no-case, both "not listed" ACCEPTS-WHEN rows, the counted-not-Nobody row,
+       the review-copy row and the binding row. The bound-leaves-the-count row PASSES there, and that is a fact about
+       the row rather than the fix: nothing is counted on 656b0817, so zero is free (§5: an outcome that costs
+       nothing is not evidence) — arm (e) is what shows the count bites.
+   (a) THE ROW'S OWN — THE C1 KEY RESTORED: `#ackKey` returns `ident`. DECLARED: MUST fail both "not listed"
+       ACCEPTS-WHEN rows by name ("another draft", "the case door"), with the rows resting on the same key; MUST NOT
+       fail blocks 1-7. RESULT: 28 pass, 6 FAIL — the same six rows as (R), both "not listed" rows by name; blocks 1-7
+       GREEN. AS DECLARED.
+   (b) THE LINK ARM KEEPS `edition=?` (the pre-D-720 WHERE). DECLARED: MUST fail the binding row alone (L's edition 3
+       is not 1). RESULT: 33 pass, 1 FAIL, exactly "D-720 ACCEPTS-WHEN (the binding)". AS DECLARED.
+   (c) THE REVIEW COPY READS AT `ident`. DECLARED: MUST fail the review-copy row alone. RESULT: 33 pass, 1 FAIL,
+       exactly that row (DP's copy lists pat's case-door reading of K). AS DECLARED.
+   (e) THE UNBOUND COUNT ASKS `edition=?` ALONE (its draft-names-this-case clause disarmed). DECLARED: MUST fail the
+       counted-not-Nobody row alone. RESULT: 33 pass, 1 FAIL, exactly that row. AS DECLARED.
+   (d) OVER-STRICTNESS — `#ackKey` spelled another way with the same meaning (`if (newCase && ident.caseId != null)
+       return { edition: 1, caseId: null }; return { ...ident };`). DECLARED: MUST pass. RESULT: 34 pass, 0 fail.
+       AS DECLARED.
+
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
    the case it produced. The link is an ACT, recorded with who made it (the publisher) and when, and the case
@@ -525,6 +551,111 @@ console.log("\n--- 7. D-521: the draft door's read can return TWO documents, nev
      (fmOf((await docOf(X, 2))?.text).completeness_acknowledgements || []).map((a) => a.by),
      (fmOf((await docOf(Y, 2))?.text).completeness_acknowledgements || []).map((a) => a.by)],
     [true, true, ["pat"], ["ella"]]);
+}
+
+/* =========================================================================== 8 */
+console.log("\n--- 8. D-720: a draft naming a case AND asking for a new one keys its reading at NO case ---");
+/* D-720 / BIO_Publication_v0_1.md §3 rule 13 (BOB #36 RULED 2026-09-25 11:30Z, option (1)). Since D-618 a draft that
+   names K AND sets `newCase` has an UNDETERMINED case: publication refuses the pair together (CASE_IDENTITY_AMBIGUOUS)
+   and every answer states `edition: null`. But `op=statementack` still WROTE its reading at K's next edition, and
+   `#statementAcknowledgements`' '*' draft match lists every row at a case identity — so K's next document listed a
+   reading given on a draft that may become ANOTHER case: the record claiming a binding nobody made.
+   MEASURED FIRST THROUGH THE OP on 656b0817 (D-708's tip, the tree D-720 was spawned on), before any change: ella's
+   reading answered `case_id: K` and `bound_to_a_case: true`; K's next edition, authored from ANOTHER draft with
+   the byte-identical statement, listed ella; L's next edition, authored at the CASE DOOR (no draft=), listed pat;
+   DP's review copy listed a case-door reading of K's; and neither case a publish naming the draft produced listed
+   the reading. The ruling: the reading is keyed at NO case identity, bound to the draft, as a derived draft's is,
+   and binds only by REC-217's act — a publish naming the draft — whichever instruction was withdrawn first. */
+{
+  const S8 = args(PROJ, "d720").statement;
+  const qk = await finding("d720k"), ql = await finding("d720l");
+  const pK = await publish("d720k", [qk]), pL = await publish("d720l", [ql]);
+  if (pK?.ok === false || !pK?.caseDocument?.doc_sha) bail("publish d720k", pK);
+  if (pL?.ok === false || !pL?.caseDocument?.doc_sha) bail("publish d720l", pL);
+  const K = pK.caseDocument.case_id, L = pL.caseDocument.case_id;
+  for (const [c, s] of [[K, pK.caseDocument.doc_sha], [L, pL.caseDocument.doc_sha]]) {
+    const r = await ratify(c, 1, s);
+    if (r?.ok === false) bail(`caseratify ${c}`, r);
+  }
+  const qp = await finding("d720p"), qo = await finding("d720o"), qm = await finding("d720m"), qd = await finding("d720d");
+  const DP = await draftOf("d720", [qp], { caseId: K, newCase: true, statement: S8 });
+  const DM = await draftOf("d720", [qm], { caseId: L, newCase: true, statement: S8 });
+  const aE = await ack(`draft=${DP}&token=${ELLA}`);
+  const aP = await ack(`draft=${DM}&token=${PAT}`);
+  t("D-720: THE READING OF A PAIR DRAFT IS KEYED AT NO CASE — case_id null, bound to the draft, edition stated null, "
+  + "and the answer claims no binding to a case",
+    [aE?.ok, aE?.acknowledgement?.case_id, aE?.acknowledgement?.draft_id, aE?.acknowledgement?.edition,
+     aE?.bound_to_a_case, aP?.ok, aP?.acknowledgement?.case_id, aP?.bound_to_a_case],
+    [true, null, DP, null, false, true, null, false]);
+  /* K's NEXT EDITION FROM ANOTHER DRAFT, byte-identical statement (hash computed here). */
+  const DO = await draftOf("d720", [qo], { caseId: K, statement: S8 });
+  const PK2 = await publish("d720", [qo], { caseId: K, draft: DO, statement: S8 });
+  if (PK2?.ok === false || !PK2?.caseDocument?.doc_sha) bail("publish K edition 2 naming DO", PK2);
+  const fmK2 = fmOf((await docOf(K, 2))?.text);
+  t("D-720 ACCEPTS-WHEN (another draft): K's next edition, authored from ANOTHER draft carrying the byte-identical "
+  + "statement, does NOT list ella's reading of the pair draft",
+    [PK2?.caseDocument?.edition, fmK2.completeness?.statement_sha === sha(S8),
+     (PK2?.completeness?.acknowledgements || []).map((a) => a.by),
+     (fmK2.completeness_acknowledgements || []).map((a) => a.by)],
+    [2, true, [], []]);
+  /* THE CASE DOOR: L's next edition published with no draft=, byte-identical statement. */
+  const PL2 = await publish("d720", [qd], { caseId: L, statement: S8 });
+  if (PL2?.ok === false || !PL2?.caseDocument?.doc_sha) bail("publish L edition 2 at the case door", PL2);
+  const fmL2 = fmOf((await docOf(L, 2))?.text);
+  t("D-720 ACCEPTS-WHEN (the case door): L's next edition, published with no draft= and the byte-identical "
+  + "statement, does NOT list pat's reading of the pair draft",
+    [PL2?.caseDocument?.edition, fmL2.completeness?.statement_sha === sha(S8),
+     (PL2?.completeness?.acknowledgements || []).map((a) => a.by),
+     (fmL2.completeness_acknowledgements || []).map((a) => a.by)],
+    [2, true, [], []]);
+  /* NOT LISTED IS NOT "NOBODY": each reading may still become that case's (a publish naming its draft, `newCase`
+     withdrawn), so REC-194's provisional stands — COUNTED and stated UNDETERMINED, never named, and never covered by
+     "Nobody but its author acknowledged it" (BOB #33: without draft=, an unbindable reading is counted). */
+  const whoElse = (text) => (text || "").split("**Who else read this statement.**")[1]?.split("## What Was Searched")[0] || "";
+  const [k2, l2] = [whoElse((await docOf(K, 2))?.text), whoElse((await docOf(L, 2))?.text)];
+  t("D-720: AND EACH IS COUNTED AS UNDETERMINED, NOT PRINTED AS NOBODY — K's and L's next editions each count one "
+  + "reading whose case is not established, and each says nobody acknowledged it FOR THIS CASE, never 'nobody but "
+  + "its author'",
+    [PK2?.completeness?.acknowledgements_unbindable_to_this_case, PL2?.completeness?.acknowledgements_unbindable_to_this_case,
+     /Nobody but its author/.test(k2) || !/Nobody acknowledged it FOR THIS CASE/.test(k2),
+     /Nobody but its author/.test(l2) || !/Nobody acknowledged it FOR THIS CASE/.test(l2),
+     /This record also holds 1 acknowledgement/.test(k2),
+     /This record also holds 1 acknowledgement/.test(l2), /\bella\b/.test(k2), /\bpat\b/.test(l2)],
+    [1, 1, false, false, true, true, false, false]);
+  /* AND THE OTHER DIRECTION: a reading given at K's case door is K's, not the pair draft's. */
+  const aK = await ack(`case=${K}&edition=2&token=${PAT}`);
+  const copyP = rP(await GET(`op=reviewcopy&draft=${DP}&token=${IRIS}`));
+  t("D-720: THE PAIR DRAFT'S REVIEW COPY lists ella's reading of IT, and not pat's reading of K's edition 2 given "
+  + "at K's case door",
+    [aK?.ok, aK?.acknowledgement?.case_id,
+     (copyP?.statement_acknowledgements?.acknowledgements || []).map((a) => a.by)],
+    [true, K, ["ella"]]);
+  for (const [c, doc] of [[K, await docOf(K, 2)], [L, await docOf(L, 2)]]) {
+    const r = await ratify(c, 2, doc?.doc_sha);
+    if (r?.ok === false) bail(`caseratify ${c} edition 2`, r);
+  }
+  /* BINDING, WHICHEVER INSTRUCTION IS WITHDRAWN. DP drops K and publishes a NEW case naming itself; DM drops
+     `newCase` and publishes L's next edition (3) naming itself. */
+  const reP = rP(await POST(`op=casedraft&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "d720"), statement: S8, newCase: true, targets: [qp], draft: DP })));
+  const reM = rP(await POST(`op=casedraft&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "d720"), statement: S8, caseId: L, targets: [qm], draft: DM })));
+  if (!reP?.ok) bail("casedraft DP withdraws K", reP);
+  if (!reM?.ok) bail("casedraft DM withdraws newCase", reM);
+  const PN = await publish("d720", [qp], { newCase: true, draft: DP, statement: S8 });
+  if (PN?.ok === false || !PN?.caseDocument?.doc_sha) bail("publish new case naming DP", PN);
+  const PL3 = await publish("d720", [qm], { caseId: L, draft: DM, statement: S8 });
+  if (PL3?.ok === false || !PL3?.caseDocument?.doc_sha) bail("publish L edition 3 naming DM", PL3);
+  t("D-720 ACCEPTS-WHEN (the binding): after a publish NAMING the draft, the reading IS listed in the case that "
+  + "publish produced, marked with the draft — a NEW case when K was withdrawn, L's edition 3 when newCase was",
+    [PN?.caseDocument?.case_id !== K && PN?.caseDocument?.edition === 1,
+     (PN?.completeness?.acknowledgements || []).map((a) => [a.by, a.draft ?? null]),
+     PL3?.caseDocument?.case_id === L && PL3?.caseDocument?.edition === 3,
+     (PL3?.completeness?.acknowledgements || []).map((a) => [a.by, a.draft ?? null]),
+     (fmOf((await docOf(L, 3))?.text).completeness_acknowledgements || []).map((a) => [a.by, a.draft ?? null])],
+    [true, [["ella", DP]], true, [["pat", DM]], [["pat", DM]]]);
+  t("D-720: AND A BOUND READING LEAVES THE COUNT — L's edition 3 lists pat by the link and counts nothing undetermined",
+    [PL3?.completeness?.acknowledgements_unbindable_to_this_case ?? 0], [0]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);

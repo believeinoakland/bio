@@ -10722,6 +10722,17 @@ export class Store extends DurableObject {
     return ident.caseId || newCase ? ident.edition : null;
   }
 
+  /* D-720 (BIO_Publication_v0_1.md §3 rule 13, BOB #36 2026-09-25 11:30Z, option (1)): THE KEY A DRAFT'S STATEMENT
+     READING IS WRITTEN AND MATCHED AT. A draft that names a case AND asks for a new one has an UNDETERMINED case
+     (D-618), so its reading is keyed at NO case identity — (NULL, 1), bound to the draft, as a derived draft's is —
+     and binds only at REC-217's act, a publish naming the draft. It was written at the named case's next edition, and
+     `#statementAcknowledgements`' '*' match then listed it in that case's document: a binding nobody made. Every other
+     draft keeps `#draftIdentity`'s key. `review_grants` are not keyed through this (D-618: the grant binds at the
+     identity key, unchanged). */
+  static #ackKey(ident, newCase) {
+    return ident.caseId && newCase ? { caseId: null, edition: 1 } : ident;
+  }
+
   /* REC-217 / BIO_Publication_v0_1.md §3 rule 13 (BOB #33): THE CASE EDITION A PUBLISHER NAMED THIS DRAFT FOR, read
      off the act's own record (`case_documents.draft_id`, with the act's `authored_by` and `authored_at` as who and
      when), signed or not — or null where no publisher has named it. One row at most by construction: `op=publish`
@@ -11212,7 +11223,11 @@ export class Store extends DurableObject {
        and not stated would make the review copy show fewer readers than the record holds, which is
        the record claiming less than it can support — the same defect one direction over. */
     const writer = { by: d.statement_by ?? null };
-    const acks = this.#statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
+    /* D-720 (§3 rule 13, BOB #36): read at the key the draft door WRITES at. For a draft naming a case AND asking for
+       a new one that is no case identity, so its copy lists the readings of THIS draft — and not every reading at the
+       named case's next edition, given through another draft or that case's door, which are that case's. */
+    const ackKey = Store.#ackKey(ident, !!params.newCase);
+    const acks = this.#statementAcknowledgements(d.project_id, ackKey.caseId, ackKey.edition,
                                                  params.statement ?? "", null, writer, d.draft_id);
     const withheld = acks.byWriter + acks.withheldWriterUndetermined;
     const statementAcks = { statement_sha: acks.statementSha, acknowledgements: acks.rows,
@@ -11599,14 +11614,26 @@ export class Store extends DurableObject {
        Collapsing to ONE read would keep whichever it asked first and could drop the document the reading belongs
        to, with no refusal (that block's control arm (b) measured the loss). Where both keys name the same document
        it is kept once. The pair is ordered by case id, as the single statement's `ORDER BY case_id` did. */
+    /* D-720 (§3 rule 13, BOB #36): THE READING IS WRITTEN, MATCHED AND REACHES DOCUMENTS AT `key`, NOT `ident`. For a
+       draft that names a case AND asks for a new one the two differ: its case is UNDETERMINED (D-618), so the key is
+       NO case identity — no document is reached by identity, and the named case's next edition, authored from another
+       draft or at the case door with this exact statement, is NOT re-authored to list it. A reading at no case binds
+       by its draft's LINK alone, whatever edition the publish naming the draft produced — a new case's 1 or the named
+       case's next, depending on which instruction was withdrawn — so that read asks the draft and not the edition
+       (still one row: `op=publish` refuses a second binding of one draft, PUBLISH_DRAFT_ALREADY_BOUND). */
+    const key = Store.#ackKey(ident, draftNewCase);
     const docCols = `case_id, edition, doc_sha, text, draft_id, authored_by, authored_at`;
-    const docMatch = `sig_armored IS NULL AND edition=? AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
-    const byIdentity = ident.caseId == null ? null
+    const docText = `sig_armored IS NULL AND instr(text, ?) > 0 AND instr(text, ?) > 0`;
+    const docMatch = `edition=? AND ${docText}`;
+    const byIdentity = key.caseId == null ? null
       : this.#one(`SELECT ${docCols} FROM case_documents WHERE case_id=? AND ${docMatch}`,
-                  ident.caseId, ident.edition, needle, projectLine);
+                  key.caseId, key.edition, needle, projectLine);
     const byLink = !draftId ? null
+      : key.caseId == null
+      ? this.#one(`SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docText}`,
+                  draftId, needle, projectLine)
       : this.#one(`SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docMatch}`,
-                  draftId, ident.edition, needle, projectLine);
+                  draftId, key.edition, needle, projectLine);
     const found = [byIdentity, byLink]
       .filter((d, i, all) => d && all.findIndex((e) => e && e.case_id === d.case_id) === i)
       .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
@@ -11620,23 +11647,23 @@ export class Store extends DurableObject {
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?
                               AND (? IS NOT NULL OR draft_id IS ?)`,
-                           project, statementSha, ident.caseId ?? null, ident.edition, kind, by,
-                           ident.caseId ?? null, draftId);
+                           project, statementSha, key.caseId ?? null, key.edition, kind, by,
+                           key.caseId ?? null, draftId);
     const when = same ? same.at : stampInstant("millisecond");
     if (!same)
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
                      acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
-                    project, ident.caseId ?? null, ident.edition, statementSha, draftId, kind, by, recipient, when);
+                    project, key.caseId ?? null, key.edition, statementSha, draftId, kind, by, recipient, when);
     /* The documents read above, re-read whole: the parse is the authority on the project, the SQL match its index. */
     const docs = found
       .filter((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     /* REC-217: WHICH CASE, IF ANY, A PUBLISHER HAS NAMED THIS DRAFT FOR — read off the act's own record,
        signed or not, so the answer below states the link instead of REC-194's "bound to no case". */
-    const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
+    const linkedTo = key.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
-                                case_id: ident.caseId ?? null, edition: Store.#statedEdition(ident, draftNewCase),
+                                case_id: key.caseId ?? null, edition: Store.#statedEdition(ident, draftNewCase),
                                 draft_id: draftId, statement_sha: statementSha },
              /* Each unsigned case document of this statement, re-authored to list it: its NEW hash is
                 the one the owner signs (op=caseratify refuses the old one as stale). */
@@ -11647,7 +11674,7 @@ export class Store extends DurableObject {
                 other. One given for a draft that names NO case is a reading of the DRAFT: the review copy
                 lists it, and no case document can — a case id is minted only by publication, so nothing
                 here can say which case the draft became, and naming one would be inventing a referent. */
-             bound_to_a_case: ident.caseId != null || !!linkedTo,
+             bound_to_a_case: key.caseId != null || !!linkedTo,
              ...(linkedTo ? { draft_link: { case_id: linkedTo.case_id, edition: Number(linkedTo.edition),
                                             named_by: linkedTo.authored_by ?? null,
                                             named_at: linkedTo.authored_at ?? null,
@@ -11669,22 +11696,24 @@ export class Store extends DurableObject {
                   edition, and the listing clause around it still promised one. Publication refuses the pair
                   together, so no case document can be authored FROM THIS DRAFT while both stand; the reading is
                   recorded, the review copy lists it, and which document can list it depends on which instruction is
-                  withdrawn, so this answer names none. Documents re-authored above (another draft's unsigned document
-                  at the key this draft names, carrying this exact statement) are the record's own act and are said. */
+                  withdrawn, so this answer names none.
+                  D-720 (§3 rule 13, BOB #36): D-708 still said "documents re-authored above … at the key this draft
+                  names", because the reading was WRITTEN at that key and re-authored the named case's next document.
+                  It is now keyed at NO case identity (`#ackKey`), so nothing is re-authored by identity, and a draft a
+                  publisher already named answers through `linkedTo` above — this branch re-authors nothing, and says
+                  where the reading binds: at a publish naming this draft, whichever instruction is withdrawn. */
                : ident.caseId != null && draftNewCase
                ? `this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case — `
                    + `publication refuses those two instructions together, so which case this draft becomes stays `
                    + `UNDETERMINED until one of them is withdrawn, and this answer states no edition for it and `
-                   + `promises no listing. op=reviewcopy lists it for this draft. No case document can be authored `
-                   + `from this draft while both instructions stand (op=publish refuses it). `
-                   + (reauthored.length
-                     ? `The unsigned case document${reauthored.length > 1 ? "s" : ""} returned beside this answer `
-                       + `(case_documents) carr${reauthored.length > 1 ? "y" : "ies"} this exact statement at the `
-                       + `key this draft names, and now list${reauthored.length > 1 ? "" : "s"} it, re-authored; `
-                       + `${reauthored.length > 1 ? "their owners sign" : "its owner signs"} the new bytes. `
-                     : ``)
-                   + `A statement edited afterwards is a different sentence, and this acknowledgement is not listed `
-                   + `under it.`
+                   + `promises no listing. This acknowledgement is bound to NO case identity yet: it is recorded for `
+                   + `this draft, op=reviewcopy lists it for this draft, and NO case document lists it — not `
+                   + `${ident.caseId}'s either, even one carrying this exact statement, because naming ${ident.caseId} `
+                   + `is not a choice while the draft also asks for a new case (BIO_Publication §3 rule 13). When one `
+                   + `instruction is withdrawn and the case is published naming this draft (op=publish&draft=${draftId}), `
+                   + `this reading binds at that act to the case it produced, and its document lists it with the link `
+                   + `stated (REC-217). A statement edited afterwards is a different sentence, and this acknowledgement `
+                   + `is not listed under it.`
                : ident.caseId != null
                ? `the completeness block of ${Store.#caseIdentitySentence(ident.caseId, ident.edition, draftNewCase)} `
                    + `lists this acknowledgement when its case document is authored with this exact statement `
@@ -11939,13 +11968,20 @@ export class Store extends DurableObject {
        readings are wanted, or the sentinel `*` meaning every row at this case identity: a draft id is
        `DRAFT-YYYY-NNNN` (`#caseDraft`), so no draft can be spelled `*`, and an unallocated identity with no
        draft named asks for `draft_id = ''`, which no row carries — zero rows by the predicate rather than
-       by a branch around it. */
+       by a branch around it.
+       D-720 (§3 rule 13, BOB #36): THE '*' MATCH NEVER LISTS A ROW AT NO CASE IDENTITY UNDER A CASE — its arm asks
+       `case_id IS ?` with a case id, so only the LINK arm can bring a NULL-case row in, and only the NAMED draft's.
+       A draft naming a case AND asking for a new one now writes its readings there (`#ackKey`), so the link is the
+       one door to them. THE LINK ARM ASKS NO EDITION: a reading at no case identity is keyed at edition 1 (the
+       derived draft's internal key), and the publish naming its draft may have produced the named case's NEXT
+       edition — the pair's `newCase` withdrawn — which is never 1. The draft is the binding; one draft binds one
+       case edition (PUBLISH_DRAFT_ALREADY_BOUND), so this adds no document a reading was not given for. */
     const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
                            `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
                               FROM statement_acknowledgements
-                             WHERE project_id=? AND statement_sha=? AND edition=?
-                               AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
+                             WHERE project_id=? AND statement_sha=?
+                               AND ((edition=? AND case_id IS ? AND (? = '*' OR draft_id = ?))
                                     OR (case_id IS NULL AND draft_id = ?))
                              ORDER BY at, ack_id LIMIT ?`,
                             project, sha, edition, caseId ?? null, draftMatch, draftMatch, linked,
@@ -11979,6 +12015,13 @@ export class Store extends DurableObject {
        possible second reading) nor silently excluded (which would claim it is the writer's): two unknowns,
        stated apart. A RECIPIENT row is never the writer (REC-193), so it stays in `unbound` either way.
        `writer === null` (not asked) excludes only the publisher, exactly as before this landing. */
+    /* D-720 (§3 rule 13, BOB #36; BOB #33's "without draft=, REC-194's provisional STANDS"): AND A READING AT NO CASE
+       GIVEN ON A DRAFT THAT NAMES THIS CASE IS COUNTED HERE AT ANY EDITION. A draft naming this case AND asking for a
+       new one keys its reading at (NULL, 1) (`#ackKey`), yet a publish naming it once `newCase` is withdrawn produces
+       THIS case's next edition — never 1 — so asking `edition=?` alone left this case's document printing "Nobody but
+       its author acknowledged it" over a record holding a reading that may be this case's (measured: block 8's case
+       door, L's edition 2). The draft's CURRENT `case_id` is what could still bind it here; a draft bound elsewhere
+       leaves the count by the clause below, as REC-217 made every bound reading leave it. */
     const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
     const writerUndetermined = writer && writer.by === null ? 1 : 0;
     const unboundRow = unallocated ? null
@@ -11990,13 +12033,14 @@ export class Store extends DurableObject {
                                             WHEN acknowledger_kind='participant' AND ? = 1 THEN 1
                                             ELSE 0 END), 0) AS u
                    FROM statement_acknowledgements
-                   WHERE project_id=? AND statement_sha=? AND edition=? AND case_id IS NULL
+                   WHERE project_id=? AND statement_sha=? AND case_id IS NULL
+                     AND (edition=? OR draft_id IN (SELECT draft_id FROM case_drafts WHERE case_id=?))
                      AND (draft_id IS NULL
                           OR draft_id NOT IN (SELECT draft_id FROM case_documents WHERE draft_id IS NOT NULL))
                      AND (draft_id IS NULL OR draft_id <> ?)`,
                   exceptAuthor ?? null, writerUndetermined, writerBy,
                   exceptAuthor ?? null, writerUndetermined,
-                  project, sha, edition, linked);
+                  project, sha, edition, caseId, linked);
     return { statementSha: sha, truncated,
              /* REC-217: the link this read was asked under, carried so every rendering states one act. */
              link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
