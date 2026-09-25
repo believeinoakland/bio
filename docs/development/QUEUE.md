@@ -636,7 +636,8 @@ scope: open the three through doAnswer and answer storeSilent (502) on a non-ans
 accepts-when: a forced store failure on each of the three answers a non-200 status with its named code (moves: HTTP 200 on failure). NEGATIVE CONTROL: restore the bare json(..., 200) on one and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-629's worker).
 
-### D-683 · running — **A READING OF A NO-CASE DRAFT IS NOT COUNTED UNDETERMINED ON A FURTHER EDITION PUBLISHED WITHOUT draft=: `#statementAcknowledgements`' unbound COUNT query asks `edition=?`, but such readings are recorded at edition 1 (D-568), so the count drops them.** Established from the code, not driven. Found by D-680's worker (minted on land/worker/D-680). — owner RECORD.
+### D-683 · integrated — **A READING OF A NO-CASE DRAFT IS NOT COUNTED UNDETERMINED ON A FURTHER EDITION PUBLISHED WITHOUT draft=: `#statementAcknowledgements`' unbound COUNT query asks `edition=?`, but such readings are recorded at edition 1 (D-568), so the count drops them.** Established from the code, not driven. Found by D-680's worker (minted on land/worker/D-680). — owner RECORD.
+status: integrated — SCHEDULER #23 10:35Z: tip 80d1db46 (on D-680 0d17eb0e), GATE 385/385 GREEN FULLREUSE (21885 assertions), tree 6fc9ca57; reproduced through op=publish; the unbound count drops its edition filter; Publication §3 rule 13 As built; minted D-703
 order: spawned directly after D-680, the same edition filter D-680 removed from the link arm (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 — the unbound count on a further edition; the integrator classifies.
@@ -754,6 +755,16 @@ depends-on: none (stacked on land/worker/D-564 @ ae807e25, integrated — its d5
 scope: adopt D-548's block() recorder and needs() in the eleven suites; add each to d564-block.control.mjs's SUITES table; state the matcher's blind spot (an abort under another name, an inline top-level process.exit) on the control's line.
 accepts-when: each of the eleven, with one fixture broken, names the sections that never ran and its totals are unchanged when whole (moves: an abort that hides unrun sections). NEGATIVE CONTROL: disarm the recorder in one suite and its broken-fixture arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-564's worker).
+
+### D-703 · running — **A SIGNED CASE DOCUMENT CREDITS THE PUBLISHER WITH AN EDITOR'S SENTENCE: `#statementWriter`'s `here` (`(d.case_id ?? null) === null && Number(edition) === 1`) matches a no-case draft only at edition 1, so when ella writes the exclusion statement in a no-case draft and iris publishes edition 2 without draft=, completeness.statement_by reads "iris" — "wrote this exclusion statement in the act that published this case" — into a signed document.** Driven in a scratch probe. Found by D-683's worker (minted on land/worker/D-683). — owner RECORD.
+order: spawned directly — a false attribution in signed bytes is the over-claim CLAUDE.md §2 ranks worst, and it corrects the D-680/D-683 chain (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 — who a signed statement names as writer on a further edition; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (as D-680 folded BOB #35's rulings: a no-case draft binds on any edition) and §6A.4.
+depends-on: none (stacked on land/worker/D-683 @ 80d1db46, integrated, on D-680 on D-626).
+scope: drop the edition condition from `here` (a no-case draft's identity reads edition 1 per D-568, and since D-680 it publishes any edition); state, do not widen, the known gap that the writer read looks at every no-case draft rather than the named one.
+accepts-when: edition 2 published without draft= names ella as writer in the signed block (moves: the publisher credited with an editor's bytes). NEGATIVE CONTROL: restore `Number(edition) === 1` and the edition-2 writer arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-683's worker).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
