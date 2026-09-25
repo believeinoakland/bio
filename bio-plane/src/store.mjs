@@ -39552,6 +39552,181 @@ export class Store extends DurableObject {
              why: `${describeExtent(extent)} exists in the newer capture as the record holds it` };
   }
 
+  /* ======================================================================
+   * REC-221 — DOES THE NEWER VERSION AFFECT THE REFERENCED PART? GRADED, NOT GUESSED.
+   *
+   * Bob, 2026-09-25 00:40Z, rule 2: a member is notified only when the update
+   * touches the referenced PART, and where the record cannot tell it says
+   * UNDETERMINED rather than staying silent. §5.8 of CONTENT-EXTENT-DESIGN-SPACE
+   * names the grades the record may DERIVE across two captures: A, byte-identical
+   * text at the extent; B, identical text at a new position; C, similar text,
+   * flagged. This build adds the two answers a derivation must also be able to
+   * give: NOT FOUND (the newer capture's text is held WHOLE and the passage is not
+   * in it) and UNDETERMINED, always with its reason.
+   *
+   * WHAT IS COMPARED IS THE TEXT THE RECORD HOLDS NOW FOR BOTH CAPTURES, in
+   * `capture_text` (the one per-unit text store, CONTENT-SEARCH-DESIGN.md §4.1),
+   * never the extent's existence. REC-82's extent test says only that page 3
+   * EXISTS in the newer capture; a publisher who rewrote page 3 leaves that test
+   * holding, and a grade read off it would be the silence rule 2 forbids.
+   *
+   * THE GRADE IS ADDITIVE TO THE ANSWER, and `state`/`matched` are unchanged: a
+   * surface already rendering them reads what it read before.
+   *
+   * THE ASYMMETRY IS THE DESIGN. A and B say UNAFFECTED only on POSITIVE evidence
+   * (the identical text was found). NOT FOUND is said only where the newer text is
+   * held whole (its index PRESENT, no unit truncated) — an index cut at a bound,
+   * or a capture nobody read, is UNDETERMINED, because "not in the part we read"
+   * is not "not in the document". A cited unit the record holds no text for is
+   * UNDETERMINED, never A: an extent that exists with no text to compare is not a
+   * passage carried forward.
+   *
+   * THE SIMILARITY FLOOR ONLY SEPARATES C FROM NOT FOUND, AND BOTH ARE AFFECTED,
+   * so it cannot move whether anyone is notified. It is a word-multiset Dice
+   * coefficient (case-folded letters and digits), chosen for being order-free and
+   * cheap; 0.7 is provisional, this worker's, and says only which of two AFFECTED
+   * words a member reads.
+   * ====================================================================== */
+
+  /** The five grades, what each means for the referenced part, and the sentence a
+   *  member reads. The vocabulary travels with the answer (PL-17). */
+  static VERSION_NOTICE_GRADES = {
+    A: { affects: "unaffected",
+         says: "the passage's text is byte-identical at the same extent of the newer version" },
+    B: { affects: "unaffected",
+         says: "the passage's text is byte-identical in the newer version, at a different position" },
+    C: { affects: "affected",
+         says: "text SIMILAR to the passage is in the newer version, and it is not identical: the passage changed" },
+    NOT_FOUND: { affects: "affected",
+         says: "the newer version's text is held whole, and neither the passage nor text similar to it is in it" },
+    UNDETERMINED: { affects: "undetermined",
+         says: "whether the change touches your passage is UNDETERMINED; the reason says what the record lacks" },
+  };
+  /** Word-multiset Dice at or above which differing text is C rather than NOT FOUND. */
+  static VERSION_NOTICE_SIMILAR = 0.7;
+
+  /** The latest text-index outcome for a capture (`#observeIndexed`'s row), or null. */
+  #indexStateOf(captureSha) {
+    return this.#one(
+      `SELECT state FROM observation_log WHERE level='content' AND subject_kind='capture' AND subject=?
+         AND authority_kind='derive' ORDER BY seq DESC LIMIT 1`, captureSha)?.state ?? null;
+  }
+
+  /** A capture's held units in reading order, read ONCE per notice read (`memo`),
+   *  because one newer capture is usually asked about by every leg citing it. */
+  #unitsOf(captureSha, memo) {
+    const key = `units\u0000${captureSha}`;
+    if (!memo.has(key)) {
+      const units = this.#rows(
+        `SELECT extent, ref, text, truncated FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT ?`,
+        captureSha, CAPTURE_TEXT_CAPTURE_UNIT_BOUND);
+      memo.set(key, { units, state: this.#indexStateOf(captureSha) });
+    }
+    return memo.get(key);
+  }
+
+  static #bagOf(text) {
+    const bag = new Map();
+    for (const w of String(text).toLowerCase().match(/[\p{L}\p{N}]+/gu) || []) bag.set(w, (bag.get(w) || 0) + 1);
+    let n = 0;
+    for (const v of bag.values()) n += v;
+    return { bag, n };
+  }
+  static #dice(a, b) {
+    if (!a.n || !b.n) return 0;
+    let shared = 0;
+    const [small, big] = a.bag.size <= b.bag.size ? [a.bag, b.bag] : [b.bag, a.bag];
+    for (const [w, c] of small) shared += Math.min(c, big.get(w) || 0);
+    return (2 * shared) / (a.n + b.n);
+  }
+
+  /** THE GRADE for one cited passage against one newer capture. Returns
+   *  `{ grade, affects, reason, why, found_at, similarity }`. Reads, never writes. */
+  #gradeAcross(row, extent, newerSha, memo) {
+    const G = Store.VERSION_NOTICE_GRADES;
+    const out = (grade, reason, why, found_at = null, similarity = null) =>
+      ({ grade, affects: G[grade].affects, reason, why, found_at, similarity });
+    const U = (reason, why) => out("UNDETERMINED", reason, why);
+    if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
+      return U("extent_unreadable", "the cited passage's extent could not be read back from its row");
+    if (row.cited_as === "bytes")
+      return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part "
+        + "digest of the newer capture to compare it with");
+    const older = this.#unitsOf(row.capture_sha, memo);
+    const newer = this.#unitsOf(newerSha, memo);
+    const whole = extent.kind === "document";
+    let cited;
+    if (whole) {
+      if (older.state !== "PRESENT" || !older.units.length || older.units.some((u) => u.truncated))
+        return U("cited_text_partial", "the citation is to the whole document, and the record does not hold the "
+          + `cited version's text whole (its index reads ${older.state || "never recorded"}), so there is no whole `
+          + "text to compare");
+      cited = { extent: canonicalExtent(extent), text: older.units.map((u) => u.text).join("\n") };
+    } else {
+      const at = canonicalExtent(extent);
+      const u = older.units.find((x) => x.extent === at);
+      if (!u)
+        return U("cited_text_not_held", `the record holds no text at exactly ${describeExtent(extent)} of the cited `
+          + "version (only whole indexed units — a PDF page, a paragraph, a slide — carry text), so there is "
+          + "nothing to compare");
+      if (u.truncated)
+        return U("cited_text_truncated", "the cited passage's text is held only to the per-unit cap, so an "
+          + "identity with the newer version cannot be established");
+      cited = { extent: at, text: u.text };
+    }
+    const found = (x) => ({ extent: safeJson(x.extent), ref: x.ref });
+    if (whole) {
+      const complete = newer.state === "PRESENT" && newer.units.length && !newer.units.some((u) => u.truncated);
+      if (!complete)
+        return U(newer.units.length ? "newer_text_partial" : "newer_text_not_held",
+          `the record does not hold the newer version's text whole (its index reads ${newer.state || "never recorded"})`);
+      const same = newer.units.length === older.units.length
+        && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
+      if (same) return out("A", "identical_at_extent", "every unit of the newer version's text is byte-identical "
+        + "at the same position", { extent, ref: row.ref });
+      const text = newer.units.map((u) => u.text).join("\n");
+      if (text === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, "
+        + "divided into different units", { extent, ref: row.ref });
+      const sim = Store.#dice(Store.#bagOf(cited.text), Store.#bagOf(text));
+      const r = Math.round(sim * 1000) / 1000;
+      return sim >= Store.VERSION_NOTICE_SIMILAR
+        ? out("C", "similar_text", `the document's text changed; word similarity ${r}`, { extent, ref: row.ref }, r)
+        : out("NOT_FOUND", "text_not_found", `the document's text changed past the similarity floor `
+            + `(${Store.VERSION_NOTICE_SIMILAR}); word similarity ${r}`, null, r);
+    }
+    const here = newer.units.find((x) => x.extent === cited.extent);
+    if (here && !here.truncated && here.text === cited.text)
+      return out("A", "identical_at_extent", `the text at ${describeExtent(extent)} is byte-identical in the newer version`,
+        found(here));
+    const moved = newer.units.find((x) => !x.truncated && x.text === cited.text);
+    if (moved)
+      return out("B", "identical_elsewhere", `the passage's text is byte-identical at ${moved.ref} of the newer version`,
+        found(moved));
+    /* C: the best-scoring unit, the same extent winning a tie so an edited passage
+       that stayed put is named where it stayed. */
+    const bag = Store.#bagOf(cited.text);
+    let best = null, bestSim = -1;
+    for (const x of here ? [here, ...newer.units.filter((y) => y !== here)] : newer.units) {
+      const s = Store.#dice(bag, Store.#bagOf(x.text));
+      if (s > bestSim) { best = x; bestSim = s; }
+    }
+    const r = best ? Math.round(bestSim * 1000) / 1000 : null;
+    if (best && bestSim >= Store.VERSION_NOTICE_SIMILAR)
+      return out("C", "similar_text", `text similar to the passage (word similarity ${r}) is at ${best.ref} of the `
+        + "newer version, and it is not identical", found(best), r);
+    if (!newer.units.length)
+      return U("newer_text_not_held", "the record holds no text of the newer version (its index reads "
+        + `${newer.state || "never recorded"}), so where the passage went cannot be looked for`);
+    if (newer.state !== "PRESENT")
+      return U("newer_text_partial", `the newer version's text is held only in part (its index reads ${newer.state}), `
+        + "so the passage may be in the part not held");
+    if (newer.units.some((x) => x.truncated))
+      return U("newer_text_truncated", "a unit of the newer version is held only to the per-unit cap, so the passage "
+        + "may be in the part not held");
+    return out("NOT_FOUND", "text_not_found", `the newer version's text is held whole (${newer.units.length} unit(s)) `
+      + `and neither the passage nor text similar to it is in it (best word similarity ${r ?? 0})`, null, r);
+  }
+
   /** THE ADDRESSES ONE CAPTURE WAS RETRIEVED FROM — one walk of `captured_locators`
    *  by capture, shared by its two askers: IS-6's origin walk (`#independenceOf`) and
    *  D-394's notice. `independence.test.mjs` pins exactly ONE such walk in this file,
@@ -39566,7 +39741,7 @@ export class Store extends DurableObject {
   }
 
   /** The notice for ONE content row. `row` is the stored row (extent as JSON text). */
-  #versionNoticeFor(row, viewer) {
+  #versionNoticeFor(row, viewer, memo = new Map()) {
     const extent = safeJson(row.extent);
     const cap = Store.VERSION_NOTICE_ADDRESSES_MAX;
     const addrRows = this.#capturedAddresses(row.capture_sha, cap + 1);
@@ -39599,9 +39774,13 @@ export class Store extends DurableObject {
     const newer = newerBySha.size > 0 ? true : allRead ? false : null;
     const candidates = [...newerBySha.values()].map((v) => {
       const test = this.#extentTestAcross(extent, v.capture_sha);
+      const g = this.#gradeAcross(row, extent, v.capture_sha, memo);
       return { capture_sha: v.capture_sha, bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
                extent: test.holds ? extent : null, matched: test.holds, reason: test.reason, why: test.why,
                existing_content_id: test.existing_content_id,
+               /* REC-221 — the grade, beside the extent test and not replacing it. */
+               grade: g.grade, affects: g.affects, grade_reason: g.reason, grade_why: g.why,
+               found_at: g.found_at, similarity: g.similarity,
                candidate_only: true, identity: "not_established",
                says: test.holds
                  ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to "
@@ -39617,10 +39796,18 @@ export class Store extends DurableObject {
       : addrRows.length > cap
         ? `this capture was seen at more than ${cap} addresses and only ${cap} were asked`
         : "at least one address's version chain does not hold this capture for you";
+    /* REC-221 — WHETHER THE UPDATE AFFECTS THE PASSAGE, rolled up over the
+       candidates: AFFECTED if any newer version affects it, else UNDETERMINED if
+       any cannot be told, else UNAFFECTED. No newer version affects nothing
+       (`null`); a chain nobody could read is UNDETERMINED, never silence. */
+    const affects = state === "no_newer_capture" ? null
+      : state === "chain_unread" ? "undetermined"
+      : candidates.some((c) => c.affects === "affected") ? "affected"
+      : candidates.some((c) => c.affects === "undetermined") ? "undetermined" : "unaffected";
     return {
       content_id: row.content_id, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
       extent_kind: row.extent_kind, ref: row.ref,
-      state, newer, chain_read: newer === false ? true : read.length > 0,
+      state, newer, chain_read: newer === false ? true : read.length > 0, affects,
       chains, addresses_asked: addresses.length, addresses_truncated: addrRows.length > cap,
       candidates,
       /* §18.1's first row: silence is earned only where the chain was read. */
@@ -39644,7 +39831,7 @@ export class Store extends DurableObject {
     };
     const tgt = String(target ?? "").trim();
     const cid = String(content ?? "").trim();
-    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref`;
+    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as`;
     let legs = [], rows = [], truncated = false, inquiry = null;
     /* DEC-49 REGION is-version-notice-subject */
     if ((tgt && cid) || (!tgt && !cid))
@@ -39682,19 +39869,20 @@ export class Store extends DurableObject {
             ...ids, ids.length)
         : [];
     }
-    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer)]));
+    const memo = new Map();
+    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer, memo)]));
     const notices = inquiry
       ? legs.map((l) => l.content_id && byId.has(l.content_id)
           ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
           : { ord: l.ord, target: l.target, content_id: null, state: "not_asked", newer: null,
-              says: null,
+              says: null, affects: null,
               why: "this leg rests on no cited passage (it cites another question, or a document this record "
                  + "holds no bytes of), so there is no capture whose newer versions could be asked about" })
       : [...byId.values()];
     return {
       ok: true, target: inquiry, content: inquiry ? null : cid,
       notices, count: notices.length, limit: inquiry ? max : 1, truncated,
-      states: Store.VERSION_NOTICE_STATES,
+      states: Store.VERSION_NOTICE_STATES, grades: Store.VERSION_NOTICE_GRADES,
       wrote: false, proposal_only: true,
       visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
         + "were not invited to is not in them",
