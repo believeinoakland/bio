@@ -10346,13 +10346,18 @@ export class Store extends DurableObject {
     const gate = viewerPredicate(`member:${d.updated_by}`);
     const findings = targets.map((raw) => {
       const id = String(raw ?? "").trim();
+      /* D-539: THE DESIGNATION IS THE DRAFT'S OWN AUTHORED FACT, not the finding's, so it is said
+         back whether or not the finding can be read. The absent branch dropped it, and an edit
+         written from the answer then wrote the member's load_bearing back as nothing — the UI
+         files a finding with no role under "undesignated" — so the designation was gone by the
+         time the finding could be read. It discloses nothing the target id beside it does not. */
+      const role = params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null;
       const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
                            WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-      if (!b) return { target: id, present: false,
+      if (!b) return { target: id, present: false, role,
                        detail: "this draft names a finding its editor cannot read, or one that does not exist." };
       const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      return { target: id, present: true, object_type: b.object_type, state: b.current_state,
-               role: params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null,
+      return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
                text: md ? md.content : null };
     });
     const gates = this.#reviewGates(d);

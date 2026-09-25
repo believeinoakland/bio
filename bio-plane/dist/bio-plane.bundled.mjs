@@ -39898,11 +39898,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const gate = viewerPredicate(`member:${d.updated_by}`);
     const findings = targets.map((raw) => {
       const id = String(raw ?? "").trim();
+      const role = params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null;
       const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
                            WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
       if (!b) return {
         target: id,
         present: false,
+        role,
         detail: "this draft names a finding its editor cannot read, or one that does not exist."
       };
       const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
@@ -39911,7 +39913,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         present: true,
         object_type: b.object_type,
         state: b.current_state,
-        role: params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null,
+        role,
         text: md ? md.content : null
       };
     });
