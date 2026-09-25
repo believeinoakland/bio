@@ -541,8 +541,8 @@ const CATALOG_CENSUS = {
        C-41.13 REC-219: caseDocumentRequiresDisclosures answers yes for /4 as well as /3;
        C-53.10, C-53.11, C-53.12  MK-7: the publication fence NARROWED to an observation that still names its author
                in its own files (and what rests on one); every other observation crosses under C-92;
-       C-70.3  REC-197: the value check moved into #visibilitySettingRefusal, which op=projectcreate/fork's new
-               `visibility` also asks — a second door refused by the same row.
+       C-70.3  REC-197: the value check moved into #visibilitySettingRefusal, which a project's creation or fork
+               (op=promote's new `visibility`) also asks — a second door refused by the same row.
      NOT listed, read and judged wording-only (what is refused or admitted did not move): C-29.9 and C-38.7's
      translations (REC-162 — the same set refused, the sentence names the session), C-33.29..31's `where` (D-589's
      regions), C-2.8's earned-leg hint text ("the MEASUREMENTS ledger"). THE LIMIT: `changed` is read from the

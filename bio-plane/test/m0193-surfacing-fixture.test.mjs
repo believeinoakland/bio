@@ -103,7 +103,11 @@ const question = async (token) => {
   try {
     r = await call(`op=promote&token=${E(token)}`, {
       bundleId: id, base: null, snapKey: `20260925T0000${String(seq).padStart(2, "0")}Z_m0193aa`,
-      meta: { object_type: "inquiry", group: "believe-in-oakland", title: `title for ${id}`,
+      /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: M0-193 was cut before D-563, whose C-86.3
+         refuses an envelope title the held document contradicts ("title for …" against "Question …"), so every
+         fixture promote read ENVELOPE_TITLE_DISAGREES. The envelope's title is dropped as D-563 dropped it in its own
+         fixtures; promote derives it from the document. */
+      meta: { object_type: "inquiry", group: "believe-in-oakland",
               current_state: "open", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }], register: [] });
   } catch (e) { threw = String((e && e.message) || e); }
