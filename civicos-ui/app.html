@@ -2259,7 +2259,9 @@ const SURFACES = {
        project's draft cases belongs to the workspace, and the review-copy surface keeps the
        DRAFT itself at its own address. So the read is declared on the surface that performs
        it; `review-copy`'s `reads` are unchanged. */
-    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts"],
+    /* D-189: `biasmanifest` at project scope — the set in force over this project's work, and
+       whether any of it is the project's own (BIO_Declared_Bias_v0_1.md §"Bias bundles and adoption"). */
+    reads: ["projectparticipants", "projectownerarith", "projection", "casedrafts", "biasmanifest"],
   },
   action: {
     routes: ["object:action", "hash:action"],
@@ -8982,6 +8984,74 @@ function projectDraftsHtml(ask){
      a spelling nobody anticipated, which is what this file's own over-strictness arm is for. */
   return `${bound}<div class="card" data-project-drafts="${rows.length}" style="padding:4px 18px">${body}</div>`;
 }
+/* ============================================================
+   D-189 · THE BIAS THIS PROJECT WORKS UNDER, AND WHETHER IT CARRIES ITS OWN.
+
+   DESIGN: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and
+   adoption" (DEC-46): *"Project managers define project bias. A project bias
+   bundle may add statements and may OVERRIDE (nullify or replace) instance
+   statements"*, and *"Effective bias for a piece of work = the adopted instance
+   statements at pinned revisions, minus project nullifications of unlocked
+   statements, plus project replacements and additions."* `op=biasmanifest` at
+   PROJECT scope computes exactly that set; until this item nothing in the product
+   called it, so no member could learn from any page that a project carries a
+   bias of its own (construct 7.ui).
+
+   NOTHING BELOW IS COMPUTED. Which sets are in force, at which scope, how many
+   statements the set holds, which override a lock refused, and whether an
+   adoption pins a revision the group has not accepted are the plane's fields,
+   rendered as they came. "This project carries its own bias" is said exactly
+   when the plane lists a set in force at scope `project`; a project working only
+   under the instance's sets is told so, and never that the sets are its own.
+
+   AN EMPTY ANSWER DRAWS NOTHING — the row's accepts-when, and the reason is the
+   record's: `in_force: false` with no `pins_proposed` is a scope with no set
+   adopted at all, and an indicator there would be this page claiming a lens the
+   record does not hold. `in_force: null` is NOT empty: it is the plane's stated
+   UNDETERMINED, and its own sentence is printed. `pins_proposed` (REC-210) is not
+   empty either: a member's authored act REPLACED the lens with bytes the group
+   has not accepted, and the plane's own sentence about what that means is
+   printed beside the list rather than re-worded here. */
+function projectBiasHtml(ask){
+  if(!ask) return "";
+  if(!ask.accepted) return `<h2 class="sec">The bias this project works under</h2>${actRefusalHtml(ask.refusal)}`;
+  const r = (ask.result && typeof ask.result === "object") ? ask.result : {};
+  const pins = Array.isArray(r.pins_proposed) ? r.pins_proposed.filter(p => p && p.bundle_id) : [];
+  const head = `<h2 class="sec">The bias this project works under</h2>`;
+  const pinsHtml = pins.length
+    ? `<div class="teach" data-bias-pins-proposed="${pins.length}"><b>Adopted at a revision the group has not accepted:</b> ${pins.map(p =>
+        `<a onclick="openByType(${esc(JSON.stringify(String(p.bundle_id)))},'bias')">${esc(String(p.bundle_id))}</a> (${p.scope === "project" ? "for this project" : "for the whole instance"}${p.adopted_by ? `, by ${esc(String(p.adopted_by))}` : ""})`).join(", ")}.${typeof r.pins_proposed_stated === "string" && r.pins_proposed_stated ? ` The record says: ${esc(r.pins_proposed_stated)}.` : ""}</div>`
+    : "";
+  if(r.in_force === null)
+    return `${head}<div class="teach" data-project-bias="undetermined">${esc(String(r.stated || "The record could not say which bias sets are in force for this project."))}</div>${pinsHtml}`;
+  if(r.in_force !== true)
+    return pins.length ? `${head}<p class="subj-note" data-bias-in-force="false">${esc(String(r.stated || ""))}</p>${pinsHtml}` : "";
+  const sets = (Array.isArray(r.bundles) ? r.bundles : []).filter(b => b && b.bundle_id);
+  const own = sets.filter(b => b.scope === "project");
+  const inherited = sets.filter(b => b.scope !== "project");
+  const setLink = b => `<a onclick="openByType(${esc(JSON.stringify(String(b.bundle_id)))},'bias')">${esc(String(b.bundle_id))}</a>${b.adopted_by ? ` <span class="subj-note">adopted by ${esc(String(b.adopted_by))}${b.adopted_at ? ` on ${esc(fmtWhenFull(b.adopted_at))}` : ""}</span>` : ""}`;
+  const lede = own.length
+    ? `<p class="lede" data-project-bias="${own.length}"><b>This project carries its own bias:</b> ${own.length === 1 ? "one bias set is" : `${own.length} bias sets are`} adopted for this project and in force over its work.</p>`
+    : `<p class="lede" data-project-bias="0">This project carries no bias set of its own. It works under the ${inherited.length === 1 ? "bias set" : "bias sets"} adopted for the whole instance, which bind every project.</p>`;
+  const list = [
+    own.length ? `<div class="kv"><span class="k">This project's own</span><span class="v plain">${own.map(setLink).join("<br>")}</span></div>` : "",
+    inherited.length ? `<div class="kv"><span class="k">The instance's</span><span class="v plain">${inherited.map(setLink).join("<br>")}</span></div>` : "",
+  ].join("");
+  const stmts = (Array.isArray(r.statements) ? r.statements : []).filter(s => s && s.statement_id);
+  const total = Number.isInteger(r.total) ? r.total : stmts.length;
+  const stmtRows = stmts.map(s =>
+    `<li data-bias-statement="${esc(String(s.statement_id))}">${esc(String(s.text || ""))} <span class="subj-note">&mdash; ${esc(String(s.kind || ""))}, ${s.scope === "project" ? "this project's" : "the instance's"}${s.locked ? ", locked" : ""}${s.nullifies ? `, in place of ${esc(String(s.nullifies))}` : ""}</span></li>`).join("");
+  const bound = r.truncated === true
+    ? `<p class="subj-note">The set holds ${esc(String(total))} statements and this list shows the first ${esc(String(stmts.length))}, the bound the record applied to its own answer.</p>` : "";
+  const locks = (Array.isArray(r.lock_violations) ? r.lock_violations : []).filter(v => v && v.statement_id);
+  const lockHtml = locks.length
+    ? `<div class="teach" data-bias-lock-violations="${locks.length}">${locks.map(v =>
+        `<div>${esc(String(v.project_bundle))} tried to set aside ${esc(String(v.nullifies))}: ${esc(String(v.detail || ""))}.</div>`).join("")}</div>` : "";
+  return `${head}${lede}
+    <div class="card" data-bias-in-force="true" style="padding:10px 18px">${list}</div>
+    <p class="subj-note">The ${total === 1 ? "statement" : `${esc(String(total))} statements`} in force, as the record computes them for this project: the instance's, minus what this project set aside, plus what it added.</p>
+    ${stmtRows ? `<ul>${stmtRows}</ul>` : ""}${bound}${lockHtml}${pinsHtml}`;
+}
 /* One click, the right surface: a question opens the QUESTION page, a project
    opens its own workspace, everything else opens as a document. */
 function openByType(id, type){
@@ -9197,11 +9267,16 @@ async function openProjectWorkspace(id, fromNav){
     const ar = await actAsk("projectownerarith", { projectId:id });
     if(ar.accepted) arith = ar.result || null;
     if(WORKSPACE) WORKSPACE.arith = arith;
+    /* D-189: THE BIAS THIS PROJECT WORKS UNDER, read at PROJECT scope after the
+       visibility gate cleared. Not on the skeleton above: the set governs the
+       project's WORK PRODUCT, which 7.9 withholds from an invited member. */
+    const bias = await actAsk("biasmanifest", { scope:"project", scopeId:id });
 
     $("#content").innerHTML = `${header}
       <h2 class="sec">How ready the work product is</h2>
       <p class="subj-note">The rung below is the record's own, carried on this project's document. It moves when an evaluation is RECORDED against the work &mdash; not when anyone, here or elsewhere, judges that it should.</p>
       ${projectLadderHtml(fmj && fmj.workproduct_state, fmj && fmj.evaluations)}
+      ${projectBiasHtml(bias)}
       <h2 class="sec">What is in this project</h2>
       <p class="subj-note">The questions, documents and actions this project carries. What each one RESTS ON, how strong it is and what it concluded live on the question itself, one click away: a project is a container with membership and access control, and a question is a claim structure &mdash; this page does not answer for the other.</p>
       ${contents}
@@ -20102,13 +20177,91 @@ function pubCaseAuthors(c){
   for(const f of (c && c.findings) || []) if(f.attestor && f.attestor.member) names.push(String(f.attestor.member) + " (attested " + String(f.bundle_id) + ")");
   return names.length ? names.join(", ") : "not named in the published bytes";
 }
-/* DECLARED BIAS is the HUNCH legs and nothing else: a hunch is declared bias,
-   recorded openly from the moment it is made. "None declared" is a real answer
-   and is printed as one. Per FINDING, because a basis belongs to a finding. */
+/* DECLARED BIAS HAS TWO SOURCES, AND THIS PAGE PRINTS BOTH, APART.
+   CORRECTED 2026-09-25 by D-189, not extended: this comment said declared bias
+   was the hunch legs alone, and that was false of the record from the
+   day DEC-46 was ruled. `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption":
+   bias sets are adopted at instance scope and at PROJECT scope, and *"Every work
+   product cites its BIAS MANIFEST … The manifest is part of the evidentiary
+   record and travels with publication"* — since D-84 op=publish stamps it into the
+   case document the owner signs. So a case published under a project's own bias
+   set was shown to a stranger as carrying no declared bias beyond its hunches.
+     (1) THE HUNCH LEGS, per FINDING (below): a hunch is TEMPORARY declared bias,
+         recorded openly from the moment it is made. "None declared" is a real
+         answer and is printed as one. Per finding, because a basis belongs to one.
+     (2) THE BIAS SETS IN FORCE, per CASE (`pubLensHtml`): read from the SIGNED
+         case document's own `bias_manifest` block — frozen at publication, never
+         the lens in force today — as the case's container carries it. */
 function pubDeclaredBias(f){
   const legs = (f && Array.isArray(f.basis)) ? f.basis : [];
   const h = legs.filter((l) => l && l.grade_source === "hunch").map((l) => String(l.target));
   return h.length ? `${h.length} declared hunch${h.length === 1 ? "" : "es"} — ${h.join(", ")}` : "none declared";
+}
+/* D-189 — THE BIAS SETS THE CASE WAS PUBLISHED UNDER, FROM ITS SIGNED BYTES.
+   op=publishedcase names no bias set of its own; the case document does, inside
+   the signature (D-84's `bias_manifest` map and `bias_manifest_bundles` list, the
+   `searched` arrangement), and the CONTAINER carries that document WHOLE
+   (`manifest.case_document.text`, `bio-case-container/5` on) so a stranger can
+   re-hash what they hold. This reads the two blocks out of THAT text — the bytes
+   the reader is already holding, so no second read is made and nothing a
+   stranger could not check is shown — and COMPUTES NOTHING: which sets, at which
+   scope, the hash, the plane's own sentence. Returns null for bytes that are no
+   member of a case (there is no case document to read), `{ read:false }` when no
+   document is in hand, and the parsed block otherwise. `splitFm` reads the map;
+   the list is read by the three-line shape the plane writes (`  - bundle_id:`,
+   `    revision:`, `    scope:`), because `splitFm` skips list items by design. */
+function pubCaseLens(c){
+  if(!pubCaseId(c)) return null;
+  let m = c && c.manifest;
+  if(typeof m === "string"){ try{ m = JSON.parse(m); }catch(_){ m = null; } }
+  if(!m || typeof m !== "object")
+    return { read: false, why: "this edition has no container yet, and the signed case document that names them travels in the container" };
+  const d = m.case_document;
+  if(!d || typeof d !== "object" || typeof d.text !== "string")
+    return { read: false, why: "this case's container carries no signed case document to read them from" };
+  return { read: true, ...pubLensFromDocument(d.text) };
+}
+function pubLensFromDocument(text){
+  const { fm } = splitFm(text);
+  const m = /^---\n([\s\S]*?)\n---/.exec(text || "");
+  const lines = m ? m[1].split("\n") : [];
+  const bundles = [];
+  let inList = false;
+  for(const line of lines){
+    if(/^bias_manifest_bundles:\s*$/.test(line)){ inList = true; continue; }
+    if(inList && /^\S/.test(line)) break;
+    if(!inList) continue;
+    const kv = /^\s*(-\s+)?([a-z_]+):\s*(.*)$/.exec(line);
+    if(!kv) continue;
+    if(kv[1]) bundles.push({});
+    if(bundles.length) bundles[bundles.length - 1][kv[2]] = kv[3].replace(/^["']|["']$/g, "").trim();
+  }
+  const f = (k) => (typeof fm["bias_manifest." + k] === "string" ? fm["bias_manifest." + k] : null);
+  const inForce = f("in_force");
+  return { present: inForce !== null,
+           in_force: inForce === "true" ? true : inForce === "false" ? false : null,
+           scope_id: f("scope_id"), statements_sha: f("statements_sha"),
+           stated: f("stated"), bundles: bundles.filter(b => b.bundle_id) };
+}
+/* WHAT THE HEADER SAYS OF IT. An EMPTY block (`in_force: false`, no set named)
+   draws NOTHING — the row's accepts-when, and the hunch half beside it still
+   says "none declared" where that is true. A document this page could not read
+   is SAID, never drawn as empty: a block not in hand and an empty one are two facts,
+   exactly as `pubCaseHashLine` says there is no container hash yet in the
+   `awaiting` window rather than printing a member's hash in its place.
+   A pre-D-84 document carries no block at all and is said to carry none. */
+function pubLensHtml(lens){
+  if(!lens) return "";
+  if(!lens.read)
+    return ` &middot; <span data-case-bias="no-document">which bias sets were in force when this case was published is not read here: ${esc(lens.why)}</span>`;
+  if(!lens.present)
+    return ` &middot; <span data-case-bias="absent">its signed document carries no record of the bias sets in force, because it was published before the record stamped them</span>`;
+  if(lens.in_force === null)
+    return ` &middot; <span data-case-bias="undetermined">${esc(lens.stated || "which bias sets were in force at publication is undetermined")}</span>`;
+  if(lens.in_force !== true || !lens.bundles.length) return "";
+  const own = lens.bundles.filter(b => b.scope === "project");
+  const words = lens.bundles.map(b => `${esc(String(b.bundle_id))} (${b.scope === "project" ? "the project's own" : "the instance's"})`).join(", ");
+  return ` &middot; <span data-case-bias="${own.length}">${own.length ? "<b>the case's project carries its own bias</b>: " : ""}published under ${lens.bundles.length === 1 ? "one bias set" : `${esc(String(lens.bundles.length))} bias sets`} &mdash; ${words}${lens.statements_sha ? `, statements hash sha256:${esc(lens.statements_sha)}` : ""}, frozen in the signed case document</span>`;
 }
 /* PER CASE: again a list, finding by finding, never a total. A count over the
    whole case would be a case-level number about evidence, which is the shape
@@ -20183,7 +20336,7 @@ function dec34Header(c, floors, f){
     <span class="f"><b>${f ? "Finding" : "Findings"}</b> ${f ? esc(String(f.bundle_id)) : esc(pubRoster(c).map((m) => m.id + (m.ratified ? "" : " (awaiting)")).join(", ") || "none")}</span>
     <span class="f"><b>Edition state</b> ${esc(pubEditionStateWord(c))}</span>
     <span class="f"><b>Authors</b> ${esc(f ? pubAuthors(f) : pubCaseAuthors(c))}</span>
-    <span class="f"><b>Declared bias</b> ${f ? esc(pubDeclaredBias(f)) : pubCaseDeclaredBias(c)}</span>
+    <span class="f"><b>Declared bias</b> ${f ? esc(pubDeclaredBias(f)) : pubCaseDeclaredBias(c)}${pubLensHtml(pubCaseLens(c))}</span>
     <span class="f"><b>Floors</b> ${floorLine}</span>
     <span class="f"><b>What this is</b> ${pubFilterHtml(floors, "filterline")}</span>
     <span class="f sha"><b>Hash</b> ${hash.html}</span>
