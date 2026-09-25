@@ -13,6 +13,9 @@
  *   the 502 and older-plane silences failing on the HEADER only (the fence's `recR` throws on a non-OK answer, so its
  *   catch still says "could not read" — the arm moved one path of two, and the header arm is the one that saw it), the
  *   true-absence arms GREEN · (D) GREEN 45/45.
+ *   RE-RUN 2026-09-25 by UI-78 after the read moved to op=groupidentity (the op-name arms corrected, the (A) anchor's
+ *   comment updated), against app.html 73a4f7de… (1,618,811 bytes): 5/5 AS DECLARED, every figure identical to the run
+ *   above — BASELINE 45/45 · (A) RED 10/45 · (B) RED 31/45 · (C) RED 41/45 · (D) GREEN 45/45; file IDENTICAL at the end.
  * =========================================================================
  * UI-77 — THE MEMBER FENCE AND THE PUBLIC HEADER SHOW THE GROUP THE RECORD RECORDS, OR SAY THAT NONE IS RECORDED.
  * Design: `docs/architecture/BIO_Publication_v0_1.md` §7 point 1 (the slug is PUBLIC; a display name is shown WITH it,
@@ -28,7 +31,7 @@
  *   SECOND — a store whose first boot bound `INSTANCE_NAME` to a slug that is NOT this project's (the row's "plane
  *            recording a SECOND slug"): both surfaces, signed out AND signed in, show that slug;
  *   NONE   — a store whose first boot bound none, so it records no group: both surfaces SAY so, in words;
- *   SILENT — the SECOND plane with its `op=instancegroup` made to fail three ways (the store's own 502 envelope, an
+ *   SILENT — the SECOND plane with its group read (`op=groupidentity` since UI-78) made to fail three ways (the store's own 502 envelope, an
  *            older plane's refusal of a stranger, a transport that throws): both surfaces say they could not read the
  *            group, and NEVER that none is recorded and never the slug (REC-52: a silence is not an absence).
  * Signed in is a real enrolled member signed in with a SESSION, through the real `boot()`.
@@ -144,6 +147,13 @@ function loadApp(fetchImpl){
   const state = (s) => { const e = els.get(s); return e && e.dataset ? e.dataset.group : undefined; };
   return { U: ctx.__U, SENT, domText, at, state };
 }
+/* CORRECTED 2026-09-25 BY UI-78: the surfaces' read is now `op=groupidentity` (REC-164, IC-223), which answers the
+   same `group` under op=instancegroup's rule for who and which store, and beside it the display name and the domain
+   (`group-identity-surface.test.mjs`). The arms below named `instancegroup` as THE op read; that pinned the transport
+   UI-77 happened to use, not the property (one credential-less read for the header, the member's for the fence,
+   and a failed read saying so), so they now name the op the surface reads — every property asserted unchanged. The
+   plane-side checks above still ask `op=instancegroup` itself: that is the plane's answer the fixture floors. */
+const GROUP_OP = "groupidentity";
 const mfFetch = (mf) => (url, opts) => mf.dispatchFetch(url.toString(), opts);
 const FENCE = ["#m-grp", "#m-idstr"], HEADER = ["#p-gname"];
 
@@ -191,8 +201,8 @@ const OLIVE = await memberSession(mfS);
   ok(`SIGNED OUT, HEADER: the monogram is the slug's own first character (read "${A.at("#p-mono")}")`, A.at("#p-mono") === "H");
   ok("SIGNED OUT, HEADER: no domain is shown — none is verified (§7 point 3)", A.at("#p-gid") === "");
   ok("SIGNED OUT, HEADER: the site is marked recorded", A.state("#p-gname") === "recorded");
-  const igSent = A.SENT.filter(s => s.op === "instancegroup");
-  ok("SIGNED OUT: the header read op=instancegroup exactly once, holding NO credential",
+  const igSent = A.SENT.filter(s => s.op === GROUP_OP);
+  ok(`SIGNED OUT: the header read op=${GROUP_OP} exactly once, holding NO credential`,
      igSent.length === 1 && !("token" in igSent[0].params));
   ok(`SIGNED OUT NO-LITERAL: the DOM's text, hidden or not, names neither literal:\n${A.domText()}`, !hasLiteral(A.domText()));
 }
@@ -205,14 +215,14 @@ const OLIVE = await memberSession(mfS);
   ok(`SIGNED IN: boot() completed (${bootErr ? JSON.stringify(bootErr && (bootErr.message || bootErr)).slice(0, 200) : "ok"})`, !bootErr);
   for(const s of FENCE) ok(`SIGNED IN, FENCE: ${s} shows the recorded slug (read "${B.at(s)}")`, B.at(s) === SECOND);
   for(const s of FENCE) ok(`SIGNED IN, FENCE: ${s} is marked recorded`, B.state(s) === "recorded");
-  const igSent = B.SENT.filter(s => s.op === "instancegroup");
-  ok("SIGNED IN: the fence read op=instancegroup through the member's own credential (the store every other read asks)",
+  const igSent = B.SENT.filter(s => s.op === GROUP_OP);
+  ok(`SIGNED IN: the fence read op=${GROUP_OP} through the member's own credential (the store every other read asks)`,
      igSent.length >= 1 && igSent[0].params.token === OLIVE);
   /* ...and the public header, entered WITH a credential held, reads the public answer holding nothing. */
   B.U.enterPublished(true);
   await B.U.PUB_GROUP;
   ok(`SIGNED IN, HEADER: #p-gname shows the recorded slug (read "${B.at("#p-gname")}")`, B.at("#p-gname") === SECOND);
-  const pubSent = B.SENT.filter(s => s.op === "instancegroup").slice(1);
+  const pubSent = B.SENT.filter(s => s.op === GROUP_OP).slice(1);
   ok("SIGNED IN, HEADER: the public header's read carried NO credential", pubSent.length === 1 && !("token" in pubSent[0].params));
   ok(`SIGNED IN NO-LITERAL: the DOM's text, hidden or not, names neither literal:\n${B.domText().slice(0, 3000)}`, !hasLiteral(B.domText()));
 }
@@ -258,7 +268,7 @@ const SILENCES = {
   "a transport that throws": () => { throw new TypeError("fetch failed"); },
 };
 for(const [how, answer] of Object.entries(SILENCES)){
-  const f = (url, opts) => url.searchParams.get("op") === "instancegroup" ? answer() : mfS.dispatchFetch(url.toString(), opts);
+  const f = (url, opts) => url.searchParams.get("op") === GROUP_OP ? answer() : mfS.dispatchFetch(url.toString(), opts);
   const A = loadApp(f);
   A.U.enterPublished(true);
   await A.U.PUB_GROUP;
@@ -284,7 +294,8 @@ console.log("\n--- the preview shell names nobody ---");
   await new Promise(r => setImmediate(r));   /* every microtask the unawaited paint queued has run */
   ok(`PREVIEW: the fence says the group was not read (read ${JSON.stringify(FENCE.map(s => P.at(s)))})`,
      FENCE.every(s => SILENT_RE.test(P.at(s))));
-  ok("PREVIEW: op=instancegroup was not asked (preview holds no plane)", !P.SENT.some(s => s.op === "instancegroup"));
+  ok("PREVIEW: neither op=groupidentity nor op=instancegroup was asked (preview holds no plane)",
+     !P.SENT.some(s => s.op === GROUP_OP || s.op === "instancegroup"));
   ok("PREVIEW NO-LITERAL", !hasLiteral(P.domText()));
 }
 
