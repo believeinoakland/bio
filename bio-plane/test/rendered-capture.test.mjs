@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: re-run with `node test/nc-d64.mjs` (one arm: `node test/nc-d64.mjs <arm>`). RE-RUN IN FULL 2026-09-24 for D-499 on base origin/main 58293bf3 plus this item, EIGHT rows — six arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE this worktree (corrected by D-499, BOB #32's scratch ruling), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (6 of 6 MATCH/IDENTICAL, 19715 and 802628 bytes). BASELINE 76 pass 0 fail; BASELINE-LAST 76/0. (1) `determined` — D-64's control — force `determined` on a page drawing data from a second origin: DECLARED B1 by name, B2-B4, E1; ACTUAL 71/5 B1 B2 B3 B4 E1, AS DECLARED. (2) `emptyscripts` — a script set nobody recorded read as `[]`: DECLARED D1 D2 D4; ACTUAL 73/3, AS DECLARED. (3) `shellprimary` — the shell kept as the PRIMARY: DECLARED A2 A3 A4; ACTUAL 73/3, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — the host's own data read as foreign: DECLARED A16 and, since D-499, J7; ACTUAL 74/2 A16 J7, AS DECLARED — the arm's set WIDENED by one because D-499 asserts the same property a second time (J7, on the timeout page), not because the arm breaks anything new; it read A16 alone before this item and that is a change in the SUITE, recorded rather than smoothed. (5) `waitcondition` — D-499'S CONTROL, the row's own words: record every wait as `condition`: DECLARED J2 J3 J4 J4b J6 (the timeout page), J10 J11 (an unrecognised word), J12 (no wait reported), and NOT J0 J1 J5 J7 J8 J9 J13 or A-I; ACTUAL 68/8 failing exactly J2 J3 J4 J4b J6 J10 J11 J12, AS DECLARED — the capture is still filed, still graded and still determined under the arm, which is the point: the arm removes the RECORD of which wait fired and nothing else. (6) `waitcase` — D-499'S OVER-STRICTNESS ARM — drop the normalisation so `  NetworkIdle  ` no longer reads as the asked condition: DECLARED J13 ALONE; ACTUAL 75/1 J13, AS DECLARED. */
 /* NEGATIVE CONTROL (D-492, the RESERVATION): re-run with `node test/nc-d492.mjs` (one arm: `node test/nc-d492.mjs <arm>`). Run 2026-09-24 on base origin/main 58293bf31 plus this item — RE-RUN after the concurrency wait moved from a hand-rolled `Date.now()` deadline to `until`+`budgetAssert` (M0-107), which `budget-sweep.test.mjs` graded UNCHECKED by name and which added the budget's own assertion (68 -> 69); the first run read every arm identically at one tally lower — SIX rows — four arms each armed ALONE, a baseline first and last — each file copied to a UNIQUELY-NAMED per-arm pristine copy OUTSIDE the worktree (BOB #32), every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp with the byte count printed and floored at 1000 (4 of 4 MATCH/IDENTICAL). BASELINE 69 pass 0 fail; BASELINE-LAST 69/0. (1) `noreserve` — THE ROW'S CONTROL — drop the reservation and admit on what has been SPENT, the rule D-492 replaced: DECLARED red on J1 by name, with J2 J3 J4 J5 H2 H3 H4, nothing else — and the wait's `stop` (all K renderers inside means every request was ADMITTED, so no deferral can still be coming) is what keeps this arm pointed at J1 rather than reporting the budget NOT MEASURED; ACTUAL 61/8 failing exactly H2 H3 H4 J1 J2 J3 J4 J5, AS DECLARED — the four concurrent admits all succeed against one `spent_ms`. (2) `norelease` — the reservation is never given back: DECLARED H1 H3 J6; ACTUAL 66/3 H1 H3 J6, AS DECLARED. (3) `releaseunreported` — an unreported render hands its reservation back, D-492's rule inverted: DECLARED J5 ALONE; ACTUAL 68/1 J5, AS DECLARED. (4) `overstrict` — OVER-STRICTNESS — a CORRECT reservation spelled as a JSON string rather than a number must be admitted exactly as before: DECLARED nothing fails; ACTUAL 69/0, the baseline's own tally, AS DECLARED. */
+/* NEGATIVE CONTROL (D-529, the SUBRESOURCE DIGEST): re-run with `node test/nc-d64.mjs <arm>` for `nodigest`, `rendererclaim`, `textstrict`. Run 2026-09-25 on base origin/main 8bdf20e6 plus this item, each arm ALONE with a baseline first and last, every patch matched EXACTLY ONCE (armed: true), every restore verified by sha256 AND cmp (sha256 de1f6240b2ae MATCH, cmp IDENTICAL, 31010 bytes, 3 of 3). BASELINE 95 pass 0 fail; BASELINE-LAST 95/0. (1) `nodigest` — THE ROW'S CONTROL, its own words: drop the digest from each recorded subresource: DECLARED K0 K2 K3 (THE VERIFY ARM, by name) K4 K5 K6 K7 K8 K9 K10 and NOT A13 or A-J; ACTUAL 85/10 failing exactly K0 K2 K3 K4 K5 K6 K7 K8 K9 K10, AS DECLARED. (2) `rendererclaim` — the rule D-529 replaced, a renderer-REPORTED digest recorded as the digest: DECLARED A13 K0 K3 K4 K6 K7 K8, NOT K2 K5 K9 K10; ACTUAL 88/7 failing exactly A13 K0 K3 K4 K6 K7 K8, AS DECLARED — K3 catches it because the store holds no bytes under a claimed digest. (3) `textstrict` — OVER-STRICTNESS — a correct `body_text` (the form CDP gives a text body) treated as missing: DECLARED K0 K3 K4 K5 K6 K8; ACTUAL 89/6 exactly those, AS DECLARED. */
 /* D-64 — THE RENDER ARM OF op=acquire, driven THROUGH THE OP.
  *
  * Design: `CLIENT-RENDERED.md` (a development design, cited here and never read by this suite) §"What must be recorded on a
@@ -68,6 +69,15 @@ const SHELL = `<!doctype html><html><head><title>Portal</title><script src="/app
 const SHELL_SHA = sha(Buffer.from(SHELL, "utf-8"));
 const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n", "latin1");
 
+/* D-529's bytes: a script, a vendor script, a stylesheet with a non-ASCII character (so
+   `body_text` is re-encoded, not copied), and an image that is not valid UTF-8 at all. */
+const D529 = {
+  js: "window.app = { agenda: true };\n",
+  vendorJs: "(function(){ /* analytics */ })();\n",
+  css: "main { font-family: \"Noto Sans\"; } /* café */\n",
+  png: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xfe, 0x00, 0x80]),
+};
+
 /* ONE RENDERED DOCUMENT PER PAGE — distinct bytes, so every sha is its own. */
 const rendered = (p) => `<!doctype html><html><head><title>Portal</title></head><body><main>`
   + `<h1>Council agenda</h1><p>Rendered for ${p}.</p><a href="https://${HOST}/item/1">Item 1</a></main></body></html>`;
@@ -101,6 +111,27 @@ const PAGES = {
     requests: [...same("/same-site"),
       { url: "https://tiles.example.gov/0/0/0.png", type: "image", outcome: "completed", status: 200 }],
     scripts: [{ url: `https://${HOST}/app.js` }] },
+  /* D-529 — THE DIGEST PAGE. Every load carries the bytes a browser would hand over, in
+     each of the forms the seam admits, beside the ways bytes go missing. The BYTES are
+     this file's, and so is every sha the verify arm compares against: the plane's digest
+     must equal a hash this suite took of what it SERVED, not of what the plane kept. */
+  "/digests": {
+    requests: [
+      { url: `https://${HOST}/digests`, type: "document", outcome: "completed", status: 200, body_text: SHELL },
+      { url: `https://${HOST}/app.js`, type: "script", outcome: "completed", status: 200,
+        body_base64: Buffer.from(D529.js).toString("base64") },
+      { url: "https://cdn.analytics.example/a.js", type: "script", outcome: "completed", status: 200,
+        body_base64: Buffer.from(D529.vendorJs).toString("base64") },
+      { url: `https://${HOST}/app.css`, type: "stylesheet", outcome: "completed", status: 200, body_text: D529.css },
+      { url: `https://${HOST}/logo.png`, type: "image", outcome: "completed", status: 200,
+        body_base64: D529.png.toString("base64") },
+      { url: `https://${HOST}/api/agenda.json`, type: "xhr", outcome: "completed", status: 200, sha256: "b".repeat(64) },
+      { url: `https://${HOST}/api/evicted.json`, type: "fetch", outcome: "completed", status: 200,
+        body_unavailable: "the browser would not give the body: CDP No resource with given identifier found" },
+      { url: `https://${HOST}/api/garbled.json`, type: "fetch", outcome: "completed", status: 200, body_base64: "@@not base64@@" },
+      { url: `https://${HOST}/missing.js`, type: "script", outcome: "failed", status: 404 },
+    ],
+    scripts: [{ url: `https://${HOST}/app.js` }, { url: "https://cdn.analytics.example/a.js" }] },
   "/fail": null,
 };
 
@@ -179,7 +210,11 @@ t("code and layout are the only non-data axes (inverted list)", Object.values(NO
    /odd-case) that drive the wait's own cases, and a count pinned to the old number
    would have failed for the one reason that is not a defect. `/fail` is still the
    only page that does not render. */
-t("the fixture has ten pages, nine that render", [Object.keys(PAGES).length, Object.values(PAGES).filter(Boolean).length], [10, 9]);
+/* CORRECTED by D-529: this read [10, 9]. SUPERSEDED, not wrong — D-529 added `/digests`,
+   the page whose loads carry their bytes, and a count pinned to the old number would
+   fail for the one reason that is not a defect. `/fail` is still the only page that
+   does not render. */
+t("the fixture has eleven pages, ten that render", [Object.keys(PAGES).length, Object.values(PAGES).filter(Boolean).length], [11, 10]);
 
 /* ====================================================================== A */
 console.log("\n--- A. a rendered capture of a shell holds BOTH artifacts, the rendered one primary ---");
@@ -209,8 +244,16 @@ console.log("\n--- A. a rendered capture of a shell holds BOTH artifacts, the re
     d.render && d.render.requests, { made: 4, completed: 4, failed: 0, blocked: 0, blocked_by: {}, outcome_unstated: 0 });
   t("A12 render.data holds the DATA the render consumed (document, xhr), not code or layout",
     d.render && d.render.data.map((x) => [x.type, x.origin]), [["document", "same_host"], ["xhr", "same_host"]]);
-  t("A13 a data digest is carried as the renderer's claim, labelled",
-    d.render && [d.render.data[1].sha256, d.render.data[1].reported_by], ["a".repeat(64), "renderer"]);
+  /* CORRECTED by D-529 (BOB #33, 2026-09-24 21:05Z), not exempted. This asserted that
+     the renderer's reported `sha256` ("a"x64) was carried AS the entry's digest. That
+     was the rule before the ruling and is now the defect the ruling names: a digest
+     with no bytes behind it cannot be verified by anyone, so it is an equality that
+     cost nothing to produce. The claim survives as `renderer_sha256`, labelled; the
+     digest reads `undetermined` with its reason. The entry is still the renderer's. */
+  t("A13 a digest the renderer REPORTED without bytes is its claim, and the digest is undetermined",
+    d.render && [d.render.data[1].sha256, d.render.data[1].renderer_sha256, d.render.data[1].reported_by,
+                 /did not deliver this response's bytes/.test(d.render.data[1].digest_reason || "")],
+    ["undetermined", "a".repeat(64), "renderer", true]);
   t("A14 EVERY script origin executed is named", d.render && d.render.scripts_executed, [`https://${HOST}`]);
   t("A15 no third party executed, and it says so with an empty list", d.render && d.render.third_party_executed, []);
   t("A16 shell asserted + all data same_host + no foreign code = determined, as the shell's authority",
@@ -541,6 +584,59 @@ console.log("\n--- J. D-499: WHICH WAIT FIRED, and the completeness that follows
   t("J13 OVER-STRICTNESS: `  NetworkIdle  ` is the asked condition, and reads condition_met",
     k.render && [k.render.wait.fired, k.render.wait.fired_class, k.render.completeness],
     ["  NetworkIdle  ", "condition", "condition_met"]);
+}
+
+/* ====================================================================== K */
+console.log("\n--- K. D-529: every subresource the render loaded carries a digest that VERIFIES, or reads undetermined with its reason ---");
+{
+  const r = await acquire({ locator: `https://${HOST}/digests`, render: true, authority: "City of Example" });
+  const d = r.document || {};
+  const subs = (d.render && d.render.subresources) || [];
+  const hexed = subs.filter((x) => /^[0-9a-f]{64}$/.test(String(x.sha256)));
+  t("K0 the capture was filed, and the corpus is what this block declares (8 loads, 5 with bytes)",
+    [r.ok, subs.length, hexed.length], [true, 8, 5]);
+  t("K1 a FAILED request loaded nothing and owes no digest", subs.some((x) => /missing\.js/.test(x.address)), false);
+  t("K2 every loaded subresource carries a `sha256` field — hex or `undetermined`, never absent or null",
+    subs.every((x) => typeof x.sha256 === "string" && (x.sha256 === "undetermined" || /^[0-9a-f]{64}$/.test(x.sha256))), true);
+
+  /* THE VERIFY ARM (the row's accepts-when). Each digest is checked TWICE, and neither
+     check can agree for free: the bytes come back THROUGH THE OP by that digest and are
+     re-hashed here, and the digest must equal this suite's own hash of what it SERVED. */
+  const want = {
+    [`https://${HOST}/digests`]: sha(Buffer.from(SHELL, "utf-8")),
+    [`https://${HOST}/app.js`]: sha(Buffer.from(D529.js)),
+    "https://cdn.analytics.example/a.js": sha(Buffer.from(D529.vendorJs)),
+    [`https://${HOST}/app.css`]: sha(Buffer.from(D529.css, "utf-8")),
+    [`https://${HOST}/logo.png`]: sha(D529.png),
+  };
+  const verified = [];
+  for (const x of hexed) {
+    const b = await capture(x.sha256);
+    verified.push([x.address, !!b && sha(b) === x.sha256, x.sha256 === want[x.address], !!b && b.length === x.bytes]);
+  }
+  t("K3 VERIFY: each digest re-hashes from the bytes the store returns for it, equals the served bytes' hash, and states their length",
+    verified.sort(), Object.keys(want).map((a) => [a, true, true, true]).sort());
+  t("K4 the digest is the PLANE'S, and says what it is of: exact bytes, or the browser's decoded text",
+    Object.fromEntries(hexed.map((x) => [x.address.replace(/^https:\/\/[^/]+/, ""), [x.digest_by, x.body_as]])),
+    { "/digests": ["plane", "decoded_text"], "/app.js": ["plane", "bytes"], "/a.js": ["plane", "bytes"],
+      "/app.css": ["plane", "decoded_text"], "/logo.png": ["plane", "bytes"] });
+  t("K5 the browser's copy of the page document verifies against the SHELL the plane fetched itself",
+    (hexed.find((x) => x.type === "document") || {}).sha256, d.render && d.render.of);
+
+  const why = Object.fromEntries(subs.filter((x) => x.sha256 === "undetermined")
+    .map((x) => [x.address.replace(/^https:\/\/[^/]+/, ""), x.digest_reason || ""]));
+  t("K6 each load whose bytes were not kept reads undetermined WITH its reason",
+    [Object.keys(why).sort(), /did not deliver this response's bytes/.test(why["/api/agenda.json"]),
+     /No resource with given identifier found/.test(why["/api/evicted.json"]), /not valid base64/.test(why["/api/garbled.json"])],
+    [["/api/agenda.json", "/api/evicted.json", "/api/garbled.json"], true, true, true]);
+  t("K7 a digest the renderer only REPORTED is kept as its claim and never as the digest",
+    subs.filter((x) => x.renderer_sha256).map((x) => [x.sha256, x.renderer_sha256]), [["undetermined", "b".repeat(64)]]);
+  t("K8 the gap is stated once in render.undetermined, counted",
+    d.render && d.render.undetermined.filter((u) => /^subresources: 3 of the 8 subresources the render loaded carry no digest/.test(u)).length, 1);
+  t("K9 render.data carries the SAME digests as the loads it is a subset of (one lookup, not a second copy)",
+    d.render && d.render.data.every((e) => { const x = subs.find((s) => s.address === e.address); return x && x.sha256 === e.sha256; }), true);
+  t("K10 a third-party SCRIPT that ran is recorded WITH ITS DIGEST (BOB #31 + BOB #33)",
+    subs.filter((x) => x.type === "script" && /analytics/.test(x.address)).map((x) => x.sha256), [sha(Buffer.from(D529.vendorJs))]);
 }
 
 await mf.dispose();

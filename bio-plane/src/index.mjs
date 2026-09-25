@@ -111,7 +111,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, renderAllowanceMs, renderBlock,
+import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, keepRenderBodies, renderAllowanceMs, renderBlock,
          renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
@@ -8229,6 +8229,19 @@ export default {
             detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.`
                           : rb.problem }, 502);
         /* END DEC-49 REGION is-render-result */
+        /* D-529 (BOB #33, 2026-09-24 21:05Z): every subresource the render LOADED is
+           hashed BY THE PLANE over bytes it KEEPS, content-addressed where subresource
+           capture keeps its bytes, and the block is rebuilt with those digests. Only
+           after the render is known to be filed, so a refused render keeps nothing. */
+        const renderDigests = await keepRenderBodies(answer, {
+          sha256: async (b) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))]
+            .map((x) => x.toString(16).padStart(2, "0")).join(""),
+          put: async (s, b) => {
+            const k = `${storeName}/captures/${s}`;
+            if (!(await env.CAPTURES.head(k))) await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
+          },
+        });
+        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved, digests: renderDigests });
         const rd = await crypto.subtle.digest("SHA-256", rbytes);
         const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
         renderedExisted = !!(await env.CAPTURES.head(`${storeName}/captures/${rsha}`));
