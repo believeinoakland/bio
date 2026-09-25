@@ -69,7 +69,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             array now: this act's refusal, C-2.10's finding and the published
             vocabulary cannot disagree about how an action may end. */
          RESOLUTIONS,
-         ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
+         ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings, recordsLawFindings,
          correspondenceFindings, respondsToEdgeFindings, consequenceState,
          divisionDisclosureFindings,
          /* REC-43 / DEC-39: the capture-axis ceiling, which used to be a static
@@ -19277,6 +19277,20 @@ export class Store extends DurableObject {
                        + "who, when and why, and keeps every earlier tier readable. Nothing was written." };
           /* END DEC-49 REGION is-promote-risk-tier */
         }
+        /* D-695 / C-73.6 — C-2.10's `law` ARM, AT THE ACT (`BIO_Case_Making_v0_1.md` §2: a `law` on any kind but
+           records_request, or one longer than a citation, is refused). REC-201 ran `recordsLawFindings` only in the
+           audit sweep, so this write landed both. Every writer, after the machine fence above answered WHO may state
+           a law: that fence does not see a `law` on a kind whose key states nothing, and a member is not fenced at
+           all. The findings are the catalogue's own sentences, so the act and the sweep say one thing. */
+        const lawF = [];
+        recordsLawFindings(docFmW, lawF);
+        const lawErrs = lawF.filter((x) => x.severity === "error");
+        /* DEC-49 REGION is-promote-records-law */
+        if (lawErrs.length)
+          return { ok: false, reason: "RECORDS_LAW_REFUSED", bundleId,
+                   findings: lawErrs.map((x) => ({ check: x.check, detail: x.message,
+                                                   ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        /* END DEC-49 REGION is-promote-records-law */
         const af = [];
         actionBasisFindings(docFmW, af);
         const aerrs = af.filter((x) => x.severity === "error");

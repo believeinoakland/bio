@@ -790,8 +790,11 @@ export function recordsLawStatement(fm) {
 
 /** REC-201: C-2.10's `law` arm. Absent, null or empty is the honest undetermined and passes. A `law` on any kind
  *  but records_request is refused: `cpra_request` already names its law, and on any other kind the field would
- *  state a law no read shows. */
-function recordsLawFindings(fm, findings) {
+ *  state a law no read shows.
+ *  D-695: EXPORTED AND RUN BY THE STORE AT THE WRITE, like actionBasisFindings — REC-201 called it only from
+ *  checkActionExtension, which the audit sweep reaches and `promote` never did, so the act landed what this arm
+ *  refuses. `promote` refuses its errors as RECORDS_LAW_REFUSED (C-73.6), carrying each finding's sentence. */
+export function recordsLawFindings(fm, findings) {
   if (!Object.prototype.hasOwnProperty.call(fm, 'law') || fm.law === null || fm.law === '') return;
   if (fm.action_kind !== 'records_request') {
     findings.push(f('C-2.10', 'error',
@@ -10533,6 +10536,20 @@ export const GOVERNING_LAW_CHECKS = {
     translation: 'One act states at most twelve governing laws. A request governed at the federal, state and '
       + 'local levels names a handful; a longer list is more likely a list of every law that might apply than '
       + 'of the ones that do. Nothing was written.',
+  },
+  /* D-695 (BIO_Case_Making_v0_1.md §2: "C-2.10 refuses a `law` on any other kind (it would state a law no read
+     shows) and one longer than a citation"). REC-201 built that arm (`recordsLawFindings`) and ran it only in the
+     audit sweep, so op=promote landed both. This row is the ACT's refusal of the same arm, a member's write and a
+     machine's alike: C-32.20 asks WHO states a law, this asks whether what is stated is a law's citation on a
+     records request at all. `findings[]` carries the arm's own C-2.10 sentences, so the act and the sweep say one
+     thing. */
+  RECORDS_LAW_REFUSED: {
+    check: 'C-73.6',
+    where: 'src/store.mjs promote > is-promote-records-law',
+    translation: 'The law a records request is made under is named by its citation — a short reference such as a '
+      + 'code section — and only a records request carries one. This write stated a law that was too long to be a '
+      + 'citation, was not text, or sat on a kind of action that is not a records request (a California Public '
+      + 'Records Act request already names its law by its kind). Nothing was written.',
   },
 };
 

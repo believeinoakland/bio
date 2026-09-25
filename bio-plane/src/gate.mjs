@@ -217,6 +217,10 @@ export const CATALOG_VERSION = "1.31.0";
 /* D-689 side, kept as history — took 1.34.0 (D-689, 2026-09-25, branch land/worker/D-689): ONE ARRIVAL, NO DEPARTURES — C-32.20
    MACHINE_CANNOT_STATE_RECORDS_LAW in MACHINE_FENCE_CHECKS; the census row also names REC-201's changed C-2.10.
    1.31.0-1.33.0 and 2.0.0 are held by other in-flight branches; CONDUCT takes the union's one number.  (c23-batch30, 2026-09-25: D-689 said 1.34.0; number to re-read at the figures pass.) */
+/* D-695 side, kept as history — took 1.35.0 (D-695, 2026-09-25, branch land/worker/D-695 stacked on D-689 @ 4ef3d303): ONE ARRIVAL, NO DEPARTURES —
+   C-73.6 RECORDS_LAW_REFUSED in GOVERNING_LAW_CHECKS, `promote`'s refusal of C-2.10's `law` arm at the act. MINOR and
+   additive; C-2.10 itself does not change (the arm is REC-201's, now also run at the write). 1.31.0-1.34.0 and 2.0.0
+   are held by other branches; CONDUCT takes the union's one number and re-reads the census from the d470 print.  (c23-batch30, 2026-09-25: D-695 said 1.35.0; number to re-read at the figures pass.) */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
