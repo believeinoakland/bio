@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rulemap.test.mjs",
+ "inputHash": "7ad07318cfc4e0b478aaddf9a60d1212b074c7654741158c733dd35ee6e163e5",
+ "verdict": "PASS",
+ "run": "2cd8a884bdc2cbbff5f39baf7e52553ab7210811.1790311535210.1477.json",
+ "tree": "2cd8a884bdc2cbbff5f39baf7e52553ab7210811",
+ "head": "0931ba7522fc5051289528d3a5c79f7893818858",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 491,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "486b4e79-aa53-5e21-8078-f6a21495934d",
+ "at": "2026-09-25T04:45:35.223Z"
+}
