@@ -1,0 +1,16 @@
+{
+ "unit": "plane:claudecascade.test.mjs",
+ "inputHash": "dba32f2b91e4ea1b7b7b891992004e4777bf62427aa52532e08b8ddd91256928",
+ "verdict": "PASS",
+ "run": "7583b9e6572ec346d54352e15f4621c215b22a9f.1790339999124.3880.json",
+ "tree": "7583b9e6572ec346d54352e15f4621c215b22a9f",
+ "head": "238517e1c4673caa68284dbf5bdb43d52d40f847",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 862,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "238562ba-9223-578e-ae89-2627aa39746c",
+ "at": "2026-09-25T12:39:59.135Z"
+}
