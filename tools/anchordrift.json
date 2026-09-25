@@ -413,9 +413,10 @@
  "unreadable": {
   "row": "D-663",
   "since": "2026-09-25",
-  "why": "the arms' anchors are inline in imperative blocks behind side effects (a git worktree, baseline suites, chained helper replaces); exposing them needs more than a minimal change",
+  "why": "the arms' anchors are inline in imperative blocks behind side effects (a git worktree, baseline suites, chained helper replaces); exposing them needs more than a minimal change; nc-rec116 spawns `git merge-base` for a BASE binding scripts/pensweep.mjs must read literally, so it stays as it was",
   "drivers": [
    "bio-plane/test/fieldread.control.mjs",
+   "bio-plane/test/nc-rec116.mjs",
    "bio-plane/test/pipeline-readers.control.mjs",
    "bio-plane/test/verdict-excluder.control.mjs"
   ],

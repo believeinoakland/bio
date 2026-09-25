@@ -109,9 +109,7 @@ import { tmpdir } from "node:os";
 import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree;
-   nothing is patched, run or restored there — each arm's ONE armPatch call records its anchor (A1..A9, in file order). */
-const PEN = ANCHOR_DRY ? join(tmpdir(), "m048-harness") : join(REPO, ".m048-harness");
+const PEN = join(REPO, ".m048-harness");
 const PRED = join(REPO, "tools/strandedwork.mjs");
 const PLANCHECK = join(REPO, "tools/plancheck.mjs");
 const SUITE = join(REPO, "bio-plane/test/strandedwork.test.mjs");
@@ -124,11 +122,11 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const pristine = new Map();
 for (const [name, p] of [["predicate", PRED], ["plancheck", PLANCHECK]]) {
   const copy = join(PEN, `pristine.${name}`);
-  writeFileSync(copy, readFileSync(p));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(p));  /* M0-197: no pristine copy under the dry read */
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
   console.log(`  pristine ${name}: ${statSync(p).size} bytes, sha256 ${sha(p).slice(0, 8)}…`);
 }

@@ -30,7 +30,6 @@ import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync, existsSyn
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { controlPen } from "./pen.mjs";
-import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 import { join, dirname } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -41,7 +40,7 @@ const PRISTINE_DIR = controlPen("rec116");       /* M0-182: OUTSIDE the worktree
 /* The base commit this branch built on — the PRE-ITEM build for arm (f). Read
    from git rather than hard-coded to a sha, so a rebase cannot silently make the
    comparison meaningless. */
-const BASE = ANCHOR_DRY ? "(M0-197 dry read)" : execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"],
+const BASE = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"],
   { encoding: "utf8" }).trim();
 
 const OPENING_STORE_SHA = createHash("sha256").update(readFileSync(join(HERE, "..", "src", "store.mjs"))).digest("hex");
@@ -63,7 +62,6 @@ mkdirSync(PRISTINE_DIR, { recursive: true });
  * completion line did not finish, whatever the shell said.
  * ===================================================================== */
 const runSuite = (file) => {
-  if (ANCHOR_DRY) return { pass: -1, fail: -1, reachedFoot: false, out: "" };   /* M0-197: no suite under the dry read */
   let out = "";
   try {
     out = execFileSync("node", [join(HERE, file)], { encoding: "utf8", cwd: ROOT, timeout: 600000 });
@@ -171,9 +169,6 @@ const ARMS = [
     declared: "section E's deny arm — an unrecognised viewer is answered rather than withheld",
   },
 ];
-/* M0-197: the arms' anchors as data, for tools/anchordrift.mjs (a no-op outside its dry read). */
-anchorTable([...ARMS.map((a) => ({ arm: a.id, file: a.file, find: a.anchor, put: a.patch })),
-  { arm: "f", none: "compares answers against a pre-item src/ extracted from git; patches nothing" }]);
 
 for (const arm of ARMS) {
   console.log(`\n=== ARM (${arm.id}) ${arm.name} ===`);

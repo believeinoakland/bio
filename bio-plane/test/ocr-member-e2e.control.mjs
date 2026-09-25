@@ -28,15 +28,13 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { tmpdir } from "node:os";
 import { ANCHOR_DRY, anchorRows, anchorTable } from "../scripts/anchortable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const REPO = join(PLANE, "..");
 const MEMBER = join(REPO, "ocr-worker");
-/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
-const PEN = ANCHOR_DRY ? join(tmpdir(), "cpdf10-e2e-pen") : join(PLANE, ".cpdf10-e2e-pen");
+const PEN = join(PLANE, ".cpdf10-e2e-pen");
 const SUITE = join(HERE, "ocr-member-e2e.test.mjs");
 
 const F = {
@@ -65,11 +63,12 @@ function runSuite() {
   return { code: r.status, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, foot, failed, out };
 }
 
-if (existsSync(PEN)) rmSync(PEN, { recursive: true, force: true });
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY && existsSync(PEN)) rmSync(PEN, { recursive: true, force: true });   /* M0-197: no pen under the dry read */
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });
 const pristine = new Map();
 for (const p of TOUCHABLE) {
   const to = join(PEN, rel(p).replace(/\//g, "__"));
+  if (ANCHOR_DRY) continue;  /* M0-197: no pristine copy under the dry read */
   copyFileSync(p, to);
   pristine.set(p, to);
   const n = readFileSync(to).length;

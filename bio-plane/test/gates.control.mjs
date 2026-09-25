@@ -126,12 +126,10 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
-import { tmpdir } from "node:os";
 import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
-const PEN = ANCHOR_DRY ? join(tmpdir(), "d293-harness") : join(REPO, ".d293-harness");
+const PEN = join(REPO, ".d293-harness");
 const GATES = join(REPO, "tools/gates.mjs");
 const GUARD = join(REPO, "tools/pushguard.mjs");
 const SUITE = join(REPO, "bio-plane/test/gates.test.mjs");
@@ -146,10 +144,10 @@ const t = (label, got, want) => {
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* ---------------------------------------------------------------- pristine copies, and the exit hook */
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const SUBJECTS = [GATES, GUARD].map((file) => {
   const copy = join(PEN, `pristine.${file.split("/").pop()}`);
-  writeFileSync(copy, readFileSync(file));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(file));  /* M0-197: no pristine copy under the dry read */
   return { file, copy, sha: sha(file), bytes: statSync(file).size };
 });
 const MIN_BYTES = 20000;
@@ -176,7 +174,7 @@ function onExit() {
   /* Only the copies this driver wrote, by name, and only after the subjects verify. */
   if (SUBJECTS.every((s) => sha(s.file) === s.sha)) for (const s of SUBJECTS) { try { unlinkSync(s.copy); } catch { /* gone */ } }
 }
-process.on("exit", onExit);
+if (!ANCHOR_DRY) process.on("exit", onExit);   /* M0-197: the dry read writes no pen copy to remove */
 for (const [sig, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]]) process.on(sig, () => { onExit(); process.exit(code); });
 
 function armPatches(patches) {

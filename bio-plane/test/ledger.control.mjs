@@ -71,12 +71,10 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { tmpdir } from "node:os";
 import { ANCHOR_DRY, anchorTable } from "../scripts/anchortable.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-/* M0-197: under the dry read of tools/anchordrift.mjs the pristine copies land in its throwaway $TMPDIR, not the tree. */
-const PEN = ANCHOR_DRY ? join(tmpdir(), "led2-harness") : join(REPO, ".led2-harness");
+const PEN = join(REPO, ".led2-harness");
 const LEDGER = join(REPO, "tools/ledger.mjs");
 const OWED = join(REPO, "tools/owed.mjs");
 const MINTID = join(REPO, "tools/mintid.mjs");
@@ -92,11 +90,11 @@ const t = (label, got, want) => {
 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-mkdirSync(PEN, { recursive: true });
+if (!ANCHOR_DRY) mkdirSync(PEN, { recursive: true });   /* M0-197: no pen under the dry read */
 const pristine = new Map();
 for (const [name, p] of [["ledger", LEDGER], ["owed", OWED], ["mintid", MINTID], ["coord", COORD]]) {
   const copy = join(PEN, `pristine.${name}.mjs`);
-  writeFileSync(copy, readFileSync(p));
+  if (!ANCHOR_DRY) writeFileSync(copy, readFileSync(p));  /* M0-197: no pristine copy under the dry read */
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
   console.log(`  pristine ${name}: ${statSync(p).size} bytes, sha256 ${sha(p).slice(0, 8)}…`);
 }
