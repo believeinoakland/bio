@@ -1,0 +1,16 @@
+{
+ "unit": "plane:monitor-assess.test.mjs",
+ "inputHash": "18e8d9170d9f3c9585edd76326f2cda5e803314870c2d30e69f2526243a6a488",
+ "verdict": "PASS",
+ "run": "1b76729c8875abf26e0e6a161575074c8ed054f7.1790310547345.17248.json",
+ "tree": "1b76729c8875abf26e0e6a161575074c8ed054f7",
+ "head": "868fc178dac3ceef82e52a96c852d8e6c762aaeb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "121bbcb2-de65-5713-ad95-38ad338f43dc",
+ "at": "2026-09-25T04:29:07.361Z"
+}

@@ -1,0 +1,16 @@
+{
+ "unit": "plane:subresources.test.mjs",
+ "inputHash": "7b7e2f67c2a06430f79b09ce005e8b3c6866a7119c0bf1143141398482abd89b",
+ "verdict": "PASS",
+ "run": "1b76729c8875abf26e0e6a161575074c8ed054f7.1790310547345.17248.json",
+ "tree": "1b76729c8875abf26e0e6a161575074c8ed054f7",
+ "head": "868fc178dac3ceef82e52a96c852d8e6c762aaeb",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 155,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "121bbcb2-de65-5713-ad95-38ad338f43dc",
+ "at": "2026-09-25T04:29:07.361Z"
+}
