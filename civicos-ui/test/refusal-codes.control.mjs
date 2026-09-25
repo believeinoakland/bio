@@ -42,6 +42,12 @@
  * the new (r5) anchor: the SAME plant one line after the region's END marker
  * leaves the guard at exit 0, so the arm's position inside the region is what
  * makes it fire.
+ * D-542 / D-562 ADD TWO ARMS, (o1) and (o2): 49 arms. (o1) every review-copy op
+ * call in the real app.html made computed -> exit 1 on R5's floor with none of
+ * D-448's 11 codes on an R5 line; (o2) reach-by-op.mjs's stop at another op's
+ * entry removed -> refusal-codes.test.mjs fails at exactly ARM 16a, 16d, 16e
+ * (ARM 13x on D-542's branch; relabelled at c22-batch30). Both RUN 2026-09-25 on
+ * land/worker/D-542; the 49-arm table is re-run by CONDUCT on the union.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -69,6 +75,8 @@ const F = {
      guard's own text no longer holds those functions. */
   reader:  path.join(PLANE, "test", "verdict-reader.mjs"),
   runner:  path.join(HERE, "run.mjs"),
+  /* D-542: the guard's by-op walk (R5, R6). */
+  rbo:     path.join(UI, "reach-by-op.mjs"),
 };
 
 /* THE FLOOR ANCHORS ARE READ, NOT TYPED — corrected 2026-09-21 by D-254, never
@@ -935,6 +943,51 @@ arm("(w3)", Array.from({ length: 8 }, () => ({ file: PV, from: "VERIFY_REFUSAL_W
     ok: r.exit === 0 && /FOLLOWED REQUIRED_ARGUMENT_MISSING — preauth-vocabulary\.test\.mjs \(VERIFY_REFUSAL_ENVELOPE/.test(r.out),
     what: "the guard exits 0 and follows REQUIRED_ARGUMENT_MISSING through the renamed binding",
   }));
+
+/* ================================================================ D-542 / D-562
+   (o1) THE ROW'S NEGATIVE CONTROL, ARMED AGAINST THE REAL app.html: take away every call the surface makes
+   to a review-copy op (the seven UI-68 and D-150 built: casedraft, casedrafts, reviewgrant, reviewrevoke,
+   reviewcopy, reviewcomment, statementack) and D-448's eleven codes leave R5 BY NAME. Each call's quoted op
+   becomes `null`, so the helper still runs and the walk counts a computed op it cannot resolve.
+   DECLARED BEFORE ARMING: MUST FAIL on R5's floor, and NO per-op R5 line may name any of the eleven; MUST NOT
+   move the total reach — the eleven are D-448's family rows (R1) on main, which is why the control is read on
+   R5's own lines and not on the total. Two public ops keep NO_REVIEW_COPY and REVIEW_NO_COMMENT_TEXT in R6,
+   which is D-562's rule working, and is printed on the `D-562:` lines this check does not read.
+   MEASURED 2026-09-25 on the item's tree: R5 335 -> 316, exit 1 on the floor, all eleven gone from R5.
+   A FINDING ABOUT THE BRIEF'S ARM, kept: removing `reviewcopy`'s own two calls ALONE moved NOTHING (R5 335,
+   exit 0). The ten act codes are minted by `reviewAct`, reached from casedraft/reviewgrant/reviewrevoke, and
+   NO_REVIEW_COPY is carried by casedrafts, reviewcomment and statementack too; `reviewcopy`'s read mints one. */
+const RVC_CALL = /\b(?:recR|apiQ|recPostR|actAsk|actAskPost|intentAsk|apiR)\(\s*"(?:casedraft|casedrafts|reviewgrant|reviewrevoke|reviewcopy|reviewcomment|statementack)"/g;
+const rvcCalls = [...fs.readFileSync(F.app, "utf8").matchAll(RVC_CALL)].map(m => m[0]);
+const { REVIEW_COPY_CHECKS } = await import("file://" + F.catalog + "?d542=" + Date.now());
+const D448 = Object.keys(REVIEW_COPY_CHECKS);
+const r5Lines = out => [...out.matchAll(/^ {2}arm B \/ D-542: {3}[^\n]*$/gm)].map(m => m[0]).join("\n");
+console.log(`\n(o1) EVERY REVIEW-COPY OP CALL taken out of the real app.html (${rvcCalls.length} site(s)) — D-448's `
+  + `${D448.length} codes leave R5 by name`);
+arm("(o1)", rvcCalls.map(c => ({ file: F.app, from: c, to: c.replace(/"[a-z]+"/, "null") })), guard, r => {
+  const still = D448.filter(c => new RegExp(`\\b${c}\\b`).test(r5Lines(r.out)));
+  return {
+    ok: r.exit === 1 && rvcCalls.length >= 7 && D448.length === 11 && still.length === 0
+      && /R5 BY OP is \d+ code\(s\) minted on an op the surface calls, floor is \d+/.test(r.out)
+      && reachOf(r.out) === reachOf(clean.out),
+    what: `the guard exits 1 on R5's floor, no R5 line names any of D-448's ${D448.length} codes (still named: `
+        + `${still.join(", ") || "none"}), and the total reach holds at ${reachOf(clean.out)} (read ${reachOf(r.out)})`,
+  };
+});
+
+/* (o2) THE WALK'S ONE PRUNING DISARMED — the stop at ANOTHER op's entry method removed from
+   reach-by-op.mjs. DECLARED: the fixture suite MUST fail at exactly ARM 16a, 16d and 16e (the three
+   trees in which an op nobody calls is reached through the called op's entry and FIXTURE_FOREIGN leaks
+   into reach) and MUST NOT fail 16b/16c (no call, so nothing is followed) or any other arm.
+   MEASURED 2026-09-25 on the item's tree: exactly [ARM 13a, ARM 13d, ARM 13e].
+   RELABELLED at c22-batch30: that fixture arm is ARM 16 on the union (M0-148's arm holds ARM 13 on main, and
+   `suiteArmsFailing` reads arms BY LABEL), so the list names ARM 16x — the same arms. */
+console.log("\n(o2) THE STOP AT ANOTHER OP'S ENTRY removed from reach-by-op.mjs — its suite must fail at exactly ARM 16a, 16d, 16e");
+arm("(o2)", [{ file: F.rbo, from: "      if (anyEntry.has(k) && !own.has(k)) continue;", to: "" }], () => run(SUITE), r => {
+  const got = suiteArmsFailing(r.out), want = ["ARM 16a", "ARM 16d", "ARM 16e"];
+  return { ok: r.exit === 1 && got.join(",") === want.join(","),
+           what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
+});
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");
