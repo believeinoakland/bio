@@ -262,8 +262,8 @@ try {
   /* The EXTRACT escalates to tier 2 and the FULL document does not (M-174: 150,887 markers under 964,612
      glyphs). Nine undecoded folios outnumber the extract's zero glyphs, and tier 2 can decode an Arial folio,
      so asking it is right. The stub declines, and the OCR route does not depend on its answer. When tier 2
-     ANSWERS, its merge replaces the page's markers and the route is lost: D-633, measured in M-178 and minted
-     rather than pinned here. */
+     ANSWERS and wins the pages, the route used to be lost with the markers (D-633, found in M-178). D-633 carries
+     them, and `d633-tier2-image-marker.test.mjs` pins that route with an answering stub. */
   t("THE ROUTE: the extract's folios are offered to tier 2 first (it declines here), as its undecoded codes warrant",
     PDF_ASKED.some((b) => b && b.capture_sha === SHA.real), true);
   const chain = r && r.reading && Array.isArray(r.reading.text_source) ? r.reading.text_source : [];

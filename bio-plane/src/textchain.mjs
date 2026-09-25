@@ -1447,6 +1447,9 @@ export function perPageTierWinner(p1, p2) {
   return (u2 < u1 && c2 > c1) ? "tier2" : "tier1";
 }
 
+/* D-633: the markers `pdfstructure.mjs`'s `markImageContent` writes (D-627). */
+const IMAGE_CONTENT_REASONS = Object.freeze(["image_content_unread", "image_content_undetermined"]);
+
 /**
  * Merge tier 2's decode into tier 1's PAGE BY PAGE, and say which tier produced
  * each page. The D-283 answer, and the counterpart to `mergeTier3Text`.
@@ -1506,9 +1509,19 @@ export function mergeTier2Text(base, t2) {
     const winner = perPageTierWinner(b, cand);
     if (winner === "tier2" && cand) {
       replaced.push(b.page);
+      /* D-633 — THE PAGE KEEPS WHAT TIER 1 SAID ABOUT ITS IMAGES. D-627's
+         `image_content_*` markers are facts about the images the page paints
+         and its box, not about the decode, and tier 2 reads no image: taking
+         tier 2's markers alone dropped `image_content_unread`, so a page tier 2
+         won routed nowhere. They count 0 undetermined characters, so the award
+         above is unmoved. Tier 2's own markers are otherwise unchanged, and one
+         it already states is not doubled (Content Framework §16). */
+      const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const images = (Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) =>
+        u && IMAGE_CONTENT_REASONS.includes(u.reason) && !own.some((o) => o && o.reason === u.reason));
       pages.push({ page: b.page,
                    text: typeof cand.text === "string" ? cand.text : "",
-                   undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+                   undetermined: images.length ? [...own, ...images] : own,
                    tier: 2 });
     } else {
       kept.push(b.page);
