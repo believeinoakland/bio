@@ -2,7 +2,7 @@
 
 **DIST #7's measured state, 23:40Z on origin/main `9f8b69e6`:** every DIST branch is an ancestor of main EXCEPT
 `land/dist/DIST-7` @ `c1cc9d90` (1 commit ahead, merges clean into `9f8b69e6` by `git merge-tree`). **DIST-7 RIDES THE NEXT
-TRAIN** — handed to CONDUCT #20 by DIST #7. DIST-11 (`41322908`), DIST-13 (`82b5bf71`) and cut-0.79.0 (`d2ca15b0`) are ON MAIN
+TRAIN** — handed to CONDUCT #20 by DIST #7, re-handed to CONDUCT #21 (`session_01Np8wnAdDnRwswmAokZzNoY`) 2026-09-25. DIST-11 (`41322908`), DIST-13 (`82b5bf71`) and cut-0.79.0 (`d2ca15b0`) are ON MAIN
 (c20-batch25). **Record defect:** BACKLOG's DIST-7 row reads `integrated` while `c1cc9d90` is on no main — sent to SCHEDULER #20.
 The "newgroup/dist REBUILD OWED" item below is SUPERSEDED: main's bundle carries `instanceAiBinding` (4) and DIST-13's guard now enforces freshness.
 
@@ -53,14 +53,10 @@ DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the
 
 ## DIST's rows
 
-- **DIST-8 · queued, BACKLOG** (`node tools/ledger.mjs find DIST-8`; not cached at writing). Sweep scratch residue left by
-  GONE sessions (BOB #32's ruling 2026-09-23 23:30Z: a session's own scratch is its own; gone sessions' residue is DIST's,
-  swept at each cut's live verification). Accepts: scratch empty after, `bio` counters unchanged; NEGATIVE CONTROL: a sweep
-  call without `store=scratch` is refused (D-456) or moves `bio`'s counters. **Before building, read `op=purge`'s reach:
-  it would take LIVE sessions' residue too.** Known residue: DIST #5's `INQ-2026-9172-dist5-*` (a, b, c; several suffixes)
-  and runs `RUN-2026-0923-dist5-*` (all closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`,
-  livefire canaries, 13 July probe members (not DIST's), CPDF-3's count of 17 bundles and 11 aiRuns. Build only when
-  SCHEDULER caches it and CONDUCT writes `running`.
+- **DIST-8 · BUILT (NARROWED), `land/dist/DIST-8` @ `8d3e3be9`** (prose gate GREEN 33/33 · 1920; handed to CONDUCT #21 for the
+  train, 02:0xZ 2026-09-25). First sweep DONE LIVE 01:40Z: control refused (400, `expected: bio`), then `op=purge store=scratch
+  confirm=scratch` scope ALL — scratch 0 on every counter (bundles 17→0, aiRuns 11→0, …), `bio` stats byte-identical (M-159).
+  The sweep is now DIST.md gate step 7b. RESIDUE: 14 scratch MEMBERS — no op deletes a member; stated in M-159, not swept.
 - **DIST-12 · LANDED on main** (`1a0fc88f` an ancestor of `13073707`). Release gate step 7a runs
   `node tools/urlpreflight-entry.mjs --release X.Y.Z --id <M-id> --out docs/development/measurements/<M-id>.md` at the
   next release; first reading M-136 14/14 LIVE. Its accepts-when is that release's entry.
