@@ -330,16 +330,49 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
+    /* D-556 (BOB #34, 2026-09-25 00:00Z; Intake Doctrine section 8): A WHOLE-HASH ROW HELD IN PARTS RATIFIES
+       when every part the record names (the bundle's data/provenance.json) is present and its digest verifies:
+       the audit calls those bytes SOUND (D-533), and publication now copies them part by part and re-verifies
+       each at the destination, so the gate may not treat them as missing. Otherwise it is refused BY NAME: the
+       parts that are not there, or the parts whose size or digest failed or could not be checked. */
+    if (!probe.present && probe.parts) {
+      const { named, missing, disagree, unverified, why } = probe.parts;
+      const sum = (named || []).reduce((n, p) => n + p.bytes, 0);
+      const label = (ps) => ps.map((p) => p.file || p.sha256).join(", ");
+      if (why)
+        errors.push({ check: "PLANE_PART_UNVERIFIED",
+                      detail: `registered capture is held in parts, and ${why}, so no part could be verified`,
+                      where: { path: r.path, sha256: r.capture_sha } });
+      else if (missing.length)
+        errors.push({ check: "PLANE_PART_MISSING",
+                      detail: `registered capture is held in parts, and ${missing.length} of the ${named.length} `
+                            + `parts the record names are not in the working bucket: ${label(missing)}`,
+                      where: { path: r.path, sha256: r.capture_sha, missing_parts: missing } });
+      else if (disagree.length || unverified.length || (typeof r.bytes === "number" && sum !== r.bytes))
+        errors.push({ check: "PLANE_PART_UNVERIFIED",
+                      detail: disagree.length
+                        ? `registered capture is held in parts, and the stored size or digest of `
+                          + `${disagree.length} disagrees with the record: ${label(disagree)}`
+                        : unverified.length
+                        ? `registered capture is held in parts, all present, but the digest of `
+                          + `${unverified.length} could not be verified: ${label(unverified)}`
+                        : `registered capture is held in parts, and the parts the record names sum to ${sum} `
+                          + `bytes where the register says ${r.bytes}`,
+                      where: { path: r.path, sha256: r.capture_sha,
+                               ...(disagree.length ? { disagreeing_parts: disagree } : {}),
+                               ...(unverified.length ? { unverified_parts: unverified } : {}) } });
+      continue;
+    }
     /* D-530: a whole hash held only in parts is not missing bytes, and saying so was
-       false. It is still refused: publication copies a capture by the hash its row
-       names, and there is no object under this one. Registering each part, as the
-       setup surface does, is the shape that publishes. */
+       false. D-556: it is still refused when the record names NO parts for it, since
+       then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
                     detail: `registered capture is held only in parts: this plane's acquisition receipt names `
                           + `the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash. Publication copies a capture by the hash its register row names, so `
-                          + `register the parts rather than the whole`,
+                          + `its own hash, but the bundle's data/provenance.json names no parts for it. `
+                          + `Publication copies the parts the record names, so name them there, or register `
+                          + `the parts rather than the whole`,
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (!probe.present)
       errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
