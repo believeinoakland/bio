@@ -7205,6 +7205,13 @@ export default {
       return json({ ok: true, ...r.result });
     }
 
+    /* D-701 (BOB #35, 2026-09-25 09:30Z): op=navchanges and op=links name capture shas and page addresses,
+       and a capture filed in a project the caller cannot see is that project's existence and what it holds.
+       So both take the D-15 viewer, decided by the SERVER from the credential exactly as the stamp block below
+       decides it (a member-scoped agent key stamps its principal), and the store passes every row through it
+       before ordering or counting; it fails CLOSED on an absent viewer. These two handlers build their own
+       store requests, so they stamp here rather than joining that list. */
+    const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     if (op === "navchanges") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const host = (url.searchParams.get("host") || "").trim().toLowerCase();
@@ -7213,7 +7220,7 @@ export default {
           "navchanges requires host=<hostname>") }, 400);
       const limit = url.searchParams.get("limit");
       const r = await doAnswer(st.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}`
-        + (limit ? `&limit=${encodeURIComponent(limit)}` : "")));
+        + (limit ? `&limit=${encodeURIComponent(limit)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`));
       /* REC-52's rule: a store silence is not "the navigation never changed". */
       if (!r.answered) return storeSilent("navchanges");
       return json({ ok: true, ...r.result });
@@ -7228,7 +7235,8 @@ export default {
            rows on a store silence, which a reader cannot tell from "nothing
            points at it" — an absence at one level reported as an absence at the
            next, which CLAUDE.md names as its own rule. */
-        const r = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`));
+        const r = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`
+          + `&viewer=${encodeURIComponent(linkViewer)}`));
         if (!r.answered) return storeSilent("links");
         return json({ ok: true, ...r.result });
       }
@@ -7236,7 +7244,7 @@ export default {
         return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
           detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it" }, 400);
       /* REC-52: same again for a document's outbound links. */
-      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
+      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}&viewer=${encodeURIComponent(linkViewer)}`));
       if (!r.answered) return storeSilent("links");
       return json({ ok: true, ...r.result });
     }

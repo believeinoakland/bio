@@ -16951,6 +16951,26 @@ export class Store extends DurableObject {
     };
   }
 
+  /** D-701 (BOB #35, 2026-09-25 09:30Z): the D-15 predicate over a column that holds a CAPTURE sha, as a WHERE
+   *  term. `register` files a capture in ONE bundle, so the capture is seen exactly when that bundle is — the
+   *  question `#bundleGate` already answers, asked through it and never restated. A capture filed in NO bundle
+   *  (acquired, never promoted) names no bundle and so discloses none: `#bundleGate`'s own NULL arm, kept. An
+   *  absent or unrecognised viewer sees NOTHING, filed or not (fail closed), and a machine credential is not
+   *  filtered (D-15's carve-out). The column must be qualified, for `#bundleGate`'s reason. */
+  #captureGate(col, viewer) {
+    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+      throw new Error(`REFUSED: the D-701 capture gate needs a QUALIFIED column (got ${col}).`);
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    const seen = this.#bundleGate("reg.bundle_id", viewer);
+    return {
+      sql: `${GATE_MARK} NOT EXISTS (SELECT 1 FROM register reg
+              WHERE reg.capture_sha = ${col} AND NOT (${seen.sql}))`,
+      args: seen.args,
+    };
+  }
+
   /** The same question asked of ONE id, for the answers this store assembles in
    *  JavaScript rather than in SQL. Returns a function that passes a visible id
    *  through and answers `null` for one the viewer may not see; a row that names
@@ -43713,24 +43733,37 @@ export class Store extends DurableObject {
    *  different pages of one host are two observations of ONE navigation. When
    *  the two pages differ the answer says so (`same_page: false`), because a
    *  section's own sidebar can differ page to page, and which of the two a
-   *  difference is stays UNDETERMINED here rather than being decided. */
-  navChanges({ host, limit = null }) {
+   *  difference is stays UNDETERMINED here rather than being decided.
+   *
+   *  D-701 (BOB #35, 2026-09-25 09:30Z): THROUGH THE VIEWER, BEFORE ANYTHING IS ORDERED, CUT OR COUNTED. An
+   *  observation names a capture sha and the page it was captured at, which for a capture filed in a project the
+   *  caller cannot see is that project's existence and what it holds — so every observation passes
+   *  `#captureGate` in the SQL, and the sequence, the pairs compared, `observations`, `truncated` and each
+   *  record's interval and `captures` are all computed from the observations that passed. A record's stored
+   *  roll-up counts every capture and is NOT served; its figures are re-derived here from the visible refs,
+   *  which for an unfiltered caller is the same arithmetic over the same rows. */
+  navChanges({ host, limit = null, viewer = null }) {
     const h = String(host || "").trim().toLowerCase();
     const asked = Number(limit);
     const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
-    /* The NEWEST observations, cut at the cap and SAID to be cut (REC-57). */
+    const seen = this.#captureGate("s.source_capture", viewer);
+    const seen2 = this.#captureGate("s2.source_capture", viewer);
+    /* The NEWEST observations the viewer may see, cut at the cap and SAID to be cut (REC-57). */
     const found = this.#rows(
-      `SELECT source_capture, page, first_observed, last_observed, fingerprint, basis
-         FROM site_chrome_refs WHERE host = ? ORDER BY first_observed DESC, source_capture DESC LIMIT ?`, h, cap + 1);
+      `SELECT s.source_capture, s.page, s.first_observed, s.last_observed, s.fingerprint, s.basis
+         FROM site_chrome_refs s WHERE s.host = ? AND (${seen.sql})
+        ORDER BY s.first_observed DESC, s.source_capture DESC LIMIT ?`, h, ...seen.args, cap + 1);
     const seq = found.slice(0, cap).reverse();
     /* Only the records the observations in hand name, which is at most one per observation, so the cap
-       that bounds the sequence bounds this read too. */
+       that bounds the sequence bounds this read too; each record's figures from the refs the viewer sees. */
     const records = this.#rows(
-      `SELECT fingerprint, links, first_observed, last_observed, captures
-         FROM site_chrome WHERE host = ? AND fingerprint IN (
-           SELECT fingerprint FROM site_chrome_refs WHERE host = ?
-            ORDER BY first_observed DESC, source_capture DESC LIMIT ?)
-        ORDER BY first_observed LIMIT ?`, h, h, cap, cap)
+      `SELECT s.fingerprint, c.links, MIN(s.first_observed) AS first_observed, MAX(s.last_observed) AS last_observed,
+              COUNT(*) AS captures
+         FROM site_chrome_refs s JOIN site_chrome c ON c.host = s.host AND c.fingerprint = s.fingerprint
+        WHERE s.host = ? AND (${seen.sql}) AND s.fingerprint IN (
+           SELECT s2.fingerprint FROM site_chrome_refs s2 WHERE s2.host = ? AND (${seen2.sql})
+            ORDER BY s2.first_observed DESC, s2.source_capture DESC LIMIT ?)
+        GROUP BY s.fingerprint ORDER BY first_observed LIMIT ?`, h, ...seen.args, h, ...seen2.args, cap, cap)
       .map((r) => ({ ...r, links: JSON.parse(r.links || "[]") }));
     const linksOf = new Map(records.map((r) => [r.fingerprint, r.links]));
     const obs = (o) => ({ source_capture: o.source_capture, page: o.page, first_observed: o.first_observed,
@@ -43769,12 +43802,16 @@ export class Store extends DurableObject {
 
   /** Everything that points AT an address. The reverse index, which is the
    *  whole reason this is address-keyed. */
-  linksTo({ address_norm }) {
+  linksTo({ address_norm, viewer = null }) {
     /* Matched on the RESOURCE key, so asking what points at a report finds the
-       citations of its sections too, each still naming the element it cited. */
+       citations of its sections too, each still naming the element it cited.
+       D-701: only sources the viewer may see (`#captureGate`), and `count` and
+       `elements` are taken from those rows, so an address only a hidden capture
+       links to answers exactly as one nothing links to. */
+    const seen = this.#captureGate("l.source_capture", viewer);
     const rows = [...this.sql.exec(
-      `SELECT source_capture, source_bundle, link_ref, partition, fragment, citation_norm, captured_at
-       FROM links WHERE address_norm = ?`, address_norm)];
+      `SELECT l.source_capture, l.source_bundle, l.link_ref, l.partition, l.fragment, l.citation_norm, l.captured_at
+       FROM links l WHERE l.address_norm = ? AND (${seen.sql})`, address_norm, ...seen.args)];
     return { address_norm, count: rows.length, sources: rows,
       elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))] };
   }
@@ -43792,9 +43829,20 @@ export class Store extends DurableObject {
    *  The strongest evidence available here is two captures of the target
    *  BRACKETING the source's retrieval whose bytes hash equal: identical bytes
    *  across the interval settles it outright and needs no timestamp anyone has
-   *  to trust. Everything weaker is named rather than leaned on. */
-  resolveLinks({ sourceCapture, at = null }) {
-    const rows = [...this.sql.exec(`SELECT * FROM links WHERE source_capture = ?`, sourceCapture)];
+   *  to trust. Everything weaker is named rather than leaned on.
+   *
+   *  D-701 (BOB #35, 2026-09-25 09:30Z): THROUGH THE VIEWER. A source capture the viewer cannot see answers
+   *  exactly as one the record does not hold, and a target's captures are only those the viewer can see, taken
+   *  BEFORE the bracket is looked for — so a link whose only capture is hidden is `offsite` for that viewer, the
+   *  answer a target never captured gets, and `target_bundle` can only name a bundle the viewer can open. */
+  resolveLinks({ sourceCapture, at = null, viewer = null }) {
+    return this.#resolveLinks({ sourceCapture, at,
+      seenSource: this.#captureGate("l.source_capture", viewer), seenTarget: this.#captureGate("cl.capture_sha", viewer) });
+  }
+
+  #resolveLinks({ sourceCapture, at, seenSource, seenTarget }) {
+    const rows = [...this.sql.exec(`SELECT l.* FROM links l WHERE l.source_capture = ? AND (${seenSource.sql})`,
+      sourceCapture, ...seenSource.args)];
     if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
     const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
     const out = [];
@@ -43814,8 +43862,9 @@ export class Store extends DurableObject {
          and gets its own treatment when the provenance chain grades it; until
          then it must not leak into the identity bracket. */
       const caps = [...this.sql.exec(
-        `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
-         WHERE address_norm = ? AND via = 'direct' ORDER BY first_retrieved`, r.address_norm)];
+        `SELECT cl.capture_sha, cl.first_retrieved, cl.last_retrieved, cl.observations FROM captured_locators cl
+         WHERE cl.address_norm = ? AND cl.via = 'direct' AND (${seenTarget.sql}) ORDER BY cl.first_retrieved`,
+        r.address_norm, ...seenTarget.args)];
       if (!caps.length) {
         tally.offsite++;
         out.push({ ...r, resolution: "offsite", verdict: null,
@@ -43913,7 +43962,11 @@ export class Store extends DurableObject {
    *  every paginated Legistar calendar does, is not a connection between two
    *  documents and would show up as a bundle citing itself. */
   projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
-    const res = this.resolveLinks({ sourceCapture, at });
+    /* D-701 leaves this WRITE's resolution UNFILTERED, as it was: it writes the record's edges, which must not
+       depend on who asked. Its ANSWER names bundles and captures across the viewer's sight and is not yet
+       gated — minted as its own row (see the D-701 report), not widened here. */
+    const all = { sql: "1=1", args: [] };
+    const res = this.#resolveLinks({ sourceCapture, at, seenSource: all, seenTarget: all });
     if (!res.links || !res.links.length) return { projected: 0, edges: [] };
     let bundle = sourceBundle;
     if (!bundle) {
@@ -51369,8 +51422,9 @@ export class Store extends DurableObject {
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
         recordlinks: () => this.recordLinks(body || {}),
-        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
-        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
+        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture"),
+                                                viewer: url.searchParams.get("viewer") }),
+        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address"), viewer: url.searchParams.get("viewer") }),
         recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null }),
@@ -51777,7 +51831,8 @@ export class Store extends DurableObject {
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
-        navchanges: () => this.navChanges({ host: url.searchParams.get("host"), limit: url.searchParams.get("limit") }),
+        navchanges: () => this.navChanges({ host: url.searchParams.get("host"), limit: url.searchParams.get("limit"),
+                                            viewer: url.searchParams.get("viewer") }),
         derivesitechrome: () => this.deriveSiteChrome({ host: url.searchParams.get("host"),
                                                         limit: url.searchParams.get("limit"), after: url.searchParams.get("after") }),
         sitechrome: () => this.siteChrome({ host: url.searchParams.get("host"),

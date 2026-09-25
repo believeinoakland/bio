@@ -949,7 +949,13 @@ console.log("\n--- links resolve at read time, and the verdict has three values 
   await call("/recordcapturedlocator", { address: tgt("onlyold"), addressNorm: N(tgt("onlyold")),
     captureSha: "55".repeat(32), retrieved: "2026-04-01T00:00:00Z" });
 
-  const r = (await call(`/resolvelinks?capture=${SRC}`)).result;
+  /* CORRECTED 2026-09-25 (D-701, BOB #35), never exempted: every direct store call to `resolvelinks` and
+     `linksto` in this suite now names `viewer=class:member`, the MACHINE viewer the control plane stamps for
+     MEMBER_TOKEN. The old calls named no viewer and were answered unfiltered, which was the defect: both reads
+     named captures filed in projects the caller could not see. They now fail CLOSED on an absent viewer
+     (d701-linkgate.test.mjs asserts it), so the stamp is what a caller of the store must send; what these
+     assertions measure — the partition and verdict arithmetic — is unchanged for an unfiltered viewer. */
+  const r = (await call(`/resolvelinks?viewer=class:member&capture=${SRC}`)).result;
   const by = Object.fromEntries(r.links.map((l) => [l.link_ref, l]));
 
   t("identical bytes bracketing the retrieval settle it outright",
@@ -982,7 +988,7 @@ console.log("\n--- links resolve at read time, and the verdict has three values 
     /resting state and the expected common case/.test(r.note), true);
 
   /* The reverse index: what points AT an address. */
-  const rev = (await call(`/linksto?address=${encodeURIComponent(N(tgt("steady")))}`)).result;
+  const rev = (await call(`/linksto?viewer=class:member&address=${encodeURIComponent(N(tgt("steady")))}`)).result;
   t("the reverse index finds what points at an address", rev.count, 1);
   t("naming the capture that does", rev.sources[0].source_capture, SRC);
 
@@ -1071,10 +1077,10 @@ console.log("\n--- an element reference is part of the citation, not a comment o
     links: L.filter((l) => l.address).map((l) => ({ ref: l.ref, address: l.address,
       address_norm: normalizeAddress(l.address), citation_norm: l.citation,
       fragment: l.fragment, type: l.type })) });
-  const rl = (await call(`/resolvelinks?capture=${SRC2}`)).result;
+  const rl = (await call(`/resolvelinks?viewer=class:member&capture=${SRC2}`)).result;
   t("all four survive as distinct rows, where one key would have collapsed two",
     rl.resolved, 4);
-  const rev = (await call(`/linksto?address=${encodeURIComponent("https://www.oaklandca.gov/report.pdf")}`)).result;
+  const rev = (await call(`/linksto?viewer=class:member&address=${encodeURIComponent("https://www.oaklandca.gov/report.pdf")}`)).result;
   t("asking what points at the report finds the citations of its sections too", rev.count, 3);
   t("and names which elements were cited", rev.elements.sort(), ["page=12", "page=40"]);
 }
@@ -1221,7 +1227,7 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
      settled. It still does not project, because no bundle has registered those
      bytes, which is the state of everything acquired and not yet promoted. A
      zero here is correct and must be EXPLAINED rather than just returned. */
-  const rl = (await call(`/resolvelinks?capture=${A_SHA}`)).result;
+  const rl = (await call(`/resolvelinks?viewer=class:member&capture=${A_SHA}`)).result;
   const linked = rl.links.filter((l) => l.resolution === "linked" && l.fragment);
   t("the link resolves and the verdict is settled by bytes bracketing the retrieval",
     [linked.length, linked[0].verdict], [2, "contemporaneous"]);
@@ -1233,7 +1239,7 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
   t("and an address the record holds nothing for stays unresolved", proj.unresolved, 1);
 
   t("resolution is unchanged by projecting: it is still computed at read time",
-    (await call(`/resolvelinks?capture=${A_SHA}`)).result.links.length, 4);
+    (await call(`/resolvelinks?viewer=class:member&capture=${A_SHA}`)).result.links.length, 4);
 
   /* The catalog's contract for the new relation. */
   const { checkBundle } = await import("../checks/bio-checks.mjs");
@@ -1375,7 +1381,7 @@ console.log("\n--- D-58: an ordinary capture files its address, so it can be a l
         address_norm: normalizeAddress("https://www.oaklandca.gov/never.html"),
         citation_norm: "https://www.oaklandca.gov/never.html", fragment: null, type: "deferred" },
     ] });
-  const r58 = (await callD(`/resolvelinks?capture=${SRC58}`)).result;
+  const r58 = (await callD(`/resolvelinks?viewer=class:member&capture=${SRC58}`)).result;
   const by58 = Object.fromEntries(r58.links.map((l) => [l.link_ref, l]));
 
   t("a link to a PDF the record holds resolves as linked, not offsite",
@@ -1396,7 +1402,7 @@ console.log("\n--- D-58: an ordinary capture files its address, so it can be a l
     [r58.tally.linked, r58.tally.offsite], [2, 1]);
 
   /* And the reverse index, which is what the re-resolution loop will drive. */
-  const rev58 = (await callD(`/linksto?address=${encodeURIComponent(PDF_URL)}`)).result;
+  const rev58 = (await callD(`/linksto?viewer=class:member&address=${encodeURIComponent(PDF_URL)}`)).result;
   t("the reverse index finds what points at the PDF", rev58.count, 1);
   t("naming the document that does", rev58.sources[0].source_capture, SRC58);
 }

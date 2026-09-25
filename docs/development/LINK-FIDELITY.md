@@ -673,6 +673,15 @@ sources where our own bracket arm can never fire. See `ARCHIVE-FALLBACK.md` and
 arrive from more than one source, the bracket arm must know which is which or it
 will report a provenance difference as a change.
 
+2026-09-25 (BOB #35, 09:30Z, on SCHEDULER #23's question; built by D-701). **The link reads answer through the
+viewer.** A capture sha or page address belonging to a bundle the caller cannot read discloses that the bundle
+exists and what it holds, so `op=links` (both arms) and `op=navchanges` pass every row through the viewer
+predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see
+(`MEMBER-KNOWLEDGE-DESIGN.md` §5: a caller who cannot see receives exactly the answer a nonexistent row would
+give). A capture's visibility is its `register` bundle's; a capture filed in no bundle names none and stays
+visible. The consequence for the verdict is deliberate and follows from the ruling: a target whose only capture
+is hidden resolves `offsite` for that viewer, and the bracket is sought among the captures that viewer can see.
+
 ## Open questions
 - Whether C-18.3 should be widened to a cross-bundle check, or whether
   store-level idempotence at plant and promote time is the whole answer. A

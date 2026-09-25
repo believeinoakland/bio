@@ -1129,6 +1129,21 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "byte-identically to one that does not exist, withheld WHOLE. The bar VALUE of a VISIBLE project is "
       + "deliberately NOT reader-dependent (DEC-17's surviving stake: it is never set by who a reader is), "
       + "and the finding arm is refused by name rather than answered, because no bar attaches to a finding.",
+    /* D-701, 2026-09-25: MOVED HERE FROM THE UNGATED LIST, and the entries they replace were wrong. Both
+       read "names no bundle". op=links named the TARGET's bundle outright (`target_bundle`), and both named
+       capture shas and page addresses, which BOB #35 ruled (2026-09-25 09:30Z) disclose that a bundle exists
+       and what it holds — MEMBER-KNOWLEDGE-DESIGN §5's rule. "Names no bundle" was a claim about a field
+       name, not about what the answer discloses. */
+    links: "D-701: WHAT POINTS AT AN ADDRESS and WHAT A CAPTURE LINKS TO name capture shas, the addresses "
+      + "they were captured at, and a resolved target's bundle, so every source and every target capture passes "
+      + "`#captureGate` (the capture's `register` bundle through `#bundleGate`) BEFORE `count`, `elements`, the "
+      + "tally or the bracket are computed. A hidden source capture answers exactly as one the record does not "
+      + "hold; a link whose only capture is hidden is `offsite`, the answer an uncaptured target gets. A capture "
+      + "filed in NO bundle names none and stays visible. Fails closed on an absent stamp.",
+    navchanges: "D-701: a HOST's navigation observations name capture shas and page addresses, so every "
+      + "observation passes `#captureGate` before the sequence is ordered, cut or compared, and each record's "
+      + "interval and `captures` are re-derived from the visible observations — the stored roll-up, which "
+      + "counts every capture, is not served. Fails closed on an absent stamp.",
     /* PL-10 / D-220, 2026-08-07: the document-version chain. Classified here by
        the item that adds it, on op=meaningrows' precedent. */
     versionchain: "PL-10: EVERY VERSION AT AN ADDRESS NAMES A BUNDLE, so a capture filed inside a project "
@@ -1286,8 +1301,6 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     expertiselist: "declared expertise, a member fact; names no bundle.",
     inbox: "the doorbell inbox — material submitted from OUTSIDE, filed against no bundle.",
     inboxget: "one such submission; filed against no bundle.",
-    links: "outbound links by capture sha and inbound by address; names no bundle.",
-    navchanges: "a HOST's navigation across its direct captures, by capture sha and page address (D-340); names no bundle.",
     sourcereach: "reachability of a document ADDRESS; names no bundle.",
     archivelookup: "a CDX lookup against an external archive; names no bundle.",
     pdfstructure: "the structure of a captured PDF, by sha; names no bundle.",
