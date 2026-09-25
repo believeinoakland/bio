@@ -207,6 +207,8 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          CONTRADICTION_PAIR_CHECKS,
          /* D-148 / C-72: the fee-quote grammar's one rule and its refusal family. */
          QUOTE_CHECKS, quoteFindings, quoteValue, isQuoteEntry,
+         /* D-147 / C-94: the records-request lifecycle's one rule, its refusal family and its one reader. */
+         LIFECYCLE_CHECKS, lifecycleFindings, requestLifecycleOf,
 
          /* D-149: the three levels, the two bounds and the ONE reader of an action's governing laws, from the
             catalog that judges them (C-2.10) — the act, its refusal and the read cannot disagree. */
@@ -2226,6 +2228,10 @@ export class Store extends DurableObject {
          when and why — and the intake tier with its author stated UNDETERMINED. Read by the catalogue's one reader
          from the same bytes `risk_tier` above is, so the history and the current tier cannot disagree. */
       risk_tier_history: riskTierHistoryOf(fm),
+      /* D-147: THE RECORDS-REQUEST LIFECYCLE, read back as one dated chain by the catalog's one reader at
+         the same `now` as the clock above. Each entry's due date is the member's STATED date with its
+         citation, or UNDETERMINED with its sentence — never computed from the kind, a law or a stage. */
+      lifecycle: requestLifecycleOf(fm, new Date(now).toISOString().slice(0, 10)),
       /* REC-195: AND WHAT WAS PROPOSED, APART FROM IT. Two keys, never composed: `governing_laws` above is the
          member's statement or its honest undetermined, and this is machine work labelled as machine work
          (D-149). Nothing here is evidence that the list came from a proposal, and nothing derives one. */
@@ -6963,10 +6969,19 @@ export class Store extends DurableObject {
    * `quoteFindings`, run here over the ledger as it WOULD stand, so a member is
    * refused by the C-72 name before anything is written, and the same function
    * reports C-2.10 over the document that lands. An entry with no quote
-   * parameter writes exactly the bytes it wrote before D-148. */
+   * parameter writes exactly the bytes it wrote before D-148.
+   *
+   * D-147: AND IT MAY CARRY ITS PLACE IN THE RECORDS-REQUEST LIFECYCLE (`stage`,
+   * `follows`, `outcome`, `exemptions`, `due_by`, `due_cite`) — the catalog's
+   * `lifecycleFindings`, run here the same way. A due date's citation is judged
+   * HERE against the action's governing laws as they stand when it is stated
+   * (DUE_CITE_NOT_GOVERNING), and only here: see the catalog's comment for why
+   * the document-level rule does not. No due date is ever computed. An entry
+   * with no lifecycle parameter writes exactly the bytes it wrote before. */
   actionCorrespond({ target, direction = "", at = "", medium = "", party = "",
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
+                     stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
                      viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
@@ -7025,11 +7040,32 @@ export class Store extends DurableObject {
       const t = String(v ?? "").trim();
       if (t) quote[k] = t;
     }
+    /* D-147: the lifecycle keys, likewise only those a caller SENT. */
+    const life = {};
+    for (const [k, v] of [["stage", stage], ["follows", follows], ["outcome", outcome],
+                          ["exemptions", exemptions], ["due_by", dueBy], ["due_cite", dueCite]]) {
+      const t = String(v ?? "").trim();
+      if (t) life[k] = t;
+    }
     const refusal = (code, detail, extra) => {
-      const row = QUOTE_CHECKS[code];
+      const row = QUOTE_CHECKS[code] || LIFECYCLE_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation,
                target, detail, ...(extra || {}) };
     };
+    /* DEC-49 REGION is-lifecycle-writable — D-147/C-94.11. The two prose values
+       a stage carries are written quoted into a grammar with no escapes; the four
+       tokens are bare, so each must be the token its grammar names before any
+       byte is spliced (the grammar below judges which token). */
+    for (const [k, max] of [["exemptions", Store.RELEASE_ACK_MAX], ["due_cite", CITATION_MAX]])
+      if (life[k] !== undefined && (life[k].length > max || /["\\\r\n]/.test(life[k])))
+        return refusal("LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is at most ${max} characters and cannot contain a quote, a backslash, or a newline: the `
+          + `restricted frontmatter grammar has no escapes`, { field: k });
+    for (const k of ["stage", "follows", "outcome", "due_by"])
+      if (life[k] !== undefined && !/^[a-z0-9_-]{1,40}$/.test(life[k]))
+        return refusal("LIFECYCLE_TEXT_UNWRITABLE",
+          `${k} is a single token of lower-case letters, digits, underscores or hyphens`, { field: k });
+    /* END DEC-49 REGION is-lifecycle-writable */
     /* DEC-49 REGION is-quote-writable — D-148/C-72.6. The two prose values a
        quote carries are written quoted into a grammar with no escapes. */
     for (const k of ["quote_currency", "quote_basis"])
@@ -7081,6 +7117,7 @@ export class Store extends DurableObject {
       ...(sha ? { artifact_sha: sha } : {}),
       ...(acct ? { account: acct } : {}),
       ...quote,
+      ...life,
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
@@ -7108,6 +7145,49 @@ export class Store extends DurableObject {
         return refusal("QUOTE_REVISES_NO_QUOTE", has("QUOTE_REVISES_NO_QUOTE").message, all);
       /* END DEC-49 REGION is-quote-grammar */
     }
+    /* D-147: the catalog's ONE lifecycle rule, over the ledger as it would stand. */
+    const lf = lifecycleFindings([...ledgerNow, entryFm], ord);
+    if (lf.length) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      const has = (c) => lf.find((x) => x.code === c);
+      const all = { findings: lf };
+      /* DEC-49 REGION is-lifecycle-grammar — D-147/C-94.1-9. The first finding, by
+         the name the catalog reports over the document too. */
+      if (has("STAGE_NOT_OF_DIRECTION"))
+        return refusal("STAGE_NOT_OF_DIRECTION", has("STAGE_NOT_OF_DIRECTION").message, all);
+      if (has("FOLLOWS_NO_ENTRY"))
+        return refusal("FOLLOWS_NO_ENTRY", has("FOLLOWS_NO_ENTRY").message, all);
+      if (has("APPEAL_NAMES_NO_DECISION"))
+        return refusal("APPEAL_NAMES_NO_DECISION", has("APPEAL_NAMES_NO_DECISION").message, all);
+      if (has("OUTCOME_NOT_ON_RECEIVED"))
+        return refusal("OUTCOME_NOT_ON_RECEIVED", has("OUTCOME_NOT_ON_RECEIVED").message, all);
+      if (has("OUTCOME_NOT_IN_VOCABULARY"))
+        return refusal("OUTCOME_NOT_IN_VOCABULARY", has("OUTCOME_NOT_IN_VOCABULARY").message, all);
+      if (has("DECISION_WITHOUT_OUTCOME"))
+        return refusal("DECISION_WITHOUT_OUTCOME", has("DECISION_WITHOUT_OUTCOME").message, all);
+      if (has("FEE_ESTIMATE_WITHOUT_QUOTE"))
+        return refusal("FEE_ESTIMATE_WITHOUT_QUOTE", has("FEE_ESTIMATE_WITHOUT_QUOTE").message, all);
+      if (has("DUE_HALF_STATED"))
+        return refusal("DUE_HALF_STATED", has("DUE_HALF_STATED").message, all);
+      if (has("DUE_NOT_A_DATE"))
+        return refusal("DUE_NOT_A_DATE", has("DUE_NOT_A_DATE").message, all);
+      /* END DEC-49 REGION is-lifecycle-grammar */
+    }
+    /* D-147: a stated due date names ONE OF THE ACTION'S citations (D-149), read
+       from the action's own bytes as they stand now. With no list stated, no
+       citation can be one of it, so the date cannot be stated yet — the refusal
+       says to state the laws first. Nothing is inferred from the kind. */
+    const cited = life.due_cite;
+    const listed = governingLawsOf(fm).laws.map((l) => l.citation);
+    const onList = cited ? listed.includes(cited) : true;
+    if (!onList) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      /* DEC-49 REGION is-lifecycle-due-cite — D-147/C-94.10. */
+      return refusal("DUE_CITE_NOT_GOVERNING",
+        `due_cite '${cited.slice(0, 60)}' is not one of this action's stated governing laws`,
+        { governing_laws: listed });
+      /* END DEC-49 REGION is-lifecycle-due-cite */
+    }
     let text = Store.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text)
       return { ok: false, reason: "UNSPLICEABLE_CORRESPONDENCE", target,
@@ -7119,7 +7199,8 @@ export class Store extends DurableObject {
       + `Trigger: op=actioncorrespond on ${target}\n`
       + `Changes: correspondence[${ord}] recorded, dated ${day}`
       + `${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.\n`
-      + `Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}\n`);
+      + `Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}\n`
+      + `${life.stage ? `Stage: ${life.stage}${life.follows !== undefined ? `, following correspondence[${life.follows}]` : ""}.\n` : ""}`);
 
     const carried = [];
     for (const r of this.sql.exec(
@@ -7156,6 +7237,7 @@ export class Store extends DurableObject {
              held_as: sha ? "capture" : "testimony",
              ...(sha ? { artifact_sha: sha } : { account: acct }),
              ...(Object.keys(quote).length ? { quote } : {}),
+             ...(Object.keys(life).length ? { lifecycle: life } : {}),
              ...(responded ? { responds_to: responded } : {}),
              weight: "single" };
   }
@@ -7808,6 +7890,15 @@ export class Store extends DurableObject {
       ...(e.quote_basis !== undefined ? [`    quote_basis: "${e.quote_basis}"`] : []),
       ...(e.quote_answers !== undefined ? [`    quote_answers: ${e.quote_answers}`] : []),
       ...(e.quote_revises !== undefined ? [`    quote_revises: ${e.quote_revises}`] : []),
+      /* D-147: the lifecycle keys, each only if carried. Stage, follows and
+         outcome are bare tokens (judged tokens before this splice); the date and
+         the two prose values are quoted so the parser keeps them as written. */
+      ...(e.stage !== undefined ? [`    stage: ${e.stage}`] : []),
+      ...(e.follows !== undefined ? [`    follows: ${e.follows}`] : []),
+      ...(e.outcome !== undefined ? [`    outcome: ${e.outcome}`] : []),
+      ...(e.exemptions !== undefined ? [`    exemptions: "${e.exemptions}"`] : []),
+      ...(e.due_by !== undefined ? [`    due_by: "${e.due_by}"`] : []),
+      ...(e.due_cite !== undefined ? [`    due_cite: "${e.due_cite}"`] : []),
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`,
     ];
@@ -53248,6 +53339,10 @@ export class Store extends DurableObject {
           quoteBasis: url.searchParams.get("quote_basis"),
           quoteAnswers: url.searchParams.get("quote_answers"),
           quoteRevises: url.searchParams.get("quote_revises"),
+          /* D-147: the entry's place in the records-request lifecycle. */
+          stage: url.searchParams.get("stage"), follows: url.searchParams.get("follows"),
+          outcome: url.searchParams.get("outcome"), exemptions: url.searchParams.get("exemptions"),
+          dueBy: url.searchParams.get("due_by"), dueCite: url.searchParams.get("due_cite"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* D-148: the quotes, by counterparty or by request. */

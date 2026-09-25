@@ -165,6 +165,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    refusals in the new IDSPACE_CHECKS family. MINOR and additive on this constant's own rule; CONDUCT
    reconciles the number at integration if another branch takes 1.30.0 first. */
 export const CATALOG_VERSION = "1.30.0";
+/* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the

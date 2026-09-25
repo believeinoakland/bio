@@ -227,6 +227,8 @@ t("... and NOT the gate's own version alone — the recorded stamp names the cat
    D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
 /* REC-203 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-91's three rows; since
    D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
+/* D-147 side, kept as history: the branch CORRECTED this arm's literal 1.29.0 -> 1.30.0 for C-94.1-11; since
+   D-558 the expected stamp is built from CATALOG_VERSION, so no literal moves here. */
 /* CORRECTED 2026-08-04 (REC-44 / DEC-44), never exempted, and it moves BACK to
    3 -- which is worth stating plainly because the count went 3 -> 4 under REC-14
    and now returns. REC-14's reasoning was right about the container and wrong

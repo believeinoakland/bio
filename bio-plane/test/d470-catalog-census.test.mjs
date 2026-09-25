@@ -470,6 +470,11 @@ const CATALOG_CENSUS = {
      digest are THIS SUITE'S OWN PRINT on the item's tree over origin/main 8bdf20e6. CONDUCT reconciles at the union. */
   /* D-520 side, kept as history (branch row DROPPED at c22-batch29; CONDUCT takes the union's number once and re-reads
      count and digest from this suite's print): "1.29.0": { count: 462, digest: "bbbbc10c8a9a3d179dd984d5c9bfb902dccc5b9fd91ba63a67edff5c6f4d0439" } */
+  /* D-147 side, kept as history (branch row DROPPED at c22-batch29 — ours already holds "1.30.0" for the c21-batch28
+     catalogue; CONDUCT takes the union's number once and re-reads count and digest from this suite's print):
+     1.30.0 (D-147, 2026-09-25): ELEVEN ARRIVALS, NO DEPARTURES — C-94.1-11, LIFECYCLE_CHECKS, 466 -> 477 over
+     origin/main 964da679;
+     "1.30.0": { count: 477, digest: "b06cb8dce8d8ce12f4d719b0b8e44e8d1f78c7501fb1b803126870967bcb39f4" } */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -672,6 +677,8 @@ t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1
 /* REC-219 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-41.14/C-41.15); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* REC-203 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-91's three rows); ours is
+   kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
+/* D-147 side, kept as history — its A5 pin read 1.30.0 on its own branch (1.29.0 -> 1.30.0, C-94.1-11); ours is
    kept at c22-batch29 and CONDUCT moves this literal with the constant once. */
 /* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
    written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
