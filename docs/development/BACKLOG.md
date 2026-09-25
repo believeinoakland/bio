@@ -214,6 +214,16 @@ scope: the set act sends each project-scoped item's own project; where an item h
 accepts-when: a project-scoped finding joins a selection and the set act carries its project; an item with two homes is not sent until the member names one (the measured failure it moves: null for scope=project). NEGATIVE CONTROL: return null again and the selection arm fails by name.
 added: 2026-09-24 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
 
+### UI-113 · queued — **NO SURFACE RENDERS A PUBLISHED CASE'S FROZEN `bias_manifest` BLOCK AT ALL (0 hits in civicos-ui), so REC-219's pending-adoption statement reaches no page.** Found by REC-219's worker (02:38Z). — owner UI.
+order: after UI-110, with the surface halves of landed record rows (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: none (reads REC-219's /4 block).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 18, with Declared Bias "Bias bundles and adoption".
+depends-on: REC-219.
+scope: the published case page renders the frozen bias_manifest as the document states it, verbatim (DEC-8): the stated sentence, and pins_proposed_stated with each pending revision; /3, /2 and /1 documents render what they carry, never a default.
+accepts-when: a /4 case with a pending adoption shows it; a /3 case shows its own statement and nothing invented (moves: no surface). NEGATIVE CONTROL: drop the block and the pending arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs UI`).
+
 ### D-576 · queued — **THE `op=connect` RECEIPT CLAIMS THE WHOLE SET WHEN THE DERIVATION WAS CUT: `app.html` `connectGo` reads "The record derived N connections among the documents that concern this subject" and ignores the answer's `truncated`, which store.mjs documents as "whether the DERIVATION was cut".** Found by UI-95's worker (01:10Z); UI-95 states the cut on the subject panel beneath it. — owner UI.
 order: after UI-110, with the surface corrections: a receipt reading a cut set as whole claims more than the record holds (CLAUDE.md §2) (SCHEDULER #21, 2026-09-25)
 milestone: M4
@@ -306,6 +316,16 @@ scope: C-25.11's composition carries the capture the run read onto each suggeste
 accepts-when: a run's suggestion names the capture it read, and an accepted suggestion keeps it (moves: bundle-only suggested legs). NEGATIVE CONTROL: drop `extent_capture` from the composition and the suggested-pin arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
+### D-597 · queued — **A CASE'S CITATION EDGE IS NOT PINNED INSIDE THE SIGNED DOCUMENT: `references[] rel: cites` names a bundle only.** D-579(a). BOB #34 RULED 2026-09-25 02:30Z (drained to `BOB-INBOX-drained.md`; cite until folded): pinned INSIDE the signed case document, riding REC-219's `bio-case-document/4` (ONE bump); a /3 document is never re-signed and its edges read "version undetermined (signed before capture pins)". REC-219 landed /4 without it (its report of 02:38Z). — owner RECORD.
+order: directly after REC-219, and trained WITH it if the batch allows: /4 must not be released twice (BOB #34 02:30Z) (SCHEDULER #21, 2026-09-25)
+milestone: M10
+interface: I3 — each cites edge in /4 carries `extent_capture`; the integrator classifies (with REC-219's /4 IC).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 18 (REC-219's fold) and §18.1 of the Framework, with BOB #34's 02:30Z ruling.
+depends-on: REC-219, REC-220.
+scope: op=cite's case arm stamps the capture the record presents at the act (REC-220's stamp); op=publish writes it into each cites edge of a /4 document; C-41.14's family refuses a /4 cites edge without it where the record held one; /3 edges read as ruled.
+accepts-when: a /4 case's cites edge carries its capture and ratifies; one without it where the record held one is refused by name; a /3 still ratifies (moves: bundle-only case edges). NEGATIVE CONTROL: drop the pin from publish and the /4 edge arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
+
 ### REC-222 · queued — **A MEMBER HOLDING A REFERENCE IS NEVER TOLD A NEWER VERSION AFFECTS IT: `op=versionnotice` is a PULL read, and nothing is pushed.** Bob's 00:40Z doctrine, rule 2 (item 3). — owner RECORD.
 status: queued — REC-221 (01:51Z): notice-level affects reads 'undetermined' for chain_unread; REC-222 DECIDES whether chain_unread raises a notice (rule 2 says never silence; every address-less capture may be noisy) and states the decision
 order: after REC-221, whose grade it reads (SCHEDULER #21, 2026-09-25)
@@ -367,6 +387,16 @@ depends-on: D-550.
 scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stated reason each file that PUBLISHES codes as data rather than minting them (affordances.mjs first); move the ceiling and candidate set to the printed figures.
 accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
+
+### D-590 · queued — **FIVE CODES A REAL-PLANE UI SUITE READS IN A PANE CARRY NO CANNED TRANSLATION: BAD_REQUIRED (intent-write #pg-pf), NO_JUSTIFICATION (#rel-pf), NO_KIND (#ent-pf), each one mint site; NOT_CONCERNED (#pg-th-pf) and NO_REASON (conclude-reading, intent-write #pg-dis-pf, queue-peritem), multi-site (NO_REASON at 13 store.mjs sites + 1 affordances.mjs).** Found by D-485's worker (its ARM H/R4, 02:37Z; owed by name in R4_OWED). — owner RECORD.
+order: after D-574, with the DEC-49 rows: a member meets these untranslated today (DEC-49), and the two multi-site codes are consolidated first (D-550/D-574's class) (SCHEDULER #21, 2026-09-25)
+milestone: M8
+interface: I3 additive — code, check and translation on each; the integrator classifies.
+design: DEC-49, as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it, in D-484's settled shape (one governed helper, one region, one condition).
+depends-on: D-485.
+scope: a *_CHECKS row (ACT_SHAPE_CHECKS the natural family) with a canned translation for each; consolidate NOT_CONCERNED and NO_REASON behind one mint site first; remove each from R4_OWED and lower CEILING.reachGap in the same landing.
+accepts-when: ARM H lists the five as reached AND translated, R4_OWED holds none of them (moves: five untranslated codes in panes). NEGATIVE CONTROL: strip one translation and ARM H fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-485's worker).
 
 ### D-560 · queued — **`tools/release-assemble.mjs` (~140) STILL NAMES THE ONE-BUNDLE COMMAND: its NO_ARTIFACT detail says "Run `npm run build` in <dir>/", and the assembler dies on the FIRST missing artifact, so a releaser fixes one bundle at a time.** M0-188's sibling site (found by M0-188's worker, via CONDUCT #20 23:45Z). — owner DIST (the path), M0.
 order: after D-548, with the process rows behind the product rows: it costs a release round, not a gate round, and no release is cut until the plan's current scope is done (BOB #34 22:30Z) (SCHEDULER #21, 2026-09-24)
@@ -470,36 +500,6 @@ depends-on: MK-7 (it carries MK-7's attribution; §8 names MK-3's replacement (i
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-147 · queued — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
-order: directly after D-149, on D-148's entry grammar, which it extends (BOB #27: *"depends-on D-148"*), the M10 action path (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 2)
-milestone: M10
-interface: I3 and I5 — correspondence entry kinds, a closed outcome vocabulary and a stated due date; the … (whole text: the cut archive)
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, *THE RECORDS-REQUEST LIFECYCLE* (BOB #27, 2026-09-22), bound by D-149.
-depends-on: D-148 (the entry grammar it extends); D-149 (a stated due date names one of the action's citations).
-accepts-when: a request, a fee estimate, a waiver decision, a partial production and an appeal read back as one dated chain; an entry with no stated due date reads UNDETERMINED; a stated … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 2, drained this commit; D-147's DEBT row of 2026-08-01; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### REC-196 · queued — **A READ NAMING A DISCOVERABLE PROJECT'S OWN ID ANSWERS "DOES NOT EXIST" TO A MEMBER THE DIRECTORY HAS JUST SHOWN IT TO.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *POSITIONAL WINS for the PROJECT ITSELF: an uninvited member session naming a discoverable project's own id gets the positional refusal (not a participant; id and name only); anything INSIDE the project answers exactly as today; `viewerPredicate` unchanged.* — owner RECORD.
-order: before REC-150, the §7.14 sequence (SCHEDULER #17, 2026-09-23; REC-149's worker)
-milestone: M8
-interface: I3 — the project-id read's refusal; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14), with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded).
-depends-on: REC-149.
-scope: the project-itself read gives a discoverable project's positional refusal; contents keep the existence answer. Extend `bio-plane/test/project-sight.test.mjs`.
-accepts-when: a discoverable project's id reads the positional refusal naming id and name; a bundle inside it still reads as absent. NEGATIVE CONTROL: answer "does not exist" for the project itself, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
-### REC-197 · queued — **CREATE AND FORK DO NOT CARRY THE DISCOVERABLE SETTING, AND A MACHINE CREDENTIAL'S OWNERLESS PROJECT HAS NO RULE.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *create and fork take one optional `visibility` (`discoverable` or `hidden`), absent means HIDDEN; a MACHINE credential never sets it (an ownerless project has no owner to choose): its creation is HIDDEN and `visibility=discoverable` from one is refused by name.* — owner RECORD.
-order: directly after REC-196 (SCHEDULER #17, 2026-09-23)
-milestone: M8
-interface: I3 additive — the `visibility` field and one refusal; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.14), with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded).
-depends-on: REC-149.
-scope: the field on both acts, the fail-closed default, the machine refusal. Extend `bio-plane/test/project-sight.test.mjs`.
-accepts-when: an absent field creates HIDDEN; a machine's `discoverable` is refused by name. NEGATIVE CONTROL: default to discoverable, and the fail-closed arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
 order: after REC-149, whose EXISTENCE level it needs (SCHEDULER, 2026-09-19)
