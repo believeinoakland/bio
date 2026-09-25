@@ -83,16 +83,6 @@ scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (kee
 accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
 
-### D-607 · queued — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
-order: directly after D-606, the same seam: a small overclaim in the tier-3 note (SCHEDULER #22, 2026-09-25)
-milestone: M2
-interface: none (a note's wording).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
-depends-on: none.
-scope: emit that clause only when layerPages is non-empty.
-accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
-added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
-
 ### D-572 · queued — **A MULTI-QUESTION PROJECT RUN HAS NO TARGET FOR A LEVEL-EMPTY CANDIDATE: after D-451 a project citing SEVERAL questions still seeds none, so its table-made candidates are refused SUGGEST_NO_TARGET.** Found by D-451's worker. BOB #34 RULED (c) 2026-09-25 02:05Z (drained to `BOB-INBOX-drained.md`; cite until folded): a level observation NAMES the question(s) its search was for; one candidate per NAMED question, never per cited question; an observation naming none keeps today's provisional (UNDETERMINED with the count, refused, logged) and the instrument states "N empty levels not attributed to a question". — owner RECORD, agent-worker.
 order: after D-570, in product order: a candidate claiming a search the log does not show overclaims (BOB #34 02:05Z) (SCHEDULER #21, 2026-09-25)
 milestone: M6
@@ -1202,3 +1192,13 @@ depends-on: none.
 accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-85 · blocked — **THE HEARTBEAT MEASURES A STALE TREE.** `conduct-heartbeat` STEP 3 greps `QUEUE.md` in the MAIN CHECKOUT's working tree and … (whole text: the cut archive)
+order: behind the product rows with the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*; SCHEDULER #12), M0-81's class (BOB #19, 2026-09-21); `blocked` because no worker can take it — the definition is Bob's to approve and is never changed from here (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the heartbeat's own STEP 3 warning … (whole text: the cut archive)
+depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-09-21).
+accepts-when: a heartbeat run's `queued`/`running` counts equal those of `node tools/coord.mjs read docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

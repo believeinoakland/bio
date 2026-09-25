@@ -557,8 +557,8 @@ scope: the capture manifest (or its reading) states the earliest and latest part
 accepts-when: a composite whose parts were fetched at two instants states both. NEGATIVE CONTROL: drop the spread, and the two-instant arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 
-### D-320 · running — **THE PASS-THROUGH JPEG ROUTE CANNOT BE TRANSCRIBED IN-ISOLATE: `ocr-worker`'s `transcribe.mjs` refuses every non-PNG route (PIXELS_UNREADABLE), so 17 of CPDF-12's 24 image-only pages (DCT) go untranscribed; 8-bit rotation is not built either (`pagepixels.mjs`).** — owner CONTENT-PDF.
-status: running — SCHEDULER #22 03:30Z spawns WORKER D-320 (depth 2)
+### D-320 · integrated — **THE PASS-THROUGH JPEG ROUTE CANNOT BE TRANSCRIBED IN-ISOLATE: `ocr-worker`'s `transcribe.mjs` refuses every non-PNG route (PIXELS_UNREADABLE), so 17 of CPDF-12's 24 image-only pages (DCT) go untranscribed; 8-bit rotation is not built either (`pagepixels.mjs`).** — owner CONTENT-PDF.
+status: integrated — SCHEDULER #22 04:43Z: tip 46b43c35 (CARRIES D-585 82fda0bf), GATE 78/78 GREEN FULLREUSE over 6bc01cc3's full run (366/367, its red fixed), tree 46b43c35; baseline DCT decoder, Pillow-exact; M-163; 5.pdf-dct-decode BUILT; owed after DIST's next ocr-worker cut: the deployed decode measured
 order: with the M2 extraction rows, after D-191: the route with the strongest provenance reads nothing (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
 milestone: M2
 interface: I6 — the member's pixel route; the integrator mints and classifies the IC.
@@ -774,6 +774,16 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with the OCR me
 depends-on: none.
 scope: tier3Extend re-asks the member for each page in `deferred`, one invocation per page, sequential, each merged by mergeTier3Text; a refused page keeps its marker. MEASURE FIRST the per-acquire CPU and subrequest budget for a 58-page scan on the deployed runtime's limits (miniflare wall 80 s shipped vs 858 s per page over the 21); if it exceeds them, the tail goes to a deferred task, stated.
 accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
+
+### D-607 · queued — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
+order: directly after D-606, the same seam: a small overclaim in the tier-3 note (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: none (a note's wording).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: none.
+scope: emit that clause only when layerPages is non-empty.
+accepts-when: a wholly scanned document's note carries no kept-text clause, and a mixed one still does (moves: a stated text layer that never existed). NEGATIVE CONTROL: emit the clause unconditionally and the wholly-scanned arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
