@@ -12052,6 +12052,13 @@ async function citeOpen(init){
   await loadActSource();
   try{ CITE.targets = await citeCandidates(); }
   catch(e){ CITE.targets = []; CITE.targetsErr = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
+  /* REC-202: a caller that already knows the citing object — a lead taken up under the question it
+     bears on — names it, and it is CHOSEN only if it is among the candidates the record offered this
+     credential. One that is not is left unchosen rather than forced: the list is the record's answer. */
+  if(init.target){
+    const c = (CITE.targets || []).find(x => x.id === init.target) || null;
+    if(c){ CITE.target = c.id; CITE.targetType = c.type; }
+  }
   citePaint();
 }
 /* Choosing the citing object also settles WHICH ARM this is, from the record's
@@ -15916,6 +15923,19 @@ function queueEntryControlsHtml(it){
        is worse than none. The test is a PROPERTY of the item rather than a list
        of kinds, so a finding kind nobody has written yet is judged correctly the
        day it arrives. */
+    /* REC-202: A FINDING WHOSE DISPOSITION IS SCOPED TO A PROJECT (D-266) TAKES ITS OWN DOORS, and
+       until REC-202 it was handed the progression three instead — Adopt / Defer / Dismiss keyed on the
+       item's id, which the plane refuses NO_PROJECT_SCOPE every time because a judgment-layer
+       disposition names the project it is taken for. So those three were controls that could only ever
+       be refused, on exactly the items UI-45 withdrew them from one rule over. */
+    if(notifScopedDisposition(it)){
+      /* c22-batch30 union (CONDUCT #22), UI-110 x REC-202: REC-202's doors replace only the progression
+         THREE; UI-110's tick, which feeds the SET act with the member's chosen case (D-266, the picker in
+         `queueSelHomeHtml`), is kept beside them, gated exactly as it was on this branch of the queue. */
+      const tick = canProposalAct() ? queueSelTickHtml(it) : "";
+      const doors = notifInquiryActsHtml(it);
+      return tick ? `<div class="q-entry-acts">` + tick + `</div>` + doors : doors;
+    }
     if(!notifDispositionKeyed(it)) return notifNoDispositionHtml(it);
     const key = queueFindingKey(it);
     if(!key || !canProposalAct()) return "";
@@ -16053,7 +16073,7 @@ function queueItemHtml(it){
          finding with no progression identity has no such population, so printing
          "strength: undetermined" beside it would answer a question that was never
          asked about it. */""}
-    ${it.class === "FINDING" && notifDispositionKeyed(it) ? proposalGradeHtml(queueFindingAsProposal(it)) : ""}
+    ${it.class === "FINDING" && notifProgressionKeyed(it) ? proposalGradeHtml(queueFindingAsProposal(it)) : ""}
     ${notifBasisEntryHtml(it)}
     ${queueBasisHtml(it)}
     ${queueOptionsHtml(it)}
@@ -16390,7 +16410,7 @@ function queuePaint(){
      UI-45, only from the findings op=proposedispose can actually be keyed on. A
      finding with no progression identity used to enter this list with two null
      keys, so the act dialog it fed had nothing to send. */
-  PROPOSALS_LAST = items.filter(i => i.class === "FINDING" && notifDispositionKeyed(i))
+  PROPOSALS_LAST = items.filter(i => i.class === "FINDING" && notifProgressionKeyed(i))
                         .map(queueFindingAsProposal);
 
   const notices = queueNotices();
@@ -25016,9 +25036,14 @@ function notifOptionsGrainHtml(it){
   if(!g || typeof g !== "object") return "";
   const offered = String(g.offered == null ? "" : g.offered).trim();
   const missing = String(g.missing == null ? "" : g.missing).trim();
+  /* REC-202: a grain OFFERED with none MISSING is the record saying the gap is closed, and it is said
+     as that — never read as the old sentence, and never as the generic one below, which would tell a
+     member the record declared a gap it no longer declares. */
   const head = (offered && missing)
     ? "The acts below are at " + offered + " level. The ones a member would most naturally want here are at "
       + missing + " level, and the record says they do not exist yet."
+    : (offered && (g.missing === null || g.missing === undefined || missing === ""))
+    ? "The acts below are at " + offered + " level, and the record declares nothing missing at any other level."
     : "The record has something to say about which acts it can and cannot offer on this.";
   return '<div class="q-grain"><b>' + esc(head) + '</b>'
     + (g.detail ? ' <span class="q-grain-why">' + esc(String(g.detail)) + '</span>' : "")
@@ -25095,6 +25120,138 @@ function notifNoDispositionHtml(it){
         ? 'What the record does publish as doable here is listed above.'
         : 'The record publishes no act on it for this credential either, which is stated above rather than left blank.')
     + '</div>';
+}
+
+/* ------------------------------------ (3b) REC-202 · THE INQUIRY-GRAIN DOORS
+   BOB #32, 2026-09-23 23:08Z: *a missing member door.* The out-of-inquiry lead
+   declared that taking it up and setting it aside did not exist, and both did:
+   `op=cite` into the question it bears on, and `op=proposedispose` scoped to one
+   project (D-266). The plane now publishes both on the item as `inquiry_acts`,
+   with the arguments each takes; this surface draws them from there and holds
+   no list of its own. A finding scoped to a project that publishes no
+   `inquiry_acts` still has its set-aside, read from its `disposition` block —
+   the same act, the same arguments. Each door is drawn only where the record
+   says it is open AND this credential can act; where the record says it is
+   closed, the record's own sentence is rendered instead of a control. */
+function notifScopedDisposition(it){
+  const d = (it && it.disposition) || null;
+  return !!(it && it.class === "FINDING" && d && d.scope === "project");
+}
+function notifProgressionKeyed(it){ return notifDispositionKeyed(it) && !notifScopedDisposition(it); }
+function notifInquiryActs(it){
+  const acts = Array.isArray(it && it.inquiry_acts) ? it.inquiry_acts : [];
+  const find = id => acts.find(a => a && a.id === id) || null;
+  let aside = find("set_aside");
+  const d = (it && it.disposition) || null;
+  if(!aside && d && d.scope === "project")
+    aside = { id:"set_aside", op: d.op || "proposedispose", available: d.available === true,
+              finding: d.finding || null, projects: Array.isArray(d.projects) ? d.projects : [],
+              dispositions: null, reason: d.reason || null, detail: d.detail || "" };
+  return { take: find("take_up"), aside };
+}
+function notifInquiryActsHtml(it){
+  const { take, aside } = notifInquiryActs(it);
+  const id = esc(String(it.id));
+  const can = canProposalAct();
+  const parts = [];
+  if(take){
+    if(take.available === true && take.document && take.project)
+      parts.push(can
+        ? `<button class="btn" data-take-up="${id}" onclick="notifTakeUpOpen('${id}')">Take this up under ${esc(String(take.project))}&hellip;</button>`
+        : "");
+    else parts.push(`<div class="q-gap" data-take-up-closed="${id}">${esc(String(take.detail || ""))}</div>`);
+  }
+  if(aside){
+    if(aside.available === true && aside.finding && (aside.projects || []).length)
+      parts.push(can
+        ? `<button class="btn ghost" data-set-aside="${id}" onclick="notifSetAsideOpen('${id}')">Set aside for your case&hellip;</button>`
+        : "");
+    else parts.push(`<div class="q-gap" data-set-aside-closed="${id}">${esc(String(aside.detail || ""))}</div>`);
+  }
+  const body = parts.filter(Boolean).join("");
+  return body ? `<div class="q-entry-acts" data-inquiry-acts="${id}">${body}</div>` : "";
+}
+/* TAKE UP: the cite dialog every other surface opens, over the document the
+   record named and with the question it named chosen — the member still states
+   the role, and the plane still judges the act. */
+async function notifTakeUpOpen(itemId){
+  const it = QUEUE_ITEMS.get(String(itemId));
+  const take = it ? notifInquiryActs(it).take : null;
+  if(!take || take.available !== true || !take.document) return;
+  await loadActSource();
+  const act = passageCiteAct();
+  if(!act) return;
+  return citeOpen({ ids:[String(take.document)], act, title:String(take.document), target:String(take.project) });
+}
+/* SET ASIDE: the project is the member's to name, never defaulted even where
+   there is one (the plane's rule: a plane choosing whose judgment the record
+   carries is the single shared stance §7 rejected); the disposition is one the
+   record publishes; the reason is theirs and required. The commit is ABSENT
+   until all three are supplied, and every refusal is the record's own words. */
+let NOTIF_ASIDE = null;   // { id, finding, projects, dispositions, project, to, reason, refusal, busy }
+function notifSetAsideOpen(itemId){
+  const it = QUEUE_ITEMS.get(String(itemId));
+  const aside = it ? notifInquiryActs(it).aside : null;
+  if(!aside || aside.available !== true || !aside.finding) return;
+  const vocab = Array.isArray(aside.dispositions) && aside.dispositions.length ? aside.dispositions : dispositions();
+  NOTIF_ASIDE = { id:String(itemId), finding:String(aside.finding), projects:(aside.projects || []).map(String),
+                  dispositions:vocab, project:"", to:"", reason:"", refusal:null, busy:false };
+  $("#dlg-wrap").classList.remove("hidden");
+  notifSetAsidePaint();
+}
+function notifSetAsideChoose(field, v){
+  if(!NOTIF_ASIDE) return;
+  if(field === "project" || field === "to") NOTIF_ASIDE[field] = String(v || "");
+  if(field === "reason") NOTIF_ASIDE.reason = String(v == null ? "" : v);
+  NOTIF_ASIDE.refusal = null;
+  if(field !== "reason") notifSetAsidePaint();
+}
+function notifSetAsidePaint(){
+  const A = NOTIF_ASIDE; if(!A) return;
+  const box = $("#dlg"); if(!box) return;
+  const projects = A.projects.map(p => `<label class="dz-opt${p===A.project?" on":""}">
+      <input type="radio" name="sa-project" value="${esc(p)}" ${p===A.project?"checked":""} onchange="notifSetAsideChoose('project', this.value)">
+      <span class="dz-verb mono">${esc(p)}</span></label>`).join("");
+  const tos = A.dispositions.map(d => `<label class="dz-opt${d===A.to?" on":""}">
+      <input type="radio" name="sa-to" value="${esc(d)}" ${d===A.to?"checked":""} onchange="notifSetAsideChoose('to', this.value)">
+      <span class="dz-verb">${esc(disposeVerb(d))}</span></label>`).join("");
+  const commit = (A.project && A.to && A.reason.trim())
+    ? `<div class="intent-pf"><button class="btn" id="sa-go" onclick="notifSetAsideSend()"${A.busy?" disabled":""}>${esc(disposeVerb(A.to))} for ${esc(A.project)}</button></div>` : "";
+  box.innerHTML =
+    `<h2>Set this aside for your case</h2>
+     <p class="what">This records your case's decision about this notification, with your reason, and takes it off <b>that case's</b> open list. No other case's list moves, and nothing is deleted: it can be re-triaged.</p>
+     <h3 class="cx-h">Which case you are acting for</h3>
+     <p class="subj-note">The record lists the cases this notification is filed under that you can see. None is chosen for you.</p>
+     <div class="dz-choose">${projects}</div>
+     <h3 class="cx-h">Which disposition</h3>
+     <div class="dz-choose">${tos}</div>
+     <h3 class="cx-h">Your reason</h3>
+     <textarea class="txt" id="sa-reason" rows="2" onchange="notifSetAsideChoose('reason', this.value);notifSetAsidePaint()" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     ${A.refusal ? `<div class="intent-pf">${citeRefusalHtml(A.refusal)}</div>` : ""}
+     ${commit}
+     <div class="row-btns"><button class="btn ghost" onclick="closeDialog()">Cancel</button></div>`;
+  const r = $("#sa-reason"); if(r) r.value = A.reason;
+}
+async function notifSetAsideSend(){
+  const A = NOTIF_ASIDE;
+  if(!A || A.busy || !A.project || !A.to || !A.reason.trim()) return;
+  A.busy = true; A.refusal = null; notifSetAsidePaint();
+  try{
+    const out = await recPostR("proposedispose", { project:A.project, finding:A.finding, to:A.to, reason:A.reason.trim() });
+    A.busy = false;
+    if(out && out.ok === false){ A.refusal = out; notifSetAsidePaint(); return { refused:true, reason:out.reason }; }
+    notifRememberDisposition(out);
+    closeDialog();
+    await renderQueue();
+    return out;
+  }catch(e){
+    A.busy = false;
+    const inner = (e && typeof e === "object" && e.result !== undefined) ? e.result : e;
+    A.refusal = (inner && typeof inner === "object" && (inner.reason || inner.detail || inner.error))
+      ? inner : { reason:"NO_ANSWER", detail:String(e) };
+    notifSetAsidePaint();
+    return { refused:true, reason: A.refusal.reason };
+  }
 }
 
 /* ------------------------------------------------- (4) WHICH LEVEL WAS EMPTY */

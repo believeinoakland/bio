@@ -709,6 +709,8 @@ const CHOOSERS = {
   "disposePaint":          "radios choosing the ONE disposition token for one act",
   "openBallotDialog":      "radios choosing the ONE owner a ballot is about",
   "proposalActPaint":      "radios choosing the ONE disposition token",
+  /* REC-202, 2026-09-25. */
+  "notifSetAsidePaint":    "REC-202: radios choosing the ONE project a set-aside is taken for and the ONE disposition token, for one op=proposedispose on one finding",
   "addActionPaneHtml":     "draft-list editing (basis legs, clock entries) before ONE op=promote; nothing is decided until the one act",
   "progStageHtml":         "draft-list editing of a progression's stages before ONE op=progressiondefine",
   "lookupSubject":         "disambiguation — choosing the ONE subject a lookup meant",

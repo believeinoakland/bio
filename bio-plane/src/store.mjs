@@ -30295,7 +30295,7 @@ export class Store extends DurableObject {
       const basisEntry = this.#leadBasisAbsence(r.capture_sha);
       const capturedMs = Date.parse(r.captured_at);
       const leadTitle = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, r.lead_inquiry);
-      out.push({
+      const item = {
         id: `FINDING::out-of-inquiry-lead::${r.request}`,
         class: "FINDING",
         kind: "out-of-inquiry-lead",
@@ -30339,28 +30339,91 @@ export class Store extends DurableObject {
               detail: "the request row carries a completion stamp this producer cannot read as an instant" },
         assignee: null,
         assignee_role: null,
-        /* THE ACTS ON INQUIRY B, derived by the same composer every other item
-           uses. D-213 named this half honestly when it was answered and the
-           naming still holds: the NATURAL options here are inquiry-grain acts —
-           *take this up under B*, *set it aside* — and those do not exist yet
-           (D-222's grain problem, one surface over). What `#queueOptions`
-           offers is the document-grain acts that DO exist, on B itself, which
-           are real acts a member can actually take rather than a promise the
-           surface would have to break. The gap is DECLARED on the item rather
-           than hidden by an empty array. */
+        /* THE ACTS ON INQUIRY B ITSELF, derived by the same composer every other
+           item uses — acts on the QUESTION (dispose it, conclude it), which is
+           document grain. The acts on THIS LEAD at inquiry grain are published
+           beside them in `inquiry_acts`, below. */
         options: this.#queueOptions([r.lead_inquiry], viewer, identity),
-        options_grain: {
-          offered: "document",
-          missing: "inquiry",
-          detail: "the acts offered are the ones this record can actually perform on the question "
-                + "this lead is filed under. The acts a member would most naturally want here are at "
-                + "INQUIRY grain — take this up under that question, or set it aside — and they do "
-                + "not exist yet (D-222). Declared rather than left as an absence a surface would "
-                + "have to explain.",
-        },
-      });
+      };
+      /* ============================================== REC-202 · THE INQUIRY-GRAIN DOORS
+         PL-15 DECLARED `options_grain.missing: "inquiry"` ON 2026-08-08, AND BY 2026-08-10 IT
+         WAS HALF FALSE AND NOBODY CHANGED IT. D-266 (IC-60) built the project-scoped
+         disposition two days later — `op=proposedispose` keyed (project, finding) — which IS
+         "set it aside" for one team; and `op=cite`'s inquiry arm (REC-37) had already made
+         "take this up under that question" an act: it makes the captured document a leg of
+         inquiry B's basis, by a member, with the role they state. Both doors existed and the
+         item went on telling every member they did not — the record claiming LESS than it
+         can do, which reads to a member as a lead nothing can be done about (BOB #32,
+         2026-09-23 23:08Z: *a missing member door*).
+
+         SO THE ITEM NOW PUBLISHES THE TWO DOORS, and publishes each one's arguments, so a
+         surface draws them from the record and never from a list of its own:
+           · TAKE UP — `op=cite`, `project` = inquiry B (the citing object keeps its I3 name),
+             over a selection of the document the capture is registered under. Where no
+             document holds these bytes there is nothing to cite, and the door says so with
+             the basis entry's own reason rather than offering an act the plane would refuse.
+             A take-up is an AUTHORED act: it names a role and it enters a claim, which is
+             exactly what D-213 kept away from the machine (*nothing enters a claim without a
+             member*) and exactly why it is the member's.
+           · SET ASIDE — `op=proposedispose` at the JUDGMENT LAYER, one team's decision
+             governing that team's feed and nothing else (D-266). Its availability and
+             candidates are read from the ONE implementation the mint publishes as
+             `disposition` — called here, not re-derived — so the two cannot disagree.
+         `options_grain` stays on the item, because a surface still owes the member the
+         account of which acts are at which grain, and it now DECLARES NO GAP. */
+      /* The doors are composed by `#leadInquiryActs`, which READS NOTHING: `#dispositionOf` is a pure
+         function of the item, and the take-up reads the basis entry this loop already measured. Said
+         here because `derivation-bounds` scores row sources inside this loop and that helper adds none. */
+      this.#leadInquiryActs(item, basisEntry, r.lead_inquiry);
+      out.push(item);
     }
     return out;
+  }
+
+  /** REC-202 — the lead's two inquiry-grain doors and its closed `options_grain`, written onto `item`.
+   *  Pure: no read happens here (see the producer's banner for what each door is and why). */
+  #leadInquiryActs(item, basisEntry, leadInquiry) {
+    const takeDoc = basisEntry.bundle_id;
+    const aside = this.#dispositionOf(item);
+    item.inquiry_acts = [
+      takeDoc
+        ? { id: "take_up", op: "cite", available: true, inquiry: leadInquiry,
+            project: leadInquiry, document: takeDoc,
+            requires: ["handle", "role"], select: { op: "select", ids: [takeDoc] },
+            detail: `take this up under ${leadInquiry}: select ${takeDoc} and cite it into that `
+                  + "question with the role you judge it plays (op=select, then op=cite naming the "
+                  + "question as `project`). The document then becomes a leg of that question's "
+                  + "basis, in your name and with your role — the one act that makes it evidence, "
+                  + "and a member's, never the session's (D-213). The act judges your position "
+                  + "and the leg; this says only that there is a document to cite." }
+        : { id: "take_up", op: "cite", available: false, inquiry: leadInquiry,
+            project: leadInquiry, document: null,
+            reason: "no_document_to_cite", basis_entry_reason: basisEntry.reason,
+            detail: "there is nothing to take up yet: the captured bytes are held, and no document "
+                  + "in this store carries them, so there is no document to cite into the question "
+                  + "(the basis entry says which absence it is). Registering the capture under a "
+                  + "document is what makes this door open; nothing is offered that would be refused." },
+      { id: "set_aside", op: "proposedispose", available: aside.available === true,
+        scope: aside.scope ?? null, finding: aside.finding ?? null, projects: aside.projects ?? [],
+        dispositions: DISPOSITIONS, requires: ["project", "finding", "to", "reason"],
+        ...(aside.available === true ? {} : { reason: aside.reason ?? null }),
+        detail: aside.available === true
+          ? "set it aside for your team: op=proposedispose naming the project you act for (one of "
+          + "`projects`), this `finding`, deferred or dismissed, and your reason. It ages the lead "
+          + "out of THAT team's open list and moves no other team's (D-266); it deletes nothing, "
+          + "and it stands until it is re-triaged (D-79)."
+          : String(aside.detail || "") },
+    ];
+    item.options_grain = {
+      offered: "document",
+      missing: null,
+      inquiry: item.inquiry_acts.map((a) => a.id),
+      detail: "the acts in `options` are the ones on the QUESTION this lead is filed under, at "
+            + "document grain. The acts on THIS LEAD, at inquiry grain — take it up under that "
+            + "question, or set it aside for your team — are published in `inquiry_acts` with the "
+            + "arguments each takes, and each says whether it is open to you here and why not. "
+            + "Nothing at inquiry grain is missing (REC-202; BOB #32, 2026-09-23).",
+    };
   }
 
   /* ======================================================================
