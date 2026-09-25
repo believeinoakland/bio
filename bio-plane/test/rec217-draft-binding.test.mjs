@@ -66,6 +66,19 @@
    (c) NEW — THE MERGE DROPPED: the once-per-document filter becomes `.filter((d) => d)`. DECLARED: block 7's
        "identity and link name ONE document … ONCE" MUST fail; nothing else. RESULT: 26 pass, 1 FAIL, exactly that
        row: the same document came back twice, both marked re-authored. AS DECLARED.
+   D-626 NEGATIVE CONTROL (its block 7 on its branch, block 8 since the c22-batch30 union; declared before arming, each arm ALONE on `src/store.mjs` or
+   `checks/bio-checks.mjs`, restored by `cp` from a per-arm pristine copy, `cmp` identical, sha256 c1a6c2a7…
+   3,472,824 bytes and 2c6b96a8… 1,006,280 bytes):
+   (0) BASELINE 28 pass, 0 fail.
+   (a) THE ROW'S OWN CONTROL — `newCase` dropped from is-publish-draft-this-case's `#caseIdentitySentence` call.
+       DECLARED: MUST FAIL block 7's two new-case rows (boolean and string spellings) BY NAME; MUST NOT fail the
+       derivation, C-87.6 or acknowledgement rows. RAN 26 pass, 2 FAIL — exactly those two. AS DECLARED.
+   (b) `newCase` dropped from `acknowledgeStatement`'s `listed` call. DECLARED: MUST FAIL the acknowledgement row
+       alone. RAN 27 pass, 1 FAIL — that row. AS DECLARED.
+   (c) OVER-STRICTNESS — `newCase === true` in place of truthiness. DECLARED: MUST FAIL the string-spelling row
+       alone. RAN 27 pass, 1 FAIL — that row. AS DECLARED.
+   (d) C-87.6's translation reverted to "Leave the name off and the draft is a new case." DECLARED: MUST FAIL the
+       C-87.6 row alone. RAN 27 pass, 1 FAIL — that row. AS DECLARED.
 
    REC-217 / BIO_Publication_v0_1.md §3 rules 11 and 13 — BOB #33 RULED 2026-09-24 19:14Z: `op=publish` NAMES THE
    DRAFT IT PUBLISHES (`draft=`, optional, additive), and AT THAT ACT the readings taken through that draft BIND to
@@ -525,6 +538,51 @@ console.log("\n--- 7. D-521: the draft door's read can return TWO documents, nev
      (fmOf((await docOf(X, 2))?.text).completeness_acknowledgements || []).map((a) => a.by),
      (fmOf((await docOf(Y, 2))?.text).completeness_acknowledgements || []).map((a) => a.by)],
     [true, true, ["pat"], ["ella"]]);
+}
+
+/* =========================================================================== 8 */
+/* Block 7 on land/worker/D-626; renumbered 8 at the c22-batch30 union, where D-521b's block 7 was already on main. */
+/* D-626 (D-538's class): a draft that names no case is TWO drafts — one asking for a new case, one leaving
+   publication to DERIVE the case — and three plane sentences still told them apart by the case id alone. Every
+   expectation below is a phrase this suite writes out, never one read off the sentence helper. */
+console.log("\n--- 8. D-626: A DRAFT THAT NAMES NO CASE IS NOT CALLED A NEW CASE UNLESS IT ASKS FOR ONE ---");
+{
+  const NEW = /prepared for a new case, whose identity is not yet allocated/;
+  const DERIVED = /prepared for a case this draft does not name and publication DERIVES/;
+  const Q7 = await finding("d626");
+  const Dn = await draftOf("d626n", [Q7], { newCase: true });
+  const Ds = await draftOf("d626s", [Q7], { newCase: "true" });
+  const Dd = await draftOf("d626d", [Q7]);
+  const onC1 = (d) => publish("d626", [Q7], { draft: d, caseId: C1 });
+  const rn = await onC1(Dn), rs = await onC1(Ds), rd = await onC1(Dd);
+  t("a NEW-CASE draft named on a further edition of C1 is refused, and its detail reads the NEW-CASE sentence "
+  + "and the new-case remedy — never the derivation sentence",
+    [rn?.reason, NEW.test(rn?.detail || ""), DERIVED.test(rn?.detail || ""),
+     /Publish the new case the draft asks for \(newCase=true\)/.test(rn?.detail || "")],
+    ["PUBLISH_DRAFT_NOT_THIS_CASE", true, false, true]);
+  t("the same with newCase spelled as the string \"true\" — read for truthiness, as publication reads it",
+    [rs?.reason, NEW.test(rs?.detail || ""), DERIVED.test(rs?.detail || "")],
+    ["PUBLISH_DRAFT_NOT_THIS_CASE", true, false]);
+  t("a draft that names no case and asks for none reads the DERIVATION sentence: it is not called a new case, "
+  + "and the remedy does not claim the draft names one",
+    [rd?.reason, DERIVED.test(rd?.detail || ""), NEW.test(rd?.detail || ""),
+     /the case the draft names/.test(rd?.detail || ""),
+     /accepted here only at a new case's first edition: publish it with newCase=true/.test(rd?.detail || "")],
+    ["PUBLISH_DRAFT_NOT_THIS_CASE", true, false, false, true]);
+  const ns = rP(await POST(`op=casedraft&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "d626x"), caseId: "CASE-2026-9999-none", targets: [Q7] })));
+  t("C-87.6 REVIEW_NO_SUCH_CASE, driven through op=casedraft: its translation no longer says leaving the name off "
+  + "makes a new case — it says publication derives the case, and a new case is a separate choice",
+    [ns?.reason ?? ns?.code, /the draft is a new case/.test(ns?.translation || ""),
+     /publication derives the case/.test(ns?.translation || ""),
+     /asking for a new case is a separate choice/.test(ns?.translation || "")],
+    ["REVIEW_NO_SUCH_CASE", false, true, true]);
+  const Da = await draftOf("d626a", [Q7], { caseId: C1, newCase: true });
+  const aa = await ack(`draft=${Da}&token=${ELLA}`);
+  t("a draft naming C1 AND asking for a new case: the statement acknowledgement states that identity as "
+  + "UNDETERMINED, never as the next edition of C1 alone",
+    [aa?.ok, /also asks for a new case/.test(aa?.listed || ""), /UNDETERMINED until one of them is withdrawn/.test(aa?.listed || "")],
+    [true, true, true]);
 }
 
 console.log(`\nrec217-draft-binding: ${pass} pass, ${fail} fail`);
