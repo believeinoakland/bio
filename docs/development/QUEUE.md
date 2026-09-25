@@ -777,7 +777,8 @@ scope: in promote's action block, run recordsLawFindings beside actionBasisFindi
 accepts-when: a 250-character law and a law on another kind are refused by name at op=promote (moves: a forbidden value landing). NEGATIVE CONTROL: remove the call and the over-long-law arm lands, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by UI-119's worker).
 
-### D-700 · running — **THE GATE'S C-20.1 AUDIT STILL WALKS A BUNDLE'S `_history/manifest.json` IN SNAP-KEY ORDER, not write order: readImage sorts by key and bio-checks.mjs sorts entries by key, so the gate's "prior" can differ from the plane's since D-674 ordered every plane reader by rowid.** State Rules §6 already said "sent to SCHEDULER" (REC-182) and no plan row existed. Found by D-674's worker (minted on land/worker/D-674). — owner RECORD, CHECKS.
+### D-700 · integrated — **THE GATE'S C-20.1 AUDIT STILL WALKS A BUNDLE'S `_history/manifest.json` IN SNAP-KEY ORDER, not write order: readImage sorts by key and bio-checks.mjs sorts entries by key, so the gate's "prior" can differ from the plane's since D-674 ordered every plane reader by rowid.** State Rules §6 already said "sent to SCHEDULER" (REC-182) and no plan row existed. Found by D-674's worker (minted on land/worker/D-674). — owner RECORD, CHECKS.
+status: integrated — SCHEDULER #24 11:31Z: tip 50116ded (on D-674 96a7802f), GATE 80/80 GREEN (6498 assertions) per the worker session summary, its full report still in flight; the gate C-20.1 audit walks write order as the plane does; additive seq; merge notes for D-546/D-615/D-673 in its report; minted D-718, D-719 (to place on receipt)
 order: spawned directly after D-674, which it completes (the plane and its gate read one order) (SCHEDULER #23, 2026-09-25)
 milestone: M7
 interface: I1/I3 — the image carries write order; the integrator classifies.
@@ -973,7 +974,8 @@ scope: re-anchor the named arm(s) on the subject line as it now reads, or length
 accepts-when: the anchor-drift reader reads the driver LIVE with no allowance, and the arm run alone fails its subject by name (moves: a drifted anchor). NEGATIVE CONTROL: this row is one — the driver's own arm, recorded on its line.
 added: 2026-09-25 · SCHEDULER #23 (id minted by M0-197's worker).
 
-### D-631 · queued — **`adminvote.control` arm stamp-dropped: ANCHOR DRIFT — matches 2 (REC-164), so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+### D-631 · running — **`adminvote.control` arm stamp-dropped: ANCHOR DRIFT — matches 2 (REC-164), so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: running — SCHEDULER #24 11:31Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
 order: after D-630, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
