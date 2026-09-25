@@ -167,9 +167,12 @@ const ARMS = {
                "the reverse index answers for all three documents, placed and unplaced alike",
                "OVER-STRICTNESS: the whole-document citation earns from every connection its document has"],
     mustPass: "the reading blob, and the row itself — a reading without position is a reading, not a gap",
+    /* RE-ANCHORED 2026-09-25 (D-644): the position columns are no longer the INSERT's last arguments, so the
+       old anchor (10-space indent, closing `);`) matched 0 times and the arm never armed. It now quotes the line
+       as it reads — unique in store.mjs on this tree and on origin/main. */
     patch: () => arm(STORE,
-      "          pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null);",
-      "          null, null, null);"),
+      "            pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null,",
+      "            null, null, null,"),
   },
 
   /* (e) THE OVER-STRICTNESS DIRECTION. Making a whole-document citation pass the

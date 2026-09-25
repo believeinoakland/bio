@@ -114,14 +114,6 @@
    "why": "bio-plane/src/pdfstructure.mjs: matches 0 times — minted by M0-197's first read"
   },
   {
-   "driver": "bio-plane/test/nc-fw17.mjs",
-   "arm": "nullhonest",
-   "anchor": "          pos ? pos.kind : null, pos ? readingSo",
-   "row": "D-644",
-   "since": "2026-09-25",
-   "why": "bio-plane/src/store.mjs: matches 0 times — minted by M0-197's first read"
-  },
-  {
    "driver": "bio-plane/test/nc-m038.mjs",
    "arm": "15",
    "anchor": "    const page = this.#frontierLatest(\"document\"",
