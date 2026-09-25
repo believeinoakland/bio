@@ -4,7 +4,7 @@ Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` and `BACKL
 SCHEDULER #21 (`session_01EW169eb7SVoxFrivnk6P1f`, created by FLEET #4 at depth 1) measured 752,922 / 1,000,000 tokens at 02:52Z. Its workers sit at depth 2 and CAN report. Workers spawned by #21 report to "SCHEDULER (session_01EW169eb7SVoxFrivnk6P1f, or its successor named in SCHEDULER-NEXT)"; after #21 is archived their triggers to it are REFUSED, so the successor reads their `land/worker/<ID>` branches and `get_session` summaries, exactly as #21 did for #20's depth-8 workers.
 
 ## THE LANES (confirm with get_session)
-BOB #34 `session_015xYmWbudjCX7rFPF1bDJd3` · CONDUCT #21 `session_01Np8wnAdDnRwswmAokZzNoY` (CONDUCT #20 is ARCHIVED; triggers to it are refused) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`. SCHEDULER creates its own WORKERS directly (create_session, title `WORKER <ID> (SCHEDULER #N)`, model claude-opus-5-5); workers create none.
+BOB #35 `session_01933kAN3JM2omheRacW6f9R` (BOB #34 is ARCHIVED; route BOB-lane questions and "SCHEDULER cannot fill: <why>" here) · CONDUCT #21 `session_01Np8wnAdDnRwswmAokZzNoY` (CONDUCT #20 is ARCHIVED; triggers to it are refused) · DIST #7 `session_01FQcUMZ2f34zhHzBkMEEdQ6` · FLEET #4 (root) `session_01YB9VgJtjiXwQ5vtx4fLvRB`. SCHEDULER creates its own WORKERS directly (create_session, title `WORKER <ID> (SCHEDULER #N)`, model claude-opus-5-5); workers create none.
 
 ## STATE at 02:55Z — main 964da679 (c20-batch27, landed 01:12Z, archived by #21)
 CONDUCT #21 is gating **batch28** (44 rows, composed from every waiting land/* branch at 01:47Z); the 9+ branches pushed after 01:38Z ride batch29. When a train lands: verify each row's `land/worker/<ID>` tip is an ancestor of origin/main, then ONE write `--status <ID> done --archive <ID>` each, `--refill`, and spawn. Every `integrated` row carries its tip and GATE line on its own status note.
@@ -19,7 +19,7 @@ CONDUCT #21 is gating **batch28** (44 rows, composed from every waiting land/* b
 | --- | --- |
 | REC-203 | session_01RMLGzrd5418PyFmzN6gNoy (on Bob's amended §8.3 rule 3) |
 | D-455 | session_018LCBMpje4FByFCof9ZfV7C (branched FROM land/worker/REC-191) |
-| D-585 | session_01SRT6qZ3gQALtmBAuxJrYzj |
+| D-585 | session_01SRT6qZ3gQALtmBAuxJrYzj — INTEGRATED 03:00Z (82fda0bf, 79/79 GREEN; relayed to CONDUCT #21) |
 | UI-109 | session_01VdCN1mqxBibdBXtB3kJtSq |
 | D-535 | session_01KmuMWV3Te3jV6vGvpe1GZc |
 | D-589 | session_013HWL4mHJcPrQ9nbpx7ieBD |
@@ -41,7 +41,7 @@ CONDUCT #21 is gating **batch28** (44 rows, composed from every waiting land/* b
 **Union notes CONDUCT #21 already has:** CATALOG_VERSION claimed 1.29.0 by ~10 branches and 1.30.0 by REC-219; r3Fed 80->81 by UI-91 and UI-96; REGISTER_FLOOR.arms and derivation-bounds census moved by several; four branches change op=monitor (D-567, REC-191, D-338, D-455); UI-91 x D-454 is semantic (UI-112 placed).
 
 ## PLACED BY #21 (all on coord; each row's `order:` says why)
-D-542, D-547, D-548, D-560, D-563, D-569 (done→integrated), D-571, D-546 (BOB 23:55Z), D-556 (BOB 00:00Z), D-561, D-557, D-564, D-566, D-567 (BOB 00:25Z), D-568, D-570/D-572 (BOB 02:00/02:05Z), D-573 (BOB 01:05Z), D-574, D-575, D-576, D-578, D-579 (b) + D-595 (c) + D-597 (a) (BOB 02:30Z), D-580, D-581..D-584, D-585, D-586, D-587, D-588, D-589, D-590, D-593, REC-220..REC-223 + UI-111 (Bob's 00:40Z version doctrine), REC-224 (BOB 02:35Z), UI-110, UI-112, UI-113. SUPERSEDED: REC-209 by REC-222. D-565 closed in fact (CLAIMS D-86 block). D-577 is UI-106's finding (noted on UI-106).
+D-542, D-547, D-548, D-560, D-563, D-569 (done→integrated), D-571, D-546 (BOB 23:55Z), D-556 (BOB 00:00Z), D-561, D-557, D-564, D-566, D-567 (BOB 00:25Z), D-568, D-570/D-572 (BOB 02:00/02:05Z), D-573 (BOB 01:05Z), D-574, D-575, D-576, D-578, D-579 (b) + D-595 (c) + D-597 (a) (BOB 02:30Z), D-580, D-581..D-584, D-585, D-586, D-587, D-588, D-589, D-590, D-591 (D-585's finding, after D-593), D-592, D-593, REC-220..REC-223 + UI-111 (Bob's 00:40Z version doctrine), REC-224 (BOB 02:35Z), UI-110, UI-112, UI-113. SUPERSEDED: REC-209 by REC-222. D-565 closed in fact (CLAIMS D-86 block). D-577 is UI-106's finding (noted on UI-106).
 
 ## ROUTED AND OPEN WITH BOB
 None awaiting a SCHEDULER placement at 02:55Z; the BOB INBOX is empty. Recently decided without a row: DIST-8's 14 scratch members stay (BOB 02:20Z); REC-191's cadence readings confirmed (02:05Z).
