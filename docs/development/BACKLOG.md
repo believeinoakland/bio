@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-701 · queued — **op=links AND D-340's navchanges DISCLOSE GATED CAPTURES: both name capture shas and page addresses to any member with no viewer stamp, so a member outside a gated bundle's project learns that the bundle exists and what it holds.** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): FILTER BY THE VIEWER, not intended — every row passes the viewer predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see (the lead rule, MEMBER-KNOWLEDGE-DESIGN §5). Raised by D-340's worker. — owner RECORD.
-order: HEAD of the backlog — a disclosure defect outranks every feature (SCHEDULER.md loop step 3) (SCHEDULER #23, 2026-09-25)
-milestone: M7
-interface: I3 — both ops' answers filtered by the viewer; the integrator classifies.
-design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (a caller who cannot see receives exactly the answer a nonexistent row would give), with BOB #35's 09:30Z ruling.
-depends-on: D-340 (integrated, land/worker/D-340 @ fdf6c8c9 — navchanges; op=links is on main).
-scope: op=links and navchanges pass every row through the viewer predicate before grouping or counting; counts move only with visible rows; sweep the other link-family reads for the same.
-accepts-when: a member outside a gated bundle's project sees neither its shas nor its addresses from either op, nor any count that moves with them (moves: disclosure). NEGATIVE CONTROL: a member outside a gated bundle's project calls both ops and must see neither its shas nor its addresses, nor any count that moves with them — drop the filter and it fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
-
 ### D-702 · queued — **D-340 JUDGES A LINK AS SITE CHROME BY CONTAINMENT ONLY, so a page-local sidebar that varies reads as a LOST chrome link (same_page:false).** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): chrome for links needs containment AND recurrence — site chrome is what RECURS across the site's pages in a chrome region; a page-local sidebar is page content; where recurrence cannot be measured (one page of the site held) the link reads chrome UNDETERMINED, never a loss. — owner CAPTURE.
 order: after D-701, the same op's second correction (SCHEDULER #23, 2026-09-25)
 milestone: M4
@@ -485,6 +475,26 @@ depends-on: none (D-627, integrated at 056d3092, is the cause; build after it la
 scope: arm (f) also disarms the image_content route, so its break reaches the no_text_layer routing it names; record on the driver's line.
 accepts-when: arm (f) fails its subject by name, AS DECLARED (moves: a surprise arm). NEGATIVE CONTROL: this row is one.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-635's worker).
+
+### D-691 · queued — **TWO TEST HEADERS CLAIM THE UNFLUSHED-EXIT LOSS "CANNOT OCCUR AT ALL" ON LINUX (bio-plane/test/stdio.mjs's THE MECHANISM section; tally-through-pipe.test.mjs's header), while M-183 measured it ON LINUX under parallel load (a node {stdio:"pipe"} socketpair) — the record claims more than it supports.** Found by D-690's worker (minted on land/worker/D-690). — owner M0 (plane test estate; prose only).
+order: after D-687, with the control-hygiene group — prose only, behind product (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test prose).
+design: `docs/development/VERIFICATION.md` (a vendor's documentation is a claim, labelled as theirs; admitted for M0 by name), with M-183.
+depends-on: D-690 (integrated, land/worker/D-690 @ eea7e8a5 — M-183 lands with it).
+scope: correct both headers to cite M-183 (loss measured on Linux under parallel load; node's documentation is the vendor's claim); no code change.
+accepts-when: neither header states the loss cannot occur on Linux, and both cite M-183 (moves: a false platform claim). NEGATIVE CONTROL: none meaningful for prose; state so.
+added: 2026-09-25 · SCHEDULER #23 (id minted by D-690's worker).
+
+### D-704 · queued — **`civicos-ui/check-mock-envelope.mjs` SPAWNS SUITES PIPED WITH NO `maxBuffer` (node's 1 MiB default), so a suite that overflows it is KILLED and its tally lost — D-387's reader-side class, left open as HALF 2 of CLAIMS.md's DELEGATION 2026-09-16 M0 (M0-36) -> UI, with no plan row.** D-387 closed for run.mjs; this caller was not covered. Raised by D-690's worker. — owner UI (the delegation).
+order: after D-691, with the control-hygiene group — a tally that can vanish is a check that cannot fail (SCHEDULER #23, 2026-09-25)
+milestone: M0
+interface: none (test-only).
+design: `docs/development/VERIFICATION.md` (a run without its final line did not finish; admitted for M0 by name), with D-387's measured ENOBUFS at 1,114,112 bytes.
+depends-on: none.
+scope: set an explicit maxBuffer (or stream to a file) for every child check-mock-envelope spawns, as run.mjs does since D-387; sweep the other civicos-ui check-*.mjs spawners; discharge half 2 of the delegation on coord CLAIMS.md.
+accepts-when: an armed suite emitting over 1 MiB delivers its tally through check-mock-envelope (moves: a killed child). NEGATIVE CONTROL: remove the maxBuffer and the overflow arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, D-690's report).
 
 ### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
 order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
@@ -1081,14 +1091,4 @@ design: `docs/development/VERIFICATION.md` (a sentence other sessions read is a 
 depends-on: M0-158.
 scope: apply the block's candidate words to the three sentences (FLEET-NEXT on coord, the kickoffs on main); close M0-99's block.
 accepts-when: the block reads closed and none of the three sentences says to regenerate or merge DECIDED.md. NEGATIVE CONTROL: none (prose).
-added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).
-
-### M0-163 · queued — **`tools/delegations.mjs` HAS NO GRAMMAR FOR A PER-ITEM CLOSURE: `**Items <range> CLOSED <date>**` reads as neither affirm nor discharge, which produced three of M0-158's five contradictions.** Found by M0-158's worker. — owner M0.
-order: after M0-162, the same register (SCHEDULER #18, 2026-09-24; via CONDUCT #20 16:19Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
-milestone: M0
-interface: none.
-design: `docs/development/VERIFICATION.md` (an instrument reads the forms the ledger actually uses).
-depends-on: none.
-scope: recognise the per-item closure form; plancheck §8's warning names a block whose per-item closures cover every item.
-accepts-when: a block closed item by item reads closed. NEGATIVE CONTROL: drop the form from the grammar and that block reads open, by name.
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs M0`).

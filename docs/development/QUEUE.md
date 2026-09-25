@@ -535,7 +535,8 @@ scope: where a content row cites an image extent, the page offers its crop from 
 accepts-when: a member viewing a cited image extent sees its crop, and a non-image extent shows no control (moves: a built op no surface asks). NEGATIVE CONTROL: stub the new content-crop read and the render arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, D-419's owed surface).
 
-### D-690 · running — **`civicos-ui/check-refusal-codes.mjs` ENDS IN A BARE `process.exit(1)` WITHOUT THE D-282 FLUSH IMPORT, and D-542 grows its output 38 KB -> 61 KB: measured on the D-542 union with a plant, 7 of 32 parallel runs lost the tail (zero ratchet lines), so the guard's FAIL lines can vanish under load.** stdio-census ARM D's known residual, now LIVE. Found by D-664's worker (minted on land/worker/D-664). — owner UI (the 2026-09-16 M0->UI delegation).
+### D-690 · integrated — **`civicos-ui/check-refusal-codes.mjs` ENDS IN A BARE `process.exit(1)` WITHOUT THE D-282 FLUSH IMPORT, and D-542 grows its output 38 KB -> 61 KB: measured on the D-542 union with a plant, 7 of 32 parallel runs lost the tail (zero ratchet lines), so the guard's FAIL lines can vanish under load.** stdio-census ARM D's known residual, now LIVE. Found by D-664's worker (minted on land/worker/D-664). — owner UI (the 2026-09-16 M0->UI delegation).
+status: integrated — SCHEDULER #23 09:45Z: tip eea7e8a5 on 5e8a65a8 (merges clean with D-542), GATE 84/84 GREEN FULLREUSE (6693 assertions), tree 4c98eee5; flush import on three check-*.mjs; stdio-census ARM D inverted; M-183: 0/64 truncated with the import, up to 13/32 without; RIDES WITH D-542; minted D-691
 order: running now — it must land WITH or BEFORE D-542 (integrated, batch30), or the refusal-code guard can read green by losing its failures; a gate-trust defect that blocks a product landing (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
@@ -639,6 +640,17 @@ depends-on: none (stacked on land/worker/D-680 @ 0d17eb0e, integrated, on D-626)
 scope: drop the edition predicate from the count's case_id IS NULL arm, as D-680 did for the link arm; drive it first through the op (a further edition published without draft=).
 accepts-when: a no-case draft's reading counts UNDETERMINED on a further edition (moves: the reading dropped from the count). NEGATIVE CONTROL: restore `edition=?` on that arm and the further-edition arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-680's worker).
+
+### D-701 · running — **op=links AND D-340's navchanges DISCLOSE GATED CAPTURES: both name capture shas and page addresses to any member with no viewer stamp, so a member outside a gated bundle's project learns that the bundle exists and what it holds.** BOB #35 RULED 2026-09-25 09:30Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #23; cite until folded): FILTER BY THE VIEWER, not intended — every row passes the viewer predicate BEFORE grouping or counting, and no count includes a row the viewer cannot see (the lead rule, MEMBER-KNOWLEDGE-DESIGN §5). Raised by D-340's worker. — owner RECORD.
+status: running — SCHEDULER #23 09:45Z: spawned, stacked on land/worker/D-340 @ fdf6c8c9
+order: HEAD of the backlog — a disclosure defect outranks every feature (SCHEDULER.md loop step 3) (SCHEDULER #23, 2026-09-25)
+milestone: M7
+interface: I3 — both ops' answers filtered by the viewer; the integrator classifies.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (a caller who cannot see receives exactly the answer a nonexistent row would give), with BOB #35's 09:30Z ruling.
+depends-on: none (stacked on land/worker/D-340 @ fdf6c8c9, integrated — navchanges; op=links is on main).
+scope: op=links and navchanges pass every row through the viewer predicate before grouping or counting; counts move only with visible rows; sweep the other link-family reads for the same.
+accepts-when: a member outside a gated bundle's project sees neither its shas nor its addresses from either op, nor any count that moves with them (moves: disclosure). NEGATIVE CONTROL: a member outside a gated bundle's project calls both ops and must see neither its shas nor its addresses, nor any count that moves with them — drop the filter and it fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 09:30Z ruling).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)
