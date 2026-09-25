@@ -1,0 +1,16 @@
+{
+ "unit": "plane:calibration.test.mjs",
+ "inputHash": "7c29926839039a8175d3db7162edb9701215ccfa0fcc6c355e560a08a6d7f2fc",
+ "verdict": "PASS",
+ "run": "e01383abaf7332828bc3be9e74a66122bc4a6661.1790308236020.14202.json",
+ "tree": "e01383abaf7332828bc3be9e74a66122bc4a6661",
+ "head": "2e9d4f4e318a6e0919d859f1e47fc2bbd65323f4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "DOCS",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "55f05340-834c-58c7-9581-33765e1d529c",
+ "at": "2026-09-25T03:50:36.028Z"
+}
