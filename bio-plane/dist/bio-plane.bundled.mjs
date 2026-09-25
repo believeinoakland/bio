@@ -87686,35 +87686,39 @@ var index_default = {
             ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match"
           }, 403);
-        const r = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        const out2 = await doAnswer(stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST",
           body: JSON.stringify({ role: "admin", password: body2.password })
-        }));
-        return json(await r.json(), 200);
+        })));
+        if (!out2.answered) return storeSilent("claim");
+        return json({ ok: true, result: out2.result }, 200);
       }
       if (op === "login") {
         const body2 = await req.json().catch(() => ({}));
-        const r = await stub2.fetch(new Request("http://do/login", {
+        const out2 = await doAnswer(stub2.fetch(new Request("http://do/login", {
           method: "POST",
           body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
-        }));
-        return json(await r.json(), 200);
+        })));
+        if (!out2.answered) return storeSilent("login");
+        return json({ ok: true, result: out2.result }, 200);
       }
       if (op === "invitelook") {
         const body2 = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/invitelook", {
+        const out2 = await doAnswer(invStub.fetch(new Request("http://do/invitelook", {
           method: "POST",
           body: JSON.stringify(body2)
-        }));
-        return json(await r.json(), 200);
+        })));
+        if (!out2.answered) return storeSilent("invitelook");
+        return json({ ok: true, result: out2.result }, 200);
       }
       if (op === "enroll") {
         const body2 = await req.json().catch(() => ({}));
-        const r = await invStub.fetch(new Request("http://do/enroll", {
+        const out2 = await doAnswer(invStub.fetch(new Request("http://do/enroll", {
           method: "POST",
           body: JSON.stringify(body2)
-        }));
-        return json(await r.json(), 200);
+        })));
+        if (!out2.answered) return storeSilent("enroll");
+        return json({ ok: true, result: out2.result }, 200);
       }
       if (op === "verify") {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
