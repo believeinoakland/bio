@@ -4552,6 +4552,7 @@ __export(bio_checks_exports, {
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
+  ARCHIVE_CAPTURE_GRADE: () => ARCHIVE_CAPTURE_GRADE,
   ATTEST_CHECKS: () => ATTEST_CHECKS,
   ATTRIBUTION_CHECKS: () => ATTRIBUTION_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
@@ -6867,6 +6868,7 @@ var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"]
 var EARNED_GRADE_SOURCES = ["resolution", "capture"];
 var EARNED_CAPTURE_CEILING = "B";
 var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
+var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var EARNED_SOURCE_AXIS = { resolution: "connection", capture: "capture" };
 var GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
 function checkLegExtentGrammar(leg, label, checkId, findings) {
@@ -33967,7 +33969,6 @@ function actNoCitation(detail, extra = {}) {
   };
 }
 var ARCHIVE_VIA = "archive.org";
-var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -90441,18 +90442,17 @@ var index_default = {
                will not accept: the same defect REC-43 closed on the attest
                fence and REC-48 on this op's own `note:`, one field over.
                *
-               THE ARCHIVE-SOURCED LETTER IS DELIBERATELY STILL TYPED, and that
-               is open BY DECISION rather than by oversight. Naming it would
-               assert what an archive-sourced capture EARNS and whether that is
-               a ceiling or a fixed grade — a second capture-axis doctrine
-               value, which is a ruling and not a worker's or CONDUCT's to make
-               by writing a constant (QUEUE.md REC-50). What IS already ruled is
-               the ORDERING stated at the top of this comment, and
-               acquire.test.mjs pins that the typed letter still ranks strictly
-               below the ceiling — so if the ceiling ever moves onto or past it,
-               the suite says so by name instead of the record quietly claiming
-               an archive capture is worth as much as a direct one. */
-            grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING,
+               THE ARCHIVE-SOURCED LETTER IS NOW RULED, AND SO IT IS THE RULED
+               VALUE (D-698). REC-50 left it a typed "C" OPEN BY DECISION: naming
+               what an archive-sourced capture earns was a ruling nobody had
+               made. BOB #35 made it 2026-09-25 07:55Z — one rank below the
+               direct ceiling, measured — and D-693 derived it as
+               `ARCHIVE_CAPTURE_GRADE`, which D-698 moved into the catalogue
+               beside the ceiling so this stamp and the store's measurement of
+               an archive-only capture read ONE constant. A typed letter here
+               would now be a second copy of a ruled value that agrees today at
+               zero cost and would not follow the ceiling. */
+            grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
             /* WHO SERVED US THESE BYTES, which is not who issued the document.
                Bob, 2026-07-31: recording that the capture came through the
                Internet Archive is proper even while the CONTENT authority is

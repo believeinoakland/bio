@@ -3578,6 +3578,21 @@ export const EARNED_GRADE_SOURCES = ['resolution', 'capture'];
 export const EARNED_CAPTURE_CEILING = 'B';
 export const UNREACHABLE_CAPTURE_GRADE =
   BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
+/* D-698 · AND THE LETTER BELOW IT, FOR A CAPTURE READ ONLY THROUGH AN ARCHIVE.
+ * RULED by BOB #35 (2026-09-25 07:55Z) from doctrine already on record: an
+ * archive-only capture EARNS a letter, strictly below a direct capture, because
+ * grade tracks directness and the archive hop is one more party between us and
+ * the publisher (ARCHIVE-FALLBACK.md's two-hop chain; AUTHORITY-AND-TRUST's
+ * transitive trust "with disclosure and grade adjustment"). One rank WEAKER than
+ * the ceiling in the same array — UNREACHABLE_CAPTURE_GRADE's derivation, one rank
+ * the other way — and null rather than a lie if the ceiling were ever the weakest.
+ * D-693 derived it inside store.mjs, where op=acquire could not read it, so the
+ * letter acquire STAMPS on an archive capture stayed a typed "C" pinned equal only
+ * by a suite. It lives HERE for the reason the ceiling does: the lowest layer the
+ * store (the reader that measures it) and the control plane (the op that stamps
+ * it) both already import. One ruled value, one definition. */
+export const ARCHIVE_CAPTURE_GRADE =
+  BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 /* Which axis each earned source is a source FOR. A resolution is the framework's
    §8.1 CONNECTION grade and nothing else; a capture grade is a property of an
    INFORMATION object (DEC-21) and nothing else. Stated as data rather than as

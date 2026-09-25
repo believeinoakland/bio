@@ -26,6 +26,9 @@ import { deliveringPrincipal, delivererOf } from "./deliverer.mjs";
    are character-identical while the prefixes are `token:` and `class:`. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          completenessFields, biasAcknowledgementOf, sectionText, EARNED_CAPTURE_CEILING,
+         /* D-698: the RULED archive letter (BOB #35, 2026-09-25), stamped on an
+            archive-sourced capture — the value the store measures it at, not a copy. */
+         ARCHIVE_CAPTURE_GRADE,
          /* PL-4: the ONE composer for the honest agent, and the capture-request
             arm's DEC-49 row. Both live in the catalog so the Durable Object's
             drain and this control plane cannot disagree about what was sent. */
@@ -10654,18 +10657,17 @@ const PLANE = {
                will not accept: the same defect REC-43 closed on the attest
                fence and REC-48 on this op's own `note:`, one field over.
                *
-               THE ARCHIVE-SOURCED LETTER IS DELIBERATELY STILL TYPED, and that
-               is open BY DECISION rather than by oversight. Naming it would
-               assert what an archive-sourced capture EARNS and whether that is
-               a ceiling or a fixed grade — a second capture-axis doctrine
-               value, which is a ruling and not a worker's or CONDUCT's to make
-               by writing a constant (QUEUE.md REC-50). What IS already ruled is
-               the ORDERING stated at the top of this comment, and
-               acquire.test.mjs pins that the typed letter still ranks strictly
-               below the ceiling — so if the ceiling ever moves onto or past it,
-               the suite says so by name instead of the record quietly claiming
-               an archive capture is worth as much as a direct one. */
-            grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING,
+               THE ARCHIVE-SOURCED LETTER IS NOW RULED, AND SO IT IS THE RULED
+               VALUE (D-698). REC-50 left it a typed "C" OPEN BY DECISION: naming
+               what an archive-sourced capture earns was a ruling nobody had
+               made. BOB #35 made it 2026-09-25 07:55Z — one rank below the
+               direct ceiling, measured — and D-693 derived it as
+               `ARCHIVE_CAPTURE_GRADE`, which D-698 moved into the catalogue
+               beside the ceiling so this stamp and the store's measurement of
+               an archive-only capture read ONE constant. A typed letter here
+               would now be a second copy of a ruled value that agrees today at
+               zero cost and would not follow the ceiling. */
+            grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
             /* WHO SERVED US THESE BYTES, which is not who issued the document.
                Bob, 2026-07-31: recording that the capture came through the
                Internet Archive is proper even while the CONTENT authority is

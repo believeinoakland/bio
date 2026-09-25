@@ -85,6 +85,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             doctrine, which REC-48's scope had not counted — while the `why:`
             line directly above it already interpolated the ceiling. */
          EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+         /* D-698: the ARCHIVE letter joins them, for the same reason one layer on —
+            D-693 derived it here, where op=acquire's stamp could not read it. */
+         ARCHIVE_CAPTURE_GRADE,
          /* REC-46 (2026-08-04): the ONE machine-identity predicate, and the ONE
             spelling of the stamp `index.mjs` writes. This file used to answer
             "is this a machine" for itself, ELEVEN times, in two hand-typed
@@ -704,7 +707,11 @@ function actNoProjectScope(detail, extra = {}) {
  */
 
 /* D-693 · WHAT AN ARCHIVE-ONLY CAPTURE EARNS ON THE CAPTURE AXIS — RULED, and so
-   DERIVED here rather than typed. BOB #35, 2026-09-25 07:55Z, from doctrine already
+   DERIVED rather than typed. D-698 MOVED THE DERIVATION to checks/bio-checks.mjs,
+   beside EARNED_CAPTURE_CEILING and UNREACHABLE_CAPTURE_GRADE, and this file now
+   IMPORTS it: op=acquire STAMPS the same letter on every archive capture it files,
+   and a store-local constant left that stamp a typed copy. The reasoning below is
+   D-693's, unchanged. BOB #35, 2026-09-25 07:55Z, from doctrine already
    on record: a capture whose only source is an archive replay EARNS a letter, as a
    MEASURED value with the same shape as the direct case, strictly below a direct
    capture. AUTHORITY-AND-TRUST accepts transitive trust "with disclosure and grade
@@ -715,11 +722,11 @@ function actNoProjectScope(detail, extra = {}) {
    pattern, one rank the other way. Deriving it means the ordering the ruling rests on
    cannot drift from the ceiling: move the ceiling and this letter moves with it.
    inquirystrength.test.mjs section 9d pins the value to the ruled letter AND to the
-   letter op=acquire stamps on an archive capture, so a divergence is named.
+   letter op=acquire stamps on an archive capture, which since D-698 is this same
+   imported constant.
    The grade is about the FETCH PATH only (DEC-75; BOB #35's second answer): the
    issuing authority's D-97 state is a different axis and is never read for it. */
 const ARCHIVE_VIA = "archive.org";
-const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 
 /* The SHA-256 of the empty string: the canonical base of a creation, as the
    accelerator recorded it and as the check catalog recognises it. */
