@@ -1,0 +1,16 @@
+{
+ "unit": "ui:recipe-drive.test.mjs",
+ "inputHash": "dd5970f27b5dec2194e2f264c792607a1eb576cdcb874f9f89ad4fc4cb512982",
+ "verdict": "PASS",
+ "run": "e2c2c6e4a47d0b4f000675cb715d6b9b6acc33dd.1790338410073.1904.json",
+ "tree": "e2c2c6e4a47d0b4f000675cb715d6b9b6acc33dd",
+ "head": "9c7a66622779010736107dab04260408bf9914de",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 87,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "299cb748-b998-5e21-89f3-48620e1cb40f",
+ "at": "2026-09-25T12:13:30.087Z"
+}
