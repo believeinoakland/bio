@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec122-onpoint-choice.test.mjs",
+ "inputHash": "9e427b78ea1ee396f7c0c7bd39854261b3512ed92ced4d42beba068015fc2695",
+ "verdict": "PASS",
+ "run": "31b5713a958a2473a3c7738766dbd5b5b0036ad8.1790331184040.3186.json",
+ "tree": "31b5713a958a2473a3c7738766dbd5b5b0036ad8",
+ "head": "5887b36df7bb4605e2ad021489b3b045c441d22f",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 147,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "e143e6e2-2140-5552-a2bb-ef52e006d742",
+ "at": "2026-09-25T10:13:04.063Z"
+}
