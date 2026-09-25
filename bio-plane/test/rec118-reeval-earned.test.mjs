@@ -423,15 +423,21 @@ console.log("\n--- 6. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---
      no ceiling to be bounded by, so this obligation must come back exactly as
      it did before this item, but for the two added fields — which is the row's
      own statement of what byte-identity means here. */
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: this pinned
+     `grade_why` NULL on the uncapped leg, and that pin encoded a SILENCE — the
+     document has no recorded fetch route, and a null reason cannot be told from
+     "the route was measured". Nothing is capped still (the letter stands); the
+     reason now states the letter is the author's, under the ceiling, unmeasured. */
+  const AUTHORED_UNDER_CEILING = /^this leg is read at the B its author gave, under the ceiling of B: no fetch route is recorded for .* not a measured one\.$/;
   t("AN OBLIGATION NEEDING NO CAP IS BYTE-IDENTICAL BUT FOR THE ADDED FIELDS — publisher-typed text earns its letter and keeps it",
-    cleanLeg ? { grade: cleanLeg.grade, authored: cleanLeg.grade_authored, why: cleanLeg.grade_why }
+    cleanLeg ? { grade: cleanLeg.grade, authored: cleanLeg.grade_authored, why: AUTHORED_UNDER_CEILING.test(cleanLeg.grade_why ?? "") }
              : null,
-    { grade: "B", authored: "B", why: null });
+    { grade: "B", authored: "B", why: true });
   t("...and the clean obligation's two halves agree too, at the letter the member authored — the fix did not move an answer that was already right",
     cleanLeg && CLEAN.strength && CLEAN.strength.capture
       ? cleanLeg.grade === CLEAN.strength.capture.grade : null, true);
-  t("`grade_why` is NULL rather than a filler sentence when nothing was capped — an explanation of a thing that did not happen is noise in the record",
-    cleanLeg ? cleanLeg.grade_why : "MISSING", null);
+  t("`grade_why` STATES the letter is the author's under the ceiling, never measured, when nothing was capped and no route is recorded (D-709)",
+    cleanLeg ? AUTHORED_UNDER_CEILING.test(cleanLeg.grade_why ?? "") : "MISSING", true);
   /* THE CONNECTION ARM, WHICH IS TWO CONTROLS IN ONE. It catches a fix that
      capped by axis NAME rather than by what the registry holds; and because
      this leg sits in the SAME obligation as the capture leg, beside the SAME

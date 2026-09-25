@@ -611,6 +611,18 @@ const PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG = {
        + `member can cite instead.`,
     ceiling: `Grade A is not reachable on the capture axis at all: it needs a chain-of-custody web `
            + `archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`,
+    /* ADDED BY D-709 (BOB #35, 2026-09-25 10:05Z) — a correction, not an exemption:
+       without this key the literal pinned a SILENCE. `DOC` has no recorded fetch
+       route (no locator row), and an entry with no `fetch` key cannot be told from
+       "the route was measured and is absent"; the entry now STATES it. */
+    fetch: {
+      route: "unrecorded", unrecorded: 1, earned: null, earned_via: null, determined: false,
+      undetermined_because: "CAPTURE_ROUTE_UNRECORDED",
+      why: `no fetch route is recorded for any of the 1 capture(s) of ${DOC} the record holds (bytes a `
+         + `provenance document carried, or a member's upload), so no capture grade is measured for it from `
+         + `how it was fetched. A leg on it keeps the letter its author gave, under the ceiling: that letter `
+         + `is the author's account, not a measurement.`,
+    },
   },
 };
 /* THE DIGESTS THE PROBE PRINTED on the pristine tree, 2026-09-14, over
@@ -634,8 +646,14 @@ const BOUNDED_CAPTURE_DIGEST = "e369111fa99a879d4f3fff0ea477452ffe02d502c8a76e16
     conn, PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG.connection);
   t("and byte-for-byte against the digest the PROBE printed on the pristine tree — key order included",
     sha(JSON.stringify(conn)), PRISTINE_CONNECTION_DIGEST);
-  t("the CAPTURE entry is BOUNDED BY FIDELITY and hashes to the bounded digest (REC-88)",
-    sha(JSON.stringify(eb2.earned.capture[DOC])), BOUNDED_CAPTURE_DIGEST);
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: the digest
+     was of the WHOLE entry, which pinned the absence of a stated route — a
+     silence. REC-88's measured figure stands for everything REC-88 wrote: the
+     entry LESS D-709's one added key hashes to it, key order included; the added
+     key is pinned field for field by the next assertion. */
+  const { fetch: _d709Fetch, ...capPreD709 } = eb2.earned.capture[DOC];
+  t("the CAPTURE entry is BOUNDED BY FIDELITY and, less D-709's stated route, hashes to the bounded digest (REC-88)",
+    sha(JSON.stringify(capPreD709)), BOUNDED_CAPTURE_DIGEST);
   t("the CAPTURE entry a document leg earns states C, the weakest link, field for field",
     eb2.earned.capture[DOC], PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG.capture);
   /* THE DIRECTION, ASSERTED STRUCTURALLY RATHER THAN BY THE LETTER: whatever the

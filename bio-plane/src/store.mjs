@@ -26814,8 +26814,9 @@ export class Store extends DurableObject {
          names earns nothing here: its route is NAMED on the entry as
          CAPTURE_GRADE_VIA_UNRULED, undetermined, never guessed. A capture
          with NO locator row — bytes a provenance document carried, a member's
-         upload — has no recorded fetch path at all, and the entry for it is
-         byte-identical to what it was before this item. The ISSUING authority
+         upload — has no recorded fetch path at all; D-709 (BOB #35, 2026-09-25
+         10:05Z) makes the entry SAY so, `fetch: { route: "unrecorded" }`, below.
+         The ISSUING authority
          (D-97's three-valued state) is not read: it gates publication, and
          capture grade tracks directness, never who issued the document. */
       const vias = String(r.vias || "").split(",").filter(Boolean);
@@ -26982,10 +26983,11 @@ export class Store extends DurableObject {
            + `grade, and it is not a separate measurement a member can cite instead.`,
         ceiling };
     }
-    /* D-177 · THE FETCH PATH, PUBLISHED ON THE ENTRY IT GRADES. Added ONLY where
-       the record holds a locator for one of the document's captures, so every
-       entry the record cannot say this about is byte-identical to the pre-item
-       answer (REC-88's over-strictness rule, one fact over). `earned` is the
+    /* D-177 · THE FETCH PATH, PUBLISHED ON THE ENTRY IT GRADES. D-177 added it
+       only where the record holds a locator for one of the document's captures
+       and left every other entry byte-identical; D-709 CORRECTED that silence
+       (below): an entry with no recorded route now states `route: "unrecorded"`
+       rather than carrying no key. `earned` is the
        MEASURED letter — the strongest a direct or archive capture of this
        document supports — and `#capturedAt` reads a leg at no LESS than it; the
        ceiling above it is unchanged and still caps.
@@ -26997,10 +26999,29 @@ export class Store extends DurableObject {
        A document whose recorded route is a via NO ruling names gets the route
        NAMED and the letter UNDETERMINED (CAPTURE_GRADE_VIA_UNRULED); a capture
        with NO recorded via stays undetermined and is counted as `unrecorded`
-       wherever the entry carries a route at all. */
+       wherever the entry carries a route at all.
+       D-709 (BOB #35, 2026-09-25 10:05Z): A DOCUMENT NONE OF WHOSE CAPTURES HAS
+       A RECORDED ROUTE STATES THAT TOO. Until this item such an entry carried no
+       `fetch` key, and a reader could not tell "the route was measured and is
+       absent" from "nobody measured it" — a silence where CLAUDE.md §4 requires
+       undetermined to be STATED. It now carries `route: "unrecorded"` (the
+       `unrecorded` naming the partial case already counts under), no measured
+       letter, and the reason; `#capturedAt` reads a leg on it as the letter its
+       author gave, under the ceiling, and says so — never as a measured letter. */
     for (const [bundleId, e] of perBundle) {
       const entry = out.earned.capture[bundleId];
-      if (!entry || entry.captures === 0 || (!e.direct && !e.otherVia.size)) continue;
+      if (!entry || entry.captures === 0) continue;
+      if (!e.direct && !e.otherVia.size) {
+        entry.fetch = {
+          route: "unrecorded", unrecorded: e.unrecorded,
+          earned: null, earned_via: null, determined: false,
+          undetermined_because: "CAPTURE_ROUTE_UNRECORDED",
+          why: `no fetch route is recorded for any of the ${e.unrecorded} capture(s) of ${bundleId} the `
+             + `record holds (bytes a provenance document carried, or a member's upload), so no capture `
+             + `grade is measured for it from how it was fetched. A leg on it keeps the letter its author `
+             + `gave, under the ceiling: that letter is the author's account, not a measurement.` };
+        continue;
+      }
       const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
       const unrecorded = e.unrecorded;
       const byArchive = e.measured != null && e.measuredVia === ARCHIVE_VIA;
@@ -32390,7 +32411,9 @@ export class Store extends DurableObject {
        A CEILING     the member's letter STANDS and is CAPPED, never raised. A
                      letter at or under the ceiling comes back unchanged with no
                      `why`, which is what makes publisher-typed text identical to
-                     the byte. */
+                     the byte — EXCEPT where the registry states the route
+                     unrecorded (D-709): that letter comes back unchanged WITH a
+                     `why` naming it the author's, under the ceiling, unmeasured. */
   static #capturedAt(stated, earned, targetId) {
     if (!earned || earned.mode !== "ceiling") return null;
     if (earned.grade == null)
@@ -32422,7 +32445,20 @@ export class Store extends DurableObject {
                   + `so the record holds its capture grade at `
                   + `${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. `
                   + `${earned.fetch.why}`.trimEnd() };
-    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
+    /* D-709 (BOB #35, 2026-09-25 10:05Z): NO ROUTE RECORDED, AND THE READ SAYS SO.
+       The registry states the route unrecorded, so a leg on it is read as the
+       letter its author gave, under the ceiling, and the read names that letter
+       as authored rather than returning silently: a reader must not take an
+       unmeasured letter for a measured one. Above the ceiling the cap below
+       applies and carries the same statement. */
+    const unrecorded = earned.fetch && earned.fetch.route === "unrecorded";
+    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade])
+      return unrecorded
+        ? { grade: stated,
+            why: `this leg is read at the ${stated} its author gave, under the ceiling of ${earned.grade}: no `
+               + `fetch route is recorded for ${targetId}, so that letter is the author's account and not a `
+               + `measured one.` }
+        : null;
     /* THE LETTERS ARE INTERPOLATED AND NEVER TYPED. hygiene.test.mjs detector
        (B) refuses any module spelling the capture rule's own letters beside the
        word it is a grade of, so that the letters have exactly ONE home and are
@@ -32432,7 +32468,8 @@ export class Store extends DurableObject {
     return { grade: earned.grade,
              why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg `
                 + `is read at ${earned.grade} here and not at the ${stated} it carries. `
-                + `${earned.why ?? ""}`.trimEnd() };
+                + `${earned.why ?? ""}${unrecorded ? ` No fetch route is recorded for ${targetId}, so the `
+                + `letter it is read at is the ceiling, not a measured one.` : ""}`.trimEnd() };
   }
 
   /* REC-105 / D-373 · THE WALK'S WHOLE TARGET SET, COLLECTED ONCE SO THE

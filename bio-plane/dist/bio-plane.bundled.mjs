@@ -56221,7 +56221,19 @@ ${words}`;
     }
     for (const [bundleId, e] of perBundle) {
       const entry = out.earned.capture[bundleId];
-      if (!entry || entry.captures === 0 || !e.direct && !e.otherVia.size) continue;
+      if (!entry || entry.captures === 0) continue;
+      if (!e.direct && !e.otherVia.size) {
+        entry.fetch = {
+          route: "unrecorded",
+          unrecorded: e.unrecorded,
+          earned: null,
+          earned_via: null,
+          determined: false,
+          undetermined_because: "CAPTURE_ROUTE_UNRECORDED",
+          why: `no fetch route is recorded for any of the ${e.unrecorded} capture(s) of ${bundleId} the record holds (bytes a provenance document carried, or a member's upload), so no capture grade is measured for it from how it was fetched. A leg on it keeps the letter its author gave, under the ceiling: that letter is the author's account, not a measurement.`
+        };
+        continue;
+      }
       const other = [...new Set([...e.otherVia].join(",").split(",").filter(Boolean))].sort();
       const unrecorded = e.unrecorded;
       const byArchive = e.measured != null && e.measuredVia === ARCHIVE_VIA;
@@ -61195,7 +61207,9 @@ ${words}`;
          A CEILING     the member's letter STANDS and is CAPPED, never raised. A
                        letter at or under the ceiling comes back unchanged with no
                        `why`, which is what makes publisher-typed text identical to
-                       the byte. */
+                       the byte — EXCEPT where the registry states the route
+                       unrecorded (D-709): that letter comes back unchanged WITH a
+                       `why` naming it the author's, under the ceiling, unmeasured. */
   static #capturedAt(stated, earned, targetId) {
     if (!earned || earned.mode !== "ceiling") return null;
     if (earned.grade == null)
@@ -61214,10 +61228,15 @@ ${words}`;
         grade: routeGrade,
         why: `this instance fetched ${targetId} ${earned.fetch.earned_via === "direct" ? "itself" : "through an archive replay"}, so the record holds its capture grade at ${routeGrade}, and this leg is read at ${routeGrade} here and not at the ${stated} it carries. ` + `${earned.fetch.why}`.trimEnd()
       };
-    if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade]) return null;
+    const unrecorded = earned.fetch && earned.fetch.route === "unrecorded";
+    if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade])
+      return unrecorded ? {
+        grade: stated,
+        why: `this leg is read at the ${stated} its author gave, under the ceiling of ${earned.grade}: no fetch route is recorded for ${targetId}, so that letter is the author's account and not a measured one.`
+      } : null;
     return {
       grade: earned.grade,
-      why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg is read at ${earned.grade} here and not at the ${stated} it carries. ` + `${earned.why ?? ""}`.trimEnd()
+      why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg is read at ${earned.grade} here and not at the ${stated} it carries. ` + `${earned.why ?? ""}${unrecorded ? ` No fetch route is recorded for ${targetId}, so the letter it is read at is the ceiling, not a measured one.` : ""}`.trimEnd()
     };
   }
   /* REC-105 / D-373 · THE WALK'S WHOLE TARGET SET, COLLECTED ONCE SO THE

@@ -348,10 +348,19 @@ const ebP = await get("earnedbasis", `id=INQ-2026-8800-claims-c&targets=${DOCS.P
 const capP = ebP.earned.capture[DOCS.PLAIN.id];
 t("a captured, READ, publisher-typed document still earns the ceiling",
   [capP.mode, capP.grade, capP.captures], ["ceiling", "B", 1]);
-t("and its entry is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed — key order included",
-  sha(JSON.stringify(capP)), PRISTINE_PLAIN_CAPTURE_DIGEST);
-t("STRUCTURAL: it gained not one key — no code, no empty level, nothing",
-  Object.keys(capP), ["mode", "grade", "captures", "why", "ceiling"]);
+/* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: these two
+   pinned the WHOLE entry, and "it gained not one key" encoded a SILENCE — this
+   document has no recorded fetch route, and an entry with no `fetch` key cannot be
+   told from "the route was measured and is absent". The entry now STATES the route
+   unrecorded in one added key. REC-88's claim is unchanged and still measured
+   across checkouts: the entry LESS that one stated key is byte-identical to what
+   the pristine pre-item tree printed, key order included. */
+const { fetch: capPFetch, ...capPPreD709 } = capP;
+t("and its entry, less D-709's stated route, is BYTE-IDENTICAL to what the PRISTINE pre-item tree printed — key order included",
+  sha(JSON.stringify(capPPreD709)), PRISTINE_PLAIN_CAPTURE_DIGEST);
+t("STRUCTURAL: REC-88 gained it not one key — no code, no empty level — and D-709 adds only the stated route, last",
+  [Object.keys(capP), capPFetch?.route ?? "(no fetch key)", capPFetch?.earned ?? null],
+  [["mode", "grade", "captures", "why", "ceiling", "fetch"], "unrecorded", null]);
 const rP2 = await promote("INQ-2026-8800-plain-b",
   inquiryMd("INQ-2026-8800-plain-b", { subject: ORD, refs: [DOCS.PLAIN.id],
     legs: [legOn(DOCS.PLAIN, "B")] }), "inquiry");

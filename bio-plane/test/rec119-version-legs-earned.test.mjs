@@ -404,13 +404,19 @@ console.log("\n--- 7. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---
   /* The whole point of the CLEAN document: a leg at or under its ceiling must come back exactly
      as it did, but for the two added fields. An item that capped everything would pass block 2
      and fail here. */
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: this pinned
+     `grade_why` NULL on the uncapped leg, and that pin encoded a SILENCE — the
+     document has no recorded fetch route, and a null reason cannot be told from
+     "the route was measured". Nothing is capped still (the letter stands); the
+     reason now states the letter is the author's, under the ceiling, unmeasured. */
+  const AUTHORED_UNDER_CEILING = /^this leg is read at the B its author gave, under the ceiling of B: no fetch route is recorded for .* not a measured one\.$/;
   t("A LEG NEEDING NO CAP IS BYTE-IDENTICAL BUT FOR THE ADDED FIELDS — publisher-typed text earns its letter and keeps it",
     { target: CLEAN && CLEAN.target_id, grade: CLEAN && CLEAN.grade,
-      authored: CLEAN && CLEAN.grade_authored, why: CLEAN && CLEAN.grade_why,
+      authored: CLEAN && CLEAN.grade_authored, why: !!CLEAN && AUTHORED_UNDER_CEILING.test(CLEAN.grade_why ?? ""),
       axis: CLEAN && CLEAN.grade_axis, role: CLEAN && CLEAN.role, ord: CLEAN && CLEAN.ord },
-    { target: DOC2, grade: "B", authored: "B", why: null, axis: "capture", role: "supports", ord: 1 });
-  t("`grade_why` is NULL rather than a filler sentence when nothing was capped — an explanation of a thing that did not happen is noise in the record",
-    CLEAN && CLEAN.grade_why, null);
+    { target: DOC2, grade: "B", authored: "B", why: true, axis: "capture", role: "supports", ord: 1 });
+  t("`grade_why` STATES the letter is the author's under the ceiling, never measured, when nothing was capped and no route is recorded (D-709)",
+    !!CLEAN && AUTHORED_UNDER_CEILING.test(CLEAN.grade_why ?? ""), true);
   /* THE REST OF THE LEG IS UNMOVED. A fix that rebuilt the leg object rather than resolving one
      field on it would drop `note`, `at` or `ground` and no arm above would notice. */
   t("the rest of the leg object is UNMOVED — this item resolves ONE field and rebuilds nothing, so `note`, `at` and `ground` still travel",

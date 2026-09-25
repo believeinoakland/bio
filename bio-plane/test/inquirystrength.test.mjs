@@ -636,9 +636,14 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
   const pubWalk = (await pair(carol, I_PUB)).body.result.capture;
   t("a publisher-typed document's leg is byte-identical to the DO-internal derivation, key for key",
     JSON.stringify(pubWalk), JSON.stringify((await doGet(`strength?id=${I_PUB}`)).capture));
-  t("and it carries NO new key: no bound, no reason, nothing that says the record looked",
-    [pubWalk.grade, "bounded_by" in pubWalk, pubWalk.weakest?.why ?? null],
-    ["B", false, null]);
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: this read
+     "no reason, nothing that says the record looked", with a null `why`, and that
+     pin encoded a SILENCE. The document has no recorded fetch route, so the leg's
+     letter is the author's, under the ceiling, and the read now SAYS so. The
+     letter and the absent bound are unchanged. */
+  t("and it carries no BOUND, and states its letter is the author's under the ceiling (no route recorded)",
+    [pubWalk.grade, "bounded_by" in pubWalk, /the B its author gave, under the ceiling of /.test(pubWalk.weakest?.why ?? "")],
+    ["B", false, true]);
   /* A LEG THAT CLAIMS NOTHING ON A DOCUMENT THE BOUND WOULD HAVE MOVED. The gate
      does not pressure anyone into inventing an attribution (CLAUDE.md), so an
      ungraded leg is legal, is inert by DEC-18, and this item must leave it
@@ -657,8 +662,12 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
   const I_WEAK = "INQ-2026-0914-weaker-than-ceiling";
   await promote(carol, I_WEAK, inquiryMd(I_WEAK, { refs: [D_PUB], legs: [g(D_PUB, "C", "capture")] }), "inquiry");
   const weakWalk = (await pair(carol, I_WEAK)).body.result.capture;
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: the null
+     `why` pinned here encoded a SILENCE about an unrecorded route. The letter
+     still stands unraised; the read now says it is the author's. */
   t("a leg stating a WEAKER letter than the ceiling keeps its own, and is not raised to the maximum",
-    [weakWalk.state, weakWalk.grade, weakWalk.weakest?.why ?? null], ["graded", "C", null]);
+    [weakWalk.state, weakWalk.grade, /the C its author gave, under the ceiling of /.test(weakWalk.weakest?.why ?? "")],
+    ["graded", "C", true]);
 
   /* ---- 8e. THE RECURSION CARRIES THE BOUND, and this arm exists because
      without it the item would have a hole that reads as working. A leg to
@@ -747,8 +756,14 @@ console.log("\n--- 9. D-177: a DIRECT capture's grade is MEASURED from its fetch
   await promote(carol, I_DIR, inquiryMd(I_DIR, { refs: [D_DIR], legs: [g(D_DIR, "C", "capture")] }), "inquiry");
   const dirBefore = (await pair(carol, I_DIR)).body.result.capture;
   const regBefore = await reg9(I_DIR, D_DIR);
-  t("BEFORE the fetch is recorded the route is unrecorded: the member's weaker letter stands and the entry has NO fetch key",
-    [dirBefore.grade, "fetch" in (regBefore ?? {})], ["C", false]);
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: this read
+     "the entry has NO fetch key", and that pin encoded a SILENCE — an absent key
+     cannot be told from "the route was measured and is absent". The entry now
+     STATES the route unrecorded, and the leg reads the member's letter and says
+     it is the author's, under the ceiling. */
+  t("BEFORE the fetch is recorded the route is unrecorded: the member's weaker letter stands and the entry STATES the route unrecorded",
+    [dirBefore.grade, regBefore?.fetch?.route ?? "(no fetch key)", regBefore?.fetch?.earned ?? null],
+    ["C", "unrecorded", null]);
   await locate(D_DIR, "direct");
   const dirAfter = (await pair(carol, I_DIR)).body.result.capture;
   const regAfter = await reg9(I_DIR, D_DIR);
@@ -863,6 +878,29 @@ console.log("\n--- 9. D-177: a DIRECT capture's grade is MEASURED from its fetch
     [false, null, ["some-other-mirror"], "CAPTURE_GRADE_VIA_UNRULED", true]);
   t("and the member's weaker letter on it STANDS — nothing is invented for an unruled route",
     [unrWalk.grade, unrWalk.weakest?.why ?? null], ["D", null]);
+
+  /* ---- 9g. D-709 (BOB #35, 2026-09-25 10:05Z) — THE ROW'S ACCEPTS-WHEN: A
+     CAPTURE WITH NO RECORDED ROUTE IS STATED, NEVER SILENT. A document none of
+     whose captures has a locator row carries `fetch: { route: "unrecorded" }`
+     with its reason coded and no measured letter; a leg on it reads the letter
+     its author gave, under the ceiling, and the walk SAYS the letter is the
+     author's. The ceiling is read from the registry, never typed. */
+  const D_NOL = "INFO-2026-0925-no-locator";
+  const I_NOL = "INQ-2026-0925-weaker-on-no-locator";
+  await promote9(D_NOL, undefined);
+  await promote(carol, I_NOL, inquiryMd(I_NOL, { refs: [D_NOL], legs: [g(D_NOL, "D", "capture")] }), "inquiry");
+  const nolReg = await reg9(I_NOL, D_NOL);
+  const nolWalk = (await pair(carol, I_NOL)).body.result.capture;
+  t("A NO-LOCATOR CAPTURE'S ENTRY STATES ITS ROUTE UNRECORDED",
+    { route: nolReg?.fetch?.route ?? "(no fetch key)", unrecorded: nolReg?.fetch?.unrecorded,
+      earned: nolReg?.fetch?.earned, determined: nolReg?.fetch?.determined,
+      reason: nolReg?.fetch?.undetermined_because ?? null, says: /no fetch route is recorded/.test(nolReg?.fetch?.why ?? "") },
+    { route: "unrecorded", unrecorded: 1, earned: null, determined: false,
+      reason: "CAPTURE_ROUTE_UNRECORDED", says: true });
+  t("A LEG ON IT READS AUTHORED-UNDER-CEILING AND SAYS SO — the author's letter, never a measured one",
+    { grade: nolWalk.grade, authored: /the D its author gave, under the ceiling of /.test(nolWalk.weakest?.why ?? ""),
+      ceiling: new RegExp(`under the ceiling of ${nolReg?.grade}:`).test(nolWalk.weakest?.why ?? "") },
+    { grade: "D", authored: true, ceiling: true });
 }
 
 await mf.dispose();

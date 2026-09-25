@@ -4,8 +4,8 @@
  * (anchor exactly once, a per-arm pristine copy in `controlPen`, restore verified by sha256 AND `cmp` AND
  * size with a floor, the suite's own foot read or -1) are REC-105's driver's, reused unchanged below.
  *
- * Run: `node test/nc-d177.mjs <none|a|b|c|d|e|f|g|h>` from `bio-plane/`. Arms (e)-(g) are D-693's; (h) is
- * D-698's. D-698 moved ARCHIVE_CAPTURE_GRADE into `checks/bio-checks.mjs`, so an arm may now name the FILE
+ * Run: `node test/nc-d177.mjs <none|a|b|c|d|e|f|g|h|i|j|k>` from `bio-plane/`. Arms (e)-(g) are D-693's; (h) is
+ * D-698's; (i)-(k) are D-709's (a no-locator capture's route STATED, BOB #35 2026-09-25 10:05Z). D-698 moved ARCHIVE_CAPTURE_GRADE into `checks/bio-checks.mjs`, so an arm may now name the FILE
  * it arms (`file:`, default store.mjs), and may name a SECOND suite whose own declared failures are checked
  * too (`also:`) — D-698's control must move op=acquire's stamp pin and 9d TOGETHER. */
 import "./stdio.mjs";
@@ -27,6 +27,9 @@ const HEADLINE = "A MEMBER-AUTHORED WEAKER LETTER ON A DIRECT CAPTURE READS THE 
 const ARCHIVE_HEADLINE = "A LEG ON AN ARCHIVE-ONLY CAPTURE READS THE MEASURED LETTER";
 const DERIVED = "the catalogue DERIVES the archive letter one rank below the enforced ceiling";
 const UNRULED_NAMED = "a route NO ruling names is NAMED";
+/* D-709's labels. */
+const NOLOC_ENTRY = "A NO-LOCATOR CAPTURE'S ENTRY STATES ITS ROUTE UNRECORDED";
+const NOLOC_LEG = "A LEG ON IT READS AUTHORED-UNDER-CEILING AND SAYS SO";
 const ARMS = {
   a: {
     what: "THE ROW'S OWN — READ THE AUTHORED GRADE AGAIN. The measured floor in `#capturedAt` never "
@@ -147,6 +150,42 @@ const ARMS = {
             mustPass: ["the ARCHIVE-SOURCED arm names the RULED constant ARCHIVE_CAPTURE_GRADE",
                        "and it ranks strictly BELOW the enforced ceiling",
                        "the DIRECT-FETCH arm interpolates the enforced ceiling"] },
+  },
+  /* D-709's own. (i) is THE ROW'S DECLARED CONTROL: omit the key again on a no-locator entry, and the
+     stated-route arm (9g) must fail BY NAME, with the suites whose silence pins it corrected. */
+  i: {
+    what: "THE SILENCE RESTORED — a capture entry with no recorded route carries NO fetch key again, as "
+        + "D-177 shipped it, so a reader cannot tell an unrecorded route from a measured absence.",
+    find: "      if (!e.direct && !e.otherVia.size) {\n",
+    with: "      if (!e.direct && !e.otherVia.size) { continue;\n",
+    mustFail: [NOLOC_ENTRY, NOLOC_LEG, "BEFORE the fetch is recorded the route is unrecorded",
+               "and it carries no BOUND, and states its letter is the author's",
+               "a leg stating a WEAKER letter than the ceiling keeps its own"],
+    mustPass: [HEADLINE, ARCHIVE_HEADLINE, "an archive-only document's capture grade is MEASURED", UNRULED_NAMED,
+               "and the member's weaker letter on it STANDS"],
+    also: { suite: "./rec114-leg-earned.test.mjs", foot: /(\d+) pass, (\d+) fail/,
+            mustFail: ["`grade_why` STATES the letter is the author's under the ceiling"],
+            mustPass: ["BOTH DERIVED FIELDS ARE PRESENT ON EVERY LEG ROW"] },
+  },
+  j: {
+    what: "THE READ GOES SILENT — the entry still states the route unrecorded, but `#capturedAt` returns "
+        + "nothing for a letter at or under the ceiling, so the leg's letter reads with no statement that it "
+        + "is the author's.",
+    find: "    const unrecorded = earned.fetch && earned.fetch.route === \"unrecorded\";\n",
+    with: "    const unrecorded = false;\n",
+    mustFail: [NOLOC_LEG, "and it carries no BOUND, and states its letter is the author's",
+               "a leg stating a WEAKER letter than the ceiling keeps its own"],
+    mustPass: [NOLOC_ENTRY, "BEFORE the fetch is recorded the route is unrecorded", HEADLINE, ARCHIVE_HEADLINE,
+               UNRULED_NAMED],
+  },
+  k: {
+    what: "OVER-STRICTNESS. The same test spelled with optional chaining. Correct work in a spelling this "
+        + "item did not use must PASS.",
+    find: "    const unrecorded = earned.fetch && earned.fetch.route === \"unrecorded\";\n",
+    with: "    const unrecorded = earned.fetch?.route === \"unrecorded\";\n",
+    mustFail: [],
+    mustPass: [NOLOC_ENTRY, NOLOC_LEG, "BEFORE the fetch is recorded the route is unrecorded", HEADLINE,
+               ARCHIVE_HEADLINE, UNRULED_NAMED, "a leg stating a WEAKER letter than the ceiling keeps its own"],
   },
 };
 

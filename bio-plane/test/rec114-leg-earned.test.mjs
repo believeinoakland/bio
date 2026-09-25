@@ -339,11 +339,17 @@ console.log("\n--- 3. ALL THREE READERS, DRIVEN — reaching one and missing the
 console.log("\n--- 4. THE MEMBER'S ACT IS NOT ERASED, AND THE UNCAPPED CONTROL IS UNMOVED ---");
 {
   const clean = await legOf("rows=leg&q=type:inquiry&limit=500", INQ_CLEAN, DOC_CLEAN);
+  /* CORRECTED BY D-709 (BOB #35, 2026-09-25 10:05Z), never exempted: this pinned
+     `grade_why` NULL on the uncapped leg, and that pin encoded a SILENCE — the
+     document has no recorded fetch route, and a null reason cannot be told from
+     "the route was measured". Nothing is capped still (the letter stands); the
+     reason now states the letter is the author's, under the ceiling, unmeasured. */
+  const AUTHORED_UNDER_CEILING = /^this leg is read at the B its author gave, under the ceiling of B: no fetch route is recorded for .* not a measured one\.$/;
   t("publisher-typed text earns its letter, so the authored letter STANDS and `grade` equals `grade_authored`",
-    clean ? { grade: clean.grade, authored: clean.grade_authored, why: clean.grade_why } : null,
-    { grade: "B", authored: "B", why: null });
-  t("`grade_why` is NULL rather than a filler sentence when nothing was capped — a reason with nothing to explain is noise",
-    clean ? clean.grade_why : "MISSING", null);
+    clean ? { grade: clean.grade, authored: clean.grade_authored, why: AUTHORED_UNDER_CEILING.test(clean.grade_why ?? "") } : null,
+    { grade: "B", authored: "B", why: true });
+  t("`grade_why` STATES the letter is the author's under the ceiling, never measured, when nothing was capped and no route is recorded (D-709)",
+    clean ? AUTHORED_UNDER_CEILING.test(clean.grade_why ?? "") : "MISSING", true);
   t("BOTH DERIVED FIELDS ARE PRESENT ON EVERY LEG ROW, never only on the capped ones — a field that appears sometimes makes a surface test for presence",
     clean ? ["grade_authored" in clean, "grade_why" in clean] : null, [true, true]);
   const moved = await legOf("rows=leg&q=type:inquiry&limit=500", INQ_MOVE, DOC_MOVE);
