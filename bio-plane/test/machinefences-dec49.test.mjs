@@ -469,6 +469,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.45", "AI_RUN_RERUN_SELF"],
     ["C-33.46", "AI_RUN_RERUN_UNKNOWN"],
     ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT"],
+    /* D-623, 2026-09-25: `op=proposedispose`'s judgment-layer disposition named with no project, minted at
+       two sites and consolidated behind one governed helper (`actNoProjectScope`) on D-484's shape. D-PIN-B
+       failed naming exactly this row when it landed, which is this pair of arms doing its job. */
+    ["C-33.48", "NO_PROJECT_SCOPE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -588,7 +592,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        the re-run link's three refusals at `aiRunOpen > is-airun-rerun-link`. */
     /* CONDUCT #21 at c21-batch28: 67 at the union — REC-205's C-33.44 (64 on its branch) and REC-207's three,
        renumbered C-33.45..C-33.47 off that collision; RE-READ from this suite's print on the merged tree. */
-    rowsSeen, 67);
+    /* MOVED 67 -> 68 on 2026-09-25 (D-623), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 68") on the item's
+       tree over origin/main 5e8a65a8: ONE arrival, C-33.48 NO_PROJECT_SCOPE in ACT_SHAPE_CHECKS. */
+    rowsSeen, 68);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`
