@@ -9016,9 +9016,14 @@ export class Store extends DurableObject {
       /* DEC-49 REGION is-publish-draft-this-case */
       if (di.caseId ? (di.caseId !== theCase || di.edition !== predicted) : predicted !== 1)
         return refusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
-          draft_case: di.caseId ?? null, draft_edition: di.edition,
+          /* D-721: `draft_edition` is `#statedEdition`'s, as on every other answer about a draft: null for a draft
+             naming a case AND asking for a new one (D-618) and for one whose case is DERIVED (D-568), where it read
+             the internal key. The sentence reads the draft's `newCase` as every other answer's does, so a new
+             case's draft is no longer described with the derivation sentence either. */
+          draft_case: di.caseId ?? null, draft_edition: Store.#statedEdition(di, !!JSON.parse(d.params).newCase),
           case_id: theCase ?? null, edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition)}, and `
+          detail: `draft ${draftNamed} is prepared for ${Store.#caseIdentitySentence(di.caseId, di.edition,
+                                                                                     !!JSON.parse(d.params).newCase)}, and `
                 + `this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it `
                 + `would bind its readings to a case they were not given for. Publish the case the draft names `
                 + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.` });
@@ -10743,12 +10748,16 @@ export class Store extends DurableObject {
      `newCase` is read for truthiness, as `publishCase` reads it. THE SENTENCE IS A MEMBER'S AND A
      RECIPIENT'S TO READ, so it carries no code: the surfaces draw it verbatim, and their DEC-49 guards
      refuse a SHOUTY_CODE on the page (measured: civicos-ui review-copy and statement-ack went red on
-     this change's first spelling, which named the refusal's code). */
+     this change's first spelling, which named the refusal's code).
+     D-721 (same section and ruling, D-618's `#statedEdition`): THE PAIR BRANCH NAMES NO EDITION. It opened "the
+     next edition (N) of C1 — but …", so op=casedraft, casedrafts, reviewcopy and reviewgrant's `boundTo` each stated
+     an edition beside D-618's `edition: null` for a case the record has not chosen. It names the case as the draft
+     names it, then the refusal; `edition` is not read on this branch. */
   static #caseIdentitySentence(caseId, edition, newCase) {
     if (caseId && newCase)
-      return `the next edition (${edition}) of ${caseId} — but this draft also asks for a new case, and `
-           + `publication refuses those two instructions together, so which case it is stays UNDETERMINED `
-           + `until one of them is withdrawn`;
+      return `${caseId}, the case the draft names — but the draft also asks for a new case, and publication `
+           + `refuses those two instructions together, so which case it is stays UNDETERMINED until one of them `
+           + `is withdrawn, and no edition is stated for it`;
     if (caseId) return `the next edition (${edition}) of ${caseId}`;
     if (newCase) return "a new case, whose identity is not yet allocated — a case id is minted only by publication";
     return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED "
@@ -10975,9 +10984,13 @@ export class Store extends DurableObject {
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
              edition: Store.#statedEdition(ident, newCase),
              recipient: to, issuedBy: a.who, issuedAt: when,
+             /* D-721: for the pair the sentence states no edition, so "that edition" had no referent; the grant
+                ends with the named case's next edition either way (`#liveReviewGrant` reads the draft's key). */
              boundTo: `this grant reads ${Store.#caseIdentitySentence(ident.caseId, ident.edition,
                                                                      newCase)} and nothing `
-                    + `else. It ends when it is revoked, and when that edition is published and signed.` };
+                    + `else. It ends when it is revoked, and when `
+                    + (ident.caseId && newCase ? `the next edition of ${ident.caseId}` : `that edition`)
+                    + ` is published and signed.` };
   }
 
   #reviewRevoke(who, { grant = null } = {}) {

@@ -30,6 +30,13 @@
    was RE-RUN ALONE on the changed `src/store.mjs` (restored `sha256sum -c` OK e52d8160…0786c9, `cmp` identical,
    3,337,185 bytes): 8 pass, 15 FAIL, the same fifteen rows, block 2 GREEN — the control still bites.
 
+   NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-721 (cloud, SCHEDULER #24), block 5's pair-draft row. DECLARED
+   before arming: (d721) publish's PUBLISH_DRAFT_NOT_THIS_CASE restored to the plane before D-721 — `draft_edition`
+   read as `di.edition` and the sentence called without the draft's `newCase`. MUST FAIL "D-721: THE PAIR DRAFT named
+   on a new case…" by name; MUST NOT fail any other row. RESULT: 27 pass, 1 FAIL, that row by name. AS DECLARED.
+   Restored by `cp` from a per-arm pristine copy in the session scratchpad, `sha256sum -c` OK and `cmp` identical,
+   3,658,049 B. BASELINE on the same tree: 28 pass, 0 fail.
+
    NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-521 on land/worker/D-521b, over origin/main 5e8a65a8. D-521 retired
    C-82.1 (STATEMENT_ACK_DOCUMENTS_OVER_BOUND) and added block 7. Each arm ran ALONE and was declared before arming.
    Every restore was by `cp` from per-arm pristine copies in the session scratchpad, verified by `sha256sum -c`
@@ -433,6 +440,19 @@ console.log("\n--- 5. THE THREE REFUSALS: a link that would be false is refused 
   const nt = await publish("refused", [Q5], { draft: Dc.draftId, newCase: true });
   t("a draft of an EXISTING case named on a NEW one: PUBLISH_DRAFT_NOT_THIS_CASE, with C-44.4's row, naming both",
     [...said(nt), nt?.draft_case, nt?.case_id], [...row("PUBLISH_DRAFT_NOT_THIS_CASE"), C1, null]);
+  /* D-721 (BIO_Publication §6A.4, D-618's `#statedEdition`): A DRAFT THAT NAMES C1 AND ALSO ASKS FOR A NEW CASE,
+     named on a new one, is refused as `Dc` is — but its detail read `#caseIdentitySentence` without `newCase`
+     and said it "is prepared for the next edition (N) of C1", and `draft_edition` stated N: an edition for a case
+     the record has not chosen, the defect D-618 closed on the draft's own answers. */
+  const Dp = rP(await POST(`op=casedraft&token=${IRIS}`,
+    withRoles({ ...args(PROJ, "pairnamed"), caseId: C1, newCase: true, targets: [Q5] })));
+  if (!Dp?.ok) bail("casedraft naming C1 and asking for a new case", Dp);
+  const np = await publish("refused", [Q5], { draft: Dp.draftId, newCase: true });
+  t("D-721: THE PAIR DRAFT named on a new case is refused PUBLISH_DRAFT_NOT_THIS_CASE, and its detail and "
+  + "`draft_edition` state NO edition — the detail names C1 and says the pair is UNDETERMINED",
+    [...said(np), np?.draft_case, np?.draft_edition, /edition \(\d+\) of|edition \d+ of C/.test(np?.detail ?? ""),
+     (np?.detail ?? "").includes(C1) && /UNDETERMINED/.test(np?.detail ?? "")],
+    [...row("PUBLISH_DRAFT_NOT_THIS_CASE"), C1, null, false, true]);
   const ab = await publish("refused", [Q5], { draft: D1 });
   t("block 1's draft, already bound to its case, named for another: PUBLISH_DRAFT_ALREADY_BOUND, with C-44.5's row",
     [...said(ab), ab?.bound_to?.case_id, ab?.bound_to?.edition], [...row("PUBLISH_DRAFT_ALREADY_BOUND"), C1, 1]);

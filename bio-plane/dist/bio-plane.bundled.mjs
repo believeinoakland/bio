@@ -40987,11 +40987,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       if (di.caseId ? di.caseId !== theCase || di.edition !== predicted : predicted !== 1)
         return refusal6("PUBLISH_DRAFT_NOT_THIS_CASE", {
           draft: draftNamed,
+          /* D-721: `draft_edition` is `#statedEdition`'s, as on every other answer about a draft: null for a draft
+             naming a case AND asking for a new one (D-618) and for one whose case is DERIVED (D-568), where it read
+             the internal key. The sentence reads the draft's `newCase` as every other answer's does, so a new
+             case's draft is no longer described with the derivation sentence either. */
           draft_case: di.caseId ?? null,
-          draft_edition: di.edition,
+          draft_edition: _Store.#statedEdition(di, !!JSON.parse(d.params).newCase),
           case_id: theCase ?? null,
           edition: predicted,
-          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(di.caseId, di.edition)}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.`
+          detail: `draft ${draftNamed} is prepared for ${_Store.#caseIdentitySentence(
+            di.caseId,
+            di.edition,
+            !!JSON.parse(d.params).newCase
+          )}, and this act publishes ${theCase ? `edition ${predicted} of ${theCase}` : "a new case"}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names ` + (di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) + `, or name the draft of this one.`
         });
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
@@ -42497,10 +42505,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
      `newCase` is read for truthiness, as `publishCase` reads it. THE SENTENCE IS A MEMBER'S AND A
      RECIPIENT'S TO READ, so it carries no code: the surfaces draw it verbatim, and their DEC-49 guards
      refuse a SHOUTY_CODE on the page (measured: civicos-ui review-copy and statement-ack went red on
-     this change's first spelling, which named the refusal's code). */
+     this change's first spelling, which named the refusal's code).
+     D-721 (same section and ruling, D-618's `#statedEdition`): THE PAIR BRANCH NAMES NO EDITION. It opened "the
+     next edition (N) of C1 — but …", so op=casedraft, casedrafts, reviewcopy and reviewgrant's `boundTo` each stated
+     an edition beside D-618's `edition: null` for a case the record has not chosen. It names the case as the draft
+     names it, then the refusal; `edition` is not read on this branch. */
   static #caseIdentitySentence(caseId, edition, newCase) {
     if (caseId && newCase)
-      return `the next edition (${edition}) of ${caseId} \u2014 but this draft also asks for a new case, and publication refuses those two instructions together, so which case it is stays UNDETERMINED until one of them is withdrawn`;
+      return `${caseId}, the case the draft names \u2014 but the draft also asks for a new case, and publication refuses those two instructions together, so which case it is stays UNDETERMINED until one of them is withdrawn, and no edition is stated for it`;
     if (caseId) return `the next edition (${edition}) of ${caseId}`;
     if (newCase) return "a new case, whose identity is not yet allocated \u2014 a case id is minted only by publication";
     return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment \u2014 a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them";
@@ -42743,11 +42755,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       recipient: to,
       issuedBy: a.who,
       issuedAt: when,
+      /* D-721: for the pair the sentence states no edition, so "that edition" had no referent; the grant
+         ends with the named case's next edition either way (`#liveReviewGrant` reads the draft's key). */
       boundTo: `this grant reads ${_Store.#caseIdentitySentence(
         ident.caseId,
         ident.edition,
         newCase
-      )} and nothing else. It ends when it is revoked, and when that edition is published and signed.`
+      )} and nothing else. It ends when it is revoked, and when ` + (ident.caseId && newCase ? `the next edition of ${ident.caseId}` : `that edition`) + ` is published and signed.`
     };
   }
   #reviewRevoke(who2, { grant = null } = {}) {

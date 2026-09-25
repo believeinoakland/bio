@@ -269,7 +269,29 @@
    DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE", by name. AS DECLARED. (ad) -> **104 pass, 0 fail**. AS DECLARED.
    Arms c and v each fail ONE MORE than D-618 measured (c 7, v 6), both "D-708 ACCEPTS-WHEN": each kills DB's grant,
    so the recipient's reading is refused and states no `listed` — the arm's own declared direction. Every other arm's
-   failure count unchanged. */
+   failure count unchanged.
+   D-721 (the identity sentence's pair branch names no edition; §6A.4, BOB #32's ruling, D-618's `#statedEdition`)
+   ADDED TWO ARMS TO BLOCK 14 and THREE CONTROL ARMS. DECLARED 2026-09-25 BEFORE ARMING:
+
+   (ae) THE ROW'S NEGATIVE CONTROL — the numbered pair sentence restored ("the next edition (N) of C1 — but …"), the
+   plane before D-721. MUST FAIL, by name: "D-721 ACCEPTS-WHEN". MUST NOT FAIL: "D-721: A DRAFT NAMING C1 ONLY KEEPS
+   ITS SENTENCE", any D-618 or D-708 arm (the stated `edition` and the `listed` sentence do not read this branch).
+
+   (af) THE PAIR SENTENCE FOR EVERY NAMED-CASE DRAFT — its `newCase` test dropped. MUST FAIL, by name: "D-721: A DRAFT
+   NAMING C1 ONLY KEEPS ITS SENTENCE", and D-708's "A DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE" (that branch
+   draws this sentence for C1's draft). MUST NOT FAIL "D-721 ACCEPTS-WHEN".
+
+   (ag) OVER-STRICTNESS — the pair sentence reworded in a spelling this suite did not write. MUST PASS, every arm.
+
+   MEASURED 2026-09-25 by WORKER D-721 (cloud, SCHEDULER #24) with `node test/reviewcopy.control.mjs`, all THIRTY-THREE
+   arms ALONE in one driver run, the pen in the session scratchpad via `BIO_NC_PEN`, 33 of 33 restores of
+   `src/store.mjs` (3,658,049 B, sha256 cc5dc175…) sha256 MATCH, content IDENTICAL, size ok: (0) BASELINE -> **106
+   pass, 0 fail**. (ae) -> **105 pass, 1 fail**: "D-721 ACCEPTS-WHEN", by name. AS DECLARED. (af) -> **103 pass, 3
+   fail**: "D-721: A DRAFT NAMING C1 ONLY KEEPS ITS SENTENCE" and D-708's names-C1-only arm, as declared, AND D-538's
+   "A DRAFT NAMING A CASE IS UNCHANGED", undeclared — the same sentence read on C1's draft from block 11, the arm's
+   own direction; "D-721 ACCEPTS-WHEN" GREEN, as declared. (ag) -> **106 pass, 0 fail**. AS DECLARED. Arm r MOVED
+   4 -> 5, "D-721 ACCEPTS-WHEN": the sentence ignoring `newCase` falls to the numbered branch for DB — the arm's own
+   direction. Every other arm's failure count unchanged from D-708's measurement. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -1371,6 +1393,21 @@ console.log("\n--- 14. D-618: a draft naming a case and asking for a new one sta
   t("D-708: A DRAFT NAMING C1 ONLY KEEPS ITS `listed` SENTENCE — the completeness block of C1's next edition, by number",
     [ack1?.ok, (ack1?.listed ?? "").startsWith(`the completeness block of the next edition (${c1?.case?.edition}) of ${C1} lists`)],
     [true, true]);
+  /* D-721 (§6A.4, BOB #32's newCase ruling, D-618's `#statedEdition`): THE IDENTITY SENTENCE ITSELF is the fifth
+     place DB's edition was stated. D-538's pair branch of `#caseIdentitySentence` opened "the next edition (N) of C1 —
+     but this draft also asks for a new case…", so op=casedraft's `caseIdentity`, op=casedrafts' and op=reviewcopy's
+     `identity` and op=reviewgrant's `boundTo` each named an edition beside `edition: null`. They now name the case as
+     the draft names it, then the refusal. `noEdition` is D-708's; `boundTo` is read whole, since its tail once
+     pointed at "that edition". */
+  const idOf = [DBr?.caseIdentity, row(DBr.draftId)?.identity, cB?.case?.identity, gB?.boundTo];
+  t("D-721 ACCEPTS-WHEN: DB'S IDENTITY SENTENCE NAMES NO EDITION — in op=casedraft, op=casedrafts, op=reviewcopy and "
+  + "op=reviewgrant's boundTo — and still names C1 and says the pair is refused and UNDETERMINED until one is withdrawn",
+    [...idOf.map(noEdition), ...idOf.map((s) => typeof s === "string" && s.includes(C1) && /asks for a new case/.test(s)
+                                          && /UNDETERMINED/.test(s) && /withdrawn/.test(s))],
+    [true, true, true, true, true, true, true, true]);
+  t("D-721: A DRAFT NAMING C1 ONLY KEEPS ITS SENTENCE — the next edition of C1, by number, on its copy and its grant",
+    [c1?.case?.identity, (g1?.boundTo ?? "").startsWith(`this grant reads the next edition (${c1?.case?.edition}) of ${C1} and`)],
+    [`the next edition (${c1?.case?.edition}) of ${C1}`, true]);
   t("D-618: A DRAFT NAMING C1 ONLY IS UNCHANGED — C1's next edition, a number, in its copy, its reviewgrant answer "
   + "and its LIVE grant's row",
     [Number.isInteger(c1?.case?.edition) && c1.case.edition >= 2, g1.edition, gRow(c1, g1)?.live,

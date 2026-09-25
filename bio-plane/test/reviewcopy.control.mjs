@@ -4,7 +4,8 @@
  * (r)-(s) D-538's, the identity sentence reading `newCase` — its (o)-(p) on its branch, renamed at
  * c21-batch28 by CONDUCT #21 because D-539 holds (o)-(q)), (t)-(w) D-568's, a derived draft's edition stated
  * as UNDETERMINED while its internal key still binds, (x)-(z) D-618's, a draft naming a case and asking for a new
- * one stating no edition, re-runnable in one step:
+ * one stating no edition, (aa)-(ad) D-708's, the acknowledgement's `listed` sentence for that pair, (ae)-(ag)
+ * D-721's, the identity sentence for that pair naming no edition, re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -290,6 +291,27 @@ const ARMS = {
         apply: () => edit(STORE,
           "`this is a reading of draft ${draftId}, which names ${ident.caseId} AND asks for a new case — `",
           "`you read draft ${draftId}; it names ${ident.caseId} and also asks for a new case, so `") },
+
+  ae: { files: [STORE],
+        label: "(ae) THE ROW'S NEGATIVE CONTROL: the numbered pair sentence restored — the plane before D-721, "
+             + "\"the next edition (N) of C1 — but …\" beside `edition: null`",
+        apply: () => edit(STORE,
+          "      return `${caseId}, the case the draft names — but the draft also asks for a new case, and publication `",
+          "      return `the next edition (${edition}) of ${caseId} — but the draft also asks for a new case, and publication `") },
+
+  af: { files: [STORE],
+        label: "(af) THE PAIR SENTENCE FOR EVERY NAMED-CASE DRAFT: its `newCase` test dropped",
+        apply: () => edit(STORE, "    if (caseId && newCase)\n      return `${caseId}, the case the draft names",
+                                 "    if (caseId)\n      return `${caseId}, the case the draft names") },
+
+  ag: { files: [STORE],
+        label: "(ag) OVER-STRICTNESS: the pair sentence reworded, a spelling this suite did not write — must PASS",
+        apply: () => edit(STORE,
+          "      return `${caseId}, the case the draft names — but the draft also asks for a new case, and publication `\n"
+        + "           + `refuses those two instructions together, so which case it is stays UNDETERMINED until one of them `\n"
+        + "           + `is withdrawn, and no edition is stated for it`;",
+          "      return `the case ${caseId} this draft names, while it also asks for a new case; publication refuses both `\n"
+        + "           + `instructions together, so which case it is stays UNDETERMINED until one of them is withdrawn`;") },
 };
 
 const want = process.argv[2];
@@ -475,4 +497,17 @@ console.log(`\npen removed: ${PEN}`);
      ad 104/0  the reworded sentence passes
    Two older arms MOVED, each by one, in the arm's own direction: c 6 -> 7 and v 5 -> 6, both "D-708 ACCEPTS-WHEN" —
    each kills DB's grant, so the recipient's reading is refused and carries no `listed`.
+
+   RE-MEASURED 2026-09-25 by WORKER D-721 (cloud, SCHEDULER #24), all THIRTY-THREE arms, pen in the session scratchpad
+   via `BIO_NC_PEN`, 33 of 33 restores of a 3,658,049-byte `store.mjs` (sha256 cc5dc175…) sha256 MATCH / content
+   IDENTICAL / size ok:
+     baseline  106/0
+     a 101/5  b 105/1  c 99/7   d 104/2  e 104/2  f 105/1  g 98/8   h 105/1  i 100/6  j 103/3  k 106/0  l 103/3
+     m 104/2  n 106/0  o 104/2  p 106/0  q 104/2  s 106/0  t 103/3  u 105/1  v 100/6  w 106/0  x 105/1  y 105/1
+     z 106/0  aa 105/1 ab 105/1 ac 105/1 ad 106/0 — failure counts unchanged
+     ae 105/1  the numbered pair sentence restored — "D-721 ACCEPTS-WHEN", by name
+     af 103/3  the pair sentence for every named-case draft — D-721's and D-708's names-C1-only arms, and D-538's
+               "A DRAFT NAMING A CASE IS UNCHANGED" (undeclared, same direction)
+     ag 106/0  the reworded pair sentence passes
+   One older arm MOVED: r 4 -> 5, "D-721 ACCEPTS-WHEN" — ignoring `newCase` sends DB to the numbered branch.
 */
