@@ -51,6 +51,20 @@
    ALONE, restored and verified the same way (4dac91af…, 903,635 bytes). Declared: MUST fail
    /2-STILL-RATIFIES by name and nothing else -> **26 pass, 1 fail**: /2-STILL-RATIFIES, as declared.
 
+   (i) D-548 (declared and RUN 2026-09-24, WORKER D-548 (SCHEDULER #21)), THE RECORDER — every section now runs in
+   `block()`, and the subject is the SUITE, so the arms break a section's FIXTURE (a promote the plane refuses
+   ENVELOPE_TYPE_DISAGREES). Re-run in one step: `node test/d548-block.control.mjs` from bio-plane/, which arms a
+   COPY in a temporary mirror of the repository and hashes this file before and after (unchanged on every run). BASELINE -> **35 pass, 0 fail**, per section 0/0, 5/0, 7/0, 5/0, 8/0, 10/0, foot reached.
+   (i) SECTION 4's FIXTURE BROKEN — declared: section 4 DIES by name with tally -1, every other section reports its
+   baseline tally -> **27 pass, 1 fail**, `BLOCK 4 DIED: (fixture) promote BIAS-2026-8400-amended -> draft`, as
+   declared. THE SAME ARM ON THE PRE-D-548 SUITE -> **17 pass, 1 fail [FIXTURE ABORTED]**: section 5's ten
+   assertions never ran — the measured failure this row moves.
+   (j) SECTION 2's FIXTURE BROKEN — declared: 2 DIES, and 3 and 5, which read its case, die NAMING the section they
+   rest on (never a bare TypeError); 1 and 4 report -> **13 pass, 3 fail**, as declared. Its first run, before
+   `needs()`, killed 3 and 5 on `Cannot read properties of undefined` — recorded, but naming nothing.
+   (k) THE RECORDER DISARMED (`block()` rethrows) over (i)'s fixture — declared: NO foot and no section tally
+   -> no foot, exit 1, no tallies, as declared: the driver cannot read an early end as a finished run.
+
    ---
 
    D-84 — THE BIAS MANIFEST IS STAMPED INTO THE SIGNED CASE DOCUMENT, FROZEN.
@@ -113,12 +127,32 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const bail = (what, r) => {
-  console.log(`  FAIL  (fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`);
-  fail++;
-  console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FIXTURE ABORTED]`);
-  mf.dispose().then(() => process.exit(1));
-  throw new Error("fixture");
+/* D-548: EVERY SECTION RUNS INSIDE `block()` — bias.test.mjs's recorder, adopted. Before it, `bail()` disposed the
+   sandbox and exited on the FIRST fixture failure, so one broken fixture ended the run and every later section went
+   unmeasured for a round (found by D-468's worker). Now a fixture failure is a THROW that `block()` records as ONE
+   failure naming its section, and the sections after it still run and report. Each section's own tally is kept and
+   printed at the foot; a section that DIED prints its tally as -1, never as the partial count it reached, because a
+   partial count read as a tally is the claim-more-than-it-measured this recorder exists to stop. A section resting on
+   an earlier one's values (3 and 5 read 1 and 2) dies BY NAME when that one died — recorded, never silent. */
+const bail = (what, r) => { throw new Error(`(fixture) ${what}: ${JSON.stringify(r).slice(0, 600)}`); };
+/* A section that reads an earlier one's values asks for them first, so it dies naming the section it rests on
+   rather than on a TypeError that names nothing. */
+const needs = (section, vals) => {
+  const missing = Object.entries(vals).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length) throw new Error(`rests on section ${section}, which did not produce ${missing.join(", ")}`);
+};
+const TALLY = [];
+const block = async (name, fn) => {
+  const p0 = pass, f0 = fail;
+  let died = false;
+  try { await fn(); }
+  catch (e) {
+    died = true;
+    fail++;
+    console.log(`  FAIL  BLOCK ${name} DIED: ${String((e && e.message) || e).slice(0, 700)}`);
+    console.log("         (the sections after this one still run — see below)");
+  }
+  TALLY.push({ name, pass: died ? -1 : pass - p0, fail: died ? -1 : fail - f0, died });
 };
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -153,16 +187,20 @@ const enrol = async (memberId, role, capabilities) => {
 };
 /* Two administrators before any member (4.2/4.3). NADIA authors the instance lens; IRIS owns the
    publishing project, authors its project lens, and publishes. */
-const NADIA = await enrol("nadia", "admin", ["contribute", "publish", "create_projects"]);
-await enrol("omar", "admin", ["contribute", "publish"]);
-const IRIS = await enrol("iris", "member", ["contribute", "publish"]);
-await POST("op=signeradd&token=adm-d84", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" });
-
-const PROJ = await makePublishingProject({
-  post: async (q, b) => (await mf.dispatchFetch(`http://x/api/?${q}`,
-    { method: "POST", body: JSON.stringify(b ?? {}) })).json(),
-  mf, sha, machineToken: "adm-d84", owner: "iris",
-  name: "PROJ-2026-8400-lens", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+let NADIA, IRIS, PROJ;
+console.log("\n--- 0. setup: members, the signer, the publishing project ---");
+await block("0 (setup)", async () => {
+  NADIA = await enrol("nadia", "admin", ["contribute", "publish", "create_projects"]);
+  await enrol("omar", "admin", ["contribute", "publish"]);
+  IRIS = await enrol("iris", "member", ["contribute", "publish"]);
+  await POST("op=signeradd&token=adm-d84", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" });
+  PROJ = await makePublishingProject({
+    post: async (q, b) => (await mf.dispatchFetch(`http://x/api/?${q}`,
+      { method: "POST", body: JSON.stringify(b ?? {}) })).json(),
+    mf, sha, machineToken: "adm-d84", owner: "iris",
+    name: "PROJ-2026-8400-lens", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  if (typeof PROJ !== "string" || !PROJ) bail("makePublishingProject", PROJ);
+});
 
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
@@ -268,14 +306,20 @@ const lensOf = async () => GET(`op=biasmanifest&token=${IRIS}&scope=project&scop
 /* ===========================================================================
    1. NOTHING ADOPTED — the document SAYS no manifest was in force.
    =========================================================================== */
+/* The values later sections read, hoisted so each section can run inside block(). */
+let pubA, docA, FA, L1, pubB, docB, FB, L2, FC;
+const BI = "BIAS-2026-8400-instance", BP = "BIAS-2026-8400-project";
+const pairsOf = (fm) => (fm.bias_manifest_bundles || []).map((r) => [r.bundle_id, r.revision, r.scope]);
+
 console.log("\n--- 1. with nothing adopted, the signed document says NO MANIFEST WAS IN FORCE ---");
+await block("1", async () => {
 const L0 = await lensOf();
 t("REACH: the project's lens is genuinely not in force before anything is adopted",
   [L0?.in_force, L0?.stated], [false, "no manifest was in force"]);
 
-const pubA = await publishAndSign(await ground("none"), "A");
-const docA = await readDoc(pubA);
-const FA = parseFrontmatter(docA.text).data;
+pubA = await publishAndSign(await ground("none"), "A");
+docA = await readDoc(pubA);
+FA = parseFrontmatter(docA.text).data;
 t("the case is SIGNED and what a stranger reads is the ratified document",
   [docA.ratified, typeof docA.sig_armored === "string"], [true, true]);
 t("NO-MANIFEST ARM: the signed frontmatter states the lens was NOT in force, in the sentence "
@@ -289,12 +333,13 @@ t("and a PERSON reads it: the body carries the manifest under its own heading an
   [true, true]);
 t("op=publish echoed the same stamp it wrote",
   [pubA.bias_manifest?.in_force, pubA.bias_manifest?.stated], [false, "no manifest was in force"]);
+});
 
 /* ===========================================================================
    2. A LENS ADOPTED — the document NAMES EACH PAIR AND THE HASH.
    =========================================================================== */
 console.log("\n--- 2. under an adopted set, the signed document names each (bundle, revision) pair and the hash ---");
-const BI = "BIAS-2026-8400-instance", BP = "BIAS-2026-8400-project";
+await block("2", async () => {
 const TXT_I1 = "Claims from the city attorney's office need a second record.";
 const TXT_P1 = "Budget figures quoted by the office are checked against the adopted budget.";
 for (const st of ["draft", "proposed"]) await promote(NADIA, BI, biasMd(BI, st, "i1", TXT_I1), "bias", st);
@@ -303,17 +348,16 @@ const ADOPTED_I = (await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I1),
 for (const st of ["draft", "proposed"]) await promote(IRIS, BP, biasMd(BP, st, "p1", TXT_P1), "bias", st);
 const adP = await GET(`op=biasadopt&token=${IRIS}&bundleId=${BP}&scope=project&scopeId=${PROJ}`);
 const ADOPTED_P = (await promote(IRIS, BP, biasMd(BP, "adopted", "p1", TXT_P1), "bias", "adopted")).bundleSha;
-const L1 = await lensOf();
+L1 = await lensOf();
 t("REACH: both adoptions landed and the project's lens is IN FORCE with TWO pairs — one instance, one "
 + "project — so every arm below compares something real",
   [adI?.ok, adP?.ok, L1?.in_force, (L1?.bundles || []).map((b) => [b.bundle_id, b.scope]),
    /^[0-9a-f]{64}$/.test(L1?.statements_sha || "")],
   [true, true, true, [[BI, "instance"], [BP, "project"]], true]);
 
-const pubB = await publishAndSign(await ground("lensed"), "B");
-const docB = await readDoc(pubB);
-const FB = parseFrontmatter(docB.text).data;
-const pairsOf = (fm) => (fm.bias_manifest_bundles || []).map((r) => [r.bundle_id, r.revision, r.scope]);
+pubB = await publishAndSign(await ground("lensed"), "B");
+docB = await readDoc(pubB);
+FB = parseFrontmatter(docB.text).data;
 t("NAMED-LENS ARM: the signed document names EACH (bias bundle id, revision) pair in force for the "
 + "project's scope, exactly as op=biasmanifest answered before publishing",
   pairsOf(FB), (L1.bundles || []).map((b) => [b.bundle_id, b.revision, b.scope]));
@@ -343,17 +387,20 @@ t("the manifest sits BESIDE the authored acknowledgement and does not replace it
   [typeof FB.bias_acknowledgement, /^## Bias Acknowledgement$/m.test(docB.text)], ["string", true]);
 t("and the gate accepts the document it signed — no finding of any kind",
   checkCaseDocument(FB, { body: docB.text }).filter((f) => f.severity === "error").map((f) => f.check), []);
+});
 
 /* ===========================================================================
    3. THE LENS MOVES AFTER PUBLISHING — the signed bytes do NOT.
    =========================================================================== */
 console.log("\n--- 3. a new revision adopted afterwards moves op=biasmanifest and never the published bytes ---");
+await block("3", async () => {
+needs("1 and 2", { pubA, docA, pubB, docB, FB, L1 });
 const beforeB = { text: docB.text, sha: sha(docB.text), doc_sha: docB.doc_sha };
 const beforeA = sha(docA.text);
 const TXT_I2 = "Claims from the city attorney's office need TWO independent records.";
 await promote(NADIA, BI, biasMd(BI, "adopted", "i1", TXT_I2), "bias", "adopted");
 const reI = await GET(`op=biasadopt&token=${NADIA}&bundleId=${BI}`);
-const L2 = await lensOf();
+L2 = await lensOf();
 t("THE LENS REALLY MOVED: a new revision of the instance set is adopted, and op=biasmanifest now names "
 + "that revision and a different hash — so the next rows measure frozen bytes, not an unmoved lens",
   [reI?.ok, L2?.in_force, L2?.statements_sha !== L1.statements_sha,
@@ -377,11 +424,12 @@ t("the case published with no lens still says so after one was adopted — nothi
 /* A case published NOW carries the NEW lens — which is what proves the frozen rows above are frozen
    rather than a stamp that never reads the lens at all. */
 const pubC = await publishAndSign(await ground("moved"), "C");
-const FC = parseFrontmatter((await readDoc(pubC)).text).data;
+FC = parseFrontmatter((await readDoc(pubC)).text).data;
 t("OVER-STRICTNESS ARM: a case published after the lens moved stamps the lens in force AT ITS OWN "
 + "publication — the new revision and hash — so freezing is per edition, not a stamp that stopped reading",
   [FC.bias_manifest?.statements_sha, pairsOf(FC).map((p) => p[1])],
   [L2.statements_sha, (L2.bundles || []).map((b) => b.revision)]);
+});
 
 /* ===========================================================================
    4. REC-187 — PROPOSE -> ADOPT -> A LATER PROPOSAL: the stamp names the ADOPTED revision, and its
@@ -402,6 +450,7 @@ t("OVER-STRICTNESS ARM: a case published after the lens moved stamps the lens in
    `history`, and purge clears a purged set's adoptions — so it is written and NOT driven; (3) the recompute
    does not model a project NULLIFICATION and refuses rather than guesses if one appears. */
 console.log("\n--- 4. REC-187: propose -> adopt -> a LATER proposal; the stamp names the ADOPTED revision and hashes exactly its bytes ---");
+await block("4", async () => {
 /* The recompute. Each stamped (bundle, revision) pair is resolved to bytes BY THE REVISION, and the
    bytes are proved to BE that revision (their sha256 is the pin) before a statement is read. The
    plane's formula, restated here from its doctrine rather than imported: every statement of every
@@ -474,6 +523,7 @@ t("OVER-STRICTNESS ARM: once the later revision is itself promoted to `adopted`,
   [ADOPTED_Q2, ADOPTED_Q2, recompute(pairsOf(FE).map((p) => [p[0], p[1]]))]);
 t("and case D, published under the earlier adoption, still names it — frozen, never recomputed",
   [revOf(parseFrontmatter((await readDoc(pubD)).text).data.bias_manifest_bundles, BQ)], [ADOPTED_Q]);
+});
 
 /* ===========================================================================
    5. REC-188 — `bio-case-document/3`: THE GATE REFUSES THE ABSENCE.
@@ -500,7 +550,8 @@ t("and case D, published under the earlier adoption, still names it — frozen, 
    through op=caseratify, because no op authors /2 any more and this plane has no SQL surface to plant one.
    =========================================================================== */
 console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a /3 document silent about the lens or its second readers ---");
-{
+await block("5", async () => {
+  needs("1, 2 and 3", { FA, docA, FB, docB, FC });
   const { runCaseGate } = await import("../src/gate.mjs");
   const gateOf = (fm, body = null) => runCaseGate({ caseId: fm.case_id, edition: fm.case_edition, fm, priorCase: null,
                                                      body });
@@ -549,8 +600,18 @@ console.log("\n--- 5. REC-188: a published case reads /3, and the gate refuses a
                    completeness_acknowledgements: [{ kind: "recipient", by: "RG-1", recipient: "a reader",
                                                      at: "2026-07-02T00:00:00Z" }] }, docB.text)),
     []);
-}
+});
 
-console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED]`);
+/* D-548: every section's own tally, -1 for one that DIED; and a section that never recorded at all is named
+   missing rather than read as clean — the foot counts the sections it expected against the ones that reported. */
+const EXPECTED = ["0 (setup)", "1", "2", "3", "4", "5"];
+console.log("\n--- per-section tallies (D-548: -1 = the section DIED, its tally is missing) ---");
+for (const n of EXPECTED) {
+  const r = TALLY.find((x) => x.name === n);
+  if (!r) { fail++; console.log(`  FAIL  section ${n}: NEVER REPORTED — tally -1`); continue; }
+  console.log(`  section ${n}: ${r.pass} pass, ${r.fail} fail${r.died ? "  [DIED]" : ""}`);
+}
+const DIED = TALLY.filter((x) => x.died).map((x) => x.name);
+console.log(`\nd84-case-manifest: ${pass} pass, ${fail} fail  [FOOT REACHED${DIED.length ? `; DIED: ${DIED.join(", ")}` : ""}]`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);
