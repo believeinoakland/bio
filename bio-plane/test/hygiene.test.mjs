@@ -2313,6 +2313,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        read it back after the boot's migration. It throws unless exactly ONE store holds rows, the row counts are asserted equal
        before and after, and nothing it walks is a figure anybody floors on. */
     "bio-plane/test/reading-position-occurrences.test.mjs", // its own mkdtemp persist root, to rewrite the old shape; asserted exactly one store
+    /* D-542 (2026-09-25): the DEC-49 guard's by-op walk lists `bio-plane/src/*.mjs` to build its call graph. Not
+       guarded by provenance.mjs itself because its CALLER is: `check-refusal-codes.mjs` counts a by-op code into the
+       floored figure only when a file minting it on that op is IN THE COMMIT AT HEAD (`inCommit`, D-257), and prints the
+       working-tree figure beside it, so a phantom source can raise the printed figure but never the floored one. */
+    "civicos-ui/reach-by-op.mjs",                 // bio-plane/src, for the guard's R5/R6; its caller floors only committed mints
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2393,7 +2398,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      file(s)`): the one is D-394's own suite (`test/versionnotice.test.mjs`, named above), the only walker it adds. */
   /* MOVED 42 -> 43 by CONDUCT #18 at D-394's merge onto c18-batch8, which carries D-179's walker (d179onehome): the
      merged tree PRINTED 43, d179onehome and versionnotice both walkers. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 45)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 47)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2406,7 +2411,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     /* MOVED 44 -> 45 by D-454, from the figure this suite PRINTED on the item's tree over origin/main 8bdf20e6
        (`45 walking file(s)`): the one is D-454's own suite (`test/reading-position-occurrences.test.mjs`, named above),
        the only walker the item adds (its control driver sits in the worker's scratchpad and is not committed). */
-    census.length >= 45, true);
+    /* MOVED 45 -> 47 by D-542, from the figure this suite PRINTED on the item's tree over origin/main 5e8a65a8
+       (`47 walking file(s)`). ONE is D-542's own walk (`civicos-ui/reach-by-op.mjs`, named above). THE OTHER WAS ALREADY
+       THERE: the same census on origin/main 5e8a65a8, untouched, printed `46 file(s)` against this floor of 45, so one
+       walker landed without moving it; closed here rather than carried. */
+    census.length >= 47, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
