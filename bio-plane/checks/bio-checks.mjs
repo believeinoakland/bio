@@ -13438,7 +13438,7 @@ export const PROJECT_VISIBILITY_CHECKS = {
 export const PROJECT_JOIN_REQUEST_CHECKS = {
   PROJECT_REQUEST_NEEDS_A_MEMBER: {
     check: 'C-95.1',
-    where: 'src/store.mjs projectRequest > is-join-request-ask',
+    where: 'src/store.mjs #noRequester > is-join-request-member',
     translation: 'Asking to join a project, withdrawing that request and reading your own requests are things '
       + 'a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed.',
   },
@@ -13456,7 +13456,7 @@ export const PROJECT_JOIN_REQUEST_CHECKS = {
   },
   PROJECT_REQUEST_NONE_OPEN: {
     check: 'C-95.4',
-    where: 'src/store.mjs projectRequestWithdraw > is-join-request-withdraw',
+    where: 'src/store.mjs #noOpenRequest > is-join-request-none-open',
     translation: 'There is no open request to join here to act on. It may already have been answered, '
       + 'withdrawn or lapsed. Nothing was changed.',
   },

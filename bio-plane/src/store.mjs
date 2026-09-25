@@ -33783,6 +33783,32 @@ export class Store extends DurableObject {
     if (me.member_id === Store.ROOT_ADMIN) return viewer === Store.ROOT_ADMIN ? me : null;
     return viewerPredicate(viewer).member === me.member_id ? me : null;
   }
+  /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
+     RELAYS it (`#existenceOnly`'s shape): one row, one `where`, one place a translation can go missing. The DETAIL is
+     the act's own sentence, handed in; the code is the literal here. */
+  #joinRequestRefusal(code, projectId, detail, extra = {}) {
+    const row = PROJECT_JOIN_REQUEST_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+             project: projectId ?? null, ...extra };
+  }
+  #noRequester(projectId, detail) {
+    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d);
+    /* DEC-49 REGION is-join-request-member */
+    return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
+      `${detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who `
+      + `asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's `
+      + `bearer and the member bearer have nobody behind them to ask.`);
+    /* END DEC-49 REGION is-join-request-member */
+  }
+  #noOpenRequest(projectId, detail, extra = {}) {
+    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d, extra);
+    /* DEC-49 REGION is-join-request-none-open */
+    return refusal("PROJECT_REQUEST_NONE_OPEN",
+      `${detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going `
+      + `hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask `
+      + `again.`);
+    /* END DEC-49 REGION is-join-request-none-open */
+  }
   #openJoinRequest(projectId, memberId) {
     return this.#one(`SELECT seq, comment, asked_at FROM project_join_requests
                        WHERE project_id=? AND member_id=? AND state='open'`, projectId, memberId);
@@ -33822,7 +33848,7 @@ export class Store extends DurableObject {
        asked BEFORE sight, because it is a fact about the caller and says nothing about any project. */
     const me = this.#requester(by, viewer);
     if (!me)
-      return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
+      return this.#noRequester(projectId,
         "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A "
         + "credential with no active member behind it asks nothing. Nothing was written.");
     /* Only a PROJECT is asked to join: any other bundle is visible to every member (§7.9: the evidence corpus
@@ -33855,22 +33881,15 @@ export class Store extends DurableObject {
    *  own record, so it asks no sight of the project: the request is what the caller names, and a caller with no
    *  open request to that id is answered ONE way whether the project is discoverable, hidden or absent. */
   projectRequestWithdraw({ projectId, by, viewer = null } = {}) {
-    const refusal = (code, detail) => {
-      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               project: projectId ?? null };
-    };
-    /* DEC-49 REGION is-join-request-withdraw */
     const me = this.#requester(by, viewer);
     if (!me)
-      return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
+      return this.#noRequester(projectId,
         "withdrawing a request to join is the requester's own act, and a credential with no active member "
         + "behind it made none. Nothing was written.");
     if (!this.#openJoinRequest(projectId, me.member_id))
-      return refusal("PROJECT_REQUEST_NONE_OPEN",
+      return this.#noOpenRequest(projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is "
         + "the same whatever that id names. Nothing was written.");
-    /* END DEC-49 REGION is-join-request-withdraw */
     const at = new Date().toISOString();
     this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at);
     return { ok: true, projectId, state: "withdrawn", closed: at };
@@ -33905,7 +33924,7 @@ export class Store extends DurableObject {
     const target = this.#memberByHandle(handle);
     const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
     if (!open)
-      return refusal("PROJECT_REQUEST_NONE_OPEN",
+      return this.#noOpenRequest(projectId,
         `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there `
         + `is nothing to answer. Nothing was written.`, { handle: handle ?? null });
     if (want === "grant" && target.status !== "active")
@@ -33958,13 +33977,11 @@ export class Store extends DurableObject {
                project: projectId ?? null };
     };
     if (projectId === null || projectId === undefined || projectId === "") {
-      /* DEC-49 REGION is-join-requests-own */
       const me = this.#requester(by, viewer);
       if (!me)
-        return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
+        return this.#noRequester(null,
           "a member's own requests to join are read by that member, signed in. A credential with no active "
           + "member behind it has made none.");
-      /* END DEC-49 REGION is-join-requests-own */
       const mine = this.#rows(
         `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
                 closed_comment, closed_at AS closed
