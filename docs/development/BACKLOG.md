@@ -43,6 +43,16 @@ scope: a revision that states no type takes the head's `cur.object_type` (the on
 accepts-when: a typeless revision lands carrying the head's type and says so; no op=promote answer carries a stack (moves: a raw NOT NULL error). NEGATIVE CONTROL: drop the carry-forward and the typeless-revision arm reads the raw error, failing by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-547's worker).
 
+### REC-224 · queued — **AN OWNER'S STANDING REQUEST TO LEAVE CAN BECOME ONE THAT CAN NEVER BE HONOURED: if two owners both hold `leaving`, the first honoured strands the other; and `projectOwnerRemove` (§7.10) can remove the last committed owner while the rest hold `leaving`.** REC-186's two gaps (its worker, 02:28Z). BOB #34 RULED 2026-09-25 02:35Z (drained to `BOB-INBOX-drained.md`; cite until folded): the floor counts COMMITTED owners (owners holding no `leaving`); an owner's leave is REFUSED LAST_COMMITTED_OWNER when no OTHER committed owner exists; `projectOwnerRemove` is REFUSED when it would leave only leaving owners, naming them; one helper on Store.ownerMath's floor. — owner RECORD.
+order: right after REC-186, in product order: a request that can never be honoured is an overclaim (BOB #31's reason, BOB #34 02:35Z) (SCHEDULER #21, 2026-09-25)
+milestone: M8
+interface: I3 — two named refusals; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7.6 and §7.10, with BOB #34's 02:35Z ruling, folded by this row with REC-186's fold.
+depends-on: REC-186.
+scope: as ruled; both refusals carry DEC-49 rows; one committed-owner helper serves projectLeave and projectOwnerRemove.
+accepts-when: of two owners, the second to ask is refused while the first's request stands; removing the last committed owner while the others are leaving is refused by name (moves: an unhonourable request). NEGATIVE CONTROL: count owner flags instead of committed owners and both arms fail by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs REC`).
+
 ### D-546 · queued — **`op=promote` ASKS NO STATE-EDGE TABLE EXCEPT FOR BIAS: D-468 fenced a bias set's moves against its STATES edges, and every other type with a head can still move along an edge its table does not declare.** D-468's worker. BOB #34 RULED 2026-09-24 23:55Z (drained to `BOB-INBOX-drained.md` by SCHEDULER #21; cite until folded): *the fence governs moves MADE FROM NOW ON; the history stays as it was written, and is COUNTED and SAID.* — owner RECORD.
 order: after D-547, with the promote corrections: a disallowed move lands in the record (CLAUDE.md §2); BOB #34 ruled it product order (SCHEDULER #21, 2026-09-24)
 milestone: M7
@@ -264,6 +274,26 @@ depends-on: REC-220.
 scope: order by when the record first held the bytes (a server stamp for the readings arm, or `captured_locators.first_retrieved`), never by a date read from the document.
 accepts-when: an older-dated document captured later sorts after the earlier-held capture (moves: the wrong earliest). NEGATIVE CONTROL: order by `readings.at` again and the held-order arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by REC-220's worker).
+
+### D-579 · queued — **AN ACTION'S BASIS LEG NAMES ONLY A BUNDLE: `action_basis[]` records no capture, so a later capture changes what the leg resolves to.** Found by REC-220's worker (item (b) of D-579; (a), the case edge, rides REC-219's `/4`; (c) is D-595). BOB #34 RULED 2026-09-25 02:30Z under Bob's 00:40Z version doctrine (drained to `BOB-INBOX-drained.md`; cite until folded): an action's basis leg gains an `extent_capture` slot in its frontmatter grammar, I5 ADDITIVE; legs without it read "version undetermined". — owner RECORD.
+order: before REC-222, in the version-pinning chain: the notice needs pins to compare against (BOB #34 02:30Z) (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I5 additive — `extent_capture` on an action basis leg; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1, with Bob's 00:40Z doctrine and BOB #34's 02:30Z ruling.
+depends-on: REC-220.
+scope: stamp the capture the record presents at the act on each action basis leg, as REC-220's op=cite does; a leg without it reads "version undetermined", never back-filled.
+accepts-when: a new action basis leg carries its capture, and a later capture on the bundle does not change what it resolves to (moves: bundle-only legs). NEGATIVE CONTROL: drop the stamp and the pin arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by REC-220's worker).
+
+### D-595 · queued — **A RUN'S SUGGESTED VERSION LEGS NAME ONLY A BUNDLE: `op=suggest`'s `suggestVersion` composes legs without `extent_capture`, so a suggestion does not say which capture the run read.** Item (c) of D-579 (REC-220's worker). BOB #34 RULED 2026-09-25 02:30Z under Bob's 00:40Z version doctrine (drained to `BOB-INBOX-drained.md`; cite until folded): suggested version legs carry `extent_capture` through C-25.11's composition. — owner RECORD, agent-worker.
+order: after D-579, before REC-222, in the version-pinning chain (BOB #34 02:30Z) (SCHEDULER #21, 2026-09-25)
+milestone: M6
+interface: I3 additive — `extent_capture` on a suggested leg; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 with C-25.11 (basis versions are frozen, composed without carry-forward), and BOB #34's 02:30Z ruling.
+depends-on: REC-220.
+scope: C-25.11's composition carries the capture the run read onto each suggested leg; a leg composed without one reads "version undetermined".
+accepts-when: a run's suggestion names the capture it read, and an accepted suggestion keeps it (moves: bundle-only suggested legs). NEGATIVE CONTROL: drop `extent_capture` from the composition and the suggested-pin arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs D`).
 
 ### REC-222 · queued — **A MEMBER HOLDING A REFERENCE IS NEVER TOLD A NEWER VERSION AFFECTS IT: `op=versionnotice` is a PULL read, and nothing is pushed.** Bob's 00:40Z doctrine, rule 2 (item 3). — owner RECORD.
 status: queued — REC-221 (01:51Z): notice-level affects reads 'undetermined' for chain_unread; REC-222 DECIDES whether chain_unread raises a notice (rule 2 says never silence; every address-less capture may be noisy) and states the decision
@@ -1193,43 +1223,3 @@ depends-on: none.
 scope: promote arm F's identifier resolution to a seventh matcher in the union; re-read the six `FLOOR` figures from one printed green run in the same turn; translate the recovered codes under DEC-49 (`STORE_DID_NOT_ANSWER` among them). Suite `civicos-ui/test/refusal-codes.test.mjs`, driver `refusal-codes.control.mjs`.
 accepts-when: both recovered codes are in the union and the floors carry no slack. NEGATIVE CONTROL: remove the seventh matcher, and a named floor arm fails.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; D-272's DEBT row of 2026-08-09, verified at the code on `02603e88`; keeps its `D-` id).
-
-### D-273 · queued — **NINETY-THREE-PLUS REFUSAL CODES ARE WRITTEN INLINE AT SEVERAL SITES (`check-refusal-codes.mjs` F4 MULTI-SITE, last partition 103), SO NONE CAN TAKE ONE DEC-49 ROW.** — owner RECORD, with UI.
-order: after D-272, the same census (SCHEDULER #17, 2026-09-23, LED-7 S17-3; verified at the code on `02603e88`)
-milestone: M0 (the guard's shape)
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard), following REC-79's single-helper shape for `NOT_CAPABLE` (`admission-gate.test.mjs`).
-depends-on: none.
-scope: consolidate each multi-site code behind one helper, one code per slice, starting with `NO_SUCH_BUNDLE` (15 sites); re-read the partition each slice.
-accepts-when: the sliced code reads single-site and the F4 count falls by one. NEGATIVE CONTROL: restore one inline literal, and arm F fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-344 · queued — **THE CONTROL REGISTER CANNOT SEE A QUALIFIED `NEGATIVE CONTROL` DECLARATION: `control-register.mjs` `markerPositions` counts the phrase only when a separator follows it directly, so `NEGATIVE CONTROL (…)` (over sixty suites) and `NEGATIVE CONTROL, …` (three in `corpuscheck.test.mjs`) are invisible, and `register-grammar.test.mjs` C5e works around the blind spot rather than fixing it.** — owner M0 (VERIFICATION).
-order: after D-272: the register every suite's control is counted by under-reads, so coverage is claimed on less than it reads (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` §"The negative-control register".
-depends-on: none.
-scope: `markerPositions` admits one parenthesised or comma qualifier before a separator on the same line; a bare phrase with no separator still does not count; C5e corrected in the same change.
-accepts-when: `corpuscheck.test.mjs` reads five declarations and C5e's workaround falls, in `register-grammar.test.mjs`. NEGATIVE CONTROL: restore the strict separator check, and the "a qualified marker is a declaration" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-357 · queued — **THE DEC-49 GUARD'S REGION MATCHER ENDS IN A WORD BOUNDARY, SO A REGION NAMED `x-y` OPENS REGION `x` TOO: `civicos-ui/check-refusal-codes.mjs` `REGION_START`/`REGION_END`.** A live latent pair exists (`is-capture-request` in `store.mjs`, `is-capture-request-arm` in `index.mjs`), harmless only while they sit in different files. — owner UI.
-order: after D-344 (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the DEC-49 guard's section, *what a refusal is in principle*).
-depends-on: none.
-scope: end both patterns in a lookahead for whitespace, a comment close or end of line instead of the word boundary; a sibling-region fixture.
-accepts-when: a file holding regions `x` and `x-y` passes with one opener each, and the `regionLines` floors do not move. NEGATIVE CONTROL: restore the word boundary, and the "one opener per name" arm fails naming two opening markers.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
-
-### D-300 · queued — **A SUITE THAT READS THE WALL CLOCK CAN TURN RED UNTOUCHED, AND THE SWEEP THAT WOULD SAY SO IS RUN BY NOBODY: three suites of about three hundred bind `BIO_NOW_MS`; `clockadvance.control.mjs` exists and no tool, script or gate runs it.** — owner M0.
-order: after D-357; the cheap half (run the sweep) first; threading the clock through every constructor is a later row if the sweep finds decay (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`.
-depends-on: none.
-scope: `gates.mjs` (or the battery) runs the clock-advanced sweep at plus one year on the full class and prints its result line; each suite it turns red is named.
-accepts-when: the sweep runs without anyone starting it and its line is printed on a full gate. NEGATIVE CONTROL: plant a fixture dated thirty days ahead, and the sweep arm fails naming the suite.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; keeps its `D-` id).
