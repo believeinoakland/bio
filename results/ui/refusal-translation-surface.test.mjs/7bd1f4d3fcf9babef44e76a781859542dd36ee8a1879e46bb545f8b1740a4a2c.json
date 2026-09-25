@@ -1,0 +1,16 @@
+{
+ "unit": "ui:refusal-translation-surface.test.mjs",
+ "inputHash": "7bd1f4d3fcf9babef44e76a781859542dd36ee8a1879e46bb545f8b1740a4a2c",
+ "verdict": "PASS",
+ "run": "2fd38cbdbc7bdaecc5ba6e021f58a1940c4ef30e.1790297093584.1235.json",
+ "tree": "2fd38cbdbc7bdaecc5ba6e021f58a1940c4ef30e",
+ "head": "9822af96853bd020328534405bb1e39178026ec8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 93,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "674c2989-4c7b-5631-a3aa-00f5e9cda3f5",
+ "at": "2026-09-25T00:44:53.598Z"
+}
