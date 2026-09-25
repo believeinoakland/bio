@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-08-04, rec34-agent, FOUR arms, each broken ALONE in src/store.mjs and restored byte-identically; 48 pass when whole) (a) THE ITEM'S OWN — ANSWER FROM THE CACHED COLUMNS: in inquiryStrength replace `const s = this.strengthOf(id);` with `const c = this.#one("SELECT inquiry_capture_strength AS cg, inquiry_capture_state AS cs, inquiry_connection_strength AS ng, inquiry_connection_state AS ns FROM bundles WHERE bundle_id=?", id); const ax = (a, gr, st) => ({ axis: a, state: st, grade: gr, determined: st === "graded", weakest: null, load_bearing: 0, population: 0, not_load_bearing: [], depth_bound: Store.QUEUE_ANCESTOR_DEPTH, detail: "" }); const s = { ok: true, depth_bound: Store.QUEUE_ANCESTOR_DEPTH, capture: ax("capture", c.cg, c.cs), connection: ax("connection", c.ng, c.ns) };` -> 17 assertions fail. THE STALE READ IS NAMED: block 3's "the op moves the INSTANT the leg beneath is raised" wants B and GETS C, while its sibling "the CACHE is genuinely stale (the column still answers capture:C)" still PASSES — which is what proves the two are different sources rather than one. The source assertions name the swap itself ("the op's own code calls the derivation" -> false; "names NONE of the five cached columns" -> lists four), both byte-equality assertions fail, every named leg reads null, the depth sentence and undetermined_at vanish, and block 6 has nothing left to redact. (b) THE PROSE SWEEP — `const prose = (v) => v;` in #redactAxis -> 3 fail, dave receiving PROJ-2026-0001-secret inside `detail`/`why` SENTENCES while every id FIELD is still correctly null (REC-14's measured leak shape reproduced), and the failure "one level up, the inherited answer names no secret either" is the id that appears in NO field of the answer at all — carried up from two levels down inside an inherited leg's `why`. (c) THE SUBJECT ROW — `if (!this.#viewerSees(id, viewer))` -> `if (false)` -> 5 fail: dave is handed the secret project's NOT_AN_INQUIRY answer with `object_type: "project"` and its id spelled out in the detail, hidden-vs-absent stops being byte-identical, the forged-viewer probe flips, and the unstamped read answers instead of failing closed. (d) THE FIELD REDACTION — `static #MEMBER_ID_FIELDS = [];` -> 5 fail, the same secret id standing in `weakest.target_id` and in both not_load_bearing lists while the prose is clean: the two defences are independently breakable and each is loud, which is why they are separate. */
 /* NEGATIVE CONTROL: section 8 (REC-105 / D-373) — RUN 2026-09-15 by the REC-105 worker, SIX arms, each armed ALONE in `src/store.mjs` and restored from its OWN uniquely-named pristine copy, every restore verified byte-identical by sha256 AND by `cmp` AND by size (2,149,389 bytes, sha256 80ddb449096ef564, floored at 100 kB). ONE COMMAND EACH: `node test/nc-rec105.mjs <none|a|b|c|d|e>` from `bio-plane/` — the driver holds the patch, the DECLARATION and the declared-vs-actual check, so the next session re-runs an arm in one step instead of re-deriving how to break the subject. BASELINE ARM `none` = 68 pass / 0 fail / exit 0, and it exists because a driver whose every arm reports one number cannot tell six-arms-broken from six-arms-working. (a) THE ITEM'S OWN — `#captureBoundsFor` returns null, so `strengthOf()` hands the walk no bound and every leg reports its stored letter as it did before this item (also IC-102's one-line reversal) -> 61 pass, 7 FAIL, AS DECLARED: the two reads disagree again and the failure NAMES BOTH ANSWERS, labelled — `want {"walk":"C","registry":"C"} got {"walk":"B","registry":"C"}` — because a failure naming one answer is one a reader cannot act on. (b) THE CEILING APPLIED AS A VALUE RATHER THAN AS A CAP (the `<=` short-circuit removed) -> 61 pass, 7 FAIL, AS DECLARED, and it bit HARDER than declared in the correct direction: raising a weaker authored letter to the ceiling moved this suite's OWN pre-existing fixtures in sections 1 and 3 as well as section 8's over-strictness arms. (c) THE UNDETERMINED ARM DROPPED (an unmeasured transcription falls through and keeps its authored letter) -> 66 pass, 2 FAIL, AS DECLARED, both in 8b. (d) THE RECURSION DROPS THE BOUND MAP -> 67 pass, 1 FAIL, AS DECLARED, and it is the ONLY arm 8e catches — without 8e this item would have had a hole that read as working. (e) OVER-STRICTNESS — the SAME rule written in the registry's own `BASIS_GRADES.indexOf` idiom instead of `#GRADE_RANK` -> 68 pass, 0 FAIL, exit 0: correct work in a spelling this item did not anticipate PASSES. THREE FINDINGS ABOUT THE ARMS THEMSELVES — recorded rather than smoothed, kept at each arm in the driver, and deliberately NOT written as an enumerated list, because `countArms` reads one and this declaration arms FIVE, so numbering them would put slack in a ratchet built to carry none (measured with the register itself: transitions 5, enumerations 8 before this wording). FINDING ONE: arm (a) was first declared to break “and the leg it is sent to check is the ACTUAL one” and did NOT: that assertion reads `inherited_from`/`through`, which name WHICH leg set the grade whatever LETTER is reached, so it is blind to this break BY CONSTRUCTION and belongs in the held-open half. FINDING TWO: arm (b) was first declared to break “a publisher-typed document's leg is byte-identical to the DO-internal derivation” and did NOT — and this is the useful one: that equality compares `op=inquirystrength` against the ungated `/strength` route and BOTH GO THROUGH `strengthOf()`, so a change to the arithmetic damages both sides equally and the equality survives. It is a real pin on the GATE and it is STRUCTURALLY BLIND to the derivation beneath it — the costs-nothing rule in miniature. The assertion that does see that break is “it carries NO new key”. FINDING THREE: arm (c)'s first spelling DID NOT ARM AS DECLARED: a bare `return null;` left the undetermined branch's object literal standing as an unconditional return, so every entry came back null — 51 pass / 17 fail, breaking THREE of its four declared held-open assertions, which is precisely the signal the held-open half exists to give. The arm was rewritten surgically and re-run. */
+/* NEGATIVE CONTROL: section 9 (D-177) — RUN 2026-09-25 by the D-177 worker, FOUR arms in `src/store.mjs`, each armed ALONE and restored from its own per-arm pristine copy in `controlPen` (outside the worktree), every restore verified byte-identical by sha256 AND `cmp` AND size (3,476,631 bytes, sha256 4fd15a448b0feb63, floored at 100 kB). ONE COMMAND EACH: `node test/nc-d177.mjs <none|a|b|c|d>` from `bio-plane/`; the driver holds each patch, its declaration and the declared-vs-actual check. BASELINE `none` = 77 pass / 0 fail / exit 0. (a) THE ROW'S OWN, READ THE AUTHORED GRADE AGAIN: the measured floor in `#capturedAt` never applies -> 75 pass, 2 FAIL, AS DECLARED, the headline naming both letters — `want {"walk":"B","authored":"C"} got {"walk":"C","authored":"C"}` — and the reason sentence. (b) THE ROUTE IGNORED: any recorded source counts as a direct fetch, so an archive replay earns the direct letter nobody ruled -> 75 pass, 2 FAIL, AS DECLARED, both in 9d. (c) THE CEILING READ AS A MEASUREMENT: the floor is taken from the ceiling for every document, fetched or not -> 69 pass, 8 FAIL, AS DECLARED and harder than declared in the correct direction: sections 1 and 3's own weaker-letter fixtures, 8c's weaker-than-ceiling arm and 9a's BEFORE all move, because the record would be grading a route it never saw. Its FIRST spelling did not arm as declared — it left the reason sentence reading a key the entry lacked, so the suite died in section 1 at -1/-1 without reaching one declared assertion; the arm was rewritten so only the floor's source moves, and the finding is kept at the arm in the driver. (d) OVER-STRICTNESS: the same floor in the registry's own `BASIS_GRADES.indexOf` idiom -> 77 pass, 0 FAIL, exit 0: correct work in a spelling this item did not use PASSES. */
 /* REC-34: `op=inquirystrength` — the GATED control-plane read of REC-12's
  * derived pair. UI-11's delegation (measured: no op served the pair for a
  * WORKING inquiry) and UI-12's hard blocker (its live preview re-queries as a
@@ -89,7 +90,10 @@ export default {
     const u = new URL(req.url);
     if (u.pathname.startsWith("/probe/"))
       return env.STORE.get(env.STORE.idFromName("bio"))
-        .fetch(new Request("http://do/" + u.pathname.slice(7) + u.search));
+        /* D-177: the request itself is the init, so a POST reaches the DO with
+           its body — section 9 records a capture's locator through the SAME
+           internal route op=acquire calls. A GET forwards exactly as before. */
+        .fetch(new Request("http://do/" + u.pathname.slice(7) + u.search, req));
     return worker.fetch(req, env, ctx);
   },
 };
@@ -111,6 +115,8 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
 /* The DO-INTERNAL derivation itself — the authority the op is measured against,
    reached by a door no caller has. */
 const doGet = async (p) => (await (await mf.dispatchFetch(`http://x/probe/${p}`)).json()).result;
+const doPost = async (p, body) => (await (await mf.dispatchFetch(`http://x/probe/${p}`,
+  { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })).json()).result;
 
 /* `weakest?.` throughout, ON PURPOSE and for one reason: this suite's own
    negative control replaces the derivation with the CACHED COLUMNS, which carry
@@ -682,6 +688,115 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
     /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(STORE_SRC), true);
   t("and so does op=suggest's candidate pair",
     /#strengthWalk\(target, 0, Store\.QUEUE_ANCESTOR_DEPTH, walkLegs\)/.test(STORE_SRC), true);
+}
+
+console.log("\n--- 9. D-177: a DIRECT capture's grade is MEASURED from its fetch path, not authored ---");
+{
+  /* THE ROW'S ACCEPTS-WHEN, DRIVEN AS A BEFORE AND AN AFTER over the SAME leg:
+     a member-authored letter WEAKER than the ceiling on a document this
+     instance fetched itself. Before the record holds the fetch it reads the
+     member's letter (8c's rule, which still holds for an unrecorded route);
+     after `captured_locators` records a DIRECT fetch of that capture it reads
+     the earned letter. The only act between the two is the locator row, and it
+     is written through the SAME internal route op=acquire calls
+     (recordcapturedlocator), because this suite cannot make a network fetch.
+     THE LETTERS ARE READ FROM THE REGISTRY, never typed as the ceiling: the
+     measured letter is whatever the record says a direct capture earns. */
+  const HEAD9 = new Map();
+  /* Section 8's measured chain, restated: that block's consts are scoped to it. */
+  const OCR_C = [{ step: "pixels" },
+    { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
+  const cap9 = (id) => sha(`capture-of-d177-${id}`);
+  const promote9 = async (id, chain) => {
+    const prov = JSON.stringify({ documents: [{
+      capture: { sha256: cap9(id), encoding: "binary", bytes: 10 },
+      reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+                 entities: [], facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } }] });
+    const text = infoMd(id);
+    const r = await POST(`op=promote&token=${carol}`, {
+      bundleId: id, base: HEAD9.get(id) ?? null, snapKey: `${id}-${sha(String(chain)).slice(0, 8)}`, author: "suite",
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+              { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+      register: [{ path: "snapshots/doc.bin", sha256: cap9(id), encoding: "binary", bytes: 10 }],
+      meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+              current_state: "collected", created: NOW, last_updated: LATER } });
+    if (!r.result?.ok) throw new Error(`promote9 ${id}: ${JSON.stringify(r).slice(0, 600)}`);
+    HEAD9.set(id, r.result.bundleSha);
+  };
+  const locate = async (id, via) => {
+    const r = await doPost("recordcapturedlocator", {
+      address: `https://example.gov/${id}.pdf`, addressNorm: `example.gov/${id}.pdf`,
+      captureSha: cap9(id), retrieved: NOW, via });
+    if (!r || r.recorded === false) throw new Error(`locate ${id}: ${JSON.stringify(r)}`);
+  };
+  const reg9 = async (inq, doc) => {
+    const r = (await GET(`op=earnedbasis&token=${carol}&id=${inq}`)).body.result;
+    return (r && r.earned && r.earned.capture ? r.earned.capture[doc] : null) ?? null;
+  };
+
+  /* ---- 9a. THE HEADLINE. */
+  const D_DIR = "INFO-2026-0920-fetched-direct";
+  const I_DIR = "INQ-2026-0920-weaker-on-direct";
+  await promote9(D_DIR, undefined);
+  await promote(carol, I_DIR, inquiryMd(I_DIR, { refs: [D_DIR], legs: [g(D_DIR, "C", "capture")] }), "inquiry");
+  const dirBefore = (await pair(carol, I_DIR)).body.result.capture;
+  const regBefore = await reg9(I_DIR, D_DIR);
+  t("BEFORE the fetch is recorded the route is unrecorded: the member's weaker letter stands and the entry has NO fetch key",
+    [dirBefore.grade, "fetch" in (regBefore ?? {})], ["C", false]);
+  await locate(D_DIR, "direct");
+  const dirAfter = (await pair(carol, I_DIR)).body.result.capture;
+  const regAfter = await reg9(I_DIR, D_DIR);
+  t("the registry now MEASURES the document's capture grade from its direct fetch",
+    [regAfter?.fetch?.determined, regAfter?.fetch?.direct, regAfter?.fetch?.earned === regAfter?.grade],
+    [true, 1, true]);
+  /* THE ACCEPTS-WHEN, with BOTH figures and the authored one labelled, so the
+     negative control (read the authored grade again) fails naming what it read. */
+  t("A MEMBER-AUTHORED WEAKER LETTER ON A DIRECT CAPTURE READS THE EARNED GRADE, NOT THE AUTHORED ONE",
+    { walk: dirAfter.grade, authored: "C" }, { walk: regAfter?.fetch?.earned ?? "(no earned grade)", authored: "C" });
+  t("and the walk says WHY, in the registry's own words",
+    [/record measured/.test(dirAfter.weakest?.why ?? ""), /directly from its own address/.test(dirAfter.weakest?.why ?? "")],
+    [true, true]);
+  t("the leg's own AUTHORED letter is untouched in the record",
+    (await doGet(`basis?id=${I_DIR}`)).legs.map((l) => l.grade), ["C"]);
+
+  /* ---- 9b. THE MEASURED LETTER FOLLOWS THE CHAIN (DEC-4): a direct capture
+     whose text a machine derived at a MEASURED fidelity earns that fidelity,
+     not the byte grade, and a leg at the fidelity letter reads unchanged. */
+  const D_DOCR = "INFO-2026-0921-direct-ocrd";
+  const I_DOCR = "INQ-2026-0921-on-direct-ocrd";
+  await promote9(D_DOCR, OCR_C);
+  await locate(D_DOCR, "direct");
+  await promote(carol, I_DOCR, inquiryMd(I_DOCR, { refs: [D_DOCR], legs: [g(D_DOCR, "C", "capture")] }), "inquiry");
+  const docrReg = await reg9(I_DOCR, D_DOCR);
+  const docrWalk = (await pair(carol, I_DOCR)).body.result.capture;
+  t("a direct capture's measured letter is its fidelity bound, and a leg AT it reads unchanged with no reason",
+    [docrReg?.fetch?.earned, docrReg?.grade, docrWalk.grade, docrWalk.weakest?.why ?? null], ["C", "C", "C", null]);
+
+  /* ---- 9c. OVER-STRICTNESS: a leg AT the measured letter on a direct capture
+     is byte-for-byte the pre-item answer — no reason, nothing raised. */
+  const I_AT = "INQ-2026-0922-at-the-measured-letter";
+  await promote(carol, I_AT, inquiryMd(I_AT, { refs: [D_DIR], legs: [g(D_DIR, regAfter.fetch.earned, "capture")] }), "inquiry");
+  const atWalk = (await pair(carol, I_AT)).body.result.capture;
+  t("a leg stating exactly the measured letter reads it with NO reason attached",
+    [atWalk.grade, atWalk.weakest?.why ?? null], [regAfter.fetch.earned, null]);
+
+  /* ---- 9d. A NON-DIRECT ROUTE IS UNDETERMINED, STATED, AND RAISES NOTHING.
+     What an archive-served capture earns is a doctrine value no ruling names
+     (REC-50's precedent; D-177's residue is with Bob). So the member's weaker
+     letter STANDS, and the registry names the route and why it cannot grade it. */
+  const D_ARC = "INFO-2026-0923-archive-only";
+  const I_ARC = "INQ-2026-0923-weaker-on-archive";
+  await promote9(D_ARC, undefined);
+  await locate(D_ARC, "archive.org");
+  await promote(carol, I_ARC, inquiryMd(I_ARC, { refs: [D_ARC], legs: [g(D_ARC, "C", "capture")] }), "inquiry");
+  const arcReg = await reg9(I_ARC, D_ARC);
+  const arcWalk = (await pair(carol, I_ARC)).body.result.capture;
+  t("an archive-only document's route is NAMED and its grade UNDETERMINED, with the reason coded",
+    [arcReg?.fetch?.determined, arcReg?.fetch?.earned, arcReg?.fetch?.other_via, arcReg?.fetch?.undetermined_because,
+     /no ruling names/.test(arcReg?.fetch?.why ?? "")],
+    [false, null, ["archive.org"], "CAPTURE_GRADE_VIA_UNRULED", true]);
+  t("and the member's weaker letter on it STANDS — nothing is invented for an unruled route",
+    [arcWalk.grade, arcWalk.weakest?.why ?? null], ["C", null]);
 }
 
 await mf.dispose();

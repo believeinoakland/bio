@@ -56093,7 +56093,9 @@ ${words}`;
     const perBundle = /* @__PURE__ */ new Map();
     for (const r of this.#rows(
       `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
-              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
+              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored,
+              (SELECT group_concat(DISTINCT cl.via) FROM captured_locators cl
+                WHERE cl.capture_sha = u.capture_sha) AS vias FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (SELECT value FROM json_each(?))
@@ -56104,7 +56106,15 @@ ${words}`;
     )) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
+        perBundle.set(r.bundle_id, {
+          n: 0,
+          bound: null,
+          transcribed: 0,
+          authored: 0,
+          direct: 0,
+          measured: null,
+          otherVia: /* @__PURE__ */ new Set()
+        });
       const e = perBundle.get(r.bundle_id);
       if (r.authored === 1) {
         e.authored++;
@@ -56114,6 +56124,11 @@ ${words}`;
       const chain2 = safeJson(r.chain);
       const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
       if (isTranscribed(chain2)) e.transcribed++;
+      const vias = String(r.vias || "").split(",").filter(Boolean);
+      if (vias.includes("direct")) {
+        e.direct++;
+        if (b != null) e.measured = e.measured == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.measured) ? b : e.measured;
+      } else for (const v of vias) e.otherVia.add(v);
       if (b == null) continue;
       e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
     }
@@ -56191,6 +56206,19 @@ ${words}`;
         bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
         why: `${captureWord}, and the bytes as this instance fetched them would be worth ${EARNED_CAPTURE_CEILING} \u2014 but this document's TEXT was derived by a machine and that derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.`,
         ceiling
+      };
+    }
+    for (const [bundleId, e] of perBundle) {
+      const entry = out.earned.capture[bundleId];
+      if (!entry || entry.captures === 0 || !e.direct && !e.otherVia.size) continue;
+      const other = [...e.otherVia].sort();
+      entry.fetch = {
+        direct: e.direct,
+        other_via: other,
+        earned: e.measured,
+        determined: e.measured != null,
+        ...e.measured == null ? { undetermined_because: e.direct ? "CAPTURE_FIDELITY_UNMEASURED" : "CAPTURE_GRADE_VIA_UNRULED" } : {},
+        why: e.measured != null ? `this instance fetched ${bundleId} directly from its own address (${e.direct} capture(s)), so the record MEASURES its capture grade at ${e.measured} rather than taking it from a member: a leg on it is read at that letter, never below it.` : e.direct ? `this instance fetched ${bundleId} directly, but every direct capture's text is unmeasured, so no capture grade is measured for it.` : `every capture of ${bundleId} the record holds was served by someone other than its publisher (${other.join(", ")}), and what such a capture earns on the capture axis is UNDETERMINED: no ruling names that grade yet. A leg on it keeps the letter its author gave, under the ceiling.`
       };
     }
     if (Array.isArray(contentIds) && contentIds.length)
@@ -61157,6 +61185,12 @@ ${words}`;
       return {
         grade: null,
         why: earned.why ?? `what this document's capture can support is undetermined, so this leg claims nothing on the capture axis`
+      };
+    const measured = earned.fetch && earned.fetch.earned != null ? earned.fetch.earned : null;
+    if (measured != null && _Store.#GRADE_RANK[stated] < _Store.#GRADE_RANK[measured])
+      return {
+        grade: measured,
+        why: `the record measured ${targetId} at ${measured} on the capture axis, so this leg is read at ${measured} here and not at the ${stated} it carries. ${earned.fetch.why}`
       };
     if (_Store.#GRADE_RANK[stated] <= _Store.#GRADE_RANK[earned.grade]) return null;
     return {
