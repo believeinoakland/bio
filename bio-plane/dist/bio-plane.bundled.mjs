@@ -25975,6 +25975,8 @@ function chainKindFor(chain2, target = null) {
   if (target === CHAIN_LAST || page == null && derivations.every((s) => extentOf(s) === "all"))
     return derivations.length ? derivations[derivations.length - 1].step : null;
   if (page == null) {
+    const lastScoped = derivations.findLastIndex((s) => extentOf(s) !== "all");
+    if (derivations.findIndex((s) => extentOf(s) === "all") > -1 && derivations.findIndex((s) => extentOf(s) === "all") < lastScoped) return null;
     const pages = /* @__PURE__ */ new Set();
     for (const s of derivations) {
       const ext = extentOf(s);
@@ -34017,7 +34019,7 @@ var Store = class _Store extends DurableObject {
            rather than only in the design, because a member reading this list is
            exactly the reader who would otherwise take an empty `content:` answer
            for an empty record (CONTENT-SEARCH-DESIGN.md sections 1 and 3). */
-        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by how the passage's page was read (D-686: the last step covering it), content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
+        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by how the passage's page was read (D-686: the last step covering it), content:mixed for a passage with no page (a whole document) read by more than one kind of step -- it CONTAINS machine-read text, and content:ocr does not name it: its pages do, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
         "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
         /* REC-121 / IC-131: the chain's THIRD answer, stated in the published grammar

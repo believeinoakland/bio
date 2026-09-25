@@ -853,7 +853,8 @@ export const CHAIN_LAST = "chain";
  *                   covers. BOB #35 09:35Z: the single kind when every page the chain's scoped steps name was
  *                   read the same way, and `mixed` when they differ — NOT null, because the record knows the
  *                   answer. A chain with no scoped step has one provenance and answers its last derivation
- *                   step, as it always did. A page among them that is undetermined makes the unit so.
+ *                   step, as it always did. A page among them that is undetermined makes the unit so, and so
+ *                   does an unscoped step BEFORE a scoped one (D-710: the pages only it read are uncounted).
  *    `CHAIN_LAST`   `capture_text`'s document-level fact: the chain's last derivation step, whatever it covers.
  *
  *  A chain holding a step of no known kind is undetermined. A VERIFICATION step is not how the text was
@@ -873,6 +874,15 @@ export function chainKindFor(chain, target = null) {
   if (target === CHAIN_LAST || (page == null && derivations.every((s) => extentOf(s) === "all")))
     return derivations.length ? derivations[derivations.length - 1].step : null;
   if (page == null) {
+    /* D-710 — AN UNSCOPED STEP BEFORE A SCOPED ONE. It read every page, so any page no scoped step names was
+       read by it and by nothing later — and whether such a page exists needs the page count, which the chain
+       does not hold. Built from the named pages alone, `[layer, pixels(p1), ocr(p1)]` read `ocr` for a document
+       whose page 0 only the layer read: D-686's overstatement one grain up, on a chain `checkChain` admits
+       (`mergedChain` never builds it; a caller's `text_source` can). UNDETERMINED, stated, never guessed in
+       either direction. An unscoped step LAST covers every page last, so the per-page walk answers it. */
+    const lastScoped = derivations.findLastIndex((s) => extentOf(s) !== "all");
+    if (derivations.findIndex((s) => extentOf(s) === "all") > -1
+        && derivations.findIndex((s) => extentOf(s) === "all") < lastScoped) return null;
     /* EVERY PAGE THE CHAIN NAMES, each asked the page question below — so the whole-unit answer is built
        from the per-page answers and cannot disagree with them. */
     const pages = new Set();

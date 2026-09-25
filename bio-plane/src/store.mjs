@@ -2902,6 +2902,10 @@ export class Store extends DurableObject {
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
         + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
         + "record has replaced, content:machine by who minted it, content:ocr by how the passage's page was read (D-686: the last step covering it), "
+        /* D-710 (BOB #35 09:35Z): the vocabulary's one word that is not a step, said where the steps are, and
+           said as CONTAINING machine-read text (DEC-4), the reading every labelling reader must give it. */
+        + "content:mixed for a passage with no page (a whole document) read by more than one kind of step -- it "
+        + "CONTAINS machine-read text, and content:ocr does not name it: its pages do, "
         + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked "
         + "citable in them, so an empty answer is a fact about citation and never about what a document says",
