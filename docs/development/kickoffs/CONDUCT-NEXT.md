@@ -37,7 +37,7 @@ D-718 689cd6d1 + D-719 8ab99e48 → D-732 f64bad66 (on D-700) · D-709 97e2925c 
 M0-172 2f64cd95 · M0-171 4a13c257 (report not seen). Anchor-drift re-anchors, all on M0-197 (keep every anchordrift.json
 deletion; their allowances go STALE -> drop): D-630 c33a2194 · D-631 3092ad35 · D-632 1ca6abd4 · D-634 8904b832 ·
 D-636 54490e02 · D-637 1c4a573e · D-638 238517e1 · D-639 80a66f56 · D-640 fbf2e6a4 · D-642 d6a6e52f (NOT FLIPPED) ·
-D-644 eb82f304 · D-645 995f6b3f · D-646 78d04f15 · D-647 cdaa1b3b · D-648 1bbab3f1 · D-650 a57fa715. Others may be running.
+D-644 eb82f304 · D-645 995f6b3f · D-646 78d04f15 · D-647 cdaa1b3b · D-648 1bbab3f1 · D-650 a57fa715. D-643 480c206b (on M0-197; report pending) · D-729 72e123e2 (on D-702; report pending). Others may be running.
 - batch31 ICs: the six moved out of batch30 (IC-366 D-701, IC-367 D-706, IC-369 D-668, IC-391 D-673, IC-393 D-703, IC-396
   D-340) are recoverable from `land/conduct/c23-batch30-ics` @ **8f6fd690** (before the trim). Re-base their versions on
   batch30's I3 150.12.0 / I5 8.6.0. Plus new ICs for every late MAJOR above.
