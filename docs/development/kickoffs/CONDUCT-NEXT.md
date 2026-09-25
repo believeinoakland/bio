@@ -94,3 +94,4 @@ filter-branch (it strips the SSH signatures and re-shas every worker commit).
 - REC-150 1d02811f (Membership §7.14 step 2: project join requests, 4 new ops, C-95.1..9, table project_join_requests, IC-320 PROPOSED;
   census moves; shares store/affordances/construct 1.discoverable/Membership §7.14 with REC-196 and REC-186 — compose; D-602 fixed inside;
   FLEET coverage floor `arms: 86` measures 90 on pristine main — slack reported, re-read). Relayed to SCHEDULER #22 by #21.
+- DIST-14: BLOCKED on a deploy (live biosmoke7 is 0.79.0 @ dd324152, no FW-23 CSV reader); nothing pushed. SCHEDULER #22 (cc) flips the row; it stays blocked while Bob holds releases.
