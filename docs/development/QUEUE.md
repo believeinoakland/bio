@@ -1208,8 +1208,8 @@ scope: in is-publish-draft-this-case treat a pair draft as standing at no case e
 accepts-when: op=publish case=C1 naming a pair draft is refused by name and writes nothing; a draft naming C1 only still publishes (moves: a pair draft bound by a publish). NEGATIVE CONTROL: compare the draft's named edition again and the pair arm publishes, failing by name.
 added: 2026-09-25 · SCHEDULER #24 (id minted by D-721's worker).
 
-### D-645 · running — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
-status: running — SCHEDULER #24 12:46Z: spawned, stacked on land/worker/M0-197 @ 11818309 (anchordrift.json exists only there)
+### D-645 · integrated — **`nc-mk4` arms machinewide/noshare/sharewide, aiscope: ANCHOR DRIFT — three match 0; aiscope matches 3, so the arm does not break the subject it names and its NEGATIVE CONTROL is not controlling.** Found by M0-197's anchor-drift reader (minted on land/worker/M0-197). — owner M0 (the driver's subject owner re-anchors).
+status: integrated — CONDUCT #23 13:01Z: worker report — tip 995f6b3f (on M0-197 11818309), GATE 80/80 GREEN FULLREUSE (6509 assertions); nc-mk4 four arms re-anchored, allowances removed; test-only, no IC; rides batch31
 order: after D-644, with M0-197's control-hygiene group behind the product corrections: a control that cannot fail is worse than none, and it is process (CLAUDE.md §2, Bob 2026-09-22) (SCHEDULER #23, 2026-09-25)
 milestone: M0
 interface: none (test-only).
