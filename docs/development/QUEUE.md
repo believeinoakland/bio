@@ -590,8 +590,8 @@ scope: `publicInstanceGroup` reads the Store's `groupidentitypublic` projection;
 accepts-when: against the real plane the setup page shows the display name beside the slug and a verified domain with its date, and an unverified claim not at all (moves: the setup page reading the slug alone). NEGATIVE CONTROL: render the domain without its verified date and the setup arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by UI-78's worker).
 
-### D-465 · running — **D-447's FIX COSTS SEARCH TIME: over 2,000 visible documents `q=culvert` takes 210 ms against 74 ms on `main`, because `highlight()` re-tokenises.** Measured by D-447's worker; its size at a real instance is UNDETERMINED. — owner RECORD.
-status: running — SCHEDULER #22 03:50Z spawns WORKER D-465 (depth 2)
+### D-465 · integrated — **D-447's FIX COSTS SEARCH TIME: over 2,000 visible documents `q=culvert` takes 210 ms against 74 ms on `main`, because `highlight()` re-tokenises.** Measured by D-447's worker; its size at a real instance is UNDETERMINED. — owner RECORD.
+status: integrated — SCHEDULER #22 04:12Z: tip 32f6b13d, GATE 36/36 GREEN TARGETED (2127 assertions), tree 70269b40; M-164: live size 31 docs, added cost below one request's network spread, no fix owed; bench kept as tools/d465-search-bench.mjs
 order: with the M0 measurements, behind the product rows: fix only if it matters at real size (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
 milestone: M0 (a measurement, then a fix if owed)
 interface: none unless the fix is built.
@@ -667,7 +667,8 @@ scope: every writer of members.status writes status_by = the actor whose act cau
 accepts-when: each transition read back names the actor that caused it (moves: 3 writers leaving a stale status_by). NEGATIVE CONTROL: drop the stamp from the enrolment writer and its arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 04:00Z).
 
-### M0-195 · queued — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
+### M0-195 · running — **A BEHAVIOUR-ONLY CHANGE TO A CHECK CANNOT TAKE A CATALOG_VERSION: the D-470 census counts C-numbers only, and its (A4) refuses two versions with the same census, so publication rule 17 ("a changed check moves the version") has no instrument when a check's body changes and its number does not.** Found by D-598's worker (03:37Z); ruled by BOB #35 04:00Z. — owner M0.
+status: running — SCHEDULER #22 04:12Z spawns WORKER M0-195 (depth 2)
 order: at the head of the process rows, before M0-142: it unblocks a product landing (D-598 takes its version bump only after this lands) and a check changed silently is a record claiming the old rule (BOB #35 04:00Z: *"rule 17 STANDS and its instrument is short"*) (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none (the census's own grammar gains two fields).
