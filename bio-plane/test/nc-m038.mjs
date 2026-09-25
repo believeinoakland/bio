@@ -20,6 +20,11 @@
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("m038");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
@@ -120,7 +125,7 @@ if (base.fail !== 0 || base.pass < 1) { console.log("REFUSING TO ARM: the baseli
 
 let armed = 0;
 for (const [tag, label, parts, declared] of ARMS) {
-  const pristine = `${STORE}.pristine-m038-arm${tag}`;
+  const pristine = penPath(STORE, `pristine-m038-arm${tag}`);
   copyFileSync(STORE, pristine);
   let text = readFileSync(STORE, "utf8");
   console.log(`\n=== ARM (${tag}) ${label}`);
@@ -160,7 +165,7 @@ for (const [tag, label, parts, declared] of ARMS) {
   unlinkSync(pristine);
 }
 console.log(`\n${armed} of ${ARMS.length} arms armed. Pristine copies left behind: `
-          + `${ARMS.map(([tag]) => `${STORE}.pristine-m038-arm${tag}`).filter(existsSync).length} (must be 0).`);
+          + `${ARMS.map(([tag]) => penPath(STORE, `pristine-m038-arm${tag}`)).filter(existsSync).length} (must be 0).`);
 const after = run("derivation-bounds");
 console.log(`CLOSING BASELINE — derivation-bounds ${after.pass}/${after.fail}, census ${after.census} `
           + `(must equal the opening row ${base.pass}/${base.fail}, census ${base.census})`);

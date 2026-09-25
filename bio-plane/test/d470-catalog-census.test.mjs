@@ -317,6 +317,28 @@ const CATALOG_CENSUS = {
 
   /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510's rows over 1.27.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
   "1.28.0": { count: 461, digest: "3c28396e5c9e7c561a01625f9fe1f2965799f661b0d9a595d3ae752e21c61d89" },
+  /* 1.26.0 (D-463, 2026-09-24, REBASED onto main @ 1a7f0bcc): TWO ARRIVALS, no departures — C-78.3
+     NAMESPACE_CONFINED and C-29.10 AI_CONFINEMENT_NOT_SCRATCH, the confined-credential item's own rows.
+     457 -> 459, the count AND the digest taken from THIS SUITE'S OWN PRINT on the rebased tree and never
+     arithmetic (the digest cannot be computed by hand, which is why it is pinned beside the count).
+     **THIS BRANCH'S OWN 1.24.0 = {449, 3821d157…} IS DROPPED:** it was the census of this item's rows over
+     the OLD base e9b21be6, and main has since published a different catalogue under 1.24.0 (D-507 + D-508)
+     and another under 1.25.0 (REC-211). ONE VERSION NAMES ONE CATALOGUE, which is this table's whole rule,
+     so the landed rows stand and this item takes the next number. */
+
+  /* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463's rows over 1.28.0; its branch row DROPPED, comment kept; count and digest are THIS SUITE'S PRINT on the merged tree. */
+  "1.29.0": { count: 466, digest: "82d13f0339c9228ff961949ec5e5f804d77c27a7e8aabd8d4f401bad4ba2e8e6" },
+  /* 1.26.0 (D-513, 2026-09-24, branch land/worker/D-513): `op=knock`'s three pre-store refusals take
+     rows in the EXISTING KNOCK_CHECKS family — C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4
+     KNOCK_PAYLOAD_TOO_LARGE, C-85.5 KNOCK_EMPTY — so 457 -> 460. THREE ARRIVALS, NO DEPARTURES, so the
+     bump is ADDITIVE and MINOR on the precedent above. Count and digest are THIS SUITE'S OWN PRINT on
+     the item's tree over origin/main 1a7f0bcc0, never 457 + 3. Every earlier row STAYS: each is the
+     census of the catalogue that stamped it, and a ratification is not walked back. CONDUCT #20's
+     c20-batch25 moves this same constant in parallel; ONE VERSION NAMES ONE CATALOGUE (A4), so at
+     integration CONDUCT takes the next number once and records what THIS SUITE PRINTS on the merged
+     tree — the figure below is this branch's catalogue and is not the union's. */
+
+  /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -414,8 +436,20 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    key on purpose — a pin derived from the thing it pins agrees for free (CLAUDE.md
    §5), so this line is edited by hand in the same commit that moves the constant,
    and going red here is the arm working. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.28.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.28.0)", "1.28.0"]);
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.29.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.29.0)", "1.29.0"]);
+/* CORRECTED AGAIN by D-513 (2026-09-24), never exempted, and the reason the old value was right when
+   written is unchanged: at c20-batch23 the catalogue this pin named WAS 1.25.0's. D-513 gives
+   `op=knock`'s three pre-store refusals catalogue rows (C-85.3, C-85.4, C-85.5), so the catalogue under
+   the stamp moved and the stamp moved with it. The label in the first argument lags the assertion on
+   purpose — it is the sentence a reader sees when this line goes red — and both are edited by hand in
+   the same commit that moves the constant, because a pin derived from the thing it pins agrees for
+   free (CLAUDE.md §5). */
+/* D-513's own A5 assertion (1.26.0) is SUPERSEDED at c20-batch27 (CONDUCT #20), not exempted: D-513's
+   checks ride the union's 1.29.0 with D-463's, and the ONE A5 assertion above pins that stamp. Two
+   assertions pinning two versions of one constant could never both pass. */
+
+  /* D-513's rows ride 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27) beside D-463's; its branch row (1.26.0) DROPPED, comment kept. */
 
 /* (A6) OVER-STRICTNESS. Correct work in spellings this suite did not anticipate
    must be SEEN: arguments across lines, extra whitespace, a `return f(` rather

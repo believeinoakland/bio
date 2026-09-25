@@ -20,6 +20,7 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const STORE = HERE + "../src/store.mjs";
@@ -90,6 +91,7 @@ const ARMS = [
 const want = process.argv.slice(2).map(Number).filter(Boolean);
 const arms = want.length ? ARMS.filter((a) => want.includes(a.n)) : ARMS;
 
+const PEN = controlPen("rec66");
 console.log("=== BASELINE (no arm) ===");
 for (const key of ["derivation", "meaning", "bounds"]) {
   const r = runSuite(SUITES[key]);
@@ -97,7 +99,7 @@ for (const key of ["derivation", "meaning", "bounds"]) {
 }
 
 for (const arm of arms) {
-  const pristine = `${arm.file}.nc-rec66-arm${arm.n}.pristine`;
+  const pristine = `${PEN}/${arm.file.split("/").pop()}.nc-rec66-arm${arm.n}.pristine`;
   copyFileSync(arm.file, pristine);
   const before = sha(arm.file);
   let src = readFileSync(arm.file, "utf8");

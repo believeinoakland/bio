@@ -365,6 +365,14 @@ export const CONTENT_AXIS_UNDETERMINED = "undetermined";
    produced and predates this log entirely. The store computes which cause
    applies and passes it in; this function holds the rule about what each cause
    LICENSES, so the two cannot drift. */
+/** D-516 / BOB #33 (2026-09-24 17:58Z) — THE CAUSE WORD FOR THE ONE THING THE
+ *  STORED WATERMARK CANNOT SETTLE, spelled ONCE because it is keyed into two
+ *  vocabularies, read by three consumers and compared at one site. A word spelled
+ *  at each of those is the mirror-and-drift class this file refuses everywhere
+ *  else, and `MEANING_MISSING_ROW_CAUSES` exists at all because REC-95 refused it
+ *  for the other three. */
+export const WATERMARK_BAND_CAUSE = "watermark_band";
+
 export const MISSING_ROW_CAUSES = {
   pre_log:      "this capture was extracted BEFORE the observation log carried the content level, "
               + "so the look is recorded in the readings table and not here. It is not a capture "
@@ -388,6 +396,19 @@ export const MISSING_ROW_CAUSES = {
   never_looked: "the log existed and was not purged over this capture's lifetime, and the record "
               + "holds nothing else about its text -- so nobody has tried to extract it. This is "
               + "the one cause that licenses a positive statement",
+  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
+     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
+     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
+     because the alternative was the reader PICKING between them. `not_ruled_out`
+     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
+  [WATERMARK_BAND_CAUSE]:
+                "this capture entered the record in the clock second IMMEDIATELY BEFORE the "
+              + "earliest content-level row this log holds, and `observation_log.at` stores whole "
+              + "seconds -- so the stored watermark denotes a one-second interval and this record "
+              + "cannot tell whether the capture entered before that row or within the same second "
+              + "of it. Those are different facts and this record DOES NOT PICK between them. The "
+              + "uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S "
+              + "`not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW",
 };
 
 /** The per-capture content-axis state, computed in ONE place.
@@ -727,6 +748,19 @@ export const MEANING_MISSING_ROW_CAUSES = {
   never_looked: "the log carried this level over this subject's whole lifetime and was not purged "
               + "since, AND the record holds no product of such a look -- so nobody has looked. "
               + "This is the one cause that licenses a positive statement",
+  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
+     the row it is measured against differs, which is A3b's rule applied to the
+     word this item adds rather than inherited by it. */
+  [WATERMARK_BAND_CAUSE]:
+                "this subject entered the record in the clock second IMMEDIATELY BEFORE the "
+              + "earliest meaning-level row this log holds, and `observation_log.at` stores whole "
+              + "seconds -- so the stored watermark denotes a one-second interval and this record "
+              + "cannot tell whether the subject entered before that row or within the same second "
+              + "of it. Those are different facts and this record DOES NOT PICK between them; at a "
+              + "reference or an entity a pre-log look that found NOTHING is live in the set as "
+              + "well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and "
+              + "`evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE "
+              + "NARROWED IT",
 };
 
 /** THE FINDING THIS LEVEL PAID FOR, AND IT IS A REAL LIMIT RATHER THAN A CAVEAT.
@@ -871,7 +905,17 @@ export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined }
   /* AN UNRECOGNISED CAUSE WORD TAKES THE WIDEST SET, never the narrowest — the
      same shape as `#missingMeaningCause`'s unrecognised-subject-kind default one
      call up, pointed at the cause vocabulary instead of at the subject one. */
-  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  /* D-516 — THE BAND TAKES `purged`'s SET, AND IT IS DERIVED RATHER THAN CHOSEN.
+     Inside the band the two live readings are (a) the subject entered at or within
+     the tie of the first row, which is `never_looked`, and (b) it entered more than
+     the watermark's uncertainty before it, which is this branch's own bucket and
+     whose set ALREADY CONTAINS `never_looked`. The union of the two is therefore
+     exactly (b)'s set, at both sidednesses — so the band does not widen the claim
+     and does not narrow it. Spelled as a fall-through to the ONE branch rather than
+     as a second copy of its two returns: they are the same set for the same reason,
+     and two spellings of one set is how they stop being the same set. */
+  if (missingCause !== "purged" && missingCause !== WATERMARK_BAND_CAUSE)
+    return [...ALL_MISSING_ROW_CAUSES];
   /* TWO-SIDED: cause (1) as §5.1 DEFINES it requires the evidence table to hold
      what the look produced, and the probe just missed. So a bare pre-log look is
      excluded — it survives only THROUGH a purge, which is cause (2) and is
@@ -976,15 +1020,86 @@ export function watermarkUncertaintyMs(firstAt) {
   return WATERMARK_HAS_FRACTION.test(String(firstAt ?? "")) ? 0 : WATERMARK_SECOND_MS;
 }
 
+/** D-516 / BOB #33 (2026-09-24 17:58Z) — **THE THIRD ANSWER, AND IT IS THE ONE
+ *  THE RECORD OWED.**
+ *
+ *  D-500 left this rule with TWO answers and a residue it NAMED: *a subject
+ *  entering 1–2 s before a level's first row can still classify either way
+ *  depending on where the second fell* (`observation-log.test.mjs` arm M3). Two
+ *  answers over a value that admits three means the record was choosing between
+ *  two claims it cannot tell apart, which is the one thing `CLAUDE.md` §2 refuses
+ *  ahead of a missing feature. **Bob ruled that the reader STATES undetermined
+ *  inside the band rather than picking**, and that `observation_log.at` stays at
+ *  whole-second precision: the column does not move, the comparison does.
+ *
+ *  **THE THREE ANSWERS ARE READ OFF THE INTERVAL, exactly as D-500 said the
+ *  coarser side must be read, and the third is what that reading always implied.**
+ *  A stored `…:15Z` says the first row F lies in `[…:15.000Z, …:16.000Z)`. The
+ *  question REC-94 settled is whether the subject entered AT OR AFTER F, or within
+ *  the same clock second of it (simultaneity — the content writer runs inside
+ *  promote's transaction). Against an interval that question has three answers and
+ *  not two:
+ *
+ *    AFTER  (`entered >= first`) — entered and F are in the same second or entered
+ *             is later, so REC-94's tie or the plain order settles it FOR EVERY F
+ *             the interval admits. Cause (3) is reachable.
+ *    BEFORE (`entered < first - u`) — entered is more than the whole interval
+ *             earlier, so it precedes F and is outside the tie FOR EVERY F. The
+ *             weak bucket, unchanged.
+ *    WITHIN THE BAND — entered falls in the one clock second immediately before
+ *             the watermark's own second. Whether the tie reaches it depends on
+ *             where inside its second F actually was, which is the digit the
+ *             column does not store. **The record says so instead of answering.**
+ *
+ *  **WHAT MOVED AND WHAT DID NOT, stated as a partition rather than asserted.**
+ *  D-500's `entered >= first - u` is exactly `AFTER ∪ WITHIN_BAND`, and its
+ *  negation is exactly `BEFORE`. So no pair that answered `purged` moves, no pair
+ *  that answers `never_looked` now answered anything else before, and the ONLY
+ *  pairs that move are the band's — from a positive statement to a stated
+ *  undetermined. That is BOB #33's *pairs outside the band are unmoved*, by
+ *  construction rather than by measurement.
+ *
+ *  **AND THE DETERMINISM BOB #32 RULED FOR IS NOT SPENT — IT IS SHARPENED, which
+ *  is worth stating because a three-way answer LOOKS like a retreat from it.**
+ *  D-500 bought determinism by picking a side for the whole band. What survives
+ *  here is stronger and is proved for EVERY gap rather than for a corpus: the two
+ *  regions that make a claim, `AFTER` and `BEFORE`, are separated by an interval
+ *  of width `u`, and a subject at a fixed true distance from F sweeps a window of
+ *  width exactly `u` as the clock second moves under it — a half-open window of
+ *  width `u` cannot meet both sides. **So no pair can EVER flip between
+ *  `never_looked` and `purged` on where the second fell.** A pair may weaken from
+ *  a claim to `within_band`; it can never swap one claim for the other. M3's
+ *  measured failure is that swap, and this is what closes it.
+ *
+ *  **WHAT IS STILL NOT CLOSED, and it is D-500's ceiling narrowed rather than
+ *  lifted.** The band itself is still entered and left as the clock second moves:
+ *  a subject entering a few milliseconds before F reads `after` on most placements
+ *  and `within_band` on the rest. That is a weakening, never a wrong claim, and
+ *  closing it needs the watermark stored WITH MILLISECONDS — which BOB #33 ruled
+ *  against for the reason the column's convention gives (`ISO_TS_RE`, ~30 gate
+ *  checks) and which is an interface question, not this rule's. Driven as a NAMED
+ *  ceiling, arm M3b, rather than left to be discovered.
+ *
+ *  A FRACTIONAL WATERMARK STILL COLLAPSES TO TWO ANSWERS WITH NO EDIT HERE: `u` is
+ *  0, the interval is a point, and `within_band` becomes unreachable — the same
+ *  read-it-off-the-value property D-500 built, inherited rather than re-stated. */
+export const WATERMARK_AFTER = "after";
+export const WATERMARK_BEFORE = "before";
+export const WATERMARK_WITHIN_BAND = "within_band";
+
 export function enteredAfterFirstRow(enteredAt, firstAt) {
   const entered = Date.parse(String(enteredAt ?? ""));
   const first = Date.parse(String(firstAt ?? ""));
-  /* AN UNPARSEABLE SIDE NEVER REACHES THE POSITIVE STATEMENT. Both callers have
-     already answered `purged` for an absent value before they get here; this is the
-     floor that makes that true AT THE RULE rather than by the courtesy of the
-     caller — the shape `checkObservation` takes one screen down. */
-  if (!Number.isFinite(entered) || !Number.isFinite(first)) return false;
-  return entered >= first - watermarkUncertaintyMs(firstAt);
+  /* AN UNPARSEABLE SIDE NEVER REACHES THE POSITIVE STATEMENT, and after D-516 it
+     does not reach the BAND either — a value nobody can read is not a value whose
+     precision we are entitled to plead. Both callers have already answered
+     `purged` for an absent value before they get here; this is the floor that
+     makes that true AT THE RULE rather than by the courtesy of the caller — the
+     shape `checkObservation` takes one screen down. */
+  if (!Number.isFinite(entered) || !Number.isFinite(first)) return WATERMARK_BEFORE;
+  if (entered >= first) return WATERMARK_AFTER;
+  if (entered < first - watermarkUncertaintyMs(firstAt)) return WATERMARK_BEFORE;
+  return WATERMARK_WITHIN_BAND;
 }
 
 /** THE READER RUN — section 4.3's first act, as a function.
@@ -1268,6 +1383,20 @@ export function derivationStatement(row = null, missingCause = null) {
     return { state: null, cut: null, at: null, documents: null, derived: "pre_log",
              says: "derived before the observation log recorded derivations: the connection rows "
                  + "exist, and whether that derivation was cut is NOT recorded" };
+  /* D-516 — THE BAND SAYS WHY IT COULD NOT TELL, and `derived` stays `undetermined`
+     so no consumer of this statement moves. This branch exists because *a fix
+     verified only where you changed it is not verified*: this function is the
+     THIRD reader of a cause word (`contentAxisFor` and the frontier rows are the
+     other two), and without it the band would arrive here and be described by the
+     sentence below, which names a pre-log look and a purge and not the one thing
+     that actually happened — the stored watermark being a whole second. */
+  if (cause === WATERMARK_BAND_CAUSE)
+    return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
+             says: "undetermined: no derivation over this subject is recorded, and this subject "
+                 + "entered the record in the clock second IMMEDIATELY BEFORE the earliest "
+                 + "meaning-level row the log holds. `observation_log.at` stores whole seconds, so "
+                 + "the record cannot tell which side of that row the subject entered on, and it "
+                 + "does not pick" };
   return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
            says: "undetermined: no derivation over this subject is recorded, and the log cannot "
                + "rule out one made before it carried this level (or cleared by a purge)" };

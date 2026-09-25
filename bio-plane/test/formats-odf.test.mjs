@@ -257,8 +257,15 @@ const odfFixture = (flavour, o = {}) => {
 /* ================================================================== */
 console.log("\n--- the registry carries three more entries, and that is the WHOLE cost (D-70) ---");
 {
+  /* CORRECTED by FW-23, 2026-09-24: this read `listFormats().slice(-3)`, the
+     LAST three entries, which said what it meant only while ODF happened to be
+     the last thing registered. The ninth entry (`csv`) turned it into a claim
+     about registration RECENCY, and what it is for is TABLE ORDER — the three
+     sitting immediately after the OOXML entries. Anchored on `pptx` instead, so
+     a tenth format cannot make it wrong again. */
+  const roster = listFormats();
   t("all three are registered, in table order after the OOXML entries",
-    listFormats().slice(-3), ["odt", "ods", "odp"]);
+    roster.slice(roster.indexOf("pptx") + 1, roster.indexOf("pptx") + 4), ["odt", "ods", "odp"]);
   t("each is reachable by name through the registry",
     ["odt", "ods", "odp"].map((f) => getFormat(f) === ENTRY[f]), [true, true, true]);
   t("each fills all four I7 slots (no null slot: ODF is its own container walk AND its own text)",
@@ -658,8 +665,16 @@ console.log("\n--- NEGATIVE CONTROL arm (3), THE ARM'S OWN ARM: unregister one e
   registerFormat(removed);
   t("RESTORED: .ods detects both ways again, and the restore is MEASURED not assumed",
     [detectFormat(odsBytes, null).format, detectFormat(null, ODS_CONTENT_TYPE).format], baseline);
-  t("and the registry holds exactly the eight formats it held before the arm",
-    listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "odp", "ods"]);
+  /* CORRECTED by FW-23, 2026-09-24: the roster gained a NINTH entry (`csv`),
+     so the old eight-name list is superseded by an entry that landed after it,
+     not by a defect in what it asserted. `ods` trails `odp` here and does so on
+     purpose — the arm above removed and re-registered it, which moves it to the
+     END of the Map, and that ordering IS part of what the restore is checked
+     against. So `ods` now trails `csv` as well, because `csv` was registered
+     while `ods` was out; the expected list is written from the run rather than
+     from registration order, which is the fact this assertion is about. */
+  t("and the registry holds exactly the nine formats it held before the arm",
+    listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "odp", "csv", "ods"]);
 }
 
 /* ================================================================== */

@@ -24,9 +24,18 @@
  * unchanged on purpose (D-283 is the ASSIGNMENT half), and one consequence is
  * MEASURED here rather than argued: `legistar-73618`, the committed fixture
  * whose page 1 is the very page that falsified §5.2 as written, DOES NOT
- * ESCALATE — tier 1 read it at 1,925 characters with a single unmapped code, so
+ * ESCALATE — tier 1 read it at 1,815 characters with a single unmapped code, so
  * the document-level predicate declines and the merge is never consulted. That
  * is asserted below, so the limit is in the suite rather than only in a report.
+ * [The figure read 1,925 until D-517, 2026-09-24, and had been stale since
+ * D-481 changed the line-break policy — it matched no reading this suite could
+ * produce. It is corrected to the measured one rather than deleted, because
+ * what it records — a margin far short of the predicate — is still the point,
+ * and the margin is now 1,815 against 1 marker. `needsTier2` compares RAW
+ * `counts.chars`, so this margin is the only thing standing between a
+ * whitespace change and an escalation verdict; D-517 measured all nine of
+ * M-141's documents both ways and NO verdict moves, the closest non-escalating
+ * margin being this one at 1,814 against a 24-character move (M-145).]
  *
  * NEGATIVE CONTROL: `node bio-plane/test/nc-rec98.mjs` — COMMITTED, so it re-runs
  * in one step. NINE rows, each armed ALONE with every other defence held open,
@@ -72,7 +81,7 @@ const MANIFEST = Object.freeze({
   mixed:    "legistar-73545.pdf",   // 7 pages: 0-5 to tier 2, 6 stays tier 1
   clean:    "legistar-73450.pdf",   // 3 pages, fully decodable — must not escalate
   recovers: "legistar-73550.pdf",   // 3 pages, all three to tier 2
-  degrades: "legistar-73618.pdf",   // page 1: tier 1 657 chars, tier 2 580 — THE page (D-481 moved tier 1's count; see the note at the first figure)
+  degrades: "legistar-73618.pdf",   // page 1: tier 1 647 chars, tier 2 580 — THE page (D-481 then D-517 moved tier 1's count; see the note at the first figure)
 });
 
 let pass = 0, fail = 0;
@@ -175,9 +184,28 @@ console.log("\n--- op=pdfstructure over the MIXED document: the merge is per PAG
    compares raw `text.length`, so it counts whatever line-break policy tier 1
    happens to run. The measured page's margin over tier 2 narrowed 129 -> 77
    characters without one glyph changing hands. A page's TIER should not be able
-   to turn on a newline; the comparison wants non-whitespace characters. */
-  t("page 6 kept 3,420 characters that a wholesale tier-2 assignment would have replaced with 3,416",
-    [out.text.pages[6]?.text?.length ?? -1, TIER1.mixed.pages[6].text.length], [3420, 3420]);
+   to turn on a newline; the comparison wants non-whitespace characters.
+   [THAT FINDING IS CLOSED, and it is corrected here rather than deleted because
+   its closing is the news: `perPageTierWinner` reads `decodedChars`, which
+   counts NON-WHITESPACE code points, since D-501 ruled glyphs and D-514 moved
+   the sites. The award no longer turns on a line-break policy.]
+
+   FIGURES MOVED AGAIN 2026-09-24 by D-517, and the CLAIM at every site below is
+   STILL unchanged — no page's tier flipped, the merge keeps and replaces exactly
+   what it did, and the degradation guard refuses exactly what it refused. What
+   moved is tier 1's CHARACTER COUNT a second time, and again for a reason that
+   is not slack: D-517 stopped emitting a separator where the document had
+   already written one, so the counts below lost 24 REDUNDANT SPACES on
+   `legistar-73618` and one on `legistar-73545` page 6, and not one decoded
+   glyph. THE NON-WHITESPACE COUNTS DID NOT MOVE AT ALL, and THAT is why this
+   landing is an independent confirmation of D-501/D-514's counter rather than a
+   second instance of the finding above: the descriptive raw counts in this file
+   moved while the award, which now reads glyphs, could not see the change.
+   Tier 2's figures (580, 3,416, 100) are the member's decode and are untouched
+   for a THIRD landing, which is what makes both falls readable. Taken from what
+   this suite PRINTED on a rebased tree, never by subtraction. */
+  t("page 6 kept 3,419 characters that a wholesale tier-2 assignment would have replaced with 3,416",
+    [out.text.pages[6]?.text?.length ?? -1, TIER1.mixed.pages[6].text.length], [3419, 3419]);
   t("page 0 is the member's decode, and it is the recovery the escalation is FOR",
     (out.text.pages[0]?.text?.length ?? 0) > 1000 && TIER1.mixed.pages[0].text.length < 50, true);
   t("the document says in its own notes that its text layer is a merge of two decodes",
@@ -281,8 +309,8 @@ console.log("\n--- THE DEGRADATION CLASS through the op: tier 2 flags fewer, dec
   const uch = (p) => (p.undetermined || []).reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);
   t("the arm is real: §5.2 AS WRITTEN (fewer undetermined wins) hands page 5 to tier 2",
     uch(p2) < uch(p1), true);
-  t("...and doing so would LOSE 165 characters of text tier 1 had already decoded",
-    p1.text.length - p2.text.length, 165);
+  t("...and doing so would LOSE 164 characters of text tier 1 had already decoded",
+    p1.text.length - p2.text.length, 164);
   t("the SHIPPED rule's one-directional guard refuses that award",
     perPageTierWinner(p1, p2), "tier1");
 
@@ -292,8 +320,8 @@ console.log("\n--- THE DEGRADATION CLASS through the op: tier 2 flags fewer, dec
   t("THROUGH THE OP: page 5 is kept at tier 1 — a character count never PROMOTES "
     + "a page, it only ever refuses to demote one",
     out.text.pages[5]?.tier ?? null, 1);
-  t("and page 5 comes back with tier 1's own 265 characters, not the member's 100",
-    [out.text.pages[5]?.text?.length ?? -1, hex(out.text.pages[5]?.text ?? "") === hex(p1.text)], [265, true]);
+  t("and page 5 comes back with tier 1's own 264 characters, not the member's 100",
+    [out.text.pages[5]?.text?.length ?? -1, hex(out.text.pages[5]?.text ?? "") === hex(p1.text)], [264, true]);
   t("the pages tier 2 genuinely improved still move — nothing is left behind",
     tiersOf(out.text), [2, 2, 2, 2, 2, 1, 1]);
   await mf.dispose();
@@ -311,8 +339,8 @@ console.log("\n--- legistar-73618 page 1: THE page CPDF-20 measured as degraded 
      numbers this suite chose. */
   const recorded = JSON.parse(readFileSync(FIX + "tier2-recorded.json", "utf8"))["legistar-73618"];
   const t1 = TIER1.degrades, p1 = t1.pages[1], p2 = recorded.pages.find((p) => p.page === 1);
-  t("the measured page, CPDF-20's document and D-481's count: tier 1 decodes 657 characters, tier 2 decodes 580",
-    [p1.text.length, p2.text.length], [657, 580]);
+  t("the measured page, CPDF-20's document and D-517's count: tier 1 decodes 647 characters, tier 2 decodes 580",
+    [p1.text.length, p2.text.length], [647, 580]);
   t("tier 1 flagged exactly ONE unmapped code on it, and tier 2 flagged none — "
     + "which is the whole of §5.2's comparison, and it compares nothing",
     [(p1.undetermined || []).reduce((n, m) => n + m.count, 0),
@@ -320,13 +348,14 @@ console.log("\n--- legistar-73618 page 1: THE page CPDF-20 measured as degraded 
   const m = mergeTier2Text(t1, recorded);
   t("THE MERGE THE WIRE CALLS KEEPS IT AT TIER 1, by page number",
     [m.ok, m.kept, m.replaced], [true, [0, 1], []]);
-  t("...saving the 77 characters §5.2 as written would have traded for one glyph",
-    p1.text.length - p2.text.length, 77);
+  t("...saving the 67 characters §5.2 as written would have traded for one glyph",
+    p1.text.length - p2.text.length, 67);
 
   /* AND THE LIMIT, MEASURED RATHER THAN ARGUED. The routing half is unchanged by
      this item (D-283 is the ASSIGNMENT half, and `needsTier2` was closed on
      purpose), so this document never reaches the merge through the op at all:
-     tier 1 read it at 1,925 characters against a single marker, far short of
+     tier 1 read it at 1,815 characters against a single marker (stale at 1,925
+     since D-481; corrected by D-517 to the measured figure), far short of
      "more undetermined regions than decoded characters". The page is saved by
      the rule; through the op it was never at risk. Asserted so a future change
      to the routing half turns this red instead of quietly widening the class. */
@@ -335,8 +364,8 @@ console.log("\n--- legistar-73618 page 1: THE page CPDF-20 measured as degraded 
   const out = await structure(mf, "degrades");
   t("through the op this document does NOT escalate — the routing half declines it",
     [out.tier, out.notes.some((n) => /tier-2 decoder|merge of two decodes|tier2_/.test(n))], [1, false]);
-  t("so both its pages carry tier 1 and its 1,839 characters are untouched",
-    [out.text.counts.chars, out.text.pages.map((p) => p.text.length)], [1839, [1181, 657]]);
+  t("so both its pages carry tier 1 and its 1,815 characters are untouched",
+    [out.text.counts.chars, out.text.pages.map((p) => p.text.length)], [1815, [1167, 647]]);
   await mf.dispose();
 }
 
@@ -486,8 +515,23 @@ console.log("\n--- the merge's refusal: driven, and its reach through the op sta
                      undetermined: [], counts: { chars: 32, undetermined: 0 } };
   const m = mergeTier2Text(pageless, { pages: [{ page: 0, text: "replacement", undetermined: [] }] });
   t("a pageless base holding text REFUSES rather than guessing", m.ok, false);
+  /* CORRECTED AT D-514, 2026-09-24 — THE OLD ASSERTION WAS WRONG, NOT MERELY
+     SUPERSEDED. It required the refusal to say "32 decoded character(s)", and 32
+     is this string's raw `.length`: it counts the five spaces as decoded text.
+     D-501 had already ruled that whitespace is not decoded text and that the unit
+     is the GLYPH; D-514 carries that ruling into this judgment, so the sentence
+     now reads 27 decoded GLYPHS — the same string, counted in the unit the claim
+     is actually about. The figure is asserted rather than the phrase alone,
+     because a refusal that names a number the document does not hold is exactly
+     the defect D-514 exists to close, and an assertion on `/decoded glyph/` with
+     no number would pass over any number at all.
+     BOTH HALVES ARE PINNED ON PURPOSE: `counts.chars` STAYS 32 in the fixture
+     above, unchanged, because the raw counter is still the raw counter (D-501's
+     interface note) — what moved is which of the two this JUDGMENT reads. */
   t("and the refusal says what it is protecting, in the record's own words",
-    /no per-page grain/.test(m.why) && /32 decoded character/.test(m.why), true);
+    /no per-page grain/.test(m.why) && /27 decoded glyph/.test(m.why), true);
+  t("and it counts the string's GLYPHS, never its raw length (D-514: 32 characters, 27 glyphs)",
+    /32 decoded/.test(m.why), false);
 }
 
 console.log(`\ntier2-wire: ${pass} pass, ${fail} fail`);

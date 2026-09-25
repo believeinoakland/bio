@@ -1,15 +1,26 @@
-/* REC-148's NEGATIVE CONTROL DRIVER — three arms plus a baseline, re-runnable in one step:
+/* REC-148's NEGATIVE CONTROL DRIVER, EXTENDED BY REC-200 — six arms plus a baseline, re-runnable in one step:
  *
  *     node test/reviewcopy-inband.control.mjs        # every arm, in order
  *     node test/reviewcopy-inband.control.mjs a      # one arm
  *
  * `reviewcopy.control.mjs`'s shape and rules, kept for its reasons: NOT a `.test.mjs` (it edits real sources);
- * pristine copies INSIDE this worktree, uniquely named per arm; every restore verified by CONTENT and sha256
- * with the byte count floored; the suite's output to a FILE, never a pipe (D-282); each arm armed ALONE.
- * The declarations are in the suite's own `NEGATIVE CONTROL:` header, made before arming.
+ * pristine copies uniquely named per arm; every restore verified by CONTENT and sha256 with the byte count
+ * floored; the suite's output to a FILE, never a pipe (D-282); each arm armed ALONE. The declarations are in
+ * the suite's own `NEGATIVE CONTROL:` header, made before arming.
+ *
+ * THE PEN MOVED OUT OF THE WORKTREE, 2026-09-24 (REC-200), and the rule it used to follow is superseded
+ * rather than forgotten. Rule 1 put pristine copies INSIDE the worktree because PL-10 had two workers write a
+ * harness to the SAME FIXED shared-scratchpad path and the second overwrite the first. BOB #32 ruled on
+ * 2026-09-24 that a scratch file in the worktree is not inert — repository-walking suites walk it, it trips
+ * `gates.mjs` §2e's under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to record a green
+ * verdict (three items paid for that in one night). BOTH reasons are served by `mkdtempSync`, which is
+ * COLLISION-FREE BY CONSTRUCTION rather than by a name nobody else guessed — the property the fixed path
+ * lacked in either location — and `coordpin.control.mjs` already pens this way. The pen is printed and
+ * removed at the end, and a failed restore still leaves it standing.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -18,9 +29,10 @@ import { preflight } from "../scripts/armdecay.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
-const PEN = join(ROOT, ".nc-reviewcopy-inband");          /* inside this worktree */
+const PEN = mkdtempSync(join(tmpdir(), "nc-reviewcopy-inband-"));   /* OUTSIDE the worktree — see the header */
 const INDEX = join(ROOT, "src", "index.mjs");
 const INBAND = join(ROOT, "src", "inband.mjs");
+const STORE = join(ROOT, "src", "store.mjs");
 const SUITE = join(DIR, "reviewcopy-inband.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -50,9 +62,12 @@ const ARMS = {
           ONE function at c19-batch9 (REC-198 made it the answer shape for every read of a draft), so the quoted
           line lost six spaces of indent and this needle matched ZERO times — m025's A4 named it (the D-276
           class). The quote moves with its line; the arm and its declaration are unchanged. */
+       /* RE-ANCHORED AGAIN 2026-09-24 (REC-200): the quoted line now reads `r.last_change?.at` — BOB #32's
+          ruling moved the DATE off the draft's `updated_at` — so the old needle matched zero times. The arm
+          and its declaration are unchanged; only the line it plants after moved with the source. */
        apply: () => edit(INDEX,
-         "      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n",
-         "      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n"
+         "      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n",
+         "      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n"
          + "    quartet.hash.sha256 = await sha256Hex(JSON.stringify(served));\n") },
 
   b: { files: [INBAND],
@@ -66,6 +81,32 @@ const ARMS = {
        apply: () => edit(INBAND,
          "    capture, connection, declared,\n",
          "    capture: connection, connection: capture, declared,\n") },
+
+  /* ---- REC-200's three, on the DATE ---- */
+
+  d: { files: [INDEX],
+       label: "(d) REC-200's ROW CONTROL: KEEP THE OLD DATE — the quartet's date taken from the draft's "
+            + "`updated_at` (its last EDIT) again, as it was before BOB #32's ruling",
+       apply: () => edit(INDEX,
+         "      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n",
+         "      date: r.updated_at ?? null, author: r.updated_by ?? null, bar: bar ?? null });\n") },
+
+  e: { files: [STORE],
+       label: "(e) OVER-STRICTNESS: the newest act picked by SORTING the candidates rather than by the "
+            + "reducer loop — a correct spelling the suite did not anticipate; it must PASS",
+       apply: () => edit(STORE,
+         "    let last = null;\n"
+         + "    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;\n",
+         "    const ranked = cand.map((c, i) => [c, i])\n"
+         + "      .sort((x, y) => (Date.parse(y[0].at) - Date.parse(x[0].at)) || (x[1] - y[1]));\n"
+         + "    const last = ranked.length ? ranked[0][0] : null;\n") },
+
+  f: { files: [STORE],
+       label: "(f) THE LIAR: the date is the MOMENT OF THE READ — which moves on every comment and would "
+            + "satisfy every 'the date moved' arm while meaning nothing",
+       apply: () => edit(STORE,
+         "      at: last ? last.at : null, by: last ? last.by : null,\n",
+         "      at: new Date().toISOString(), by: last ? last.by : null,\n") },
 };
 
 const want = process.argv[2];

@@ -28,6 +28,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { controlPen } from "./pen.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));          /* bio-plane/ */
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -46,7 +47,7 @@ const RP_PEN = path.join(REPO, "civicos-ui", "test", ".rec79-control-pristine");
 const REFSEL = "bio-plane/test/refselectivity.control.mjs";
 const OPCLAIMS = "bio-plane/test/op-claims.control.mjs";
 const LOGROOT = path.join(REPO, "_m025", "nc-d355");                  /* gitignored with `_m025/` */
-const PEN = path.join(REPO, ".nc-d355-pen");                          /* this file's own pristine copies */
+const PEN = controlPen("d355");                                       /* this file's own pristine copies */
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY = sha(Buffer.alloc(0));

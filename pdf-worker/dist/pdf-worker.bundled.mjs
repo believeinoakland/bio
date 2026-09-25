@@ -40761,6 +40761,7 @@ function matMul(a2, b2) {
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
+var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -40966,7 +40967,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           if (!inArr) continue;
           if (it2.t === "str") show(it2.bytes);
           else if (it2.t === "num") {
-            if (it2.v < -100) pieces.push(" ");
+            if (-it2.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
             advanceBy(it2.v);
           }
         }
@@ -41410,6 +41411,7 @@ var SURFACE = {
   version: { method: "GET", mutating: false }
 };
 var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -41445,8 +41447,20 @@ async function handleStructure(req, env) {
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
-  if (!store || !/^[a-z0-9_-]+$/i.test(store))
-    return json({ ok: false, reason: "BAD_STORE", detail: "store must be a namespace token" }, 400);
+  if (typeof body?.store !== "string")
+    return json({
+      ok: false,
+      reason: "BAD_STORE",
+      detail: "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one."
+    }, 400);
+  if (!NAMESPACES.includes(store))
+    return json({
+      ok: false,
+      reason: "NAMESPACE_UNKNOWN",
+      detail: "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
+      asked: store.slice(0, 80),
+      namespaces: [...NAMESPACES]
+    }, 400);
   const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
   if (!obj) return json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404);
   const bytes = new Uint8Array(await obj.arrayBuffer());

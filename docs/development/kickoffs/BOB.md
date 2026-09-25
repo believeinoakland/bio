@@ -243,13 +243,11 @@ which is the only reason the misroute was caught at all — make it a rule, not 
 confirm delivery says so and writes to the record instead, which is the one channel an unattended session can
 still read.
 
-**Spawning a missing or saturated lane's successor is this lane's act, and in the cloud the mechanism is `create_session`**
-(MEASURED 2026-09-23: a session it makes SHOWS in Bob's app — Bob conversed in BOB #29, which BOB #28 created so, and BOB #29
-started CONDUCT #15 and SCHEDULER #15 so; the desktop's `spawn_task` chip and Bob's click are retired with the Mac). Ensure
+**THE SESSION TREE (Bob, 2026-09-24: never too deep, no spawn delay):** the ROOT lane (no parent: FLEET #4 today, later `GOD`, which Bob starts in the app) creates EVERY lane session and successor; lanes create their own workers directly; workers create nothing. Depth stays root 0, lanes 1, workers 2 (the platform refuses at 8). **BOB decides a successor; the ROOT lane makes the `create_session` call.** Ensure
 the kickoff exists and the saturating lane wrote its `<LANE>-NEXT.md` on `coord` (currency and occupancy checked as above),
-then create the session with a SELF-CONTAINED prompt — read `CLAUDE.md`, then the kickoff, fetch, verify state with
+then send the root lane a SELF-CONTAINED prompt — read `CLAUDE.md`, then the kickoff, fetch, verify state with
 `node tools/coord.mjs read`, claim before editing — and tell it, by a one-shot `create_trigger`, the ids it must reach.
-**Title it EXACTLY `<LANE> #<n>`:** `retirable.mjs`'s `laneOf` and every peer match that form (BOB #19, 2026-09-21).
+**Title it EXACTLY `<LANE> #<n>`:** `retirable.mjs`'s `laneOf` and every peer match that form.
 
 **A stand-down is not a retirement.** A stood-down session keeps running and may hold its worktree; its
 successor archives it (above). From the moment a successor exists it owns the checkout: a replaced session

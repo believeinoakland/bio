@@ -10,7 +10,8 @@
  * file ALONE from a pristine tree and DECLARES before arming which NAMED assertion must fail and which must NOT; the
  * suite must reach its own foot; one assertion no arm can reach — the fixture's remote `main` existing — must stay
  * green, so a red is not collateral. D-331: every anchor is counted BEFORE anything is armed, through `preflight`.
- * Every restore is verified by sha256 AND `cmp` against the arm's own uniquely-named copy in `.m0111-harness/`, with
+ * Every restore is verified by sha256 AND `cmp` against the arm's own uniquely-named copy in `controlPen("m0111")`,
+ * OUTSIDE the worktree (M0-182), with
  * the byte count printed and floored; an `exit` hook restores both files from memory and removes the pen on EVERY
  * exit. The suite runs as an asynchronous child, so a signal is honoured when it arrives.
  *
@@ -24,13 +25,14 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { preflight } from "../scripts/armdecay.mjs";
+import { controlPen } from "./pen.mjs";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const GUARD = path.join(REPO, "tools", "pushguard.mjs");
 const TRAIN = path.join(REPO, "tools", "train.mjs");
 const GATES = path.join(REPO, "tools", "gates.mjs");
 const SUITE = path.join(REPO, "bio-plane", "test", "train.test.mjs");
-const PEN = path.join(REPO, ".m0111-harness");
+const PEN = controlPen("m0111");
 const ONLY = process.argv[2] || null;
 const DECLARED_ARMS = 12;
 const FLOOR = { [GUARD]: 40000, [TRAIN]: 10000, [GATES]: 40000 };

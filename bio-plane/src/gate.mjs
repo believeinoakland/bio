@@ -115,7 +115,7 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 /* 1.25.0 AT THE SECOND UNION (CONDUCT #20, c20-batch23): REC-211 took 1.24.0 on its own branch for 447 + 2, but main's
    1.24.0 (c20-batch22) is already the D-507 + D-508 catalogue of 455 checks. REC-211's two rows are a DIFFERENT
    catalogue, so the union moves the stamp once more, MINOR: 455 + 2 = 457, figures re-read from the d470 suite's print. */
-export const CATALOG_VERSION = "1.28.0";
+export const CATALOG_VERSION = "1.29.0";
 /* 1.24.0 (D-491, 2026-09-24, branch land/worker/D-491): C-28.16
    CAPTURE_REQUEST_RENDER_MALFORMED joined CAPTURE_REQUEST_CHECKS — the capture-request
    door's refusal of a `render` flag that is neither true nor absent (IC-276) — so the
@@ -129,6 +129,25 @@ export const CATALOG_VERSION = "1.28.0";
 /* 1.26.0 AT THE THIRD UNION (CONDUCT #20, c20-batch25): D-491 took 1.24.0 on its branch for 447 + 1 (C-28.16), but main's line is already 1.25.0 = 457 (c20-batch23). ONE VERSION NAMES ONE CATALOGUE, so the union moves the stamp once more, MINOR: 458, read from the d470 suite's print. */
 /* 1.27.0 AT THE UNION (CONDUCT #20, c20-batch25): D-472 took a branch version over its own base; the line already stood at 1.26.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
 /* 1.28.0 AT THE UNION (CONDUCT #20, c20-batch25): D-510 took a branch version over its own base; the line already stood at 1.27.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
+/* 1.26.0 (D-463, 2026-09-24, branch land/worker/D-463, REBASED onto main @ 1a7f0bcc): two checks ARRIVE and
+   none departs — C-78.3 NAMESPACE_CONFINED in NAMESPACE_CHECKS and C-29.10 AI_CONFINEMENT_NOT_SCRATCH in
+   AI_CREDENTIAL_CHECKS — so the catalogue moved 457 -> 459 and the stamp moves with it, MINOR and additive on
+   this constant's own rule (Publication §3 rule 17). **THIS BRANCH FIRST TOOK 1.24.0 FOR 447 -> 449, WHICH WAS
+   TRUE OF ITS OLD BASE AND IS DROPPED:** main's 1.24.0 is the D-507 + D-508 catalogue and its 1.25.0 is
+   REC-211's, so this item's two rows are a THIRD catalogue and take the next number. ONE VERSION NAMES ONE
+   CATALOGUE, which is the d470 table's whole rule. Figures RE-READ from the d470 suite's own print on the
+   rebased tree, never arithmetic and never this branch's old figure. */
+/* 1.29.0 AT THE UNION (CONDUCT #20, c20-batch27): D-463 took a branch version over its own base; the line already stood at 1.28.0, so the union takes the next number once, MINOR, its census read from the d470 suite's print. */
+/* 1.26.0 (D-513, 2026-09-24): `op=knock`'s three pre-store refusals take catalogue rows —
+   C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4 KNOCK_PAYLOAD_TOO_LARGE and C-85.5 KNOCK_EMPTY in the
+   existing `KNOCK_CHECKS` family — so the catalogue moved 457 -> 460 checks and the stamp moves with
+   it. THREE ARRIVALS, NO DEPARTURES, so the bump is MINOR on this constant's own rule (Publication §3
+   rule 17): nothing the catalogue passed is now refused. The census figures below are the d470 suite's
+   own print on this item's tree over origin/main 1a7f0bcc0, never 457 + 3. THE BASE READ IS main's
+   1.25.0 (c20-batch23's second union); CONDUCT #20's c20-batch25 moves the same constant in parallel,
+   so ONE VERSION NAMES ONE CATALOGUE (A4) makes the number at the union CONDUCT's to take once, from
+   the d470 suite's print on the merged tree — this branch's figure is this branch's catalogue. */
+/* 1.29.0 AT THE UNION ALSO CARRIES D-513 (CONDUCT #20, c20-batch27): D-513 took 1.26.0 over its own base; the union's ONE new number for this batch is 1.29.0, holding D-463's and D-513's checks together, its census read from the d470 suite's print. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");

@@ -25,13 +25,11 @@ open rows, and a CONDUCT kickoff too large to read whole. **One lane whose whole
 | what is in the cache (`QUEUE.md`), in what order; REPLENISHING it | **SCHEDULER** |
 | marking a task `done`, moving it to the archive (`node tools/ledger.mjs archive <ID>`), in ONE commit with the replenish | **SCHEDULER** |
 | draining the `BOB INBOX` (it is now addressed to this lane) | **SCHEDULER** |
-| **DISPATCH** (BOB #33, 09-24): each wake: a `running` row whose worker REPORTED finished, or whose branch is pushed with a recorded GREEN, → flip `integrated` (an idle bucket is not: gates run in background); BLOCKED → CONDUCT (design: BOB); replenish; SPAWN each queued row (`running` first) to 16+ | **SCHEDULER** — from CONDUCT, whose trains left slots idle |
+| **DISPATCH** (BOB #33, 09-24): each wake: a `running` row whose worker REPORTED finished, or whose branch is pushed with a recorded GREEN, → flip `integrated` (an idle bucket is not: gates run in background); BLOCKED → CONDUCT (design: BOB); replenish; SPAWN each queued row (`running` first) to 16+, by your own `create_session` (you are root-created, so workers sit at depth 2; read a silent worker by summary and branch) | **SCHEDULER** — from CONDUCT, whose trains left slots idle |
 | gating, integrating, verifying, trains, archiving; answering workers | **CONDUCT** (may also flip a finished row it hears of; never holds a flip for a train) |
 | designs, decompositions, doctrine, and bringing Bob the priority calls that are his | **BOB** |
 
-**Vocabulary, fixed because two lanes share it:** SCHEDULER **REPLENISHES the cache** and, since 2026-09-24, **FILLS SLOTS**
-(spawns workers into free development slots). Never "refill" for either — one word for two acts is the defect `BOB.md` rule 7
-names.
+**Vocabulary:** SCHEDULER **REPLENISHES the cache** and **FILLS SLOTS** (spawns workers). Never "refill" for either.
 
 ## The loop
 

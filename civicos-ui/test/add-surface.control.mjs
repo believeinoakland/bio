@@ -31,6 +31,26 @@
  *
  * ------------------------------------------------------------ RESULTS, RUN
  *
+ * RUN 2026-09-24 by UI-101, and the item is the ADJUDICATION OF A ROW, not a change to this driver. QUEUE's
+ * UI-101 read "THE APP OFFERS NO RISK-TIER CONTROL"; it was false when it was minted — UI-85 built the chooser
+ * and `BIO_Case_Making_v0_1.md` §2 already carried the correction — so the honest deliverable is the
+ * measurement, not a second chooser. NOTHING HERE WAS ARMED DIFFERENTLY AND NO SUBJECT MOVED: the same eight
+ * arms were re-measured for one reason, that a control whose patches anchor in a file five UI workers share is
+ * only as good as its anchors, and `app.html` has grown 99,564 bytes since UI-85 ran them (1,478,680 ->
+ * 1,578,244, sha256 1eff43c1..., over `origin/main` @ 1a7f0bcc). EVERY ARM STILL ARMED — each anchor matched
+ * exactly once and the bytes differed.
+ * FINAL: 8 arms, 8 AS DECLARED, 0 not; both watched files restored byte-identical (sha256 + cmp), verified
+ * again from outside this driver. (5) default-to-1 RED at "UI-85 UNTOUCHED: an untouched chooser writes
+ * undetermined", by name and the FIRST failure — which is UI-101's own named control, already built here;
+ * (6) hard-coded words RED at "UI-85 IDENTITY"; (3b), (6b) and the baseline GREEN at 190/190, the assertion
+ * total unmoved from UI-85's run.
+ * RE-RUN OVER EVERY TREE THIS ITEM PRODUCED, and the repetition is the point rather than diligence. On
+ * `origin/main` @ e9b21be66 (app.html 1,570,307); after each edit this item made to either WATCHED file, since
+ * arm (2) patches the suite itself and an edit to it could disarm the anchor that proves the rest; and after
+ * the branch rebased onto c20-batch24c, which moved `app.html` again (1,578,244). 8 of 8 AS DECLARED every
+ * time, every restore byte-identical, the last run over the bytes this commit ships. A control that only ever
+ * ran on the tree it was written for would have established none of that.
+ *
  * RUN 2026-09-24 by UI-85, after adding arms (5), (6) and (6b) — the risk-tier chooser's. EIGHT arms, each
  * armed ALONE, every restore verified by sha256 AND `cmp` against two pristine copies (app.html 1,478,680
  * bytes). FINAL: 8 arms, 8 AS DECLARED, 0 not; both watched files byte-identical. (5) default-to-1 RED at

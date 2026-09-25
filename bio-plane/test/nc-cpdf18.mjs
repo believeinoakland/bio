@@ -27,19 +27,20 @@
  *               text digests MUST fail and every image assertion hold — proving
  *               the pin can see a change to the text this item promised not to move.
  *
- * Pristine copies live in `.cpdf18-control-pristine/` at the worktree root (named
- * in `.gitignore`), uniquely named per arm.
+ * Pristine copies live in a pen OUTSIDE the worktree — `controlPen("cpdf18")` from `test/pen.mjs`
+ * (M0-182, BOB #32) — uniquely named per arm.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = join(REPO, ".cpdf18-control-pristine");
+const SAFE = controlPen("cpdf18");
 mkdirSync(SAFE, { recursive: true });
 
 const PDFS = join(PLANE, "src/pdfstructure.mjs");

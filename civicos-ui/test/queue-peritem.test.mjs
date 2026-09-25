@@ -20,15 +20,47 @@
  *      `NO_REASON` and its detail), never a sentence composed here.
  *  (5) A BULK CONTROL THE PLANE DID NOT PUBLISH — section 3 hands the surface a plane answer with no `set_acts`, and
  *      no tick and no selection bar may be drawn.
+ *  (6) UI-94 — A BULK FORWARD THAT IS N FORWARDS. Section 4 counts the wire again for `op=taskforward`: ONE call
+ *      carrying three `items` and the chosen member ONCE as the shared key. A per-item loop dressed as a bulk
+ *      button fails "ONE op=taskforward call for the whole selection" by name.
+ *  (7) UI-94 — A MEMBER OFFERED WHO CANNOT BE FORWARDED TO. The picker must not name a member the WHOLE selection
+ *      already belongs to (the record would refuse every item, ALREADY_THEIRS), and must still name one who holds
+ *      only SOME of it — the record refuses those and applies the rest, which is the per-item weight's own point.
  *
  * ================== WHAT THIS SUITE CANNOT SEE, STATED ==================
  *  - The DOM is a stub, the reach every civicos-ui suite has: the tick's `onchange` is not fired by a browser, so the
  *    suite calls the function the tick names (`queueSelectionToggle`), and asserts separately that the tick is drawn
  *    naming it.
- *  - `op=taskforward`'s set form has NO bulk control on this surface (the forward picker is per item), so it is not
- *    driven here; the plane suite `bio-plane/test/peritem.test.mjs` drives it through the op.
+ *  - CORRECTED 2026-09-24 by UI-94, not exempted: this read *"`op=taskforward`'s set form has NO bulk control on
+ *    this surface (the forward picker is per item), so it is not driven here; the plane suite
+ *    `bio-plane/test/peritem.test.mjs` drives it through the op."* That was TRUE on D-126's landing and is the gap
+ *    UI-94 closed. Section 4 below drives the bulk forward on THIS surface, through the same real plane. What
+ *    stays outside this suite's reach is unchanged: the DOM is a stub, so the picker's `onchange` and the button's
+ *    `onclick` are not fired by a browser — the suite calls the functions those attributes name and asserts
+ *    separately that `queueWire` binds them.
+ *  - A PROJECT-SCOPED FINDING is still not selectable (its act names a project per item), and no fixture here
+ *    carries one, so this suite says nothing about that case either way.
  *
- * NEGATIVE CONTROL: arms declared and run in `queue-peritem.control.mjs`; results recorded on the line below.
+ * NEGATIVE CONTROL: arms declared and run in `queue-peritem.control.mjs`; results recorded on the lines below.
+ * CONTROL RESULT 2026-09-24 (UI-94 worker), `node civicos-ui/test/queue-peritem.control.mjs`, all SEVEN arms, each
+ * armed alone on the EXTRACTED script (app.html never edited, nothing to restore), each splice asserted to match
+ * exactly once. EVERY ARM AS DECLARED:
+ *   baseline    exit 0 · 36 pass / 0 fail   (16 before UI-94)
+ *   fwdloop     exit 1 · 31/5 — the ROW's control. FAILS "ONE op=taskforward call for the whole selection, carrying
+ *               THREE items" and "still ONE call for the two" BY NAME, and, as declared, "the chosen member is the
+ *               act's SHARED key", "G7 is KEPT …" and "it is NOT still selected …" — a loop of single acts returns
+ *               no `items[]`, so there is nothing to retain from. Sections 1, 2, 3 green.
+ *   fwdofferall exit 1 · 33/3 — "it does NOT offer mona …", 4b's "all-hers, through the op …" and 4b's "UNIT, the
+ *               same state read directly …", as declared. 4b's SPANNING unit arm stays green (mona belongs there),
+ *               which is what tells this arm from one that simply emptied the picker. Every one-call arm green.
+ *   fwdspelling exit 0 · 36/0 — OVER-STRICTNESS, as declared: the shared key assembled before the call instead of
+ *               written as a literal at it is correct work, and nothing here reads its spelling.
+ *   allornone   exit 1 · 32/4 · silentdrop exit 1 · 33/3 · ncalls exit 1 · 31/5 — D-126's three, RE-RUN against the
+ *               widened suite and each now reaching section 4 as well. TWO OF THEM MOVED and the declarations were
+ *               AMENDED from these printed figures rather than the figures smoothed: `allornone` also fails 4c's
+ *               "G6 was forwarded and has left the list", and `silentdrop` also fails 4c's "G7 is KEPT …", because
+ *               the bulk forward goes through the same `queueApplySet` and the same retained-note path. `ncalls`
+ *               does NOT disturb retention (it synthesises an `items[]` of its own) and fails only the call counts.
  * CONTROL RESULT 2026-09-23 (D-126 worker), `node civicos-ui/test/queue-peritem.control.mjs`, every arm armed alone on
  * the EXTRACTED script (app.html never edited, nothing to restore), each splice asserted to match exactly once:
  *   baseline   exit 0 · 16 pass / 0 fail.
@@ -188,7 +220,19 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext((APP ? fs.readFileSync(APP, "utf8") : appScript()) + ";globalThis.__U = {" + [
   "PLANE", "renderQueue", "queueSelectionToggle", "queueApplySet", "loadActSource", "ACT_SOURCE",
-].join(",") + ", SEL: () => [...QUEUE_SEL], RET: () => [...QUEUE_RETAINED.keys()] };", ctx);
+  /* UI-94: the bulk forward's four functions, called here because the stub DOM fires no events, plus
+     `queueSelClear` (a section must not inherit the section before it's selection) and
+     `queueForwardCandidates`, which section 4b drives directly for the reason stated there. */
+  "queueForwardOpen", "queueForwardTo", "queueForwardSet", "queueForwardCancel", "queueSelClear",
+  "queueForwardCandidates",
+].join(",") + ", SEL: () => [...QUEUE_SEL], RET: () => [...QUEUE_RETAINED.keys()]"
+  /* UI-94: the WIRING is read as source, because a control the surface draws and never binds is worse
+     than none and this stub DOM cannot fire a click to find out. */
+  + ", WIRESRC: () => String(queueWire)"
+  /* UI-94, section 4b: forces ONE field of ONE live painted item. Named FORCE rather than `set` so no
+     reader mistakes it for something the record did. */
+  + ", FORCE: (id, assignee) => { const it = QUEUE_ITEMS.get(String(id)); if(it) it.assignee = assignee; }"
+  + " };", ctx);
 const U = ctx.__U;
 U.PLANE.token = MONA;
 U.PLANE.session = true;
@@ -257,6 +301,124 @@ const T4 = await makeTaskFor("mona");
 await U.renderQueue();
 ok("the obligation is listed with its single controls and NO tick", !!itemBlock(T4) && !/data-qsel=/.test(itemBlock(T4))
    && /data-res=/.test(itemBlock(T4)));
+HIDE_SET_ACTS = false;
+
+/* ============================================================ 4. UI-94 — THE BULK FORWARD */
+console.log("\n--- 4. UI-94: THE ROW'S ACCEPTS-WHEN — a selection of THREE forwards in ONE act ---");
+await U.loadActSource(true);
+U.queueSelClear();
+const [G1, G2, G3] = [await makeTaskFor("mona"), await makeTaskFor("mona"), await makeTaskFor("mona")];
+await U.renderQueue();
+ok("fixture: all three obligations are mona's and listed", [G1, G2, G3].every((id) => !!itemBlock(id)),
+   JSON.stringify([G1, G2, G3].map((id) => !!itemBlock(id))));
+for (const id of [G1, G2, G3]) U.queueSelectionToggle(id, true);
+ok("the bar offers the FORWARD as a published set act, with the PLANE's own label and the count",
+   /data-qsetfwdopen>Forward the selected obligations \(3\)/.test(Q()), Q().slice(Q().indexOf("q-selbar"), Q().indexOf("q-selbar") + 700));
+ok("and the resolve control is still there beside it — UI-94 ADDED a mode, it replaced none",
+   /data-qset="taskresolve">Resolve the selected obligations \(3\)/.test(Q()));
+ok("the bulk forward is WIRED, on attributes of its own and not the per-item picker's `data-fwd`",
+   /data-qsetfwdopen/.test(U.WIRESRC()) && /data-qsetfwdgo/.test(U.WIRESRC()) && /data-qsetfwdpick/.test(U.WIRESRC()));
+
+await U.queueForwardOpen();
+ok("opened, it offers the roster's other active members — nate among them", /data-qsetfwdpick/.test(Q()) && /value="nate"/.test(Q()), Q().slice(Q().indexOf("q-setfwd"), Q().indexOf("q-setfwd") + 600));
+ok("and it does NOT offer mona, who holds the WHOLE selection: the record would refuse every item of it",
+   !/value="mona"/.test(Q()), Q().slice(Q().indexOf("q-setfwd"), Q().indexOf("q-setfwd") + 600));
+U.queueForwardTo("nate");
+const beforeF = WIRE.length;
+await U.queueForwardSet();
+const sentF = WIRE.slice(beforeF).filter((w) => w.op === "taskforward");
+ok("ONE op=taskforward call for the whole selection, carrying THREE items — not three calls",
+   sentF.length === 1 && Array.isArray(sentF[0].body?.items) && sentF[0].body.items.length === 3,
+   JSON.stringify(sentF.map((w) => w.body)));
+ok("the chosen member is the act's SHARED key, said ONCE, and no item names an actor",
+   sentF.length === 1 && sentF[0].body.to === "nate" && !("actor" in (sentF[0].body || {}))
+   && sentF[0].body.items.every((i) => Object.keys(i).length === 1 && "id" in i),
+   JSON.stringify(sentF[0] && sentF[0].body));
+ok("all three left mona's list, none was kept, and the picker closed",
+   [G1, G2, G3].every((id) => !itemBlock(id) && !keptBlock(id)) && !/data-qsetfwdpick/.test(Q()));
+ok("READ BACK: the record agrees — all three are nate's now, none resolved",
+   await (async () => { const t = rP(await POST(`op=tasks&token=${IRIS}`, {})); const rows = (t?.tasks || []);
+     const g = (id) => rows.find((r) => r.id === id) || {};
+     return [G1, G2, G3].every((id) => g(id).assignee === "nate" && g(id).status !== "resolved"); })());
+
+/* WHO THE PICKER MAY NAME, AT THE BOUNDARY — and one half of it is driven as a UNIT, which is said here
+   rather than implied. The rule is keyed on the SELECTED ITEMS' assignees, not on who is asking: a member
+   the WHOLE selection already belongs to is withheld (naming them could move nothing, ALREADY_THEIRS on
+   every item), and anyone else is offered because the record can move at least one.
+
+   THE ALL-HERS HALF IS REACHABLE AND IS DRIVEN THROUGH THE OP, in section 4 above: `queueFeed` carries a
+   member her OWN tasks plus honestly `unassigned` ones (`row.assignee !== me && row.assignee !== "unassigned"`),
+   so every task a member can select here is already hers and mona is withheld.
+
+   THE SPANNING HALF IS NOT REACHABLE IN THIS FIXTURE, and the reason is the plane's, not this suite's: the
+   only selection that can span assignees is one holding an `unassigned` task, and `#routeTask` returns
+   `unassigned` ONLY when there is no active administrator — while `memberSet` refuses to revoke an admin
+   without a section 4.7 vote (the ADMIN_REQUIRES_VOTE refusal, NAMED UNQUOTED on purpose and not as a
+   style: `check-refusal-codes.mjs`' R3-FED walk harvests any SCREAMING_SNAKE token in quotes or backticks
+   anywhere in a suite's source, comments included, and counts it as a code this suite FEEDS to a surface,
+   so backticking it here would raise the `r3Fed` floor by prose — UI-100's measurement, recorded at
+   `case-frozen-pair.test.mjs`, and this suite hands that code to no surface). So this fixture cannot
+   produce one. Rather than leave
+   the branch unmeasured, it is driven as a UNIT over the live painted state: one field of one item is
+   FORCED to the value the record would have given an unrouted task, and `queueForwardCandidates` is called.
+   WHAT THAT ARM DOES NOT ESTABLISH: that a member can ever assemble such a selection on this plane today. */
+console.log("\n--- 4b. who the picker may name, at the boundary (the spanning half driven as a unit — see the note) ---");
+U.queueSelClear();
+const G4 = await makeTaskFor("mona");
+await U.renderQueue();
+ok("fixture: G4 is mona's own", !!itemBlock(G4));
+U.queueSelectionToggle(G4, true);
+await U.queueForwardOpen();
+ok("all-hers, through the op: mona is withheld and the other three actives are offered",
+   !/value="mona"/.test(Q()) && ["adam", "iris", "nate"].every((m) => new RegExp(`value="${m}"`).test(Q())),
+   Q().slice(Q().indexOf("q-setfwd"), Q().indexOf("q-setfwd") + 700));
+const namesOf = () => U.queueForwardCandidates().map((m) => m.member_id || m.member || m.id || m.handle);
+ok("UNIT, the same state read directly: the candidates are those three and mona is not among them",
+   !namesOf().includes("mona") && namesOf().length === 3, JSON.stringify(namesOf()));
+U.FORCE(G4, "unassigned");   /* what `#routeTask`'s last arm writes when it can find nobody */
+ok("UNIT, spanning: with the item unrouted, mona is offered too — the rule reads the ITEMS, not the asker",
+   namesOf().includes("mona") && namesOf().length === 4, JSON.stringify(namesOf()));
+U.queueForwardCancel();
+U.queueSelClear();
+
+/* THE RETENTION ARM: forward a set to the member who ALREADY holds one of them. */
+console.log("\n--- 4c. one item of the set is already the target's: it is KEPT with the record's own reason ---");
+const G6 = await makeTaskFor("mona");
+const G7 = await makeTaskFor("mona");
+U.queueSelClear();
+await U.renderQueue();
+for (const id of [G6, G7]) U.queueSelectionToggle(id, true);
+await U.queueForwardOpen();
+U.queueForwardTo("nate");
+/* iris moves G7 to nate between the paint and the click — the drift, in the forward's own shape. */
+const driftF = rP(await POST(`op=taskforward&token=${IRIS}`, { id: G7, to: "nate", now: AT }));
+ok("fixture: G7 drifted to nate between the paint and the act", driftF.ok === true && driftF.assignee === "nate");
+const beforeH = WIRE.length;
+await U.queueForwardSet();
+const sentH = WIRE.slice(beforeH).filter((w) => w.op === "taskforward");
+ok("still ONE call for the two", sentH.length === 1 && sentH[0].body.items.length === 2, JSON.stringify(sentH.map((w) => w.body)));
+ok("G6 was forwarded and has left the list", !itemBlock(G6) && !keptBlock(G6));
+const keptF = keptBlock(G7);
+ok("G7 is KEPT, and with the RECORD's own reason rather than a sentence of this surface's",
+   !!keptF && /NOT_YOURS/.test(unent(keptF)) && /it is with nate/.test(unent(keptF)), unent(keptF));
+/* AND IT IS NOT STILL SELECTED — asserted as the fact it is, not as the thing that would read better.
+   `queuePaint` drops from the selection every id the feed no longer carries, and a drifted obligation is
+   exactly that: it is nate's now and `op=queue` is right not to list it for mona. So what survives the act
+   is the KEPT NOTE with the record's reason, which is what section 1 measures too. A different action on
+   it is not available from this screen, and the surface does not pretend otherwise. */
+ok("it is NOT still selected — mona's feed no longer carries it — and the kept note is what remains",
+   !U.SEL().includes(G7) && U.RET().includes(G7), JSON.stringify({ sel: U.SEL(), ret: U.RET() }));
+
+/* ============================================================ 5. NO PUBLICATION, NO BULK FORWARD */
+console.log("\n--- 5. a plane that publishes no set_acts gets no bulk forward either ---");
+HIDE_SET_ACTS = true;
+await U.loadActSource(true);
+const T5 = await makeTaskFor("mona");
+U.queueSelClear();
+await U.renderQueue();
+U.queueSelectionToggle(T5, true);
+ok("no tick, no selection bar and no bulk forward — and the PER-ITEM forward is untouched",
+   !/data-qsel=/.test(itemBlock(T5) || "") && !/data-qsetfwdopen/.test(Q()) && /data-fwd=/.test(itemBlock(T5) || ""));
 HIDE_SET_ACTS = false;
 } finally {
   await mf.dispose();

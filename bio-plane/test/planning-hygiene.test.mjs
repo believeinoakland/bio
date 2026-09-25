@@ -29,7 +29,8 @@
    DELEGATION-register arm, driven by `node bio-plane/test/delegations.control.mjs` from the
    repo root — COMMITTED, so it re-runs in one step. **24 of 24 checks as declared across six
    arms plus a baseline**, each armed ALONE, every restore verified by sha256 AND `cmp` AND a
-   floored byte count against a uniquely-named pristine in `.m037-harness/`. BASELINE
+   floored byte count against a uniquely-named pristine in `controlPen("m037")`, outside
+   the worktree since M0-182. BASELINE
    `plancheck --local` exit 0, corpus 49, no block named. (A1) an `open as of` rolled back past
    the threshold -> FAILS naming that block AS STALE and naming only it and its affirming line.
    (A2) **the arm this item exists for** — the DISCHARGED line deleted from a block the TREE

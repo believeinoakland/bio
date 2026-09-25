@@ -62,12 +62,13 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUBJECT = join(HERE, "..", "src", "textchain.mjs");
 const SUITE = join(HERE, "tier-pagewise.test.mjs");
 const FIX = join(HERE, "fixtures", "cpdf20");
-const PEN = join(HERE, ".nc-cpdf20-pristine");
+const PEN = controlPen("cpdf20");
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
@@ -224,12 +225,21 @@ sourceArm({
 });
 
 /* ── A7 · D-501: the award back on RAW `text.length` ─────────────────── */
+/* THE ANCHOR MOVED AT D-514, 2026-09-24, and the ARM DID NOT CHANGE MEANING.
+   D-501's loop lived inside `decodedChars`; D-514 lifted it into the exported
+   `glyphCount` so the four other readers that ask the same question read the
+   same counter, and `decodedChars` became the one-line page wrapper below. This
+   arm still aims at exactly what it always aimed at — THE AWARD's counter, put
+   back on raw `text.length` — and deliberately NOT at `glyphCount` itself:
+   arming the shared primitive would break five readers at once and this arm's
+   declaration is about the tier-2 award alone. If this ever reports DID NOT ARM,
+   the wrapper was rewritten and the anchor is what needs moving, not the arm. */
 sourceArm({
   name: "A7", declared: "FAIL",
-  from: `  let n = 0;
-  for (const ch of page.text) if (!WHITESPACE.test(ch)) n++;
-  return n;`,
-  to:   `  return page.text.length;   /* NC A7: the D-501 defect — whitespace counted as decoded */`,
+  from: `const decodedChars = (page) =>
+  (page && typeof page.text === "string") ? glyphCount(page.text) : 0;`,
+  to:   `const decodedChars = (page) =>
+  (page && typeof page.text === "string") ? page.text.length : 0;   /* NC A7: the D-501 defect — whitespace counted as decoded */`,
 });
 
 /* ── the ledger ───────────────────────────────────────────────────────────── */

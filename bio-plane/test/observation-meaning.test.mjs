@@ -253,10 +253,24 @@ t("A2b: and `reference` says in its own sentence that it may match NO entity —
    are equal is what makes a fourth level that invents a fourth key fail here
    rather than pass review — and it is the arm that would have caught a level
    spelling `neverLooked` beside `never_looked`. */
-t("A3: §5.1's THREE CAUSES are keyed IDENTICALLY at the content and meaning levels — one "
-+ "vocabulary, two sets of sentences, and a fourth spelling of one of the three fails HERE",
-  [Object.keys(MISSING_ROW_CAUSES).sort(), Object.keys(MEANING_MISSING_ROW_CAUSES).sort()],
-  [["never_looked", "pre_log", "purged"], ["never_looked", "pre_log", "purged"]]);
+/* CORRECTED BY D-516, AND THE ARM'S PROPERTY IS THE ONE THAT MATTERED RATHER THAN
+   THE LITERAL. It read `[["never_looked","pre_log","purged"], [same]]`, and BOB #33
+   (2026-09-24 17:58Z) added `watermark_band` to BOTH maps — a word that names not a
+   §5.1 cause but WHICH TWO OF THE THREE the stored watermark's whole-second
+   precision left open. The thing this arm exists to catch is a LEVEL INVENTING A
+   WORD THE OTHER DOES NOT HAVE, and that is now asserted as the equality it always
+   was, with §5.1's own unchanged three asserted BESIDE it from
+   `ALL_MISSING_ROW_CAUSES` — so a level adding a fifth word one side only still
+   fails here, and a later session cannot mistake the published vocabulary for the
+   undetermined set again. */
+t("A3: THE CAUSE VOCABULARY is keyed IDENTICALLY at the content and meaning levels — one "
++ "vocabulary, two sets of sentences, and a word one level invents fails HERE. §5.1's own "
++ "THREE causes are the undetermined set and are unchanged beside it",
+  [Object.keys(MISSING_ROW_CAUSES).sort(), Object.keys(MEANING_MISSING_ROW_CAUSES).sort(),
+   [...ALL_MISSING_ROW_CAUSES].sort()],
+  [["never_looked", "pre_log", "purged", "watermark_band"],
+   ["never_looked", "pre_log", "purged", "watermark_band"],
+   ["never_looked", "pre_log", "purged"]]);
 
 t("A3b: and the SENTENCES differ, because the evidence differs — sharing the keys must not "
 + "quietly mean sharing the reasons, which would say `readings` is the pre-log evidence for a "
@@ -792,7 +806,10 @@ t("G2b: and `never_looked` is reported APART from `missing_unexplained`, with th
     return [Array.isArray(m.never_looked), Array.isArray(m.missing_unexplained),
             Object.keys(m.missing_causes || {}).sort(),
             (m.missing_unexplained || []).every((r) => typeof r.why === "string" && r.why.length > 40)]; })(),
-  [true, true, ["never_looked", "pre_log", "purged"], true]);
+  /* CORRECTED BY D-516: the PUBLISHED vocabulary gained BOB #33's band word, which
+     A3 above pins at both levels. §5.1's three are unchanged and are what
+     `not_ruled_out` is still drawn from. */
+  [true, true, ["never_looked", "pre_log", "purged", "watermark_band"], true]);
 
 t("G3: THE ONE-SIDED EVIDENCE IS PUBLISHED ON THE ANSWER, because a reader who assumes all three "
 + "levels resolve §5.1 the same way is wrong and this is where they find out — at a reference or "

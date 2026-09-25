@@ -7,7 +7,8 @@
  *
  * COMMITTED so the next session re-runs it in ONE step instead of re-deriving how to break the
  * subject. Every arm is armed ALONE with the others held open, against a UNIQUELY-NAMED
- * pristine copy in this worktree's own pen (`.m037-harness/`, never a shared scratchpad), and
+ * pristine copy in a pen OUTSIDE this worktree (`controlPen("m037")` from `test/pen.mjs`; M0-182,
+ * BOB #32 — it was `.m037-harness/`, which no `.gitignore` line covered), and
  * every restore is verified by sha256 AND by `cmp` AND by a floored byte count — because
  * `git checkout --` restores to HEAD, which in a tree with uncommitted work is "throw mine
  * away" and exits 0 either way (CLAUDE.md, measured twice in two days).
@@ -67,9 +68,10 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const PEN = join(REPO, ".m037-harness");
+const PEN = controlPen("m037");
 const CLAIMS = join(REPO, "docs/development/CLAIMS.md");
 const PLANCHECK = join(REPO, "tools/plancheck.mjs");
 const MODULE = join(REPO, "tools/delegations.mjs");

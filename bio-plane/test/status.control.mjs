@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * fourteen arms plus an opening and closing baseline.
+ * sixteen arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -149,10 +149,38 @@ const ARMS = [
      miss ("matches nowhere") or the unique pin, because a guard that failed every `hit` would pass
      the ambiguity arms while blinding the corpus. */
   { id: "A14", title: "a `hit` satisfied by its FIRST of many matches again — a probe that pins nothing reads as one that pins the right site (M0-160)",
-    from: "    if (sites.length === 1) return { ok: true, evidence:",
-    to:   "    if (sites.length >= 1) return { ok: true, evidence:",
+    /* CORRECTED BY M0-181, NEVER EXEMPTED: this anchor was the PREFIX
+       `if (sites.length === 1) return { ok: true, evidence:`, which was unique until the `table`
+       probe grew a line of the same shape — two matches, so `armPatch` would have written nothing
+       and the arm would have reported ARMED=2 rather than breaking anything. Spelled whole, it
+       names the `hit` branch alone. An arm that did not arm is a finding, and the driver's own
+       "matched exactly once" assertion is what would have made it one. */
+    from: "    if (sites.length === 1) return { ok: true, evidence: `/${p.hit}/ at ${sites[0]}` };",
+    to:   "    if (sites.length >= 1) return { ok: true, evidence: `/${p.hit}/ at ${sites[0]}` };",
     mustBreak: "A `hit` MATCHING TWICE IN ITS FILE IS NOT ok",
     alsoBreak: "TWO FILES MATCHING ONCE EACH IS AMBIGUOUS TOO" },
+  /* M0-181, 2026-09-24. THE ANCHOR: a `table` used to be satisfied anywhere in a line, so `content`
+     was satisfied by the STRING ARGUMENT in store.mjs that names it as well as by its declaration in
+     schema.mjs — delete the declaration and a table nothing creates keeps reading BUILT. Armed, the
+     shape floats again and the fixture's string alone declares the table. It must NOT break the
+     over-strictness arms (a declaration beside that string, and the nine written as an indented
+     backtick), because an anchor that lost real declarations would be a worse defect than the one it
+     closes — a bare `^` was measured doing exactly that, losing nine. */
+  { id: "A15", title: "a table declaration recognised mid-line again — a STRING naming a table declares it (M0-181)",
+    from: 'const DECL_ANCHOR = "(?:^|`)[ \\\\t]*";',
+    to:   'const DECL_ANCHOR = "";',
+    mustBreak: "A TABLE NAMED ONLY BY A STRING IS NOT DECLARED",
+    alsoBreak: "ON THE REAL TREE EVERY DECLARATION IS THE ONLY ONE OF ITS NAME" },
+  /* M0-181, the SECOND property and a separate arm because it has a separate cause: the anchor says
+     WHAT a declaration is, the count says a name may have only ONE. Armed, the probe takes the first
+     declaration again, so a table declared in both files reads BUILT and deleting either leaves it
+     green. It must NOT break the miss ("A TABLE DECLARED NOWHERE still says so") or the string arm —
+     a guard that failed every `table` probe would satisfy this arm while blinding 58 claims. */
+  { id: "A16", title: "a `table` satisfied by the FIRST of two declarations again — deleting the claim's own table leaves it green (M0-181)",
+    from: "    if (sites.length === 1) return { ok: true, evidence: `table ${p.table} (${sites[0]})` };",
+    to:   "    if (sites.length >= 1) return { ok: true, evidence: `table ${p.table} (${sites[0]})` };",
+    mustBreak: "A TABLE DECLARED TWICE IS NOT ok",
+    alsoBreak: "A CLAIM WHOSE `table` PROBE IS AMBIGUOUS DRIFTS" },
 ];
 
 for (const a of ARMS) {

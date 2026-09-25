@@ -50,6 +50,338 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
+is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
+did for v113. SURFACE: **the published case page now names the member who WROTE the exclusion statement apart from
+the member who PREPARED AND PUBLISHED the case.**
+
+**WHAT IT CLOSES, and it is a sentence that claimed more than the record supports.** Page 2 read `Written by
+${c.completeness.author}` under a note promising *"the member who wrote it"*. `completeness.author` is the
+PUBLISHER. REC-212 (IC-272) split the two acts on the plane the same day — BOB #32 ruled (b), *two acts, two names,
+never conflated*, and BOB #33 ruled REC-212's three determinations — and raised the delegation this item
+discharges (`CLAIMS.md`, "DELEGATION 2026-09-24 RECORD (REC-212) -> UI"). So on the ordinary shape of a project
+that reviews its own work — an editor writes the statement, the owner publishes — a CREDENTIAL-FREE page told a
+stranger the publisher wrote a sentence they did not write. That is the overclaim this record exists to refuse, in
+the one place a stranger reads.
+
+**THE DATE WENT WITH IT, and it is the same defect's second half rather than a tidy-up.** `completeness.at` is
+stamped at the PUBLISHING act (`op=publish` writes `author: who, at: when` together), so *"Written by X on <at>"*
+dated the writing by the publishing. The date is kept and now prints against the act it measures.
+
+**WHAT LANDED**, three sites in `app.html` and nothing else of the surface: a new `pubStatementWriterHtml` beside
+`pubStatementAcksHtml`; the `p2` block of `pubCaseHtml` calling it, with the old sentence gone; and
+`pubCaseAuthors`, whose entries now name their own acts (`(prepared and published the case)`, and the writer as
+its own entry when the record names one that is not the publisher) where one read `(completeness, for the case)`.
+No `DEC-49 REGION`, no act dialog, no router, no `SURFACES` key, no review-copy surface was touched.
+
+**THE THREE STATES ARE RENDERED AS THREE, which is UI-89's rule (`[]` is not `null`) arriving at the name beside
+the list.** `op=publishedcase` serves `completeness.statement_by` — a name, or `null` — together with
+`completeness.statement_by_stated`, ONE sentence the plane committed from the SIGNED bytes at ratification. That
+sentence is what tells the plane's two nulls apart (a document that SAYS it could not establish the writer, and a
+document authored before rule 13 that says NOTHING about one), so it is rendered AS THE PLANE WROTE IT — DEC-8,
+and the area's own rule: render the record's own words or render nothing.
+
+**AND A FOURTH STATE THIS SURFACE CAN MEET AND THE PLANE CANNOT, found by asking who else reads the field.** A
+published record COMMITTED before `statement_by_stated` existed carries no such key at all, so there is no plane
+sentence to render. It is not the plane's stated undetermined and is not drawn as it: the page says the question
+was never put to this record, and takes no name off the publisher. `publishedcase.test.mjs`'s fixtures are exactly
+that state, which is why its two affected assertions were CORRECTED rather than exempted, each with a dated
+comment saying why the old one was wrong — one of them was asserting the defect (`/Written by vera on 2026-07-20/`).
+
+**MEASURED.** `civicos-ui/test/statement-writer.test.mjs`, 25/0, NEW: three cases drafted, published, SIGNED and
+ratified through the real plane under miniflare, then read back by the page through `op=publishedcase` as a caller
+holding NO credential — kai's draft statement published by iris (two names), a statement no draft holds (one
+member, two acts), and two drafts disagreeing (the plane's stated undetermined). `publishedcase.test.mjs` 244 ->
+245. UI harness and the full gate green; figures in the report.
+
+**WHAT IT CANNOT SEE, stated.** The no-key state cannot be driven live — `ratifyCaseDocument` writes the key
+unconditionally now — so it is rendered from a built answer and over `publishedcase.test.mjs`'s own pre-rule-13
+fixtures, and said rather than scored. `#statementWriter`'s `drafts_unbounded` and `draft_unreadable` answers are
+not reached (they need >500 drafts of one project, or a `case_drafts.params` no op writes); both are the PLANE's
+gap and `rec212-statement-writer.test.mjs` says the same of them. And rule 13's OWN residue is untestable by
+construction: a publisher who retypes a sentence an editor wrote in a draft SINCE EDITED is credited with it,
+because no record keeps a draft's statement history — the page prints the record's provenance sentence beside the
+name so a reader weighs it, and cannot do better than the record.
+
+**THE CONTROL FOUND THE INSTRUMENT WRONG, and it is recorded rather than smoothed.** Arm (A) — the row's own, the
+writer read off `author` again — came back RED at the right count with one DECLARED row GREEN. The row whose words
+are *"it is not read off the publisher"* read the PLANE's sentence and the HEADER's list and never asked what the
+page rendered as the writer, so the one row named for the defect could not see it. The row was corrected and the
+arm re-run against the corrected instrument: 7/7 AS DECLARED.
+(Renumbered v114 -> v119 by CONDUCT #20 at c20-batch27: the versions below it were taken first.)
+
+v118, 2026-09-24 session, thread UI, UI-94 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-94` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number is
+PROVISIONAL — UI-97 was running beside me and may have taken v114, so CONDUCT renumbers if it collided. SURFACE:
+**the queue FORWARDS A SELECTION of obligations to one member in ONE act.**
+
+**WHAT IT CLOSES.** D-126 (IC-235) gave `op=taskforward` a set form on the plane and left this surface's forward
+picker PER ITEM, and said so in four places rather than leaving it to be found: `NOTIFICATIONS.md`'s Incomplete
+section, `construct-status.json`'s `12.per-item` note, `member-respect.test.mjs`'s `queueEntryControlsHtml` row,
+and `queue-peritem.test.mjs`'s own "what this suite cannot see". A member holding ten obligations for one
+colleague had ten pickers and ten calls — the forty-dialogs shape (DEC-52) whichever button starts it. **All four
+statements are CORRECTED IN PLACE in this landing, each with why, and none exempted.**
+
+**WHAT LANDED**, all of it in `app.html`'s queue block and none of it on the plane (I3 consumer only):
+`queueSetOpFor` became **`queueSetOpsFor`**, answering the SET of published set acts an item can be handed to
+rather than one op — that singular return is the whole reason the bulk forward could not exist, since an
+OBLIGATION had to choose between `taskresolve` and `taskforward` and always answered the first. Beside it:
+`queueForwardOpen` / `queueForwardTo` / `queueForwardSet` / `queueForwardCancel`, `queueForwardCandidates`, one
+`QUEUE_FWD` state cell, the bar's branch and four wiring attributes of its own. The act is ONE `op=taskforward`
+carrying `items[]` with the chosen member as the shared key; every retained item keeps the record's own refusal
+(`NOT_YOURS` and who holds it now, `ALREADY_THEIRS`) through the path D-126 already built.
+
+**TWO DECISIONS THAT WERE MINE.**
+
+**(1) The picker withholds a member the WHOLE selection already belongs to, and nobody else.** The alternative was
+to withhold nobody and let the record refuse per item, which is the per-item weight's own posture — but naming
+someone who provably cannot receive ANY of it is *a control the record cannot honour*, which this area has a
+standing rule against (`v83`). The rule is keyed on the SELECTED ITEMS' assignees rather than on who is asking,
+which is the only spelling that stays right when the selection is not all one person's.
+
+**(2) The picker's state lives in `QUEUE_FWD`, not in the DOM.** The queue repaints whole, so a `<select>`'s value
+would not survive the repaint its own `onchange` triggers.
+
+**WHAT THE WORK FOUND, and both are about the fixture rather than the subject.** (a) A first draft of the
+spanning-selection arm claimed to drive a selection spanning assignees and **did not** — `queueFeed` carries a
+member her OWN tasks plus honestly `unassigned` ones, so every task selectable here is already hers, and
+`#routeTask` returns `unassigned` only when there is no active administrator, which `memberSet` will not produce
+without a section 4.7 vote (`ADMIN_REQUIRES_VOTE`). The arm is now driven as a UNIT with that stated at the site,
+rather than left as a green section measuring something else. (b) A retained item that DRIFTED away is **not**
+still selected — `queuePaint` drops from the selection every id the feed no longer carries — so the assertion
+says that, instead of the tidier sentence I first wrote.
+
+**NUMBERS.** `queue-peritem.test.mjs` 16 -> **36 pass / 0 fail**; `member-respect.test.mjs` 495/0 after its row's
+correction; the UI harness and the full battery green (the gate line is on the landing commit). The negative
+control is **7 arms, every one as declared**, recorded on the suite's `NEGATIVE CONTROL:` lines: UI-94's own
+`fwdloop` (the row's control — loop per item, and the one-act arms fail BY NAME), `fwdofferall` (the candidate
+rule), `fwdspelling` (OVER-STRICTNESS, green), plus D-126's `baseline`, `allornone`, `silentdrop`, `ncalls`
+re-run. **Two of D-126's three moved**, because the bulk forward goes through the same `queueApplySet`, and their
+declarations were amended FROM THE PRINTED FIGURES rather than the figures smoothed.
+(Renumbered v114 -> v118 by CONDUCT #20 at c20-batch27: the versions below it were taken first.)
+
+v117, 2026-09-24 session, thread UI, UI-97 (a WORKER of SCHEDULER #19 under BOB #33's 21:10Z dispatch, cloud
+session). Landed on `land/worker/UI-97` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry;
+the version number is provisional, since a concurrent UI worker may take v114 on main first — renumber it at
+integration and keep both entries in full and in version order. SURFACE: **the QUEUE's mute report now carries the
+two UNDO controls, so a member can take a mute back.**
+
+**WHAT IT CLOSES.** D-125 gave `op=queuemute` `unmute: true` in BOTH forms on 2026-09-23 and UI-86 gave the member
+both ways to MUTE on 2026-09-24. Nothing ever sent the flag. So the app had a one-way door: a member could silence
+a finding or a held host from the queue and had no way back, and `NOTIFICATIONS.md`'s own front matter said so
+(*"UNMUTE … has NO surface"*).
+
+**WHERE THE CONTROLS HAD TO GO, and it is the item's one real design point.** Not on the item: a muted item is NOT
+IN THE FEED, so there is nothing there to carry a control. The mute REPORT (`queueMuteReportHtml`) is the only
+place a member's own mutes are named at all, which makes it the only place an undo can live. Each form keeps its
+own attribute — `data-unmuteitem` sends `{ item, unmute:true }`, `data-unmutecase` sends `{ case, kinds,
+unmute:true }` — for the reason UI-86 gave for the mute's two: an undo of one item must never be picked up by a
+selector that hands a case to the plane.
+
+**AND WHAT THE SURFACE CANNOT NAME IS SAID RATHER THAN GUESSED AT.** `op=queue` publishes `mute.cases` as case IDS
+and publishes the muted KINDS nowhere; the only kinds this page can see are the ones on `suppressed[]`, which exist
+for a kind holding something back TODAY. So a case whose mute is suppressing nothing gets NO undo control and a
+sentence saying why. An "Unmute" over kinds this page had to guess would let back in something other than what the
+member muted, and *a control the record cannot honour is worse than no control* (`v83`). The gap is the PLANE's and
+is minted as **D-534**, sent to SCHEDULER — not a mode this surface withheld.
+
+**THE ACCEPTS-WHEN IS AGAINST A REAL PLANE**, in a new suite rather than folded into the mock one: `queue-unmute.test.mjs`
+(19/0) runs `bio-plane/src/index.mjs` under miniflare with two enrolled members, a threaded progression under a real
+case and a real held host, and drives both round trips through the surface's own acts — mute, undo, the item back
+on the painted feed AND read back from `op=queue`, with ben's feed asserted unmoved at every stage. It is its own
+file because `notifications.test.mjs`'s fixture rule is that NOTHING IS DRAWN AT RUNTIME, and a real plane mints
+ids, instants and tokens at runtime; the two instruments cannot share a file without one of them lying about itself.
+
+**CONTROLS.** `queue-unmute.control.mjs`, five arms on the EXTRACTED script (app.html never edited): baseline 19/0;
+`noflagitem` and `noflagcase` (the row's own — omit `unmute:true`, and the plane's idempotent upsert silently
+RE-MUTES) 15/4 each, exactly the declared arms; `noreport` (no undo drawn at all — the state this item found) 17/2;
+`overstrict` (the flag as `Boolean(1)`) GREEN. `notifications.control.mjs` re-run whole with four new arms: 20 of 20
+as declared, exit 0, every restore verified by sha256 and cmp.
+
+**AND ONE CORRECTION TO A DRIVER, never an exemption.** `notifications.control.mjs` kept its pristine copies in
+`.ui45-harness/` INSIDE the worktree — two full copies of `app.html` there for the length of every run. BOB #32
+ruled on 2026-09-24 that a file in a worktree is not inert (repository-walking suites walk it, it trips `gates.mjs`
+§2e, and it makes the tree dirty, so D-293 refuses to record a GREEN verdict; three items paid for it in one night).
+The pen is now a per-run `mkdtemp` outside the worktree, and the driver's own practice line says why it moved. Its
+collision reasoning was right and is KEPT — `mkdtemp` answers it by uniqueness rather than by location.
+
+Suites, each baseline RE-MEASURED at `1a7f0bcc0` in a scratch worktree rather than taken from the brief:
+`notifications.test.mjs` 75/0 -> 86/0 (§2, eleven new assertions, and its §6 sweep floor MOVED 11 -> 22 from the
+figure the run printed — the corpus was already 18, so the floor had SEVEN phases of slack before this item added
+four); `member-respect.test.mjs` 495/0 -> 503/0 (one new `SETS` row, `queueMuteReportHtml`, which the walk finds at
+three sites, plus two ARM 4d measurements of the plane's `unmute`); `queue-unmute.test.mjs` NEW, 19/0.
+`construct-status.json` gains `12.unmute`.
+(Renumbered v114 -> v117 by CONDUCT #20 at c20-batch27: UI-102, UI-101 and UI-99 took v114-v116 in c20-batch26.)
+
+v116, 2026-09-24 session, thread UI, UI-99 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-99` (base `origin/main` @ `1a7f0bcc`, the c20-batch24c train), in the commit that carries this
+entry. It was written as `v113` against `origin/main` @ `e9b21be6` and RENUMBERED to `v114` when the rebase onto
+the batch-22/23/24c trains found UI-92 already holding `v113` on main; CONDUCT renumbers again at integration if
+a concurrent entry took this one. SURFACES:
+**the PROGRESSIONS screen's read pane and the QUEUE.** Design: `BIO_Content_Framework_v0_10.md` §8.2,
+"The declared flow, and its revisions" (D-128 and REC-184 on the plane; BOB #27's ruling).
+
+**THE ITEM IS ONE SHAPE OF DEFECT SEEN TWICE: THE RECORD HELD MORE THAN IT SHOWED.** The area's standing
+rules are written against the opposite error — *delete the false sentence, do not write a better one* —
+and this is its mirror. Both halves were BUILT ON THE PLANE, TESTED ON THE PLANE, and reached no page.
+
+**HALF ONE — a revision's basis.** D-128 made a progression definition APPEND-ONLY: a revision writes a
+new version with its author, date and BASIS (the member's statement of why the declared flow changes, and
+a citation for where that is published or held), every earlier version stands, and `op=progression`
+returns the whole list. UI-83 built the form that SENDS those two fields, and its receipt tells the member
+the earlier version *"stays on the record beside it"*. `progLoad` read `op=progression` for its stages and
+threw `versions[]` away, so that promise was kept by the plane and by no page: the basis a member wrote,
+the author and date the plane stamped, and the standing earlier version were nowhere. `progVersionsHtml`
+now renders them, and `progVersionBasisHtml` states an absent basis as `not recorded` IN WORDS — the
+first declaration is not required to carry one, and a definition declared before D-128 has none to carry,
+so both read the same honest sentence rather than one the screen guesses between. It renders as soon as
+the DEFINITION reads back, which also fixed a smaller thing found while building: the path where the
+subject is not in the registry used to leave a member a refusal sentence and no sight of the flow they had
+just revised.
+
+**HALF TWO — the version a decision judged.** REC-184 made `op=proposedispose` stamp the definition
+version in force, made a decision age its proposal only while that version is current, and published the
+version, its state and whether it still applies on `op=queue`'s `disposed` block. **No surface read
+`disposed` at all** (`grep` over `civicos-ui/`: one hit, `res.disposed`, inside an act's own receipt).
+The only set-aside decisions a member ever saw were the ones `notifDisposedHtml` remembered from THIS
+page's own acts — which the plane's own comment on that block names as the honest stopgap it replaces,
+and which survive neither a reload nor a second member, and which can never read `not recorded` because a
+fresh act is always stamped. `queueDisposedRecordHtml` now renders the record's own block, and
+`disposedFlowVersionHtml` says per row which version it judged, whether that version is still the one
+standing, and `not recorded` where the record holds no version — with no number put in its place.
+`notifDisposedHtml` now renders only what the record's block does not yet carry, so one decision is shown
+once: two renderings would be a second place a fact is stated (D-21/DEC-8), which is the defect
+`disposed` exists to end.
+
+**THE SUITE IS REAL-PLANE AND THE `not recorded` ROW IS MADE, NOT MOCKED.**
+`civicos-ui/test/declared-flow-surface.test.mjs` runs `app.html`'s own handlers against miniflare with a
+signed-in enrolled member (never the deploy `MEMBER_TOKEN` — REC-189: that is a machine identity), and
+reaches the pre-REC-184 shape the way `bio-plane/test/proposedispose.test.mjs` reaches it: a ProbeStore
+subclass adding ONE raw-SQL route, the column DROPPED on a live store, the store re-booted on the same
+storage so `#migrate` puts it back NULL. Five arms, 38 assertions. Every sentence assertion runs over what
+a member READS — tags stripped, entities opened, case-insensitive — so the control's over-strictness arm
+is a real arm and not a spelling test.
+
+**NEGATIVE CONTROL, the row's own: 4/4 AS DECLARED.** `not recorded` is written in two places, so it is
+hidden in each ALONE. (A) hidden on the disposition -> RED 2 of 38, both naming THE ROW'S SECOND HALF,
+with the basis arms green. (B) hidden on a version's basis -> **RED 1 of 38, and nothing else** — which is
+the receipt that the two surfaces write the same words and neither inherits the other's coverage.
+(C) over-strictness, the same words upper-cased inside `<em>` -> GREEN 38/0. Run three times in all (twice
+before the rebase onto the c20-batch24c train and once after two corrections this item's own diff review
+found), 4/4 every time. `app.html` restored by `cp`
+from a per-arm pristine copy, sha256 and `cmp` verified, identical at the end.
+
+**WHAT IS STILL UNBUILT AND IS NAMED RATHER THAN LEFT TO BE INFERRED.** `op=proposals`' own
+`prior_disposition` — the earlier decision the plane carries beside a proposal a revision REOPENED —
+reaches no page, and cannot from here: UI-14 retired `op=proposals` from every surface in favour of
+`op=queue`, and `op=queue`'s FINDING items carry `subject.definition_version` but NOT
+`prior_disposition`. So a member meeting a reopened question is not shown that somebody already decided
+it once; they are shown the decision in the set-aside block, under its own heading, which is a weaker
+join than the plane can make. That is a plane-side gap (a field on an op a surface reads), it is stated
+in §8.2's As-built paragraph and in UI-99's report to CONDUCT, and it is not fixed here.
+(Renumbered v114 -> v116 by CONDUCT #20 at c20-batch26: UI-102 took v114 and UI-101 v115.)
+
+v115, 2026-09-24 session, thread UI, UI-101 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-101` (base `origin/main` @ `1a7f0bcc`), in the commit that carries this entry. (Claimed
+`v113`, which UI-92 holds on main; renumbered here when this branch rebased onto c20-batch24c, and v114 -> v115 by CONDUCT #20 at c20-batch26 because UI-102 took v114. Only the
+number moved.) The base is the SECOND one this item measured against — see the figures below. SURFACE:
+**none, and none was owed — the row's own subject was already built.** No byte of `civicos-ui/app.html`
+moves. The entry is here because the next session reading `QUEUE.md` will meet UI-101's heading and needs
+to know, without re-deriving it, that the heading is false.
+
+**THE ROW'S PREMISE WAS FALSE WHEN IT WAS MINTED, AND THE RECORD ALREADY SAID SO.** UI-101 reads *"THE APP
+OFFERS NO RISK-TIER CONTROL: `civicos-ui/app.html`'s action intake cannot state 1, 2 or 3"*, found by D-483's
+worker and rowed by SCHEDULER #18. D-483 and UI-85 landed the same day on opposite sides of one integration:
+D-483's worker looked at an `app.html` that did not yet carry UI-85's chooser, reported the absence honestly,
+and the row outlived the fact. `BIO_Case_Making_v0_1.md` §2 carries the correction in its own words — *"D-483's
+own note that `civicos-ui/app.html` has no such control is CORRECTED HERE: UI-85 built it … and the two landings
+crossed"* — and `construct-status.json` 8.risk-tier has read BUILT, naming `addActTier` at `app.html`, since.
+
+**VERIFIED AT THE DEPENDENT BY NAME, not from the row and not from the note** (`CLAUDE.md` §5). The chooser is
+`addActionPaneHtml`'s `tierPick` over `actVocabMap("risk_tiers")`; the member's act is `addActTier`; the write is
+`riskTierLine`, which writes a key only when the published map holds it; the default is `addActReset`'s
+`tier:"undetermined"`. Every clause of the row's scope — a choice over `vocabularies.risk_tiers`, in the action
+intake, unset by default, unset writing undetermined, words taken from the plane — is at the code.
+
+**AND MEASURED, because a claim about the state of the system is a claim about the moment it was verified.** The
+row's accepts-when is *"a chosen tier is written and none chosen writes undetermined, against a real-plane suite"*.
+`add-surface.test.mjs` drives the app's own `addGo` through miniflare as a SIGNED-IN MEMBER SESSION and reads back
+`op=projection`: untouched → `undetermined`, *"not assessed: no member has stated a risk tier for this action"*;
+picked 2 → `2`, *"file with caution"*. 190 assertions, all green; `node civicos-ui/test/run.mjs` exit 0, all
+harnesses green. The row's named NEGATIVE CONTROL — *"default the choice to 1 and the unset arm fails by name"* —
+is arm (5) of `add-surface.control.mjs` and UI-85 built it too: re-run here, 8 arms, 8 AS DECLARED, (5) RED first
+and by name at *"UI-85 UNTOUCHED"*, both watched files restored byte-identical. The only figure that moved is
+`app.html`'s size, 1,478,680 → 1,578,244 bytes since UI-85's run — 99,564 bytes of other UI landings under a
+control whose patches anchor by text, every anchor still matching exactly once. That is the one thing this
+re-run establishes that UI-85's did not, and it is recorded on both files' own headers rather than here.
+
+**MEASURED ON TWO BASES, because the first gate caught the record and not the code.** The item ran green on
+`origin/main` @ `e9b21be66` and then went RED at `plancheck`, on `docs/development/DEBT.md` missing — M0-140's
+retirement had landed on `coord` while `main` still carried the pointer stub that sends a reader there. Not this
+item's diff and not fixable inside it: the fix was already written, in the c20-batch24c train
+(`ec17d236`), which landed on `main` as `1a7f0bcc` while this item was measuring. Rebased onto it, and since that
+train also moves `app.html`, every figure above was re-taken rather than carried: the suite, the two projections
+and all eight arms read the same on both bases, and only `app.html`'s size differs. The control has now run three
+times on three different `app.html`s, 8 of 8 AS DECLARED each time — which is a stronger statement about those
+anchors than the single run this item set out to make.
+
+**WHAT THIS ITEM FOUND THAT ITS ROW DID NOT ASK FOR, routed and not parked.** (1) **No member may state a tier on
+an action that already exists.** `risk_tier` reaches the record only through a document's front matter at
+`op=promote`; there is no member act for it, where the neighbouring ruling D-149 got `op=actionlaws` and UI-90's
+surface. So D-182's *"only a member's authored act sets a tier"* is available at CREATION ONLY, and an action
+written before anyone assessed it reads "not assessed" for good — while §2's own sentence, *"a machine may PROPOSE
+that a tier be reconsidered"*, describes a reconsideration nothing can carry out. `node tools/decided.mjs` finds no
+ruling and `QUEUE.md` no row. (2) **The two intake surfaces disagree in shape**: the app preselects `undetermined`
+and offers it as a choice; D-483's setup page derives its settable keys through `riskTierState` so `undetermined`
+is not offered and nothing is preselected. Neither overclaims and §2 rules on neither. Both are in the report,
+(1) diagnosed to a named fix and routed to BOB for the design half before SCHEDULER places it.
+
+v114, 2026-09-24 session, thread UI, UI-102 (a WORKER of CONDUCT #20, cloud session). Landed on
+`land/worker/UI-102` (base `origin/main` @ `1a7f0bcc`, carrying c20-batch24c), in the commit that carries this
+entry; **the version number is PROVISIONAL** — other UI workers are live and CONDUCT renumbers at integration, as it
+did v112 -> v113. SURFACE: **the action page now renders each PROPOSAL of the laws governing the ask, beside the
+member's list — and offers no way to turn one into the list.**
+
+**WHAT IT CLOSES.** REC-195 built the plane half D-149 had left unbuilt — `op=actionlawspropose`, the
+`action_law_proposals` table, and `governing_laws_proposals` on `op=projection`'s action block — and MEASURED its own
+gap: `grep -c governing_laws_proposals civicos-ui/app.html` = 0. The owed act was named in IC-267's
+consumer-impact section and in `construct-status.json` 8.governing-laws' NOT BUILT tail. **It was named in NEITHER a
+`CLAIMS.md` DELEGATION nor a QUEUE row of its own** — measured, not assumed: `CLAIMS.md` on `coord` is 20,145 lines
+and contains no occurrence of `REC-195`, `actionlawspropose`, `governing_laws_proposals` or `UI-102`. SCHEDULER #18
+rowed it anyway off the construct-status tail, which is the mechanism working; recorded because the ledger CLAUDE.md
+names for an owed act was not the one that carried this one.
+
+**WHAT LANDED**, all of it in `app.html`: `actionLawsProposalsHtml`, called once from the action page immediately
+after `actionLawsHtml` inside the SAME `<h2>The laws this ask is made under</h2>` section, plus one `subj-note` and
+one CSS rule. Each proposal renders the credential the plane stamped, the date, its citations each at its level, and
+the plane's own label sentence; the block's own `says` closes it. Three answers are kept apart exactly as the list
+above it keeps them: a set of proposals, an EMPTY set said in the plane's own words, and an ABSENT key said as an
+absence. **The page holds no sentence of its own about any of it** — proved structurally, not asserted: the suite
+checks `app.html` contains no copy of any of the plane's five sentences.
+
+**THE ITEM IS AN ABSENCE, AND THAT IS WHY IT NEEDED DRIVING.** The row's scope is *never offer a proposal as a way to
+set the list*, so what had to be built was a read with NO control on it. A "use this" button is the obvious
+convenience and it is the defect: there is no act that ADOPTS a proposal — `op=actionlaws` is a member's authored
+statement, not an acceptance of anybody's suggestion — so such a control could only prefill a member's authored
+legal claim with a machine's citations. Three arms hold it: the rendered block carries no button, link, field or
+handler in any of its three shapes; it names no function a control could call; and the act's form is DRIVEN open
+with two proposals standing and its one row read back empty. A markup sweep is the honest instrument here and its
+limit is stated in the suite — a control added by script after render would be invisible to it, which is what the
+behavioural arm covers.
+
+**A STALE COMMENT CORRECTED, not left to the reader.** `openActionLaws`' comment block said *"no proposal is built in
+the plane and none is invented here."* The first clause was true when written and REC-195 made it false. Corrected in
+place with its date and reason — and the second clause, which is the load-bearing one, is unchanged and now carries
+more weight than it did: this form still opens on an empty row whatever the record holds.
+
+Suites: NEW `civicos-ui/test/ui102-laws-proposals.test.mjs`, 38/0, against a REAL PLANE under miniflare — two
+proposals written through `op=actionlawspropose` (one by a machine credential, one by a signed-in member), the list
+by `op=actionlaws`, three actions covering stated-with-proposals, nothing-proposed and proposed-but-undetermined, and
+every rendered sentence compared VERBATIM against `op=projection`'s own answer in the same run. No existing suite's
+count moved and no floor moved. Control: `ui102-laws-proposals.control.mjs`, five arms, every one as declared,
+including the row's own — a "use this" control fails the no-setter arms by name.
+
 v113, 2026-09-24 session, thread UI, UI-92 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-92` (base `origin/main` @ `68fecb8d`), in the commit that carries this entry; the version number
 was provisional; CONDUCT #20 renumbered it v112 -> v113 at c20-batch22 because UI-100 took v112 on main. SURFACE: **the PROJECT

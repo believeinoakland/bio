@@ -17,6 +17,11 @@
    (b) THE SAME LITERAL, AND THEN MOVE THE RULE — keep the literal and set `EARNED_CAPTURE_CEILING = 'C'` in checks/bio-checks.mjs -> THREE FAIL (75/78) and they name the drift in both directions: the publication no longer equals the enforcement's own value, and the two letters the fence states are no longer the rule's. THIS IS WHAT THE COPY COSTS: a member co-attesting is told the capture is strengthened toward evidentiary weight at Grade B while the gate refuses any leg above C — the record overclaiming on a doctrine sentence, which is the failure CLAUDE.md ranks worse than a missing feature;
    (c) THE COMPOSED FENCE UNDER THE SAME MOVED RULE — restore the composition, leave the ceiling at C -> TWO FAIL (76/78) and they are the RIGHT two: "the published fence IS Bob's sentence" (the publication has moved off the ruling, which is precisely what must stop a turn), and the counterfactual, which goes degenerate because attestFence("C","B") is now the published string. What does NOT happen in this arm is the thing arm (b) does: no member is told a grade the gate will not accept, because the sentence followed the rule. That difference between (b) and (c) is the item.
    Restored -> 78/78. */
+/* NEGATIVE CONTROL (D-444, the PROJECT arm of `reinstate`), FOUR arms, DECLARED IN AND RUN BY `test/d444-reinstate-project-arm.control.mjs` — deliberately not a `.test.mjs`, because it edits real sources while it runs. RUN 2026-09-24, each arm ALONE, every arm AS DECLARED, both sources restored from uniquely-named per-arm pristine copies verified by sha256 AND by byte compare with the byte count printed and floored (src/affordances.mjs 171,437 B sha256 86a6d1ba17c7…; src/store.mjs 3,289,632 B sha256 baf6dd975e99…), pristine copies kept OUTSIDE the worktree (BOB #32). BASELINE 99 pass / 0 fail, so a run with every arm broken is distinguishable from one with every arm working.
+   (revert) THE ROW'S OWN — the PROJECT arm keys back on `cites_out.severed`. DECLARED fail §0, §1, §4; hold §2, §3. RESULT 96/3, AS DECLARED: the retired-only project is offered an act the store refuses again, which is the defect re-entered, and §4 catches the same project once its live edge is back.
+   (drop) HOW A LIAR PASSES, named on the row — the PROJECT arm is removed from `reinstate` altogether, which satisfies "never offer what the store refuses" for free. DECLARED fail §0 and §2's OFFER; hold §1, §3, §4 and §2's ACCEPTANCE. RESULT 96/3, AS DECLARED — and NOT PREDICTED: it also failed REC-19's own "the project now publishes {cite, reinstate}" above, so that assertion was already a second catcher for this lie and is recorded here rather than left to be rediscovered.
+   (copy) `affordanceFacts` asks its OWN copy of the retired predicate, spelled identically. DECLARED fail §0 ALONE; hold every behavioural arm. RESULT 98/1, AS DECLARED — an identical copy agrees at zero cost (REC-35's finding, here on a PREDICATE rather than an array), so the structural pin is the whole of that control and the only reason a second copy cannot enter quietly.
+   (blind) the fact is stated but never counted, so the act is withheld from every project — over-strictness from the STORE's side. DECLARED fail §2's OFFER; hold §0, §1, §3, §4 and §2's ACCEPTANCE. RESULT 97/2, AS DECLARED, with the same unpredicted second catcher as (drop). */
 /* op=affordances (REC-19, standing doctrine DEC-8): the plane publishes what may
  * be DONE to an object, so an act surface renders options it RECEIVED and never
  * computes one. whoami publishes capabilities, searchfields publishes the query
@@ -1006,6 +1011,116 @@ const reB = rP(await GET(`op=reinstate&token=mem-rec19&project=${P}&handle=${hB5
 t("... and op=reinstate onto the retired item is refused RETIRED_NOT_CITABLE, as the empty list says",
   [reB.ok, reB.code], [false, "RETIRED_NOT_CITABLE"]);
 
+/* ============ D-444 · THE PROJECT ARM OF `reinstate`, NARROWED ==============
+ * State Rules & Consistency v1.5 §4.1 ("A RETIRED ITEM IS NOT CITABLE", BOB
+ * #30), with the affordance contract that an offered act is one the store
+ * accepts (DEC-8).
+ *
+ * REC-183 fenced reinstate at the TARGET's end and stated the residue at the
+ * other: the PROJECT arm keyed on `cites_out.severed`, a count of the project's
+ * own severed edges that says nothing about what those targets have BECOME. The
+ * corpus is standing in exactly that state right now — P's ONE edge is severed
+ * and B, its target, has just been retired — so the four assertions below run
+ * on the very object REC-183 left un-narrowed, and the last of them drove the
+ * refusal one line up. The store now states `cites_out.severed_reinstatable`,
+ * counted through `#retiredNotCitable`, the predicate `#edgeTransition` itself
+ * refuses on.
+ *
+ * HOW A LIAR PASSES, and which arm catches it: withholding `reinstate` from
+ * every project satisfies "never offer what the store refuses" and costs a case
+ * the one recorded way to take a citation back up. §2 is that arm — a severed
+ * edge onto a LIVE target must still be OFFERED and must still be ACCEPTED
+ * through the op — and §4 catches the same lie in its narrower form, an arm
+ * that goes quiet once any retired target is present.
+ *
+ * AND ONE ARM IS STRUCTURAL, because behaviour cannot see the defect this item
+ * is really about. A SECOND COPY of the retired predicate — one in the fact,
+ * one in the refusal — would pass every assertion here on the day it was
+ * written and drift the day either moved: REC-35's finding, that an identical
+ * copy agrees at zero cost, restated on a PREDICATE. */
+console.log("\n--- D-444: the project arm of `reinstate` follows the TARGETS, not the count ---");
+const storeSrcNoComments = stripComments(storeSrc);
+const reinstateApplies = String(ACTS.find((a) => a.id === "reinstate").applies);
+/* THE SPELLING IS COUNTED AT TWO, NOT AT ONE, AND THE SECOND IS NAMED RATHER THAN ROUNDED OFF.
+   `#retiredNotCitable` is DEFINED once and READ twice — by `#edgeTransition`'s refusal and by
+   `affordanceFacts` — so the offer and the refusal cannot drift, which is this item. A SECOND
+   spelling of the same question survives inside D-168's `is-cite-retired` DEC-49 region at
+   `op=cite`, and a THIRD, type-blind one at the suggest path's SUGGEST_LEG_UNREACHABLE. Folding
+   those is a separate act: the cite copy sits inside a governed region whose `regionLines` floor a
+   4-line contraction would breach, and the suggest copy asks the question of a DIFFERENT column set
+   (viewer-gated, no type test), so collapsing them is a decision and not a rename. Reported to
+   SCHEDULER as a class finding. THE PIN IS WRITTEN SO IT FAILS ON A THIRD COPY: the total is 2 and
+   exactly ONE of them is inside the cite region, so a copy grown anywhere else — above all inside
+   the new fact — turns this red rather than passing at zero cost (REC-35's finding, on a
+   predicate). */
+/* THE REGION IS TAKEN FROM THE RAW SOURCE AND NOT THE STRIPPED ONE, corrected after the first run
+   (which read 0 and was RIGHT to): a DEC-49 marker lives INSIDE a block comment, so the span does not
+   exist in a comment-blanked copy at all. The total is still counted on the stripped source, where a
+   spelling quoted in prose cannot inflate it. */
+const citeRegion = (storeSrc.match(
+  /DEC-49 REGION is-cite-retired[\s\S]*?END DEC-49 REGION is-cite-retired/) || [""])[0];
+const RETIRED_LITERAL = /String\(b\.current_state \?\? ""\)\.trim\(\) === "retired"/g;
+t("§0 STRUCTURAL: `#retiredNotCitable` is DEFINED once and READ twice — by the refusal and by the "
++ "fact; the only other spelling is D-168's, inside the cite region; and the arm keys on the "
++ "reinstatable count, never on the bare `severed` one",
+  [(storeSrcNoComments.match(/#retiredNotCitable\(/g) || []).length,
+   (storeSrcNoComments.match(RETIRED_LITERAL) || []).length,
+   (citeRegion.match(RETIRED_LITERAL) || []).length,
+   /cites_out\.severed_reinstatable/.test(reinstateApplies),
+   /cites_out\.severed\b/.test(reinstateApplies),
+   /cites_out\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies))],
+  [3, 2, 1, true, false, true]);
+
+/* §1 THE ITEM'S OWN ARM. P holds exactly ONE cites edge; it is severed; its
+   target B is retired. The store would refuse a reinstate here — it just did,
+   one assertion up — so the act must not be offered. `cite` stays (a project is
+   always a citing side) and `sever` does not (nothing confirmed to move), which
+   is what makes this an absence with a reason rather than an empty answer. */
+const affP2 = await affordances(P);
+t("§1 a project whose ONLY severed edge points at a RETIRED item is NOT offered reinstate — "
++ "and the absence has a reason: cite remains, sever does not",
+  actIds(affP2), ["cite"]);
+
+/* §2 THE OVER-STRICTNESS ARM, and the accepts-when's second half. A second
+   information bundle, cited onto the SAME project and severed, gives P two
+   severed edges of which one is reinstatable. The offer must come back, and the
+   op must then ACCEPT it — an offer nothing honours is the same defect wearing
+   the other face. */
+const C = "INFO-2026-0003-d444";
+await promote(C, infoMd(C, "verified", `sha256:${sha("body C")}`), "information", "verified");
+const hC1 = await selectIds([C]);
+t("§2 FIXTURE: C is cited onto the same project",
+  [rP(await GET(`op=cite&token=mem-rec19&project=${P}&handle=${hC1}&note=basis`)).ok,
+   (await affordances(C)).result.current_state], [true, "verified"]);
+const hC2 = await selectIds([C]);
+t("§2 FIXTURE: and severed, so P now holds TWO severed edges — one onto retired B, one onto live C",
+  rP(await GET(`op=sever&token=mem-rec19&project=${P}&handle=${hC2}&reason=checking+the+later+capture`)).severed, [C]);
+const affP3 = await affordances(P);
+t("§2 the project IS offered reinstate again once one severed target is live — the act is NARROWED, not dropped",
+  actIds(affP3), ["cite", "reinstate"]);
+const hC3 = await selectIds([C]);
+const reC = rP(await GET(`op=reinstate&token=mem-rec19&project=${P}&handle=${hC3}&reason=the+later+capture+was+wrong`));
+t("§2 ... and the store ACCEPTS it: the offered act is one the op honours, which is the whole contract",
+  [reC.ok, reC.reason ?? null, reC.reinstated], [true, null, [C]]);
+
+/* §3 THE TWO ENDS AGREE. The offer is published over the reinstatable count and
+   the refusal is taken over the same predicate, so naming the retired member in
+   the same selection refuses the WHOLE call — the project-side offer never
+   promises that every member of a selection may move. */
+const hBC = await selectIds([B, C]);
+const reBC = rP(await GET(`op=reinstate&token=mem-rec19&project=${P}&handle=${hBC}&reason=both+back+please`));
+t("§3 the project-side offer does not narrow a SELECTION: naming the retired member refuses the whole call by name",
+  [reBC.ok, reBC.code, reBC.offenders], [false, "RETIRED_NOT_CITABLE", [B]]);
+
+/* §4 THE OFFER FOLLOWS THE RECORD. C's edge is confirmed again, so the only
+   severed edge left on P points at retired B: reinstate goes away, and sever
+   arrives because there is now a live edge to move. The count `cites_out.severed`
+   is 1 in BOTH this state and §2's, which is precisely why it could not carry
+   this act — the negative control breaks exactly here. */
+const affP4 = await affordances(P);
+t("§4 after the live edge is reinstated, the one severed edge left points at retired B — reinstate goes, sever comes",
+  actIds(affP4), ["cite", "sever"]);
+
 /* --------------------------------------------------------------- focus */
 console.log("\n--- a focus: dispose while an edge exists, EMPTY when elevated — and the empty list is honest ---");
 const F = "FOCUS-2026-0001-rec19";
@@ -1205,8 +1320,11 @@ t("the derivation module agrees with the wire (no second copy in the handler)",
      citing object that is not a project. Stated here rather than left to the
      rule's `?? 0` default, so this fixture exercises the SHAPE the store
      actually returns and not the fallback. */
+  /* D-444 added `cites_out.severed_reinstatable`, stated here for the same
+     reason, so the fixture keeps exercising the store's real shape. */
   deriveActs({ object_type: "information", current_state: "collected",
-               cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 },
+               cites_in: { confirmed: [], severed: [] },
+               cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
                cited_by_case: { confirmed: 0, severed: 0 } })
     .map((a) => a.id).sort(), ["cite", "release"]);
 

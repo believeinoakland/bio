@@ -80,6 +80,38 @@
  *       count so `needsTier2` stops escalating -> exit 1, naming the PREMISE
  *       assertions, which are a different set from A1's and A2's. This is the arm that
  *       catches green-over-nothing.
+ *   (5) A5 D-514: THE LAYER FILTER BACK ON RAW `text.length` -> exit 1, naming D-514's
+ *       ATTRIBUTION set and straying into no other. THE ROW'S OWN DECLARED CONTROL.
+ *   (6) A6 OVER-STRICTNESS for D-514, the same predicate as a `\S` test -> exit 0.
+ *   (7) A7 D-514: THE ROUTING BACK ON RAW `counts.chars` -> exit 1, naming the ROUTING
+ *       set only. Armed apart from A5 because D-514 has two halves and a landing that
+ *       shipped one would pass the other's arm completely.
+ * Result 2026-09-24 (D-514): 8 of 8 arms agreed with their declarations, baseline 43
+ * assertions, every restore sha256-MATCH and cmp-IDENTICAL. AND THE RUN REPAIRED TWO
+ * ARMS THAT HAD NOT BEEN ARMING: A1 — the arm that proves D-372's gap was real — and
+ * A3, both anchored at an indentation `src/index.mjs` stopped carrying when CPDF-19's
+ * read-time copy of the partition was collapsed into one. Recorded in `nc-rec102.mjs`'s
+ * own header, not smoothed.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHAT SECTIONS 5-7 CAN AND CANNOT SEE (D-514), stated because it is load-bearing:
+ *   THEY CAN see, through the op, that a whitespace-only page is attributed to no
+ *   layer part and records the same chain as an empty one; that the escalation
+ *   predicate consults the member for a document sitting one character inside the
+ *   band where the glyph rule and the raw rule disagree; and that the real witness
+ *   the row names, `legistar-73550` p1, reads 39 characters and ZERO glyphs.
+ *   THEY CANNOT drive that real page through the op, and nothing here pretends
+ *   otherwise: no page of that document carries a `no_text_layer` marker, so it
+ *   never reaches the tier-3 merge, and no committed PDF pairs a whitespace page
+ *   with a scan. The two halves are driven APART — the page at the counter, the
+ *   wire over a synthesised pair — and neither stands in for the other.
+ *   THEY CANNOT see the two BASE judgments D-514 also corrected (the wholesale
+ *   refusals in `mergeTier2Text` and `mergeTier3Text`), because no producer in this
+ *   plane emits a text shape with no per-page grain — `tier2-wire.test.mjs` section 8
+ *   measured that and drives the tier-2 one at the merge directly. Nor the per-page
+ *   `empty` test, which a whitespace page never reaches through the op because it
+ *   carries no marker to be eligible for OCR at all. Those three are guards, named
+ *   as guards at their sites, and this suite claims nothing about them.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -97,6 +129,10 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 const sha256 = (v) => createHash("sha256").update(v).digest("hex");
+/* Bound at section 1 from the module's own export and read again at section 5,
+   so both sections put their chains through the RECORD's validator rather than
+   through two imports that could drift. */
+let checkChainD514 = null;
 
 /* ===================================================================== *
  * THE PDF BUILDER.
@@ -197,7 +233,77 @@ const TIER2ONLY = pdf([
   { num: 13, head: `<< /Length ${Buffer.from(IDENTITY_CMAP, "latin1").length} >>`, stream: Buffer.from(IDENTITY_CMAP, "latin1") },
 ]);
 
-const DOCS = { both: BOTH, tier3only: TIER3ONLY, tier2only: TIER2ONLY };
+/* ---- D-514's PAIR. Two documents identical in every way but ONE: the text page
+   holds four SPACES in the first and NOTHING in the second. Tier 1 reads both,
+   neither draws a marker (a font is declared, so the page is not a scan), and
+   neither holds a single GLYPH. The record must therefore say the SAME thing
+   about both — and until D-514 it did not: the whitespace page went into the
+   `layer` part of the chain on `p.text.length`, so the record named a tier-1
+   derivation for a page from which nothing was derived, while the empty page
+   correctly belonged to neither part.
+
+   WHY A PAIR AND NOT ONE DOCUMENT. An assertion that the two agree would pass for
+   free if both chains came back null or empty, which is how three headline
+   assertions in this estate passed over nothing. So each shape is asserted
+   POSITIVELY and in full below, and the agreement is read off those two readings
+   rather than asserted as an equality in its own right.
+
+   WHY IT IS SYNTHESISED WHEN A REAL WITNESS EXISTS. The real one is
+   `legistar-73550` p1 — 39 characters and ZERO glyphs, measured at M-140 — and it
+   is driven at the counter in section 6. It cannot be driven HERE, through the
+   op, because it carries no `no_text_layer` marker anywhere in its document, so
+   nothing in that file ever reaches the tier-3 merge. The class needs a scan on
+   the same document to reach the site at all, and no committed PDF pairs the two.
+   Both halves are stated rather than one standing in for the other. ---- */
+const WS_LINE = "    ";
+const wsOrEmpty = (showLines) => pdf([
+  { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+  { num: 2, body: "<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>" },
+  /* page 0 — a REAL text page: a font with a working `/ToUnicode`, selected and
+     shown. Tier 1 decodes it faithfully; what it decodes holds no glyph. */
+  { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>" },
+  { num: 4, head: `<< /Length ${showOps(showLines).length} >>`, stream: showOps(showLines) },
+  { num: 5, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 6 0 R >>" },
+  { num: 6, head: `<< /Length ${Buffer.from(IDENTITY_CMAP, "latin1").length} >>`, stream: Buffer.from(IDENTITY_CMAP, "latin1") },
+  /* page 1 — the scan, exactly as the other fixtures build it: the marker that
+     carries the document to the tier-3 merge in the first place. */
+  { num: 7, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 100 0 R >> >> /Contents 8 0 R >>" },
+  { num: 8, head: `<< /Length ${IMAGE_OPS.length} >>`, stream: IMAGE_OPS },
+  { num: 100, head: `<< /Type /XObject /Subtype /Image /Width 2550 /Height 3300 /Filter /DCTDecode /Length ${IMAGE_BYTES.length} >>`, stream: IMAGE_BYTES },
+]);
+const WSLAYER = wsOrEmpty([WS_LINE]);   /* the text page holds four spaces */
+const EMPTYLAYER = wsOrEmpty([]);       /* the text page holds nothing at all */
+
+/* ---- D-514's ROUTING WITNESS. `needsTier2` escalates when the marker count
+   EXCEEDS the decoded text, and until D-514 "decoded text" was `counts.chars`,
+   the raw character count. The two rules differ only in the band between a
+   document's glyphs and its characters — exactly the whitespace — so a document
+   that lands IN that band is the only thing that can tell them apart. This is
+   that document, and the band is one character wide on purpose: EIGHT
+   unmappable runs against the good line's 8 characters and 7 glyphs.
+     under the RAW rule:    8 markers > 8 characters -> FALSE, never escalates
+     under the GLYPH rule:  8 markers > 7 glyphs     -> TRUE,  escalates
+   The numbers are ASSERTED below, not arranged and forgotten, because a fixture
+   that drifts out of the band stops discriminating and every assertion on it
+   goes quiet rather than red. The stub member DECLINES this document (it answers
+   only for `both` and `tier2only`), which is deliberate: what is under test is
+   the ROUTING DECISION — whether the member is consulted at all — and a
+   declining member is a path the plane already handles. ---- */
+const MARGIN_RUNS = Array.from({ length: 8 }, (_, i) => `Resolution 26-78${String(i).padStart(2, "0")}`);
+const ROUTEMARGIN = pdf([
+  { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+  { num: 2, body: "<< /Type /Pages /Kids [3 0 R 10 0 R] /Count 2 >>" },
+  { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>" },
+  { num: 4, head: `<< /Length ${showOps(MARGIN_RUNS).length} >>`, stream: showOps(MARGIN_RUNS) },
+  { num: 5, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Garamond-Custom >>" },
+  { num: 10, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 12 0 R >> >> /Contents 11 0 R >>" },
+  { num: 11, head: `<< /Length ${showOps([GOOD_LINE]).length} >>`, stream: showOps([GOOD_LINE]) },
+  { num: 12, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 13 0 R >>" },
+  { num: 13, head: `<< /Length ${Buffer.from(IDENTITY_CMAP, "latin1").length} >>`, stream: Buffer.from(IDENTITY_CMAP, "latin1") },
+]);
+
+const DOCS = { both: BOTH, tier3only: TIER3ONLY, tier2only: TIER2ONLY,
+               wslayer: WSLAYER, emptylayer: EMPTYLAYER, routemargin: ROUTEMARGIN };
 const SHA = Object.fromEntries(Object.entries(DOCS).map(([k, b]) => [k, sha256(b)]));
 
 /* THE CORPUS IS PRINTED AND FLOORED. Three headline totality assertions in this
@@ -207,8 +313,11 @@ console.log(`REC-102 corpus: ${Object.keys(DOCS).length} synthesised PDFs, `
   + `${Object.values(DOCS).reduce((n, b) => n + b.length, 0)} bytes total`);
 for (const [k, b] of Object.entries(DOCS))
   if (b.length < 400) throw new Error(`REC-102 fixture ${k} is ${b.length} B — the corpus floor is 400 B`);
-t("the corpus is three documents: both merges, tier 3 alone, tier 2 alone",
-  Object.keys(DOCS).length, 3);
+/* THE COUNT MOVED 3 -> 6 AT D-514 (2026-09-24) and the floor moved WITH it, to
+   the figure this file PRINTS. A corpus assertion that stayed at 3 would have
+   kept passing over a fixture pair that had silently stopped being built. */
+t("the corpus is six documents: both merges, tier 3 alone, tier 2 alone, D-514's whitespace/empty pair and its routing witness",
+  Object.keys(DOCS).length, 6);
 
 /* ===================================================================== *
  * THE TWO STUB FLEET MEMBERS.
@@ -360,6 +469,7 @@ console.log("\n--- 1. D-372: the layer part is PARTITIONED by tier, not collapse
      NO chain at all — and a null chain reads, from the outside, exactly like a
      document nothing ever transcribed. */
   const { checkChain } = await import("../src/textchain.mjs");
+  checkChainD514 = checkChain;          /* D-514's section 5 reads the same validator */
   t("the three-part chain is one the record's own validator accepts",
     checkChain(chainOf(both)), null);
   t("the engine step still NAMES what performed it, which is the fact a chain exists to carry",
@@ -426,9 +536,133 @@ console.log("\n--- 4. THE FIXTURE'S OWN MARGIN, asserted so it cannot go quiet -
   t("page 1 is named a scan by tier 1 itself — the marker the tier-3 predicate reads",
     t1.pages[1].undetermined.map((m) => m.reason), ["no_text_layer"]);
   t("page 2 decoded its short line byte-for-byte", t1.pages[2].text.includes(GOOD_LINE), true);
-  t("and the escalation predicate's own inputs clear it with margin: 21 markers over 8 characters",
-    [t1.counts.undetermined, t1.counts.chars, t1.counts.undetermined > t1.counts.chars],
-    [21, GOOD_LINE.length, true]);
+  /* CORRECTED AT D-514, 2026-09-24. This read `t1.counts.chars` — the RAW
+     character count — and said the predicate clears its margin over 8
+     characters. `needsTier2` no longer reads that number: it reads the GLYPHS of
+     the text in hand, which for `"Item 3.1"` is 7, because the space is not
+     decoded text. The old assertion was not merely superseded, it named an input
+     the predicate does not consult, so a change to the predicate could not fail
+     here. BOTH figures are pinned now: `counts.chars` stays 8 (the raw counter is
+     untouched by D-514 — it is a reported quantity, D-501's interface note) and
+     the margin is asserted on the 7 the predicate actually weighs. */
+  const glyphsOf = (str) => { let n = 0; for (const ch of str) if (!/\s/u.test(ch)) n++; return n; };
+  t("the RAW counter is untouched and still reports 8 characters for the good line",
+    t1.counts.chars, GOOD_LINE.length);
+  t("and the escalation predicate's own input clears it with margin: 21 markers over 7 GLYPHS",
+    [t1.counts.undetermined, glyphsOf(t1.document), t1.counts.undetermined > glyphsOf(t1.document)],
+    [21, 7, true]);
+}
+
+/* ===================================================================== *
+ * 5. D-514 — A PAGE CARRIES TEXT WHEN IT CARRIES A GLYPH, DRIVEN THROUGH THE OP.
+ *
+ * The layer attribution filtered on `p.text.length`, so a page whose tier-1
+ * reading is whitespace and nothing else went into the `layer` part of the
+ * chain: the record named a tier-1 derivation for a page from which nothing was
+ * derived. The two documents below are identical but for four spaces, and the
+ * record must say the same thing about both.
+ * ===================================================================== */
+console.log("\n--- 5. D-514: a whitespace-only page is attributed to NO layer part ---");
+{
+  const ws = (await acquire("wslayer")).document;
+  const mt = (await acquire("emptylayer")).document;
+
+  /* THE PREMISE FIRST, because every assertion under it is worthless if these
+     documents did not reach the tier-3 merge — and a document that never got
+     there has an empty layer part for a reason that has nothing to do with
+     D-514. Read off the plane's own answer, never assumed. */
+  t("the whitespace document reached the TIER-3 merge: the engine was consulted, for the scan only",
+    (OCR_ASKED.find((b) => b && b.capture_sha === SHA.wslayer) || {}).pages, [1]);
+  t("and it did NOT escalate to tier 2 — its one marker is a scan marker",
+    PDF_ASKED.some((b) => b && b.capture_sha === SHA.wslayer), false);
+  t("the empty-page document reached it the same way", 
+    (OCR_ASKED.find((b) => b && b.capture_sha === SHA.emptylayer) || {}).pages, [1]);
+
+  /* THE ASSERTION THE ITEM EXISTS FOR, stated POSITIVELY and in full rather than
+     as an absence: the chain is the engine's two steps and NOTHING ELSE. Restore
+     the raw-length filter and this line fails by name, with a `layer` step at
+     tier 1 over page 0 appearing in a document that decoded no glyph. */
+  t("the whitespace page is in NO layer part: the chain is the engine's two steps, unscoped",
+    shapeOf(ws), [["pixels", "(no tier key)", null], ["ocr", "(no tier key)", null]]);
+  t("...and no step anywhere in it names page 0",
+    chainOf(ws).some((st) => st.extent && st.extent.kind === "pages"
+                          && (st.extent.pages || []).includes(0)), false);
+  t("the empty page records the very same chain — which is the point: four spaces are not text",
+    shapeOf(mt), [["pixels", "(no tier key)", null], ["ocr", "(no tier key)", null]]);
+  /* NOT AN EQUALITY ASSERTED FOR ITS OWN SAKE. Two empty readings agree for
+     free, so the shape above is pinned positively on BOTH and the engine is
+     named on both; the agreement is what those four readings show, not a fifth
+     assertion that costs nothing. */
+  t("both chains name the engine that produced them",
+    [(chainOf(ws).find((st) => st.step === "ocr") || {}).engine,
+     (chainOf(mt).find((st) => st.step === "ocr") || {}).engine], ["tesseract", "tesseract"]);
+  t("and both are chains the record's own validator accepts",
+    [checkChainD514(chainOf(ws)), checkChainD514(chainOf(mt))], [null, null]);
+  t("both are recorded at tier 3 overall", [ws.reading.text_tier, mt.reading.text_tier], [3, 3]);
+}
+
+/* ===================================================================== *
+ * 6. D-514's REAL WITNESS, driven at the COUNTER the filter now reads.
+ *
+ * `legistar-73550` p1 is the page the row names: a real Oakland PDF page whose
+ * tier-1 reading is 39 characters and ZERO glyphs (M-140). It cannot be driven
+ * through the op here — nothing in that document carries a `no_text_layer`
+ * marker, so it never reaches the tier-3 merge at all — so the two halves are
+ * driven apart and neither is claimed to be the other: the REAL page is measured
+ * at the counter, and the WIRE is driven over the synthesised pair above.
+ * ===================================================================== */
+console.log("\n--- 6. D-514: the real witness, measured at the counter ---");
+{
+  const { extractPdfStructure } = await import("../src/pdfstructure.mjs");
+  const { glyphCount } = await import("../src/textchain.mjs");
+  const FIXTURE = new URL("./fixtures/cpdf20/legistar-73550.pdf", import.meta.url);
+  const real = (await extractPdfStructure(new Uint8Array(readFileSync(FIXTURE)))).text;
+  const p1 = (real.pages || []).find((pg) => pg && pg.page === 1);
+  t("the fixture is present and tier 1 ordered its pages", !!p1, true);
+  /* THE FIGURE FROM M-140, RE-MEASURED HERE RATHER THAN QUOTED. A number copied
+     from a measurement agrees with it for free. */
+  /* CORRECTED at c20-batch27 (CONDUCT #20), never exempted: this page read 39 characters and ZERO glyphs
+     when D-514 wrote the arm (M-140), and ALL 39 were this reader's OWN emitted spaces. D-517 (same batch)
+     stopped emitting them (`softSpace`, M-145: legistar-73550 119 -> 29 characters, every one whitespace),
+     so on this tree the page reads 0 characters. The REAL witness of a whitespace-only page is therefore
+     gone from this corpus — the defect's source was closed one layer down — and the property it stood for
+     (the layer filter reads GLYPHS, not raw length) is driven by §5's synthesised pair, which does not
+     depend on any reader's spacing. What this section still asserts is what is TRUE of the real page. */
+  t("legistar-73550 p1 reads 0 characters (D-517 withdrew the 39 spaces this reader used to emit)",
+    p1 ? p1.text.length : -1, 0);
+  t("...and ZERO glyphs — nothing was derived from it, then or now (M-140, re-measured)",
+    p1 ? glyphCount(p1.text) : -1, 0);
+  t("so neither the glyph counter nor raw length can place it in a layer part",
+    [glyphCount(p1.text) > 0, p1.text.length > 0], [false, false]);
+}
+
+/* ===================================================================== *
+ * 7. D-514 — THE ROUTING COUNTS GLYPHS, DRIVEN THROUGH THE OP.
+ *
+ * `needsTier2` compared markers against `counts.chars`. A document whose marker
+ * count falls between its GLYPHS and its CHARACTERS was not sent to the member
+ * that could read it, because the whitespace in its own text stood in for
+ * decoded text. This is the only band in which the two rules disagree, so this
+ * is the only kind of document that can tell them apart.
+ * ===================================================================== */
+console.log("\n--- 7. D-514: the escalation predicate reads GLYPHS, and the band is asserted ---");
+{
+  await acquire("routemargin");
+  const { extractPdfStructure } = await import("../src/pdfstructure.mjs");
+  const { glyphCount } = await import("../src/textchain.mjs");
+  const rm = (await extractPdfStructure(ROUTEMARGIN)).text;
+  /* THE BAND, ASSERTED. If these three numbers drift the fixture stops being
+     able to discriminate and the assertion under them passes over nothing. */
+  t("the fixture sits IN the band: 8 markers, 8 raw characters, 7 glyphs",
+    [rm.counts.undetermined, rm.counts.chars, glyphCount(rm.document)], [8, 8, 7]);
+  t("...so the RAW rule would NOT have escalated it (8 > 8 is false)",
+    rm.counts.undetermined > rm.counts.chars, false);
+  t("...and the GLYPH rule DOES (8 > 7 is true)",
+    rm.counts.undetermined > glyphCount(rm.document), true);
+  /* THE WIRE. Not the predicate re-spelled — the plane's own routing, read off
+     what the member was actually asked. */
+  t("and the plane CONSULTED the tier-2 member for it: the routing decision, through the op",
+    PDF_ASKED.some((b) => b && b.capture_sha === SHA.routemargin), true);
 }
 
 await mf.dispose();

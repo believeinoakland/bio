@@ -89,9 +89,10 @@
  * ===========================================================================
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, renameSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, existsSync, renameSync, mkdirSync, rmSync, mkdtempSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -110,10 +111,31 @@ const PLANE = join(REPO, "bio-plane");
 const SUITE = join(HERE, "pdf-worker.test.mjs");
 const SRC = join(MEMBER, "src", "index.mjs");
 const DIST = join(MEMBER, "dist", "pdf-worker.bundled.mjs");
-const PRISTINE = join(HERE, ".control-pristine");
+/* D-478: THE MANIFEST JOINS THE PRISTINE SET, AND IT IS A DEFECT THIS HARNESS HAD RATHER THAN A TIDYING.
+   `scripts/build.mjs` writes BOTH `dist/pdf-worker.bundled.mjs` AND `dist/pdf-worker.bundle.json`, and this
+   harness restored only the first — so every arm that rebuilt left the MANIFEST describing the ARMED build:
+   its sha256, its byte count, and the source sha it was built from. Nothing here noticed, because no arm reads
+   the manifest. `bio-plane/test/fleetbundles.test.mjs` does, and it went RED on D-478's own first gate with
+   three findings that were all one cause. `ocr-worker.control.mjs` already had this right (its TOUCHABLE holds
+   the manifest AND it rebuilds after restore); this file now does both. */
+const MANIFEST = join(MEMBER, "dist", "pdf-worker.bundle.json");
+/* WHERE THE PEN LIVES — CORRECTED BY BOB #32, 2026-09-24, WHICH SUPERSEDES THE HEADER ABOVE.
+   The header's "THE PEN LIVES INSIDE THIS WORKTREE and never in a shared scratchpad" was written against a real
+   incident (a concurrent worker overwrote a pen between ARM and RESTORE), and the half of it that is right is
+   that a pen under a GENERIC name in a SHARED root is nobody's. What BOB #32 measured is that the other horn
+   costs too: a file in the worktree is not inert. Repository-walking suites walk it, it trips `gates.mjs` §2e's
+   under-inclusion check, and it makes the tree DIRTY, so D-293 refuses to RECORD a GREEN verdict — three items
+   paid for that in one night, one of them `.d487-gate.log` costing a 14-minute re-run of a green gate. And this
+   harness `process.exit(2)`s on paths that never reach a cleanup, so the leak was not hypothetical.
+   `mkdtempSync` answers BOTH at once and needs nobody to remember anything: outside the worktree, and a fresh
+   UNIQUE directory per run, so no concurrent worker can be writing the same path. It is not a new idea here —
+   seven harnesses in this estate already do exactly this (`statepaths`, `mintid-take`, `coordpin`, `leadslug`,
+   `mergecarry`, `pipeline-readers`, `shadowed-refusals`); 55 of the 81 that declare a pen still do not, which
+   is a class D-478 reports rather than sweeps. */
+const PRISTINE = mkdtempSync(join(tmpdir(), "d478-pdf-worker-pristine-"));
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const FILES = { suite: SUITE, src: SRC, dist: DIST };
+const FILES = { suite: SUITE, src: SRC, dist: DIST, manifest: MANIFEST };
 
 /* ---- pristine copies, taken ONCE before any arm ---- */
 if (existsSync(PRISTINE)) rmSync(PRISTINE, { recursive: true, force: true });
@@ -345,6 +367,71 @@ arm("A6", "THE SURFACE ROW WITHOUT ITS REACH — two stages, because stage 1 may
   });
 
 /* ======================================================================= (O) */
+/* ================================================================= D-478 (N1) */
+arm("N1", "D-478'S NAMED CONTROL — WIDEN THE SHAPE AGAIN, the constant left intact",
+  /* DECLARED WRONG ON THE FIRST PASS AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED. The first
+     declaration demanded the named-empty, non-token and trailing-space rows fail too, and they did NOT — 4 of 5
+     named, on an arm that was otherwise exactly as declared. The reason is a real property of this arm and worth
+     more than the row it cost: the arm swaps the CONDITION and leaves the REFUSAL BODY standing, so a name that
+     fails `/^[a-z0-9_-]+$/i` — ``, `a b`, `scratch ` — never reaches R2 under either shape and keeps answering
+     NAMESPACE_UNKNOWN. THAT IS WHAT MAKES THE SHAPE AND THE SET SEPARATELY VISIBLE, which is the whole reason N1
+     and N2 are two arms: N1 can only reach the names the OLD SHAPE ACCEPTED. Declared accordingly now, and the
+     three rows it cannot reach are moved to MUST NOT, where an arm reaching them would be the finding. */
+  "MUST FAIL (8, all of them names the OLD SHAPE ACCEPTED): `store=biosmoke -> 400 NAMESPACE_UNKNOWN` BY NAME "
+  + "and its detail row, the `refusal lists exactly that set` row, the hyphenated / underscored / both "
+  + "case-variant rows, and the 400-vs-404 distinguishability arm — the widened member SERVES a document from a "
+  + "namespace no instance holds (§8b seeds the bytes under that very prefix, so `biosmoke` is a 200, not a "
+  + "NOT_FOUND). MUST NOT fail: the set-EQUALS-the-plane pin (the constant is untouched); the two BAD_STORE rows "
+  + "(absent and non-string); the named-empty, `a b` and trailing-space rows, which the OLD SHAPE REFUSED TOO and "
+  + "which this arm therefore cannot reach; tier 2; the envelope; the version arms; the R2-unchanged arm.",
+  () => {
+    edit(SRC, "  if (!NAMESPACES.includes(store))", "  if (!/^[a-z0-9_-]+$/i.test(store))");
+    const b = build();
+    if (b.code !== 0) return `BUILD FAILED, arm could not be honoured: ${b.out.slice(0, 200)}`;
+    const r = runSuite();
+    const named = ["store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists",
+      "a hyphenated one (biosmoke-fleet) -> 400 NAMESPACE_UNKNOWN",
+      "an underscored one (bio_smoke) -> 400 NAMESPACE_UNKNOWN",
+      "a case variant (Scratch) -> 400 NAMESPACE_UNKNOWN",
+      "a case variant (BIO) -> 400 NAMESPACE_UNKNOWN",
+      "  so the two are distinguishable on the wire: 400 NAMESPACE_UNKNOWN vs 404 NOT_FOUND"]
+      .filter((n) => new RegExp(`FAIL\\s+${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(r.out));
+    const held = ["this member's namespace set EQUALS the plane's `namespaceGate` set",
+      "store ABSENT is 400 BAD_STORE", "store that is not a string is 400 BAD_STORE",
+      "a namespace named EMPTY is 400 NAMESPACE_UNKNOWN",
+      "a namespace that is not a token (a b) -> 400 NAMESPACE_UNKNOWN",
+      "a namespace with a trailing space -> 400 NAMESPACE_UNKNOWN",
+      "recovered the real text Tier 1 marked undetermined",
+      "R2 is byte-for-byte unchanged across every refusal above — a refusal writes nothing either"]
+      .filter((n) => new RegExp(`PASS\\s+${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(r.out));
+    return `exit ${r.code} · ${r.pass} pass, ${r.fail} FAIL · failed by name: ${named.length}/6 (${named.join(" | ") || "NONE"}) · held: ${held.length}/8 · total FAIL must be exactly 8`;
+  });
+
+/* ================================================================= D-478 (N2) */
+arm("N2", "THE COPY AGES — this member's NAMESPACES gains a name the plane does not hold",
+  "MUST FAIL: the set-EQUALS-the-plane pin, the `and the refusal lists exactly that set` arm, and the two "
+  + "`store=biosmoke` rows (it is now ACCEPTED and answers 200 from the seeded bytes). MUST NOT fail: the "
+  + "plane-set-was-READ arm, the two BAD_STORE rows, the OTHER unknown names (biosmoke-fleet, Scratch, BIO, "
+  + "`a b`), the NOT_FOUND arm, tier 2 and the R2-unchanged arm. The SHAPE and the SET are separately visible.",
+  () => {
+    edit(SRC, 'const NAMESPACES = Object.freeze(["bio", "scratch"]);',
+              'const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);');
+    const b = build();
+    if (b.code !== 0) return `BUILD FAILED, arm could not be honoured: ${b.out.slice(0, 200)}`;
+    const r = runSuite();
+    const named = ["this member's namespace set EQUALS the plane's `namespaceGate` set",
+      "and the refusal lists exactly that set",
+      "store=biosmoke -> 400 NAMESPACE_UNKNOWN, naming what was asked and what exists"]
+      .filter((n) => new RegExp(`FAIL\\s+${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(r.out));
+    const held = ["the plane's namespace set was READ from its source (not an empty corpus)",
+      "a hyphenated one (biosmoke-fleet) -> 400 NAMESPACE_UNKNOWN",
+      "a case variant (Scratch) -> 400 NAMESPACE_UNKNOWN",
+      "store ABSENT is 400 BAD_STORE",
+      "a capture genuinely absent from a namespace that EXISTS still reads 404 NOT_FOUND"]
+      .filter((n) => new RegExp(`PASS\\s+${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(r.out));
+    return `exit ${r.code} · ${r.pass} pass, ${r.fail} FAIL · failed by name: ${named.length}/3 (${named.join(" | ") || "NONE"}) · held: ${held.length}/5`;
+  });
+
 arm("O1", "OVER-STRICTNESS — a fleet suite in a spelling the discovery did not anticipate",
   "NOTHING IS BROKEN. MUST: a second, correctly-written fleet suite whose filename this session did not "
   + "anticipate is DISCOVERED and RUN by the battery, the battery stays GREEN, and the `fleet:` line still reports "

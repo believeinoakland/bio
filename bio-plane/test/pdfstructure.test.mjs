@@ -66,6 +66,39 @@
    `0.01 em` arm was added for it, and the corpus figure behind it (threshold 0 reads the seven documents as 17,292
    tokens, 4,578 of them one character long, against 14,039 and 638) is in M-141, not here.
    Restored after each arm, verified by sha256 AND cmp -> 142 pass, 0 fail. */
+/* NEGATIVE CONTROL (D-517, 2026-09-24, THREE ARMS, each armed ALONE, each restored from a UNIQUELY-NAMED per-arm
+   pristine copy of bio-plane/src/pdfstructure.mjs verified by sha256 AND `cmp` — 104,517 B (floored at 100,000),
+   sha256 0597514d5d468c7ba7b80a2291cd9a5296a0b77be22a592280d28972eebbadba. BASELINE, nothing armed: 170 pass, 0 fail,
+   against 142 pass 0 fail on origin/main — this row adds 28 arms and breaks none. The baseline holds across this
+   row's rebase: `pdfstructure.mjs` and this file are byte-identical at 1a7f0bcc and at 9f8b69e6, checked by sha256,
+   so the figure is one measurement and not two.
+   THE ROW'S OWN DECLARED CONTROL COULD NOT BE ARMED, and it is recorded as unarmable rather than approximated: it
+   reads "restore -100 and the measured-threshold arm fails by name", which presumes the measurement MOVED the
+   constant. M-145 CONFIRMED it — 0.100 em is the midpoint of a valley, (0.020, 0.180] em, in which the letter-adjacent
+   population is EMPTY — so `-100` and `0.1 em` are one predicate, agreeing on every one of the 417 distinct TJ values
+   the corpus holds and on the boundary in both directions, and restoring the literal is a no-op no assertion can see.
+   The three arms below discriminate what this landing DID change.
+   ARM 1 — THE EMITTER RESTORED: `softSpace()` -> `pieces.push(" ")` at the TJ site (1 site), the one thing that let
+   this rule escape both halves of D-502's withdrawal rule. DECLARED must fail: the four withdrawal arms and every
+   real-document arm asserting the redundant separators are gone. DECLARED must pass: every threshold arm, both
+   one-sided arms, the document-wrote-it-itself over-strictness arm, every token/word/glue arm, and all of D-481's and
+   D-502's. RUN: exactly 12 of 170 failed and they are that list — the four withdrawal arms, 73618's four, 73550's two
+   and 73545's two. The token and word arms on all three documents HELD, which is the arm working as designed rather
+   than a miss: this change moves whitespace only, so a count that would move is evidence against it.
+   ARM 2 — THE UNIFICATION THE ROW OFFERED, `TJ_WORD_GAP_EM = 0.25` (1 site), the run gap's own figure. DECLARED must
+   fail: the -101, -180, -200 and -240 split arms, the ems-at-40-pt arm, and 73545's character and token figures.
+   DECLARED must pass: the -20 and -100 continuation arms, both one-sided arms, the agenda's arms. RUN: 11 of 170
+   failed. THE DECLARATION WAS INCOMPLETE AND THAT IS THE FINDING: eight were the declared list and THREE WERE ARMS
+   THIS ROW DID NOT WRITE AND DID NOT PREDICT — D-481's own "a -250 advance inserts a space (A B)" and both copies of
+   "the TJ word-gap rule is untouched", D-481's and D-502's. All three pin the rule at exactly -250, which IS 0.25 em,
+   so the unification would have had to delete three standing assertions to land. The suite refused it before this row
+   measured it. 73618 and 73550 did NOT fail here, and that is consistent rather than lucky: M-145 measured all of
+   73618's ten contested elements at 0.1533 em in the ALREADY-SEPARATED class, which ARM 1's emitter withdraws either
+   way, so the threshold cannot reach them.
+   ARM 3 — OVER-STRICTNESS, AN EQUIVALENT SPELLING: `it.v < -1000 * TJ_WORD_GAP_EM` (1 site) — the threshold scaled
+   back into thousandths instead of the displacement divided into ems, which is what a later reader is likely to write.
+   DECLARED: all 170 must pass. RUN: 170 pass, 0 fail. Correct work in a spelling this row did not choose is accepted.
+   Restored after each arm, verified by sha256 AND cmp, 104,517 B -> 170 pass, 0 fail. */
 /* NEGATIVE CONTROL (D-481, 2026-09-24, TWO ARMS, each armed ALONE, each restored by sha256 AND cmp against a per-arm
    pristine copy of bio-plane/src/pdfstructure.mjs — 83,282 B, sha256 be8ee479fb248212dff2c7a4dfc24ac248334b6e81dacd98a42a100826f972d4):
    ARM 1 — REVERT THE SUBJECT: make Td/TD and Tm break unconditionally again (2 sites). DECLARED must fail: the two
@@ -948,6 +981,161 @@ console.log("\n--- D-502 ON THE REAL AGENDA: the token M-133 named is gone, and 
   t("no line was gained or lost: 1,495, exactly as D-481 left it", doc.split("\n").length, 1495);
   t("the lower->upper glue count fell 43 -> 11, and the 11 are the document's own words",
     (doc.match(/[^\s]+/g) || []).filter((w) => /[a-z][A-Z]/.test(w)).length, 11);
+}
+
+/* ------------------------------------------------------------------ *
+ * D-517 — ONE READER, TWO WORD-GAP RULES: BOTH CONSTANTS NOW MEASURED
+ * ------------------------------------------------------------------ *
+ * D-481 picked the TJ rule's threshold by hand at -100 thousandths (0.1 em);
+ * D-502 measured the OTHER rule's at 0.25 em and kept -100, saying the two
+ * populations answer different questions. M-145 measured the second population
+ * — 14,067 TJ numeric elements over M-141's own nine documents — and the two
+ * statements now rest on figures:
+ *
+ *   - THE VALLEY IS (0.020, 0.180] EM AND IT IS EMPTY. Of 3,904 forward
+ *     elements that follow a LETTER OR DIGIT — the only ones where a space is a
+ *     claim about a word boundary — 3,818 are at or below 0.020 em (intra-word
+ *     kerning) and 86 are at or above 0.180 em (the producer's own word gaps).
+ *     NOTHING lies between. 0.100 em is that valley's midpoint, so D-481's
+ *     hand-picked figure was RIGHT; what it lacked was the measurement.
+ *   - SO THE TWO CONSTANTS ARE NOT UNIFIED, and that is a measured refusal
+ *     rather than a preference: 75 of those 86 real word gaps sit in
+ *     (0.180, 0.25], so raising this threshold to the run gap's 0.25 em loses 75
+ *     words and gains 9 glue tokens on `legistar-73545` alone.
+ *   - WHAT IS UNIFIED IS THE EMITTER. This rule pushed its space directly onto
+ *     `pieces`, so it alone escaped both halves of D-502's withdrawal rule — a
+ *     separator kept only where it actually separates something. It emits
+ *     through `softSpace` now, and the corpus loses 122 space characters and 12
+ *     whitespace-only lines while NOT ONE token, word, glue token or
+ *     non-whitespace character moves.
+ *
+ * THE ROW'S OWN DECLARED CONTROL — "restore -100 and the measured-threshold arm
+ * fails by name" — CANNOT BE ARMED, and that is stated rather than worked
+ * around: it presumes the measurement would MOVE the constant, and the
+ * measurement CONFIRMED it, so restoring -100 is a no-op that no arm can see.
+ * The control recorded below is the one that discriminates what this landing
+ * actually changed. */
+console.log("\n--- D-517: the TJ threshold is the measured valley's midpoint, and the boundary is where M-145 put it ---");
+{
+  /* At 10 pt an em is 10 pt, so a TJ number of -n thousandths moves the pen
+     n/1000 em. The two edges of the measured valley, and the boundary itself. */
+  t("a -20 kern — 0.020 em, the top of the intra-word population — does NOT split",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-20(\\002)] TJ ET"), "He");
+  t("a -100 displacement — 0.100 em, the threshold ITSELF — does NOT split: the test is strict",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-100(\\002)] TJ ET"), "He");
+  t("a -101 displacement — the first value past it — DOES split",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-101(\\002)] TJ ET"), "H e");
+  t("a -180 displacement — 0.180 em, the SMALLEST real word gap M-145 found — splits",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-180(\\002)] TJ ET"), "H e");
+  /* THE ARM THAT REFUSES THE UNIFICATION. 75 of the corpus's 86 real word gaps
+     are in this band; a threshold raised to the run gap's 0.25 em swallows them. */
+  t("a -200 displacement — 0.200 em, INSIDE the band unifying at 0.25 em would lose — splits",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-200(\\002)] TJ ET"), "H e");
+  t("...and a -240, the commonest value in that band on the real corpus, splits too",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)-240(\\002)] TJ ET"), "H e");
+  /* The threshold is in EMS, so the same number at another size is the same
+     fraction of an em — which is what makes 4 pt a word gap at 8 pt and a kern
+     at 40 pt, the reason D-502 gave for ems in the first place. */
+  t("the rule is in EMS, not points: -101 splits at 40 pt as it does at 10",
+    await textOf("BT /F1 40 Tf 72 700 Td [(\\001)-101(\\002)] TJ ET"), "H e");
+}
+
+console.log("\n--- D-517: the rule stays ONE-SIDED, and the asymmetry is pinned so it is not tidied away ---");
+{
+  /* A backward displacement inside ONE shown run is the producer tightening or
+     overprinting, never a new run — unlike a backward JUMP between runs, which
+     is a column drawn out of order and is what WORD_GAP_EM's magnitude form is
+     for. Measured: of 5,635 backward elements in the corpus not one exceeds
+     0.075 em, so the magnitude spelling is byte-identical THERE — an equality
+     that costs nothing to produce, which is why these synthetic arms exist. */
+  t("a +200 displacement — 0.200 em BACKWARD — inserts no space",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)200(\\002)] TJ ET"), "He");
+  t("...nor does a +1000, a whole em backward: this rule is forward-only by measurement",
+    await textOf("BT /F1 10 Tf 72 700 Td [(\\001)1000(\\002)] TJ ET"), "He");
+  t("and the run-gap rule above IS two-sided, so the two are not confused: a 0.30 em backward JUMP splits",
+    await textOf("BT /F1 10 Tf 72 700 Td <01> Tj -3 0 Td <02> Tj ET"), "H e");
+}
+
+console.log("\n--- D-517: the TJ rule's separator is WITHDRAWN where it separates nothing, like the other rule's ---");
+{
+  /* Both halves of D-502's withdrawal rule, now reached by this rule too: the
+     document supplying the separator itself, and the line ending before
+     anything follows. Before this landing each of these kept a space. */
+  /* `<05>` is this CMap's U+0020, so the DOCUMENT can write a real space here.
+     An earlier draft of this arm wrote a literal 0x20 byte, which this CMap does
+     not map at all — it PASSED, as an undetermined region rather than as a
+     space, and so tested nothing it claimed to. Recorded because a passing arm
+     that cannot see its subject is the failure this file's controls exist for. */
+  t("a TJ word gap the document then writes itself does not double the space",
+    await textOf("BT /F1 10 Tf 72 700 Td [<01>-250<0502>] TJ ET"), "H e");
+  t("...and in the other order — the document's space, then the gap — there is no double either",
+    await textOf("BT /F1 10 Tf 72 700 Td [<0105>-250<02>] TJ ET"), "H e");
+  t("a TJ word gap at the END of a line is withdrawn, not left trailing",
+    await textOf("BT /F1 10 Tf 14 TL 72 700 Td [<01>-250] TJ T* <02> Tj ET"), "H\ne");
+  t("...and a line that was NOTHING BUT such a gap does not survive as whitespace",
+    await textOf("BT /F1 10 Tf 14 TL 72 700 Td <01> Tj T* [-250] TJ T* <02> Tj ET"), "H\ne");
+  /* OVER-STRICTNESS: a space the DOCUMENT wrote is never withdrawn, however
+     many of them there are. The corpus's own guard is the agenda's 39
+     multiple-space runs, which this landing leaves untouched. */
+  t("a double space the DOCUMENT wrote is kept: withdrawal touches only inserted separators",
+    await textOf("BT /F1 10 Tf 72 700 Td <01050502> Tj ET"), "H  e");
+}
+
+console.log("\n--- D-517 ON THE REAL DOCUMENTS: what left the corpus is whitespace and nothing else ---");
+{
+  /* Three of M-141's nine move, and every change is a separator this reader had
+     inserted where the document already wrote one, or a line made of nothing
+     but those. Figures measured on these committed files (M-145), D-502 -> D-517. */
+  const docOf = async (rel) => (await extractPdfStructure(
+    new Uint8Array(readFileSync(new URL(rel, import.meta.url))))).text.document;
+
+  const d618 = await docOf("./fixtures/cpdf20/legistar-73618.pdf");
+  t("73618: the 24 double spaces this reader inserted are gone, and the count is zero",
+    (d618.match(/[^\s] {2,}[^\s]/g) || []).length, 0);
+  t("73618: `RESOLUTION  CONFIRMING` — the doubled form — does not occur",
+    /RESOLUTION {2,}CONFIRMING/.test(d618), false);
+  t("...and the words are all there, single-spaced",
+    /RESOLUTION CONFIRMING THE MAYOR'S APPOINTMENT OF/.test(d618), true);
+  t("73618: 24 characters left, all of them spaces — 1,839 -> 1,815 with non-ws and lines UNMOVED",
+    [d618.length, d618.replace(/\s/g, "").length, d618.split("\n").length], [1815, 1401, 91]);
+  t("73618: not one token or word moved — 258 tokens, 248 words, 0 glue",
+    [(d618.match(/[^\s]+/g) || []).length,
+     (d618.match(/[^\s]+/g) || []).filter((w) => w.length >= 2 && /[A-Za-z0-9]/.test(w)).length,
+     (d618.match(/[^\s]+/g) || []).filter((w) => /[a-z][A-Z]/.test(w)).length], [258, 248, 0]);
+
+  const d550 = await docOf("./fixtures/cpdf20/legistar-73550.pdf");
+  t("73550: the 10 lines that were NOTHING BUT inserted spaces are gone — 15 lines -> 5",
+    [d550.split("\n").length, d550.split("\n").filter((l) => l.length && !l.trim()).length], [5, 0]);
+  t("73550: 119 characters -> 29, and all 25 non-whitespace characters are still there",
+    [d550.length, d550.replace(/\s/g, "").length], [29, 25]);
+  t("73550: its 5 tokens and 2 words are untouched",
+    [(d550.match(/[^\s]+/g) || []).length,
+     (d550.match(/[^\s]+/g) || []).filter((w) => w.length >= 2 && /[A-Za-z0-9]/.test(w)).length], [5, 2]);
+
+  const d545 = await docOf("./fixtures/cpdf20/legistar-73545.pdf");
+  t("73545: `secure.  The` — the doubled form — is gone and the sentence reads single-spaced",
+    [/secure {2,}The TFO can then/.test(d545), /secure\. The TFO can then/.test(d545)], [false, true]);
+  t("73545: 3,945 characters -> 3,937 and 102 lines -> 100, with non-ws UNMOVED at 3,259",
+    [d545.length, d545.split("\n").length, d545.replace(/\s/g, "").length], [3937, 100, 3259]);
+  t("73545: 645 tokens, 628 words and 0 glue — the figures unifying at 0.25 em would have cost 78, 75 and +9",
+    [(d545.match(/[^\s]+/g) || []).length,
+     (d545.match(/[^\s]+/g) || []).filter((w) => w.length >= 2 && /[A-Za-z0-9]/.test(w)).length,
+     (d545.match(/[^\s]+/g) || []).filter((w) => /[a-z][A-Z]/.test(w)).length], [645, 628, 0]);
+
+  /* AND THE DOCUMENT THE ACCEPTS-WHEN NAMES IS UNMOVED FOR A STRUCTURAL REASON,
+     which is stated because an unmoved figure is otherwise evidence of nothing:
+     M-145 counted ZERO TJ numeric elements in either Legistar agenda, so this
+     rule never runs on that class at all. M-133's own agenda holds its glue at
+     5 and loses no word because nothing here can touch it — not because the
+     threshold was chosen for it. The committed agenda's own arms above (1,495
+     lines, 51,060 non-whitespace characters, glue 11) are that guard; this one
+     adds the multiple-space count, which a change that merely stripped double
+     spaces everywhere would have moved. */
+  const agenda = await docOf("./fixtures/legistar-agenda-1425405.pdf");
+  t("the agenda keeps all 39 multiple-space runs the DOCUMENT wrote: nothing was stripped wholesale",
+    (agenda.match(/[^\s] {2,}[^\s]/g) || []).length, 39);
+  t("...and its characters are unmoved at 60,797, the figure D-502 left",
+    agenda.length, 60797);
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);

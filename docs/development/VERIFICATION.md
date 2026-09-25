@@ -162,7 +162,7 @@ zero-match MUST first count every arm's quote in the file that arm will write an
 (`preflight()` in `bio-plane/scripts/armdecay.mjs`). **Keep the throw**: a half-armed tree is never
 measured. Refuse only for the arms the invocation will run. **A driver DECLARES its arm tally at its head
 and ASSERTS it at its foot**, held against its run by the census (D-333, D-355, `m025-arm-census.mjs`); an
-UNKNOWN on either side is listed apart, not gated. **Its pen goes on EVERY exit** (0, 1, a throw, a signal)
+UNKNOWN on either side is listed apart, not gated. **Its RESTORE goes on EVERY exit** (0, 1, a throw, a signal)
 from an `exit` hook: a signal handler over `execFileSync` fires only after the script ends (M-83), so a
 driver honours a signal with asynchronous children.
 **Decay mode (c), a subject gone, is a stated LIMITATION, not a figure** (D-353): cite M0-29's 0 only as of

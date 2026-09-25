@@ -35,6 +35,9 @@
    (A) THE ROW'S OWN CONTROL — DROP THE VERSION CHECK: `if (seenVersion !== currentVersion)` made unreachable, so a STALE version is ADMITTED -> **52/3**: "THE ARM: the decision naming the version the member READ is REFUSED DEFINITION_MOVED", "a version that NEVER STOOD is refused the same way" and "THE FOUR REFUSALS WROTE NOTHING" all fail BY NAME. MUST NOT FAIL and did not: both NO_DEFINITION_VERSION arms, every admitted arm, and REC-184's whole block — the stamp is unchanged by this arm and only the gate in front of it moves.
    (B) DROP THE NAMED CHECK: `if (!Number.isInteger(seenVersion) || seenVersion < 1)` made unreachable -> **53/2**, and THE TWO THAT FAILED ARE THE TWO THAT NAME THE CODE, not the one that says nothing was written. **A SURPRISING GREEN, RECORDED RATHER THAN SMOOTHED, AND IT IS A REAL PROPERTY OF THE ORDER THESE TWO CHECKS SIT IN:** with the named check gone, an act carrying no version reaches the comparison with `seenVersion` = NaN, and `NaN !== 4` is TRUE — so it is still REFUSED, by DEFINITION_MOVED, and still writes nothing. **The comparison alone carries the SAFETY; the named check carries the HONESTY** — without it a member who named no version is told the flow was revised, which the plane does not know and which is the invented-reason defect this item exists to close, one refusal over. That is why the arms assert the CODE and not merely the refusal.
    (C) OVER-STRICTNESS — the same comparison in a spelling this item does not use, `String(seenVersion) !== String(currentVersion)`: correct work -> **55/0**, nothing fails.
+   D-527's TWO ARMS, RUN 2026-09-24 (WORKER D-527) from a pristine copy of `store.mjs` held in the session scratchpad OUTSIDE the worktree (BOB #32, 2026-09-24), each armed ALONE by one exact-match patch whose anchor matched ONCE and which was checked to have CHANGED THE FILE before the run, restored by `cp` and verified by sha256 (9cc0d92f...) AND by `cmp` AND by byte count (3,287,470 B) after every arm. BASELINE 55/0 — MEASURED HERE rather than taken from REC-211's line above, and it agreed with it. BOTH AS DECLARED.
+   (A) THE ROW'S OWN CONTROL — DROP THE FIELD FROM THE QUEUE ITEM: `prior_disposition: p.prior_disposition` removed from the FINDING item `op=queue` mints, so the object `proposalsFeed` builds rides only on `op=proposals` again -> **55/3**, and the three that fail are the three D-527 arms BY NAME: the reopened item's own arm, the totality arm against `op=proposals`, and the `present and null` arm. MUST NOT FAIL and did not: every REC-184, REC-211 and D-266 arm, including "the member's own feed agrees", which reads the `disposed` BLOCK and passes with the item carrying nothing — that green is the measurement that the block beside the item is not the item, and the reason the new arms name `items[]`.
+   (B) OVER-STRICTNESS — the same object published in a spelling this item does not use (spread through a conditional, `...(p.prior_disposition === undefined ? {} : { prior_disposition: p.prior_disposition })`), correct work -> **58/0**, nothing fails: the arms ask for the FACT on the item, not for this item's line.
    NOT ARMED, BECAUSE IT IS ALREADY ASSERTED GREEN: the ORDER of these two checks against the identity checks above them. `badKey` ("procurement::nosuchstage", naming NO version) is refused BAD_STAGE rather than NO_DEFINITION_VERSION, which is D-128's rule one op over — a bad stage is still heard first — measured by an arm that was here before this item and passes unchanged. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -168,6 +171,20 @@ t("D-266 — and the `disposed` block is PRESENT AND EMPTY rather than absent. T
   [typeof q0.disposed, q0.disposed?.count, q0.disposed?.findings, q0.disposed?.personal,
    q0.disposed?.truncated, q0.disposed?.bound],
   ["object", 0, [], false, false, 64]);
+/* D-527's BEFORE HALF, taken here for the same reason the block above is: the arm further down is a
+   DELTA. It asks the present-vs-absent question one field over — on an item nobody has decided the
+   queue publishes `prior_disposition` PRESENT AND NULL, never absent, so a surface reading the item
+   can tell *nobody has answered this* from *this op does not say*. The corpus is printed and floored
+   because a claim about every item is free over none. */
+const q0f = (q0.items || []).filter(
+  (i) => i.class === "FINDING" && i.subject && i.subject.kind === "progression_stage");
+console.log(`  corpus (before any decision): ${q0f.length} proposal-derived FINDING items`);
+t("D-527 — before any decision, every proposal-derived FINDING item carries `prior_disposition` "
++ "PRESENT AND NULL — the field is published rather than omitted, so an item nobody has decided is "
++ "distinguishable from an op that does not say",
+  [q0f.length, q0f.map((i) => [i.id, "prior_disposition" in i, i.prior_disposition]).sort()],
+  [2, [["FINDING::grant::application", true, null],
+       ["FINDING::procurement::solicitation", true, null]]]);
 
 /* ---- the ACT: a member DISMISSES procurement::solicitation with a reason, through the control plane.
    No bundle is minted; the disposition is the whole of the act (D-79 — declining is not authoring). ---- */
@@ -392,6 +409,46 @@ t("REC-184 — OVER-STRICTNESS: the revision of `permit` reopened NOTHING ELSE �
 + "grant's decisions, taken against their own unrevised version 1, still govern",
   fp2.dispositions.filter((d) => d.key !== "permit::application").map((d) => [d.key, d.definition_version, d.applies]).sort(),
   [["grant::application", 1, true], ["procurement::solicitation", 1, true]]);
+/* ------------------------------------------------------------------ D-527 · AND IT REACHES THE
+   ITEM, NOT ONLY THE BLOCK BESIDE IT. REC-184 published `prior_disposition` on `op=proposals`,
+   which no surface reads (UI-14 retired it for `op=queue`), so the member meeting the reopened
+   question on the one op they open was shown a question nobody has answered while the record held
+   a decision. The arm reads the ITEM, not `disposed`: the block above is a JOIN bounded by
+   QUEUE_DISPOSED_MAX, and the assertion directly over it (`qdp2`, four lines up) is the reason
+   this one has to name the item — a suite that asserts the block would pass over an item that
+   carries nothing. The UI render is a later row and nothing here asserts one. */
+const q527 = (qp2.items || []).find((i) => i.id === "FINDING::permit::application");
+t("D-527 — THE ARM: the REOPENED FINDING ITEM ITSELF carries the earlier decision — state, reason, "
++ "author, instant and the definition version it judged — with applies:false and its cause",
+  q527 && q527.prior_disposition
+    && [q527.prior_disposition.state, q527.prior_disposition.reason,
+        q527.prior_disposition.decided_by, q527.prior_disposition.at === dp2.at,
+        q527.prior_disposition.definition_version, q527.prior_disposition.definition_version_state,
+        q527.prior_disposition.applies, q527.prior_disposition.applies_because],
+  ["dismissed", "this permit class is issued over the counter with no written application",
+   "class:member", true, 1, "recorded", false, "decided_against_earlier_version"]);
+/* TOTALITY, and it is the shape that makes the over-strictness arm real: EVERY proposal-derived
+   FINDING item in this one read agrees with `op=proposals` about the prior decision — the reopened
+   one carries it, the ones nobody ever decided carry `null` rather than an invented object, and no
+   fourth spelling is admitted. The corpus is PRINTED and floored non-empty, and `truncated` is
+   asserted false, because a capped or empty read would satisfy a per-item claim for free. */
+const q527items = (qp2.items || []).filter(
+  (i) => i.class === "FINDING" && i.subject && i.subject.kind === "progression_stage");
+const q527got = q527items
+  .map((i) => [i.id, i.prior_disposition ? [i.prior_disposition.state, i.prior_disposition.definition_version] : null])
+  .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+const q527want = fp2.proposals
+  .map((p) => [`FINDING::${p.key}`,
+               p.prior_disposition ? [p.prior_disposition.state, p.prior_disposition.definition_version] : null])
+  .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+console.log(`  corpus: ${q527items.length} proposal-derived FINDING items in this read, `
+          + `${q527got.filter((r) => r[1]).length} carrying a prior decision — ${JSON.stringify(q527got)}`);
+t("D-527 — TOTALITY: the queue's proposal-derived FINDING items agree with op=proposals ITEM FOR "
++ "ITEM about the prior decision; the read is not truncated and the corpus is not empty. The "
++ "UNDECIDED side of this claim is the `present and null` arm above, because at this point in the "
++ "fixture every other proposal is aged out by a decision that still governs",
+  [q527items.length >= 1, qp2.truncated === true, q527got],
+  [true, false, q527want]);
 const pd3 = await proposeDispose({ key: "permit::application", to: "deferred", definitionVersion: 2,
   reason: "wait for the planning desk to publish the application form" });
 const fp3 = await getProposals();

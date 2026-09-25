@@ -299,9 +299,14 @@ const ORG = await mint({ tokenId: "org-agent", principalKind: "organisation", pr
      and "nothing here has ever held it" is a property. */
   const list = await GET(`op=aicredentials&token=${RUTH}`);
   const fields = [...new Set(list.credentials.flatMap((c) => Object.keys(c)))].sort();
-  t("the list publishes the identity, the principal, the scope and the authorship — and no value "
+  /* CORRECTED 2026-09-24 BY D-463, never exempted: `confinedTo` joined this projection, and the OLD LIST WAS RIGHT
+     FOR THE TREE IT WAS WRITTEN ON. The assertion is a WHOLE-KEY-SET arm on purpose — it is what would catch a hash
+     or a value appearing here — so a new field has to be added deliberately, which is the arm working rather than
+     failing. `confinedTo` is a NAMESPACE NAME and neither a value nor a hash: it is the one property a member must be
+     able to read back to know whether an agent can reach the record at all (D-463). */
+  t("the list publishes the identity, the principal, the scope, the confinement and the authorship — and no value "
   + "and no hash", fields,
-    ["mintedAt", "mintedBy", "note", "principal", "principalKind", "revoked", "revokedAt", "revokedBy",
+    ["confinedTo", "mintedAt", "mintedBy", "note", "principal", "principalKind", "revoked", "revokedAt", "revokedBy",
      "taskScope", "tokenId", "writes"]);
   t("no credential value appears in the serialised list", /aik-[0-9a-f]{64}/.test(JSON.stringify(list)), false);
   /* THE CLAIM NARROWED TO WHAT IS TRUE, and the narrowing is a finding rather
@@ -440,6 +445,22 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
   t("a scope naming something that is not an op at all is refused by name — an entry nothing "
   + "enforces is what declaring the scope on the record was for", codeOf(unknown), "AI_SCOPE_UNKNOWN_OP");
   t("with its C-number", unknown.check, "C-29.8");
+
+  /* ADDED 2026-09-24 BY D-463, which allocated C-29.10 in this family: the CONFINEMENT is the second thing judged
+     at the mint, and block 10 below asserts the driven set EQUALS the registry — so a code allocated here and
+     driven only in its own suite would leave that arm red. It is driven HERE because the completeness arm lives
+     here. What the confinement DOES is driven in `d463-confined-credential.test.mjs`. */
+  const badConfinement = await mint({ tokenId: "confined-to-the-record", confinedTo: "bio" });
+  t("a credential confined to `bio` is refused by name — `bio` is where every unconfined credential already lands, "
+  + "so recording it as a confinement would be a fence in the record that holds nothing (D-463)",
+    codeOf(badConfinement), "AI_CONFINEMENT_NOT_SCRATCH");
+  t("with its C-number", badConfinement.check, "C-29.10");
+  t("and nothing was written by it", (await GET(`op=aicredentials&token=${RUTH}`))
+    .credentials.some((c) => c.tokenId === "confined-to-the-record"), false);
+  const confined = await mint({ tokenId: "confined-to-scratch", confinedTo: "scratch" });
+  t("and the confinement a credential MAY carry is recorded and read back — over-strictness, in the arm that "
+  + "would otherwise only ever see the refusal", [confined?.ok, confined?.credential?.confinedTo],
+    [true, "scratch"]);
 
   /* THE RULE HAS NO OP NAMES IN IT. A shape with an exception list in it is a
      list, so this is asserted over the function's own source. */

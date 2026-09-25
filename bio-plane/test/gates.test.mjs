@@ -138,6 +138,27 @@
  *   item restored and the two M0-153 added. That is the arm isolated on the union of both items' changes to the
  *   subject, which is the only tree either figure is about.
  *
+ * NEGATIVE CONTROL: RAN 2026-09-24 by the M0-176 worker, same driver, arms G23-G25 each ALONE, baseline and
+ * closing 124 pass / 0 fail, driver 55 pass / 0 fail read UNPIPED at exit 0, `tools/gates.mjs` restored sha256-
+ * and cmp-identical at 105,884 bytes after every arm (`pushguard.mjs` untouched at 98,150). The three break the
+ * ONE function every site reads through (`docsTaken`), which is why a single patch moves the key, the DOCS step
+ * and both of `readersOf`'s bounds together:
+ *   (23) the WHOLE-`docs/` door restored, the row's own control -> "the plan for each note is EXACTLY its readers
+ *       plus the backstop" FAILS by name, with eight more: the path-granular arms, the TARGETED "net" arm and the
+ *       `--since` cap arm. 115/9. The DERIVATION arms all hold, which is what says the door moved and §2 did not.
+ *   (24) clause 3's BACKSTOP dropped — the false green this row can produce -> "a doc-facing suite that names NO
+ *       path and NO directory keeps the whole tree" FAILS, 117/7; the three units that DO name their prose stay
+ *       exactly where they were, so "fewer units" cannot pass for the fix.
+ *   (25) clause 2 dropped -> "...and is BOUNDED to that directory" FAILS, 117/7 — and the shape is the finding:
+ *       the assembly reader does not MISS its note, it falls through to clause 3 and takes the whole tree, so the
+ *       arm fails WIDER rather than narrower. That is the two clauses being different rules, not one written twice.
+ * ONE DECLARATION WAS WRONG AND IS CORRECTED RATHER THAN SMOOTHED. G24 declared the EMPTY-diff arm among its
+ * expected failures; armed, it did not fail, and the subject is right: the DOCS step short-circuits on
+ * `!docsChanged.length` before it asks any clause anything. It is now asserted UNBROKEN by all three arms.
+ * ON THE REAL ESTATE, arm 23 by hand in an isolated clone: the MEASUREMENTS-only, kickoffs-only and
+ * architecture-only probes go 39 / 35 / 30 back to 42 / 42 / 42 — the same list every time, `calibration.test.mjs`
+ * among them — which is the door not looking at the path (`docs/development/measurements/M-146.md`).
+ *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
  * would be a real refusal of a real push. So every arm builds a REAL repository under the battery's
@@ -223,7 +244,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 12;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1; M0-173 (the coord snapshot): +1 */
+const SECTIONS = 13;  /* M0-107: +1; M0-116: +1; BOB #29 (re-run only what failed): +1; M0-143: +1; M0-153: +1; M0-173 (the coord snapshot): +1; M0-176 (the path-granular doc-facing door): +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -371,6 +392,23 @@ const FILES = {
   "docprofile/registry.mjs": "export const registry = 1;\n",
   "docs/notes/a.md": "# a\n",
   "docs/notes/b.md": "# b\n",
+  /* M0-176: WHICH prose a doc-facing suite takes — one fixture per clause of `gates.mjs` §2f. Their note lives in
+     `docs/pack/`, never in `docs/notes/`, so clause 2's bounded suite cannot widen the `--since` arms below, whose
+     other side moves `notes/a.md` and `notes/b.md`.
+       - clause 2: `dirtool.mjs` NAMES a docs DIRECTORY as a quoted token and never enumerates one — it reads prose
+         by ASSEMBLY, which clause 1 cannot see and `isWalker` does not call a walk. Its take is BOUNDED to that
+         directory, which is what separates it from clause 3 below;
+       - clause 3: `asmdocs.mjs` spells `docs/` ONLY inside a template with an interpolated segment, so it names no
+         path and no directory. It is the unit MENTION is blind to, and the whole tree is what keeps it from being a
+         false green. A suite whose own source spelled the path would test clause 1 twice and clause 3 never. */
+  "docs/pack/p.md": "# p\n",
+  "tools/dirtool.mjs": [
+    `import { readFileSync } from "node:fs";`,
+    `export const DIR = "docs/pack";`,
+    `export const read = (n) => readFileSync(DIR + "/" + n, "utf8");`, ""].join("\n"),
+  "bio-plane/test/dirnamed.test.mjs": `const TOOL = "tools/dirtool.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
+  "tools/asmdocs.mjs": "export const of = (a) => \`docs/${a}/note.md\`;\n",
+  "bio-plane/test/assembled.test.mjs": `const TOOL = "tools/asmdocs.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
   "CLAUDE.md": "# fixture\n",
   ".gitignore": "node_modules/\n",
 };
@@ -447,6 +485,11 @@ function withEdits(root, rels, fn) {
 }
 const planOf = (g) => (g.plan || "").split(" · ");
 const batteryOf = (g) => ((g.plan || "").match(/battery \[([^\]]*)\]/) || [, ""])[1].split(", ").filter(Boolean).sort();
+/* M0-176: the DERIVED doc-facing set, read off the line §2 prints, NOT off what the plan selects. The two were the
+   same thing until this row made selection path-granular, and the arms below that ask "is this suite doc-facing?"
+   ask the derivation — which is the question they were always about. */
+const docFacingOf = (g) => ((g.out || "").match(/doc-facing suites derived fresh[^\n]*?plane \[([^\]]*)\]/) || [, ""])[1]
+  .split(", ").filter(Boolean).sort();
 
 /* ========================================================================== */
 section("THE FIXTURE — a real repository, the real tools, a real remote, the real hook");
@@ -654,22 +697,106 @@ section("M0-143 · THE DOC-FACING SET IS READ AS CODE — a comment names `docs/
      (plane 60 · ui 12), 41 after (plane 37 · ui 4) — 23 plane and 8 ui qualified by a comment mention ALONE, and
      none was added (`measurements/M-134.md`). */
   branch(F.root, "docfacing");
+  /* CORRECTED 2026-09-24 (M0-176), never exempted. Every arm here asks "is this suite DOC-FACING?" and every one
+     asked it THROUGH `batteryOf` — what the DOCS class runs — because until this row those were the same set: the
+     door handed every doc-facing unit any `docs/` change, so running it and being in the set were one fact. They
+     are now two, and reading membership off the plan would ask the WRONG one: `toolstring.test.mjs` reaches
+     `notes/c.md` and would drop out of a `notes/a.md` plan while staying exactly as doc-facing as before. So the
+     arms read `docFacingOf` — the derived set §2 itself prints — and keep the teeth G17-G19 need, which a
+     selection-shaped assertion would have lost: under G18 a comment-only suite becomes doc-facing but is still
+     MENTION-blind to the note, so its selection would not move and the arm would pass over a broken §2. */
   const d = withEdits(F.root, ["docs/notes/a.md"], () => gates(F.root, ["--explain"]));
   t("a docs-only diff reads DOCS", d.cls, "DOCS");
   t("a suite that READS `docs/` through a STRING is doc-facing — dropping the `docs/` test is not the fix",
-    batteryOf(d).includes("prose.test.mjs"), true);
+    docFacingOf(d).includes("prose.test.mjs"), true);
   t("...and a suite whose ONLY `docs/` mention is in a COMMENT is NOT doc-facing",
-    batteryOf(d).includes("doccomment.test.mjs"), false);
+    docFacingOf(d).includes("doccomment.test.mjs"), false);
   t("a suite that names a doc-READING tool in CODE is doc-facing — the tool's own string path still reads",
-    batteryOf(d).includes("toolstring.test.mjs"), true);
+    docFacingOf(d).includes("toolstring.test.mjs"), true);
   t("...and a suite that names that same tool only in a COMMENT is NOT",
-    batteryOf(d).includes("toolcomment.test.mjs"), false);
+    docFacingOf(d).includes("toolcomment.test.mjs"), false);
   t("a TOOL whose own `docs/` mention is only in ITS comment reaches no prose, so a suite naming it in CODE is NOT",
-    batteryOf(d).includes("toolproseonly.test.mjs"), false);
-  t("the doc-facing battery set is EXACTLY this, and it is NOT EMPTY — a selector that selects nothing fails here",
-    [batteryOf(d), batteryOf(d).length > 0], [["prose.test.mjs", "toolstring.test.mjs"], true]);
+    docFacingOf(d).includes("toolproseonly.test.mjs"), false);
+  t("the doc-facing set is EXACTLY this, and it is NOT EMPTY — a selector that selects nothing fails here",
+    [docFacingOf(d), docFacingOf(d).length > 0],
+    [["assembled.test.mjs", "dirnamed.test.mjs", "prose.test.mjs", "toolstring.test.mjs"], true]);
   t("...and the plan SAYS the set was read as code, so the selection stays auditable",
     d.out.includes("doc-facing suites derived fresh, read as code, comments blanked (strings kept)"), true);
+}
+
+/* ========================================================================== */
+section("M0-176 · A DOC-FACING UNIT TAKES ONLY THE PROSE IT NAMES — and the whole tree when it names none");
+{
+  /* HOW A LIAR PASSES THIS, stated before what it checks. The row asks for FEWER units, so the two cheapest
+     liars both narrow: (a) select nothing at all for prose, which reads as the biggest win there is; (b) narrow
+     the DERIVED SET instead of the door, which drops the same suites and looks identical in a plan. So every
+     arm that asserts a suite is NOT selected sits beside one asserting a different suite IS, the derived set is
+     pinned WHOLE and non-empty in the M0-143 section above, and the note each suite reaches is different from
+     every other's — a door that ignored the path would select all four for all four notes, which is the
+     measured BEFORE state on the real estate (`docs/development/measurements/M-146.md`: a MEASUREMENTS-only
+     diff and a kickoffs-only diff each selected the SAME 42 doc-facing units, the same list).
+     THE THIRD CLAUSE IS THE ONE THAT CAN COST A FALSE GREEN, so it is driven rather than believed: a unit whose
+     prose is read through an ASSEMBLED path names nothing, and if narrowing dropped it, a change to the note it
+     really reads would go unmeasured with the gate green. `assembled.test.mjs` is that unit, and it is asserted
+     SELECTED for every note below, including one no fixture names at all. */
+  branch(F.root, "docsgranular");
+  const A = withEdits(F.root, ["docs/notes/a.md"], () => gates(F.root, ["--explain"]));
+  const C = withEdits(F.root, ["docs/notes/c.md"], () => gates(F.root, ["--explain"]));
+  const P = withEdits(F.root, ["docs/pack/p.md"], () => gates(F.root, ["--explain"]));
+  const B = withEdits(F.root, ["docs/notes/b.md"], () => gates(F.root, ["--explain"]));
+  const AC = withEdits(F.root, ["docs/notes/a.md", "docs/notes/c.md"], () => gates(F.root, ["--explain"]));
+
+  t("every arm here is still the DOCS class — the door is what moved, never the classification",
+    [A.cls, C.cls, P.cls, B.cls, AC.cls], ["DOCS", "DOCS", "DOCS", "DOCS", "DOCS"]);
+
+  /* Clause 1: the path the unit's own reach covers, and NOT the one it does not. */
+  t("a suite that reads ONE note is selected for THAT note", batteryOf(A).includes("prose.test.mjs"), true);
+  t("...and NOT for a note it does not read — which is the whole of this row",
+    [batteryOf(C).includes("prose.test.mjs"), batteryOf(P).includes("prose.test.mjs"),
+     batteryOf(B).includes("prose.test.mjs")], [false, false, false]);
+  t("a suite that reads its note THROUGH A TOOL is selected for that note, and not for another's",
+    [batteryOf(C).includes("toolstring.test.mjs"), batteryOf(A).includes("toolstring.test.mjs")], [true, false]);
+
+  /* Clause 2: a docs DIRECTORY named in code, with nothing enumerating it — and BOUNDED to that directory. */
+  t("a suite whose tool NAMES a docs directory and walks nothing takes the prose IN it",
+    batteryOf(P).includes("dirnamed.test.mjs"), true);
+  t("...and is BOUNDED to that directory — clause 2 is not a second way of saying 'everything'",
+    [batteryOf(A).includes("dirnamed.test.mjs"), batteryOf(C).includes("dirnamed.test.mjs"),
+     batteryOf(B).includes("dirnamed.test.mjs")], [false, false, false]);
+
+  /* Clause 3: the backstop. Narrowing THIS unit is the false green the row can produce. */
+  t("a doc-facing suite that names NO path and NO directory keeps the whole tree — it is MENTION-blind, and a "
+    + "narrowing that dropped it would be the false green",
+    [batteryOf(A).includes("assembled.test.mjs"), batteryOf(C).includes("assembled.test.mjs"),
+     batteryOf(P).includes("assembled.test.mjs"), batteryOf(B).includes("assembled.test.mjs")],
+    [true, true, true, true]);
+
+  /* The plan is EXACT at every note, so "fewer units" cannot pass for the fix. */
+  t("the plan for each note is EXACTLY its readers plus the backstop, and never empty",
+    [batteryOf(A), batteryOf(C), batteryOf(P), batteryOf(B)],
+    [["assembled.test.mjs", "prose.test.mjs"], ["assembled.test.mjs", "toolstring.test.mjs"],
+     ["assembled.test.mjs", "dirnamed.test.mjs"], ["assembled.test.mjs"]]);
+  t("a note NOBODY names still runs the backstop and nothing else — absence of a reader is not absence of a read",
+    batteryOf(B), ["assembled.test.mjs"]);
+  t("two notes together select the UNION, never one of them",
+    batteryOf(AC), ["assembled.test.mjs", "prose.test.mjs", "toolstring.test.mjs"]);
+
+  /* The narrowing is PRINTED, as the derivation it narrows is. */
+  t("the plan SAYS the selection is path-granular, and counts it against the derived set",
+    /doc-facing selection is PATH-GRANULAR \(M0-176\) — 2 of 4 doc-facing unit\(s\) take a changed path/.test(A.out), true);
+  t("...and an EMPTY diff, which has no path to narrow by, runs the WHOLE derived set and says so",
+    (() => { const e = gates(F.root, ["--explain"]);
+             return [e.cls, batteryOf(e), /EMPTY diff: nothing to narrow by/.test(e.out)]; })(),
+    ["DOCS", ["assembled.test.mjs", "dirnamed.test.mjs", "prose.test.mjs", "toolstring.test.mjs"], true]);
+
+  /* TARGETED's "net" bound is the same rule now, so prose is never checked more narrowly there than DOCS checks it. */
+  const mixed = withEdits(F.root, ["tools/widget.mjs", "docs/notes/a.md"], () => gates(F.root, ["--explain"]));
+  t("a TARGETED diff carrying prose selects the doc-facing units that TAKE it, not every doc-facing unit",
+    [mixed.cls, mixed.units.includes("plane:prose.test.mjs"), mixed.units.includes("plane:assembled.test.mjs"),
+     mixed.units.includes("plane:dirnamed.test.mjs"), mixed.units.includes("plane:toolstring.test.mjs")],
+    ["TARGETED", true, true, false, false]);
+  t("...and the suites that read the CODE side are still selected — the docs half narrowed, nothing else did",
+    [mixed.units.includes("plane:widget.test.mjs"), mixed.units.includes("plane:walker.test.mjs")], [true, true]);
 }
 
 /* ========================================================================== */
@@ -764,8 +891,14 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
   const pl = gates(F.root, ["--since", "--explain"]);
   t("a plane change gated FULL, rebased over docs, re-runs the READERS of those docs, not the battery",
     [pl.cls, pl.units.includes("plane:prose.test.mjs")], ["SINCE", true]);
+  /* CORRECTED 2026-09-24 (M0-176), never exempted: the expected set was `["prose.test.mjs"]` and is now two, and
+     the SECOND one is the point rather than noise. `assembled.test.mjs` reads prose through a path assembled at
+     run time, so §2f clause 3 hands it the whole tree and the cap re-runs it over ANY moved note — which is the
+     cap doing what it says (never narrower than DOCS), now that DOCS itself is path-granular. The arm's own
+     subject is unchanged and still has its teeth: `cites.test.mjs` names the note in its own prose, is not
+     doc-facing, and is still NOT re-run. */
   t("...and NOT a suite that only CITES the moved note in its own prose — the other side's prose is bounded by DOCS",
-    [pl.units.includes("plane:cites.test.mjs"), batteryOf(pl)], [false, ["prose.test.mjs"]]);
+    [pl.units.includes("plane:cites.test.mjs"), batteryOf(pl)], [false, ["assembled.test.mjs", "prose.test.mjs"]]);
 }
 
 /* ========================================================================== */

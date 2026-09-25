@@ -35,8 +35,20 @@
  *
  * WHAT IT CAN AND CANNOT SEE: it drives each site through the control plane (`dispatchFetch`, the route a real
  * caller takes), on Miniflare. It is NOT a live probe, and a green harness is not a serving build (D-108). It does
- * not see the 405 method complaints (codeless by design), `knock`'s `TOO_LARGE`/`EMPTY` (coded already, outside
- * D-278), or `publishedbytes`' `NO_PUBLISHED_STORE` (coded already).
+ * not see the 405 method complaints (codeless by design), `knock`'s pre-store oversize and empty refusals, or
+ * `publishedbytes`' `NO_PUBLISHED_STORE`.
+ *
+ * CORRECTED BY D-513 (2026-09-24), NOT EXEMPTED. That last clause used to read "(coded already, outside D-278)"
+ * and "(coded already)", AND "CODED" WAS CARRYING TWO CLAIMS WITH ONE WORD. It was true that each refusal named a
+ * `reason` on the wire; it was false that any of them carried the canned translation this item's whole subject is.
+ * `knock`'s two reached a stranger — the one caller in this plane guaranteed not to be a member, with no account
+ * and no other way to find out what happened — as a bare machine token. That is the defect this repository ranks
+ * above a missing feature, sitting inside the header of the suite written to end it. D-513 closes the knock half:
+ * those refusals are now C-85.3 KNOCK_ENVELOPE_TOO_LARGE, C-85.4 KNOCK_PAYLOAD_TOO_LARGE and C-85.5 KNOCK_EMPTY,
+ * each minted at one governed site and graded on the wire by `doorbell.test.mjs`, which is why they are still
+ * outside this suite. `NO_PUBLISHED_STORE` IS NOT CLOSED: measured on this tree, it has a `reason` and no canned
+ * translation, and `check-refusal-codes.mjs`'s arm F still partitions it as MULTI-SITE — the sentence is corrected
+ * here to say only what is true, and the fix is reported rather than taken, because it is not this item's row.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */

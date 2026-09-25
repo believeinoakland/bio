@@ -29,12 +29,18 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-/* INSIDE this worktree, in a DOT-directory — never the shared scratchpad. */
-const SAFE = join(REPO, ".rec127-control-pristine");
+/* THE PEN IS OUTSIDE THE WORKTREE (M0-182, BOB #32). `controlPen` is `mkdtempSync` under the system
+   temp root, so neither the battery's discovery nor the fleet walk can enrol what it holds, and the
+   tree stays CLEAN while the control runs — which matters because since D-293 a gate on a dirty tree
+   RECORDS NOTHING. `mkdtemp`, not a fixed name, is what keeps it isolated: the shared scratchpad and
+   `/tmp` are not isolated between sessions, and a harness there was once overwritten mid-turn by a
+   concurrent worker. */
+const SAFE = controlPen("rec127");
 mkdirSync(SAFE, { recursive: true });
 
 /* THE COMMIT THIS ITEM WAS BUILT ON. Pinned, never `origin/main`. */

@@ -39,9 +39,10 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { controlPen } from "./pen.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const HOLD = join(ROOT, ".nc-cpdf19-pristine");     /* inside the worktree, never the shared scratchpad */
+const HOLD = controlPen("cpdf19");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const INDEX = join(ROOT, "src/index.mjs");
 const STORE = join(ROOT, "src/store.mjs");

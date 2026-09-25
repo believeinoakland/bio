@@ -47,6 +47,11 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync, statSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { controlPen } from "./pen.mjs";
+
+const PEN = controlPen("rec115");
+/* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
+const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const QUERY = fileURLToPath(new URL("../src/query.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -130,7 +135,7 @@ for (const [name, [edits, declared]] of Object.entries(ARMS)) {
   if (want !== "all" && want !== name) continue;
   const staged = [];
   for (const [file, anchor, repl] of edits) {
-    const pristine = `${file}.pristine-rec115-${name}`;
+    const pristine = penPath(file, `pristine-rec115-${name}`);
     copyFileSync(file, pristine);
     const before = readFileSync(file, "utf8");
     const beforeSha = sha(file);
