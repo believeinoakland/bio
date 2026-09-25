@@ -1,5 +1,10 @@
-/* GATE: never-cache (history) — D-569: its verdicts are git ancestry over fixture repositories under os.tmpdir(), which
-   no result key can name. It reads no live ref of this checkout: every git call names a scratch repository as its cwd. */
+/* CACHEABLE ON PURPOSE, not `never-cache`: every verdict is git ancestry over fixture repositories this suite builds
+   under os.tmpdir() from nothing, so its inputs are its own source and its import closure (tools/strandedwork.mjs).
+   It reads no live ref of this checkout (every git call names a scratch repository as its cwd). A never-cache unit is
+   selected by EVERY change: marking it so first moved statepaths.test.mjs' MEASUREMENTS-only selection 43 -> 44
+   (measured, D-569). For the same reason it does NOT name the gate's own file: a unit whose closure names plancheck
+   is never-cached (gates.mjs `neverCacheOf`), so the pin that plancheck ROUTES by this grade lives in
+   strandedwork.test.mjs §9, which already drives plancheck. */
 /* D-569 — plancheck §1's UNPUSHED arm, GRADED AS ITS OWN TEXT SAYS: "a failure on main and a note anywhere else".
  *
  * THE DEFECT. The arm fires when HEAD is ahead of `origin/main`. Its message said a worker's own branch is EXPECTED
@@ -9,7 +14,7 @@
  * teaches its reader to read past its FAILs.
  *
  * THE GRADE (`unpushedGrade` in tools/strandedwork.mjs, imported by plancheck — the suite drives the function the
- * gate calls, and section 4 pins that the gate routes by it):
+ * gate calls; strandedwork.test.mjs §9 pins that the gate routes by it):
  *   FAIL on main; FAIL where no ref on origin carries HEAD; NOTE where one does, under ANY name.
  *
  * WHY BOTH DIRECTIONS ARE ARMED IN THE SAME RUN. The cheapest fix is a note everywhere, which loses D-288's alarm
@@ -19,22 +24,21 @@
  * of HEAD — carried by ancestry, not equality).
  *
  * NEGATIVE CONTROL: RUN 2026-09-25 by WORKER D-569, by hand, each arm ALONE, restored by `cp` from a pristine copy in
- * the session scratchpad (strandedwork.mjs 31,137 B, plancheck.mjs 79,366 B) and verified by `cmp` AND sha256
- * (strandedwork b22bbb96…, plancheck 4f624ba0…, identical before and after). Baseline 14 pass / 0 fail, exit 0.
+ * the session scratchpad and verified by `cmp` AND sha256 (strandedwork.mjs b22bbb96…, identical before and after).
+ * Baseline 11 pass / 0 fail, exit 0.
  *   (N1) `unpushedGrade`'s carried branch made unreachable, so it grades FAIL on every branch (the defect, at the
  *        predicate) -> the four NOTE arms fail by name (S2a "a worker branch pushed under its own name is a NOTE",
- *        S2b, S2c, S2d); section 3 passes. 10 pass / 4 fail, exit 1.
- *   (N2) plancheck's routing reverted to `fail()` unconditionally (the defect, at the gate) -> "S4 plancheck routes
- *        a NOTE grade to notes, not to fail()" fails by name; sections 2-3 pass. 13 pass / 1 fail, exit 1.
+ *        S2b, S2c, S2d); section 3 passes. 7 pass / 4 fail, exit 1.
+ *   (N2) the gate's routing reverted to `fail()` unconditionally is strandedwork.test.mjs' arm A11 (see there).
  *   (N3) every `grade: "fail"` in `unpushedGrade` made `"note"` (the cheap over-correction) -> section 3's four
  *        FAIL arms fail by name (S3a "main ahead of origin/main is a FAIL even when another ref carries it", S3b,
- *        S3c, S3d); section 2 passes. 10 pass / 4 fail, exit 1. ITS FIRST ARMING WAS UNSOUND and is recorded: an
- *        early `return { grade: "note", carrier: null }` also dropped the CARRIER, a second variable, so section 2
- *        failed too (6 pass / 8 fail) — re-armed on the grade alone as above.
+ *        S3c, S3d); section 2 passes. 7 pass / 4 fail, exit 1. ITS FIRST ARMING WAS UNSOUND and is recorded: an early
+ *        `return { grade: "note", carrier: null }` also dropped the CARRIER, a second variable, so section 2 failed
+ *        too (6 pass / 8 fail of that day's 14) — re-armed on the grade alone as above.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -50,7 +54,7 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
-const SECTIONS = 4;
+const SECTIONS = 3;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -149,19 +153,6 @@ section("3 — main, and work no origin ref carries, still FAIL");
   const d = scratch();
   commit(d, "unpushed main");
   t("S3d main ahead and carried by nothing is a FAIL", grade(d), { grade: "fail", carrier: null });
-}
-
-/* ========================================================================== */
-section("4 — plancheck routes by the grade (the gate, not only the library)");
-{
-  const src = readFileSync(join(REPO, "tools/plancheck.mjs"), "utf8");
-  const arm = src.slice(src.indexOf("const ahead = sh(\"git rev-list --count origin/main..HEAD\")"),
-                        src.indexOf("warn(`local main is behind origin/main"));
-  t("S4 the UNPUSHED arm was found in plancheck.mjs", arm.length > 200 && arm.includes("UNPUSHED —"), true);
-  t("S4 plancheck imports unpushedGrade from strandedwork.mjs",
-    /import\("\.\/strandedwork\.mjs"\)/.test(arm) && /unpushedGrade\(\{ branch, head \}\)/.test(arm), true);
-  t("S4 plancheck routes a NOTE grade to notes, not to fail()",
-    /if \(graded\.grade === "note"\) notes\.push\(/.test(arm) && !/^\s*fail\(`UNPUSHED/m.test(arm), true);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);
