@@ -1502,6 +1502,10 @@ async function checkQueueAndBase(ctx, findings) {
       // C-17.2 (v1.7.0): disjointness auto-classification, the I-17 ladder's
       // mechanical rung. Same classifier the client promoter uses.
       const cls = classifyDivergence(man, ctx.files);
+      if (cls.order === 'key' && cls.walked > 1) {
+        findings.push(f('C-17.2', 'info', `the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)`,
+          ['re-export the bundle from a plane that writes seq into _history/manifest.json']));
+      }
       if (cls.rung === 'disjoint-auto') {
         findings.push(f('C-17.2', 'info', `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(', ')}] touched {${[...cls.interveningFiles].join(', ')}}, package touches {${man.files.map(e => e.name).join(', ')}}, sets disjoint; apply in sequence recording both bases`, ['apply-disjoint: promote in sequence, recording base and applied-over in the history manifest entry']));
       } else {
@@ -1528,8 +1532,13 @@ export function classifyDivergence(man, files) {
   if (histRaw == null) return { rung: 'adjudicated', reason: 'no history manifest: disjointness unverifiable' };
   let hist;
   try { hist = JSON.parse(typeof histRaw === 'string' ? histRaw : new TextDecoder().decode(histRaw)); } catch { return { rung: 'adjudicated', reason: 'history manifest unreadable' }; }
-  const entries = Array.isArray(hist.entries) ? [...hist.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
-  if (entries.length === 0) return { rung: 'adjudicated', reason: 'history manifest has no entries' };
+  /* D-718 (State Rules §6, I-20): the chain is walked in WRITE order — `seq`, through historyWriteOrder, the walk
+     C-20.1 takes — never by snap key, whose lexical order is not a clock: keyed against write order, the anchor
+     and the intervening set were the wrong ones, and a later-written promotion touching the package's own file
+     could drop out of the intervening set and read as disjoint-auto. `order` says which walk was taken, so an
+     image without seq is still classified, in key order, and the caller says so. */
+  const { order, entries } = historyWriteOrder(hist.entries);
+  if (entries.length === 0) return { rung: 'adjudicated', reason: 'history manifest has no entries', order, walked: entries.length };
   // Anchor man.base in the chain. Two legitimate anchor forms, and we take
   // the LATEST match to minimize the intervening set:
   //   (a) man.base === entries[i].base: the base was live immediately
@@ -1552,15 +1561,15 @@ export function classifyDivergence(man, files) {
     } catch { recordGap = true; }
   }
   if (start === -1) {
-    return { rung: 'adjudicated', reason: recordGap ? 'package base not found in recorded history (and some promotion records are missing or unreadable: chain incomplete)' : 'package base not found anywhere in recorded history' };
+    return { rung: 'adjudicated', reason: recordGap ? 'package base not found in recorded history (and some promotion records are missing or unreadable: chain incomplete)' : 'package base not found anywhere in recorded history', order, walked: entries.length };
   }
   const intervening = entries.slice(start);
-  if (intervening.length === 0) return { rung: 'adjudicated', reason: 'base resolves to the chain tail yet live differs: unrecorded live edit' };
+  if (intervening.length === 0) return { rung: 'adjudicated', reason: 'base resolves to the chain tail yet live differs: unrecorded live edit', order, walked: entries.length };
   const interveningFiles = new Set();
   for (const e of intervening) for (const n of (e.files || [])) interveningFiles.add(n);
   const overlap = man.files.map(e => e.name).filter(n => interveningFiles.has(n));
-  if (overlap.length > 0) return { rung: 'adjudicated', reason: `overlapping substantive divergence on {${overlap.join(', ')}}` , interveningFiles };
-  return { rung: 'disjoint-auto', baseKey: anchor, intervening: intervening.map(e => e.key), interveningFiles };
+  if (overlap.length > 0) return { rung: 'adjudicated', reason: `overlapping substantive divergence on {${overlap.join(', ')}}` , interveningFiles, order, walked: entries.length };
+  return { rung: 'disjoint-auto', baseKey: anchor, intervening: intervening.map(e => e.key), interveningFiles, order, walked: entries.length };
 }
 
 // ---------------------------------------------------------------------------

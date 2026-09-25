@@ -5647,6 +5647,14 @@ async function checkQueueAndBase(ctx, findings) {
     } else {
       findings.push(f("C-17.1", "warn", `pending package base ${String(man.base).slice(0, 12)}\u2026 does not match live bundle.md ${liveHash.slice(0, 12)}\u2026: divergence`, ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint if file sets prove disjoint (requires history manifests)"]));
       const cls = classifyDivergence(man, ctx.files);
+      if (cls.order === "key" && cls.walked > 1) {
+        findings.push(f(
+          "C-17.2",
+          "info",
+          `the history manifest carries no write order (a seq on every entry), so the divergence was classified in snap-key order, which is not a clock: its anchor and intervening set may not be the ones written (I-20)`,
+          ["re-export the bundle from a plane that writes seq into _history/manifest.json"]
+        ));
+      }
       if (cls.rung === "disjoint-auto") {
         findings.push(f("C-17.2", "info", `divergence classified disjoint-auto: base found in history at ${cls.baseKey}; intervening promotion(s) [${cls.intervening.join(", ")}] touched {${[...cls.interveningFiles].join(", ")}}, package touches {${man.files.map((e) => e.name).join(", ")}}, sets disjoint; apply in sequence recording both bases`, ["apply-disjoint: promote in sequence, recording base and applied-over in the history manifest entry"]));
       } else {
@@ -5664,8 +5672,8 @@ function classifyDivergence(man, files) {
   } catch {
     return { rung: "adjudicated", reason: "history manifest unreadable" };
   }
-  const entries = Array.isArray(hist.entries) ? [...hist.entries].sort((a, b) => a.key < b.key ? -1 : 1) : [];
-  if (entries.length === 0) return { rung: "adjudicated", reason: "history manifest has no entries" };
+  const { order, entries } = historyWriteOrder(hist.entries);
+  if (entries.length === 0) return { rung: "adjudicated", reason: "history manifest has no entries", order, walked: entries.length };
   let start = -1;
   let anchor = null;
   for (let i = 0; i < entries.length; i++) {
@@ -5693,15 +5701,15 @@ function classifyDivergence(man, files) {
     }
   }
   if (start === -1) {
-    return { rung: "adjudicated", reason: recordGap ? "package base not found in recorded history (and some promotion records are missing or unreadable: chain incomplete)" : "package base not found anywhere in recorded history" };
+    return { rung: "adjudicated", reason: recordGap ? "package base not found in recorded history (and some promotion records are missing or unreadable: chain incomplete)" : "package base not found anywhere in recorded history", order, walked: entries.length };
   }
   const intervening = entries.slice(start);
-  if (intervening.length === 0) return { rung: "adjudicated", reason: "base resolves to the chain tail yet live differs: unrecorded live edit" };
+  if (intervening.length === 0) return { rung: "adjudicated", reason: "base resolves to the chain tail yet live differs: unrecorded live edit", order, walked: entries.length };
   const interveningFiles = /* @__PURE__ */ new Set();
   for (const e of intervening) for (const n of e.files || []) interveningFiles.add(n);
   const overlap = man.files.map((e) => e.name).filter((n) => interveningFiles.has(n));
-  if (overlap.length > 0) return { rung: "adjudicated", reason: `overlapping substantive divergence on {${overlap.join(", ")}}`, interveningFiles };
-  return { rung: "disjoint-auto", baseKey: anchor, intervening: intervening.map((e) => e.key), interveningFiles };
+  if (overlap.length > 0) return { rung: "adjudicated", reason: `overlapping substantive divergence on {${overlap.join(", ")}}`, interveningFiles, order, walked: entries.length };
+  return { rung: "disjoint-auto", baseKey: anchor, intervening: intervening.map((e) => e.key), interveningFiles, order, walked: entries.length };
 }
 function canonicalJson(v) {
   if (Array.isArray(v)) return "[" + v.map(canonicalJson).join(",") + "]";
