@@ -37473,13 +37473,43 @@ export class Store extends DurableObject {
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
        stands for, which is the direction that overruns. */
     const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
+    /* D-520 — THE CONCURRENCY CAP, decided BEFORE the allowance and taking nothing from it.
+       Residue (2) above was that the allowance is an ACCOUNT and nothing capped how many
+       renders run at once; this is the throttle. A render over the cap is `waiting`, a THIRD
+       state and not a deferral: the day's allowance may have plenty of room, and a member
+       told "deferred" would read the allowance as spent. Nothing is reserved and nothing is
+       counted against the day for it, so the caller can ask again as soon as a slot frees —
+       the unattended drain does exactly that, holding the row under C-83.8 and asking again
+       on its next tick (BOB #33: over the cap a render WAITS, never dropped).
+
+       SLOTS EXPIRE, and the expiry is the reservation: a render admitted at T with reservation
+       R holds its slot until it reports or until T + R, the most time the asked environment
+       permits it. Without the expiry a render that never reports (a Worker that died) would
+       hold a slot for ever, and `cap` of them would stop every render on the instance. WHAT
+       THE EXPIRY CANNOT SEE: a renderer that overruns its asked bounds is still running when
+       its slot is reclaimed, so for that overrun one more render than the cap can be in the
+       browser — residue (1)'s shape, the renderer's time being its own claim.
+
+       A caller that names no cap is ADMITTED WITHOUT ONE, which is the one place this does
+       not fail closed, and on purpose: the reservation above already fails closed, and the
+       cap is a throttle whose absence costs throughput, never the record. The one caller
+       (`src/index.mjs`) passes `renderConcurrencyCap(env)`. */
+    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
+    const nowMs = Date.parse(now);
+    if (capN !== null) {
+      if (Number.isFinite(nowMs)) this.sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
+      const running = [...this.sql.exec(`SELECT COUNT(*) AS n FROM render_slots`)][0].n;
+      if (running >= capN)
+        return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
+                 why: `${running} renders are running and this instance runs at most ${capN} at once` };
+    }
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
     const reserved = cur ? (cur.reserved_ms || 0) : 0;
@@ -37501,8 +37531,14 @@ export class Store extends DurableObject {
       return defer(null);
     if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
     else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+    /* D-520: the slot, taken in the SAME serialised step as the reservation, so no second
+       admission can read the count between the check above and this write. */
+    const slot = crypto.randomUUID();
+    this.sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
+                  slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
     return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
-             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0 };
+             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
+             slot, cap: capN };
   }
 
   /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
@@ -37518,7 +37554,12 @@ export class Store extends DurableObject {
    *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
-  renderSpend({ ms, releaseMs = 0, at = null }) {
+  renderSpend({ ms, releaseMs = 0, slot = null, at = null }) {
+    /* D-520: THE SLOT IS GIVEN BACK ON EVERY PATH, including the unreported one. The slot
+       counts renders RUNNING, and a render that has come back to this op — with a time or
+       without one — is not running; the day's reservation is a different question and keeps
+       D-492's answer below. */
+    if (typeof slot === "string" && slot) this.sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
@@ -41720,7 +41761,11 @@ export class Store extends DurableObject {
                          a reader needs no second one: the content is UNDETERMINED
                          and says so, which is what keeps a deferral out of the
                          coverage a captured row would imply. */
-                      render: { state: "deferred", content: "undetermined" },
+                      /* D-520: the STATE is op=acquire's own word when it sent one — a render
+                         over the concurrency cap is `waiting` (C-83.8), not `deferred`: nothing
+                         was taken from the day's allowance, and the next tick is expected to
+                         run it. `deferred` is kept for every code that sends no word. */
+                      render: { state: r.renderState || "deferred", content: "undetermined" },
                       detail: why });
         } else {
           this.sql.exec(
@@ -41907,6 +41952,10 @@ export class Store extends DurableObject {
         && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return { ok: false, reason,
                renderCode,
+               /* D-520: op=acquire's word for the held render (`waiting`, `deferred`), read and
+                  never invented; any other value is dropped rather than carried into the record. */
+               renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred")
+                 ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch (e) {
       /* D-205: the message is the plane's own, never the exception's, because a

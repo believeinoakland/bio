@@ -157,16 +157,19 @@ const acquire = acq(mf), capture = held(mf);
 
 /* ====================================================================== 0 */
 console.log("\n--- 0. the family and the fixture are what they claim ---");
-t("C-83 has seven rows, each with a C-number and a sentence",
+/* CORRECTED 2026-09-25 BY D-520, NEVER EXEMPTED: this read SEVEN rows. D-520 minted the
+   eighth, C-83.8 RENDER_AT_CAPACITY (a render over the concurrency cap WAITS, BOB #33), so
+   the old count was right about the family it was written against and is superseded. */
+t("C-83 has eight rows, each with a C-number and a sentence",
   Object.values(RENDER_CAPTURE_CHECKS).map((r) => /^C-83\.\d+$/.test(r.check) && r.translation.length > 40),
-  [true, true, true, true, true, true, true]);
+  [true, true, true, true, true, true, true, true]);
 /* THE C-NUMBERS AS LITERALS, so a renumber or a swapped row fails here by name rather
    than agreeing with itself through row() below. */
 t("each code carries the C-number this item minted for it",
   Object.fromEntries(Object.entries(RENDER_CAPTURE_CHECKS).map(([k, r]) => [k, r.check])),
   { RENDER_FLAG_MALFORMED: "C-83.1", RENDER_ARM_CONFLICT: "C-83.2", RENDER_NO_RENDERER: "C-83.3",
     RENDER_DEFERRED: "C-83.4", RENDER_HOST_COOLING_OFF: "C-83.5", RENDER_NOT_A_PAGE: "C-83.6",
-    RENDER_FAILED: "C-83.7" });
+    RENDER_FAILED: "C-83.7", RENDER_AT_CAPACITY: "C-83.8" });
 t("the method string is the one BOB #32 ruled", RENDERED_METHOD, "rendered");
 t("code and layout are the only non-data axes (inverted list)", Object.values(NON_DATA_TYPES).sort(),
   ["code", "layout", "layout"]);
@@ -339,8 +342,14 @@ console.log("\n--- H. the daily allowance: committed means DEFERRED, recorded, n
    third does not) and makes the third's deferral the allowance's doing and not the
    reservation's: at 46,000 the second render's 1,000 ms plus one reservation is exactly
    the allowance and fits, and the third's 2,000 ms plus one reservation is 1 ms over.
+   (D-520: the figures in this paragraph are for the 45,000 ms reservation of its day; the
+   arithmetic is the same at RESERVE = 25,000 — the allowance is RESERVE + 1,000.)
    Block J drives the reservation itself. */
-const RESERVE = 45000;            /* the wait timeout (15,000) plus the navigation bound (30,000) */
+/* CORRECTED 2026-09-25 BY D-520, NEVER EXEMPTED: this read 45000, the wait's 15,000 plus a
+   navigation bound of 30,000 that was CHOSEN. D-520 set the bound from measurement M-151
+   (10,000 ms), so the old figure is superseded, not wrong for its day. Every arm below that
+   sizes an allowance in reservations reads this one literal, which is why only it moved. */
+const RESERVE = 25000;            /* the wait timeout (15,000) plus the navigation bound (10,000, M-151) */
 {
   /* PINNED AS A LITERAL, not read from the module into both sides of the comparison: a
      figure the suite takes from the code agrees with the code for free (WORKER.md). If
@@ -463,6 +472,90 @@ console.log("\n--- J. D-492: the allowance is RESERVED at admission, so renders 
   t("J6 a shell that is not a page releases the reservation without charge, and the next render is admitted",
     [refusal(n1), n2.ok, n2.document && n2.document.capture.method], [row("RENDER_NOT_A_PAGE"), true, RENDERED_METHOD]);
   await notpage.dispose();
+}
+
+/* ====================================================================== K */
+console.log("\n--- K. D-520: a CONCURRENCY CAP — a burst above it renders no more than the cap at once ---");
+/* ACCEPTS-WHEN (QUEUE.md D-520): a burst above the cap renders no more than the cap at once,
+   with the rest completing later. NEGATIVE CONTROL: remove the cap and the burst arm counts
+   more concurrent renders than the cap, failing by name (K1).
+   The ALLOWANCE here is ample on purpose (a hundred reservations), so every refusal below is
+   the CAP's and none is the account's — the two axes kept apart, as the store keeps them.
+   The member path is refused BY NAME and asks again; the unattended path HOLDS the row and
+   the alarm asks again (`capturerequests.test.mjs` block 7d).
+   WHAT THIS BLOCK CANNOT SEE: the vendor's own limit. The cap's default is Cloudflare's stated
+   included concurrency (render.mjs, labelled as theirs), and no browser here ever ran. */
+{
+  const K = 5, CAP = 2;
+  let entered = 0, running = 0, peak = 0, settled = 0, release = null;
+  const gate = new Promise((r) => { release = r; });
+  const heldR = async (request) => {
+    const q = await request.json();
+    entered++; running++; peak = Math.max(peak, running);
+    await gate;
+    running--;
+    return Response.json({
+      ok: true, html: rendered("/same"), engine: "chromium", engine_version: "fixture-1",
+      viewport: q.viewport, dpr: q.dpr, locale: q.locale, timezone: q.timezone,
+      wait: { condition: q.wait, fired: "networkidle" }, elapsed_ms: 1000,
+      navigated_to: q.url, status: 200, requests: PAGES["/same"].requests, scripts: PAGES["/same"].scripts });
+  };
+  const capped = plane({ RENDER_CONCURRENCY_CAP: String(CAP), RENDER_DAILY_ALLOWANCE_MS: String(RESERVE * 100) },
+                       { RENDERER: heldR });
+  const ka = acq(capped);
+  const hitsBefore = pageHits["/same"] || 0;
+  const flight = Array.from({ length: K }, () =>
+    ka({ locator: `https://${HOST}/same`, render: true }).then((v) => { settled++; return v; }));
+  /* Released once CAP renderers are inside AND the other K-CAP were already answered, so the
+     refusals happen WHILE the admitted renders are running. `stop` ends the wait the moment
+     MORE than CAP are inside — the cap did not hold, and K1 then names it rather than the
+     wait reporting NOT MEASURED. */
+  const WAIT_MS = 20000;
+  const waited = await until(() => entered >= CAP && settled >= K - CAP, WAIT_MS,
+    { stepMs: 25, stop: () => entered > CAP });
+  const atRelease = [entered, settled];
+  release();
+  const out = await Promise.all(flight);
+  if (budgetAssert(t, "K the wait for CAP renderers in flight with the other K-CAP already answered",
+      waited, WAIT_MS, "K1 K2 K3 K4 — the peak, the refusals by name, their word and the fetches")) {
+    t("K1 A BURST OF K AGAINST A CAP OF CAP: no more than CAP renders were ever running at once",
+      [K, CAP, peak], [5, 2, CAP]);
+    const waiting = out.filter((r) => r.reason === "RENDER_AT_CAPACITY");
+    t("K2 CAP were admitted and every other one is RENDER_AT_CAPACITY by name, while the CAP were running",
+      [out.filter((r) => r.ok === true).length, waiting.length, atRelease], [CAP, K - CAP, [CAP, K - CAP]]);
+    t("K3 each waiting render says WAITING, content undetermined, and names the running count and the cap",
+      [waiting.length, ...waiting.map((r) => [refusal(r), r.render.state, r.render.content, r.render.running, r.render.cap])],
+      [K - CAP, ...waiting.map(() => [row("RENDER_AT_CAPACITY"), "waiting", "undetermined", CAP, CAP])]);
+    t("K4 nothing was fetched for a waiting render: only the CAP admitted ones loaded the shell",
+      (pageHits["/same"] || 0) - hitsBefore, CAP);
+  }
+  /* THE REST COMPLETE LATER. The slots came back when the renders reported, so asking again
+     is admitted — the refusal was a wait, not a verdict. */
+  /* ONE AT A TIME: asked all at once, K-CAP = 3 retries against a cap of 2 would leave the
+     third waiting again — correct behaviour, and exactly what this block's first run of this
+     arm measured before the arm was corrected to ask the way a waiting caller does. */
+  const later = [];
+  for (let i = 0; i < K - CAP; i++) later.push(await ka({ locator: `https://${HOST}/same`, render: true }));
+  t("K5 the rest COMPLETE LATER: asked again once the running renders finished, each is filed",
+    later.map((r) => [r.ok, r.document && r.document.capture.method]), later.map(() => [true, RENDERED_METHOD]));
+  await capped.dispose();
+}
+{
+  /* AN UNREPORTED RENDER GIVES ITS SLOT BACK, even though D-492 keeps its reservation: the
+     slot counts renders RUNNING, and one that came back failed is not running. Under a cap of
+     one, a render after it must be admitted, not left waiting behind a render that ended. */
+  const one = plane({ RENDER_CONCURRENCY_CAP: "1", RENDER_DAILY_ALLOWANCE_MS: String(RESERVE * 100) });
+  const oa = acq(one);
+  const f = await oa({ locator: `https://${HOST}/fail`, render: true });
+  const n = await oa({ locator: `https://${HOST}/same`, render: true });
+  t("K6 a failed render releases its slot: under a cap of one, the next render is admitted and filed",
+    [refusal(f), n.ok], [row("RENDER_FAILED"), true]);
+  /* OVER-STRICTNESS: a cap that is not a positive whole number is the DEFAULT, never "no
+     renders" — a typo must not switch rendering off. */
+  const typo = plane({ RENDER_CONCURRENCY_CAP: "0" });
+  const ta = await acq(typo)({ locator: `https://${HOST}/same`, render: true });
+  t("K7 OVER-STRICTNESS: RENDER_CONCURRENCY_CAP=0 reads as the default and renders", ta.ok, true);
+  await one.dispose(); await typo.dispose();
 }
 
 /* ====================================================================== I */

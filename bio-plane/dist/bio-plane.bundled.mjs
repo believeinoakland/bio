@@ -4005,6 +4005,20 @@ CREATE TABLE IF NOT EXISTS render_allowance (
   last_at    TEXT NOT NULL
 );
 
+-- D-520: THE RENDERS RUNNING NOW, one row per admitted render, so the
+-- instance can CAP how many run at once (CLIENT-RENDERED.md, RULED by BOB #33:
+-- a concurrency cap from the vendor's stated limit, labelled; over the cap a
+-- render WAITS). render_allowance is an ACCOUNT of browser time and cannot say
+-- how many are in flight. A slot is released when its render reports, and
+-- EXPIRES at its admission plus its reservation (the most time the asked
+-- environment permits it), so a render that never reports cannot hold a slot
+-- for ever. An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_slots (
+  slot        TEXT PRIMARY KEY,
+  admitted_at TEXT NOT NULL,
+  expires_ms  INTEGER NOT NULL
+);
+
 -- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md \xA72): A MACHINE'S
 -- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
 --
@@ -12070,6 +12084,16 @@ var RENDER_CAPTURE_CHECKS = {
     check: "C-83.7",
     where: "src/index.mjs fetch > is-render-result",
     translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
+  },
+  /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
+     vendor's stated limit, and a render over it WAITS, never dropped). Decided in the
+     admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the
+     day's allowance is untouched and may have room, so the sentence must not say it is
+     used. The unattended drain holds the row under this code and asks again next tick. */
+  RENDER_AT_CAPACITY: {
+    check: "C-83.8",
+    where: "src/index.mjs fetch > is-render-admit",
+    translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
   }
 };
 var NAMESPACE_CHECKS = {
@@ -21797,6 +21821,7 @@ function archiveLocatorFrom(res, requested) {
 var FAKE_HOST = "https://fake.host";
 var CLIENT_HEADER = "bio-plane";
 var IDLE_QUIET_MS = 500;
+var SERIALISE_MS = 1e3;
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
@@ -21818,6 +21843,17 @@ async function openSession(binding) {
     throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
   up.webSocket.accept();
   return { sessionId, ws: up.webSocket };
+}
+async function boundedOpen(binding, ms) {
+  let timer = null;
+  const expire = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`)), ms);
+  });
+  try {
+    return await Promise.race([openSession(binding), expire]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 function cdpConnection(ws) {
   let nextId = 1, closed = null;
@@ -21892,15 +21928,23 @@ var resourceType = (t) => typeof t === "string" && t ? t.toLowerCase() : "other"
 async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
   const asked = req || {};
   const timeoutMs = Math.max(1e3, Number(asked.wait?.timeout_ms) || 15e3);
+  const navMs = Math.max(1e3, Number(asked.navigation_timeout_ms) || 3e4);
   const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
   let sess = null, conn = null, targetId = null;
   const started = now();
+  const navDeadline = started + navMs;
+  const left = (deadline, phase) => {
+    const ms = deadline - now();
+    if (ms <= 0) throw new Error(`the render's ${phase} bound was spent before it finished`);
+    return ms;
+  };
+  const navLeft = () => left(navDeadline, `navigation (${navMs} ms)`);
   try {
-    sess = await openSession(binding);
+    sess = await boundedOpen(binding, navMs);
     conn = cdpConnection(sess.ws);
     let engine = null, engineVersion = null;
     try {
-      const v = await conn.send("Browser.getVersion");
+      const v = await conn.send("Browser.getVersion", {}, void 0, navLeft());
       const product = typeof v.product === "string" ? v.product : null;
       if (product) {
         const slash = product.lastIndexOf("/");
@@ -21913,17 +21957,17 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     }
     let pageTarget = null;
     try {
-      const { targetInfos } = await conn.send("Target.getTargets");
+      const { targetInfos } = await conn.send("Target.getTargets", {}, void 0, navLeft());
       pageTarget = (Array.isArray(targetInfos) ? targetInfos : []).find((t) => t && t.type === "page") || null;
     } catch {
       pageTarget = null;
     }
     if (!pageTarget) {
-      const made = await conn.send("Target.createTarget", { url: "about:blank" });
+      const made = await conn.send("Target.createTarget", { url: "about:blank" }, void 0, navLeft());
       targetId = made.targetId;
     } else targetId = pageTarget.targetId;
     if (!targetId) throw new Error("the browser gave this render no page target");
-    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true });
+    const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true }, void 0, navLeft());
     if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
     const vp = asked.viewport || {};
     const envOk = { viewport: false, dpr: false, locale: false, timezone: false };
@@ -21933,36 +21977,36 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
         height: Math.round(Number(vp.height) || 800),
         deviceScaleFactor: Number(asked.dpr) || 1,
         mobile: false
-      }, sessionId);
+      }, sessionId, navLeft());
       envOk.viewport = true;
       envOk.dpr = true;
     } catch {
     }
     if (typeof asked.locale === "string" && asked.locale)
       try {
-        await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId);
+        await conn.send("Emulation.setLocaleOverride", { locale: asked.locale }, sessionId, navLeft());
         envOk.locale = true;
       } catch {
       }
     if (typeof asked.timezone === "string" && asked.timezone)
       try {
-        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId);
+        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked.timezone }, sessionId, navLeft());
         envOk.timezone = true;
       } catch {
       }
     let requests = /* @__PURE__ */ new Map(), scripts = [];
     let sawNetwork = false, sawDebugger = false;
     try {
-      await conn.send("Network.enable", {}, sessionId);
+      await conn.send("Network.enable", {}, sessionId, navLeft());
       sawNetwork = true;
     } catch {
     }
     try {
-      await conn.send("Page.enable", {}, sessionId);
+      await conn.send("Page.enable", {}, sessionId, navLeft());
     } catch {
     }
     try {
-      await conn.send("Debugger.enable", {}, sessionId);
+      await conn.send("Debugger.enable", {}, sessionId, navLeft());
       sawDebugger = true;
     } catch {
     }
@@ -22025,10 +22069,11 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
           break;
       }
     });
-    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, timeoutMs);
+    const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, navLeft());
     if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
     mainFrameId = nav.frameId || null;
-    const deadline = started + timeoutMs;
+    const overall = started + navMs + timeoutMs;
+    const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
     let fired = null;
     while (now() < deadline) {
       if (until === "load" && loadFired) {
@@ -22047,7 +22092,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
       expression: `JSON.stringify({html: (document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\\n" : "") + document.documentElement.outerHTML,url: location.href })`,
       returnByValue: true,
       awaitPromise: false
-    }, sessionId, timeoutMs);
+    }, sessionId, left(overall, `render (${navMs + timeoutMs} ms)`));
     let html = null, navigatedTo = null;
     try {
       const parsed = JSON.parse(evaluated.result?.value);
@@ -22122,18 +22167,25 @@ function browserBindingRenderer(binding) {
 }
 
 // src/render.mjs
+var RENDER_NAVIGATION_TIMEOUT_MS = 1e4;
 var RENDER_DEFAULTS = Object.freeze({
   /* D-492: THE NAVIGATION BOUND, ASKED OF THE RENDERER AND RESERVED AGAINST THE
      ALLOWANCE. A render's maximum browser cost is the time it may spend getting to
      the page plus the time the wait condition may burn once there, so the two
-     together are what `renderReserveMs` reserves at admission. CHOSEN, NOT MEASURED,
-     and stated as chosen for the same reason the daily allowance is: no instrument
-     here has timed a navigation, and no platform enforces this number for us. What
-     it buys is that the reservation is a bound the renderer was ASKED to hold, not
-     one this module invented for the arithmetic — a renderer that overruns its own
-     asked bounds overruns the reservation too, and `renderSpend` then records the
-     time it REPORTED, which is the only figure the plane ever has. */
-  navigation_timeout_ms: 3e4,
+     together are what `renderReserveMs` reserves at admission.
+     D-520: SET FROM A MEASUREMENT, `docs/development/measurements/M-151.md`. It was
+     30,000 ms and CHOSEN; M-151 timed Page.navigate to commit over the client-rendered
+     sources the corpus names (local headless Chromium, 2026-09-25): the slowest of 24
+     navigations committed in 1,300 ms. Its rule, applied to that printed tail: twice the
+     tail, plus 5,000 ms held for the session acquisition nobody has measured, rounded UP
+     to the next whole 5,000 ms — 2 x 1,300 + 5,000 = 7,600, so 10,000. The doubling is
+     the stated allowance for the instrument not being Cloudflare's browser or network;
+     the 5,000 ms is CHOSEN, NOT MEASURED (no instance holds the binding), and is the
+     term the first live render's figure replaces. AND IT IS NOW HONOURED: until D-520 the in-plane driver never
+     read this field (`browserrender.mjs` bounded Page.navigate by the WAIT timeout and
+     every setup command by a 30,000 ms default), so the reservation was a bound the
+     renderer was asked for and did not hold. */
+  navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
   locale: "en-US",
@@ -22161,6 +22213,13 @@ function renderAllowanceMs(env) {
   if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
+}
+var RENDER_CONCURRENCY_CAP_DEFAULT = 10;
+function renderConcurrencyCap(env) {
+  const v = env && env.RENDER_CONCURRENCY_CAP;
+  if (v === void 0 || v === null || v === "") return RENDER_CONCURRENCY_CAP_DEFAULT;
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : RENDER_CONCURRENCY_CAP_DEFAULT;
 }
 function renderReserveMs(asked = RENDER_DEFAULTS) {
   const pos = (v, fallback) => {
@@ -64387,11 +64446,26 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
    *  first reading of this measurement generalised from three greps, which is the same error,
    *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, reserveMs = 0, at = null }) {
+  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
     const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
+    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
+    const nowMs = Date.parse(now);
+    if (capN !== null) {
+      if (Number.isFinite(nowMs)) this.sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
+      const running = [...this.sql.exec(`SELECT COUNT(*) AS n FROM render_slots`)][0].n;
+      if (running >= capN)
+        return {
+          state: "waiting",
+          day,
+          cap: capN,
+          running,
+          reserve_ms: reserve,
+          why: `${running} renders are running and this instance runs at most ${capN} at once`
+        };
+    }
     const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
     const spent = cur ? cur.spent_ms : 0;
     const reserved = cur ? cur.reserved_ms || 0 : 0;
@@ -64416,6 +64490,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       return defer(null);
     if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
     else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+    const slot = crypto.randomUUID();
+    this.sql.exec(
+      `INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
+      slot,
+      now,
+      (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve
+    );
     return {
       state: "admitted",
       day,
@@ -64424,7 +64505,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       reserve_ms: reserve,
       allowance_ms: allowance,
       renders: (cur ? cur.renders : 0) + 1,
-      deferred: cur ? cur.deferred : 0
+      deferred: cur ? cur.deferred : 0,
+      slot,
+      cap: capN
     };
   }
   /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
@@ -64440,7 +64523,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
    *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
    *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
-  renderSpend({ ms, releaseMs = 0, at = null }) {
+  renderSpend({ ms, releaseMs = 0, slot = null, at = null }) {
+    if (typeof slot === "string" && slot) this.sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const day = now.slice(0, 10);
     const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
@@ -68097,7 +68181,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                a reader needs no second one: the content is UNDETERMINED
                and says so, which is what keeps a deferral out of the
                coverage a captured row would imply. */
-            render: { state: "deferred", content: "undetermined" },
+            /* D-520: the STATE is op=acquire's own word when it sent one — a render
+               over the concurrency cap is `waiting` (C-83.8), not `deferred`: nothing
+               was taken from the day's allowance, and the next tick is expected to
+               run it. `deferred` is kept for every code that sends no word. */
+            render: { state: r.renderState || "deferred", content: "undetermined" },
             detail: why
           });
         } else {
@@ -68264,6 +68352,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ok: false,
         reason,
         renderCode,
+        /* D-520: op=acquire's word for the held render (`waiting`, `deferred`), read and
+           never invented; any other value is dropped rather than carried into the record. */
+        renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred") ? out.render.state : null,
         detail: renderCode ? String(out && out.detail || "").slice(0, 400) : null
       };
     } catch (e) {
@@ -81332,6 +81423,7 @@ var index_default = {
       const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
       let renderer = null;
       let renderReserved = 0;
+      let renderSlot = null;
       if (renderAsked) {
         if (body2.render !== true)
           return json({
@@ -81400,9 +81492,24 @@ var index_default = {
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved })
+          body: JSON.stringify({
+            allowanceMs: renderAllowanceMs(env),
+            reserveMs: renderReserved,
+            cap: renderConcurrencyCap(env),
+            at: retrieved
+          })
         }));
         const adm = admOut.answered ? admOut.result : null;
+        if (adm && adm.state === "waiting")
+          return json({
+            ok: false,
+            reason: "RENDER_AT_CAPACITY",
+            ...renderRow("RENDER_AT_CAPACITY"),
+            op,
+            render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
+            detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; this render is waiting and nothing was fetched.`
+          }, 429);
+        if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
         if (!adm || adm.state !== "admitted")
           return json({
             ok: false,
@@ -81645,7 +81752,7 @@ var index_default = {
             await stGov.fetch("http://x/renderspend", {
               method: "POST",
               headers: { "content-type": "application/json" },
-              body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved })
+              body: JSON.stringify({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved })
             });
           } catch {
           }
@@ -81669,7 +81776,7 @@ var index_default = {
           await stGov.fetch("http://x/renderspend", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved })
+            body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved })
           });
         } catch {
         }

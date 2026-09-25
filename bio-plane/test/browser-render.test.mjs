@@ -114,6 +114,8 @@ const PAGES = ${JSON.stringify({
                   scripts: [{ url: `https://${HOST}/app.js` }] },
   "/navfail": { requests: [], scripts: [], navError: "net::ERR_NAME_NOT_RESOLVED" },
   "/noload": { requests: [], scripts: [], noLoad: true },
+  /* D-520: a navigation the browser never answers — the site that never commits. */
+  "/navhang": { requests: [], scripts: [], navHang: true },
   "/noserialise": { requests: [], scripts: [], noHtml: true },
 })};
 const RENDERED = (p) => ${JSON.stringify("<!DOCTYPE html>\n<html><head><title>Portal</title></head><body><main><h1>Council agenda</h1><p>Rendered for ")} + p + ${JSON.stringify(".</p></main></body></html>")};
@@ -151,6 +153,7 @@ export default {
             page = PAGES[pageKey] || null;
             if (!page) return ok({ frameId: "F1" });
             if (page.navError) return ok({ frameId: "F1", errorText: page.navError });
+            if (page.navHang) return;   /* D-520: no answer, ever */
             ok({ frameId: "F1", loaderId: "L1" });
             if (env.MODE !== "nonetwork") for (let i = 0; i < page.requests.length; i++) {
               const r = page.requests[i], id = "R" + i;
@@ -392,6 +395,20 @@ console.log("\n--- E. every way the binding can fail says WHICH call failed and 
   const e = (await render({ url: `https://${HOST}/noserialise`, wait: { until: "networkidle", timeout_ms: 2000 } })).answer;
   t("E5 a browser that returns no document is a failed render, never an empty capture",
     [e.ok, /no serialised document/.test(e.error || "")], [false, true]);
+}
+
+{
+  /* D-520 — THE NAVIGATION BOUND IS HONOURED. Before D-520 the driver never read
+     `navigation_timeout_ms`: Page.navigate was bounded by the WAIT timeout, so a site that
+     never commits held the render for the wait's 4,000 ms here, not the 1,000 ms of
+     navigation it was asked for and reserved against. The wall clock is the discriminator,
+     with the arms far enough apart (1,000 vs 4,000) that a loaded machine cannot blur them. */
+  const t0 = Date.now();
+  const g = (await render({ url: `https://${HOST}/navhang`, navigation_timeout_ms: 1000,
+                            wait: { until: "networkidle", timeout_ms: 4000 } })).answer;
+  const took = Date.now() - t0;
+  t("E6 a navigation that never commits fails BY NAME inside the asked navigation bound, not the wait's",
+    [g.ok, /CDP Page\.navigate did not answer within \d+ ms/.test(g.error || ""), took < 3000], [false, true, true]);
 }
 
 /* ====================================================================== F */

@@ -108,7 +108,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderBlock,
+import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, renderAllowanceMs, renderConcurrencyCap, renderBlock,
          renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
 /* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
    pdfstructure.mjs is no longer imported here — it is the registry's pdf
@@ -7444,9 +7444,11 @@ export default {
          blocks — the first before the shell is fetched, the second after — and the release must
          name the SAME figure the admission took. */
       let renderReserved = 0;
+      /* D-520: the concurrency slot the admission took, given back by the same `renderspend`. */
+      let renderSlot = null;
       /* DEC-49 REGION is-render-admit
        *
-       * THE SPAN C-83.1..C-83.5 name. Helper `renderRow`, every code a STRING
+       * THE SPAN C-83.1..C-83.5 and C-83.8 name. Helper `renderRow`, every code a STRING
        * LITERAL at its site. */
       if (renderAsked) {
         if (body.render !== true)
@@ -7500,8 +7502,19 @@ export default {
         renderReserved = renderReserveMs(RENDER_DEFAULTS);
         const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved, at: retrieved }) }));
+          body: JSON.stringify({ allowanceMs: renderAllowanceMs(env), reserveMs: renderReserved,
+                                 cap: renderConcurrencyCap(env), at: retrieved }) }));
         const adm = admOut.answered ? admOut.result : null;
+        /* D-520: OVER THE CONCURRENCY CAP THE RENDER WAITS (BOB #33). It is not a deferral —
+           nothing was reserved from the day and nothing was counted against it — and it is not
+           dropped: the unattended drain holds the row under this code and asks again on its next
+           tick, and a member is told a slot frees as soon as a running render finishes. */
+        if (adm && adm.state === "waiting")
+          return json({ ok: false, reason: "RENDER_AT_CAPACITY", ...renderRow("RENDER_AT_CAPACITY"),
+            op, render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
+            detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; `
+                  + `this render is waiting and nothing was fetched.` }, 429);
+        if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
         if (!adm || adm.state !== "admitted")
           return json({ ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
             op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
@@ -7914,7 +7927,7 @@ export default {
              path either reports the render's time or leaves the reservation charged on purpose. */
           try { await stGov.fetch("http://x/renderspend", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, at: retrieved }) }); }
+            body: JSON.stringify({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved }) }); }
           catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
           return json({ ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
             op, content_type: ct || null, bytes: total, multipart,
@@ -7925,7 +7938,7 @@ export default {
         catch (e) { answer = { ok: false, error: String(e && e.message || e) }; }
         try { await stGov.fetch("http://x/renderspend", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, at: retrieved }) }); }
+          body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }) }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
         if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
