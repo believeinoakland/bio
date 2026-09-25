@@ -977,8 +977,8 @@ scope: a pure reader that loads every `*.control.mjs` driver's arm table, dry-ap
 accepts-when: the reader runs in every profile and names each drifted or UNREADABLE driver (moves: drifts found a worker round late). NEGATIVE CONTROL: reword one anchored line in a fixture copy and the arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs M0`; BOB #35 04:25Z).
 
-### M0-196 · running — **`bio-plane/scripts/pensweep.mjs`'s walk cannot resolve `fileURLToPath(new URL("..", import.meta.url))` as a tree read, so every copy-source control driver that reads its tree that way reads UNCLASSIFIED; batch28 raised the ceiling 15 -> 18 by name for D-526's, D-547's and D-548's drivers.** Found by CONDUCT #21 at batch28's integration (04:06Z). — owner M0.
-status: running — SCHEDULER #22 06:01Z spawns WORKER M0-196 (depth 2)
+### M0-196 · integrated — **`bio-plane/scripts/pensweep.mjs`'s walk cannot resolve `fileURLToPath(new URL("..", import.meta.url))` as a tree read, so every copy-source control driver that reads its tree that way reads UNCLASSIFIED; batch28 raised the ceiling 15 -> 18 by name for D-526's, D-547's and D-548's drivers.** Found by CONDUCT #21 at batch28's integration (04:06Z). — owner M0.
+status: integrated — SCHEDULER #22 06:25Z: tip 59433afe, GATE 75/75 GREEN TARGETED (5840 assertions); premise wrong (the URL form already resolved): three other shapes now read; UNCLASSIFIED ceiling 18->13; at union DROP D-563's 18->19 raise (its driver resolves), ceiling stays 13
 order: after M0-142, with the gate-instrument rows behind the product rows: a ceiling raised by name is loud, not false, and every new driver of that shape raises it again (SCHEDULER #22, 2026-09-25)
 milestone: M0
 interface: none.
@@ -1041,6 +1041,16 @@ depends-on: M0-170.
 scope: replace each list with `moduleClosure({ repo, roots: [<tool>], dynamic: false })` as M0-170 did; state the sweep's reach (literal-name copies only).
 accepts-when: an import added to coord.mjs or status.mjs leaves both suites green (moves: three hand lists). NEGATIVE CONTROL: restore one list, add an import, and that suite fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by M0-170's worker).
+
+### D-564 · queued — **SEVEN MORE SUITES END AT THEIR FIRST FIXTURE FAILURE ("FIXTURE ABORTED": dispose and exit), so one broken fixture hides every later section: casesearched, casesign, d150-statement-acknowledgement, d507-statement-ack-translation, rec212-statement-writer, reviewcopy, reviewcopy-inband.** Found by D-548's worker (00:33Z); 3 of 351 suites carry a `block()` recorder. — owner RECORD (the suites).
+order: after D-566, with the process rows behind the product rows: it hides later failures for a round but no gate result is false (D-548's precedent) (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (a suite measures every arm it declares).
+depends-on: D-548.
+scope: adopt `block()` and the per-section tally, -1 for a section that died, a section never reported a FAIL by name, as D-548 did; state the matcher's reach (the literal "FIXTURE ABORTED" only).
+accepts-when: in each suite, one section's fixture broken leaves every other section reporting its tally (moves: 7 suites ending at the first failure). NEGATIVE CONTROL: break one fixture per suite and the others still report; disarm the recorder and the foot is missing, by name.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-548's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
