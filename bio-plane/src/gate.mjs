@@ -185,6 +185,12 @@ export const CATALOG_VERSION = "1.29.0";
    that does reach it, where it used to answer NO_SUCH_PROGRESSION. One arrival, no departure, nothing
    moved: MINOR on this constant's own rule (Publication §3 rule 17). 457 + 1 = 458, count and digest
    re-read from the d470 suite's own print on this tree. */
+/* 1.26.0 (REC-207, 2026-09-24): BOB #32's ruling of 2026-09-23 23:42Z on what settles a bias-debt
+   obligation added TEN rows — C-26.13 to C-26.19 in BIAS_CHECKS (the member's resolve) and C-33.45 to
+   C-33.47 in ACT_SHAPE_CHECKS (the re-run link, judged at op=airunopen's door). MINOR and additive on
+   this constant's own rule (Publication §3 rule 17): ten checks arrive, none moves and none leaves.
+   457 + 10 = 467, and the count and digest recorded in d470-catalog-census.test.mjs are THAT SUITE'S
+   OWN PRINT on this tree, never the arithmetic — the arithmetic would agree with itself for free. */
 export const CATALOG_VERSION = "1.26.0";
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 

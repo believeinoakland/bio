@@ -386,6 +386,11 @@ const CATALOG_CENSUS = {
      ACT_SHAPE_CHECKS, and no departure — MINOR. The code was given a canned translation AT THE MINT rather
      than added bare to the 293 untranslated ones, which is why `check-refusal-codes`' `untranslated` floor
      did not move for this landing. Count and digest are THIS SUITE'S OWN PRINT on the item's tree. */
+  /* 1.26.0 (REC-207, 2026-09-24, branch land/worker/REC-207): ten arrivals, no departures — C-26.13 to
+     C-26.19 (the member's resolve of a bias debt) and C-33.45 to C-33.47 (the re-run link's three
+     refusals at op=airunopen). MINOR on the rule above. The count and the digest below are THIS SUITE'S
+     OWN PRINT on this tree and never 457 + 10: the figure is a measurement of the catalogue that is
+     here, and the arithmetic would agree with it for free. */
 };
 
 /* The computed emission spellings this suite accounts for, each with the

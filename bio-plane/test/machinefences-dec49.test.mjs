@@ -459,6 +459,16 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        translated at the mint rather than added to the untranslated census. D-PIN-B failed naming exactly
        this row when it landed, which is this pair of arms doing its job. */
     ["C-33.44", "CLASS_NOT_DISPOSED"],
+    /* REC-207 / BOB #32's ruling of 2026-09-23 23:42Z, 2026-09-24: `op=airunopen` takes the authored
+       link saying which run this one RE-RUNS, and `aiRunClose` settles a bias debt on the strength of
+       it — so the link is judged at the door in one region (`aiRunOpen > is-airun-rerun-link`). Three
+       rows because they are three different facts about the request with three different remedies: the
+       run named itself, it named nothing this caller holds, or it named work in another context whose
+       lens is a different lens. D-PIN-B failed naming exactly these three when they landed, which is
+       this pair of arms doing its job. */
+    ["C-33.45", "AI_RUN_RERUN_SELF"],
+    ["C-33.46", "AI_RUN_RERUN_UNKNOWN"],
+    ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -572,7 +582,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* MOVED 61 -> 63 on 2026-09-24 (REC-211), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 63") on the
        item's tree over origin/main 58293bf31, and never 61 + 2: C-33.42 NO_DEFINITION_VERSION and
        C-33.43 DEFINITION_MOVED. */
-    rowsSeen, 64);
+    /* MOVED 63 -> 66 on 2026-09-24 (REC-207), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 66 rows
+       across 2 families", "got 66") on the item's tree over origin/main 1a7f0bcc0, and never 63 + 3:
+       C-33.45 AI_RUN_RERUN_SELF, C-33.46 AI_RUN_RERUN_UNKNOWN and C-33.47 AI_RUN_RERUN_OTHER_CONTEXT,
+       the re-run link's three refusals at `aiRunOpen > is-airun-rerun-link`. */
+    /* CONDUCT #21 at c21-batch28: 67 at the union — REC-205's C-33.44 (64 on its branch) and REC-207's three,
+       renumbered C-33.45..C-33.47 off that collision; RE-READ from this suite's print on the merged tree. */
+    rowsSeen, 67);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

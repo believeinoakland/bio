@@ -853,11 +853,20 @@ const beforeShaA = await shaOf(A);
   + "three answers, because 'no' alone is the gate that pressures somebody into inventing a way "
   + "past it. STRUCTURAL, and LABELLED as such: this fixture emits neither class, which is why the "
   + "count below is asserted at zero rather than left to be assumed",
+    /* CORRECTED 2026-09-24 BY REC-207, never exempted, and the old assertion was WRONG rather than
+       merely stale: it read `/instead: "taskresolve"/`, which said that EVERY obligation's act is
+       `op=taskresolve`. That op addresses rows in `tasks` by id, and BOB #32's ruling of 2026-09-23
+       23:42Z gave the bias-debt obligation — keyed on the RUN whose lens moved, with no task row at
+       all — two settling acts of its own. So the act an OBLIGATION names is a property of its KIND,
+       and the pin is now on the CHOICE rather than on the one answer: the source must still name
+       `taskresolve` as the default AND must name the bias-debt kind's own door, so a third kind
+       added without one lands here as a failure instead of quietly inheriting a door it has not got. */
     [/an_obligation_is_resolved_not_disposed/.test(STORE_SRC),
-     /instead: "taskresolve"/.test(STORE_SRC),
+     /\? "biasdebtresolve" : "taskresolve"/.test(STORE_SRC),
+     /item\.kind === "bias-debt"/.test(STORE_SRC),
      /a_condition_is_acknowledged_or_muted/.test(STORE_SRC),
      /instead: "queuemute"/.test(STORE_SRC),
-     ITEMS(q).filter((i) => i.class !== "FINDING").length], [true, true, true, true, 0]);
+     ITEMS(q).filter((i) => i.class !== "FINDING").length], [true, true, true, true, true, 0]);
 
   /* THE PUBLICATION IS A MEASUREMENT OF THE ACT, IN BOTH DIRECTIONS. A claim
      about `op=proposedispose` that never calls it is a claim; these two calls

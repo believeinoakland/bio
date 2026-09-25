@@ -509,7 +509,7 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("TWELVE refusals are allocated, and every one carries check + where + translation",
+  t("NINETEEN refusals are allocated, and every one carries check + where + translation",
     /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
        and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
        WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
@@ -525,8 +525,18 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
        D-468) — `op=promote` now holds a bias set to the declared STATES edges
        read from its head, which `STATES.bias`'s own comment had described and
        nothing enforced. CORRECTED here rather than exempted, and the figure is
-       the one the gate PRINTED, not this number plus one. */
-    [12, true]);
+       the one the gate PRINTED, not this number plus one.
+       EIGHTEEN, not eleven, 2026-09-24 (REC-207): BOB #32's ruling of 2026-09-23
+       23:42Z gave a bias debt two settling acts it did not have, and the member's
+       resolve brought SEVEN refusals with it (C-26.13 to C-26.19, the two regions
+       in `biasDebtResolve`). CORRECTED HERE RATHER THAN EXEMPTED, and the old
+       figure was not WRONG — it was true of its family on its day, which is what
+       a count like this one is for: it is the arm that made the C-25 -> C-26
+       renumber's one missed reference visible, and it can only do that while it
+       is moved by hand every time the family grows.
+       NINETEEN AT THE UNION (CONDUCT #21, c21-batch28): D-468's C-26.12 and REC-207's seven, renumbered
+       C-26.13 to C-26.19 off that collision, together — twelve plus seven. */
+    [19, true]);
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",

@@ -337,6 +337,22 @@ const ROLE = {
      purge's proof and still counts `ai_runs` by table name; that is `n("ai_runs", "context_id")`, which this walk
      has never counted as a read of the row. ARM W4's three publishers are untouched — asserted one arm down. */
   "#hiddenSets":       "HOUSEKEEPS",
+  /* REC-207's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on this
+     item's first full battery, which is the sixth time this ratchet has caught a new reader rather than
+     absorbing one in silence. `#biasDebtDischargeByRerun` reads `ai_runs` (`SELECT *`, for `rerun_of` and
+     for the row `#biasForRun` needs) at the close of a run that names an earlier one, to decide whether
+     that earlier run's BIAS DEBT is discharged.
+     AUTHORISES, and the fit is argued rather than assumed. It is reached from `aiRunClose`, which is
+     already WRITES — but the act it decides is not the close: the close terminates whatever this method
+     answers, and what this one decides is whether a DIFFERENT object, a `bias_debts` row belonging to
+     ANOTHER run, is settled. That is `suggestVersion`'s and `captureRequest`'s role word for word: read
+     the run row to decide whether some other act may land. NOT `WRITES`: it writes `bias_debts` and
+     `bias_debt_settlements` and not one column of `ai_runs`, so ARM P1's column matrix is untouched by it.
+     NOT `PUBLISHES`: the block it returns names the caller's own run, the id the caller AUTHORED as
+     `rerun_of`, and two lens hashes — and the hashes come from `#biasForRun`, which is `aiRunRead`'s own
+     publisher and is already counted as one. No column of the indebted run reaches anybody through here,
+     so ARM W4's "exactly three publishers" stands and was re-checked rather than assumed. */
+  "#biasDebtDischargeByRerun": "AUTHORISES",
   /* FL-4's two, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE
      naming both of them by name, which is the sweep behaving exactly as its own
      comment promises rather than absorbing a new reader in silence.

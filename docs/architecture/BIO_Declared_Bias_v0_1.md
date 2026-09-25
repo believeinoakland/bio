@@ -1,6 +1,6 @@
 # BIO Declared Bias, v0.1 DRAFT
 
-**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23): one disclosed, never-blocking obligation per run whose lens moved (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-09-24 (REC-187 BUILT BOB #31's ruling — the manifest names the ADOPTED revision and hashes exactly its statements; REC-210 BUILT BOB #32's: an adoption pinning a still-PROPOSED revision is a REPLACEMENT and SAYS so, on the act's answer and on op=biasmanifest, and the ruling moved into §"Bias bundles and adoption").
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. Bias debt is RAISED since D-86 (2026-09-23) and SETTLED since REC-207 (2026-09-24, BOB #32's ruling of 2026-09-23 23:42Z): one disclosed, never-blocking obligation per run whose lens moved, and three acts that settle it — the lens moving back, a re-run under the lens now in force, and a member's resolve with a required stated reason — each RECORDED, append-only, and read back by `op=biasdebt` (`construct-status.json` 7.bias-debt). Since REC-188 the gate refuses a `bio-case-document/3` without the manifest (C-41.13). as of 2026-09-25 (REC-207 BUILT BOB #32's ruling of 2026-09-23 23:42Z: what settles a bias-debt obligation; REC-187 BUILT BOB #31's ruling — the manifest names the ADOPTED revision and hashes exactly its statements; REC-210 BUILT BOB #32's: an adoption pinning a still-PROPOSED revision is a REPLACEMENT and SAYS so, on the act's answer and on op=biasmanifest, and the ruling moved into §"Bias bundles and adoption").
 statements; D-468 then made the bias state machine ENFORCED at the write path rather than merely declared, which is what closes the adoption residue above).
 
 **Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
@@ -11,7 +11,6 @@ statements; D-468 then made the bias state machine ENFORCED at the write path ra
 - §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Since REC-187 (2026-09-24) a manifest's `revision` is the ADOPTED revision and `statements_sha` is over exactly its statements (BOB #31). Since REC-188 (2026-09-24) the gate REQUIRES the block of a `bio-case-document/3`, which op=publish authors (C-41.13); a /2 document authored before D-84 carries none and still ratifies. `op=biasadopt` taken on a later PROPOSED revision re-pins CLOSED 2026-09-24 by D-468, which was that residue's only route: `op=promote` now holds every bias-set move to those proposed bytes and lifts the adopted lens: RULED a REPLACEMENT by BOB #32 (2026-09-24) and MARKED since REC-210 — `pins_proposed` on the act's answer and `pins_proposed[]` on op=biasmanifest. Still open: the FROZEN case-document block carries no marker, so a case published in that state signs `no manifest was in force` and says nothing about the replacement; the field declared STATES edges read from the current head and refuses any other by name (BIAS_ILLEGAL_TRANSITION, C-26.12), so an ADOPTED set cannot stand at `proposed` again — from `adopted` the only moves are `retired` and a revision that stays at `adopted`, which RE-PINS. The section's own sentence *"Amending an adopted set is a NEW REVISION of the same bundle under append-only history — which re-pins"* is what the machine now leaves as the way to amend one. Nothing in this section is a `bio-case-document/4` and C-41.13's.
 open.
 - §Integration with the epistemics ladder — the mechanical binding is a stated prerequisite; no ruling, no op.
-- §Bias debt, and HUNCH DEBT — bias debt is now RAISED (D-86, 2026-09-23: one disclosed obligation per run whose lens moved, `construct-status.json` 7.bias-debt) and nothing DISCHARGES it but the lens moving back; the section does not say what settles a debt, and no act does.
 - §Bias debt, and HUNCH DEBT — says `op=publishpreflight` "exists"; it is deferred with REC-15 behind DEC-33; the sequencing paragraph predates PL-12.
 - §Differential traversal and the cross-group rerun and §Sequencing — regrade and rerun are prose only; "Not a build order"; no op exists.
 
@@ -354,7 +353,30 @@ as built. (2) **A re-run under the CURRENT lens** discharges the debt of the run
 closed with the discharging run's id and lens pins, so a reader sees WHICH run settled it. A re-run under any other
 lens discharges nothing. (3) **A member's resolve with a REQUIRED stated reason**: an authored act, attributed, dated
 and append-only. It needs no re-run, because a member may judge that the lens change does not bear on the finding.
-Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69). NOT BUILT (REC-207).
+Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69).
+
+**BUILT 2026-09-24 by REC-207**, and what was built is named here so it can be checked rather than believed.
+Every settlement — all three — goes through ONE writer and appends a row to `bias_debt_settlements`
+(`bio-plane/src/store.mjs` `#biasDebtSettle`), which is the structural half of *each is RECORDED*: a second
+writer is how one of the three comes to clear a debt without a row. **(1) The lens moves back** is D-86's
+sweep, unchanged in effect and no longer silent — it wrote a bare `cleared_at` before this landing, so a
+reader could see THAT the obligation had gone and never WHY; it now records that the sweep settled it, with
+no actor and no reason, because a sweep is not a person and attributing it to one would be an invented
+attribution. **(2) A re-run under the CURRENT lens.** The link is AUTHORED at the open — `op=airunopen`
+takes `rerun_of`, the opener's own word about which run this one re-runs, judged at the door (a self
+reference, a run this caller cannot see, and a run in another context are each refused by name, C-33.45 to
+C-33.47) — and the DISCHARGE is taken at that run's own `op=airunclose`, because a run that was opened and
+never ran has not re-run anything. "Under the current lens" is ONE comparison and it is `op=airun`'s, never
+a second one: the lens the run was FORMED under (the manifest it was handed) against the lens in force for
+its context now. Where either side has no hash the answer is UNDETERMINED and nothing is discharged — two
+absent hashes agree on nothing. The obligation is closed with the discharging run's id and both lens pins.
+**(3) A member's resolve**, `op=biasdebtresolve`, which refuses a missing reason by name (C-26.16) and
+refuses a machine credential by SHAPE (C-26.15), and records the member, the date, the reason and the pins.
+A settlement is APPENDED and never replaced, so a lens that moves ONWARDS raises NEW debt with the old
+settlement still on record, while a sweep that finds the SAME lens delta leaves an authored settlement
+standing — a member is not asked the same question twice (DEC-69). `op=biasdebt` reads all of it back, which
+is what makes *never cleared silently* a fact a reader can check. Driven by
+`bio-plane/test/rec207-bias-debt-settle.test.mjs`.
 
 ### RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT
 

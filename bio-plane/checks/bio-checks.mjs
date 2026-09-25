@@ -8904,6 +8904,74 @@ export const BIAS_CHECKS = {
       + 'A set is written, then proposed, then adopted — and the middle step is what stops a set '
       + 'becoming binding without anybody having offered it.',
   },
+
+  /* ---------------------------------------------------------------------------
+     REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
+     the EXISTING family rather than a new one, on SK-1's rule: a new `*_CHECKS`
+     family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for
+     everybody else's walk, and these refusals are bias's in the plainest sense —
+     they are the conditions under which the record declines to record that a
+     member has settled the obligation a lens change raised.
+
+     TWO REGIONS, NOT ONE, and the split is the order of the answers rather than
+     tidiness. `is-bias-debt-resolve-shape` holds the four conditions about the
+     ACT — no run named, no member behind the call, a machine, no stated reason —
+     and every one of them is answered BEFORE the record is read, so a caller who
+     cannot see the run learns nothing from which refusal they get.
+     `is-bias-debt-resolve-subject` holds the two about the DEBT, after the gated
+     lookup, where an unseen debt and an absent one are deliberately ONE answer.
+     --------------------------------------------------------------------------- */
+  BIAS_DEBT_NO_RUN: {
+    check: 'C-26.13',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because the request did not say which piece of work it is about. '
+      + 'A bias debt belongs to one assistant run — the one whose lens changed — so settling it has to '
+      + 'name that run.',
+  },
+  BIAS_DEBT_NO_ACTOR: {
+    check: 'C-26.14',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because this request has no member behind it. Deciding that a '
+      + 'change in the group\'s declared lens does not affect a piece of work is somebody\'s judgement, '
+      + 'and the record keeps whose it was. Sign in and do it as yourself.',
+  },
+  BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
+    check: 'C-26.15',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled. This was asked by a machine credential, and saying that a lens '
+      + 'change does not affect a finding is a person\'s judgement about the work — not something an '
+      + 'automated account can decide on anyone\'s behalf. A machine may raise this and show it to you; '
+      + 'answering it is yours.',
+  },
+  BIAS_DEBT_NO_REASON: {
+    check: 'C-26.16',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because no reason was given. The whole of what this act puts on '
+      + 'the record is why you judged that the change in the lens does not bear on this work — without '
+      + 'it the record would say only that somebody decided, and a later reader could not tell whether '
+      + 'the question was answered or waved away. Say why, and it is settled.',
+  },
+  BIAS_DEBT_REASON_TOO_LONG: {
+    check: 'C-26.17',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because the reason given is longer than this record holds for one. '
+      + 'Nothing about it was wrong — it is a size limit and not a judgement about what you wrote. Put '
+      + 'the reasoning where it belongs in the work and give the short form of it here.',
+  },
+  BIAS_DEBT_NO_SUCH_DEBT: {
+    check: 'C-26.18',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
+    translation: 'Nothing was settled, because there is no open bias debt on that run here. Either the '
+      + 'run never carried one, or it has already been settled, or it is not a run you can open.',
+  },
+  BIAS_DEBT_ALREADY_SETTLED: {
+    check: 'C-26.19',
+    where: 'src/store.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
+    translation: 'Nothing was added, because this one has already been settled — by the lens moving back, '
+      + 'by a re-run under the lens now in force, or by a member who gave their reason. What settled it '
+      + 'is on the record and is not overwritten. If the lens changes again, the obligation is raised '
+      + 'again as a new one.',
+  },
 };
 
 /* =========================================================================
@@ -10527,6 +10595,57 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'Nothing was run, because a run with this name is already on record here. The record '
       + 'keeps what each run did under its own name, so starting a second one under a name already in '
       + 'use would write two different histories into one place. Give this one a name of its own.',
+  },
+
+  /* ---------------------------------------------------------------------------
+     REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
+
+     They are ACT-SHAPE conditions — the answer to *may this open carry this
+     link* — so they belong here rather than in a family of their own (SK-1's
+     rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
+
+     WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
+     `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
+     the record cannot stand behind is a DISCHARGE resting on the caller's word.
+     The three conditions are the three ways that could happen: the run names
+     itself, it names something that is not there, or it names work in another
+     context whose lens is a different lens entirely.
+
+     A WHOLE-FUNCTION `where`, AND THE CHOICE IS MEASURED RATHER THAN LAZY.
+     These three were first written inside a narrowed REGION, which is what
+     `kickoffs/WORKER.md` asks for — and `check-refusal-codes.mjs` then FAILED
+     all three by name. `aiRunOpen`'s three existing rows carry a WHOLE-FUNCTION
+     `where`, and the guard does not subtract a region's span from the enclosing
+     function's: the region's refusals are judged TWICE, once at the region and
+     once at `aiRunOpen`, where the code is not one of that site's rows. So a
+     region inside a function that still has a whole-function `where` is not a
+     narrowing, it is a contradiction — the two sites disagree about who governs
+     the same lines. Narrowing ALL of `aiRunOpen`'s rows is the honest fix and
+     is REC-71's work rather than this item's, so these three join their three
+     neighbours at the function, and the residue is stated here rather than
+     left for the next reader to rediscover from a red guard.
+     --------------------------------------------------------------------------- */
+  AI_RUN_RERUN_SELF: {
+    check: 'C-33.45',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because this run was told it is a re-run of itself. A re-run says '
+      + 'which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its '
+      + 'own outstanding re-run. Name the earlier run, or leave the field out.',
+  },
+  AI_RUN_RERUN_UNKNOWN: {
+    check: 'C-33.46',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because the earlier run it says it repeats is not one this record '
+      + 'holds for you. It may never have existed, it may have been removed, or it may belong to work '
+      + 'you have not been brought into. Check the name.',
+  },
+  AI_RUN_RERUN_OTHER_CONTEXT: {
+    check: 'C-33.47',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because the earlier run it says it repeats belongs to a different '
+      + 'question or project. Repeating work means asking the same question again under the lens that is '
+      + 'in force for it — somewhere else the group\'s declared lens can be a different one, so the two '
+      + 'runs would not be comparable and settling anything on that basis would be wrong.',
   },
 
   /* ---------------------------------------------------------------------------
