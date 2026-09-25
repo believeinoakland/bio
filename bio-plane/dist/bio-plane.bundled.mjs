@@ -54816,15 +54816,96 @@ ${words}`;
      carries no rule, and its tie-break was the scan's row order, so `tie_break` is
      NULL there and `says` names why rather than inventing the rule it would have
      had. */
-  static #pairSelection(rule) {
+  /* D-575 — THE SENTENCE STATES THE CHOICE WHERE ONE EXISTS. `states` is `#pairChoiceStates`'
+     answer for the row; with no choice on either end the sentence is REC-120's byte for byte.
+     Where a member has chosen, "which nobody has chosen" would be the record contradicting itself
+     beside the member's own act, so each end is stated: chosen (naming the member, the mention and
+     where it was read), LAPSED (with the lapse's own why), or unchosen. `chosen` stays false: it
+     is about the MACHINE's pair, which a member's choice sits beside and never becomes. */
+  static #pairSelection(rule, states = null) {
+    const lead = rule ? "each end is the strongest-graded mention of the subject in its document; between equal grades the tie goes to the first reference by sort order, which says nothing about relevance. It is a machine selection and not the mention on point" : "each end is the strongest-graded mention of the subject in its document; this row was derived before the tie-break was recorded, when equal grades went to the scan's row order, which is not a basis. Re-deriving the subject's connections records it. It is a machine selection and not the mention on point";
+    const st = states || {};
+    const endSays = (side) => {
+      const e = st[side];
+      if (!e) return `on end ${side} nobody has chosen`;
+      if (e.lapsed) return `on end ${side} a member (${e.lapsed.chosen_by}) chose ${e.lapsed.ref} as the mention on point, and that choice has LAPSED: ${e.lapsed.why}`;
+      return `on end ${side} a member (${e.choice.chosen_by}) chose ${e.m.ref}` + (e.position && e.position.ref ? ` (read at ${e.position.ref})` : " (where it was read is not recorded)") + " as the mention on point";
+    };
     return {
       method: "strongest-graded",
       tie_break: typeof rule === "string" && rule ? rule.split("/")[1] || null : null,
       chosen: false,
-      says: rule ? "each end is the strongest-graded mention of the subject in its document; between equal grades the tie goes to the first reference by sort order, which says nothing about relevance. It is a machine selection and not the mention on point, which nobody has chosen" : "each end is the strongest-graded mention of the subject in its document; this row was derived before the tie-break was recorded, when equal grades went to the scan's row order, which is not a basis. Re-deriving the subject's connections records it. It is a machine selection and not the mention on point, which nobody has chosen"
+      says: st.a || st.b ? `${lead}; ${endSays("a")}; ${endSays("b")}` : `${lead}, which nobody has chosen`
     };
   }
-  #connectionView(r) {
+  /* D-575 — A MEMBER'S CHOICE ON EACH END, RESOLVED AGAINST WHAT THE DOCUMENT READS NOW. One
+     resolution for every reader of a connection (`op=connections` by id, sha and content, and
+     `op=connect`'s own answer), so the id/sha arm can no longer publish a choice the content arm
+     calls lapsed. Each end: null where nobody chose, else `{ choice, m, position }` for a current
+     choice or `{ choice, lapsed }` for one whose mention is gone (`#resolvePairChoice`). */
+  #pairChoiceStates(r) {
+    const choices = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
+    const out = { a: null, b: null };
+    for (const side of ["a", "b"])
+      if (choices[side])
+        out[side] = {
+          choice: choices[side],
+          ...this.#resolvePairChoice(side === "a" ? r.a_capture_sha : r.b_capture_sha, r.entity_id, choices[side])
+        };
+    return out;
+  }
+  /* D-454: THE CHOICE IS OF AN OCCURRENCE. Its place is read here from the reading, never
+     from the choice row, so a re-read that no longer reads the reference AT THAT PLACE
+     lapses the choice rather than letting it slide to another read of the same string.
+     A choice made before D-454 names no occurrence: it answers while its reference has
+     exactly one, and where the document now reads it at several it is AMBIGUOUS — the
+     member chose a string when the record could show only one place for it, and which
+     place they meant is not recoverable — so it is stated and read as unchosen.
+     (Moved here from `connectionGradeForContent` by D-575, unchanged, so every reader asks it.) */
+  #resolvePairChoice(captureSha, entityId, mine) {
+    const reads = this.#rows(
+      `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+              rp.occurrence AS occurrence
+         FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+        WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
+      captureSha,
+      entityId,
+      mine.ref,
+      _Store.#OCCURRENCES_PER_REF + 1
+    );
+    const ambiguous = mine.occurrence == null && reads.length > 1;
+    const m = mine.occurrence == null ? reads.length === 1 ? reads[0] : null : reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null;
+    const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
+    if (ambiguous)
+      return { lapsed: {
+        ref: mine.ref,
+        chosen_by: mine.chosen_by,
+        at: mine.at,
+        lapsed: true,
+        ambiguous: true,
+        occurrences: reads.map((x) => ({
+          occurrence: x.occurrence ?? null,
+          position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
+        })),
+        why: `a member chose ${mine.ref} as on point before the record kept which read of a reference a choice meant, and this document reads it at ${reads.length} places, so the choice cannot say which and the machine's selection is read as unchosen. Choosing again, naming the occurrence, settles it`
+      } };
+    if (!m)
+      return { lapsed: {
+        ref: mine.ref,
+        ...occ,
+        chosen_by: mine.chosen_by,
+        at: mine.at,
+        lapsed: true,
+        why: "a member chose this mention as on point, and this document no longer carries it " + (mine.occurrence != null ? "at that place " : "") + "for this subject, so the choice cannot answer and the machine's selection is read as unchosen"
+      } };
+    return { m, occ, position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) };
+  }
+  /* `on_point[side]` as published on the id/sha arm: the choice with `lapsed: false`, or the
+     lapse itself with its why (D-575 — that arm stated no lapse). */
+  static #onPointView(e) {
+    return e ? e.lapsed || { ...e.choice, lapsed: false } : null;
+  }
+  #connectionView(r, states = this.#pairChoiceStates(r)) {
     const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
     const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
     return {
@@ -54848,7 +54929,7 @@ ${words}`;
         b_position: bPos,
         positioned: !!(aPos && bPos),
         why: aPos && bPos ? "both ends record where in their document the determining reference was read" : "the determining reference is recorded on both ends; where it was read is not, so a citation of a PART of either document cannot yet earn from this connection",
-        selection: _Store.#pairSelection(r.pair_rule)
+        selection: _Store.#pairSelection(r.pair_rule, states)
       } : null
     };
   }
@@ -55077,10 +55158,7 @@ ${words}`;
     const truncated = scan.length > cap;
     const rows = truncated ? scan.slice(0, cap) : scan;
     const keep = this.#bundleRedactor(viewer);
-    const withChoice = (r) => {
-      const ch = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
-      return ch.a || ch.b ? { on_point: ch } : {};
-    };
+    const withChoice = (st) => st.a || st.b ? { on_point: { a: _Store.#onPointView(st.a), b: _Store.#onPointView(st.b) } } : {};
     const derivation = entityId ? (() => {
       const obs = this.#one(
         `SELECT at, state, detail FROM observation_log
@@ -55097,12 +55175,15 @@ ${words}`;
       entity_id: entityId,
       capture_sha: captureSha,
       count: rows.length,
-      connections: rows.map((r) => ({
-        ...this.#connectionView(r),
-        a_bundle_id: keep(r.a_bundle_id),
-        b_bundle_id: keep(r.b_bundle_id),
-        ...withChoice(r)
-      })),
+      connections: rows.map((r) => {
+        const st = this.#pairChoiceStates(r);
+        return {
+          ...this.#connectionView(r, st),
+          a_bundle_id: keep(r.a_bundle_id),
+          b_bundle_id: keep(r.b_bundle_id),
+          ...withChoice(st)
+        };
+      }),
       limit: cap,
       truncated,
       ...derivation ? { derivation } : {}
@@ -55212,7 +55293,8 @@ ${words}`;
     };
     for (const c of conns) {
       const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
-      const view = this.#connectionView(c);
+      const states = this.#pairChoiceStates(c);
+      const view = this.#connectionView(c, states);
       const entry = {
         entity_id: c.entity_id,
         grade: c.grade,
@@ -55225,55 +55307,15 @@ ${words}`;
         reaching.push({ ...entry, why: "this citation is of the whole document, so every connection the document has is inside it" });
         continue;
       }
-      const choices = this.#currentPairChoices(c.a_capture_sha, c.b_capture_sha, c.entity_id);
-      const mine = choices[side];
+      const mine = states[side] && states[side].choice;
       let lapsed = null;
       if (mine) {
-        const reads = this.#rows(
-          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
-                  rp.occurrence AS occurrence
-             FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
-          row.capture_sha,
-          c.entity_id,
-          mine.ref,
-          _Store.#OCCURRENCES_PER_REF + 1
-        );
-        const ambiguous = mine.occurrence == null && reads.length > 1;
-        const m = mine.occurrence == null ? reads.length === 1 ? reads[0] : null : reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null;
-        const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
-        if (ambiguous) {
-          lapsed = {
-            ref: mine.ref,
-            chosen_by: mine.chosen_by,
-            at: mine.at,
-            lapsed: true,
-            ambiguous: true,
-            occurrences: reads.map((x) => ({
-              occurrence: x.occurrence ?? null,
-              position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
-            })),
-            why: `a member chose ${mine.ref} as on point before the record kept which read of a reference a choice meant, and this document reads it at ${reads.length} places, so the choice cannot say which and the machine's selection is read as unchosen. Choosing again, naming the occurrence, settles it`
-          };
-        } else if (!m) {
-          lapsed = {
-            ref: mine.ref,
-            ...occ,
-            chosen_by: mine.chosen_by,
-            at: mine.at,
-            lapsed: true,
-            why: "a member chose this mention as on point, and this document no longer carries it " + (mine.occurrence != null ? "at that place " : "") + "for this subject, so the choice cannot answer and the machine's selection is read as unchosen"
-          };
+        if (states[side].lapsed) {
+          lapsed = states[side].lapsed;
         } else {
-          const position = readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref);
-          const theirs = choices[side === "a" ? "b" : "a"];
-          const otherSha = side === "a" ? c.b_capture_sha : c.a_capture_sha;
-          const theirGrade = theirs && this.#one(
-            `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
-            otherSha,
-            c.entity_id,
-            theirs.ref
-          )?.grade || (side === "a" ? c.b_grade : c.a_grade);
+          const { m, occ, position } = states[side];
+          const theirs = states[side === "a" ? "b" : "a"];
+          const theirGrade = theirs && !theirs.lapsed && theirs.m.grade || (side === "a" ? c.b_grade : c.a_grade);
           const grade2 = _Store.#weakerGrade(m.grade, theirGrade);
           const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
           const chosenEntry = { ...entry, grade: grade2, on_point: onPoint };
