@@ -878,7 +878,7 @@ cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budge
 note: 2026-09-23 by SCHEDULER #17 (M0-71's worker, via CONDUCT #18): the contradiction gate cannot see a detector that ABSTAINS (recall 2/9 sits beside it); this row stays blocked until its machine judgement is measured on this gate WITH its recall reported. The measurement is M-118 (M-117 was burned by a collision).
 
 ### UI-69 · integrated — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
-status: integrated — SCHEDULER #22 03:30Z: tip 0406203f, GATE 305/305 GREEN FULLREUSE (18006 assertions), tree 2dfab35e; 13.review-copy export BUILT (still PARTIAL); two provisionals + one design gap with BOB #35
+status: integrated — SCHEDULER #22 03:40Z: tip d57c135e (comment-only over 0406203f; 72/72 GREEN on tree 128736d5), full set 305/305 GREEN on 0406203f (18006 assertions); 13.review-copy export BUILT (still PARTIAL); two provisionals + one design gap with BOB #35
 order: after UI-68 and REC-148: export only once the quartet travels with it (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 consumer (REC-148's IC)
