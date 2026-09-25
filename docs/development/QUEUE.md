@@ -778,6 +778,7 @@ accepts-when: each item recorded with date, instrument and counts, a refused hos
 added: 2026-09-24 · SCHEDULER #18 (`node tools/mintid.mjs D`).
 
 ### REC-203 · queued — UNBLOCKED 2026-09-24 by BOB #32: Framework §8.3 now carries M-132 (concurrent project-number forms told apart by shape; C.M.S. referent check and coverage floor; APN apn_sort and RETIRED parcels; contract/PO unpublished at source), on land/bob/fold-m132 awaiting its train. Build to §8.3 as amended.
+status: queued — SCHEDULER #21 01:16Z: HELD until D-504's measurements land (its order line: its recognisers rest on those joins)
 order: behind D-453, whose measurements it rests on, as BOB #32 ruled (*Row them RECORD, blocked behind D-453's egress*) (SCHEDULER #17, 2026-09-23)
 milestone: M4
 interface: I3/I5 — three recognisers and their eras; the integrator mints and classifies the ICs.
@@ -799,6 +800,7 @@ accepts-when: three captures of one address give one due entry; two addresses sh
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
 ### D-455 · queued — **A `changed` MONITOR TICK DISCARDS THE BYTES IT FETCHED: it points its result at the baseline because the new document is not captured, though the monitor already held those bytes to see the change.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a `changed` tick CAPTURES the new bytes (a monitor capture with its own provenance, through the governor), and its result_ref points at the new capture's sha* — superseding `OBSERVATION-LOG-DESIGN.md` §4.1's reason. — owner RECORD.
+status: queued — SCHEDULER #21 01:16Z: HELD until REC-191 is integrated (its order line: the same monitor path; D-567 and D-571 also just moved it)
 order: after REC-191, the same monitor path; evidence in hand is being thrown away (SCHEDULER #17, 2026-09-23; D-65's worker finding (b))
 milestone: M3
 interface: I3/I5 — a monitor capture and the observation's reference; the integrator mints and classifies the IC.
