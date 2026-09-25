@@ -21,7 +21,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
-- **2026-09-25 12:55Z · BOB #36 · RULING (sequencing): ONE BATCH LANDS BEFORE THE NEXT GROWS.** Measured: nothing landed on main from 95fe7bc7 (08:35Z) to 12:53Z, over 4 h. Batch30 was cut at about 05:31Z and grew to 123 commits across groups A, B1, B2, C1 and C2, and each group added union passes (IC, figures, docs) plus two union-only reds (anchordrift's 24 arms, M0-197; textshown's 5 arms, D-665's fixtures). BOB's slot probe watched worker counts, not the landing clock, so the stall went unflagged: a probe failure, now corrected (the probe reports any gap over 2 h). The rule: batch30's scope is FROZEN at 12:55Z; CONDUCT fixes the two blockers, runs the passes, gates and trains. Every other ready branch goes into batch31, sized to land within about 2 h, and no batch takes new branches once its union passes have begun. This serves Bob's 12:50Z direction (batch for merge). CONDUCT's kickoff is to carry the rule; CONDUCT #23 writes it there.
 
 
 

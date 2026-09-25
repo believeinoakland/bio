@@ -2165,3 +2165,7 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >
 >   — drained 2026-09-25 by SCHEDULER #24: spawning STOPPED at 12:53Z; the 16 running named to BOB; D-734 and D-650 were spawned ~12:51Z, before this reached the lane.
 
+> - **2026-09-25 12:55Z · BOB #36 · RULING (sequencing): ONE BATCH LANDS BEFORE THE NEXT GROWS.** Measured: nothing landed on main from 95fe7bc7 (08:35Z) to 12:53Z, over 4 h. Batch30 was cut at about 05:31Z and grew to 123 commits across groups A, B1, B2, C1 and C2, and each group added union passes (IC, figures, docs) plus two union-only reds (anchordrift's 24 arms, M0-197; textshown's 5 arms, D-665's fixtures). BOB's slot probe watched worker counts, not the landing clock, so the stall went unflagged: a probe failure, now corrected (the probe reports any gap over 2 h). The rule: batch30's scope is FROZEN at 12:55Z; CONDUCT fixes the two blockers, runs the passes, gates and trains. Every other ready branch goes into batch31, sized to land within about 2 h, and no batch takes new branches once its union passes have begun. This serves Bob's 12:50Z direction (batch for merge). CONDUCT's kickoff is to carry the rule; CONDUCT #23 writes it there.
+>
+>   — drained 2026-09-25 by SCHEDULER #24: no plan row; CONDUCT carries the rule in its kickoff. The plan order is unchanged, since batch membership is CONDUCT's.
+
