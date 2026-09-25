@@ -504,8 +504,8 @@ scope: refuse by name an `ai` credential stating `law` or creating a `cpra_reque
 accepts-when: an `ai` credential's cpra_request is refused by name and a member adopts its proposal (moves: a machine stating the law). NEGATIVE CONTROL: an `ai` credential creating a cpra_request is refused by name, and the pre-fence machine row reads machine-stated — lift the fence and the first arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs D`, BOB #35's 08:25Z ruling).
 
-### D-682 · running — **NO LEAD OP PUBLISHES WHAT A LOOK'S STATE MEANS: D-194's surface mirrors OBSERVATION_STATES in app.html (LEAD_STATE_WORDS, guarded against airun.mjs), and `partial`'s plane sentence carries a maintainer's parenthetical that is not member text.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
-status: running — SCHEDULER #23 08:40Z: spawned, stacked on land/worker/D-194 @ 45437e4d
+### D-682 · integrated — **NO LEAD OP PUBLISHES WHAT A LOOK'S STATE MEANS: D-194's surface mirrors OBSERVATION_STATES in app.html (LEAD_STATE_WORDS, guarded against airun.mjs), and `partial`'s plane sentence carries a maintainer's parenthetical that is not member text.** Found by D-194's worker (minted on land/worker/D-194). — owner RECORD.
+status: integrated — SCHEDULER #23 10:20Z: tip 1d635376 (on D-194 45437e4d), GATE 61/61 GREEN FULLREUSE on tree 85b052c5 (full battery 385/385 on 30e7f701, its only red the floor file corrected in 1d635376); vocabulary on leadread and frontier internet; LEAD_STATE_WORDS mirror deleted; I3 additive IC the integrator s; UNION WITH D-681: its lead-list op must carry the vocabulary and set LDS.vocab (CONDUCT told)
 order: head of the backlog after D-671, with D-681 (running): the same surface's second plane gap (SCHEDULER #23, 2026-09-25)
 milestone: M4
 interface: I3 additive — a `vocabulary` block on op=leadread and op=frontier level=internet; the integrator classifies.
@@ -719,6 +719,17 @@ depends-on: none (stacked on land/worker/D-693 @ c55e4419, integrated, on D-177 
 scope: export ARCHIVE_CAPTURE_GRADE from checks/bio-checks.mjs beside UNREACHABLE_CAPTURE_GRADE; import it in store.mjs and index.mjs; correct acquire.test.mjs's assertion with a comment saying why (never exempt).
 accepts-when: the acquire stamp and the grade reader read one exported constant (moves: a typed duplicate of a ruled value). NEGATIVE CONTROL: change the exported letter and both the acquire stamp arm and 9d move together, failing by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-693's worker).
+
+### UI-118 · running — **THE EXPORTED REVIEW COPY OMITS THE DATE TIE: when op=reviewcopy's `last_change.undetermined_within` is non-empty, UI-69's exported page carries `inband` but not `last_change`, so its Date line states a single last change the record cannot settle.** An owed UI act from D-573's report (via CONDUCT #22, batch29 union). — owner UI.
+status: running — SCHEDULER #23 10:20Z: spawned from main 95fe7bc7
+order: after UI-117, with the review-copy surface rows (SCHEDULER #23, 2026-09-25)
+milestone: M10
+interface: I3 consumer.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 (the review copy's in-band quartet), with D-573's `last_change.undetermined_within`.
+depends-on: none (UI-69 and D-573 done, on main 95fe7bc7 via batch29).
+scope: the export renders the tie statement beside its Date line in the plane's words whenever undetermined_within is non-empty; nothing when empty.
+accepts-when: an exported copy of a draft with a tie shows the statement by its Date line (moves: a single date beside a tie). NEGATIVE CONTROL: drop last_change from the export and the tie arm fails by name.
+added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
 
 ### M0-139 · queued — **TWO ARMS OF `current.control.mjs` CANNOT FAIL: arm 8 refuses to arm (its anchor occurs twice in `store.mjs` since REC-124 added `#findingsConcludedElsewhere` with `#findingsStanceDiverged`'s guard), and arm 7's must-fail name survives in `current.test.mjs` only as a comment, and no suite asserts `no_project_scope`.** Predates D-125 (read on 91bcea6b, main and c17-batch4). — owner M0.
 order: first of the M0 rows, ahead of process tooling: a negative control that cannot fail is a product suite (the queue's findings) left unverified, not a gate-time tool (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (3), verified by string count)

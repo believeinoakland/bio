@@ -506,16 +506,6 @@ scope: status by code in the serialiseContainer refusal path: 409 for DUPLICATE_
 accepts-when: a zip request naming a path twice answers 409 DUPLICATE_PATH, and an over-large one 413 (moves: a duplicate path reported as too large). NEGATIVE CONTROL: send 413 for every refusal again and the duplicate arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-561's worker).
 
-### UI-118 · queued — **THE EXPORTED REVIEW COPY OMITS THE DATE TIE: when op=reviewcopy's `last_change.undetermined_within` is non-empty, UI-69's exported page carries `inband` but not `last_change`, so its Date line states a single last change the record cannot settle.** An owed UI act from D-573's report (via CONDUCT #22, batch29 union). — owner UI.
-order: after UI-117, with the review-copy surface rows (SCHEDULER #23, 2026-09-25)
-milestone: M10
-interface: I3 consumer.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 (the review copy's in-band quartet), with D-573's `last_change.undetermined_within`.
-depends-on: UI-69, D-573 (both integrated, ride batch29).
-scope: the export renders the tie statement beside its Date line in the plane's words whenever undetermined_within is non-empty; nothing when empty.
-accepts-when: an exported copy of a draft with a tie shows the statement by its Date line (moves: a single date beside a tie). NEGATIVE CONTROL: drop last_change from the export and the tie arm fails by name.
-added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
-
 ### UI-121 · queued — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
 order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
 milestone: M10
@@ -1111,4 +1101,14 @@ design: `docs/development/VERIFICATION.md` (an instrument refuses what it cannot
 depends-on: M0-159.
 scope: `--branch` and `--trailer` refuse a value starting with `--` by name, with an escape for a literal one.
 accepts-when: `--trailer --full` is refused by name, and the escaped form is taken literally. NEGATIVE CONTROL: drop the check and the refusal arm fails by name.
+added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
+
+### M0-177 · queued — **A SUITE CAN NAME A `docs/` BASENAME ONLY IN A SLASH-FREE STRING, which the gate reads as a reader edge (M0-165: "MEASUREMENTS" alone is a quoted token); the worker's sweep lists 40 candidates, none confirmed.** Found by M0-165's worker. — owner M0.
+order: after M0-175, behind the product rows: a sweep of candidates after M0-176 narrows the door (Bob's 17:41Z rule; SCHEDULER #19, 2026-09-24; via CONDUCT #20 18:02Z)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (the gate runs the class the diff measures).
+depends-on: M0-176.
+scope: an estate-wide arm failing a suite that names a docs basename only in a slash-free string with no other edge; confirm or clear each of the 40.
+accepts-when: the arm passes with each candidate fixed or stated legitimate. NEGATIVE CONTROL: plant a bare "MEASUREMENTS" label in one suite and the arm names it.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs M0`).
