@@ -756,7 +756,8 @@ scope: adopt D-548's block() recorder and needs() in the eleven suites; add each
 accepts-when: each of the eleven, with one fixture broken, names the sections that never ran and its totals are unchanged when whole (moves: an abort that hides unrun sections). NEGATIVE CONTROL: disarm the recorder in one suite and its broken-fixture arm fails by name.
 added: 2026-09-25 · SCHEDULER #23 (id minted by D-564's worker).
 
-### D-703 · running — **A SIGNED CASE DOCUMENT CREDITS THE PUBLISHER WITH AN EDITOR'S SENTENCE: `#statementWriter`'s `here` (`(d.case_id ?? null) === null && Number(edition) === 1`) matches a no-case draft only at edition 1, so when ella writes the exclusion statement in a no-case draft and iris publishes edition 2 without draft=, completeness.statement_by reads "iris" — "wrote this exclusion statement in the act that published this case" — into a signed document.** Driven in a scratch probe. Found by D-683's worker (minted on land/worker/D-683). — owner RECORD.
+### D-703 · integrated — **A SIGNED CASE DOCUMENT CREDITS THE PUBLISHER WITH AN EDITOR'S SENTENCE: `#statementWriter`'s `here` (`(d.case_id ?? null) === null && Number(edition) === 1`) matches a no-case draft only at edition 1, so when ella writes the exclusion statement in a no-case draft and iris publishes edition 2 without draft=, completeness.statement_by reads "iris" — "wrote this exclusion statement in the act that published this case" — into a signed document.** Driven in a scratch probe. Found by D-683's worker (minted on land/worker/D-683). — owner RECORD.
+status: integrated — SCHEDULER #24 11:04Z: tip 3401cd78 (on D-683 80d1db46), GATE 385/385 GREEN FULLREUSE (21886 assertions; excludes 3 untallied, 23 UI units reused), tree 618f07c1; #statementWriter no-case arm at any edition, reproduced via op=publish 41/1 -> 42/0; I3: who a signed statement names as writer on a further edition; stated gap -> D-725
 order: spawned directly — a false attribution in signed bytes is the over-claim CLAUDE.md §2 ranks worst, and it corrects the D-680/D-683 chain (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 — who a signed statement names as writer on a further edition; the integrator classifies.
@@ -882,6 +883,17 @@ depends-on: none.
 scope: split arm 8 into 8a and 8b, each anchored on its producer's signature line plus the guard; add a `current.test.mjs` assertion driving a finding filed under no project to `available:false, reason:"no_project_scope"` and point arm 7's must-fail at it.
 accepts-when: `node bio-plane/test/current.control.mjs` reports every arm run and 0 NOT as declared; 8a and 8b each fail "PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET", arm 7 fails the new no-scope assertion by name. NEGATIVE CONTROL: the control's own arms, each recorded on the suite's `NEGATIVE CONTROL:` line.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs M0`).
+
+### D-725 · running — **A SIGNED CASE DOCUMENT CAN NAME THE WRITER OF ANOTHER CASE'S DRAFT: `#statementWriter` reads EVERY no-case draft in the project, not the draft `draft=` named, so a same-bytes no-case draft prepared for another case answers for this one — its author is named in completeness.statement_by, or drafts_disagree/UNDETERMINED if the authors differ.** Stated (not built) by D-703's worker in the code, Publication §3 rule 13 and construct 13.statement-ack. — owner RECORD.
+order: spawned directly, stacked on D-703: a false attribution in signed bytes outranks every feature (CLAUDE.md §4, never invent an attribution) and corrects just-landed work (SCHEDULER #24, 2026-09-25)
+status: running — SCHEDULER #24 11:04Z: spawned, stacked on land/worker/D-703 @ 3401cd78
+milestone: M10
+interface: I3 — who a signed statement names as writer when draft= is given; the integrator classifies.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 13 (a no-case draft binds on any edition; the draft named is the draft read) and §6A.4.
+depends-on: none (stacked on land/worker/D-703 @ 3401cd78, integrated, on D-683 @ 80d1db46).
+scope: when draft= is given, the writer read consults THAT draft only; without draft=, keep D-703's behaviour and its stated disagreement. Remove the stated gap from rule 13 and construct 13.statement-ack once built.
+accepts-when: two same-bytes no-case drafts by different authors, one named by draft=: the publish names the named draft's author, never the other and never UNDETERMINED (moves: another draft's author named, or a needless UNDETERMINED). NEGATIVE CONTROL: read every project draft again and the named-draft arm fails by name.
+added: 2026-09-25 · SCHEDULER #24 (`node tools/mintid.mjs D`, D-703's stated gap).
 
 ### M0-171 · queued — **`versions.test.mjs` HARVESTS SCHEMA TABLES WITH A LOOSE PATTERN (`/CREATE TABLE IF NOT EXISTS (\w+)/g`, ~line 719), so it still counts the prose phantom `would` that M0-155 removed from the census.** Found by M0-155's worker. — owner M0.
 order: after M0-160, beside the probe-accuracy rows (SCHEDULER #18, 2026-09-24; via CONDUCT #20 17:07Z) MOVED 2026-09-24 ~17:30Z by SCHEDULER #19 behind the product rows, to the head of the M0 group after M0-139: the lane's law (CLAUDE.md §2, Bob 2026-09-22) puts a process row that neither cuts gate time nor unblocks product behind the product rows.
