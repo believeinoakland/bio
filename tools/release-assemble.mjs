@@ -136,14 +136,26 @@ const members = discoverMembers().filter((m) => m.bundle);
 const all = [plane, ...members];
 
 function committedArtifact(m) {
-  const p = join(m.abs, m.bundle.outfile);
-  if (!existsSync(p)) die("NO_ARTIFACT", `${m.name} has no committed ${m.bundle.outfile}.`,
-    `Run \`npm run build\` in ${m.dir}/ and commit the artifact.`);
-  return readFileSync(p);                      // read BEFORE any build runs
+  return readFileSync(join(m.abs, m.bundle.outfile));   // read BEFORE any build runs
 }
 
 console.log("assets discovered:");
 for (const m of all) console.log(`   ${m.name.padEnd(14)} ${m.bundle.outfile}`);
+
+/* ---- NO_ARTIFACT: EVERY missing artifact named in ONE refusal (D-560) -------
+   This refusal used to die on the FIRST missing artifact and tell the releaser
+   to run `npm run build` in that one member's directory, so a releaser fixed one
+   bundle, re-ran, and met the next: a round per missing bundle, for a remedy
+   whose command was right about ONE member and wrong about the SET (M0-188's
+   sibling site). The whole set is named here before anything dies, and the
+   remedy is the command that rebuilds every bundle (M0-178). */
+const missingArtifacts = all.filter((m) => !existsSync(join(m.abs, m.bundle.outfile)));
+if (missingArtifacts.length) {
+  die("NO_ARTIFACT",
+    `${missingArtifacts.length} of ${all.length} assets have no committed artifact: `
+    + missingArtifacts.map((m) => `${m.name} (${m.dir}/${m.bundle.outfile})`).join(", ") + ".",
+    `Rebuild them all with \`node tools/bundles.mjs\` from the repository root, and commit the artifacts.`);
+}
 
 /* ---- REFUSAL 1: every asset proved fresh, by the landed guard -------------- */
 
