@@ -212,7 +212,8 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
      through UNCHANGED — received from this op something it could neither translate nor name.
 
      `ok:false` is now reserved for a CATALOGUED REFUSAL, and this op's refusals are all raised before
-     this function is reached (the class gate, `SESSION_ROUTE_NOT_RECORDED`, the namespace gate). So
+     this function is reached (the class gate, the session gate's `MACHINE_CREDENTIAL_REQUIRED` — it
+     read `SESSION_ROUTE_NOT_RECORDED` until REC-155 recorded §4.10's decision — the namespace gate). So
      REACHING HERE IS THE OP ANSWERING, and `ok` is true — never a verdict.
 
      The HTTP STATUS is deliberately NOT moved: `index.mjs` keys it to `verdict` and every outcome

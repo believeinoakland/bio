@@ -1844,6 +1844,17 @@ const IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
    `machineClasses` instead — `admin` and `probe`, the classes it held before — which keeps the
    MEMBER_TOKEN bearer and an `ai` credential out exactly as they were. */
 const CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
+/* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
+   that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
+   the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
+   THE PROVENANCE PAIR: their OPS rows call the act *"a named member's judgement"*, and a signed-in session is
+   the one caller that carries a name — the `author` stamp already names `sessMember` on the session route.
+   The bearer WRITE route closes in §4.10's SECOND landing (REC-158), not here: this one refuses nobody. */
+const PROVENANCE_JUDGEMENT_ACTIONS = ["provenancechain", "provenanceroute"];
+/* THE CALIBRATION WRITES: their OPS row rules that the fence is NOT who may measure but that a measurement
+   never moves a GRADE (`CAL_CANNOT_REGRADE`), so a person measures on the same terms as a probe, and the
+   bearer route stays — a scheduled re-probe is a machine act by construction. */
+const CALIBRATION_WRITE_ACTIONS = ["calibrate", "calibrationsubject", "calibrationsignal"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
@@ -2098,6 +2109,10 @@ const SESSION_OPS = {
                       above — the roster decides them, asked by the store against the
                       stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
                    ...CUSTODIAL_ACTIONS,
+                   /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
+                      of them is the founder's act, and an enrolled administrator is a
+                      `member` kind. */
+                   ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
                       their accepted readings and the documents those rest on, so the
                       viewer decides what it may pair at all — the session route is the
@@ -2180,6 +2195,7 @@ const SESSION_OPS = {
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
+                   ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
                    "aicredentialmint", "aicredentialrevoke",
                    "casedraft", "reviewgrant", "reviewrevoke"]),
@@ -2727,6 +2743,17 @@ const NEEDS = {
      `biasinhale` carries NONE, like every other read in this file, and it is a
      read precisely because it writes nothing. */
   biasadopt:        "contribute",
+  /* REC-155 / §4.10: NO FIFTH CAPABILITY TOKEN. Repairing a provenance chain and recording a route marker are
+     corrections to the working record in a member's name, and recording a calibration, an engine to probe or a
+     vendor's announcement puts a row in the record — each rides `contribute`, as `attesttext` does, and a
+     VIEW-ONLY member does neither. PROVISIONAL, and stated: `provenancechain`'s REPORT arm writes nothing, but
+     this table gates an op rather than an arm (only `capture`'s GET is exempted, at the check), so a view-only
+     member does not reach the report through a session either. §4.10 ruled reach and is silent on capability. */
+  provenancechain:    "contribute",
+  provenanceroute:    "contribute",
+  calibrate:          "contribute",
+  calibrationsubject: "contribute",
+  calibrationsignal:  "contribute",
 };
 
 /* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
@@ -4156,8 +4183,10 @@ const dispatchRow = (code) => {
  * rows say the opposite of it in as many words: *"NOT open to `daemon`: deciding
  * that the evidence supports a route is a named member's judgement."* The plane
  * was telling a member that an op reserved to a named member's judgement is
- * performed by an unattended writer. Under (c) they now get the fact and no
- * invented reason, which is the honest answer until somebody rules.
+ * performed by an unattended writer. Under (c) they got the fact and no
+ * invented reason, which was the honest answer until somebody ruled — and BOB
+ * #19 did (§4.10, 2026-09-21): REC-155 gave both SESSION reach, so a signed-in
+ * member now performs them under their own name, as their OPS rows say.
  *
  * **WHAT THIS DOES NOT CHANGE, AND IT IS THE WHOLE SAFETY ARGUMENT: WHO REACHES
  * WHAT.** Not one op moves between `SESSION_OPS`' sets and no class list moves.
@@ -4181,13 +4210,18 @@ const dispatchRow = (code) => {
  * that costs nothing must be the one that claims nothing.
  *
  * EACH ENTRY WAS READ AT THE ARTIFACT, not inferred from an op looking
- * machine-ish, and the four below are the only ones in this plane for which a
- * decision was found. Ops refused to every session with NO entry here —
- * `livefire`, `reproject`, `provenancechain`, `provenanceroute` and the three
- * calibration writes — are UNDETERMINED rather than decided,
- * and saying WHICH is a first-class obligation (CLAUDE.md). Adding a row here
- * is recording a decision, so it is an act to take deliberately and never to
- * tidy up. */
+ * machine-ish. Adding a row here is recording a decision, so it is an act to
+ * take deliberately and never to tidy up.
+ * CORRECTED 2026-09-25 BY REC-155. This paragraph read: *"Ops refused to every
+ * session with NO entry here — `livefire`, `reproject`, `provenancechain`,
+ * `provenanceroute` and the three calibration writes — are UNDETERMINED rather
+ * than decided."* True until BOB #19 RULED all seven
+ * (`BIO_Membership_Architecture_v2.md` §4.10): the provenance pair and the three
+ * calibration writes JOINED BOTH SESSION SETS (`PROVENANCE_JUDGEMENT_ACTIONS`,
+ * `CALIBRATION_WRITE_ACTIONS`), and `livefire` and `reproject` are recorded
+ * below, each with the citation §4.10 quotes. So on this plane NO mutating op
+ * that reaches the gate is an omission today — and sentence (c) STAYS, because
+ * it is the answer the plane owes the next op somebody adds without a ruling. */
 const UNATTENDED_BY_DECISION = {
   purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside "
        + "SESSION_OPS, purge above all, still requires a machine credential.'",
@@ -4205,6 +4239,14 @@ const UNATTENDED_BY_DECISION = {
                    + "INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
                    + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
                    + "OF ANY ROLE REACHES IT.'",
+  /* REC-155: the two §4.10 RULES unattended by decision (BOB #19, 2026-09-21). Each citation is the one §4.10
+     quotes, re-read at the artifact by this landing; the ruling is cited beside it so a caller can find both. */
+  livefire: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/livefire.mjs, header: 'the only "
+          + "channel available for reaching a deployment may be a plain fetch of a URL. Confined to the scratch "
+          + "namespace' — the deployment's live-fire battery, addressed to the operator's credential.",
+  reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
+           + "because a deploy runs the bounded pass once at construction and a large store may need more than "
+           + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 };
 
 /* THE SESSION GATE. A browser signed in with a password holds a session token,

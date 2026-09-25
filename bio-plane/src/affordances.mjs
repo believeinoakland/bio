@@ -2198,6 +2198,17 @@ export const NON_ACTS = {
      both, in `ai_credentials`. */
   aicredentialmint: "creating an agent credential with a declared task scope (D-199): instance-level governance, authored and dated by a member, keyed by nothing in the corpus. Not object-directed — it is the roster ops' territory, not a bundle's",
   aicredentialrevoke: "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
+  /* REC-155 — Membership v2 §4.10 (BOB #19) gave these five SESSION reach, and a session-reachable op carries a
+     `NEEDS` row, so this drift guard requires each to be an act or named here. NAMED HERE, AND THE PAIR'S
+     SENTENCE SAYS WHAT IS TRUE RATHER THAN "not object-directed": the provenance pair IS keyed by a document.
+     Publishing either as an ACT beside a document — a label, a rung, a surface — is NOT decided by §4.10, which
+     ruled reach only, and no surface offers it; REC-155 does not invent that. The three calibration writes are
+     keyed by an ENGINE, which is no object in the corpus. */
+  provenancechain: "document-directed: rebuilds a document's provenance chain from the evidence its register already holds, keyed by bundleId; REPORTS by default and writes only on apply=1. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",
+  provenanceroute: "document-directed: records a standing marker that a document's route cannot be shown, keyed by bundleId; moves no state and no byte. Session reach since REC-155 (§4.10); whether a surface offers it beside a document is NOT decided, so no act row is published",
+  calibrate: "engine-directed: records what a probe measured of a derivation engine, keyed by (engine, version); moves no claim and no grade (CAL_CANNOT_REGRADE)",
+  calibrationsubject: "engine-directed: registers an engine this instance can probe, keyed by engine; registering is not measuring",
+  calibrationsignal: "engine-directed: records a vendor's announcement about an engine, keyed by engine; may only shorten the interval to the next probe",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.

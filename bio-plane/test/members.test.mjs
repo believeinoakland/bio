@@ -270,8 +270,12 @@ t("session cannot purge, and the sentence is the byte-identical one, because a d
   "this operation requires a machine credential, not a signed-in session");
 t("session cannot purge, under the code that carries that recorded decision",
   (await GET(`op=purge&confirm=bio&${S}`)).reason, "MACHINE_CREDENTIAL_REQUIRED");
-t("session cannot livefire — still refused, but the plane no longer invents a reason it has not "
-+ "recorded", (await GET(`op=livefire&${S}`)).reason, "SESSION_ROUTE_NOT_RECORDED");
+/* CORRECTED 2026-09-25 BY REC-155, NEVER EXEMPTED. This pinned SESSION_ROUTE_NOT_RECORDED, true while no
+   decision about `livefire` was on record. BOB #19 RULED it unattended by decision
+   (`BIO_Membership_Architecture_v2.md` §4.10), recorded in `UNATTENDED_BY_DECISION`, so the session is
+   still refused and the plane now cites the record — as it does for `purge` above. */
+t("session cannot livefire — still refused, under the code that carries §4.10's recorded decision "
++ "(REC-155)", (await GET(`op=livefire&${S}`)).reason, "MACHINE_CREDENTIAL_REQUIRED");
 /* CORRECTED 2026-09-23 (REC-159), NEVER EXEMPTED. These two pinned SESSION_ROLE_CANNOT_REACH_OP for
    ruth's session, and that answer was itself false of her: ruth is an ENROLLED ADMINISTRATOR (her
    invitation above is `role: "admin"`), and Membership v2 §4.9 gives adding a member and registering a
