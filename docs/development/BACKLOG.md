@@ -792,12 +792,12 @@ added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
 ### REC-223 · queued — **A MEMBER CANNOT ADOPT A NEWER VERSION OR RECORD KEEPING THE EARLIER ONE, so a notice can never close.** Bob's 00:40Z doctrine, rule 3 (item 4). — owner RECORD.
 status: queued — REC-220 (02:20Z): KEEP can write extent_capture to pin an UNDETERMINED leg; use it
-order: after REC-222, which raises the notice these acts close (SCHEDULER #21, 2026-09-25)
+order: after REC-222 (and carries REC-202's queue door, BOB #35 08:10Z), which raises the notice these acts close (SCHEDULER #21, 2026-09-25)
 milestone: M4
 interface: I3 — two member acts; the integrator classifies.
 design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
 depends-on: REC-220, REC-222.
-scope: ADOPT writes a NEW basis, cite or claim version pinned to the newer capture and retains the old; KEEP records "stays on the earlier version" with who, when, an optional why and both captures; both close the notice; a machine credential is refused (D-394's design, §5.8, §14.4).
+scope: ADOPT writes a NEW basis, cite or claim version pinned to the newer capture and retains the old; KEEP records "stays on the earlier version" with who, when, an optional why and both captures; both close the notice; a machine credential is refused (D-394's design, §5.8, §14.4). ALSO the QUEUE DOOR (BOB #35 2026-09-25 08:10Z, REC-202's Q2; drained): op=queue's `new-version-arrived-from-another-team` item offers ADOPT/KEEP, scoped to a project the member names and has joined, never defaulted (D-266's pattern).
 accepts-when: adopt leaves the old version readable and the new one pinned; keep closes the notice and a re-read does not re-raise it for the same capture (moves: no act). NEGATIVE CONTROL: let a machine credential adopt and the refusal arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
 
