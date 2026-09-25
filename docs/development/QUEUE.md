@@ -734,7 +734,7 @@ accepts-when: an exported copy of a draft with a tie shows the statement by its 
 added: 2026-09-25 · SCHEDULER #23 (`node tools/mintid.mjs UI`, CONDUCT #22's relay of D-573).
 
 ### UI-121 · integrated — **NO SURFACE SENDS `draft=` OR SHOWS `draft_case`: D-680 made the signed block state how its case was bound (derived_at_publication, named_and_confirmed, new_case_asked_at_publication, named_by_draft, new_case_asked_by_draft) and refuses a named case that is not the derived one (C-44.6), and no page offers the draft binding or shows which way the case was bound.** From D-680's worker's report. — owner UI.
-status: integrated — SCHEDULER #24 11:00Z: tip 6ceb9b9b (on D-680 0d17eb0e), GATE 318/318 GREEN FULLREUSE (18708 assertions; excludes 2 untallied), tree 1d682494; NARROWED to part 2: the published case page quotes the signed documents draft binding via op=casedocument; parts 1+3 are UI-122 (BLOCKED, DEC-33); CIVICOS_UI_STATE v120 provisional; union: APIQ_CALLERS 9, FLAT_OPS +casedocument; minted D-712
+status: integrated — SCHEDULER #24 11:23Z: HOLD — trains ONLY with or after D-712 (BOB #36 11:22Z, CLAUDE.md §2): without it the public case page tells strangers a signed case is unsigned. D-712 running, stacked on this tip 6ceb9b9b. Integrated: tip 6ceb9b9b (on D-680 0d17eb0e), GATE 318/318 GREEN FULLREUSE, tree 1d682494; NARROWED to part 2; parts 1+3 are UI-122
 order: after UI-118, with the review-copy and publication surfaces (SCHEDULER #23, 2026-09-25)
 milestone: M10
 interface: I3 consumer.
