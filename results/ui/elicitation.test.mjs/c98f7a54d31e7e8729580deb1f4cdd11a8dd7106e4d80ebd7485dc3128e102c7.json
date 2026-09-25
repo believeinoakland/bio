@@ -1,0 +1,16 @@
+{
+ "unit": "ui:elicitation.test.mjs",
+ "inputHash": "c98f7a54d31e7e8729580deb1f4cdd11a8dd7106e4d80ebd7485dc3128e102c7",
+ "verdict": "PASS",
+ "run": "ea21c526aedc9dfbe0c7f92f93b0625bacc191d8.1790310797080.9823.json",
+ "tree": "ea21c526aedc9dfbe0c7f92f93b0625bacc191d8",
+ "head": "690848774caee072695c7573f72ff57c42651caf",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 12,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "d70db3ea-7581-5ea6-9b04-c07f7cfa1733",
+ "at": "2026-09-25T04:33:17.095Z"
+}
