@@ -1,0 +1,16 @@
+{
+ "unit": "plane:formats-xlsx.test.mjs",
+ "inputHash": "099d2e6fdcb27fbd65f8e0f87a5208d0863cb9ce1827bcc91fab443c2b093363",
+ "verdict": "PASS",
+ "run": "e98dd23093d68f0fc83096c5cc1f0f96f4576733.1790326883590.31102.json",
+ "tree": "e98dd23093d68f0fc83096c5cc1f0f96f4576733",
+ "head": "1716321d7f0df1531ec190bdff5b191f05d3ac36",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 135,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5a76689a-fb86-5e7e-986f-23f54462f487",
+ "at": "2026-09-25T09:01:23.610Z"
+}

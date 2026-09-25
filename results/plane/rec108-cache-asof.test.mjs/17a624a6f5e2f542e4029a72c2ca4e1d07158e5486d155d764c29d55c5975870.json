@@ -1,0 +1,16 @@
+{
+ "unit": "plane:rec108-cache-asof.test.mjs",
+ "inputHash": "17a624a6f5e2f542e4029a72c2ca4e1d07158e5486d155d764c29d55c5975870",
+ "verdict": "PASS",
+ "run": "e98dd23093d68f0fc83096c5cc1f0f96f4576733.1790326883590.31102.json",
+ "tree": "e98dd23093d68f0fc83096c5cc1f0f96f4576733",
+ "head": "1716321d7f0df1531ec190bdff5b191f05d3ac36",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "5a76689a-fb86-5e7e-986f-23f54462f487",
+ "at": "2026-09-25T09:01:23.611Z"
+}
