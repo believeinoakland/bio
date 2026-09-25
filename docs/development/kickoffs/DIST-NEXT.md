@@ -44,6 +44,12 @@ REFUSES `store=scratch` (NAMESPACE_PINNED) — probes of public ops must name `s
 
 Everything through 0.79.0 SHIPPED (its pointer landed at `5f116f33`). The next cut adds DIST-11 (the BROWSER binding) and
 DIST-13 (the installer-bundle freshness guard) once they land, plus whatever the trains carry. **Live checks owed at that deploy:**
+- **D-606 — per-page OCR capped at 24 member invocations per acquire** (`f04460ab`), resting on Cloudflare's stated 32 Worker
+  invocations per request — THEIR claim; Miniflare does not enforce it (M-175). Measure on the deployed runtime: one scratch acquire
+  that fans out past 24 pages, record invocations used and whether the cap or the vendor limit answered (SCHEDULER #22, 06:22Z 09-25).
+- **D-320 — the deployed OCR member's CPU and memory, unmeasured (M-163)** (`46b43c35`): transcribe
+  `pdf-worker/test/fixtures/scan-dct-page.pdf` through the deployed ocr-worker in scratch; record CPU ms and memory from the
+  deployed runtime (`wrangler tail` or the analytics API), date and instrument in an M entry.
 - **D-605 — the setup page's key form** (worker report 05:57Z 2026-09-25; `land/worker/D-605` @ `8dcf0f2b`, stacked on D-596, NOT on
   main at writing — CONDUCT's train). Shipped 0.79.0 and newgroup's embed post the whole key line, so registering a signing key
   from the setup page reads BAD_KEY; fixed only by a cut from a main carrying D-605. Confirm it is an ancestor at the cut. Its live
