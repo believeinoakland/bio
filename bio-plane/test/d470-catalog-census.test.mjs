@@ -615,6 +615,37 @@ const CATALOG_CENSUS = {
      1.35.0 (D-628, 2026-09-25, WORKER D-628, branch land/worker/D-628 stacked on land/worker/D-615 8b3ab6ae): ONE ARRIVAL,
      NO DEPARTURES, NONE CHANGED — C-86.8 PROMOTED_FIELD_UNSTATED. 507 -> 508 by this suite's print on the item's tree.
      "1.35.0": { count: 508, digest: "1f4066611742427ca673d8ecb9b3ef4b4e41b202c319615d0c1cadd0ac608d88" }, */
+  /* 1.32.0 AT THE UNION (CONDUCT #23, c23-batch30 union, 2026-09-25): every branch row above that took 1.31.0, 1.32.0,
+     1.34.0 or 1.35.0 over its own base is DROPPED, its comment kept; the union takes ONE number, the next after main's
+     1.31.0, for the catalogue that runs.
+     ARRIVALS (18): C-32.20 (D-689); C-33.49 (D-623); C-44.6 (D-680); C-45.13 (D-670); C-69.3, C-69.4 (D-629); C-73.6
+     (D-695); C-86.5 (D-578); C-86.6 (D-546); C-86.7 (D-615); C-86.8 (D-628); C-90.6 (REC-215); C-94.12 (D-688);
+     C-99.1..5 (D-419). DEPARTURES: none. 569 + 18 = 587, and that sum is NOT the figure: count, digest and source are
+     THIS SUITE'S OWN PRINT on the merged tree (HEAD 5341b6f1 + the gate.mjs bump; esbuild 0.25.12). Arrivals and
+     departures were read by diffing this suite's census of origin/main 95fe7bc7 against the merged tree.
+     `changed` — EXISTING ids whose refusal or admission moved in this batch (rule 17), each read at its site in
+     `git diff origin/main..HEAD -- bio-plane/checks/bio-checks.mjs` and the emitting code:
+       C-2.10  REC-201: ACTION_KINDS admits `records_request` (refused as not in the suite before), and the new `law`
+               arm (recordsLawFindings) refuses a `law` on any other kind, one that is not text, or one past a citation;
+       C-20.1  D-700: the mechanical-promotion walk follows the manifest's write order (`seq`) where every entry
+               carries one, so "prior" can be a different snapshot, and a key-order walk now says so (an info finding);
+       C-44.4  D-680: a derivation draft (no case, no newCase) now binds to the case publication derives and is refused
+               only where derivation yields none (store.mjs is-publish-draft-this-case);
+       C-45.1  D-374: a pdf-page rect reaching outside its page's MediaBox, where the record holds the box, is refused;
+       C-45.3  REC-204: the `envelope` extent kind and `cited_as: envelope` are admitted (both refused before), and the
+               envelope item's shape is refused by name;
+       C-90.2  REC-215: the tier grammar moved into #riskTierAsked, which op=actionriskpropose's new door also asks —
+               a second door refused by the same row (C-70.3's precedent at 1.31.0);
+       C-94.11 D-688: no longer answers a stage/follows/outcome/due_by that is not one token (C-94.12 does).
+     NOT listed, read and judged wording-only (what is refused or admitted did not move): C-87.6's translation (D-680's
+     branch row named it as D-626's; its condition at is-review-no-such-case is unchanged, only the sentence about
+     leaving the name off), C-45.1's translation widened to a region (D-374, listed above for its condition), C-90.2's
+     `where` (listed for the door), C-26.12's comment (D-546). C-4.2 is D-673's, which is not in this batch.
+     THE LIMIT: `changed` is read from the catalogue and the code at the sites named; a behaviour moved through a
+     helper elsewhere is not seen here. */
+  "1.32.0": { count: 587, digest: "ec5db668d9a6408c6ca1f08fc12383fc6a6c8b02c03b9177c80aa54cfc045f97",
+              changed: ["C-2.10", "C-20.1", "C-44.4", "C-45.1", "C-45.3", "C-90.2", "C-94.11"],
+              source: "602dddc57871044e5589983913edb033d8fee1a31976c0bf17fa703d3b738abf" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -806,8 +837,11 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: 1.30.0 -> 1.31.0, the union's one number for
    every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
    hand with the constant, which is its whole rule. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+/* CORRECTED at the c23-batch30 union (CONDUCT #23), never exempted: 1.31.0 -> 1.32.0, the union's one number for
+   this batch's branches (the catalogue under the stamp moved 569 -> 587 by this suite's print); the literal moves by
+   hand with the constant, which is its whole rule. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.32.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.32.0)", "1.32.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

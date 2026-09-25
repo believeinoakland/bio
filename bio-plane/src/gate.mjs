@@ -184,7 +184,16 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    on this item's tree. CONDUCT re-reads them on the union if another branch moves this constant. (c23-batch30,
    2026-09-25: D-688 said 1.32.0, merged clean over ours' 1.31.0 and put back to ours'; number to re-read at the
    figures pass.) */
-export const CATALOG_VERSION = "1.31.0";
+/* 1.32.0 AT THE UNION (CONDUCT #23, c23-batch30 union, 2026-09-25): every branch that took 1.31.0, 1.32.0, 1.34.0 or
+   1.35.0 over its own base (D-419, D-546, D-578, D-615, D-623, D-628, D-629, D-670, D-680, D-688, D-689, D-695, REC-215)
+   rides ONE new number, the next after main's 1.31.0, and every such claim is superseded here (their comments kept as
+   history). EIGHTEEN ARRIVALS — C-32.20 (D-689), C-33.49 (D-623), C-44.6 (D-680), C-45.13 (D-670), C-69.3/.4 (D-629),
+   C-73.6 (D-695), C-86.5 (D-578), C-86.6 (D-546), C-86.7 (D-615), C-86.8 (D-628), C-90.6 (REC-215), C-94.12 (D-688),
+   C-99.1..5 (D-419) — NO DEPARTURES, and SEVEN CHANGED under an unmoved id (the d470 row's `changed`, rule 17):
+   C-2.10 (REC-201), C-20.1 (D-700), C-44.4 (D-680), C-45.1 (D-374), C-45.3 (REC-204), C-90.2 (REC-215), C-94.11
+   (D-688). MINOR: nothing departs. Count 587, digest ec5db668…, source 602dddc5… — the d470 suite's own print on the
+   merged tree (HEAD 5341b6f1 + this commit), never 569 + 18. */
+export const CATALOG_VERSION = "1.32.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
