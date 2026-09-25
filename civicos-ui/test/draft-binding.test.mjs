@@ -76,10 +76,10 @@
  * UI-121's six arms above were measured at 38 rows, before these ten were added, and are not re-run here.
  * D-734's ARMS (section 7, BOB #36 2026-09-25 11:50Z, D-731 (b)), RUN 2026-09-25 by the D-734 worker against
  * `bio-plane/src/store.mjs` bfd60e4b… (3,484,521 B), each alone, IDENTICAL by sha256 AND `cmp` after, BASELINE 72/0:
- * (A) the registration call removed from `ratifyCaseDocument` -> 60/12, the six editions' op=verify and publishedbytes
+ * (a) the registration call removed from `ratifyCaseDocument` -> 60/12, the six editions' op=verify and publishedbytes
  * rows and nothing else — op=verify answered `{"published":false,"matches":[]}` for every one, the defect reproduced;
- * (C) the store's read hands back the text plus one byte -> 66/6, the six publishedbytes rows; (B) the boot backfill
- * removed and (D) the path re-spelled -> 72/0, as they must be here. `bio-plane/test/d734-casedoc-published.test.mjs`
+ * (c) the store's read hands back the text plus one byte -> 66/6, the six publishedbytes rows; (b) the boot backfill
+ * removed and (d) the path re-spelled -> 72/0, as they must be here. `bio-plane/test/d734-casedoc-published.test.mjs`
  * carries the arms in full.
  */
 import "../../bio-plane/test/stdio.mjs";

@@ -24,22 +24,22 @@
  *
  * WHAT IT CANNOT SEE, STATED: CASE_DOCUMENT_UNSERVABLE (bytes that do not hash to the sha) is unreachable through
  * any op — every writer of `case_documents.text` recomputes `doc_sha` beside it and a ratified row is never
- * rewritten — so it is driven only by the negative control's arm (C), which corrupts the store's read.
+ * rewritten — so it is driven only by the negative control's arm (c), which corrupts the store's read.
  *
  * NEGATIVE CONTROL: RUN 2026-09-25 by the D-734 worker against `src/store.mjs` bfd60e4b… (3,484,521 B), each arm ALONE,
  * each anchor matched EXACTLY ONCE, restored from a uniquely-named per-arm copy and verified IDENTICAL by sha256 AND
  * `cmp` after every arm; this suite and `civicos-ui/test/draft-binding.test.mjs` run under each. BASELINE 12/0 and 72/0.
- *  (A) THE ROW'S OWN — the committer's `this.#registerCaseDocumentSha(id, ed, …)` call removed from
- *      `ratifyCaseDocument`: draft-binding 60/12, the six editions' "op=verify answers published:true" and "publishedbytes
+ *  (a) THE ROW'S OWN — the committer's `this.#registerCaseDocumentSha(id, ed, …)` call removed from
+ *      `ratifyCaseDocument` -> draft-binding 60/12, the six editions' "op=verify answers published:true" and "publishedbytes
  *      serves" rows and nothing else (op=verify answered `{"published":false,"matches":[]}`, publishedbytes 404 — the
  *      defect, reproduced on all six). THIS suite refuses at its fixture (0/1, "the pre-item plane is ARMED"), because
  *      its pre-item copy is made by removing that same call: stated, not smoothed — section 1 IS that arm, run always.
- *  (B) THE BACKFILL — the boot pass's call replaced by an empty statement: this suite 8/4, section 1's two "AFTER THE
+ *  (b) THE BACKFILL — the boot pass's call replaced by an empty statement -> this suite 8/4, section 1's two "AFTER THE
  *      REBOOT" rows and section 4's two (the pre-item edition never answers); draft-binding 72/0, as it must — every
  *      edition there is signed on this source.
- *  (C) THE RE-HASH — the store's read hands back `d.text + " "`: this suite 10/2 and draft-binding 66/6, every
+ *  (c) THE RE-HASH — the store's read hands back `d.text + " "` -> this suite 10/2 and draft-binding 66/6, every
  *      "publishedbytes serves" row and nothing else (CASE_DOCUMENT_UNSERVABLE, 500, never the wrong bytes).
- *  (D) OVER-STRICTNESS — the path spelled `CASE-DOCUMENT-e<N>.md`: 12/0 and 72/0. A filename is not the contract.
+ *  (d) OVER-STRICTNESS — the path spelled `CASE-DOCUMENT-e<N>.md` -> 12/0 and 72/0. A filename is not the contract.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process (the pen below) and removes it on exit */
@@ -224,7 +224,7 @@ const answersPublished = async (label, d) => {
   const doc = await GET(`op=casedocument&case=${encodeURIComponent(d.case_id)}&edition=${d.edition}`);
   t(`${label}: op=verify answers published:true for the signed document's sha, ONE match naming the kind `
     + `case_document, the case, its edition's path and the ratification's own time`,
-    /* The path is a disclosed FILENAME, asserted only to name its edition, never pinned to one spelling (arm D). */
+    /* The path is a disclosed FILENAME, asserted only to name its edition, never pinned to one spelling (arm (d)). */
     [v?.ok, v?.published, v?.sha256, (v?.matches || []).map((m) => [m.kind, m.bundle_id,
       typeof m.path === "string" && new RegExp(`(^|\\D)${d.edition}\\.md$`).test(m.path), m.published])],
     [true, true, d.doc_sha, [["case_document", d.case_id, true, doc?.ratified_at]]]);
