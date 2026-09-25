@@ -721,6 +721,62 @@ for (const [id, from, to, want] of [
   });
 }
 
+/* (h1)-(h3) D-485 — ARM H, REACH OBSERVED THROUGH THE REAL PLANE, against the REAL tree.
+   DECLARED before arming, each ALONE:
+   (h1) THE ROW'S OWN CONTROL — strip NO_CITATION's translation (the key renamed, so the row
+        has none). MUST FAIL with arm H's own line naming NO_CITATION and the pane it was read
+        in — not merely arm A's row line, which is what this control found the first draft
+        doing (arm B's `translated` map records a row with no sentence as translated).
+   (h2) THE CLASS — take BAD_REQUIRED off R4_OWED. It is read in intent-write's #pg-pf pane off
+        the real plane and was in NO reach set before this arm, so before D-485 the guard was
+        GREEN over it. MUST FAIL naming BAD_REQUIRED through arm H.
+   (h3) OVER-STRICTNESS — the SAME pane assertion for NO_KIND turned into a NEGATED one in the
+        real suite. MUST FAIL only as the owed list going STALE and R4 losing a code (the
+        floor), NEVER as NO_KIND reaching a member: a suite proving a code ABSENT is not reach. */
+const CATALOG_NC = `    where: 'src/store.mjs actNoCitation > is-act-no-citation',\n    translation: 'A citation`;
+console.log("\n(h1) D-485 — NO_CITATION's translation stripped: arm H must name it");
+arm("(h1)", [{ file: F.catalog, from: CATALOG_NC, to: CATALOG_NC.replace("translation:", "translationStripped:") }],
+  guard, r => ({
+    ok: r.exit === 1 && /ARM H \(D-485\): NO_CITATION REACHES A MEMBER THROUGH THE REAL PLANE[^\n]*intent-write\.test\.mjs/.test(r.out),
+    what: "the guard exits 1 with ARM H's own line naming NO_CITATION and the intent-write pane",
+  }));
+console.log("\n(h2) D-485 — BAD_REQUIRED taken off R4_OWED: the class, invisible before this arm");
+arm("(h2)", [{ file: F.guard, from: `["BAD_REQUIRED", "D-590"], `, to: `` }], guard, r => ({
+  ok: r.exit === 1 && /ARM H \(D-485\): BAD_REQUIRED REACHES A MEMBER THROUGH THE REAL PLANE/.test(r.out)
+    && (r.out.match(/^FAIL: ARM H/gm) || []).length === 1,
+  what: "the guard exits 1 naming BAD_REQUIRED through arm H, and arm H fails on nothing else",
+}));
+const IW = path.join(HERE, "intent-write.test.mjs");
+console.log("\n(h3) D-485 — NO_KIND's pane assertion NEGATED in the real suite: not reach");
+arm("(h3)", [{ file: IW, from: `&& /NO_KIND/.test(html("#ent-pf"))`, to: `&& !/NO_KIND/.test(html("#ent-pf"))` }], guard, r => ({
+  ok: r.exit === 1 && /R4_OWED names NO_KIND \(owed by D-590\) but no real-plane suite observes it/.test(r.out)
+    && /R4 is \d+ code\(s\) a real-plane suite observes in a pane, floor \d+/.test(r.out)
+    && !/NO_KIND REACHES A MEMBER THROUGH THE REAL PLANE/.test(r.out),
+  what: "the guard exits 1 on the STALE owed entry and the R4 floor, and never says NO_KIND reaches a member",
+}));
+
+/* (h4)-(h6) D-485 — ARM H BROKEN IN THE GUARD; its fixture ARM 12 must fail at exactly the
+   named arms and nothing else. DECLARED before arming, each ALONE, and MEASURED on the item's
+   tree before being written here: (h4) a PANE read as NEGATED (the arm goes blind) -> 12a,
+   12b, 12c, 12d, 12g; (h5) a NEGATED read as PANE (the over-read) -> 12e alone; (h6) the
+   lexer's comment test removed (a quoted example becomes an observation) -> 12e alone; (h7) the
+   constructor read with strings KEPT (a fixture's template counts as a plane) -> 12h alone. */
+for (const [id, from, to, want] of [
+  ["(h4)", `: srcIds.has(lead) ? "SOURCE" : "PANE";`, `: srcIds.has(lead) ? "SOURCE" : "NEGATED";`,
+    ["ARM 12a", "ARM 12b", "ARM 12c", "ARM 12d", "ARM 12g"]],
+  ["(h5)", `return negated ? "NEGATED" : WIRE_SUBJECT`, `return negated ? "PANE" : WIRE_SUBJECT`, ["ARM 12e"]],
+  ["(h6)", `    if (lexed[reStart] !== " " || lexed.slice(callAt, callAt + 6) !== ".test(") continue;`,
+    `    if (false) continue;`, ["ARM 12e"]],
+  ["(h7)", `MINIFLARE_CTOR.test(strip(src))`, `MINIFLARE_CTOR.test(code)`, ["ARM 12h"]],
+]) {
+  console.log(`\n${id} D-485 — ARM H BROKEN IN THE GUARD: its suite must fail at exactly ${want.join(", ")}`);
+  arm(id, [{ file: F.guard, from, to }], () => run(SUITE), r => {
+    const got = suiteArmsFailing(r.out);
+    return { ok: r.exit === 1 && got.join(",") === want.join(","),
+             what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
+  });
+}
+
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");
 const after = guard();
