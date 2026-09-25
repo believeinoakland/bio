@@ -83,16 +83,6 @@ scope: (1) Tier 1 inflate tolerates bytes after the compressed stream's end (kee
 accepts-when: CAFR-2002's pages read with text where their streams decode, and no page reads 0 chars without a marker (measured into a measurements/ file). NEGATIVE CONTROL: restore the strict inflate and the trailing-bytes arm fails by name.
 added: 2026-09-25 · SCHEDULER #21 (id minted by D-585's worker).
 
-### D-606 · queued — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
-order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
-milestone: M2
-interface: I6 — more pages transcribed per acquire; the member contract is unchanged; the integrator classifies.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with the OCR member's page contract (its own note asks the caller to loop).
-depends-on: none.
-scope: tier3Extend re-asks the member for each page in `deferred`, one invocation per page, sequential, each merged by mergeTier3Text; a refused page keeps its marker. MEASURE FIRST the per-acquire CPU and subrequest budget for a 58-page scan on the deployed runtime's limits (miniflare wall 80 s shipped vs 858 s per page over the 21); if it exceeds them, the tail goes to a deferred task, stated.
-accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
-added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
-
 ### D-607 · queued — **`tier3Note` SAYS "the page that already had text kept it" ON A WHOLLY SCANNED DOCUMENT WHERE NO PAGE HAD TEXT (live: FINAL-2-6-PC-Agenda, 7 of 7 no_text_layer), so the record states a text layer that never existed.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF.
 order: directly after D-606, the same seam: a small overclaim in the tier-3 note (SCHEDULER #22, 2026-09-25)
 milestone: M2
@@ -1202,3 +1192,13 @@ depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds
 accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 … (whole text: the cut archive)
+order: behind the product rows, first of the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: a detector neither cuts gate time nor unblocks product; SCHEDULER #12); after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting `kickoffs/BOB.md` rules 4 and 12.
+depends-on: none.
+accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.

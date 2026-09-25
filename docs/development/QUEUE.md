@@ -403,8 +403,8 @@ accepts-when: through the ops, each level round-trips into the published project
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
 cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-147 · running — UNBLOCKED 2026-09-24 by BOB #32: its dependency is met (M0-71 done, gate on main; M-118). The old block confused an ACCEPTANCE condition with a precondition — the judgement this row builds is what the gate measures. RULED: accepts-when adds that the run REPORTS recall beside false conflicts on M0-71's gate (the gate alone cannot see a detector that abstains); a judgement whose recall does not beat the lexical baseline's 2/9 (M-118) is the finding and returns to BOB.
-status: running — SCHEDULER #21 02:40Z spawns WORKER REC-147 (depth 2)
+### REC-147 · integrated — UNBLOCKED 2026-09-24 by BOB #32: its dependency is met (M0-71 done, gate on main; M-118). The old block confused an ACCEPTANCE condition with a precondition — the judgement this row builds is what the gate measures. RULED: accepts-when adds that the run REPORTS recall beside false conflicts on M0-71's gate (the gate alone cannot see a detector that abstains); a judgement whose recall does not beat the lexical baseline's 2/9 (M-118) is the finding and returns to BOB.
+status: integrated — SCHEDULER #22 04:41Z: tip abdf486d, GATE 60/60 GREEN FULLREUSE over tree 6f3ee7d5's full run (366/366 but floor slack, moved in commit 2), tree d043c47b; M-162: machine judgement MEETS M0-71's gate; the new contradiction propose act, C-93.1-7, IC-318; CATALOG 1.30.0 (collides); D-604 with BOB
 order: blocked on M0-71's measured gate (SCHEDULER, 2026-09-19)
 milestone: M9
 interface: I3 and I5 (a table; ICs minted with `node tools/mintid.mjs IC`)
@@ -764,6 +764,16 @@ depends-on: none.
 scope: descend into Form XObjects in the text walk the way CPDF-18's image walk does (/Matrix, /Resources, cycle and depth bounds); at the least, a counted page marker when a painted form carries unread text-show ops. Re-read M-166's 9 pages and record the moved counts; the 1,455 pages under 10% stay undiagnosed unless the re-read moves them.
 accepts-when: p38 reads its form text at tier 1 (moves: 9 pages reading as decoded while missing form text). NEGATIVE CONTROL: stop descending at `Do` and the form arm fails by name.
 added: 2026-09-25 · SCHEDULER #22 (id minted by D-515's worker).
+
+### D-606 · queued — **A SCANNED DOCUMENT IS OCR'D ONE PAGE PER ACQUIRE AND THE REST IS DROPPED: `index.mjs` `tier3Extend` (the only OCR_WORKER.fetch call site) calls the member once and never reads its answer's `deferred`, while `contract.mjs` `chooseChunk` takes the lowest page. MEASURED (M-165): on FW-20's walk rebuilt, 174 of 190 selected scanned pages were never transcribed; a per-page loop transcribes 183.** Found by D-460's worker (04:24Z). — owner CONTENT-PDF (the plane seam).
+order: after D-608, with the reader corrections: most of a scanned civic record going unread is the silent under-read CLAUDE.md §2 ranks worst (SCHEDULER #22, 2026-09-25)
+milestone: M2
+interface: I6 — more pages transcribed per acquire; the member contract is unchanged; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16, with the OCR member's page contract (its own note asks the caller to loop).
+depends-on: none.
+scope: tier3Extend re-asks the member for each page in `deferred`, one invocation per page, sequential, each merged by mergeTier3Text; a refused page keeps its marker. MEASURE FIRST the per-acquire CPU and subrequest budget for a 58-page scan on the deployed runtime's limits (miniflare wall 80 s shipped vs 858 s per page over the 21); if it exceeds them, the tail goes to a deferred task, stated.
+accepts-when: the committed two-page fixture (bio-plane/test/fixtures/d460/) reads meeting_agenda through the op (moves: 174 of 190 pages untranscribed). NEGATIVE CONTROL: stop reading `deferred` and the fixture reads generic, 1/1 unread, by name (scripts/d460-perpage-ocr.mjs).
+added: 2026-09-25 · SCHEDULER #22 (id minted by D-460's worker).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
