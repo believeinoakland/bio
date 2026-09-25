@@ -30,8 +30,8 @@
     },
     {
       "path": "../bio-plane/src/subresources.mjs",
-      "bytes": 65933,
-      "sha256": "7254940ec7d67137fc78929c04783da0e353302c5d4585c03976a60eeaef4ff9"
+      "bytes": 69441,
+      "sha256": "47ec5803c3351e9d6b59e31136f94e59d5bf3fe04b8faca8e40eda961c8dc13c"
     },
     {
       "path": "../pdf-worker/src/pagepixels.mjs",

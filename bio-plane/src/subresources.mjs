@@ -616,6 +616,65 @@ export function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 100
            changes: known.changes || 0 };
 }
 
+/** D-191: the TEMPORAL SPREAD of a composite capture — the earliest and latest
+ *  instants at which its parts were fetched (CAPTURE-SCALING.md §Checking that a
+ *  reused asset is still the same; §Re-fetch at ratification is mandatory). A
+ *  capture assembled partly from reused bytes is a page as the source served it
+ *  across a SPAN of time, not at one instant, and the record says so.
+ *
+ *  The instants are on TWO CLOCKS and are never compared as one (the class of
+ *  D-580):
+ *  - `capture`: a part fetched during THIS capture carries `fetched_at`, stamped by
+ *    the capturing Worker's own clock (`now`) as the request was issued.
+ *  - `record`: a reused part carries `reused_from_fetched_at`, which is
+ *    `site_assets.last_fetched` — stamped by the Store Durable Object when an
+ *    EARLIER capture's observations were FILED, after that fetch completed. It is a
+ *    different process's clock marking a different event, so it is not ordered
+ *    against the capture clock: when both clocks hold parts the composite-wide
+ *    earliest and latest are stated per clock and the cross-clock order is
+ *    `two_clocks_not_compared`, never guessed.
+ *  A part is a record the capture HOLDS bytes for (`ok`). A reused part whose
+ *  instant is absent or unreadable is counted `undetermined`, never placed. The
+ *  primary is not a part here: its retrieval is the document's own. */
+export const SPREAD_CLOCKS = {
+  capture: { instant: "fetched_at", clock: "the capturing Worker's clock, stamped as this capture issued the request" },
+  record: { instant: "reused_from_fetched_at", clock: "the Store's clock (site_assets.last_fetched), stamped when an earlier capture's fetch was filed" },
+};
+export function partFetchSpread(records) {
+  const acc = { capture: [], record: [] };
+  let undetermined = 0, parts = 0;
+  for (const r of records || []) {
+    if (!r || !r.ok) continue;
+    parts++;
+    const clock = r.fetched_this_capture === false ? "record" : "capture";
+    const at = r[SPREAD_CLOCKS[clock].instant];
+    const ms = typeof at === "string" ? Date.parse(at) : NaN;
+    if (!Number.isFinite(ms)) { undetermined++; continue; }
+    acc[clock].push([ms, at]);
+  }
+  const clocks = {};
+  for (const k of Object.keys(acc)) {
+    if (!acc[k].length) continue;
+    const s = acc[k].sort((a, b) => a[0] - b[0]);
+    clocks[k] = { ...SPREAD_CLOCKS[k], parts: s.length, earliest: s[0][1], latest: s[s.length - 1][1],
+                  span_ms: s[s.length - 1][0] - s[0][0] };
+  }
+  const named = Object.keys(clocks);
+  const one = named.length === 1 ? clocks[named[0]] : null;
+  return {
+    parts, undetermined, clocks,
+    state: named.length === 0 ? "no_instants" : one ? "one_clock" : "two_clocks_not_compared",
+    clock: one ? named[0] : null,
+    earliest: one ? one.earliest : null,
+    latest: one ? one.latest : null,
+    note: "the earliest and latest instants at which this composite's parts were fetched, per clock. "
+        + "`capture` instants were stamped by this capture; `record` instants are when an earlier capture's "
+        + "fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, "
+        + "so a composite holding both states each and leaves the composite-wide earliest and latest null. "
+        + "undetermined counts held parts whose instant the record does not give.",
+  };
+}
+
 export function fetchPolicy(ref, origin) {
   if (ref.collapsed)
     return { fetch: false, reason: "COLLAPSED_SRCSET_FAMILY",
@@ -1125,6 +1184,8 @@ export async function captureSubresources({
                  + "their bytes come from an earlier fetch of the same address on this host, made by the "
                  + "capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. "
                  + "A capture ratified as evidence must re-fetch them." },
+    /* D-191: when the parts this composite holds were fetched, per clock. */
+    part_fetch_spread: partFetchSpread(records),
     outstanding: deferred,
     platform: {
       limited: platformHit,

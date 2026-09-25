@@ -17501,6 +17501,50 @@ function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 1e3, minDo
     changes: known.changes || 0
   };
 }
+var SPREAD_CLOCKS = {
+  capture: { instant: "fetched_at", clock: "the capturing Worker's clock, stamped as this capture issued the request" },
+  record: { instant: "reused_from_fetched_at", clock: "the Store's clock (site_assets.last_fetched), stamped when an earlier capture's fetch was filed" }
+};
+function partFetchSpread(records) {
+  const acc = { capture: [], record: [] };
+  let undetermined = 0, parts = 0;
+  for (const r of records || []) {
+    if (!r || !r.ok) continue;
+    parts++;
+    const clock = r.fetched_this_capture === false ? "record" : "capture";
+    const at = r[SPREAD_CLOCKS[clock].instant];
+    const ms = typeof at === "string" ? Date.parse(at) : NaN;
+    if (!Number.isFinite(ms)) {
+      undetermined++;
+      continue;
+    }
+    acc[clock].push([ms, at]);
+  }
+  const clocks = {};
+  for (const k of Object.keys(acc)) {
+    if (!acc[k].length) continue;
+    const s = acc[k].sort((a, b) => a[0] - b[0]);
+    clocks[k] = {
+      ...SPREAD_CLOCKS[k],
+      parts: s.length,
+      earliest: s[0][1],
+      latest: s[s.length - 1][1],
+      span_ms: s[s.length - 1][0] - s[0][0]
+    };
+  }
+  const named = Object.keys(clocks);
+  const one = named.length === 1 ? clocks[named[0]] : null;
+  return {
+    parts,
+    undetermined,
+    clocks,
+    state: named.length === 0 ? "no_instants" : one ? "one_clock" : "two_clocks_not_compared",
+    clock: one ? named[0] : null,
+    earliest: one ? one.earliest : null,
+    latest: one ? one.latest : null,
+    note: "the earliest and latest instants at which this composite's parts were fetched, per clock. `capture` instants were stamped by this capture; `record` instants are when an earlier capture's fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, so a composite holding both states each and leaves the composite-wide earliest and latest null. undetermined counts held parts whose instant the record does not give."
+  };
+}
 function fetchPolicy(ref, origin) {
   if (ref.collapsed)
     return {
@@ -17963,6 +18007,8 @@ async function captureSubresources({
       min_documents: reuseMinDocuments,
       note: "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them."
     },
+    /* D-191: when the parts this composite holds were fetched, per clock. */
+    part_fetch_spread: partFetchSpread(records),
     outstanding: deferred,
     platform: {
       limited: platformHit,
@@ -86224,6 +86270,7 @@ var index_default = {
             outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            part_fetch_spread: subs.manifest.part_fetch_spread,
             compute: subs.manifest.compute,
             ...subs.computeRecord ? { compute_recorded: subs.computeRecord } : {},
             ...subs.resumeState ? { continuation: {

@@ -9847,6 +9847,7 @@ export default {
             complete: subs.manifest.complete, outstanding: subs.manifest.outstanding,
             platform: subs.manifest.platform,
             reuse: subs.manifest.reuse,
+            part_fetch_spread: subs.manifest.part_fetch_spread,
             compute: subs.manifest.compute,
             ...(subs.computeRecord ? { compute_recorded: subs.computeRecord } : {}),
             ...(subs.resumeState ? { continuation: {
