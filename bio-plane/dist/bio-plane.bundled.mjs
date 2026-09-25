@@ -4466,6 +4466,7 @@ __export(bio_checks_exports, {
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
+  EXTENT_USER_SPACE: () => EXTENT_USER_SPACE,
   FILENAME_RE: () => FILENAME_RE,
   FORBIDDEN_ALIASES: () => FORBIDDEN_ALIASES,
   GOVERNING_LAWS_MAX: () => GOVERNING_LAWS_MAX,
@@ -4586,6 +4587,7 @@ __export(bio_checks_exports, {
   divisionDisclosureFindings: () => divisionDisclosureFindings,
   ed25519Verify: () => ed25519Verify,
   extentRelation: () => extentRelation,
+  extentSpace: () => extentSpace,
   governingLawsOf: () => governingLawsOf,
   imagePageUndetermined: () => imagePageUndetermined,
   imagePartUndetermined: () => imagePartUndetermined,
@@ -13185,8 +13187,25 @@ var CONTENT_EXTENT_CHECKS = {
     check: "C-45.12",
     where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
     translation: 'This citation calls a region of the page an image, and the page paints no image there. When this document was captured the record listed every image each page draws and where, and none sits at this address \u2014 so a row saying "an image is here" would claim something the file does not show. If you meant the words in that region, cite it as a region of the page; if you meant a picture, pick it from the images the record lists for this page, which are named beside this refusal.'
+  },
+  /* D-670 — A RECT STATED IN A COORDINATE SPACE OTHER THAN PDF USER SPACE.
+     Not C-45.1 (the address may well fall inside the page's numbers — that is
+     the hazard) and not C-45.3 (the address is readable, and says exactly which
+     space it is in). What is wrong is that the grammar ADDRESSES user space
+     only (IC-203, D-374's MediaBox bound), and a rect in the pixels of a
+     rendered frame names a different place under the same four numbers.
+     C-45.13, a sub-number of an allocated family on C-45.5's precedent. */
+  CONTENT_EXTENT_NOT_USER_SPACE: {
+    check: "C-45.13",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "This citation gives a region of a page in a different measure from the one this record addresses pages in. A region here is measured in points from the corner of the page as the file lays it out; this one is measured in something else \u2014 usually the pixels of an image made from the page, as a text-recognition engine reports them. The same four numbers name a different place in each, so recording it as given would point at a region nobody chose, and it is not converted either, because the conversion depends on how the image was made and turned. Cite the region in points on the page, or cite the page."
   }
 };
+var EXTENT_USER_SPACE = "user";
+function extentSpace(extent) {
+  const v = extent && typeof extent === "object" ? extent.space : void 0;
+  return v === void 0 || v === null ? EXTENT_USER_SPACE : String(v);
+}
 function refusal(key, detail, extra = null) {
   const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
   return {
@@ -13207,6 +13226,8 @@ function legExtent(leg) {
   if (kind === "pdf-page") {
     if (l.extent_page !== void 0 && l.extent_page !== null) out.page = l.extent_page;
     if (l.extent_rect !== void 0 && l.extent_rect !== null) out.rect = l.extent_rect;
+    if (l.extent_space !== void 0 && l.extent_space !== null && l.extent_space !== "")
+      out.space = l.extent_space;
   }
   if (kind === "sheet-cell") {
     if (l.extent_sheet !== void 0 && l.extent_sheet !== null) out.sheet = l.extent_sheet;
@@ -13232,6 +13253,8 @@ function legExtent(leg) {
     if (l.extent_part !== void 0 && l.extent_part !== null) out.part = l.extent_part;
     if (l.extent_page !== void 0 && l.extent_page !== null) out.page = l.extent_page;
     if (l.extent_rect !== void 0 && l.extent_rect !== null) out.rect = l.extent_rect;
+    if (l.extent_space !== void 0 && l.extent_space !== null && l.extent_space !== "")
+      out.space = l.extent_space;
   }
   if (l.extent_cited_as !== void 0 && l.extent_cited_as !== null && l.extent_cited_as !== "")
     out.cited_as = l.extent_cited_as;
@@ -13254,7 +13277,9 @@ function legHasAuthoredExtent(leg) {
     "extent_range",
     "extent_table",
     "extent_part",
-    "extent_cited_as"
+    "extent_cited_as",
+    /* D-670 */
+    "extent_space"
   ]) {
     const v = l[k];
     if (v === void 0 || v === null || v === "") continue;
@@ -13373,6 +13398,7 @@ function extentRelation(outer, inner) {
   if (!a || !b) return "unreadable";
   const landed = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, k) && CONTENT_EXTENT_KINDS[k].landed;
   if (!landed(a.kind) || !landed(b.kind)) return "unreadable";
+  if (extentSpace(a) !== EXTENT_USER_SPACE || extentSpace(b) !== EXTENT_USER_SPACE) return "unreadable";
   const ca = JSON.parse(canonicalExtent(a));
   const cb = JSON.parse(canonicalExtent(b));
   if (JSON.stringify(ca) === JSON.stringify(cb)) return "same";
@@ -14197,6 +14223,11 @@ function checkContentExtent(extent, ctx = {}) {
     return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85`
+    );
+  if ((e.kind === "pdf-page" || e.kind === "image") && extentSpace(e) !== EXTENT_USER_SPACE)
+    return refusal(
+      "CONTENT_EXTENT_NOT_USER_SPACE",
+      `this ${e.kind} extent states its rect in space '${extentSpace(e).slice(0, 40)}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read (ocr-worker)`
     );
   if (e.kind === "pdf-page") {
     if (!Number.isInteger(e.page) || e.page < 0)
@@ -25983,6 +26014,7 @@ function extentCovers(extent, target) {
   const src = extent.source;
   if (!src || src.page !== target.page) return false;
   if (!Array.isArray(target.rect) || target.rect.length !== 4) return false;
+  if (extentSpace(src) !== extentSpace(target)) return false;
   const [ax0, ay0, ax1, ay1] = normRect(src.rect);
   const [bx0, by0, bx1, by1] = normRect(target.rect);
   return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -26028,7 +26060,8 @@ function readingSource(source) {
   if (kind === "pdf-page") {
     if (!isIndex(source.page)) return null;
     const rect = Array.isArray(source.rect) && source.rect.length === 4 && source.rect.every((n) => typeof n === "number" && Number.isFinite(n)) ? source.rect.map(Number) : null;
-    return { kind, ref, page: source.page, rect };
+    const space = rect && extentSpace(source) !== EXTENT_USER_SPACE ? extentSpace(source).slice(0, 40) : null;
+    return space ? { kind, ref, page: source.page, rect, space } : { kind, ref, page: source.page, rect };
   }
   if (kind === "doc-para") {
     if (!isIndex(source.para)) return null;
@@ -26074,6 +26107,7 @@ function readingPositionInExtent(position, extentKind, extent) {
     if (!isIndex(e.page) || e.page !== p.page) return false;
     if (!Array.isArray(e.rect) || e.rect.length !== 4) return true;
     if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    if (extentSpace(p) !== extentSpace(e)) return false;
     const [ax0, ay0, ax1, ay1] = normRect(e.rect);
     const [bx0, by0, bx1, by1] = normRect(p.rect);
     return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;

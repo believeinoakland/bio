@@ -1,15 +1,15 @@
 # D-164 design space — the content object and the extent-carrying edge
 
-**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; §5 brings the doctrine items to Bob in the shape he rules on and §6 records the mechanism decided provisionally by BOB #10 under his standing delegation (option (c), the hybrid). **D-164, the gap this study served, CLOSED 2026-09-22 (BOB #26)**: the primitive is BUILT (`node tools/status.mjs 4`) and Bob's reopening condition is met (`BIO_Content_Framework_v0_10.md` §18), so this study is now the design record behind it; §1.2's DEC-4 constraint is READ at the leg as a cap, never a refusal (Framework §14.4, D-152). §6 gains the `pdf-page` rect's bound (D-374, 2026-09-25). as of 2026-09-25.
+**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; §5 brings the doctrine items to Bob in the shape he rules on and §6 records the mechanism decided provisionally by BOB #10 under his standing delegation (option (c), the hybrid). **D-164, the gap this study served, CLOSED 2026-09-22 (BOB #26)**: the primitive is BUILT (`node tools/status.mjs 4`) and Bob's reopening condition is met (`BIO_Content_Framework_v0_10.md` §18), so this study is now the design record behind it; §1.2's DEC-4 constraint is READ at the leg as a cap, never a refusal (Framework §14.4, D-152). §6 gains the `pdf-page` rect's bound (D-374, 2026-09-25) and its coordinate space (D-670, 2026-09-25). as of 2026-09-25.
 
 **Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
 
 **Incomplete sections** ·
 - §5 — all eight items answered by Bob on 2026-09-14 (5.5 as direction confirmed against the record rather than a ruling); the mechanism (§6) is updated to them and the IC on I5/I3 follows.
 - §4 and §6 — the mechanism was decided as option (c), contracted as IC-83 (I5) and IC-84 (I3) and BUILT by REC-82 to REC-85 (`node tools/status.mjs 4`); the two sections are the design as decided and are not rewritten to the as-built, so a builder reads the IC and the code for the shape that landed (corrected 2026-09-22 by BOB #26; this bullet said the IC was still to be written).
-- §6 — the `pdf-page` arm's rect bound (D-374) is recorded there as built; the coordinate space of a
-  rect is not part of the extent grammar, so an attestation region and an OCR anchor are not bounded
-  (D-670).
+- §6 — the `pdf-page` arm's rect bound (D-374) and its coordinate space (D-670) are recorded there as
+  built. A non-user-space rect is REFUSED, not converted, so an OCR region is citable as a region only once
+  something produces its user-space rect; that conversion is not designed here (it waits on D-671).
 
 **Contents**
 - [1. The fixed constraints](#1-the-fixed-constraints)
@@ -361,4 +361,26 @@ box** — a PDF acquired before D-374, or a page whose MediaBox the file does no
 admitted and the absence stated as `undetermined {level: page_box, why}`, never refused and never given
 a guessed page size. Clip-and-state was the alternative and was not taken: a clipped rect is a region
 the member did not choose. **Not bounded here:** a text attestation's region and an OCR anchor, whose
-rects carry no stated coordinate space in this grammar (OCR anchors are image pixels) — D-670.
+rects are in image pixels — see the next paragraph (D-670).
+
+**The rect's coordinate space (D-670, 2026-09-25).** A rect is four numbers IN A SPACE. The grammar
+addresses **PDF default user space** (IC-203; the MediaBox bound above), while an OCR anchor is in the
+**pixels of the frame that was read** (`ocr-worker` transcribe, `space: "image-px"`). Until D-670 the
+space was part of no extent: `readingSource` rebuilt a reading position field by field and dropped it,
+so `op=extractpropose` handed the checker an OCR pixel rect as user space — minted wherever it happened
+to fit the MediaBox, refused C-45.1 for the wrong reason where it did not. **Now** the `pdf-page` and
+`image` arms carry `space`: `readingSource` keeps it beside a rect (a page index has no space, so a
+page-only position drops it), `#posFields` passes it through, `legExtent` reads `extent_space`, and
+`checkContentExtent` refuses any space other than `user` **by name, C-45.13
+`CONTENT_EXTENT_NOT_USER_SPACE`** — before any number in the rect is judged. `extentCovers` (an
+attestation), `readingPositionInExtent` and `extentRelation` (`op=narrow` and its candidate list)
+answer no across spaces. **Refuse, not convert, and why:** converting image pixels needs the frame's
+dimensions, the render route's rotation and the page's MediaBox — the rotation is D-671's open defect
+(`pagepixels.mjs` does not inherit /Rotate), and a capture acquired before D-374 holds no box — so a
+converted rect would rest on a figure the record cannot vouch for, and a rect pointing at the wrong
+place is worse than one refused (the ocr worker's own note). **Existing extents without `space` read as
+user space**, and that is a fact about the record rather than an assumption: nothing minted any other
+space except through the defect this closes. `space` is **not in the canonical bytes** — sound only
+while user space is the one space admitted — so an explicit `space: "user"` is the unstated address and
+every content id minted before D-670 is unchanged. `op=cite` does not carry `extent_space` (refused
+C-45.7 by name): a member authors user space by stating none.

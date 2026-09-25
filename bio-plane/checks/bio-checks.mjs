@@ -12816,7 +12816,39 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'region of the page; if you meant a picture, pick it from the images the record lists for '
       + 'this page, which are named beside this refusal.',
   },
+  /* D-670 — A RECT STATED IN A COORDINATE SPACE OTHER THAN PDF USER SPACE.
+     Not C-45.1 (the address may well fall inside the page's numbers — that is
+     the hazard) and not C-45.3 (the address is readable, and says exactly which
+     space it is in). What is wrong is that the grammar ADDRESSES user space
+     only (IC-203, D-374's MediaBox bound), and a rect in the pixels of a
+     rendered frame names a different place under the same four numbers.
+     C-45.13, a sub-number of an allocated family on C-45.5's precedent. */
+  CONTENT_EXTENT_NOT_USER_SPACE: {
+    check: 'C-45.13',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation gives a region of a page in a different measure from the one this '
+      + 'record addresses pages in. A region here is measured in points from the corner of the page '
+      + 'as the file lays it out; this one is measured in something else — usually the pixels of an '
+      + 'image made from the page, as a text-recognition engine reports them. The same four numbers '
+      + 'name a different place in each, so recording it as given would point at a region nobody '
+      + 'chose, and it is not converted either, because the conversion depends on how the image was '
+      + 'made and turned. Cite the region in points on the page, or cite the page.',
+  },
 };
+
+/** D-670 — THE COORDINATE SPACE A RECT IS STATED IN. The grammar addresses PDF
+ *  default user space (IC-203) and nothing else, so `user` is the one space an
+ *  extent may carry and an UNSTATED space READS AS USER SPACE: every extent
+ *  written before D-670 carried a user-space rect or no rect, because nothing
+ *  in this plane minted any other (the OCR worker's `image-px` anchors never
+ *  reached a content row except through the defect D-670 closes). Anything
+ *  else present is returned as the string it is, so it can be refused BY NAME;
+ *  `null` and absent are not a statement. */
+export const EXTENT_USER_SPACE = 'user';
+export function extentSpace(extent) {
+  const v = extent && typeof extent === 'object' ? extent.space : undefined;
+  return v === undefined || v === null ? EXTENT_USER_SPACE : String(v);
+}
 
 /** DEC-49's refusal helper for this family, and BOTH halves of its spelling are
  *  load-bearing rather than style. The name is exactly `refusal` and the code is
@@ -12879,6 +12911,10 @@ export function legExtent(leg) {
   if (kind === 'pdf-page') {
     if (l.extent_page !== undefined && l.extent_page !== null) out.page = l.extent_page;
     if (l.extent_rect !== undefined && l.extent_rect !== null) out.rect = l.extent_rect;
+    /* D-670: the rect's space is READ, never dropped. Until D-670 a leg naming
+       `extent_space: image-px` was read as a user-space rect in silence. */
+    if (l.extent_space !== undefined && l.extent_space !== null && l.extent_space !== '')
+      out.space = l.extent_space;
   }
   /* REC-85: THE THREE ARMS' FIELDS ARE NOW READ PER ARM rather than carried
      through in one six-key bag. REC-82 wrote that bag deliberately — an
@@ -12932,6 +12968,8 @@ export function legExtent(leg) {
     if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
     if (l.extent_page !== undefined && l.extent_page !== null) out.page = l.extent_page;
     if (l.extent_rect !== undefined && l.extent_rect !== null) out.rect = l.extent_rect;
+    if (l.extent_space !== undefined && l.extent_space !== null && l.extent_space !== '')
+      out.space = l.extent_space;
   }
   /* `cited_as` is read on EVERY kind, not only on `image`, so that `bytes` on
      a paragraph reaches the checker and is refused BY NAME rather than being
@@ -12960,7 +12998,9 @@ export function legHasAuthoredExtent(leg) {
   for (const k of ['extent_kind', 'extent_page', 'extent_rect', 'extent_ref', 'extent_sheet',
                    'extent_cell', 'extent_slide', 'extent_shape', 'extent_para', 'extent_run',
                    /* FW-19 / IC-125 */
-                   'extent_range', 'extent_table', 'extent_part', 'extent_cited_as']) {
+                   'extent_range', 'extent_table', 'extent_part', 'extent_cited_as',
+                   /* D-670 */
+                   'extent_space']) {
     const v = l[k];
     if (v === undefined || v === null || v === '') continue;
     return true;
@@ -13013,6 +13053,11 @@ export const CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain:
  *  differently and they are still citing one passage. */
 export function canonicalExtent(extent) {
   const e = extent && typeof extent === 'object' ? extent : {};
+  /* D-670: A RECT'S `space` IS NOT IN THE ADDRESS, and that is sound only
+     because `checkContentExtent` admits user space alone — so every row that
+     can exist is a user-space row, an unstated space and `space: 'user'` are
+     one address, and every content id minted before D-670 is byte-identical.
+     The day a second space is ADMITTED, it joins these bytes first. */
   if (e.kind === 'document') return canonicalJson({ kind: 'document' });
   if (e.kind === 'pdf-page') {
     const ok = Array.isArray(e.rect) && e.rect.length === 4
@@ -13191,6 +13236,10 @@ export function extentRelation(outer, inner) {
   const landed = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, k)
     && CONTENT_EXTENT_KINDS[k].landed;
   if (!landed(a.kind) || !landed(b.kind)) return 'unreadable';
+  /* D-670: the canonical form carries no space, so two rects in two spaces
+     would compare as numbers here. Either side outside user space is a place
+     this function cannot evaluate. */
+  if (extentSpace(a) !== EXTENT_USER_SPACE || extentSpace(b) !== EXTENT_USER_SPACE) return 'unreadable';
   const ca = JSON.parse(canonicalExtent(a));
   const cb = JSON.parse(canonicalExtent(b));
   if (JSON.stringify(ca) === JSON.stringify(cb)) return 'same';
@@ -14623,6 +14672,14 @@ export function checkContentExtent(extent, ctx = {}) {
       `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet `
       + `evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with `
       + `REC-82 and the other three follow with REC-85`);
+  /* D-670 — THE RECT'S SPACE, judged before any number in it: a pixel rect
+     that happens to fit the MediaBox is the case that minted. */
+  if ((e.kind === 'pdf-page' || e.kind === 'image') && extentSpace(e) !== EXTENT_USER_SPACE)
+    return refusal("CONTENT_EXTENT_NOT_USER_SPACE",
+      `this ${e.kind} extent states its rect in space '${extentSpace(e).slice(0, 40)}'; the grammar `
+      + `addresses PDF default user space only (points, the page as the file lays it out), so the `
+      + `rect is not converted and not read as points. A text-recognition anchor is in the pixels `
+      + `of the frame it read (ocr-worker)`);
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
