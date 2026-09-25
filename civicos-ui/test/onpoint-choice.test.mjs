@@ -248,10 +248,16 @@ ok("NEVER REPLACING: the MEMBER's line names the member's mention, and who chose
    c2.includes("ordinance:13579-amended") && c2.includes("ruth"), c2);
 ok("NEVER REPLACING: BESIDE — both lines render in the same connection, the machine's first",
    !!m2 && !!c2 && h2.indexOf(m2) < h2.indexOf(c2), JSON.stringify([h2.indexOf(m2), h2.indexOf(c2)]));
-ok("D-575: the plane's 'which nobody has chosen' sentence is WITHHELD beside a current choice, never re-worded",
+/* CORRECTED by D-575's worker (2026-09-25), never exempted: this arm asserted the plane's sentence was
+   STATIC — the same "which nobody has chosen" before and after the choice — which was the defect D-575
+   fixes. The plane's sentence now names the choice; what this page owns is unchanged and still asserted:
+   it withholds the plane's pair sentence beside a current choice rather than re-wording it. */
+ok("D-575: the plane's pair sentence now names the choice (no longer 'which nobody has chosen'), and the page still WITHHOLDS it beside a current choice, never re-worded",
    !h2.includes(AB1.determining_pair.selection.says)
-   && AB1.determining_pair.selection.says === AB0.determining_pair.selection.says,
-   "the plane's sentence is static; if it changes, re-take this arm");
+   && AB1.determining_pair.selection.says !== AB0.determining_pair.selection.says
+   && !/which nobody has chosen$/.test(AB1.determining_pair.selection.says)
+   && /which nobody has chosen$/.test(AB0.determining_pair.selection.says),
+   JSON.stringify([AB0.determining_pair.selection.says, AB1.determining_pair.selection.says]));
 ok("the offer marks the current choice and the machine's pair by name",
    /ordinance:13579-amended — the current choice/.test(h2) && /ordinance:13579 — the machine/.test(h2), h2.slice(0, 200));
 const postB = await read(SB);
@@ -284,7 +290,10 @@ console.log("\n--- 4. a lapsed choice (FIXTURE-VERIFIED: no op can produce one t
    so the sentence the plane states for it is the template with that clause EMPTY: read the template's string
    literals and drop the ternary's. Still read from store.mjs, never typed here. The page's handling of a
    NAMED occurrence is UI-112's (placed by SCHEDULER #21 for this meet). */
-const whyM = /lapsed = \{ ref: mine\.ref, (?:\.\.\.occ, )?chosen_by: mine\.chosen_by, at: mine\.at, lapsed: true,\s*why: ([\s\S]*?)\};/.exec(STORE_SRC);
+/* CORRECTED AGAIN by D-575's worker (2026-09-25): the lapse moved, unchanged in its words, into
+   `Store#resolvePairChoice`, which RETURNS it (`return { lapsed: { ... } };`) rather than assigning it, so
+   both heads are read and the object's close is `}` either way. */
+const whyM = /(?:lapsed = |return \{ lapsed: )\{ ref: mine\.ref, (?:\.\.\.occ, )?chosen_by: mine\.chosen_by, at: mine\.at, lapsed: true,\s*why: ([\s\S]*?)\s*\}/.exec(STORE_SRC);
 const LAPSE_WHY = whyM
   ? [...whyM[1].replace(/\(mine\.occurrence != null \? "[^"]*" : ""\)/g, "").matchAll(/"([^"]*)"/g)].map((m) => m[1]).join("")
   : null;
