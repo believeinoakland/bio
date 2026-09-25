@@ -194,6 +194,56 @@ accepts-when: a proposal reads labelled machine work and the tier is unchanged u
 context: REC-216's audit (F1-F4, SCHEDULER #19's worker) and BOB #33's 21:55Z ruling: every `*propose` op is NON_ACTS in `bio-plane/src/affordances.mjs` (REC-195's reasoning) and a member states the value with their own act; so this proposal is a machine READ, never a member act in ACTS, and its surface SHOWS it beside the member's tier with no adopt control, as UI-102 (a2d974aa) does for the governing-laws proposal.
 added: 2026-09-24 · SCHEDULER #19 (`node tools/mintid.mjs REC`).
 
+### REC-220 · queued — **NOT EVERY REFERENCE IS PINNED TO A VERSION: a basis leg, a cite onto a case or question, or a claim with no `content_id` names only a BUNDLE, so a later capture changes what it resolves to.** Bob's 00:40Z doctrine, rule 1 (item 1 of BOB #34's decomposition). — owner RECORD.
+order: after REC-215, first of the version-doctrine rows in product order; it completes construct 4.cross-version (BOB #34 00:55Z) (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I3 — the capture a reference was made against, recorded at the act; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
+depends-on: none.
+scope: record the capture (document grain) at every reference act; MEASURE existing legs per kind (count), never back-fill by guess: a leg whose capture cannot be known reads "version undetermined".
+accepts-when: a new whole-document citation stores its capture sha, and a later capture on the same bundle does not change what the leg resolves to (moves: bundle-only references). NEGATIVE CONTROL: resolve to the newest capture and the pin arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
+### REC-221 · queued — **NOTHING GRADES WHETHER A NEWER VERSION AFFECTS THE REFERENCED PART: `op=versionnotice`'s extent test does not produce §5.8's grades.** Bob's 00:40Z doctrine, rule 2 (item 2). — owner RECORD.
+order: after REC-220, in the version-doctrine chain (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I3 — the grade on versionnotice's answer; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
+depends-on: none.
+scope: extend the extent test to A (byte-identical at the extent), B (same text, new position), C (similar text), NOT FOUND, and UNDETERMINED with a reason; A and B read UNAFFECTED, C and NOT FOUND AFFECTED; office extent arms driven, not assumed.
+accepts-when: each grade is produced by a fixture pair and named on the wire (moves: no grade). NEGATIVE CONTROL: collapse C into B and the C arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
+### REC-222 · queued — **A MEMBER HOLDING A REFERENCE IS NEVER TOLD A NEWER VERSION AFFECTS IT: `op=versionnotice` is a PULL read, and nothing is pushed.** Bob's 00:40Z doctrine, rule 2 (item 3). — owner RECORD.
+order: after REC-221, whose grade it reads (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I3 — a `newer_capture` reevaluation source, a queue kind and a mute kind; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
+depends-on: REC-221.
+scope: `Store#reevaluations` gains `newer_capture`, raised per member-held reference graded AFFECTED or UNDETERMINED, never for A or B; one notice per (reference, newer capture), a yet newer capture raising a new one; queue and mute kinds on D-534's model; published cases tell the OWNERS once (Framework §18.1, Bob's 2026-09-24 option D).
+accepts-when: an AFFECTED reference raises one notice and an A-graded one raises none (moves: nothing pushed). NEGATIVE CONTROL: raise for A and the silence arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
+### REC-223 · queued — **A MEMBER CANNOT ADOPT A NEWER VERSION OR RECORD KEEPING THE EARLIER ONE, so a notice can never close.** Bob's 00:40Z doctrine, rule 3 (item 4). — owner RECORD.
+order: after REC-222, which raises the notice these acts close (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: I3 — two member acts; the integrator classifies.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
+depends-on: REC-220, REC-222.
+scope: ADOPT writes a NEW basis, cite or claim version pinned to the newer capture and retains the old; KEEP records "stays on the earlier version" with who, when, an optional why and both captures; both close the notice; a machine credential is refused (D-394's design, §5.8, §14.4).
+accepts-when: adopt leaves the old version readable and the new one pinned; keep closes the notice and a re-read does not re-raise it for the same capture (moves: no act). NEGATIVE CONTROL: let a machine credential adopt and the refusal arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
+### UI-111 · queued — **NO SURFACE TELLS A MEMBER A NEWER VERSION AFFECTS WHAT THEY REFERENCED, OR OFFERS ADOPT / KEEP.** Bob's 00:40Z doctrine (item 5); construct 4.cross-version-ui. UI-96 draws the PULL notice where a citation shows; this row adds the pushed notice and the two acts. — owner UI.
+order: after REC-223, the surface half of the version-doctrine chain (SCHEDULER #21, 2026-09-25)
+milestone: M4
+interface: none (reads REC-222's and REC-223's I3).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 (the cross-version relation), with §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.8, and Bob's 2026-09-25 00:40Z version doctrine as BOB #34 decomposed it at 00:55Z (drained to `BOB-INBOX-drained.md`; cite until folded on BOB's batch branch).
+depends-on: REC-222, REC-223, UI-96.
+scope: where the member meets a reference, and in the queue, show "a newer version of this document exists", the grade in the plane's words, and ADOPT / KEEP; show nothing for A and B.
+accepts-when: an AFFECTED reference shows the notice and both acts, an A-graded one shows nothing (moves: no surface). NEGATIVE CONTROL: render for A and the silence arm fails by name.
+added: 2026-09-25 · SCHEDULER #21 (`node tools/mintid.mjs`).
+
 ### M0-142 · queued — **`meaning-bounds.test.mjs`'s BOUND_KEY HAS NO `max`: `/^(?:limit|cap|bound|page_size|[a-z_]*_limit)$/` (line 382), so a read bounded by a `max`/`*_max` key (bounded actionquotes) is counted BARE and correct work reads unbounded.** Found by c18-batch7fix's worker; verified at 548eb2c5 by CONDUCT #20 and SCHEDULER #18. — owner M0.
 order: (held behind c20-batch11fix, SCHEDULER #18 03:47Z) after D-484, with the rows that cut gate time: an over-strict instrument fails correct work (SCHEDULER #18, 2026-09-24; via CONDUCT #20 03:37Z)
 milestone: M0
@@ -1139,73 +1189,3 @@ depends-on: none.
 scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
 accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
-
-### D-304 · queued — **`walkfloor.mjs`'s HEADER STATES HALF ITS LEXICAL-SCOPE BLIND SPOT: it names same-named locals in different blocks, and omits a `let` reassigned in a branch and a site reading GUARDED off a neighbour's `*Repro` key.** — owner M0 (walkfloor's owner).
-order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (an instrument states its limits), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the missing statements belong in walkfloor.mjs's own HEADER; VERIFICATION.md gets no line (no budget).*
-depends-on: none.
-scope: add the two items to the header's CANNOT SEE list.
-accepts-when: the header names both. NEGATIVE CONTROL: a grep arm over the header fails by name if either is missing.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### D-342 · queued — **A CLAIMS.md RELEASE HAS FOUR SPELLINGS AND NO TOOL READS ANY OF THEM: a `### RELEASED` heading, a `released:` line at the file end, a dated release, and the one grammar.** BOB #32's ruling of 2026-09-23 23:30Z (cite until folded): *the one release grammar is a `released: <date> …` line INSIDE the claim's block; the three historical forms are read as released and brought to it; the planning-hygiene pin is a row.* — owner M0.
-order: with the M0 instrument rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a pin over a ledger), for `docs/development/PARALLELISM.md` §"Claiming an area" (BOB folds the grammar), with BOB #32's ruling of 2026-09-23 23:30Z (cite until folded).
-depends-on: none.
-scope: bring the three historical forms to the grammar; a `planning-hygiene` arm pins it.
-accepts-when: every released block carries the in-block line. NEGATIVE CONTROL: plant a `### RELEASED` heading, and the pin fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
-### D-459 · queued — **`case-opened.test.mjs` IS UNCLASSIFIED IN THE COVERAGE REGISTER, AND WAS BEFORE D-241.** — owner M0.
-order: with the M0 instrument rows, after D-342 (SCHEDULER #17, 2026-09-23; D-241's worker via CONDUCT #18 00:15Z)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (the negative-control register).
-depends-on: none.
-scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
-accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
-order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (test through the op).
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
-accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-467 · queued — **`nc-m038.mjs` ARM (15) DOES NOT ARM ON `main`: its anchor no longer occurs, so the arm cannot fail.** Found by REC-187's worker (F2). — owner M0.
-order: with the M0 control rows, after D-466 (SCHEDULER #17, 2026-09-24; REC-187's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control that cannot fail refutes nothing).
-depends-on: none.
-scope: re-anchor arm (15) on frontier's `(n) => this.#frontierLatest(level, …)` closure.
-accepts-when: `node bio-plane/test/nc-m038.mjs` reports arm (15) run and failing as declared. NEGATIVE CONTROL: the arm itself, recorded on the suite's `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-471 · queued — **`status.test` §6's UI_HELPERS CENSUS MISSES `queueApplySet` AND `queueSelFor`.** — owner M0 (`tools/status.mjs`).
-order: with the M0 instrument rows, after D-467 (SCHEDULER #17, 2026-09-24; REC-188's worker via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a census states what it reads).
-depends-on: none.
-scope: add both to `UI_HELPERS` in `tools/status.mjs`.
-accepts-when: the census names both. NEGATIVE CONTROL: remove one, and the §6 arm fails by name.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
-
-### D-474 · queued — **`machine-fences.control.mjs` STILL DECLARES FIGURES FOR 12 OR 13 FENCES, AND THERE ARE NOW 14 (REC-189 added MACHINE_CANNOT_SET_RISK_TIER); the driver is REC-73's and is not in the battery.** — owner RECORD.
-order: with the M0 control rows, after D-471 (SCHEDULER #17, 2026-09-24; REC-189's worker F3 via CONDUCT #19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (a control declares what it measures).
-depends-on: REC-189 (finished; rides the train after c19-batch9).
-scope: re-run the driver and move its declared figures to 14 fences.
-accepts-when: `node bio-plane/test/machine-fences.control.mjs` reports every arm as declared at 14. NEGATIVE CONTROL: the driver's own arms, recorded on its `NEGATIVE CONTROL:` line.
-added: 2026-09-24 · SCHEDULER #17 (`node tools/mintid.mjs D`).
