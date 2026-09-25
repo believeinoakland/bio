@@ -104,9 +104,11 @@ const ARMS = {
     mustPass: [...LABELLED_ALL, "OVER-STRICTNESS: a label that only RESPACES the title LANDS"] },
 
   /* OVER-STRICTNESS (3): the derivation in a spelling this item did not write. Coupled to behaviour, all green. */
+  /* CORRECTED by D-628 (2026-09-25): the anchor quoted D-563's line, which D-628 rewrote (`let`, and the envelope's
+     fallback through `textStated`); the old anchor no longer occurs, so this arm could never have armed. */
   spelling: {
-    patches: [[S, "const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : undefined);",
-                  "const promotedState = documentState !== null ? documentState : envelopeMeta?.current_state;"]],
+    patches: [[S, "let promotedState = documentState ?? envelopeState ?? undefined;",
+                  "let promotedState = documentState !== null ? documentState : (envelopeState !== null ? envelopeState : undefined);"]],
     mustFail: [], mustPass: LABELLED_ALL },
 };
 

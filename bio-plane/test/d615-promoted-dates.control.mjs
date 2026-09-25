@@ -72,9 +72,11 @@ const ARMS = {
     mustPass: [...LABELLED_ALL] },
 
   /* The derivation in a spelling this item did not write. Coupled to behaviour, all green. */
+  /* CORRECTED by D-628 (2026-09-25): the anchor quoted D-615's line, which D-628 rewrote (`let`, and the envelope's
+     fallback through `textStated`); the old anchor no longer occurs, so this arm could never have armed. */
   spelling: {
-    patches: [[S, "const promotedLastUpdated = documentLastUpdated ?? (envelopeMeta ? envelopeMeta.last_updated : undefined);",
-                  "const promotedLastUpdated = documentLastUpdated !== null ? documentLastUpdated : envelopeMeta?.last_updated;"]],
+    patches: [[S, "let promotedLastUpdated = documentLastUpdated ?? envelopeLastUpdated ?? undefined;",
+                  "let promotedLastUpdated = documentLastUpdated !== null ? documentLastUpdated : (envelopeLastUpdated !== null ? envelopeLastUpdated : undefined);"]],
     mustFail: [], mustPass: LABELLED_ALL },
 };
 
