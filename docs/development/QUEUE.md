@@ -713,8 +713,8 @@ scope: exclude the statement's writer in the `unbound` count's NOT clause, as RE
 accepts-when: a case with a writer's own reading and two second readings reads `unbound` 2 and states the writer-undetermined count apart (the measured failure it moves: 3 read where 2 is true). NEGATIVE CONTROL: drop the writer exclusion and the count reads 3, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
 
-### UI-109 · running — **THE QUEUE'S FINDING ITEM CANNOT SHOW A REOPENED QUESTION'S EARLIER DECISION: D-527 publishes `prior_disposition` on `op=queue`'s FINDING items and no surface reads it.** D-527's own scope: *a UI follow-on renders it and is rowed once this lands* (CONDUCT #20 22:34Z). — owner UI.
-status: running — SCHEDULER #21 01:53Z spawns WORKER UI-109 (depth 2); D-527 done on main 964da679
+### UI-109 · integrated — **THE QUEUE'S FINDING ITEM CANNOT SHOW A REOPENED QUESTION'S EARLIER DECISION: D-527 publishes `prior_disposition` on `op=queue`'s FINDING items and no surface reads it.** D-527's own scope: *a UI follow-on renders it and is rowed once this lands* (CONDUCT #20 22:34Z). — owner UI.
+status: integrated — SCHEDULER #21 03:00Z: tip 5c27cf76, GATE 92/92 GREEN; additive queueFindingPriorHtml; corrected UI-99's declared-flow-surface control arm 5
 order: after UI-108, in product order: the second surface for the same decision record (SCHEDULER #20, 2026-09-24)
 milestone: M4
 interface: I3 consumer (D-527's IC).
