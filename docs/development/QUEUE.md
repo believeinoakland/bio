@@ -1118,6 +1118,16 @@ scope: commit one real scanned-agenda page image to the OCR fixtures; drive the 
 accepts-when: a real page's OCR yields a `reading_refs` hit. NEGATIVE CONTROL: switch the recogniser off, and the join reads empty by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
 
+### D-610 · queued — **THREE WRITERS CHANGE `members.status` WITHOUT `status_by` (measured at 964da679: the re-invitation ~34957, the revocation ~35008 and the enrolment ~35183 in `store.mjs`), so a row `memberset` stamped reads a later status under the WRONG actor: a live false attribution.** Measured by BOB #35 on D-134's question (04:00Z). — owner RECORD.
+order: after D-586, with the authority and attribution corrections ahead of features: a status stated under an actor who did not cause it is the record claiming more than it supports (CLAUDE.md §2); BOB #35: *"(c) is a DEFECT"* (SCHEDULER #22, 2026-09-25)
+milestone: M8
+interface: I5 — `status_by` now written on every transition; the integrator classifies.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 and the REC-159 paragraph as BOB #35 folded it 04:00Z (land/bob/batch-0925c), with §4.7 for the vote.
+depends-on: none.
+scope: every writer of members.status writes status_by = the actor whose act caused that transition: enrolment the member; invitation and re-invitation the inviter; revocation its actor; a §4.7 vote the administrator whose vote completed it. Grep every writer by the column, not the three lines named. Rows written before read as they are; never back-fill.
+accepts-when: each transition read back names the actor that caused it (moves: 3 writers leaving a stale status_by). NEGATIVE CONTROL: drop the stamp from the enrolment writer and its arm fails by name.
+added: 2026-09-25 · SCHEDULER #22 (`node tools/mintid.mjs D`; BOB #35 04:00Z).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
