@@ -4865,12 +4865,21 @@ function mergeTier3Text(base, ocr, eligible) {
  * answered for that it was not asked about (dropped, and evidence about the
  * member rather than about the document). `null` when there is nothing to say,
  * so a clean wholesale transcription reads exactly as it read before. */
-function tier3Note(m, memberNote) {
+function tier3Note(m, memberNote, layerPages) {
   const say = [];
+  /* D-607 — THE KEPT-TEXT CLAUSE IS A CLAIM ABOUT THE PAGES THAT HAD TEXT, SO IT
+     IS SAID ONLY WHEN THERE ARE ANY. It was emitted whenever a page was filled,
+     so a WHOLLY scanned document (live: FINAL-2-6-PC-Agenda, 7 of 7 pages
+     `no_text_layer`) recorded that "the pages that already had text kept it"
+     about a text layer that never existed. `layerPages` is the caller's own
+     list of pages that carry a glyph and were not filled (D-514's unit); absent
+     or empty, the clause is not said. Its number is that list's, not the filled
+     count's — the sentence is about the kept pages. */
+  const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
     say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into `
-           + `this document's own text; the ${m.filled.length === 1 ? "page" : "pages"} that already `
-           + `had text kept it`);
+           + `this document's own text`
+           + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
   if (m.unanswered.length)
     say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay `
            + `honestly unread`);
@@ -5099,7 +5108,7 @@ async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPag
               chain = Array.isArray(merged) ? merged : null; chainSet = true;
               if (m.filled.length) wiredTier = 3;
               filled = m.filled; unanswered = m.unanswered || [];
-              ocrNote = tier3Note(m, built.note);
+              ocrNote = tier3Note(m, built.note, layerPages);
             }
           } else ocrNote = built.why;
         }
