@@ -490,8 +490,8 @@ scope: capture `(\d+(?:\.\d+)*[A-Za-z]?)`, compute depth from the dotted part, a
 accepts-when: rowsubstrate reads REC-213's `§6A` as §6A and the three false notes are gone (the measured failure it moves: three rows noted "substrate not evident"). NEGATIVE CONTROL: restore the digits-only capture and the §6A arm reads §6, failing by name.
 added: 2026-09-24 · SCHEDULER #20 (id minted by REC-213's worker).
 
-### D-550 · running — **NO GATED INSTRUMENT HOLDS A CATALOGUED REFUSAL CODE TO ONE MINT SITE: `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` measures it (60 multi-site candidates today) but has no floor, ceiling or gate, so a new second site passes silently.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner M0 (the instrument).
-status: running — SCHEDULER #21 23:50Z spawns WORKER D-550 (depth 2, can report); base origin/main 9f8b69e6
+### D-550 · integrated — **NO GATED INSTRUMENT HOLDS A CATALOGUED REFUSAL CODE TO ONE MINT SITE: `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs` measures it (60 multi-site candidates today) but has no floor, ceiling or gate, so a new second site passes silently.** Found by D-513's worker (via CONDUCT #20 22:59Z). — owner M0 (the instrument).
+status: integrated — SCHEDULER #21 00:43Z: tip 0c19c1fe, GATE 86/86 GREEN (FULLREUSE); ceiling 59 (62 less 3 closures; the row's 60 was stale)
 order: after D-535, with the process rows behind the product rows: it prevents a regression and does not cut gate time (Bob's 17:41Z rule) (SCHEDULER #20, 2026-09-24)
 milestone: M0
 interface: none.
@@ -719,6 +719,17 @@ depends-on: D-241 (`integrated` on c18-batch8).
 scope: render `derivation.says` whenever `derivation.cut` is true or the state is not `derived`, beside the connection list. Extend the subject-view harness in `civicos-ui/test/`.
 accepts-when: a cut derivation shows its sentence; a whole one shows none. NEGATIVE CONTROL: drop the render, and the cut-set arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### UI-96 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS STILL NEVER TOLD A NEWER VERSION EXISTS: D-394 built the plane's cross-version notice (`versionnotice`, C-80; construct 4.cross-version BUILT), and 4.cross-version-ui is ABSENT: no surface shows it where a member meets a citation.** — owner UI.
+order: after UI-95: the plane half's member surface (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M4
+interface: I3 consumer (IC-239).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1.
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: where a citation is shown, render the notice's state as the plane states it, including "the chain could not be read"; replace 4.cross-version-ui's probe.
+accepts-when: a citation to a superseded passage shows the notice; an unread newer capture reads as not read, never as unchanged. NEGATIVE CONTROL: collapse "not read" into "unchanged", and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+note: 2026-09-24 — RE-SCOPED by Bob's ruling (Framework §18.1, option D; folds-0924b): the proactive notice reaches a published case's OWNERS only (delivery is REC-209); the surface shows it to owners, and anyone may still ASK at a citation.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

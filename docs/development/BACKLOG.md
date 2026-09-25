@@ -224,6 +224,16 @@ scope: teach the walk REACH-BY-OP: a code minted on an op that a surface in `civ
 accepts-when: on D-448's parent (origin/main 9f8b69e6's review-copy mints) the walk sorts the ten review-copy codes IN REACH rather than F6 (the measured failure it moves: ten of eleven scored out of reach while UI-68's surface existed). NEGATIVE CONTROL: remove the surface's call to `reviewcopy`, and those codes fall back to out of reach by name.
 added: 2026-09-24 · SCHEDULER #21 (id minted by D-448's worker).
 
+### D-574 · queued — **D-550's ONE-MINT-SITE GUARD (arm G) AND ITS SWEEP WALK ONLY `store.mjs` AND `index.mjs`, so multi-site codes in other plane files go unwatched: AI_RUN_BOUND_UNKNOWN (4 sites, airun.mjs), TEXT_ATTEST_EXTENT (4) and TEXT_ANCHOR_MISSING (4, textchain.mjs), CAL_SIGNAL_SHAPE (3, calibration.mjs), AI_RUN_SKILL_VERSION_UNNAMED (2, skillpack.mjs) among them; the whole of `bio-plane/src` reads 93 candidates, not 62.** Found by D-550's worker (00:42Z). — owner M0 (the guard).
+order: after D-542, with the DEC-49 instrument rows behind the product rows: it widens a guard, and no gate result is false today (SCHEDULER #21, 2026-09-25)
+milestone: M0
+interface: none.
+design: `docs/development/VERIFICATION.md` (an instrument states what it reads), with DEC-49's one-code-one-condition rule as D-484 settled it.
+depends-on: D-550.
+scope: widen `MULTI_SITE_FILES` to every `bio-plane/src` file, excluding by stated reason each file that PUBLISHES codes as data rather than minting them (affordances.mjs first); move the ceiling and candidate set to the printed figures.
+accepts-when: arm G reads every src mint site and names the codes above (moves: two files walked of the plane's many). NEGATIVE CONTROL: plant a second site of a single-site code in textchain.mjs and arm G fails naming it.
+added: 2026-09-25 · SCHEDULER #21 (id minted by D-550's worker).
+
 ### D-560 · queued — **`tools/release-assemble.mjs` (~140) STILL NAMES THE ONE-BUNDLE COMMAND: its NO_ARTIFACT detail says "Run `npm run build` in <dir>/", and the assembler dies on the FIRST missing artifact, so a releaser fixes one bundle at a time.** M0-188's sibling site (found by M0-188's worker, via CONDUCT #20 23:45Z). — owner DIST (the path), M0.
 order: after D-548, with the process rows behind the product rows: it costs a release round, not a gate round, and no release is cut until the plan's current scope is done (BOB #34 22:30Z) (SCHEDULER #21, 2026-09-24)
 milestone: M0
@@ -275,17 +285,6 @@ added: 2026-09-25 · SCHEDULER #21 (id minted by D-548's worker).
 | **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
 | **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
-
-### UI-96 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS STILL NEVER TOLD A NEWER VERSION EXISTS: D-394 built the plane's cross-version notice (`versionnotice`, C-80; construct 4.cross-version BUILT), and 4.cross-version-ui is ABSENT: no surface shows it where a member meets a citation.** — owner UI.
-order: after UI-95: the plane half's member surface (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
-milestone: M4
-interface: I3 consumer (IC-239).
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1.
-depends-on: D-394 (`integrated` on c18-batch8).
-scope: where a citation is shown, render the notice's state as the plane states it, including "the chain could not be read"; replace 4.cross-version-ui's probe.
-accepts-when: a citation to a superseded passage shows the notice; an unread newer capture reads as not read, never as unchanged. NEGATIVE CONTROL: collapse "not read" into "unchanged", and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
-note: 2026-09-24 — RE-SCOPED by Bob's ruling (Framework §18.1, option D; folds-0924b): the proactive notice reaches a published case's OWNERS only (delivery is REC-209); the surface shows it to owners, and anyone may still ASK at a citation.
 
 ### REC-209 · queued — **A PUBLISHED CASE'S OWNERS ARE NEVER TOLD ITS CITED DOCUMENT HAS A NEWER VERSION: D-394's notice answers only when asked.** Re-scoped 2026-09-24 to OWNERS by Bob's ruling (option D), replacing BOB #32's 00:05Z "members". — owner RECORD.
 order: after UI-96, the notice's delivery (SCHEDULER #17, 2026-09-24)
