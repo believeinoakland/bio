@@ -1,0 +1,16 @@
+{
+ "unit": "plane:testify.test.mjs",
+ "inputHash": "12e910ae9faa25f476c0ef6eb9371a0032006a5a063d668f7dd1807fb9e8ebe2",
+ "verdict": "PASS",
+ "run": "1758659a7aa8367d73ee31eb716920e24e3eff76.1790313732570.29407.json",
+ "tree": "1758659a7aa8367d73ee31eb716920e24e3eff76",
+ "head": "0e030301bbe4dba58892b092b1f1b6809187f6f8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 145,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6b922f29-537c-5da6-b609-d188345b36f9",
+ "at": "2026-09-25T05:22:12.583Z"
+}

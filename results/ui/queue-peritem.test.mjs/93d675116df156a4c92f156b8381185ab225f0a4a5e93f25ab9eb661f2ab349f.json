@@ -1,0 +1,16 @@
+{
+ "unit": "ui:queue-peritem.test.mjs",
+ "inputHash": "93d675116df156a4c92f156b8381185ab225f0a4a5e93f25ab9eb661f2ab349f",
+ "verdict": "PASS",
+ "run": "1758659a7aa8367d73ee31eb716920e24e3eff76.1790313732570.29407.json",
+ "tree": "1758659a7aa8367d73ee31eb716920e24e3eff76",
+ "head": "0e030301bbe4dba58892b092b1f1b6809187f6f8",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 80,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "6b922f29-537c-5da6-b609-d188345b36f9",
+ "at": "2026-09-25T05:22:12.584Z"
+}
