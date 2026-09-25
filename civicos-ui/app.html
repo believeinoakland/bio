@@ -8194,10 +8194,73 @@ function basisLegRow(leg, ord, referent){
     <div class="kv"><span class="k">Leg ${ord+1}</span><span class="v plain">
       <a onclick="openBundle(${esc(JSON.stringify(target))})" class="mono">${esc(target)}</a>
       &middot; ${esc(role)}${axis?` &middot; graded on the ${esc(axis.toLowerCase())} axis`:""}</span></div>
-    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>${legReferentHtml(referent)}
+    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>${legReferentHtml(referent)}${versionNoticeAskHtml(referent, ord)}
     ${hunch?`<div class="teach" style="margin:8px 0 0"><b>HUNCH</b> &middot; declared by ${esc(leg.author||"an unnamed member")} on ${esc(leg.date||"an unrecorded date")}. A hunch is declared bias, recorded openly from the moment it is made rather than disclosed at publication, and it is temporary by construction: it is cleared by establishing the grade, or it stands and says so.</div>`:""}
     ${leg && leg.note?`<div class="subj-how" style="margin-top:6px">${esc(leg.note)}</div>`:""}
   </div>`;
+}
+
+/* ---- UI-96 / D-394 (framework §18.1) — IS THERE A NEWER VERSION OF WHAT THIS LEG RESTS ON? ----
+   §18.1's gap is the record KNOWING that a cited document has a newer capture and
+   telling nobody. The plane half is `op=versionnotice` (C-80); this is where a
+   member meets the citation, so this is where anyone may ASK (Bob, 2026-09-24,
+   option D). The proactive telling of a published case's OWNERS is REC-209's
+   delivery and is not drawn here.
+
+   ASKED, NEVER ON LOAD. A leg whose referent is a passage gets ONE control, and
+   the read happens when the member uses it — the notice is computed at read and
+   stored nowhere, and a page that asked for every leg on every visit would be
+   this surface deciding to tell everyone, which is the ruling's option not taken.
+   A leg with no passage (another question, a document with no bytes) offers no
+   control: there is no capture to ask about, and the plane says so itself.
+
+   EVERY SENTENCE IS THE PLANE'S (DEC-8). The state's sentence is the notice's own
+   `says`, the reason is its `why`, a candidate's account is the candidate's
+   `says` — never a sentence composed here and never a state mapped onto a
+   friendlier one. FOUR STATES, NOT THREE: `chain_unread` ("the chain could not be
+   read") is UNDETERMINED and is drawn in C-14's undetermined primitive, never as
+   the first row's earned silence; and within `newer_capture_undetermined`, a
+   newer capture NOBODY HAS READ is named by the candidate's own `why`, which
+   says it is a fact about the record and not about the document. A state this
+   surface does not know is rendered by its code and the plane's sentence, never
+   dropped. */
+function versionNoticeAskHtml(r, ord){
+  if(!r || !r.content_id) return "";
+  return `<div class="subj-how" id="vn-${Number(ord)}" style="margin-top:6px"><a onclick="askVersionNotice(${esc(JSON.stringify(String(r.content_id)))},${Number(ord)})">Ask whether a newer version of this document exists</a></div>`;
+}
+async function askVersionNotice(contentId, ord){
+  const slot = $(`#vn-${Number(ord)}`);
+  let r;
+  try{ r = await recR("versionnotice", { content: String(contentId) }); }catch(e){ r = e; }
+  if(slot) slot.innerHTML = versionNoticeHtml(r);
+  return r;
+}
+function versionNoticeHtml(r){
+  if(!r || r.ok === false || !Array.isArray(r.notices)) return actRefusalHtml(r || {});
+  const n = r.notices[0];
+  if(!n) return actRefusalHtml({ detail: "The record answered with no notice for this passage." });
+  const line = (k, v) => v ? `<div class="subj-how"><b>${k}</b> &middot; ${esc(String(v))}</div>` : "";
+  const scope = line("whose chains", r.visible_to);
+  /* BRANCHED ON THE CERTAINTY, `newer`, which is the field the plane defines the states by
+     (true / false / null — null exactly where the chain was not read), so the silence is drawn
+     only where the plane said `false`. The state's NAME is never matched here beyond that. */
+  if(n.newer === false)
+    return `<div class="card" style="margin:8px 0 0" data-vn="${esc(n.state)}">${line("answer", (r.states||{})[n.state])}${line("why", n.why)}${scope}</div>`;
+  if(n.newer === null)
+    return `<div class="card undet" style="margin:8px 0 0" data-vn="${esc(n.state)}">
+        <div class="subj-grade g-unconf">undetermined</div>${line("basis", n.says)}${line("why", n.why)}
+        <div class="subj-how"><b>retry</b> &middot; ${esc(UNDET_RETRY.could_not_determine)}</div>${scope}</div>`;
+  const cands = Array.isArray(n.candidates) ? n.candidates : [];
+  const cand = (c) => `<div class="subj-how" style="margin-top:4px" data-vn-reason="${esc(String(c.reason||""))}">`
+    + `<b>newer capture</b> &middot; <span class="mono">${esc(String(c.capture_sha||"").slice(0,12))}</span>`
+    + `${c.first_retrieved?` &middot; first retrieved ${esc(String(c.first_retrieved))}`:""}`
+    + `${c.bundle_id?` &middot; <a onclick="openBundle(${esc(JSON.stringify(String(c.bundle_id)))})">open it</a>`:""}`
+    + `<div>${esc(String(c.says||""))}</div>`
+    + `${c.existing_content_id?`<div>The record already holds a passage there: <span class="mono">${esc(String(c.existing_content_id))}</span>.</div>`:""}</div>`;
+  const undet = n.state !== "newer_capture_matched";
+  return `<div class="card${undet?" undet":""}" style="margin:8px 0 0" data-vn="${esc(String(n.state||""))}">
+      ${undet?`<div class="subj-grade g-unconf">${n.state==="newer_capture_undetermined"?"undetermined":esc(String(n.state||"unstated"))}</div>`:""}
+      ${line(undet?"basis":"a newer version", n.says || r.says)}${cands.map(cand).join("")}${scope}</div>`;
 }
 
 /* ---- THE ONE SEAM: the plane's own axis objects, or nothing ---- */
