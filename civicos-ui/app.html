@@ -15098,6 +15098,10 @@ let QUEUE_SET_ERR = "";           // a refusal of the SET itself (it had no item
    whole and a `<select>`'s value would not survive it. `null` is "not open"; `to` is the member the
    forward would name, and it is read back out of here by the act, never off the element. */
 let QUEUE_FWD = null;             // null, or { members:[…the roster as op=memberlist gave it…], to }
+/* UI-110: the case a member NAMED for a selected finding filed under several (id -> project id). Held in
+   state for the reason `QUEUE_FWD` is: the queue repaints whole. Nothing is ever put here but a member's own
+   pick, so an item absent from it has no case and is not sent — there is no default to fall back on. */
+let QUEUE_HOME = new Map();
 /* Read off the act source boot already loaded (`loadActSource`, one `op=affordances` read for the whole
    surface), never a second call — and never awaited ahead of the feeds, so the queue is not held back by it. */
 function queueSetActsFrom(src){
@@ -15105,9 +15109,19 @@ function queueSetActsFrom(src){
   QUEUE_SET_ACTS = new Map(acts.filter(a => a && a.weight === "per-item" && a.id).map(a => [a.id, a]));
 }
 /* WHICH set acts a selected item can be handed to, from the item's own class and the record's own
-   disposition publication. A finding keyed by (project, finding) is NOT selectable: its act needs the
-   member to name the project it is acting for, one item at a time, and a set would have to choose it
-   for them.
+   disposition publication.
+
+   UI-110 — A FINDING KEYED BY (project, finding) IS SELECTABLE, and the sentence that stood here (*"its act
+   needs the member to name the project it is acting for, one item at a time, and a set would have to choose
+   it for them"*) was wrong about the plane: REC-205 measured the set act taking a `project` PER ITEM and
+   narrowing the shared body by the act's published `item_keys`, so a mixed selection is one act. What the
+   sentence guarded is still guarded, by a different mechanism: the project is never CHOSEN here. An item
+   the record files under ONE case sends that case — its own home, the only one `disposition.projects`
+   names. An item filed under SEVERAL is selectable but is NOT SENT until the member names one of them
+   (`queueHomeFor`): D-266 — a surface that defaulted one would be choosing whose judgment the record
+   carries. A project-scoped finding the record publishes NO home for (`available` false,
+   `no_project_scope`) is not offered at all, because there is nothing for the decision to be recorded
+   under.
 
    UI-94 WIDENED THIS FROM ONE OP TO THE SET OF THEM, and that is the whole shape of the change: an
    OBLIGATION takes BOTH of the acts the plane publishes over it — resolve the selection, or forward the
@@ -15120,11 +15134,45 @@ function queueSetOpsFor(it){
     return canContribute() ? ["taskresolve", "taskforward"].filter(op => QUEUE_SET_ACTS.has(op)) : [];
   if(it.class === "FINDING"){
     const d = it.disposition || null;
-    if(d && d.available === true && d.scope === "project") return [];
+    if(d && d.scope === "project" && !queueFindingHomes(it).length) return [];
     if(!notifDispositionKeyed(it) || !queueFindingKey(it) || !canProposalAct()) return [];
     return QUEUE_SET_ACTS.has("proposedispose") ? ["proposedispose"] : [];
   }
   return [];
+}
+/* UI-110: the cases a project-scoped finding may be decided for — the record's `disposition.projects`, read
+   verbatim and never widened. An item that is not project-scoped answers none. */
+function queueFindingHomes(it){
+  const d = (it && it.disposition) || null;
+  if(!d || d.scope !== "project" || d.available !== true || !Array.isArray(d.projects)) return [];
+  return d.projects.filter(p => typeof p === "string" && p.trim()).map(p => p.trim());
+}
+function queueIsProjectScoped(it){ return !!(it && it.disposition && it.disposition.scope === "project"); }
+/* The case THIS item's decision is recorded under, or null while it is still the member's to name. One home
+   is the item's own; several are asked, and only the member's own pick — still one of the record's homes —
+   answers. Null is never replaced by a guess. */
+function queueHomeFor(it){
+  const homes = queueFindingHomes(it);
+  if(homes.length === 1) return homes[0];
+  const picked = QUEUE_HOME.get(String(it && it.id));
+  return (picked && homes.includes(picked)) ? picked : null;
+}
+function queueHomeTo(id, project){
+  id = String(id);
+  if(project) QUEUE_HOME.set(id, String(project)); else QUEUE_HOME.delete(id);
+  queuePaint();
+}
+/* Selected project-scoped findings no case has been named for yet: selected, and held back from the act. */
+function queueSelAwaitingHome(){
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id);
+    return it && queueIsProjectScoped(it) && queueSetOpsFor(it).includes("proposedispose") && !queueHomeFor(it); });
+}
+/* How a case is named to a member: the record's title for it where the item's own ancestors carry one, and
+   its id beside it, so two cases with one title are never confused. */
+function queueCaseName(it, project){
+  const a = ((it && it.case && Array.isArray(it.case.ancestors)) ? it.case.ancestors : [])
+    .find(x => x && x.id === project);
+  return (a && a.title) ? `${a.title} (${project})` : project;
 }
 function queueSelectionToggle(id, on){
   id = String(id);
@@ -15132,11 +15180,14 @@ function queueSelectionToggle(id, on){
   if(on) QUEUE_SEL.add(id); else QUEUE_SEL.delete(id);
   queuePaint();
 }
-function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
+function queueSelClear(){ QUEUE_SEL.clear(); QUEUE_HOME.clear(); QUEUE_SET_ERR = ""; QUEUE_FWD = null; queuePaint(); }
 function queueRetainedClear(id){ QUEUE_RETAINED.delete(String(id)); queuePaint(); }
-/* The selected ids a set op would take, in the order the member sees them. */
+/* The selected ids a set op would take, in the order the member sees them. UI-110: a project-scoped finding
+   whose case is still the member's to name is NOT among them — it stays selected and waits. */
 function queueSelFor(op){
-  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id); return it && queueSetOpsFor(it).includes(op); });
+  return [...QUEUE_SEL].filter(id => { const it = QUEUE_ITEMS.get(id);
+    return it && queueSetOpsFor(it).includes(op)
+      && !(op === "proposedispose" && queueIsProjectScoped(it) && !queueHomeFor(it)); });
 }
 /* ONE call for the whole selection. `shared` is what every item shares (a disposition, a reason); each
    item carries only its own identity. The actor and the decider are the plane's stamps and are never sent. */
@@ -15152,17 +15203,24 @@ async function queueApplySet(op, shared){
        own published `disposition` block — the same block the key comes from — and never composed or
        re-read here. A set that names a version the record has since revised is RETAINED with the
        plane's own DEFINITION_MOVED words, exactly as a missing reason already is. */
-    const items = ids.map(id => op === "proposedispose"
-      ? { key: queueFindingKey(QUEUE_ITEMS.get(id)),
-          definitionVersion: queueDispositionVersion(QUEUE_ITEMS.get(id)) }
-      : { id });
+    /* UI-110: a project-scoped finding goes in the act's SECOND identity shape, (project, finding) — its
+       own case, or the one the member named, and the finding as the record published it
+       (`disposition.finding`). Never `key`: that is the shared-record shape, and the plane's IC-60 bridge
+       would only refuse it NO_PROJECT_SCOPE. */
+    const items = ids.map(id => {
+      const it = QUEUE_ITEMS.get(id);
+      if(op !== "proposedispose") return { id };
+      if(queueIsProjectScoped(it))
+        return { project: queueHomeFor(it), finding: (it.disposition && it.disposition.finding) || String(it.id) };
+      return { key: queueFindingKey(it), definitionVersion: queueDispositionVersion(it) };
+    });
     const res = await recPostR(op, { ...(shared || {}), items });
     const outs = (res && Array.isArray(res.items)) ? res.items : null;
     if(!outs){ QUEUE_SET_ERR = queueReason(res); return; }
     outs.forEach(o => {
       const id = ids[o.index];
       if(id === undefined) return;
-      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }
+      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); QUEUE_HOME.delete(id); }
       else {
         const it = QUEUE_ITEMS.get(id);
         /* The canned translation is chosen first (`queueReason`); where the record ALSO sent a detail — the
@@ -15181,7 +15239,23 @@ function queueSelTickHtml(it){
   const id = String(it.id);
   /* The tick FEEDS THE SET the act sends (member-respect ARM 1d's item selector): its value is the
      item's membership of `items[]`, nothing else. */
-  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`;
+  return `<label class="q-sel"><input type="checkbox" data-qsel="${esc(id)}"${QUEUE_SEL.has(id)?" checked":""} onchange="queueSelectionToggle('${esc(id)}', this.checked)"> Select</label>`
+    + queueSelHomeHtml(it);
+}
+/* UI-110: WHOSE decision a selected project-scoped finding would be, on the item itself. One home is said;
+   several are ASKED — a picker whose first option chooses nothing, and which marks no case chosen until
+   the member has chosen it (D-266). */
+function queueSelHomeHtml(it){
+  const id = String(it.id);
+  if(!QUEUE_SEL.has(id) || !queueIsProjectScoped(it)) return "";
+  const homes = queueFindingHomes(it);
+  if(homes.length === 1)
+    return `<div class="q-selhome" data-selhome="${esc(id)}">Recorded as the case ${esc(queueCaseName(it, homes[0]))}&rsquo;s own decision; it governs no other case.</div>`;
+  const picked = queueHomeFor(it);
+  return `<div class="q-selhome" data-selhome="${esc(id)}">This is filed under ${homes.length} cases, and deciding it is one case&rsquo;s own act. `
+    + `<select data-qsethome="${esc(id)}"><option value="">Choose which case this is for&hellip;</option>`
+    + homes.map(p => `<option value="${esc(p)}"${picked === p ? " selected" : ""}>${esc(queueCaseName(it, p))}</option>`).join("")
+    + `</select>${picked ? "" : " It is not sent until you choose."}</div>`;
 }
 /* The record's reason an item was kept, on the item itself. */
 function queueRetainedHtml(id){
@@ -15278,6 +15352,10 @@ function queueSelBarHtml(){
           + `<button class="tbtn" data-qsetfwdcancel>Cancel</button></span>`);
     }
   }
+  /* UI-110: the findings held back for want of a case are COUNTED in the bar, so a set that goes without
+     them is never read as the whole selection. */
+  const waiting = queueSelAwaitingHome();
+  if(waiting.length) bits.push(`<span class="q-sethomewait" data-sethomewait>${waiting.length} selected ${waiting.length === 1 ? "finding is" : "findings are"} filed under more than one case and will not be sent until you choose, on ${waiting.length === 1 ? "it" : "each"}, which case the decision is for.</span>`);
   if(finds.length && disp) bits.push(`<span class="q-setdisp">${esc(disp.label)} (${finds.length}): `
     + `<input class="q-setreason" data-qsetreason placeholder="Your reason, in your own words"> `
     + `<button class="btn ghost" data-qsetdisp="deferred">Defer</button> <button class="btn ghost" data-qsetdisp="dismissed">Dismiss</button></span>`);
@@ -16273,6 +16351,8 @@ function queueWire(){
   document.querySelectorAll("#q [data-qselclear]").forEach(b=>b.onclick=()=>queueSelClear());
   document.querySelectorAll("#q [data-unretain]").forEach(b=>b.onclick=()=>queueRetainedClear(b.dataset.unretain));
   document.querySelectorAll("#q [data-qset]").forEach(b=>b.onclick=()=>queueApplySet(b.dataset.qset));
+  /* UI-110: the case a member names for a finding filed under several, on its own attribute. */
+  document.querySelectorAll("#q [data-qsethome]").forEach(sel=>sel.onchange=()=>queueHomeTo(sel.dataset.qsethome, sel.value));
   document.querySelectorAll("#q [data-qsetdisp]").forEach(b=>b.onclick=()=>{
     const r = document.querySelector("#q [data-qsetreason]");
     queueApplySet("proposedispose", { to: b.dataset.qsetdisp, reason: (r && r.value) || "" });

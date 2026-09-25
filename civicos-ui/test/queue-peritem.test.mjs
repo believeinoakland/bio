@@ -38,8 +38,10 @@
  *    stays outside this suite's reach is unchanged: the DOM is a stub, so the picker's `onchange` and the button's
  *    `onclick` are not fired by a browser — the suite calls the functions those attributes name and asserts
  *    separately that `queueWire` binds them.
- *  - A PROJECT-SCOPED FINDING is still not selectable (its act names a project per item), and no fixture here
- *    carries one, so this suite says nothing about that case either way.
+ *  - A PROJECT-SCOPED FINDING: no fixture here carries one, so this suite says nothing about that case. CORRECTED
+ *    2026-09-25 by UI-110, not exempted: this read *"is still not selectable (its act names a project per item)"*,
+ *    which REC-205 measured to be false of the plane and UI-110 made false of the surface. The case is driven against
+ *    the real plane in `queue-projectscope.test.mjs`, with its own control.
  *
  * NEGATIVE CONTROL: arms declared and run in `queue-peritem.control.mjs`; results recorded on the lines below.
  * CONTROL RESULT 2026-09-24 (UI-94 worker), `node civicos-ui/test/queue-peritem.control.mjs`, all SEVEN arms, each

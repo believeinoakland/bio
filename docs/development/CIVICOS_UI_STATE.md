@@ -189,6 +189,37 @@ control `ui104-risk-tier.control.mjs`, six arms, every arm as declared (the row'
 REQUIRED REASON arms by name). **NOT BUILT, and left room for:** REC-215's labelled machine PROPOSAL of a
 reconsideration, to be read BESIDE the history and never inside it.
 
+v120, 2026-09-25 session, thread UI, UI-110 (a WORKER of SCHEDULER #22, cloud session). Landed on
+`land/worker/UI-110` (base `origin/main` @ `5e8a65a83`), in the commit that carries this entry; the version number
+is PROVISIONAL — a concurrent UI worker may take v120 on `main` first, and CONDUCT renumbers at integration.
+SURFACE: **the queue's selection takes a PROJECT-SCOPED finding, and the case its decision is recorded under is the
+item's own or the member's pick — never the surface's.**
+
+**WHAT IT CLOSES.** `queueSetOpsFor` (UI-94's name for `queueSetOpFor`) returned no set act for an item whose
+`disposition.scope` is `project`, by a comment that said the set *"would have to choose it for them"*. REC-205
+measured the plane's set act taking a `project` PER ITEM, so that half was false; the other half — the member must
+say which team they act for — is what this entry builds. RECORD's DELEGATION (REC-205 → UI, 2026-09-24) is
+discharged in its block on `coord`.
+
+**WHAT IT DOES.** A project-scoped finding with a home in `disposition.projects` gets the tick. In the act it goes
+as `{ project, finding }` (`disposition.finding`), never as `key`. ONE home: sent under it, and the item says so
+(*"Recorded as the case … 's own decision; it governs no other case"*). SEVERAL: the item draws a case picker whose
+only default is the option that chooses nothing, the bar COUNTS it as held back, and `queueSelFor` leaves it out of
+the act — still selected — until the member names one (`queueHomeFor` answers null, never a guess; D-266).
+
+**NUMBERS.** `civicos-ui/test/queue-projectscope.test.mjs` NEW, **23 pass / 0 fail**, against the real plane under
+miniflare with `d266scope.test.mjs`'s fixture, every decision read back under its case. Control
+`queue-projectscope.control.mjs`, six arms, every one as declared (three declarations AMENDED from the printed run):
+baseline 23/0 · nullscope 12/11 (the row's: *"a PROJECT-SCOPED finding carries a tick that FEEDS THE SET"* fails by
+name) · preselect 14/9 (the no-default arm: *"THE TWO-HOME FINDING IS NOT SENT until the member names one"* fails by
+name) · pickdefault 22/1 · keyshape 17/6 · spelling 23/0 (over-strictness). `queue-peritem.test.mjs`'s *"still not
+selectable"* line CORRECTED, not exempted.
+
+**WHAT IT DOES NOT DO, stated.** The plane's refusal of such an item reaches the member in the plane's own `detail`,
+not a DEC-49 canned translation: the plane mints `NO_PROJECT_SCOPE` with no `code`/`translation` (D-623, the
+plane's). The SINGLE-item Defer/Dismiss dialog still sends `key` alone on a project-scoped finding and is refused —
+the 2026-08-10 D-266 DELEGATION to UI, open since, now D-624 in the plan; `queueHomeFor` is the piece it can reuse.
+
 v119, 2026-09-24 session, thread UI, UI-103 (a WORKER of CONDUCT #20, cloud session). Landed on
 `land/worker/UI-103` (base `origin/main` @ `1a7f0bcc0`), in the commit that carries this entry; the version number
 is PROVISIONAL — a concurrent UI worker may take v114 on `main` first, and CONDUCT renumbers at integration, as it
