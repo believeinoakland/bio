@@ -52,63 +52,35 @@ const ARMS = {
      project under a NEW name carrying the case, the draft and the grant, so no PROJ outcome decides theirs). Under this
      arm F7 still fails partly by CASCADE — its draft is DRAFT's forced collision too, and throws — so F7's independent
      evidence is `no-ledger-write`, where the draft is reissued and the grant's own draw is what fails. */
-  "no-ledger-read": {
-    patches: [["store.mjs", READ, "    const spent = (id) => taken(id);"]],
-    mustFail: ["S2:", ...AFTER_PURGE, "F9 PROJ", ...SEEDED, "U7 CASE"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-ledger-read mutated the minter's ledger READ (`const spent = ...` over `minted_ids`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `minted_ids`); its anchor no longer occurs and it cannot arm. */
 
   /* The write removed: nothing the minter hands out is remembered. Section 2's store booted empty, so its ledger stays
      empty and every purge arm REISSUES — the SILENT form of the defect, each purged id handed out again with nothing
      refusing it, which is exactly what REC-151's minter did. Section 3's ids were SEEDED at boot and stay refused: the
      seed is a second, independent writer, which is what this arm separates. */
-  "no-ledger-write": {
-    patches: [["store.mjs", WRITE, "      /* armed: the ledger write removed */"]],
-    mustFail: [...AFTER_PURGE, "F9 PROJ"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-ledger-write mutated the minter's ledger WRITE (`INSERT INTO minted_ids ... 'mint'`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `minted_ids`); its anchor no longer occurs and it cannot arm. */
 
   /* The ledger cleared by purge's whole-store arm — the obvious "derived table" reflex CLAUDE.md §7 would apply. The
      single-bundle arm does not reach it, so F9 stays green; the seeded ids are wiped by section 3's whole-store purge;
      and the source pin sees a statement that is neither a point read nor an insert. */
-  "ledger-purged": {
-    patches: [["store.mjs", "        this.sql.exec(`DELETE FROM bundles`);",
-               "        this.sql.exec(`DELETE FROM minted_ids`);\n        this.sql.exec(`DELETE FROM bundles`);"]],
-    mustFail: ["S4:", ...AFTER_PURGE, ...SEEDED, "U7 CASE"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm ledger-purged mutated the whole-store purge's `DELETE FROM bundles` in src/store.mjs, which moved to src/record-core/index.mjs (the whole-store purge; grep `DELETE FROM ${d.name}`); its anchor no longer occurs and it cannot arm. */
 
   /* THE LIAR (b): the write taken OUT of the calling act's transaction — deferred to a microtask, so it lands after the
      act has committed OR ROLLED BACK. Every purge arm stays green, because the id is still remembered; only the review
      copy's dry run can see it, whose rolled-back case id is now spent. */
-  "outside-the-transaction": {
-    patches: [["store.mjs", WRITE,
-               "      queueMicrotask(() => this.sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'mint')`, id, new Date().toISOString()));"]],
-    mustFail: ["F2:"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm outside-the-transaction mutated the minter's ledger WRITE (`INSERT INTO minted_ids ... 'mint'`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `minted_ids`); its anchor no longer occurs and it cannot arm. */
 
   /* The boot seed removed: every id that existed before the ledger did stays as reissuable as it was. */
-  "no-seed": {
-    patches: [["store.mjs", "    this.#seedMintLedger();", "    /* armed: no seed */"]],
-    mustFail: [...SEEDED, "U7 CASE"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-seed mutated the boot call `this.#seedMintLedger()` in src/store.mjs, which moved to src/record-core/index.mjs (grep `seedMintLedger(`; store.mjs now calls `recordOf(this.ctx).seedMintLedger`); its anchor no longer occurs and it cannot arm. */
 
   /* Each half of the seed alone: the COUNTER half is the only thing that refuses an id the counter issued and no object
      ever used; the LIVE half the only thing that refuses one a pre-ledger build minted. */
-  "no-counter-seed": {
-    patches: [["store.mjs", "    this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)\n                   WITH RECURSIVE",
-               "    if (false) this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)\n                   WITH RECURSIVE"]],
-    mustFail: ["U7 CASE"],
-  },
-  "no-live-seed": {
-    patches: [["store.mjs", "    for (const [prefix, table, column] of Store.#MINT_LEDGER_LIVE)",
-               "    for (const [prefix, table, column] of [])"]],
-    mustFail: SEEDED,
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-counter-seed mutated the seed's COUNTER half (`INSERT OR IGNORE INTO minted_ids ... WITH RECURSIVE`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `seedMintLedger(`, `WITH RECURSIVE`); its anchor no longer occurs and it cannot arm. */
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-live-seed mutated the seed's LIVE half (the loop over `Store.#MINT_LEDGER_LIVE`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `seedMintLedger(`, `for (const [prefix, table, column] of sources)`); its anchor no longer occurs and it cannot arm. */
 
   /* THE SUITE'S OWN OVER-STRICTNESS: the point lookup in a spelling the source pin did not anticipate (a column in
      place of the constant, spaces round the operator). Correct work — nothing may fail. */
-  "lookup-other-spelling": {
-    patches: [["store.mjs", "SELECT 1 FROM minted_ids WHERE id=?", "SELECT id FROM minted_ids WHERE id = ?"]],
-    mustFail: [],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm lookup-other-spelling mutated the minter's ledger point lookup (`SELECT 1 FROM minted_ids WHERE id=?`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `minted_ids`); its anchor no longer occurs and it cannot arm. */
 
   /* M0-147 — THE SUITE MUST NOT READ THE YEAR OFF ITS OWN CLOCK. `pin` runs the suite under `test/clockpin.preload.mjs`
      frozen 1 ms before the New Year that BEGAN the plane's current year (the plane's workerd keeps the true wall), so the

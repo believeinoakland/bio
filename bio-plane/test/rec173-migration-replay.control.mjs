@@ -57,11 +57,7 @@ const ARMS = {
      at REC-175's merge: REC-175's door (`Store#digestFiles`, FILE_DIGEST_MISMATCH) now refuses the stale figure BEFORE the
      replay check reads it, so disarming the replay's own hash alone showed NO EFFECT — the second cause, named. The arm
      disarms BOTH layers so it still proves the replay path never trusts the caller's figure on its own. */
-  "trust-caller-sha": { patches: [["index.mjs", COMPUTED_SHA, "  const mdSha = bm.sha256;\n"],
-                                  ["store.mjs", "    if (digested.disagree.length)\n", "    if (false)\n"]],
-                        /* D-512: and ARM N3c, which drives REC-175's door ALONE (no replay claimed), fails with the door
-                           this arm disarms — declared after its first run came back NOT AS DECLARED naming only N3c. */
-                        mustFail: ["ARM N3b ", "ARM N0:", "ARM N3c "] },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm trust-caller-sha mutated the promotion's recomputed-sha disagreement refusal (`if (digested.disagree.length)`, REC-175's FILE_DIGEST_MISMATCH door, which the arm had to disarm together with index.mjs's computed-sha guard) in src/store.mjs, which moved to src/promotion/index.mjs (grep `digested.disagree`); its anchor no longer occurs and it cannot arm. */
   /* (b) BROKEN: D-78 restamps the verified replay — its Drive-era `surfaced_by: human` is rewritten `agent`. */
   "restamp-replay": { patches: [["index.mjs", NO_RESTAMP, "        if (b.base === null && b.meta "]], mustFail: ["ARM R1b "] },
   /* (a) BROKEN: the replay is still stamped for rule 2 — every replay is refused SURFACE_NO_RUN. */

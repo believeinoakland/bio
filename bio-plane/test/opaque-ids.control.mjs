@@ -37,54 +37,35 @@ const ARMS = {
   /* THE ROW'S CONTROL: the counter RESTORED for one prefix — a new case's id taken from allocId's CASE sequence
      again. CASE's count arms fail by name, and so do the two structural pins that see the site. DRAFT, RVG, TASK
      and PROJ stay green: one prefix broken, one prefix red. */
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): the CASE mint's call site stayed in src/store.mjs and now reaches the one
+     minter through record-core's interface (`recordOf(this.ctx).mintOpaqueId`); the same mutation, on that spelling. */
   "counter-restored-case": {
-    patches: [["store.mjs", "      theCase = this.#mintOpaqueId(\"CASE\", new Date().toISOString().slice(0, 4), \"\", (id) =>",
-               "      theCase = ((y, _t, _f) => this.allocId(\"CASE\", y).id)(new Date().toISOString().slice(0, 4), \"\", (id) =>"]],
+    patches: [["store.mjs", "      theCase = recordOf(this.ctx).mintOpaqueId(\"CASE\", new Date().toISOString().slice(0, 4), \"\", (id) =>",
+               "      theCase = ((y, _t, _f) => recordOf(this.ctx).allocId(\"CASE\", y).id)(new Date().toISOString().slice(0, 4), \"\", (id) =>"]],
     mustFail: ["CASE NO COUNT: the three ids are NOT the counter's answer", "CASE NO COUNT: two mints in a row",
                "NO gated prefix is minted from the counter anywhere", "the CASE mint calls the one minter"],
   },
 
   /* THE LIAR (a): Math.random in place of the CSPRNG. Every BEHAVIOURAL arm stays green — which is the point —
      and only the source-by-name arms can see it. */
-  "math-random": {
-    patches: [["store.mjs", "      for (;;) { crypto.getRandomValues(u); if (u[0] < 60000)",
-               "      for (;;) { u[0] = Math.floor(Math.random() * 60000); if (u[0] < 60000)"]],
-    mustFail: ["it draws from the CSPRNG BY NAME", "and from nothing weaker or counted"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm math-random mutated the minter's CSPRNG draw (`crypto.getRandomValues(u)`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `getRandomValues`); its anchor no longer occurs and it cannot arm. */
 
   /* THE LIAR (b): a suffix DERIVED from the counter — the counter's value through a fixed permutation. Not +1,
      not 0001..0003, so every behavioural arm stays green; the minter now steps `#nextSeq`, and only the
      source pin names it. */
-  "counter-derived": {
-    patches: [["store.mjs", "      const id = `${prefix}-${year}-${draw()}${tail}`;",
-               "      const id = `${prefix}-${year}-${String((Number(this.#nextSeq(prefix, year).id.split(\"-\").pop()) * 7919) % 10000).padStart(4, \"0\")}${tail}`;"]],
-    mustFail: ["and from nothing weaker or counted"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm counter-derived mutated the minter's id composition (`${prefix}-${year}-${draw()}${tail}`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `getRandomValues`); its anchor no longer occurs and it cannot arm. */
 
   /* op=allocid's refusal removed: every gated counter readable again. The five refusal arms and the dash arm
      fail; the over-strictness arms stay green. */
-  "allocid-open": {
-    patches: [["store.mjs", "    if (gated) {\n      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;",
-               "    if (false) {\n      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;"]],
-    mustFail: ["op=allocid prefix=PROJ is REFUSED", "op=allocid prefix=CASE is REFUSED", "op=allocid prefix=DRAFT is REFUSED",
-               "op=allocid prefix=RVG is REFUSED", "op=allocid prefix=TASK is REFUSED", "a gated scope reached another way"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm allocid-open mutated op=allocid's gated-prefix refusal (`if (gated) { ... ALLOCID_PREFIX_GATED`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `ALLOCID_PREFIX_GATED`); its anchor no longer occurs and it cannot arm. */
 
   /* AN OVER-STRICT FENCE: a prefix gated if it merely BEGINS with a gated one's letters. The over-strictness arm
      must catch it. */
-  "allocid-overstrict": {
-    patches: [["store.mjs", "Store.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));",
-               "Store.GATED_ID_PREFIXES.find((g) => scope.startsWith(g));"]],
-    mustFail: ["OVER-STRICTNESS: a prefix that merely begins"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm allocid-overstrict mutated op=allocid's gated-prefix test (`Store.GATED_ID_PREFIXES.find(...)`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `GATED_ID_PREFIXES.find`); its anchor no longer occurs and it cannot arm. */
 
   /* THE SUITE'S OWN OVER-STRICTNESS: the same CSPRNG draw in a spelling the suite did not anticipate (a 32-bit
      draw, rejection-sampled against its own bound). Correct work — nothing may fail. */
-  "csprng-other-spelling": {
-    patches: [["store.mjs", "      const u = new Uint16Array(1);\n      for (;;) { crypto.getRandomValues(u); if (u[0] < 60000)",
-               "      const u = new Uint32Array(1);\n      for (;;) { crypto.getRandomValues(u); if (u[0] < 4294960000)"]],
-    mustFail: [],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm csprng-other-spelling mutated the minter's CSPRNG draw (`new Uint16Array(1)` ... `crypto.getRandomValues(u)`) in src/store.mjs, which moved to src/record-core/index.mjs (grep `mintOpaqueId(`, `getRandomValues`); its anchor no longer occurs and it cannot arm. */
 
   /* M0-147 — THE SUITE MUST NOT READ THE YEAR OFF ITS OWN CLOCK. `pin` runs the suite under `test/clockpin.preload.mjs`
      frozen 1 ms before the New Year that BEGAN the plane's current year (the plane's workerd keeps the true wall), so the

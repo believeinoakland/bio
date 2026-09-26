@@ -55,19 +55,12 @@ const ARMS = {
 
   /* THE BRIEF'S CONTROL 2: the owner check dropped (in the ONE helper, so both doors lose it;
      this suite drives only op=ratify's). A non-owner's signature publishes E's finding. */
-  "no-owner-check": {
-    patches: [["store.mjs", OWNER, "    if (!project)"]],
-    mustFail: ["NON-OWNER:"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-owner-check mutated the owner-signer check (`if (!project || !this.#isProjectOwner(project, signer))`) in src/store.mjs, which moved to src/membership/index.mjs (grep `caseAuthority(`); its anchor no longer occurs and it cannot arm. */
 
   /* THE BRIEF'S CONTROL 3: the delivery check dropped. The outside administrator publishes A's
      finding with iris's signature; wen and vic then meet an already-published sha (a retry),
      and ruth's retry answers `existed`. */
-  "no-delivery-check": {
-    patches: [["store.mjs", DELIVERY, "    /* armed: the delivery check removed */\n"]],
-    mustFail: ["OUTSIDE ADMINISTRATOR:", "INVITED, NOT JOINED:", "UNINVITED:", "DELIVERY: and nothing",
-               "RETRY: ruth re-sends"],
-  },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm no-delivery-check mutated the delivery check (`if (project && deliveredBy !== "founder") { ... #projectAuthority`) in src/store.mjs, which moved to src/membership/index.mjs (grep `caseAuthority(`); its anchor no longer occurs and it cannot arm. */
 
   /* THE BRIEF'S CONTROL 4: role before visibility. The ratifier's viewer is not sent to the
      gate facts, so a hidden project's bundle reaches the TYPE refusal (and a stale sha would
