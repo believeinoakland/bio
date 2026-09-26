@@ -141,7 +141,12 @@ console.log("\n--- 1. an action creation that fills in its own governing laws me
 for (const [label, env] of ENVELOPES) {
   const id = `ACTN-2026-0526-laws-${label.toLowerCase()}`;
   const r = await promote({ id, text: actionMd(id, { laws: true }), metaType: env === null ? "action" : env, token: RUTH });
-  t(`${label}: refused GOVERNING_LAWS_REWRITTEN`, reasonOf(r), "GOVERNING_LAWS_REWRITTEN");
+  /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39 as K62 wrote it): this fence is now a check legacy-store
+     REGISTERS with promotion, and promotion's own refusals run before every registered check, so MISLABELLED meets
+     D-510's ENVELOPE_TYPE_DISAGREES first, as section 6 always did. The defect this suite exists for, the
+     UNLABELLED pass, is unchanged: it meets the fence. */
+  t(`${label}: refused ${label === "MISLABELLED" ? "ENVELOPE_TYPE_DISAGREES" : "GOVERNING_LAWS_REWRITTEN"}`, reasonOf(r),
+    label === "MISLABELLED" ? "ENVELOPE_TYPE_DISAGREES" : "GOVERNING_LAWS_REWRITTEN");
   t(`${label}: …and nothing landed`, await landed(id), null);
 }
 {
@@ -160,7 +165,12 @@ for (const [label, env] of ENVELOPES) {
   const id = `INQ-2026-0526-surface-${label.toLowerCase()}`;
   const r = await promote({ id, text: inquiryMd(id), metaType: env === null ? "inquiry" : env, state: "open",
                             title: "Where did it go", token: "mem-d526" });
-  t(`${label}: refused SURFACE_NO_RUN`, reasonOf(r), "SURFACE_NO_RUN");
+  /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39 as K62 wrote it): this fence is now a check legacy-store
+     REGISTERS with promotion, and promotion's own refusals run before every registered check, so MISLABELLED meets
+     D-510's ENVELOPE_TYPE_DISAGREES first, as section 6 always did. The defect this suite exists for, the
+     UNLABELLED pass, is unchanged: it meets the fence. */
+  t(`${label}: refused ${label === "MISLABELLED" ? "ENVELOPE_TYPE_DISAGREES" : "SURFACE_NO_RUN"}`, reasonOf(r),
+    label === "MISLABELLED" ? "ENVELOPE_TYPE_DISAGREES" : "SURFACE_NO_RUN");
   t(`${label}: …and nothing landed`, await landed(id), null);
 }
 

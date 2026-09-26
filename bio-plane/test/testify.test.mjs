@@ -350,7 +350,11 @@ const gone = await post("promote", {
   bundleId: OBS, base: OBS_BASE, snapKey: snapKey(),
   meta: { object_type: "information", group: "believe-in-oakland",
           current_state: "collected", created: tx.recorded_at, last_updated: tx.recorded_at },
-  files: [fileOf("bundle.md", head0["bundle.md"]), fileOf(tx.file, head0[tx.file])] }, RUTH);
+  files: [fileOf("bundle.md", head0["bundle.md"]), fileOf(tx.file, head0[tx.file])],
+  /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R7, R39), never exempted: a revision that silently leaves out
+     a live file is refused FILES_DROPPED by promotion itself, ahead of every registered check, so the drop is now
+     DECLARED, as a caller who means it must, and it is the testimony fence (C-53.9) that refuses it. */
+  drop: ["data/provenance.json"] }, RUTH);
 t("…and one whose revision drops data/provenance.json altogether (C-53.9)",
   refusedAs(gone, "TESTIMONY_AUTHORED_DROPPED"), want("TESTIMONY_AUTHORED_DROPPED"));
 const hijack = await promoteDoc("INFO-2026-5301-hijack", { docs: [uploadDoc(OSHA)],
