@@ -97,11 +97,14 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   sources are `sheetCellRef`.
 - **R9** *(not yet met: D-415)* `xlsxEntry.structure`: each single-area workbook `definedName` in
   `xl/workbook.xml` emits one `anchor` link with `source:null` and
-  `target:{definedName, ref, fragment:"#<ref>"}`. **Not yet met (row D-415):** a defined
-  name is not additionally emitted as its own `sheet-range` unit (via `sheetRangeRef`/
-  `usedSheetRange`'s shape), a multi-area name is not distinguished from a single-area one,
-  and `xl/tables/*.xml` table parts are not read at all — so a table's own extent has no
-  `sheet-range` unit today.
+  `target:{definedName, ref, fragment:"#<ref>"}`. `xlsxEntry.text()` also carries, over the size
+  guard too, `rangeUnits: [{source:"defined-name"|"table", name, scope, hidden, unit}]`, one per
+  defined name or table part (reached through each sheet's own `.rels`) that is ONE rectangle on
+  ONE sheet of this workbook, `unit` being its `sheet-range` reference from the one builder; and
+  `rangeUnitsSkipped: [{source, name, ref, why, part?}]` for every other, `why` one of
+  `multi_area`, `broken_reference`, `not_a_range_reference`, `whole_row_or_column`,
+  `external_workbook`, `multi_sheet_reference`, `no_such_sheet`, `outside_grid`,
+  `empty_reference`, `table_part_unreadable:<why>`, `table_element_absent`.
 - **R10** The DEC-5 evidentiary envelope, `evidentiary:{container, kinds, items,
   undetermined, counts}`, is the SAME shape across every entry:
   - `docx`: `{kind:"tracked-change", change:"insertion"|"deletion", author, date, text
