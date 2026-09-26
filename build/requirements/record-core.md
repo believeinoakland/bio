@@ -64,13 +64,15 @@ and every other module that stores anything, write through and read from.
   each named by a fixed derivation from its path and the snapshot key that archived it; and one manifest
   document listing every promotion recorded for the bundle (its key, kind, base, author, created time,
   and the files it touched).
-- **R16** Manifest entries are given back in the order this module recorded them (write order), never
-  resorted by a caller-chosen key. *(not yet met: `readImage` sorts entries by `snap_key` text, which is
-  not write order — see report §3, D-674's amendment to State Rules I-20.)*
+- **R16** Write order is never lost: every manifest entry given back carries `seq`, its rank in the order
+  this module recorded the entries, and a caller that needs write order takes it from `seq`, never from
+  the snap key. The manifest document itself lists its entries by key, as the catalogue's C-12.1 requires
+  (the D-700 form; K65). *(not yet met on `main`: `readImage` gives no write order — D-674's amendment to
+  State Rules I-20.)*
 - **R17** Returns `null` when the bundle is not held.
 - Errors: never throws.
 
-**auditPass({after, limit, visible}) → page report**
+**auditPass({after, limit, visible, context?}) → page report**
 - **R18** Runs the check catalogue (`legacy-checks`) against a bounded page of bundles in id order from
   `after`, and reports, for the page: how many bundles were clean, how many carried an error, and every
   error tallied both by check and by check-and-code.
@@ -80,10 +82,12 @@ and every other module that stores anything, write through and read from.
   predicate admits (the sight rule is `membership`'s; this module never decides it).
 - **R20** Resumable: the cursor returned is the last bundle id seen on the page, independent of any
   snapshot of the store.
+- **R45** `context(bundleId)`, when the caller gives it, answers extra options for that bundle's checks (today the earned and published registries later modules build); they are passed to the catalogue with the bundle. This module builds none itself. (K61)
 - Errors: never throws.
 
 **declarePurge(module, tables, {exempt?}) → void**
 - **R21** A module that owns tables declares them here once, at start. `purge` clears every declared table except those declared `exempt`; this module's own tables (`bundles`, `files`, `history`, `manifest`, `leases`) are declared by it. A table declared twice, or by two modules, is refused with `TABLE_DECLARED`.
+- **R46** A declared table is a name, keyed to a bundle by its `bundle_id` column when it has one, or `{name, keys: [columns], whole: "<WHERE clause>"}`: keyed to a bundle by the named columns (any of them matching), and cleared by the whole-store form only where the clause holds. (K61)
 
 **purge({bundleId}) → report**
 - **R22** With no `bundleId`, clears every row of every declared, non-exempt table; with one, clears only the rows keyed to that bundle. A table no module has declared is never touched.
@@ -101,13 +105,14 @@ and every other module that stores anything, write through and read from.
   inside it is spent. Nested calls join the outer transaction.
 - Errors: rethrows what `fn` throws, after the rollback.
 
-**commit({bundleId, type, title, project, snapKey, kind, base, author, writer, operation, files}) → `{bundleSha, rowVersion}`**
+**commit({bundleId, type, title, project, snapKey, kind, base, author, writer, operation, files, state, priorState, group, created, lastUpdated, criticality, at}) → `{bundleSha, rowVersion}`**
 - **R33** The one write path into this module's tables, called inside `transact`: it copies every live
   file the commit replaces into `history` under `snapKey`, writes the new live files (inline text, or a
   blob reference), sets the bundle's row, and appends exactly one `manifest` entry recording the key,
   kind, base, author, time, writer, operation and each file's digest. It never modifies or removes an
   existing `history` row or `manifest` entry. What may be committed is decided by its caller
   (`promotion`), never here.
+- **R44** The bundle's row records `state`, `priorState`, `group`, `created`, `lastUpdated` and `criticality` as the caller gives them, and the manifest entry's time is `at`, the caller's stated time. (K61)
 - Errors: never throws for a well-formed call.
 
 **bundleInfo(bundleId) → `{id, type, title, project}` or null; listBundles({project, after, limit}) → `{ids, cursor}`**
@@ -121,6 +126,17 @@ and every other module that stores anything, write through and read from.
 - **R36** `listByType` lists held bundle ids of one `object_type` in id order after `after`, at most `limit`; `cursor` is the last id listed. Never throws.
 - **R37** The table `bundles` and its columns `bundle_id` and `object_type` are a stated read contract: a later module may join them in its own SQL (a projection bounded by SQL, as membership's directory is, D-497), and this module changes neither column's name, type or meaning without a requirement change carried to every such reader (P5). No other column is part of the contract.
 - **R38** `evidenceStore()` answers the instance's evidence store (R2 bucket) as `{head(key), get(key), put(key, bytes)}`, the object key of a digest being fixed by this module; `null` when the instance has none bound, so callers answer undetermined (provenance R8–R9). *(not yet met: K49 — callers reach the binding directly today)*
+
+**How the module is reached: recordOf(ctx, opts?) → the instance** (K61)
+- **R39** Answers the one instance of this module for a Durable Object's storage (`ctx.storage`, with its `sql` and `transactionSync`): every caller in the object gets the same instance, so all share one transaction depth, one purge declaration list and one evidence binding. `opts` (`{evidence, evidencePrefix}`) is read on the first call only. The services above are its methods, by their names.
+
+**seedMintLedger(sources) → void** (K61)
+- **R40** Before the first mint, seeds the opaque-id ledger with the ids live in the tables and columns its caller names (`[[prefix, table, column], …]`), each named by that table's owner as `declarePurge`'s tables are. It reads nothing else of another module's tables: with `purge`, the one reading of other modules' tables R31 allows, and only as they are declared.
+
+**head(bundleId), manifestEntry(bundleId, snapKey), livePaths(bundleId)** (K61)
+- **R41** `head` answers a held bundle's `{bundleSha, rowVersion, type, title, currentState, priorState, groupId}`, or `null`.
+- **R42** `manifestEntry` answers the manifest entry recorded under `snapKey` as `{kind, base, author, created, files, writer, operation}`, or `null`.
+- **R43** `livePaths` answers the paths of a held bundle's live files in path order, or `null` when the bundle is not held. None of the three throws.
 
 ## Private
 
