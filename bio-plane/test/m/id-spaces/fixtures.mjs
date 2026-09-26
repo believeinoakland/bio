@@ -3,9 +3,8 @@
  * test-harbor, has the shapes the first real profile measured (numbered enactments with kind floors,
  * concurrent project forms, a padded parcel key, a republished assessor layer); the others are different
  * jurisdictions, so every service is shown answering from the view alone (R24).
- *
- * `combine` is a STAND-IN for `jurisdictions.combine` (R12–R16 there), used until the jurisdictions module
- * merges into tranche/T2; it gives the view's shape and withholds a disagreeing floor with a conflict. */
+ * Views are made by `jurisdictions.combine` itself (its R12–R16), which validates each profile first. */
+import { combine } from "../../../../jurisdictions/index.mjs";
 
 const T = "TEST";
 const P = (re, flags) => (flags ? { re, flags } : { re });
@@ -87,51 +86,19 @@ export const LAKESHORE = {
 /* A profile that disagrees with HARBOR on the ordinance floor, and one that names a kind with no floor. */
 export const DISSENT = {
   id: "test-dissent", name: "Dissent (test)", covers: ["Harbor County"], test: true,
-  spaces: { enactment: { label: "ordinance or resolution number (H.C.)", kinds: [
+  spaces: { enactment: { label: "ordinance or resolution number (H.C.)", forms: [], kinds: [
     { kind: "ordinance", prefix: kindPrefix("ordinance"), floor: { first: 12000, system: "harbor.legis", basis: T }, basis: T }] } },
+  systems: [HARBOR.systems[1]],
 };
 export const UNMEASURED = {
   id: "test-unmeasured", name: "Unmeasured (test)", covers: ["Harbor Port District"], test: true,
-  spaces: { enactment: { kinds: [{ kind: "proclamation", prefix: kindPrefix("proclamation"), basis: T }] } },
+  spaces: { enactment: { label: "proclamation number", forms: [], kinds: [{ kind: "proclamation", prefix: kindPrefix("proclamation"), basis: T }] } },
 };
 
-/* ---- the stand-in combine ---- */
-const tag = (o, profile) => ({ ...o, profile });
-export function combine(list) {
-  const seen = new Set(), profiles = [], conflicts = [];
-  const view = { spaces: {}, systems: [], mixed_hosts: [], crosswalks: [] };
-  const floors = new Map();
-  for (const p of list) {
-    if (seen.has(p.id)) continue;
-    seen.add(p.id); profiles.push(p);
-    for (const [space, s] of Object.entries(p.spaces || {})) {
-      const into = view.spaces[space] || (view.spaces[space] = { labels: [], forms: [], kinds: [] });
-      if (s.label && !into.labels.includes(s.label)) into.labels.push(s.label);
-      for (const f of s.forms || []) if (!into.forms.some((x) => x.form === f.form)) into.forms.push(tag(f, p.id));
-      for (const k of s.kinds || []) {
-        if (k.floor) {
-          const fl = floors.get(k.kind) || [];
-          fl.push({ profile: p.id, value: k.floor, basis: k.floor.basis });
-          floors.set(k.kind, fl);
-        }
-        if (!into.kinds.some((x) => x.kind === k.kind)) into.kinds.push(tag(k, p.id));
-      }
-    }
-    for (const key of ["systems", "mixed_hosts", "crosswalks"]) for (const x of p[key] || []) view[key].push(tag(x, p.id));
-  }
-  for (const [kind, fl] of floors) {
-    const k = view.spaces.enactment.kinds.find((x) => x.kind === kind);
-    if (new Set(fl.map((f) => f.value.first)).size > 1) {
-      delete k.floor;
-      conflicts.push({ at: `spaces.enactment.kinds.${kind}.floor`, values: fl, says: `the profiles disagree on the ${kind} floor` });
-    } else k.floor = fl[0].value;
-  }
-  for (const s of Object.values(view.spaces)) { s.label = s.labels.join("; "); delete s.labels; }
-  view.profiles = profiles.map((p) => p.id);
-  view.covers = [...new Set(profiles.flatMap((p) => p.covers))];
-  view.test = profiles.some((p) => p.test);
-  return { ok: true, view, conflicts };
-}
-
 /* The view as a service takes it: the combined view with its conflicts. */
-export const viewOf = (...profiles) => { const c = combine(profiles); return { ...c.view, conflicts: c.conflicts }; };
+export { combine };
+export function viewOf(...profiles) {
+  const c = combine(profiles);
+  if (!c.ok) throw new Error(`a test profile fails jurisdictions.combine: ${JSON.stringify(c.errors)}`);
+  return { ...c.view, conflicts: c.conflicts };
+}

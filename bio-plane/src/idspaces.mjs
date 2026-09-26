@@ -18,7 +18,13 @@
  *      parcel is RETIRED only where the assessor's own lineage records it; otherwise UNDETERMINED.
  *
  * WHAT IT CANNOT DO, stated: it cannot READ a referent. Agreement is either a determinate check (the fund
- * NAME, compared normalised) or a reading the caller supplies, returned labelled as theirs. */
+ * NAME, compared normalised) or a reading the caller supplies, returned labelled as theirs.
+ *
+ * THE LEGACY ADAPTER (R26, ruling K35; temporary, retired with entry N6 when `op=idmatch` leaves
+ * legacy-store): the old names, answering through the view-first services over the view `combine` makes of
+ * every non-test profile `jurisdictions` holds, with the old space names mapped in and out. At the foot. */
+
+import { list as heldProfiles, combine as combineProfiles } from "../../jurisdictions/index.mjs";
 
 /* The four spaces, their generic labels (used only when the view gives none) and what their referent is. */
 const SPACES = Object.freeze({
@@ -135,6 +141,7 @@ function kindPrefix(view, value) {
 
 /** One value recognised in one space, or null (R3). Never throws. */
 export function recognise(v, space, value) {
+  if (typeof v === "string" && arguments.length === 2) return legacyRecognise(v, space);
   const { view } = viewOf(v);
   if (!SPACE_NAMES.includes(space)) return null;
   if (typeof value !== "string" && typeof value !== "number") return null;
@@ -197,7 +204,7 @@ function floorOf(view, conflicts, kind) {
 }
 
 const outsideSays = (view, kind, f) => `a ${kind} below ${systemName(view, f.system)}'s first (${f.floor}): OUTSIDE THE `
-  + `RECORD'S REACH — the record's source holds no ${kind} that old, which says nothing of whether this one exists`;
+  + `RECORD'S REACH, never "not found" — the record's source holds no ${kind} that old`;
 
 /** Whether an enactment number is inside the record's reach (R6–R9). Never throws. */
 export function reach(v, number, kind = null) {
@@ -220,8 +227,8 @@ export function reach(v, number, kind = null) {
   const known = each.filter((e) => e.floor != null);
   const named = known.map((e) => `${e.kind} ${e.floor}`).join(", ");
   if (known.length && known.every((e) => n < e.floor) && known.length === each.length)
-    return { reach: "OUTSIDE_REACH", says: `below every kind's coverage floor (${named}): OUTSIDE THE RECORD'S REACH — the `
-      + `record's source holds nothing that old, which says nothing of whether this one exists` };
+    return { reach: "OUTSIDE_REACH", says: `below every kind's coverage floor (${named}): OUTSIDE THE RECORD'S REACH, `
+      + `never "not found" — the record's source holds nothing that old` };
   if (known.length === each.length && known.every((e) => n >= e.floor))
     return { reach: "INSIDE", says: `at or above every kind's coverage floor (${named}): the record can look it up` };
   const unknown = each.filter((e) => e.floor == null).map((e) => e.why);
@@ -344,6 +351,7 @@ function throughCrosswalk(view, space, ra, rb) {
 /** §8.3's counting rule over one pair (R16–R22). Throws TypeError only when an end is unrecognised or not in
  *  `space`; the caller must recognise both values first. */
 export function judgePair(v, space, a, b, reading = null) {
+  if (typeof v === "string" && typeof space !== "string") return legacyJudgePair(v, space, a, b);
   const ra = isObj(a) ? a.rec : null, rb = isObj(b) ? b.rec : null;
   if (!isObj(ra) || !isObj(rb)) throw new TypeError("judgePair: a.rec and b.rec must both be recognised values (recognise() first)");
   if (!SPACE_NAMES.includes(space) || ra.space !== space || rb.space !== space)
@@ -358,8 +366,8 @@ export function judgePair(v, space, a, b, reading = null) {
     const cw = throughCrosswalk(view, space, ra, rb);
     if (!cw)
       return verdict("FORMS_UNJOINED", `the values are in different forms of the ${label} (${ra.form}, ${rb.form}); two forms `
-        + "join only through a crosswalk, and the active profiles supply none between these, so the two stay unjoined: "
-        + "an unmade join, not a mismatch");
+        + "join only through a captured crosswalk, and none is captured between them in the active profiles, so the two "
+        + "stay unjoined: an unmade join, not a mismatch");
     if (!cw.partners.length)
       return verdict("FORMS_UNJOINED", `the values are in different forms of the ${label} (${ra.form}, ${rb.form}), and the `
         + `crosswalk between them (${cw.sources.join(", ")}) lists no partner for ${ra.normal}: an unmade join, not a mismatch`);
@@ -409,5 +417,47 @@ export function judgePair(v, space, a, b, reading = null) {
       { referent: { by: "the caller's reading", agrees: false } });
   return verdict("SHARED", `one value${via}, two independent systems (${sa.origin}, ${sb.origin}), and the referent agrees on `
     + "the caller's reading — a reading this module did not make and cannot check",
-    { referent: { by: "the caller's reading, which this module did not make and cannot check", agrees: true } });
+    { referent: { by: "the caller's reading", agrees: true } });
+}
+
+/* ---------------------------------------------------------------- the legacy adapter (R26, K35; temporary) */
+
+/* The old space names, mapped in (old → new) and out (new → old). */
+const OLD_TO_NEW = Object.freeze({ cms: "enactment", project: "project", fund: "fund", apn: "parcel" });
+const NEW_TO_OLD = Object.freeze(Object.fromEntries(Object.entries(OLD_TO_NEW).map(([o, n]) => [n, o])));
+
+/* The view of every non-test profile `jurisdictions` holds, combined in `list()`'s order. A combine that fails
+   gives an empty view, over which every service answers undetermined (jurisdictions R16). */
+const LEGACY_VIEW = (() => {
+  let ids = [];
+  try { ids = heldProfiles().filter((p) => p && p.test !== true).map((p) => p.id); } catch { ids = []; }
+  const c = combineProfiles(ids);
+  return c && c.ok ? { ...c.view, conflicts: Array.isArray(c.conflicts) ? c.conflicts : [] } : { conflicts: [] };
+})();
+
+const outRec = (r) => (r ? { ...r, space: NEW_TO_OLD[r.space] } : r);
+const inEnd = (e) => (isObj(e) && isObj(e.rec) && has(OLD_TO_NEW, e.rec.space) ? { ...e, rec: { ...e.rec, space: OLD_TO_NEW[e.rec.space] } } : e);
+
+/** The old `ID_SPACES`: the spaces of the legacy view under their old names, `{label, forms, referent}` each. */
+export const ID_SPACES = Object.freeze(Object.fromEntries(spaces(LEGACY_VIEW).map((s) =>
+  [NEW_TO_OLD[s.space], Object.freeze({ label: s.label, forms: Object.freeze(s.forms), referent: s.referent })])));
+
+/** The old `CMS_FLOOR`, which the old battery's `rec203-idspaces.test.mjs` imports: each enactment kind's coverage
+ *  floor in the legacy view, `{kind: first}`, for the kinds whose floor the view holds. */
+export const CMS_FLOOR = Object.freeze(Object.fromEntries(kindsOf(LEGACY_VIEW)
+  .filter((k) => typeof k.kind === "string" && isObj(k.floor) && Number.isFinite(k.floor.first)).map((k) => [k.kind, k.floor.first])));
+
+/** The old `apnStanding(key, evidence)`: `parcelStanding`. */
+export const apnStanding = (key, evidence) => parcelStanding(key, evidence);
+
+/** The old `systemOfAddresses(addresses)`: `systemOf` over the legacy view. */
+export const systemOfAddresses = (addresses) => systemOf(LEGACY_VIEW, addresses);
+
+/* `recognise` and `judgePair` keep one name for both call shapes: the old one is told by a first argument that
+   is a string (an old space name), where the view-first call gives the view. */
+function legacyRecognise(space, raw) {
+  return has(OLD_TO_NEW, space) ? outRec(recognise(LEGACY_VIEW, OLD_TO_NEW[space], raw)) : null;
+}
+function legacyJudgePair(space, a, b, reading = null) {
+  return judgePair(LEGACY_VIEW, has(OLD_TO_NEW, space) ? OLD_TO_NEW[space] : space, inEnd(a), inEnd(b), reading);
 }

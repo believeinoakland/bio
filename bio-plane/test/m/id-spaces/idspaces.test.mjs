@@ -39,7 +39,7 @@ test("R1 spaces lists the four spaces, each with the forms the view supplies and
       assert.equal(x.referent, x.space === "fund" ? "name" : "reading");
       assert.equal(typeof x.label, "string");
       assert.ok(x.label.length > 0);
-      const want = (view.spaces[x.space] && view.spaces[x.space].forms) || [];
+      const want = (view.spaces && view.spaces[x.space] && view.spaces[x.space].forms) || [];
       assert.deepEqual(x.forms.map((f) => f.form), want.map((f) => f.form));
     }
   }
@@ -164,7 +164,9 @@ test("R8 OUTSIDE_REACH is never reported as not found: says states the source ho
     assert.equal(r.reach, "OUTSIDE_REACH");
     assert.match(r.says, /OUTSIDE THE RECORD'S REACH/);
     assert.match(r.says, /holds (no \w+|nothing) that old/);
-    assert.doesNotMatch(r.says, /not found|does not exist|no such/i);
+    assert.equal((r.says.match(/not found/gi) || []).length, (r.says.match(/never "not found"/gi) || []).length,
+      "\"not found\" appears only as what it is never");
+    assert.doesNotMatch(r.says, /does not exist|no such/i);
   }
   assert.match(reach(H, 59916, "resolution").says, /the Harbor legislative record/, "the source is named from the view");
 });
@@ -255,9 +257,10 @@ test("R13 an address names the first matching system by host and, where given, p
   assert.equal(systemOf(H, ["HTTPS://API.LEGISVENDOR.TEST/v1/HARBOR/x"]).origin, "harbor.legis", "host case is ignored");
   assert.equal(systemOf(H, [A.otherclient]).origin, null, "a path that does not match names no system");
   /* first match wins: two entries for one host, told apart by path, in view order */
-  const first = viewOf({ ...HARBOR, systems: [{ origin: "one", name: "one", hosts: ["h.test"], basis: "TEST" },
-                                             { origin: "two", name: "two", hosts: ["h.test"], basis: "TEST" }] });
-  assert.equal(systemOf(first, ["https://h.test/x"]).origin, "one");
+  const first = viewOf({ ...HARBOR, systems: [{ origin: "one", name: "one", hosts: ["h.test"], path: { re: "^/a" }, basis: "TEST" },
+                                             { origin: "two", name: "two", hosts: ["h.test"], path: { re: "^/" }, basis: "TEST" }, HARBOR.systems[1]] });
+  assert.equal(systemOf(first, ["https://h.test/a/x"]).origin, "one", "both match; the first in the view names it");
+  assert.equal(systemOf(first, ["https://h.test/b"]).origin, "two");
   assert.equal(systemOf(L, ["https://clerk.lakeshore.test/b/1"]).origin, "lake.clerk");
   assert.equal(systemOf(L, [A.legis]).origin, null, "another jurisdiction's view does not know these systems");
 });
@@ -322,7 +325,7 @@ test("R17 different forms are FORMS_UNJOINED unless the view supplies a crosswal
     const r = judgePair(H, "project", end(H, "project", a, A.budget), end(H, "project", b, A.legis), "agrees");
     assert.deepEqual([r.verdict, r.counts], ["FORMS_UNJOINED", false], `${a} ${b}`);
     assert.match(r.says, /unmade join, not a mismatch/);
-    assert.match(r.says, /supply none/);
+    assert.match(r.says, /none is captured/);
   }
   const la = (v, addr) => end(L, "project", v, addr);
   const C = "https://clerk.lakeshore.test/1", F = "https://finance.lakeshore.test/1";
@@ -391,8 +394,7 @@ test("R21 otherwise the referent: unread, disagrees, or SHARED on the caller's r
   assert.deepEqual([dis.verdict, dis.counts, dis.referent.agrees], ["REFERENT_DISAGREES", false, false]);
   const ok = judgePair(H, "project", ...e(), "agrees");
   assert.deepEqual([ok.verdict, ok.counts, ok.referent.agrees], ["SHARED", true, true]);
-  assert.match(ok.referent.by, /the caller's reading/);
-  assert.match(ok.referent.by, /did not make and cannot check/);
+  assert.equal(ok.referent.by, "the caller's reading");
   assert.match(ok.says, /caller's reading — a reading this module did not make and cannot check/);
   const fund = judgePair(H, "fund", end(H, "fund", "3100", A.legis, "Sewer Fund"), end(H, "fund", "3100", A.budget, "Rate Fund"), "agrees");
   assert.deepEqual([fund.verdict, fund.referent.by.startsWith("the caller's reading")], ["SHARED", true]);
@@ -507,6 +509,6 @@ test("R25 every no says which kind of no, and absence is never reported as non-e
   for (const r of [...nos, ...reaches, ...standings, ...systems]) {
     const text = r.says || r.why;
     assert.ok(typeof text === "string" && text.length > 20, JSON.stringify(r));
-    assert.doesNotMatch(text, /\bnot found\b|\bno such\b|does not exist|never existed/i, text);
+    assert.doesNotMatch(text.replace(/never "not found"/g, ""), /\bnot found\b|\bno such\b|does not exist|never existed/i, text);
   }
 });
