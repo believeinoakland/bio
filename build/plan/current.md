@@ -87,3 +87,4 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 - office-readers · `job/T2/office-readers` @ 9c5b4866 · 25/25 ids, 57 pass; nine flaws fixed; DIST-14 deferred (needs a deployed plane); N26, N27; plane bundle stale · 2026-09-26 17:13
 - text-chain · `job/T2/text-chain` @ 51a38ec0 · 86/86 ids, 86 pass; K50; N28; plane bundle stale · 2026-09-26 17:13
 - odf-reader · `job/T2/odf-reader` @ 8e5e530e · 43/43 ids, 45 pass; D-612, D-346 met; K52; N29 (formats-odf legacy test red by design) · 2026-09-26 17:15
+- id-spaces · `job/T2/id-spaces` @ 27b7c4ba · 26/26 ids, 32 pass (against the merged profile); rec203-idspaces 45/0 and bounds 206/0 load the plane · 2026-09-26 17:19
