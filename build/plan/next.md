@@ -38,6 +38,8 @@
 - N10 · 2026-09-25 · **record-core**, **installer**, **instance-setup**: the instance holds the list of its active jurisdiction profiles as a setting, and the installer offers the choice. Rule 2 of "No jurisdiction in the product".
 - California's records law as a kind name (`cpra_request`) and in outward text is carried as old-plan row REC-201 against `actions`; the profile's `records_laws` section is where the law's name comes from.
 
+- N35 · 2026-09-26 · **capture-requests** (K58): BOB drafts its requirements from the code (store.mjs ~44550–45440 and the `capturerequest*` ops) and brings them to Bob before its layer's tranche; `capture`'s job keeps only the trusted in-process arm.
+
 ## Tranche T3, prepared (P18): ready to open when T2 closes
 
 Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). Bob approved the three modules' requirements on 2026-09-26 (K56). **T3 opens only after the extraction fix is certified** (handoff §6 step 1, P3).

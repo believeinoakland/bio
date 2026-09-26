@@ -103,7 +103,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **R31** `sha256` must be 64 hex (`BAD_SHA`). When no object is held under it: an acquisition receipt naming it lets the attestation proceed, answering `held: {form: "parts", on: "acquisition_receipt"}`; a register row alone is refused `CAPTURE_HELD_IN_PARTS` (C-89.1), which does not call the bytes missing; neither is `NO_SUCH_CAPTURE`, saying what was asked, and whether the store could be asked.
 - **R32** Asks the timestamp authorities in `signatures.TSA_ENDPOINTS` order, each with a fresh RFC 3161 request over the digest, and stops at the first response `parseTimestampResponse` accepts as bound to it. The token is stored in the evidence store under its own SHA-256 and named `snapshots/timestamp-<first 12 hex>.tsr`, `kind: "rfc3161"`, `over` the capture. Every attempt, failed or not, is in `attempts` with its service, instant and outcome. No token answers `ok: false`, `reason: "NO_ATTESTATION"`. The token's signature is not verified here, and the answer says so.
 - **R33** With `archive: true` and a public https `locator`, also asks the co-archive (`signatures.ARCHIVE_SAVE_BASE`) and records the archived locator from `archiveLocatorFrom`, or the failed attempt. Without it, no archive is asked.
-- **R34** When this instance files an archive-sourced capture, it signs its own receipt: that on this date it fetched these bytes from this retrieval locator and they hashed to this value. *(not yet met: ARCHIVE-FALLBACK §Shape on the capture; waits on Bob's ruling, Open for Bob 3)*
+- **R34** When this instance files an archive-sourced capture, it signs its own receipt: that on this date it fetched these bytes from this retrieval locator and they hashed to this value. The signing key is the instance's own, one per instance, held as a secret and replaceable by the operator; a receipt signed before a replacement stays verifiable against the public key it was signed with (Bob, K59). *(not yet met: ARCHIVE-FALLBACK §Shape on the capture; the plane holds no key today)*
 - Errors: never throws for a well-formed call; an authority or archive failure is an attempt, never a throw.
 
 ## Private
@@ -159,4 +159,5 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 ## Open for Bob
 
-- **R34: a signed own receipt needs an instance signing key.** ARCHIVE-FALLBACK says the instance signs its own receipt for an archive-sourced capture, but the plane holds no private key (`signatures` holds none; release keys are used offline). *Recommended:* an instance key, held as a secret and rotated by the operator. R34 stays not yet met until Bob rules.
+None (R34's key ruled by Bob, K59).
+
