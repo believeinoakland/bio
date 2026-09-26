@@ -95,6 +95,9 @@ of a document with its own provenance, each `chain` already built by `appendStep
   not an array or has none, which reads as an UNREADABLE extent to every reader below, never as "all
   the document". Every VERIFICATION step is copied through unscoped (an attestation carries its own
   extent).
+  When two parts of one chain share a page, `mergedChain` also stamps each of their derivation
+  steps' extents `part: <the part's index>`, and `derivationCap` (R28) keys parts the same way;
+  chains whose parts partition their pages are unchanged byte for byte.
 - Errors: never throws.
 
 **`calibrationsOf(chain) → string[]`**
@@ -303,10 +306,11 @@ page. `base`/`t2` are `{document, pages:[{page, text, undetermined:[{count}]}], 
   2's page has strictly FEWER undetermined characters (summed `.undetermined[].count`) than tier 1's
   AND strictly MORE glyphs (`glyphCount` of `.text`, R73) than tier 1's. Otherwise tier 1's page is
   kept, spread unchanged plus `tier:1`.
-- **R77** *(not yet met: D-633)* When tier 2 wins a page (R76), every field on the base page whose name
-  starts with `image_content_` is copied onto the merged page unchanged — they are facts about the
-  page's images, not about which decode won. Today the tier-2-won page carries only `page`, `text`,
-  `undetermined` and `tier`; any `image_content_*` field the base page carried is dropped.
+- **R77** *(not yet met: D-633)* When tier 2 wins a page (R76), every entry of the base page's
+  `undetermined` list whose `reason` starts with `image_content_`, and every base-page field whose
+  name starts with `image_content_`, is carried onto the merged page unchanged, never re-graded,
+  after tier 2's own markers (not duplicated when tier 2 already states one): they are facts about
+  the page's images, not about which decode won.
 - **R78** On the page-wise path (R76), the result also carries `{ok:true, wholesale:false, text:{
   ...base, document:<pages' texts joined by "\n">, pages, undetermined:<concatenated>, counts:{chars:
   document.length, undetermined: undetermined.length}}, replaced:<tier-2-won pages>, kept:<tier-1-kept
@@ -328,10 +332,12 @@ covered by derivation steps of two different kinds (D-635's shape: a text layer'
 transcription appended over the same page). BOB #35's 09:35Z rule (in D-723) is that such a page reads
 `mixed`, and BOB #36 superseded D-686's page rule for this one case (11:05Z, 2026-09-25). This module
 must add a service that:
-- **R81** *(not yet met: D-723)* Given a chain and a page, answers `mixed` when that page is covered by derivation steps of
-  more than one kind (the same extent test R22/R27 use — a step's extent, or unscoped meaning the
-  whole document), and answers the one kind covering it otherwise — undetermined (`null`) when no
-  derivation step covers the page or the covering extent is unreadable (R30's rule). `terminalStep`
+- **R81** *(not yet met: D-723)* `chainKindFor(chain, target) → kind | "mixed" | null`, `target`
+  `{page}` or a page number; `CHAIN_KIND_MIXED` is `"mixed"`. Each part covering the page (the
+  extent test of R22/R27; a step's extent, or unscoped meaning the whole document) answers the
+  kind of its LAST derivation step; an unscoped step met first from the end answers alone. The
+  page reads that kind when all covering parts agree and `mixed` when they do not; `null` when no
+  derivation step covers the page or a covering extent is unreadable (R30's rule). `terminalStep`
   itself is unchanged: it stays document-level and never answers `mixed`.
 
 ### Errors summary

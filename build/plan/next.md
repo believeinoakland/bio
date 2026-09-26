@@ -13,11 +13,33 @@
 - N18 · 2026-09-26 · **membership**: build the canon rules the review found unbuilt (requirements R10 resignation §4.5, R11 hosting-access record §4.8, R18 roster projects §7.8, R19 pairing publication §3) and fix the defects it found (R29 a member credential's principal is its minter; R39 an owner added only when joined; R42 carried owner votes kept and read, §7.10, §7.13).
 - N19 · 2026-09-26 · **legacy-index**: `needsTier3` and `tier3Pages` route a page marked `image_content_unread` (pdf-reader R26) to OCR as they route `no_text_layer`, and `needsTier2` counts it as a scan marker. Built work: `index.mjs` at `land/worker/D-627` @ 056d3092 (14 lines). Reported by PDF-READER #1.
 - N20 · 2026-09-26 · **legacy-tests**: `bio-plane/test/textshown.test.mjs` reads `PdfDoc._pageOrder`, now private (pdf-reader K28); use `pageCount`/`pageDict`. Reported by PDF-READER #1.
+- N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1.
+- N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
+- N23 · 2026-09-26 · **legacy-tests**: `nc-rec203.mjs`'s negative-control anchors no longer match the rewritten `idspaces.mjs` (N2), so its arms do not arm; re-anchor or retire it with the old interface (N6). Reported by ID-SPACES #1.
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
 
 - N4 · 2026-09-25 · `store.mjs` `readingNamePlan` defaults its search terms to "oakland": take them from the active profiles. The owning module is confirmed at extraction.
 - N5 · 2026-09-25 · **installer**: the outward text names CivicOS and the installing group. Believe in Oakland appears only as the release's publisher and signer. The example group name is not a place.
-- N6 · 2026-09-25 · **entities**: `op=idmatch` takes the renamed spaces (N2), passes the combined profile view, and passes each end's addresses from the record. **affordances**: `idmatch`'s outward text names no local system (it says "C.M.S.", "APN" and "Legistar's floor" today).
+- N6 · 2026-09-25 · **entities**: `op=idmatch` takes the renamed spaces (N2) and the view-first services, and `id-spaces` retires its legacy adapter (R26, K35) in the same tranche; `bio-plane/test/rec203-idspaces.test.mjs` moves to the new names, passes the combined profile view, and passes each end's addresses from the record. **affordances**: `idmatch`'s outward text names no local system (it says "C.M.S.", "APN" and "Legistar's floor" today).
 - N10 · 2026-09-25 · **record-core**, **installer**, **instance-setup**: the instance holds the list of its active jurisdiction profiles as a setting, and the installer offers the choice. Rule 2 of "No jurisdiction in the product".
 - California's records law as a kind name (`cpra_request`) and in outward text is carried as old-plan row REC-201 against `actions`; the profile's `records_laws` section is where the law's name comes from.
+
+## Tranche T3, prepared (P18): ready to open when T2 closes
+
+Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). **T3 opens only when Bob has approved the three modules' requirements** (product modules, P17; asked on the layer-2 page, 2026-09-26).
+
+**record-core** (map: `build/extraction/record-core.md`)
+- T3-1 · Extract the module from `legacy-store` per its map and requirements (K23, K31); requirement-named tests for every live id.
+- D-674 · R16, not yet met (see the requirement).
+- N10 · The instance's active jurisdiction profiles as a setting (R26); the installer's and instance-setup's shares stay with those modules.
+
+**membership** (map: `build/extraction/membership.md`, in preparation)
+- T3-2 · Extract the module from `legacy-store` per its map and requirements; requirement-named tests for every live id.
+- N18 · (above) the canon rules found unbuilt and the defects found.
+- REC-224, REC-226 · the carried rows its requirements mark not yet met.
+
+**promotion** (map: `build/extraction/promotion.md`)
+- T3-3 · Extract `promote` and `reopen` from `legacy-store` per its map and requirements (K31: later modules register checks, projections and facts); requirement-named tests for every live id.
+- N8, N16 (promotion's share), N17 · (above).
+- R11–R15, R17, R18 · the carried rows its requirements mark not yet met.
