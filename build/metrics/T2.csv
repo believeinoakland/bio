@@ -1,0 +1,14 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_014szwz88Jt9EWztKH5wfE1v,job,jurisdictions,12665849,234517,136,100809,65,7,1017
+session_01ASkdafQGFCeqoncTyWGLPC,job,test-support,2465364,77232,50,27511,22,3,237
+session_015mpX96po6BkGDjNJ5AVwMB,job,bundler,9819552,144055,136,46722,62,12,797
+session_019P3M1pLBD1XzdjzkJULhF6,job,runtime-limits,2674745,77576,54,27761,24,16,277
+session_01GJC6ytwQrBRdr2Y8KdcybF,job,signatures,8215225,155039,114,57927,50,5,1023
+session_01JxBcyrvDmhXth7LevtRM2H,job,id-spaces,11435312,176122,648,74587,64,14,463
+session_01Evj8HyEdBGojZqKJhpkumU,job,office-readers,16989782,274381,149,99206,58,8,3320
+session_0191Ek5BuDhcVCoPJoHo62Ge,job,odf-reader,18681629,246002,6058,92429,73,14,2003
+session_019LnvZG7rvC4fK35bUVv3MW,job,format-registry,3761020,116301,62,32090,27,6,305
+session_011N1d8x7gArcfWDvLkY3fC5,job,text-chain,11719113,205473,130,62905,51,12,1649
+session_01QLCYkFnXjtMweB8KWin4FT,job,docprofile,28227056,332401,716,129070,95,7,4060
+session_01LumujCtUSN1WBLyoke2Hz2,job,ocr-worker,9665678,213008,106,69426,41,5,779
+session_01SSonB7dLsY8mZoHgBAoHT6,job,pdf-worker,81231237,628908,382,305096,184,24,4075
