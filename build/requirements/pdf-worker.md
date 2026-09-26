@@ -103,10 +103,11 @@ member has no member-facing route for it).
   `pixels_sha256` on the 8-bit route. Any other colour-space/bit-depth combination (CMYK, 16-bit, …)
   answers `UNSUPPORTED_SAMPLES`; data short of the declared height answers `TRUNCATED_IMAGE_DATA`; a
   missing width/height or unreadable stream answers `IMAGE_UNREADABLE`.
-- **R25** *(not yet met: D-622)* A `JBIG2Decode` image (generic region, MMR and arithmetic coding, with
-  `JBIG2Globals`) and a `JPXDecode` image are decoded to a PNG like R23 and R24, carrying `pixels_sha256`,
+- **R25** *(not yet met: D-622)* A `JBIG2Decode` image (at least generic and generic-refinement regions,
+  symbol-dictionary and text regions, MMR/Huffman and arithmetic coding, with `JBIG2Globals`; pattern
+  and halftone regions where the job can build them small) and a `JPXDecode` image are decoded to a PNG like R23 and R24, carrying `pixels_sha256`,
   pixel-exact against an independent reference decoder. What cannot be decoded answers `UNSUPPORTED_FILTER`,
-  naming the feature. Today both filters answer `UNSUPPORTED_FILTER`.
+  naming the feature (for JBIG2, the segment type). Today both filters answer `UNSUPPORTED_FILTER`.
 - **R26** A route that DECODES samples (R23, R24, or R22 with `decodeDct`) carries `pixels_sha256`, a
   SHA-256 over the normalised packed/interleaved samples taken before any container is built; a
   pass-through route (R22 default) carries none, its bytes being the publisher's own and byte-stable by
