@@ -119,7 +119,7 @@ export default {
       /* A header line naming the body that meets (agenda and minutes mastheads). */
       { pattern: { re: R`(Committee|City Council|Commission|Board|Authority)\s*$` }, basis: "2026-08-03, M-24" },
       /* The enacting body printed above an instrument's own caption. */
-      { pattern: { re: R`\b(?:OAKLAND\s+CITY\s+COUNCIL|CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|CITY\s+OF\s+OAKLAND)\b`, flags: "i" },
+      { pattern: { re: R`\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\s+[A-Z]+|COMMISSION|AUTHORITY|CITY\s+OF\s+[A-Z]+)\b` },
         basis: "M-24" },
     ],
     member_titles: [
@@ -157,7 +157,7 @@ export default {
       { pattern: { re: R`\bStaff\s+Recommends\s+That\b`, flags: "i" }, basis: "M-24" },
     ],
     template_blanks: [
-      { pattern: { re: R`INTRODUCED\s+BY\b[^\]]*\]`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^\s*INTRODUCED\s+BY\b[^\]]*\]`, flags: "i" }, basis: "M-24" },
     ],
   },
 

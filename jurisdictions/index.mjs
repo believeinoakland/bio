@@ -616,7 +616,8 @@ function merge(profiles) {
       for (const f of ["tier", "venue", "template"]) {
         const vals = given.filter((g) => own(g.k, f)).map((g) => ({ profile: g.profile, value: clone(g.k[f]), basis: g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f] = f === "venue" ? { ...vals[0].value, profile: vals[0].profile } : vals[0].value;
+        if (agree(vals)) e[f] = f !== "venue" ? vals[0].value
+          : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
         else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${f === "tier" ? "risk tiers" : `${f}s`} for ${kind}, so none is given`);
       }
       e.basis = given[0].k.basis;
