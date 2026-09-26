@@ -45,6 +45,7 @@
 - N50 · 2026-09-26 · DONE (K80) · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.
 - N51 · 2026-09-26 · **record-core**: `auditPass` offers a registration for later modules' audit checks (the K31 pattern), so `promotion.recordAudit` stops re-judging only the bundles the moved checks flag. Reported by PROMOTION #1.
 - N52 · 2026-09-26 · **affordances**: import promotion's `REOPENABLE_FROM` instead of keeping its own. Reported by PROMOTION #1.
+- N53 · 2026-09-26 · **skills**, **agent-worker**, **control-plane** (K81): the skills tests that read `agent-worker` and `index.mjs` move into those modules' own tests.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
