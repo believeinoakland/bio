@@ -28,7 +28,7 @@
  * paints several, and choosing one would be inventing the citation's referent.
  */
 
-import { pdfPageImages } from "../../bio-plane/src/pdfstructure.mjs";
+import { pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { loadPdf, decodeImage, imageOf } from "./pagepixels.mjs";
 
 export const CROP_REFUSALS = Object.freeze({
@@ -75,7 +75,7 @@ export async function cropImage(bytes, extent) {
   const doc = await loadPdf(bytes);
   if (!doc) return refuse("NOT_A_PDF");
   if (doc.isEncrypted()) return refuse("ENCRYPTED");
-  const n = (doc._pageOrder || []).length;
+  const n = doc.pageCount;
   if (e.page < 0 || e.page >= n) return refuse("NO_SUCH_PAGE", { page: e.page, pageCount: n });
 
   const got = await pdfPageImages(doc, e.page);
@@ -86,7 +86,8 @@ export async function cropImage(bytes, extent) {
     return refuse("NO_IMAGE_AT_RECT", { page: e.page, rect: want, painted: got.images.map((im) => im.rect) });
   if (hits.length > 1) return refuse("AMBIGUOUS_RECT", { page: e.page, rect: want, count: hits.length });
   const hit = hits[0];
-  if (hit.inline || !hit._stream) return refuse("INLINE_IMAGE", { page: e.page, rect: want });
+  const src = imagePlacementSource(hit);
+  if (hit.inline || !src?.stream) return refuse("INLINE_IMAGE", { page: e.page, rect: want });
 
   const im = imageOf(doc, hit);
   const out = await decodeImage(doc, im, { rotate: 0 });
@@ -112,7 +113,7 @@ export async function cropImage(bytes, extent) {
        samples upright; otherwise this module does not know, and says null
        rather than true. */
     upright: (() => {
-      const m = hit._ctm;
+      const m = src.ctm;
       const plain = Array.isArray(m) && m[1] === 0 && m[2] === 0 && m[0] > 0 && m[3] > 0;
       return plain && out.upright === true ? true : null;
     })(),

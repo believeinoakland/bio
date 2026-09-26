@@ -74,7 +74,7 @@
  * RGBA frame is the whole reason this fits.
  */
 
-import { PdfDoc, pageShowsText, pdfPageImages } from "../../bio-plane/src/pdfstructure.mjs";
+import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
@@ -106,19 +106,11 @@ const refuse = (reason, detail = {}) => {
 
 /* ── the document ─────────────────────────────────────────────────────────── */
 
-/** Load a PDF into the SAME reader `pdfstructure.mjs` uses (imported, never
- *  re-derived — see that file's export note). */
+/** Open a PDF with `pdf-reader`'s own `openPdf` — the one reader, never re-derived.
+ *  Everything below uses its named services only (N9): `pageCount`, `pageDict`,
+ *  `imagePlacementSource`, never a private field. */
 export async function loadPdf(bytes) {
-  if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
-  }
-  doc.buildPageIndex();
-  return doc;
+  return openPdf(bytes);
 }
 
 const nameOf = (doc, v) => {
@@ -255,7 +247,8 @@ const VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
  *  height, filters and name, and its stream's sample layout. An inline image has
  *  no stream (`obj` null). */
 export function imageOf(doc, placement) {
-  const st = placement._stream || null;
+  const src = imagePlacementSource(placement);
+  const st = src ? src.stream : null;
   const d = st ? st.dict : {};
   return {
     name: placement.name,
@@ -275,9 +268,8 @@ export function imageOf(doc, placement) {
  *  is not "no text" (a Type3 or a broken resource dict), and "has an image" is
  *  not "is a scan". */
 export async function analyzePage(doc, pageIndex) {
-  const order = doc._pageOrder || [];
-  if (pageIndex < 0 || pageIndex >= order.length) return null;
-  const pageMap = doc.dictOf({ t: "ref", n: order[pageIndex] });
+  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
+  const pageMap = doc.pageDict(pageIndex);
   if (!pageMap) return null;
 
   /* R17/R18 (K27): the images the page PAINTS, in painting order, including
@@ -338,7 +330,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
 
   const a = await analyzePage(doc, pageIndex);
   if (!a) {
-    const n = (doc._pageOrder || []).length;
+    const n = doc.pageCount;
     return pageIndex >= 0 && pageIndex < n
       ? refuse("PAGE_UNREADABLE", { page: pageIndex })
       : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
