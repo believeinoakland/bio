@@ -12,6 +12,7 @@
 | the modules in their total order, with paths, tests and uses | `build/modules.json` |
 | each module's requirements, and the conventions they follow | `build/requirements/<module>.md`, `build/requirements/README.md` |
 | the running tranche's plan, the next one, the finished ones | `build/plan/current.md`, `build/plan/next.md`, `build/plan/archive/T<n>.md` |
+| what each coming extraction moves out of a legacy module (P18) | `build/extraction/<module>.md` |
 | one record per module job | `build/jobs/T<n>/<module>.md` |
 | every ruling, one line each | `build/rulings.md` |
 | tokens processed per session | `build/metrics/T<n>.csv` (transition sessions under `T0`) |
