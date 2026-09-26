@@ -1,6 +1,6 @@
 # Plan: tranche T1, the certification run
 
-**Status** · OPEN. Opened by BOB #38, 2026-09-26 (PROCESS-MECHANICS §5; TRANSITION.md T9). Branch `tranche/T1` starts at the commit that opened this plan. Bob's weekly meter at the opening: not yet given. T1 proves the process on a small tranche (P3) and starts the metrics (P14). Everything else waits in `next.md`: the other layer-1 modules and their entries (N1–N3, N7, N11, and the carried rows) are the next tranche's.
+**Status** · OPEN. Opened by BOB #38, 2026-09-26 (PROCESS-MECHANICS §5; TRANSITION.md T9). Branch `tranche/T1` starts at the commit that opened this plan. Bob's weekly meter at the opening: not yet given. BOB's session: `session_01P2QZ2EqVK6N1rTM1MdoLpx` (BOB #40, since 2026-09-26). T1 proves the process on a small tranche (P3) and starts the metrics (P14). Everything else waits in `next.md`: the other layer-1 modules and their entries (N1–N3, N7, N11, and the carried rows) are the next tranche's.
 
 **Why these four.** They are small, and between them they exercise every part of a layer: a job that only writes tests (`ooxml`), a job that fixes one carried defect (`subresources`), and two jobs in the same layer where one changes a service the other uses and the change is carried between them (`pdf-reader` and `pdf-worker`, N9). None of them depends on the jurisdiction profile, which the next tranche builds.
 

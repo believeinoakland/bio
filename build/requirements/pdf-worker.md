@@ -65,9 +65,10 @@ member has no member-facing route for it).
 - **R16** A page that SHOWS text — `pdf-reader.pageShowsText`: a text-showing operator (`Tj`, `TJ`, `'`,
   `"`) runs in its content or in a Form XObject it draws; a bare `BT` is not text (D-585) — answers
   `PAGE_HAS_TEXT_LAYER` with `imageCount`, unless `opts.allowTextPage` is true.
-- **R17** A page with no image XObject answers `NO_IMAGE_ON_PAGE` when it also paints no vector mark
+- **R17** A page that paints no image (`pdf-reader.pdfPageImages`) answers `NO_IMAGE_ON_PAGE` when it also paints no vector mark
   (a fill, stroke or shading operator; a clip alone does not count), else `NOT_IMAGE_ONLY`.
-- **R18** A page painting more than one image answers `MULTIPLE_IMAGES_ON_PAGE`, with every image's
+- **R18** A page painting more than one image (counted from what it paints, `pdf-reader.pdfPageImages`,
+  never from the image XObjects its `/Resources` lists) answers `MULTIPLE_IMAGES_ON_PAGE`, with every image's
   `{width, height, filters}`; images are never composited.
 - **R19** The one remaining image is decoded per R22–R25; its own refusal, if any, is returned with
   `page` added.
@@ -75,9 +76,10 @@ member has no member-facing route for it).
   source:{filters, colorSpace, bitsPerComponent, imageMask}, page_geometry:{mediaBoxPt, rotate, dpi},
   page_marks:{hasTextOps, hasVectorOps}, …(ccitt|dct detail when decoded), …(pixels_sha256 when
   decoded)}`.
-- **R21** *(not yet met: D-671)* `rotate_deg` and the rotation applied to the pixels are the page's own `/Rotate` (0/90/180/270),
-  read from the LEAF page only. `opts.rotate`, if given, is ignored — the page's own value always wins.
-  **Not yet met: see Status (D-671, inherited `/Rotate` is not read).**
+- **R21** `rotate_deg` and the rotation applied to the pixels are the page's `/Rotate`, an inheritable
+  attribute: the page's own value, else the nearest `/Parent` ancestor's, else 0; normalised to 0/90/180/270.
+  A `/Rotate` that is not a multiple of 90 answers `PAGE_UNREADABLE` (R15), never a guessed turn.
+  `opts.rotate`, if given, is ignored — the page's value always wins.
 
 **Decode rules**, shared by `renderPageToPixels` and `cropImage` (`decodeImage`, private to this module):
 - **R22** DCTDecode (the stream IS a JPEG), filter chain of length 1: by default passed through
@@ -146,9 +148,10 @@ Status.
 
 ### Uses
 
-- `pdf-reader`: `extractPdfStructure(bytes)` for the I2 structure baseline; `PdfDoc`,
-  `pageShowsText(doc, pageMap)` and `pdfPageImages(doc, pageIndex)` for the page-image and text-marks
-  readers (`bio-plane/src/pdfstructure.mjs`).
+- `pdf-reader`: `extractPdfStructure(bytes)` for the I2 structure baseline; `openPdf`, `PdfDoc`
+  (`pageCount`, `pageDict`, `resolve`, `dictOf`, `streamRawBytes`, `streamDecoded`, `isEncrypted`),
+  `pageShowsText(doc, pageMap)`, `pdfPageImages(doc, pageIndex)` and `imagePlacementSource(placement)`
+  for the page-image and text-marks readers — named services only, never a private field (N9, K28).
 
 ### Invariants
 
@@ -178,9 +181,6 @@ Status.
   `cpdf18-pdf-images.test.mjs` import it, driving it directly rather than through any plane op, and
   `content`'s `uses` in `modules.json` does not name `pdf-worker` even though EXTRACTION-BREADTH §3.4 is
   written for a viewer only a plane op could reach. Worth BOB's attention when `content` is extracted.
-- D-671's fix can likely reuse the `/Parent`-walk already in `pagepixels.mjs` (`pageResources`,
-  `mediaBox`'s own walk do the same climb for other fields); no `pdfPageBox` export exists on `main`
-  today, despite the backlog row's note that D-374 added one.
 - `unpdf` (pdf.js) 1.8.0 is pinned; `Math.sumPrecise` is polyfilled only where the runtime lacks it
   (guards node, not workerd, where the native one runs — CPDF-5).
 - `scripts/build.mjs` inlines `unpdf` and commits `dist/pdf-worker.bundled.mjs` plus its manifest; the
@@ -192,7 +192,7 @@ Status.
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `pdf-worker/src/index.mjs`,
 `pdf-worker/src/pagepixels.mjs`, `pdf-worker/src/dctdecode.mjs`, `pdf-worker/src/imagecrop.mjs`,
 `pdf-worker/src/pagepixels-worker.mjs` (the last a workerd-only test entry point, not a requirement).
-R21 is not yet met: `/Rotate` is read from the leaf page only, so an inherited rotation renders un-turned
-(D-671, queued, CPDF-12's 8.67%-character measurement). R25 is not yet met: JBIG2- and JPX-filtered
+R21 reworded by BOB #40, 2026-09-26 (K27): it had stated the D-671 defect as the requirement. R17 and R18
+count painted images (K27). R25 is not yet met: JBIG2- and JPX-filtered
 images are refused rather than decoded, leaving 14 held pages unread by every tier (D-622, queued,
 M-166).
