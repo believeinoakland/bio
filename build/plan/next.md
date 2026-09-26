@@ -39,6 +39,8 @@
 - N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
 - N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
 - N46 · 2026-09-26 · **legacy-tests** (with N37): `meaningread` and `meaningquery` pin the gate's mint sites in `query.mjs`'s text; re-anchor them when `query.mjs` re-exports membership's `viewerPredicate` (K75).
+- N47 · 2026-09-26 · **themes** (K76): the theme code (store.mjs ~22904–23215, `themes`, `theme_placements`) has no owning module; BOB assigns it before layer 5's tranche.
+- N48 · 2026-09-26 · **extraction** (K76): REC-206's item-to-file derivation, and the name of its `membership.mjs` file changed so it is not confused with the module.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
@@ -71,6 +73,7 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 
 **capture**
 - T4-4 · Extract the module per its map and requirements (K48, K49, K58); requirement-named tests for every live id. The capture requests stay in `legacy-store` for `capture-requests` (K58); `capture` keeps the trusted in-process arm.
+- D-701 (K76): `op=links` and `navchanges`, as capture's map places them.
 - R17 (N3, N10), R18 (D-698), R20 (K60, co-attestation at every capture), R28–R29 (D-340, D-702), R11 and R42 (K49: the reading block moves to `extraction`, not here), R41 (K48): the rows its requirements mark not yet met; built work for D-340, D-698, D-702 on the snapshot, judged against the requirements.
 
 **legacy-index** (layer 11, K53)
