@@ -30,3 +30,26 @@
 - N35 · 2026-09-26 · **capture-requests** (K58): BOB drafts its requirements from the code (store.mjs ~44550–45440 and the `capturerequest*` ops) and brings them to Bob before its layer's tranche; `capture`'s job keeps only the trusted in-process arm.
 - N36 · 2026-09-26 · **promotion** (from `legacy-checks`): catalogue rows for promotion's `EXISTS` and `ABSENT` refusals (N17). (C-18.8's removal moved into T3 by K64.)
 - N37 · 2026-09-26 · **query-language**: `viewerPredicate` and `GATE_MARK` become re-exports of membership's (K63).
+
+## Tranche T4, prepared (P18): ready to open when T3 closes
+
+Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (and `legacy-checks` where a map says so), each by its target module's job (mechanics §12.2), all four concurrently (P10), in the layer's order `host-governor`, `provenance`, `capture-sources`, `capture`; a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE after the provider's early merge. Bob approved the four requirement sets on 2026-09-26 (K67). Each job writes requirement-named tests for every live id at its interface (P7). Maps: `build/extraction/<module>.md` (in preparation, P18).
+
+**host-governor**
+- T4-1 · Extract the module per its map and requirements (K47); requirement-named tests for every live id.
+- N25 · `governedFetch` and the ops `governorstate` and `governorconfig` move from `index.mjs` (the fetch and user agent passed in by the caller).
+- R3, R12 · the negative-appetite and stored-appetite defects, fixed in the extraction (K47).
+
+**provenance**
+- T4-2 · Extract the module per its map and requirements (K49, K59); requirement-named tests for every live id.
+- R12 (D-580, K49), R21–R22 (REC-158), R24 (D-177), R25 (D-693), R26 (D-709), R29–R30 (REC-225), R47 (K49): the carried rows its requirements mark not yet met; built work for D-177, D-693, D-709 on the snapshot (`land/worker/<row>`), judged against the requirements.
+- R34 (K59): the instance signing key for its own receipts, held as a secret, replaceable by the operator.
+
+**capture-sources**
+- T4-3 · Requirement-named tests for every live id; R36 (the CDX `urlkey`, K48), R54 (the render locale from the profiles, K48), R26 (D-570's quiet-window class, K48). R37 (Memento) stays unscheduled (K48).
+
+**capture**
+- T4-4 · Extract the module per its map and requirements (K48, K49, K58); requirement-named tests for every live id. The capture requests stay in `legacy-store` for `capture-requests` (K58); `capture` keeps the trusted in-process arm.
+- R17 (N3, N10), R18 (D-698), R20 (K60, co-attestation at every capture), R28–R29 (D-340, D-702), R11 and R42 (K49: the reading block moves to `extraction`, not here), R41 (K48): the rows its requirements mark not yet met; built work for D-340, D-698, D-702 on the snapshot, judged against the requirements.
+
+**Not in T4:** D-593, D-694, D-724 go with `extraction` (K49, layer 4); D-581, D-582, D-584 with `capture-requests` (K58, layer 6).

@@ -1,6 +1,6 @@
 # capture-sources — requirements
 
-**Status** · DRAFT by BOB #41, 2026-09-26 (P18), from a drafting worker's reading of the code, reviewed by BOB (K47–K49); for Bob's approval (a product module, P17). Layer 3. Code today: its own files, `bio-plane/src/render.mjs` (the rendered capture's record), `bio-plane/src/browserrender.mjs` (the in-plane CDP renderer), `bio-plane/src/cdx.mjs` (the web-archive index) and `bio-plane/src/drive.mjs` (the Google Drive host stack); no extraction from a legacy module. Not yet met: R26 (old-plan row D-570: the quiet-window wait, as K48 rules it), R36 (the CDX `urlkey`, fixed in the first job, K48), R54 (the render locale from the profiles, K48), and R37 (Memento; stays here, unscheduled, K48).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17; K67). DRAFT by BOB #41, 2026-09-26 (P18), from a drafting worker's reading of the code, reviewed by BOB (K47–K49). Layer 3. Code today: its own files, `bio-plane/src/render.mjs` (the rendered capture's record), `bio-plane/src/browserrender.mjs` (the in-plane CDP renderer), `bio-plane/src/cdx.mjs` (the web-archive index) and `bio-plane/src/drive.mjs` (the Google Drive host stack); no extraction from a legacy module. Not yet met: R26 (old-plan row D-570: the quiet-window wait, as K48 rules it), R36 (the CDX `urlkey`, fixed in the first job, K48), R54 (the render locale from the profiles, K48), and R37 (Memento; stays here, unscheduled, K48).
 
 ## Public
 
