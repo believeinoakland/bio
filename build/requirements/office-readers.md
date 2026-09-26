@@ -95,7 +95,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   `slideN.xml` filenames, which record creation order; when that order cannot be read,
   affected slides and their sources are `null` (never numbered off the filename); `xlsx`
   sources are `sheetCellRef`.
-- **R9** *(not yet met: D-415)* `xlsxEntry.structure`: each single-area workbook `definedName` in
+- **R9** *(not yet met: D-415)* `xlsxEntry.structure`: each workbook `definedName` (multi-area ones included) in
   `xl/workbook.xml` emits one `anchor` link with `source:null` and
   `target:{definedName, ref, fragment:"#<ref>"}`. `xlsxEntry.text()` also carries, over the size
   guard too, `rangeUnits: [{source:"defined-name"|"table", name, scope, hidden, unit}]`, one per

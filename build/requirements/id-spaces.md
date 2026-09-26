@@ -53,7 +53,7 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 - Errors: throws `TypeError` when `a.rec` or `b.rec` is null, or when the two are not in `space`. The caller must recognise both values first.
 
 **Legacy adapter (temporary, K35; retired when `op=idmatch` leaves `legacy-store`, entry N6).** For `legacy-store` only, which calls the old interface until then.
-- **R26** The old names `ID_SPACES`, `recognise(space, raw)`, `apnStanding`, `systemOfAddresses` and `judgePair(space, a, b, reading?)` are exported, each answering exactly as its view-first service answers over the view `jurisdictions.combine` makes of every non-test profile `jurisdictions` holds, with the old space names mapped (`cms` ↔ `enactment`, `apn` ↔ `parcel`) in and out. The adapter names no place (R24 holds).
+- **R26** The old names `ID_SPACES`, `CMS_FLOOR`, `recognise(space, raw)`, `apnStanding`, `systemOfAddresses` and `judgePair(space, a, b, reading?)` are exported, each answering exactly as its view-first service answers over the view `jurisdictions.combine` makes of every non-test profile `jurisdictions` holds, with the old space names mapped (`cms` ↔ `enactment`, `apn` ↔ `parcel`) in and out. The adapter names no place (R24 holds).
 
 ## Private
 

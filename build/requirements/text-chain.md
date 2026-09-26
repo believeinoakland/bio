@@ -312,7 +312,7 @@ page. `base`/`t2` are `{document, pages:[{page, text, undetermined:[{count}]}], 
   after tier 2's own markers (not duplicated when tier 2 already states one): they are facts about
   the page's images, not about which decode won.
 - **R78** On the page-wise path (R76), the result also carries `{ok:true, wholesale:false, text:{
-  ...base, document:<pages' texts joined by "\n">, pages, undetermined:<concatenated>, counts:{chars:
+  ...base, document:<the non-empty pages' texts joined by "\n">, pages, undetermined:<concatenated>, counts:{chars:
   document.length, undetermined: undetermined.length}}, replaced:<tier-2-won pages>, kept:<tier-1-kept
   pages>, perPageTier:{tier1:kept, tier2:replaced}}`.
 - Errors: never throws.
