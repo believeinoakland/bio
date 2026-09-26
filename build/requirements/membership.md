@@ -104,6 +104,9 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R72** `bootstrapState(tokenFp)` answers `{claimed, rearmed, consumedAt}`: `claimed` once the bootstrap credential is spent, unless `tokenFp` differs from the one recorded at the claim (`rearmed`, R1); `consumedAt` is the instant the instance was claimed, `null` when re-armed. It names nobody and returns no secret.
 - **R73** `setPassword({role, password})` stores a salted, derived hash for `role`, replacing any earlier one, and never the password. Who may call it is the control plane's rule (the `setpassword` op).
 
+**participation(projectId, memberId) → `{state, owner}` or null** (K68)
+- **R74** Answers one member's participation in one project: its state (`invited`, `joined`, `leaving`, or another state the roster holds) and whether the member is an owner; `null` when the member has none or the project is not held. Never throws. (Read by `promotion.forkProject`, R43.)
+
 ## Private
 
 ### Uses
