@@ -65,7 +65,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **R39** A later module registers, once at start, a `check` run before the write and a `project`ion
   written after it, both inside the promotion's one `record-core.transact`. A registered check's refusal
   refuses the promotion under R2, with its own `reason`. Steps run in the modules' total order. A step
-  or fact registered twice by one module is refused `STEP_DECLARED`.
+  or fact registered twice by one module is refused `STEP_DECLARED`. This module's own refusals (R1–R20) are asked first, then the registered checks in the total order (`legacy-store` last); then `commit`; then the registered projections in order. A projection answers `null` or an object whose keys are added to the accepted answer, never replacing this module's own keys. (K62)
 - **R40** A fact this module needs from a later module (the citation index behind `CITED`, R16; case
   membership, R24) is read through `registerFact`. A fact with no registered provider refuses the act
   that needs it with `FACT_UNAVAILABLE`, naming the fact; it is never read as false.
@@ -78,7 +78,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - `legacy-checks`: the catalogues `checkBundle` and `checkCaseDocument`; the parser, `normalizeType`, `vocabFor`/`STATES`, `isMachineIdentity`, `MECHANICAL_FIELD_SETS`; and the check rows whose ids and translations this module's refusals carry (`ACT_SHAPE_CHECKS`, `PROMOTED_TYPE_CHECKS`, `PROJECT_ID_CHECKS`, `PROJECT_CREATION_VISIBILITY_CHECKS`, `BIAS_CHECKS`).
 - `record-core`: `transact` and `commit` (R2, R3; every row R3 writes goes through them), `mintOpaqueId` (a project's id, R19), `bundleInfo`, and `readImage`, whose write order R30 depends on (record-core R16).
 - `membership`: the producing group (R13), project ownership and joined authority (R19), and the sight predicate (R20, R23).
-- `signatures`: `verifySshsig` (R31). `modules.json` does not yet list this edge; K10 rules it (layer 1, earlier, so it is allowed).
+- `signatures`: `verifySshsig` (R31). Listed in `modules.json` (K10, K62).
 - Later modules' facts, checks and projections reach this module only through R39–R40, never by a use.
 
 ### Invariants
