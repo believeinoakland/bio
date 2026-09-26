@@ -2,6 +2,8 @@
 
 **Status** · COMPLETE, 2026-09-26. Job session for module `ooxml`, tranche T1, branch `job/T1/ooxml`. No open question.
 
+**For BOB — a conflict between two steps of `roles/JOB.md`, not blocking:** step 7's `metrics/record.mjs` writes `build/metrics/T1.csv`, and step 6's ownership check then fails on that file: `FAIL  build/metrics/T1.csv: outside ooxml's paths, tests and job record` (`ownership: 5 files changed by ooxml between tranche/T1 and HEAD; 1 failure`). The row is committed as step 7 says. Ownership passes on everything else (`3 files …; 0 failures` before the metrics commit). Either the check allows a job to append its own metrics row, or the row is carried by BOB.
+
 ## Entries applied
 
 - **T1-1** · Requirement-named tests for every live id. `bio-plane/test/m/ooxml/ooxml.test.mjs` (35 tests) names R1–R26, each in a test title, and checks each at the module's interface on archives built byte by byte by `bio-plane/test/m/ooxml/zip.mjs` (compression and CRC from `node:zlib`, independent of the module; every central-directory, local-header and EOCD field can be overridden). No other entry.
