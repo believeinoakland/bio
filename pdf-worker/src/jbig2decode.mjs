@@ -692,6 +692,15 @@ export function decodeJbig2(data, globals = null) {
 
   for (let si = 0; si < segs.length; si++) {
     const seg = segs[si];
+    try {
+      page = decodeSegment(seg, page);
+    } catch (e) {
+      /* R25 (K43): a refusal names the segment it arose in, by type. */
+      if (e instanceof Jbig2Refusal) e.detail = { segmentType: seg.type, segment: seg.number, ...e.detail };
+      throw e;
+    }
+  }
+  function decodeSegment(seg, page) {
     const r = new Reader(seg.data);
     const t = seg.type;
     switch (t) {
@@ -753,8 +762,9 @@ export function decodeJbig2(data, globals = null) {
         break;
       }
       default:
-        throw unsupported("segment type", { segmentType: t });
+        throw unsupported("segment type");
     }
+    return page;
   }
   if (!page) throw unsupported("no page");
   const rowBytes = Math.ceil(page.w / 8);

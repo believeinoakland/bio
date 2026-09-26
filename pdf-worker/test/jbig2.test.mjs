@@ -176,6 +176,7 @@ console.log("\n--- R25, R39: what the decoder refuses, by name, and what is cut 
       named.add(r.feature);
       t(`R25 ${what}: UNSUPPORTED_FILTER naming the feature`, fields(r, "ok", "reason", "filter", "feature", "bytes"),
         [false, "UNSUPPORTED_FILTER", "JBIG2Decode", what, undefined]);
+      t(`R25 ${what}: and the segment type it arose in (K43)`, Number.isInteger(r.segmentType) && Number.isInteger(r.segment), true);
     } else {
       t(`R25 ${what}: ${want[code]}`, fields(r, "ok", "reason", "jbig2", "bytes"), [false, want[code], code, undefined]);
     }
