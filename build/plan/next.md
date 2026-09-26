@@ -24,6 +24,7 @@
 - N29 · 2026-09-26 · **legacy-tests**: `bio-plane/test/formats-odf.test.mjs` asserts the D-346 defect (13 assertions: the two `outside_content_xml_not_read` markers, no `core-properties`, the "no intra" note) and fails them since T2's `odf-reader` met R29; the snapshot's version at `96eeb2d5` passes 171/0. Take it, and re-baseline `nc-coff11.mjs`. Known red on `main` until then, as N15. Reported by ODF-READER #1.
 - N30 · 2026-09-26 · **odf-reader**: repeats (`number-rows-repeated`, `number-columns-repeated`, `text:s`, `text:c`) are expanded without a bound, so hostile bytes can hang the reader or end in `reader_failed` instead of a stated undetermined. BOB adds a bounded-expansion requirement (a measured cap, answering undetermined past it) before the job. Deferred by ODF-READER #1.
 - N31 · 2026-09-26 · **bundler**, **legacy-tests**: `fleet-bundle.mjs`'s remedy text names `node tools/bundles.mjs`, and `fleetbundles.test.mjs` arm (j) asserts it; change both together when `tools/` retires (N14). Also red before T2 and unchanged by it, found by BUNDLER #1: `owed-controls.test` (2 fail), `provenance-floor.control`, `walkfloor.control`, `d301-census.control`; root-caused by the `legacy-tests` job.
+- N32 · 2026-09-26 · **legacy-tests**: 39 harnesses copy a fixed directory list (or `git archive` those paths) into a sandbox without `jurisdictions/`, so loading `docprofile` fails ENOENT; add the directory to each (the script is in `build/jobs/T2/docprofile.md`, "Found in other modules"; applied there, all 39 pass). `civicos-ui/check-semantics.mjs`'s flattened copy is stale (with N14). Reported by DOCPROFILE #1.
 - DIST-14 · **office-readers**: the CSV size bound (20 MiB) is unsettled until measured on a deployed plane (old-plan row DIST-14). Deferred by OFFICE-READERS #1 in T2: it needs a deployment.
 - Local facts still in code, reported by JURISDICTIONS #1: `readingNamePlan`'s "oakland" (N4) and `legacy-checks`' `cpra_request` and `governingLawsOf`'s CPRA sentence (REC-201): each extraction reads them from the view.
 
@@ -53,3 +54,8 @@ Layer 2: the first extractions from `legacy-store`, each by its target module's 
 - T3-3 · Extract `promote` and `reopen` from `legacy-store` per its map and requirements (K31: later modules register checks, projections and facts); requirement-named tests for every live id.
 - N8, N16 (promotion's share), N17 · (above).
 - R11–R15, R17, R18 · the carried rows its requirements mark not yet met.
+
+**Layer 11, after layer 2 (K53):**
+
+**legacy-tests**
+- T3-4 · Bring the old battery green on the tranche: N32 first (39 harnesses red since T2), then N14, N15, N20, N23, N24, N29, N31; each red test is fixed, re-anchored, or retired with the code it anchors on, never skipped.
