@@ -22,7 +22,7 @@
 
     {"id": "record-core", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/"], "uses": ["legacy-checks", "id-spaces"]},
     {"id": "membership", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/"], "uses": ["legacy-checks", "signatures", "record-core"]},
-    {"id": "promotion", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/gate.mjs", "bio-plane/src/promotion/"], "tests": ["bio-plane/test/m/promotion/"], "uses": ["legacy-checks", "record-core", "membership"]},
+    {"id": "promotion", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/gate.mjs", "bio-plane/src/promotion/"], "tests": ["bio-plane/test/m/promotion/"], "uses": ["legacy-checks", "signatures", "record-core", "membership"]},
 
     {"id": "host-governor", "layer": 3, "from": "legacy-store", "paths": ["bio-plane/src/host-governor/"], "tests": ["bio-plane/test/m/host-governor/"], "uses": ["record-core"]},
     {"id": "provenance", "layer": 3, "from": "legacy-store", "paths": ["bio-plane/src/provenance/"], "tests": ["bio-plane/test/m/provenance/"], "uses": ["legacy-checks", "signatures", "record-core", "promotion", "membership"]},
