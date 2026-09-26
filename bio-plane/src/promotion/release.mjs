@@ -8,7 +8,22 @@
  * windows), and the canonical release message (the catalogue's `releaseMessage`). */
 
 import { verifySshsig } from "../sshsig.mjs";
-import { releaseMessage, normalizeRootKey, isMachineIdentity } from "../../checks/bio-checks.mjs";
+import { canonicalJson, isMachineIdentity } from "../../checks/bio-checks.mjs";
+
+/** The exact message a release signature covers (design 5.1), canonical JSON so signer and verifier agree byte for byte. */
+export function releaseMessage(fields) {
+  return canonicalJson({ v: "bio-release/1", bundle: fields.bundle, transition: fields.transition,
+    from_state: fields.from_state, to_state: fields.to_state, signer: fields.signer,
+    bundle_md_sha256: fields.bundle_md_sha256, registry_sha256: fields.registry_sha256 });
+}
+
+/** A pinned root key as an operator pastes it: the full public-key line, or the bare base64 body. */
+export function normalizeRootKey(k) {
+  const v = String(k || "").trim();
+  if (v === "") return v;
+  if (/^(ssh-|ecdsa-|sk-)/.test(v)) return v;
+  return "ssh-ed25519 " + v.split(/\s+/)[0];
+}
 
 const finding = (severity, message, repairs) => ({ check: "C-18.8", severity, message, ...(repairs ? { repairs } : {}) });
 /* The release message's bytes, one byte per UTF-16 unit (the signer's encoding, the catalogue's since D2.1). */

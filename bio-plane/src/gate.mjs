@@ -32,8 +32,8 @@
  * removed out of band.
  */
 
-import { checkBundle, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
-import { checkReleaseSignature } from "./promotion/release.mjs";
+import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { recordChecks } from "./promotion/record-checks.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
    PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
@@ -345,14 +345,10 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
   });
-  /* R31 (K64): C-18.8 is promotion's own check, verified through `signatures.verifySshsig`. Until the catalogue's
-     copy leaves `checkBundle` (this module's extraction from `legacy-checks`), its findings are replaced by this
-     module's, never added to them, so a release is judged once. */
-  const md = files.get("bundle.md");
-  const fm = md ? parseFrontmatter(md).data : null;
-  const findings = [...catalogue.filter((f) => f.check !== "C-18.8"),
-    ...await checkReleaseSignature({ folderName: bundleId, fm: fm && typeof fm === "object" ? fm : null, files,
-                                     releaseRegistry: releaseRegistry || null, sha256 })];
+  /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
+     C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
+  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
+                                                           releaseRegistry: releaseRegistry || null, sha256 })];
 
   const errors = findings
     .filter((f) => f.severity === "error")

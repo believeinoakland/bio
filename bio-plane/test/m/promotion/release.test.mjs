@@ -1,11 +1,12 @@
 /* promotion's release-signature check, C-18.8 (build/requirements/promotion.md R31), as `runGate` runs it. Keys are
  * made with WebCrypto and signatures by a small SSHSIG signer written here from PROTOCOL.sshsig, so every verdict is
- * checked against bytes this suite made, and against the catalogue's own C-18.8 on the same bundle. */
+ * checked against bytes this suite made. The catalogue no longer holds a copy (K64). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto, createHash } from "node:crypto";
 import { runGate } from "../../../src/promotion/index.mjs";
-import { releaseMessage, checkBundle } from "../../../checks/bio-checks.mjs";
+import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { releaseMessage } from "../../../src/promotion/release.mjs";
 
 const ID = "INFO-2026-0001-report";
 const T_REL = "2026-08-01T10:00:00Z";
@@ -59,7 +60,7 @@ async function bundle({ reg, schema, author = "member:ann", key = ANN, signer = 
 const gate = (image, releaseRegistry) => runGate({ bundleId: ID, image, knownIds: new Set([ID]), hasCapture: async () => ({ present: true }),
   registers: [], releaseRegistry });
 const c188 = async (image, reg) => (await gate(image, reg)).findings.filter((f) => f.check === "C-18.8").map((f) => f.detail);
-/* The catalogue's own C-18.8 errors on the same bundle and registry. */
+/* What the catalogue says about C-18.8 on the same bundle: nothing, since it left for this module (K64). */
 async function catalogue(image, reg) {
   const files = new Map(Object.entries(image));
   const { findings } = await checkBundle({ folderName: ID, files, elidedPaths: new Set(),
@@ -83,7 +84,7 @@ test("R31: a post-migration release at information@2 verifies through signatures
   assert.deepEqual(await c188(await bundle({}), null), []);
 });
 
-test("R31: it fails closed — every way a release can fail is an error naming it, and agrees with the catalogue's verdict", async () => {
+test("R31: it fails closed — every way a release can fail is an error naming it", async () => {
   const reg = await registry();
   const cases = [
     ["no signed release record", await bundle({ reg, record: false })],
@@ -98,7 +99,6 @@ test("R31: it fails closed — every way a release can fail is an error naming i
     const got = await c188(image, reg);
     assert.equal(got.length, 1, want);
     assert.match(got[0], new RegExp(want.replace(/[()]/g, "\\$&")), want);
-    assert.equal((await catalogue(image, reg)).length, 1, `the catalogue also refuses: ${want}`);
   }
   /* A key outside its validity window names no key for the principal at that instant. */
   const windowed = await registry({ signers: `member:ann valid-before="20260701" ${ANN.line}` });
@@ -117,8 +117,9 @@ test("R31: it fails closed — every way a release can fail is an error naming i
   assert.deepEqual(await c188(await bundle({ reg: later, tamper: true }), later), []);
 });
 
-test("R31: the gate judges a release once: the catalogue's C-18.8 findings are replaced by this module's, never doubled", async () => {
+test("R31: the module holds the one C-18.8: the catalogue no longer asks it, and the gate asks it once", async () => {
   const reg = await registry();
+  assert.deepEqual(await catalogue(await bundle({ reg, tamper: true }), reg), []);
   const r = await gate(await bundle({ reg, tamper: true }), reg);
   assert.equal(r.findings.filter((f) => f.check === "C-18.8").length, 1);
   assert.equal(r.ok, false);
