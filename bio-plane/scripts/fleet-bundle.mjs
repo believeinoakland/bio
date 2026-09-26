@@ -176,7 +176,7 @@ export function discoverMembers(repoRoot = REPO_ROOT) {
  * `battery.mjs`'s member census all keep their meaning untouched.
  *
  * The plane's build has ONE pre-step no member has: `embed:sign` regenerates
- * `src/signpage.mjs` from `tools/sign-release.html`, deterministically. The
+ * `src/signpage.mjs` from `src/sign-release.html` (K33), deterministically. The
  * generated file is COMMITTED and input-hashed like any other source, and the
  * gate closes the loop the input hashes cannot see — a changed
  * `sign-release.html` whose render was never re-run — by comparing the
