@@ -239,6 +239,10 @@ test("R15 R16 R17: readImage assembles live files, snapshots at the fixed path, 
   const byWrite = [...m.entries].sort((a, b) => a.seq - b.seq);
   assert.deepEqual(byWrite.map((e) => [e.seq, e.key]), [[1, "20260901T000000Z_zzzz"], [2, "20200101T000000Z_aaaa"], [3, "20250101T000000Z_mmmm"]],
                    "R16: each entry's seq is its rank in write order, not the snap keys' lexical order");
+  assert.ok(m.entries.every((e) => Number.isSafeInteger(e.seq)), "R16: every entry given back carries seq");
+  assert.deepEqual(m.entries.map((e) => e.seq).sort(), [1, 2, 3]);
+  assert.deepEqual(["20260901T000000Z_zzzz", "20200101T000000Z_aaaa", "20250101T000000Z_mmmm"].map((k) => rc.manifestEntry(id, k).seq), [1, 2, 3],
+                   "R16: manifestEntry gives the same write-order rank");
   const [e1, e2, e3] = byWrite;
   assert.deepEqual([e1.kind, e1.base, e1.author, e1.files], ["promotion", null, "a1", ["bundle.md", "data/changes.json"]]);
   assert.deepEqual([e2.base, e2.author, e2.writer, e2.operation, e2.files, e2.snapshotted],
@@ -614,7 +618,7 @@ test("R41 R42 R43: head, manifestEntry and livePaths answer a held bundle's row,
   assert.deepEqual(rc.head("INFO-2026-0001-a"), { bundleSha: sha("b"), rowVersion: 1, type: "information", title: "T",
                                                   currentState: "collected", priorState: null, groupId: "g1" });
   const e = rc.manifestEntry("INFO-2026-0001-a", "K1");
-  assert.deepEqual({ ...e, created: null }, { kind: "promotion", base: null, author: "a", created: null, writer: "w", operation: "o",
+  assert.deepEqual({ ...e, created: null }, { kind: "promotion", base: null, author: "a", created: null, writer: "w", operation: "o", seq: 1,
     files: [{ name: "z.md", sha256: sha("z") }, { name: "bundle.md", sha256: sha("b") }, { name: "a/b.json", sha256: sha("{}") }] });
   assert.ok(!Number.isNaN(Date.parse(e.created)));
   assert.equal(rc.manifestEntry("INFO-2026-0001-a", "K2"), null);

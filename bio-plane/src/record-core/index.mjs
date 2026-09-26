@@ -279,15 +279,17 @@ export class RecordCore {
                  currentState: r.current_state, priorState: r.prior_state ?? null, groupId: r.group_id } : null;
   }
 
-  /** R42 */
+  /** R42; `seq` is the entry's write-order rank, as in `readImage` (R16). */
   manifestEntry(bundleId, snapKey) {
-    const r = this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
-                          WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey);
+    const r = this.#one(`SELECT kind, base, author, created, files_json, writer, operation,
+                                (SELECT COUNT(*) FROM manifest x WHERE x.bundle_id = m.bundle_id AND x.rowid <= m.rowid) AS seq
+                           FROM manifest m WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey);
     if (!r) return null;
     let files;
     try { files = JSON.parse(r.files_json); } catch { files = []; }
     return { kind: r.kind, base: r.base ?? null, author: r.author ?? null, created: r.created,
-             files: Array.isArray(files) ? files : [], writer: r.writer ?? null, operation: r.operation ?? null };
+             files: Array.isArray(files) ? files : [], writer: r.writer ?? null, operation: r.operation ?? null,
+             seq: Number(r.seq) };
   }
 
   /** R43 */
