@@ -56,3 +56,21 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 
 **pdf-worker**
 - D-622 · 2026-09-26 · Decoders for JBIG2 and JPX image-only pages (old-plan row D-622), held out of T1 as too large for the certification run. (N9 moved to T1.)
+
+## Job sessions (layer 1, started 2026-09-26 16:52 UTC)
+
+| module | session | title |
+| --- | --- | --- |
+| jurisdictions | `session_014szwz88Jt9EWztKH5wfE1v` | JURISDICTIONS #1 |
+| test-support | `session_01ASkdafQGFCeqoncTyWGLPC` | TEST-SUPPORT #1 |
+| bundler | `session_015mpX96po6BkGDjNJ5AVwMB` | BUNDLER #1 |
+| runtime-limits | `session_019P3M1pLBD1XzdjzkJULhF6` | RUNTIME-LIMITS #1 |
+| signatures | `session_01GJC6ytwQrBRdr2Y8KdcybF` | SIGNATURES #1 |
+| id-spaces | `session_01JxBcyrvDmhXth7LevtRM2H` | ID-SPACES #1 |
+| office-readers | `session_01Evj8HyEdBGojZqKJhpkumU` | OFFICE-READERS #1 |
+| odf-reader | `session_0191Ek5BuDhcVCoPJoHo62Ge` | ODF-READER #1 |
+| format-registry | `session_019LnvZG7rvC4fK35bUVv3MW` | FORMAT-REGISTRY #1 |
+| text-chain | `session_011N1d8x7gArcfWDvLkY3fC5` | TEXT-CHAIN #1 |
+| docprofile | `session_01QLCYkFnXjtMweB8KWin4FT` | DOCPROFILE #1 |
+| ocr-worker | `session_01LumujCtUSN1WBLyoke2Hz2` | OCR-WORKER #1 |
+| pdf-worker | `session_01SSonB7dLsY8mZoHgBAoHT6` | PDF-WORKER #2 |
