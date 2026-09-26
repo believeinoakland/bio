@@ -45,6 +45,15 @@ The full battery on the job branch before any change (`tranche/T3` @ `062e69f669
 
 ## Found in other modules (REPORT)
 
+Each keeps an old-battery assertion red on the tranche; each assertion was pointed at today's behaviour and left honest, never relaxed.
+1. **legacy-checks, N44** · `rec-186-leave-join`: the refusal an owner's leave now meets, `LAST_COMMITTED_OWNER` (membership R35), has no catalogue row (DEC-49: check, region, translation).
+2. **affordances, N45** · `d311-roster-affordances` "THE AGREEMENT": `op=affordances` offers `projectleave` to pam@PC, whom membership R35 refuses `LAST_COMMITTED_OWNER`.
+3. **membership (the plane's bound rule, REC-57)** · `meaning-bounds` RATCHET (45 bare reads, ceiling 43): three reads publish a collection from `#rows` with no LIMIT and no published bound: `hostingaccess` (R11's `history`), `memberpairings` (R19's `pairings`) and `projectowneradd`'s new `deciders`. Membership's requirements state no cap for them; a requirement (or a bound) is BOB's to decide.
+4. **record-core / legacy-store** · `meaning-bounds` REACH: legacy-store's `auditPass` adapter (record-core R18's `visible`) builds `sighted` by an unbounded `SELECT b.bundle_id FROM bundles b WHERE (gate)` on every audit page, where it read one LIMITed page before; present already at the T3 base.
+5. **promotion R39 / the D-240 reader** · `meaning-bounds` "D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING": promotion's `#fact` returns `{ unavailable: { ok:false … } }`, the refusal nested, which the D-240 reader grades `silent`; it publishes no collection. Either the reader or the return shape changes: a decision for BOB.
+6. **legacy-ui** · `civicos-ui/check-semantics.mjs`: `app.html`'s flattened docprofile copy is stale (DOCPROFILE #1 found it); `node civicos-ui/check-semantics.mjs --print-docprofile` now prints the copy to paste. The flattener's list does not include `jurisdictions`, which `docprofile` imports (the no-view fallback covers the UI's two calls today).
+7. **legacy-index, BOB's documents, membership** · `op-claims`: `build/extraction/{connections,observation-log,retrieval}.md` and `build/requirements/{entities,inquiry,strength}.md` name ops that are not ops (`navchanges`, `leadlist`) or DO paths as ops (`affordancefacts`, `readingnameplan`, `basis`, `restson`, `strength`); `bio-plane/src/membership/index.mjs:195` names `op=hostingaccessset`, not yet routed (N43); and `scripts/op-claims-ledger.mjs`'s entry `docs/development/research/DATA-MODEL.md · op=setpassword` (DO-PATH) no longer matches the store's dispatch map (the route moved to membership).
+
 ## Open
 
 ## Tests and checks run
