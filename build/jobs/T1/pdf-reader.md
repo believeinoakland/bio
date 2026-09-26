@@ -1,6 +1,23 @@
 # pdf-reader · T1 job record
 
-**Status** · Job for `pdf-reader`, tranche T1, started by BOB #38. Waiting on BOB: N9's proposed services below, to be added to `build/requirements/pdf-reader.md` on `tranche/T1`.
+**Status** · Job for `pdf-reader`, tranche T1, started by BOB #38. N9 answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. Working all entries; two questions open (below), carried on meanwhile on my best readings.
+
+## QUESTION to BOB (2026-09-26)
+
+**Q1 · R26's figures.** R26 leaves the image-share threshold and the glyph floor UNDETERMINED "until D-627's own measurement is run". That measurement exists: M-178, on the snapshot branch at `land/worker/D-627` @ `056d3092` (`docs/development/measurements/M-178.md`). It ran over the FY23-25 budget book and M-174's other two documents: 1,788 pages, 307 of them painting an image. It found 17 image-only pages with at most 4 glyphs and image shares from 0.1897 to 0.6542. Every other page that paints an image shows at least 22 glyphs, and no page falls between. This job cannot re-run it: the corpus is in the instance's store, not in the repository.
+*My best reading, which I am building:* adopt M-178's figures.
+- A page that paints an image, is not already `no_text_layer`, shows at most **4** glyphs and has an image share of at least **0.18** gets `image_content_unread`.
+- The same kind of page gets `image_content_undetermined` when it shows **5–21** glyphs, when its share is above 0 and under 0.18, or when its page box is unreadable.
+- A page that shows **22** or more glyphs gets no marker.
+- Both markers carry `image_share` and `glyphs`.
+
+Please either state these figures in R26 or give others.
+
+**Q2 · R25, where the trailing-byte count goes.** R25 says a Flate stream with trailing junk still decodes, "with the trailing-byte count recorded", but does not say where. R2's `notes` list is closed.
+*My best reading, which I am building:*
+- The count goes in `notes` as `flate_trailing_bytes:<n>`, once per stream, and R2's list gains that note.
+- The page-level marker R25 asks for is `{page, reason:"content_stream_undecodable", font:null, codes:"", count:0}`.
+- A page whose `/Contents` reference resolves to nothing gets `reason:"content_stream_unresolvable"`, so that a missing stream is not read as a blank page either (R27).
 
 ## For BOB: N9, the proposed named services
 
