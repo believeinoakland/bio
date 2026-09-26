@@ -1,0 +1,14 @@
+# Job record: record-core, T3
+
+**Status** · IN PROGRESS. RECORD-CORE #1, session `session_0128RDfHecKMSruEijV3kfAe`, branch `job/T3/record-core` (cut from `tranche/T3` @ 5355f81ae1). Entries: T3-1, K57, D-674, N10 (record-core's share).
+
+## How the module is reached (stated early, for membership and promotion)
+
+`bio-plane/src/record-core/index.mjs` exports `recordOf(ctx, opts?)`: the one `RecordCore` instance per Durable Object storage (`ctx.storage`, which carries `sql` and `transactionSync`), created on first call and returned to every later caller, so every module in the object shares one transaction depth, one purge declaration list and one evidence binding. `opts` (read on the first call only): `{ evidence: <R2 bucket> | null, evidencePrefix: "<store>/captures/" }`. The instance's methods are the Provides, by their names: `allocId`, `allocIdOp`, `mintOpaqueId`, `acquireLease`, `readFile`, `readImage`, `auditPass` (async), `declarePurge`, `purge`, `getSetting`, `setSetting`, `transact`, `commit`, `bundleInfo`, `listBundles`, `listByType`, `evidenceStore`; plus `RecordCore.snapPath(path, snapKey)` (R15's fixed derivation), `RecordCore.GATED_ID_PREFIXES`, and `RECORD_SCHEMA` (the DDL of this module's own tables, which the legacy schema interpolates until it is divided). A user imports `recordOf` from `../record-core/index.mjs` and calls `recordOf(this.ctx)`.
+
+## Questions to BOB
+
+**Q1 (sent with the shape above).** Three interface points the requirements leave open; my best readings, on which I am building:
+1. `auditPass({after, limit, visible, context})`: the legacy sweep hands the check catalogue two registries per bundle that later modules build (`earnedRegistry`, `publishedRegistry`); without them earned and inherited legs report as offenders. Reading: an optional `context(bundleId) → extra checkBundle options`, supplied by the caller (legacy-store today). `visible` is a JS predicate as R19 says; the legacy wrapper keeps its own `total`, `route` and `membership` additions on top of the page report.
+2. `mintOpaqueId`'s boot seed (D-432) reads the live rows of other modules' tables (cases, tasks, review grants …), which R31 forbids record-core to read on its own. Reading: `seedMintLedger(sources)`, sources `[[prefix, table, column], …]` declared by the caller (legacy-store today, each owner after its extraction), exactly as `declarePurge` takes other modules' tables; the counter half (from `seq`) is record-core's own.
+3. `declarePurge(module, tables, {exempt})`: a table entry is a name (keyed to a bundle by `bundle_id`, when it has that column) or `{name, keys: [columns], whole: "<WHERE clause>"}` for a table keyed to a bundle by other columns (`connections.a_bundle_id`/`b_bundle_id`, `project_participants.project_id` …) or cleared only in part by the whole-store form (`case_documents WHERE ratified_at IS NULL`). Legacy-store declares its tables in its old order.
