@@ -1,6 +1,6 @@
 # provenance — requirements
 
-**Status** · DRAFT for BOB #41, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code; for BOB's review. Layer 3. Code today: inside the legacy modules. `bio-plane/src/store.mjs`: the register write inside `promote` (~19905–19925) and `#testimonyFence` (22265–22376); `testify` with `testimonyBytes`, `observerRef` (21880–21930, 22377–22620); `chainFromEvidence`, `provenanceChainRebuild`, `routeFinding`, `provenanceRouteAssess`, `provenanceRoutesMarked` (16457–17196); `registerAudit`, `#partsNamedFor` (35485–35544); `homeCensus`, `registerHolds` (36562–36654); `recordCapturedLocator`, `capturedLocators` (40800–40995); `versionChain` (40995–41137). `bio-plane/src/index.mjs`: the handlers of `op=attest` (10169–10318) and `op=registeraudit` (7247–7311), and `partsHeld` (4560–4598). `schema.mjs`: `register` (85–107, K23), `captured_locators` (566–586), `provenance_route_marks` (2902–2984). Not yet met: R24–R26 (D-177, D-693, D-709), R12 (D-580), R21–R22 (REC-158), R29–R30 (REC-225), R34 (new, ARCHIVE-FALLBACK). D-698 is `capture`'s (its R18). Old-plan rows naming `provenance`: D-693, D-709, REC-225, REC-158.
+**Status** · DRAFT by BOB #41, 2026-09-26 (P18), from a drafting worker's reading of the code, reviewed by BOB (K47–K49); for Bob's approval (a product module, P17). Layer 3. Code today: inside the legacy modules. `bio-plane/src/store.mjs`: the register write inside `promote` (~19905–19925) and `#testimonyFence` (22265–22376); `testify` with `testimonyBytes`, `observerRef` (21880–21930, 22377–22620); `chainFromEvidence`, `provenanceChainRebuild`, `routeFinding`, `provenanceRouteAssess`, `provenanceRoutesMarked` (16457–17196); `registerAudit`, `#partsNamedFor` (35485–35544); `homeCensus`, `registerHolds` (36562–36654); `recordCapturedLocator`, `capturedLocators` (40800–40995); `versionChain` (40995–41137). `bio-plane/src/index.mjs`: the handlers of `op=attest` (10169–10318) and `op=registeraudit` (7247–7311), and `partsHeld` (4560–4598). `schema.mjs`: `register` (85–107, K23), `captured_locators` (566–586), `provenance_route_marks` (2902–2984). The C-18 register arms run today in `bio-plane/checks/bio-checks.mjs` (`checkBundle`, at the gate). Not yet met: R24–R26 (D-177, D-693, D-709), R12 (D-580, this module's by K49), R21–R22 (REC-158), R29–R30 (REC-225), R47 (K49), R34 (Open for Bob). D-698 is `capture`'s (its R18). Old-plan rows naming `provenance`: D-580, D-693, D-709, REC-225, REC-158.
 
 ## Public
 
@@ -48,13 +48,17 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - Errors: never throws.
 
 **capturesOf(bundleId) → `[{capture_sha, held_at}]`**
-- **R12** The bundle's captures in the order the record first held them: `held_at` is the earliest of the row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock. A document's own stated date never orders them, and two clocks are never compared in one column. *(not yet met: D-580 — `#captureForContent` orders `register.registered` against `readings.at`)*
+- **R12** The bundle's captures in the order the record first held them: `held_at` is the earliest of the row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock. A document's own stated date never orders them, and two clocks are never compared in one column. *(not yet met: D-580, K49 — `#captureForContent` orders `register.registered` against `readings.at`; content reads this order once fixed)*
 - Errors: never throws.
 
 **recordReceipt({address, addressNorm, captureSha, retrieved, via, retrievalLocator}) → `{recorded, address_norm, via, observation}`**
 - **R13** The plane's own acquisition receipt: one row per (`addressNorm`, `captureSha`, `via`), `via` defaulting to `direct`. A new row starts at `observations` 1 with `first_retrieved` and `last_retrieved` both `retrieved`; a repeat widens the interval (the earlier first, the later last), adds 1 to `observations`, and keeps an existing `retrieval_locator` when none is given. `address` is kept as given beside its normalised form.
 - **R14** `observation` is read from the record before the write, never from the caller: `new` when no row has this address and `via`, `unchanged` when one has these bytes, `changed` otherwise. With no `addressNorm` or `captureSha` it answers `{recorded: false}` and writes nothing.
 - **R15** Only the plane's own acquisition writes receipts (`capture.acquire`, and monitoring's fetches); no op lets a caller write one.
+- Errors: never throws.
+
+**onReceipt(module, fn) → void** A later module's work on each receipt (K49; K31's pattern, promotion R39).
+- **R47** A module registers `fn` once at start; a second registration by the same module is refused `LISTENER_DECLARED`. After each receipt write, every registered `fn` runs inside the same transaction, in the modules' total order, with `{address, address_norm, capture_sha, via, retrieval_locator, retrieved, observation}` (R14). A listener that refuses or throws does not undo the receipt; `recordReceipt`'s answer names each listener's outcome. This module calls no later module. *(not yet met: K49 — `recordCapturedLocator` writes the observation-log row itself)*
 - Errors: never throws.
 
 **receipts({addressNorm}) → `{address_norm, rows, observations}`**
@@ -99,7 +103,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **R31** `sha256` must be 64 hex (`BAD_SHA`). When no object is held under it: an acquisition receipt naming it lets the attestation proceed, answering `held: {form: "parts", on: "acquisition_receipt"}`; a register row alone is refused `CAPTURE_HELD_IN_PARTS` (C-89.1), which does not call the bytes missing; neither is `NO_SUCH_CAPTURE`, saying what was asked, and whether the store could be asked.
 - **R32** Asks the timestamp authorities in `signatures.TSA_ENDPOINTS` order, each with a fresh RFC 3161 request over the digest, and stops at the first response `parseTimestampResponse` accepts as bound to it. The token is stored in the evidence store under its own SHA-256 and named `snapshots/timestamp-<first 12 hex>.tsr`, `kind: "rfc3161"`, `over` the capture. Every attempt, failed or not, is in `attempts` with its service, instant and outcome. No token answers `ok: false`, `reason: "NO_ATTESTATION"`. The token's signature is not verified here, and the answer says so.
 - **R33** With `archive: true` and a public https `locator`, also asks the co-archive (`signatures.ARCHIVE_SAVE_BASE`) and records the archived locator from `archiveLocatorFrom`, or the failed attempt. Without it, no archive is asked.
-- **R34** When this instance files an archive-sourced capture, it signs its own receipt: that on this date it fetched these bytes from this retrieval locator and they hashed to this value. *(not yet met: new, ARCHIVE-FALLBACK §Shape on the capture; see Q8)*
+- **R34** When this instance files an archive-sourced capture, it signs its own receipt: that on this date it fetched these bytes from this retrieval locator and they hashed to this value. *(not yet met: ARCHIVE-FALLBACK §Shape on the capture; waits on Bob's ruling, Open for Bob 3)*
 - Errors: never throws for a well-formed call; an authority or archive failure is an attempt, never a throw.
 
 ## Private
@@ -108,9 +112,9 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 - `legacy-checks`: `TESTIMONY_CHECKS` (C-53.1–C-53.9, C-53.13), `ROUTE_MARK_CHECKS` (C-34), `VERSION_CHAIN_CHECKS` (C-24), `ATTEST_CHECKS` (C-89.1); `EARNED_CAPTURE_CEILING`, `BASIS_GRADES`, `TESTIMONY_GRADE`, `isMachineIdentity`, `isPublicHttpsLocator`, `OBSERVATION_STATES`.
 - `signatures`: `timestampRequest`, `parseTimestampResponse`, `TSA_ENDPOINTS`, `TSA_CONTENT_TYPE`, `TSA_ACCEPT`, `ARCHIVE_SAVE_BASE`, `ARCHIVE_SERVICE`, `archiveLocatorFrom`.
-- `record-core`: `transact`, `readImage`, `bundleInfo`, `allocId` (the observation's id), `getSetting` (the instance name), `declarePurge` (`register`, `captured_locators`, `provenance_route_marks`).
+- `record-core`: `transact`, `readImage`, `bundleInfo`, `allocId` (the observation's id), `getSetting` (the instance name), `declarePurge` (`register`, `captured_locators`, `provenance_route_marks`), and the evidence store (`head`, `get`, `put` by digest with integrity; K49) for R7–R9 and R31–R32.
 - `membership`: `viewerPredicate` and `sight` (R2's holder, R17, R20, R22, R23, R29); the producing group (R28; not yet a named service in membership's Provides).
-- `promotion`: `promote` (R20, R28) and `registerStep` (R1–R3). *`modules.json` does not list this edge; Q1.*
+- `promotion`: `promote` (R20, R28) and `registerStep` (R1–R3, R42–R46).
 
 ### Invariants
 
@@ -120,6 +124,14 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **R38** A member's authored observation stays one: its flag is set only by R28 and never cleared, its origin and actor class stay `member`, and its words are never paraphrased or rewritten (C-53.7–C-53.9).
 - **R39** Network calls are made only by `attest`, only to the compiled endpoints `signatures` names.
 - **R40** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product").
+- **R41** This module owns `register`, `captured_locators` (the acquisition receipts) and `provenance_route_marks`; no other module writes them (K49).
+
+*The register's checks at the gate (C-18, K49).* Registered with `promotion.registerStep` as checks on the promoted package's `data/provenance.json`, for an information bundle whose register is present; each keeps its catalogue id and severity.
+- **R42** C-18.1 (error): the register is `{documents: [...]}`; each document is an object naming `file` (present in the bundle), `locator` and `retrieved`; `authority`, or `authority_state` `undetermined`, with an `authority_basis` in both states; a `capture` block with `method`, a `grade` in `CAPTURE_GRADES` (none for an authored observation) and a declared `actor_class`; an `origin.kind` in `ORIGIN_KINDS` (`sweep` with `matched_sweep` and `deeming_actor`; `member` for an authored observation). A `collected → verified` transition is authored by a named member, never a machine identity, and a sweep-origin bundle reaches `verified` only through such a transition.
+- **R43** C-18.3 (error): one capture appears once in a register: two documents with the same `capture.sha256`, or with the same determined evidentiary digest and different raw bytes, are refused as corroboration missed; an undetermined evidentiary digest is never compared.
+- **R44** C-18.4 (warn): a `crucial` document whose entry carries neither `co_archive` nor `timestamp` is flagged for a member to verify co-attestation before release.
+- **R45** C-18.6 (error): every registered capture's stored bytes (whole, or its parts streamed in order) hash to the recorded `capture.sha256`; bytes that cannot be decoded are refused with the reason.
+- **R46** C-18.9 (error): a document at or past `verified` records a non-empty `provenance_chain` whose every hop names its attestor, and states its authority or, when undetermined, its `authority_basis`; no chain, a non-array chain and an empty chain are three distinct findings.
 
 ### Satisfies
 
@@ -135,21 +147,16 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 ### Suggestions
 
-- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-34.1–C-34.4, C-24.1–C-24.3 and C-89.1 move with this module. The C-18 family's provenance-register arms (C-18.1, C-18.3, C-18.4, C-18.6, C-18.9) run today inside `checkBundle` at the gate; Q4 proposes they move here and join the gate through `promotion.registerStep`. C-53.10–C-53.12 are publication's.
+- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-34.1–C-34.4, C-24.1–C-24.3, C-89.1 and the C-18 register arms (R42–R46) move with this module. Of the rest of C-18, C-18.5 (`gathering.json`) goes to monitoring and C-18.7 stays with C-18.8 in promotion (K49). C-53.10–C-53.12 are publication's.
 - **What stays out.** `testimonyReach`, `observationsNamingAuthor` and `attributeObservation` read inquiry basis and attribution tables (later modules); `attestText`, `transcriptionAttest` and `text_attestations` are extraction's; `projectLinks` writes `refs` (connections, K23).
 - **Testify's later work.** Today `testify` hands `promote` a hook that indexes the words, mints the content row and logs an extraction observation. Under K31 those become projections `extraction`, `content` and `observation-log` register for an authored register row, so this module calls none of them.
-- **The receipt's observation row.** `recordCapturedLocator` writes an observation-log row (OBSERVATION-LOG-DESIGN §4.1, edge-triggered). That is layer 5's; Q3.
-- **The evidence store.** `attest`, `registerAudit` and `partsHeld` read and write the R2 working bucket through injected callbacks here; who owns the bucket is Q5.
+- **The receipt's observation row.** Observation-log (layer 5) registers its OBSERVATION-LOG-DESIGN §4.1 writer through R47; `capture`'s reuse-verdict rows can use the same pattern.
+- **The evidence store** (the R2 working bucket) is `record-core`'s, added to its requirements before T3 (K49); until then `attest`, `registerAudit` and `partsHeld` take it through injected callbacks.
+- **Testify is here** (K49): the authored flag's only writer and its fence live in one module.
 - `homeCensus` walks every `files` and `history` row: an unbounded scan, admin-only today. Keep it admin-only or page it.
 - Tests: each *(not yet met)* id gets a negative control reproducing its row. D-177, D-693, D-698 and D-709 have built work on `land/worker/D-177`, `D-693`, `D-698`, `D-709` (snapshot branch), judged at the job.
 
-## Open questions for BOB
 
-- **Q1 · Uses edge to `promotion`.** R1–R3 are a registered step and R20, R28 call `promote`, but `modules.json` gives provenance only `legacy-checks`, `signatures`, `record-core`, `membership`. *Recommend:* add `promotion` (earlier, so allowed; BOB's under P17), and add it to `capture` too if capture keeps any write through `promote`.
-- **Q2 · `captured_locators` belongs here.** It is the acquisition receipt that attest, `registerHolds` and the version chain read (Intake §8 calls it "the plane's own acquisition receipt"). Capture and monitoring write it. *Recommend:* provenance owns the table and `recordReceipt` (R13–R16), and `versionChain` with it (register joined to receipts).
-- **Q3 · The observation-log write inside `recordReceipt`.** Observation-log is layer 5, so provenance cannot call it. *Recommend:* provenance offers `onReceipt(fn)`, a listener registered once at start and run inside the same transaction (K31's pattern), and observation-log registers its §4.1 writer there. The same pattern serves capture's reuse-verdict rows.
-- **Q4 · The C-18 family.** Its register-shape and publication arms describe this module's data but run in the bundle catalogue at the gate. *Recommend:* C-18.1, 18.3, 18.4, 18.6 and 18.9 move here as invariants and join the gate through `promotion.registerStep`; C-18.5 (`gathering.json`) goes to monitoring; C-18.7 stays with C-18.8 in promotion (N8).
-- **Q5 · Who owns the evidence store (the R2 working bucket).** `acquire`, `op=capture`, `attest`, the register audit, the ratify gate's `hasCapture` and publication all use it; no requirements file names it. *Recommend:* record-core gains it (put by digest with integrity, head, get, range), since it "owns the record's storage"; this module and capture take it through record-core.
-- **Q6 · Testify here or in capture.** It is intake (Intake §3a) but its one special power is the register's authored flag. *Recommend:* here, so the flag's only writer and its fence live in one module and no private key between two modules is needed.
-- **Q7 · D-580's site.** The row's target is `capture`, but the defect is an ordering over register and reading times read by content. *Recommend:* provenance provides the held-time order (R12) and content's `#captureForContent` reads it; the row moves here.
-- **Q8 · R34, the signed receipt.** ARCHIVE-FALLBACK says the instance signs its own archive receipt with the release key, but `signatures` holds no private key and release keys are used offline. *Recommend:* keep R34 as not yet met and ask Bob whether an instance signing key is intended (a new capability, so Bob's), rather than drop the canon line.
+## Open for Bob
+
+- **R34: a signed own receipt needs an instance signing key.** ARCHIVE-FALLBACK says the instance signs its own receipt for an archive-sourced capture, but the plane holds no private key (`signatures` holds none; release keys are used offline). *Recommended:* an instance key, held as a secret and rotated by the operator. R34 stays not yet met until Bob rules.

@@ -20,7 +20,7 @@ The source-specific halves of capture that decide what a fetch from a particular
 - **R54** The locale a render asks for: the one the instance's active jurisdiction profiles name (`view`, `jurisdictions.combine`'s view, passed by the caller), else `RENDER_DEFAULTS.locale`. Never throws. *(not yet met: K48 — every render asks "en-US"; the profiles name no locale yet)*
 
 **waitFiredClass(fired, askedWait) → "condition" | "settled" | "timeout" | "undetermined"**
-- **R3** Of `fired` trimmed and lowercased: "timeout" when it matches `/timed?[ _-]?out|timeout/` (e.g. "timeout", "timed out", "time-out"); "settled" when it is "quiet_excluding_long_lived" (R26); "condition" when it equals `askedWait.until` (trimmed, lowercased); "undetermined" otherwise, including a non-string or empty `fired` and a word never seen. Never throws. *(not yet met for "settled": D-570, K48)*
+- **R3** Of `fired` trimmed and lowercased: "timeout" when it matches `/timed?[ _-]?out|timeout/` (e.g. "timeout", "timed out", "time-out"); "settled" when it is "quiet_excluding_long_lived" (R26); "condition" when it equals `askedWait.until` (trimmed, lowercased); "undetermined" otherwise, including a non-string or empty `fired` and a word never seen. Never throws. *(not yet met: D-570, K48 — the "settled" class)*
 
 **completenessReading(render) → string | null**
 - **R4** For `render.completeness` "settled_with_open_requests", R26's reading. Otherwise `null` unless it is "undetermined"; then `RENDER_INCOMPLETE_READING` when `render.wait.fired_class` is "timeout", else "render completeness is undetermined (which wait ended the render was not established)". Never throws.
@@ -136,7 +136,7 @@ The source-specific halves of capture that decide what a fetch from a particular
 - **R50** Completeness and authority are separate axes, and neither touches the grade: a timed-out render keeps its grade and method; a rendered capture is never `determined` as the host when another origin supplied data or ran code.
 - **R51** A provenance hop's facts are derived from the address and from what this instance fetched, never taken from a request (D-112); both hops are `bound: false` and say why.
 - **R52** Equality that costs nothing is not evidence: the archive's record length is never compared, the empty-body digest never selects a capture, and a non-200 row never stands in for a document.
-- **R53** No jurisdiction. The recognisers name only the platforms they read (Google Drive, the Internet Archive), never a place; the source a measurement was taken from may be named in a comment (layers.md rule 6).
+- **R53** No jurisdiction. The recognisers name only the platforms they read (Google Drive, the Internet Archive), never a place; a render's locale comes from the jurisdiction profiles (R54); the source a measurement was taken from may be named in a comment (layers.md rule 6).
 
 ### Satisfies
 
