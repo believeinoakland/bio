@@ -15,11 +15,11 @@
  *      `TypeError: Invalid URL string.` Supplying it takes the other branch.
  *   3. THE ENGINE WANTS RGBA. `loadImage` refuses anything shorter than
  *      width*height*4, so the frame is not avoidable by sending less. That frame
- *      is this member's binding constraint and `transcribe.mjs` bounds it.
+ *      is this member's binding constraint and `member.mjs` bounds it.
  *
  * WHAT THIS FILE IS NOT. It is not a place a measured number lives. `cap`,
  * `measured_by` and the confidence floor are the RECORD's, assembled in
- * `transcribe.mjs` from constants that name their measurement; this file
+ * `member.mjs` from constants that name their measurement; this file
  * produces text, rectangles and the engine's own confidence and judges none of
  * them.
  */
@@ -136,3 +136,9 @@ export async function transcribeFrame(rgba, width, height, { psm = null } = {}) 
     try { if (engine) engine.destroy(); } catch { /* the isolate is going anyway */ }
   }
 }
+
+/** The engine as `member.mjs` takes it (`makeMember`). */
+export const TESSERACT = Object.freeze({
+  name: ENGINE_NAME, version: ENGINE_VERSION, model: MODEL_NAME,
+  check: engineCheck, transcribeFrame,
+});

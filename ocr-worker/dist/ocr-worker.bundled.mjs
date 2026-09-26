@@ -2733,6 +2733,282 @@ function samplesToRgba({ width, height, bitDepth, comps, packed, rowBytes }) {
   return rgba;
 }
 
+// src/contract.mjs
+var CAP = "C";
+var MEASURED_BY = "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.";
+var MAX_FRAME_BYTES = 613e5;
+var frameBytesOf = (w, h) => w * h * 4;
+var REFUSALS2 = {
+  R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
+  BAD_SHA: "capture_sha must be 64 lowercase hex",
+  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
+     reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
+     namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
+  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
+  BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
+  NOT_FOUND: "no capture with that sha in that store",
+  ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
+  PAGE_NOT_RENDERABLE: "the page could not be turned into pixels, and the renderer says why",
+  FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
+  PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
+  ENGINE_FAILED: "the engine refused or failed on this frame",
+  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page"
+};
+function chooseChunk(pages) {
+  const clean = [];
+  for (const p of Array.isArray(pages) ? pages : [])
+    if (Number.isInteger(p) && p >= 0 && !clean.includes(p)) clean.push(p);
+  clean.sort((a, b) => a - b);
+  return { take: clean.length ? clean[0] : null, deferred: clean.slice(1) };
+}
+
+// src/member.mjs
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
+var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function floorFrom(env) {
+  const raw = env && env.OCR_CONFIDENCE_FLOOR;
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : null;
+}
+function makeMember(engine, { render = renderPageToPixels } = {}) {
+  async function transcribeOnePage(bytes, page, { psm = null, confidenceFloor = null } = {}) {
+    const engineWhy = engine.check();
+    if (engineWhy)
+      return { ok: false, reason: "ENGINE_ABSENT", detail: REFUSALS2.ENGINE_ABSENT, why: engineWhy };
+    const rendered = await render(bytes, page, { decodeDct: true });
+    if (!rendered || !rendered.ok)
+      return {
+        ok: false,
+        reason: "PAGE_NOT_RENDERABLE",
+        detail: REFUSALS2.PAGE_NOT_RENDERABLE,
+        page,
+        render: rendered ? {
+          reason: rendered.reason,
+          why: REFUSALS[rendered.reason] || null,
+          detail: rendered
+        } : null
+      };
+    if (rendered.mediaType !== "image/png")
+      return {
+        ok: false,
+        reason: "PIXELS_UNREADABLE",
+        detail: REFUSALS2.PIXELS_UNREADABLE,
+        page,
+        route: rendered.route,
+        mediaType: rendered.mediaType,
+        why: `the ${rendered.route} route hands back ${rendered.mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.`
+      };
+    const frame = frameBytesOf(rendered.width, rendered.height);
+    if (frame > MAX_FRAME_BYTES)
+      return {
+        ok: false,
+        reason: "FRAME_OVER_MEASURED_BOUND",
+        detail: REFUSALS2.FRAME_OVER_MEASURED_BOUND,
+        page,
+        width: rendered.width,
+        height: rendered.height,
+        frame_bytes: frame,
+        bound_bytes: MAX_FRAME_BYTES,
+        why: `a ${rendered.width}x${rendered.height} page needs a ${frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is ${MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.`
+      };
+    const samples = await pngToSamples(rendered.bytes);
+    if (!samples.ok)
+      return {
+        ok: false,
+        reason: "PIXELS_UNREADABLE",
+        detail: REFUSALS2.PIXELS_UNREADABLE,
+        page,
+        route: rendered.route,
+        png: samples
+      };
+    const rgba = samplesToRgba(samples);
+    samples.packed = null;
+    let out;
+    try {
+      out = await engine.transcribeFrame(rgba, samples.width, samples.height, { psm });
+    } catch (e) {
+      out = { ok: false, error: String(e && e.message || e), name: e && e.name };
+    }
+    if (!out || !out.ok)
+      return {
+        ok: false,
+        reason: "ENGINE_FAILED",
+        detail: REFUSALS2.ENGINE_FAILED,
+        page,
+        frame_bytes: frame,
+        engine_error: out ? out.error : "the engine answered nothing",
+        engine_error_name: out ? out.name : void 0
+      };
+    const ref = `p${page}`;
+    const regions = [];
+    let unanchored = 0, blank = 0, unrated = 0;
+    for (const w of out.regions || []) {
+      const text = w && w.text;
+      if (!(typeof text === "string" && text.trim().length)) {
+        blank++;
+        continue;
+      }
+      const rect = Array.isArray(w.rect) && w.rect.length === 4 ? w.rect : null;
+      if (!rect || !rect.every((n) => typeof n === "number" && Number.isFinite(n))) {
+        unanchored++;
+        continue;
+      }
+      const [l, t0, r, b] = rect;
+      const c = w.confidence;
+      const rated = typeof c === "number" && c >= 0 && c <= 1;
+      if (!rated) unrated++;
+      regions.push({
+        text,
+        source: {
+          kind: "pdf-page",
+          ref,
+          page,
+          rect: [l, t0, r, b],
+          space: "image-px",
+          image: {
+            width: samples.width,
+            height: samples.height,
+            route: rendered.route,
+            upright: rendered.upright,
+            rotate_deg: rendered.rotate_deg,
+            pixels_sha256: rendered.pixels_sha256 || null
+          }
+        },
+        confidence: rated ? { value: c, basis: "engine" } : "none"
+      });
+    }
+    const boxes = Number.isInteger(out.boxCount) ? out.boxCount : (out.regions || []).length;
+    if (!regions.length)
+      return {
+        ok: false,
+        reason: "NOTHING_TRANSCRIBED",
+        detail: REFUSALS2.NOTHING_TRANSCRIBED,
+        page,
+        boxes,
+        blank,
+        unanchored,
+        why: `the engine boxed ${boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.`
+      };
+    return {
+      ok: true,
+      page,
+      regions,
+      unanchored,
+      blank,
+      unrated,
+      grain: out.grain,
+      image: {
+        width: samples.width,
+        height: samples.height,
+        frame_bytes: frame,
+        route: rendered.route,
+        upright: rendered.upright,
+        rotate_deg: rendered.rotate_deg,
+        dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
+        pixels_sha256: rendered.pixels_sha256 || null
+      },
+      confidence_floor: confidenceFloor
+    };
+  }
+  async function transcribeRequest(bytes, pages, opts = {}) {
+    const { take, deferred } = chooseChunk(pages);
+    if (take == null)
+      return { ok: false, reason: "BAD_PAGES", detail: REFUSALS2.BAD_PAGES };
+    const one = await transcribeOnePage(bytes, take, opts);
+    const notes = [];
+    if (deferred.length)
+      notes.push(`this member transcribes ONE PAGE PER INVOCATION and ${deferred.length} further page(s) (${deferred.join(", ")}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.`);
+    if (!one.ok)
+      return {
+        ok: false,
+        reason: one.reason,
+        detail: one.detail,
+        page: take,
+        deferred,
+        notes: notes.concat(one.why ? [one.why] : []),
+        refusal: one
+      };
+    if (one.unanchored)
+      notes.push(`${one.unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.`);
+    if (one.unrated)
+      notes.push(`${one.unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.`);
+    return {
+      ok: true,
+      engine: engine.name,
+      version: engine.version,
+      model: engine.model,
+      cap: CAP,
+      measured_by: MEASURED_BY,
+      confidence_floor: one.confidence_floor,
+      pages: [{ page: one.page, regions: one.regions }],
+      /* The GRAIN is on the wire because it is the grain of a LINE in the record's text: the plane joins region
+         texts with a newline. */
+      grain: one.grain,
+      deferred,
+      image: one.image,
+      notes
+    };
+  }
+  async function handleTranscribe(req, env) {
+    if (typeof env?.CAPTURES?.get !== "function")
+      return json({ ok: false, reason: "R2_NOT_CONFIGURED", detail: REFUSALS2.R2_NOT_CONFIGURED }, 503);
+    const body = await req.json().catch(() => null);
+    const sha = typeof body?.capture_sha === "string" ? body.capture_sha.toLowerCase() : "";
+    if (!/^[0-9a-f]{64}$/.test(sha))
+      return json({ ok: false, reason: "BAD_SHA", detail: REFUSALS2.BAD_SHA }, 400);
+    if (typeof body?.store !== "string")
+      return json({ ok: false, reason: "BAD_STORE", detail: REFUSALS2.BAD_STORE }, 400);
+    const store = body.store;
+    if (!NAMESPACES.includes(store))
+      return json({
+        ok: false,
+        reason: "NAMESPACE_UNKNOWN",
+        detail: REFUSALS2.NAMESPACE_UNKNOWN,
+        asked: store.slice(0, 80),
+        namespaces: [...NAMESPACES]
+      }, 400);
+    const pages = Array.isArray(body?.pages) ? body.pages : null;
+    if (!pages || !pages.length)
+      return json({ ok: false, reason: "BAD_PAGES", detail: REFUSALS2.BAD_PAGES }, 400);
+    const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
+    if (!obj) return json({ ok: false, reason: "NOT_FOUND", detail: REFUSALS2.NOT_FOUND, capture_sha: sha, store }, 404);
+    const bytes = new Uint8Array(await obj.arrayBuffer());
+    const out = await transcribeRequest(bytes, pages, {
+      confidenceFloor: floorFrom(env),
+      psm: env && env.OCR_PSM ? env.OCR_PSM : null
+    });
+    if (!out.ok && out.reason === "BAD_PAGES") return json(out, 400);
+    return json(out);
+  }
+  function handleVersion(env) {
+    const why = engine.check();
+    return json({
+      ok: true,
+      name: "ocr-worker",
+      version: env?.VERSION || "0.0.0",
+      engine: engine.name,
+      engine_version: engine.version,
+      model: engine.model,
+      engine_loaded: why == null,
+      ...why ? { engine_unavailable: why } : {}
+    });
+  }
+  async function fetch2(req, env) {
+    const url = new URL(req.url);
+    const path = url.pathname.replace(/^\/+/, "");
+    if (req.method === "GET" && path === "version") return handleVersion(env);
+    if (req.method === "POST" && (path === "transcribe" || path === ""))
+      return handleTranscribe(req, env);
+    return json({ ok: false, reason: "UNKNOWN", detail: "POST /transcribe or GET /version only" }, 404);
+  }
+  return { fetch: fetch2, transcribeRequest, transcribeOnePage };
+}
+
 // src/tessengine.mjs
 import wasmModule from "../assets/tesseract-core.wasm";
 import MODEL from "../assets/eng.traineddata";
@@ -5433,281 +5709,22 @@ async function transcribeFrame(rgba, width, height, { psm = null } = {}) {
     }
   }
 }
-
-// src/contract.mjs
-var CAP = "C";
-var MEASURED_BY = "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.";
-var MAX_FRAME_BYTES = 613e5;
-var frameBytesOf = (w, h) => w * h * 4;
-var REFUSALS2 = {
-  R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
-  BAD_SHA: "capture_sha must be 64 lowercase hex",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
-  /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
-     reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
-     namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
-  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
-  BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
-  NOT_FOUND: "no capture with that sha in that store",
-  ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
-  PAGE_NOT_RENDERABLE: "the page could not be turned into pixels, and the renderer says why",
-  FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
-  PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
-  ENGINE_FAILED: "the engine refused or failed on this frame",
-  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page"
-};
-function chooseChunk(pages) {
-  const clean = [];
-  for (const p of Array.isArray(pages) ? pages : [])
-    if (Number.isInteger(p) && p >= 0 && !clean.includes(p)) clean.push(p);
-  clean.sort((a, b) => a - b);
-  return { take: clean.length ? clean[0] : null, deferred: clean.slice(1) };
-}
-
-// src/transcribe.mjs
-async function transcribeOnePage(bytes, page, { psm = null, confidenceFloor = null } = {}) {
-  const engineWhy = engineCheck();
-  if (engineWhy)
-    return { ok: false, reason: "ENGINE_ABSENT", detail: REFUSALS2.ENGINE_ABSENT, why: engineWhy };
-  const rendered = await renderPageToPixels(bytes, page, { decodeDct: true });
-  if (!rendered || !rendered.ok)
-    return {
-      ok: false,
-      reason: "PAGE_NOT_RENDERABLE",
-      detail: REFUSALS2.PAGE_NOT_RENDERABLE,
-      page,
-      render: rendered ? {
-        reason: rendered.reason,
-        why: REFUSALS[rendered.reason] || null,
-        detail: rendered
-      } : null
-    };
-  if (rendered.mediaType !== "image/png")
-    return {
-      ok: false,
-      reason: "PIXELS_UNREADABLE",
-      detail: REFUSALS2.PIXELS_UNREADABLE,
-      page,
-      route: rendered.route,
-      mediaType: rendered.mediaType,
-      why: `the ${rendered.route} route hands back the publisher's own ${rendered.mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at; the capability is NAMED so the corpus can decide whether it is worth building rather than being discovered as a silent blank`
-    };
-  const frame = frameBytesOf(rendered.width, rendered.height);
-  if (frame > MAX_FRAME_BYTES)
-    return {
-      ok: false,
-      reason: "FRAME_OVER_MEASURED_BOUND",
-      detail: REFUSALS2.FRAME_OVER_MEASURED_BOUND,
-      page,
-      width: rendered.width,
-      height: rendered.height,
-      frame_bytes: frame,
-      bound_bytes: MAX_FRAME_BYTES,
-      why: `a ${rendered.width}x${rendered.height} page needs a ${frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is ${MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.`
-    };
-  const samples = await pngToSamples(rendered.bytes);
-  if (!samples.ok)
-    return {
-      ok: false,
-      reason: "PIXELS_UNREADABLE",
-      detail: REFUSALS2.PIXELS_UNREADABLE,
-      page,
-      route: rendered.route,
-      png: samples
-    };
-  const rgba = samplesToRgba(samples);
-  samples.packed = null;
-  const out = await transcribeFrame(rgba, samples.width, samples.height, { psm });
-  if (!out.ok)
-    return {
-      ok: false,
-      reason: "ENGINE_FAILED",
-      detail: REFUSALS2.ENGINE_FAILED,
-      page,
-      frame_bytes: frame,
-      engine_error: out.error,
-      engine_error_name: out.name
-    };
-  const ref = `p${page}`;
-  const regions = [];
-  let unanchored = 0, blank = 0, unrated = 0;
-  for (const w of out.regions) {
-    const text = w.text;
-    if (!(typeof text === "string" && text.trim().length)) {
-      blank++;
-      continue;
-    }
-    const [l, t0, r, b] = w.rect;
-    if (![l, t0, r, b].every((n) => Number.isFinite(n))) {
-      unanchored++;
-      continue;
-    }
-    const c = w.confidence;
-    const rated = typeof c === "number" && c >= 0 && c <= 1;
-    if (!rated) unrated++;
-    regions.push({
-      text,
-      source: {
-        kind: "pdf-page",
-        ref,
-        page,
-        rect: [l, t0, r, b],
-        space: "image-px",
-        image: {
-          width: samples.width,
-          height: samples.height,
-          route: rendered.route,
-          upright: rendered.upright,
-          rotate_deg: rendered.rotate_deg,
-          pixels_sha256: rendered.pixels_sha256 || null
-        }
-      },
-      confidence: rated ? { value: c, basis: "engine" } : "none"
-    });
-  }
-  if (!regions.length)
-    return {
-      ok: false,
-      reason: "NOTHING_TRANSCRIBED",
-      detail: REFUSALS2.NOTHING_TRANSCRIBED,
-      page,
-      boxes: out.boxCount,
-      blank,
-      unanchored,
-      why: `the engine boxed ${out.boxCount} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.`
-    };
-  return {
-    ok: true,
-    page,
-    regions,
-    unanchored,
-    blank,
-    unrated,
-    grain: out.grain,
-    image: {
-      width: samples.width,
-      height: samples.height,
-      frame_bytes: frame,
-      route: rendered.route,
-      upright: rendered.upright,
-      rotate_deg: rendered.rotate_deg,
-      dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
-      pixels_sha256: rendered.pixels_sha256 || null
-    },
-    confidence_floor: confidenceFloor
-  };
-}
-async function transcribeRequest(bytes, pages, opts = {}) {
-  const { take, deferred } = chooseChunk(pages);
-  if (take == null)
-    return { ok: false, reason: "BAD_PAGES", detail: REFUSALS2.BAD_PAGES };
-  const one = await transcribeOnePage(bytes, take, opts);
-  const notes = [];
-  if (deferred.length)
-    notes.push(`this member transcribes ONE PAGE PER INVOCATION and ${deferred.length} further page(s) (${deferred.join(", ")}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.`);
-  if (!one.ok)
-    return {
-      ok: false,
-      reason: one.reason,
-      detail: one.detail,
-      page: take,
-      deferred,
-      notes: notes.concat(one.why ? [one.why] : []),
-      refusal: one
-    };
-  if (one.unanchored)
-    notes.push(`${one.unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.`);
-  if (one.unrated)
-    notes.push(`${one.unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.`);
-  return {
-    ok: true,
-    engine: ENGINE_NAME,
-    version: ENGINE_VERSION,
-    model: MODEL_NAME,
-    cap: CAP,
-    measured_by: MEASURED_BY,
-    confidence_floor: one.confidence_floor,
-    pages: [{ page: one.page, regions: one.regions }],
-    /* The GRAIN is on the wire because it is the grain of a LINE in the record's
-       text — the plane joins region texts with a newline — and a consumer that
-       cannot tell word grain from line grain cannot tell whether a line-anchored
-       read of the result means anything. Measured, not guessed: see
-       `REGION_GRAIN` in `tessengine.mjs`. */
-    grain: one.grain,
-    deferred,
-    image: one.image,
-    notes
-  };
-}
+var TESSERACT = Object.freeze({
+  name: ENGINE_NAME,
+  version: ENGINE_VERSION,
+  model: MODEL_NAME,
+  check: engineCheck,
+  transcribeFrame
+});
 
 // src/index.mjs
 var SURFACE = {
   transcribe: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
-var NAMESPACES = Object.freeze(["bio", "scratch"]);
-var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
-  status,
-  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-});
-function floorFrom(env) {
-  const raw = env && env.OCR_CONFIDENCE_FLOOR;
-  if (raw == null || raw === "") return null;
-  const n = Number(raw);
-  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : null;
-}
-async function handleTranscribe(req, env) {
-  if (typeof env.CAPTURES?.get !== "function")
-    return json({ ok: false, reason: "R2_NOT_CONFIGURED", detail: REFUSALS2.R2_NOT_CONFIGURED }, 503);
-  const body = await req.json().catch(() => null);
-  const sha = typeof body?.capture_sha === "string" ? body.capture_sha.toLowerCase() : "";
-  const store = typeof body?.store === "string" ? body.store : "";
-  if (!/^[0-9a-f]{64}$/.test(sha))
-    return json({ ok: false, reason: "BAD_SHA", detail: REFUSALS2.BAD_SHA }, 400);
-  if (typeof body?.store !== "string")
-    return json({ ok: false, reason: "BAD_STORE", detail: REFUSALS2.BAD_STORE }, 400);
-  if (!NAMESPACES.includes(store))
-    return json({
-      ok: false,
-      reason: "NAMESPACE_UNKNOWN",
-      detail: REFUSALS2.NAMESPACE_UNKNOWN,
-      asked: store.slice(0, 80),
-      namespaces: [...NAMESPACES]
-    }, 400);
-  const pages = Array.isArray(body?.pages) ? body.pages : null;
-  if (!pages || !pages.length)
-    return json({ ok: false, reason: "BAD_PAGES", detail: REFUSALS2.BAD_PAGES }, 400);
-  const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
-  if (!obj) return json({ ok: false, reason: "NOT_FOUND", detail: REFUSALS2.NOT_FOUND, capture_sha: sha, store }, 404);
-  const bytes = new Uint8Array(await obj.arrayBuffer());
-  const out = await transcribeRequest(bytes, pages, {
-    confidenceFloor: floorFrom(env),
-    psm: env && env.OCR_PSM ? env.OCR_PSM : null
-  });
-  return json(out);
-}
-function handleVersion(env) {
-  const why = engineCheck();
-  return json({
-    ok: true,
-    name: "ocr-worker",
-    version: env.VERSION || "0.0.0",
-    engine: ENGINE_NAME,
-    engine_version: ENGINE_VERSION,
-    model: MODEL_NAME,
-    engine_loaded: why == null,
-    ...why ? { engine_unavailable: why } : {}
-  });
-}
+var member = makeMember(TESSERACT);
 var index_default = {
-  async fetch(req, env) {
-    const url = new URL(req.url);
-    const path = url.pathname.replace(/^\/+/, "");
-    if (req.method === "GET" && path === "version") return handleVersion(env);
-    if (req.method === "POST" && (path === "transcribe" || path === ""))
-      return handleTranscribe(req, env);
-    return json({ ok: false, reason: "UNKNOWN", detail: "POST /transcribe or GET /version only" }, 404);
-  }
+  fetch: (req, env) => member.fetch(req, env)
 };
 export {
   SURFACE,
