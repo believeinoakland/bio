@@ -22,3 +22,4 @@
 - K18 · 2026-09-26 · checks · Owner of a file is the module with the most specific matching path; a requirement id is defined where written in bold `**Rn**`; a relative import naming no tracked file is counted, not judged · BOB #38 (`civicos-process/checks/README.md`)
 - K19 · 2026-09-26 · process · The full regression runs only by hand, at a release or when Bob asks; nothing runs on a push to `main` · P11; Bob asked that the old push-to-main gate go
 - K20 · 2026-09-26 · requirements · Requirements of a helper or legacy module are technical detail and BOB's under P17; requirements of a product module are Bob's · BOB #38's reading of P17
+- K21 · 2026-09-26 · process · Outside a tranche, BOB commits the build state to `main` directly; while a tranche runs, `main` does not change and BOB writes on the tranche branch · P12 and mechanics §4
