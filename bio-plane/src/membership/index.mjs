@@ -4,8 +4,9 @@
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
  *
- * SHAPE. `new Membership({ sql, core })`: `sql` is the store's SqlStorage (`exec(query, ...args)` returning an
- * iterable of rows), `core` is record-core's service object (`bundleInfo`, `declarePurge`, …). This module's
+ * SHAPE (K61). `membershipOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
+ * and reaches record-core by `recordOf(ctx)` on the same `ctx` (`bundleInfo`, `declarePurge`, …); a test may
+ * pass its own record-core as `membershipOf(ctx, { record })`. This module's
  * SQL joins record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type`
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
@@ -15,6 +16,7 @@ import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_I
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
+import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
    comment, so it changes nothing about what runs; the runtime test asserts each gated statement contains it. */
@@ -88,9 +90,11 @@ export class Membership {
 
   /* R59, through record-core's `declarePurge` (its R21) once record-core provides it. */
   declareTables() {
-    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    this.core.declarePurge("membership", [...MEMBERSHIP_PROJECT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES],
-                           { exempt: [...MEMBERSHIP_EXEMPT_TABLES] });
+    if (this.#declared) return false;
+    /* record-core R46: the project-keyed tables are keyed to a bundle (the project) by `project_id`. */
+    this.core.declarePurge("membership",
+      [...MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })), ...MEMBERSHIP_EXEMPT_TABLES],
+      { exempt: [...MEMBERSHIP_EXEMPT_TABLES] });
     this.#declared = true;
     return true;
   }
@@ -2892,12 +2896,13 @@ export class Membership {
   }
 }
 
-/* The one Membership of a host (the legacy store), made on first use over the host's own `sql`, with the host as
-   record-core's service object. */
+/* K61: the one Membership of a Durable Object's storage, made on first use over its `sql`, reaching record-core by
+   `recordOf(ctx)` on the same `ctx`. `record` (a test's own record-core) is read on the first call only. */
 const OF = new WeakMap();
-export function membershipOf(host) {
-  let m = OF.get(host);
-  if (!m) { m = new Membership({ sql: host.sql, core: host }); OF.set(host, m); }
+export function membershipOf(ctx, { record = null } = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let m = OF.get(storage);
+  if (!m) { m = new Membership({ sql: storage.sql, core: record ?? recordOf(ctx) }); OF.set(storage, m); }
   return m;
 }
 

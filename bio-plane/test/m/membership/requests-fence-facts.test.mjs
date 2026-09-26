@@ -223,13 +223,15 @@ test("R59 members' tables are declared exempt from purge; project-keyed tables a
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["credentials", "sessions", "bootstrap", "members", "signers",
     "ai_credentials", "member_expertise", "admin_votes", "hosting_access"]));
-  assert.deepEqual(new Set(d.tables), new Set([...MEMBERSHIP_EXEMPT_TABLES, ...MEMBERSHIP_PROJECT_TABLES]));
+  const names = d.tables.map((t) => (typeof t === "string" ? t : t.name));
+  assert.deepEqual(new Set(names), new Set([...MEMBERSHIP_EXEMPT_TABLES, ...MEMBERSHIP_PROJECT_TABLES]));
   for (const t of MEMBERSHIP_PROJECT_TABLES) {
     assert.ok(!d.opts.exempt.includes(t));
+    assert.deepEqual(d.tables.find((x) => x.name === t), { name: t, keys: ["project_id"] }, "keyed by project (record-core R46)");
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "project_id"), `${t} is keyed by project`);
   }
   const owned = w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('bundles','sqlite_sequence')`).map((r) => r.name);
-  assert.deepEqual(new Set(owned), new Set(d.tables), "every table the module owns is declared");
+  assert.deepEqual(new Set(owned), new Set(names), "every table the module owns is declared");
   w.m.migrate();
   assert.equal(w.declared.length, 1, "declared once");
 });

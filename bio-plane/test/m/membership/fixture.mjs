@@ -1,8 +1,8 @@
 /* A membership module over a real SQLite database (node:sqlite), with a stub record-core that provides the
    services membership uses (bundleInfo, declarePurge) over a `bundles` table holding the R37 read contract
-   (bundle_id, object_type) and a title. Every test drives the module at its interface. */
+   (bundle_id, object_type) and a title, passed to `membershipOf` as a test's own record-core (K61). Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
-import { Membership, membershipOps } from "../../../src/membership/index.mjs";
+import { membershipOf, membershipOps } from "../../../src/membership/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -27,7 +27,9 @@ export function world() {
     declarePurge(module, tables, opts) { declared.push({ module, tables, opts }); },
   };
   const sql = sqlOver(db);
-  const m = new Membership({ sql, core });
+  const ctx = { storage: { sql } };                  // a Durable Object's storage, as membershipOf reads it
+  const m = membershipOf(ctx, { record: core });
+  if (membershipOf(ctx) !== m) throw new Error("membershipOf answers one instance per storage");
   m.migrate();
   const w = {
     db, sql, core, m, declared,

@@ -1369,7 +1369,7 @@ export class Store extends DurableObject {
     }
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
-    membershipOf(this).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
+    membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
        between the store's birth and the record of whose store it is. */
@@ -10221,7 +10221,7 @@ export class Store extends DurableObject {
       return Store.#noCaseDocument(id, ed);
     return {
       ok: true, doc,
-      signers: membershipOf(this).attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
+      signers: membershipOf(this.ctx).attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
       priorCase: this.#one(
         `SELECT edition, completeness, bias_acknowledgement FROM published_cases
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`, id, ed),
@@ -17323,7 +17323,7 @@ export class Store extends DurableObject {
   }
 
 
-  #viewerSees(...a) { return membershipOf(this).inSight(...a); }
+  #viewerSees(...a) { return membershipOf(this.ctx).inSight(...a); }
 
   /* ======================= REC-30 · the posture sweep ===============   *
    * REC-25 stamped the D-15 gate onto every read that is ADDRESSED to a bundle.
@@ -22814,7 +22814,7 @@ export class Store extends DurableObject {
     };
   }
 
-  #positionalMember(...a) { return membershipOf(this).positionalMember(...a); }
+  #positionalMember(...a) { return membershipOf(this.ctx).positionalMember(...a); }
 
   /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
    *  never rewritten. `sharer` is the control plane's stamp. */
@@ -34500,11 +34500,11 @@ export class Store extends DurableObject {
 
 
 
-  bootstrapState(...a) { return membershipOf(this).bootstrapState(...a); }
+  bootstrapState(...a) { return membershipOf(this.ctx).bootstrapState(...a); }
 
-  claim(...a) { return membershipOf(this).claim(...a); }
+  claim(...a) { return membershipOf(this.ctx).claim(...a); }
 
-  setPassword(...a) { return membershipOf(this).setPassword(...a); }
+  setPassword(...a) { return membershipOf(this.ctx).setPassword(...a); }
 
   /* =====================================================================
    * D-436 / IC-172 — THE PRODUCING GROUP, ONE RECORDED VALUE FOR THE WHOLE INSTANCE.
@@ -34963,9 +34963,9 @@ export class Store extends DurableObject {
 
   static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;
 
-  login(...a) { return membershipOf(this).login(...a); }
+  login(...a) { return membershipOf(this.ctx).login(...a); }
 
-  session(...a) { return membershipOf(this).session(...a); }
+  session(...a) { return membershipOf(this.ctx).session(...a); }
 
 
   /* ---- members: each person their own credential, admin-invited ----
@@ -35054,8 +35054,8 @@ export class Store extends DurableObject {
                                                             sha256: bare(p.sha256), bytes: p.bytes })) };
   }
 
-  #isProjectOwner(...a) { return membershipOf(this).isProjectOwner(...a); }
-  #isJoinedParticipant(...a) { return membershipOf(this).isJoinedParticipant(...a); }
+  #isProjectOwner(...a) { return membershipOf(this.ctx).isProjectOwner(...a); }
+  #isJoinedParticipant(...a) { return membershipOf(this.ctx).isJoinedParticipant(...a); }
 
   /* REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8 — MAY THIS MEMBER CONCLUDE THIS QUESTION FOR
    * SOME PROJECT: has it JOINED a project it can SEE that LIVE-cites the question? `op=affordances`
@@ -35147,17 +35147,17 @@ export class Store extends DurableObject {
     return false;
   }
 
-  #projectAuthority(...a) { return membershipOf(this).projectAuthority(...a); }
+  #projectAuthority(...a) { return membershipOf(this.ctx).projectAuthority(...a); }
 
-  #caseAuthority(...a) { return membershipOf(this).caseAuthority(...a); }
+  #caseAuthority(...a) { return membershipOf(this.ctx).caseAuthority(...a); }
 
-  #inSight(...a) { return membershipOf(this).inSight(...a); }
+  #inSight(...a) { return membershipOf(this.ctx).inSight(...a); }
   static SIGHT_NONE = Membership.SIGHT_NONE;
   static SIGHT_EXISTENCE = Membership.SIGHT_EXISTENCE;
   static SIGHT_FULL = Membership.SIGHT_FULL;
-  #visibilityOf(...a) { return membershipOf(this).visibilityOf(...a); }
-  #reindexProjectSight(...a) { return membershipOf(this).reindexProjectSight(...a); }
-  #existenceAct(...a) { return membershipOf(this).existenceAct(...a); }
+  #visibilityOf(...a) { return membershipOf(this.ctx).visibilityOf(...a); }
+  #reindexProjectSight(...a) { return membershipOf(this.ctx).reindexProjectSight(...a); }
+  #existenceAct(...a) { return membershipOf(this.ctx).existenceAct(...a); }
   /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
    * 7.14, RULED 2026-09-23 by BOB #32, (a)).
    *
@@ -35230,26 +35230,26 @@ export class Store extends DurableObject {
     return null;
   }
 
-  projectVisibilitySet(...a) { return membershipOf(this).projectVisibilitySet(...a); }
+  projectVisibilitySet(...a) { return membershipOf(this.ctx).projectVisibilitySet(...a); }
 
-  #visibilitySettingRefusal(...a) { return membershipOf(this).visibilitySettingRefusal(...a); }
+  #visibilitySettingRefusal(...a) { return membershipOf(this.ctx).visibilitySettingRefusal(...a); }
 
-  projectVisibility(...a) { return membershipOf(this).projectVisibility(...a); }
+  projectVisibility(...a) { return membershipOf(this.ctx).projectVisibility(...a); }
 
-  projectDirectory(...a) { return membershipOf(this).projectDirectory(...a); }
+  projectDirectory(...a) { return membershipOf(this.ctx).projectDirectory(...a); }
   static PROJECT_DIRECTORY_LIMIT = Membership.PROJECT_DIRECTORY_LIMIT;
 
   static JOIN_REQUEST_ANSWERS = Membership.JOIN_REQUEST_ANSWERS;
 
-  projectRequest(...a) { return membershipOf(this).projectRequest(...a); }
+  projectRequest(...a) { return membershipOf(this.ctx).projectRequest(...a); }
 
-  projectRequestWithdraw(...a) { return membershipOf(this).projectRequestWithdraw(...a); }
+  projectRequestWithdraw(...a) { return membershipOf(this.ctx).projectRequestWithdraw(...a); }
 
-  projectRequestAnswer(...a) { return membershipOf(this).projectRequestAnswer(...a); }
+  projectRequestAnswer(...a) { return membershipOf(this.ctx).projectRequestAnswer(...a); }
 
-  projectRequests(...a) { return membershipOf(this).projectRequests(...a); }
+  projectRequests(...a) { return membershipOf(this.ctx).projectRequests(...a); }
   static PROJECT_REQUESTS_LIMIT = Membership.PROJECT_REQUESTS_LIMIT;
-  #rosterInSight(...a) { return membershipOf(this).rosterInSight(...a); }
+  #rosterInSight(...a) { return membershipOf(this.ctx).rosterInSight(...a); }
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
@@ -35457,30 +35457,30 @@ export class Store extends DurableObject {
              detail: "no project answers to that id here. A project you cannot see is answered exactly as one "
                    + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way." };
   }
-  #ownsAnyProject(...a) { return membershipOf(this).ownsAnyProject(...a); }
+  #ownsAnyProject(...a) { return membershipOf(this.ctx).ownsAnyProject(...a); }
 
-  #isProjectEditor(...a) { return membershipOf(this).isProjectEditor(...a); }
+  #isProjectEditor(...a) { return membershipOf(this.ctx).isProjectEditor(...a); }
 
-  #participation(...a) { return membershipOf(this).participation(...a); }
-  #isAdminMember(...a) { return membershipOf(this).isAdministrator(...a); }
+  #participation(...a) { return membershipOf(this.ctx).participation(...a); }
+  #isAdminMember(...a) { return membershipOf(this.ctx).isAdministrator(...a); }
 
-  projectClaimOwner(...a) { return membershipOf(this).projectClaimOwner(...a); }
+  projectClaimOwner(...a) { return membershipOf(this.ctx).projectClaimOwner(...a); }
 
-  projectInvite(...a) { return membershipOf(this).projectInvite(...a); }
+  projectInvite(...a) { return membershipOf(this.ctx).projectInvite(...a); }
 
-  projectJoin(...a) { return membershipOf(this).projectJoin(...a); }
+  projectJoin(...a) { return membershipOf(this.ctx).projectJoin(...a); }
 
-  projectLeave(...a) { return membershipOf(this).projectLeave(...a); }
+  projectLeave(...a) { return membershipOf(this.ctx).projectLeave(...a); }
 
-  projectRemove(...a) { return membershipOf(this).projectRemove(...a); }
+  projectRemove(...a) { return membershipOf(this.ctx).projectRemove(...a); }
 
-  projectOwnerAdd(...a) { return membershipOf(this).projectOwnerAdd(...a); }
+  projectOwnerAdd(...a) { return membershipOf(this.ctx).projectOwnerAdd(...a); }
 
-  #rescueRefusal(...a) { return membershipOf(this).rescueRefusal(...a); }
+  #rescueRefusal(...a) { return membershipOf(this.ctx).rescueRefusal(...a); }
 
-  projectOwnerRescue(...a) { return membershipOf(this).projectOwnerRescue(...a); }
+  projectOwnerRescue(...a) { return membershipOf(this.ctx).projectOwnerRescue(...a); }
 
-  projectOwnerRemove(...a) { return membershipOf(this).projectOwnerRemove(...a); }
+  projectOwnerRemove(...a) { return membershipOf(this.ctx).projectOwnerRemove(...a); }
 
   /** 7.12: any JOINED participant may fork a project, creating a clone.
    *
@@ -35866,13 +35866,13 @@ export class Store extends DurableObject {
 
 
 
-  expertiseDeclare(...a) { return membershipOf(this).expertiseDeclare(...a); }
+  expertiseDeclare(...a) { return membershipOf(this.ctx).expertiseDeclare(...a); }
 
-  expertiseConfirm(...a) { return membershipOf(this).expertiseConfirm(...a); }
+  expertiseConfirm(...a) { return membershipOf(this.ctx).expertiseConfirm(...a); }
 
-  expertiseList(...a) { return membershipOf(this).expertiseList(...a); }
+  expertiseList(...a) { return membershipOf(this.ctx).expertiseList(...a); }
 
-  projectParticipants(...a) { return membershipOf(this).projectParticipants(...a); }
+  projectParticipants(...a) { return membershipOf(this.ctx).projectParticipants(...a); }
 
   static CAPABILITIES = Membership.CAPABILITIES;
 
@@ -35880,46 +35880,46 @@ export class Store extends DurableObject {
 
   static ownerMath = Membership.ownerMath;
 
-  projectOwnerArithmetic(...a) { return membershipOf(this).projectOwnerArithmetic(...a); }
+  projectOwnerArithmetic(...a) { return membershipOf(this.ctx).projectOwnerArithmetic(...a); }
 
-  #owners(...a) { return membershipOf(this).projectOwners(...a).sort(); }
+  #owners(...a) { return membershipOf(this.ctx).projectOwners(...a).sort(); }
 
-  adminArithmetic(...a) { return membershipOf(this).adminArithmetic(...a); }
+  adminArithmetic(...a) { return membershipOf(this.ctx).adminArithmetic(...a); }
 
   static ROOT_ADMIN = Membership.ROOT_ADMIN;
 
-  #activeAdmins(...a) { return membershipOf(this).activeAdmins(...a); }
+  #activeAdmins(...a) { return membershipOf(this.ctx).activeAdmins(...a); }
 
 
 
 
 
-  memberCaps(...a) { return membershipOf(this).memberCaps(...a); }
+  memberCaps(...a) { return membershipOf(this.ctx).memberCaps(...a); }
 
-  adminEndorse(...a) { return membershipOf(this).adminEndorse(...a); }
+  adminEndorse(...a) { return membershipOf(this.ctx).adminEndorse(...a); }
 
-  adminRemove(...a) { return membershipOf(this).adminRemove(...a); }
+  adminRemove(...a) { return membershipOf(this.ctx).adminRemove(...a); }
 
-  memberAdd(...a) { return membershipOf(this).memberAdd(...a); }
+  memberAdd(...a) { return membershipOf(this.ctx).memberAdd(...a); }
 
 
 
-  inviteLook(...a) { return membershipOf(this).inviteLook(...a); }
+  inviteLook(...a) { return membershipOf(this.ctx).inviteLook(...a); }
 
-  enroll(...a) { return membershipOf(this).enroll(...a); }
+  enroll(...a) { return membershipOf(this.ctx).enroll(...a); }
 
-  memberList(...a) { return membershipOf(this).memberList(...a); }
+  memberList(...a) { return membershipOf(this.ctx).memberList(...a); }
 
-  memberSet(...a) { return membershipOf(this).memberSet(...a); }
+  memberSet(...a) { return membershipOf(this.ctx).memberSet(...a); }
 
   static SIGNER_ATTESTS = Membership.SIGNER_ATTESTS;
 
 
-  signerAdd(...a) { return membershipOf(this).signerAdd(...a); }
+  signerAdd(...a) { return membershipOf(this.ctx).signerAdd(...a); }
 
-  signerList(...a) { return membershipOf(this).signerList(...a); }
+  signerList(...a) { return membershipOf(this.ctx).signerList(...a); }
 
-  signerSet(...a) { return membershipOf(this).signerSet(...a); }
+  signerSet(...a) { return membershipOf(this.ctx).signerSet(...a); }
 
   /* ---- ratification support: facts out, published rows in ----
 
@@ -35968,7 +35968,7 @@ export class Store extends DurableObject {
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),
-      signers: membershipOf(this).attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
+      signers: membershipOf(this.ctx).attestingKeys(),   /* membership R70: the ONE predicate (D-158) */
       /* REC-14: the two facts the catalog cannot get from the bundle — what
          THIS case asserted at its previous edition (C-21.1) and what the cases
          beneath it FROZE (C-21.2). Read here, with the rows, rather than
@@ -43086,13 +43086,13 @@ export class Store extends DurableObject {
       attribution: this.#captureRequestAttribution(r) })) };
   }
 
-  aiCredentialMint(...a) { return membershipOf(this).aiCredentialMint(...a); }
+  aiCredentialMint(...a) { return membershipOf(this.ctx).aiCredentialMint(...a); }
 
-  aiCredentialRevoke(...a) { return membershipOf(this).aiCredentialRevoke(...a); }
+  aiCredentialRevoke(...a) { return membershipOf(this.ctx).aiCredentialRevoke(...a); }
 
-  aiCredentialLook(...a) { return membershipOf(this).aiCredentialLook(...a); }
+  aiCredentialLook(...a) { return membershipOf(this.ctx).aiCredentialLook(...a); }
 
-  aiCredentials(...a) { return membershipOf(this).aiCredentials(...a); }
+  aiCredentials(...a) { return membershipOf(this.ctx).aiCredentials(...a); }
 
 
 
@@ -50617,7 +50617,7 @@ export class Store extends DurableObject {
        NAMED and asked for; an unnamed one is how this got here. */
     try {
       const map = {
-        ...membershipOps(membershipOf(this), url, body, this.env),
+        ...membershipOps(membershipOf(this.ctx), url, body, this.env),
         /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
            wrapper is the producer-side ARM for the monitor-cadence consumer, in
            the shape SCHEDULER.md prescribes ("arm it from whatever producer
