@@ -42,3 +42,10 @@ Nothing.
 - `node checks/architecture.mjs … text-chain`: 6 product files, 9 relative imports; 0 failures.
 - `node checks/coverage.mjs … text-chain`: 86 of 86 live requirement ids named by a test; 0 failures.
 - `node checks/ownership.mjs … text-chain tranche/T2`: 0 failures.
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_011N1d8x7gArcfWDvLkY3fC5,job,text-chain,8544462,184064,102,57742,51,12,1649
+```
