@@ -45,6 +45,11 @@
 - N50 · 2026-09-26 · DONE (K80) · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.
 - N51 · 2026-09-26 · **record-core**: `auditPass` offers a registration for later modules' audit checks (the K31 pattern), so `promotion.recordAudit` stops re-judging only the bundles the moved checks flag. Reported by PROMOTION #1.
 - N52 · 2026-09-26 · **affordances**: import promotion's `REOPENABLE_FROM` instead of keeping its own. Reported by PROMOTION #1.
+- N53 · 2026-09-26 · **skills**, **agent-worker**, **control-plane** (K81): the skills tests that read `agent-worker` and `index.mjs` move into those modules' own tests.
+- N54 · 2026-09-26 · **ai-runs**, **run-productions** (K82): BOB splits `build/requirements/ai-runs.md` into `ai-runs.md` and `run-productions.md` (`op=suggest` and the extract proposals), adds `run-productions` after `ai-runs` in `modules.json`, before Bob approves either.
+- N55 · 2026-09-26 · **inquiry**, **citation** (K83): BOB splits `build/requirements/inquiry.md` into `inquiry.md` and `citation.md` (cite, sever, reinstate), adds `citation` directly after `inquiry` in `modules.json`, before Bob approves either.
+- N56 · 2026-09-26 · **promotion** (K83): a read `fact(name, ...args)` of facts registered with it (R40), for later modules; and D-592 (`reopen`), re-targeted to promotion.
+- N57 · 2026-09-26 · **legacy-tests** (K84): a sweep of the 227 `*.control.mjs` and 99 `nc-*.mjs` negative controls no entry named in T3, each run as declared, re-anchored or retired with the code it anchors on.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 

@@ -37,7 +37,7 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 | `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json` | `not_product` | `bio-plane/`: `npm run build` (renders `src/signpage.mjs` first) | the plane's source |
 | `pdf-worker/dist/pdf-worker.bundled.mjs`, `.bundle.json` | `pdf-worker` | `pdf-worker/`: `npm run build` | `pdf-worker`, and plane files (`pdfstructure`, `subresources`, `cpu`) |
 | `ocr-worker/dist/ocr-worker.bundled.mjs`, `.bundle.json` | `ocr-worker` | `ocr-worker/`: `npm run build` (re-renders `src/tesslib.mjs` when `tesseract-wasm` is installed) | `ocr-worker`, `pdf-worker/src/pagepixels.mjs`, plane `pdfstructure` |
-| `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker` only |
+| `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker`, and the plane's `bio-plane/src/tokens.mjs` (runtime-limits) |
 | `newgroup/dist/newgroup.bundled.mjs` | `installer` | `newgroup/`: `npm run build` | `installer`, and `signatures` (`sshsig.mjs`) |
 
 **Verify, after regenerating:** `node --test bio-plane/test/fleetbundles.test.mjs` from the repository root (`verifyStatic` and `verifyFresh` over every member: input hashes, byte identity, externals). Also `node --test bio-plane/test/newgroup-bundle-fresh.test.mjs` for the installer's bundle. Each must print `0 fail` with no `SKIP`; a `SKIP` means a member's `node_modules` is missing (`npm ci` there first). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
