@@ -29,7 +29,8 @@
     {"id": "capture-sources", "layer": 3, "paths": ["bio-plane/src/render.mjs", "bio-plane/src/browserrender.mjs", "bio-plane/src/cdx.mjs", "bio-plane/src/drive.mjs"], "tests": ["bio-plane/test/m/capture-sources/"], "uses": ["subresources"]},
     {"id": "capture", "layer": 3, "from": ["legacy-store", "legacy-index"], "paths": ["bio-plane/src/capture/"], "tests": ["bio-plane/test/m/capture/"], "uses": ["jurisdictions", "legacy-checks", "subresources", "format-registry", "docprofile", "record-core", "membership", "host-governor", "provenance", "capture-sources"]},
 
-    {"id": "extraction", "layer": 4, "from": ["legacy-checks", "legacy-store", "legacy-index"], "paths": ["bio-plane/src/extractrun.mjs", "bio-plane/src/calibration.mjs", "bio-plane/src/readingprov.mjs", "bio-plane/src/extraction/"], "tests": ["bio-plane/test/m/extraction/"], "uses": ["jurisdictions", "legacy-checks", "text-chain", "format-registry", "docprofile", "pdf-worker", "ocr-worker", "record-core", "membership", "capture", "promotion"]},
+    {"id": "calibration", "layer": 4, "from": ["legacy-checks", "legacy-store"], "paths": ["bio-plane/src/calibration.mjs", "bio-plane/src/calibration/"], "tests": ["bio-plane/test/m/calibration/"], "uses": ["legacy-checks", "record-core"]},
+    {"id": "extraction", "layer": 4, "from": ["legacy-checks", "legacy-store", "legacy-index"], "paths": ["bio-plane/src/extractrun.mjs", "bio-plane/src/readingprov.mjs", "bio-plane/src/extraction/"], "tests": ["bio-plane/test/m/extraction/"], "uses": ["jurisdictions", "legacy-checks", "text-chain", "format-registry", "docprofile", "pdf-worker", "ocr-worker", "record-core", "membership", "capture", "promotion", "calibration"]},
     {"id": "content", "layer": 4, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/content/"], "tests": ["bio-plane/test/m/content/"], "uses": ["legacy-checks", "text-chain", "pdf-worker", "record-core", "membership", "provenance", "extraction"]},
 
     {"id": "entities", "layer": 5, "from": "legacy-store", "paths": ["bio-plane/src/entities/"], "tests": ["bio-plane/test/m/entities/"], "uses": ["jurisdictions", "legacy-checks", "id-spaces", "record-core", "content"]},
@@ -63,7 +64,7 @@
     {"id": "escalation", "layer": 9, "paths": ["bio-plane/src/escalation/"], "tests": ["bio-plane/test/m/escalation/"], "uses": ["record-core", "membership", "conformance", "consequences", "actions", "filings"]},
 
     {"id": "monitoring", "layer": 10, "from": "legacy-store", "paths": ["bio-plane/src/monitoring/"], "tests": ["bio-plane/test/m/monitoring/"], "uses": ["record-core", "membership", "capture", "extraction", "content", "intent", "reevaluation", "actions", "escalation"]},
-    {"id": "scheduler", "layer": 10, "from": "legacy-store", "paths": ["bio-plane/src/scheduler/"], "tests": ["bio-plane/test/m/scheduler/"], "uses": ["record-core", "host-governor", "capture", "extraction", "retrieval", "strength", "ai-runs", "capture-requests", "monitoring", "intent", "reevaluation"]},
+    {"id": "scheduler", "layer": 10, "from": "legacy-store", "paths": ["bio-plane/src/scheduler/"], "tests": ["bio-plane/test/m/scheduler/"], "uses": ["record-core", "host-governor", "capture", "calibration", "extraction", "retrieval", "strength", "ai-runs", "capture-requests", "monitoring", "intent", "reevaluation"]},
     {"id": "legacy-store", "layer": 10, "legacy": true, "paths": ["bio-plane/src/store.mjs", "bio-plane/src/schema.mjs"], "tests": [], "uses": ["*earlier"]},
 
     {"id": "affordances", "layer": 11, "from": "legacy-store", "paths": ["bio-plane/src/affordances.mjs", "bio-plane/src/affordances/"], "tests": ["bio-plane/test/m/affordances/"], "uses": ["membership", "inquiry", "review", "publication", "legacy-store", "legacy-checks"]},
