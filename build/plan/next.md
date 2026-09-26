@@ -53,6 +53,7 @@
 - N58 · 2026-09-26 · **record-core** (K85): provides `stampInstant(precision, when)` (store.mjs ~814–826), which later modules take from it instead of the store; with its requirement, before layer 6's tranche. *Requirement written by BOB #43 (K87): `record-core` R47–R48, not yet met.*
 - N59 · 2026-09-26 · **bias** (K82 (3), K86): its draft requirements take the bias-debt mechanism (ai-runs' old R39–R44, and members' work if Bob says yes to bias question 3) before Bob approves it. *Requirements done by BOB #43 (K87): `bias` R33–R40.*
 - N60 · 2026-09-26 · **strength** (K86): its draft gains a service answering the strength pair over a candidate's legs, which run-productions reads, before Bob approves it. *Requirements done by BOB #43 (K87): `strength` R26–R27.*
+- N61 · 2026-09-26 · **jurisdictions**: `records_laws` levels are `state`, `county`, `city` (R7), with no `federal`, while D-149's `LAW_LEVELS` (`legacy-checks`, read by `actions`) is `federal`, `state`, `local`; and `standard_sources` (R23) carries no level. A profile then cannot hold a federal records law, nor say a standard's level. Reconcile the two vocabularies before `actions`' and `standards`' jobs. Found by the layer-9 drafting worker (K88); a change of meaning in an approved requirement, so it goes to Bob with a recommendation.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 

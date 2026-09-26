@@ -58,9 +58,9 @@
 
     {"id": "publication", "layer": 8, "from": "legacy-store", "paths": ["bio-plane/src/container.mjs", "bio-plane/src/inband.mjs", "bio-plane/src/deliverer.mjs", "bio-plane/src/publication/"], "tests": ["bio-plane/test/m/publication/"], "uses": ["legacy-checks", "ooxml", "signatures", "record-core", "membership", "provenance", "content", "bias", "inquiry", "strength", "review", "intent", "reevaluation"]},
 
-    {"id": "standards", "layer": 9, "paths": ["bio-plane/src/standards/"], "tests": ["bio-plane/test/m/standards/"], "uses": ["jurisdictions", "record-core", "content"]},
-    {"id": "conformance", "layer": 9, "paths": ["bio-plane/src/conformance/"], "tests": ["bio-plane/test/m/conformance/"], "uses": ["record-core", "membership", "content", "inquiry", "strength", "reevaluation", "publication", "standards"]},
-    {"id": "consequences", "layer": 9, "paths": ["bio-plane/src/consequences/"], "tests": ["bio-plane/test/m/consequences/"], "uses": ["record-core", "membership", "content", "inquiry", "strength", "conformance"]},
+    {"id": "standards", "layer": 9, "paths": ["bio-plane/src/standards/"], "tests": ["bio-plane/test/m/standards/"], "uses": ["jurisdictions", "legacy-checks", "record-core", "membership", "promotion", "content"]},
+    {"id": "conformance", "layer": 9, "paths": ["bio-plane/src/conformance/"], "tests": ["bio-plane/test/m/conformance/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "inquiry", "strength", "reevaluation", "publication", "standards"]},
+    {"id": "consequences", "layer": 9, "paths": ["bio-plane/src/consequences/"], "tests": ["bio-plane/test/m/consequences/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "inquiry", "strength", "conformance"]},
     {"id": "actions", "layer": 9, "from": "legacy-store", "paths": ["bio-plane/src/actions/"], "tests": ["bio-plane/test/m/actions/"], "uses": ["jurisdictions", "legacy-checks", "record-core", "membership", "content", "connections", "inquiry", "strength", "conformance", "consequences"]},
     {"id": "filings", "layer": 9, "paths": ["bio-plane/src/filings/"], "tests": ["bio-plane/test/m/filings/"], "uses": ["jurisdictions", "record-core", "membership", "publication", "standards", "actions", "consequences"]},
     {"id": "escalation", "layer": 9, "paths": ["bio-plane/src/escalation/"], "tests": ["bio-plane/test/m/escalation/"], "uses": ["record-core", "membership", "conformance", "consequences", "actions", "filings"]},
