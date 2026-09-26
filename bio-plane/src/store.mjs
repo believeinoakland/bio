@@ -220,6 +220,8 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the catalogue so the act and the read publish one answer and no surface judges an identity. */
          lawProposalLabel } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+/* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
+import { promotionOf, stepContext } from "./promotion/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -859,6 +861,101 @@ export class Store extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
+    /* K31: promotion, reached through record-core's and membership's services. Until those two modules' jobs land,
+       this store supplies them over its own tables (promotion job record, Q2); legacy-store then registers its share
+       of every promotion (later modules' checks, projections and facts) until each is extracted. */
+    const promotion = promotionOf(ctx, {
+      record: {
+        transact: (fn) => {
+          let refused = null;
+          try {
+            return this.ctx.storage.transactionSync(() => {
+              const out = fn();
+              if (out && out.ok === false) { refused = out; throw Store.#ROLLBACK; }
+              return out;
+            });
+          } catch (e) {
+            if (e !== Store.#ROLLBACK || !refused) throw e;
+            return refused;
+          }
+        },
+        head: (id) => {
+          const r = this.#one(`SELECT bundle_sha, row_version, object_type, title, current_state, prior_state, group_id,
+                                      created, last_updated FROM bundles WHERE bundle_id=?`, id);
+          return r ? { bundleSha: r.bundle_sha, rowVersion: r.row_version, type: r.object_type, title: r.title,
+                       currentState: r.current_state, priorState: r.prior_state, groupId: r.group_id,
+                       created: r.created, lastUpdated: r.last_updated } : null;
+        },
+        manifestEntry: (id, key) => {
+          const r = this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
+                               WHERE bundle_id=? AND snap_key=?`, id, key);
+          return r ? { kind: r.kind, base: r.base, author: r.author, created: r.created, writer: r.writer,
+                       operation: r.operation, files: Store.#manifestFiles(r.files_json) } : null;
+        },
+        livePaths: (id) => this.#rows(`SELECT path FROM files WHERE bundle_id=?`, id).map((r) => r.path),
+        readFile: (id, path) => this.readFile(id, path),
+        bundleInfo: (id) => {
+          const r = this.#one(`SELECT bundle_id, object_type, title FROM bundles WHERE bundle_id=?`, id);
+          return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: null } : null;
+        },
+        listByType: ({ type, after = null, limit = 200 }) => {
+          const ids = this.#rows(`SELECT bundle_id FROM bundles WHERE object_type=? AND bundle_id>? ORDER BY bundle_id LIMIT ?`,
+                                 type, after ?? "", limit).map((r) => r.bundle_id);
+          return { ids, cursor: ids.length ? ids[ids.length - 1] : null };
+        },
+        mintOpaqueId: (prefix, year, tail, taken) => this.#mintOpaqueId(prefix, year, tail, taken),
+        commit: ({ bundleId, type, title, snapKey, kind, base, author, writer, operation, files, state, priorState,
+                   group, created, lastUpdated, criticality, at }) => {
+          const now = new Date().toISOString();
+          if (this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, bundleId))
+            for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
+              this.sql.exec(`INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
+                bundleId, snapKey, r.path, r.content, r.blob_sha, r.sha256, now);
+          this.sql.exec(
+            `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
+            bundleId, snapKey, kind, base, author, at,
+            JSON.stringify(files.map((f) => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
+          this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
+          for (const f of files)
+            this.sql.exec(`INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
+              bundleId, f.path, f.text ?? null, f.blobSha ?? null, f.bytes, f.sha256);
+          this.sql.exec(
+            `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
+             VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
+             ON CONFLICT(bundle_id) DO UPDATE SET
+               object_type=excluded.object_type, title=excluded.title,
+               current_state=excluded.current_state, prior_state=excluded.prior_state,
+               last_updated=excluded.last_updated, criticality=excluded.criticality,
+               bundle_sha=excluded.bundle_sha,
+               row_version=bundles.row_version+1`,
+            bundleId, type, group, title, state, priorState, created, lastUpdated, criticality ?? null,
+            files.find((f) => f.path === "bundle.md")?.sha256, bundleId);
+          const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
+          return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
+        },
+      },
+      membership: {
+        sight: (id, viewer) => String(this.#sight(id, viewer)).toUpperCase(),
+        isProjectOwner: (projectId, memberId) => this.#isProjectOwner(projectId, memberId),
+        projectAuthority: (projectId, identity, need, act) => this.#projectAuthority(projectId, identity, need, act),
+        visibilitySettingRefusal: (value) => this.#visibilitySettingRefusal(value, null),
+        projectVisibility: ({ projectId }) => this.#visibilityOf(projectId),
+        projectCreated: ({ projectId, ownerId, visibility, by }) => {
+          const ts = new Date().toISOString();
+          if (visibility)
+            this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+              projectId, visibility, by, null, ts);
+          this.sql.exec(`INSERT OR REPLACE INTO project_participants
+                           (project_id, member_id, state, owner, invited_by, comment, created, updated)
+                         VALUES (?,?,'joined',1,NULL,NULL,?,?)`, projectId, ownerId, ts, ts);
+          this.#reindexProjectSight(projectId);
+        },
+      },
+    });
+    promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
+    promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
+    promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
+    promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
 
@@ -7982,193 +8079,8 @@ export class Store extends DurableObject {
    * door of a revision. An act the catalog permits and no caller can perform is
    * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-reopen — REC-64/C-32.5. The fence alone. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_REOPEN",
-               detail: "reopening is a named member's judgement that a question the group set down has to "
-                     + "be worked again. A machine credential may surface a question and pursue one, and "
-                     + "may not overturn the group's own disposition. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-reopen */
-    const why = String(reason ?? "").trim();
-    if (!why)
-      return { ok: false, reason: "NO_REASON",
-               detail: "reopening records WHY the disposition no longer holds. The member who deferred or "
-                     + "dismissed this gave their reason; reopening with none would replace an accounted "
-                     + "decision with an unaccountable one. Nothing here is prefilled." };
-    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
-      return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
-    if (!target)
-      return { ok: false, reason: "NO_TARGET",
-               detail: "reopening picks up ONE question: pass target=<inquiry id>" };
-
-    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
-       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
-       absent one, so the refusal discloses nothing. */
-    const gate = viewerPredicate(viewer);
-    /* The `b` alias is load-bearing: viewerPredicate's participation arm is
-       written against `b.object_type` / `b.bundle_id` (see conclude above). */
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
-       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "inquiry")
-      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "reopening picks a question back up, and only an inquiry carries one." };
-
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
-    let text = liveMd.content;
-    const fm = parseFrontmatter(text).data || {};
-
-    /* Reopenable, and only reopenable. Checked BEFORE the edge table so a
-       concluded inquiry — whose `open` edge IS legal — is told what it needs
-       rather than being told the move is illegal, which it is not.
-
-       THE SET IS REOPENABLE_FROM, decided at the REC-31 x REC-14 merge, and
-       the exclusion this refusal was written for is UNCHANGED. `concluded`
-       stays refused for exactly the reason below: a conclusion reverting to
-       open still wearing its conclusion records nothing, and the edition
-       machinery is where that move belongs. `published` JOINS, because a
-       published case has the opposite property — its editions are ratified,
-       signed and immutable, and DEC-12 rules that reopening does not unpublish
-       them. There is nothing to erase, and published -> open is the only route
-       to a second edition, so refusing it here would leave a legal edge no
-       caller could travel. The array lives in affordances.mjs beside
-       DISPOSITIONS so the refusal and the published act cannot disagree about
-       what "reopenable" means.
-
-       ===== CASE-4 / DEC-72, 2026-09-10: `published` LEFT THE ARRAY AND THE
-       DISJUNCTION IS WHAT REPLACES IT, AND THIS IS THE SHARPEST PLACE IN THE
-       ITEM WHERE A NAIVE REMOVAL WOULD HAVE DONE DAMAGE IN BOTH DIRECTIONS AT
-       ONCE.
-
-       Under DEC-72 a published member sits at `concluded` — the one state this
-       refusal names BY NAME. So dropping `published` from the array alone
-       refuses reopening to every published case in the record and leaves DEC-12's
-       second edition with no route to it (a legal act no caller can perform,
-       which is the state machine lying). And widening the array to `concluded`
-       alone destroys REC-31's rule in the opposite direction: a conclusion
-       nobody published would revert to open still wearing its conclusion,
-       recording nothing.
-
-       The rule was never about the word. It was: reopening is refused where
-       something would be ERASED WITH NO RECORD, and permitted where an
-       immutable, signed edition means there is nothing to erase. So the test is
-       the DISPOSITION SET **or** THE CASE RELATION — and the case relation is
-       precisely the fact "there is a ratified, signed edition holding this
-       version", which is what made `published` safe to reopen from in the first
-       place. A concluded finding that was never published is still refused, with
-       REC-31's own words. */
-    if (!REOPENABLE_FROM.includes(b.current_state) && !this.#caseRelationOf(target).member)
-      return { ok: false, reason: "NOT_SET_DOWN", target, from: b.current_state, reopenable: REOPENABLE_FROM,
-               detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or a finding "
-                     + "that is a MEMBER OF A PUBLISHED CASE. An open inquiry is already open, and a "
-                     + "CONCLUDED one that is in no case moves forward by publishing a new EDITION "
-                     + "(DEC-12) — op=publish — rather than quietly reverting to open still wearing its conclusion, "
-                     + "which would record nothing. Reopening a finding that IS in a published case is this "
-                     + "act and does not unpublish anything: every edition keeps answering with its own "
-                     + "signature, attestor, time and gate version." };
-
-    /* THE MAP RULE: the machine is looked up through the catalog's own vocabFor
-       over the DECLARED spelling, never STATES.inquiry by a raw key. A legacy
-       focus/problem document has no `open` state at all — its open state is
-       spelled `surfaced` — so it is refused rather than given a state its
-       contract never had. */
-    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
-    const legalFrom = (spec?.edges?.[b.current_state]) || [];
-    if (!legalFrom.includes("open"))
-      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "open", target,
-               from: b.current_state, object_type: fm.object_type ?? b.object_type,
-               detail: "this is not a legal move in the catalog's state table for this document's own "
-                     + "vocabulary. An inquiry reopens from deferred, dismissed or published; a legacy "
-                     + "focus/problem "
-                     + "document has no `open` state at all until its frontmatter is modernized." };
-
-    const when = stampInstant("second");
-    const withHistory = Store.#appendStateHistory(text, {
-      timestamp: when, from_state: b.current_state, to_state: "open",
-      blurb: why, author: who });
-    if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
-               detail: "this document's state_history block cannot be extended in place, and a reopening "
-                     + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" };
-    text = withHistory;
-    text = Store.#setScalar(text, "prior_state", b.current_state);
-    text = Store.#setScalar(text, "current_state", "open");
-    /* The disposition_reason is CLEARED, and the authored words are not lost:
-       the state_history entry dispose() wrote keeps them forever. Leaving the
-       scalar would hand every reader an OPEN inquiry still saying it is set
-       down for a reason that no longer applies — the current-state fields
-       describe where the document stands now, and the history describes where
-       it has been. #setScalar on an absent key is a no-op by design, so an
-       inquiry that never carried the field gains nothing. */
-    text = Store.#setScalar(text, "disposition_reason", `""`);
-    /* CASE-4 / DEC-72: THE PREPARED CASE CLAIM IS ABANDONED HERE, and it is the
-       same act that used to end the `published` state doing the same job through
-       the relation. Membership as the bytes assert it is the PAIR (`case_id`,
-       `case_edition`); `case_id` STAYS, because publishCase() re-derives which
-       case a second edition belongs to from it and must never take an identity
-       from a caller. What goes is the EDITION claim: a document back in `open`
-       is not a member of an edition, and leaving the claim would keep the
-       published ceremony's entry requirements (C-2.8) pinned to a document the
-       record says the group is legitimately working again — a gate firing where
-       the member is allowed to be mid-thought. It also closes the prepared arm
-       of #caseRelationOf, so a publication that was prepared and then reopened
-       stops holding the restructure and divide guards shut, exactly as the state
-       change did before this item. #setScalar on an absent key is a no-op, so a
-       finding that was never published gains nothing. */
-    text = Store.#setScalar(text, "case_edition", "null");
-    text = Store.#setScalar(text, "last_updated", `"${when}"`);
-    /* C-13.2: last_updated moving requires a Session Log entry, and DEC-30's
-       attribution lives here — who reopened, and why, is part of the record. */
-    const entry = `### Session ${when} | Reopened | ${who}\n`
-                + `Trigger: op=reopen on ${target}\n`
-                + `Changes: state ${b.current_state} to open. Reason: ${why}.\n`;
-    const at = text.indexOf("## Session Log");
-    if (at < 0) text += "\n## Session Log\n\n" + entry;
-    else {
-      const nxt = text.indexOf("\n## ", at + 1);
-      const cutAt = nxt === -1 ? text.length : nxt + 1;
-      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-    }
-
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
-      carried.push(r.content !== null
-        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-    const bytes = new TextEncoder().encode(text);
-    const promoted = this.promote({
-      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-      author: who,
-      files: [{ path: "bundle.md", text, bytes: bytes.length,
-                sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type,
-              title: fm.title, current_state: "open", prior_state: b.current_state,
-              created: fm.created, last_updated: when,
-              criticality: fm.criticality ?? null },
-    });
-    if (!promoted.ok) return { ...promoted, target };
-    /* `weight: "single"` for conclude's reason: one question is picked back up
-       at a time. A bulk reopen would be a checkbox reversing a set of separate
-       decisions with one sentence standing for all of them. */
-    /* REC-17 / D-5: reopening is REVERSIBLE, so it is permitted over a cited
-       inquiry and RAISES the obligation instead of refusing — the same arm
-       deferring takes. The question everything below it rested on is being
-       worked again, which is precisely a reason to take a second look, and
-       nothing is written to the dependents: the obligation is derived. */
-    return { ok: true, target, from: b.current_state, to: "open",
-             why, author: who, at: when, weight: "single",
-             reevaluation: { source: "reopened", since: when,
-                             raised: this.#reevalRaisedBy(target, viewer) } };
+    const r = promotionOf(this.ctx).reopen({ target, reason, viewer, author });
+    return r.ok ? { ...r, reevaluation: { source: "reopened", since: r.at, raised: this.#reevalRaisedBy(target, viewer) } } : r;
   }
 
 
@@ -17879,239 +17791,14 @@ export class Store extends DurableObject {
    * manifest base-sha CAS provided on Drive.
    */
   promote(pkg) {
-    if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
-    const { base, meta, snapKey, author, register = [] } = pkg;
-    /* REC-141: `let`, because a NEW project's id and its document are the plane's to write (below). */
-    let { bundleId, files } = pkg;
-    /* A mechanical writer must name an operation the catalog knows, because
-       C-20.1 holds it to that operation's declared field set and refuses one
-       that names nothing. Validated here so a daemon cannot write an
-       unaccountable mechanical revision and discover the problem at
-       ratification, when the revision is already in the history. */
-    const writer = pkg.writer === "mechanical" ? "mechanical" : null;
-    const operation = writer ? pkg.operation : null;
-    if (writer && !(operation in MECHANICAL_FIELD_SETS))
-      return { ok: false, reason: "UNDECLARED_OPERATION",
-               detail: `a mechanical promotion names one of: ${Object.keys(MECHANICAL_FIELD_SETS).join(", ")}`,
-               got: operation ?? null };
-    /* References used to arrive in the payload AND live in the frontmatter, and
-       only the frontmatter was ever checked, so the two could disagree with
-       nothing noticing (DEBT D-21). The document is authoritative. A caller
-       still sending the old field is refused rather than quietly overridden,
-       because a silent override is how the two drifted apart in the first
-       place. */
-    if (Array.isArray(pkg.refs) && pkg.refs.length)
-      return { ok: false, reason: "REFS_IN_PAYLOAD",
-               detail: "references are read from bundle.md frontmatter, not from the promote payload; remove the refs field" };
-    /* REC-11: the same D-21 discipline for basis legs, from birth rather than
-       after a drift has already cost something. The document is authoritative. */
-    if (Array.isArray(pkg.basis) && pkg.basis.length)
-      return { ok: false, reason: "BASIS_IN_PAYLOAD",
-               detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field" };
-    /* ===== REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership v2 §7, *"HOW the plane mints a
-       project id"*, BOB #15; §7.9 *"not its existence"*). A creation that named its project's id answered
-       EXISTS at a hidden project's id and CREATED at a free one — D-428's creation half. So a NEW project
-       (base null, typed `project`) and ANY creation in the `PROJ-` namespace, whatever type it claims, is
-       refused if it names an id, and the refusal is decided HERE, before any id is looked up: one answer,
-       taken or not, echoing no id. Never silently ignored — a caller who named one is told. With no id the
-       plane mints one inside the transaction below and WRITES it into the document's `id:` before the
-       bytes are hashed and registered, so the sha it returns is the sha of what it holds; a document that
-       already carries a top-level `id:` is refused (the catalog's own parser decides what one is, so a
-       nested key or a body line is not one). Every other type still names its own id, unchanged. */
-    /* ===== D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1) — THE PROMOTED TYPE IS DERIVED ONCE, HERE, BEFORE
-       EVERY FENCE THAT ASKS IT. D-510 made the DOCUMENT's own `object_type` the record's word on what a promotion
-       IS and refused an envelope that contradicts it (ENVELOPE_TYPE_DISAGREES) — but it parsed `bundle.md` below
-       the fences, so REC-141's mint decision, D-85's surfacing gate, REC-173's migration stamp, the project name
-       scan (NAME_TAKEN), REC-181's `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward still read the
-       CALLER'S envelope. Nothing wrong could land (D-510's fence is still ahead of the first write), but WHICH
-       refusal a caller met depended on a label D-510 ruled untrusted: an action filed under an `information`
-       envelope met ENVELOPE_TYPE_DISAGREES where the same action correctly labelled met GOVERNING_LAWS_REWRITTEN.
-       So every fence reads `promotedType`: the document's type through the catalogue's `normalizeType`, the
-       envelope only as the FALLBACK where the bytes state none (a blob-held or type-less bundle.md), exactly as
-       D-510's projections already read it. Read from the bytes the caller SENT: REC-141's mint and D-436's group
-       stamp below rewrite `id:` and `group:`, never `object_type`. D-510's refusal itself stays where it was, so a
-       disagreement no fence speaks to still meets it, by name, before the first write. ===== */
-    const typeStated = (v) => (typeof v === "string" && v.trim() !== "" ? normalizeType(v) : null);
-    const sentMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
-    const sentFm = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
-    const documentType = sentFm && typeof sentFm === "object" ? typeStated(sentFm.object_type) : null;
-    const envelopeType = meta && typeof meta === "object" ? typeStated(meta.object_type) : null;
-    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);
-    /* ===== END D-526 derivation ===== */
-    /* ===== D-563 (`BIO_Case_Making_v0_1.md` §2; C-2.5 and D-510's derivation, C-86.3, C-86.4) — THE DOCUMENT ALSO
-       STATES WHAT IT IS CALLED AND WHERE IT STANDS, AND THE ENVELOPE IS A LABEL FOR THOSE TOO. D-510/D-526 derived the
-       TYPE from the bytes; the title and the state were still the CALLER'S: `bundles.title`, `current_state` and
-       `prior_state` were projected from `meta`, and 7.1's name scan, 7.11's owner test and REC-181's retirement arm
-       asked `meta.title` / `meta.current_state` / `meta.closed_reason`. MEASURED by D-526's worker: a second project
-       whose bytes name a TAKEN title LANDED when `meta.title` named another, and the projection showed the envelope's
-       title over the bytes'. So each is derived ONCE, here, from the bytes the caller sent (REC-141's mint and D-436's
-       stamp rewrite `id:` and `group:` only), and every fence and the projection read the derived value. The envelope
-       is the FALLBACK where the document states nothing, exactly as `promotedType` takes it — a blob-held or
-       title-less bundle.md is byte-identical to what these lines did before. `prior_state` and `closed_reason` are
-       STATED when the document carries the key (a `null` is a statement); an envelope contradicting any of them is
-       refused by name below (`is-promoted-title-disagrees`, `is-promoted-state-disagrees`), after every fence, so
-       which fence a caller meets never depends on the label. ===== */
-    const envelopeMeta = meta && typeof meta === "object" ? meta : null;
-    const fmHas = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
-    const textStated = (v) => (typeof v === "string" && v.trim() !== "" ? v : null);
-    const documentTitle = sentFm && typeof sentFm === "object" ? textStated(sentFm.title) : null;
-    /* C-16: an inquiry's title is a rendering of its `## Question`; an envelope naming THAT title agrees with the
-       document as much as one naming `title:` does, because it is the title the projection writes. */
-    const documentQuestionTitle = documentType === "inquiry" && typeof sentMd?.text === "string"
-      ? deriveInquiryTitle(inquiryQuestionOf(sentMd.text)) : null;
-    const envelopeTitle = envelopeMeta ? textStated(envelopeMeta.title) : null;
-    /* `let`: a revision stating no title anywhere carries the held one forward (below, once `cur` is read). */
-    let promotedTitle = documentTitle ?? (envelopeMeta ? envelopeMeta.title : undefined);
-    const documentState = sentFm && typeof sentFm === "object" ? textStated(sentFm.current_state) : null;
-    const envelopeState = envelopeMeta ? textStated(envelopeMeta.current_state) : null;
-    const promotedState = documentState ?? (envelopeMeta ? envelopeMeta.current_state : undefined);
-    const promotedPriorState = fmHas(sentFm, "prior_state") ? (sentFm.prior_state ?? null)
-      : (envelopeMeta ? envelopeMeta.prior_state ?? null : null);
-    const promotedClosedReason = fmHas(sentFm, "closed_reason") ? (sentFm.closed_reason ?? null)
-      : (envelopeMeta ? envelopeMeta.closed_reason : undefined);
-    /* ===== END D-563 derivation ===== */
-    const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
-    const creatingProject = base === null && !!meta && typeof meta === "object"
-      && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
-    const refusal = (code, detail) => {
-      const row = PROJECT_ID_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
-    };
-    let projectMd = null;
-    if (creatingProject) {
-      /* DEC-49 REGION is-project-id-supplied */
-      if (idSupplied)
-        return refusal("PROJECT_ID_SUPPLIED",
-          "a new project's id is minted by the plane and returned; send the creation with no bundleId. "
-          + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
-      /* END DEC-49 REGION is-project-id-supplied */
-      /* DEC-49 REGION is-project-id-bytes */
-      projectMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
-      const fmNew = projectMd && typeof projectMd.text === "string" ? parseFrontmatter(projectMd.text).data : null;
-      if (!fmNew)
-        return refusal("PROJECT_DOCUMENT_UNREADABLE",
-          "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
-          + "because the plane writes the minted id into it. Nothing was created.");
-      if (Object.prototype.hasOwnProperty.call(fmNew, "id"))
-        return refusal("PROJECT_ID_IN_BYTES",
-          "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; "
-          + "remove the line and send it again. Nothing was created.");
-      /* END DEC-49 REGION is-project-id-bytes */
-    }
-    /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
-    if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
-    /* ===== REC-197 — A CREATION CARRIES ITS SETTING, AND AN OWNERLESS ONE CANNOT CHOOSE (Membership v2 §7.14,
-       RULED by BOB #32 (b), 2026-09-23: *"create and fork take one optional field, `visibility` (`discoverable` or
-       `hidden`), and an absent one is HIDDEN. A MACHINE credential never sets it"*). Decided HERE, before any
-       write, so a refusal leaves nothing. ABSENT IS HIDDEN BY WRITING NOTHING: the sight index's one CASE
-       (`#reindexProjectSight`) already reads a project with no act as hidden, and a default restated here would
-       be the second copy of that rule. A PRESENT value is the creating OWNER's act and is recorded as one inside
-       the creation's transaction (below, beside the owner row), `hidden` included — the owner chose it. The
-       machine test is OWNERLESSNESS, never a class list: `ownerMemberId` is the control plane's stamp, set for
-       a member session alone and deleted first for every caller, so a creation with none has no owner to
-       choose — the ruling's own reason. Its `hidden` is accepted and writes nothing (it asks for exactly what an
-       ownerless creation gets); its `discoverable` is refused by name. A `visibility` on anything that is not a
-       project's creation is refused rather than ignored: a revision that answered ok over it would tell its
-       caller a choice landed that nobody recorded (the setting of an existing project is
-       `op=projectvisibilityset`, an owner's act). */
-    let creationVisibility = null;
-    if (pkg.visibility !== undefined && pkg.visibility !== null) {
-      const refusal = (code, detail) => {
-        const row = PROJECT_CREATION_VISIBILITY_CHECKS[code];
-        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
-      };
-      /* DEC-49 REGION is-project-creation-visibility */
-      if (base !== null || normalizeType(meta.object_type) !== "project")
-        return refusal("PROJECT_VISIBILITY_NOT_A_CREATION",
-          "visibility is chosen when a project is created or forked, and this is not a project's creation. An "
-          + "existing project's setting is its owners' act, op=projectvisibilityset. Nothing was written.");
-      /* END DEC-49 REGION is-project-creation-visibility */
-      const unknown = this.#visibilitySettingRefusal(pkg.visibility, null);
-      if (unknown) return unknown;
-      const creator = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
-      /* DEC-49 REGION is-project-creation-ownerless */
-      if (!creator && pkg.visibility === "discoverable")
-        return refusal("PROJECT_VISIBILITY_NO_OWNER",
-          "whether a project can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and a "
-          + "project created by a machine credential has no owner to choose it, so it is created HIDDEN. Send "
-          + "the creation without visibility (or with visibility=hidden); an owner who arrives later may set "
-          + "it. Nothing was created.");
-      /* END DEC-49 REGION is-project-creation-ownerless */
-      creationVisibility = creator ? pkg.visibility : null;
-    }
-    /* ===== REC-175 — A STORED DIGEST IS OF THE STORED BYTES (the Mechanical Verification Law,
-       `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §5, *an equality that costs nothing to produce is
-       not evidence*). `files.sha256` and the bundle's head (`newSha`, read from bundle.md's row below) were
-       written AS THE CALLER GAVE THEM: REC-173's worker drove a bundle.md sha of `fff…` to `ok: true`. So the
-       digest of every INLINE text file is COMPUTED here over the UTF-8 encoding of the very string the
-       `files` row stores (`content`), and a supplied value that differs is REFUSED — every file, not only
-       bundle.md — BEFORE THE TRANSACTION, so a refusal leaves the bundle byte-identical (a refusal returned
-       from inside `transactionSync` does not roll back what was already written). A file that supplies none
-       stores the computed one. The comparison is of hex digits, case-insensitive; the COMPUTED lowercase form
-       is what is stored, so an honest upper-case spelling lands and no second spelling of one digest enters.
-       This runs before REC-141's mint and D-436's group stamp, which rewrite bundle.md and recompute its
-       digest from what they wrote: the caller's claim is judged against the bytes the caller sent.
-       BLOB-BACKED FILES, EXACTLY: their bytes are in R2, which `promote` does not read (D-45, §8's stated
-       limitation — R2 is outside this transaction). What IS checked is that the supplied `sha256` names the
-       same digest as `blobSha`, the content address the bytes are held under (and `op=capture` refuses a PUT
-       whose body does not hash to its key, `INTEGRITY`); none supplied stores `blobSha`. What is NOT checked:
-       that bytes exist under that key at all (refused at RATIFY, `PLANE_MISSING_BYTES`), or that the stated
-       `bytes` count is theirs. `bytes` on an INLINE file is not judged by THIS region: REC-178, directly
-       below, computes it from the same UTF-8 bytes and stores that (several writers sent `text.length`).
-       Replay is NOT exempt: a replay's bytes are the past's, and so is their digest (migrate.mjs hashes the
-       raw buffer it sends as text, and REC-173's replay door already demands the equality for bundle.md). */
-    /* DEC-49 REGION is-promote-digest */
-    const digested = Store.#digestFiles(files);
-    if (digested.disagree.length)
-      return { ok: false, reason: "FILE_DIGEST_MISMATCH", code: "FILE_DIGEST_MISMATCH",
-               check: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.check,
-               translation: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.translation,
-               paths: digested.disagree.map((d) => d.path), files: digested.disagree,
-               detail: "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ")
-                     + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content "
-                     + "address). The record stores a digest only of what it holds. Nothing was written." };
-    /* END DEC-49 REGION is-promote-digest */
-    files = digested.files;
-    /* ===== REC-178 — A STORED SIZE IS OF THE STORED BYTES, REC-175's rule one field over (the Mechanical
-       Verification Law, `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §2, a record claiming more than it can
-       support). An INLINE file's `bytes` is COMPUTED here as the length of the UTF-8 encoding of the string the `files`
-       row stores, by the one `Store.#inlineBytesOf`, and that is what is stored and what OVERSIZE_INLINE judges below.
-       A supplied value that differs is OVERRIDDEN, not refused, and the difference from REC-175's digest is the reason:
-       a digest that disagrees says the caller holds OTHER BYTES than it sent, so the claim is about identity and must
-       be refused; a byte count that disagrees over bytes whose digest AGREES is a unit error and nothing else — the
-       content is not in question, and the plane holds everything needed to state the true figure. Refusing it would
-       also refuse every internal act that carries a stored row forward (`bytes: r.bytes`, 42 sites) over
-       any row the census below counts as wrong, turning a misstated figure into an unwritable document. So the
-       caller's figure is never stored and never judged. A BLOB-backed file's `bytes` is NOT computed: its bytes are in
-       R2, which promote does not read (D-45; refused at RATIFY, `PLANE_SIZE`). ===== */
-    files = files.map((f) => {
-      const n = Store.#inlineBytesOf(f);
-      return n === null || f.bytes === n ? f : { ...f, bytes: n };
-    });
-    /* ===== D-436 — A CREATION'S PRODUCING GROUP, decided HERE, before the transaction, because a refusal returned
-       from inside `transactionSync` does not roll back what was already written (REC-141's mint writes first).
-       With a recorded group, a creation is STAMPED with it (`#stampGroup`, after the mint) and the projection is
-       written with it — whatever the caller's bytes or meta said, because the producer of a document this instance
-       creates is this instance's group. A REPLAY is the exception, on this function's standing rule that historical
-       replay is not authorship: its bytes are the past's and are carried verbatim. With no recorded group, nothing
-       is stamped and nothing is defaulted: the caller's OWN statement — the document's `group:`, else its meta — is
-       kept as before, and a creation that states none is refused (C-64.1). A REVISION is never decided here: the
-       projection keeps the group its creation wrote, so a revision's meta names no group at all. ===== */
-    let groupStamp = null, createdGroup = null;
-    if (base === null) {
-      const recorded = this.#producingGroup();
-      if (recorded && !pkg.replay) { groupStamp = recorded; createdGroup = recorded; }
-      else {
-        const md0 = files.find((f) => f && f.path === "bundle.md");
-        const said = md0 && typeof md0.text === "string" ? parseFrontmatter(md0.text).data?.group : undefined;
-        const stated = [said, meta.group].find((g) => typeof g === "string" && g.trim() !== "");
-        createdGroup = stated ? stated.trim() : recorded;
-        if (!createdGroup)
-          return this.#groupUndetermined("promote",
-            "this store records no producing group, and this creation names none — neither a group: line in its "
-            + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.");
-      }
-    }
+    return promotionOf(this.ctx).promote(pkg);
+  }
+
+  /* K31 (promotion R39): legacy-store's share of every promotion's checks, until each module that owns one is
+     extracted. Registered with `promotion` in the constructor; a refusal here refuses the whole promotion. */
+  #promoteChecks(c) {
+    const { pkg, bundleId, base, meta, author, register, files, promotedType } = stepContext(c);
+    const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
     /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): AN ASSISTANT'S CREATION OF A QUESTION names a running run
        it holds, with room under its `surfaces` bound — asked here, before anything is written; the link row and the
        bound's consumption are written inside the transaction below, on the creation's own success path. Only a
@@ -18123,268 +17810,6 @@ export class Store extends DurableObject {
       if (refusedSurface) return refusedSurface;
       surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
-    /* REC-173 (§11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): a creation of an inquiry the control
-       plane ADMITTED as a migration replay (`migrationReplay`, its stamp — deleted first for every caller and set only
-       for the admin class over a verified drive-provenance capture) carries no `assistantPrincipal`, so the gate above
-       was not asked; the fact is recorded in the creation's own transaction below, so the question's read can say
-       WHY no run is recorded. A stamp with no capture is not one. */
-    const migration = (base === null && !surfacing && meta && typeof meta === "object"
-        && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
-        && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
-      ? { capture: pkg.migrationReplay.capture,
-          promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
-      : null;
-    /* ===== REC-180 — A REFUSED PROMOTION LEAVES NOTHING BEHIND (the Mechanical Verification Law,
-       `BIO_State_Rules_Consistency_v1_5.md` §8: the record holds only what an act that LANDED wrote; CLAUDE.md §2,
-       a record claiming more than it can support). A refusal RETURNED from inside `transactionSync` commits whatever
-       the callback wrote before it, and one write precedes every refusal below on a project creation: REC-141's mint,
-       which records the drawn id in `minted_ids` — so a creation refused NAME_TAKEN spent an id for a project that
-       never existed. The callback is therefore `act`, and ANY `ok: false` it returns throws `Store.#ROLLBACK`
-       (REC-126's sentinel, `#reviewGates`) with the refusal held beside it; the catch returns that refusal, so the
-       transaction is undone and the caller's answer is unchanged. This covers every late refusal at once rather
-       than one site at a time: the sweep (REC-180's row) found the mint the only write before a refusal TODAY, and
-       each later refusal-before-first-write comment below ("a refusal returned inside `transactionSync` rolls
-       nothing back") no longer states the only thing keeping the record clean. Nested inside a caller's own
-       transaction (`cite`, `publishCase`, `#reviewGates`) the throw undoes this promotion's savepoint only. A
-       sentinel caught with no refusal held is not this function's and is re-thrown. ===== */
-    const act = () => {
-      /* REC-141: MINT, WRITE, THEN HASH. The id goes in as the first line after the opening fence; the
-         bytes and their sha256 are recomputed from the written text, and THAT sha is what the files row,
-         the bundle's head and the answer carry — the caller's own sha of an id-less document is never
-         registered. Inside the transaction, so the sequence step and the write are one act. */
-      if (creatingProject) {
-        bundleId = this.#mintProjectId(promotedTitle);
-        if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
-                                detail: "the plane could not find a free project id in the current sequence" };
-        const lines = projectMd.text.split("\n");
-        lines.splice(1, 0, `id: ${bundleId}`);
-        const text = lines.join("\n");
-        const bytes = new TextEncoder().encode(text);
-        const written = { ...projectMd, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
-        files = files.map((f) => f === projectMd ? written : f);
-      }
-      /* D-436: the producing group written into a created document's bytes — after the mint, so a new project's
-         document is written once for its id and once for its group, and hashed from what is finally held. */
-      if (groupStamp) files = Store.#stampGroup(files, groupStamp);
-      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
-
-      /* REC-138 / D-426: a REVISION of a bundle the actor cannot see answers exactly as a revision of
-         one that does not exist — one answer, `#promoteAbsent`, from both branches. Only project
-         bundles are ever out of sight (`viewerPredicate`). Asked of `actorViewer`, the VISIBILITY
-         half the control plane stamps beside `actorIdentity` (both deleted first there), and asked
-         only when that stamp arrived: an internal write (`cite`'s own edit, the version pointer)
-         carries neither and is not a caller. A stamped identity with no viewer fails CLOSED.
-         BEFORE everything that reads `cur` — the title carry, NAME_TAKEN, 7.11's owner test and
-         C-56 — so none of them can speak to a caller who cannot see the project. A CREATION at a
-         hidden id (base null) still answers EXISTS: a shared id space cannot hide that an id is
-         taken, which is D-428's, stated there rather than here. */
-      /* REC-149: asked just before, at EXISTENCE only (a discoverable project, a member outside it): C-70.1,
-         positional, because the directory has shown this caller it exists. A stamped identity with no viewer is
-         asked as an EMPTY viewer, which is NONE, so the line below still fails it closed. */
-      if (cur && base !== null && pkg.actorIdentity != null) {
-        const existence = this.#existenceAct(bundleId, pkg.actorViewer ?? "");
-        if (existence) return existence;
-      }
-      if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
-        return Store.#promoteAbsent();
-      /* ===== REC-176 — A RE-SEND OF A PROMOTION THE RECORD ALREADY HOLDS IS A NO-OP (the history law,
-         `BIO_State_Rules_Consistency_v1_5.md` §2.4: racing promoters "write identical names with identical bytes and
-         the second detects the existing file and skips"). If this bundle's manifest already has a row under THIS
-         snap key, and the row records THIS promotion — the same base, every file by name and digest (not bundle.md
-         alone), the same kind, writer, operation and author — the answer is ok and NOTHING is written: no manifest
-         row, no history, no live file, no row_version. It is asked here, BEFORE EXISTS and CAS_STALE, because an
-         identical re-send of a creation meets EXISTS and of a revision meets CAS_STALE (its base is no longer the
-         head) — both of which would refuse the one re-send the record can honestly accept. After the sight check,
-         so a caller who cannot see the bundle learns nothing from it. The digests compared are the ones `files`
-         carries HERE — after REC-175's `is-promote-digest` computed them from the bytes (once both land) and after
-         D-436's group stamp, which is deterministic — so a creation re-sent is stamped exactly as it was. A row
-         that DIFFERS in any of these is not answered here: it falls through, and `is-promote-snapkey` below refuses
-         it before any write. A file whose digest either side does not state makes the two UNDETERMINED, never
-         equal (two absent digests agree on nothing), and falls through to the refusal. ===== */
-      const heldAtKey = (typeof snapKey === "string" || typeof snapKey === "number")
-        ? this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
-                     WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey)
-        : null;
-      if (heldAtKey && Store.#samePromotion(heldAtKey, {
-            base: base === null ? EMPTY_STRING_SHA : base, files, author: author ?? null,
-            kind: pkg.replay ? "promotion-replay" : "promotion", writer, operation })) {
-        const recordedMd = Store.#manifestFiles(heldAtKey.files_json).find((f) => f.name === "bundle.md");
-        return { ok: true, bundleId, idempotent: true, wrote: false, snapKey: String(snapKey),
-                 bundleSha: recordedMd ? recordedMd.sha256 : null,
-                 recorded: { kind: heldAtKey.kind, base: heldAtKey.base, author: heldAtKey.author,
-                             created: heldAtKey.created },
-                 current: cur ? { bundleSha: cur.bundle_sha, rowVersion: cur.row_version } : null,
-                 detail: "the record already holds this promotion under this snap key, byte for byte; "
-                       + "nothing was written" };
-      }
-      /* ===== END REC-176 is-promote-resend ===== */
-      if (cur && base === null)
-        return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
-      if (!cur && base !== null)
-        return Store.#promoteAbsent();
-
-      /* A title is never LOST by a revision.
-       *
-       * Found by the 7.1 check below refusing a cite. `cite`, `sever` and
-       * `reinstate` rebuild `meta` from the document's frontmatter and re-promote,
-       * so a bundle whose frontmatter carries no `title` was being re-promoted
-       * with `title: undefined`, silently blanking it in the projection. The
-       * catalog requires `title` on every bundle, so such a document is
-       * malformed, but a malformed document is exactly when a write path should
-       * preserve what it already knows rather than quietly discard it.
-       *
-       * Carrying forward is correct in general: an update that does not mention
-       * the title is not a request to remove it. */
-      /* D-563: carried into the DERIVED title, which the document and the envelope both left unstated. */
-      if (cur && (promotedTitle === undefined || promotedTitle === null || promotedTitle === "")) {
-        const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
-        if (prev && prev.title) promotedTitle = prev.title;
-      }
-
-      /* 7.1: a project's name is unique across the instance.
-       *
-       * HERE, at the write path, and not only at fork. Enforcing it at fork
-       * alone left the ordinary creation path open, which was D-48: two projects
-       * born the normal way could collide, and fork is only one of several ways
-       * a project comes into being.
-       *
-       * Compared case-insensitively with runs of whitespace collapsed, via the
-       * one `projectNameKey` the fork check also uses, so the two cannot
-       * disagree about what a collision is. A plain unique index over the
-       * trimmed string is how HANDLES work and would let "Sewer Fund" and
-       * "Sewer fund" coexist, which is the collision the rule exists to stop:
-       * uniqueness a reader cannot see is not uniqueness.
-       *
-       * HELD ACROSS EVERY LIFECYCLE STATE, deactivated projects included. A
-       * deactivated project is `closed` with a reason of `abandoned` (7.11), not
-       * gone: it is still cited, and its name must still resolve to what was
-       * cited. Freeing the name on deactivation would let a later project
-       * silently inherit an earlier one's references.
-       *
-       * Excludes the bundle being written, so a project may be revised without
-       * colliding with itself, which is the obvious way to get this wrong.
-       *
-       * A SCAN, deliberately. The alternative is a maintained key column with a
-       * unique index, which needs a backfill and would not catch collisions
-       * against projects promoted before the column existed. Projects are few
-       * relative to Information and this runs only for them. */
-      if (promotedType === "project") {
-        const key = Store.projectNameKey(promotedTitle);   /* D-563: the DOCUMENT's name */
-        if (!key)
-          return { ok: false, reason: "NO_TITLE",
-                   detail: "a project needs a name, and it must be unique across this instance" };
-        const clash = this.#rows(
-          `SELECT bundle_id, title FROM bundles WHERE object_type='project' AND bundle_id<>?`, bundleId)
-          .find((r) => Store.projectNameKey(r.title) === key);
-        /* REC-139 / D-428 (Membership v2 §7, BOB #15, 2026-09-18): the refusal names NEITHER the
-           other project's id NOR its title. A caller who cannot see that project may learn nothing of
-           it (§7.9, *"not its existence, not its name"*); one who can already knows both. So the
-           payload is the same for every caller and there is no sight question to ask here — which is
-           why this does not call `#inSight`. Uniqueness itself still holds, PROVISIONALLY: it is the
-           one point BOB #15 left OPEN for Bob, and refusing tells the caller only that SOME project
-           holds the name they typed. */
-        if (clash)
-          return { ok: false, reason: "NAME_TAKEN",
-                   detail: "a project by that name already exists on this instance, compared without regard "
-                         + "to case or spacing. This holds for deactivated projects too, because their "
-                         + "names are still cited." };
-      }
-
-      /* 7.11: only an OWNER deactivates or reactivates a project.
-       *
-       * NARROW ON PURPOSE. Section 7.11 is titled deactivation and reactivation
-       * and says only owners may do those. It does NOT say only owners may move
-       * a project's lifecycle at all, and reading it that way would stop the
-       * accelerator advancing a project from forming to investigating, which is
-       * ordinary record work gated by `contribute` like every other write.
-       *
-       * So exactly two transitions are owner-only, and they are the two the
-       * section names. Deactivation is entering `closed` with a `closed_reason`
-       * of `abandoned`, which is what distinguishes "we stopped pursuing this"
-       * from `resolved` (finished) and `superseded` (overtaken). Reactivation is
-       * `closed` to `investigating`, the one reverse transition the check
-       * catalog allows, which is there for this.
-       *
-       * `actorMemberId` is stamped by the control plane from the SESSION and
-       * deleted first if a caller supplies it, exactly as `author` is. A machine
-       * credential therefore carries none and cannot deactivate: saying the
-       * group has stopped pursuing something is a statement by its members about
-       * their own intent, and no automation holds that. */
-      if (cur && cur.object_type === "project") {
-        /* D-563: the state and the reason the DOCUMENT states, not the label on the request. */
-        const to = promotedState, from = cur.current_state;
-        const deactivating = from !== "closed" && to === "closed" && promotedClosedReason === "abandoned";
-        const reactivating = from === "closed" && to === "investigating";
-        if (deactivating || reactivating) {
-          const actor = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
-          if (!actor || !this.#isProjectOwner(bundleId, actor))
-            return { ok: false, reason: "NOT_THE_OWNER",
-                     act: deactivating ? "deactivate" : "reactivate",
-                     detail: deactivating
-                       ? "only an owner of this project may deactivate it, which is what closing it as "
-                       + "abandoned means. Closing it as resolved or superseded is ordinary record work."
-                       : "only an owner of this project may reactivate it." };
-        }
-        /* REC-134: EVERY OTHER REVISION of a project's own document is work inside that project,
-           so the actor must have JOINED it (Membership v2 §7.5). Nothing gated it before — any
-           member holding `contribute`, and every administrator, could rewrite a project they
-           were never invited to by naming its id. Asked of the POSITIONAL identity the control
-           plane stamps (`actorIdentity`, deleted first there), never of what the actor may see;
-           an absent stamp is an internal write (`cite`'s own edit, the version pointer, a fork's
-           clone is a CREATION and never reaches here) and a machine credential holds no position
-           — both unchanged. After the 7.11 arm above, so an owner-only transition keeps
-           answering NOT_THE_OWNER in its own words. */
-        const denied = this.#projectAuthority(bundleId, pkg.actorIdentity ?? null, "joined", "promote");
-        if (denied) return denied;
-      }
-      /* DEC-49 REGION is-promote-cas — REC-64/C-33.21. THE COMPARE-AND-SWAP, and
-         it is one of the 32 refusals PL-1's whole-function `where` conscripted
-         into DEC-49's scope by accident (REC-71). It is in scope now on purpose,
-         with a span that claims exactly the two lines that enforce it. */
-      if (cur && cur.bundle_sha !== base)
-        return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
-      /* END DEC-49 REGION is-promote-cas */
-
-      /* ===== D-547 (`BIO_Case_Making_v0_1.md` §2; D-510/D-526's derivation, C-2.5, C-86.2) — A REVISION DOES NOT
-         RETYPE THE BUNDLE IT REVISES. `bundles.object_type` below is written from `promotedType` (the document's own
-         type, D-510), and nothing compared it with the HEAD's: a revision whose document stated a different type
-         rewrote the column in place, so every fence that asks "is this an action / a project / a bias set" answered
-         for a machine the bundle's history never was — an information revised into a project skipped REC-134's
-         joined check above, which reads the NEW type. C-2.5 pins a type to its id prefix, but the catalogue is not
-         run here, so that pin was never an answer at the write. Asked after the compare-and-swap (a stale base
-         answers CAS_STALE: the head it would be compared with is not the one the caller saw) and before the first
-         write. Both sides go through `normalizeType`, so `focus`/`problem` revised as `inquiry` is not a retype.
-         Only a STATED type is compared: a revision stating none anywhere leaves `promotedType` undefined, which is
-         not this refusal's question. REPLAY IS EXEMPT for D-510's reason — the record's own history must stay
-         holdable verbatim, and a replay's claim to be one is caller-asserted (D-511). A bundle ALREADY retyped
-         before this line is not rewritten (M-156 counted none, in either register, on 2026-09-25). ===== */
-      /* DEC-49 REGION is-promote-retypes-bundle */
-      if (cur && typeof promotedType === "string" && promotedType !== normalizeType(cur.object_type) && !pkg.replay) {
-        const rtRow = PROMOTED_TYPE_CHECKS.REVISION_RETYPES_BUNDLE;
-        return { ok: false, reason: "REVISION_RETYPES_BUNDLE", code: "REVISION_RETYPES_BUNDLE",
-                 check: rtRow.check, translation: rtRow.translation,
-                 head_type: normalizeType(cur.object_type), revision_type: promotedType,
-                 detail: `${String(bundleId).slice(0, 80)} is '${normalizeType(cur.object_type)}' and this revision `
-                       + `says '${String(promotedType).slice(0, 40)}'. A revision changes what a document says, `
-                       + `never what kind of thing it is. Nothing was written.` };
-      }
-      /* END DEC-49 REGION is-promote-retypes-bundle */
-
-      /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
-         write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
-         refuses `CITED` while a live edge cites the item; `promote` is the write path it runs
-         through, and a caller naming `current_state: retired` directly reached the same terminal
-         state without the question (State Rules v1.5 §4.1, BOB #30). The same predicate, the same
-         code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
-         retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
-      if (promotedState === "retired" && (!cur || cur.current_state !== "retired")   /* D-563: the document's state */
-          && (cur ? cur.object_type : promotedType) === "information") {
-        const citedBy = this.#retirementCitedBy(bundleId);
-        if (citedBy.length)
-          return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
-                   detail: Store.RETIRE_CITED_DETAIL };
-      }
-
       /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
          FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
          restamp; REC-173's verified replay keeps the Drive era's), and the restamp runs only there — so without this
@@ -18468,13 +17893,6 @@ export class Store extends DurableObject {
         { identity: pkg.actorIdentity ?? null, viewer: pkg.actorViewer ?? null });
       if (fenced) return fenced;
 
-      for (const f of files) {
-        /* REC-178: judged in UTF-8 BYTES, the unit INLINE_MAX is stated in — never `text.length`, which counts UTF-16
-           units and admitted a non-ASCII file up to three times the limit. */
-        const inlineBytes = Store.#inlineBytesOf(f);
-        if (inlineBytes !== null && inlineBytes > INLINE_MAX)
-          return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: inlineBytes };
-      }
       /* A gathering queue is validated at the WRITE, not only at ratification.
          C-18.5's grammar exists because a leaked write token must be able to
          litter the queue without steering a member's session: the exporter
@@ -18519,105 +17937,6 @@ export class Store extends DurableObject {
          re-parsed. */
       const docFmW = basisMd && typeof basisMd.text === "string"
         ? parseFrontmatter(basisMd.text).data : null;
-      /* ===== D-510 (`BIO_Case_Making_v0_1.md` §2, `action` IS the impact substrate; C-2.5 pins a document's
-       * type to its id prefix) — THE PROMOTED DOCUMENT DECLARES ITS OWN TYPE, AND AN ENVELOPE THAT DISAGREES
-       * IS REFUSED. D-505's worker found this beside the risk-tier fence (its finding 3).
-       *
-       * THE DEFECT, measured at the code: `bundles.object_type` was written from `normalizeType(meta.object_type)`
-       * — the CALLER'S envelope — and the action, bias and inquiry projections below were gated on the same
-       * envelope, while `#projectRow`'s action COLUMNS (`action_kind`, `action_risk_tier`,
-       * `action_counterparty_state`, `action_resolution`, the clock) are read off the promoted DOCUMENT'S own
-       * front matter. So an ACTION promoted under `meta: { object_type: "information" }` landed TYPED
-       * INFORMATION with `action_risk_tier` set from its bytes and its `action_basis` and `correspondence`
-       * NEVER PROJECTED — the record holding an action it does not index as one, which is worse than not
-       * holding it (CLAUDE.md §2). D-505 measured the same disagreement from the other side and pinned it.
-       *
-       * TWO HALVES, AND THEY ARE DIFFERENT CLAIMS.
-       *   (1) DERIVATION. `promotedType` below is the DOCUMENT's own type through the catalogue's
-       *       `normalizeType`, and every site that decides WHAT THE RECORD SAYS ABOUT THESE BYTES reads it:
-       *       `bundles.object_type` itself, `isInquiry` (the inquiry_basis and basis-version projections),
-       *       the bias projection, and the action_basis / correspondence / action_quotes projections. A
-       *       projection is a view of the document (D-21); it may not be keyed on something the document
-       *       does not say.
-       *   (2) REFUSAL. An envelope that STATES a type contradicting the document's is refused by name, here,
-       *       before the first write — never silently obeyed and never silently overridden, because a caller
-       *       who asked for one thing and got another was told nothing either way.
-       *
-       * REPLAY IS EXEMPT FROM (2) AND NOT FROM (1), and the split is the point: the record's own history may
-       * contain a package whose envelope and document disagree and must stay holdable verbatim — but what the
-       * record SAYS about those bytes is the bytes' own word. So a replayed action lands TYPED ACTION with its
-       * basis and correspondence projected, rather than as mislabelled information. That exemption is
-       * CALLER-ASSERTED, which is D-505's declared residue and D-511's subject, and nothing here closes it.
-       *
-       * WHAT IS ABOVE THIS LINE NO LONGER READS THE ENVELOPE (D-526): D-510 left the project name scan, the
-       * `CITED` retirement arm and D-149's `LAWS_ACT` carry-forward reading it, so WHICH refusal a caller met
-       * depended on the label. `documentType`, `envelopeType` and `promotedType` are now derived ONCE at the top
-       * of `promote`, from the bytes the caller sent, and every fence above reads `promotedType`; this refusal
-       * still speaks for a disagreement no earlier fence answers. `isAction` (D-505) stays a UNION: a union can
-       * only add refusals, and it is still reachable where the envelope states no type at all. ===== */
-      /* DEC-49 REGION is-promoted-type-disagrees */
-      if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {
-        const dtRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES;
-        return { ok: false, reason: "ENVELOPE_TYPE_DISAGREES", code: "ENVELOPE_TYPE_DISAGREES",
-                 check: dtRow.check, translation: dtRow.translation,
-                 document_type: documentType, envelope_type: envelopeType,
-                 detail: `the document being promoted says object_type `
-                       + `'${String(docFmW.object_type).slice(0, 40)}' and this request's meta says `
-                       + `'${String(meta.object_type).slice(0, 40)}'. The record goes by the document, and it `
-                       + `will not file one kind of thing as another: what a document IS decides which `
-                       + `columns, projections and reads it gets. Send it again with the meta naming the type `
-                       + `the document names, or change the document first. Nothing was written.` };
-      }
-      /* END DEC-49 REGION is-promoted-type-disagrees */
-      /* D-563 — the same two halves as D-510's, for the title and the state: the DERIVATION above is not exempt for a
-         replay, and the REFUSAL is, for D-510's reason. Only a contradiction between two STATEMENTS is refused: an
-         envelope stating nothing takes the document's word, and a document stating nothing takes the envelope's.
-         Compared with runs of whitespace collapsed and ends trimmed, so a respacing is not a contradiction; case is
-         kept, because a different word is a different title. */
-      const sameText = (a, b) => String(a).trim().replace(/\s+/g, " ") === String(b).trim().replace(/\s+/g, " ");
-      /* DEC-49 REGION is-promoted-title-disagrees */
-      if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null)
-          && !(documentTitle !== null && sameText(envelopeTitle, documentTitle))
-          && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)) && !pkg.replay) {
-        const ttRow = PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES;
-        return { ok: false, reason: "ENVELOPE_TITLE_DISAGREES", code: "ENVELOPE_TITLE_DISAGREES",
-                 check: ttRow.check, translation: ttRow.translation,
-                 document_title: String(documentTitle ?? documentQuestionTitle).slice(0, 200),
-                 envelope_title: String(envelopeTitle).slice(0, 200),
-                 detail: `the document being promoted is titled '${String(documentTitle ?? documentQuestionTitle).slice(0, 80)}' `
-                       + `and this request's meta says '${String(envelopeTitle).slice(0, 80)}'. The record goes by the `
-                       + `document, and a name is what 7.1 holds unique, so it will not file one under the other. Send it `
-                       + `again with the meta naming the document's title, or with no title in the meta, or change the `
-                       + `document first. Nothing was written.` };
-      }
-      /* END DEC-49 REGION is-promoted-title-disagrees */
-      const stateContradiction = (() => {
-        if (!envelopeMeta) return null;
-        if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
-          return ["current_state", documentState, envelopeState];
-        for (const k of ["prior_state", "closed_reason"]) {
-          if (!fmHas(sentFm, k) || envelopeMeta[k] === undefined) continue;
-          const d = sentFm[k] ?? null, e = envelopeMeta[k] ?? null;
-          if (d === null && e === null) continue;
-          if (d === null || e === null || !sameText(d, e)) return [k, d, e];
-        }
-        return null;
-      })();
-      /* DEC-49 REGION is-promoted-state-disagrees */
-      if (stateContradiction && !pkg.replay) {
-        const stRow = PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES;
-        const [field, said, asked] = stateContradiction;
-        return { ok: false, reason: "ENVELOPE_STATE_DISAGREES", code: "ENVELOPE_STATE_DISAGREES",
-                 check: stRow.check, translation: stRow.translation, field,
-                 document_value: said === null ? null : String(said).slice(0, 80),
-                 envelope_value: asked === null ? null : String(asked).slice(0, 80),
-                 detail: `the document being promoted says ${field} '${said === null ? "null" : String(said).slice(0, 40)}' `
-                       + `and this request's meta says '${asked === null ? "null" : String(asked).slice(0, 40)}'. The record `
-                       + `goes by the document: where a thing stands decides who may move it and what may cite it. Send `
-                       + `it again with the meta naming what the document says, or leave it out of the meta, or change `
-                       + `the document first. Nothing was written.` };
-      }
-      /* END DEC-49 REGION is-promoted-state-disagrees */
       /* `promotedType` (D-526, derived at the top of `promote`) is the one value every projection below reads. The
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
@@ -19113,81 +18432,6 @@ export class Store extends DurableObject {
         /* END DEC-49 REGION is-basis-acyclic */
       }
 
-      /* D-468 / C-26.12 — THE BIAS MACHINE, ASKED OF THE HEAD, AT THE WRITE PATH.
-         `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": a bias set is a BUNDLE so that it
-         inherits *"append-only history, member-authored transitions, convergent promotion"* without
-         inventing governance — and `STATES.bias`'s own comment says *"NO EDGE OUT OF `adopted` EXCEPT
-         `retired`"*, with the reason: a published case names the revision it was held to, so a set that
-         could slide backwards makes *"the lens this case was produced under"* unresolvable after the fact.
-         NOTHING ASKED THE TABLE. `promote` writes `meta.current_state` into the bundles row, and the only
-         state questions it carried were entry requirements for ONE destination (`retired` for information,
-         the project 7.11 pair). So `adopted -> proposed` was accepted and moved the head — REC-187's worker
-         found it (F4), and `d84-case-manifest.test.mjs` §4 DROVE it and read the new head back, which is
-         the measurement this row opens on rather than a reading of the comment.
-         THE TABLE IS THE CATALOGUE'S AND THIS PATH HOLDS NO COPY, through `vocabFor` over the DECLARED
-         spelling (the MAP RULE), exactly as op=actionmove and op=conclude take it. Only a MOVE is asked: `from ===
-         to` is a revision and not a transition, which is the doctrine's own way to amend an adopted set —
-         *"Amending an adopted set is a NEW REVISION of the same bundle under append-only history — which
-         re-pins"* — and `bias.test.mjs` §11 and `d84-case-manifest.test.mjs` §3 both drive that amendment.
-         A CREATION IS NOT A TRANSITION EITHER (`cur` is null and there is no head to move from), so this
-         does not decide which state a set may be BORN in; that question is the gate's and is NOT asked here.
-         THE TYPE IS D-510's `promotedType` AND THIS HOLDS NO SECOND DERIVATION OF IT. D-510 (2026-09-24,
-         reached by merging main into this branch) made the DOCUMENT's own type the one value every projection
-         reads and refuses an envelope contradicting it (`is-promoted-type-disagrees`) ahead of this line, so
-         the document-versus-envelope question is already answered here and re-deriving it would be the
-         two-readings drift this repository has measured five times. This item's first spelling DID re-derive
-         it, and folding it onto `promotedType` is what the merge was for.
-         ASKED WHENEVER THE PROMOTED TYPE IS BIAS **OR** THE HEAD IS A BIAS SET, so a promotion that also
-         retypes the bundle cannot step around the machine by renaming it: from a bias head the legal moves
-         are the bias table's whatever the incoming document calls itself. (That a revision can retype a
-         bundle AT ALL is a separate, wider defect D-510 did NOT close — `promotedType` is written into
-         `bundles.object_type` with no comparison anywhere to `cur.object_type` — and is reported rather than
-         fixed here.)
-         `replay` IS NOT AN EXEMPTION, on REC-179's reasoning and not by oversight: `index.mjs` verifies a
-         replay only for a CREATION (REC-173), so on a revision the flag is a caller's assertion, and a fence
-         a caller can turn off by asserting is not a fence. The gathering check's exemption exists because a
-         faithfully replayed history must be holdable verbatim; a backwards move was never legally written,
-         so an honest replay does not meet this.
-         REFUSED BEFORE ANY WRITE of this transaction, beside its `BIAS_REFUSED` sibling and for that
-         refusal's reason: a refusal returned inside `transactionSync` rolls nothing back, so a state the
-         record will not honour must be refused before it can land in append-only history. */
-      /* DEC-49 REGION bias-state-edge */
-      const biasSpelling = promotedType === "bias" ? promotedType
-                         : (cur && normalizeType(cur.object_type) === "bias" ? cur.object_type : null);
-      if (cur && biasSpelling) {
-        /* D-563: the state the projection below WRITES — asking the label here while the row takes the bytes
-           would let an envelope saying `adopted` walk an adopted set back to `proposed`. */
-        const from = cur.current_state, to = promotedState;
-        const legalFrom = vocabFor(STATES, biasSpelling)?.edges?.[from] || [];
-        /* BUILT AS A LITERAL rather than through `#biasRefuse`, and the DEC-49 guard is why: a verdict
-           INHERITED THROUGH A SPREAD is one the guard's outcome walk cannot resolve until run time, so
-           it reads this span as a governed region containing no refusal at all. Its ceiling on such
-           returns may only ever move DOWN. The code is a STRING LITERAL at its site and the check and
-           the translation are read from the catalogue's own row — one place, as `BIAS_REFUSED` does it
-           four hundred lines below. */
-        if (to !== from && !legalFrom.includes(to))
-          return { ok: false, reason: "BIAS_ILLEGAL_TRANSITION",
-                   check: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.check,
-                   translation: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION.translation,
-                   from, to: to ?? null, object_type: biasSpelling, legal_from: legalFrom,
-                   detail: `${bundleId} stands at '${from}' and this promotion names `
-                     + `'${to === undefined || to === null ? "no state" : to}'. `
-                     + `A bias set at '${from}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}`
-                     + `${legalFrom.length ? "" : " — it is terminal"}, and a revision that leaves it where it stands is `
-                     + `how an adopted set is amended. The table is the catalogue's and this path holds no copy of it. `
-                     + `Nothing was written.` };
-      }
-      /* END DEC-49 REGION bias-state-edge */
-
-      /* REC-176 — THE HISTORY LAW AT THE WRITE (§2.4: "History is append-only; nothing in _history/ is ever modified
-         or deleted"). The two manifest writes below, and the history snapshot, are keyed (bundle_id, snap_key) and
-         were INSERT OR REPLACE: a second promotion naming a key this bundle already held REPLACED the first
-         promotion's manifest row — its base, author, time and file list — and overwrote its snapshot, and answered
-         ok. A byte-identical re-send was answered above (`is-promote-resend`) without writing; anything else at a
-         held key is refused HERE, the last line before the first write of this transaction, so a refusal leaves
-         the bundle byte-identical (a refusal returned inside `transactionSync` does not roll back what was already
-         written, and nothing has been). The statements below are now plain INSERT, so a key reaching them held is
-         a constraint failure that rolls the whole promotion back rather than a silent replace. */
       /* PL-12 / D-84: A MALFORMED BIAS SET NEVER LANDS, and it is refused by the
          CATALOGUE'S OWN function rather than by a second implementation here —
          the checkGatheringGrammar and checkInquiryBasis precedent exactly, and
@@ -19252,142 +18496,29 @@ export class Store extends DurableObject {
         }
       }
       /* END DEC-49 REGION bias-set-refusal */
-      /* DEC-49 REGION is-promote-files — REC-64/C-33.24. MOVED HERE BY REC-176 from after the manifest and history
-         writes, where a refusal left the refused promotion's row in the history (see the note at its old site). */
-      if (cur && !pkg.replay) {
-        const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
-        const now2 = new Set(files.map((f) => f.path));
-        const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
-        const dropped = [...had].filter((p) => !now2.has(p) && !declared.has(p));
-        if (dropped.length)
-          return { ok: false, reason: "FILES_DROPPED", paths: dropped.sort(),
-                   detail: "this promotion would remove files the previous revision had. "
-                         + "Carry them forward, or name them in drop[] to delete them on purpose." };
-      }
-      /* END DEC-49 REGION is-promote-files */
-      if (!files.find(f => f.path === "bundle.md")?.sha256) return { ok: false, reason: "NO_BUNDLE_MD" };
-      /* DEC-49 REGION is-promote-snapkey */
-      if (heldAtKey)
-        return { ok: false, reason: "SNAP_KEY_TAKEN", code: "SNAP_KEY_TAKEN",
-                 check: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.check,
-                 translation: ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN.translation,
-                 snapKey: String(snapKey),
-                 detail: `${bundleId} already holds a promotion under snap key ${String(snapKey)}, and this one is `
-                       + "not it (a different base, file, writer or author). The record does not rewrite a history "
-                       + "entry; send this promotion under a new snap key. Nothing was written." };
-      /* END DEC-49 REGION is-promote-snapkey */
+      return null;
+  }
 
-      // history is append-only: snapshot the outgoing live state first
-      /* A creation records a manifest entry with the empty-string SHA as its
-         base and no snapshot, because there is no prior state to snapshot.
-         The accelerator did exactly this and the catalog depends on it:
-         classifyDivergence anchors the hash chain on entry bases, and C-20.1
-         recognises a creation by that same sentinel. Omitting the entry, which
-         is what this method did before, leaves the chain with no first link. */
-      if (!cur) {
-        this.sql.exec(
-          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
-          bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", EMPTY_STRING_SHA, author,
-          meta.last_updated || new Date().toISOString(),
-          JSON.stringify(files.map((f) => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
-      }
-      if (cur) {
-        for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
-          this.sql.exec(
-            `INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`,
-            bundleId, snapKey, r.path, r.content, r.blob_sha, r.sha256, new Date().toISOString());
-        this.sql.exec(
-          `INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json,writer,operation) VALUES (?,?,?,?,?,?,?,?,?)`,
-          /* The catalog switches on kind === 'promotion' (C-12.2, C-20.1), so
-             that is the vocabulary. A creation is still distinguishable, by a
-             base equal to the empty-string SHA, which is how the accelerator
-             recorded it and how C-20.1 recognises one. */
-          bundleId, snapKey, pkg.replay ? "promotion-replay" : "promotion", base, author,
-          /* The revision's own time, never the server's wall clock. C-12.1
-             compares live last_updated against earlier entries' created, and a
-             signed ratification legitimately backdates last_updated to the
-             transition instant. Stamping server time here made that comparison
-             fail on honest content. */
-          meta.last_updated || new Date().toISOString(),
-          JSON.stringify(files.map(f => ({ name: f.path, sha256: f.sha256 }))), writer, operation);
-      }
-
-      /* Silent deletion has no legitimate use in an append-only record.
-       *
-       * promote writes a WHOLE image, so a caller that mentions one file removes
-       * every other one. That is efficient and it is a trap, and it has already
-       * cost twice: the monitor's first tick destroyed the provenance register of
-       * every bundle it touched, and the browser's revise path did the same thing
-       * for anyone who edited a captured document. Both were the DEFAULT
-       * behaviour of a caller doing the obvious thing.
-       *
-       * So a promotion that drops a path the previous revision had must name it.
-       * A deliberate deletion is still possible and is now on the record; an
-       * accidental one is refused with the paths listed. Replay is exempt because
-       * the history it reconstructs may legitimately contain deletions, and a
-       * replayed revision is already marked as such in the manifest.
-       */
-      /* REC-176: `is-promote-files` (FILES_DROPPED) and NO_BUNDLE_MD MOVED from here to BEFORE `is-promote-snapkey`,
-         i.e. before the first write — they sat AFTER the manifest and history writes (and NO_BUNDLE_MD after the live
-         files were replaced), and a refusal returned inside `transactionSync` rolls nothing back, so a refused
-         promotion left its manifest row and snapshot in the history. Both judge only the request and the live file
-         list, which nothing between there and here changes. */
-      this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f of files)
-        this.sql.exec(
-          `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
-          bundleId, f.path, f.text ?? null, f.blobSha ?? null, f.bytes, f.sha256);
-
-      const newSha = files.find(f => f.path === "bundle.md")?.sha256;
-
-      /* Normalisation site 3 of 4 (REC-10): the projected type goes through
-         the CATALOG'S OWN normalizeType rather than an inline restatement of
-         it, so the store's view and the checker's view cannot disagree — the
-         same reason this file imports the catalog's parser.
-         D-510: and what it normalises is the PROMOTED DOCUMENT's own type, decided once above. This column
-         is what every reader asks "is this an action" of — `#projectRow` was already reading the action
-         columns beside it off these same bytes, and the two could disagree. */
-      const projectedType = promotedType;
-      /* C-16: an inquiry's title is DERIVED from its `## Question` section
-         and never separately authored — deriveInquiryTitle (the catalog
-         holds the one rule) over the document being promoted, with the
-         caller's meta.title honoured only when the document carries no
-         question (every legacy focus/problem document, whose title WAS
-         authored under the old contract). */
-      const mdForTitle = files.find((x) => x.path === "bundle.md");
-      const projectedTitle = (projectedType === "inquiry"
-        ? deriveInquiryTitle(inquiryQuestionOf(typeof mdForTitle?.text === "string" ? mdForTitle.text : "")) ?? promotedTitle
-        : promotedTitle);   /* D-563: the document's title (the envelope's only where the bytes state none) */
-
-      this.sql.exec(
-        `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,criticality,bundle_sha,row_version)
-         VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT row_version+1 FROM bundles WHERE bundle_id=?),1))
-         ON CONFLICT(bundle_id) DO UPDATE SET
-           object_type=excluded.object_type, title=excluded.title,
-           current_state=excluded.current_state, prior_state=excluded.prior_state,
-           last_updated=excluded.last_updated, criticality=excluded.criticality,
-           bundle_sha=excluded.bundle_sha,
-           row_version=bundles.row_version+1`,
-        /* D-436: a revision keeps the group its creation wrote (the ON CONFLICT arm never touches group_id, and
-           NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
-           above, before the transaction. `meta.group` is read nowhere but that decision. */
-        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, promotedState, promotedPriorState,
-        meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
-
+  /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
+     inside the same transaction. The answer's keys promotion does not already carry are added to its answer. */
+  #promoteProjections(c) {
+    const { pkg, bundleId, base, meta, author, register, files, promotedType, promotedState, owner } = stepContext(c);
+    const cur = c.head, newSha = c.bundleSha, docFmW = c.docFm, isInquiry = promotedType === "inquiry";
+    const basisFm = isInquiry ? docFmW : null;
+    const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
+    const testimony = pkg[TESTIMONY_PATH] || null;
+    const surfacing = !cur && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()
+      ? { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() } : null;
+    const migration = (!cur && !surfacing && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
+        && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
+      ? { capture: pkg.migrationReplay.capture,
+          promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
+      : null;
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
          covers all three arrivals — a project created here gains a row carrying the derivation's default, a
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
          than leaving a sight row standing over something that is no longer a project. It is a derivation, so
          it is idempotent: a revision that changes neither recomputes the same row. */
-      /* REC-197: the creating owner's CHOSEN setting, as the owner's act `op=projectvisibilityset` writes — one row
-         of the same append-only log, `set_by` the owner whose ownership row this transaction writes below — written
-         BEFORE the one derivation call, so the sight index is re-derived from the log that holds it (D-497's rule:
-         never written from the value directly) and no second call exists. `creationVisibility` is non-null only for
-         a project's creation that carries an owner (decided before the transaction). No reason is written: the
-         owner gave none, and a plane-authored reason would put words in their mouth. */
-      if (!cur && creationVisibility)
-        this.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
-          bundleId, creationVisibility, pkg.ownerMemberId, null, new Date().toISOString());
       this.#reindexProjectSight(bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of
@@ -19965,33 +19096,6 @@ export class Store extends DurableObject {
          to roll the whole promotion back rather than return a half. */
       const testimonyWrote = testimony ? testimony.within(bundleId) : null;
 
-      /* 7.1: the creator of a project is its sole initial owner, written in the
-         SAME transaction as the project itself so a project cannot exist
-         unowned even for an instant. Two round trips from the control plane
-         would leave an ownerless project whenever the second one failed.
-
-         `ownerMemberId` is stamped by the control plane from the authenticated
-         SESSION and any caller-supplied value is deleted there first, exactly as
-         `author` is: it is the field that decides who owns a project, so a
-         caller naming it would be a caller granting themselves, or someone else,
-         ownership of a project. A machine credential creates no owner at all,
-         because there is no member behind it and inventing one would put a name
-         on the record that nobody holds.
-
-         Creation only. A revision to an existing project must not silently
-         reassign it, which is why this hangs off `!cur`. */
-      const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
-      let owner = null;
-      /* D-526: `promotedType`, the document's type, as the control plane's `create_projects` gate that stamped
-         `ownerMemberId` now asks it: keyed on the raw envelope, an unlabelled creation landed owned by nobody. */
-      if (!cur && ownerMemberId && promotedType === "project") {
-        const ts = new Date().toISOString();
-        this.sql.exec(
-          `INSERT OR REPLACE INTO project_participants
-             (project_id, member_id, state, owner, invited_by, comment, created, updated)
-           VALUES (?,?,'joined',1,NULL,NULL,?,?)`, bundleId, ownerMemberId, ts, ts);
-        owner = ownerMemberId;
-      }
       /* D-85 (§11 item 5, rule 2): THE LINK AND THE BOUND, in the creation's own transaction, so a question an
          assistant opened cannot exist without the row naming its run, and a refused creation spends nothing.
          An INSTANCE row keyed by the new inquiry and never a line in its bytes (the run is scratch). The bound
@@ -20084,19 +19188,6 @@ export class Store extends DurableObject {
             WHERE bundle_id=? ORDER BY name, ord`, bundleId)
           .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id,
                          content_id: r.content_id ?? null })) } : {}) };
-    };
-    let refused = null;
-    try {
-      return this.ctx.storage.transactionSync(() => {
-        const out = act();
-        if (out && out.ok === false) { refused = out; throw Store.#ROLLBACK; }
-        return out;
-      });
-    } catch (e) {
-      if (e !== Store.#ROLLBACK || !refused) throw e;
-      return refused;
-    }
-    /* ===== END REC-180 ===== */
   }
 
   /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it
