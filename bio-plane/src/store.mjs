@@ -939,6 +939,7 @@ export class Store extends DurableObject {
         isProjectOwner: (projectId, memberId) => this.#isProjectOwner(projectId, memberId),
         projectAuthority: (projectId, identity, need, act) => this.#projectAuthority(projectId, identity, need, act),
         visibilitySettingRefusal: (value) => this.#visibilitySettingRefusal(value, null),
+        participation: (projectId, memberId) => this.#participation(projectId, memberId),
         projectVisibility: ({ projectId }) => this.#visibilityOf(projectId),
         projectCreated: ({ projectId, ownerId, visibility, by }) => {
           const ts = new Date().toISOString();
@@ -36129,117 +36130,7 @@ export class Store extends DurableObject {
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
   forkProject({ projectId, newId, title, by, viewer = null, visibility = null } = {}) {
-    /* REC-141 / C-59.3: a fork's id is MINTED, as a new project's is (Membership v2 §7, BOB #15). A named
-       `newId` is refused FIRST — before the origin, the participation or the id is looked up — so the
-       answer is one answer whether the named id is taken or free, and it echoes no id. */
-    /* DEC-49 REGION is-project-fork-id-supplied */
-    if (newId !== undefined && newId !== null && newId !== "") {
-      const row = PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED;
-      return { ok: false, reason: "PROJECT_FORK_ID_SUPPLIED", code: "PROJECT_FORK_ID_SUPPLIED", check: row.check,
-               translation: row.translation,
-               detail: "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked." };
-    }
-    /* END DEC-49 REGION is-project-fork-id-supplied */
-    const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
-       cannot see that it exists"* while telling them exactly that; it is now said only to a caller
-       who CAN see the project (an administrator not in it). */
-    { const existence = b ? this.#existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    const p = this.#participation(projectId, by);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
-      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists." };
-    if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state,
-      detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing "
-            + "for them to fork. Join it first." };
-
-    /* 7.1: a project's name is unique across the instance, compared
-       case-insensitively with runs of whitespace collapsed. A plain unique index
-       over the trimmed string is how HANDLES work and would let "Sewer Fund" and
-       "Sewer fund" coexist, which is the collision the rule exists to stop. Held
-       across every lifecycle state, deactivated projects included, because a
-       deactivated project is still cited and its name must still resolve to what
-       was cited. */
-    const want = Store.projectNameKey(title);
-    if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
-    const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`)
-      .find((r) => Store.projectNameKey(r.title) === want);
-    /* REC-139 / D-428: names neither the other project's id nor its title — `promote`'s reason, stated there. */
-    if (clash) return { ok: false, reason: "NAME_TAKEN",
-      detail: "a project by that name already exists on this instance, and project names are unique. "
-            + "This holds for deactivated projects too, because their names are still cited." };
-    /* The clone is a real bundle, written through `promote` like every other
-       write, so it passes the same gate and lands in the same history. Composed
-       here rather than left to the caller: a fork the caller has to assemble is
-       a fork every caller assembles slightly differently. */
-    const liveMd = this.#one(
-      `SELECT content, bundle_sha FROM files f JOIN bundles b ON b.bundle_id=f.bundle_id
-       WHERE f.bundle_id=? AND f.path='bundle.md'`, projectId);
-    if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
-
-    const when = new Date().toISOString();
-    /* THE ORIGIN EDGE, written into the document and not merely reported.
-       The first version of this method returned `rel: "derived_from"` and never
-       wrote it, and the suite asserted the returned literal rather than the
-       record, so a fork with no provenance passed. `derived_from` is already in
-       the closed relationship vocabulary of State Rules 5.1, so nothing is added
-       to it, and refs projects the edge from frontmatter like any other. */
-    const withEdge = Store.#spliceReferences(liveMd.content,
-      [{ rel: "derived_from", target: projectId, status: "confirmed", note: `forked by ${by}` }]);
-    if (!withEdge)
-      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", projectId,
-               detail: "the origin's references block is not in a shape this grammar can extend in place, "
-                     + "so the clone could not be given a recorded origin. A fork with no provenance is "
-                     + "not written." };
-    /* REC-141: the origin's `id:` line is REMOVED, not rewritten — `promote` mints the fork's id and writes
-       it into these bytes before it hashes them, and refuses bytes that already carry one. */
-    let text = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
-    text = Store.#setScalar(text, "title", JSON.stringify(title));
-    /* A fork starts at the beginning of the lifecycle regardless of where the
-       origin had got to. Inheriting `matured` would claim a readiness the clone
-       has not earned, and inheriting `closed` would create a project born
-       deactivated. */
-    text = Store.#setScalar(text, "current_state", "forming");
-    text = Store.#setScalar(text, "last_updated", `"${when}"`);
-    const entry = `### Session ${when} | forked from ${projectId} | ${by}\n`
-                + `Trigger: fork\n`
-                + `Changes: created as a clone of ${projectId}, recorded as a derived_from reference. `
-                + `Participants were NOT copied.\n`;
-    const at = text.indexOf("## Session Log");
-    if (at < 0) text += "\n## Session Log\n\n" + entry;
-    else {
-      const nxt = text.indexOf("\n## ", at + 1);
-      const cut = nxt === -1 ? text.length : nxt + 1;
-      text = text.slice(0, cut) + entry + "\n" + text.slice(cut);
-    }
-
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, projectId))
-      carried.push(r.content !== null
-        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-    const fbytes = new TextEncoder().encode(text);
-    const promoted = this.promote({
-      base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-      author: by, ownerMemberId: by,
-      /* REC-197 (§7.14, BOB #32 (b)): the FORKER's choice, decided and recorded by `promote` exactly as a
-         creation's — a fork is a creation (§7.12) and does NOT inherit the origin's setting. Absent is HIDDEN. */
-      visibility,
-      files: [{ path: "bundle.md", text, bytes: fbytes.length,
-                sha256: createSha256().update(fbytes).hex() }, ...carried],
-      /* D-436: no `group` here — this was an unconditional literal. The fork is a CREATION, so `promote` stamps the
-         store's recorded group into its bytes, or, recording none, keeps the group its origin's bytes carry. */
-      meta: { object_type: "project", title,
-              current_state: "forming", created: when, last_updated: when },
-    });
-    if (!promoted.ok) return promoted;
-    return { ok: true, projectId, newId: promoted.bundleId, title, origin: projectId, rel: "derived_from",
-             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha,
-             visibility: promoted.visibility };   /* REC-197: read back from the record by `promote` */
+    return promotionOf(this.ctx).forkProject({ projectId, newId, title, by, viewer, visibility });
   }
 
   /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same

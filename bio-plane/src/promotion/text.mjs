@@ -45,3 +45,37 @@ export function appendSessionLog(text, entry) {
   const cutAt = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
 }
+
+/** Set a column-0 scalar, opening it immediately before the closing fence when the document does not carry it. */
+export function setOrAddScalar(text, key, value) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return text;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return text;
+  for (let i = 1; i < end; i++)
+    if (lines[i].startsWith(key + ":")) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
+  return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
+}
+
+/** Append reference entries to `references`, for the absent, inline-empty and block shapes; null for any other. */
+export function spliceReferences(text, additions) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  const block = additions.map((a) =>
+    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+  let ref = -1;
+  for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
+  if (ref === -1) return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
+  const rest = lines[ref].slice("references:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = ref;
+  for (let i = ref + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+}

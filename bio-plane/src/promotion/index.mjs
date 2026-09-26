@@ -9,7 +9,8 @@
  * with `deps` and returned to every later caller. `deps`:
  *   record      record-core's services: transact, commit, head, manifestEntry, livePaths, readFile, mintOpaqueId,
  *               bundleInfo, listByType (head, manifestEntry, livePaths and commit's projection inputs: job record Q2).
- *   membership  sight, isProjectOwner, projectAuthority, projectCreated, visibilitySettingRefusal, projectVisibility.
+ *   membership  sight, isProjectOwner, projectAuthority, projectCreated, visibilitySettingRefusal, projectVisibility,
+ *               participation (a member's state in a project, for `forkProject`: job record Q8).
  *   now         the module's clock, an ISO instant (default: the wall clock).
  *   order       the modules' total order (ids), which registered steps run in; unknown modules run last.
  */
@@ -19,7 +20,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
-import { appendStateHistory, setScalar, appendSessionLog } from "./text.mjs";
+import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
@@ -112,6 +113,9 @@ function stampGroup(files, slug) {
 }
 
 const ABSENT = () => ({ ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" });
+const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
+  detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
+        + "holds for deactivated projects too, because their names are still cited." });
 
 class Promotion {
   #record; #membership; #now; #order;
@@ -356,13 +360,7 @@ class Promotion {
       /* R20: a revision the stamped actor may not see is answered as one of a bundle not held. */
       if (head && base !== null && pkg.actorIdentity != null) {
         const sight = membership.sight(bundleId, pkg.actorViewer ?? "");
-        if (sight === "EXISTENCE" && pkg.actorViewer != null) {
-          const info = record.bundleInfo(bundleId);
-          return rowRefusal(PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT, "PROJECT_SEEN_NOT_A_PARTICIPANT",
-            "this project is discoverable and you are not one of its participants. Its existence and name are all "
-            + "it shows you; asking to join is the one act open to you.",
-            { project: bundleId, name: info ? info.title ?? null : null });
-        }
+        if (sight === "EXISTENCE") return this.#existenceOnly(bundleId);
         if (sight !== "FULL") return ABSENT();
       }
 
@@ -413,21 +411,7 @@ class Promotion {
         const key = projectNameKey(promotedTitle);
         if (!key)
           return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across this instance" };
-        let after = null, clash = false;
-        for (;;) {
-          const page = record.listByType({ type: "project", after, limit: 200 });
-          for (const id of page.ids) {
-            if (id === bundleId) continue;
-            const info = record.bundleInfo(id);
-            if (info && projectNameKey(info.title) === key) { clash = true; break; }
-          }
-          if (clash || page.ids.length < 200 || !page.cursor) break;
-          after = page.cursor;
-        }
-        if (clash)
-          return { ok: false, reason: "NAME_TAKEN",
-                   detail: "a project by that name already exists on this instance, compared without regard to case "
-                         + "or spacing. This holds for deactivated projects too, because their names are still cited." };
+        if (this.#nameTaken(key, bundleId)) return NAME_TAKEN();
       }
 
       /* R19: only an owner deactivates or reactivates a project; every other revision needs a joined actor. */
@@ -639,6 +623,103 @@ class Promotion {
       for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
       return answer;
     });
+  }
+
+  /* R19: is `key` (projectNameKey) the name of any project but `except`, deactivated ones included? */
+  #nameTaken(key, except = null) {
+    let after = null;
+    for (;;) {
+      const page = this.#record.listByType({ type: "project", after, limit: 200 });
+      for (const id of page.ids) {
+        if (id === except) continue;
+        const info = this.#record.bundleInfo(id);
+        if (info && projectNameKey(info.title) === key) return true;
+      }
+      if (page.ids.length < 200 || !page.cursor) return false;
+      after = page.cursor;
+    }
+  }
+
+  /* R20 (membership R44): the one answer an act gives a caller who sees a project at EXISTENCE: its id and name. */
+  #existenceOnly(projectId) {
+    const info = this.#record.bundleInfo(projectId);
+    return rowRefusal(PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT, "PROJECT_SEEN_NOT_A_PARTICIPANT",
+      "this project is discoverable and you are not one of its participants. Its existence and name are all it shows "
+      + "you; asking to join is the one act open to you.", { project: projectId, name: info ? info.title ?? null : null });
+  }
+
+  /* ---------------------------------------------------------------- forkProject (N16, §7.12) */
+
+  forkProject(args = {}) {
+    try { return this.#fork(args || {}); }
+    catch (e) {
+      return { ok: false, reason: "FORK_FAILED",
+               detail: `the fork could not complete and nothing was written: ${cut(e && e.message ? e.message : e, 200)}` };
+    }
+  }
+
+  #fork({ projectId, newId, title, by, viewer = null, visibility = null }) {
+    const record = this.#record, membership = this.#membership;
+    /* The fork's id is minted, as a new project's is; a named one is refused first, echoing nothing. */
+    if (newId !== undefined && newId !== null && newId !== "")
+      return rowRefusal(PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED, "PROJECT_FORK_ID_SUPPLIED",
+        "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked.");
+    const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
+    /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
+    const sight = head && viewer !== null && viewer !== undefined ? membership.sight(projectId, viewer) : "FULL";
+    if (head && sight === "EXISTENCE") return this.#existenceOnly(projectId);
+    if (!head || sight !== "FULL")
+      return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
+               detail: "no project answers to that id here. A project you cannot see is answered exactly as one that "
+                     + "does not exist, so this is not a hint either way." };
+    if (normalizeType(head.type) !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
+    const p = membership.participation(projectId, by);
+    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
+      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists." };
+    if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state,
+      detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing for them to "
+            + "fork. Join it first." };
+    const key = projectNameKey(title);
+    if (!key) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
+    if (this.#nameTaken(key)) return NAME_TAKEN();
+    const live = record.readFile(projectId, "bundle.md");
+    if (!live || typeof live.text !== "string")
+      return { ok: false, reason: "NO_DOCUMENT", detail: "the origin has no readable bundle.md to fork" };
+
+    const when = this.#now();
+    const withEdge = spliceReferences(live.text,
+      [{ rel: "derived_from", target: projectId, status: "confirmed", note: `forked by ${by}` }]);
+    if (!withEdge)
+      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", projectId,
+               detail: "the origin's references block is not in a shape this grammar can extend in place, so the clone "
+                     + "could not be given a recorded origin. A fork with no provenance is not written." };
+    /* The origin's id line is removed: promote mints the fork's and writes it before hashing. */
+    let text = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
+    text = setScalar(text, "title", JSON.stringify(title));
+    /* A fork starts at the beginning of the lifecycle, and is created now (the document states it: R12). */
+    text = setScalar(text, "current_state", "forming");
+    text = setOrAddScalar(text, "created", `"${when}"`);
+    text = setScalar(text, "last_updated", `"${when}"`);
+    text = appendSessionLog(text, `### Session ${when} | forked from ${projectId} | ${by}\n`
+                                  + `Trigger: fork\n`
+                                  + `Changes: created as a clone of ${projectId}, recorded as a derived_from reference. `
+                                  + `Participants were NOT copied.\n`);
+    const carried = [];
+    for (const path of record.livePaths(projectId)) {
+      if (path === "bundle.md") continue;
+      const f = record.readFile(projectId, path);
+      if (!f) continue;
+      carried.push(typeof f.text === "string" ? { path, text: f.text, sha256: f.sha256 }
+                                              : { path, blobSha: f.blobSha, sha256: f.sha256, bytes: f.bytes });
+    }
+    const promoted = this.promote({
+      base: null, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`, author: by, ownerMemberId: by, visibility,
+      files: [{ path: "bundle.md", text }, ...carried],
+      meta: { object_type: "project", title, current_state: "forming", created: when, last_updated: when },
+    });
+    if (!promoted.ok) return promoted;
+    return { ok: true, projectId, newId: promoted.bundleId, title, origin: projectId, rel: "derived_from",
+             owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha, visibility: promoted.visibility };
   }
 
   /* ---------------------------------------------------------------- reopen */

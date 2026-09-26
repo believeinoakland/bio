@@ -110,13 +110,19 @@ export function makeRecord() {
 /** membership, as its Provides state it, with the facts a test sets. */
 export function makeMembership() {
   const m = {
-    hidden: new Set(), discoverable: new Set(), owners: new Map(), joined: new Map(), created: [],
+    hidden: new Set(), discoverable: new Set(), owners: new Map(), joined: new Map(), invited: new Map(), created: [],
     sight(id, viewer) {
       if (!viewer) return "NONE";
       if (m.hidden.has(id)) return m.discoverable.has(id) && String(viewer).startsWith("member:") ? "EXISTENCE" : "NONE";
       return "FULL";
     },
     isProjectOwner: (p, who) => (m.owners.get(p) || []).includes(who),
+    participation(p, who) {
+      if (m.isProjectOwner(p, who)) return { state: "joined", owner: 1 };
+      if ((m.joined.get(p) || []).includes(who)) return { state: "joined", owner: 0 };
+      if ((m.invited.get(p) || []).includes(who)) return { state: "invited", owner: 0 };
+      return null;
+    },
     projectAuthority(p, identity, need, act) {
       if (!identity || !String(identity).startsWith("member:")) return null;
       const who = String(identity).slice(7);
