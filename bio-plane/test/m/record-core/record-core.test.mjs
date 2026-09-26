@@ -234,9 +234,12 @@ test("R15 R16 R17: readImage assembles live files, snapshots at the fixed path, 
   assert.equal(img["_history/bundle_20250101T000000Z_mmmm.md"], "v2");
   assert.deepEqual(img["_history/c_20250101T000000Z_mmmm.pdf"], { blobSha: "c".repeat(64), sha256: "c".repeat(64) });
   const m = JSON.parse(img["_history/manifest.json"]);
-  assert.deepEqual(m.entries.map((e) => e.key), ["20260901T000000Z_zzzz", "20200101T000000Z_aaaa", "20250101T000000Z_mmmm"],
-                   "R16: write order, not the snap keys' lexical order");
-  const [e1, e2, e3] = m.entries;
+  assert.deepEqual(m.entries.map((e) => e.key), ["20200101T000000Z_aaaa", "20250101T000000Z_mmmm", "20260901T000000Z_zzzz"],
+                   "the document keeps the key order the catalogue checks (C-12.1)");
+  const byWrite = [...m.entries].sort((a, b) => a.seq - b.seq);
+  assert.deepEqual(byWrite.map((e) => [e.seq, e.key]), [[1, "20260901T000000Z_zzzz"], [2, "20200101T000000Z_aaaa"], [3, "20250101T000000Z_mmmm"]],
+                   "R16: each entry's seq is its rank in write order, not the snap keys' lexical order");
+  const [e1, e2, e3] = byWrite;
   assert.deepEqual([e1.kind, e1.base, e1.author, e1.files], ["promotion", null, "a1", ["bundle.md", "data/changes.json"]]);
   assert.deepEqual([e2.base, e2.author, e2.writer, e2.operation, e2.files, e2.snapshotted],
                    [sha("v1"), "a2", "monitor", "recheck", ["bundle.md", "c.pdf"], ["bundle.md", "data/changes.json"]]);

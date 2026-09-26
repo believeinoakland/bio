@@ -222,8 +222,10 @@ export class RecordCore {
    *  file (a blob as its reference, carrying its size, so a partial writer can hand it back unchanged);
    *  every snapshot at its canonical path; a verbatim promotion record per manifest entry (C-20.1 reads
    *  the writer and operation from it, classifyDivergence rebuilds the hash chain from its per-file
-   *  digests); and the manifest itself, its entries in WRITE ORDER (D-674, State Rules I-20: "prior"
-   *  is write order, never the caller-chosen snap key, whose lexical order is not a clock). */
+   *  digests); and the manifest itself. R16 (D-674, D-700, State Rules I-20): "prior" is WRITE order,
+   *  never the caller-chosen snap key, whose lexical order is not a clock, so every entry carries `seq`,
+   *  its rank in the order this module recorded it, read from the table's own row order. The document
+   *  keeps its entries sorted by key, the form the catalogue checks (C-12.1); a reader walks `seq`. */
   readImage(bundleId) {
     const img = {};
     for (const r of this.#sql.exec(`SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=?`, bundleId))
@@ -237,6 +239,7 @@ export class RecordCore {
       snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
     }
     const entries = [];
+    let seq = 0;
     for (const r of this.#sql.exec(
       `SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest
         WHERE bundle_id=? ORDER BY rowid`, bundleId)) {
@@ -246,7 +249,7 @@ export class RecordCore {
       const writtenPairs = written.map((f) => typeof f === "string" ? { name: f, sha256: null } : f);
       const files = writtenPairs.map((f) => f.name);
       const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
-      entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author,
+      entries.push({ key: r.snap_key, seq: ++seq, kind: r.kind, base: r.base, author: r.author,
                      created: r.created, files, snapshotted,
                      ...(r.writer ? { writer: r.writer, operation: r.operation } : {}) });
       img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
@@ -255,7 +258,10 @@ export class RecordCore {
         ...(r.writer ? { writer: r.writer, operation: r.operation } : {}),
       }, null, 2);
     }
-    if (entries.length) img["_history/manifest.json"] = JSON.stringify({ entries }, null, 2);
+    if (entries.length) {
+      entries.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+      img["_history/manifest.json"] = JSON.stringify({ entries }, null, 2);
+    }
     return Object.keys(img).length ? img : null;
   }
 
