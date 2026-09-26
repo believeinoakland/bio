@@ -35,6 +35,10 @@ Layer 2: the first extractions from `legacy-store`, each by its target module's 
 | membership | `session_01LSy7nZpkVyvEV81G4a5SYA` | MEMBERSHIP #1 |
 | promotion | `session_01LPQSJzgT8fbw2kcionFsh3` | PROMOTION #1 |
 
+## Completions verified by BOB
+
+- **record-core** · COMPLETE at `05ff5e64f8`, verified 2026-09-26 18:59 UTC: ownership 0 failures (legacy-store 74 added, 1,114 removed; every `ADDED` line read: the import, the purge declarations, and callers rewired to `recordOf`), coverage 46 of 46, architecture 0, module tests 33/33. Merged early into `tranche/T3` at `bde7923ebd`; CHANGE sent to membership and promotion. Its REPORTs: (1) ten source-anchored old-battery suites that parse store.mjs for moved code (hygiene, opaque-ids, project-mint, bias, action-loop, actionquote, capturerequests, caselifecycle, publishedcase) are `legacy-tests`' under T3-4; (2) C-20.1's walk over `seq` is promotion's R30 (K64, K65); (3) `bio-plane/dist` is stale: regenerated at the layer's close (manifest §Generated); (4) membership's `project_*` purge declarations, forwarded to membership.
+
 ## The entries named above
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
