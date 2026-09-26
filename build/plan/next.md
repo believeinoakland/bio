@@ -33,6 +33,8 @@
 - N38 · 2026-09-26 · **instance-setup** (K69): the group-identity cluster (C-64) moves here from `legacy-store` at `instance-setup`'s extraction; BOB writes its requirements (the producing group, its history, the domain checks) and brings them to Bob before that tranche.
 - N39 · 2026-09-26 · **observation-log**, **ai-runs** (K71): each stops reading `capture_requests` directly and offers a registration `capture-requests` fills (the K31 pattern), at their extractions.
 - N40 · 2026-09-26 · **record-core** (K72): `digestCensus` and `snapKeyCensus` (store.mjs ~34223–34300) read only record-core's tables and move to it, with requirements BOB writes first.
+- N41 · 2026-09-26 · **calibration**, **extraction** (K73): BOB splits `build/requirements/extraction.md` into `calibration.md` and `extraction.md` and adds `calibration` to `modules.json` (layer 4, before `extraction`), before Bob approves either.
+- N42 · 2026-09-26 · **text-chain**, **pdf-reader**, **legacy-checks**, **retrieval** (K73): rows routed to extraction touch these first: D-697 and D-635 (text-chain), D-665 (pdf-reader), D-685 (legacy-checks), and D-672 (retrieval), on which D-684, D-685 and D-724 are stacked; each gets an entry against its own module in the tranche before extraction's.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
