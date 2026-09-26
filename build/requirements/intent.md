@@ -1,6 +1,6 @@
 # intent — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. A new module in all but one arm: measured on `tranche/T3` @ `f324df9b0f`, nothing in `bio-plane/src/store.mjs` or `schema.mjs` implements intent. What exists: a project's `objective` is a free-text frontmatter field, required non-empty by the first arm of C-2.9 (`bio-plane/checks/bio-checks.mjs` 4181–4183, inside `checkProjectExtension` 4178–4216); it is written at instance setup (`bio-plane/src/setup.mjs` 894, `instance-setup`'s) and by the UI. Named but unbuilt elsewhere: the queue kind `objective-gap` (`queuestate.mjs` 145, D-76, no producer), the observation-log authority kind `objective` (store.mjs 42143–42151: "no writer on this tree"). The discovery loop's defer and dismiss exist for one proposal source only, progressions' derived findings (`progressions` R20–R22, D-79). `from`: `legacy-store` as declared; `build/extraction/intent.md` proposes `legacy-checks` instead. Met: R1. Not yet met: R2–R18 (a new module); the invariants R19–R25 bind the new code, and R22 is met when the check moves. No old-plan row is carried to `intent`.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. A new module in all but one arm: measured on `tranche/T3` @ `f324df9b0f`, nothing in `bio-plane/src/store.mjs` or `schema.mjs` implements intent. What exists: a project's `objective` is a free-text frontmatter field, required non-empty by the first arm of C-2.9 (`bio-plane/checks/bio-checks.mjs` 4181–4183, inside `checkProjectExtension` 4178–4216); it is written at instance setup (`bio-plane/src/setup.mjs` 894, `instance-setup`'s) and by the UI. Named but unbuilt elsewhere: the queue kind `objective-gap` (`queuestate.mjs` 145, D-76, no producer), the observation-log authority kind `objective` (store.mjs 42143–42151: "no writer on this tree"). The discovery loop's defer and dismiss exist for one proposal source only, progressions' derived findings (`progressions` R20–R22, D-79). `from`: `legacy-store` as declared; `build/extraction/intent.md` proposes `legacy-checks` instead. Met: R1. Not yet met: R2–R18 (a new module), R26 (K102); the invariants R19–R25 bind the new code, and R22 is met when the check moves. No old-plan row is carried to `intent`.
 
 **Size (P6).** About 3 lines move today (C-2.9's objective arm). The module is written new from this file; its first job reports its size. Nothing here suggests it approaches 4,000.
 
@@ -22,7 +22,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 **progress({project, viewer}) → `{ok, project, objective, condition, matched, meeting, short, undetermined, satisfied, computed_at}` or refusal**
 - **R3** `NO_SUCH_PROJECT` as R2. With no condition, the answer carries `condition: null` and says progress cannot be computed because the objective states no condition; it never reads as zero. *(not yet met: new module)*
-- **R4** Otherwise, derived on read and never stored: the **matched** instances are the progression's instances whose entity is the condition's entity or stands in its `relation` to it (`entities`), passing `filter`. An instance **meets** it when its grade (`progressions` R10) is at least `required.grade` and every stage in `required.stages` is placed. An instance whose grade is undetermined, or whose `filter` the record cannot evaluate, is counted in `undetermined` with why, never as meeting or short. `satisfied` is true when `meeting / matched` reaches `share`, false when it cannot reach it even if every undetermined instance met it, else null. *(not yet met: new module; the filter's reach is Open for Bob 3)*
+- **R4** Otherwise, derived on read and never stored: the **matched** instances are the progression's instances whose entity is the condition's entity or stands in its `relation` to it (`entities`), passing `filter`. An instance **meets** it when its grade (`progressions` R10) is at least `required.grade` and every stage in `required.stages` is placed. An instance whose grade is undetermined, or whose `filter` the record cannot evaluate, is counted in `undetermined` with why, never as meeting or short. `satisfied` is true when `meeting / matched` reaches `share`, false when it cannot reach it even if every undetermined instance met it, else null. A condition says only what this shape holds (entity and relation, required grade and stages, share); a `filter` the record cannot evaluate on an instance makes it undetermined, never excluded, and an objective the shape cannot express keeps its text with progress stated as not computable (R3). *(not yet met: new module; K102)*
 - **R5** Each `short` instance names why: the stages missing, or the grade reached against the grade required and the weakest link (`progressions` R10). Bundle ids the viewer may not see are null; counts and grades are the same for every reader. *(not yet met: new module)*
 
 **gaps({project, viewer}) → `{ok, project, gaps}`**
@@ -32,10 +32,10 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R7** What the condition reads: its entity and related entities, its progression, and the captures placed in matched instances, so `monitoring` watches exactly those. Empty with no condition. *(not yet met: new module)*
 
 **Goals: declareGoal({statement, bounds, aspiration?, author}), linkObjective({goal, project, author}), closeGoal({goal, reason, author})**
-- **R8** Each refuses a machine (`MACHINE_CANNOT_DECLARE_GOAL`), an empty statement or bounds (`NO_STATEMENT`), a goal or aspiration the author may not see (`NO_SUCH_GOAL`, `NO_SUCH_ASPIRATION`), and `closeGoal` without a reason (`NO_REASON`). `linkObjective` records the decomposition as the author's dated claim and needs the author joined in that project. A goal carries no progress figure; its objectives do. A closed goal stays readable with its objectives and reason. *(not yet met: new module; how a goal is held is Open for Bob 1)*
+- **R8** Each refuses a machine (`MACHINE_CANNOT_DECLARE_GOAL`), an empty statement or bounds (`NO_STATEMENT`), a goal or aspiration the author may not see (`NO_SUCH_GOAL`, `NO_SUCH_ASPIRATION`), and `closeGoal` without a reason (`NO_REASON`). `linkObjective` records the decomposition as the author's dated claim and needs the author joined in that project. A goal carries no progress figure; its objectives do. A closed goal stays readable with its objectives and reason. *(not yet met: new module; how a goal is held is R26, K102)*
 
 **Aspirations: declareAspiration({scope, owner, statement, entities?, progressions?, author}), departFrom({project, aspiration, reason, author}), recordDeadEnd({aspiration, note, author}), retireAspiration({aspiration, taught, author})**
-- **R9** A machine is refused (`MACHINE_CANNOT_DECLARE_ASPIRATION`). A `member` aspiration is declared, revised or retired only by that member (`NOT_YOURS`); a `project` one by a member joined in the project; a `group` one as Open for Bob 2 rules. Every aspiration is readable by every member of the group. *(not yet met: new module)*
+- **R9** A machine is refused (`MACHINE_CANNOT_DECLARE_ASPIRATION`). A `member` aspiration is declared, revised or retired only by that member (`NOT_YOURS`); a `project` one by a member joined in the project; a `group` one only by an active administrator (the founder included), the act dated and attributed; anyone else is refused `GROUP_ASPIRATION_NOT_ADMIN` (K102, as membership R62). Every aspiration is readable by every member of the group. *(not yet met: new module)*
 - **R10** A project holds every `held` group aspiration unless it records a departure, which needs a reason (`NO_REASON`) and is answered as notable wherever the project's aspirations are read. *(not yet met: new module)*
 - **R11** `retireAspiration` requires a non-empty `taught` (`NO_LESSON`); a retired aspiration and its pursuit record stay readable. `recordDeadEnd` appends a dated, authored entry that is never removed. *(not yet met: new module)*
 
@@ -77,6 +77,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R23** Every read and act naming a project, goal or aspiration the viewer may not see answers exactly as an absent one. *(not yet met: new module)*
 - **R24** This module's tables carry the id they are about and are declared to record-core's purge (K23). *(not yet met: new module)*
 - **R25** No place is named in this module's behaviour or outward text; §12's examples are illustrations only. *(not yet met: new module)*
+- **R26** Aspirations and goals are record documents of two new types, with history, the gate (`promotion`) and authored revisions like every other record object: an aspiration's states are `held → retired`, a goal's `open → closed`, and no other move is accepted; the pursuit record survives abandonment (§12.2). *(not yet met: K102)*
 
 ### Satisfies
 
@@ -86,6 +87,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (DEC-24 rule 2: the objective is a member's; an objective going looking is authorised by the member).
 - `docs/development/NOTIFICATIONS.md`, Analysis: `objective-gap` (D-76), the assistant-surfaced focus (D-78, D-82).
 - `build/layers.md`, layer 7 (what monitoring, scheduling and publication take from intent).
+- State Rules §4 gains the aspiration and goal types and their state machines (R26; K102, a change to the canon's text).
 
 ### Suggestions
 
@@ -98,9 +100,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 ## Open for Bob
 
-1. **How aspirations and goals are held.** §12 says they "do not exist yet"; the record's catalogue (State Rules §4) has no type for either. As new document types they get history, the gate and authored revisions like every other record object; as rows in this module's tables they are lighter but outside the record's append-only history. *Recommendation:* two new document types with state machines (`held → retired`; `open → closed`), so the pursuit record survives abandonment as §12.2 requires, and State Rules §4 gains both.
-2. **Who may declare or change a group aspiration.** §12.1: "a group act, with the weight that implies"; nothing says whose act. *Recommendation:* administrators only, dated and attributed, as for organisation-wide AI keys (membership R62).
-3. **What a satisfaction condition can say.** §12's one example filters on an award amount and date; the record holds no such attributes on a progression instance, so that filter cannot be evaluated today. *Recommendation:* build the progression shape (entity and relation, required grade and stages, share) first; a filter the record cannot evaluate makes the instance undetermined (R4), never excluded, and an objective the shape cannot express keeps its text with progress stated as not computable (R3).
+None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB (for the rulings file)
 

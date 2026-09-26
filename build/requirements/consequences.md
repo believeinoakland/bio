@@ -1,8 +1,8 @@
 # consequences — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **nothing records what a government breach did, or to whom.** Nearest, and staying where it is:
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **nothing records what a government breach did, or to whom.** Nearest, and staying where it is:
 - DEC-14's `consequenceState` (`bio-plane/checks/bio-checks.mjs` 4918–4977; read at `store.mjs` 2155; `schema.mjs` 1920): the consequence of the **group's own action** (an `outcome`, or an `impact` that is `unproven` until it rests on evidence outside the action). It is `actions`'. Its discipline, that a causal claim from sequence alone lands as `unproven` and says so rather than being refused or graded low, is the model for R5 here.
-- Money in the record today is only a correspondence fee quote (D-148: `action_quotes`, `schema.mjs` 2012; `store.mjs` 6882–7060). The record holds no amounts or fund figures as values (`EXTRACTION-BREADTH-DESIGN.md` §2 rows 5–6: no budget or financial-report reader; `progressions` Open for Bob 3). So R3's computed figures read the numbers in cited content, and until such readers exist most consequences will be assessed or undetermined.
+- Money in the record today is only a correspondence fee quote (D-148: `action_quotes`, `schema.mjs` 2012; `store.mjs` 6882–7060). The record holds no amounts or fund figures as values (`EXTRACTION-BREADTH-DESIGN.md` §2 rows 5–6: no budget or financial-report reader; `progressions`' question 3, K102). So R3's computed figures read the numbers in cited content, and until such readers exist most consequences will be assessed or undetermined.
 Every requirement is *(not yet met: new module)*. Bob's ruling of 2026-09-26 (K12) is R2–R4. No old-plan row is carried to `consequences`; no check in `bio-checks.mjs` belongs to it.
 
 **Size (P6).** New. Estimated 700–1,000 lines of code; one session reads it with the public parts of its uses.
@@ -19,7 +19,7 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 
 **consequenceRecord({determination, standard, affected, measure?, period, basis, causation?, author, viewer}) → `{ok: true, id, part}` or refusal**
 - **R1** Refusals in order: `NO_SUCH_DETERMINATION` (absent or invisible, one answer); `NOT_NONCOMPLIANT` (the determination's outcome for `standard` is not `noncompliant`, or it is superseded); `NOT_A_PARTICIPANT` (a member author not joined in its project); `AFFECTED_UNKNOWN_KIND`; `AFFECTED_INDIVIDUAL` (R10); `MEASURE_UNKNOWN_UNIT`; `MEASURE_INVALID` (a value or range bound not a finite number, a range reversed, or `currency` on a unit other than `money`); `PERIOD_INVALID`. *(not yet met: new module)*
-- **R2** A part is `computed` when `basis` is a computation over the record: `{op, operands}`, `op` one of `sum`, `difference`, `count`, `product`, `ratio`, and each operand a content id whose passage holds the figure, with the figure as read. The value is the module's own arithmetic over the operands, never the author's; each operand carries its capture grade as the record earns it (`inquiry.earned`), and the part's grade is the weakest (DEC-21's weakest link), named. A computed part may be recorded by a machine. *(not yet met: new module)*
+- **R2** A part is `computed` when `basis` is a computation over the record: `{op, operands}`, `op` one of `sum`, `difference`, `count`, `product`, `ratio`, and each operand a content id whose passage holds the figure, with the figure as read. The value is the module's own arithmetic over the operands, never the author's; each operand carries its capture grade as the record earns it (`inquiry.earned`), and the part's grade is the weakest (DEC-21's weakest link), named. A computed part may be recorded by a machine, labelled as machine work with its operands shown (K102); assessment (R3) and addressed (R9) stay members' alone. *(not yet met: new module)*
 - **R3** A part is `assessed` when a member states the value or range with a rationale (at most 2,000 characters) and what it rests on (content ids or findings, possibly none, stated as none). It carries who assessed it and when, and is never presented, summed or graded as computed. A machine assessment is refused `MACHINE_CANNOT_ASSESS`. *(not yet met: new module)*
 - **R4** A part with no measure, or whose computation lacks an operand, is `undetermined`, with why (the figure is not in the record; the record holds it in a form not read; nobody has assessed it). An undetermined part is never read as zero. *(not yet met: new module)*
 - **R5** `causation` names an inquiry whose finding is that the harm follows from the act. With none, or one not concluded, the part's causation is `unproven`, stated with why: it lands, is not a refusal and is never a low grade (DEC-14's discipline, applied to the government's act). With one, the answer carries its strength pair (`strength.inquiryStrength`), per axis. *(not yet met: new module)*
@@ -39,7 +39,7 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 - `legacy-checks`: `isMachineIdentity`. *(not declared)*
 - `record-core`: `allocId`, `transact`, `stampInstant`.
 - `membership`: `sight`, `projectAuthority`, `viewerPredicate`.
-- `promotion`: `promote`, under standards' Open for Bob 1. *(not declared)*
+- `promotion`: `promote`, a part being a record object (R14, K102). *(not declared)*
 - `content`: `contentRow` and its passage text (R2's operands), `passageNotice` (R8).
 - `inquiry`: `earned` (R2); the causation inquiry's state and supersession (R5, R8).
 - `strength`: `inquiryStrength` (R5).
@@ -51,6 +51,7 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 - **R11** No answer composes computed, assessed and undetermined parts into one figure, and none carries a significance, severity, priority or score (K12). *(not yet met: new module)*
 - **R12** No harm is assumed from the act: every part answers its causation, `established` (naming the inquiry) or `unproven`. *(not yet met: new module)*
 - **R13** Parts, revisions and addressed records are append-only and declared to `record-core`'s purge (K23). No place is named in this module's behaviour or outward text. Every read answers a part in a project the viewer may not see as absent. *(not yet met: new module)*
+- **R14** A consequence part is a record object of its own type: promoted through `promotion`, with history, audit and export like a finding; R6's rule holds, a revision being a successor (`standards` R15). *(not yet met: new module; K102)*
 
 ### Satisfies
 
@@ -65,16 +66,16 @@ Terms. **Affected** is `{kind, description, role?}`, `kind` one of `class`, `fun
 - Id prefix `CONS-`; tables `consequence_parts`, `consequence_operands`, `consequence_addressed`.
 - Operands read their figure from the cited passage's text; a spreadsheet cell or table extent (`content`'s `sheet-range` and `doc-table` arms) is the natural operand. A parser of figures is this module's; a budget or financial-report reader, when written, belongs to `extraction`/`docprofile`, not here.
 - An AI run may prepare computed parts (R2) and propose assessments as text for a member; it never records `assessed` or `addressed`.
+- **Who says a consequence is addressed** (K102): any joined participant, with evidence, as R9, no change; an escalation ends only by a member's own act (`escalation` R14), so no single entry here closes one silently.
 - Tests: every refusal with a negative control; R2's arithmetic against hand-computed operands and the weakest-grade rule; R7's totals with mixed states and currencies; R9's overall state across all mixes; R10 with `kind: "person"`.
 
 ## Open for Bob
 
-1. **May a machine record a computed part?** The row says consequences are "computed from the record where the record holds the figures". Computation is mechanical, so R2 lets an AI run record it; but choosing which passages are the operands is a judgment about what the breach did. *Recommendation:* allow it, labelled as machine work with its operands shown, since it is arithmetic over cited passages a member can check, and assessment and "addressed" stay members' alone.
-2. **Who says a consequence is addressed?** Operational Principle 6 ends the work only when consequences are addressed; R9 lets any joined participant record it, with evidence. *Recommendation:* as R9, and `escalation` asks a member to confirm before it ends, so no single entry closes an escalation silently.
+None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB (for rulings)
 
-- `consequences`' uses gain `legacy-checks` and `promotion` (under standards' Open 1).
+- `consequences`' uses gain `legacy-checks` and `promotion` (R14, K102).
 - DEC-14's `consequence` on an action (the group's own outcome or impact) stays `actions`'; this module's consequence is the breach's. The two are never read as one; this module reuses only DEC-14's `unproven` rule.
 - Totals within one state, unit and currency only (R7); an undetermined part is never zero.
 - A part is recorded against one standard's noncompliant outcome of a live determination; a superseded determination's parts stay readable, not carried forward automatically.

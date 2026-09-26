@@ -1,6 +1,6 @@
 # conformance — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **nothing records a determination** that a government act is compliant, noncompliant or unclear; `grep` for them over `store.mjs`, `schema.mjs`, `index.mjs` and `bio-checks.mjs` finds none. What it will read already exists:
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **nothing records a determination** that a government act is compliant, noncompliant or unclear; `grep` for them over `store.mjs`, `schema.mjs`, `index.mjs` and `bio-checks.mjs` finds none. What it will read already exists:
 - "Published" is membership of a published case edition: `schema.mjs` 1639–1715 (`published_cases`, `published_case_members` with `version_sha` and `role`), the fact `caseMember` registered by `legacy-store` (`store.mjs` 902, `#caseRelationOf`), each member's frozen `case_strength` pair (Publication v0.1 §2).
 - An action today rests on any `INFO-`/`INQ-`/`PROB-`/`FOCUS-` bundle (`action_basis`, `schema.mjs` 1930; `actionBasisFindings`, `bio-checks.mjs` 4520, C-2.10), not on a determination. That is `actions`' to change (its contract: "it rests on a conformance determination").
 Every requirement is *(not yet met: new module)*. No old-plan row is carried to `conformance`; no check in `bio-checks.mjs` belongs to it.
@@ -19,7 +19,7 @@ Terms. An **act** is `{description, actor: {role, body}, at | period, evidence}`
 
 **determine({project, act, findings, standards, rows, questions?, supersedes?, reason?, author, viewer}) → `{ok: true, id, ...}` or refusal**
 - **R1** Refusals in order: `MACHINE_CANNOT_DETERMINE` (an empty or machine author; a machine proposes, R11); `NO_SUCH_PROJECT` (absent or not visible, one answer); `NOT_A_PARTICIPANT` (the author not joined: `membership.projectAuthority(project, author, "joined")`); `ACT_INCOMPLETE` (no description, no actor role or body, no date or period, or no evidence), naming the missing part; `NO_FINDINGS`; `FINDING_NOT_PUBLISHED` (R2), naming it; `NO_STANDARDS`; `NO_SUCH_STANDARD`, naming it; `STANDARD_NOT_IN_FORCE` (R3); `ROWS_INCOMPLETE` (a named standard with no row, or a row whose `requires`, `did` or `reading` is empty); `OUTCOME_UNKNOWN`; `UNCLEAR_NO_QUESTION` (R6); `SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT` (R8). *(not yet met: new module)*
-- **R2** Every finding named is a finding-version that is a member of a published case edition of `project` (`publication`), and the determination pins that edition and version. A finding not published, or published only by another project, is refused. *(not yet met: new module; Open for Bob 1)*
+- **R2** Every finding named is a finding-version that is a member of a published case edition of `project` (`publication`), and the determination pins that edition and version. A finding not published, or published only by another project, is refused. *(not yet met: new module; K102)*
 - **R3** Each standard is read through `standards.inForce` at the act's date (or each end of its period): `not_in_force` is refused; `undetermined` is accepted and stated on the determination beside that standard. *(not yet met: new module)*
 - **R4** The outcome is given **per standard**, from the member, and is never composed across standards into one verdict. A determination whose rows for a standard are all `aligns` and whose outcome is `noncompliant`, or any `diverges` with `compliant`, is accepted and the disagreement stated beside it, never corrected. *(not yet met: new module)*
 - **R5** The three outcomes carry the same obligations (R1–R4): a compliant determination names its act, findings, standards and rows exactly as a noncompliant one does, and is read by the same services. *(not yet met: new module)*
@@ -42,7 +42,7 @@ Terms. An **act** is `{description, actor: {role, body}, at | period, evidence}`
 - `legacy-checks`: `isMachineIdentity`, `lawProposalLabel`. *(not declared)*
 - `record-core`: `allocId`, `transact`, `stampInstant`.
 - `membership`: `sight`, `projectAuthority`, `viewerPredicate`.
-- `promotion`: `promote` (R6's new inquiry; and the determination itself under standards' Open for Bob 1). *(not declared)*
+- `promotion`: `promote` (R6's new inquiry; and the determination itself, R17, K102). *(not declared)*
 - `content`: `contentRow`, `passageNotice` (R1's evidence, R10).
 - `inquiry`: `supersededBy`, `stateHistory` (R10); visibility of a named inquiry (R6).
 - `strength`: `inquiryStrength` (R9).
@@ -56,6 +56,7 @@ Terms. An **act** is `{description, actor: {role, body}, at | period, evidence}`
 - **R14** Every determination rests on at least one published finding and at least one standard held in the record (layer 9's contract). *(not yet met: new module)*
 - **R15** Every read answers a determination in a project the viewer may not see as an absent one (membership R44). *(not yet met: new module)*
 - **R16** Determinations, supersessions and proposals are append-only; each table is declared to `record-core`'s purge (K23). No place is named in this module's behaviour or outward text. *(not yet met: new module)*
+- **R17** A determination is a record object of its own type: promoted through `promotion`, with history, audit and export like a finding; R7's rule holds, a correction being a new determination that supersedes it (`standards` R15). *(not yet met: new module; K102)*
 
 ### Satisfies
 
@@ -65,6 +66,7 @@ Terms. An **act** is `{description, actor: {role, body}, at | period, evidence}`
 - `BIO_Publication_v0_1.md` §2 (a case, its editions and frozen strength).
 - `docs/development/DECISIONS.md` DEC-44 (never one composed strength), DEC-72 (publication is the case relation).
 - `build/layers.md`, layer 9 (the `conformance` row, Bob's ruling 1); K12.
+- K102: a determination comes after publication, resting on published findings (R2), the comparison before publication being inquiry work and `comparisonPropose` (R12); and one outcome per standard, never composed (R4). Both as drafted, no change.
 
 ### Suggestions
 
@@ -75,8 +77,7 @@ Terms. An **act** is `{description, actor: {role, body}, at | period, evidence}`
 
 ## Open for Bob
 
-1. **Can a determination come before publication?** The canon places the three outputs in Layer 2 (Analysis), before a work product is documented and published (Layer 3 Functions 1–2); the approved contract puts `conformance` after `publication`, "resting on published findings". *Recommendation:* keep the contract (R2): what the government did is a finding the group publishes first, and a determination is a claim built on it. The comparison before publication is inquiry work, and `comparisonPropose` (R12) can be used then.
-2. **A determination per standard, or one for the act?** "Compliant, noncompliant or unclear against named standards" can be read as one outcome for the act. *Recommendation:* one outcome per standard (R4), never composed, as strength's pair is never composed: an act can conform to a statute and breach an adopted policy, and one word would hide which.
+None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB (for rulings)
 

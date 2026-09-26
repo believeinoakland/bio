@@ -1,6 +1,6 @@
 # escalation — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `edbd39b`): **no escalation protocol exists.** `grep -i escalat` over `store.mjs` and `index.mjs` finds only the host governor's back-off (36251–36337), DEC-10's notification escalation (3490) and progressions' overdue marking (27216, 27398), none of them this. What exists to build on: the action's clock and ledger (`actions`), the resolution `escalated` in `RESOLUTIONS` (`bio-checks.mjs` 838), and progressions' pattern of a declared stage with a due date (`progressions`), which this module does not reuse (Suggestions). Every requirement is *(not yet met: new module)*. Bob's ruling K14 (Design Requirement 7 as amended: stage 7) is R11–R12. No old-plan row is carried to `escalation`; no check in `bio-checks.mjs` belongs to it.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `edbd39b`): **no escalation protocol exists.** `grep -i escalat` over `store.mjs` and `index.mjs` finds only the host governor's back-off (36251–36337), DEC-10's notification escalation (3490) and progressions' overdue marking (27216, 27398), none of them this. What exists to build on: the action's clock and ledger (`actions`), the resolution `escalated` in `RESOLUTIONS` (`bio-checks.mjs` 838), and progressions' pattern of a declared stage with a due date (`progressions`), which this module does not reuse (Suggestions). Every requirement is *(not yet met: new module)*. Bob's ruling K14 (Design Requirement 7 as amended: stage 7) is R11–R12. No old-plan row is carried to `escalation`; no check in `bio-checks.mjs` belongs to it.
 
 **Size (P6).** New. Estimated 800–1,200 lines of code with its tables; one session reads it with the public parts of its uses.
 
@@ -37,7 +37,7 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 
 **escalationEnd({id, author, viewer}); escalationSuspend({id, reason, author, viewer}) / escalationResume**
 - **R14** `escalationEnd` refuses `MACHINE_CANNOT_END`, `NO_SUCH_ESCALATION`, and, naming the ids, `COMPLIANCE_NOT_RESTORED` unless, for every standard the escalation pursues, a live `compliant` determination of the same act recorded after it opened exists (`conformance.determinationsFor`), and `CONSEQUENCES_NOT_ADDRESSED` or `CONSEQUENCES_UNDETERMINED` unless `consequences.addressed` for the escalation's determination is `addressed` (`consequences` R9). Otherwise the state is `ended`, with who and when; an ended escalation is never reopened (a new breach is a new determination). *(not yet met: new module)*
-- **R15** `escalationSuspend` (a member, with a reason) stops proposals being reported as due; the escalation stays open to reading, its clocks keep running in the actions, and the read says it is suspended and since when. `escalationResume` restores it at the same stage. Neither ends it. *(not yet met: new module; Open for Bob 3)*
+- **R15** `escalationSuspend` (a member, with a reason) stops proposals being reported as due; the escalation stays open to reading, its clocks keep running in the actions, and the read says it is suspended and since when. `escalationResume` restores it at the same stage. Neither ends it: an escalation is never ended, withdrawn or resolved without R14's two conditions, so the record never reads a stopped escalation as a finished one. *(not yet met: new module; K102)*
 
 **For `monitoring`: escalationsDue({nowMs, limit?, viewer}) → `{items, truncated}`**
 - **R16** Lists every open escalation with at least one proposed edge not advanced or declined since its trigger was met, with the edge, the trigger's instant and its age, oldest first, at most 500 (`truncated` stated). This is what `monitoring` notifies on. *(not yet met: new module)*
@@ -66,10 +66,12 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 - `BIO_Functional_Architecture_v3.md` Layer 3, Function 3 (escalate: current stage, available actions by tier, deadlines) and Function 5 (track toward resolution; the exit condition; partial compliance does not stop the clock).
 - `BIO_Complete_Roadmap_v5.md` §5 (Operational Principles 1, 3 and 6), §8, §9 (Skill 8, Escalation Protocol).
 - `build/layers.md`, layer 9 (the `escalation` row and the contract); K12, K14.
+- Design Requirement 7's sentence that the protocol "is designed to be mechanical: when trigger conditions are met, the next stage activates" is noted as amended: a met trigger is proposed with its age and a member advances or declines it with a reason (R2, R13, R16) (K102, a change to the canon's text).
+- K102: compliance is restored by a live `compliant` determination of the same act for every standard pursued, an evaluation reading `complied` only pointing at it (R7, R14). As drafted, no change.
 
 ### Suggestions
 
-- Id prefix `ESC-`; tables `escalations`, `escalation_moves`, `escalation_evaluations`, `escalation_attachments`, `escalation_declines`. Whether an escalation is a record object is decided with `standards`' Open for Bob 1.
+- Id prefix `ESC-`; tables `escalations`, `escalation_moves`, `escalation_evaluations`, `escalation_attachments`, `escalation_declines`. Whether an escalation is a record object is not settled by K102, which made standards, determinations and consequence parts record objects (`standards` R15) and named no fourth; it stays these tables until BOB rules.
 - R2's "first met" instant is the latest of the dates of the ids that meet the trigger (a `sent` entry's `at`, a clock date's next day), not the read time, so the age is a fact of the record.
 - `progressions`' declared stages are a member's own template for a recurring process; the protocol's stages are fixed by Design Requirement 7, so this module holds its own table and does not reuse progressions.
 - The Escalation Protocol skill (Roadmap §9, Skill 8) reads R2 and `filings` to explain the stage, the acts available by tier and the deadlines; it prepares, and a member acts.
@@ -77,9 +79,7 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 
 ## Open for Bob
 
-1. **Mechanical, or proposed and advanced?** Design Requirement 7 says the protocol "is designed to be mechanical: when trigger conditions are met, the next stage activates. This removes the human hesitation that the protection system exploits." The approved layer-9 contract says the next stage "is proposed when its trigger is met, and a member advances it". *Recommendation:* the contract's reading (R2, R13): an escalation acts outside the system, and every such act is the group's. Hesitation is countered by making it visible: a met trigger is proposed with its age, a member who declines records why (R13), and `monitoring` notifies on every due proposal (R16). Design Requirement 7's sentence is then noted as amended.
-2. **What counts as "compliance restored"?** A member's `complied` evaluation of a response, or a new determination? *Recommendation:* a live `compliant` determination of the same act for every standard pursued (R14), recorded with the same care as the noncompliant one (the contract: "compliance is recorded as carefully as noncompliance"); an evaluation reading `complied` only points at it.
-3. **Can a group stop without an end?** The contract says an escalation "ends only when compliance is restored and the consequences are addressed", but a group can run out of capacity. *Recommendation:* it may suspend with a reason (R15); it is never ended, withdrawn or resolved without both conditions, so the record never reads a stopped escalation as a finished one.
+None: answered by Bob 2026-09-26 (K102).
 
 ## Decided by BOB (for rulings)
 
