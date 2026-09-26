@@ -1,3 +1,4 @@
+/* T3 (legacy-tests; K84 (2)), 2026-09-26: this suite's negative control `project-join-request.control.mjs` is RETIRED: every arm mutated code in src/store.mjs that moved to src/membership/index.mjs (the join-request acts; grep `PROJECT_REQUEST_ANSWER_NOT_THE_OWNER`, `#lapseJoinRequests`, `#openJoinRequest`); no anchor occurs and none can arm. The suite's own assertions stand. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-join-request.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-join-request.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-25 on branch land/worker/REC-150 over origin/main 964da679 (real sources untouched: YES, by sha256), every arm AS DECLARED on its first run: (a) baseline 62/0 · (b) grant-writes-joined 61/1, the row's own named control — the grant writes `joined`, and §3c (the read-back through op=projectparticipants, "INVITED and NOT JOINED") fails by name while §3b stays green, because the act's own RETURN still says `invited` — the claim a liar keeps, and why §3c reads the record · (c) admin-answers 58/4 — §3a and §3a' by name, §3b and §3c' as declared consequences · (d) lapse-dropped 55/7 — §5a, §5b, §5e by name, with §5d GREEN (the acts answer through sight, which the lapse never touches) · (e) hidden-answered-positionally 61/1 — only §1c' fails: §1c's byte comparison stays green because a hidden id and a never-minted one then answer the same FALSE thing, so a byte comparison proves indistinguishability and never truth · (f) one-open-respelled 62/0, the over-strictness arm.
  * =========================================================================
@@ -348,17 +349,27 @@ console.log("\n--- 6. a grant goes to an ACTIVE member who is NOT already a part
   t("6b: the owner can still decline it", [d?.ok, d?.state], [true, "declined"]);
   must("kai asks", await POST(`op=projectrequest&token=${KAI}&projectId=${P}`));
   must("iris invites kai directly", await POST(`op=projectinvite&token=${IRIS}&projectId=${P}&handle=kai`));
+  /* UPDATED 2026-09-26 (T3, legacy-tests; membership R33, REC-226): an invitation now CLOSES the invitee's open
+     request `granted`, by the inviter, in the same act — so after iris's invitation kai has no open request, a grant
+     finds none (C-95.4) and kai has none to withdraw (R50). The grant's C-95.8 refusal (R51) stands, and is no
+     longer reachable through the ops by this route: an invitation was the way a requester became a participant
+     with the request still open. It is driven at the module, test/m/membership/requests-fence-facts.test.mjs (R51). */
+  const kReq = (await GET(`op=projectrequests&token=${IRIS}&projectId=${P}`))?.requests?.filter((q) => q.handle === "kai").at(-1);
+  t("6c0: iris's invitation CLOSED kai's open request `granted` — the invitation is the answer (R33)",
+    kReq?.state, "granted");
   const k = await POST(`op=projectrequestanswer&token=${IRIS}&projectId=${P}&handle=kai&answer=grant`);
-  t("6c: granting a member already a participant is refused C-95.8 — a grant would invite nobody new",
-    [codeOf(k), k?.check], ["PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT", "C-95.8"]);
+  t("6c: so a grant to kai, now a participant, finds no open request (C-95.4) — a grant would invite nobody new",
+    [codeOf(k), k?.check], ["PROJECT_REQUEST_NONE_OPEN", "C-95.4"]);
   const kw = await POST(`op=projectrequestwithdraw&token=${KAI}&projectId=${P}`);
-  t("6d: and kai, now invited, can still withdraw his own open request", [kw?.ok, kw?.state], [true, "withdrawn"]);
+  t("6d: and kai, now invited, has no open request left to withdraw (R50)", [kw?.ok, codeOf(kw)], [false, "PROJECT_REQUEST_NONE_OPEN"]);
 }
 
 /* ======================================== 8. THE REQUESTS READ IS BOUNDED, AND THE BOUND IS PUBLISHED (bounds.test) */
 console.log("\n--- 8. op=projectrequests is PAGED: `limit` applied, `truncated` measured one row past the cap ---");
 {
-  const CEIL = Number((/static PROJECT_REQUESTS_LIMIT = (\d+);/.exec(readFileSync(join(SRC_DIR, "store.mjs"), "utf8")) || [])[1]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction, R53): the cap is declared in
+     `src/membership/index.mjs` (the store's `PROJECT_REQUESTS_LIMIT` now an alias of membership's), and read there. */
+  const CEIL = Number((/static PROJECT_REQUESTS_LIMIT = (\d+);/.exec(readFileSync(join(SRC_DIR, "membership", "index.mjs"), "utf8")) || [])[1]);
   const whole = await GET(`op=projectrequests&token=${PAM}`);
   const bite = await GET(`op=projectrequests&token=${PAM}&limit=2`);
   const over = await GET(`op=projectrequests&token=${PAM}&limit=${CEIL * 10}`);

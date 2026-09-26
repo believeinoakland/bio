@@ -86,7 +86,6 @@ const PRISTINE = path.join(HERE, ".m0-18-pristine");   // inside this worktree, 
 const F = {
   identity:   path.join(HERE, "identity-claims.test.mjs"),
   dec49:      path.join(HERE, "machinefences-dec49.test.mjs"),
-  planning:   path.join(HERE, "planning-hygiene.test.mjs"),
   fences:     path.join(HERE, "machine-fences.test.mjs"),
   shadowed:   path.join(HERE, "shadowed-refusals.test.mjs"),
   bounds:     path.join(HERE, "bounds.test.mjs"),
@@ -109,7 +108,7 @@ let failures = 0, checks = 0;
    here; the foot fails naming any declared arm that did not run and any that ran undeclared. The
    cheapest way past a red arm is to delete it, and a deleted arm leaves no failing check behind — this
    is the check it leaves. `6 stage 1` is announced twice (a heading, then the arm) and counted once. */
-const DECLARED_ARMS = ["0", "1", "2a", "2b", "3", "4", "5", "6-stage-1", "6a", "6b", "7", "8a", "8b"];
+const DECLARED_ARMS = ["0", "1", "2a", "2b", "3", "4", "6-stage-1", "6a", "6b", "7", "8a", "8b"];
 const RAN = [];
 const report = (name, ok, detail) => {
   checks++;
@@ -212,7 +211,9 @@ console.log("M0-18 · provenance floors — negative controls\n"
 console.log("\n--- ARM 0 · BASELINE (no patch)");
 RAN.push("0");
 const BASE = {};
-for (const [k, f] of [["identity", F.identity], ["dec49", F.dec49], ["planning", F.planning],
+/* T3 (legacy-tests; N14, N31, K84): `planning-hygiene` retired with the old process's plan tooling it tested, and
+   leaves this baseline, arm 3's git-shim list and arm 5 with it. */
+for (const [k, f] of [["identity", F.identity], ["dec49", F.dec49],
                       ["fences", F.fences], ["bounds", F.bounds], ["opclaims", F.opclaimsT],
                       ["hygiene", F.hygiene]]) {
   const r = runSuite(f);
@@ -310,7 +311,7 @@ fs.writeFileSync(path.join(GITSHIM, "git"), "#!/bin/sh\nexit 1\n");
 fs.chmodSync(path.join(GITSHIM, "git"), 0o755);
 try {
   const env = { PATH: `${GITSHIM}:${process.env.PATH}` };
-  for (const [k, f] of [["identity", F.identity], ["planning", F.planning], ["bounds", F.bounds], ["fences", F.fences]]) {
+  for (const [k, f] of [["identity", F.identity], ["bounds", F.bounds], ["fences", F.fences]]) {
     const r = runSuite(f, env), tl = tally(r.out);
     /* RE-AIMED 2026-09-21 BY D-355 FOR `planning` ONLY, NEVER EXEMPTED — A SUITE GROWTH, DATED.
        "stays GREEN" was the right proxy on 2026-08-09: nothing in planning-hygiene needed git except
@@ -325,19 +326,9 @@ try {
        carry any other label and fail this. Over-strictness: if plancheck ever answers without git and
        those four pass, this still passes. Identity, bounds and fences carry no such dependency and still
        owe a fully GREEN run. */
-    if (k === "planning") {
-      const failedLabels = [...r.out.matchAll(/^ {2}FAIL {2}(.+)$/gm)].map((m) => m[1].trim());
-      const foreign = failedLabels.filter((l) => !/^plancheck\b/.test(l));
-      report(`3 · planning's M0-18 walk stays GREEN with git unavailable — its only failures are assertions that `
-        + `READ tools/plancheck.mjs, which needs git by design (${tl.pass} pass, ${tl.fail} fail · `
-        + `${failedLabels.length - foreign.length} plancheck-reading, ${foreign.length} other)`,
-        tl.pass > 0 && tl.fail === failedLabels.length && foreign.length === 0,
-        `tally ${tl.pass}/${tl.fail}, named failures ${failedLabels.length}, OTHER failures: `
-        + `${JSON.stringify(foreign).slice(0, 300)}`);
-    } else {
-      report(`3 · ${k} stays GREEN with git unavailable (${tl.pass} pass, ${tl.fail} fail)`,
-        r.exit === 0 && tl.fail === 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
-    }
+    /* (the `planning` branch retired with planning-hygiene, T3) */
+    report(`3 · ${k} stays GREEN with git unavailable (${tl.pass} pass, ${tl.fail} fail)`,
+      r.exit === 0 && tl.fail === 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
     report(`3 · ${k} says UNVERIFIED`, /UNVERIFIED/.test(r.out), "no UNVERIFIED in the output");
     /* D-257's ARM 3 CAME BACK WRONG AND FOUND A DEFECT IN THE FIX RATHER THAN IN
        THE ARM: the label still read "in the commit at HEAD (unverified)", a
@@ -365,18 +356,9 @@ arm("4 · OVER-STRICTNESS — an uncommitted edit to a TRACKED file must still C
   },
 });
 
-/* ---- (5) THE SWEEP MUST NOT HAVE NARROWED --------------------------------- */
-arm("5 · a phantom carrying a REAL FINDING still REDS its suite — the sweep did not narrow", {
-  writes: [{ file: PHANTOM_DOC, text: "# M0-18 control phantom\n\n## Order of work\n\n1. a step nobody governed\n" }],
-  run() {
-    const r = runSuite(F.planning), tl = tally(r.out);
-    report("5 · planning-hygiene goes RED on an unregistered 'Order of work' heading in an UNCOMMITTED doc — "
-      + `a finding in work nobody has committed is still a finding (${tl.pass} pass, ${tl.fail} fail)`,
-      r.exit !== 0 && tl.fail > 0 && /ZZ-M0-18-PHANTOM/.test(r.out),
-      `exit ${r.exit}, tally ${tl.pass}/${tl.fail}, names the phantom ${/ZZ-M0-18-PHANTOM/.test(r.out)}`);
-    return tl;
-  },
-});
+/* ---- (5) RETIRED 2026-09-26 (T3, legacy-tests; N14, K84): "a phantom carrying a REAL FINDING still REDS its suite —
+   the sweep did not narrow" drove `planning-hygiene` over an uncommitted 'Order of work' heading; that suite retired
+   with the plan tooling it tested. ---------------------------------------------------------------------------------- */
 
 /* ---- (6) THE SIXTH WALK'S OWN DECISIVE PAIR -------------------------------
  *

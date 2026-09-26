@@ -504,13 +504,23 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      too. So the pin follows the rule to where it lives: the region calls the
      PREDICATE, and the predicate consumes `#isProjectOwner`. The property being
      held is unchanged — the owner rule is consumed, never restated. */
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction, K57): `#ownsAnyProject`,
+     `#isProjectOwner` and `#positionalMember` moved to `src/membership/`; the store's private methods are now
+     one-line delegations to membership's public `ownsAnyProject`, `isProjectOwner` and `positionalMember`. So
+     each pin asserts the store's helper IS that delegation, and reads the predicate's body in membership's
+     source, where `isProjectOwner` is called as `this.isProjectOwner(`. The property is unchanged: the owner
+     rule and the viewer parse are consumed, never restated. */
+  const MEMBERSHIP_SRC = readFileSync(new URL("../src/membership/index.mjs", import.meta.url), "utf8");
+  const delegates = (priv, pub) =>
+    new RegExp(`^  #${priv}\\(\\.\\.\\.a\\) \\{ return membershipOf\\(this\\.ctx\\)\\.${pub}\\(\\.\\.\\.a\\); \\}`, "m").test(storeSrc);
   const ownsAny = (() => {
-    const s = storeSrc.indexOf("  #ownsAnyProject(memberId) {");
-    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+    const s = MEMBERSHIP_SRC.indexOf("  ownsAnyProject(memberId) {");
+    return s === -1 ? "" : MEMBERSHIP_SRC.slice(s, MEMBERSHIP_SRC.indexOf("\n  }\n", s));
   })();
   t("the fact is derived THROUGH `#isProjectOwner` — the same predicate publishCase()'s refusal runs "
   + "— and neither the facts region nor the predicate restates the owner rule in SQL",
-    [ownsAny.length > 50, /#isProjectOwner\(/.test(ownsAny), /#ownsAnyProject\(/.test(factsRegion),
+    [ownsAny.length > 50 && delegates("ownsAnyProject", "ownsAnyProject") && delegates("isProjectOwner", "isProjectOwner"),
+     /this\.isProjectOwner\(/.test(ownsAny), /#ownsAnyProject\(/.test(factsRegion),
      /\bowner\s*=\s*1\b/.test(stripComments(factsRegion) + stripComments(ownsAny)),
      /project_participants/.test(stripComments(factsRegion))],
     [true, true, true, false, false]);
@@ -526,8 +536,11 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      member. The old pin read `gate.member` here; it now reads `#positionalMember(`, and the
      helper is pinned below to take its member from `viewerPredicate` and nowhere else. */
   const positional = (() => {
-    const s = storeSrc.indexOf("  #positionalMember(viewer, identity = null) {");
-    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+    /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): read in membership's source, the
+       store's `#positionalMember` asserted to be the one-line delegation to it. */
+    const s = MEMBERSHIP_SRC.indexOf("  positionalMember(viewer, identity = null) {");
+    return s === -1 || !delegates("positionalMember", "positionalMember") ? ""
+      : MEMBERSHIP_SRC.slice(s, MEMBERSHIP_SRC.indexOf("\n  }\n", s));
   })();
   t("the store does not parse the viewer a SECOND time: no `member:` prefix literal and no slice of "
   + "one inside the facts region — the id comes from `#positionalMember`, whose ONLY parser is "

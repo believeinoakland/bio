@@ -45,6 +45,7 @@
  *         arms enumerate the types this item ruled on; a type nobody has minted
  *         yet is refused by the same predicate but is not named here.
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -150,7 +151,7 @@ const promote = async (id, text, type, state) => POST(`op=promote&token=${RUTH}`
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
-          current_state: state, created: NOW, last_updated: LATER } });
+          current_state: state, created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
 const mustPromote = async (id, text, type, state) => {
   const r = await promote(id, text, type, state);
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
@@ -167,7 +168,7 @@ const createProject = async (name) => {
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 700)}`);
   return r.bundleId;
 };

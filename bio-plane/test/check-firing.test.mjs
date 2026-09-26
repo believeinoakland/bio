@@ -77,6 +77,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { join as joinPath } from "node:path";
 import { checkBundle, CHECK_RETIREMENTS } from "../checks/bio-checks.mjs";
+import { recordChecks } from "../src/promotion/index.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -151,12 +152,15 @@ const fmInsert = (md, ...lines) => {
   a.splice(at, 0, ...lines); return a.join(NL);
 };
 
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; K64): C-4.2, C-17.2, C-18.8 and C-20.1 left the catalogue for
+   `promotion`, whose gate runs `recordChecks` after `checkBundle`; the findings of a bundle are both, as the gate
+   takes them. */
 async function findingsFor(type, files, extra = {}) {
   const { findings } = await checkBundle({
     folderName: idFor(type), files, sha256: shaHex, sha512: sha512Hex,
     resolveTarget: (x) => x === idFor(type), nowMs: NOWMS, ...extra,
   });
-  return findings;
+  return [...findings, ...await recordChecks({ folderName: idFor(type), files, sha256: shaHex, ...extra })];
 }
 const has = (fs, id) => fs.some((f) => f.check === id);
 

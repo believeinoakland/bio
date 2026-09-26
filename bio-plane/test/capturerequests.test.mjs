@@ -290,19 +290,13 @@ console.log("\n--- 1. the table's shape, its position, and its place in purge (D
   t("and NO BACKTICK anywhere in it — a balanced stray pair still parses, so `node --check` "
   + "would not have saved us", body.includes("`"), false);
 }
-{
-  const pStart = STORE_SRC.indexOf("purge({ bundleId");
-  const pEnd = STORE_SRC.indexOf("\n  /* ---- credentials", pStart);
-  const purgeSrc = STORE_SRC.slice(pStart, pEnd > pStart ? pEnd : pStart + 40000);
-  const deletes = [...purgeSrc.matchAll(/DELETE FROM capture_requests([^\n]*)/g)].map((m) => m[1].trim());
-  t("purge deletes capture_requests in BOTH arms — per-bundle by `target`, whole-store outright. "
-  + "PL-3's delegated trap: a table keyed on something other than bundle_id cannot ride the TABLES "
-  + "list and needs its own DELETE in each arm (D-113 arriving through a column name)",
-    [deletes.length, deletes.some((d) => d.startsWith("WHERE target=?")), deletes.some((d) => d.startsWith("`"))],
-    [2, true, true]);
-  t("and the table is NOT in the TABLES list, because it is not keyed on bundle_id",
-    /const TABLES\s*=\s*\[[^\]]*capture_requests/.test(purgeSrc), false);
-}
+/* RETIRED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "purge deletes capture_requests in BOTH arms — per-bundle
+   by `target`, whole-store outright. ..." read the two `DELETE FROM capture_requests` lines out of store.mjs's purge,
+   and "and the table is NOT in the TABLES list, because it is not keyed on bundle_id" read the `const TABLES = [`
+   list there; purge moved to record-core, where each module declares its tables and the columns that key them to a
+   bundle (legacy-store declares capture_requests keyed by `target`). The second no longer read anything and passed
+   empty. Both claims are MEASURED in section 8: a per-bundle purge of the question the requests were asked under
+   (keyed by `target`, not bundle_id) takes them and leaves the rest, and a whole-store purge takes the table to 0. */
 
 /* ====================================================================== 2
  * THE DOOR: A REQUEST IS A ROW. IT FETCHES NOTHING.

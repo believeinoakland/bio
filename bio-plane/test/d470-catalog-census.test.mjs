@@ -550,6 +550,13 @@ const CATALOG_CENSUS = {
   "1.31.0": { count: 569, digest: "d1e8a679256b530d49f955460b893064fdb2e6bea67f19a6b3f94a2684d592b0",
               changed: ["C-2.8", "C-2.10", "C-21.2", "C-41.1", "C-41.13", "C-53.10", "C-53.11", "C-53.12", "C-70.3"],
               source: "832fbe02962e8f75e5b75b28d6ab83a08d083c8124a864c5b5260110ad6ceda9" },
+  /* 1.32.0 (PROMOTION #1, T3, 2026-09-26; K64, K66; recorded by legacy-tests, T3-4): NO ARRIVALS; C-4.2, C-17.2,
+     C-18.8 and C-20.1 left `bio-checks.mjs` for `promotion`, whose gate runs them after `checkBundle` (src/gate.mjs's
+     1.32.0 note), so THIS census, which is of the catalogue file, lost their ids (569 -> 566; one arm of C-4.2 stays
+     in `checkStateLegality`, which C-2.6 needs). Count, digest and source are this suite's own print on the tranche. */
+  "1.32.0": { count: 566, digest: "2bd1637d11ad4d0ab1643a5961aab700a02f8efdd68504c12d7d180353578c13",
+              changed: ["C-4.2", "C-17.2", "C-18.8", "C-20.1"],
+              source: "e6ee5523495cb692894222ab98a36e8adc8d11451076bc576f58b1c89dfbd8ff" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -741,8 +748,9 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: 1.30.0 -> 1.31.0, the union's one number for
    every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
    hand with the constant, which is its whole rule. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.31.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.31.0)", "1.31.0"]);
+/* UPDATED 2026-09-26 (T3, legacy-tests): 1.31.0 -> 1.32.0, promotion's move of four checks (K64). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.32.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.32.0)", "1.32.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

@@ -72,6 +72,7 @@
  *       bundles for that reason: the disclosure arm returns early where there is
  *       no division to disclose, so what is left is the edge requirement alone.
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -238,7 +239,7 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) =>
   rP(await POST(`op=promote&token=${tok}`, {
     bundleId: id, base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
-            current_state: state, created: NOW, last_updated: LATER },
+            current_state: state, created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],
   }));

@@ -57,6 +57,7 @@
 
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
+import { moduleSources } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the extracted modules' source */
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
@@ -270,25 +271,46 @@ const VERSION_OPS = Object.keys(VERSION_ACT_TO).map((a) => `version${a}`);
    write SUBSTRATE every act rides, and a refusal reached only through it is not
    this act's own requirement. Sweeping those in would have graded nearly every
    op `reasoned` and the rung would have meant nothing. */
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions): `adminRemove`,
+   `projectOwnerRemove`, `projectOwnerRescue` and `reopen` now live in `src/membership/` and `src/promotion/`,
+   and the store's method is a one-line delegation (`membershipOf(this.ctx).X(…)`, `promotionOf(this.ctx).X(…)`).
+   That delegation IS the act's own decomposition, so it is followed into the module's method, and that method's
+   private helpers are read in the module's own source — the same one hop the store's private helpers get. Public
+   store methods are still not followed. */
+const MODULE_SRC = { membershipOf: moduleSources("membership"), promotionOf: moduleSources("promotion") };
+const MEMBERSHIP_ROUTES = new Map([...(methodBody(MODULE_SRC.membershipOf.replace(/^export function membershipOps/m,
+  "  membershipOps"), "membershipOps") ?? "").matchAll(/^\s{8}([a-z][a-z0-9]*)\s*:\s*\(\)\s*=>\s*(?:\(\{\s*\.\.\.)?m\.([A-Za-z0-9_]+)\s*\(/gm)]
+  .map((x) => [x[1], x[2]]));
+t("`membershipOps` was read out of membership's source — the ops the store's dispatch map now takes from it",
+  ["adminremove", "projectownerremove", "projectownerrescue"].every((o) => MEMBERSHIP_ROUTES.has(o)), true);
+const refusesIn = (b) => { const h = jre.test(b); jre.lastIndex = 0; return h; };
+function demandsInBody(body, src, depth = 0) {
+  if (refusesIn(body)) return true;
+  for (const dm of new Set([...body.matchAll(/this\.(#[A-Za-z][A-Za-z0-9_]*)\s*\(/g)].map((x) => x[1]))) {
+    const bb = methodBody(src, dm);
+    if (bb != null && refusesIn(bb)) return true;
+  }
+  if (depth === 0)
+    for (const [, of, name] of body.matchAll(/\b(membershipOf|promotionOf)\(this\.ctx\)\.([A-Za-z][A-Za-z0-9_]*)\s*\(/g)) {
+      const mb = methodBody(MODULE_SRC[of], name);
+      if (mb != null && demandsInBody(mb, MODULE_SRC[of], 1)) return true;
+    }
+  return false;
+}
 const demandsAccount = new Set();
 const bodiesRead = [];
 for (const op of MUTATING) {
   if (VERSION_OPS.includes(op)) continue;
   const r = routeOf(op, table);
-  if (!r.method) continue;
-  const body = methodBody(storeSrc, r.method);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): an op the store's dispatch map no longer
+     names is looked up in `membershipOps`, the map membership contributes to it, and read in membership's source. */
+  const viaMembership = !r.method ? MEMBERSHIP_ROUTES.get(r.doPath) : null;
+  if (!r.method && !viaMembership) continue;
+  const src = viaMembership ? MODULE_SRC.membershipOf : storeSrc;
+  const body = methodBody(src, viaMembership ?? r.method);
   if (body == null) continue;
   bodiesRead.push(op);
-  let hit = jre.test(body); jre.lastIndex = 0;
-  if (!hit) {
-    for (const dm of new Set([...body.matchAll(/this\.(#[A-Za-z][A-Za-z0-9_]*)\s*\(/g)].map((x) => x[1]))) {
-      const bb = methodBody(storeSrc, dm);
-      if (bb == null) continue;
-      const h = jre.test(bb); jre.lastIndex = 0;
-      if (h) { hit = true; break; }
-    }
-  }
-  if (hit) demandsAccount.add(op);
+  if (demandsInBody(body, src)) demandsAccount.add(op);
 }
 for (const a of Object.keys(VERSION_ACT_TO))
   if (versionNeedsReason(VERSION_ACT_TO[a])) demandsAccount.add(`version${a}`);

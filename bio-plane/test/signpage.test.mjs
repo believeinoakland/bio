@@ -1,7 +1,7 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE tools/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE bio-plane/src/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass. */
 /* The signing page, checked against OpenSSH.
  *
- * Negative-control detail: corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE tools/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass.
+ * Negative-control detail: corrupt the SSHSIG signed-preimage magic in the page's own sshsig() ("SSHSIG" -> "SSHXIG") in the SOURCE bio-plane/src/sign-release.html (this suite lifts the inline script from that file, NOT the generated src/signpage.mjs) -> 6 assertions fail (ssh-keygen rejects the page's release and ratification signatures); restored, 35 pass.
  *
  * Bob signs in a browser tab because he has no terminal, which means the
  * page reimplements SSHSIG construction in about forty lines of
@@ -35,7 +35,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   process.exit(0);
 }
 
-const PAGE = fileURLToPath(new URL("../../tools/sign-release.html", import.meta.url));
+const PAGE = fileURLToPath(new URL("../src/sign-release.html", import.meta.url));
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
@@ -206,7 +206,7 @@ t("a protected key with no passphrase says what to do", /protected with a passph
 t("a key for an unknown job is refused",
   /does not name a job/.test(await refuse("BIOKEY-RAW1.bio-nonsense.AAAA") || ""), true);
 t("something that is not a key at all says so",
-  /does not look like a BIO private key/.test(await refuse("hello") || ""), true);
+  /does not look like a CivicOS private key/   /* the product page names CivicOS (signatures, K33) */.test(await refuse("hello") || ""), true);
 
 /* ---- the saved file carries everything needed to sign again ---- */
 const report = keyReport(made);

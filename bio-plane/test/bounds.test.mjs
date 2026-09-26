@@ -115,6 +115,7 @@ import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy t
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
+import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
@@ -134,7 +135,13 @@ const t = (label, got, want) => {
 
 /* =================================================================== * WALK — THE ROSTER OF CAPPED OPS, READ OFF THE PLANE'S OWN SOURCE.
  * ========================================================================== */
-const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions): this walk's subject is the
+   store's class read as a census (op -> method off the dispatch map, the method's segment), and the extraction left
+   it reading one-line delegations and a spread of `membershipOps(...)` — so `op=projectdirectory` and
+   `op=projectrequests` fell off the roster while still capped and still driven. The corpus is the store's text with
+   the extracted methods RE-INLINED where the store delegates to them (`inlinedStore`, `extracted-sources.mjs`, which
+   states each substitution); every figure and anchor below is unchanged. */
+const SRC_STORE = inlinedStore();
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures

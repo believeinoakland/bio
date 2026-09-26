@@ -284,6 +284,7 @@ console.log("\n--- D-219: a grade-D row written BEFORE the corrected wording kee
     cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
     const OLD_LINE = 'const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;';
     const METHOD_LINE = /const method = `testimony -- [^`]*`;/g;
     const storePath = join(root, "bio-plane", "src", "store.mjs");

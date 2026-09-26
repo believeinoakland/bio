@@ -93,6 +93,7 @@
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
  * not on PATH rather than dying mid-run (publish.test.mjs's precedent, D-93).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
@@ -337,7 +338,7 @@ let snapSeq = 0;
 const promote = async (id, md, type, state, tok = PILAR, base = null) => rP(await POST(`op=promote&token=${tok}`, {
   bundleId: id, base, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: type, group: "believe-in-oakland",
-          current_state: state, created: NOW, last_updated: LATER },
+          current_state: state, created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
@@ -350,7 +351,7 @@ const createProject = async (name, md, tok = PILAR) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     base: null, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "investigating", created: NOW, last_updated: LATER },
+            current_state: "investigating", created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
   if (r.ok === false || !r.bundleId) throw new Error(`create project ${name}: ${JSON.stringify(r)}`);
   return r.bundleId;

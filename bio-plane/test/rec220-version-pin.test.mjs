@@ -21,6 +21,7 @@
  *   4. The act pins nothing it cannot: no pin on a question target, none where a content id is named,
  *      none on a case's citation edge (the case arm has no slot, stated in section 5).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import { withSurfacingRun } from "./surfacing-run.mjs";
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -105,7 +106,7 @@ const promote = async (id, text, type, register = [], reading = null) => {
     snapKey: `20260925T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: this item was cut before D-563, whose C-86.3 refuses an envelope title the held document contradicts; the envelope title `Bundle <id>` is dropped as D-563 dropped it in its own fixtures, and promote derives it from the document. */
     meta: { object_type: type, group: "believe-in-oakland",
-            current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
+            current_state: type === "inquiry" ? "open" : "collected", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
     files, register });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
   live[id] = r.bundleSha ?? r.sha ?? live[id];

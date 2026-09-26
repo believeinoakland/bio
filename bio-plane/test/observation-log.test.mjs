@@ -404,6 +404,8 @@ import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' sources, for B4's census (record-core R21). */
+import { storeCorpus, moduleSources } from "./extracted-sources.mjs";
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
 
 const TOK = "mem-rec93";
@@ -510,8 +512,21 @@ console.log("\n--- B · one append site, and the refusals are read out of the ma
      "a log that can be rewritten is not evidence of anything". */
   t("B3: nothing UPDATEs the table — append-only is a property of the code, not a promise",
     [...SRC_STORE.matchAll(/UPDATE observation_log\b/g)].length, 0);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): the one DELETE was purge's literal
+     whole-store line in store.mjs. Purge moved to `record-core`, which deletes from each DECLARED table with ONE
+     generic statement; a table declared with no keys is cleared by the whole-store arm only. So the census is
+     widened to the extracted modules and asks: no statement names a delete from the log, the only generic delete
+     is record-core's purge, and the log's owner declares it keyless (whole-store only). Section H measures both
+     arms (H2: the per-bundle arm leaves every row; the whole-store arm clears). */
+  const corpus = storeCorpus(["record-core", "membership", "promotion"]);
+  const rc = moduleSources("record-core");
+  const pAt = rc.indexOf("  purge({ bundleId = null } = {}) {"), pEnd = rc.indexOf("\n  }\n", pAt);
   t("B4: and exactly one DELETE, which is the whole-store purge arm",
-    [...SRC_STORE.matchAll(/DELETE FROM observation_log\b/g)].length, 1);
+    [[...corpus.matchAll(/DELETE FROM observation_log\b/g)].length,
+     [...corpus.matchAll(/DELETE FROM \$\{/g)].length,
+     [...rc.matchAll(/DELETE FROM \$\{/g)].every((m) => m.index > pAt && m.index < pEnd),
+     /\{ name: "observation_log", keys: \[\] \}/.test(SRC_STORE)],
+    [0, 1, true, true]);
 }
 
 /* THE REFUSALS ARE READ LIVE FROM THE CATALOGUE, never typed here — DEC-49's
@@ -1777,6 +1792,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
       cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
       cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
       cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+      cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
       const ANCHOR = "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
       const LEGACY = "    const bad = (entry.authority_kind === \"run\" && entry.state === \"PRESENT\" "
         + "&& (entry.result_ref == null || entry.result_ref === \"\")) ? null "

@@ -48,6 +48,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as CATALOGUE from "../checks/bio-checks.mjs";
 import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+/* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for BLOCK H's harvest. */
+import { storeCorpus } from "./extracted-sources.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS } from "../src/airun.mjs";
 import { SKILL_PACK_ID, DOCTRINE_EDITION, OBJECTIVE, BOUNDARY, FOUR_LEVEL_RULE,
          SEARCH_COMPLETENESS, AUTHORED_SOURCES, SOURCING, ABSENCE_ANSWER_SHAPE,
@@ -627,7 +629,9 @@ const run = async () => {
 
   const prefix = "MACHINE" + "_CANNOT_";
   const mintedInSource = new Set();
-  for (const src of [STORE_SRC, INDEX_SRC])
+  /* WIDENED 2026-09-26 (T3, legacy-tests; promotion R21): `reopen` and its MACHINE_CANNOT_REOPEN moved from
+     store.mjs to `src/promotion/`, so the plane's source is store.mjs AND the extracted modules' files, with index.mjs. */
+  for (const src of [storeCorpus(["record-core", "membership", "promotion"]), INDEX_SRC])
     for (const m of src.matchAll(/["'`](MACHINE_CANNOT_[A-Z0-9_]+)["'`]/g)) mintedInSource.add(m[1]);
   const rendered = new Set(fences.map((f) => f.code));
   const uncanned = [...mintedInSource].filter((c) => !rendered.has(c));

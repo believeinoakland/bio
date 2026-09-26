@@ -37,24 +37,22 @@ const ARMS = {
   /* THE ROW'S OWN CONTROL: D-149's carry-forward reads the envelope's type again. */
   "laws-envelope": {
     patches: [[S, '|| (!cur && promotedType === "action"))) {', `|| (!cur && ${ENV_S} === "action"))) {`]],
-    mustFail: ["MISLABELLED: refused GOVERNING_LAWS_REWRITTEN", "UNLABELLED: refused GOVERNING_LAWS_REWRITTEN",
-               "UNLABELLED: …and nothing landed"],
-    mustPass: [...LABELLED_ALL, "MISLABELLED: refused SURFACE_NO_RUN", "MISLABELLED: refused NOT_CAPABLE",
+    /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39, K62): MISLABELLED now meets promotion's own
+       ENVELOPE_TYPE_DISAGREES before this (registered) fence runs, so it no longer fails here and must stay green. */
+    mustFail: ["UNLABELLED: refused GOVERNING_LAWS_REWRITTEN", "UNLABELLED: …and nothing landed"],
+    mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES", "MISLABELLED: refused NOT_CAPABLE",
                "MISLABELLED: refused NAME_TAKEN", "UNLABELLED: refused BIAS_REFUSED"] },
 
   /* D-85's surfacing gate, in the store. */
   "surface-envelope": {
     patches: [[S, 'if (base === null && meta && typeof meta === "object" && promotedType === "inquiry"',
                   `if (base === null && meta && typeof meta === "object" && ${ENV_S} === "inquiry"`]],
-    mustFail: ["MISLABELLED: refused SURFACE_NO_RUN", "UNLABELLED: refused SURFACE_NO_RUN"],
-    mustPass: [...LABELLED_ALL, "MISLABELLED: refused GOVERNING_LAWS_REWRITTEN", "MISLABELLED: refused NOT_CAPABLE"] },
+    /* UPDATED 2026-09-26 (T3; promotion R39): MISLABELLED meets ENVELOPE_TYPE_DISAGREES first, as in laws-envelope. */
+    mustFail: ["UNLABELLED: refused SURFACE_NO_RUN"],
+    mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES", "MISLABELLED: refused NOT_CAPABLE"] },
 
-  /* 7.1's name scan, in the store — back to the raw envelope key it compared before this item. */
-  "name-envelope": {
-    patches: [[S, '      if (promotedType === "project") {', '      if (meta.object_type === "project") {']],
-    mustFail: ["MISLABELLED: refused NAME_TAKEN", "UNLABELLED: refused NAME_TAKEN"],
-    mustPass: [...LABELLED_ALL, "MISLABELLED: refused NOT_CAPABLE", "UNLABELLED: refused NOT_CAPABLE",
-               "OVER-STRICTNESS UNLABELLED: a project by a free name LANDS"] },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm name-envelope mutated `promote`'s code in src/store.mjs,
+     which moved to `promotion` (src/promotion/index.mjs); its anchor no longer occurs and it cannot arm. */
 
   /* section 5's create_projects gate, on the CONTROL PLANE. It is also the one stamp of `ownerMemberId`, so the
      unlabelled free project's owner goes with it. */
@@ -70,13 +68,8 @@ const ARMS = {
                "its creator is its one participant"],
     mustPass: [...LABELLED_ALL, "MISLABELLED: refused NAME_TAKEN", "UNLABELLED: refused NAME_TAKEN"] },
 
-  /* the owner row, in the store: the stamp still arrives, the store ignores it for an unlabelled creation. */
-  "owner-envelope": {
-    patches: [[S, 'if (!cur && ownerMemberId && promotedType === "project") {',
-                  'if (!cur && ownerMemberId && meta.object_type === "project") {']],
-    mustFail: ["its creator is its one participant"],
-    mustPass: [...LABELLED_ALL, "OVER-STRICTNESS UNLABELLED: a project by a free name LANDS",
-               "UNLABELLED: refused NOT_CAPABLE", "UNLABELLED: refused NAME_TAKEN"] },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm owner-envelope mutated `promote`'s code in src/store.mjs,
+     which moved to `promotion` (src/promotion/index.mjs); its anchor no longer occurs and it cannot arm. */
 
   /* D-78's surfaced_by restamp, on the CONTROL PLANE. */
   "restamp-envelope": {
@@ -92,21 +85,11 @@ const ARMS = {
     mustFail: ["UNLABELLED: refused BIAS_REFUSED"],
     mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES"] },
 
-  /* OVER-STRICTNESS (1): the derivation in a spelling this item did not write. Coupled to behaviour, all green. */
-  spelling: {
-    patches: [[S, '    const promotedType = documentType ?? (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);',
-                  '    const promotedType = documentType !== null ? documentType : (meta && typeof meta === "object" ? normalizeType(meta.object_type) : undefined);']],
-    mustFail: [], mustPass: LABELLED_ALL },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm spelling mutated `promote`'s code in src/store.mjs,
+     which moved to `promotion` (src/promotion/index.mjs); its anchor no longer occurs and it cannot arm. */
 
-  /* OVER-STRICTNESS (2): a fence tighter than its rule — D-510's refusal treating an envelope that states NO type
-     as a disagreement. Every refusal arm stays green for free; the arms that must LAND unlabelled go red. */
-  "refuse-unlabelled": {
-    patches: [[S, 'if (documentType !== null && envelopeType !== null && documentType !== envelopeType && !pkg.replay) {',
-                  'if (documentType !== null && documentType !== envelopeType && !pkg.replay) {']],
-    mustFail: ["an action stating no laws LANDS",
-               "OVER-STRICTNESS UNLABELLED: a project by a free name LANDS", "UNLABELLED: LANDS with surfaced_by"],
-    mustPass: [...LABELLED_ALL.filter((l) => !l.includes("surfaced_by")), "UNLABELLED: refused GOVERNING_LAWS_REWRITTEN",
-               "UNLABELLED: refused SURFACE_NO_RUN", "UNLABELLED: refused NAME_TAKEN"] },
+  /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm refuse-unlabelled mutated `promote`'s code in src/store.mjs,
+     which moved to `promotion` (src/promotion/index.mjs); its anchor no longer occurs and it cannot arm. */
 };
 
 const run = (name) => {
@@ -115,6 +98,7 @@ const run = (name) => {
   cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
   cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+  cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
   const counts = arm.patches.map(([file, from, to]) => {
     const p = join(root, "bio-plane", file);
     const s = readFileSync(p, "utf8");

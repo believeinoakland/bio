@@ -785,9 +785,17 @@ console.log("\n--- 11. hidden and absent answer identically ---");
      PIN CORRECTED AGAIN 2026-09-24 BY D-526, NEVER EXEMPTED: the derivation MOVED to the top of `promote`, where
      every fence reads it too, and its fallback now guards a missing envelope — so the second half names that line.
      The old line pinned a spelling D-526 removed, not a behaviour: the claim is unchanged. */
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R9): the derivation moved with `promote` to
+     `src/promotion/index.mjs` (the document's type, normalised, the envelope only where the document states none, a
+     missing envelope guarded), and the store's leg projection reads it from promotion's step context. The first half
+     is unchanged; the second pins the derivation where it now lives, in its three lines. */
+  const PROMOTION_SRC = readFileSync(SRC("promotion/index.mjs"), "utf8");
   t("promote writes legs only for inquiries, which is WHY the project half cannot be staged THROUGH `leg:`",
     [/const isInquiry = promotedType === "inquiry"/.test(STORE_SRC),
-     /const promotedType = documentType \?\? \(meta && typeof meta === "object" \? normalizeType\(meta\.object_type\) : undefined\);/.test(STORE_SRC)],
+     /const typeStated = \(v\) => \(typeof v === "string" && v\.trim\(\) !== "" \? normalizeType\(v\) : null\);/.test(PROMOTION_SRC)
+       && /const envelopeType = envelope \? typeStated\(envelope\.object_type\) : null;/.test(PROMOTION_SRC)
+       && /let promotedType = documentType \?\? envelopeType \?\? undefined;/.test(PROMOTION_SRC)
+       && /promotedType[^\n]*\} = stepContext\(c\)/.test(STORE_SRC)],
     [true, true]);
 }
 

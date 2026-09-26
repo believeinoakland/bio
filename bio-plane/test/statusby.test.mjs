@@ -35,10 +35,14 @@ import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process an
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's corpus with its extracted modules */
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const IDX_SRC = readFileSync(IDX, "utf8");
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "latin1");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): the writers of members.status moved with
+   memberAdd, adminEndorse, adminRemove, enroll and memberSet into `src/membership/`, so the census reads
+   `store.mjs` AND the module extracted from it (a census of source text: its corpus widens, the floor stands). */
+const STORE_SRC = storeCorpus(["membership"], "latin1");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -50,7 +54,7 @@ const t = (label, got, want) => {
 /* ============================================ 1. THE CENSUS: every writer, by the column
  * Every template literal in store.mjs that INSERTs into or UPDATEs `members` and names the `status`
  * column. Each must also name `status_by`. Printed, and floored: a census over nothing passes. */
-console.log("\n--- 1. census: every statement in store.mjs that writes members.status ---");
+console.log("\n--- 1. census: every statement in store.mjs (and src/membership/) that writes members.status ---");
 const stmts = [...STORE_SRC.matchAll(/`((?:INSERT(?: OR [A-Z]+)? INTO|UPDATE) members\b[^`]*)`/g)].map((m) => m[1]);
 const writers = stmts.filter((q) => q.startsWith("UPDATE")
   ? /\bSET\b[\s\S]*\bstatus\s*=/.test(q)

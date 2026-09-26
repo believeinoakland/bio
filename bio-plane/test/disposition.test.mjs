@@ -18,6 +18,7 @@
  * bundle the catalog rejects. The suite conformance-checks each Problem BEFORE
  * and after, because an after-check alone measures nothing (standing lesson 4).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -143,7 +144,7 @@ const mk = (id, text, type) => call("/promote", {
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland",
           current_state: type === "problem" ? "surfaced" : type === "inquiry" ? "open" : "collected",
-          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
+          created: docDate(text, "created") ?? "2026-07-01T00:00:00Z", last_updated: docDate(text, "last_updated") ?? "2026-07-02T00:00:00Z" } });
 
 const IDS = ["PROB-2026-0001-a", "PROB-2026-0002-b", "PROB-2026-0003-c"];
 for (const id of IDS) await mk(id, probMd(id), "problem");
@@ -398,8 +399,8 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
       snapKey: `${id}-verify`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
       meta: { object_type: "information", group: "believe-in-oakland",
-              current_state: "verified", created: "2026-07-01T00:00:00Z",
-              last_updated: "2026-07-03T00:00:00Z" } });
+              current_state: "verified", created: docDate(doc, "created") ?? "2026-07-01T00:00:00Z",
+              last_updated: docDate(doc, "last_updated") ?? "2026-07-03T00:00:00Z" } });
   }
   t("a reason is required, as it is for disposition",
     (await call(`/retire?handle=${await select(infoIds)}&${STAMP}`)).reason, "NO_REASON");
@@ -421,7 +422,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
     files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */
     meta: { object_type: "project", group: "believe-in-oakland", title: "Citing Project",
-            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+            current_state: "forming", created: docDate(pdoc, "created") ?? "2026-07-01T00:00:00Z", last_updated: docDate(pdoc, "last_updated") ?? "2026-07-01T00:00:00Z" } });
   const proj = created.bundleId;
   t("the citing Project is created at a plane-minted id", /^PROJ-\d{4}-\d{4}-/.test(String(proj)), true);
   {

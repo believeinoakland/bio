@@ -36,6 +36,7 @@
  * try. A `replay` promote is exempt from the fence with the rest of the action block (D-511's residue); REC-215's
  * machine PROPOSAL is not built and is not driven here.
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -128,7 +129,7 @@ const promote = async (tok, id, text, base = null) =>
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [],
     meta: { object_type: "action", group: "believe-in-oakland",
-            current_state: "planned", created: NOW, last_updated: LATER },
+            current_state: "planned", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
   }));
 const headOf = async (id) => (await proj(NADIA, id))?.bundle_sha;
 const searchIds = async (q) => (rP(await GET(`op=search&token=${NADIA}&q=${encodeURIComponent(q)}`))?.hits ?? [])

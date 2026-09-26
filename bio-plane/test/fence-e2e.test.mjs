@@ -80,6 +80,9 @@ import { AI_CREDENTIAL_CHECKS, CAPTURE_REQUEST_CHECKS, VERSION_ACT_CHECKS,
          MACHINE_FENCE_CHECKS, isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+/* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for section 10's harvest. */
+import { storeCorpus } from "./extracted-sources.mjs";
+
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE_SRC = join(DIR, "..", "src", "index.mjs");
@@ -921,7 +924,10 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      headline totality assertion has passed over an empty corpus three times
      here. Comments are blanked length-preservingly first, because this file's
      own prose names every one of these codes. */
-  const STORE_BARE = readFileSync(join(DIR, "..", "src", "store.mjs"), "utf8")
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R22–R24): `reopen` and its MACHINE_CANNOT_REOPEN moved
+     from store.mjs to `src/promotion/`, so the harvest's corpus is the store AND the extracted modules' files — the
+     family the store minted before the extraction. */
+  const STORE_BARE = storeCorpus(["record-core", "membership", "promotion"])
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
@@ -931,7 +937,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
      drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
      `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
-  t("and the set driven below IS the family `src/store.mjs` mints, so a thirteenth cannot arrive "
+  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3) mints, so a thirteenth cannot arrive "
   + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
     [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);

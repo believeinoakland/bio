@@ -363,18 +363,11 @@ t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block
    answers SQLITE_CORRUPT_VTAB on the base delete and LEAVES THE BASE ROWS
    STANDING — so a sweep written the natural way, beside `bundles_fts`'s own
    line, would have been worse than no sweep at all. */
-{
-  const p0 = STORE_SRC.indexOf("purge({ bundleId");
-  const src = STORE_SRC.slice(p0, STORE_SRC.indexOf("---- credentials ----", p0));
-  const tables = /const TABLES\s*=\s*\[([\s\S]*?)\]/.exec(src);
-  t("A7: `capture_text` is in purge's TABLES, so it clears in BOTH arms (it carries bundle_id)",
-    !!tables && /"capture_text"/.test(tables[1]), true);
-  const loop = src.indexOf("for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`)");
-  const sweep = src.indexOf("DELETE FROM capture_text_fts");
-  t("A8: and the whole-store sweep of the FTS table comes AFTER the base rows are cleared — "
-  + "index-first corrupts the vtab and leaves the base rows, measured on workerd",
-    loop > -1 && sweep > loop, true);
-}
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): A7 and A8 read purge's `const TABLES = [`
+   list and its `for (const t of TABLES)` loop out of store.mjs; purge moved to `record-core`, where each module
+   declares its own tables (`declarePurge`) and purge clears them in declaration order. Both are now MEASURED in
+   section E below through `op=purge` and `op=stats`: A7 as `capture_text` units taken by BOTH arms, A8 as the
+   OUTCOME index-first produces and the right order does not — base rows left standing and the vtab corrupt. */
 
 /* ========================================================================= *
  *  B · ACQUIRE EMITS THE UNITS, FROM REAL CONTAINERS
@@ -861,8 +854,12 @@ console.log("\n--- E · purge takes the units AND the index, in both arms (D-113
      destructive op took. */
   t("E0: there is something to purge — the delta below is over a non-empty index",
     before.textUnits > 0 && before.textIndexOk === true, true);
-  await post(`purge&confirm=bio&bundleId=${encodeURIComponent(B_DOC)}`, {}, "adm-rec91");
+  const onePurge = await post(`purge&confirm=bio&bundleId=${encodeURIComponent(B_DOC)}`, {}, "adm-rec91");
   const after = await get("stats", "", "adm-rec91");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21): A7's per-bundle half, measured (see section A). */
+  t("A7: `capture_text` is declared to purge, so it clears in BOTH arms (it carries bundle_id) — the PER-BUNDLE arm "
+  + "answers ok and takes that document's units",
+    [onePurge && onePurge.ok, before.textUnits - after.textUnits], [true, PARAS.length]);
   t("E1: the PER-BUNDLE arm takes that document's units — a purged document whose passages stayed "
   + "indexed would let a search answer out of a file nobody holds, and a later bundle allocated a "
   + "colliding id would inherit somebody else's text",
@@ -872,8 +869,17 @@ console.log("\n--- E · purge takes the units AND the index, in both arms (D-113
     after.textIndexOk, true);
 }
 {
-  await post("purge&confirm=bio", {}, "adm-rec91");
+  const pre = await get("stats", "", "adm-rec91");
+  const wholePurge = await post("purge&confirm=bio", {}, "adm-rec91");
   const after = await get("stats", "", "adm-rec91");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): A7's whole-store half and A8, measured (see
+     section A). Index-first answers SQLITE_CORRUPT_VTAB on the base delete and leaves the base rows standing, so
+     the order is read off its outcome: no unit left AND an index that passes FTS5's integrity-check at rank 1. */
+  t("A7: ...and the WHOLE-STORE arm takes every remaining unit (rows were there to clear)",
+    [pre.textUnits > 0, wholePurge && wholePurge.ok, after.textUnits], [true, true, 0]);
+  t("A8: and the whole-store sweep of the FTS table comes AFTER the base rows are cleared — "
+  + "index-first corrupts the vtab and leaves the base rows, measured on workerd",
+    [after.textUnits, after.textIndexOk], [0, true]);
   t("E2: the WHOLE-STORE arm empties both — a scratch reset reporting scope ALL while a search still "
   + "answered out of the purged corpus is the D-113 silent leftover in the one surface a member "
   + "reads absence from",

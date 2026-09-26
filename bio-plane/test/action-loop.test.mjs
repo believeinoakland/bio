@@ -776,10 +776,6 @@ console.log("\n--- 10. the vocabularies, and the D-113 floor ---");
   t("the basis kinds are the closed pair", ACTION_BASIS_KINDS, ["rests_on", "advances"]);
   t("the directions include the one that is easy to leave out (DEC-13)",
     CORRESPONDENCE_DIRECTIONS, ["sent", "received", "no_response"]);
-  t("both new tables are named in purge's TABLES list, so a whole-store purge cannot report ALL and leave rows",
-    [/"action_basis"/.test(STORE_SRC.slice(STORE_SRC.indexOf("const TABLES = ["))),
-     /"correspondence"/.test(STORE_SRC.slice(STORE_SRC.indexOf("const TABLES = [")))],
-    [true, true]);
   const st = rP(await GET(`op=stats&token=adm-rec24`));
   t("and both are COUNTED in stats, so a purge can PROVE it took them rather than assert it",
     [typeof st.actionBasis, typeof st.correspondence, st.actionBasis > 0, st.correspondence > 0],
@@ -790,6 +786,20 @@ console.log("\n--- 10. the vocabularies, and the D-113 floor ---");
   const after = rP(await GET(`op=stats&token=adm-rec24`));
   t("...and the counts FALL, measured rather than asserted (D-113)",
     [after.correspondence < st.correspondence, after.actionBasis < st.actionBasis], [true, true]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): this arm read purge's `const TABLES = [` list out of store.mjs, and
+     purge moved to `record-core`, where each module declares its tables (record-core R21). The same claim, "a
+     whole-store purge cannot report ALL and leave rows", is now MEASURED: a seeded action puts rows in both tables,
+     and a whole-store purge takes both tables to zero. */
+  const SEED = "ACTN-2026-2499-purge-seed";   /* one more action with a leg and a letter, so both tables hold rows */
+  const seedR = (await promote(NADIA, SEED, actionMd(SEED, { refs: [INQ], basis: [{ target: INQ, kind: "advances" }],
+      correspondence: [{ direction: "sent", at: "2026-08-11", artifact_sha: SENT_SHA }] }), "action", "planned"));
+  t("(a seed action with a basis leg and a correspondence entry lands, so both tables hold rows to clear)", seedR.ok, true);
+  const seeded = rP(await GET(`op=stats&token=adm-rec24`));
+  const whole = rP(await GET(`op=purge&token=adm-rec24&confirm=bio`));
+  const empty = rP(await GET(`op=stats&token=adm-rec24`));
+  t("both new tables are cleared by a whole-store purge, so it cannot report ALL and leave rows (rows were there to clear)",
+    [seeded.actionBasis > 0 && seeded.correspondence > 0, whole.ok, empty.actionBasis, empty.correspondence],
+    [true, true, 0, 0]);
 }
 
 console.log(`\naction-loop: ${pass} pass, ${fail} fail`);

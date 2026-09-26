@@ -50,7 +50,7 @@ import "./stdio.mjs";
 import "./sandbox.mjs";
 import { readFileSync } from "node:fs";
 import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../scripts/derive-bindings.mjs";
-import { stripJsonc } from "../../tools/jsonc.mjs";
+import { stripJsonc } from "./jsonc.mjs";   /* N14: taken from tools/ into test/ */
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {

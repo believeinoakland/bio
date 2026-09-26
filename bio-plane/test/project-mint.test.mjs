@@ -1,3 +1,4 @@
+/* T3 (legacy-tests; K84 (2)), 2026-09-26: this suite's negative control `project-mint.control.mjs` is RETIRED: every arm mutated code in src/store.mjs that moved to src/promotion/index.mjs (the project mint and fork; grep `idSupplied`, `mintOpaqueId("PROJ"`); no anchor occurs and none can arm. The suite's own assertions stand. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-mint.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-mint.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a12cdccbace704eb6 on base 3dee1fdb + REC-141 (real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES), every arm AS DECLARED: (a) baseline 40/0 · (b) accept-supplied-id — THE ROW'S CONTROL 1, the refusal removed and the caller's id used -> 32/8, §1's refusal and byte-identity arms (the hidden id answers EXISTS, the free one is CREATED) · (c) hash-before-id — THE ROW'S CONTROL 2, the caller's pre-id sha registered -> 37/3, the returned-sha arm, the not-the-caller's-sha arm and the fork's sha arm · (d) fork-ignores-newid — a named newId silently ignored -> 37/3, the three fork refusal arms · (e) id-anywhere, an over-strict fence -> 38/2, the two over-strictness arms · (f) id-key-other-spelling, correct work in another spelling -> 40/0. RECORDED, NOT SMOOTHED: the FIRST run had (b) and (d) NOT AS DECLARED — (b)'s other-type byte-identity arm stayed green because the armed plane's own §1 creation had made the never-minted id EXIST, so both probes answered EXISTS; (d) failed four committing-fork arms because the armed plane's probe fork took the name the committing fork used. Both were the INSTRUMENT: the other-type probe now uses a second never-minted id and the fork probes a name of their own; re-run, every arm AS DECLARED.
    RE-RUN 2026-09-18 after merging origin/main (8e39602a) and adding the C-59.3 and C-59.4 check assertions (coverage's CHECKS column named both as never asserted), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,642,473 B sha256 e41e7bf843e9… (re-run again after the helper rename, identical figures), untouched: YES — every arm AS DECLARED: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 · id-key-other-spelling 41/0. RECORDED: fork-ignores-newid first came back NOT AS DECLARED (37/4) because its declaration lacked the new C-59.3 check arm, which it rightly fails; the declaration was corrected and the arm re-run.
@@ -30,7 +31,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -224,14 +225,19 @@ console.log("\n--- 6. a minted id carries no count (BOB #16): the suffix is opaq
      takes its suffix from REC-151's ONE opaque minter (whose CSPRNG source `opaque-ids.test.mjs` §1 pins by name).
      Probe (2), the run of five, is unchanged. */
   const YEAR = new Date().toISOString().slice(0, 4);
-  const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion, record-core R6): the PROJ mint moved with `promote` to
+     `promotion` (`record.mintOpaqueId("PROJ", …)`), and the minter to record-core. The pin reads the store's corpus as
+     it stood before the extraction: store.mjs AND the extracted modules' files; a call of the minter is `.mintOpaqueId(`. */
+  const STORE_SRC = [readFileSync(join(SRC_DIR, "store.mjs"), "utf8"), ...["record-core", "membership", "promotion"]
+    .flatMap((d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort()
+      .map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))].join("\n");
   const refused = await POST(`op=allocid&token=${ADM}&prefix=PROJ&year=${YEAR}`);
   t("NO COUNT: the PROJ counter cannot be read through op=allocid (refused ALLOCID_PREFIX_GATED, nothing allocated)",
     [refused?.ok, refused?.code, refused?.id], [false, "ALLOCID_PREFIX_GATED", undefined]);
   const one = parse(await create(IRIS, "Count Probe Zero"));
   const suffix = (id) => Number(String(id).split("-")[2]);
   t("NO COUNT: and the PROJ mint takes its suffix from the one opaque minter, never the counter",
-    [/^PROJ-\d{4}-\d{4}-count-probe-zero$/.test(String(one?.bundleId)), /#mintOpaqueId\(\s*"PROJ"/.test(STORE_SRC),
+    [/^PROJ-\d{4}-\d{4}-count-probe-zero$/.test(String(one?.bundleId)), /\.mintOpaqueId\(\s*"PROJ"/.test(STORE_SRC),
      /(?:allocId|#nextSeq)\(\s*"PROJ"/.test(STORE_SRC)], [true, true, false]);
   const run = [];
   for (const n of ["One", "Two", "Three", "Four", "Five"]) run.push(suffix(parse(await create(IRIS, `Count Probe ${n}`))?.bundleId));

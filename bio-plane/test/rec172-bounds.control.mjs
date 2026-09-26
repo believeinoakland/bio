@@ -108,6 +108,7 @@ const run = (name) => {
     cpSync(join(PLANE, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
     const vf4 = join(root, "vf4-live-scratch.mjs");
     cpSync(VF4, vf4);
     for (const [file, from, to] of arm.patches) {

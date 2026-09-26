@@ -120,6 +120,8 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import * as CHECK_CATALOGUE from "../checks/bio-checks.mjs";
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for 3b's widened harvest. */
+import { moduleFiles } from "./extracted-sources.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -498,7 +500,14 @@ console.log("\n--- 3b. D-494 · the catalogue vs the WIDENED harvest (both sourc
 
 const FENCE_LITERAL = /"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g;
 const SITES = new Map();                       /* code -> [{ file, line }] */
-for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]]) {
+/* WIDENED 2026-09-26 (T3, legacy-tests): layer 2 of T3 extracted `record-core`, `membership` and `promotion` from
+   store.mjs into `src/<module>/`, taking MACHINE_CANNOT_REOPEN (promotion R21) with them. Each extracted file is
+   harvested UNDER ITS OWN NAME, so a row whose `where` still names `src/store.mjs` for a fence that moved is
+   reported as exactly that (list 2) rather than as minted nowhere. */
+const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
+  ...["record-core", "membership", "promotion"].flatMap(moduleFiles).map((f) =>
+    [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
+for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {
     if (!SITES.has(m[1])) SITES.set(m[1], []);
     const at = SITES.get(m[1]), line = lineOf(bare, m.index);
@@ -508,17 +517,17 @@ for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", IND
 
 /* A code this walk cannot name. Gated at empty rather than described. */
 const TEMPLATED = [];
-for (const [file, bare] of [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE]])
+for (const [file, bare] of HARVESTED)   /* T3 (legacy-tests), 2026-09-26: the widened harvest, above */
   for (const m of bare.matchAll(/`[^`\n]*(?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]*\$\{[^`\n]*`/g))
     TEMPLATED.push(`${file} L${lineOf(bare, m.index)}  ${m[0].slice(0, 80)}`);
 
 const CAT = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS;
 const CAT_CODES = Object.keys(CAT).sort();
-const whereFile = (w) => (/(src\/[A-Za-z.]+\.mjs)/.exec(String(w)) || [])[1] || null;
+const whereFile = (w) => (/(src\/[A-Za-z./-]+\.mjs)/.exec(String(w)) || [])[1] || null;   /* T3 (legacy-tests), 2026-09-26: a `where` may name src/<module>/x.mjs */
 const familyOf = (c) => (ROWS.get(c) || {}).family || null;
 
 console.log(`    MACHINE_FENCE_CHECKS holds ${CAT_CODES.length} row(s); the widened harvest finds `
-          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs`);
+          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs + src/{record-core,membership,promotion}/`);   /* T3 (legacy-tests), 2026-09-26 */
 for (const code of [...SITES.keys()].sort()) {
   const at = SITES.get(code).map((s) => `${s.file}:${s.line}`).join(", ");
   console.log(`      ${(familyOf(code) === "MACHINE_FENCE_CHECKS" ? "   " : "  *")} ${code.padEnd(34)} `

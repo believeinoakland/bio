@@ -21,6 +21,7 @@
  * bundle has and what the UX filters on, and the full frontmatter is kept as
  * JSON for the per-schema tail, queryable through json_extract.
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -146,13 +147,13 @@ const promote = (id, text, meta) => call("/promote", {
 await promote(INFO_ID, infoMd, {
   object_type: "information", group: "believe-in-oakland",
   title: "Sewer Service Fund transfer series", current_state: "collected",
-  created: "2026-07-18T22:00:00Z", last_updated: "2026-07-20T18:58:01Z",
+  created: docDate(infoMd, "created") ?? "2026-07-18T22:00:00Z", last_updated: docDate(infoMd, "last_updated") ?? "2026-07-20T18:58:01Z",
   criticality: "crucial",
 });
 await promote(PROB_ID, probMd, {
   object_type: "problem", group: "believe-in-oakland",
   title: "Did the franchise fee ever have lawful authority", current_state: "surfaced",
-  created: "2026-07-19T00:00:00Z", last_updated: "2026-07-19T00:00:00Z",
+  created: docDate(probMd, "created") ?? "2026-07-19T00:00:00Z", last_updated: docDate(probMd, "last_updated") ?? "2026-07-19T00:00:00Z",
 });
 
 console.log("\n--- the projection carries every field the UX filters on ---");
@@ -224,7 +225,7 @@ await call("/promote", {
   bundleId: INFO_ID, base: sha(infoMd), snapKey: "20260725T130000Z_projtest2", author: "seed",
   meta: { object_type: "information", group: "believe-in-oakland",
           title: "Sewer Service Fund transfer series", current_state: "collected",
-          created: "2026-07-18T22:00:00Z", last_updated: "2026-07-20T19:00:00Z",
+          created: docDate(infoMd2, "created") ?? "2026-07-18T22:00:00Z", last_updated: docDate(infoMd2, "last_updated") ?? "2026-07-20T19:00:00Z",
           criticality: "crucial" },
   files: [{ path: "bundle.md", text: infoMd2, bytes: infoMd2.length, sha256: sha(infoMd2) }],
   refs: [], register: [],
@@ -250,7 +251,7 @@ const badId = "INFO-2026-0003-unparseable";
 const badMd = `---\nid: ${badId}\nthis line is not a key\n---\n\n## Summary\n`;
 const bad = await promote(badId, badMd, {
   object_type: "information", group: "believe-in-oakland", title: "bad",
-  current_state: "collected", created: "2026-07-19T00:00:00Z", last_updated: "2026-07-19T00:00:00Z",
+  current_state: "collected", created: docDate(badMd, "created") ?? "2026-07-19T00:00:00Z", last_updated: docDate(badMd, "last_updated") ?? "2026-07-19T00:00:00Z",
 });
 t("the promotion still succeeds", bad.result.ok, true);
 const bp = (await call(`/projection?id=${badId}&viewer=class:member`)).result;

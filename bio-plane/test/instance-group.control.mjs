@@ -160,6 +160,7 @@ const run = (name) => {
     cpSync(join(PLANE, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
     for (const [file, from, to] of arm.patches) {
       /* A bare name is a module of src/; "checks/..." is the catalogue the copy's plane imports. */
       const p = file.includes("/") ? join(tree, "bio-plane", file) : join(tree, "bio-plane", "src", file);

@@ -59,6 +59,7 @@
  * here drives a project's conclusion into a case. The sharing edge is
  * hand-authored into `references[]`, REC-72's open finding (current.test.mjs).
  * ========================================================================= */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
@@ -192,7 +193,7 @@ const promote = async (id, text, type, state = null, base = null) => POST(`op=pr
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
   meta: { object_type: type, group: "believe-in-oakland",
           current_state: state ?? (type === "inquiry" ? "open" : type === "project" ? "forming" : "collected"),
-          created: NOW, last_updated: LATER } });
+          created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
 const mustPromote = async (id, text, type, state = null) => {
   const r = await promote(id, text, type, state);
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
@@ -207,7 +208,7 @@ const createProject = async (name, text) => {
     base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
   if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
   return r.bundleId;
 };
@@ -617,7 +618,7 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
     bundleId: B, base: await shaOf(B), snapKey: "99991231T235959Z_tamper",
     files: [{ path: "bundle.md", text: cut, bytes: cut.length, sha256: sha(cut) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "forming", created: NOW, last_updated: LATER } });
+            current_state: "forming", created: docDate(cut, "created") ?? NOW, last_updated: docDate(cut, "last_updated") ?? LATER } });
   t("the fixture's cut really removed an entry (else the next arm proves nothing)", entriesIn(cut), 2);
   t("the rewrite lands (promote gates on shape, not on the catalogue's history rules)", tamper?.ok, true);
   const afterAudit = await auditB();

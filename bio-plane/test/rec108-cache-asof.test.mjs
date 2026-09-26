@@ -57,6 +57,7 @@
  * (D-43: `op=invitelook` shipped with a ReferenceError while 1276 assertions
  * passed).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -151,7 +152,7 @@ const promote = async (id, text, type, { register = [], reading = null } = {}) =
     snapKey: `20260916T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected",
-            created: NOW, last_updated: LATER },
+            created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
     files, register });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
   HEAD.set(id, r.bundleSha);

@@ -40,6 +40,7 @@
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
  * not on PATH rather than dying mid-run (ratify.test.mjs's precedent, D-93).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -241,7 +242,7 @@ const promote = async (id, md, type, state, base = null, extra = {}) => rP(await
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `t ${id}` } : {}),
-          current_state: state, created: NOW, last_updated: LATER },
+          current_state: state, created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...(extra.files || [])],
   register: extra.register || [],
 }));

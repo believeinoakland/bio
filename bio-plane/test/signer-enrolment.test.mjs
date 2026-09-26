@@ -71,6 +71,7 @@ import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process an
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's corpus with its extracted modules */
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -89,7 +90,9 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R70, K57): the signer roster and the predicate moved to
+   `src/membership/`, so §5's structural pin reads `store.mjs` AND the module extracted from it. */
+const STORE_SRC = storeCorpus(["membership"]);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -360,13 +363,20 @@ console.log("\n--- 5. one predicate, and the roster is not a second opinion ---"
    anywhere can see a FAITHFUL INLINE COPY of a rule, so the reader count is
    pinned EXACTLY. If you add a fourth reader this line fails and you are meant to
    come and say which site you added and why. Do not relax it to a floor. */
-const readers = STORE_SRC.split("${Store.SIGNER_ATTESTS}").length - 1;
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R70, K57 as it said): the three readers are now reached
+   through ONE door — the roster (`signerList`) splices the constant, and `gateFacts` and `caseDocumentFacts` call
+   membership's `attestingKeys()`, the constant's one other splice. So the pin counts TWO splices of the constant
+   (the roster and `attestingKeys`), TWO callers of `attestingKeys()` (the gate's facts and a case's document facts)
+   and ONE occurrence of the text: the same three readers of one predicate, counted exactly, never a floor. */
+const readers = STORE_SRC.split("${Store.SIGNER_ATTESTS}").length - 1 + STORE_SRC.split("${Membership.SIGNER_ATTESTS}").length - 1;
+const doorCallers = STORE_SRC.split(".attestingKeys()").length - 1;
 const literals = STORE_SRC.split("s.status='active' AND m.status='active'").length - 1;
-console.log(`    STRUCTURE: ${readers} reader(s) of Store.SIGNER_ATTESTS · ${literals} occurrence(s) of the predicate's text`);
-t("the predicate has EXACTLY three readers — the roster, `gateFacts` and `caseDocumentFacts` — and its "
+console.log(`    STRUCTURE: ${readers} splice(s) of SIGNER_ATTESTS · ${doorCallers} caller(s) of attestingKeys() · ${literals} occurrence(s) of the predicate's text`);
+t("the predicate has EXACTLY three readers — the roster, `gateFacts` and `caseDocumentFacts` (the latter two "
++ "through membership's `attestingKeys()`, R70) — and its "
 + "text occurs ONCE, in the constant itself: a faithful inline copy at any of them is invisible to "
 + "every behavioural assertion in this file and visible only here",
-  [readers, literals], [3, 1]);
+  [readers, doorCallers, literals], [2, 2, 1]);
 t("and the search that says so COMPILED over a real file rather than quietly matching nothing",
   STORE_SRC.length > 2_000_000, true);
 

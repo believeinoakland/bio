@@ -98,6 +98,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { STATES } from "../checks/bio-checks.mjs";
+import { docDate } from "./docdates.mjs";   /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R12) */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- caselifecycle ---");
@@ -245,7 +246,10 @@ const promote = async (tok, id, md, type, state = "open", extra = {}) => rP(awai
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `t ${id}` } : {}),
-          current_state: state, created: NOW, last_updated: LATER },
+          /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R12): the envelope's dates are the document's own where it
+             states them — block 8 re-sends a finding's LIVE bytes, whose `last_updated` op=conclude moved, and a fixed
+             envelope date contradicting it is now refused ENVELOPE_DATES_DISAGREE. */
+          current_state: state, created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
   register: extra.register || [],
 }));
@@ -716,12 +720,11 @@ console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project'
      is the thing that is supposed to be allowed. Now it parses the array the
      way `hygiene.test.mjs`'s own D-113 census does and asks the question it
      meant to ask. */
-  const TABLES_ARR = /const TABLES\s*=\s*\[([\s\S]*?)\]/.exec(STORE_SRC);
-  t("the purge list is locatable in store.mjs — the parse this assertion rests on",
-    !!TABLES_ARR, true);
-  t("and the table rides the purge list, so a scratch reset does not report scope ALL while a case "
-  + "still reads as flagged (D-113)",
-    /"case_revision_flags"/.test(TABLES_ARR ? TABLES_ARR[1] : ""), true);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "the purge list is locatable in store.mjs — the
+     parse this assertion rests on" and "and the table rides the purge list, ..." parsed purge's `const TABLES = [` out
+     of store.mjs; purge moved to record-core, where each module declares its tables. The claim is now MEASURED at the
+     end of this suite (after block 10, so the fixture the later blocks rest on is not purged): a whole-store purge
+     over a store holding flags leaves op=caseflags, which reads the table directly, with none. */
 }
 
 /* ===================================================================== 7
@@ -901,6 +904,17 @@ console.log("\n--- 10. op=caseflags' bound, in bounds.test.mjs's own loop shape 
   t("op=caseflags: an over-ask is answered at the CEILING and the ceiling is what is published — a "
   + "caller is never told they got more than they did",
     [over.limit, over.truncated], [500, false]);
+}
+
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): block 6's purge-list arm, measured (see block 6). */
+console.log("\n--- 11. a whole-store purge takes the revision flags (D-113) ---");
+{
+  const held = await anonFlags("limit=500");
+  const purged = rP(await (await mf.dispatchFetch(`http://x/api/?op=purge&token=adm-case4&confirm=bio`)).json());
+  const left = await anonFlags("limit=500");
+  t("and the table rides the purge list, so a scratch reset does not report scope ALL while a case "
+  + "still reads as flagged (D-113) — measured: flags were there to clear, the purge reported ALL, none is left",
+    [held.count > 0, purged.scope ?? purged.error ?? null, left.count], [true, "ALL", 0]);
 }
 
 /* NEGATIVE CONTROL — RUN 2026-09-10 (case4-lifecycle-flag). SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, each RUN, and each restore verified by CONTENT and by sha256 against a uniquely-named per-arm pristine copy taken INSIDE THIS WORKTREE (store.mjs 1,764,229 bytes, sha256 496745342a0c8726…; this file's own sha is not quoted, because a file cannot state its own). The driver is `test/caselifecycle.control.mjs` — COMMITTED, so every arm re-runs in one step with `node test/caselifecycle.control.mjs [arm]`. WHOLE (baseline, nothing armed) = 66 pass, 0 fail. **THE FIGURES BELOW WERE RE-READ AFTER THE COMMIT AND THEY MOVED — recorded rather than left as first written, because a hand-carried number nobody re-measures is this project's most-repeated defect and an NC block is exactly where it hides.** Block 10 (the bound, driven here for `bounds.test.mjs`) was added after the first control run, so every tally rose by six.

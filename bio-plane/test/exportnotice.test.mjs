@@ -17,11 +17,8 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, mkdtempSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { NAMESPACES, allocations, corpusFloor, mint } from "../../tools/mintid.mjs";
 import { catalogueIdOf, classOfKind } from "../src/queuestate.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -152,19 +149,9 @@ const log2 = await GET("op=exportlog&token=t-admin-1");
     Object.values(others).map((v) => v.length), [0, 0, 0]);
 }
 
-console.log("\n--- `mintid N` mints, and the allocation site is the one the catalogue holds ---");
-{
-  t("N is a registered namespace, code-referenced", NAMESPACES.N?.kind, "code");
-  const a = allocations("N");
-  t("its allocation site is graded and finds N-1 in queuestate.mjs, once",
-    [a.covered, a.sites.map((s) => s.id), a.duplicates], [true, ["N-1"], []]);
-  const f = corpusFloor("N");
-  t("the floor reads the live corpus (1)", [f.floor, f.missing], [1, []]);
-  /* Minted into a SCRATCH ledger, so the suite burns no real id. */
-  const scratch = mkdtempSync(join(tmpdir(), "d52-idalloc-"));
-  const r = mint("N", { who: "exportnotice.test", why: "suite arm", env: { BIO_IDALLOC_DIR: scratch } });
-  t("`mintid N` mints the next number above the catalogue's floor", [r.ok, r.ids?.[0] ?? r.id], [true, "N-2"]);
-}
+/* RETIRED 2026-09-26 (T3, legacy-tests; N14, K84 (3)): the arm "`mintid N` mints, and the allocation site is the one
+   the catalogue holds" drove the old process's id minter (`tools/mintid.mjs`: its namespace registry, allocation
+   grading, corpus floor and a scratch mint), not the product; it retires with that tool. The notice itself is above. */
 
 await mf.dispose();
 console.log(`\nexportnotice: ${pass} pass, ${fail} fail`);

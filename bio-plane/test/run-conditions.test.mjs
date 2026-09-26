@@ -385,7 +385,11 @@ const ROLE = {
      `aiRunRead` by calling it, which ARM W8 drives. ARM W4's three publishers are untouched. */
   "#biasDebtPending":  "HOUSEKEEPS",
   "#biasDebtSweep":    "SELECTS",
-  purge:               "HOUSEKEEPS",
+  /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R21, R22): `purge`'s cell is REMOVED, and ARM W3b named it,
+     on `#counts`' precedent above. Purge moved to `record-core`, which deletes from every DECLARED table with one
+     generic statement; the store now DECLARES `ai_runs` to it (`{ name: "ai_runs", keys: [] }`, whole-store only)
+     and its `purge` wrapper no longer names the table. It reaches `ai_runs` only as a caller of a helper, so it is
+     not a reader this walk finds, and callers are not in this table. Still HOUSEKEEPS in what it does. */
   /* PL-13's, AND ARM W3 IS AGAIN WHY IT IS HERE — it arrived as a FAILURE
      naming itself, on the item's first full battery, which is the third time
      this ratchet has caught a new reader rather than absorbing one.

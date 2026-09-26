@@ -33,6 +33,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, deriveInquiryTitle, withProducingGroup } from "../checks/bio-checks.mjs";
+/* T3 (legacy-tests), 2026-09-26: the document's own dates for the envelope (promotion R12). */
+import { docDate } from "./docdates.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -163,7 +165,11 @@ const mkOn = (c) => (id, text, type, title) => c("/promote", {
      state, and is now refused; a project document here states no title, so the label stays its only name. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: title ?? `Bundle ${id}` } : {}),
           current_state: type === "inquiry" ? "open" : "surfaced",
-          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
+          /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R12): the envelope's dates are the document's own where
+             it states them — the intake page's document states its own `created`, which the fixed dates contradicted
+             (ENVELOPE_DATES_DISAGREE). */
+          created: docDate(text, "created") ?? "2026-07-01T00:00:00Z",
+          last_updated: docDate(text, "last_updated") ?? "2026-07-02T00:00:00Z" },
 });
 const mk = mkOn(call);
 const errorsOf = async (id) => {
@@ -340,12 +346,23 @@ console.log("\n--- 6. the boot normaliser converts pre-REC-10 rows (site 2, exer
      D-510: it tested for the ABSENCE of the old spelling, so when the marker VANISHED the patch armed NOTHING
      and this arm went GREEN — the anchor-that-did-not-arm WORKER.md names, caught only because
      `reopen.test.mjs` pins the same site with a PRESENCE test and went red. It is a presence test now. */
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R3, R9): `promote` moved to `src/promotion/`, which decides the
+     type from the document (normalised) and writes the row through record-core's `commit`; store.mjs keeps only the
+     one-line door `promote(pkg) { return promotionOf(this.ctx).promote(pkg); }`, and the module files are read from
+     disk, so they cannot be patched through this script. The promote-side neutering is therefore made AT THAT DOOR,
+     in store.mjs, to the same effect the old patch had: the row a promotion leaves carries the ENVELOPE's raw
+     spelling (`meta.object_type`) rather than the normalised type. The boot normaliser's neutering is unchanged.
+     Both are PRESENCE tests, per D-510's correction above. */
+  const DOOR = "  promote(pkg) {\n    return promotionOf(this.ctx).promote(pkg);\n  }";
+  const RAW_DOOR = "  promote(pkg) {\n    const r = promotionOf(this.ctx).promote(pkg);\n"
+    + "    if (r && r.ok && pkg && pkg.meta && pkg.meta.object_type)\n"
+    + "      this.sql.exec(\"UPDATE bundles SET object_type=? WHERE bundle_id=?\", pkg.meta.object_type, pkg.bundleId);\n"
+    + "    return r;\n  }";
   const neutered = STORE_SRC
     .replace("Object.entries(LEGACY_TYPE_ALIASES))", "[])")
-    .replace("const projectedType = promotedType;",
-             "const projectedType = meta.object_type;");
+    .replace(DOOR, RAW_DOOR);
   t("the neutering patch found both sites (markers moved if this fails)",
-    neutered !== STORE_SRC && neutered.includes("const projectedType = meta.object_type;")
+    neutered !== STORE_SRC && neutered.includes(RAW_DOOR)
       && !neutered.includes("Object.entries(LEGACY_TYPE_ALIASES))"), true);
   const mkMf = (src) => new Miniflare({
     modules: true, script: src, modulesRoot: "/", scriptPath: SRC("store.mjs"),

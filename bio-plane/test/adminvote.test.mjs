@@ -61,6 +61,7 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
+import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's corpus with its extracted modules */
 import { fileURLToPath } from "node:url";
 import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
 import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
@@ -412,7 +413,10 @@ t("and nothing cai asked for landed: gus is still an administrator, otto is stil
  *     not changed here — it is a reach change, which is not this row.
  * ========================================================================= */
 console.log("\n--- 8. REC-156: `op=memberadd`'s `by` is the server's, and the store reads only the stamp ---");
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "latin1");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): the store's `memberadd` relay moved into
+   `membershipOps` in `src/membership/`, whose receiver is `m` (the Membership), not `this`; the pin reads `store.mjs`
+   AND that module, and names either receiver. The relay's shape it asserts is unchanged. */
+const STORE_SRC = storeCorpus(["membership"], "latin1");
 /* 8a. STRUCTURE — the stamp and the relay, each a half without which the other is
    a mechanism believed on the strength of its existence. */
 /* CORRECTED 2026-09-23 (REC-159), never exempted: the disjunct was `op === "memberadd"`, and REC-159
@@ -428,7 +432,7 @@ t("STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct of the ONE co
   [true, true]);
 t("STRUCTURE: the store's `memberadd` relay spreads the body and THEN sets `by` from the query, so a "
 + "`by` in the body can never win — D-136's shape for the three ops beside it",
-  /memberadd: \(\) => this\.memberAdd\(\{ \.\.\.\(body \|\| \{\}\), by: url\.searchParams\.get\("by"\) \}\)/.test(STORE_SRC),
+  /memberadd: \(\) => (?:this|m)\.memberAdd\(\{ \.\.\.\(body \|\| \{\}\), by: url\.searchParams\.get\("by"\) \}\)/.test(STORE_SRC),
   true);
 t("BOUNDARY, kept and its reason CORRECTED: `memberadd` is NOT in GOVERNANCE_ACTIONS — not because its "
 + "`by` is unstamped (8a) but because that array also spreads MEMBER-set reach and the operator fence, "

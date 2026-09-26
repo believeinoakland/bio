@@ -40,6 +40,7 @@
  * the comparison is not driven — the reader counts `/2` documents only and says so in its comment. Nothing
  * is live (no deploy is this item's).
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
@@ -194,13 +195,13 @@ const promote = async (id, text, type, base = null) => POST(`op=promote&token=${
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
   meta: { object_type: type, group: "believe-in-oakland",
-          current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
+          current_state: type === "inquiry" ? "open" : "collected", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: "project", group: "believe-in-oakland",
-            current_state: "investigating", created: NOW, last_updated: LATER } });
+            current_state: "investigating", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
   if (!r?.ok || typeof r.bundleId !== "string") await bail(`create project ${label}`, r);
   return r.bundleId;
 };
