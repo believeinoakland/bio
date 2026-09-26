@@ -23,7 +23,11 @@ Sent 2026-09-26 as one `QUESTION`. I carry on with every entry on the best readi
 - **Q7** · ANSWER 18:40 UTC (K64): R30, R31, R32's checks move here from `legacy-checks` once the `from` list is certified (a CHANGE to come); R18 is tested against the catalogue as it stands.
 - **CHANGE** 18:43 UTC (K65): R30 reads write order from `seq`. Merged.
 
-## forkProject, in requirement form (Q5; for BOB to state as R41)
+- **CHANGE** 18:47 UTC (K66): `from` is `["legacy-checks", "legacy-store"]`; C-4.2, C-17.2, C-18.8 and C-20.1 move here. Done (below).
+- **Q5, Q8** · ANSWER 18:51 UTC (K68): `forkProject` stated as R41–R44 (tested); membership R74 `participation`, supplied by legacy-store until MEMBERSHIP #1 merges.
+- **Early merge of record-core** (bde7923e): merged; promotion reaches record-core through `recordOf(ctx)`; the record port is gone.
+
+## forkProject, in requirement form (Q5; stated by BOB as R41–R44)
 
 **`forkProject({projectId, newId, title, by, viewer, visibility}) → {ok:true, projectId, newId, title, origin, rel:"derived_from", owner, participantsCopied:0, bundleSha, visibility} | {ok:false, reason, ...}`**
 
@@ -40,6 +44,7 @@ Sent 2026-09-26 as one `QUESTION`. I carry on with every entry on the best readi
 - **Entries applied (on the readings above):** R11 (D-578, D-628, D-707), R12 (D-615, D-692), R13's revision refusal (D-726), R14 (D-738), R15 (D-546, bias included), R16's fact, R17 (D-741), N16's promotion share (fork, name uniqueness; the fork now states its own `created`, D-615's fork fix), N17 (`CAS_STALE` carries C-33.21).
 - **R31 (N8, K10, K62)** · `bio-plane/src/promotion/release.mjs`: C-18.8 as promotion's own check. Every SSHSIG verification, the registry root's included, goes through `signatures.verifySshsig`; principal resolution (`allowed_signers` with its validity windows) and the canonical message (`releaseMessage`) stay with the check. `runGate` runs it after `checkBundle` and replaces the catalogue's C-18.8 findings with its own, so a release is judged once until the catalogue's copy leaves `bio-checks.mjs` (K64).
 - **R18 (K64)** · tested through the whole write path (the store, reaching promotion and its registered legacy step): every catalogue row sited at the promote write is met by a probe, and the two catalogue functions the write relays whole (`basisVersionFindings`, `checkBiasExtension`) are shown relayed finding for finding.
-- **Waiting on BOB:** the CHANGE setting `from` to `["legacy-checks", "legacy-store"]` (K64), for R30 and R32; record-core's and membership's merges, to switch the ports to their factories.
-- **Temporary code, to remove before completion:** the record port and the membership port in `legacy-store`'s constructor (`store.mjs`, the `promotionOf(ctx, {record, membership})` block).
+- **R30, R32, and R31's move (K64, K66)** · `src/promotion/history.mjs` (C-20.1, C-17.2, C-4.2) and `release.mjs` (C-18.8), with `record-checks.mjs` running all four over one image. `bio-checks.mjs` loses them and the hand-written verifier (909 lines removed, none added). The gate runs them after `checkBundle`; the store's audit runs them through `recordAudit` (record-core's `auditPass`, then the moved checks over the same page; a bundle they find in error is re-judged whole so the counts stay exact). C-20.1 and C-17.2 walk `seq` and say when an image carries none (R30); C-4.2 reads an undeclared edge as made under earlier rules only where the record's own history holds the move at or before its type's fence, computed from the image itself (R32). The fence dates are `bias` 2026-09-24 (D-468, landed) and every other type 2026-09-26 (R15, this job). One C-4.2 arm stays in the catalogue: the "state_history[i] is not an object" guard, whose `continue` C-2.6's timestamp check needs (removal only); promotion does not repeat it.
+- **CATALOG_VERSION 1.31.0 → 1.32.0** (R34): the gate runs the same checks, four of them changed. Suites that pin the version or count the catalogue's own checks (`d470-catalog-census.test.mjs` and its control) are legacy-tests' (REPORT).
+- **Temporary code, to remove before completion:** the membership port in `legacy-store`'s constructor (`promotionOf(ctx, { membership: … })`), switched to `membershipOf(ctx)` at MEMBERSHIP #1's CHANGE.
 - **Push guard.** The old process's `pre-push` hook (`tools/pushguard.mjs`, corpuscheck) refused a push over 21 unrelated docs' Status dates. CLAUDE.md retires the push guard, so this job pushes with `--no-verify`.
