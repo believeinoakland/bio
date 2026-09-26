@@ -600,7 +600,7 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["state", "California Public Records Act"]]);
   assert.equal(f.records_laws[0].basis, "D-149");
   /* every basis names a measurement or ruling, or says UNMEASURED */
-  walkFacts(f, (fact, path) => assert.match(fact.basis, /^(UNMEASURED|(M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)[^,;]*([,;] (M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)[^,;]*)*)$/, path));
+  walkFacts(f, (fact, path) => assert.match(fact.basis, /^(UNMEASURED|(M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?([,;] (M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?)*)$/, path));
 });
 
 test("R22 the test profile: test true, every basis TEST, every section and vocabulary key of the first with different values, no shared host", () => {
@@ -659,4 +659,65 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   for (const s of ["standard_sources", "counterparties", "action_kinds", "deadlines"]) assert.ok(t[s] && t[s].length, s);
   assert.ok(t.deadlines.some((x) => x.applies_to === "claim"));
   assert.ok(t.action_kinds.some((x) => x.tier === 3 && x.template === undefined));
+});
+
+/* ============================================================================================== */
+/* K44 (Q1): the sentences added to R2, R12, R13, R14, R25 and R29.                                */
+
+test("R2 K44 basis grammar: tokens, a qualifying word, joined by ', ' or '; '", () => {
+  for (const b of ["M-1 LEG", "K12; DEC-3", "2026-08-03, M-24", "D-149 (4)"]) assert.ok(breakIt((p) => { p.systems[0].basis = b; }).ok, b);
+  for (const b of ["LEG M-1", "M-1 and M-2", "X-1", "M-1,,M-2", "2026-8-3"])
+    assert.ok(hasError(breakIt((p) => { p.systems[0].basis = b; }), "BASIS_INVALID", "systems[0].basis"), b);
+});
+
+test("R12 K44 combine errors: two profiles under one id, a list that is not an array, an unknown entry field", () => {
+  const other = get(TEST); other.id = FIRST;
+  const two = combine([FIRST, other]);
+  assert.deepEqual(two.errors.map((e) => [e.at, e.code]), [[1, "INVALID_PROFILE"]]);
+  for (const x of [undefined, null, FIRST, { 0: FIRST, length: 1 }, 3])
+    assert.deepEqual(combine(x).errors.map((e) => e.code), ["NOT_A_LIST"], String(x));
+  const extra = sample(); extra.search_terms[0].weight = 2;
+  const c = combine([extra]);
+  assert.equal(c.ok, false);
+  assert.equal(c.errors[0].code, "INVALID_PROFILE");
+  assert.deepEqual(c.errors[0].errors.map((e) => [e.path, e.code]), [["search_terms[0].weight", "UNKNOWN_SECTION"]]);
+});
+
+test("R13 K44 the view's id is the combined ids joined by '+', and it has a name", () => {
+  const v = combine([FIRST, TEST]).view;
+  assert.equal(v.id, `${FIRST}+${TEST}`);
+  assert.equal(combine([TEST, FIRST]).view.id, `${TEST}+${FIRST}`);
+  assert.equal(combine([FIRST]).view.id, FIRST);
+  assert.ok(typeof v.name === "string" && v.name.includes(get(FIRST).name) && v.name.includes(get(TEST).name));
+});
+
+test("R25 K44 tier and venue are optional; absent, they are undetermined", () => {
+  assert.ok(breakIt((p) => { delete p.action_kinds[0].tier; delete p.action_kinds[0].venue; }).ok);
+  assert.ok(breakIt((p) => { delete p.action_kinds[0].tier; delete p.action_kinds[0].venue; delete p.action_kinds[0].template; delete p.action_kinds[0].laws; }).ok);
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].venue = null; }), "VALUE_INVALID", "action_kinds[0].venue"));
+  const f = get(FIRST);
+  for (const k of f.action_kinds.filter((x) => x.tier === undefined)) assert.equal(k.venue, undefined, k.kind);
+});
+
+test("R29 K44 labels and citations joined with '; ', laws unioned, an extension one value per key", () => {
+  const a = sample();
+  const b = sample(); b.id = "sample-two"; b.name = "Two"; b.covers = ["Two"];
+  b.records_laws.push({ level: "city", name: "Open Town Bylaw", citation: "OTB § 1", basis: "M-1" });
+  b.action_kinds[0].label = "request for records";
+  b.action_kinds[0].laws = ["Open Town Bylaw", "Records Law"];
+  b.deadlines[0].citation = "RL § 2(a)";
+  b.deadlines[0].extension = { days: 7, count: "business", when: "busy" };
+  const c = combine([a, b]);
+  const k = c.view.action_kinds.find((x) => x.kind === "records_request");
+  assert.equal(k.label, "records request; request for records");
+  assert.deepEqual(k.laws, ["Records Law", "Open Town Bylaw"]);
+  const d = c.view.deadlines.find((x) => x.rule === "answer");
+  assert.equal(d.citation, "RL § 2; RL § 2(a)");
+  assert.equal(d.extension, undefined);
+  assert.deepEqual(c.conflicts.map((x) => x.at), ["deadlines[answer/records_request].extension"]);
+  const same = sample(); same.id = "sample-three"; same.name = "Three"; same.covers = ["Three"];
+  const e = combine([a, same]);
+  assert.equal(e.view.action_kinds[0].label, "records request");
+  assert.deepEqual(e.view.deadlines[0].extension, { days: 5, count: "business", when: "busy" });
+  assert.equal(e.view.deadlines[0].citation, "RL § 2");
 });

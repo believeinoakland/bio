@@ -31,9 +31,9 @@ const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const KIND_RE = /^[a-z][a-z0-9_]*$/;
 const HEX64 = /^[0-9a-f]{64}$/i;
 /* R2: a basis names a measurement (`M-157`, or a dated entry `2026-07-30`) or a ruling (`D-149`,
-   `DEC-13`, `K4`); several are joined by ", " or "; ", each optionally followed by a qualifier that
-   says which part of it (`M-119 LEG`, `M-157 (4)`). `UNMEASURED` stands alone. */
-const BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?:\s+[^,;]+)?$/;
+   `DEC-13`, `K4`); several are joined by ", " or "; ", each optionally followed by one word that
+   says which part of it (`M-119 LEG`, `M-157 (4)`). `UNMEASURED` stands alone (K44). */
+const BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const isStr = (v) => typeof v === "string" && v.trim().length > 0;
