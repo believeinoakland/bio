@@ -157,6 +157,28 @@ function pageResources(doc, pageMap, depth = 0) {
   return parent ? pageResources(doc, parent, depth + 1) : null;
 }
 
+/** An inheritable page attribute (/MediaBox, /Rotate): the leaf's own value, else
+ *  the nearest ancestor's, walking /Parent. `undefined` when no node carries it.
+ *  D-671: /Rotate was read from the leaf only, so a page inheriting its rotation
+ *  from /Pages rendered un-turned. */
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap;
+  for (let d = 0; p && d <= 32; d++) {
+    if (p[key] !== undefined) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return undefined;
+}
+
+/** The page's /Rotate, normalised to 0/90/180/270. Absent is 0; a value that is
+ *  not a multiple of 90 is `null` — unreadable, never guessed. */
+function pageRotate(doc, pageMap) {
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  if (r === undefined) return 0;
+  if (!Number.isInteger(r) || r % 90 !== 0) return null;
+  return ((r % 360) + 360) % 360;
+}
+
 /** The page's content stream bytes, concatenated when /Contents is an array. */
 async function pageContentText(doc, pageMap) {
   const c = doc.resolve(pageMap.Contents);
@@ -281,9 +303,7 @@ export async function analyzePage(doc, pageIndex) {
   const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
 
   const mediaBox = (() => {
-    let m = doc.resolve(pageMap.MediaBox);
-    let p = pageMap, d = 0;
-    while (!m && d++ < 32) { p = doc.dictOf(p.Parent); if (!p) break; m = doc.resolve(p.MediaBox); }
+    const m = inheritedAttr(doc, pageMap, "MediaBox");
     if (!m || m.t !== "arr" || m.items.length < 4) return null;
     const v = m.items.map((x) => numOf(doc, x));
     if (v.some((x) => x == null)) return null;
@@ -303,7 +323,7 @@ export async function analyzePage(doc, pageIndex) {
     drawnImageNames: drawnImages,
     imageCount: images.length,
     mediaBox,
-    rotate: numOf(doc, pageMap.Rotate) ?? 0,
+    rotate: pageRotate(doc, pageMap),
   };
 }
 
@@ -332,6 +352,9 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
       : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
   }
 
+  if (a.rotate === null) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
+  }
   if (a.hasTextOps && !opts.allowTextPage) {
     return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
   }
@@ -348,7 +371,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   }
 
   const im = a._images[0];
-  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate || 0 });
+  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
 
   return {
@@ -363,7 +386,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
      * apply the page's own /Rotate says so HERE rather than leaving a consumer
      * to discover it in its output. See the note on rotateBilevel. */
     upright: out.upright,
-    rotate_deg: a.rotate || 0,
+    rotate_deg: a.rotate,
     source: {
       filters: im.filters,
       colorSpace: im.colorSpace,
@@ -446,6 +469,9 @@ export async function decodeImage(doc, im, opts) {
     const K = numOf(doc, p.K) ?? 0;
     const columns = numOf(doc, p.Columns) ?? 1728;
     const rows = numOf(doc, p.Rows) ?? im.height;
+    /* Mixed mode (K>0) needs the per-row tag bit only an EOL carries, so it has
+     * no decoder here: a filter refusal, not a failed decode. */
+    if (K > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
     const blackIs1 = doc.resolve(p.BlackIs1) === true;
     const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
 
@@ -710,10 +736,15 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
     let a0 = -1;
     let color = 0;                     // 0 = white
     let guard = 0;
+    /* A row the data does not finish — the stream ends, or a code no table holds
+     * — is NOT kept: decoding stops before it, so the caller sees fewer rows and
+     * answers TRUNCATED_IMAGE_DATA. Before this, an unknown code ended the row as
+     * white without consuming a bit, and every remaining row was minted white. */
+    let broken = false;
 
     while (a0 < columns) {
       if (++guard > columns * 4 + 64) throw new Error("row did not terminate");
-      if (br.eof) break;
+      if (br.eof) { broken = true; break; }
 
       if (twoD) {
         const w = br.peek(7);
@@ -729,7 +760,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
           const s = a0 < 0 ? 0 : a0;
           const r1 = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
           const r2 = readRun(br, color === 0 ? BLACK_ALL : WHITE_ALL);
-          if (r1 == null || r2 == null) { a0 = columns; break; }
+          if (r1 == null || r2 == null) { broken = true; break; }
           const m1 = Math.min(columns, s + r1);
           const m2 = Math.min(columns, m1 + r2);
           cur.push(m1, m2);
@@ -748,7 +779,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
         } else if (w.startsWith("0000010")) {     // VL3
           br.skip(7); a1 = b1(ref, a0, color) - 3;
         } else {
-          a0 = columns; break;                    // EOFB / unknown: end the row
+          broken = true; break;                   // EOFB / unknown: the data ends here
         }
         a1 = Math.max(0, Math.min(columns, a1));
         cur.push(a1);
@@ -757,7 +788,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
       } else {
         const s = a0 < 0 ? 0 : a0;
         const run = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
-        if (run == null) { a0 = columns; break; }
+        if (run == null) { broken = true; break; }
         const m = Math.min(columns, s + run);
         cur.push(m);
         a0 = m;
@@ -765,7 +796,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
       }
     }
 
-    if (cur.length === 0 && br.eof) break;
+    if (broken) break;
 
     const row = new Uint8Array(rowBytes).fill(0xff);   // start all white
     let pos = 0, c = 0;

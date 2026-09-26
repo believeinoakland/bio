@@ -91,7 +91,7 @@ const DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
  * `Object.freeze(["bio", SCRATCH])` in code, so the fact this member states — "no such namespace exists" — is the
  * same fact on every instance it can be bound to (D-456, C-78.1, IC-237; the member side for `agent-worker` is
  * D-462/IC-253 and this is its I6 half). It is kept here as a COPY because a fleet member cannot import the
- * plane's `index.mjs`, and a copy ages; `test/pdf-worker.test.mjs` reads the plane's `NAMESPACES` from its source
+ * plane's `index.mjs`, and a copy ages; `test/structure.test.mjs` reads the plane's `NAMESPACES` from its source
  * and requires this set to equal it, so the day the plane gains a namespace this member's suite goes red. The set
  * is exact and case-sensitive for the plane's reason: a Durable Object name, and an R2 key, is an exact string.
  *

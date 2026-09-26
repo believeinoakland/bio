@@ -33,8 +33,8 @@
     },
     {
       "path": "src/index.mjs",
-      "bytes": 13144,
-      "sha256": "c4eddfded632ff529e337f52f6590e0a7f842136a0a0b8cf49780199390bb255"
+      "bytes": 13143,
+      "sha256": "f27a075872d074bc00c83f004e22881644a21cada0c3c35b30722793e4bb8d17"
     }
   ],
   "vendoredInputs": [
