@@ -46,11 +46,13 @@
 - N51 · 2026-09-26 · **record-core**: `auditPass` offers a registration for later modules' audit checks (the K31 pattern), so `promotion.recordAudit` stops re-judging only the bundles the moved checks flag. Reported by PROMOTION #1.
 - N52 · 2026-09-26 · **affordances**: import promotion's `REOPENABLE_FROM` instead of keeping its own. Reported by PROMOTION #1.
 - N53 · 2026-09-26 · **skills**, **agent-worker**, **control-plane** (K81): the skills tests that read `agent-worker` and `index.mjs` move into those modules' own tests.
-- N54 · 2026-09-26 · **ai-runs**, **run-productions** (K82): BOB splits `build/requirements/ai-runs.md` into `ai-runs.md` and `run-productions.md` (`op=suggest` and the extract proposals), adds `run-productions` after `ai-runs` in `modules.json`, before Bob approves either.
+- N54 · 2026-09-26 · DONE (K86) · **ai-runs**, **run-productions** (K82): BOB splits `build/requirements/ai-runs.md` into `ai-runs.md` and `run-productions.md` (`op=suggest` and the extract proposals), adds `run-productions` after `ai-runs` in `modules.json`, before Bob approves either.
 - N55 · 2026-09-26 · DONE (K85) · **inquiry**, **citation** (K83): BOB splits `build/requirements/inquiry.md` into `inquiry.md` and `citation.md` (cite, sever, reinstate), adds `citation` directly after `inquiry` in `modules.json`, before Bob approves either.
 - N56 · 2026-09-26 · **promotion** (K83): a read `fact(name, ...args)` of facts registered with it (R40), for later modules; and D-592 (`reopen`), re-targeted to promotion.
 - N57 · 2026-09-26 · **legacy-tests** (K84): a sweep of the 227 `*.control.mjs` and 99 `nc-*.mjs` negative controls no entry named in T3, each run as declared, re-anchored or retired with the code it anchors on.
 - N58 · 2026-09-26 · **record-core** (K85): provides `stampInstant(precision, when)` (store.mjs ~814–826), which later modules take from it instead of the store; with its requirement, before layer 6's tranche.
+- N59 · 2026-09-26 · **bias** (K82 (3), K86): its draft requirements take the bias-debt mechanism (ai-runs' old R39–R44, and members' work if Bob says yes to bias question 3) before Bob approves it.
+- N60 · 2026-09-26 · **strength** (K86): its draft gains a service answering the strength pair over a candidate's legs, which run-productions reads, before Bob approves it.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
