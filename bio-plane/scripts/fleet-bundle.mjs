@@ -135,17 +135,30 @@ export const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
 export function discoverMembers(repoRoot = REPO_ROOT) {
   const out = [];
   for (const dir of readdirSync(repoRoot).filter((d) => !d.startsWith("."))) {
+    const marker = join(repoRoot, dir, "fleet-member.json");
+    let text;
+    try { text = readFileSync(marker, "utf8"); }
+    catch (e) {
+      if (e.code === "ENOENT" || e.code === "ENOTDIR") continue;   /* not a member */
+      throw e;
+    }
+    /* A marker that does not parse is an error, never a member that silently
+       stops being guarded. */
     let meta;
-    try { meta = JSON.parse(readFileSync(join(repoRoot, dir, "fleet-member.json"), "utf8")); }
-    catch { continue; }
+    try { meta = JSON.parse(text); }
+    catch (e) { throw new Error(`fleet member marker ${marker} is not valid JSON: ${e.message}`); }
     out.push({
       dir,
       name: meta.name || dir,
       abs: join(repoRoot, dir),
+      entry: meta.entry || (meta.bundle && meta.bundle.entry) || null,
       bundle: meta.bundle || null,
     });
   }
-  return out.sort((a, b) => a.name.localeCompare(b.name));
+  /* Code-point order, then the directory: the same list on every machine and
+     locale, whatever order the file system walks in. */
+  const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  return out.sort((a, b) => cmp(a.name, b.name) || cmp(a.dir, b.dir));
 }
 
 /* ---- THE PLANE ITSELF, GUARDED BY THE SAME LIBRARY (FL-10, D-298) ----------
@@ -173,6 +186,7 @@ export function planeMember(repoRoot = REPO_ROOT) {
     dir: "bio-plane",
     name: "bio-plane",
     abs: join(repoRoot, "bio-plane"),
+    entry: "src/index.mjs",
     bundle: {
       entry: "src/index.mjs",
       outfile: "dist/bio-plane.bundled.mjs",
@@ -243,7 +257,8 @@ export function assetsOf(member) {
 
 /** Build one member. `write: false` (the default) NEVER touches the tree. */
 export async function buildMember(member, { write = false, mutateEntry = null } = {}) {
-  const opts = { ...optionsFor(member), write };
+  /* Silent: a failure arrives as the thrown error, never as stray stderr. */
+  const opts = { ...optionsFor(member), write, logLevel: "silent" };
   /* The independence proof's hook, and the ONLY way anything mutates a source
      here: an in-memory suffix on the ENTRY's contents. Nothing on disk moves.
      **A CALLER MUST PASS SOMETHING THAT SURVIVES THE BUILD.** esbuild STRIPS
@@ -363,8 +378,12 @@ export async function writeMember(member) {
  * still imports, dynamic imports included, is checked separately in
  * `verifyFresh` from esbuild's own metafile, wherever a fresh build is runnable.
  * Two instruments, each honest about its reach. */
+/** Is `specifier` one of the `allowed` externals? A trailing `*` is a prefix. */
+const isAllowed = (allowed, specifier) =>
+  allowed.some((a) => (a.endsWith("*") ? specifier.startsWith(a.slice(0, -1)) : specifier === a));
+
 export function unresolvableSpecifiers(text, allowed = DEFAULT_EXTERNAL) {
-  const ok = (s) => allowed.some((a) => (a.endsWith("*") ? s.startsWith(a.slice(0, -1)) : s === a));
+  const ok = (s) => isAllowed(allowed, s);
   const found = new Set();
   const re = /(?:^|[;\n])\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']/g;
   const bare = /(?:^|[;\n])\s*import\s*["']([^"']+)["']/g;
@@ -553,9 +572,28 @@ export function freshBuildRunnable(member, manifest) {
 }
 
 /** The full half: a fresh build of the SOURCE, byte-compared with the artifact
- *  that was read from disk BEFORE this ran. Never writes. */
+ *  that was read from disk BEFORE this ran. Never writes.
+ *
+ *  Returns `{ checked: true, findings, built }`, or, where the member's committed
+ *  manifest names vendored inputs that are not installed here or the source
+ *  does not build here, `{ checked: false, reason, findings: null, built: null }`: it could not check,
+ *  and there is no empty list of findings a caller could read as fresh. */
 export async function verifyFresh(member, committed) {
-  const built = await buildMember(member, { write: false });
+  let manifest = null;
+  try { manifest = JSON.parse(readFileSync(join(member.abs, member.bundle.manifest), "utf8")); }
+  catch { /* no manifest to read: the build itself is the test of what is installed */ }
+  if (manifest) {
+    const { runnable, reason } = freshBuildRunnable(member, manifest);
+    if (!runnable) return { checked: false, reason: `${member.name}: not checked — ${reason}`, findings: null, built: null };
+  }
+  let built;
+  try { built = await buildMember(member, { write: false }); }
+  catch (e) {
+    /* A source that does not build here (a dependency not installed, with no
+       manifest to say so first) is not a fresh artifact: say it was not checked. */
+    return { checked: false, reason: `${member.name}: not checked — a fresh build of ${member.bundle.entry} `
+      + `failed here: ${String(e.message).split("\n").slice(0, 2).join(" ")}`, findings: null, built: null };
+  }
   const findings = [];
   if (Buffer.compare(built.bytes, committed) !== 0)
     findings.push(`${member.name}: STALE BUNDLE — a fresh build of ${member.bundle.entry} is `
@@ -568,12 +606,11 @@ export async function verifyFresh(member, committed) {
      imports too, and it cannot mistake a string for a statement. It is available
      only here, because it comes out of a build. */
   const allowed = member.bundle.external || DEFAULT_EXTERNAL;
-  const ok = (s) => allowed.some((a) => (a.endsWith("*") ? s.startsWith(a.slice(0, -1)) : s === a));
   for (const out of Object.values(built.metafile.outputs || {}))
     for (const imp of out.imports || [])
-      if (imp.external !== false && !ok(imp.path))
+      if (imp.external !== false && !isAllowed(allowed, imp.path))
         findings.push(`${member.name}: the built module still imports ${imp.path} (${imp.kind}), `
           + "which a one-part script upload cannot resolve — so an installer that cannot bundle "
           + "could not install it.");
-  return { findings, built };
+  return { checked: true, findings, built };
 }
