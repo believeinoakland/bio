@@ -39,6 +39,12 @@
  */
 import { identify, compare, profileRecord } from "./index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
+import { isMeaningful, worstSignificance } from "./events.mjs";
+
+/* Decode bytes as the reader sees them; anything that is not bytes reads as no text. */
+const pipelineText = (bytes) => {
+  try { return new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { return ""; }
+};
 
 export const LAYER = {
   STACK: "L1_stack", BYTES: "L2_bytes", NOTEWORTHY: "L3_noteworthy",
@@ -58,7 +64,7 @@ export async function assess(before, after, ctx) {
   const note = (layer, said, detail) => { trail.push({ layer, said, ...(detail || {}) }); };
 
   /* ---- L1: which stack ---- */
-  const text = new TextDecoder("utf-8", { fatal: false }).decode(after);
+  const text = pipelineText(after);
   const id = identify({ ...ctx, text });
   note(LAYER.STACK, `${id.handler.label} (${id.confidence})`,
        { handler: id.handler.key, confidence: id.confidence, signals: id.signals });
@@ -78,7 +84,15 @@ export async function assess(before, after, ctx) {
      the verdict AND the two digest objects, so the trail can still report how much was
      normalised and where reasoning stopped. */
   const dctx = { ...ctx, text, confidence: id.confidence };
-  const cmp = await compare(before, after, id.handler, dctx);
+  let cmp;
+  try { cmp = await compare(before, after, id.handler, dctx); }
+  catch (e) {
+    /* Only a caller's missing hash function or a failing one reaches here. The honest
+       answer is that nothing could be compared, never a guess in either direction. */
+    note(LAYER.BYTES, "the two captures could not be compared");
+    return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
+                 why: `the two captures could not be compared (${String((e && e.message) || e)}), so nothing is claimed` });
+  }
   const da = cmp.digests.before, db = cmp.digests.after;
 
   if (cmp.verdict === "identical") {
@@ -122,32 +136,62 @@ export async function assess(before, after, ctx) {
   note(LAYER.NOTEWORTHY, "the substance differs");
 
   /* ---- L4: what type of content ---- */
-  const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind });
+  let dt;
+  try { dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind }); }
+  catch (e) {
+    note(LAYER.CONTENT_TYPE, "no content type could be decided");
+    return out({ verdict: "changed", meaningful: null, events: [], connections: [],
+                 why: "the substance differs, and which kind of document this is could not be decided "
+                    + `(${String((e && e.message) || e)}), so what changed is not described` });
+  }
   note(LAYER.CONTENT_TYPE, dt.type.label,
        { type: dt.type.key, confidence: dt.confidence, signals: dt.signals });
+  const content_type = dt.type.key;
+
+  /* A content type that cannot read, or cannot judge, this document: the substance
+     differs (L3 said so) and nothing is claimed about what changed, in either
+     direction (R13). `routine` would be a judgment nobody made. */
+  const unread = (why) => {
+    note(LAYER.MEANING, "nothing is claimed about the content: " + why);
+    return out({ verdict: "changed", meaningful: null, events: [], connections: [], content_type,
+                 why: "the substance differs and " + why + ", so what changed is not described" });
+  };
 
   /* ---- L5: is the change meaningful FOR THAT TYPE ---- */
-  const textBefore = new TextDecoder("utf-8", { fatal: false }).decode(before);
+  const textBefore = pipelineText(before);
   const read = (t, at) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at });
-  let a, b;
+  let a, b, m;
   try {
     a = read(textBefore, ctx.before_at); b = read(text, ctx.after_at);
   } catch (e) {
-    note(LAYER.MEANING, "the content could not be parsed, so nothing is claimed about it");
-    return out({ verdict: "changed", meaningful: null, events: [], connections: [],
-                 why: "the substance differs and its contents could not be read this time, so "
-                    + "what changed is not described" });
+    return unread(`its contents could not be read this time (${String((e && e.message) || e)})`);
   }
-  const m = dt.type.assess(a, b, { ...ctx, handler: id.handler });
-  note(LAYER.MEANING, m.why, { events: m.events.length, meaningful: m.meaningful });
+  try { m = dt.type.assess(a, b, { ...ctx, handler: id.handler }); }
+  catch (e) {
+    return unread(`the ${content_type} reader could not compare the two readings (${String((e && e.message) || e)})`);
+  }
+  if (!m || m.meaningful === null || m.meaningful === undefined || !Array.isArray(m.events))
+    return unread((m && m.why) || `the ${content_type} reader could not say`);
+  /* `meaningful` is DERIVED from the graded events here, never taken as a second fact
+     a type carries beside them (R14). */
+  const events = m.events;
+  const meaningful = isMeaningful(events);
+  note(LAYER.MEANING, m.why, { events: events.length, meaningful });
 
   /* ---- L6: connections ---- */
-  const connections = dt.type.connections ? dt.type.connections(a, b, { ...ctx, events: m.events }) : [];
+  let connections = [];
+  try {
+    connections = typeof dt.type.connections === "function"
+      ? dt.type.connections(a, b, { ...ctx, events }) || [] : [];
+  } catch (e) {
+    note(LAYER.CONNECTIONS, `none stated: the ${content_type} reader failed to derive them`);
+    connections = [];
+  }
   if (connections.length) note(LAYER.CONNECTIONS, `${connections.length} implied`);
 
-  return out({ verdict: m.meaningful ? "changed" : "routine",
-               meaningful: m.meaningful, significance: m.significance,
-               events: m.events, connections, content_type: dt.type.key,
+  return out({ verdict: meaningful ? "changed" : "routine",
+               meaningful, significance: worstSignificance(events),
+               events, connections, content_type,
                why: m.why,
                /* Even a changed document confirms whatever DIDN'T change, and on a
                   list that is most of it. Discarding the confirmation because

@@ -135,19 +135,32 @@ export function applyBoundary(text, boundary) {
 
 /** The three digests for one document, under one handler. */
 export async function digests(bytes, handler, ctx) {
-  const sha256 = ctx.sha256;
+  const sha256 = ctx && ctx.sha256;
+  /* The one precondition, and the one throw: a digest with no hash function is a
+     caller's mistake, not a document's property. */
+  if (typeof sha256 !== "function") throw new TypeError("docprofile: digests() needs ctx.sha256, a hash function");
+  const h = handler || {};
   const identity = await sha256(bytes);
-  if (!handler.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
-  const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-  const rules = handler.rules(ctx) || [];
+  if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
+  let text = "";
+  try { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { text = ""; }
+  let rules = [];
+  try { rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || []; } catch { rules = []; }
   const mech = rules.filter((r) => r.region === REGION.MECHANICAL);
   const pres = rules.filter((r) => r.region === REGION.PRESENTATIONAL);
   const r1 = applyRules(text, mech);
   /* Mechanical first, always: a security token can sit inside the document's own
      boundary as easily as outside it, and normalising the boundary first would
      hide the token rather than classify it. */
-  const b = applyBoundary(r1.text, handler.boundary ? handler.boundary(ctx) : null);
-  const r2 = b.found.length ? b : applyRules(r1.text, pres);
+  let boundary = null;
+  try { boundary = typeof h.boundary === "function" ? h.boundary(ctx) : null; } catch { boundary = null; }
+  const b = applyBoundary(r1.text, boundary);
+  /* A DECLARED boundary that missed normalises nothing beyond the mechanical pass:
+     the handler said the document is what sits inside that boundary, and when the
+     boundary is not there nothing can be called furniture. Falling back to the
+     presentational rules would narrow on a guess the handler did not make. Only a
+     handler that declares NO boundary uses its presentational rules. */
+  const r2 = b.found.length ? b : b.missed ? { text: r1.text, found: [], bytes: 0 } : applyRules(r1.text, pres);
   const enc = new TextEncoder();
   return {
     identity,
@@ -216,10 +229,16 @@ export async function compare(before, after, handler, ctx) {
  *    insufficient  something render-critical is missing; the render is refused,
  *                  because showing it would misrepresent the source  */
 export function fidelity(manifest, handler, ctx) {
-  const parts = (manifest && manifest.subresources) || [];
-  const missing = parts.filter((p) => !p.ok && !handler.ignorable(p));
+  const all = manifest && Array.isArray(manifest.subresources) ? manifest.subresources : [];
+  const parts = all.filter((p) => p && typeof p === "object");
+  const h = handler || {};
+  /* A handler that cannot say is answered in the safe direction: a part is not
+     ignorable unless the handler says so, and it is critical unless it says not. */
+  const ignorable = (p) => { try { return typeof h.ignorable === "function" && !!h.ignorable(p); } catch { return false; } };
+  const critical_ = (p) => { try { return typeof h.renderCritical === "function" ? !!h.renderCritical(p, ctx) : true; } catch { return true; } };
+  const missing = parts.filter((p) => !p.ok && !ignorable(p));
   if (!missing.length) return { level: "faithful", missing: [], critical: [] };
-  const critical = missing.filter((p) => handler.renderCritical(p, ctx));
+  const critical = missing.filter(critical_);
   if (critical.length)
     return { level: "insufficient", missing, critical,
              why: "a file the page needs in order to look the way the source published it has not been collected" };
@@ -251,8 +270,10 @@ export function identify(ctx) {
   if (!r.matched)
     return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
              why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
-  return { handler, confidence: r.confidence, signals: r.signals, considered: r.considered,
-           kind: handler.kind ? handler.kind(ctx) : "unknown" };
+  const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
+  /* `kind` is the handler's own classification; a handler that defines none has none. */
+  if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
+  return out;
 }
 
 /** Everything the record should keep about how a document was profiled. Written
@@ -260,13 +281,15 @@ export function identify(ctx) {
  *  spoke and how sure it was: a verdict whose author is unnamed cannot be
  *  re-evaluated when the author turns out to have been wrong. */
 export function profileRecord(id, ctx) {
+  const x = id && typeof id === "object" ? id : {};
+  const h = x.handler && typeof x.handler === "object" ? x.handler : {};
   return {
-    handler: id.handler.key, handler_label: id.handler.label,
-    handler_version: id.handler.version,
-    confidence: id.confidence, signals: id.signals,
-    document_kind: id.kind || "unknown",
-    considered: id.considered,
+    handler: h.key == null ? null : h.key, handler_label: h.label == null ? null : h.label,
+    handler_version: h.version == null ? null : h.version,
+    confidence: x.confidence == null ? null : x.confidence, signals: x.signals || [],
+    document_kind: x.kind || "unknown",
+    considered: x.considered || [],
     at: (ctx && ctx.now) || new Date().toISOString().split(".")[0] + "Z",
-    note: id.why || null,
+    note: x.why || null,
   };
 }

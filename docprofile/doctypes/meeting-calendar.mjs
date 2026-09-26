@@ -28,14 +28,15 @@
  * the most valuable thing this type produces. Minutes that have not appeared three
  * weeks after a meeting are a fact about the body, not a gap in the record.
  */
-import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, practiceValue } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 import { unescapeHtml } from "../index.mjs";
 
-/* How long after a meeting minutes stop being merely late. Not a guess dressed as
-   a rule: Oakland's own practice is the thing to measure, and until it is measured
-   this is a threshold for RAISING A QUESTION, never for asserting a violation. */
-const MINUTES_DUE_DAYS = 21;
+/* How long after a meeting minutes stop being merely late is the JURISDICTION'S
+   practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
+   measurement it rests on (N3). It is a threshold for RAISING A QUESTION, never for
+   asserting a violation, and with no profile supplying it no date is set at all: the
+   absence is still stated, and when the minutes are due is said to be unknown. */
 const DAY = 86400000;
 
 const parseDate = (s) => {
@@ -248,8 +249,9 @@ export default {
 
     return {
       meaningful, significance: worst, events,
-      confirmed: { entries: b.entities.length, intact, window: w.named || null,
-                   scrolled_out: scrolled },
+      /* What was verified unchanged, or null when nothing was (R16). */
+      confirmed: intact ? { entries: b.entities.length, intact, window: w.named || null,
+                            scrolled_out: scrolled } : null,
       why: events.length || scrolled
         ? `${intact} of ${a.entities.length} meetings unchanged` + (parts.length ? "; " + parts.join(", ") : "")
         : `all ${b.entities.length} meetings on this calendar are unchanged`,
@@ -260,6 +262,7 @@ export default {
   connections(a, b, ctx) {
     const out = [];
     const now = ctx.now ? Date.parse(ctx.now) : Date.now();
+    const due = practiceValue(ctx, "minutes_due_days");
     for (const m of b.entities) {
       const self = `meeting:${m.key}`;
       /* REFERENTIAL: a document belongs to a meeting, and a meeting belongs to a
@@ -285,9 +288,13 @@ export default {
           { at: m.facts.date, why: "minutes for this meeting exist, so the meeting was recorded" }));
       else if (when < now)
         out.push(temporal(self, null, "minutes_not_yet_published",
-          { at: m.facts.date, expected_by: iso(when + MINUTES_DUE_DAYS * DAY),
-            why: now - when > MINUTES_DUE_DAYS * DAY
-              ? "this meeting was scheduled more than three weeks ago and this calendar still offers no minutes"
+          { at: m.facts.date, expected_by: due ? iso(when + due.value * DAY) : null,
+            why: !due
+              ? "this meeting has taken place and no minutes are offered yet; when they are due is not known, "
+                + "because no active jurisdiction profile states how long minutes usually take"
+              : now - when > due.value * DAY
+              ? `this meeting was held more than ${due.value} days ago, longer than minutes usually take here `
+                + "(the jurisdiction's measured practice), and this calendar still offers no minutes"
               : "this meeting has taken place and no minutes are offered yet" }));
       if (!m.facts.agenda && when > now)
         out.push(temporal(self, null, "agenda_not_yet_published",

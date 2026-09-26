@@ -119,6 +119,13 @@ function sdTitleLine(raw) {
   return lines.find((l) => SD_SELF_NAMING.test(l)) || null;
 }
 
+/** The entries verified unchanged, or null when none was (R16). */
+function sdConfirmed(a, b) {
+  const intact = (a.entities || []).filter((e) =>
+    (b.entities || []).some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
+  return intact ? { entries: (b.entities || []).length, intact } : null;
+}
+
 export default {
   key: "staff_directory",
   label: "a staff directory",
@@ -188,7 +195,9 @@ export default {
    *  gone is `item_pulled` (the record can no longer say this person is reached here),
    *  an entry added is `item_added`, an entry whose line moved is `item_changed`. */
   assess(a, b) {
-    if (!(a.entities || []).length && !(b.entities || []).length)
+    /* Nothing read on EITHER side is a failed reader (R16, R33), never a directory
+       emptied of everyone the other side listed. */
+    if (!(a.entities || []).length || !(b.entities || []).length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
                why: "no entry could be read from this directory this time, so nothing is claimed about it either way" };
     const d = diffEntities(a.entities || [], b.entities || []);
@@ -203,8 +212,7 @@ export default {
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
-      confirmed: { entries: (b.entities || []).length,
-                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      confirmed: sdConfirmed(a, b),
       why: events.length ? `${events.length} change(s) to the directory's entries`
                          : "the directory lists the same addresses, each saying what it said",
     };

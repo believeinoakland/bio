@@ -7,6 +7,7 @@
  * a system starts reassuring people about things it has not understood.
  */
 import { CONFIDENCE, CONTRACT } from "./index.mjs";
+import { event, worstSignificance, isMeaningful } from "../events.mjs";
 
 export default {
   key: "generic", label: "a document of no recognised type", version: 1, fallback: true,
@@ -26,12 +27,13 @@ export default {
      header records. This one closes when a measured type is written for the
      document, not before. */
   parse() { return { entities: [], facts: {} }; },
-  /* The one deliberate place `meaningful` is NOT derived from event significance:
-     with no type there are no graded events, but a substantive difference in an
-     unrecognised document must still be flagged. So it is asserted true, in the safe
-     direction, and left undescribed. */
+  /* A substantive difference in an unrecognised document is flagged in the safe
+     direction, and left undescribed: one `substance_changed` event, so `meaningful` is
+     derived from the catalogue here as everywhere else (R14), never asserted. */
   assess() {
-    return { meaningful: true, significance: "notice", events: [], confirmed: null,
+    const events = [event("substance_changed", {
+      why: "the substance of this document changed; what kind of document it is has not been worked out" })];
+    return { meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed: null,
              why: "the substance of this document changed; what kind of document it is has not "
                 + "been worked out, so what changed is not described" };
   },

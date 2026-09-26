@@ -62,29 +62,25 @@
  * not evaluate the recommendation and does not treat the report's account of a fact as
  * the fact.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
+         vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, codePatterns,
+         LINE_START, IN_PROSE } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
    see `memoHeader`. */
 const MEMO_LABEL = /\b(TO|FROM|SUBJECT|DATE)\s*:/gi;
 
-/* The agenda-report template's sections, as PRINCIPLES rather than one literal each:
-   a report of this kind states what it recommends, why, what it costs, who was
-   consulted and what it asks the body to do. Each is tested as a HEADING — alone on
-   its line — because the same words inside a sentence are not a section. */
-const REPORT_SECTIONS = [
-  /^RECOMMENDATION\b/i,
-  /^EXECUTIVE\s+SUMMARY\b/i,
-  /^(BACKGROUND|LEGISLATIVE\s+HISTORY|BACKGROUND\s*\/\s*LEGISLATIVE\s+HISTORY)\b/i,
-  /^ANALYSIS(\s+AND\s+POLICY\s+ALTERNATIVES)?\b/i,
-  /^FISCAL\s+IMPACT\b/i,
-  /^PUBLIC\s+OUTREACH\b/i,
-  /^COORDINATION\b/i,
-  /^SUSTAINABLE\s+OPPORTUNITIES\b/i,
-  /^ACTION\s+REQUESTED\b/i,
-  /^REASON\s+FOR\b/i,
-];
+/* The report template's sections are the JURISDICTION'S house template (the view's
+   `report_sections`, N3): a report of this kind states what it recommends, why, what it
+   costs, who was consulted and what it asks the body to do, under whatever headings
+   its staff use. Each is tested as a HEADING — at the start of a line of its own —
+   because the same words inside a sentence are not a section. */
+const reportSectionPatterns = (ctx) => vocabPatterns(ctx, "report_sections", LINE_START);
+/* The heading that opens the recommendation itself, in the language's own word: any
+   template names its recommendation so, and it is read only when it is one of the
+   jurisdiction's section headings as well. */
+const RECOMMENDATION_HEADING = /^RECOMMENDATIONS?(?![A-Za-z0-9])/i;
 /* A heading line is short: the template's headings are titles, and a sentence that
    happens to open with one of these words is not a section. 64 characters admits
    `ACTION REQUESTED OF THE CITY COUNCIL` (36) with room and excludes prose. */
@@ -92,9 +88,10 @@ const HEADING_MAX = 64;
 
 const SIGNOFF = /\bRespectfully\s+submitted\b/i;
 const PREPARED = /\bPrepared\s+by\s*:/i;
-/* Self-naming, on a line of its own. Unlike a masthead this appears ONCE, on the
-   title page — measured at 1 in the real document — so it is never a rate here. */
-const REPORT_TITLE = /^(AGENDA|STAFF|INFORMATIONAL|CITY\s+ADMINISTRATOR'?S?)\s+REPORT\b/i;
+/* Self-naming, on a line of its own, in the titles the jurisdiction's reports carry
+   (the view's `report_titles`, N3). Unlike a masthead this appears ONCE, on the title
+   page — measured at 1 in the real document — so it is never a rate here. */
+const reportTitlePatterns = (ctx) => vocabPatterns(ctx, "report_titles", LINE_START);
 
 /** The memorandum header as a BLOCK, which is the whole discipline of this family.
  *
@@ -145,27 +142,35 @@ function memoHeader(flat) {
 }
 
 /** Which of the template's sections appear as HEADINGS in this document. */
-function reportSections(raw) {
+function reportSections(raw, sections) {
   const found = [];
   for (const line of String(raw || "").split(/\r?\n/)) {
     const l = line.trim();
     if (!l || l.length > HEADING_MAX) continue;
-    for (let i = 0; i < REPORT_SECTIONS.length; i++)
-      if (REPORT_SECTIONS[i].test(l) && !found.includes(i)) found.push(i);
+    for (let i = 0; i < sections.length; i++)
+      if (sections[i].test(l) && !found.includes(i)) found.push(i);
   }
   return found;
 }
 
-/* The instruments a report points at, matched over RAW text with `\s+` between tokens
-   so a wrapped citation is still found AND `match.index` stays a RAW offset — which is
-   the only coordinate `ctx.locate` understands. */
-const INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
-/* A Legistar file number cited inline. Not line-anchored here: a staff report is about
-   ONE matter and cites its number in prose, which is the opposite of the agenda's
-   item-per-line list. */
-const FILE_REF = /\b(\d{2}-\d{4})\b/g;
-/* A municipal code section the report names. */
-const CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
+/* The references a report points at, every one of them the jurisdiction's (N3): its
+   instruments by kind and number (the view's `spaces.enactment`), its legislative
+   record's file numbers (`file_numbers`), and its codes of law (`codes`). All are
+   matched over RAW text with `\s+` between tokens so a wrapped citation is still found
+   AND `match.index` stays a RAW offset — the only coordinate `ctx.locate` understands.
+   A file number is NOT line-anchored here: a staff report is about ONE matter and
+   cites its number in prose, the opposite of the agenda's item-per-line list. */
+const reportFileRefs = (ctx) => vocabPatterns(ctx, "file_numbers", IN_PROSE, "g").map((re) => ({ re, tag: null }));
+
+/** What was verified unchanged between two readings of a report, or null when nothing
+ *  was (R16): the citations still cited, and the recommendation when it still reads
+ *  the same. */
+function reportConfirmed(a, b) {
+  const intact = (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length;
+  const recommendation = !!a.recommendation && String(a.recommendation) === String(b.recommendation || "");
+  if (!intact && !recommendation) return null;
+  return { entries: (b.entities || []).length, intact, recommendation_unchanged: recommendation };
+}
 
 export default {
   key: "staff_report",
@@ -193,11 +198,12 @@ export default {
 
     const memo = memoHeader(flat);
     if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
-    const secs = reportSections(t);
-    if (secs.length) signals.push(`${secs.length} agenda-report template section heading(s)`);
+    const secs = reportSections(t, reportSectionPatterns(ctx));
+    if (secs.length) signals.push(`${secs.length} report template section heading(s)`);
     const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
     if (signoff) signals.push("a staff sign-off");
-    const titled = String(t).split(/\r?\n/).some((l) => REPORT_TITLE.test(l.trim()));
+    const titles = reportTitlePatterns(ctx);
+    const titled = String(t).split(/\r?\n/).some((l) => titles.some((re) => re.test(l.trim())));
     if (titled) signals.push("names itself as a report on a line of its own");
 
     if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
@@ -232,7 +238,8 @@ export default {
 
     const memo = memoHeader(flat);
     const f = (memo && memo.fields) || {};
-    const secs = reportSections(raw);
+    const sections = reportSectionPatterns(ctx);
+    const secs = reportSections(raw, sections);
 
     /* THE RECOMMENDATION, which is the point of the document. Read from the
        `RECOMMENDATION` heading forward to the next heading — bounded, so it can never
@@ -243,20 +250,28 @@ export default {
     {
       const lines = raw.split(/\r?\n/);
       for (let i = 0; i < lines.length; i++) {
-        if (!/^RECOMMENDATION\b/i.test(lines[i].trim()) || lines[i].trim().length > HEADING_MAX) continue;
+        const h = lines[i].trim();
+        if (!RECOMMENDATION_HEADING.test(h) || h.length > HEADING_MAX || !sections.some((re) => re.test(h))) continue;
         const body = [];
         for (let j = i + 1; j < lines.length && body.join(" ").length < 600; j++) {
           const l = lines[j].trim();
           if (!l) continue;
-          if (l.length <= HEADING_MAX && REPORT_SECTIONS.some((re, k) => k !== 0 && re.test(l))) break;
+          if (l.length <= HEADING_MAX && !RECOMMENDATION_HEADING.test(l) && sections.some((re) => re.test(l))) break;
           body.push(l);
         }
         if (body.length) recommendation = flatten(body.join(" ")).slice(0, 600).trim();
         break;
       }
+      /* Where the house style has no heading: the sentence opened by the words the
+         jurisdiction's reports open a recommendation with (`recommendation_openers`). */
       if (!recommendation) {
-        const m = /\bStaff\s+Recommends\s+That\b[^.]{0,500}\./i.exec(flat);
-        if (m) recommendation = m[0].trim();
+        let best = null;
+        for (const e of vocabulary(ctx, "recommendation_openers")) {
+          const re = vocabRegex(e.pattern, (s) => `(?<![A-Za-z0-9])(?:${s})(?![A-Za-z0-9])[^.]{0,500}\\.`);
+          const m = re && re.exec(flat);
+          if (m && (!best || m.index < best.index)) best = m;
+        }
+        if (best) recommendation = best[0].trim();
       }
     }
 
@@ -274,14 +289,17 @@ export default {
       seen.set(key, e);
       entities.push(e);
     };
-    for (const m of raw.matchAll(INSTRUMENT_REF))
-      take(`${m[1].toLowerCase()}:${m[2]}`, "instrument",
-           `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
-           { instrument: m[1].toLowerCase(), number: m[2] }, m.index);
-    for (const m of raw.matchAll(FILE_REF))
+    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+      const n = m.groups && m.groups.num;
+      if (!n) continue;
+      take(`${tag.kind}:${n}`, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
+           { instrument: tag.kind, number: n }, m.index);
+    }
+    for (const { m } of allMatches(reportFileRefs(ctx), raw))
       take(`file:${m[1]}`, "legislation", `legislation ${m[1]}`, { file: m[1] }, m.index);
-    for (const m of raw.matchAll(CODE_REF))
-      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+      take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
+           { code: tag.key, section: m.groups.sec }, m.index);
 
     return {
       entities,
@@ -299,9 +317,11 @@ export default {
 
   /** Given two parses of the same report address, what happened to it. */
   assess(a, b) {
-    /* A read that found no recommendation AND no references is a failed reader, never
-       a report that says nothing. */
-    if (!a.entities.length && !b.entities.length && !a.recommendation && !b.recommendation)
+    /* A read that found no recommendation AND no references, on EITHER side, is a failed
+       reader, never a report that says nothing — and never the ground for reporting
+       everything the other side read as gone (R33). */
+    const readNothing = (x) => !(x.entities || []).length && !x.recommendation;
+    if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
                why: "nothing could be read from this report this time, so nothing is claimed "
                   + "about it either way" };
@@ -331,8 +351,7 @@ export default {
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
-      confirmed: { entries: (b.entities || []).length,
-                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      confirmed: reportConfirmed(a, b),
       why: events.length
         ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added`
           + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "")

@@ -108,8 +108,13 @@ export function doctypes() { return types.all(); }
  *  recogniser that cannot answer is a different fact from one that answered no. */
 export function doctypeFor(ctx) {
   const r = types.recognise(ctx);
-  return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
-           also: alsoFor(ctx, r.member.key) };
+  const out = { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
+                also: alsoFor(ctx, r.member.key) };
+  /* A "no" says which no (R35): nothing recognised, and so the generic reading. */
+  if (!r.matched)
+    out.why = "no registered content type recognised this document, so it is read as a document of no "
+            + "recognised type: any substantive difference is reported and not described";
+  return out;
 }
 
 /** Every registered type OTHER than `selfKey` whose own `detect` matches this text.

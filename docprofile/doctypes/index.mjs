@@ -136,6 +136,159 @@ export function alsoSatisfies(ctx, selfKey) {
   try { return f(selfKey) || []; } catch { return []; }
 }
 
+/* ------------------------------------------------------------------------- *
+ * N3 — LOCAL VOCABULARY COMES FROM THE JURISDICTION VIEW, never from here.
+ *
+ * `ctx.view` is the combined view of the instance's active jurisdiction profiles
+ * (`jurisdictions.combine`, its R13): the profile shape, each fact a
+ * `{pattern: {re, flags}, basis, profile}` entry. Everything a content type knows
+ * about ONE jurisdiction's clerks, offices, codes and record systems is read from
+ * it through the helpers below. What stays in code is what any jurisdiction's
+ * documents share: the words of the kind (minutes, agenda, ordain, WHEREAS),
+ * the publishing vendor's own page shapes, and the measured structural floors.
+ *
+ * NO VIEW, OR A VIEW WITHOUT THE FACT, MEANS NO LOCAL RECOGNITION — never a
+ * default. An absent section supplies nothing (jurisdictions R1, R16), so a type
+ * reads fewer references and says so; it never falls back to one place's words.
+ * A pattern that does not compile is skipped, not thrown: `validate` refuses such
+ * a profile upstream, and a reader must not fail on one that slipped through.
+ * ------------------------------------------------------------------------- */
+
+const VOCAB_REGEX_CACHE = new Map();
+
+/** Compile one profile pattern `{re, flags}`, `wrap` turning its source into the
+ *  expression a reader needs (anchored to a line, bounded by words) and `extra`
+ *  adding reader-side flags (`g`, `m`). The profile's own flags are kept and only
+ *  `i`/`u` are honoured (jurisdictions R2). Returns null when it cannot compile. */
+export function vocabRegex(p, wrap, extra) {
+  if (!p || typeof p.re !== "string" || !p.re.length) return null;
+  const own = String(p.flags || "").replace(/[^iu]/g, "");
+  const flags = [...new Set((own + (extra || "")).split(""))].join("");
+  const src = typeof wrap === "function" ? wrap(p.re) : p.re;
+  const k = src + "\u0000" + flags;
+  if (VOCAB_REGEX_CACHE.has(k)) return VOCAB_REGEX_CACHE.get(k);
+  let re = null;
+  try { re = new RegExp(src, flags); } catch { re = null; }
+  VOCAB_REGEX_CACHE.set(k, re);
+  return re;
+}
+
+/** The entries of one `vocabulary` key in the view, or an empty list. */
+export function vocabulary(ctx, key) {
+  const v = ctx && ctx.view && typeof ctx.view === "object" ? ctx.view.vocabulary : null;
+  const list = v && typeof v === "object" ? v[key] : null;
+  return Array.isArray(list) ? list.filter((e) => e && typeof e === "object") : [];
+}
+
+/** The compiled patterns of one vocabulary key, each wrapped the same way. */
+export function vocabPatterns(ctx, key, wrap, extra) {
+  const out = [];
+  for (const e of vocabulary(ctx, key)) {
+    const re = vocabRegex(e.pattern, wrap, extra);
+    if (re) out.push(re);
+  }
+  return out;
+}
+
+/** Wrappers for the shapes readers test a pattern in. A pattern is a NAME (a body,
+ *  an office, a code) and the reader decides where it must sit: a whole line, the
+ *  start of a line, or bounded by non-letters inside prose. */
+export const WHOLE_LINE = (re) => `^(?:${re})$`;
+export const LINE_START = (re) => `^(?:${re})(?![A-Za-z0-9])`;
+export const LINE_END = (re) => `(?:${re})\\s*$`;
+export const IN_PROSE = (re) => `(?<![A-Za-z0-9])(${re})(?![A-Za-z0-9])`;
+
+/** Does any of these compiled patterns match this string? */
+export function anyMatch(patterns, s) {
+  for (const re of patterns) { re.lastIndex = 0; if (re.test(s)) return true; }
+  return false;
+}
+
+/** Every match of several global patterns over one string, merged in reading
+ *  order, overlaps dropped (the earlier, then longer, match is kept). `tag` is
+ *  carried from the pattern's own entry so a reader knows WHICH fact matched. */
+export function allMatches(tagged, s) {
+  const hits = [];
+  for (const { re, tag } of tagged) {
+    if (!re || !re.global) continue;
+    re.lastIndex = 0;
+    for (const m of s.matchAll(re)) if (m[0].length) hits.push({ m, tag });
+  }
+  hits.sort((a, b) => a.m.index - b.m.index || b.m[0].length - a.m[0].length);
+  const out = [];
+  let end = -1;
+  for (const h of hits) {
+    if (h.m.index < end) continue;
+    out.push(h);
+    end = h.m.index + h.m[0].length;
+  }
+  return out;
+}
+
+/** A pattern's source as a piece of a larger expression: its own `^`/`$` anchors
+ *  removed, since a form written to match a whole value is embedded here in prose. */
+function vocabPiece(re) {
+  return String(re).replace(/^\^/, "").replace(/(?<!\\)\$$/, "");
+}
+
+/** The enactment space's recognisers (jurisdictions R3, `spaces.enactment`): one
+ *  per KIND of instrument, matching the kind's words, an optional `No.`, and a
+ *  number in one of the space's forms, followed by any series marker the view's
+ *  `enactment_markers` hold. `number` is optional when `blankNumber` is set, for a
+ *  proposed instrument's own caption (`ORDINANCE NO. ____`). Each result is
+ *  `{re, tag: {kind}}` with the number in the named group `num`. */
+export function enactmentPatterns(ctx, { blankNumber = false } = {}) {
+  const sp = ctx && ctx.view && ctx.view.spaces && ctx.view.spaces.enactment;
+  if (!sp || typeof sp !== "object") return [];
+  const forms = (Array.isArray(sp.forms) ? sp.forms : [])
+    .map((f) => f && f.pattern && typeof f.pattern.re === "string" ? vocabPiece(f.pattern.re) : null)
+    .filter((s) => s && vocabRegex({ re: s }));
+  const markers = vocabulary(ctx, "enactment_markers")
+    .map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null)
+    .filter((s) => s && vocabRegex({ re: s }));
+  if (!forms.length && !blankNumber) return [];
+  const num = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
+  const tail = markers.length ? `(?:\\s*(?:${markers.map((s) => `(?:${s})`).join("|")}))?` : "";
+  const out = [];
+  for (const k of Array.isArray(sp.kinds) ? sp.kinds : []) {
+    if (!k || typeof k.kind !== "string" || !k.prefix || typeof k.prefix.re !== "string") continue;
+    const body = blankNumber
+      /* A caption, not the kind's word in a sentence: after the kind's words comes
+         `No.`, the form's blank, or the number itself. */
+      ? `(?<![A-Za-z0-9])(?:${vocabPiece(k.prefix.re)})(?=\\s*(?:[Nn][Oo](?![A-Za-z])|_|\\d))\\s*(?:[Nn][Oo]\\.?\\s*)?[_\\s]*${num}?\\s*[_\\s]*${tail}`
+      : `(?<![A-Za-z0-9])(?:${vocabPiece(k.prefix.re)})\\s*(?:[Nn][Oo]\\.?\\s*)?${num}(?![0-9])${tail}`;
+    /* Case follows the kind's own words: the prefix's flags decide, so a profile
+       that wrote its kinds case-insensitively matches a capitalised caption. */
+    const re = vocabRegex({ re: body, flags: k.prefix.flags }, null, "g");
+    if (re) out.push({ re, tag: { kind: k.kind.toLowerCase() } });
+  }
+  return out;
+}
+
+/** The codes of law the view names (jurisdictions R6 `codes`), each as a recogniser
+ *  for a citation of one of its parts: the code's name or abbreviation, then the
+ *  words any code is cited by (`Section`, `Chapter`), then the part's number in
+ *  the named group `sec`. The tag carries the code's own `key` and `label`, which
+ *  prefix the reference's key and show it. */
+export function codePatterns(ctx) {
+  const out = [];
+  for (const c of vocabulary(ctx, "codes")) {
+    if (typeof c.key !== "string" || !c.key) continue;
+    const re = vocabRegex(c.pattern,
+      (s) => `(?<![A-Za-z0-9])(?:${vocabPiece(s)})\\s+(?:Section|Chapter|Sec\\.)\\s+(?<sec>\\d[\\d.]*[\\w.]*)`, "g");
+    if (re) out.push({ re, tag: { key: c.key, label: typeof c.label === "string" && c.label ? c.label : c.key } });
+  }
+  return out;
+}
+
+/** The view's `practice` value for `name`, or null when no profile supplies it (or
+ *  profiles disagreed and it was withheld, jurisdictions R15). */
+export function practiceValue(ctx, name) {
+  const p = ctx && ctx.view && ctx.view.practice;
+  const v = p && p[name];
+  return v && Number.isInteger(v.value) && v.value > 0 ? { value: v.value, basis: v.basis || null } : null;
+}
+
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
  *  fields whose change might mean something, named so assess() can say WHICH

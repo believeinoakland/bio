@@ -52,11 +52,13 @@
  * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
+         vocabPatterns, anyMatch, allMatches, enactmentPatterns, codePatterns } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
-/* THE OPERATIVE VOICE — a body enacting, in the forms Oakland actually publishes plus
-   the general shapes. This is the family that separates an instrument from a document
+/* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
+   the general shapes. It is the language of enactment, the same in every jurisdiction
+   that ordains and resolves, so it stays here (N3 moved only the local words). This is the family that separates an instrument from a document
    that cites one, so it is written as a principle (a body ORDAINS or RESOLVES, in the
    present operative voice) rather than as one literal: document A carries none of
    `BE IT ORDAINED`, which a list of spellings would have made the whole test. */
@@ -64,23 +66,19 @@ const ENACTING = /\b(?:DOES\s+(?:HEREBY\s+)?(?:ORDAIN|RESOLVE)|BE\s+IT\s+(?:FURT
 /* A recital chain. One `WHEREAS` is a quotation; a chain is how an instrument
    establishes its own grounds. */
 const RECITAL = /\bWHEREAS\b/gi;
-/* The instrument's own caption. `C.M.S.` (Council Meeting Series) is Oakland's; the
-   number may be blank on a proposed instrument, which document A shows. */
-const CAPTION = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/i;
-/* Codification: the language by which an instrument changes the code. */
-const CODIFYING = /\b(?:is\s+hereby\s+(?:amended|added|repealed|deleted)|hereby\s+(?:amended|repealed)|O\.?M\.?C\.?\s+(?:Section|Chapter)|Municipal\s+Code\s+(?:Section|Chapter))\b/gi;
+/* The instrument's own CAPTION is the jurisdiction's (N3): the kinds of instrument and
+   their number forms are the view's `spaces.enactment`, and any series marker after the
+   number (`C.M.S.` in the measured instance) its `enactment_markers`. The number may be
+   blank on a proposed instrument, which document A shows. */
+const regCaptions = (ctx) => enactmentPatterns(ctx, { blankNumber: true });
+/* Codification: the language by which an instrument changes a code. The verbs and a
+   code's generic name are the language's; which codes exist is the view's `codes`. */
+const CODIFYING = /\b(?:is\s+hereby\s+(?:amended|added|repealed|deleted)|hereby\s+(?:amended|repealed)|Municipal\s+Code\s+(?:Section|Chapter))\b/gi;
 
-/* References, matched over RAW text with `\s+` for a line break so `match.index` stays
-   a RAW offset — the only coordinate `ctx.locate` understands. */
-const REG_INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
-const REG_CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
-
-const CAPTION_ALL = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/gi;
-
-/* The enacting BODY, immediately above its own caption. Oakland's instruments open
-   `OAKLAND CITY COUNCIL` / `RESOLUTION NO. ____ C.M.S.`; the general shape is a
-   council, board, commission or authority named on its own just above. */
-const ENACTING_BODY = /\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\s+[A-Z]+|COMMISSION|AUTHORITY|CITY\s+OF\s+[A-Z]+)\b[^A-Za-z0-9]{0,40}$/;
+/* The enacting BODY, immediately above its own caption. The words that name a body
+   are the view's `bodies` (N3); the measured instruments open `<CITY> CITY COUNCIL` /
+   `RESOLUTION NO. ____ C.M.S.`, a body named on its own just above. */
+const regBodyEnds = (ctx) => vocabPatterns(ctx, "bodies", (re) => `(?:${re})[^A-Za-z0-9]{0,40}$`);
 
 /** WHICH caption is the instrument's OWN, as opposed to one it merely cites.
  *
@@ -113,12 +111,22 @@ const ENACTING_BODY = /\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\
  *  caption pattern matches — gets a null number with its reason stated, never the
  *  nearest number in the text. That is the direction this reader has already been
  *  wrong in twice. */
-function ownCaption(flat) {
-  for (const m of flat.matchAll(CAPTION_ALL)) {
-    const before = flat.slice(Math.max(0, m.index - 120), m.index).toUpperCase();
-    if (ENACTING_BODY.test(before)) return m;
+function ownCaption(flat, captions, bodies) {
+  for (const { m, tag } of allMatches(captions, flat)) {
+    const before = flat.slice(Math.max(0, m.index - 120), m.index);
+    if (anyMatch(bodies, before)) return { m, kind: tag.kind, number: (m.groups && m.groups.num) || null };
   }
   return null;
+}
+
+/** What was verified unchanged between two readings of an instrument, or null when
+ *  nothing was (R16): the references still named, and the instrument's own facts that
+ *  were read on both sides and agree. */
+function regConfirmed(a, b) {
+  const intact = (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length;
+  const facts = ["instrument", "number", "title"].filter((k) => a[k] && String(a[k]) === String(b[k] || ""));
+  if (!intact && !facts.length) return null;
+  return { entries: (b.entities || []).length, intact, facts };
 }
 
 export default {
@@ -145,9 +153,9 @@ export default {
     if (enacting) signals.push("an enacting formula in the operative voice");
     const recitals = (flat.match(RECITAL) || []).length;
     if (recitals >= 2) signals.push(`a recital chain of ${recitals} WHEREAS clause(s)`);
-    const caption = CAPTION.test(flat);
+    const caption = allMatches(regCaptions(ctx), flat).length > 0;
     if (caption) signals.push("an instrument caption");
-    const codify = (flat.match(CODIFYING) || []).length;
+    const codify = (flat.match(CODIFYING) || []).length + allMatches(codePatterns(ctx), flat).length;
     if (codify) signals.push(`${codify} codification phrase(s)`);
 
     /* The caption alone is NEVER a match, at any confidence — that is the measured
@@ -184,9 +192,9 @@ export default {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
-    const cap = ownCaption(flat);
-    const number = cap && cap[2] ? cap[2] : null;
-    const instrument = cap ? cap[1].toLowerCase() : (/\bORDAIN/i.test(flat) ? "ordinance" : null);
+    const cap = ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx));
+    const number = cap && cap.number ? cap.number : null;
+    const instrument = cap ? cap.kind : (/\bORDAIN/i.test(flat) ? "ordinance" : null);
 
     /* The caption's TITLE — the capitalised sentence that says what the instrument
        does. Taken from the OWN caption only, for the same reason the number is, and
@@ -196,7 +204,8 @@ export default {
        that demanded adjacency returned null on the one document it was written from. */
     let title = null;
     if (cap) {
-      const after = flat.slice(cap.index + cap[0].length, cap.index + cap[0].length + 2500);
+      const after = flat.slice(cap.m.index + cap.m[0].length, cap.m.index + cap.m[0].length + 2500);
+      const blanks = vocabPatterns(ctx, "template_blanks", null, "g");
       for (const s of after.split(/(?<=\.)\s+/)) {
         const t = s.trim();
         if (t.length < 40) continue;
@@ -205,10 +214,15 @@ export default {
         /* "Mostly capitals" rather than "all capitals": these titles carry ordinals,
            punctuation and the occasional lower-case artefact of extraction. */
         if ((t.replace(/[^A-Z]/g, "").length / letters.length) < 0.85) continue;
-        /* The template's own preamble is not the title: document A's caption is
-           followed by `INTRODUCED BY COUNCILMEMBER [IF APPLICABLE]`, an unfilled
-           blank on the form rather than anything the instrument says. */
-        title = t.replace(/^\s*INTRODUCED\s+BY\b[^\]]*\]\s*/i, "").replace(/\s+/g, " ").slice(0, 500);
+        /* The template's own unfilled text is not the title: document A's caption is
+           followed by `INTRODUCED BY COUNCILMEMBER [IF APPLICABLE]`, a blank on the
+           form rather than anything the instrument says. Which text is a blank is the
+           jurisdiction's template (`template_blanks`, N3). */
+        let u = t;
+        for (const re of blanks) u = u.replace(re, " ");
+        u = u.replace(/\s+/g, " ").trim();
+        if (u.length < 40) continue;
+        title = u.slice(0, 500);
         break;
       }
     }
@@ -229,14 +243,17 @@ export default {
        itself, and emitting it as one would make every instrument appear to cite one
        more thing than it does. */
     const ownKey = number ? `${instrument}:${number}` : null;
-    for (const m of raw.matchAll(REG_INSTRUMENT_REF)) {
-      const key = `${m[1].toLowerCase()}:${m[2]}`;
+    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+      const n = m.groups && m.groups.num;
+      if (!n) continue;
+      const key = `${tag.kind}:${n}`;
       if (key === ownKey) continue;
-      take(key, "instrument", `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
-           { instrument: m[1].toLowerCase(), number: m[2] }, m.index);
+      take(key, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
+           { instrument: tag.kind, number: n }, m.index);
     }
-    for (const m of raw.matchAll(REG_CODE_REF))
-      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+      take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
+           { code: tag.key, section: m.groups.sec }, m.index);
 
     return {
       entities,
@@ -246,8 +263,10 @@ export default {
          not mean the reader failed, and `number_why` says which. */
       number,
       number_why: number ? null
-        : "this instrument's caption carries no number, which is what a proposed ordinance "
-        + "or resolution looks like before a body adopts it",
+        : cap ? "this instrument's caption carries no number, which is what a proposed ordinance "
+              + "or resolution looks like before a body adopts it"
+        : "no caption introduced by an enacting body was read, in the words the active "
+        + "jurisdiction profiles give for instruments and bodies, so the number is not stated",
       title,
       recitals,
       also_satisfies: alsoSatisfies(ctx, "regulation"),
@@ -257,7 +276,10 @@ export default {
 
   /** Given two parses of the same instrument's address, what happened to it. */
   assess(a, b) {
-    if (!a.instrument && !b.instrument && !(a.entities || []).length && !(b.entities || []).length)
+    /* Nothing read on EITHER side is a failed reader (R16, R33), never an instrument
+       that lost its text. */
+    const readNothing = (x) => !x.instrument && !(x.entities || []).length;
+    if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
                why: "nothing could be read from this instrument this time, so nothing is claimed "
                   + "about it either way" };
@@ -286,8 +308,7 @@ export default {
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
-      confirmed: { entries: (b.entities || []).length,
-                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      confirmed: regConfirmed(a, b),
       why: events.length
         ? `${events.length} change(s) to an instrument at the same address`
         : "this instrument says what it said, and acts on the same things",

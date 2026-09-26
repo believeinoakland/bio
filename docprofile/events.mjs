@@ -67,6 +67,11 @@ export const EVENTS = {
   outcome_changed:        { significance: SIGNIFICANCE.EVENT },
   recommendation_changed: { significance: SIGNIFICANCE.EVENT },
   instrument_changed:     { significance: SIGNIFICANCE.EVENT },
+  /* The generic type's one event: the substance of a document of no recognised type
+     changed. It is an EVENT because nothing narrower can be said, and the failure
+     asymmetry reports rather than reassures. It lets `meaningful` be derived from the
+     events for the generic type too, never asserted beside them (R14). */
+  substance_changed:      { significance: SIGNIFICANCE.EVENT },
 };
 
 /** Build an event, drawing its significance from the catalogue so the grade lives in
