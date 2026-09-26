@@ -29,6 +29,9 @@
 
 ## Retired tests (each with why)
 
+**N14 / K84 (1) and (3): the old process's tooling, retired with it** (57 files, ). Each is a suite, control or census whose SUBJECT is a tool under  (the push guard and gates, , //, the id minter, the ledger and owed rows, the corpus and row-design checks, the merge train, /, the release URL preflight, , ): not product, and the architecture check refuses a product file's import of them. The first retired are those that run  or  against the real clone, which installs the retired  hook on every run (K84 (1)): , , , , , , , , , , , , , , and their controls. The whole list:
+                                                         
+
 ## Found in other modules (REPORT)
 
 ## Open
