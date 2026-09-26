@@ -19,7 +19,7 @@ Session: `session_01LSy7nZpkVyvEV81G4a5SYA` (MEMBERSHIP #1)
 
 ## Decisions made in the job (for BOB to record if he wishes)
 
-- The module's shape is Q1's best reading: `new Membership({ sql, core })`, `core` = record-core's service object; legacy-store passes itself. Until record-core merges, `core.bundleInfo` is absent on the store, so a project's name reads `null` in the legacy integration (see "Waiting on" below).
+- The module's shape is K61's: `membershipOf(ctx, { record })` answers the one instance per Durable Object storage and reaches record-core by `recordOf(ctx)`; legacy-store calls `membershipOf(this.ctx)`. A test passes its own record-core as `record`. The project-keyed tables are declared in record-core R46's form, `{ name, keys: ["project_id"] }`.
 - R19: the roster keeps R17 exactly (cover only under the administer stamp); the published pairings are their own read, `memberPairings`, so R17 and R19 cannot disagree.
 - R11: "asked" is the second administrator's `memberAdd` answer carrying `hostingAccess: {asked, question}`; the answer is an append-only record any administrator writes.
 - R10: the founder is refused `ROOT_OF_TRUST`; a non-administrator `NOT_AN_ADMIN`; two or fewer administrators `RESIGN_AT_TWO`. Capabilities are left as last set.
@@ -34,8 +34,10 @@ None of my entries. The legacy integration of project names waits on record-core
 
 ## Questions
 
-### Q1 · how membership reaches record-core, and the parts of the extraction outside my paths
+### Q1 · how membership reaches record-core, and the parts of the extraction outside my paths (ANSWERED by BOB: K61, K63)
 
 1. **record-core's shape.** record-core's Provides name services (`bundleInfo`, `listByType`, `declarePurge`, `transact`) but no module shape, and its job has pushed nothing yet. **Best reading, on which I build:** `bio-plane/src/membership/index.mjs` exports a class `Membership`, constructed with `{ sql, core }`: `sql` the store's SqlStorage, `core` an object carrying record-core's Provides as methods of those names. The legacy store builds one per Store instance and passes itself as `core` (so record-core's job's delegating methods on `Store`, e.g. `store.bundleInfo`, reach it); membership joins only `bundles.bundle_id`/`object_type` in its own SQL (R37) and reads a title through `core.bundleInfo`. Its tests run against a stub `core` implementing record-core's Provides over the same database. If record-core exposes a different shape, I adapt at the merge.
 2. **`viewerPredicate` in `query.mjs` (query-language, layer 5).** I cannot edit `query.mjs`. Membership gets its own `viewerPredicate` and `GATE_MARK` (R43, K57); `query.mjs` keeps its copy until query-language's job makes it a re-export of membership's. legacy-store keeps importing it from `query.mjs` (changing that import line would add a line to an import of a module not mine). For BOB to route: a `query-language` entry.
 3. **The old battery** (`bio-plane/test/*.test.mjs`, legacy-tests) keeps reaching this code through legacy-store's methods and ops, which delegate to membership; I change no old test.
+
+**BOB's answer (K61, K63), applied at `60930e3fd0`:** the factory shape above; `viewerPredicate`/`GATE_MARK` are membership's and `query.mjs` keeps its copy until N37; no old battery test changes. K62: `promote()`/`reopen()` are promotion's; I did not edit them.
