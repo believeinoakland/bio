@@ -245,8 +245,9 @@ CREATE TABLE IF NOT EXISTS project_participants (
   member_id  TEXT NOT NULL,
   state      TEXT NOT NULL,
   owner      INTEGER NOT NULL DEFAULT 0,
-  -- R65: when the member became an owner (NULL for a row written before this column: ordered by created).
-  owner_since TEXT,
+  -- R65: the order in which the member became an owner, a counter per project (NULL for a non-owner, and for an
+  -- owner row written before this column, which orders first, by created).
+  owner_order INTEGER,
   invited_by TEXT,
   comment    TEXT,
   created    TEXT NOT NULL,
@@ -339,7 +340,7 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "status_by", "TEXT"],
   ["members", "invited_by", "TEXT"],
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
-  ["project_participants", "owner_since", "TEXT"],
+  ["project_participants", "owner_order", "INTEGER"],
   ["signers", "status_by", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
 ];

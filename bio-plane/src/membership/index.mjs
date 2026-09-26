@@ -1454,8 +1454,8 @@ export class Membership {
       return { ok: false, reason: "OWNED" };
     const now = new Date().toISOString();
     this.sql.exec(
-      `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,owner_since,invited_by,created,updated)
-       VALUES (?,?,'joined',1,?,NULL,?,?)`, projectId, memberId, now, now, now);
+      `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,created,updated)
+       VALUES (?,?,'joined',1,1,NULL,?,?)`, projectId, memberId, now, now);
     return { ok: true, projectId, owner: memberId };
   }
 
@@ -1618,8 +1618,8 @@ export class Membership {
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
       projectId, target.member_id).map((r) => r.voter).filter((v) => owners.includes(v)).sort();
     this.sql.exec(
-      `UPDATE project_participants SET owner=1, owner_since=?, updated=? WHERE project_id=? AND member_id=?`,
-      now, now, projectId, target.member_id);
+      `UPDATE project_participants SET owner=1, owner_order=(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?), updated=? WHERE project_id=? AND member_id=?`,
+      projectId, now, projectId, target.member_id);
     this.#recordOwnerDecision(projectId, "add", target.member_id, deciders, [], now);
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
       projectId, target.member_id);
@@ -1697,11 +1697,11 @@ export class Membership {
       `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
        VALUES (?,'rescue',?,?,?,?)`, projectId, target.member_id, by, why, now);
     this.sql.exec(
-      `INSERT INTO project_participants (project_id,member_id,state,owner,owner_since,invited_by,comment,created,updated)
-       VALUES (?,?,'joined',1,?,?,?,?,?)
-       ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_since=excluded.owner_since, state='joined',
+      `INSERT INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,comment,created,updated)
+       VALUES (?,?,'joined',1,(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?),?,?,?,?)
+       ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_order=excluded.owner_order, state='joined',
          updated=excluded.updated`,
-      projectId, target.member_id, now, by, why, now, now);
+      projectId, target.member_id, projectId, by, why, now, now);
     this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why], now);
     return { ok: true, projectId, handle, by, reason: why, owner: true,
              owners: this.projectOwners(projectId).sort(), addedNotReplaced: true,
@@ -1774,7 +1774,7 @@ export class Membership {
     const reasons = this.#rows(
       `SELECT voter, reason FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? ORDER BY voter`,
       projectId, target.member_id).filter((v) => votes.includes(v.voter)).map((v) => v.reason).filter(Boolean);
-    this.sql.exec(`UPDATE project_participants SET owner=0, owner_since=NULL, updated=? WHERE project_id=? AND member_id=?`,
+    this.sql.exec(`UPDATE project_participants SET owner=0, owner_order=NULL, updated=? WHERE project_id=? AND member_id=?`,
       now, projectId, target.member_id);
     this.#recordOwnerDecision(projectId, "remove", target.member_id, [...votes].sort(), reasons, now);
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
@@ -1973,11 +1973,11 @@ export class Membership {
     return { ok: true, table, live, projectId: projectId ?? null };
   }
 
-  /* R65: the owners' member ids in the order they became owners (`owner_since`; a row written before that column
-     existed orders by its creation, then id); [] for no owner or no such project. */
+  /* R65: the owners' member ids in the order they became owners (`owner_order`, the project's owner counter; a row
+     written before that column existed orders first, by its creation, then id); [] for no owner or no such project. */
   projectOwners(projectId) {
     return this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1
-                        ORDER BY COALESCE(owner_since, created), created, member_id`, projectId)
+                        ORDER BY COALESCE(owner_order, 0), created, member_id`, projectId)
       .map((r) => r.member_id);
   }
 
