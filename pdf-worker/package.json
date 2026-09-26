@@ -5,7 +5,7 @@
   "version": "0.79.0",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/structure.test.mjs && node test/pagepixels.test.mjs && node test/imagecrop.test.mjs"
+    "test": "node test/structure.test.mjs && node test/pagepixels.test.mjs && node test/imagecrop.test.mjs && node test/jbig2.test.mjs"
   },
   "dependencies": {
     "unpdf": "1.8.0"
