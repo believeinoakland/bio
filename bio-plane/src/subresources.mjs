@@ -115,6 +115,13 @@ const attr = (as, n) => { const a = as.find((x) => x.name === n); return a ? a.v
  *  Getting this wrong is not cosmetic here: every invented reference is a fetch
  *  this instance makes at an address the page never named. */
 export function srcsetUrls(v) {
+  return srcsetCandidates(v).map((c) => c.url);
+}
+
+/** The same parse, keeping each candidate's descriptor beside its URL. Pairing
+ *  them by splitting the attribute on commas a second time misaligned every
+ *  descriptor after a URL that itself contains a comma. */
+export function srcsetCandidates(v) {
   const out = [];
   const s = String(v);
   let i = 0;
@@ -125,32 +132,41 @@ export function srcsetUrls(v) {
     const start = i;
     while (i < s.length && !isWs(s[i])) i++;
     let url = s.slice(start, i);
-    if (url.endsWith(",")) { out.push(url.replace(/,+$/, "")); continue; }
-    out.push(url);
+    if (url.endsWith(",")) { out.push({ url: url.replace(/,+$/, ""), descriptor: "" }); continue; }
     /* Descriptors run to the next comma that is not inside parentheses. */
-    let depth = 0;
+    const dstart = i;
+    let depth = 0, dend = s.length;
     while (i < s.length) {
       if (s[i] === "(") depth++;
       else if (s[i] === ")" && depth) depth--;
-      else if (s[i] === "," && !depth) { i++; break; }
+      else if (s[i] === "," && !depth) { dend = i; i++; break; }
       i++;
     }
+    out.push({ url, descriptor: s.slice(dstart, Math.min(dend, i)).replace(/,$/, "").trim() });
   }
-  return out.filter(Boolean);
+  return out.filter((c) => c.url);
 }
 
-function cssRefs(css) {
+/* A commented-out rule was not served to the renderer as a rule, so its url()
+   is not a request the browser would make. */
+const CSS_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
+
+/** A stylesheet's own references, each `{url, kind}`: an @import target is a
+ *  stylesheet (it ranks, and is read, as one); a url() is a css-asset. */
+function cssRefList(css) {
   const out = [];
-  CSS_URL_RE.lastIndex = 0;
+  const text = String(css).replace(CSS_COMMENT_RE, "");
   let m;
-  while ((m = CSS_URL_RE.exec(css))) {
-    const u = m[1] ?? m[2] ?? m[3] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
   CSS_IMPORT_RE.lastIndex = 0;
-  while ((m = CSS_IMPORT_RE.exec(css))) {
+  while ((m = CSS_IMPORT_RE.exec(text))) {
     const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
-    if (u.trim()) out.push(u.trim());
+    if (u.trim()) out.push({ url: u.trim(), kind: "stylesheet" });
+  }
+  const rest = text.replace(CSS_IMPORT_RE, "");
+  CSS_URL_RE.lastIndex = 0;
+  while ((m = CSS_URL_RE.exec(rest))) {
+    const u = m[1] ?? m[2] ?? m[3] ?? "";
+    if (u.trim()) out.push({ url: u.trim(), kind: "css-asset" });
   }
   return out;
 }
@@ -168,6 +184,8 @@ function cssRefs(css) {
 const FURNITURE_TAGS = new Set(["nav", "footer", "header", "aside"]);
 const FURNITURE_ROLES = new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
 const BODY_TAGS = new Set(["article", "main"]);
+/* Elements with no end tag, which therefore never open a region. */
+const VOID_ELEMENTS = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
 
 /** srcset families: one picture served at eight widths is ONE reference to the
  *  record, not eight. The largest candidate is kept, because a capture should
@@ -180,12 +198,12 @@ const BODY_TAGS = new Set(["article", "main"]);
  *  a CMS generating eight widths is managing presentation. Recorded as a prior
  *  on the reference, never as a verdict about it. */
 function pickSrcsetCandidate(cands) {
-  const score = (raw) => {
-    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
-    if (!d) return 1;
-    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1000;
+  const score = (descriptor) => {
+    const d = /(?:^|\s)(\d+(?:\.\d+)?)[wx](?:\s|$)/i.exec(descriptor || "");
+    return d ? Number(d[1]) : 1;
   };
-  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  /* Array sort is stable, so equal scores keep discovery order. */
+  const sorted = [...cands].sort((a, b) => score(b.descriptor) - score(a.descriptor));
   return { pick: sorted[0], rest: sorted.slice(1) };
 }
 
@@ -202,7 +220,10 @@ export function parseHtmlRefs(html) {
      HTML scopes <footer> to its nearest sectioning ancestor, so once inside
      <article> or <main> everything is the document's. Erring toward inclusion
      is also the safe direction, since the cost of keeping a logo is bytes and
-     the cost of dropping a figure is evidence. */
+     the cost of dropping a figure is evidence.
+     An entry opened by role= on a generic element (<div role="navigation">)
+     closes on that element's own end tag, so same-name elements opened inside
+     it are counted (`nest`) and the entry is not closed by the first </div>. */
   const region = [];
   const here = () => {
     const body = region.find((r) => r.region === "body");
@@ -212,8 +233,25 @@ export function parseHtmlRefs(html) {
   };
   const add = (ref, kind, where, extra) => {
     if (!ref || !ref.trim()) return;
+    /* A bare #fragment names a part of this same document (an SVG <use>, a
+       url(#gradient)), not a resource: resolving it would re-fetch the page. */
+    if (ref.trim().startsWith("#")) return;
     const r = here();
     refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...(extra || {}) });
+  };
+  const addFamily = (cands, kind, where) => {
+    const { pick, rest } = pickSrcsetCandidate(cands);
+    const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+    if (pick) add(pick.url, kind, where, meta);
+    for (const r of rest) add(r.url, kind, where, { ...meta, collapsed: true });
+  };
+  /* The text of a raw-text element (<script>, <style>) is not markup: a tag
+     inside a script's string literal is not a reference the page makes. */
+  const skipTo = (tag, from) => {
+    const re = new RegExp(`<\\/${tag}\\s*>`, "gi");
+    re.lastIndex = from;
+    const e = re.exec(src);
+    return e ? { body: src.slice(from, e.index), end: e.index + e[0].length } : { body: src.slice(from), end: src.length };
   };
 
   TAG_RE.lastIndex = 0;
@@ -223,33 +261,50 @@ export function parseHtmlRefs(html) {
     const closing = raw.startsWith("/");
     const tag = (closing ? raw.slice(1) : raw).toLowerCase();
     if (closing) {
-      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
-        for (let i = region.length - 1; i >= 0; i--)
-          if (region[i].tag === tag) { region.splice(i, 1); break; }
-      }
+      for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) {
+          if (region[i].nest > 0) region[i].nest--;
+          else region.splice(i, 1);
+          break;
+        }
       continue;
     }
     const as = attrsOf(m[2] || "");
-    {
-      const role = (attr(as, "role") || "").toLowerCase().trim();
-      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
-      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
-      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
-      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    if (!VOID_ELEMENTS.has(tag) && m[3] !== "/") {
+      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
+      let entry = null;
+      if (FURNITURE_ROLES.has(role)) entry = { tag, region: "furniture", basis: `role=${role}` };
+      else if (role === "main" || role === "article") entry = { tag, region: "body", basis: `role=${role}` };
+      else if (FURNITURE_TAGS.has(tag)) entry = { tag, region: "furniture", basis: `<${tag}>` };
+      else if (BODY_TAGS.has(tag)) entry = { tag, region: "body", basis: `<${tag}>` };
+      if (entry) region.push({ ...entry, nest: 0 });
+      else for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) { region[i].nest++; break; }
     }
     const inlineStyle = attr(as, "style");
-    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
+    if (inlineStyle) for (const c of cssRefList(inlineStyle)) add(c.url, c.kind, `${tag}[style]`);
 
+    if (tag === "style") {
+      const { body, end } = skipTo("style", TAG_RE.lastIndex);
+      for (const c of cssRefList(body)) add(c.url, c.kind, "style");
+      TAG_RE.lastIndex = end;
+      continue;
+    }
     if (tag === "link") {
       const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
       const href = attr(as, "href");
-      if (!href) continue;
       if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
       else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
         add(href, "icon", `link[rel=${rel.join(" ")}]`);
       else if (rel.includes("preload")) {
         const as_ = (attr(as, "as") || "").toLowerCase();
+        const iss = attr(as, "imagesrcset");
         if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
+        else if (as_ === "image" && iss) {
+          const cands = srcsetCandidates(iss);
+          if (href && !cands.some((c) => c.url === href)) cands.push({ url: href, descriptor: "" });
+          addFamily(cands, "image", "link[imagesrcset]");
+        }
         else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
         else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
       }
@@ -257,21 +312,19 @@ export function parseHtmlRefs(html) {
     }
     if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
       if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
-      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      /* <source src> is a video's or audio's rendition; <source srcset> is a
+         <picture>'s. HTML allows each only in its own parent. */
+      const kind = tag === "video" || tag === "audio" || tag === "track" || (tag === "source" && !attr(as, "srcset")) ? "media" : "image";
+      const ss = attr(as, "srcset");
       /* src is a MEMBER of the family when srcset is present: it is the
          fallback rendition of the same picture, and treating it separately
          fetches the small one alongside the large one, which is the exact
          duplication collapsing exists to prevent. */
       if (ss) {
-        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
-        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const cands = srcsetCandidates(ss);
         const fb = attr(as, "src");
-        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
-        const { pick, rest } = pickSrcsetCandidate(cands);
-        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
-        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
-        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, descriptor: "" });
+        addFamily(cands, kind, `${tag}[srcset]`);
         const po = attr(as, "poster");
         if (po) add(po, "image", `${tag}[poster]`);
         continue;
@@ -288,13 +341,10 @@ export function parseHtmlRefs(html) {
          companion. The kind is what makes the companion able to tell them
          apart without re-deciding the policy. */
       if (s) add(s, "script", "script[src]");
+      TAG_RE.lastIndex = skipTo("script", TAG_RE.lastIndex).end;
       continue;
     }
   }
-
-  STYLE_EL_RE.lastIndex = 0;
-  while ((m = STYLE_EL_RE.exec(src)))
-    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
 
   return refs;
 }
@@ -400,17 +450,14 @@ export function renderCompanion(html, { resolve, classifyLink, primarySha, when 
            survives its descriptor goes too, making it unconditional. */
         const live = [];
         let anyDead = false;
-        for (const cand of a.value.split(",")) {
-          const trimmed = cand.trim();
-          if (!trimmed) continue;
-          const bits = trimmed.split(/\s+/);
-          const t = resolve(bits[0], "image");
+        for (const cand of srcsetCandidates(a.value)) {
+          const t = resolve(cand.url, "image");
           if (t === PLACEHOLDER_MISSING) { anyDead = true; continue; }
-          bits[0] = t === null ? bits[0] : t;
-          live.push(bits.join(" "));
+          live.push({ url: t === null ? cand.url : t, descriptor: cand.descriptor });
         }
         if (!live.length) { put(PLACEHOLDER_MISSING); continue; }
-        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
+        put(live.length === 1 && anyDead ? live[0].url
+          : live.map((c) => (c.descriptor ? `${c.url} ${c.descriptor}` : c.url)).join(", "));
         continue;
       }
 
@@ -497,7 +544,7 @@ export function originOf(url, baseHost) {
  * costs the least important thing rather than an arbitrary one. */
 export const FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
 export const priorityOf = (ref) =>
-  (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+  (FETCH_PRIORITY[ref.kind] ?? 3) * 2 + (ref.region === "furniture" ? 1 : 0);
 
 /** The form two references are compared in when deciding whether they name the
  *  same resource. Stored ALONGSIDE the raw address and never instead of it, so
@@ -519,13 +566,24 @@ export const priorityOf = (ref) =>
  *  arrives in and parameter order there carries no meaning. */
 export function normalizeAddress(url) {
   let u;
-  try { u = new URL(url); } catch { return String(url || "").trim(); }
+  try { u = new URL(url); } catch { return String(url).trim(); }
   u.hash = "";
   u.protocol = u.protocol.toLowerCase();
   u.hostname = u.hostname.toLowerCase();
   if ((u.protocol === "https:" && u.port === "443") || (u.protocol === "http:" && u.port === "80")) u.port = "";
-  const ps = [...u.searchParams.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1));
-  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  /* The parameters are reordered as the source wrote them, never re-encoded:
+     `a+b` and `a%20b` stay what they were, so sorting is the only change. */
+  const q = u.search.slice(1);
+  if (q) {
+    const dec = (x) => { try { return decodeURIComponent(x.replace(/\+/g, " ")); } catch { return x; } };
+    const parts = q.split("&").map((p) => {
+      const i = p.indexOf("=");
+      return { p, k: dec(i === -1 ? p : p.slice(0, i)), v: dec(i === -1 ? "" : p.slice(i + 1)) };
+    });
+    const cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+    parts.sort((x, y) => cmp(x.k, y.k) || cmp(x.v, y.v));
+    u.search = "?" + parts.map((x) => x.p).join("&");
+  }
   return u.toString();
 }
 
@@ -561,7 +619,7 @@ export function normalizeCitation(url) {
   const raw = String(url || "").trim();
   const hash = raw.indexOf("#");
   if (hash === -1) return normalizeAddress(raw);
-  const frag = raw.slice(hash + 1);
+  const frag = raw.slice(hash + 1).trim();
   return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
 }
 
@@ -791,6 +849,11 @@ export async function captureSubresources({
      the runtime has. Network waits are never inside a segment. */
   meter = makeMeter(),
 }) {
+  /* The four callbacks have no default. Checked here, before anything else, so
+     a missing one fails the same way whether or not this page happens to have
+     a reference that would have called it. */
+  for (const [name, fn] of [["fetchOne", fetchOne], ["put", put], ["sha256", sha256], ["isPublic", isPublic]])
+    if (typeof fn !== "function") throw new TypeError(`captureSubresources: ${name} must be a function`);
   /* Why an asset the host has served before was fetched anyway. Recorded so a
      reuse rate that quietly falls to zero is visible rather than mysterious. */
   const noReuse = [];
@@ -851,7 +914,7 @@ export async function captureSubresources({
        "deferred" row beside the real outcome. */
     const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
     for (let i = records.length - 1; i >= 0; i--)
-      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+      if ((records[i].reason === "DEFERRED" || records[i].reason === "PLATFORM_LIMIT") && retry.has(records[i].url)) {
         byUrl.delete(records[i].url);
         records.splice(i, 1);
         discovered--;
@@ -886,6 +949,9 @@ export async function captureSubresources({
        two share a key would make the companion substitute the wrong bytes. */
     if (item.depth === 1 && !refToUrl.has(item.ref)) refToUrl.set(item.ref, cls.ok ? cls.url : null);
 
+    /* R17 (D-603): when THIS run decided about the reference. `fetched_at` is
+       added only where a fetch was actually issued, below; a reused, skipped,
+       deferred, capped or refused record never claims a fetch instant. */
     const at = stamp();
     const org = cls.ok ? originOf(cls.url, baseHost) : { origin: "unknown", host: null };
     const stem = { url: cls.ok ? cls.url : item.ref, kind: item.kind, via: item.where,
@@ -894,7 +960,7 @@ export async function captureSubresources({
                    ...org,
                    ...(item.family ? { family: item.family, family_size: item.family_size } : {}),
                    ...(item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {}),
-                   fetched_at: at };
+                   considered_at: at };
 
     if (!cls.ok) {
       settle(item, { ...stem, ok: false, status: null, reason: cls.reason,
@@ -959,7 +1025,7 @@ export async function captureSubresources({
        difference between a second capture of a host completing and not. */
     if (siteLookup) {
       const known = await siteLookup(normalizeAddress(cls.url));
-      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      const dec = reuseDecision(item, known, { now: now().getTime(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
       if (dec.reuse) {
         reused++;
         const rec = { ...stem, ok: true, status: null, sha256: known.sha256, bytes: known.bytes,
@@ -999,8 +1065,8 @@ export async function captureSubresources({
           const text = await readBack(known.sha256);
           if (text != null) {
             rec.css = true; rec.rewrite = [];
-            for (const u of cssRefs(text))
-              queue.push({ ref: u, kind: "css-asset", where: `url() in ${cls.url}`,
+            for (const c of cssRefList(text))
+              queue.push({ ref: c.url, kind: c.kind, where: `url() in ${cls.url}`,
                            depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec,
                            region: rec.region, region_basis: rec.region_basis });
           }
@@ -1013,7 +1079,11 @@ export async function captureSubresources({
 
     attempted++;
 
-    let r;
+    /* The instant this reference was taken up, which for a fetch is the moment
+       it was issued: nothing between the two reads a clock or waits on the net
+       except siteLookup, and a reused record never carries it. */
+    const fetchedAt = at;
+    let r, limited = false;
     try { r = await fetchOne(cls.url); }
     catch (e) {
       const msg = String((e && e.message) || e);
@@ -1028,6 +1098,7 @@ export async function captureSubresources({
               ? "the runtime refused another outbound request in this invocation; the source was never asked, "
                 + "and this says nothing about whether it would have answered"
               : msg };
+      limited = platform;
       if (platform && !platformHit) {
         platformHit = true;
         /* The count reached WHEN THE RUNTIME SAID NO. This is the observation,
@@ -1038,9 +1109,28 @@ export async function captureSubresources({
       }
     }
 
+    if (limited) {
+      /* The runtime refused before the request left, so no fetch instant, and
+         the reference is outstanding like the ones after it: a continuation
+         retries it rather than losing it. */
+      outstanding.push({ ...({ ...item, cssOwner: undefined }),
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url });
+      const rec = { ...stem, ok: false, status: 0, reason: "PLATFORM_LIMIT", detail: r.detail };
+      byUrl.set(cls.url, rec); settle(item, rec);
+      continue;
+    }
     if (!r || !r.ok) {
-      const rec = { ...stem, ok: false, status: r ? (r.status ?? null) : null,
-                    reason: r?.reason || "SOURCE_REFUSED",
+      /* The failed bucket is closed (R16, R33). A reason the caller names that
+         is not one of its two fetch outcomes (a governor's HOST_COOLING_OFF, say)
+         is not the source refusing, so it is FETCH_FAILED with the caller's
+         word kept beside it; an unexplained non-ok answer is the source's. */
+      const named = r?.reason;
+      const reason = named === "SOURCE_REFUSED" || named === "FETCH_FAILED" ? named
+        : named ? "FETCH_FAILED" : "SOURCE_REFUSED";
+      const rec = { ...stem, ok: false, status: r ? (r.status ?? null) : null, reason,
+                    ...(named && named !== reason ? { fetch_reason: named } : {}),
+                    fetched_at: fetchedAt,
                     ...(r?.detail ? { detail: r.detail } : {}) };
       byUrl.set(cls.url, rec); settle(item, rec);
       continue;
@@ -1048,7 +1138,7 @@ export async function captureSubresources({
     const bytes = r.bytes || new Uint8Array(0);
     if (bytes.length > perMax) {
       const rec = { ...stem, ok: false, status: r.status ?? 200, reason: "TOO_LARGE",
-                    bytes: bytes.length, maxBytes: perMax };
+                    bytes: bytes.length, maxBytes: perMax, fetched_at: fetchedAt };
       byUrl.set(cls.url, rec); settle(item, rec);
       continue;
     }
@@ -1057,7 +1147,7 @@ export async function captureSubresources({
     const { existed } = await put(sha, bytes);
     const ct = (r.contentType || "").split(";")[0].trim();
     const rec = { ...stem, ok: true, status: r.status ?? 200, sha256: sha, bytes: bytes.length,
-                  ...(ct ? { content_type: ct } : {}), existed: !!existed };
+                  ...(ct ? { content_type: ct } : {}), existed: !!existed, fetched_at: fetchedAt };
     rec.fetched_this_capture = true;
     byUrl.set(cls.url, rec);
     if (!bySha.has(sha)) bySha.set(sha, rec);
@@ -1074,8 +1164,8 @@ export async function captureSubresources({
       try { text = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes), bytes.length); } catch { text = ""; }
       rec.css = true;
       rec.rewrite = [];
-      for (const u of meter.sync("parse_css", () => cssRefs(text)))
-        queue.push({ ref: u, kind: "css-asset", where: `url() in ${cls.url}`,
+      for (const c of meter.sync("parse_css", () => cssRefList(text)))
+        queue.push({ ref: c.url, kind: c.kind, where: `url() in ${cls.url}`,
                      depth: item.depth + 1, from: cls.url, against: cls.url, cssOwner: rec,
                      /* A stylesheet's own assets carry the stylesheet's region,
                         not the region of whatever tag happened to be open. */
@@ -1186,7 +1276,7 @@ export async function captureSubresources({
                  + "A capture ratified as evidence must re-fetch them." },
     /* D-191: when the parts this composite holds were fetched, per clock. */
     part_fetch_spread: partFetchSpread(records),
-    outstanding: deferred,
+    outstanding: outstanding.length,
     platform: {
       limited: platformHit,
       /* Discovered, never declared. null means this run never found the edge,
