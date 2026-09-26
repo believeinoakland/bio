@@ -2,9 +2,9 @@
 
 Session: `session_014szwz88Jt9EWztKH5wfE1v` (JURISDICTIONS #1). BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T2`.
 
-**Status** · COMPLETE, 2026-09-26. Job for module `jurisdictions`, tranche T2, branch `job/T2/jurisdictions`. Entries T2-1, N1 and N11 applied. Q1 (below) is open with BOB; the work follows the readings stated there, and an answer that differs re-opens the job. Waiting on: BOB's answer to Q1, or a `CHANGE`.
+**Status** · COMPLETE, 2026-09-26, re-run after BOB's ANSWER to Q1 (K44, `origin/tranche/T2` @ e6398b33, merged at b944ce1d78): every reading stood and R2, R12, R13, R14, R25 and R29 now state them. No open question. Waiting on: nothing; available for a `CHANGE`.
 
-## Questions (Q1, 2026-09-26) — carrying on with the reading stated
+## Questions (Q1, 2026-09-26) — ANSWERED by BOB: all six readings, ruling K44
 
 The interface is pushed: `jurisdictions/index.mjs` (`list`, `get`, `validate`, `combine`), `jurisdictions/profiles/oakland-alameda.mjs` (the first profile) and `jurisdictions/profiles/test-port-ellery.mjs` (the test profile, which also carries a crosswalk). Both held profiles pass `validate`.
 
@@ -30,9 +30,14 @@ None.
 - **id-spaces, docprofile (T2):** they can now take every fact from `combine(...).view`. Local facts remain in code outside T2's entries, as `layers.md` already plans: `readingNamePlan(["oakland", "police"])` in `store.mjs` (legacy-store) and `cpra_request` in `ACTION_KINDS` with its CPRA sentence in `governingLawsOf` (legacy-checks). Their consumers should read `search_terms` and `action_kinds` / `records_laws` from the view when those modules are extracted.
 - **Generated artifacts:** none made stale; no bundle includes `jurisdictions/`.
 
-## Tests and checks run (job/T2/jurisdictions, from tranche/T2 @ 611986933c)
+## K44 (BOB's answer to Q1)
 
-- `node --test jurisdictions/test/` — `tests 30, pass 30, fail 0` (5 runs; the third found 2 failures, both slips in the tests themselves: an R15 case that invalidated its own crosswalk, and an R21 comparison of `undefined` with `false`).
+- `tranche/T2` merged. New tests name the added sentences: R2 (basis grammar), R12 (`NOT_A_LIST`, two profiles under one id, an unknown entry field), R13 (the view's `id` and `name`), R25 (tier and venue optional), R29 (labels and citations joined, laws unioned, an extension one value per key). R14's `bases` was already tested.
+- One change to the module, found by the R2 test: a basis qualifier is now one word, as R2 says (`M-1 and M-2` was accepted before). Both held profiles still validate. `id-spaces`'s tests were not re-run here (running them from its branch was denied in this session); the change only narrows which basis strings `validate` accepts, and BOB verifies `id-spaces` after this branch merges.
+
+## Tests and checks run (job/T2/jurisdictions, tranche/T2 @ b944ce1d78 merged)
+
+- `node --test jurisdictions/test/` — `tests 35, pass 35, fail 0` (7 runs in all; the sixth found the one-word qualifier above; the third found 2 failures, both slips in the tests themselves: an R15 case that invalidated its own crosswalk, and an R21 comparison of `undefined` with `false`).
 - Layer tests: none named in `build/manifest.md`. No provided service changed for an existing user (the module is new).
 - `node checks/format.mjs` — `format: 61 modules, 19 requirements files; 0 failures`
 - `node checks/architecture.mjs … jurisdictions` — `architecture: 5 product files, 4 relative imports (0 naming no tracked file, not judged); 0 failures`
@@ -43,5 +48,5 @@ None.
 
 ```csv
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
-session_014szwz88Jt9EWztKH5wfE1v,job,jurisdictions,8309434,210121,102,90594,51,5,1017
+session_014szwz88Jt9EWztKH5wfE1v,job,jurisdictions,12100708,231358,132,99828,65,7,1017
 ```
