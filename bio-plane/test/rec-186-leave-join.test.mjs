@@ -123,17 +123,21 @@ const before = await rowsOf(PA);
 const refused = await leave(IRIS, PA);
 const after = await rowsOf(PA);
 console.log(`  iris@PA leave -> ${codeOf(refused)} · rows ${sha(before).slice(0, 12)} -> ${sha(after).slice(0, 12)} (${Buffer.byteLength(before)} B)`);
-t("THE REFUSAL: op=projectleave refuses PA's only owner BY NAME (LAST_OWNER_CANNOT_LEAVE, saying to transfer "
+/* UPDATED 2026-09-26 (T3, legacy-tests; membership R35, REC-224): the floor is now one COMMITTED owner, refused
+   LAST_COMMITTED_OWNER (the old LAST_OWNER_CANNOT_LEAVE counted every owner). PA's only owner meets it the same way. */
+t("THE REFUSAL: op=projectleave refuses PA's only owner BY NAME (LAST_COMMITTED_OWNER, saying to transfer "
 + "ownership first), and every one of PA's membership rows is byte-identical after",
   [codeOf(refused), refused?.ok, /transfer ownership first/i.test(String(refused?.detail ?? "")),
    Buffer.byteLength(before) > 100, after === before],
-  ["LAST_OWNER_CANNOT_LEAVE", false, true, true, true]);
-t("THE REFUSAL IS CATALOGUED: LAST_OWNER_CANNOT_LEAVE has a DEC-49 row — its check, its region, and a canned "
+  ["LAST_COMMITTED_OWNER", false, true, true, true]);
+/* The catalogue row asked of the refusal the op actually answers. LAST_COMMITTED_OWNER has none yet: that is entry N44
+   (legacy-checks, next tranche), and until it lands this assertion is red by that module's gap, reported, not relaxed. */
+const leaveRow = ACT_SHAPE_CHECKS[codeOf(refused)];
+t("THE REFUSAL IS CATALOGUED: the refusal met has a DEC-49 row — its check, its region, and a canned "
 + "translation that tells the member what to do and that nothing was recorded",
-  [ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.check, ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.where,
-   /Add another owner first/.test(ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.translation ?? ""),
-   /Nothing was recorded/.test(ACT_SHAPE_CHECKS.LAST_OWNER_CANNOT_LEAVE?.translation ?? "")],
-  ["C-33.48", "src/store.mjs projectLeave > is-leave-owner-floor", true, true]);
+  [typeof leaveRow?.check === "string" && /^C-\d+\.\d+$/.test(leaveRow.check), typeof leaveRow?.where === "string",
+   /Add another owner first/.test(leaveRow?.translation ?? ""), /Nothing was recorded/.test(leaveRow?.translation ?? "")],
+  [true, true, true, true]);
 t("THE LEAVE OFFER: op=affordances does NOT offer projectleave to PA's only owner, and still offers her the "
 + "owner's acts (projectinvite), so the withholding is the floor and not a lost position",
   [irisPA.includes("projectleave"), irisPA.includes("projectinvite")], [false, true]);
