@@ -14,6 +14,7 @@
 - N19 · 2026-09-26 · **legacy-index**: `needsTier3` and `tier3Pages` route a page marked `image_content_unread` (pdf-reader R26) to OCR as they route `no_text_layer`, and `needsTier2` counts it as a scan marker. Built work: `index.mjs` at `land/worker/D-627` @ 056d3092 (14 lines). Reported by PDF-READER #1.
 - N20 · 2026-09-26 · **legacy-tests**: `bio-plane/test/textshown.test.mjs` reads `PdfDoc._pageOrder`, now private (pdf-reader K28); use `pageCount`/`pageDict`. Reported by PDF-READER #1.
 - N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1.
+- N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
 

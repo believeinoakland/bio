@@ -78,3 +78,4 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 ## Completions verified by BOB (ownership, coverage, module tests on the job branch)
 
 - format-registry · `job/T2/format-registry` @ de542e00 · 27/27 ids, 27 pass · 2026-09-26 17:03
+- test-support · `job/T2/test-support` @ 381fbc11 · 9/9 ids, 22 pass · 2026-09-26 17:04; N22 deferred to next.md
