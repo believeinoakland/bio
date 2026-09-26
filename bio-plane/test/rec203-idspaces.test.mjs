@@ -20,6 +20,8 @@
    44/1 · fundbare 44/1 · formjoin 42/3 · overstrict 45/0, the same assertions failing by name, every restore
    IDENTICAL at 0cb6b2a508d6…. One INSTRUMENT correction before the run, recorded at its arm: the APN "never RETIRED by absence"
    assertion first matched words and caught the answer's own "retired before the lineage".
+   RE-ANCHORED 2026-09-26 (T3, N23) on the rewritten `judgePair` (the adapter's), and RE-RUN: baseline 45/0 · independence
+   44/1 · fundbare 44/1 · formjoin 42/3 · overstrict 45/0, the same assertions failing by name, every restore IDENTICAL.
  * =========================================================================
  * rec203-idspaces.test.mjs — REC-203. THE RECOGNISERS AND THE COUNTING RULE OF
  * `docs/architecture/BIO_Content_Framework_v0_10.md` §8.3 "WHAT MAKES A SHARED IDENTIFIER COUNT", with rule 3's APN

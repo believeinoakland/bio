@@ -14,10 +14,15 @@ const SUITE = fileURLToPath(new URL("./rec203-idspaces.test.mjs", import.meta.ur
 const ID = join(SRC, "idspaces.mjs");
 const ARMS = {
   baseline: [],
-  independence: [[ID, "if (a.system.origin === b.system.origin)", "if (a.system.host === b.system.host)"]],
+  /* Re-anchored (T3, N23) on the rewritten `judgePair` (id-spaces N2), which the old interface's adapter calls: the
+     same four mutations, on the new code's names (`sa`/`sb` are the ends' systems, `ra`/`rb` their recognised values). */
+  independence: [[ID, "if (sa.origin === sb.origin)", "if (HOST(sa) === HOST(sb))"],
+    /* the host each end was retrieved from (its origin where the end carries no address, as the module-level arms'
+       ends do), defined beside the function so the arm is one expression */
+    [ID, "/* 3. the systems' independence (R19) */", "/* 3. */ const HOST = (x) => (x.addresses?.length ? new URL(x.addresses[0]).host : x.origin);"]],
   fundbare: [[ID, "if (!na || !nb)\n", "if (false)\n"]],
-  formjoin: [[ID, "if (a.rec.form !== b.rec.form)", "if (false)"]],
-  overstrict: [[ID, "if (a.system.origin === b.system.origin)", "if (b.system.origin === a.system.origin)"]],
+  formjoin: [[ID, "if (ra.form !== rb.form)", "if (false)"]],
+  overstrict: [[ID, "if (sa.origin === sb.origin)", "if (sb.origin === sa.origin)"]],
 };
 const arm = process.argv[2] || "baseline";
 if (!ARMS[arm]) { console.error(`unknown arm ${arm}; arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
@@ -43,7 +48,7 @@ try {
   console.log(`ARM ${arm}: ${foot ? `${foot[1]}/${foot[2]}` : "NO FOOT (-1)"} exit ${r.status}`);
   code = r.status;
 } finally {
-  for (const [file, pristine, want, bytes] of saved) {
+  for (const [file, pristine, want, bytes] of [...saved].reverse()) {   /* last edit first, so two arms on one file end at the first pristine copy */
     copyFileSync(pristine, file);
     const got = readFileSync(file);
     const same = digest(got) === want && Buffer.compare(got, readFileSync(pristine)) === 0 && got.length === bytes && bytes > 1000;
