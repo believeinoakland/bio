@@ -49,7 +49,7 @@ and calls at both the detect→structure seam and directly (`entry.parts(bytes)`
   unreadable part (name pushed to `undetermined` with why); `declared` is `content.xml`'s
   declared-uncompressed byte total (COFF-6's metric, summed from the central directory before
   inflation); `guard` is the size-guard marker or `null` under the bound; `undetermined`
-  already carries the two markers of R28 on every successful read.
+  carries each part not read, per R28 and R29.
 - **R4** `detect` and `parts` never throw, on any bytes.
 - **R5** When `parts` (or bytes passed to `structure()`/`text()` that fail discrimination
   through it) has `ok:false`, `structure()` and `text()` both return `{ok:false,
@@ -170,23 +170,22 @@ deckLength, undetermined, counts:{chars, notesChars, undetermined}}`; `images` i
   part:"content.xml", why}` marker — the same shape R13 states for `.odt`.
 
 **Shared envelope facts, across all three `structure()`s and `text()`s:**
-- **R28** Every successful `structure()` call states, in `evidentiary.undetermined`, that
-  `meta.xml`'s core properties (creator, title, created/modified, revision) were not read and
-  that `META-INF/manifest.xml`'s embedded-object members were not content-addressed into an
-  `intra` link — each `{part, why:"outside_content_xml_not_read", detail}` — unconditionally,
-  because this module reads `content.xml` only. `notes` always adds the sentence that no
-  `intra` link is emitted because embedded members live outside `content.xml`.
+- **R28** Every successful `structure()` call states, in `evidentiary.undetermined`, each part
+  of the package it did not read, as `{part, why, detail?}`: under R29, `meta.xml` absent
+  (`why:"part_absent"`) or unreadable (its `why`), and the manifest unreadable (its `why`).
 - **R29** *(not yet met: D-346)* narrows R28: when `meta.xml` is present,
   `structure()` reads it and emits one `core-properties` item (creator, title, created/
-  modified, revision — each `null` when the file omits it) instead of the `meta.xml` marker; a
+  modified, revision — each `null` when the file omits it); a
   package without `meta.xml` still states the absence. When the manifest is present,
   `structure()` walks it and content-addresses each embedded member it lists into a `sha256`-
-  keyed `intra` link instead of the manifest marker; a package with no manifest, or none of
-  whose listed members embed anything, still states why `intra` is empty.
+  keyed `intra` link; a package with no manifest, or none of
+  whose listed members embed anything, still states why `intra` is empty. An embedded member is
+  a manifest entry that is neither one of the package's own parts, nor under `Pictures/` (R30),
+  nor a font referenced by `svg:font-face-uri`; one absent, encrypted or unreadable becomes an
+  undetermined link naming its why.
 - **R30** `text()`'s output always carries `images`: the package's `Pictures/` directory,
   content-addressed exhaustively (`images`), or `images:null` with `imagesWhy` when it could
-  not be — read off the central directory alone, so this is independent of the manifest and
-  R28's manifest marker stays true and stays stated regardless of R30's outcome.
+  not be — read off the central directory alone, so this is independent of the manifest.
 - **R31** `ODT_CONTENT_TYPE`, `ODS_CONTENT_TYPE`, `ODP_CONTENT_TYPE` are the three exact
   OpenDocument media types, read off the same `partMap:"odf"` rows `detect`/`parts` use, never
   a separate literal. `ODF_FORMATS` is `["odt","ods","odp"]`, the three flavour strings, read
@@ -231,7 +230,8 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
 - `ooxml`: `hasZipMagic`, `readContainer`, `readPart`, `normalizePartName`, `crc32`,
   `discriminate`, `sizeGuard` (and its `MEASURED_OOXML_TEXT_BOUND_BYTES` default),
   `declaredTextBytes`, `CONTAINER_FLAVOURS` (filtered to `partMap:"odf"` rows),
-  `ODF_MIMETYPE_PART`, `ODF_MANIFEST_PART`, `ODF_MIMETYPE_MAX_BYTES`, `withContainerImages`.
+  `ODF_MIMETYPE_PART`, `ODF_MANIFEST_PART`, `ODF_MIMETYPE_MAX_BYTES`, `withContainerImages`,
+  `IMAGE_MIME_BY_EXT`.
 - `subresources`: `linkWrapper`, for the `anchor`/`deferred`/`refused` link partition.
 - `office-readers`: `docParaRef`, `docTableRef` (`docx.mjs`); `sheetCellRef`, `usedSheetRange`
   (`formats-xlsx.mjs`); `slideShapeRef` (`pptx.mjs`) — the one reference builder per IC-1 arm,
