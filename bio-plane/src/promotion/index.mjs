@@ -268,9 +268,9 @@ class Promotion {
         `${sizeless.join(", ")}: held as a blob and stating no size (bytes, a whole number from 0). Nothing was written.`,
         { paths: sizeless });
 
-    /* R17: readability is judged before any fence that reads the document's content. */
+    /* R7, R17: readability is judged before any fence that reads the document's content. */
+    if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
     if (base !== null) {
-      if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a revision carries its bundle.md" };
       if (typeof sentMd.text !== "string" || !sentFm)
         return rowRefusal(PROMOTION_CHECKS.BUNDLE_MD_UNREADABLE, "BUNDLE_MD_UNREADABLE",
           typeof sentMd.text !== "string"
