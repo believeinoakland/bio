@@ -53,7 +53,7 @@ Method: work in **chunks of about 25 rows**, reading each row's full text in the
 
 **T8 · Build state and the first tranche.** Create `build/` on `main`: the manifest, layers, modules, the first layer's requirements, the rulings file, and `plan/current.md` for tranche T1. Write the role instructions for BOB and for a module job in `civicos-process/roles/` (C13). T1 holds the extraction of the first layer's modules plus the carried T5 entries for them. **Replace `CLAUDE.md`** with a short pointer to the new process (§5, C1). Land the process documents on `main`. *Done when `main` carries all of it.*
 
-**T9 · Tranche T1, the certification run (P3).** Run T1 under the mechanics. It proves the process on a small tranche and starts the metrics (P14). *Bob approves its opening.*
+**T9 · Tranche T1, the certification run (P3).** Run T1 under the mechanics. It proves the process on a small tranche and starts the metrics (P14). *BOB opens it (K22).*
 
 ## 4. Progress log
 
@@ -89,6 +89,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-26 · T8 · role instructions for BOB and a module job (`civicos-process/roles/`); `build/manifest.md` and `build/rulings.md` (K1–K20, the transition's rulings); tranche T1's plan drafted as a proposal (`build/plan/current.md`: ooxml, subresources, pdf-reader and pdf-worker, the smallest set that exercises every part of a layer); `CLAUDE.md` replaced by a pointer to the new process, the old one archived; the format check counts a plan entry once per module · `build/`, `CLAUDE.md`, `civicos-process` @ 4a9f4f6 · next: land on `main`
 - 2026-09-26 · T8 · DONE: `land/bob/process-design` fast-forwarded onto `main` (95fe7bc7 → 98a50108, 49 commits, no history rewritten). The push ran only the branch-cleanup workflow, no gate. From here BOB writes the build state on `main` directly outside a tranche (K21) · `main` · next: T9, Bob approves T1's opening
 - 2026-09-26 · T9 · T1's plan published for Bob; handoff rewritten; this session's tokens recorded under T0 · `build/metrics/T0.csv` · next: Bob approves T1
+- 2026-09-26 · T9 · Bob pointed out that asking him to approve T1 contradicted P17. BOB #38 had carried Bob's approval of a tranche's opening over from the earlier mechanics; it is removed from the mechanics, `roles/BOB.md` and `CLAUDE.md` (K22). T1 opened by BOB · `build/plan/current.md`, `civicos-process` @ 6a5d996 · next: the four job sessions
 
 ## 5. Challenges identified
 
@@ -114,9 +115,9 @@ Replaced at each handoff; the progress log (§4) is the history.
 
 **Where things stand.** T0–T8 are done. The new process is on `main`: `CLAUDE.md` points every session to `believeinoakland/civicos-process` (principles P1–P17, mechanics, `roles/BOB.md` and `roles/JOB.md`, the four checks, the metrics recorder). The build state is complete: `build/manifest.md`, `layers.md` (11 layers, including Action), `modules.json` (61 modules), 14 layer-1 requirements files, `rulings.md` (K1–K21), `plan/next.md`, and `plan/current.md` holding T1 as a PROPOSAL. The old push guard and the push-to-`main` gate are retired. Checks on `main`: format 0 failures; architecture 66, all known and entered (N12–N14), 0 in layer 1; coverage 9 of 474 ids, as expected before the first jobs.
 
-**Waiting on Bob:** approval to open T1 (four layer-1 modules: ooxml, subresources, pdf-reader, pdf-worker), and his weekly meter reading at the opening. Rendered for him: https://claude.ai/artifact/YMEc97NkXVW7kyQG9NJRVD. His approval is also his go-ahead to start the four job sessions.
+**Waiting on Bob:** only his weekly meter reading, which the tranche does not wait for. T1 is open (ooxml, subresources, pdf-reader, pdf-worker).
 
-**Next, in order.** On approval: set `plan/current.md` to OPEN with the meter reading and remove N9 from `next.md`; create `tranche/T1` from `main`; create `job/T1/<module>` for the four modules; start four job sessions (`create_session`, each told to read `roles/JOB.md` in `civicos-process` and naming its module and T1); answer their questions; carry N9's service change from pdf-reader to pdf-worker; when all four record completion, run the ownership check on each branch, merge them into `tranche/T1`, fast-forward `main`, archive the plan with measured usage, and report to Bob.
+**Next, in order.** Create `job/T1/<module>` for the four modules; start four job sessions (`create_session`, each told to read `roles/JOB.md` in `civicos-process` and naming its module and T1); answer their questions; carry N9's service change from pdf-reader to pdf-worker; when all four record completion, run the ownership check on each branch, merge them into `tranche/T1`, fast-forward `main`, archive the plan with measured usage, and report to Bob.
 
 **Working relationship (P17).** Bob decides only policy and doctrine, requirements, architecture and UX, and opens tranches. Everything else is BOB's: decide, record in `rulings.md`, report as done. Never hand him a file or a command.
 

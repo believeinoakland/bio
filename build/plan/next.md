@@ -16,10 +16,8 @@
 **signatures**
 - N7 · 2026-09-25 · BOB #37 ruled: the signing page's source (`tools/sign-release.html`) and its generator (`bio-plane/scripts/embed-signpage.mjs`) move into `signatures`, which serves the page, so the module's own tests can check that the page it serves is the current render. `modules.json` gains the two paths when the files move.
 
-**pdf-reader**, **pdf-worker**
-- N9 · 2026-09-25 · `pdf-worker` reads `pdf-reader`'s private fields (`PdfDoc.objects`, `._pageOrder`, an image placement's `_stream` and `_ctm`), so a rename breaks it with no error at import. `pdf-reader` provides what `pdf-worker` needs as named services, and `pdf-worker` uses only those. Applied by `pdf-reader`'s job, with `pdf-worker`'s job in the same layer.
-
-- N11 · 2026-09-26 · **jurisdictions**: build the action sections, R23–R30 of `requirements/jurisdictions.md` (approved by Bob 2026-09-26), in the same job as N1, so the module is created once with every section the product will read.
+**pdf-worker**
+- D-622 · 2026-09-26 · Decoders for JBIG2 and JPX image-only pages (old-plan row D-622), held out of T1 as too large for the certification run. (N9 moved to T1.)
 
 ## Later layers
 
