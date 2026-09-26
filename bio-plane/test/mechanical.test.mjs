@@ -24,6 +24,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
 import { checkBundle, MECHANICAL_FIELD_SETS } from "../checks/bio-checks.mjs";
+import { recordChecks } from "../src/promotion/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -94,6 +95,9 @@ const judge = async (id) => {
   for (const [p, v] of Object.entries(img)) if (typeof v === "string") files.set(p, v);
   const { findings } = await checkBundle({ folderName: id, files,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; K64): C-20.1 left the catalogue for `promotion`, whose gate runs
+     `recordChecks` after `checkBundle`; "the gate" here is both, as the gate takes them. */
+  findings.push(...await recordChecks({ folderName: id, files, sha256: shaHex }));
   return findings.filter((f) => f.severity === "error");
 };
 
@@ -261,6 +265,7 @@ console.log("\n--- the monitor tick, written by the plane and audited by the gat
   const el = new Set(Object.entries(img).filter(([, v]) => typeof v !== "string").map(([k]) => k));
   const { findings } = await checkBundle({ folderName: ID7, files, elidedPaths: el,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+  findings.push(...await recordChecks({ folderName: ID7, files, sha256: shaHex }));   /* K64, as `judge` above */
   const errs = findings.filter((f) => f.severity === "error");
   for (const x of errs) console.log(`         ${x.check}: ${x.message.slice(0, 130)}`);
   t("three of the plane's own ticks, and the gate finds nothing", errs.length, 0);

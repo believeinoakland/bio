@@ -105,7 +105,13 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
-const CHECKS_SRC = readFileSync(CHECKS, "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; K64): C-4.2, C-17.2, C-18.8 and C-20.1 left the catalogue for `promotion`
+   with their repair strings, so the catalogue's repairs are `bio-checks.mjs` AND promotion's two check files.
+   `history.mjs` emits through the same `f(check, severity, message, repairs)`; `release.mjs` through
+   `finding(severity, message, repairs)` with its check fixed at C-18.8, read here as that `f` call. */
+const PROMOTION_CHECK_SRC = readFileSync(SRC("promotion/history.mjs"), "utf8") + "\n"
+  + readFileSync(SRC("promotion/release.mjs"), "utf8").replace(/(^|[^A-Za-z0-9_$.])finding\(/g, '$1f("C-18.8", ');
+const CHECKS_SRC = readFileSync(CHECKS, "utf8") + "\n" + PROMOTION_CHECK_SRC;
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 
 /* =====================================================================
@@ -592,7 +598,7 @@ console.log("\n--- REACH: each judgement fails on a planted defect and not on th
 
 const plant = (why, anchor, replacement) => {
   if (!CHECKS_SRC.includes(anchor)) {
-    throw new Error(`REACH ARM BROKEN (${why}): the anchor text is not in checks/bio-checks.mjs, so this arm `
+    throw new Error(`REACH ARM BROKEN (${why}): the anchor text is not in checks/bio-checks.mjs or promotion's check files, so this arm `
       + `would score a delta against nothing. Fix the anchor rather than the assertion.`);
   }
   return CHECKS_SRC.replace(anchor, replacement);
@@ -659,16 +665,18 @@ const plant = (why, anchor, replacement) => {
 
 {
   /* (iv) an illegal edge written in a repair that is NOT a directive. */
-  const anchor = "'record the release under one identity'";
-  const armed = plant("A4", anchor, "'the retired -> collected transition is recorded'");
+  /* T3: this repair moved with C-18.8 to promotion's release.mjs, spelled in double quotes there. */
+  const anchor = '"record the release under one identity"';
+  const armed = plant("A4", anchor, '"the retired -> collected transition is recorded"');
   t("REACH A4, as a delta: an illegal edge in non-directive prose still fires",
     [a4Offenders(REAL).length, a4Offenders(repairStrings(armed)).length], [0, 1]);
 }
 
 {
   /* (v) an op that does not exist. */
-  const anchor = "'restore the registry root signature'";
-  const armed = plant("A5", anchor, "'restore it through op=unverify'");
+  /* T3: this repair moved with C-18.8 to promotion's release.mjs, spelled in double quotes there. */
+  const anchor = '"restore the registry root signature"';
+  const armed = plant("A5", anchor, '"restore it through op=unverify"');
   t("REACH A5, as a delta: an op the control plane never declared fires",
     [a5Offenders(REAL).length, a5Offenders(repairStrings(armed)).length], [0, 1]);
 }
