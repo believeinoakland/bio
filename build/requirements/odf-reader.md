@@ -79,8 +79,8 @@ evidentiary, notes}`**
   omits it), `text`, `source` (the `doc-para`). An annotation's own text is excluded from its
   host paragraph's `paragraphs`/`document`/`evidentiary` text.
 - **R10** Over the guard, or with no readable `<office:text>` body, `paragraphs` is `null`,
-  `links` is `[]`, `evidentiary.items` is `[]`, and `notes` names which (the guard, or an
-  unreadable/absent body).
+  no link or item is derived from the body, and `notes` names which (the guard, or an
+  unreadable/absent body); what R29 reads from `meta.xml` and the manifest is still emitted.
 
 **`.odt` — `odtEntry.text` → `{ok:true, container:"odt", document, paragraphs, tables,
 undetermined, counts:{chars, undetermined}}`; `images` is added (R30).**

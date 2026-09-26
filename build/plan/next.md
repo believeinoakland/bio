@@ -21,6 +21,7 @@
 - N26 · 2026-09-26 · **office-readers**: `.docx` `mc:AlternateContent` fallbacks are read twice; the fix renumbers ¶ references in stored readings, so it lands with a migration of those references. Deferred by OFFICE-READERS #1.
 - N27 · 2026-09-26 · **odf-reader**, **office-readers**: the `.ods` half of D-415 (named ranges and tables as `sheet-range` units, as `.xlsx` has by R9/K36); built work on the snapshot (`odf.mjs`); `office-readers` names `rangeUnitFor` and `a1Corner` in its Provides for it. Reported by OFFICE-READERS #1.
 - N28 · 2026-09-26 · **legacy-store** (at the extraction of its reader): a page's kind reads `chainKindFor` (text-chain R81), not `terminalStep(chain) || "layer"`. Reported by TEXT-CHAIN #1.
+- N29 · 2026-09-26 · **legacy-tests**: `bio-plane/test/formats-odf.test.mjs` asserts the D-346 defect (13 assertions: the two `outside_content_xml_not_read` markers, no `core-properties`, the "no intra" note) and fails them since T2's `odf-reader` met R29; the snapshot's version at `96eeb2d5` passes 171/0. Take it, and re-baseline `nc-coff11.mjs`. Known red on `main` until then, as N15. Reported by ODF-READER #1.
 - DIST-14 · **office-readers**: the CSV size bound (20 MiB) is unsettled until measured on a deployed plane (old-plan row DIST-14). Deferred by OFFICE-READERS #1 in T2: it needs a deployment.
 - Local facts still in code, reported by JURISDICTIONS #1: `readingNamePlan`'s "oakland" (N4) and `legacy-checks`' `cpra_request` and `governingLawsOf`'s CPRA sentence (REC-201): each extraction reads them from the view.
 
