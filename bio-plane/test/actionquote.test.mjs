@@ -331,9 +331,10 @@ console.log("\n--- 5. purge clears action_quotes in both arms ---");
   const all = rP(await GET(`op=purge&token=adm-d148&confirm=bio`));
   t("a whole-store purge succeeds", all.ok, true);
   t("WHOLE-STORE ARM: the table is empty", (await stats()).actionQuotes, 0);
-  t("the projection is named in purge's TABLES list",
-    /"action_quotes"/.test(STORE_SRC.slice(STORE_SRC.indexOf("const TABLES = ["),
-      STORE_SRC.indexOf("];", STORE_SRC.indexOf("const TABLES = [")))), true);
+  /* RETIRED 2026-09-26 (T3, legacy-tests): "the projection is named in purge's TABLES list" read the `const TABLES = [`
+     list from store.mjs, which moved to record-core, where each module declares its own tables (record-core R21).
+     What it stood for is measured just above, in both arms, with rows there to clear: the per-bundle purge takes
+     ACT1's two quotes (4 -> 2) and the whole-store purge takes the table to 0 (record-core R22). */
 }
 
 console.log(`\nactionquote: ${pass} pass, ${fail} fail`);

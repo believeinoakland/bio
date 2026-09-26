@@ -33,7 +33,7 @@ import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy t
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -44,6 +44,14 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 const SRC_DIR = process.env.OPAQUE_IDS_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R3, R6-R9): the opaque minter, the gated list and the counter
+   moved out of store.mjs into `record-core` (`RecordCore#mintOpaqueId`, `RecordCore.GATED_ID_PREFIXES`, `allocId`),
+   and REC-141's PROJ mint into `promotion`. §1's source pins read the minter and the list in record-core and the mint
+   sites over the store's corpus as it stood before the extraction: store.mjs AND the extracted modules' files. */
+const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
+const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion"].flatMap((d) =>
+  readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))]
+  .join("\n");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -88,28 +96,35 @@ try {
 /* ======================================================== 1. THE SOURCE, BY NAME */
 console.log("\n--- 1. the CSPRNG source, by name: one minter, and every gated site calls it ---");
 {
-  const at = STORE_SRC.indexOf("  #mintOpaqueId(");
-  const body = at === -1 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n  }\n", at));
-  t("the one opaque minter exists (`Store#mintOpaqueId`) and was read (a pin over an empty body pins nothing)",
+  const at = RECORD_CORE_SRC.indexOf("\n  mintOpaqueId(");
+  const body = at === -1 ? "" : RECORD_CORE_SRC.slice(at, RECORD_CORE_SRC.indexOf("\n  }\n", at));
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R6-R9): was `Store#mintOpaqueId` in store.mjs. */
+  t("the one opaque minter exists (`RecordCore#mintOpaqueId`) and was read (a pin over an empty body pins nothing)",
     [at !== -1, body.length > 200], [true, true]);
   t("it draws from the CSPRNG BY NAME (`crypto.getRandomValues`)", /crypto\.getRandomValues\(/.test(body), true);
   t("and from nothing weaker or counted: no `Math.random`, no `allocId`, no `#nextSeq`, no read of `seq`",
     [/Math\.random/.test(body), /allocId\(/.test(body), /#nextSeq\(/.test(body), /\bFROM seq\b/i.test(body)],
     [false, false, false, false]);
   const gated = ["PROJ", "CASE", "DRAFT", "RVG", "TASK"];
-  t("the gated set is ONE list in the store, and it is these five",
-    (/static GATED_ID_PREFIXES = Object\.freeze\(\[([^\]]*)\]\)/.exec(STORE_SRC)?.[1] || "").replace(/["\s]/g, "").split(","),
-    gated);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R3, R27): the list moved to record-core; "ONE list" is now
+     asked of the whole corpus (one declaration of it anywhere). */
+  t("the gated set is ONE list, in record-core, and it is these five",
+    [(MINT_CORPUS.match(/GATED_ID_PREFIXES = /g) || []).length,
+     (/static GATED_ID_PREFIXES = Object\.freeze\(\[([^\]]*)\]\)/.exec(RECORD_CORE_SRC)?.[1] || "").replace(/["\s]/g, "").split(",")],
+    [1, gated]);
   /* Every call of the counter in the store, by prefix. A gated prefix must appear NOWHERE — including through
      `#nextSeq`, the counter's own step, which REC-141's first mint called directly. */
-  const counted = [...STORE_SRC.matchAll(/(?:allocId|#nextSeq)\(\s*"([A-Z]+)"/g)].map((m) => m[1]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R1-R9): read over the corpus, not store.mjs alone. */
+  const counted = [...MINT_CORPUS.matchAll(/(?:allocId|#nextSeq)\(\s*"([A-Z]+)"/g)].map((m) => m[1]);
   t("the corpus the counter pin reads is non-empty (INFO, ENT and REL still count)", counted.length >= 3, true);
   t("NO gated prefix is minted from the counter anywhere in the store (allocId or #nextSeq)",
     counted.filter((p) => gated.includes(p)), []);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R6, promotion): a mint site now calls record-core's minter
+     (`recordOf(this.ctx).mintOpaqueId("CASE", …)` in store.mjs; `record.mintOpaqueId("PROJ", …)` in promotion). */
   for (const P of gated.filter((p) => p !== "PROJ"))
-    t(`the ${P} mint calls the one minter`, new RegExp(`#mintOpaqueId\\(\\s*"${P}"`).test(STORE_SRC), true);
+    t(`the ${P} mint calls the one minter`, new RegExp(`\\.mintOpaqueId\\(\\s*"${P}"`).test(MINT_CORPUS), true);
   t("and REC-141's PROJ mint calls it too (one minter, not a second copy of the draw)",
-    /#mintOpaqueId\(\s*"PROJ"/.test(STORE_SRC), true);
+    /\.mintOpaqueId\(\s*"PROJ"/.test(MINT_CORPUS), true);
 }
 
 /* ======================================================== fixture */

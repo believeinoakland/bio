@@ -64,6 +64,15 @@ const REAL_SRC = join(PLANE, "src");
 const SRC_DIR = process.env.MINT_LEDGER_SRC || REAL_SRC;
 const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(join(SRC_DIR, "schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R6-R9, R40): the ledger, its minter and its seed moved out of
+   store.mjs into `record-core` (`RecordCore#mintOpaqueId`, `seedMintLedger`, the `minted_ids` DDL in its own schema),
+   and REC-141's PROJ mint into `promotion`. §1 reads the store's corpus as it stood before the extraction — store.mjs
+   AND the extracted modules' files — and record-core's schema literal; §2 and §3 patch the line where it now is. */
+const MODULES = ["record-core", "membership", "promotion"];
+const moduleFiles = (d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => `${d}/${f}`);
+const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
+const RECORD_SCHEMA_SRC = readFileSync(join(SRC_DIR, "record-core", "schema.mjs"), "utf8");
+const CORPUS = [STORE_SRC, ...MODULES.flatMap(moduleFiles).map((f) => readFileSync(join(SRC_DIR, f), "utf8"))].join("\n");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -89,24 +98,32 @@ const suffixOf = (id) => String(id ?? "").split("-")[2] ?? null;
 
 /* THE ONE EDIT THAT FORCES A DRAW, and the anchors the legacy build removes. Each is asserted to occur EXACTLY ONCE
    in the tree it patches — an arm that did not arm is a finding, not a pass. */
-const DRAW_LINE = "      const id = `${prefix}-${year}-${draw()}${tail}`;";
-const DRAW_FORCED = "      const id = `${prefix}-${year}-${(i === 0 && this.env && this.env[\"MINT_LEDGER_FORCE_\" + prefix]) || draw()}${tail}`;";
-const LEDGER_WRITE = "      this.sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'mint')`, id, new Date().toISOString());";
-const SEED_CALL = "    this.#seedMintLedger();";
-const ALLOCID_GATE = "    if (gated) {\n      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;";
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R6-R9, R40): each anchor now names the FILE it is in — the draw,
+   the ledger write and the allocid gate are record-core's, the seed call still the store's. record-core holds no `env`,
+   so the forced draw reads the binding through `process.env` (workerd populates it from the bindings under
+   `nodejs_compat`); the binding is the same and only this copy reads it. */
+const RC = "record-core/index.mjs", ST = "store.mjs";
+const DRAW_LINE = [RC, "      const id = `${prefix}-${year}-${draw()}${tail ?? \"\"}`;"];
+const DRAW_FORCED = "      const id = `${prefix}-${year}-${(i === 0 && globalThis.process?.env?.[\"MINT_LEDGER_FORCE_\" + prefix]) || draw()}${tail ?? \"\"}`;";
+const LEDGER_WRITE = [RC, "      this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'mint')`, id, new Date().toISOString());"];
+const SEED_CALL = [ST, "    recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);"];
+const ALLOCID_GATE = [RC, "    if (gated) {\n      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;"];
 
-/* A copy of the plane with its patches applied to `store.mjs`, in a directory this process owns. */
+/* A copy of the plane with its patches applied, in a directory this process owns. UPDATED 2026-09-26 (T3,
+   legacy-tests): a patch is `[[file under src/, from], to]`, since the anchors are no longer all in `store.mjs`. */
 const cutTree = (fromSrc, patches, label) => {
   const root = mkdtempSync(join(tmpdir(), `mint-ledger-${label}-`));
   cpSync(fromSrc, join(root, "bio-plane", "src"), { recursive: true });
   cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
   cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
-  const storePath = join(root, "bio-plane", "src", "store.mjs");
-  let s = readFileSync(storePath, "utf8");
-  const counts = patches.map(([from]) => s.split(from).length - 1);
-  for (const [from, to] of patches) s = s.replace(from, () => to);
-  writeFileSync(storePath, s);
+  const counts = patches.map(([[file, from], to]) => {
+    const path = join(root, "bio-plane", "src", file);
+    const s = readFileSync(path, "utf8");
+    const n = s.split(from).length - 1;
+    writeFileSync(path, s.replace(from, () => to));
+    return n;
+  });
   return { root, idx: join(root, "bio-plane", "src", "index.mjs"), counts };
 };
 
@@ -264,12 +281,15 @@ const draft = async (D, token, projectId, n) =>
 const grant = async (D, token, draftId, who) =>
   (await D.POST(`op=reviewgrant&token=${token}`, { draft: draftId, recipient: who }))?.grantId ?? null;
 
-/* Every `this.#mintOpaqueId(` CALL in the store (the definition is not a call), with its top-level arguments split —
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R6): a mint site now calls record-core's minter —
+   `recordOf(this.ctx).mintOpaqueId(` in the store, `record.mintOpaqueId(` in promotion — so a call is `.mintOpaqueId(`,
+   read over the corpus. The definition (`  mintOpaqueId(prefix, …) {`) has no dot before it and is not a call.
+   Every `this.#mintOpaqueId(` CALL in the store (the definition is not a call), with its top-level arguments split —
    template literals, quoted strings and nested parentheses respected, so a year expression holding a comma does not
    split an argument. Read out of CODE: comments are blanked first. */
 const mintCalls = (src) => {
   const code = codeOnly(src), out = [];
-  for (const m of code.matchAll(/this\.#mintOpaqueId\(/g)) {
+  for (const m of code.matchAll(/\.mintOpaqueId\(/g)) {
     let i = m.index + m[0].length, depth = 1, start = i;
     const args = [];
     for (; i < code.length; i++) {
@@ -295,25 +315,43 @@ try {
 /* ======================================================== 1. THE SOURCE */
 console.log("\n--- 1. the ledger at the source: beside seq, read only as a point lookup, named by no op ---");
 {
-  const iSeq = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS seq (");
-  const iLedger = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS minted_ids (");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R1, R40): `seq` and `minted_ids` moved with record-core's
+     tables into `src/record-core/schema.mjs`, which schema.mjs interpolates (`${RECORD_SCHEMA}`). The rule is asked
+     where they now are: beside each other in record-core's literal, and that literal placed in schema.mjs BEFORE the
+     `host_governor` block. */
+  const iSeq = RECORD_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS seq (");
+  const iLedger = RECORD_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS minted_ids (");
+  const iRecord = SCHEMA_SRC.indexOf("${RECORD_SCHEMA}");
   const iGov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor (");
-  t("S1: `minted_ids` is declared in schema.mjs BESIDE `seq` (no table between them) and BEFORE the `host_governor` "
-    + "block (the standing schema rule)",
-    [iSeq > -1, iLedger > iSeq, iGov > iLedger,
-     iSeq > -1 && iLedger > iSeq && !/CREATE TABLE IF NOT EXISTS/.test(SCHEMA_SRC.slice(iSeq + 12, iLedger))],
+  t("S1: `minted_ids` is declared in record-core's schema BESIDE `seq` (no table between them), and that schema sits "
+    + "in schema.mjs BEFORE the `host_governor` block (the standing schema rule)",
+    [iSeq > -1, iLedger > iSeq, iRecord > -1 && iGov > iRecord,
+     iSeq > -1 && iLedger > iSeq && !/CREATE TABLE IF NOT EXISTS/.test(RECORD_SCHEMA_SRC.slice(iSeq + 12, iLedger))],
     [true, true, true, true]);
   /* Every statement naming the ledger, read out of CODE and widened to its enclosing template literal. */
-  const code = codeOnly(STORE_SRC);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R8, R23, R40): read file by file over store.mjs and the
+     extracted modules' code files — their `schema.mjs` DDL left out, as schema.mjs's always was. A bare quoted NAME
+     (`"minted_ids"`) is not a statement: the one record-core states is its purge EXEMPTION (R23), which is what keeps
+     every purge arm off the ledger, so a name anywhere else is reported under S4 beside a statement that is neither a
+     point read nor an insert. */
   const stmts = [];
-  for (const m of code.matchAll(/\bminted_ids\b/g)) {
-    const a = code.lastIndexOf("`", m.index), b = code.indexOf("`", m.index);
-    stmts.push(a < 0 || b < 0 ? "(no enclosing template)" : code.slice(a + 1, b).replace(/\s+/g, " ").trim());
+  for (const f of ["store.mjs", ...MODULES.flatMap(moduleFiles).filter((f) => !f.endsWith("/schema.mjs"))]) {
+    const code = codeOnly(readFileSync(join(SRC_DIR, f), "utf8"));
+    for (const m of code.matchAll(/\bminted_ids\b/g)) {
+      if (code[m.index - 1] === '"' && code[m.index + "minted_ids".length] === '"') {
+        const line = code.slice(code.lastIndexOf("\n", m.index) + 1, code.indexOf("\n", m.index));
+        if (f !== "record-core/index.mjs" || !/^\s*static EXEMPT_TABLES = Object\.freeze\(\[/.test(line))
+          stmts.push(`(a name, not an exemption: ${f}: ${line.trim()})`);
+        continue;
+      }
+      const a = code.lastIndexOf("`", m.index), b = code.indexOf("`", m.index);
+      stmts.push(a < 0 || b < 0 ? "(no enclosing template)" : code.slice(a + 1, b).replace(/\s+/g, " ").trim());
+    }
   }
   const reads = stmts.filter((s) => /^SELECT\b/i.test(s));
   const writes = stmts.filter((s) => /^INSERT\b/i.test(s));
   const other = stmts.filter((s) => !/^(SELECT|INSERT)\b/i.test(s));
-  console.log(`         (corpus: ${stmts.length} code occurrence(s) of the ledger in store.mjs — ${reads.length} read(s), `
+  console.log(`         (corpus: ${stmts.length} code occurrence(s) of the ledger in store.mjs and the extracted modules — ${reads.length} read(s), `
     + `${writes.length} write(s); not a read or an insert: ${JSON.stringify(other)})`);
   t("S2: the ledger is READ and WRITTEN in the store's code (a pin over an empty corpus pins nothing)",
     [reads.length >= 1, writes.length >= 1], [true, true]);
@@ -321,15 +359,18 @@ console.log("\n--- 1. the ledger at the source: beside seq, read only as a point
     reads.filter((s) => !/^SELECT .+? FROM minted_ids WHERE id\s*=\s*\?(?:\s+LIMIT\s+1)?$/i.test(s)), []);
   t("S4: and nothing UPDATEs or DELETEs it: every statement naming it is a point read or an insert, so no purge arm "
     + "and no act clears it", other, []);
-  const elsewhere = readdirSync(SRC_DIR).filter((f) => f.endsWith(".mjs") && f !== "store.mjs" && f !== "schema.mjs")
+  /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R8, R40): the walk descends into `src/<module>/`, and the
+     ledger's owner is record-core (with the store, which still names it in its seed's comment and list). */
+  const elsewhere = readdirSync(SRC_DIR, { recursive: true }).map(String)
+    .filter((f) => f.endsWith(".mjs") && f !== "store.mjs" && f !== "schema.mjs" && !f.startsWith("record-core/"))
     .filter((f) => /\bminted_ids\b/.test(codeOnly(readFileSync(join(SRC_DIR, f), "utf8"))));
   t("S5: and no other module of the plane names it in code — no op, no surface, no count", elsewhere, []);
 
-  const calls = mintCalls(STORE_SRC);
+  const calls = mintCalls(CORPUS);
   t("S6: the five gated mint sites are found and read (a pin over no call pins nothing)",
     calls.map((c) => c.prefix).sort(), ["CASE", "DRAFT", "PROJ", "RVG", "TASK"]);
   const untailed = calls.filter((c) => (c.args[2] || "").trim() === '""').map((c) => c.prefix).sort();
-  const declared = ((/static UNTAILED_GATED_PREFIXES = Object\.freeze\(\[([^\]]*)\]\)/.exec(STORE_SRC) || [])[1] || "")
+  const declared = ((/static UNTAILED_GATED_PREFIXES = Object\.freeze\(\[([^\]]*)\]\)/.exec(CORPUS) || [])[1] || "")
     .replace(/["\s]/g, "").split(",").filter(Boolean).sort();
   t(`S7: the COUNTER seed's prefixes are EXACTLY the mint sites that pass no tail (${JSON.stringify(untailed)}) — an id `
     + "the counter issued for those is an id this minter can draw, and one with a slug is not",
@@ -337,8 +378,17 @@ console.log("\n--- 1. the ledger at the source: beside seq, read only as a point
   const seedBlock = (/static #MINT_LEDGER_LIVE = Object\.freeze\(\[([\s\S]*?)\]\);/.exec(STORE_SRC) || [])[1] || "";
   const seedPairs = [...seedBlock.matchAll(/\["([A-Z]+)",\s*"(\w+)",\s*"(\w+)"\]/g)]
     .map((m) => `${m[1]} ${m[2]}.${m[3]}`).sort();
-  const sitePairs = calls.flatMap((c) => [...c.text.matchAll(/FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*\?/g)]
-    .map((m) => `${c.prefix} ${m[1]}.${m[2]}`)).sort();
+  /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R34, promotion): a site's `taken` may now ask record-core
+     (promotion's PROJ mint asks `record.bundleInfo(id)`); such a call is read as the table and column that method of
+     record-core reads, out of its own body. */
+  const rcMethod = (name) => {
+    const at = RECORD_CORE_SRC.search(new RegExp(`\\n  ${name}\\(`));
+    return at < 0 ? "" : RECORD_CORE_SRC.slice(at, RECORD_CORE_SRC.indexOf("\n  }\n", at));
+  };
+  const readsOf = (text) => [...text.matchAll(/FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*\?/g)].map((m) => `${m[1]}.${m[2]}`);
+  const sitePairs = calls.flatMap((c) => [...readsOf(c.text),
+    ...[...c.text.matchAll(/\brecord\.(\w+)\(/g)].filter((m) => m[1] !== "mintOpaqueId").flatMap((m) => readsOf(rcMethod(m[1])))]
+    .map((r) => `${c.prefix} ${r}`)).sort();
   console.log(`         (the five sites' live reads: ${JSON.stringify(sitePairs)})`);
   t("S8: the LIVE seed reads EXACTLY the tables and columns each mint site's own `taken` reads, prefix by prefix — a "
     + "site that learns a table and a seed that does not fail here", [seedPairs.length > 0, seedPairs], [true, sitePairs]);
@@ -348,7 +398,7 @@ console.log("\n--- 1. the ledger at the source: beside seq, read only as a point
 console.log("\n--- 2. an id minted, purged, then redrawn under a FORCED collision is refused by the ledger ---");
 const THIS = cutTree(SRC_DIR, [[DRAW_LINE, DRAW_FORCED]], "this");
 trees.push(THIS.root);
-t("F0: the build under test is `src/` with ONE line forced — the draw in `#mintOpaqueId`, found exactly once",
+t("F0: the build under test is `src/` with ONE line forced — the draw in `RecordCore#mintOpaqueId`, found exactly once",
   THIS.counts, [1]);
 {
   const mf = planeAt(THIS.idx, { PROJ: FORCE, CASE: FORCE, DRAFT: FORCE, RVG: FORCE, TASK: FORCE });

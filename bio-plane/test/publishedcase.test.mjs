@@ -812,10 +812,11 @@ console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the pub
   t("published_edges is declared BEFORE the host_governor block (the standing trap)",
     schema.indexOf("CREATE TABLE IF NOT EXISTS published_edges") < schema.indexOf("CREATE TABLE IF NOT EXISTS host_governor"),
     true);
-  const pStart = store.indexOf("purge({ bundleId");
-  const purgeSrc = store.slice(pStart, store.indexOf("\n  #", pStart) > -1 ? store.indexOf("\n  #", pStart) : pStart + 6000);
-  t("and it is cleared in BOTH arms of op=purge — an index that outlives what it indexes is D-113",
-    (purgeSrc.match(/DELETE FROM published_edges/g) || []).length, 2);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "and it is cleared in BOTH arms of op=purge ..."
+     counted `DELETE FROM published_edges` lines in store.mjs's purge; purge moved to record-core, where each module
+     declares its tables and the columns keying them to a bundle. The claim is MEASURED at the end of this suite (so
+     no later block loses its fixture), through op=publishedcase, which reads the graph from published_edges and
+     nothing of the working corpus. */
 }
 
 /* ============ 8. M0-11: RATIFIED BYTES THAT BELONG TO NO CASE (#looseEditionState) */
@@ -1264,6 +1265,29 @@ console.log("\n--- D-549: C-68.5, the published store absent, at both public ops
   t("D-549 (ii) publishedbytes: its own detail is byte-identical to the sentence it carried before D-549",
     bj.detail, "this instance has no published object store configured, so its published bytes are "
              + "not servable. The hash is genuine and this instance cannot hand over the bytes.");
+}
+
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): block 7's purge arm, measured (see block 7). The
+   published corpus (published_bundles) outlives a purge, so op=publishedcase still answers for the child after its
+   working bundle is purged; only its graph, the index over what the purge took, must go. */
+console.log("\n--- published_edges is cleared in BOTH arms of op=purge (D-113) ---");
+{
+  const edgesOf = async (id) => ((await anonCase(`id=${id}`)).findings || [])
+    .flatMap((f) => [...(f.names || []), ...(f.serves || []), ...(f.unresolved || [])]);
+  const kid0 = await edgesOf(KID_A);
+  /* The per-bundle arm is driven on the PARENT, which the child's edges point TO: an edge is keyed to a bundle at
+     either end, so purging the parent must take the child's edge naming it and leave the one naming the sibling. */
+  const one = rP(await GET(`op=purge&token=adm-rec22&confirm=bio&bundleId=${encodeURIComponent(PARENT)}`));
+  const kid1 = await edgesOf(KID_A);
+  const all = rP(await GET(`op=purge&token=adm-rec22&confirm=bio`));
+  const kid2 = await anonCase(`id=${KID_A}`);
+  t("and it is cleared in BOTH arms of op=purge — an index that outlives what it indexes is D-113: purging the "
+  + "parent takes the child's edge naming it and leaves the one naming the sibling (per-bundle arm), and a "
+  + "whole-store purge takes the rest (the child's published case still answering, with no graph)",
+    [kid0.some((e) => e.to === PARENT), kid0.some((e) => e.to === KID_B), one.scope ?? one.error ?? null,
+     kid1.some((e) => e.to === PARENT), kid1.some((e) => e.to === KID_B), all.scope ?? all.error ?? null,
+     kid2.ok === true, (kid2.findings || []).flatMap((f) => [...(f.names || []), ...(f.serves || [])]).length],
+    [true, true, PARENT, false, true, "ALL", true, 0]);
 }
 
 await mf.dispose();

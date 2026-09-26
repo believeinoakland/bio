@@ -266,8 +266,11 @@ console.log("\n=== bias: PL-12 / D-84, the bias object and DEC-54's four scopes 
  * THE GUARD ON THE GUARD, first, because every source arm below rests on it.
  * ===================================================================== */
 console.log("\n--- S0. the comment stripper, guarded in BOTH directions ---");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21): the known code line was `const TABLES = ["files"`,
+   purge's list, which moved to record-core; the guard now reads the code line that replaced it in store.mjs,
+   legacy-store's own purge declaration. */
 t("SEEK GUARD: a known CODE line survives decommenting",
-  /const TABLES = \["files"/.test(STORE), true);
+  /\.declarePurge\("legacy-store", \[/.test(STORE), true);
 t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning cannot satisfy an anchor",
   /the malformedness rule binds the machine exactly as it binds a member/.test(STORE), false);
 t("CORPUS PRINTED — the size of what every source arm below is read over",
@@ -597,13 +600,11 @@ console.log("\n--- 6. the two new tables: placed, and in BOTH purge arms (D-113)
   const iGov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("both tables exist and BOTH sit before the host_governor block, which hygiene.test.mjs requires",
     [iStat > 0, iAdopt > iStat, iGov > iAdopt], [true, true, true]);
-  t("ARM P1: both are in purge's TABLES list, so both clear in the per-bundle arm AND the whole-store arm",
-    [/TABLES = \[[\s\S]*?"bias_statements"[\s\S]*?\]/.test(STORE),
-     /TABLES = \[[\s\S]*?"bias_adoptions"[\s\S]*?\]/.test(STORE)],
-    [true, true]);
-  t("and an adoption HELD BY a purged project clears on scope_id — the project_participants precedent, "
-  + "because a lens outliving its project would be handed to whatever bundle inherits the id",
-    /DELETE FROM bias_adoptions WHERE scope_id=\?/.test(STORE), true);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "ARM P1: both are in purge's TABLES list ..."
+     and "and an adoption HELD BY a purged project clears on scope_id ..." read purge's `const TABLES = [` list and
+     a `DELETE FROM bias_adoptions WHERE scope_id=?` line out of store.mjs; purge moved to record-core, where each
+     module declares its tables. Both claims are now MEASURED through op=purge's per-bundle arm in block 16,
+     before ARM P2's whole-store purge, under the same labels. */
   /* THE SCHEMA TRAP THIS ITEM MET, pinned so the next table does not meet it.
      #migrate splits the schema on ";" AFTER dropping full-line comments, so a
      SEMICOLON inside an INLINE comment truncates the statement and the whole
@@ -1271,6 +1272,24 @@ await block("16", async () => {
   const before = await get("stats", "", "adm-pl12");
   t("the fixture ARMS THE TRAP: there are statements and adoptions for a purge to fail to take",
     [before.biasStatements > 0, before.biasAdoptions > 0], [true, true]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): ARM P1 and the scope_id arm, moved here
+     from section 6, where they read store.mjs text; measured through the per-bundle purge. The project is
+     purged first: its lens (bundle PROJECT_BIAS) is adopted with scope_id = the project, so only the adoption
+     may go and no statement. Then the project's bias bundle: its statements go. The instance's lens is left
+     for ARM P2 below. */
+  const pProj = await get("purge", `confirm=bio&bundleId=${encodeURIComponent(PROJECT_ID)}`, "adm-pl12");
+  const afterProj = await get("stats", "", "adm-pl12");
+  t("and an adoption HELD BY a purged project clears on scope_id — the project_participants precedent, "
+  + "because a lens outliving its project would be handed to whatever bundle inherits the id",
+    [pProj.scope ?? pProj.error ?? null, afterProj.biasAdoptions, afterProj.biasStatements],
+    [PROJECT_ID, before.biasAdoptions - 1, before.biasStatements]);
+  const pBias = await get("purge", `confirm=bio&bundleId=${encodeURIComponent(PROJECT_BIAS)}`, "adm-pl12");
+  const afterBias = await get("stats", "", "adm-pl12");
+  t("ARM P1: both clear in the per-bundle arm (a statement by its bundle, an adoption by the scope it is held "
+  + "by, above) AND the whole-store arm (ARM P2, below)",
+    [pBias.scope ?? pBias.error ?? null, afterBias.biasStatements < afterProj.biasStatements,
+     afterBias.biasStatements > 0, afterBias.biasAdoptions > 0],
+    [PROJECT_BIAS, true, true, true]);
   /* THE RAW ADMIN TOKEN, not the administrator SESSION: op=purge is admin/probe class and is NOT in
      SESSION_OPS, so a signed-in administrator cannot reach it at all. Measured by driving it, after a
      first draft used the session and read the resulting `unknown op` as a purge that took nothing. */

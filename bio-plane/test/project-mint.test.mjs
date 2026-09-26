@@ -30,7 +30,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -224,14 +224,19 @@ console.log("\n--- 6. a minted id carries no count (BOB #16): the suffix is opaq
      takes its suffix from REC-151's ONE opaque minter (whose CSPRNG source `opaque-ids.test.mjs` §1 pins by name).
      Probe (2), the run of five, is unchanged. */
   const YEAR = new Date().toISOString().slice(0, 4);
-  const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion, record-core R6): the PROJ mint moved with `promote` to
+     `promotion` (`record.mintOpaqueId("PROJ", …)`), and the minter to record-core. The pin reads the store's corpus as
+     it stood before the extraction: store.mjs AND the extracted modules' files; a call of the minter is `.mintOpaqueId(`. */
+  const STORE_SRC = [readFileSync(join(SRC_DIR, "store.mjs"), "utf8"), ...["record-core", "membership", "promotion"]
+    .flatMap((d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort()
+      .map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))].join("\n");
   const refused = await POST(`op=allocid&token=${ADM}&prefix=PROJ&year=${YEAR}`);
   t("NO COUNT: the PROJ counter cannot be read through op=allocid (refused ALLOCID_PREFIX_GATED, nothing allocated)",
     [refused?.ok, refused?.code, refused?.id], [false, "ALLOCID_PREFIX_GATED", undefined]);
   const one = parse(await create(IRIS, "Count Probe Zero"));
   const suffix = (id) => Number(String(id).split("-")[2]);
   t("NO COUNT: and the PROJ mint takes its suffix from the one opaque minter, never the counter",
-    [/^PROJ-\d{4}-\d{4}-count-probe-zero$/.test(String(one?.bundleId)), /#mintOpaqueId\(\s*"PROJ"/.test(STORE_SRC),
+    [/^PROJ-\d{4}-\d{4}-count-probe-zero$/.test(String(one?.bundleId)), /\.mintOpaqueId\(\s*"PROJ"/.test(STORE_SRC),
      /(?:allocId|#nextSeq)\(\s*"PROJ"/.test(STORE_SRC)], [true, true, false]);
   const run = [];
   for (const n of ["One", "Two", "Three", "Four", "Five"]) run.push(suffix(parse(await create(IRIS, `Count Probe ${n}`))?.bundleId));
