@@ -11,7 +11,7 @@
 | the old plan, frozen as it stood when the old process stopped | `docs/development/transition/old-plan/QUEUE-2026-09-25.txt` and `BACKLOG-2026-09-25.txt` (coord @ 85f3a9f7) |
 | the index of its 216 open rows, the working sheet for step T5 | `docs/development/transition/old-plan/index.csv` |
 
-**To resume:** read `PROCESS-DESIGN.md`, `PROCESS-MECHANICS.md` and this file, each whole. Check out `land/bob/process-design`. Continue at the first step in §3 that is not done. Do not follow the old process's `CLAUDE.md`, kickoffs, lanes or `coord` ledgers; see §5, C1.
+**To resume:** read `PROCESS-DESIGN.md`, `PROCESS-MECHANICS.md` and this file, each whole; §6 is the latest handoff. Check out `land/bob/process-design`. Continue at the first step in §3 that is not done. Do not follow the old process's `CLAUDE.md`, kickoffs, lanes or `coord` ledgers; see §5, C1.
 
 ## 2. The old plan's open rows
 
@@ -86,3 +86,21 @@ Each: what it is, and how the plan handles it.
 - **C8 · Stale pointers to removed documents.** Two code comments still cite `BIO_Membership_Architecture_v1.md` (`bio-plane/src/schema.mjs` near the memberships table, `bio-plane/test/membership.test.mjs` header). Only a module job changes product code (P7), so they are not edited now: the membership module's extraction job repoints them to v2, and T5 carries it as an entry.
 - **C9 · A fourth monolith.** `bio-plane/checks/bio-checks.mjs` is 16,591 lines: the whole check catalogue, imported by modules in every layer. T4 registers it as the legacy module `legacy-checks`, first in the order; each extracted module takes its own checks as its invariants. Its size adds to C4.
 - **C10 · Oakland in the product.** Local knowledge is written into code and outward text (see the 2026-09-25 T6 line). The rule and the entries are in place. The UI, worked on elsewhere, carries the same rule, and nothing in this process reaches it.
+
+## 6. Handoff (BOB #37, 2026-09-26)
+
+Replaced at each handoff; the progress log (§4) is the history.
+
+**Where things stand.** T0–T5 are done. T6 has layer 1's 14 requirements files drafted and reviewed by BOB (`build/requirements/`, 466 ids) and awaits Bob's approval. The architecture is `build/layers.md` (9 layers, the rule "No jurisdiction in the product") and `build/modules.json` (53 modules). New entries wait in `build/plan/next.md` (N1–N10). The triaged old plan is `docs/development/transition/old-plan/index.csv` (107 carry).
+
+**Waiting on Bob, each put to him with a recommendation of yes:**
+1. Approve layer 1's requirements (T6). Rendered for him: https://claude.ai/artifact/RAnrEUgRgJcqorQk5iJX4r
+2. The `uses` edges BOB added on 2026-09-25, which ruling 5 reserves to Bob: `jurisdictions` into capture, extraction, entities, actions, instance-setup and installer; `pdf-worker` into content (D-419).
+3. Whether BOB should try to create the process repository with the GitHub tool (suggested `believeinoakland/civicos-process`), or Bob creates it at T7.
+
+**Next, in order.** Record Bob's answers. Then T7: the process repository, the four checks (PROCESS-MECHANICS §8) and metrics recording; retire the old guards (C3). Then T8: `build/` and the process documents land on `main`, `CLAUDE.md` is replaced, and tranche T1's plan is written from layer 1's carried rows (`index.csv`) and `next.md`.
+
+**How BOB #37 worked, and what it cost (P14's first observations, from the harness, not the plan meter).** Bulk reading went to short-lived workers, one per unit, writing only their own output file; BOB reviewed every report and the set before it went to Bob. T5: 9 workers on the smaller model, about 90–115k tokens each. T6: 13 workers, about 140–270k tokens each (one on the larger model). Worker reports were accurate on substance and unreliable on their own totals: always count from the files. Check requirement drafts mechanically (sections, `**Rn**` ids, no place names) and then read for a requirement that states today's behaviour instead of the rule.
+
+**Views for Bob.** The architecture view is `build/layers-view.html` (published at https://claude.ai/artifact/CJ4jg9m9rDBeJdd84irrnX). A layer's requirements render with `node docs/development/transition/render/render-requirements.mjs <layer> <out.html>`, and the output publishes as an Artifact. Bob wants documents rendered, not Markdown source.
+

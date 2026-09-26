@@ -1,0 +1,86 @@
+<title>__TITLE__</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6;
+  --accent:#1D6A86; --accent-bg:#DCEBF1; --code-bg:#EDF1F5;
+  --priv:#6A5A2E; --priv-bg:#F6F0E0; --draft:#8A5A12; --draft-bg:#F5E6C8;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542;
+  --accent:#6CC0DC; --accent-bg:#16394A; --code-bg:#222C38; --priv:#E0C27A; --priv-bg:#2E2816; --draft:#E0B060; --draft-bg:#43341A;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542;
+  --accent:#6CC0DC; --accent-bg:#16394A; --code-bg:#222C38; --priv:#E0C27A; --priv-bg:#2E2816; --draft:#E0B060; --draft-bg:#43341A;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+.doc{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:28px clamp(18px,4vw,40px) 36px}
+.eyebrow{font:500 12px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.pill{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--draft-bg);color:var(--draft)}
+h1{font:600 30px/1.2 "Source Serif 4",Georgia,serif;margin:0 0 14px;text-wrap:balance}
+h2{font:600 22px/1.25 "Source Serif 4",Georgia,serif;margin:34px 0 4px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+h3{font-size:16px;font-weight:600;margin:24px 0 6px}
+p,li{max-width:68ch}
+p{margin:8px 0}
+ul{padding-left:20px;margin:8px 0}
+li{margin:7px 0}
+code{font:13.5px "IBM Plex Mono",monospace;background:var(--code-bg);padding:1px 5px;border-radius:4px;word-break:break-word}
+a{color:var(--accent)}
+.status{font-size:13.5px;color:var(--muted);border-left:3px solid var(--rule);padding:2px 0 2px 12px;margin:0 0 8px}
+.status strong{color:var(--ink)}
+strong.rid{display:inline-block;min-width:2.6em;font:500 12px/1.7 "IBM Plex Mono",monospace;text-align:center;background:var(--accent-bg);color:var(--accent);border-radius:4px;padding:0 5px;margin-right:4px}
+.private{background:var(--priv-bg);border-radius:6px;padding:4px 18px 10px;margin-top:10px}
+.private h2{border-top:0;padding-top:6px;margin-top:10px;color:var(--priv)}
+.private strong.rid{background:color-mix(in srgb,var(--priv) 16%,transparent);color:var(--priv)}
+.who{font-size:13px;color:var(--muted);margin:0 0 6px}
+.foot{color:var(--muted);font-size:12.5px;margin-top:18px}
+@media (max-width:480px){h1{font-size:25px}}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:760px){.layout{grid-template-columns:1fr}}
+nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px}
+nav h2{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 6px 8px;border:0;padding:0}
+nav a{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:5px;color:var(--ink);text-decoration:none;font:13px "IBM Plex Mono",monospace}
+nav a:hover{background:var(--code-bg)}
+nav a[aria-current="true"]{background:var(--accent-bg);color:var(--accent)}
+nav .n{color:var(--muted);font-size:11.5px}
+nav .u{color:var(--draft);font-size:11.5px}
+@media (max-width:760px){nav{position:static}}
+.unmet{font-style:normal;font-size:12px;background:var(--draft-bg);color:var(--draft);padding:0 6px;border-radius:4px}
+</style>
+<div class="wrap">
+  <div class="layout">
+    <nav id="nav" aria-label="Modules"><h2>Layer 1 · requirements</h2></nav>
+    <div><article class="doc" id="doc"></article>
+    <p class="foot">Rendered from <code>build/requirements/</code> on branch <code>land/bob/process-design</code> at commit <code>__COMMIT__</code>. The Markdown files are the record; this page only displays them. The number beside each module is its requirement count; an amber number counts requirements not yet met.</p></div>
+  </div>
+</div>
+<script type="text/markdown" id="src">__MD__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+const DOCS = JSON.parse(document.getElementById("src").textContent);
+const nav = document.getElementById("nav"), doc = document.getElementById("doc");
+function render(id){
+  const d = DOCS.find(x=>x.id===id) || DOCS[0];
+  doc.innerHTML = marked.parse(d.md);
+  doc.querySelectorAll("strong").forEach(s => { if (/^R\d+$/.test(s.textContent.trim())) s.classList.add("rid"); });
+  doc.querySelectorAll("em").forEach(e => { if (/^not yet met/.test(e.textContent)) e.classList.add("unmet"); });
+  const h1 = doc.querySelector("h1"), first = h1 && h1.nextElementSibling;
+  if (first && first.tagName==="P" && first.textContent.startsWith("Status")) first.classList.add("status");
+  if (h1 && d.id!=="README") { const eb=document.createElement("div"); eb.className="eyebrow"; eb.innerHTML='<span>Module requirements</span><span>· Layer 1</span><span class="pill">DRAFT</span>'; h1.before(eb); }
+  const hs=[...doc.querySelectorAll("h2")];
+  const priv=hs.find(h=>h.textContent.trim()==="Private");
+  if (priv){ const box=document.createElement("section"); box.className="private"; priv.before(box); let n=priv; const mv=[]; while(n){mv.push(n); n=n.nextElementSibling;} mv.forEach(e=>box.append(e)); const w=document.createElement("p"); w.className="who"; w.textContent="Read only by the module's own job."; priv.after(w); }
+  const pub=hs.find(h=>h.textContent.trim()==="Public"); if(pub){ const w=document.createElement("p"); w.className="who"; w.textContent="All a user of the module reads."; pub.after(w); }
+  nav.querySelectorAll("a").forEach(a=>a.setAttribute("aria-current", a.dataset.id===d.id ? "true":"false"));
+  window.scrollTo(0,0);
+}
+for (const d of DOCS){
+  const a=document.createElement("a"); a.href="#"+d.id; a.dataset.id=d.id;
+  a.innerHTML = `<span>${d.id==="README"?"conventions":d.id}</span><span>${d.n?`<span class="n">${d.n}</span>`:""}${d.unmet?` <span class="u">${d.unmet}</span>`:""}</span>`;
+  a.addEventListener("click",e=>{e.preventDefault(); render(d.id); try{history.replaceState(null,"","#"+d.id)}catch{} });
+  nav.append(a);
+}
+render((location.hash||"").slice(1) || "id-spaces");
+</script>
