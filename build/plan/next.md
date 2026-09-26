@@ -66,7 +66,7 @@
 - N71 · 2026-09-26 · **canon**, all requirements (K106): Bob called the word "bundle" outdated. New requirement and canon text avoids it; an existing file is reworded when next touched; the code's identifiers (`bundle_id`, the `bundles` table) are interface names and change only with a migration BOB schedules. BOB asks Bob which word the member-facing text uses.
 - N72 · 2026-09-26 · **standards**, **escalation**, **filings** (K108): standards R3's match carries the source's level; escalation R12's oversight and audit requests check the office's `oversight` marker (jurisdictions R24); filings R9's claim deadlines count business days on the profile's holiday calendar (jurisdictions R33). Written into those requirements before layer 9's tranche; the escalation file also states it is a record object.
 
-## Tranche T4, prepared (P18): ready to open when T3 closes
+## Tranche T4, prepared (P18): opens only after the process revision K111 names is certified and approved (P3)
 
 **Layer 1, first (K53, K70): the `pdf-worker` split.** BOB applies K70 to `modules.json` and the requirement files at the opening.
 
