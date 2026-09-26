@@ -52,11 +52,14 @@ profiles that `jurisdictions.combine` gives.
   states all of them rather than letting the first match stand for the whole document. A type
   whose `detect` throws during this pass is reported as an error entry in `also`, never dropped
   and never propagated.
-- **R6** *(not yet met: N3)* Every registered content type's own `detect`/`parse`/`assess` takes its recogniser
-  vocabulary — masthead and self-naming phrases, furniture lines, operative-voice and caption
-  forms, code-citation forms, report-template section headings, reference-line shapes, recognition
-  floors and thresholds, and publishing-system address shapes — from `ctx.view`'s recogniser-
-  vocabulary section, keyed by the type's own key, and holds none of it fixed in its own code.
+- **R6** *(not yet met: N3)* Every registered content type's own `detect`/`parse`/`assess` takes
+  every LOCAL fact it tests for (furniture, bodies, member titles, enactment kinds, forms and
+  markers, codes, file numbers, report titles and sections, recommendation openers, template
+  blanks, practice deadlines) from `ctx.view`, under the keys `jurisdictions` defines (its R6–R7),
+  and holds none fixed in its own code. Place-free language (English and parliamentary words),
+  a publishing system's own page and link shapes, and measured structural floors stay in code.
+  When `ctx.view` is absent (a legacy caller; K39), the view is `jurisdictions.combine` of every
+  non-test profile `jurisdictions` holds.
 - Errors: never throws, provided no registered type's own `detect` throws outside the `also` pass
   (R5 states what happens there).
 
@@ -219,11 +222,10 @@ reported "unchanged") (**R29**).
 
 ### Invariants
 
-- **R30** *(not yet met: N3)* No place is named in this module's own code. Every masthead, furniture, caption,
-  code-citation, template-section, reference-shape, directory-floor and practice-threshold fact a
-  content type tests for comes from the active jurisdiction profiles; the tests include at least
-  one profile that is not Oakland's, for every content type. The four stack handlers hold no such
-  facts and need none, because they recognise technology, never place.
+- **R30** *(not yet met: N3)* No place is named in this module's own code. Every local fact a
+  content type tests for (R6) comes from the active jurisdiction profiles; the tests include at
+  least one profile that is not Oakland's, for every content type. The four stack handlers hold no
+  such facts and need none, because they recognise technology, never place.
 - **R31** Deterministic over its inputs: the same `bytes`/`text` and the same `ctx` values always
   give the same answer. The one exception is a content type's own forward-looking connections
   (the calendar's "minutes not yet published" fact), which read `ctx.now` when given and the wall
