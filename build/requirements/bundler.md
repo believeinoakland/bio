@@ -30,7 +30,7 @@ Builds each member of the fleet (the plane and the workers) into one bundled art
 - **R7** Where the member's dependencies are installed, rebuilds without writing and reports stale unless the bytes equal the committed artifact exactly; where they are not installed, says it could not check, never that the artifact is fresh.
 
 **`unresolvableSpecifiers(text, allowed?)` → list.**
-- **R8** Lists every import specifier in a built artifact that is neither bundled nor in the allowed externals.
+- **R8** Lists every static `import` or `export … from` specifier in a built artifact that is neither bundled nor in the allowed externals (what a one-part upload must resolve at instantiation). A dynamic `import()` is not listed; `verifyFresh` checks those through the build's own metafile.
 
 **Provenance (`readGitProvenance`, `stateOf`, `classifyDiscovered`, `reportProvenance`).**
 - **R9** For a set of files, states for each whether it is committed and unchanged, changed, or untracked in the repository, and reports it.
