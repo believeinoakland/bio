@@ -2462,18 +2462,18 @@ async function extractImages(doc) {
  * that paint an image and show at most a folio are all images of content, with
  * shares 0.1897 to 0.6542; every other image-painting page shows at least 22
  * glyphs. So at most 4 glyphs with a share of at least 0.18 reads
- * `image_content_unread`; a page in either measured gap (5 to 21 glyphs, or a
- * share above 0 and under 0.18) or whose page box cannot be read reads
+ * `image_content_unread`; any other image-painting page under 22 glyphs (5 to
+ * 21 glyphs, a share under 0.18, or a page box that cannot be read) reads
  * `image_content_undetermined` — never forced either way; 22 glyphs or more
- * says nothing. These are general PDF-reading parameters (R29): where they were
- * measured is provenance, not jurisdiction. Pending BOB's statement of the
- * figures in R26 (QUESTION Q1 in the job record).
+ * says nothing. R26 states these figures (K30). They are general PDF-reading
+ * parameters (R29): where they were measured is provenance, not jurisdiction.
+ * Neither marker replaces `no_text_layer` (R14): a page that bears no text
+ * layer carries that marker AND this one.
  *
  * WHAT THIS CANNOT SEE (M-178): a chart painted as an image under a text title
  * has the same two figures as a photo page with captions, so it reads no
  * marker. With `images` null (a walk that did not finish, or an encrypted file)
- * no share can be measured and nothing is said. A page already marked
- * `no_text_layer` is left alone: that marker already says it is unread. */
+ * no share can be measured and nothing is said. */
 const IMAGE_CONTENT_MAX_GLYPHS = 4;
 const IMAGE_CONTENT_MIN_SHARE = 0.18;
 const IMAGE_CONTENT_TEXT_GLYPHS = 22;
@@ -2531,7 +2531,6 @@ function markImageContent(doc, text, images) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const marks = pg.undetermined;
-    if (marks.some((m) => m.reason === "no_text_layer")) continue;
     let decoded = 0;
     for (const ch of pg.text) if (!/\s/u.test(ch)) decoded++;
     const glyphs = decoded + marks.reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);
@@ -2541,7 +2540,6 @@ function markImageContent(doc, text, images) {
     const share = box && rectArea(box) > 0
       ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 10000) / 10000
       : null;
-    if (share === 0) continue;
     const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
     pg.undetermined = [...marks, {
       page: pg.page, reason: unread ? "image_content_unread" : "image_content_undetermined",
