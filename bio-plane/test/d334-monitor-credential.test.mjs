@@ -104,7 +104,6 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { liveToken, PUBLISHED_TOKEN_HASHES } from "../src/tokens.mjs";
 import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
-import { fleetPosture } from "../../tools/fleet-posture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC_PATH = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -286,21 +285,9 @@ t("and every live fixture really is live, so a green arm is not green by acciden
     t("the selftest answer never contains the credential value itself",
       JSON.stringify(st).includes(DEAD_DAEMON), false);
 
-    /* Driven through the REAL report tool over this instance's own answer —
-       not over a fixture that merely resembles it. */
-    const report = await fleetPosture(
-      [{ name: "d334-instance", base: "http://x", token: LIVE_PROBE }],
-      { fetchImpl: (url) => mf.dispatchFetch(url) });
-    const row = report.instances[0];
-    t("fleet-posture reads this instance as daemon-revoked — never clean, never fallback",
-      row.posture, "daemon-revoked");
-    t("and counts it BROKEN", [report.brokenCount, report.fallbackCount], [1, 0]);
-    t("the row still SAYS BROKEN in words an operator reads",
-      row.detail?.includes("BROKEN") ?? "no detail", true);
-    t("the report is COMPLETE, so the broken row is a measurement and not a hole",
-      report.complete, true);
-    t("no credential value reaches the report",
-      JSON.stringify(report).includes(DEAD_DAEMON) || JSON.stringify(report).includes(LIVE_PROBE), false);
+    /* RETIRED 2026-09-26 (T3, legacy-tests; N14, K84 (3)): five assertions driving `tools/fleet-posture.mjs`'s report
+       over this instance (daemon-revoked, counted broken, said in words, complete, no value leaked). They tested the
+       old process's operator tool, not the plane; the plane's own two truths (selftest above, livefire below) stay. */
 
     console.log("\n--- arm B (cont.): the THIRD truth — livefire still fails on the binding by NAME ---");
     const lf = await (await mf.dispatchFetch(`http://x/api/?op=livefire&token=${LIVE_PROBE}`)).json();
@@ -337,11 +324,7 @@ t("and every live fixture really is live, so a green arm is not green by acciden
     t("and nothing failed", tick.failed, []);
     const st = await (await mf.dispatchFetch(`http://x/api/?op=selftest&token=${LIVE_PROBE}`)).json();
     t("selftest reports the daemon binding LIVE", st.bindings.DAEMON_TOKEN, true);
-    const report = await fleetPosture(
-      [{ name: "d334-live-daemon", base: "http://x", token: LIVE_PROBE }],
-      { fetchImpl: (url) => mf.dispatchFetch(url) });
-    t("and the posture is the clean one — over-strictness would show up here as a false alarm",
-      [report.instances[0].posture, report.brokenCount], ["daemon", 0]);
+    /* RETIRED 2026-09-26 (T3, N14, K84 (3)): the fleet-posture report's clean reading of this instance, with the tool. */
   } finally { await mf.dispose(); }
 }
 

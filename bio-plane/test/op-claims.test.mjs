@@ -112,10 +112,7 @@ import {
    sweeps the whole tree against it. Every other importer of `op-claims.mjs` inherited its 18 named files as inputs to
    `tools/gates.mjs` while reading none of them (why, and the figures: `../scripts/op-claims-ledger.mjs`'s head). */
 import { LEDGER, LEDGER_MAIN } from "../scripts/op-claims-ledger.mjs";
-import { isMovedPath } from "../../tools/statepaths.mjs";   /* M0-121: the predicate's walk-free home; coord.mjs re-exports it */
 import { stripComments } from "../scripts/walkfloor.mjs";
-import { fresh } from "../../tools/decided.mjs";   /* M0-99: the ruling index's ONE freshness call */
-import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -197,7 +194,9 @@ console.log("\n--- 2. the corpus, PRINTED, and asserted non-trivial ---");
 /* NEGATIVE CONTROL (M0-99, run 2026-09-22 by the M0-99 worker): the index moved aside, as a fresh checkout
    has it, and the `fresh();` line below deleted -> "EVERY generated artifact is excluded" FAILS, 34 pass / 1 fail,
    exit 1; with the line, over the same absent index, 35 / 0. Restored by cp-back, sha256 and `cmp` identical. */
-fresh();
+/* RETIRED 2026-09-26 (T3, legacy-tests; N14, K84 (3)): the `fresh()` call rendered the old process's ruling index
+   (`docs/DECIDED.md`) through `tools/decided.mjs` so the walk could be shown excluding it; the index retires with the
+   tool, and so does this suite's arm about it (below). */
 /* M0-116: the ledger is PASSED. Until 2026-09-22 `sweep()` defaulted to the main half, which meant `op-claims.mjs`
    imported it; it now defaults to NOTHING excused, so this call names the ledger it is held to. */
 const result = sweep({ ledger: LEDGER_MAIN });
@@ -286,15 +285,16 @@ t("no file under a dot path segment is in the corpus — the rule at the walk is
 t("EVERY generated artifact is excluded, each recognised STRUCTURALLY at "
 + "byte 0 and NONE by filename — a walk excluding only the warned-about one reads "
 + "the plane's own comments as a third party's claims about it",
-  [result.excluded.length,
+  /* T3 (N14, K84 (3)): the old process's ruling index `docs/DECIDED.md` is no longer rendered here (see `fresh()`'s
+     retirement above), so it is left out of the count and the list; the product's three embeds are unchanged. */
+  [result.excluded.filter((x) => !/docs\/DECIDED\.md/.test(x.rel)).length,
    result.excluded.some((x) => /newgroup\/src\/release\.mjs/.test(x.rel)),
    result.excluded.some((x) => /release\/bio-plane\.bundled\.mjs/.test(x.rel)),
-   result.excluded.some((x) => /docs\/DECIDED\.md/.test(x.rel)),
    /* ADDED 2026-09-13 (DS-4): release 0.57.0 publishes the fleet, and
       release/pdf-worker.bundled.mjs INLINES bio-plane/src — an embed of the plane
       for the same reason the other two are. */
    result.excluded.some((x) => /release\/pdf-worker\.bundled\.mjs/.test(x.rel))],
-  [4, true, true, true, true]);
+  [3, true, true, true]);
 t("AND THE GENERATOR IS KEPT IN — `newgroup/scripts/embed-release.mjs` carries the "
 + "banner because it WRITES it; excluding it would hide a real claim while still reading green",
   generatedReason(readFileSync(join(REPO, "newgroup/scripts/embed-release.mjs"), "utf8")), null);
@@ -356,12 +356,8 @@ t("the ledger is non-empty and every entry carries a reason",
    it turns this RED by name; the gate would otherwise just quietly re-run a third of the battery again. */
 const opClaimsCode = stripComments(readFileSync(join(REPO, "bio-plane/scripts/op-claims.mjs"), "utf8"));
 const mainFiles = [...new Set(LEDGER_MAIN.map((e) => e.file))];
-t(`the ledger is ONE ledger in two halves: ${LEDGER_MAIN.length} main + ${LEDGER_STATE.length} state = ${LEDGER.length}, `
-+ "every state entry is a state file and no main entry is",
-  [LEDGER.length === LEDGER_MAIN.length + LEDGER_STATE.length, LEDGER_STATE.length > 0, LEDGER_MAIN.length > 0,
-   LEDGER_STATE.filter((e) => !isMovedPath(e.file)).map((e) => e.file),
-   LEDGER_MAIN.filter((e) => isMovedPath(e.file)).map((e) => e.file)],
-  [true, true, true, [], []]);
+/* RETIRED 2026-09-26 (T3, N14, K84 (3)): "the ledger is ONE ledger in two halves", which partitioned the entries by the
+   old process's `coord` state paths (`tools/statepaths.mjs`'s `isMovedPath`); the partition retires with the tool. */
 t(`op-claims.mjs, read as code, names none of the ${mainFiles.length} file(s) the main half registers `
 + "(M0-116: its importers are not readers of them)",
   mainFiles.length > 0 ? mainFiles.filter((f) => opClaimsCode.includes(f)) : ["(the main half names no file)"], []);
@@ -490,14 +486,8 @@ t("the walk reaches bio-plane source, bio-plane tests, docs/development, the "
    rels.has("civicos-ui/app.html")],
   [true, true, true, true, true, true, true, true]);
 
-console.log("M0-136: the coord reads are at the PINNED commit, and the verdict does not move with origin/coord");
-{
-  /* This suite's one coord read is the `fresh()` call above: it renders the ruling index from the corpus, state half included, which until M0-136 was the LIVE `origin/coord`. The probe is what `fresh()` renders; the planted commit empties CLAIMS.md, which moves it when read. */
-  const p = plantedCoord({
-    probe: `const { createHash } = await import("node:crypto");\nconst { scan, render } = await import(${JSON.stringify(PIN_REPO + "/tools/decided.mjs")});\nconst reg = []; const rows = scan(undefined, undefined, { sink: reg });\nconsole.log(JSON.stringify({ rows: rows.length, register: reg.length, index: createHash("sha256").update(render(rows, reg)).digest("hex").slice(0, 16) }));`,
-    plant: { "docs/development/CLAIMS.md": "planted by M0-136: a CLAIMS.md with no rulings\n" } });
-  assertPlanted(t, "op-claims", p);
-}
+/* RETIRED 2026-09-26 (T3, N14, K84 (3)): M0-136's arm, which proved the ruling index's read of the old process's
+   `coord` branch was pinned (`./coordpin.mjs`, `tools/decided.mjs`); it retires with that read. */
 
 console.log(`\nop-claims: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
