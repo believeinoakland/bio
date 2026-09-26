@@ -10,6 +10,12 @@
 
 (pending: the full battery on the job branch before any change)
 
+## Questions to BOB
+
+### Q1 · 2026-09-26 · the controls, and N14's retirement (my reading, on which I carry on)
+1. **Controls.** `bio-plane/test` and `civicos-ui/test` hold 227 `*.control.mjs` and 99 `nc-*.mjs` negative-control drivers; `battery.mjs` runs none of them, and a full sweep is several hours of runtime. **My reading:** "the old battery green" means every suite `battery.mjs` runs (400 plane + 12 fleet). Controls are handled where an entry names them (N23, N24, N29, N32's list) or where a change of mine touches them; a control whose anchor no longer matches because layer 2 moved the code it mutates is **retired with that code** (mechanics §12.3: a control mutates source, so it cannot be re-anchored on an interface), and named here. A sweep of the remaining controls goes to `next.md` as an entry rather than into this job.
+2. **N14.** 32 files test the old process's tooling itself (`pushguard`, `coord`, `mintid`, `statepaths`, `decided`, `ledger`, …; list in "Retired tests"). **My reading:** they retire now, with the tooling (the architecture check requires it of this module), not at T7. Suites that merely borrow a tool (`deploybindings`: `jsonc.mjs`; `exportnotice`: `mintid`'s namespace arm; `d334-monitor-credential`: `fleet-posture`'s report arm; `check-semantics.mjs`: `bundle-docprofile.mjs`) take what they need into the test directory or retire only the arm that tests the tool.
+
 ## Batches
 
 **Batch 1 · the named entries** (commits `f8b8121cff`..`90c1baa8a6`):
