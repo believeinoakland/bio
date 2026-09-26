@@ -1,6 +1,6 @@
 # membership — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (a product module, P17), with his two rulings as R62 (organisation-wide AI keys: administrators only) and R63 (an owner's removal reason is kept). Reviewed for BOB #40. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, seven rules found unbuilt in this review (marked "new"), and R62–R63.
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17), with his two rulings as R62 (organisation-wide AI keys: administrators only) and R63 (an owner's removal reason is kept). Reviewed for BOB #40. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, seven rules found unbuilt in this review (marked "new"), and R62–R63. N64 folded by a drafting worker for BOB #43, 2026-09-26: R75–R76, met (both are exported and used today).
 
 ## Public
 
@@ -106,6 +106,10 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 
 **participation(projectId, memberId) → `{state, owner}` or null** (K68)
 - **R74** Answers one member's participation in one project: its state (`invited`, `joined`, `leaving`, or another state the roster holds) and whether the member is an owner; `null` when the member has none or the project is not held. Never throws. (Read by `promotion.forkProject`, R43.)
+
+**rescueRefusal(projectId, by) → refusal or null; positionalMember(viewer, identity?) → member id or null** (N64, K91)
+- **R75** `rescueRefusal` answers the first of R41's caller-and-project refusals that holds, in R41's order and byte for byte as `projectOwnerRescue` answers it: `ADMIN_ONLY` unless `by` is an administrator (R64); `NO_OWNERS` when the project has no owner; `OWNERS_ARE_ACTIVE`, naming the active owners, unless every owner is inactive; otherwise `null`. It writes nothing and never throws. (Read by `affordances` for the rescue's fact, so the offer and the act cannot disagree.)
+- **R76** `positionalMember` answers who is asking, as distinct from what they may see: R43's member id for `identity` when it is a non-empty string, else for `viewer`; `null` for a machine credential and for a viewer or identity R43 admits to nothing. It writes nothing and never throws. (Read by `retrieval`, `queue`, `affordances` and `legacy-store`.)
 
 ## Private
 

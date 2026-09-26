@@ -3,6 +3,8 @@
 
 **Status** · Measured 2026-09-26 by a drafting worker for BOB #42 (P18), reviewed by BOB. Line ranges are in the legacy files on `tranche/T3` at that date; the extraction job confirms them. Measured at `91933d7587` (record-core merged): `store.mjs` 53,685 lines, `schema.mjs` 4,180, `index.mjs` 13,438, `bio-checks.mjs` 16,591. A method's range runs from its signature to its closing brace; the comment block above it goes with it. The contract is `build/requirements/capture.md` (R1–R42); K3, K49, K58, K60, K61 and K71 apply, and `build/extraction/capture-requests.md` draws the K58 seam. The module exports a factory (for example `captureOf(ctx)`, K61) for its store half. It reaches `record-core`, `membership`, `host-governor` and `provenance` through theirs, and imports the pure modules (`capture-sources`, `subresources`, `format-registry`, `docprofile`, `jurisdictions`).
 
+**K98 amendment** · 2026-09-26, by a drafting worker for BOB #43 (P18), measured on `tranche/T3` @ `566bb7f811` (`store.mjs` 49,817 lines, `schema.mjs` 3,964, `index.mjs` 13,438, `bio-checks.mjs` 15,682). The doorbell's rows, measured again, are §1a; the contract gains R47–R55. The other ranges in §1 predate T3's extractions (`store.mjs` lost about 3,900 lines to record-core, membership and promotion) and the extraction job measures them again.
+
 ## 1. What moves to `capture`
 
 | what | where today | lines | moves |
@@ -43,6 +45,22 @@ Purge declarations:
 
 **Checks.** Uses reads C-48 (`DRIVE_CAPTURE_CHECKS`, bio-checks 12081–12203), C-83 (`RENDER_CAPTURE_CHECKS`, 11638–11731), C-85 (`KNOCK_CHECKS`, 11988–12038), C-28.13 (inside `CAPTURE_REQUEST_CHECKS`, 9267–9455, which stays with capture-requests' family), `isPublicHttpsLocator` (5342–5353), `EARNED_CAPTURE_CEILING` (3437) and `civicosUserAgent` (9263–9265) from `legacy-checks`. They are refusal rows and helpers, not findings `checkBundle` runs, and no requirement moves them. `legacy-checks` is not needed in `from`.
 
+## 1a. The doorbell and the compute measurement (K98), measured at `566bb7f811`
+
+| what | where today | lines | moves |
+| --- | --- | --- | --- |
+| `KNOCK` (its limits), `statedPerIp`, `statedGlobal`, the D-513 header, `knockEnvelopeTooLarge`, `knockPayloadTooLarge`, `knockEmpty` | index.mjs | 2851–2944 | yes (R30, R31, R47–R52) |
+| `fingerprint` | index.mjs | 2954–2958 | a copy; the `bootstrap` arm (6163) keeps the original for `fp` |
+| op handler `knock`, with its 7b comment | index.mjs | 6744–6828 | yes (R30–R32, R47–R54); `doAnswer`, `storeSilent`, `json` and `requiredArgument` stay `control-plane`'s and `legacy-checks`' |
+| the compute-measurement write inside `acquire` | index.mjs | 9005–9018, and `compute_recorded` at 10132 | stays in `acquire`, becoming R55's listener call; `compute_recorded` leaves the answer (R55) |
+| 7b header, `knock` (its `is-knock-rate` region 35959–35968, the two-bucket estimate, the prune), `inboxList`, `inboxGet`, `inboxResolve` | store.mjs | 35906–36009 | yes (R31, R32, R47, R48, R53) |
+| `import { KNOCK_CHECKS }` | store.mjs | 537 | removed with `knock` (its only reader in the store) |
+| dispatch `knock`, `inboxlist`, `inboxget`, `inboxresolve` | store.mjs `fetch` | 49797–49800 | this module's Durable Object routes |
+| `inbox` and `inbox_status`, `knock_rate` | schema.mjs | 157–181 | yes; both declared exempt from purge, as `hygiene.test.mjs` (803–804) states them |
+| `KNOCK_CHECKS` (C-85.1–C-85.5) and its D-508 header | bio-checks.mjs | 10991–11129 | read, not moved (K72 (1): capture's refusal families stay in `legacy-checks`); stated as R47–R51. See §3, conflict 8 |
+
+About 320 lines move for the doorbell: `index.mjs` 184 (2851–2944, 2954–2958, 6744–6828), `store.mjs` 108 (35906–36009 and the dispatch), `schema.mjs` 25. About 160 of them are code. The catalogue's 139 lines stay. `recordRuntimeObservation`, `runtimeObservations` and `runtime_observations` are `instance-setup`'s (K98; its map), so §2's row for them is superseded.
+
 ## 2. What stays in `legacy-store`/`legacy-index` or goes elsewhere
 
 | what | lines | owner |
@@ -52,7 +70,7 @@ Purge declarations:
 | `monitorObservationFor`, `recordMonitorLook`, `#recordMonitorAddressType`; `#fireMonitorTick`, `#fireArchiveFallback`; `driveShells`; `#monitorFloor`, `#monitorPending`, `#monitorTick` | store 49778–49920, 51363–51406, 17272–17325, 50858–50950 | `monitoring`/`scheduler`. They read `#thresholds` and `source_reachability` (50859, 50866, 50892, 50904) |
 | the tasks inbox: `#routeTask`, `taskDrain`, `taskList`, `taskForward`, `taskResolve` | store 50131– | a later module (K49). `taskDrain` (50214–50304) reads `task_queue` (50224) |
 | `#conditionsPartialCapture` (reads `capture_sessions`, 29166), `#frontierNeverLooked` (reads `links`, 45722), `#schedConsumers`' wake (reads `task_queue`, 3576) | | `queue`, `retrieval`, `scheduler`; each needs a capture read service |
-| `recordRuntimeObservation`, `runtimeObservations`, `runtime_observations` | store 39516–39535; schema 473–492 | stays (Suggestions: whoever owns the compute measurement) |
+| `recordRuntimeObservation`, `runtimeObservations`, `runtime_observations` | store 36015–36039, 36205–36210; schema 411–430 (at `566bb7f811`) | `instance-setup` (K98), fed by R55's listener |
 | op=ratify's `reusedparts`, `capturelimit`, `recordreuseverdicts`; op=runtime's `capturelimit` | index.mjs 11704, 11720, 11782, 7447 | their handlers stay; the store paths delegate |
 | `captureKey` | index.mjs 4545 | shared with `op=pdfstructure`; record-core R38 fixes the key |
 | the inbox ops' stamps in the generic forwarder, `SESSION_OPS`, `OPS` rows | index.mjs 2177, 13292 and the OPS table | dispatcher (`control-plane`, K3) |
@@ -81,6 +99,9 @@ Conflicts with the requirements:
 5. **R18 (D-698).** The archive letter is typed `"C"` at index.mjs 10073; it becomes `provenance.captureGrade`'s `ARCHIVE_CAPTURE_GRADE`.
 6. **R20 (K60).** `attestation_attempts: []` at 10115 becomes a timestamp request and a co-archive at every capture. That needs `signatures` (TSA endpoints, `ARCHIVE_SAVE_BASE`), which is **not** in this module's `uses`; or it calls `provenance.attest`, which is in `uses`. Name which.
 7. **R41, R17 (the view).** `jurisdictions.combine` needs record-core's `jurisdiction_profiles` setting (N10, record-core R26), merged now.
+8. **C-85's rows (K98).** K98 names "C-85's rate refusals" among the doorbell's code; K72 (1) keeps capture's refusal families in `legacy-checks`. This map keeps `KNOCK_CHECKS` there, read as C-48 and C-83 are, and states each row as an invariant (R47–R51). If BOB moves the family, `from` gains `legacy-checks`, which only removes (it is first in the order), and `d470-catalog-census`, `civicos-ui/check-refusal-codes.mjs` (its family count), `doorbell.test.mjs`'s import and `nc-d513`'s sweep follow it.
+9. **The compute measurement (K98, R55).** Its table is `instance-setup`'s, layer 11, which `capture` cannot call. R55 inverts the call: `instance-setup` registers a listener, and until it is extracted `legacy-store` registers the recording. `snapshot.compute_recorded` (the store's reply, answered today) leaves the answer; `subresources.test.mjs` (1144–1177) exercises the store paths directly and follows `instance-setup`.
+10. **R54 (a row without its bytes).** The store commits the inbox row before the Worker puts the bytes. Meeting R54 means putting the bytes first (content-addressed, so an orphaned object is harmless) and writing the row after, or removing the row when the put fails.
 
 ## 4. Undetermined (stated, not guessed)
 

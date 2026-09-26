@@ -1,6 +1,6 @@
 # record-core — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10). BOB #40 added `transact`, `commit`, `bundleInfo` and `listBundles` (R32–R35) and gave `auditPass` a caller's visibility predicate, from the promotion and membership reviews (K31).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10). BOB #40 added `transact`, `commit`, `bundleInfo` and `listBundles` (R32–R35) and gave `auditPass` a caller's visibility predicate, from the promotion and membership reviews (K31). N64 and N66 folded by a drafting worker for BOB #43, 2026-09-26: R49–R55 (`PER_ITEM_MAX`, `perItem`, `manifestByAuthor`, `isFirstBoot`, C-75), not yet met; R37's widening left for Bob (it changes an approved requirement). N40 folded by a drafting worker for BOB #43, 2026-09-26: R56–R58 (`digestCensus`, `snapKeyCensus`, and the one file digest and size they share with `promotion`), not yet met; both censuses read only this module's tables (`files`, `history`, `manifest`, `bundles`), checked at `566bb7f811`.
 
 ## Public
 
@@ -124,7 +124,7 @@ and every other module that stores anything, write through and read from.
 
 **listByType({type, after, limit}) → `{ids, cursor}`; the `bundles` read contract; evidenceStore() → `{head, get, put}`** (K57)
 - **R36** `listByType` lists held bundle ids of one `object_type` in id order after `after`, at most `limit`; `cursor` is the last id listed. Never throws.
-- **R37** The table `bundles` and its columns `bundle_id` and `object_type` are a stated read contract: a later module may join them in its own SQL (a projection bounded by SQL, as membership's directory is, D-497), and this module changes neither column's name, type or meaning without a requirement change carried to every such reader (P5). No other column is part of the contract.
+- **R37** The table `bundles` and its columns `bundle_id` and `object_type` are a stated read contract: a later module may join them in its own SQL (a projection bounded by SQL, as membership's directory is, D-497), and this module changes neither column's name, type or meaning without a requirement change carried to every such reader (P5). The columns `current_state`, `title` and `criticality` are part of it too, on the same terms (N64, K96: `affordances` and `queue` read them). No other column is part of the contract. *(not yet met: N64 — the three added columns' readers are not yet declared)*
 - **R38** `evidenceStore()` answers the instance's evidence store (R2 bucket) as `{head(key), get(key), put(key, bytes)}`, the object key of a digest being fixed by this module; `null` when the instance has none bound, so callers answer undetermined (provenance R8–R9). *(not yet met: K49 — callers reach the binding directly today)*
 
 **How the module is reached: recordOf(ctx, opts?) → the instance** (K61)
@@ -142,12 +142,56 @@ and every other module that stores anything, write through and read from.
 - **R47** `stampInstant` spells the instant `when` (milliseconds since the epoch, default now) in UTC as ISO 8601: `"second"` gives `YYYY-MM-DDTHH:MM:SSZ`, `"millisecond"` gives `YYYY-MM-DDTHH:MM:SS.sssZ`; any other precision throws, naming it. *(not yet met: N58 — the store exports it today)*
 - **R48** `instantOrder` compares two instants in either spelling as instants, never as strings (`…:00Z` is before `…:00.123Z`): negative, zero or positive as a comparator, and NaN when either side is not a non-empty readable instant. Never throws. *(not yet met: N58)*
 
+**PER_ITEM_MAX; perItem(act, body, stamped, one, {itemKeys, sharedKeys}) → answer** (N64, K91 (4): the set form of an act, generic over its identity groups)
+- **R49** `PER_ITEM_MAX` is 100, the most items one set may carry; `affordances` re-exports it unchanged. *(not yet met: N64; defined in
+  `affordances.mjs`)*
+- **R50** `perItem` applies `one` to each item of `body.items` on its own. Refused whole, before any item is
+  tried, with `op` (= `act`), `weight: "per-item"` and `count`: `items` absent, not an array or empty,
+  `SET_NO_ITEMS` (C-75.1); more than `PER_ITEM_MAX` items, `SET_TOO_LARGE` (C-75.2) with `max`. Otherwise each
+  item in order, whatever became of the others: one that is not an object is retained as
+  `SET_ITEM_MALFORMED` (C-75.3); else `one` is called once with the rest of `body` (the shared values), then
+  the item's own fields, then `stamped` over both, and no `items`; a call that throws is retained as
+  `SET_ITEM_FAILED` (C-75.4); an answer with `ok: true` is `applied`, any other is `retained` carrying that
+  answer's own fields verbatim. Every outcome is `{index, outcome, asked, …}`, `asked` the item's scalar
+  fields (strings cut at 400 characters), so `applied + retained = count`. *(not yet met: N64)*
+- **R51** Identity groups: a key in some group of `itemKeys` and not in `sharedKeys` is an identity key. An
+  item that names an identity key (a trimmed, non-empty string) receives the shared values of every key in
+  the groups it names, and no shared value of any other identity key; an item that names none receives the
+  shared values whole. With no `itemKeys` nothing is narrowed. *(not yet met: N64)*
+- **R52** The answer is `{ok: true, op, weight: "per-item", count, applied, retained: 0, items, detail}`
+  when every item applied, else `SET_ITEMS_RETAINED` (C-75.5) with the same fields beside it. Items are not
+  one transaction: an applied item stands whatever a later one does. Every refusal carries its `check` and
+  `translation`. `perItem` itself writes nothing and never throws. *(not yet met: N64; `#perItem` is
+  `legacy-store`'s)*
+
+**manifestByAuthor({authorPrefix, after, limit}) → `{bundles, cursor}`** (N64: the manifest read `queue`'s
+unattended-capture producer needs)
+- **R53** Lists, in id order after `after` and at most `limit`, each held bundle with at least one manifest
+  entry whose author begins with `authorPrefix`, as `{bundleId, latest, firstOther}`: `latest` is its latest
+  entry `{snapKey, kind, base, author, created, writer, operation}`, ordered by `created` and then by the
+  order this module recorded the entries; `firstOther` is its earliest entry, in the same order, whose
+  author is non-empty and does not begin with `authorPrefix`, or `null`. `cursor` is the last id listed.
+  Which of them a viewer may see is the caller's to decide (`membership`), as for R19. Never throws.
+  *(not yet met: N64; `queue`'s producer reads `manifest` in its own SQL)*
+
+**isFirstBoot() → boolean** (N66)
+- **R54** `true` throughout the boot at which the store had never held the record's schema (no `bundles`
+  table before this module created its tables), and `false` at every later boot. It is decided once, before
+  any table is created or altered, and never throws. `instance-setup` reads it (its R2, R13).
+  *(not yet met: N66; `#migrate` decides it privately in `legacy-store`)*
+
+**digestCensus({limit}) → report; snapKeyCensus({limit}) → report** (N40, K72 (12): read-only audits of this module's own tables, `op=digestcensus` and `op=snapkeycensus`)
+- **R56** `digestCensus` answers `{ok: true, files, history, rewritten: 0, note}`, one part for the live files and one for the historical snapshots, each `{rows, inline, blob, digest_disagrees, bytes_disagree, listed}`. A row's digest disagrees when its stored digest, lower-cased, differs from the digest R58 computes from its stored content; a row with neither text nor blob address is not judged. A live inline row's size disagrees when its stored size differs from R58's size of its text; historical rows hold no size and are not judged for it. `listed` holds at most `limit` disagreeing rows per part, each `{bundle_id, snap_key (historical rows), path, stored, computed, bytes_stored (only when the size disagrees), digest: "disagrees" | "agrees"}`; the counts are always whole. `limit` is an integer from 0 to 500 (a larger one is 500, a negative one 0), and 50 when absent, empty or not an integer. It writes nothing, repairs nothing and never throws. *(not yet met: N40; `legacy-store`'s `digestCensus`)*
+- **R57** `snapKeyCensus` answers `{ok: true, bundles, manifest_rows, promotions, overwritten, undetermined, bundles_with_deficit, excess, orphan_manifest_bundles, listed, rewritten: 0, note}`. For each held bundle its promotions are its `rowVersion` (one per `commit`, R33) and its deficit is promotions less its manifest entries: a negative deficit adds to `excess`; a positive one counts toward `bundles_with_deficit` and is split into `undetermined` (1 when the bundle has no creation entry, one whose `base` is the SHA-256 of the empty string, else 0) and `overwritten` (the rest). Its `unanchored` entries are the snap keys of its non-creation entries whose `base` is not the `bundle.md` digest recorded by any of its own entries (an entry's file list that does not parse counts as empty). A bundle with a positive deficit or any unanchored entry is listed, at most `limit` of them, as `{bundle_id, promotions, manifest_rows, overwritten, undetermined, creation_row, unanchored}`. Manifest entries of a bundle id not held add to `manifest_rows` and count once per id in `orphan_manifest_bundles`. `limit` as R56. It writes nothing and never throws. *(not yet met: N40; `legacy-store`'s `snapKeyCensus`)*
+- **R58** `fileDigestOf(f)` answers the SHA-256, lowercase hex, of the UTF-8 bytes of an inline file's `text` exactly as given (no trimming, no line-ending change), or a blob-backed file's `blobSha` lower-cased, or `null` for neither; `inlineBytesOf(f)` answers the UTF-8 length of an inline file's `text`, or `null` for a blob. They are module-level functions, and the one computation of a file's digest and size: `promotion`'s digest and size checks and R56 read them, so the door and the census cannot disagree about what a disagreement is (REC-175, REC-178). *(not yet met: N40; `legacy-store` holds `#fileDigestOf` and `#inlineBytesOf` for the census, and `promotion` its own copies)*
+
 ## Private
 
 ### Uses
 
 - `legacy-checks`: the check catalogue `auditPass` runs, and the check ids and translations this
-  module's own refusals cite (`ALLOCID_PREFIX_GATED`, C-59.5).
+  module's own refusals cite (`ALLOCID_PREFIX_GATED`, C-59.5; `PER_ITEM_CHECKS`, C-75, until they move
+  here, R55).
 - `id-spaces` is a permitted dependency (`build/layers.md`) but nothing in this module's share calls it
   today.
 
@@ -163,6 +207,8 @@ and every other module that stores anything, write through and read from.
   merely the shape of one refusal).
 - **R31** Every service of this module reads and writes only this module's own tables and the system
   clock (and `purge` clears the tables other modules declared to it, R21); it makes no network call and holds no member, capability or fence.
+- **R55** **C-75.** The set form's five refusals (R50, R52) move here as an invariant with their test
+  (K6): C-75.1–C-75.5. *(not yet met: N64)*
 
 ### Satisfies
 
@@ -185,4 +231,8 @@ and every other module that stores anything, write through and read from.
 - `#mintProjectId`'s slug derivation is project-specific; whether it stays here (a thin wrapper over
   `mintOpaqueId`) or moves to `promotion` (the module that actually mints `PROJ` ids) is an open
   extraction question, not a requirement.
+- **R26's writer** is `instance-setup`: its R13 at the first boot (reading R54) and its R14 after (K93, N66).
+- **`perItem`'s callers** (R50) are `entities` (`op=resolve`) and `queue` (`taskresolve`, `taskforward`,
+  `proposedispose`), each passing its act's published identity groups (`affordances`' `PER_ITEM_ACTS`).
+- **The censuses (N40).** The creation marker (the SHA-256 of the empty string) is defined here for R57; `promotion` exports its own `EMPTY_STRING_SHA` today and can import this module's. `promotion`'s `fileDigestOf` and `inlineBytesOf` (its `promotion/index.mjs`) give way to R58's, a change in `promotion` its next job makes (an entry for it). `homeCensus`, beside them in the store, reads provenance's `register` and is not this module's.
 - `purge` today clears some 40 tables in one method, most of them other modules' (entities, connections, progressions, ai-runs and more). Under R21 each module declares its own tables when it is extracted; until then the legacy store declares the rest, so `purge` keeps clearing them.

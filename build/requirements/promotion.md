@@ -1,6 +1,6 @@
 # promotion — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT, reviewed for BOB #40, 2026-09-26; for Bob's approval (a product module, P17). Layer 2. Drafted for BOB #38 from the T1 extraction survey; reviewed against the code. Code today: `bio-plane/src/gate.mjs` (owned already), and `promote()` (`bio-plane/src/store.mjs` 17881–20109) and `reopen()` (7984–8250) inside `legacy-store`, extracted by this module's first job. Not yet met: R11–R15, R17, R18 (carried rows D-578, D-628, D-707, D-615, D-692, D-726, D-738, D-546, D-741, D-695, D-717), R30–R32 (D-700, D-718, D-673, entry N8 / K10). Later modules join a promotion through R39–R40 (K31).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT, reviewed for BOB #40, 2026-09-26; for Bob's approval (a product module, P17). Layer 2. Drafted for BOB #38 from the T1 extraction survey; reviewed against the code. Code today: `bio-plane/src/gate.mjs` (owned already), and `promote()` (`bio-plane/src/store.mjs` 17881–20109) and `reopen()` (7984–8250) inside `legacy-store`, extracted by this module's first job. Not yet met: R11–R15, R17, R18 (carried rows D-578, D-628, D-707, D-615, D-692, D-726, D-738, D-546, D-741, D-695, D-717), R30–R32 (D-700, D-718, D-673, entry N8 / K10). Later modules join a promotion through R39–R40 (K31). N63 and N66 folded by a drafting worker for BOB #43, 2026-09-26: R45, not yet met; C-64.1 named among the carried rows.
 
 ## Public
 
@@ -71,6 +71,15 @@ The one write path by which a bundle enters or changes in the record. It holds t
   that needs it with `FACT_UNAVAILABLE`, naming the fact; it is never read as false.
 - Errors: never throws.
 
+**onCommitted(module, fn) → void** (the post-commit notice beside R39's in-transaction projections, K90 (6))
+- **R45** A later module registers once at start (a second registration by one module is refused
+  `LISTENER_DECLARED`). After an accepted promotion's transaction has committed, and never for a refused
+  one or one answered `wrote: false` (R4), every registered listener is called once, in the modules'
+  total order, with `{bundleId, bundleSha, type, replay}`. A listener runs outside the transaction and writes no row of the promotion; one that throws or rejects
+  never changes the promotion's answer or anything it wrote. (`scheduler` registers its `arm`, for a
+  promotion that leaves a bundle monitored.) *(not yet met: N63; the `op=promote` handler arms the
+  store's scheduler itself)*
+
 **forkProject({projectId, newId, title, by, viewer, visibility}) → `{ok: true, projectId, newId, title, origin, rel: "derived_from", owner, participantsCopied: 0, bundleSha, visibility}` or refusal** (N16, K68; moved unchanged from the store)
 - **R41** A named `newId` is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3) before anything is looked up, echoing no id: a fork's id is minted, as a project's creation's is (R19).
 - **R42** Sight before position: a project the `viewer` sees at existence only answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (its id and name only); one it does not see, and an id naming nothing, both answer `NO_SUCH_PROJECT`, identically. With no `viewer` the caller is internal and sight is not asked.
@@ -81,7 +90,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 ### Uses
 
-- `legacy-checks`: the catalogues `checkBundle` and `checkCaseDocument`; the parser, `normalizeType`, `vocabFor`/`STATES`, `isMachineIdentity`, `MECHANICAL_FIELD_SETS`; and the check rows whose ids and translations this module's refusals carry (`ACT_SHAPE_CHECKS`, `PROMOTED_TYPE_CHECKS`, `PROJECT_ID_CHECKS`, `PROJECT_CREATION_VISIBILITY_CHECKS`, `BIAS_CHECKS`).
+- `legacy-checks`: the catalogues `checkBundle` and `checkCaseDocument`; the parser, `normalizeType`, `vocabFor`/`STATES`, `isMachineIdentity`, `MECHANICAL_FIELD_SETS`; and the check rows whose ids and translations this module's refusals carry (`ACT_SHAPE_CHECKS`, `PROMOTED_TYPE_CHECKS`, `PROJECT_ID_CHECKS`, `PROJECT_CREATION_VISIBILITY_CHECKS`, `BIAS_CHECKS`, and `INSTANCE_GROUP_CHECKS`' row C-64.1, `GROUP_UNDETERMINED`, which R13 raises; K93 (2)). `withProducingGroup` and `stampGroup` are already this module's (K69).
 - `record-core`: `transact` and `commit` (R2, R3; every row R3 writes goes through them), `mintOpaqueId` (a project's id, R19), `bundleInfo`, and `readImage`, whose write order R30 depends on (record-core R16).
 - `membership`: the producing group (R13), project ownership and joined authority (R19), and the sight predicate (R20, R23).
 - `signatures`: `verifySshsig` (R31). Listed in `modules.json` (K10, K62).
@@ -108,6 +117,6 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **Fork and project names come here (K31).** `forkProject` (store.mjs 37041) and project name uniqueness (C-77) move to this module from `membership`, with §7.12's rules; their requirements are written before this module's first job (entry N16).
 - **Batch30.** Every *(not yet met)* row above has its fix built and unmerged on `snapshot/pre-refactor-2026-09-25` (PROCESS-MECHANICS §12.5). The job reads that snapshot's `promote()` first and keeps what meets these requirements. D-741 and D-738 are queued rows with no built branch.
 - **R31.** `verifySshsig` is asynchronous and reads keys, not principals. Resolving a principal and its validity window stays in C-18.8. The Apps Script runtime that justified a hand-written verifier is decommissioned (`gate.mjs` header; N8).
-- **Answer enrichments from later layers.** `reopen` adds `reevaluation.raised` and the `op=promote` handler arms the scheduler. Both are later-layer effects that move out with their modules; `op` handlers move with the construct (K3).
+- **Answer enrichments from later layers.** `reopen` adds `reevaluation.raised` and the `op=promote` handler arms the scheduler. Both are later-layer effects that move out with their modules; `op` handlers move with the construct (K3). The arm becomes `scheduler`'s listener on R45; `legacy-store` registers it until `scheduler` is extracted.
 - **Tests.** Each *(not yet met)* requirement gets a negative control reproducing its row's repro shape.
 - **For callers.** The identity stamps `actorIdentity`, `actorViewer`, `actorMemberId`, `ownerMemberId`, `assistantPrincipal` and `migrationReplay` are set by the control plane from the session and deleted first from any caller's body. This module trusts them as given; that obligation is the control plane's.

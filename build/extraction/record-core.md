@@ -153,6 +153,31 @@ not yet decided. Left undetermined — flagged in §4 rather than guessed into a
 R1 through R29 — **29 requirement ids** in this draft (Provides R1-R24 public; Invariants R25-R29
 private). All are stated fresh (draft, pre-approval), so none are marked retired.
 
+## 6. N40: the censuses (amendment by a drafting worker for BOB #43, 2026-09-26)
+
+Measured on `tranche/T3` @ `566bb7f811` (`store.mjs` 49,817 lines). The contract is R56–R58 (K72 (12), N40).
+
+**The claim checked.** Both censuses read only this module's tables. `digestCensus` reads `files` (`bundle_id, path, content, blob_sha, bytes, sha256`) and `history` (`bundle_id, snap_key, path, content, blob_sha, sha256`). `snapKeyCensus` reads `manifest` (`bundle_id, snap_key, base, files_json`) and `bundles` (`bundle_id, row_version`). Neither writes. `snapKeyCensus` relies on `row_version` being stepped by one per commit and by nothing else, and on `manifest` having one writer: both hold, since `commit` (`record-core/index.mjs` 343 and 357) is the only writer of either in the product. The claim is true. What the two use beyond the tables is a digest helper (`createSha256`, from `legacy-checks`, already this module's use), `safeJson` (a one-line store helper) and `EMPTY_STRING_SHA` (a store constant that only `snapKeyCensus` reads).
+
+| what | where today | lines | moves |
+| --- | --- | --- | --- |
+| `EMPTY_STRING_SHA` | store | 685 | yes; its only readers are `snapKeyCensus` (33324, 33329). `promotion` exports its own (`promotion/index.mjs` 32) |
+| `safeJson` | store | 858 | a copy; 40 other readers in the store keep it |
+| the REC-175 header and `#fileDigestOf`, the REC-178 header and `#inlineBytesOf` | store | 32935–32951 | yes, as the exported `fileDigestOf` and `inlineBytesOf` (R58). The census is their only reader in the store |
+| the REC-175 census header and `digestCensus` | store | 32953–32989 | yes (R56) |
+| the REC-176 header and `#manifestFiles` | store | 33284–33291 | yes (R57). The census is its only reader in the store (`#samePromotion`, named in its comment, is now `promotion`'s `samePromotion`) |
+| the REC-176 census header and `snapKeyCensus` | store | 33292–33347 | yes (R57) |
+| dispatch `snapkeycensus` with its comment | store `fetch` | 48534–48535 | delegates to `recordOf(this.ctx).snapKeyCensus` |
+| dispatch `digestcensus` with its comment | store `fetch` | 49748–49749 | delegates to `recordOf(this.ctx).digestCensus` |
+
+**Measured size moving in:** about 125 lines from `store.mjs` (about 90 of code), and the two delegating dispatch lines stay as `ADDED` lines in `legacy-store`.
+
+**What stays.** The `OPS` rows `snapkeycensus` (index 892) and `digestcensus` (index 1215, with its comment to 1219) are `control-plane`'s. `homeCensus` (store 33348–) and `registerAudit` read provenance's `register` and are not this module's; the brief's range 32936–33400 spans them and the membership delegates between, which do not move.
+
+**Conflicts.**
+1. **One computation, two copies.** REC-175 and REC-178 made `#fileDigestOf` and `#inlineBytesOf` the one computation for the door and the census. T3's promotion job gave `promotion` its own `fileDigestOf` and `inlineBytesOf` (`promotion/index.mjs` 63–72), so there are two today. `record-core` is earlier than `promotion` and cannot import it; R58 puts the one computation here and `promotion` imports it. That is a change to `promotion` (a `next.md` entry), not something this job can make, since `promotion` is not in its `from`.
+2. **Tests.** `rec175-digest.test.mjs`, `rec176-snapkey.test.mjs` and `rec178-bytes.test.mjs` load `src/index.mjs` as the Worker script and reach the censuses through their ops; they stay green while the routes delegate. Their negative-control comments name `src/store.mjs` sites that move, and `legacy-tests` re-anchors those.
+
 ## Token use
 
 Not available to me in this session (no running total surfaced by the tools I have); not reported rather

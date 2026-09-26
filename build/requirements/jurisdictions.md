@@ -1,6 +1,6 @@
 # jurisdictions — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6); R23–R30 APPROVED by Bob 2026-09-26. Layer 1. Code: `jurisdictions/index.mjs` and `jurisdictions/profiles/` (the first profile, Oakland and Alameda County, and a test profile). Built by T2 (N1, N11); the first profile's bases are settled from the measurement log, `UNMEASURED` where it holds none. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6); R23–R30 APPROVED by Bob 2026-09-26. Layer 1. Code: `jurisdictions/index.mjs` and `jurisdictions/profiles/` (the first profile, Oakland and Alameda County, and a test profile). Built by T2 (N1, N11); the first profile's bases are settled from the measurement log, `UNMEASURED` where it holds none. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). N66 folded by a drafting worker for BOB #43, 2026-09-26: the callers' Suggestion names `instance-setup` R13–R14; no requirement changed.
 
 ## Public
 
@@ -86,5 +86,5 @@ None.
 ### Suggestions
 
 - Layout: `jurisdictions/index.mjs` for the services, and one data file per profile under `jurisdictions/profiles/`. Only those data files, and this module's tests of them, name a place.
-- **For the callers.** Consumers take `combine(...).view`, so conflict handling lives in one place. The record holds the active list and refuses to activate a test profile. The installer offers the choice of profiles at install. Those requirements belong to the modules that hold the setting and call `combine`.
+- **For the callers.** Consumers take `combine(...).view`, so conflict handling lives in one place. `instance-setup` holds the active list (record-core's setting, its R26) and refuses to activate a test profile (instance-setup R13–R14, `PROFILE_IS_TEST`). The installer offers the choice of profiles at install. Those requirements belong to the modules that hold the setting and call `combine`.
 - Known bases for the first profile: M-119, M-132 and M-157 (identifiers and systems); M-18 and M-24 (minutes, staff report, ordinance or resolution); M-121 (directory: it has no local vocabulary in code); and dated entries in `MEASUREMENTS.md` (the calendar and handlers, 2026-07-30; the agenda, FW-15).
