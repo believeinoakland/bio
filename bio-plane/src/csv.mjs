@@ -146,6 +146,16 @@ import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "./ooxml.mjs";
    the publisher who writes `TEXT/CSV`. The two synonyms are the same media
    type under older spellings; NEITHER OCCURS IN THIS CORPUS and both are
    labelled unmeasured in the signal they produce. */
+/* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
+ * byte values; anything else reads as no bytes, so a wrong argument is a
+ * named refusal downstream, never a throw (R21; ooxml.mjs's own policy). */
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try { return new Uint8Array(x ?? 0); } catch { return new Uint8Array(0); }
+}
+const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+
 export const CSV_CONTENT_TYPE = "text/csv";
 const CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
 
@@ -241,7 +251,10 @@ function hasHighBytes(b) {
  *  procedure available in the runtime, so it is asked rather than reimplemented. */
 function isValidUtf8(b) {
   try {
-    new TextDecoder("utf-8", { fatal: true }).decode(b);
+    /* `stream`: the window is a CUT, and a multi-byte sequence the cut splits
+       at its end is incomplete, not invalid — a valid file must not read
+       undetermined because 1 MiB fell inside a character. */
+    new TextDecoder("utf-8", { fatal: true }).decode(b, { stream: true });
     return true;
   } catch {
     return false;
@@ -389,7 +402,7 @@ const BYTE_TRANSPORT = new TextDecoder("latin1");
  *  intake and the one a full reading emits are ONE computation and cannot
  *  disagree. No record is walked here. */
 function csvSignatures(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   if (!b.length) {
     return { ok: false, why: "empty_body" };
   }
@@ -424,17 +437,30 @@ async function csvParts(bytes) {
         metric: "body_bytes" }
     : null;
 
-  let records = null;
+  /* The records. For every encoding whose delimiters, quotes and line breaks
+     are the ASCII bytes (us-ascii, utf-8, undetermined) the walk runs over the
+     BYTE TRANSPORT and each field that holds a byte >= 0x80 is decoded on its
+     own (`fieldValue`): the signature saw only the head, and a byte past it
+     that the signature's encoding cannot read must be a stated undetermined
+     cell, never a character a lenient decoder made up. UTF-16 (BOM, certain)
+     is decoded whole; a body that is not valid UTF-16 is marked so that the
+     cells it spoils are stated too. */
+  let records = null, transport = false, invalidUtf16 = false;
   if (!guard) {
-    const text = enc.encoding
-      ? new TextDecoder(enc.encoding, { fatal: false }).decode(body)
-      : BYTE_TRANSPORT.decode(body);
+    let text;
+    if (enc.encoding === "utf-16le" || enc.encoding === "utf-16be") {
+      try { text = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body); }
+      catch { text = new TextDecoder(enc.encoding, { fatal: false, ignoreBOM: true }).decode(body); invalidUtf16 = true; }
+    } else {
+      text = BYTE_TRANSPORT.decode(body);
+      transport = true;
+    }
     records = walkRecords(text, delim.delimiter);
   }
 
   return {
     ok: true, format: "csv", bytes: b,
-    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records,
+    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport, invalidUtf16,
   };
 }
 
@@ -520,6 +546,27 @@ function asciiClean(s) {
   return true;
 }
 
+const UTF8_FATAL = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+
+/** One field's text, or why it has none. `field` is as `csvParts` walked it:
+ *  byte-transport code units for an ASCII-grid encoding, else decoded text. */
+function fieldValue(field, parts) {
+  if (!parts.transport) {
+    return parts.invalidUtf16 && field.includes("\ufffd") ? { why: "invalid_utf16" } : { value: field };
+  }
+  if (asciiClean(field)) return { value: field };
+  const encoding = parts.encoding.encoding;
+  if (encoding == null) return { why: "encoding_undetermined" };
+  if (encoding === "utf-8") {
+    const bytes = new Uint8Array(field.length);
+    for (let i = 0; i < field.length; i++) bytes[i] = field.charCodeAt(i);
+    try { return { value: UTF8_FATAL.decode(bytes) }; } catch { return { why: "invalid_utf8" }; }
+  }
+  /* us-ascii, decided over the head: a byte >= 0x80 past it is not us-ascii
+     and names no character this reading can state. */
+  return { why: "not_us_ascii" };
+}
+
 function csvText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -547,7 +594,6 @@ function csvText(parts) {
   const undetermined = [];
   const lines = [];
   let cellCount = 0, usedRows = 0, usedCols = 0;
-  const encodingUndetermined = parts.encoding.encoding == null;
 
   parts.records.forEach((record, r0) => {
     /* ROW 1 IS ROW 1 (BOB #32). No header is consumed, skipped or renamed:
@@ -555,17 +601,20 @@ function csvText(parts) {
        no readings. 1-BASED, because A1 notation is. */
     const row = r0 + 1;
     const vals = [];
-    record.forEach((field, c0) => {
+    record.forEach((raw, c0) => {
       const col = c0 + 1;
-      if (encodingUndetermined && !asciiClean(field)) {
-        /* The grid survives an undetermined encoding; these characters do
-           not. Named per cell with its own reference, never mojibake. */
+      const read = fieldValue(raw, parts);
+      if (read.why) {
+        /* The grid survives an encoding that cannot read these bytes; these
+           characters do not. Named per cell with its own reference, never
+           mojibake. */
         undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`,
-          reason: "encoding_undetermined" });
+          reason: read.why });
         if (row > usedRows) usedRows = row;
         if (col > usedCols) usedCols = col;
         return;
       }
+      const field = read.value;
       if (field === "") return;   // an empty cell is a measured emptiness, not text
       cellCount++;
       if (row > usedRows) usedRows = row;
@@ -616,7 +665,7 @@ export const csvEntry = {
   detect(bytes, contentType) {
     /* BYTES NEVER ANSWER — header §1, measured both ways. This is not a
        missing branch; it is the finding. */
-    if (bytes) return null;
+    if (bytes != null) return null;
     if (typeof contentType !== "string") return null;
     const ct = contentType.trim().toLowerCase();
     if (ct === CSV_CONTENT_TYPE) {
@@ -649,13 +698,13 @@ export const csvEntry = {
      do, so detect->structure works uniformly at the registry seam while a
      caller that already paid for parts() does not pay twice. */
   structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await csvParts(partsOrBytes)
       : partsOrBytes;
     return csvStructure(parts);
   },
   text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await csvParts(partsOrBytes)
       : partsOrBytes;
     return csvText(parts);

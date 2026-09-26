@@ -114,6 +114,17 @@ import {
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
+/* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
+ * byte values; anything else reads as no bytes, so a wrong argument is a
+ * named refusal downstream, never a throw (R21; ooxml.mjs's own policy). */
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try { return new Uint8Array(x ?? 0); } catch { return new Uint8Array(0); }
+}
+const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+
+
 export const PPTX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const CONTENT_TYPES_PART = "[Content_Types].xml";
@@ -146,7 +157,9 @@ function decodeEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
       const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      /* Past U+10FFFF fromCodePoint THROWS; such a reference is not a
+       * character, so it stays as written (R21). */
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
     }
     return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
   });
@@ -250,8 +263,10 @@ export function walkSlide(xml) {
         break;
       case "hlinkClick":
         noteRid(attrs);
-        if (attrs.id && /^rId/.test(attrs.id))
-          hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
+        /* Any non-empty r:id is a relationship id (xsd:ID; the `rId` prefix
+         * is a producer's habit, not the format's rule). An empty one is an
+         * action (next slide, end show) and names no relationship. */
+        if (attrs.id) hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
         break;
       default:
         noteRid(attrs);
@@ -334,7 +349,7 @@ function resolveRelTarget(relsPart, target) {
  *    undetermined:[{part,why}...] }    // parts that exist but cannot be read
  *  or { ok:false, why, signals } when the bytes are not a readable PPTX. */
 async function pptxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const d = await discriminate(b);
   if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
   if (d.format !== "pptx") {
@@ -849,13 +864,13 @@ export const pptxEntry = {
     /* Accept either parts() output or raw bytes, so detect→structure works
      * uniformly at the registry seam while a caller that already paid for
      * parts() does not pay twice (the docx.mjs pattern). */
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     return pptxStructure(parts);
   },
   text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
