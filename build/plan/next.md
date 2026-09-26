@@ -46,6 +46,7 @@
 - N51 · 2026-09-26 · **record-core**: `auditPass` offers a registration for later modules' audit checks (the K31 pattern), so `promotion.recordAudit` stops re-judging only the bundles the moved checks flag. Reported by PROMOTION #1.
 - N52 · 2026-09-26 · **affordances**: import promotion's `REOPENABLE_FROM` instead of keeping its own. Reported by PROMOTION #1.
 - N53 · 2026-09-26 · **skills**, **agent-worker**, **control-plane** (K81): the skills tests that read `agent-worker` and `index.mjs` move into those modules' own tests.
+- N54 · 2026-09-26 · **ai-runs**, **run-productions** (K82): BOB splits `build/requirements/ai-runs.md` into `ai-runs.md` and `run-productions.md` (`op=suggest` and the extract proposals), adds `run-productions` after `ai-runs` in `modules.json`, before Bob approves either.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
