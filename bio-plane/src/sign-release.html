@@ -1,0 +1,408 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>BIO signing keys</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--
+  Signing keys that never leave the person holding them.
+
+  This page is one file with no network access of any kind: no scripts
+  loaded, no fonts fetched, no data sent anywhere. Open it from a local
+  copy. Everything it does happens in the browser tab.
+
+  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`
+  emits, so anything signed here can be verified by anyone with stock
+  OpenSSH and no BIO code:
+
+      ssh-keygen -Y verify -f allowed_signers -I <you> \
+                 -n bio-release -s file.sig < file
+
+  Two keys, because they do different jobs. The release key signs the
+  software that installs into other people's accounts and is used a few
+  times a year. The ratification key attests documents and is used
+  constantly. Keeping routine use away from the supply-chain key is the
+  reason they are separate.
+-->
+<style>
+  :root {
+    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;
+    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;
+    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--dim); margin: 0 0 28px; }
+  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;
+            padding: 20px; margin: 0 0 18px; }
+  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;
+       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }
+  p { margin: 0 0 12px; }
+  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }
+  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;
+                    background: #fff; color: var(--ink); }
+  textarea { resize: vertical; }
+  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;
+           border: 1px solid var(--accent); background: var(--accent); color: #fff;
+           cursor: pointer; }
+  button:hover { background: var(--accent-dark); }
+  button.ghost { background: #fff; color: var(--accent); }
+  button.ghost:hover { background: var(--soft); }
+  button:disabled { opacity: .45; cursor: default; background: var(--accent); }
+  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }
+  .stack > * + * { margin-top: 14px; }
+  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }
+  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .keybox label { margin: 0; }
+  .keybox textarea { background: #fff; }
+  .copy { padding: 4px 12px; font-size: 12px; }
+  .note { color: var(--dim); font-size: 13px; margin: 0; }
+  .warn { color: var(--warn); }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }
+  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }
+  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .hide { display: none; }
+  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;
+         word-break: break-all; }
+  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row button { flex: 1 1 auto; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }
+</style>
+
+<main>
+  <h1>BIO signing keys</h1>
+  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>
+
+  <div class="tabs">
+    <button id="tab-keys" aria-pressed="true">Keys</button>
+    <button id="tab-release" aria-pressed="false">Sign a release</button>
+    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>
+  </div>
+
+  <!-- -------------------------------------------------------------- keys -->
+  <div id="pane-keys">
+    <section>
+      <h2>Make your keys</h2>
+      <p>One press makes both keys. Copy the two public keys into the session, and keep
+         the private keys wherever you keep things.</p>
+      <button id="gen" class="big">Generate my keys</button>
+      <div id="gen-out" class="stack" style="margin-top:18px"></div>
+    </section>
+
+    <section>
+      <h2>Load a key you already have</h2>
+      <p class="note">Paste a private key from a previous run. The key says which job it is for,
+         so there is nothing to choose.</p>
+      <div class="stack">
+        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>
+        <div class="row">
+          <button id="load">Load this key</button>
+          <button id="forget" class="ghost">Forget everything</button>
+        </div>
+      </div>
+      <details>
+        <summary>This key is protected with a passphrase</summary>
+        <div class="stack" style="margin-top:10px">
+          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">
+        </div>
+      </details>
+      <div id="load-out" style="margin-top:12px"></div>
+    </section>
+  </div>
+
+  <!-- ----------------------------------------------------------- release -->
+  <div id="pane-release" class="hide">
+    <section>
+      <h2>Sign a release</h2>
+      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the
+         exact bytes of that file, so a rebuilt asset needs a new signature.</p>
+      <div class="stack">
+        <div id="rel-key" class="status">No release key loaded.</div>
+        <input id="rel-file" type="file">
+        <button id="rel-sign" disabled>Sign these bytes</button>
+      </div>
+      <div class="stack" id="rel-out" style="margin-top:16px"></div>
+    </section>
+  </div>
+
+  <!-- ------------------------------------------------------------ ratify -->
+  <div id="pane-ratify" class="hide">
+    <section>
+      <h2>Sign a ratification</h2>
+      <p>Copy the bundle id and its current hash from the instance page. The signature covers
+         both, so it authorizes publishing that exact revision and no other.</p>
+      <div class="stack">
+        <div id="rat-key" class="status">No ratification key loaded.</div>
+        <div><label for="rat-id">Bundle id</label>
+          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>
+        <div><label for="rat-sha">Bundle hash</label>
+          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>
+        <button id="rat-sign" disabled>Sign this ratification</button>
+      </div>
+      <div class="stack" id="rat-out" style="margin-top:16px"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ------------------------------------------------------------- helpers */
+const $ = (id) => document.getElementById(id);
+const enc = new TextEncoder();
+const u8 = (...a) => { let n = 0; for (const p of a) n += p.length;
+  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };
+const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+const unb64 = (s) => Uint8Array.from(atob(s.replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+
+/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */
+const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+const sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };
+
+/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */
+const wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));
+const pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;
+
+/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).
+   The outer armor wraps a blob that repeats the public key and namespace so a
+   verifier can identify the signer without being told. */
+async function sshsig(privKey, raw32, namespace, message) {
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));
+  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));
+  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));
+  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),
+                  sshStr(namespace), sshStr(""), sshStr("sha512"),
+                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));
+  const body = b64(blob).replace(/(.{70})/g, "$1\n");
+  return `-----BEGIN SSH SIGNATURE-----\n${body}\n-----END SSH SIGNATURE-----\n`;
+}
+
+/* WebCrypto has no seed-to-public-key call, so the public half is read out of a
+   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the
+   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */
+const PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);
+async function keysFromSeed(seed32) {
+  const pkcs8 = u8(PKCS8_HEAD, seed32);
+  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
+  const jwk = await crypto.subtle.exportKey("jwk",
+    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));
+  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));
+  return { priv, raw32 };
+}
+
+/* The two jobs, and the only two labels this page uses. A private key carries
+   its own label, so loading one never asks which job it belongs to. */
+const JOBS = {
+  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },
+  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },
+};
+
+/* Private key formats. Raw is the default: a development key is disposable and a
+   passphrase on it is ceremony without a threat. The wrapped form exists for
+   production keys and is recognised automatically on load. */
+const rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;
+
+const KDF_ITER = 600000;
+async function wrapKey(seed32, pass, label) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));
+  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");
+}
+
+async function parseKeyString(blob, pass) {
+  const s = (blob || "").trim();
+  if (s.startsWith("BIOKEY-RAW1.")) {
+    const [, label, seed] = s.split(".");
+    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");
+    return { label, seed: unb64(seed) };
+  }
+  if (s.startsWith("BIOKEY1.")) {
+    const [, label, salt, iv, ct, iter] = s.split(".");
+    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");
+    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    try {
+      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));
+      return { label, seed };
+    } catch { throw new Error("wrong passphrase, or the key was altered"); }
+  }
+  throw new Error("that does not look like a BIO private key");
+}
+
+/* ---------------------------------------------------------------- state */
+const KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */
+
+function armed() {
+  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {
+    const k = KEYS[slot];
+    $(elId).innerHTML = k
+      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`
+      : `No ${what} key loaded. Make one on the Keys tab.`;
+  }
+  $("rel-sign").disabled = !KEYS.release;
+  $("rat-sign").disabled = !KEYS.ratify;
+}
+
+async function useSeed(label, seed) {
+  const { priv, raw32 } = await keysFromSeed(seed);
+  KEYS[JOBS[label].slot] = { priv, raw32, label };
+  armed();
+  return { priv, raw32 };
+}
+
+/* ---------------------------------------------------- copyable text block */
+let boxSeq = 0;
+function copyBox(labelText, value, hint) {
+  const id = "box" + (++boxSeq);
+  const rows = value.split("\n").length > 3 ? 7 : 2;
+  return `<div class="keybox">
+    <div class="top"><label for="${id}">${labelText}</label>
+      <button class="copy ghost" data-copy="${id}">Copy</button></div>
+    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>
+    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}
+  </div>`;
+}
+
+/* Clipboard, with a fallback because a page opened from disk cannot always
+   reach the async clipboard API. */
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch { return false; }
+}
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;
+  if (!btn) return;
+  const src = $(btn.getAttribute("data-copy"));
+  const ok = await copyText(src ? src.value : "");
+  const was = btn.textContent;
+  btn.textContent = ok ? "Copied" : "Press Ctrl+C";
+  setTimeout(() => { btn.textContent = was; }, 1400);
+});
+
+/* ------------------------------------------------------------------ tabs */
+const PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];
+for (const [btn, pane] of PANES) {
+  $(btn).onclick = () => {
+    for (const [b, p] of PANES) {
+      $(b).setAttribute("aria-pressed", String(b === btn));
+      $(p).classList.toggle("hide", p !== pane);
+    }
+  };
+}
+
+/* -------------------------------------------------------------- generate */
+function keyReport(made) {
+  return Object.entries(made)
+    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\npublic:  ${m.pub}\nprivate: ${m.priv}`)
+    .join("\n\n") + "\n";
+}
+
+async function generateAll() {
+  const made = {};
+  for (const label of Object.keys(JOBS)) {
+    const seed = crypto.getRandomValues(new Uint8Array(32));
+    const { raw32 } = await useSeed(label, seed);
+    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };
+  }
+  return made;
+}
+
+$("gen").onclick = async () => {
+  const made = await generateAll();
+  const bothPub = Object.values(made).map((m) => m.pub).join("\n");
+  const all = keyReport(made);
+
+  $("gen-out").innerHTML =
+    copyBox("Both public keys: paste these into the session", bothPub,
+            "Public keys are public by design. This is the only thing that needs to leave this page.")
+    + `<div class="row">
+         <button id="copy-all">Copy everything, keys and all</button>
+         <button id="dl" class="ghost">Download as a file</button>
+       </div>`
+    + Object.entries(made).map(([l, m]) =>
+        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,
+                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")
+    + `<p class="note">These are development keys with no passphrase. When BIO goes to real groups,
+         generate fresh keys and protect them. Nothing here carries over.</p>`;
+
+  $("copy-all").onclick = async (e) => {
+    const ok = await copyText(all);
+    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";
+    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);
+  };
+  $("dl").onclick = () => {
+    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = "bio-signing-keys.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+};
+
+/* ------------------------------------------------------------------ load */
+$("load").onclick = async () => {
+  try {
+    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);
+    const { raw32 } = await useSeed(label, seed);
+    $("load-pass").value = "";
+    $("load-out").innerHTML =
+      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;
+  } catch (e) {
+    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;
+  }
+};
+$("forget").onclick = () => {
+  KEYS.release = null; KEYS.ratify = null; armed();
+  for (const id of ["load-blob", "load-pass"]) $(id).value = "";
+  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";
+  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;
+};
+
+/* -------------------------------------------------------- sign a release */
+$("rel-sign").onclick = async () => {
+  const f = $("rel-file").files[0];
+  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);
+  const k = KEYS.release;
+  const bytes = new Uint8Array(await f.arrayBuffer());
+  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));
+  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);
+  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);
+  $("rel-out").innerHTML = copyBox(
+    `Signature for ${f.name}: paste this into the session`, manifest,
+    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);
+};
+
+/* ----------------------------------------------------- sign a ratification */
+$("rat-sign").onclick = async () => {
+  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();
+  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);
+  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);
+  const k = KEYS.ratify;
+  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\n`));
+  $("rat-out").innerHTML = copyBox(
+    "Signature: paste this into the ratify box on the instance page", sig,
+    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before
+     you submit it, the instance refuses this signature and you sign the new hash.`);
+};
+
+armed();
+</script>

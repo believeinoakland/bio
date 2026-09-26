@@ -132,6 +132,12 @@ function readTlv(bytes, at) {
  * never omitted".
  */
 export function parseTimestampResponse(bytes, expectDigestHex) {
+  try { return parseResponse(bytes, expectDigestHex); }
+  catch { return { ok: false, reason: "MALFORMED" }; }
+}
+
+function parseResponse(bytes, expectDigestHex) {
+  if (!(bytes instanceof Uint8Array)) return { ok: false, reason: "MALFORMED" };
   const outer = readTlv(bytes, 0);
   if (!outer || outer.tag !== 0x30) return { ok: false, reason: "MALFORMED" };
   const info = readTlv(outer.value, 0);
@@ -152,16 +158,17 @@ export function parseTimestampResponse(bytes, expectDigestHex) {
   /* Binding. The token's TSTInfo carries the messageImprint the authority
      signed, so our digest must appear in it. This is not signature
      verification and is not described as such anywhere; it is the cheap check
-     that stops a token for some other document being filed as ours. */
-  if (expectDigestHex) {
-    const want = hexToBytes(expectDigestHex);
-    let found = false;
-    outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
-      for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
-      found = true; break;
-    }
-    if (!found) return { ok: false, reason: "NOT_BOUND", status };
+     that stops a token for some other document being filed as ours. A digest
+     that is missing or not hex binds nothing, so it is never "found". */
+  if (typeof expectDigestHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(expectDigestHex))
+    return { ok: false, reason: "NOT_BOUND", status };
+  const want = hexToBytes(expectDigestHex);
+  let found = false;
+  outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
+    for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
+    found = true; break;
   }
+  if (!found) return { ok: false, reason: "NOT_BOUND", status };
   return { ok: true, status, token: tokenBytes };
 }
 
@@ -169,11 +176,11 @@ export function parseTimestampResponse(bytes, expectDigestHex) {
    header. Several, because a single authority is a single point of failure for
    a property the record depends on, and because the doctrine wants the attempt
    recorded either way. */
-export const TSA_ENDPOINTS = [
+export const TSA_ENDPOINTS = Object.freeze([
   "http://timestamp.digicert.com",
   "http://timestamp.sectigo.com",
   "http://rfc3161.ai.moda",
-];
+]);
 
 export const TSA_CONTENT_TYPE = "application/timestamp-query";
 export const TSA_ACCEPT = "application/timestamp-reply";
@@ -199,11 +206,19 @@ export const TSA_ACCEPT = "application/timestamp-reply";
 export const ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
 export const ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
 
-/** Pull an archived locator out of whatever the archive answered with. */
+/** Pull an archived locator out of whatever the archive answered with: the
+ *  content-location header, then the location header, then the response's own
+ *  url, the first that names one. Never throws: an unreadable answer names none. */
 export function archiveLocatorFrom(res, requested) {
-  const loc = res.headers.get("content-location") || res.headers.get("location") || "";
-  if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
-  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
-  if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(res.url || "")) return res.url;
+  const header = (name) => {
+    try { return res.headers.get(name) || ""; } catch { return ""; }
+  };
+  let url = "";
+  try { url = typeof res.url === "string" ? res.url : ""; } catch {}
+  for (const loc of [header("content-location"), header("location"), url]) {
+    if (typeof loc !== "string") continue;
+    if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
+    if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
+  }
   return null;
 }
