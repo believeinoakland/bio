@@ -31782,7 +31782,7 @@ export class Store extends DurableObject {
         proj, find.slice(0, 400), kd, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), atS);
       return { ok: true, scope: "project", project: proj, finding: find.slice(0, 400),
                key: `${proj}::${find.slice(0, 400)}`, kind: kd,
-               to: st, state: st, reason: why, decided_by: by, at: atS, keys: [],
+               to: st, state: st, reason: why, decided_by: by, at: atS, bundle: null,
                detail: "recorded for THIS project and for no other. One team's dismissal of a "
                      + "judgment-layer finding governs that team's feed and nothing else (D-266, "
                      + "§7/D-216, R5) — no other project's queue moved by an item, and the finding "
@@ -31896,7 +31896,7 @@ export class Store extends DurableObject {
          definition_version=excluded.definition_version`,
       pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersionWritten);
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
-             to: st, state: st, reason: why, decided_by: by, at, keys: [],
+             to: st, state: st, reason: why, decided_by: by, at, bundle: null,
              definition_version: definitionVersionWritten };
   }
 
