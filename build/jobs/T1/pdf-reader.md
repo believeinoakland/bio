@@ -1,6 +1,6 @@
 # pdf-reader · T1 job record
 
-**Status** · Job for `pdf-reader`, tranche T1, started by BOB #38. N9 answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. Working all entries; two questions open (below), carried on meanwhile on my best readings.
+**Status** · COMPLETE, 2026-09-26. Job for `pdf-reader`, tranche T1, started by BOB #38. N9 was answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. All four entries are applied. Two questions remain open (below); both are built on my best readings, and an answer that differs is a small change.
 
 ## QUESTION to BOB (2026-09-26)
 
@@ -60,6 +60,66 @@ What stays interface, unchanged: `resolve`, `dictOf`, `streamRawBytes`, `streamD
 
 `pdf-worker`'s change (BOB carries it, N9 there): `loadPdf` becomes `openPdf`; `_pageOrder.length` becomes `pageCount`; the page lookup becomes `pageDict`; `_stream`/`_ctm` become `imagePlacementSource(hit)`.
 
-## Entries
+## Completion (2026-09-26)
 
-Not yet applied: T1-3, D-591, D-627, N9. I continue once BOB has added the services to my requirements.
+### Entries applied
+
+- **N9.** New services, as K28 states them:
+  - `openPdf(bytes)` (R30).
+  - `PdfDoc.pageDict(pageIdx)` (R31).
+  - `imagePlacementSource(placement)` (R32). It is held in a module-private `WeakMap`, so a placement's own enumerable fields are exactly R16's.
+  - `pageCount` (R19), unchanged.
+
+  Other changes:
+  - `extractPdfStructure` and `pdfPageImages` now open and walk documents only through these services.
+  - The dead `__objnum` stamp is removed.
+  - The `_stream`/`_ctm` properties are gone.
+  - `.objects` and `._pageOrder` keep their names and are private by contract. I did not rename them, so `pdf-worker`'s page reads keep working until it switches.
+- **D-591 (R25).**
+  - A zlib stream followed by trailing bytes now keeps its inflated output. The output is kept only when it is proven complete: its Adler-32 must appear in the input, and the prefix ending there must inflate to the same bytes. The proof does not depend on any runtime's error wording.
+  - The count is noted once per stream as `flate_trailing_bytes:<n>` (Q2).
+  - A page whose content stream will not decode carries `content_stream_undecodable`. A page whose `/Contents` resolves to no stream carries `content_stream_unresolvable`. Both are page-level markers with count 0, so neither reads as a blank page.
+- **D-627 (R26).** I kept the built work at `land/worker/D-627` @ `056d3092` for `pdfstructure.mjs` only, adapted to `pageDict`. Its three thresholds are no longer exported. It emits `image_content_unread` and `image_content_undetermined`, both carrying `image_share` and `glyphs`, on M-178's figures (Q1).
+  - Not kept: the built work's `index.mjs` routing, which belongs to legacy-index (see Reported).
+  - Not kept: its fixture, a real budget-book excerpt. R29 wants hand-built fixtures.
+- **T1-3.** `bio-plane/test/m/pdf-reader/` holds 48 tests in 4 files, plus `pdf.mjs`, a hand-built PDF writer. They name all 32 live ids and check them through the module's exports only.
+- **Flaws fixed in my module along the way:**
+  - `resolve` handed back the reference itself when a chain cycled past 64 hops. It now returns `null` (R20).
+  - Object-stream parsing could throw; it now uses the safe parser (R19).
+  - A page object that does not resolve now carries `page_unreadable` instead of reading as blank (R27).
+
+### Deferred
+
+Nothing is deferred. Two figures and one field name depend on BOB's answers: R26's thresholds (Q1) and the name and place of R25's count (Q2).
+
+### Reported: other modules (against their requirements)
+
+- **pdf-worker (N9).**
+  - `imagecrop.mjs` still reads `hit._stream`/`hit._ctm`, which no longer exist. Every crop now refuses `INLINE_IMAGE`. This shows in the old battery's `cpdf18-pdf-images.test.mjs` as 4 failures, all crops, and 25 passes. The fix is to switch to `imagePlacementSource(hit)`.
+  - `pagepixels.mjs` should switch `loadPdf` to `openPdf`, `_pageOrder.length` to `pageCount`, and the page lookup to `pageDict`. It still works today only because the private fields kept their names.
+  - `pdf-worker`'s own tests pass on this branch: `pdf-worker` 67/67 and `pagepixels` 120/120, the same as before my change.
+- **legacy-index.** D-627's routing half is not in this module. For `image_content_unread` to reach OCR, `needsTier3` in `bio-plane/src/index.mjs` must treat that marker as it treats `no_text_layer`. The built work at `056d3092` has that 14-line change.
+- **legacy-tests.** `textshown.test.mjs` reads `doc._pageOrder`, which is now private; it should use `pageDict`. The `cpdf18` crop failures are listed under pdf-worker.
+- **Generated artifacts made stale** (manifest §Generated artifacts; not written by me): `pdf-worker/dist/pdf-worker.bundled.mjs`, `ocr-worker/dist/ocr-worker.bundled.mjs` and `bio-plane/dist/bio-plane.bundled.mjs`, with their `.bundle.json` files. All three embed `pdfstructure.mjs`.
+
+### Tests and checks run
+
+- `node --test bio-plane/test/m/pdf-reader/`: tests 48, pass 48, fail 0.
+- Layer tests: none are named in `build/manifest.md`.
+- Users of the changed service, run against this branch:
+  - `pdf-worker/test/pdf-worker.test.mjs`: 67 passed, 0 failed.
+  - `pdf-worker/test/pagepixels.test.mjs`: 120 passed, 0 failed.
+- The old battery's PDF tests, run for regressions: `pdfstructure` 170/0, `d608-form-text` 16/0, `producer-provenance` 58/0, `textshown` 34/0, `pdfstructure-op` 29/0, `tier-pagewise` 127/0, `capture-pagecount` 22/0, `cpdf18-pdf-images` 25 pass / 4 fail (the pdf-worker crops above).
+- `checks/format.mjs`: 61 modules, 17 requirements files; 0 failures.
+- `checks/architecture.mjs pdf-reader`: 6 product files, 11 relative imports; 0 failures.
+- `checks/coverage.mjs pdf-reader`: 32 of 32 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs pdf-reader tranche/T1`: 7 files changed by pdf-reader; 0 failures.
+
+### Metrics
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01V8T49KLDauzP7JvxJMpQSz,job,pdf-reader,11616898,285766,134,77386,67,12,2731
+```
