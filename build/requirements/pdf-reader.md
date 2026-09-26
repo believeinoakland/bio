@@ -1,11 +1,7 @@
 # pdf-reader — requirements
 
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6); N9's named services (R18, R19 restated; R30–R32 new) added by BOB #40, 2026-09-26 (K28). Layer 1. Code today: `bio-plane/src/pdfstructure.mjs`.
-R25 is not yet met: row D-591 (Tier 1 inflate refuses a Flate stream with trailing bytes and the page
-then reads empty with no marker). R26 is not yet met: row D-627 (a page whose only text is a folio
-over a full-page image carries no marker saying its content went unread); the exact image-share and
-glyph-floor figures R26 needs are UNDETERMINED until D-627's own measurement (over the FY23-25 budget
-book and M-174's corpus) is run — nothing here should invent them. D-616, also carried against this
+R25 is not yet met: row D-591. R26 is not yet met: row D-627; its figures are M-178's (K30). D-616, also carried against this
 module in the old plan's index, does NOT belong here: its fix (`tier3Extend`/`needsTier3` seeding a
 re-read from the already-transcribed page tail) lives in `bio-plane/src/index.mjs`, reads and writes
 the stored reading, and cannot be met by a module whose layer-1 contract is "no access to the record"
@@ -33,7 +29,8 @@ in the codebase.
   `links` is the array R3-R6 describe; `counts` is R7; `text` is R11-R15's shape; `images`/`imagesWhy`
   is R16's shape, carried at the top level (not inside `text`); `notes` is a array of internal
   recovery notes (`objstm_undecodable`, `page_order_by_object_number_fallback`, `encrypted`,
-  `form_stream_undecodable`, `text_extraction_error`, `content_stream_undecodable`), present whenever
+  `form_stream_undecodable`, `text_extraction_error`, `content_stream_undecodable`,
+  `flate_trailing_bytes:<n>`), present whenever
   the parser had to recover from something, informational only.
 - Errors: never throws, on any byte sequence.
 
@@ -233,21 +230,20 @@ interface is the members below and nothing else; every other field is private.
 - **R24** Pure: no store read or write, no network call, no clock. `extractPdfStructure`,
   `pageShowsText` and `pdfPageImages` answer only from their input bytes/`PdfDoc`, so the same input
   always gives the same output.
-- **R25** *(not yet met: D-591)* A Flate-compressed content stream with bytes after the compressed
-  data's own end ("trailing junk") still decodes: the decoded bytes are kept, with the trailing-byte
-  count recorded, rather than the whole stream reading as undecodable. And a page whose content stream
-  could not be decoded for any reason carries a page-level marker (`text.pages[i].undetermined`) rather
-  than reading as an ordinary empty page — today `pageContent`'s undecodable case reaches only
-  `doc.notes` (`"content_stream_undecodable"`), a document-level note a page-by-page reader does not
-  see, so such a page is indistinguishable from a page that is actually blank.
-- **R26** *(not yet met: D-627; its exact figures are UNDETERMINED)* A page that shows text (so R14's
-  `no_text_layer` rightly does not fire) but whose painted-image area, as a share of the page, is over
-  a measured threshold while its glyph count is under a measured floor carries one marker naming both
-  figures (`reason` distinct from `no_text_layer`; both this module already computes the image
-  rectangles for via `pdfPageImages` and the glyph count via R11-R12) — a page between the two
-  thresholds reads UNDETERMINED, never forced either way. **What would settle the two figures**: the
-  measurement D-627 names — the FY23-25 budget book and M-174's corpus, each page's image-area share
-  and glyph count, with the thresholds set where image-only pages separate from text pages.
+- **R25** *(not yet met: D-591)* A Flate-compressed stream with bytes after the compressed data's own
+  end still decodes: the decoded bytes are kept, and `notes` gains `flate_trailing_bytes:<n>` once per such
+  stream. A page whose content stream cannot be decoded carries the page marker `{page,
+  reason:"content_stream_undecodable", font:null, codes:"", count:0}`, and one whose `/Contents`
+  resolves to nothing carries `reason:"content_stream_unresolvable"`; neither reads as a blank page.
+- **R26** *(not yet met: D-627)* A page's image share is the area its painted images (R16) cover,
+  as a share of its visible page box; its glyphs are the characters it shows (R11-R12). A page with
+  at most 4 glyphs and an image share of at least 0.18 carries the marker `image_content_unread`. Any
+  other page that paints an image and shows fewer than 22 glyphs (a share under 0.18, 5-21 glyphs, or a
+  page box that cannot be read) carries `image_content_undetermined`. A page that paints no image, or
+  shows 22 or more glyphs, carries neither. Both markers name
+  `image_share` and `glyphs`, and neither replaces `no_text_layer` (R14). The figures are measured
+  (M-178: 1,788 pages; the 17 image-only pages show at most 4 glyphs at shares 0.1897-0.6542; every
+  other page painting an image shows at least 22 glyphs).
 - **R27** Every `undetermined`/`why`/`reason` value in this module's output names WHICH kind of
   unresolved thing it is (a missing font, an unresolved destination, an unwalkable form, an unreadable
   `/Info`, …); none is a bare `false`/empty result standing for every cause at once, and a decode
