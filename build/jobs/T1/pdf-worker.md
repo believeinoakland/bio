@@ -8,7 +8,7 @@
 
 ## Status
 
-**COMPLETE.** Every entry applied; `tranche/T1` @ 714efc57 merged (it carries `pdf-reader`'s named services, merged @ c4bcdcd2).
+**COMPLETE.** Every entry applied; `tranche/T1` @ 4c177b28 merged (`pdf-reader`'s final work; its named services first arrived @ c4bcdcd2).
 
 ## Entries
 
@@ -34,7 +34,7 @@
 
 ## Tests and checks run
 
-After N9, on `job/T1/pdf-worker` with `tranche/T1` @ 714efc57 merged:
+After N9, on `job/T1/pdf-worker` with `tranche/T1` @ 4c177b28 merged (re-run after that merge; every figure unchanged):
 - `node test/structure.test.mjs` — structure: 77 passed, 0 failed
 - `node test/pagepixels.test.mjs` — pagepixels: 171 passed, 0 failed
 - `node test/imagecrop.test.mjs` — imagecrop: 54 passed, 0 failed
@@ -51,5 +51,5 @@ After N9, on `job/T1/pdf-worker` with `tranche/T1` @ 714efc57 merged:
 
 ```csv
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
-session_0196GsBMHzu2f291sNjjYQA9,job,pdf-worker,15333095,465763,149,81091,75,22,1978
+session_0196GsBMHzu2f291sNjjYQA9,job,pdf-worker,17748381,473653,167,84609,83,26,1978
 ```
