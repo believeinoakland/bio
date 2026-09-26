@@ -1,0 +1,13 @@
+# T2 · signatures — job record
+
+**Session** · `session_01GJC6ytwQrBRdr2Y8KdcybF` (SIGNATURES #1)
+
+**Status** · IN PROGRESS, 2026-09-26. Job for module `signatures`, tranche T2, branch `job/T2/signatures` (merged `origin/tranche/T2` @ 79e6ccd829). Entries: T2-5, N7 (K33). Open question Q1 below; the job carries on against its best reading and waits on nothing.
+
+## Questions to BOB
+
+**Q1 (2026-09-26), two parts. Nothing waits on it.**
+
+(a) *Requirement ids for what N7 makes testable.* N7 moves the signing page and its generator into this module "so the module's own tests can check that the page it serves is the current render", but `build/requirements/signatures.md` has no id for that: R25 states only that `SIGN_HTML` is self-contained, and the Suggestions still say the render and the page's OpenSSH conformance "are checked outside `signatures`' own paths today ... and are not restated here as testable requirements". **Best reading, which the job builds now:** tests under `bio-plane/test/m/signatures/` check (i) `SIGN_HTML` is byte-for-byte the render of `bio-plane/src/sign-release.html` by the generator, and (ii) the page's own embedded script signs release and ratification statements that `ssh-keygen -Y verify` and `verifySshsig` accept. Until ids exist they are titled under R25 (the page served). **Recommendation:** add, as wording under P17, R30 "`SIGN_HTML` is the current, byte-identical render of `bio-plane/src/sign-release.html` by `renderSignpage`" and R31 "the page's embedded script produces SSHSIG signatures in `bio-release` and `bio-ratify` that stock `ssh-keygen -Y verify` and `verifySshsig` accept", and drop that Suggestions paragraph; the job then retitles the two tests.
+
+(b) *The page's outward text says "BIO".* The page every instance serves (R25) is titled "BIO signing keys" and says "When BIO goes to real groups", "no BIO code", "a BIO private key". `build/layers.md` "No jurisdiction in the product", rule 4: outward text names the product (CivicOS); Believe in Oakland only as publisher and signer of a release. **Best reading:** this is outward UX text, so the job does not change it without a ruling. **Recommendation:** rename the visible words to "CivicOS" and keep every wire format unchanged (the `BIOKEY-RAW1.` / `BIOKEY1.` key prefixes, the `bio-release` / `bio-ratify` namespaces, the download name `bio-signing-keys.txt`), so existing keys and signatures keep working. If ruled yes, the job applies it in this tranche; the legacy suite `bio-plane/test/signpage.test.mjs` reads `tools/sign-release.html` (unchanged), so nothing else breaks before the layer close.
