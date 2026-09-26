@@ -16,7 +16,7 @@
 - N28 · 2026-09-26 · **legacy-store** (at the extraction of its reader): a page's kind reads `chainKindFor` (text-chain R81), not `terminalStep(chain) || "layer"`. Reported by TEXT-CHAIN #1.
 - N30 · 2026-09-26 · **odf-reader**: repeats (`number-rows-repeated`, `number-columns-repeated`, `text:s`, `text:c`) are expanded without a bound, so hostile bytes can hang the reader or end in `reader_failed` instead of a stated undetermined. BOB adds a bounded-expansion requirement (a measured cap, answering undetermined past it) before the job. Deferred by ODF-READER #1.
 - N31 · 2026-09-26 · **bundler**, **legacy-tests**: `fleet-bundle.mjs`'s remedy text names `node tools/bundles.mjs`, and `fleetbundles.test.mjs` arm (j) asserts it; change both together when `tools/` retires (N14). Also red before T2 and unchanged by it, found by BUNDLER #1: `owed-controls.test` (2 fail), `provenance-floor.control`, `walkfloor.control`, `d301-census.control`; root-caused by the `legacy-tests` job. *(T3 carries its share for record-core, promotion or legacy-tests.)*
-- N34 · 2026-09-26 · **pdf-worker**: a declared refusal for a JPX image whose decode would exceed the isolate's memory (a single-tile 2550×3300 colour 9/7 image peaks near 130 MB against 128 MB), with the bound measured; then the low-memory wavelet it defers. PPM/PPT JBIG2 decoding waits on an encoder that makes a checkable fixture. `pdf-worker` is 4,075 lines, past the 4,000-line mark (`layers.md`): BOB reviews a split before its next job. Reported by PDF-WORKER #2.
+- N34 · 2026-09-26 · **pdf-worker** (in T4 by K70): a declared refusal for a JPX image whose decode would exceed the isolate's memory (a single-tile 2550×3300 colour 9/7 image peaks near 130 MB against 128 MB), with the bound measured; then the low-memory wavelet it defers. PPM/PPT JBIG2 decoding waits on an encoder that makes a checkable fixture. `pdf-worker` is 4,075 lines, past the 4,000-line mark (`layers.md`): BOB reviews a split before its next job. Reported by PDF-WORKER #2.
 - DIST-14 · **office-readers**: the CSV size bound (20 MiB) is unsettled until measured on a deployed plane (old-plan row DIST-14). Deferred by OFFICE-READERS #1 in T2: it needs a deployment.
 - Local facts still in code, reported by JURISDICTIONS #1: `readingNamePlan`'s "oakland" (N4) and `legacy-checks`' `cpra_request` and `governingLawsOf`'s CPRA sentence (REC-201): each extraction reads them from the view.
 
@@ -31,8 +31,21 @@
 - N36 · 2026-09-26 · **promotion** (from `legacy-checks`): catalogue rows for promotion's `EXISTS` and `ABSENT` refusals (N17). (C-18.8's removal moved into T3 by K64.)
 - N37 · 2026-09-26 · **query-language**: `viewerPredicate` and `GATE_MARK` become re-exports of membership's (K63).
 - N38 · 2026-09-26 · **instance-setup** (K69): the group-identity cluster (C-64) moves here from `legacy-store` at `instance-setup`'s extraction; BOB writes its requirements (the producing group, its history, the domain checks) and brings them to Bob before that tranche.
+- N39 · 2026-09-26 · **observation-log**, **ai-runs** (K71): each stops reading `capture_requests` directly and offers a registration `capture-requests` fills (the K31 pattern), at their extractions.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
+
+**Layer 1, first (K53, K70): the `pdf-worker` split.** BOB applies K70 to `modules.json` and the requirement files at the opening.
+
+**image-codecs**
+- T4-0a · Requirement-named tests at the interface for every live id (the decoders against their fixtures); the CCITT decoder moved into its own file.
+- N34 · A declared refusal for a JPX decode that would exceed the isolate's memory, with the bound measured; then the low-memory wavelet it defers.
+
+**pdf-pixels**
+- T4-0b · Requirement-named tests for every live id; map the JPX memory refusal into `REFUSALS`.
+
+**pdf-worker**
+- T4-0c · Requirement-named tests for its remaining ids; the bundle regenerated and verified at the layer's close.
 
 Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (and `legacy-checks` where a map says so), each by its target module's job (mechanics §12.2), all four concurrently (P10), in the layer's order `host-governor`, `provenance`, `capture-sources`, `capture`; a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE after the provider's early merge. Bob approved the four requirement sets on 2026-09-26 (K67). Each job writes requirement-named tests for every live id at its interface (P7). Maps: `build/extraction/<module>.md` (in preparation, P18).
 
