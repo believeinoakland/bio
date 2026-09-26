@@ -39,7 +39,7 @@
 - N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
 - N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
 - N46 · 2026-09-26 · **legacy-tests** (with N37): `meaningread` and `meaningquery` pin the gate's mint sites in `query.mjs`'s text; re-anchor them when `query.mjs` re-exports membership's `viewerPredicate` (K75).
-- N47 · 2026-09-26 · **themes** (K76): the theme code (store.mjs ~22904–23215, `themes`, `theme_placements`) has no owning module; BOB assigns it before layer 5's tranche.
+- N47 · 2026-09-26 · **connections** (K76, K77): themes (store.mjs ~22904–23215, `themes`, `theme_placements`, `THEME_CHECKS`) are connections'; their requirements and map join `connections.md` before Bob approves it.
 - N48 · 2026-09-26 · **extraction** (K76): REC-206's item-to-file derivation, and the name of its `membership.mjs` file changed so it is not confused with the module.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
