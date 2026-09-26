@@ -33,6 +33,7 @@
  */
 
 import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { recordChecks } from "./promotion/record-checks.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
    PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
@@ -177,7 +178,16 @@ import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
    (D-598), C-2.10 (D-147), C-41.1 and C-41.13 (REC-219), C-53.10..12 (MK-7), C-70.3 (REC-197). MINOR: the one
    departure refused nothing any input could reach. Count 569, digest d1e8a679…, source 832fbe02… — the d470
    suite's own print on the merged tree (HEAD ee29c763 + this commit), never 502 + 68 - 1. */
-export const CATALOG_VERSION = "1.31.0";
+/* 1.32.0 (PROMOTION #1, T3, 2026-09-26; K64, K66): NO ARRIVALS, NO DEPARTURES FROM WHAT THE GATE RUNS — FOUR CHECKS
+   CHANGED, AND MOVED. C-4.2, C-17.2, C-18.8 and C-20.1 left `bio-checks.mjs` for promotion (`src/promotion/history.mjs`,
+   `release.mjs`), and this gate runs them after `checkBundle`, so a ratification is judged by the same set of checks.
+   What changed: C-20.1 and C-17.2 walk the history in write order (`seq`, record-core R16) and say when an image
+   carries none (R30); C-4.2 reads an undeclared edge in a document's own history as made under earlier rules only where
+   the record's own history holds the same move at or before the state-edge fence (R32); C-18.8 verifies through
+   `signatures.verifySshsig` (R31), which also admits a sha256-hashed SSHSIG. MINOR, rule 17 moving the stamp for
+   changed checks. The catalogue's own census (`checkBundle` alone) lost these four ids; every suite that counts it
+   pins the old figures and is legacy-tests' to re-read. */
+export const CATALOG_VERSION = "1.32.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -312,11 +322,12 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
     else elided.add(path);
   }
 
-  const { findings } = await checkBundle({
+  const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
+  const { findings: catalogue } = await checkBundle({
     folderName: bundleId,
     files,
     elidedPaths: elided,
-    sha256: async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v)),
+    sha256,
     sha512: async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b)),
     resolveTarget: (id) => knownIds.has(id),
     releaseRegistry: releaseRegistry || null,
@@ -343,6 +354,10 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
   });
+  /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
+     C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
+  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
+                                                           releaseRegistry: releaseRegistry || null, sha256 })];
 
   const errors = findings
     .filter((f) => f.severity === "error")
