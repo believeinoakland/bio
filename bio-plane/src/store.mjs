@@ -220,6 +220,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the catalogue so the act and the read publish one answer and no surface judges an identity. */
          lawProposalLabel } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+import { recordOf } from "./record-core/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -859,6 +860,42 @@ export class Store extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
+    // record-core (R21, R46): the tables legacy-store still owns, declared to purge in the order its purge cleared
+    // them. A name is keyed to a bundle by bundle_id; `keys` names the others' (none: only the whole-store purge
+    // clears it); `whole` limits what the whole-store purge clears. Each owner declares its own when extracted (K23).
+    recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` })
+      .declarePurge("legacy-store", [
+      "refs", "register", "readings", "reading_refs", "reading_ref_terms", "reading_text_source",
+      "text_attestations", "resolutions", "progression_instances", "reading_history", "progression_exceptions", "inquiry_basis",
+      "inquiry_exclusions", "inquiry_basis_versions", "inquiry_basis_version_legs", "action_basis", "correspondence", "bias_statements",
+      "action_quotes", "action_law_proposals", "provenance_route_marks", "case_revision_flags", "content", "transcriptions",
+      "transcription_attestations", "lead_shares", "observation_attributions", "theme_placements", "proposed_readings", "inquiry_run_surfacings",
+      "inquiry_migration_replays", "capture_text",
+      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },
+      { name: "bundles_fts", keys: [] },
+      { name: "connections", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "contradiction_candidates", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "connection_pair_choices", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "project_participants", keys: ["project_id"] },
+      { name: "project_owner_votes", keys: ["project_id"] },
+      { name: "project_visibility", keys: ["project_id"] },
+      { name: "project_sight", keys: ["project_id"] },
+      { name: "project_join_requests", keys: ["project_id"] },
+      { name: "queue_state", keys: ["case_id"] },
+      { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
+      { name: "monitor_fired", keys: ["subject"] },
+      { name: "suggest_refusals", keys: ["target"] },
+      { name: "capture_requests", keys: ["target"] },
+      { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
+      { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
+      { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
+      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
+      { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
+      { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
+      { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
+      { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
+      { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
+    ]);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
 
@@ -1822,7 +1859,8 @@ export class Store extends DurableObject {
     /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
        counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
        Every boot, idempotently; `#seedMintLedger` says what it reads and what it cannot see. */
-    this.#seedMintLedger();
+    recordOf(this.ctx).migrate();
+    recordOf(this.ctx).seedMintLedger(Store.#MINT_LEDGER_LIVE);
 
     /* D-497: the SIGHT INDEX is recomputed from the owners' acts, every boot, AFTER the schema pass creates
        both tables it reads. It is a derivation and never a record, so a full recompute is the honest shape:
@@ -7100,7 +7138,7 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-correspond-artifact */
 
     /* THE COURTESY LOCK, under the acting member. */
-    const lease = this.acquireLease(target, who, Store.CORRESPOND_LEASE_MS);
+    const lease = recordOf(this.ctx).acquireLease(target, who, Store.CORRESPOND_LEASE_MS);
     if (!lease.ok)
       return { ok: false, reason: "LEASE_HELD", target, heldBy: lease.heldBy, until: lease.until,
                detail: "another member is writing to this action right now. The ledger is append-only, so a "
@@ -9043,7 +9081,7 @@ export class Store extends DurableObject {
        promotions below and before the case document is written leaves that id in the corpus and in none of
        these four tables, and the ledger is what stops it being drawn for another case. */
     if (minted) {
-      theCase = this.#mintOpaqueId("CASE", new Date().toISOString().slice(0, 4), "", (id) =>
+      theCase = recordOf(this.ctx).mintOpaqueId("CASE", new Date().toISOString().slice(0, 4), "", (id) =>
         !!(this.#one(`SELECT 1 FROM cases WHERE case_id=?`, id)
           || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id)
           || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id)
@@ -10822,7 +10860,7 @@ export class Store extends DurableObject {
                     named, json, a.who, when, statementBy, id);
     } else {
       /* REC-151: OPAQUE, never the DRAFT counter (Membership v2 §7) — a draft is its project's editors' alone. */
-      id = this.#mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
+      id = recordOf(this.ctx).mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
         !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d)
           || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
       if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
@@ -10959,7 +10997,7 @@ export class Store extends DurableObject {
     const when = stampInstant("millisecond");
     const ident = this.#draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7) — a grant is its project owner's alone. */
-    const id = this.#mintOpaqueId("RVG", when.slice(0, 4), "",
+    const id = recordOf(this.ctx).mintOpaqueId("RVG", when.slice(0, 4), "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
     if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
                       detail: "the plane could not find a free grant id; nothing was issued" };
@@ -16182,34 +16220,6 @@ export class Store extends DurableObject {
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
 
-  /* ---- reads: what storeReadAdapter_ did, without the re-resolution tax ---- */
-
-  readFile(bundleId, path) {
-    const r = this.#one(`SELECT content, blob_sha, bytes, sha256 FROM files WHERE bundle_id=? AND path=?`, bundleId, path);
-    if (!r) return null;
-    return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
-  }
-
-  /** The canonical snapshot path for a file archived under a snapshot key.
-   *
-   *  The key goes in the FILENAME, not in a directory: `bundle.md` archived
-   *  under key K is `_history/bundle_K.md`, and `data/changes.json` is
-   *  `_history/data/changes_K.json`. This is not a style choice. The bundle
-   *  format is authoritative (see schema.mjs line 3) and the check catalog
-   *  parses exactly this shape, so a directory-per-key projection makes every
-   *  snapshot in every bundle unaccountable to C-12.2 while losing no bytes.
-   *  That is precisely what happened: 168 findings across 30 bundles, all of
-   *  them this one mistake, invisible until the catalog could be run. */
-  static snapPath(path, snapKey) {
-    const cut = path.lastIndexOf("/");
-    const dir = cut === -1 ? "" : path.slice(0, cut + 1);
-    const name = cut === -1 ? path : path.slice(cut + 1);
-    const dot = name.lastIndexOf(".");
-    return dot === -1
-      ? `_history/${dir}${name}_${snapKey}`
-      : `_history/${dir}${name.slice(0, dot)}_${snapKey}${name.slice(dot)}`;
-  }
-
 
   /* A whole-store conformance pass, run WHERE THE DATA IS.
    *
@@ -16231,96 +16241,18 @@ export class Store extends DurableObject {
    * at write time by the capture op rather than re-proven here.
    */
   async auditPass({ after = "", limit = 200, viewer = null } = {}) {
-    const cap = Math.max(1, Math.min(1000, Number(limit) || 200));
-    /* REC-30: `known` stays the WHOLE corpus and never leaves this method. It is
-       the checker's answer to "does this reference resolve", and filtering it
-       would manufacture dangling-reference findings out of a viewer's position —
-       a false claim about the record, which is worse than the leak. The store is
-       a legitimate whole-corpus reader internally (REC-25's own posture for
-       #queueAncestors' existence probe); what is gated is what LEAVES. */
-    const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
-    /* The PAGE is gated, so `offenders` — the only place this answer names a
-       bundle — can only ever name one the viewer may see. `total` is gated with
-       it for REC-25's reason: a total larger than the pages says something is
-       being withheld, which is half the leak. */
+    // record-core R18-R20 runs the catalogue over the page; the viewer's gate, and the route, total and
+    // membership findings the sweep publishes beside the page, stay here.
     const gate = viewerPredicate(viewer);
-    const page = this.#rows(
-      /* REC-63: `object_type` and `current_state` are read with the page because
-         the route block below has to publish the STATE BESIDE THE FINDING — the
-         disagreement is the thing that must be legible, so it cannot be composed
-         from a second read that might disagree with this one. */
-      `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
-        WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
-      after, ...gate.args, cap);
-    const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-    const te = new TextEncoder();
-    const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
-    const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
-
-    /* REC-56 / D-206: `tallyDetail` beside `tally`, and the reasoning is on
-       `f()` in checks/bio-checks.mjs where the codes are minted.
-       `tally` is keyed by CHECK ID and does not move by one byte — a check id
-       is the rule, and every existing reader of this answer keeps the shape it
-       reads. `tallyDetail` is keyed `<check>/<code>` and exists because REC-54
-       split one C-18.9 finding into three DIFFERENT FACTS about the record, and
-       a tally that collapses them re-creates in the report the conflation the
-       check just removed from the data. It is DERIVED from the findings, so it
-       cannot fall out of step with them (not the D-113 class), and it is ABSENT
-       when nothing on the page carried a code, so an operator reading a store
-       with no coded findings sees exactly what they saw before. */
-    const tally = {}; const tallyDetail = {}; const offenders = [];
-    let clean = 0, withErrors = 0;
-    for (const row of page) {
-      const img = this.readImage(row.bundle_id) || {};
-      const files = new Map(), elided = new Set();
-      for (const [path, v] of Object.entries(img)) {
-        if (typeof v === "string") files.set(path, v); else elided.add(path);
-      }
-      const { findings } = await checkBundle({
-        folderName: row.bundle_id, files, elidedPaths: elided,
-        sha256, sha512, resolveTarget: (id) => known.has(id),
-        /* REC-18: the audit sweep runs INSIDE the store, so it is one of the
-           three places that CAN confirm an earned grade — and it must, because
-           checkEarnedLeg refuses a leg it cannot confirm rather than passing it.
-           Blinding the sweep would make every earned leg in a healthy corpus
-           report as an offender, which is the "audit clean before you call
-           anything done" gate failing on correct data. Built per bundle rather
-           than once for the page: the subject entity is per inquiry, so there is
-           no shared registry to build. Two indexed reads, and only for a bundle
-           that has basis rows at all. */
-        ...(() => {
-          const targets = this.#rows(
-            `SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, row.bundle_id).map((r) => r.target_id);
-          return {
-            earnedRegistry: targets.length
-              ? this.earnedBasisRegistry(this.#subjectEntityOf(row.bundle_id), targets) : null,
-            /* D-178 (BIO_Publication_v0_1.md §3 rule 5, C-21.2): the PUBLISHED projection, built exactly as
-               gateFacts builds it — this bundle and every target its basis names. Without it the sweep was
-               BLIND on inheritance in both directions: a correctly inherited leg read as an offender at C-2.8
-               ("cannot be checked against the published record here"), and an own grade on a published case
-               — C-21.2's whole subject — was never looked at, because checkInheritedLeg returns early on an
-               unknown target. Always an object, never null: an empty registry here is a MEASURED answer (no
-               target is published), where null would restate the blindness. */
-            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),
-          };
-        })(),
-      });
-      const errs = findings.filter((f) => f.severity === "error");
-      if (!errs.length) { clean++; continue; }
-      withErrors++;
-      for (const e of errs) {
-        tally[e.check] = (tally[e.check] || 0) + 1;
-        if (e.code) {
-          const k = `${e.check}/${e.code}`;
-          tallyDetail[k] = (tallyDetail[k] || 0) + 1;
-        }
-      }
-      /* Bounded: a pass over a broken store must not answer with a megabyte of
-         repetition. The tally says how much, these say what it looks like. */
-      if (offenders.length < 20)
-        offenders.push({ bundleId: row.bundle_id,
-                         errors: errs.slice(0, 5).map((e) => ({ check: e.check, detail: e.message })) });
-    }
+    const sighted = new Set(this.#rows(`SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})`, ...gate.args).map((r) => r.bundle_id));
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordOf(this.ctx).auditPass({
+      after, limit, visible: (id) => sighted.has(id),
+      context: (id) => {
+        const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
+        return { earnedRegistry: targets.length ? this.earnedBasisRegistry(this.#subjectEntityOf(id), targets) : null,
+                 publishedRegistry: this.publishedRegistryFor(id, targets) };
+      } });
+    const page = ids.map((id) => this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id));
     const last = page.length ? page[page.length - 1].bundle_id : after;
 
     /* ============ REC-63 / DEC-56 — THE MARKER, ON THE SWEEP =============== *
@@ -16567,7 +16499,7 @@ export class Store extends DurableObject {
          FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
     if (!seen)
       return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId };
-    const img = this.readImage(bundleId) || {};
+    const img = recordOf(this.ctx).readImage(bundleId) || {};
     const raw = img["data/provenance.json"];
     if (typeof raw !== "string")
       return { ok: false, reason: "NO_REGISTER",
@@ -16841,7 +16773,7 @@ export class Store extends DurableObject {
        record that, not to decline to answer. `op=provenancechain` refuses these
        same three conditions and is right to — it is being asked to WRITE a
        chain. The two ops meet one fact and carry opposite obligations. */
-    const img = this.readImage(bundleId) || {};
+    const img = recordOf(this.ctx).readImage(bundleId) || {};
     const raw = img["data/provenance.json"];
     let registerState = "readable", docs = [];
     if (typeof raw !== "string") registerState = "absent";
@@ -17183,71 +17115,6 @@ export class Store extends DurableObject {
       + "about the record",
   };
 
-  /** The byte-complete image the gate consumes. One bundle, one call, no
-   *  per-file resolution. This is the operation that cost ~43s on Drive.
-   *
-   *  Projects three things the catalog requires and an earlier version of this
-   *  method did not: canonical snapshot paths, a verbatim promotion record per
-   *  manifest entry, and the manifest's own entries. The promotion record is
-   *  load-bearing beyond its own check: classifyDivergence reconstructs the
-   *  bundle.md hash chain from the per-file sha256 lists inside it, and C-20.1
-   *  uses it to establish what a mechanical writer actually changed. Without
-   *  the records both are unreachable rather than passing. */
-  readImage(bundleId) {
-    const img = {};
-    /* A blob reference carries its size as well as its hash, because a caller
-       rewriting one file of a bundle has to hand every OTHER file back to
-       promote unchanged, and promote needs bytes to record. Without this a
-       partial writer silently drops what it did not mention: the monitor's
-       first tick deleted the provenance register of every bundle it touched. */
-    for (const r of this.sql.exec(`SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=?`, bundleId))
-      img[r.path] = r.content !== null ? r.content
-        : { blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes };
-    /* Per-snapshot file hashes, collected while walking history so the
-       promotion records below can carry them without a second pass. */
-    const snapFiles = new Map();
-    for (const r of this.sql.exec(`SELECT snap_key, path, content, blob_sha, sha256 FROM history WHERE bundle_id=?`, bundleId)) {
-      img[Store.snapPath(r.path, r.snap_key)] =
-        r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
-      if (!snapFiles.has(r.snap_key)) snapFiles.set(r.snap_key, []);
-      snapFiles.get(r.snap_key).push({ name: r.path, sha256: r.sha256 });
-    }
-    const entries = [];
-    for (const r of this.sql.exec(`SELECT snap_key, kind, base, author, created, files_json, writer, operation FROM manifest WHERE bundle_id=?`, bundleId)) {
-      /* files_json holds the files as WRITTEN by this promotion, with their
-         hashes. Two consumers want different views of it and both are right:
-         the manifest entry wants names, because C-20.1 asks whether a later
-         entry touched bundle.md; the verbatim promotion record wants the
-         hashes, because that is how classifyDivergence rebuilds the chain and
-         how C-20.1 decides whether live is still this promotion's result. An
-         earlier version stored only names here and put the PRE-image hashes in
-         the record, which made every mechanical audit unknowable and silently
-         skipped. */
-      const written = JSON.parse(r.files_json);
-      const writtenPairs = written.map((f) => typeof f === "string" ? { name: f, sha256: null } : f);
-      const files = writtenPairs.map((f) => f.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f) => f.name);
-      entries.push({ key: r.snap_key, kind: r.kind, base: r.base, author: r.author,
-                     created: r.created, files, snapshotted,
-                     ...(r.writer ? { writer: r.writer, operation: r.operation } : {}) });
-      /* The verbatim promotion record, in the shape the original accelerator
-         wrote and the catalog reads: what was targeted, what it was based on,
-         and the hash of every file as promoted. */
-      img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({
-        target: bundleId, base: r.base, files: writtenPairs,
-        created: r.created, author: r.author, skill_version: "bio-plane",
-        /* C-20.1 reads the writer and operation from HERE, not from the
-           manifest, so a mechanical claim that is not in the promotion record is
-           a claim the auditor never sees. */
-        ...(r.writer ? { writer: r.writer, operation: r.operation } : {}),
-      }, null, 2);
-    }
-    if (entries.length) {
-      entries.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-      img["_history/manifest.json"] = JSON.stringify({ entries }, null, 2);
-    }
-    return Object.keys(img).length ? img : null;
-  }
 
   /* Every bundle, or a page of them.
    *
@@ -17630,7 +17497,7 @@ export class Store extends DurableObject {
    *  against 558MB if every image is materialised at once. */
   *eachImage() {
     for (const r of this.#rows(`SELECT bundle_id FROM bundles ORDER BY bundle_id`))
-      yield [r.bundle_id, this.readImage(r.bundle_id)];
+      yield [r.bundle_id, recordOf(this.ctx).readImage(r.bundle_id)];
   }
 
   /* ============================================================   * PL-1 / IS-1 — THE BASIS-VERSION COMPOSITION, ASSEMBLED ONCE.
@@ -22440,7 +22307,7 @@ export class Store extends DurableObject {
        number. It is the fixed word `observation` rather than one derived from
        the title or the words, so an id — which travels further than a document
        does — says what KIND of thing it names and nothing of what it says. */
-    const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
+    const id = `${recordOf(this.ctx).allocId("INFO", recorded.slice(0, 4)).id}-observation`;
     /* THE AUTHORED BYTES: A CANONICAL HEADER, THEN THE WORDS. Ruled by BOB #14,
        2026-09-18: two members' identical observations are TWO testimonies
        (MEMBER-KNOWLEDGE-DESIGN.md §3), and the register — keyed by the bytes —
@@ -25907,7 +25774,7 @@ export class Store extends DurableObject {
     if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
     const extra = Array.isArray(aliases) ? aliases : [];
     const at = new Date().toISOString();
-    const { id } = this.allocId("ENT", at.slice(0, 4));
+    const { id } = recordOf(this.ctx).allocId("ENT", at.slice(0, 4));
     return this.ctx.storage.transactionSync(() => {
       this.sql.exec(
         `INSERT INTO entities (entity_id,kind,label,note,declared_by,at) VALUES (?,?,?,?,?,?)`,
@@ -25985,7 +25852,7 @@ export class Store extends DurableObject {
     const to = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, toEntity);
     if (!to) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: toEntity, end: "to" };
     const at = new Date().toISOString();
-    const { id } = this.allocId("REL", at.slice(0, 4));
+    const { id } = recordOf(this.ctx).allocId("REL", at.slice(0, 4));
     this.sql.exec(
       `INSERT INTO entity_relations (relation_id,from_entity,to_entity,relation,justification,citation,declared_by,at)
        VALUES (?,?,?,?,?,?,?,?)`,
@@ -32033,43 +31900,6 @@ export class Store extends DurableObject {
              definition_version: definitionVersionWritten };
   }
 
-  /* ---- coordination: what LockService and the nextSeq race did ---- */
-
-  allocId(prefix, year) {
-    return this.ctx.storage.transactionSync(() => this.#nextSeq(prefix, year));
-  }
-
-  /** REC-151 / C-59.5: `op=allocid`, the door a CALLER allocates through. It refuses every gated prefix
-   *  (`Store.GATED_ID_PREFIXES`): the plane mints those opaque and no caller allocates one, and a counter read
-   *  here would tell the caller how many objects of a gated kind exist, hidden ones included (Membership v2 §7).
-   *  Decided on the counter's SCOPE (`<prefix>-<year>`, `#nextSeq`'s key), so a caller cannot reach a gated
-   *  counter by moving the dash into the prefix; a prefix that merely BEGINS with a gated one's letters
-   *  (`PROJECTX`) keys a different scope and is not gated. The answer echoes only what the caller sent. */
-  allocIdOp(prefix, year) {
-    const scope = `${prefix}-${year}`;
-    const gated = Store.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
-    /* DEC-49 REGION is-allocid-prefix-gated */
-    if (gated) {
-      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
-      return { ok: false, reason: "ALLOCID_PREFIX_GATED", code: "ALLOCID_PREFIX_GATED", check: row.check,
-               translation: row.translation,
-               detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid `
-                     + `allocates only a prefix whose objects every caller may see. Nothing was allocated.` };
-    }
-    /* END DEC-49 REGION is-allocid-prefix-gated */
-    return this.allocId(prefix, year);
-  }
-
-  /* The sequence step itself, with no transaction of its own, so a caller already inside one (REC-141's
-     project mint, inside `promote`'s) takes the same step `op=allocid` takes. */
-  #nextSeq(prefix, year) {
-    const scope = `${prefix}-${year}`;
-    const cur = this.#one(`SELECT next FROM seq WHERE scope=?`, scope);
-    const n = cur ? cur.next : 1;
-    this.sql.exec(`INSERT INTO seq (scope,next) VALUES (?,?) ON CONFLICT(scope) DO UPDATE SET next=?`, scope, n + 1, n + 1);
-    return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
-  }
-
   /** REC-141: a NEW project's id — `PROJ-<year>-<rand>-<slug>`, the slug from the project's name the way
    *  both intake surfaces already slugged a title, in `BUNDLE_ID_RE`'s shape.
    *
@@ -32088,78 +31918,10 @@ export class Store extends DurableObject {
     const year = new Date().toISOString().slice(0, 4);
     const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
       .slice(0, 40).replace(/-+$/, "") || "project";
-    return this.#mintOpaqueId("PROJ", year, `-${slug}`,
+    return recordOf(this.ctx).mintOpaqueId("PROJ", year, `-${slug}`,
       (id) => !!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id));
   }
 
-  /** REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): THE PREFIXES WHOSE OBJECTS
-   *  A READ WITHHOLDS FROM SOME CALLER. Their ids are minted by `#mintOpaqueId` and never from `allocId`'s counter,
-   *  and `op=allocid` refuses them (C-59.5), because a counted suffix tells its reader how many were minted before,
-   *  hidden ones included. The read that withholds each:
-   *    PROJ  — a project out of an uninvited member's sight (`viewerPredicate`, §7.9)
-   *    CASE  — an unratified case answers as absent without standing (REC-130)
-   *    DRAFT — a draft is read by the producing project's editors only (§6A)
-   *    RVG   — a review grant is its project owner's (§6A.2)
-   *    TASK  — a task naming a bundle the viewer cannot see is withheld (REC-30, `taskList`'s `#bundleGate`)
-   *  Every other prefix keeps its counter: INFO, ENT and REL (the shared evidence corpus, which `viewerPredicate`
-   *  never filters) and the caller-allocated bundle prefixes (INQ, ACTN, FOCUS, PROB, BIAS …), whose objects are
-   *  not project bundles. ONE list: the allocid refusal and the pin in `opaque-ids.test.mjs` both read it. */
-  static GATED_ID_PREFIXES = Object.freeze(["PROJ", "CASE", "DRAFT", "RVG", "TASK"]);
-
-  /** D-432: the gated prefixes whose mint passes NO tail — the id is `<P>-<year>-<rand>` and nothing after it — so an
-   *  id the COUNTER issued for them before REC-151 (`seq`'s `<P>-<year>` scope, `0001` up to `next`-1) is exactly an
-   *  id the opaque minter can draw, and `#seedMintLedger` records that range. PROJ and TASK carry a slug the counter's
-   *  scope never recorded, so their counter-era ids cannot be reconstructed and are not guessed at.
-   *  `mint-ledger.test.mjs` holds this list against each mint site's own tail argument. */
-  static UNTAILED_GATED_PREFIXES = Object.freeze(["CASE", "DRAFT", "RVG"]);
-
-  /** REC-151: THE ONE OPAQUE MINTER — REC-141's draw, lifted out of `#mintProjectId` so every gated prefix takes
-   *  the same step. `<prefix>-<year>-<rand><tail>`: `<rand>` is four digits from the runtime's CSPRNG
-   *  (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally likely), fixed length so the
-   *  shape every reader already knows (`BUNDLE_ID_RE`, C-19.1's TASK grammar) still holds. `allocId`, `#nextSeq`
-   *  and `seq` are NOT read or stepped. `taken(id)` is asked of every draw inside the caller's own synchronous act
-   *  (nothing awaits between the draw and the write), and a collision draws again. Null only if 64 draws all
-   *  collide; each caller answers `MINT_EXHAUSTED`, as REC-141's did.
-   *
-   *  D-432 — AN ID THAT HAS EXISTED IS NEVER DRAWN AGAIN, PURGE OR NOT (Membership v2 §7, and the `op=purge`
-   *  comment's own rule — *"allocid must never reissue an identifier that has already existed"* — extended to the ids
-   *  that have no counter). Until this, uniqueness was against the LIVE rows `taken` reads, and a purge deletes those
-   *  rows — a whole-store purge every one of them, a single-bundle purge a project's — so an id minted before a purge
-   *  could be drawn after it, and a citation of the purged object would silently resolve to the NEW one. The counter
-   *  never could, because `purge` keeps `seq`. So every draw now asks the minter's own memory, `minted_ids`, AS WELL
-   *  AS the live rows (`spent` below is this minter's `taken`), and every id handed out is recorded there before it is
-   *  returned. The ledger is exempt from `purge` on `seq`'s reasoning — the comment above `purge` says so. The live
-   *  rows are still asked because an id can stand in one that no mint recorded; `#seedMintLedger` is how those reach
-   *  the ledger at boot.
-   *
-   *  THE WRITE IS IN THE CALLER'S TRANSACTION, NEVER ONE OF ITS OWN — whatever the calling act holds: `promote`'s for
-   *  PROJ, the review copy's always-rolled-back dry run of the publish gates for CASE — so an act that rolls back takes
-   *  its row back with it, and the ledger holds no id that never existed. An act that REFUSES after the draw without
-   *  rolling back leaves its id spent and unused: a gap, which the `purge` comment already ranks above ambiguity.
-   *  RECORDED AT THE DRAW, not at each caller's own INSERT, for a reason found by reading the CASE caller:
-   *  `publishCase` stamps the new id into every member's bytes BEFORE it writes the case document, so a publish that
-   *  refuses between the two leaves the id in the corpus and in no table its `taken` reads. And the INSERT is PLAIN,
-   *  into the ledger's PRIMARY KEY, on purpose: it cannot collide while the read above it stands, and were that read
-   *  ever lost the act would fail LOUDLY (SQLITE_CONSTRAINT) rather than hand a spent id out — measured, by the
-   *  control's `no-ledger-read` arm, which is how this second defence was found.
-   *
-   *  READ BY NO ROUTE, and never counted or listed (`mint-ledger.test.mjs` pins every read to a point lookup keyed on
-   *  one id): a count of gated ids is how many gated objects were ever minted, hidden ones included — the disclosure
-   *  the opaque suffix exists to close (BOB #16). */
-  #mintOpaqueId(prefix, year, tail, taken) {
-    const draw = () => {
-      const u = new Uint16Array(1);
-      for (;;) { crypto.getRandomValues(u); if (u[0] < 60000) return String(u[0] % 10000).padStart(4, "0"); }
-    };
-    const spent = (id) => !!this.#one(`SELECT 1 FROM minted_ids WHERE id=?`, id) || taken(id);
-    for (let i = 0; i < 64; i++) {
-      const id = `${prefix}-${year}-${draw()}${tail}`;
-      if (spent(id)) continue;
-      this.sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'mint')`, id, new Date().toISOString());
-      return id;
-    }
-    return null;
-  }
 
   /* D-432: THE LIVE ROWS EACH MINT SITE'S `taken` READS, per prefix, as `[prefix, table, column]` — the seed's half of
      two readers of one fact. `mint-ledger.test.mjs` reads every `this.#mintOpaqueId(` call and holds this list against
@@ -32174,81 +31936,6 @@ export class Store extends DurableObject {
     ["TASK", "tasks", "id"],
   ]);
 
-  /* D-432: WHERE THE LEDGER LEARNS THE IDS NO MINT RECORDED. It runs at the end of EVERY boot (`#migrate`), and it is
-     idempotent, because both of its sources can hold an id the ledger lacks at any boot, not only the first:
-       - LIVE: every live row of a gated kind, from the tables `#MINT_LEDGER_LIVE` names — the same ones each mint
-         site's `taken` reads. This is what keeps an id minted BEFORE the ledger existed (REC-141's and REC-151's, and a
-         counter-era id still standing) from being reissued after the next purge — and an id an older build minted, if
-         one is ever deployed back for a while.
-       - COUNTER: for a prefix whose mint passes no tail (`UNTAILED_GATED_PREFIXES`), every id `seq` says the counter
-         issued before REC-151 moved that prefix to this minter — `0001` to `next`-1, used or not, because an
-         allocation handed out is an identifier that has existed. Nothing steps those scopes now (`op=allocid` refuses
-         every gated prefix), so the range is fixed.
-     Rows already recorded are left as they are: `recorded_at` is when the ledger FIRST learned an id, `source` how.
-     COST, stated: nine INSERT OR IGNORE … SELECT statements (one per live source) and ONE for the counter — ten
-     statements whatever the store holds, each doing its work inside SQLite: the live ones in proportion to the gated
-     rows of their table, never the corpus, and the counter one in proportion to the ids the counter issued (at most
-     9,999 per untailed scope, one scope per prefix per year). No row comes back into JS and nothing is done per row
-     here. Stated because `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` read and cannot see
-     work inside SQL, by its own statement: this seed's first draft looped over `seq` in JS with a write per id, that
-     walk named it on the first full battery, and the counter half was rewritten as the one statement below — which is
-     also simply the better shape (ten statements rather than one per issued id). It runs at boot and no op reaches it.
-     WHAT IT CANNOT SEE, stated: an id that left every live table BEFORE this landing and that no counter recorded — a
-     PROJ or TASK counter id whose slug is gone, an opaque id minted and purged before the ledger existed, or a case id
-     a refused publish stamped into member bytes only. Nothing in the store remembers those, so nothing here can; an
-     exact reissue of one needs its slug AND its four digits again. */
-  #seedMintLedger() {
-    const at = new Date().toISOString();
-    for (const [prefix, table, column] of Store.#MINT_LEDGER_LIVE)
-      this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
-                     SELECT DISTINCT ${column}, ?, 'live' FROM ${table} WHERE ${column} GLOB ?`, at, `${prefix}-*`);
-    /* The COUNTER half: every scope `<P>-<4 digits>` of an untailed gated prefix, and every number the counter handed
-       out in it — 1 to `next`-1, capped at 9,999 because a fifth digit is an id this minter can never draw. The numbers
-       come from a recursive CTE whose depth is the largest such `next`, so a store whose counter never served these
-       prefixes generates one row and inserts nothing. */
-    const scopes = Store.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
-    const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
-    this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
-                   WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n
-                     WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope("scope")}))
-                   SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
-                     FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
-                  ...scopes, at, ...scopes);
-  }
-
-  acquireLease(bundleId, actor, ttlMs) {
-    /* D-61. A lease is NEVER anonymous. The column is NOT NULL, and an absent
-       actor used to trip SQLITE_CONSTRAINT_NOTNULL — a raw platform error where
-       a named BIO refusal belongs (the D-39 class). Refuse it here, fail-closed,
-       exactly as taskForward/taskResolve refuse a forward that names no member:
-       a writer that will not name itself does not take the lock. The control
-       plane stamps the actor server-side for BOTH a session (the member) and a
-       machine credential (token:<class>, a NAMED machine identity), so a real
-       caller is never anonymous and never reaches this refusal; the guard is the
-       floor that makes "anonymous is refused" true at the store rather than by
-       the courtesy of the caller. It bounds nothing about WHICH named actor may
-       hold the lease — the lease is a courtesy lock, and promote's CAS on `base`
-       is the integrity mechanism that this does not touch. */
-    if (typeof actor !== "string" || !actor.trim())
-      return { ok: false, reason: "ANONYMOUS_LEASE",
-               detail: "a lease is taken under a named actor — a member (from a session) or a machine "
-                     + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
-    return this.ctx.storage.transactionSync(() => {
-      const now = Date.now();
-      const cur = this.#one(`SELECT actor, expires, base_sha FROM leases WHERE bundle_id=?`, bundleId);
-      if (cur && cur.actor !== actor && Date.parse(cur.expires) > now)
-        return { ok: false, heldBy: cur.actor, until: cur.expires };
-      const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
-      const expires = new Date(now + ttlMs).toISOString();
-      this.sql.exec(
-        `INSERT INTO leases (bundle_id,actor,acquired,expires,base_sha) VALUES (?,?,?,?,?)
-         ON CONFLICT(bundle_id) DO UPDATE SET actor=excluded.actor, acquired=excluded.acquired, expires=excluded.expires, base_sha=excluded.base_sha`,
-        bundleId, actor, new Date(now).toISOString(), expires, b ? b.bundle_sha : "");
-      // the lease returns the CURRENT bundle sha as the edit base, so re-anchor
-      // is structural and the CAS is anchored on live state
-      return { ok: true, actor, expires, base: b ? b.bundle_sha : null };
-    });
-  }
 
   /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
    *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
@@ -33973,633 +33660,13 @@ export class Store extends DurableObject {
      so orphaning them costs storage but cannot corrupt anything. Reclaiming
      them is a separate sweep against the register, not part of this. */
   purge({ bundleId = null } = {}) {
-    /* D-113. `readings` and `reading_refs` (FW-5, CONSTRUCTS Step 3) are DERIVED
-       from the corpus — a projection of each captured document's provenance — and
-       both carry bundle_id, so listing them here clears them in BOTH arms: the
-       per-bundle DELETE ... WHERE bundle_id, and the whole-store DELETE. A
-       whole-store purge that reported scope ALL and left a document's reading and
-       its entity references behind is exactly the silent-leftover D-113 exists to
-       prevent, and hygiene.test.mjs holds this list against schema.mjs. */
-    /* FW-7: `resolutions` (CONSTRUCTS Step 4 slice B) is DERIVED from the corpus — a
-       recogniser's match of a captured document's reference to an entity — and carries
-       bundle_id, so it clears in BOTH arms exactly as readings/reading_refs do. Leaving
-       it out would let a whole-store purge report scope ALL while a document's
-       resolutions survived, the D-113 silent-leftover; hygiene.test.mjs holds this list
-       against schema.mjs. */
-    /* FW-9: `progression_instances` (CONSTRUCTS Step 5 slice B) is DERIVED from the corpus —
-       each row is a captured document threaded at a stage — and carries bundle_id, so it
-       clears in BOTH arms exactly as resolutions do. A per-bundle purge removes that
-       document's placements and the instance honestly re-reads with that stage now unfilled;
-       a whole-store purge takes them all. Leaving it out would let a whole-store purge report
-       scope ALL while a threaded document survived, the D-113 silent-leftover; hygiene.test.mjs
-       holds this list against schema.mjs. Progression DEFINITIONS are member-declared (no
-       bundle_id) and cleared in the whole-store arm below with the registry. */
-    /* FW-10: `progression_exceptions` (CONSTRUCTS Step 5 slice C) is DERIVED from the corpus too --
-       each row is a captured exception document threaded onto an instance -- and carries bundle_id,
-       so it clears in BOTH arms exactly as progression_instances do. A per-bundle purge removes that
-       document's discharges and the stage honestly re-reads as an undischarged gap; a whole-store
-       purge takes them all. Leaving it out would let a whole-store purge report scope ALL while a
-       discharge survived, the D-113 silent-leftover; hygiene.test.mjs holds this list against
-       schema.mjs. */
-    /* REC-11: `inquiry_basis` is DERIVED from the corpus — a projection of each
-       inquiry's basis[] frontmatter, exactly as refs is of references[] — and
-       carries bundle_id, so it clears in BOTH arms via this list. Leaving it out
-       would let a whole-store purge report scope ALL while an inquiry's legs
-       survived, the D-113 silent-leftover; hygiene.test.mjs holds this list
-       against schema.mjs. A per-bundle purge clears only the purged inquiry's
-       OWN legs; legs elsewhere that TARGET it stay, honestly unresolvable, the
-       same way refs to a purged bundle read as C-6.2 findings rather than
-       silently vanishing. */
-    /* REC-14: `inquiry_exclusions` is DERIVED from the corpus in exactly the
-       same sense — a projection of completeness_excluded[] — and carries
-       bundle_id, so it clears in BOTH arms via this list. The PUBLISHED rows
-       are not touched by either arm and must not be: published_bundles and
-       published_shas are exempt by doctrine (a hash once published answers
-       forever), so purging the working corpus leaves the published record
-       standing, which is the correct asymmetry and is why the exclusion lives
-       in the BYTES as well as in this table. */
-    /* REC-22: `published_edges` is in BOTH arms, and it is the one PUBLISHED-side
-       table that is, which is a judgement rather than an oversight. Its siblings
-       published_bundles and published_shas are exempt because nothing else holds
-       what they hold -- a hash once published answers forever. published_edges
-       holds NO fact of its own: every row is recomputable from the case's own
-       ratified bundle.md, which carries references[] and the division disclosure
-       INSIDE the hash the group signed and stays answerable at op=publishedbytes
-       whatever this table says. Clearing it destroys an index, never a fact.
-       Its column is from_bundle rather than bundle_id, so it cannot ride TABLES
-       and takes an explicit DELETE in each arm below. */
-    /* REC-24: `action_basis` and `correspondence` are DERIVED from the corpus in
-       exactly the sense inquiry_basis is — projections of an action's own
-       action_basis[] and correspondence[] — and both carry bundle_id, so they
-       clear in BOTH arms via this list. Leaving either out would let a
-       whole-store purge report scope ALL while an action's reasons or its
-       correspondence ledger survived, the D-113 silent-leftover;
-       hygiene.test.mjs holds this list against schema.mjs. A per-bundle purge
-       clears only the purged action's own rows; a `responds_to` edge FROM a
-       captured reply INTO a purged action goes with `refs`, and a leg elsewhere
-       that targets it stays honestly unresolvable, the same way refs to a purged
-       bundle read as C-6.2 findings rather than silently vanishing. */
-    /* REC-36: `reading_ref_terms` is the name index — one row per normalised term
-       of a reading_refs label — and is DERIVED from that row, carrying bundle_id
-       for the same reason. It clears in BOTH arms with the refs it projects. If
-       it did not, a whole-store purge would report scope ALL while a purged
-       document went on being offered as a candidate for a subject's name, which
-       is D-113's silent leftover in its most misleading form: the record would
-       name a document it no longer holds. hygiene.test.mjs holds this list
-       against schema.mjs. */
-    /* PL-1 / D-113: `inquiry_basis_versions` and `inquiry_basis_version_legs`
-       are projections of the inquiry's own bundle.md in exactly the sense
-       inquiry_basis is, and both carry bundle_id, so they clear in BOTH arms via
-       this list. Leaving either out would let a whole-store purge report scope
-       ALL while an inquiry's ALTERNATIVE ACCOUNTS of the evidence survived — the
-       D-113 silent leftover in a form that matters more than most, because a
-       version is a composition somebody may still accept. hygiene.test.mjs holds
-       this list against schema.mjs. */
-    /* PL-12 / D-84: `bias_statements` is DERIVED from the corpus in exactly the
-       sense inquiry_basis is — a projection of a bias bundle's own statements[]
-       — and carries bundle_id, so it clears in BOTH arms via this list.
-       `bias_adoptions` carries bundle_id too (the bias bundle adopted), so the
-       per-bundle arm takes the adoptions OF a purged bias set; the adoptions
-       held BY a purged project are keyed on scope_id and take an explicit
-       DELETE below, the project_participants precedent exactly. Leaving either
-       out would let a whole-store purge report scope ALL while a LENS was still
-       in force over an empty corpus — the D-113 silent-leftover in its most
-       dangerous form, because a manifest computed after that purge would name
-       statements over documents nobody holds. hygiene.test.mjs holds this list
-       against schema.mjs.
-       MERGED BY HAND AT THE REBASE, 2026-08-08, and it is the one conflict in
-       this item that could not be resolved mechanically: PL-1 and PL-12 each
-       rewrote this ONE array in the same integration window, so keeping both
-       sides would have declared `TABLES` twice and produced a SyntaxError.
-       Taking either side alone would have silently dropped two derived tables
-       from the purge — D-113's exact failure, arriving through a merge rather
-       than through forgetfulness. Both comment blocks are kept because both
-       reasons are true, and the array below carries all four names. */
-    /* CPDF-10 / D-113: `reading_text_source` is DERIVED from the reading, and
-       `text_attestations` is FIRST-CLASS member testimony -- different kinds of
-       row, same purge obligation, and both carry bundle_id so both clear in
-       BOTH arms through this list. Leaving the projection would let a whole-store
-       purge report scope ALL while rows still said which documents in it were
-       OCR'd; leaving the attestations would leave a member's name standing
-       behind text nobody holds, which is the silent-leftover class pointed at
-       somebody's testimony. hygiene.test.mjs holds this list against schema.mjs. */
-    const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs", "reading_ref_terms",
-                    "reading_text_source", "text_attestations", "resolutions", "progression_instances",
-                    /* D-536 / D-113: `reading_history` is DERIVED from the readings the corpus carried and
-                       carries bundle_id, so it clears in BOTH arms here. Left out, a purge reporting scope
-                       ALL would keep every earlier reading of documents the record no longer holds. */
-                    "reading_history",
-                    "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
-                    "inquiry_basis_versions", "inquiry_basis_version_legs",
-                    "action_basis", "correspondence", "bias_statements", "bias_adoptions",
-                    /* D-148 / D-113: `action_quotes` is a projection of an action's own
-                       correspondence quote keys and carries bundle_id, so it clears in
-                       BOTH arms here. Left out, a purge reporting scope ALL would still
-                       set a purged action's quotes beside the living ones by counterparty,
-                       naming a request the record no longer holds. */
-                    "action_quotes",
-                    /* REC-195 / D-113: `action_law_proposals` holds a machine's PROPOSED citations for an
-                       action and carries bundle_id, so it clears in BOTH arms here. Left out, a purge
-                       reporting scope ALL would leave citations standing against a request the record no
-                       longer holds — and they are the one kind of row here that nobody authored. */
-                    "action_law_proposals",
-                    /* REC-63 / D-113: the route markers are keyed on `bundle_id`, so they
-                       ride this list and are cleared in BOTH arms — a marker outliving the
-                       document it doubts would attach itself to whatever bundle was next
-                       allocated that id, which is the silent-leftover class in its most
-                       damaging form: a doubt about somebody else's document. */
-                    "provenance_route_marks",
-                    /* CASE-4 / DEC-72 / D-113: the revision flags are keyed on the MEMBER
-                       FINDING's `bundle_id`, so they ride this list and clear in BOTH arms.
-                       Per-bundle: purging a finding and leaving its flags would leave rows
-                       saying a case is waiting on a revision to a document nobody holds, and
-                       the flag would then attach itself to whatever bundle was next allocated
-                       that id. Whole-store: a scratch reset reporting scope ALL while a case
-                       still reads as flagged is the silent-leftover exactly. It is a record of
-                       EVENTS rather than a projection, so nothing rebuilds it — which is
-                       precisely why leaving it would be permanent rather than self-correcting.
-                       hygiene.test.mjs holds this list against schema.mjs. */
-                    "case_revision_flags",
-                    /* REC-82 / IC-83 / D-113: the CONTENT rows. They are NOT derived — an
-                       authored edge depends on one, which is why re-promotion never rewrites
-                       them and a re-extraction marks them stale rather than deleting them —
-                       but they carry `bundle_id` (the DOCUMENT they address), so they ride
-                       this list and clear in BOTH arms. Per-bundle: purging a document while
-                       leaving addresses INTO it would leave citations resolving to pages of a
-                       file nobody holds, and a later bundle allocated a colliding id would
-                       inherit somebody else's passages. Whole-store: a scratch reset reporting
-                       scope ALL while the content axis still answered "these passages are
-                       cited" is the silent-leftover exactly. hygiene.test.mjs holds this list
-                       against schema.mjs. */
-                    "content",
-                    /* REC-87 / D-113: a member's TYPED TEXT and the second members'
-                       attestations of it ride with the content rows they describe, in
-                       BOTH arms and for `content`'s reason: a transcription outliving its
-                       document would be text standing for a page nobody holds, and an
-                       attestation outliving it would leave a member's name behind it. */
-                    "transcriptions", "transcription_attestations",
-                    /* MK-4 / D-113: a lead's SHARES, keyed on the PROJECT. Per-bundle: a share
-                       outliving its project would admit whoever is next allocated that id to a
-                       member's lead. Whole-store: the leads themselves go in the arm below. */
-                    "lead_shares",
-                    /* MK-7 / D-113: an ATTRIBUTION is keyed on the OBSERVATION it governs. Per-bundle: a
-                       level outliving its observation would be inherited by whatever bundle was next
-                       allocated that id — a member's choice attached to somebody else's words. A ratified
-                       case document keeps the level it published in its own signed bytes. */
-                    "observation_attributions",
-                    /* D-162 / D-113: a THEME PLACEMENT, keyed on the DOCUMENT it places (a
-                       passage's placement carries its document too). Per-bundle: a placement
-                       outliving its document would say a file nobody holds belongs to a lens,
-                       and would attach to whatever bundle was next allocated that id.
-                       Whole-store: the themes themselves go in the arm below. */
-                    "theme_placements",
-                    /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
-                       reason `content` above does and for one more that is specific to
-                       them: a proposal is a claim about what a DOCUMENT names, so a
-                       proposal outliving its document would say what a file nobody holds
-                       says — and unlike a content row, nothing downstream depends on one
-                       (that is the whole meaning of "an uncited machine-minted row is a
-                       PROPOSAL"), so there is no authored edge to protect by keeping it.
-                       Whole-store: a scratch reset reporting scope ALL while the
-                       assistant's proposals were still listed and still counted in the
-                       minted-to-cited ratio is the silent-leftover exactly, and it would
-                       corrupt the one instrument §7.3 (6) put there to catch
-                       manufacturing. hygiene.test.mjs holds this list against schema.mjs. */
-                    "proposed_readings",
-                    /* D-85 / D-113: the link from an inquiry an ASSISTANT created to the run it was
-                       created inside (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Keyed on the
-                       INQUIRY's `bundle_id`, so it rides this list and clears in BOTH arms, as the
-                       row's scope requires. Per-bundle: a link outliving its inquiry would hand the
-                       next bundle allocated that id a run and a lens it was never formed under.
-                       Whole-store: a scratch reset reporting scope ALL while an inquiry still read
-                       its run is the silent-leftover exactly. hygiene.test.mjs holds this list
-                       against schema.mjs. */
-                    "inquiry_run_surfacings",
-                    /* REC-173 / D-113: the migration-replay row of an inquiry whose creation was a verified Drive-era
-                       replay, keyed on the INQUIRY's `bundle_id`, for the reason the D-85 entry above gives: a row
-                       outliving its inquiry would tell the next bundle allocated that id it was migrated. BOTH arms. */
-                    "inquiry_migration_replays",
-                    /*__REC91_PURGE_START__*/
-                    /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
-                       PROJECTION of a capture's extracted text -- re-derivable
-                       from the bytes and the chain, which is precisely why it is
-                       not `content`'s neighbour in the keep-it column -- and it
-                       carries `bundle_id` (the DOCUMENT the text is of), so it
-                       rides this list and clears in BOTH arms.
-                       Per-bundle: purging a document while leaving its indexed
-                       passages would let `passage:` return text from a file
-                       nobody holds, and a later bundle allocated a colliding id
-                       would inherit somebody else's text -- the same hazard the
-                       `content` entry above names, one level down and WORSE,
-                       because these rows hold the words themselves rather than
-                       an address.
-                       Whole-store: a scratch reset reporting scope ALL while a
-                       search still answered out of the purged corpus is the
-                       D-113 silent-leftover in the one surface a member reads
-                       absence from.
-                       **THE FTS INDEX GOES WITH IT AND NEEDS NO ENTRY HERE**:
-                       `capture_text_fts` is EXTERNAL CONTENT maintained by the
-                       triggers created in `#migrate`, so every row deleted
-                       through this list takes its index entry with it, in both
-                       arms, by construction. The explicit sweep below is a
-                       belt-and-braces over the whole-store arm only, and its
-                       PLACEMENT is load-bearing -- see it. hygiene.test.mjs
-                       holds this list against schema.mjs. */
-                    "capture_text"];
-                    /*__REC91_PURGE_END__*/
     const before = this.#counts({ proof: true });
-    this.ctx.storage.transactionSync(() => {
-      if (bundleId) {
-        /* The text index row goes with the bundle it describes, and it goes
-           first, while the row that names its rowid still exists. An orphaned
-           FTS row is worse than a missing one: fts_id is allocated as MAX+1, so
-           a later bundle can be handed the same integer and inherit the deleted
-           document's text. */
-        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
-        if (r && r.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
-        for (const t of TABLES) this.sql.exec(`DELETE FROM ${t} WHERE bundle_id=?`, bundleId);
-        /* FW-8. A connection is DERIVED (two documents concerning one entity) and spans
-           TWO captures, so it has no single bundle_id and is NOT in TABLES; it is cleared
-           when EITHER end's bundle is purged, so the reverse-index connection cannot
-           outlive a document it joined (D-113). */
-        this.sql.exec(`DELETE FROM connections WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
-        /* REC-147 / D-113: a contradiction candidate spans TWO referents, so it is not in TABLES, and it goes when
-           EITHER side's bundle is purged — a candidate outliving a side it compared names a referent nobody holds. */
-        this.sql.exec(`DELETE FROM contradiction_candidates WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
-        /* REC-122: a member's on-point choice is ABOUT a connection and goes with it. */
-        this.sql.exec(`DELETE FROM connection_pair_choices WHERE a_bundle_id=? OR b_bundle_id=?`, bundleId, bundleId);
-        /* REC-27 / D-137. Participation and owner-governance votes are keyed on
-           project_id, and a project_id IS a bundle id, so they are cleared in the
-           per-bundle arm too: purging a project bundle and leaving its participant
-           rows would orphan the participation graph against a project that no
-           longer exists — the D-113 silent-leftover in the two tables the D-113
-           check could not see (they are created in the DO constructor, not in
-           schema.mjs). For a non-project bundleId these DELETEs match no rows and
-           change nothing. hygiene.test.mjs holds this list against BOTH files now. */
-        this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
-        this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
-        /* REC-149: the visibility record is keyed on project_id too — the same arm, the same reason. */
-        this.sql.exec(`DELETE FROM project_visibility WHERE project_id=?`, bundleId);
-        /* D-497: and the sight index derived from it, the same arm again — a derivation outliving the acts it
-           derives from would hand a later bundle at a colliding id somebody else's owners' choice. */
-        this.sql.exec(`DELETE FROM project_sight WHERE project_id=?`, bundleId);
-        /* REC-150: the join requests are keyed on project_id too — a request outliving its project would name, to
-           its requester, a project that no longer exists. The same arm, the same reason. */
-        this.sql.exec(`DELETE FROM project_join_requests WHERE project_id=?`, bundleId);
-        /* PL-12 / D-84 / D-113. An adoption is keyed (scope_type, scope_id,
-           bundle_id) and a project scope_id IS a bundle id, so purging a project
-           while leaving its adoptions behind would leave a LENS in force over a
-           project that no longer exists — and, worse, would hand a later bundle
-           allocated a colliding id somebody else's declared bias. The TABLES
-           list above already clears the adoptions OF a purged bias bundle; this
-           clears the adoptions HELD BY a purged project. For a non-project
-           bundleId this DELETE matches no rows. */
-        this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
-        /* REC-21 / D-113. queue_state is keyed (member_id, case_id) and a case_id
-           IS a bundle id, so it clears in the per-bundle arm too: purging an
-           inquiry or a project while leaving members' mutes and snoozes against
-           it would leave personal state pointed at a case that no longer exists,
-           and a later bundle allocated a colliding id would inherit somebody's
-           silence. It is NOT in TABLES because its column is case_id rather than
-           bundle_id. For a non-case bundleId this DELETE matches no rows. */
-        this.sql.exec(`DELETE FROM queue_state WHERE case_id=?`, bundleId);
-        /* REC-22 / D-113. The published graph is keyed from_bundle -> to_bundle,
-           so a per-bundle purge takes the edges OUT of that bundle and also the
-           edges INTO it: an edge whose target no longer exists would have the
-           public surface resolving a serve against a row that has gone, and an
-           index that outlives what it indexes is the D-113 leftover. */
-        this.sql.exec(`DELETE FROM published_edges WHERE from_bundle=? OR to_bundle=?`, bundleId, bundleId);
-        /* REC-26 / D-113. The monitor-cadence consumer's fired-set is keyed on
-           `subject`, and for that consumer a subject IS a bundle id. Purging a
-           monitored bundle while leaving its key behind would leave a claim that
-           a document nobody holds was already checked this tick; if a later
-           bundle were allocated a colliding id it would inherit the skip. The
-           archive-monitor's subjects are ADDRESSES, so this DELETE matches none
-           of them, which is correct: an address outlives any one bundle. */
-        this.sql.exec(`DELETE FROM monitor_fired WHERE subject=?`, bundleId);
-        /* PL-3 / IS-4 / D-113. A stored refusal is keyed on `target`, which IS a
-           bundle id, so it is NOT in TABLES and takes its own DELETE. Leaving it
-           would keep F10's no-op keyed to an inquiry that no longer exists — and
-           a later bundle allocated a colliding id would inherit somebody else's
-           refusal and be told, without a second evaluation, that its perfectly
-           good suggestion had already been turned down. For a non-inquiry
-           bundleId this DELETE matches no rows. */
-        this.sql.exec(`DELETE FROM suggest_refusals WHERE target=?`, bundleId);
-        /* PL-4 / IS-4 / D-113. A capture request is keyed on `request`, so it
-           CANNOT ride the TABLES list and takes its own DELETE in each arm —
-           PL-3's trap arriving through a column name, exactly as delegated. It
-           is found here by `target`, which IS a bundle id. Leaving it would keep
-           a live work item pointed at a question that no longer exists, and the
-           drain would then fetch from somebody's server on behalf of an inquiry
-           nobody can read — a request outliving its accountability, which is the
-           one thing DEC-47's structure is for. For a non-inquiry bundleId this
-           DELETE matches no rows. */
-        this.sql.exec(`DELETE FROM capture_requests WHERE target=?`, bundleId);
-        /* PL-15 / D-213 / D-113 — THE SECOND BUNDLE ID ON THAT ROW, and it is a
-           genuinely different act from the DELETE above rather than a widening
-           of it.
-           *
-           * `lead_inquiry` names the question the evidence BEARS ON, which is
-           * not the question the request was made under. So purging inquiry B
-           * must not delete a request accountable to inquiry A — A still exists,
-           * the capture was still made under it, and removing the row would
-           * destroy a live work item because a DIFFERENT question went away. The
-           * lead is CLEARED instead, which is exactly what became true: the
-           * observation pointed somewhere that is no longer in the store.
-           * *
-           * WHY IT CANNOT BE SKIPPED. `#findingsOutOfInquiryLead` derives its
-           * `case` set from this column, so a surviving row would mint a
-           * member-facing FINDING whose home is a bundle nobody can read — and
-           * `#queueAncestors` would answer `ungrouped`, so the lead would present
-           * as a homeless notification about a question that no longer exists.
-           * That is D-113's silent-leftover arriving through a COLUMN rather
-           * than through a table, which is why hygiene's structural check — it
-           * compares TABLE lists — cannot see it. This item proves the coverage
-           * by CONSEQUENCE instead: the suite purges B and asserts the FEED goes
-           * quiet, which is the only form of the assertion that would have
-           * failed had this line been left out.
-           * *
-           * The DELETE above runs FIRST and this UPDATE therefore never touches
-           * a row it just removed — the case where one purge is both A and B
-           * cannot arise, because the door refuses `lead === target`. */
-        this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
-        this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
-      } else {
-        this.sql.exec(`DELETE FROM bundles_fts`);
-        for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
-        /*__REC91_PURGE_SWEEP_START__*/
-        /* REC-91 -- AND THE ORDER OF THESE TWO LINES IS THE WHOLE POINT, which
-           is why it is a separate statement rather than another name in TABLES.
-           `capture_text_fts` is FTS5 EXTERNAL CONTENT over `capture_text`.
-           Clearing the INDEX FIRST and the base rows second answers
-           `SQLITE_CORRUPT_VTAB` on the base delete and LEAVES THE BASE ROWS
-           STANDING -- measured on workerd through miniflare by this item, not
-           read in a vendor document. Clearing the base rows first lets the
-           delete triggers do the work correctly and makes this line a no-op on
-           a healthy store, which is exactly what a belt-and-braces sweep should
-           be.
-           Note the CONTRAST with `bundles_fts` three lines up: that one is a
-           REGULAR content table and MUST be cleared explicitly, and it is
-           cleared FIRST for its own stated reason. The two FTS tables in this
-           store are maintained by opposite disciplines and this comment is here
-           so the next reader does not make one look like the other. */
-        this.sql.exec(`DELETE FROM capture_text_fts`);
-        /*__REC91_PURGE_SWEEP_END__*/
-        this.sql.exec(`DELETE FROM bundles`);
-        /* REC-22 / D-113: the whole published GRAPH goes with the corpus, for the
-           reason recorded above the TABLES list — it is an index over bytes that
-           answer forever, not a fact of its own. */
-        this.sql.exec(`DELETE FROM published_edges`);
-        /* Selections are derived, so a purge of everything takes them too. A
-           purge of ONE bundle deliberately leaves them alone: the selection
-           should report that item as purged rather than silently forget it was
-           ever picked. */
-        this.sql.exec(`DELETE FROM selection_items`);
-        this.sql.exec(`DELETE FROM selections`);
-        /* REC-27 / D-137. The participation graph and the owner-governance votes
-           are keyed on project_id — a bundle id — so a whole-store purge that
-           reported scope ALL while the entire participation graph stood was
-           exactly the D-113 silent-leftover, in tables the D-113 check could not
-           see because they are created by hand in the DO constructor rather than
-           in schema.mjs. Cleared here with the corpus; the roster itself
-           (members, member_expertise, admin_votes) survives, because membership
-           is identity and not derived from captured documents. */
-        this.sql.exec(`DELETE FROM project_participants`);
-        this.sql.exec(`DELETE FROM project_owner_votes`);
-        /* REC-149: the visibility record goes with the participation graph it sits beside. */
-        this.sql.exec(`DELETE FROM project_visibility`);
-        /* D-497: the sight index is a derivation of the table above, so it goes in the same arm. Every row it
-           could hold is recomputed from what survives at the next boot, which is what makes it safe to clear. */
-        this.sql.exec(`DELETE FROM project_sight`);
-        /* REC-150: the join requests go with the participation graph they would have added to. */
-        this.sql.exec(`DELETE FROM project_join_requests`);
-        /* CASE-5b / D-113, AND IT IS CASE-1'S OWN REVERSAL CONDITION ARRIVING
-           RATHER THAN A NEW JUDGEMENT. CASE-1 exempted `cases` from purge and
-           wrote the condition that would reverse it at the site, in these words:
-           *"if a later item lets a case exist as a DRAFT before publication,
-           revisit, because draft data surviving a purge is D-113 pointed the
-           other way."* THIS ITEM IS THAT LATER ITEM. A case document is authored
-           by op=publish and stays UNSIGNED until op=caseratify, so between the
-           two acts a case genuinely exists as a draft.
-           *
-           * SO THE SPLIT IS BY SIGNATURE AND NOT BY TABLE. An UNRATIFIED row is
-           * working data — a ceremony somebody started and abandoned — and a
-           * whole-store purge reporting scope ALL while it stood would be the
-           * silent leftover this check exists to catch. A RATIFIED row is the
-           * signed bytes `published_cases` was committed from, which nothing
-           * else holds, so it answers forever for `published_bundles`' own
-           * reason. `cases` keeps its exemption unchanged: it is still written
-           * only at ratification, so no draft ever reaches it.
-           * *
-           * STATED PLAINLY BECAUSE THE D-113 CHECK CANNOT SEE IT: hygiene's
-           * structural pass matches `DELETE FROM case_documents` and scores the
-           * table covered, and it does NOT read this WHERE clause. The suite
-           * that owns this behaviour drives the split instead of asserting it. */
-        this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
-        /* D-442 / D-113: `case_exclusions` is DERIVED from case_documents, so it follows the SAME split —
-           an unratified document's rows go with it, and a ratified one's stay for that document's reason. */
-        this.sql.exec(`DELETE FROM case_exclusions WHERE NOT EXISTS (SELECT 1 FROM case_documents d
-                         WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)`);
-        /* REC-126 / D-113: THE REVIEW COPY IS WORKING DATA, all three tables of
-           it. A draft is a case nobody has published, its grants read only that
-           draft, and its comments are about it — so a whole-store purge reporting
-           scope ALL while any of them stood would be the silent leftover this
-           check exists to catch, and a grant surviving its draft would be a
-           capability over nothing. Cleared together, comments and grants first. */
-        this.sql.exec(`DELETE FROM review_comments`);
-        /* D-150: an acknowledgement is an act ON a statement nobody has published yet; one a
-           signed case document lists survives in that document's signed bytes. */
-        this.sql.exec(`DELETE FROM statement_acknowledgements`);
-        this.sql.exec(`DELETE FROM review_grants`);
-        this.sql.exec(`DELETE FROM case_drafts`);
-        /* D-113. Everything else derived from the corpus, and the reason this
-           list must be extended whenever a derived table is added: a purge that
-           reports scope "ALL" and leaves rows behind is worse than one that
-           reports a narrower scope, because the caller believes the store is
-           empty. Found on 2026-07-31 when a scratch purge cleared five bundles
-           and left an open task pointing at one of them, which C-19.1 would then
-           refuse as unresolvable.
-           *
-           * A task and a queue event are derived: both exist only because a
-           * capture in this corpus was undetermined. Source reachability is
-           * derived too, but from ATTEMPTS rather than from bundles, so it is
-           * taken here only because a whole-store purge means the corpus itself
-           * is gone and the counter would otherwise outlive the thing it
-           * describes. A per-bundle purge deliberately touches none of it, for
-           * the same reason it leaves selections alone. */
-        this.sql.exec(`DELETE FROM tasks`);
-        this.sql.exec(`DELETE FROM task_queue`);
-        this.sql.exec(`DELETE FROM source_reachability`);
-        /* REC-26 / D-113. The monitoring consumers' in-flight tick state: the
-           fired-set and the open epoch. Both are derived from the corpus in the
-           sense that matters here — every subject is a bundle this purge just
-           removed or an address whose reachability row went with it on the line
-           above — so a whole-store purge that reported scope ALL while an open
-           epoch stood would leave the next tick believing it was RETRYING a tick
-           over documents that no longer exist. They are cleared together and in
-           this order: the fired rows, then the epoch that names them. */
-        this.sql.exec(`DELETE FROM monitor_fired`);
-        this.sql.exec(`DELETE FROM monitor_tick_epoch`);
-        /* REC-191. The content type each monitored ADDRESS last read as, which the
-           cadence plan falls back on where no version authored a frequency. Read
-           from sources about documents this purge just removed, so it goes with
-           them: a later capture at the same address must be read afresh rather
-           than inherit a type nobody holds a document for. Not in the per-bundle
-           arm, for source_reachability's reason: an address outlives a version. */
-        this.sql.exec(`DELETE FROM monitor_address_type`);
-        /* The capture machinery's own derived tables, found MISSING here on
-           2026-07-31 when D-113 was closed as a class rather than an instance.
-           Every one is derived from the corpus and every one predates the fix
-           above, so each was the exact silent-leftover this list exists to
-           prevent: links a captured document made and their contemporaneity
-           verdicts; the address/capture index that answers "does the store hold
-           a capture of X"; the per-host asset cache and its per-document rows;
-           and the multi-tick capture work list. Leaving any of them behind lets
-           a store that reports scope ALL still answer as though captures it no
-           longer holds were present. hygiene.test.mjs now asserts this list
-           against schema.mjs so the next derived table cannot be forgotten. */
-        this.sql.exec(`DELETE FROM link_verdicts`);
-        this.sql.exec(`DELETE FROM links`);
-        this.sql.exec(`DELETE FROM captured_locators`);
-        this.sql.exec(`DELETE FROM site_asset_refs`);
-        this.sql.exec(`DELETE FROM site_assets`);
-        /* CAP-4: verdicts on reused parts are derived from the corpus (a ratify
-           verdict names a bundle; a posthoc verdict names a capture that reused
-           bytes now gone). A whole-store purge that reported ALL and left these
-           behind is the exact D-113 silent-leftover, so they go here too. */
-        this.sql.exec(`DELETE FROM reuse_verdicts`);
-        this.sql.exec(`DELETE FROM capture_sessions`);
-        /* FW-6 / D-83: the SUBJECT REGISTRY (entities, their aliases, their declared
-           relations). Unlike the tables above it is FIRST-CLASS member-declared
-           state, not a projection of the corpus -- but op=purge is the scratch-reset
-           tool, and a whole-store purge that reported scope ALL while leaving the
-           registry populated is exactly the D-113 silent-leftover: the caller
-           believes the store is empty. So it is cleared here, in the whole-store arm
-           only, and left untouched by a per-bundle purge (it has no bundle_id).
-           Relations first, then aliases, then entities, so nothing outlives an end
-           it references. hygiene.test.mjs asserts this list against schema.mjs. */
-        this.sql.exec(`DELETE FROM entity_relations`);
-        this.sql.exec(`DELETE FROM entity_aliases`);
-        this.sql.exec(`DELETE FROM entities`);
-        /* FW-8. Connections are DERIVED from the corpus (two captures concerning one
-           entity), so a whole-store purge clears them. Progression DEFINITIONS are
-           FIRST-CLASS member-declared state like the registry above -- not corpus-derived
-           -- but op=purge is the scratch-reset tool, so a whole-store purge that reported
-           scope ALL while leaving them is the D-113 silent-leftover; cleared here in the
-           whole-store arm only, left by a per-bundle purge (they have no bundle_id).
-           Stages before defs, so nothing outlives the definition it belongs to.
-           hygiene.test.mjs asserts this list against schema.mjs. */
-        this.sql.exec(`DELETE FROM connections`);
-        /* REC-147: the contradiction candidates, which span two referents and have no single bundle_id. */
-        this.sql.exec(`DELETE FROM contradiction_candidates`);
-        /* REC-122: the member's on-point choices, about connections that are gone. */
-        this.sql.exec(`DELETE FROM connection_pair_choices`);
-        this.sql.exec(`DELETE FROM progression_stages`);
-        this.sql.exec(`DELETE FROM progression_defs`);
-        /* D-128: every version of every definition, the append-only history beside the current
-           tables above -- member-declared like them, so cleared in the whole-store arm only. */
-        this.sql.exec(`DELETE FROM progression_stage_versions`);
-        this.sql.exec(`DELETE FROM progression_def_versions`);
-        /* REC-5 / D-122. The connection-derive dirty-set is a transient work-queue
-           DERIVED from the corpus (an entity is dirty only because a document
-           resolved to it). A whole-store purge means the corpus is gone, so the
-           pending queue must go with it or a scratch reset reports scope ALL while
-           leaving rows the next sweep would act on (the D-113 silent-leftover). It
-           has no bundle_id and is safe to re-derive, so a per-bundle purge leaves
-           it. hygiene.test.mjs asserts this list against schema.mjs. */
-        this.sql.exec(`DELETE FROM connection_dirty`);
-        /* REC-7 / D-79. Proposal dispositions are member-authored decisions (a member aged the
-           record's own question), not a projection of the corpus — like the registry and
-           progression definitions above. But op=purge is the scratch-reset tool, so a whole-store
-           purge that reported scope ALL while leaving dispositions is the D-113 silent-leftover.
-           Cleared here in the whole-store arm only; a per-bundle purge leaves it (no bundle_id).
-           hygiene.test.mjs asserts this list against schema.mjs. */
-        this.sql.exec(`DELETE FROM proposal_dispositions`);
-        /* D-266 / IC-60. The JUDGMENT-LAYER dispositions, cleared for exactly the reason the
-           instance-wide ones above are and by the same arm: member-authored decisions, no
-           bundle_id, so a per-bundle purge leaves them and a whole-store purge that reported
-           scope ALL while leaving them standing is the D-113 silent-leftover — a scratch reset
-           after which one project's feed is still quietly one finding shorter, with the row that
-           did it invisible. A SECOND TABLE MEANS A SECOND DELETE: adding the key shape without
-           adding this line is precisely the way this class recurs. hygiene.test.mjs asserts this
-           list against schema.mjs. */
-        this.sql.exec(`DELETE FROM finding_dispositions`);
-        /* REC-21 / D-113. Members' mutes and snoozes are keyed on a case id — a
-           bundle id — so a whole-store purge that reported scope ALL while
-           leaving them standing is the silent-leftover exactly: the corpus is
-           gone and a member is still not being told about a case that no longer
-           exists. It is PERSONAL state rather than corpus-derived, like the
-           registry and the proposal dispositions above, and it is cleared here
-           for the same reason those are — op=purge is the scratch-reset tool and
-           the caller believes the store is empty. hygiene.test.mjs asserts this
-           list against schema.mjs. */
-        this.sql.exec(`DELETE FROM queue_state`);
-        /* D-125. Members' ITEM mutes, cleared for queue_state's reason. Keyed on
-           an item id and on no bundle id, so the per-bundle arm has no key to
-           clear them by, and a mute naming a vanished item suppresses nothing. */
-        this.sql.exec(`DELETE FROM queue_item_mutes`);
-        /* IS-6 / D-113. The investigative run, its budget and its observation
-           log. Every one is keyed to a run whose CONTEXT is an inquiry or a
-           project this purge just removed, so a whole-store purge that reported
-           scope ALL while leaving them is the silent-leftover exactly: the
-           corpus is gone and the reaper's next tick would still find a run in
-           flight over a project that no longer exists, and terminate it against
-           a context nobody can resolve. Bounds and log first, then the run, so
-           nothing outlives the run it belongs to. A per-bundle purge leaves them:
-           a run is not a file of the bundle it is about, and killing a run
-           because one document went is a decision nobody made. */
-        /* REC-93 / D-113. THE OBSERVATION LOG, and §7 is explicit that this
-           whole-store arm is the ONLY thing that ever deletes from it:
-           *"nothing is ever deleted from the log except by whole-store purge;
-           the edge rule is what keeps that affordable"*. The folded run log is
-           in here too, which is why the `DELETE FROM ai_run_log` that stood on
-           this line is GONE rather than kept beside it — the table it named no
-           longer exists after #migrate drops it, and a purge naming a dropped
-           table is an error at exactly the moment an operator is being told the
-           store is empty.
-           THE PER-BUNDLE ARM DELIBERATELY DOES NOT DO THIS, and that is §7's
-           other half rather than an omission: *"Purge of a bundle leaves its
-           observations. They are the coverage record, not derived from the
-           bundle."* A `result_ref` pointing at a capture this purge removed is
-           ANNOTATED at read time as purged (op=frontier does it) and never
-           rewritten — the look was still made, and erasing the record of it
-           because its result went is how a store forgets that it ever searched. */
-        this.sql.exec(`DELETE FROM observation_log`);
-        /* MK-4 / D-113: a member's LEADS. Authored, with no bundle_id, so a
-           per-bundle purge leaves them and this arm clears them — in the SAME arm
-           as the log that records their looks, which is what lets `op=leadread`
-           say "nobody has followed this lead" as an established fact: a lead and
-           its looks can only ever be cleared together. */
-        this.sql.exec(`DELETE FROM leads`);
-        /* D-162 / D-113: the THEMES. Authored, with no bundle_id, so a per-bundle
-           purge leaves them (only their placements go with a document) and this arm
-           clears them — after TABLES above has already taken every placement. */
-        this.sql.exec(`DELETE FROM themes`);
-        this.sql.exec(`DELETE FROM ai_run_bounds`);
-        /* D-86 / D-113: a run's bias debt goes with the run it is about, and the sweep's place with the lens it
-           was reading — a debt outliving its run would name a run nobody can open. */
-        this.sql.exec(`DELETE FROM bias_debts`);
-        /* REC-207: and what SETTLED each of them. A settlement outliving its debt would name a run nobody can
-           open, which is the same leftover the line above refuses one table over. */
-        this.sql.exec(`DELETE FROM bias_debt_settlements`);
-        this.sql.exec(`DELETE FROM bias_debt_sweeps`);
-        this.sql.exec(`DELETE FROM ai_runs`);
-        /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
-           about: every key names an inquiry this purge just removed, so a
-           whole-store purge reporting scope ALL while they stood would be the
-           silent leftover in its most confusing form — a run resubmitting into
-           an empty store, told its submission had already been refused. */
-        this.sql.exec(`DELETE FROM suggest_refusals`);
-        /* PL-4 / IS-4 / D-113, the whole-store half of the same trap. A purge
-           reporting scope ALL while a queue of outbound requests stood would be
-           worse than the ordinary silent leftover: the next tick would go and
-           fetch from a stranger's server on behalf of a corpus that no longer
-           exists, so the leftover would be visible from OUTSIDE the instance.
-           The table is keyed on `request` and cannot ride TABLES, so it is
-           cleared here explicitly. */
-        this.sql.exec(`DELETE FROM capture_requests`);
-      }
+    // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
+    recordOf(this.ctx).transact(() => {
+      const fts = bundleId ? this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId) : null;
+      if (fts && fts.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, fts.fts_id);
+      recordOf(this.ctx).purge({ bundleId });
+      if (bundleId) this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
     });
     const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
@@ -51184,7 +50251,7 @@ export class Store extends DurableObject {
       /* REC-151: OPAQUE, never the TASK counter (Membership v2 §7) — a task naming a bundle the viewer cannot see
          is withheld (REC-30), so a counted id told a member how many tasks existed that they could not read. On
          exhaustion the event is KEPT, as an unfiled capture's is, never dropped. */
-      const taskId = this.#mintOpaqueId("TASK", year, `-${slug}`,
+      const taskId = recordOf(this.ctx).mintOpaqueId("TASK", year, `-${slug}`,
         (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id));
       if (!taskId) {
         out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts,
@@ -53167,8 +52234,8 @@ export class Store extends DurableObject {
           if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
           return r;
         },
-        allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
-        lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
+        allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
+        lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
         /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
@@ -53191,9 +52258,9 @@ export class Store extends DurableObject {
            reader (audit, eachImage, ratify's assembly); this dispatch map is
            the store's one external door. */
         image: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
-          ? this.readImage(url.searchParams.get("id")) : null,
+          ? recordOf(this.ctx).readImage(url.searchParams.get("id")) : null,
         file: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer"))
-          ? this.readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
+          ? recordOf(this.ctx).readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
         list: () => this.listBundles({ type: url.searchParams.get("type"), state: url.searchParams.get("state"),
                                        after: url.searchParams.get("after") || null,
                                        limit: url.searchParams.get("limit"),
