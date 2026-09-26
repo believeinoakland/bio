@@ -32,7 +32,8 @@
  * removed out of band.
  */
 
-import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
+import { checkBundle, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { checkReleaseSignature } from "./promotion/release.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
    PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
@@ -312,11 +313,12 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
     else elided.add(path);
   }
 
-  const { findings } = await checkBundle({
+  const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
+  const { findings: catalogue } = await checkBundle({
     folderName: bundleId,
     files,
     elidedPaths: elided,
-    sha256: async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v)),
+    sha256,
     sha512: async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b)),
     resolveTarget: (id) => knownIds.has(id),
     releaseRegistry: releaseRegistry || null,
@@ -343,6 +345,14 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        blinding is loud instead of silent. */
     earnedRegistry: earnedRegistry || null,
   });
+  /* R31 (K64): C-18.8 is promotion's own check, verified through `signatures.verifySshsig`. Until the catalogue's
+     copy leaves `checkBundle` (this module's extraction from `legacy-checks`), its findings are replaced by this
+     module's, never added to them, so a release is judged once. */
+  const md = files.get("bundle.md");
+  const fm = md ? parseFrontmatter(md).data : null;
+  const findings = [...catalogue.filter((f) => f.check !== "C-18.8"),
+    ...await checkReleaseSignature({ folderName: bundleId, fm: fm && typeof fm === "object" ? fm : null, files,
+                                     releaseRegistry: releaseRegistry || null, sha256 })];
 
   const errors = findings
     .filter((f) => f.severity === "error")
