@@ -2,7 +2,7 @@
 
 Session: `session_01LPQSJzgT8fbw2kcionFsh3` (PROMOTION #1). BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T3`.
 
-**Status** · IN PROGRESS, 2026-09-26. Branch `job/T3/promotion`, from `tranche/T3` @ af11bd11. Read whole: JOB.md, PROCESS-MECHANICS (§6, §12.2, §13), `build/requirements/promotion.md`, `build/extraction/promotion.md`, the public parts of `record-core` and `membership`, `build/layers.md`, my entries in `build/plan/current.md`, `gate.mjs`, `reopen()` and `promote()` (store.mjs 7984–8172, 17881–20100).
+**Status** · COMPLETE, 2026-09-26. Branch `job/T3/promotion`, from `tranche/T3` @ af11bd11, with `tranche/T3` merged in @ 7d915799 (record-core and membership merged). No open question for BOB. Read whole: JOB.md, PROCESS-MECHANICS (§6, §12.2, §13), `build/requirements/promotion.md`, `build/extraction/promotion.md`, the public parts of `record-core` and `membership`, `build/layers.md`, my entries in `build/plan/current.md`, `gate.mjs`, `reopen()` and `promote()` (store.mjs 7984–8172, 17881–20100).
 
 ## Questions to BOB
 
@@ -49,3 +49,85 @@ Sent 2026-09-26 as one `QUESTION`. I carry on with every entry on the best readi
 - **CATALOG_VERSION 1.31.0 → 1.32.0** (R34): the gate runs the same checks, four of them changed. Suites that pin the version or count the catalogue's own checks (`d470-catalog-census.test.mjs` and its control) are legacy-tests' (REPORT).
 - **Temporary code:** none left. The record port went at record-core's merge (bde7923e) and the membership port at membership's (221d4816): promotion's factory reaches both through `recordOf(ctx)` and `membershipOf(ctx)` (K61), and a project's creation goes through `membership.projectCreated` (R71), ownerless ones included, so each is reindexed.
 - **Push guard.** The old process's `pre-push` hook (`tools/pushguard.mjs`, corpuscheck) refused a push over 21 unrelated docs' Status dates. CLAUDE.md retires the push guard, so this job pushes with `--no-verify`.
+
+## Entries applied
+
+- **T3-3** · `promote`, `reopen`, `forkProject` and project-name uniqueness extracted from `legacy-store` into `bio-plane/src/promotion/` (with `gate.mjs`); `legacy-store` keeps delegating methods and registers its share of every promotion through R39–R40 (K31). C-4.2, C-17.2, C-18.8 and C-20.1 extracted from `legacy-checks` (K64, K66). Requirement-named tests for every live id (R1–R44).
+- **N8 / K10** (R31): C-18.8 verifies through `signatures.verifySshsig`; the hand-written Ed25519/SSHSIG verifier is removed from `bio-checks.mjs`.
+- **N16** (promotion's share): `forkProject` and project-name uniqueness (R19, R41–R44).
+- **N17**: `CAS_STALE` carries its row (C-33.21); `EXISTS`/`ABSENT` wait for N36 (K62).
+- **Carried rows**: R11 (D-578, D-628, D-707), R12 (D-615, D-692), R13 (D-726), R14 (D-738), R15 (D-546), R17 (D-741), R18 (K64, against the catalogue as it stands), R30 (D-700, D-718, on `seq`), R32 (D-673, corroborated from the image).
+
+## Deferred
+
+- None of this module's own. `EXISTS` and `ABSENT` rows: N36 (K62). R18's D-695/D-717 arms: with `actions` (K64).
+
+## Found in other modules (REPORT)
+
+1. **legacy-tests: the old battery on this branch against `tranche/T3` @ 7d915799** (the full battery, `bio-plane/test/*.test.mjs`, both trees): 51 red on the tranche, 87 here; 36 pass there and fail here, none the other way. Each was diagnosed; none is a defect in this module:
+   - **Fixtures R12 now refuses** (an envelope `created`/`last_updated` contradicting the document's own; D-615's branch met the same): case-authority, caseproduction, casesign, citeproject-inquiry, conclude-project, d149-governing-laws, d512-replay-verified, deliverer, disposition, divide, multifinding, projection, publish, ratify-authority, rec108-cache-asof, rec170-manifest-pair, rec214-risk-tier-revision, rec220-version-pin, unattended-lease. Measured: with the date refusal switched off locally, every one of these passes.
+   - **Fixtures R13/R14 now refuse**: store, ratify, audit (a document stating one id filed under another, R14; the audit's C-1.1 fixture can no longer be written); machine-fences (a revision restating another group, R13).
+   - **Refusal order, R39 as K62 wrote it** (promotion's own refusals before the registered checks): d526-refusal-order (ENVELOPE_TYPE_DISAGREES before SURFACE_NO_RUN / GOVERNING_LAWS_REWRITTEN), testify (FILES_DROPPED before TESTIMONY_AUTHORED_DROPPED).
+   - **The catalogue lost C-4.2, C-17.2, C-18.8, C-20.1** (K64): check-firing and mechanical call `checkBundle` directly and expect C-18.8 / C-20.1 (the gate runs them now); repair-reachability anchors on the removed text; d470-catalog-census pins 1.31.0 and the old census (now 1.32.0).
+   - **Source-anchored on code that moved** (retire with it, §12.3): fence-e2e, inquiry (neutering patch), instance-group S5, m025-arm-anchor-witness, meaningquery (legs pin), refusal-wire (MACHINE_CANNOT_REOPEN's site), risk-tier (promote as the one writer in store.mjs); and, seen earlier in the job and red on the tranche since the record-core/membership merges: machinefences-dec49, aicredential, rung-ladder, hygiene (src walk meets `src/promotion/`), opaque-ids, project-mint, derivation-bounds, meaning-bounds, project-discoverable 1a0, versions (promote's write-site count), subresources (reads `MECHANICAL_APPEND_FILES` in bio-checks).
+2. **record-core: `auditPass` takes no extra checks.** A module whose checks left the catalogue can only add them to the audit from outside, so `promotion.recordAudit` re-runs the catalogue on a bundle the moved checks find in error, to keep the counts exact. A hook (`checks(id, files) → findings`, merged into the same tally) would remove that second pass.
+3. **affordances: `REOPENABLE_FROM` is now held by promotion (R24).** `affordances.mjs` keeps its own copy (`[...DISPOSITIONS]`); when affordances is extracted it should import promotion's, so the refusal and the published act cannot disagree.
+4. **legacy-checks: C-2.6's state-history walk relies on the one C-4.2 arm left in `checkStateLegality`** (the "not an object" guard and its `continue`). Removal-only could not take it; whoever next edits the catalogue can move the guard into C-2.6's own shape and drop the arm (then promotion's C-4.2 should say it).
+5. **Generated artifacts**: `bio-plane/dist/bio-plane.bundled.mjs` and `newgroup/dist/newgroup.bundled.mjs` embed `store.mjs`, `gate.mjs` and `bio-checks.mjs`; both are stale (regenerate at the layer close, manifest §14).
+
+## Tests and checks run
+
+- `node --test bio-plane/test/m/promotion/` · tests 50, pass 50, fail 0 (on the merged branch @ bd93e821).
+- Layer tests: none named in `build/manifest.md`. Modules using promotion: none yet extracted.
+- The old battery, both trees, as above.
+- `checks/format.mjs` · 63 modules, 27 requirements files; 0 failures.
+- `checks/architecture.mjs promotion` · 16 product files, 42 relative imports; 0 failures.
+- `checks/coverage.mjs promotion` · 44 of 44 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs promotion tranche/T3` · 19 files; legacy-checks 0 added, 909 removed; legacy-store 37 added, 1226 removed; 0 failures. The `ADDED` lines, for BOB's review:
+
+```
+ADDED bio-plane/src/store.mjs:223  /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
+ADDED bio-plane/src/store.mjs:224  import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
+ADDED bio-plane/src/store.mjs:897  /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
+ADDED bio-plane/src/store.mjs:898  registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
+ADDED bio-plane/src/store.mjs:899  const promotion = promotionOf(ctx);
+ADDED bio-plane/src/store.mjs:900  promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
+ADDED bio-plane/src/store.mjs:901  promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
+ADDED bio-plane/src/store.mjs:902  promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
+ADDED bio-plane/src/store.mjs:903  promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
+ADDED bio-plane/src/store.mjs:7895  const r = promotionOf(this.ctx).reopen({ target, reason, viewer, author });
+ADDED bio-plane/src/store.mjs:7896  return r.ok ? { ...r, reevaluation: { source: "reopened", since: r.at, raised: this.#reevalRaisedBy(target, viewer) } } : r;
+ADDED bio-plane/src/store.mjs:15932  const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
+ADDED bio-plane/src/store.mjs:17423  return promotionOf(this.ctx).promote(pkg);
+ADDED bio-plane/src/store.mjs:17424  }
+ADDED bio-plane/src/store.mjs:17425  
+ADDED bio-plane/src/store.mjs:17426  /* K31 (promotion R39): legacy-store's share of every promotion's checks, until each module that owns one is
+ADDED bio-plane/src/store.mjs:17427  extracted. Registered with `promotion` in the constructor; a refusal here refuses the whole promotion. */
+ADDED bio-plane/src/store.mjs:17428  #promoteChecks(c) {
+ADDED bio-plane/src/store.mjs:17429  const { pkg, bundleId, base, meta, author, register, files, promotedType } = stepContext(c);
+ADDED bio-plane/src/store.mjs:17430  const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
+ADDED bio-plane/src/store.mjs:18128  }
+ADDED bio-plane/src/store.mjs:18130  /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
+ADDED bio-plane/src/store.mjs:18131  inside the same transaction. The answer's keys promotion does not already carry are added to its answer. */
+ADDED bio-plane/src/store.mjs:18132  #promoteProjections(c) {
+ADDED bio-plane/src/store.mjs:18133  const { pkg, bundleId, base, meta, author, register, files, promotedType, promotedState, owner } = stepContext(c);
+ADDED bio-plane/src/store.mjs:18134  const cur = c.head, newSha = c.bundleSha, docFmW = c.docFm, isInquiry = promotedType === "inquiry";
+ADDED bio-plane/src/store.mjs:18135  const basisFm = isInquiry ? docFmW : null;
+ADDED bio-plane/src/store.mjs:18136  const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
+ADDED bio-plane/src/store.mjs:18137  const testimony = pkg[TESTIMONY_PATH] || null;
+ADDED bio-plane/src/store.mjs:18138  const surfacing = !cur && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()
+ADDED bio-plane/src/store.mjs:18139  ? { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() } : null;
+ADDED bio-plane/src/store.mjs:18140  const migration = (!cur && !surfacing && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
+ADDED bio-plane/src/store.mjs:18141  && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
+ADDED bio-plane/src/store.mjs:18142  ? { capture: pkg.migrationReplay.capture,
+ADDED bio-plane/src/store.mjs:18143  promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
+ADDED bio-plane/src/store.mjs:18144  : null;
+ADDED bio-plane/src/store.mjs:33508  return promotionOf(this.ctx).forkProject({ projectId, newId, title, by, viewer, visibility });
+```
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01LPQSJzgT8fbw2kcionFsh3,job,promotion,122426546,644865,539,248021,265,34,1961
+```
