@@ -71,11 +71,11 @@
 
     {"id": "affordances", "layer": 11, "from": ["legacy-store", "legacy-index"], "paths": ["bio-plane/src/affordances.mjs", "bio-plane/src/affordances/"], "tests": ["bio-plane/test/m/affordances/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "entities", "connections", "progressions", "inquiry", "citation", "basis-versions", "publication", "actions"]},
     {"id": "queue", "layer": 11, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/queuestate.mjs", "bio-plane/src/queue/"], "tests": ["bio-plane/test/m/queue/"], "uses": ["legacy-checks", "record-core", "membership", "host-governor", "provenance", "capture", "connections", "progressions", "bias", "observation-log", "inquiry", "basis-versions", "ai-runs", "capture-requests", "publication", "scheduler", "legacy-store", "affordances"]},
-    {"id": "instance-setup", "layer": 11, "paths": ["bio-plane/src/setup.mjs", "bio-plane/src/livefire.mjs"], "tests": ["bio-plane/test/m/instance-setup/"], "uses": ["jurisdictions", "legacy-checks", "runtime-limits"]},
-    {"id": "control-plane", "layer": 11, "from": "legacy-index", "paths": ["bio-plane/src/control-plane/"], "tests": ["bio-plane/test/m/control-plane/"], "uses": ["membership", "legacy-store"]},
+    {"id": "instance-setup", "layer": 11, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/setup.mjs", "bio-plane/src/livefire.mjs"], "tests": ["bio-plane/test/m/instance-setup/"], "uses": ["legacy-checks", "jurisdictions", "runtime-limits", "record-core", "membership", "promotion", "host-governor", "scheduler"]},
+    {"id": "control-plane", "layer": 11, "from": ["legacy-index", "legacy-store", "legacy-checks"], "paths": ["bio-plane/src/control-plane/"], "tests": ["bio-plane/test/m/control-plane/"], "uses": ["legacy-checks", "runtime-limits", "signatures", "membership", "publication", "legacy-store", "instance-setup"]},
     {"id": "legacy-index", "layer": 11, "legacy": true, "paths": ["bio-plane/src/index.mjs", "bio-plane/wrangler.jsonc", "bio-plane/package.json", "bio-plane/package-lock.json", "bio-plane/.gitignore", "bio-plane/.dev.vars.example", "bio-plane/scripts/", "bio-plane/migrate/"], "tests": [], "uses": ["*earlier"]},
     {"id": "legacy-ui", "layer": 11, "legacy": true, "paths": ["civicos-ui/"], "tests": [], "uses": ["*earlier"]},
-    {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/"], "uses": ["jurisdictions", "signatures", "runtime-limits"]},
+    {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/"], "uses": ["jurisdictions", "signatures", "instance-setup"]},
     {"id": "legacy-tests", "layer": 11, "legacy": true, "paths": ["civicos-ui/check-refusal-codes.mjs", "civicos-ui/check-semantics.mjs"], "tests": ["bio-plane/test/", "civicos-ui/test/"], "uses": ["*earlier"]}
   ]
 }
