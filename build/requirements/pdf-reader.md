@@ -241,7 +241,8 @@ interface is the members below and nothing else; every other field is private.
   other page that paints an image and shows fewer than 22 glyphs (a share under 0.18, 5-21 glyphs, or a
   page box that cannot be read) carries `image_content_undetermined`. A page that paints no image, or
   shows 22 or more glyphs, carries neither. Both markers name
-  `image_share` and `glyphs`, and neither replaces `no_text_layer` (R14). The figures are measured
+  `image_share` and `glyphs`. R26 applies only to a page that shows text: a page carrying `no_text_layer`
+  (R14) carries neither R26 marker. The figures are measured
   (M-178: 1,788 pages; the 17 image-only pages show at most 4 glyphs at shares 0.1897-0.6542; every
   other page painting an image shows at least 22 glyphs).
 - **R27** Every `undetermined`/`why`/`reason` value in this module's output names WHICH kind of
