@@ -30,6 +30,7 @@
 - N35 · 2026-09-26 · **capture-requests** (K58): BOB drafts its requirements from the code (store.mjs ~44550–45440 and the `capturerequest*` ops) and brings them to Bob before its layer's tranche; `capture`'s job keeps only the trusted in-process arm.
 - N36 · 2026-09-26 · **promotion** (from `legacy-checks`): catalogue rows for promotion's `EXISTS` and `ABSENT` refusals (N17). (C-18.8's removal moved into T3 by K64.)
 - N37 · 2026-09-26 · **query-language**: `viewerPredicate` and `GATE_MARK` become re-exports of membership's (K63).
+- N38 · 2026-09-26 · **instance-setup** (K69): the group-identity cluster (C-64) moves here from `legacy-store` at `instance-setup`'s extraction; BOB writes its requirements (the producing group, its history, the domain checks) and brings them to Bob before that tranche.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
