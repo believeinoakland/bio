@@ -7,7 +7,7 @@
     {"id": "test-support", "layer": 1, "paths": ["bio-plane/test/sandbox.mjs", "bio-plane/test/stdio.mjs"], "tests": ["bio-plane/test/m/test-support/"], "uses": []},
     {"id": "bundler", "layer": 1, "paths": ["bio-plane/scripts/fleet-bundle.mjs", "bio-plane/scripts/provenance.mjs"], "tests": ["bio-plane/test/m/bundler/"], "uses": []},
     {"id": "runtime-limits", "layer": 1, "paths": ["bio-plane/src/cpu.mjs", "bio-plane/src/tokens.mjs"], "tests": ["bio-plane/test/m/runtime-limits/"], "uses": []},
-    {"id": "signatures", "layer": 1, "paths": ["bio-plane/src/sshsig.mjs", "bio-plane/src/tsa.mjs", "bio-plane/src/signpage.mjs"], "tests": ["bio-plane/test/m/signatures/"], "uses": []},
+    {"id": "signatures", "layer": 1, "paths": ["bio-plane/src/sshsig.mjs", "bio-plane/src/tsa.mjs", "bio-plane/src/signpage.mjs", "bio-plane/src/sign-release.html", "bio-plane/scripts/embed-signpage.mjs"], "tests": ["bio-plane/test/m/signatures/"], "uses": []},
     {"id": "id-spaces", "layer": 1, "paths": ["bio-plane/src/idspaces.mjs"], "tests": ["bio-plane/test/m/id-spaces/"], "uses": ["jurisdictions"]},
     {"id": "subresources", "layer": 1, "paths": ["bio-plane/src/subresources.mjs"], "tests": ["bio-plane/test/m/subresources/"], "uses": ["runtime-limits"]},
     {"id": "ooxml", "layer": 1, "paths": ["bio-plane/src/ooxml.mjs"], "tests": ["bio-plane/test/m/ooxml/"], "uses": []},
