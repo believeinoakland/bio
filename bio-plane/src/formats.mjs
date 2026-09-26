@@ -281,14 +281,25 @@ registerFormat(csvEntry);
    record cannot state what), which is a different fact from ABSENT (no entry
    with a decoding choice ever read this document). */
 export function readingDialect(emitted) {
-  if (!emitted || typeof emitted !== "object" || Array.isArray(emitted)) return null;
-  const str = (v) => (typeof v === "string" && v ? v : null);
-  const strs = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string") : []);
+  /* NEVER THROWS (R16), even on an object whose key read throws (a getter, a
+     revoked Proxy): a key that cannot be read is a key that holds no value of
+     the named type, so it projects as null / [] like any other. */
+  try {
+    if (!emitted || typeof emitted !== "object" || Array.isArray(emitted)) return null;
+  } catch { return null; }
+  const get = (k) => { try { return emitted[k]; } catch { return undefined; } };
+  const str = (k) => { const v = get(k); return typeof v === "string" && v ? v : null; };
+  const strs = (k) => {
+    try {
+      const v = get(k);
+      return Array.isArray(v) ? Array.prototype.filter.call(v, (s) => typeof s === "string") : [];
+    } catch { return []; }
+  };
   return {
-    delimiter: str(emitted.delimiter),
-    encoding: str(emitted.encoding),
-    confidence: { delimiter: str(emitted.delimiterConfidence), encoding: str(emitted.encodingConfidence) },
-    signals: { delimiter: strs(emitted.delimiterSignals), encoding: strs(emitted.encodingSignals) },
-    undetermined: strs(emitted.undetermined),
+    delimiter: str("delimiter"),
+    encoding: str("encoding"),
+    confidence: { delimiter: str("delimiterConfidence"), encoding: str("encodingConfidence") },
+    signals: { delimiter: strs("delimiterSignals"), encoding: strs("encodingSignals") },
+    undetermined: strs("undetermined"),
   };
 }
