@@ -1,8 +1,6 @@
 # T1 · ooxml — job record
 
-**Status** · COMPLETE, 2026-09-26. Job session for module `ooxml`, tranche T1, branch `job/T1/ooxml`. No open question.
-
-**For BOB — a conflict between two steps of `roles/JOB.md`, not blocking:** step 7's `metrics/record.mjs` writes `build/metrics/T1.csv`, and step 6's ownership check then fails on that file: `FAIL  build/metrics/T1.csv: outside ooxml's paths, tests and job record` (`ownership: 5 files changed by ooxml between tranche/T1 and HEAD; 1 failure`). The row is committed as step 7 says. Ownership passes on everything else (`3 files …; 0 failures` before the metrics commit). Either the check allows a job to append its own metrics row, or the row is carried by BOB.
+**Status** · COMPLETE, 2026-09-26, re-run after BOB #40's CHANGE (process revised): `origin/tranche/T1` @ d3a6d2e4d3 merged, steps 5–7 repeated. Job for module `ooxml`, tranche T1, branch `job/T1/ooxml`. No open question. The metrics/ownership conflict noted earlier is resolved by the revised `record.mjs` (row appended below); the stray `build/metrics/T1.csv` this job had written is removed.
 
 ## Entries applied
 
