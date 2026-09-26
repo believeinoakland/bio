@@ -60,6 +60,26 @@
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 const LATIN1 = new TextDecoder("latin1");
 
+/* Every service takes bytes as a Uint8Array, an ArrayBuffer, any typed-array
+ * view or an array of byte values. Anything else reads as no bytes at all, so
+ * a caller's wrong argument is a named refusal downstream, never a throw. */
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try { return new Uint8Array(x ?? 0); } catch { return new Uint8Array(0); }
+}
+
+/* A container as `readContainer` returns it, or an empty one when the caller
+ * passes something else: an unusable container holds no member. */
+function entriesOf(container) {
+  return Array.isArray(container?.entries) ? container.entries : [];
+}
+function findEntry(container, want) {
+  const byName = container?.byName;
+  return (byName instanceof Map ? byName.get(want) : undefined)
+    ?? entriesOf(container).find((e) => normalizePartName(e?.name) === want);
+}
+
 /* ------------------------------------------------------------------ *
  * The size guard
  * ------------------------------------------------------------------ */
@@ -94,7 +114,8 @@ export const MEASURED_OOXML_TEXT_BOUND_BYTES = 20 * 1024 * 1024; // 20,971,520
 export function declaredTextBytes(container, isTextPart) {
   let total = 0;
   const parts = [];
-  for (const e of container.entries) {
+  if (typeof isTextPart !== "function") return { total, parts };
+  for (const e of entriesOf(container)) {
     const name = normalizePartName(e.name);
     if (!isTextPart(name)) continue;
     total += e.uncompressedSize;
@@ -111,7 +132,11 @@ export function declaredTextBytes(container, isTextPart) {
  *  carrying WHY, the sizes, the metric and the bound's name — shaped so a
  *  format entry can carry it into its I2 text output verbatim. */
 export function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES) {
-  if (!(declaredBytes > bound)) return { ok: true };
+  /* `<=`, not `!(>)`: a size that is not a number is never shown to be under
+   * the bound, so it is refused rather than waved through. */
+  let under = false;
+  try { under = declaredBytes <= bound; } catch { /* not comparable: not under */ }
+  if (under) return { ok: true };
   return {
     ok: false,
     text: "undetermined",
@@ -137,7 +162,8 @@ const CRC_TABLE = (() => {
   return t;
 })();
 
-export function crc32(u8) {
+export function crc32(bytes) {
+  const u8 = toBytes(bytes);
   let c = 0xffffffff;
   for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
@@ -159,13 +185,14 @@ const SIG_EOCD = 0x06054b50; // PK\x05\x06
  *  ZIP (bare EOCD) does not carry it and cannot be an OOXML package anyway,
  *  since OOXML requires parts. */
 export function hasZipMagic(bytes) {
-  return bytes.length >= 4 && u32(bytes, 0) === SIG_LOCAL;
+  const b = toBytes(bytes);
+  return b.length >= 4 && u32(b, 0) === SIG_LOCAL;
 }
 
 /* OPC part names in [Content_Types].xml overrides start with "/", ZIP entry
  * names do not. One normal form so the two always meet. */
 export function normalizePartName(name) {
-  return String(name || "").replace(/^\/+/, "");
+  try { return String(name ?? "").replace(/^\/+/, ""); } catch { return ""; }
 }
 
 /** Walk the END OF CENTRAL DIRECTORY record and the central directory itself.
@@ -179,7 +206,7 @@ export function normalizePartName(name) {
  *  `central_directory_truncated` — a stated undetermined, never the readable
  *  prefix silently presented as the whole archive. */
 export function readContainer(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   if (b.length < 22) return { ok: false, why: "too_short_for_zip" };
 
   /* EOCD: fixed 22 bytes + a comment of up to 0xFFFF; scan back for the
@@ -241,11 +268,31 @@ export function readContainer(bytes) {
  * Member inflate — DecompressionStream("deflate-raw"), zero dependency
  * ------------------------------------------------------------------ */
 
-async function inflateRaw(u8) {
+/* Inflates at most `limit + 1` bytes. The central directory declares the
+ * member's size, so output past it is already a `size_mismatch`: inflation
+ * stops there rather than running a compression bomb to completion before
+ * the length check refuses it. Returns `{ bytes }`, `{ over: n }` (stopped
+ * after n bytes, n > limit) or null (the deflate stream did not complete). */
+async function inflateRaw(u8, limit) {
   try {
-    const ds = new DecompressionStream("deflate-raw");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-    return new Uint8Array(await out.arrayBuffer());
+    const reader = new Blob([u8]).stream()
+      .pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > limit) {
+        reader.cancel().catch(() => {});
+        return { over: total };
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(total);
+    let at = 0;
+    for (const c of chunks) { bytes.set(c, at); at += c.length; }
+    return { bytes };
   } catch {
     return null;
   }
@@ -261,10 +308,9 @@ async function inflateRaw(u8) {
  *  member (length AND CRC-32 against the central directory) — a partial
  *  inflate can never pass as whole. */
 export async function readPart(bytes, container, name) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const want = normalizePartName(name);
-  const entry = container.byName.get(want)
-    ?? container.entries.find((e) => normalizePartName(e.name) === want);
+  const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
 
   const lh = entry.localHeaderOffset;
@@ -282,8 +328,12 @@ export async function readPart(bytes, container, name) {
   if (entry.method === 0) {
     out = raw.slice();
   } else if (entry.method === 8) {
-    out = await inflateRaw(raw);
-    if (out === null) return { ok: false, why: "inflate_failed", name: want };
+    const got = await inflateRaw(raw, entry.uncompressedSize);
+    if (got === null) return { ok: false, why: "inflate_failed", name: want };
+    if (got.over !== undefined) {
+      return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: got.over };
+    }
+    out = got.bytes;
   } else {
     return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
   }
@@ -524,9 +574,13 @@ export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
  *  pinned COFF-2 outcome, so the existing determination stands and the suite
  *  asserts both halves: still `zip`, and never an ODF flavour.) */
 export async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAVOURS) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const signals = [];
-  if (contentType) signals.push(`declared-content-type:${contentType} (not used for the determination)`);
+  if (contentType) {
+    let declared;
+    try { declared = String(contentType); } catch { declared = "(not a string)"; }
+    signals.push(`declared-content-type:${declared} (not used for the determination)`);
+  }
 
   if (!hasZipMagic(b)) {
     signals.push("magic:absent (no PK\\x03\\x04)");
@@ -550,7 +604,9 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
    * pre-COFF-9 shape). */
   const opcRows = [];
   const odfRows = [];
-  for (const f of flavours) ((f.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f);
+  for (const f of Array.isArray(flavours) ? flavours : []) {
+    if (f && typeof f === "object") ((f.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f);
+  }
 
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -755,7 +811,7 @@ export function relsPartFor(partName = null) {
 
 /** Every `_rels/*.rels` part in the container, in central-directory order. */
 export function listRelsParts(container) {
-  return container.entries
+  return entriesOf(container)
     .map((e) => normalizePartName(e.name))
     .filter((n) => /(^|\/)_rels\/[^/]*\.rels$/.test(n)); // [^/]* — the package root's is the bare `_rels/.rels`
 }
@@ -907,7 +963,7 @@ export async function containerImages(bytes, container, dir) {
   const want = normalizePartName(dir);
   const members = [];
   let declared = 0;
-  for (const e of container.entries) {
+  for (const e of entriesOf(container)) {
     const name = normalizePartName(e.name);
     if (!name.startsWith(want) || name === want || name.endsWith("/")) continue;
     const dot = name.lastIndexOf(".");
