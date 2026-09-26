@@ -1,6 +1,6 @@
 # Plan: tranche T3
 
-**Status** · OPEN. Opened by BOB #42, 2026-09-26 ~18:25 UTC (PROCESS-MECHANICS §5), from the plan BOB #40 and BOB #41 prepared. Branch `tranche/T3` starts at the commit that opened this plan. Bob's meter at the opening: the weekly quota 0% used at 18:13 UTC (a $250 credit drained by 2026-09-26's earlier work). BOB's session: `session_01LM8ikCqJDLwMhvuHS6F78s`
+**Status** · OPEN. Opened by BOB #42, 2026-09-26 ~18:25 UTC (PROCESS-MECHANICS §5), from the plan BOB #40 and BOB #41 prepared. Branch `tranche/T3` starts at the commit that opened this plan. Bob's meter at the opening: the weekly quota 0% used at 18:13 UTC (a $250 credit drained by 2026-09-26's earlier work). BOB's session: `session_01QQh6h3H3qya5SEMcYKueb3` (BOB #43, took over 2026-09-26 ~20:25 UTC from BOB #42)
 
 Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). Bob approved the three modules' requirements on 2026-09-26 (K56). The extraction rule was fixed and certified before T3 opened (mechanics §12.2, D4, civicos-process `0a0e513`): a job may rewire the legacy code that called what it moves, and BOB reads every `ADDED` line the ownership check lists at the layer close.
 

@@ -20,6 +20,9 @@
 
 **Measured size:** store.mjs 881 (380 without comment-only and blank lines), bio-checks.mjs 446 (228), schema.mjs 73 (28): about 1,400 lines, about 640 of code.
 
+
+**Superseded in part (K82 (3), N59, BOB #43).** The bias-debt mechanism is `bias`'s, not `ai-runs`': in §2 below, every row whose "goes to" is `ai-runs` for the D-86 sweep, the REC-207 settlements, `SETTLED_BY_AN_ACT`, the `biasdebt`/`biasdebtresolve` dispatch, the `bias-debt` alarm consumer (registered with `scheduler`), C-26.13–C-26.19 and the three debt tables goes to **`bias`** (its R33–R39), about 730 lines more. `#biasForRun` stays `ai-runs`'; `#obligationsBiasDebt` is `queue`'s. The sweep reads runs through the work products `ai-runs` registers (its R30), never `ai_runs` directly. §5's point 1 is replaced by this note; the debt's suites follow `bias`.
+
 ## 2. What stays, or goes elsewhere, and why
 
 | what | where today | lines | goes to | why |
