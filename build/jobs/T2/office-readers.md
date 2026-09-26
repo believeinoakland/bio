@@ -2,11 +2,11 @@
 
 **Session** · `session_01Evj8HyEdBGojZqKJhpkumU` (OFFICE-READERS #1)
 
-**Status** · COMPLETE, 2026-09-26, on Q1's best reading. Job for module `office-readers`, tranche T2, branch `job/T2/office-readers` (from `tranche/T2` @ 611986933c). Q1 is still open: when BOB rewrites R9, this job merges `tranche/T2`, brings the code and the R9 tests in line, and records completion again.
+**Status** · COMPLETE, 2026-09-26, re-recorded after BOB's ANSWER to Q1 (K36): `origin/tranche/T2` @ 2d87d8e5bb merged, R9 reread whole, steps 5–7 repeated. Job for module `office-readers`, tranche T2, branch `job/T2/office-readers`. No open question.
 
 ## Questions to BOB
 
-### Q1 · 2026-09-26 · D-415 and R9: where the new `sheet-range` units are emitted, and R9's wording once met — OPEN
+### Q1 · 2026-09-26 · D-415 and R9: where the new `sheet-range` units are emitted, and R9's wording once met — ANSWERED (K36, `tranche/T2` @ bf680b7e: the reading below, as written; R9 now states it)
 
 R9 is written "not yet met (D-415)" and describes today's gap, not the met behaviour; Suggestions give the target (a defined name and a table part each emit its own `sheet-range` unit through `usedSheetRange`'s builder; a multi-area name is skipped with a stated reason) but not WHERE in the interface the units appear. Meeting it adds output fields to `xlsxEntry`, a provided service (JOB.md step 5: BOB updates the requirements first).
 
@@ -48,6 +48,12 @@ Each is proven by a test that fails on the unchanged sources (negative control, 
 - **text-chain**: D-416 (`readingPositionInExtent` and `sheet-range`) reads the units this job now emits; its `order: after D-415` is met on this branch once merged.
 - **Generated artifact made stale**: `bio-plane/dist/bio-plane.bundled.mjs` (`.bundle.json`), owner `not_product`: `fleetbundles.test.mjs` reports it stale for `src/csv.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`. BOB regenerates at the layer close (manifest §14). The worker bundles are not affected (verified: agent-, ocr-, pdf-worker "no staleness").
 - **legacy-tests**: `formats-docx`, `formats-pptx`, `formats-xlsx`, `formats-csv` and the extent suites duplicate much of this module's own suite; they pass unchanged and can be retired with the battery.
+
+## After K36 (Q1 answered)
+
+R9 as rewritten states exactly what was built; no code change was needed, and the R9 tests already check the whole of it. Three leftovers in the requirement's wording, for BOB (no change to meaning): R9's line still carries the label *(not yet met: D-415)*; the Status paragraph still says R9 "is not fully met"; and the Suggestion on D-415's target behaviour now repeats R9. Also: R9 says each *single-area* defined name emits one anchor link, and the code, as before this job, emits one for every defined name, multi-area ones included (the R9 test checks this, every name). If R9 means "only single-area", say so and this job will narrow it; as written, nothing forbids it.
+
+Re-run on the merged branch: `node --test bio-plane/test/m/office-readers/` — `pass 57, fail 0`; format `61 modules, 19 requirements files; 0 failures`; architecture `9 product files, 30 relative imports …; 0 failures`; coverage `25 of 25 live requirement ids named by a test; 0 failures`; ownership `10 files changed by office-readers between tranche/T2 and HEAD; 0 failures`.
 
 ## Tests and checks run
 
