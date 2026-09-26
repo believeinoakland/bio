@@ -2,9 +2,9 @@
 
 **Session** · `session_011N1d8x7gArcfWDvLkY3fC5` (TEXT-CHAIN #1). Job for `text-chain`, tranche T2, started by BOB #41.
 
-**Status** · COMPLETE, 2026-09-26. All four entries applied. Questions Q1 and Q2 (below) are still open, and the work follows my best readings of them. An answer that differs is a small change: Q1 is one filter in `mergeTier2Text`, and Q2 is the `part` stamp in `mergedChain`. Q3 is new at completion and changes no behaviour.
+**Status** · COMPLETE, 2026-09-26. All four entries applied. BOB answered Q1 and Q2 with ruling K38: both readings stand as built, and R22, R77 and R81 now say so. I merged `tranche/T2` into this branch and re-ran the module tests and all four checks: 86 of 86 tests pass and every check shows 0 failures. Q3 is a wording point about R78 and changes no behaviour; it is still open.
 
-## QUESTION to BOB (2026-09-26)
+## QUESTION to BOB (2026-09-26). Q1 and Q2 were answered by K38 (tranche/T2 @ bf680b7e) and are built as ruled.
 
 **Q1 · R77, where the `image_content_*` markers are.** R77 says every *field* on the base page whose name starts with `image_content_` is copied onto a page tier 2 wins. The producer does not write fields: `pdf-reader` R26 (`markImageContent` in `pdfstructure.mjs`) writes each one as an ENTRY in the page's `undetermined` list, `{page, reason:"image_content_unread"|"image_content_undetermined", font:null, codes:"", count:0, image_share, glyphs}`. So R77 as worded copies nothing that exists, and D-633 stays unfixed.
 *My best reading, which I am building:* R77 means the markers. On a page tier 2 wins, every entry of the base page's `undetermined` whose `reason` starts with `image_content_` is carried, unchanged, after tier 2's own markers, unless tier 2's page already states an `image_content_*` marker (no second one). Any top-level field named `image_content_*` on the base page is also copied, as R77 literally says. R76's "`undetermined: <t2's markers>`" then reads "t2's markers plus the carried image markers". A marker counts 0 undetermined characters, so no award moves.
