@@ -39,7 +39,7 @@
 - N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
 - N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
 - N46 · 2026-09-26 · **legacy-tests** (with N37): `meaningread` and `meaningquery` pin the gate's mint sites in `query.mjs`'s text; re-anchor them when `query.mjs` re-exports membership's `viewerPredicate` (K75).
-- N47 · 2026-09-26 · **connections** (K76, K77): themes (store.mjs ~22904–23215, `themes`, `theme_placements`, `THEME_CHECKS`) are connections'; their requirements and map join `connections.md` before Bob approves it.
+- N47 · 2026-09-26 · DONE (K79) · **connections** (K76, K77): themes (store.mjs ~22904–23215, `themes`, `theme_placements`, `THEME_CHECKS`) are connections'; their requirements and map join `connections.md` before Bob approves it.
 - N48 · 2026-09-26 · **extraction** (K76): REC-206's item-to-file derivation, and the name of its `membership.mjs` file changed so it is not confused with the module.
 - N49 · 2026-09-26 · **ai-runs**, **affordances**, **queue** (K78): each re-exports, from the layer-5 module that took a copy, the vocabulary and checks it held for that module (observation-log's in `airun.mjs`; progressions' `STAGE_REQUIREDNESS`, `DISPOSITIONS` in `affordances.mjs`; `QUEUE_CONDITION_KINDS` in `queuestate.mjs`), and deletes its own copy.
 - N50 · 2026-09-26 · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.

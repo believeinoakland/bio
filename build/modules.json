@@ -42,7 +42,7 @@
     {"id": "retrieval", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/retrieval/"], "tests": ["bio-plane/test/m/retrieval/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "provenance", "extraction", "content", "entities", "observation-log", "query-language"]},
 
     {"id": "inquiry", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/inquiry/"], "tests": ["bio-plane/test/m/inquiry/"], "uses": ["legacy-checks", "record-core", "membership", "content", "connections", "bias", "retrieval"]},
-    {"id": "basis-versions", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/basis-versions/"], "tests": ["bio-plane/test/m/basis-versions/"], "uses": ["legacy-checks", "record-core", "membership", "content", "inquiry"]},
+    {"id": "basis-versions", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/basis-versions/"], "tests": ["bio-plane/test/m/basis-versions/"], "uses": ["legacy-checks", "record-core", "membership", "content", "connections", "inquiry"]},
     {"id": "strength", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/strength/"], "tests": ["bio-plane/test/m/strength/"], "uses": ["legacy-checks", "record-core", "provenance", "content", "connections", "bias", "inquiry", "basis-versions"]},
     {"id": "contradiction", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/contradiction.mjs", "bio-plane/src/contradiction/"], "tests": ["bio-plane/test/m/contradiction/"], "uses": ["record-core", "content", "inquiry"]},
     {"id": "review", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/review/"], "tests": ["bio-plane/test/m/review/"], "uses": ["legacy-checks", "record-core", "membership", "inquiry", "basis-versions", "strength"]},
@@ -59,7 +59,7 @@
     {"id": "standards", "layer": 9, "paths": ["bio-plane/src/standards/"], "tests": ["bio-plane/test/m/standards/"], "uses": ["jurisdictions", "record-core", "content"]},
     {"id": "conformance", "layer": 9, "paths": ["bio-plane/src/conformance/"], "tests": ["bio-plane/test/m/conformance/"], "uses": ["record-core", "membership", "content", "inquiry", "strength", "reevaluation", "publication", "standards"]},
     {"id": "consequences", "layer": 9, "paths": ["bio-plane/src/consequences/"], "tests": ["bio-plane/test/m/consequences/"], "uses": ["record-core", "membership", "content", "inquiry", "strength", "conformance"]},
-    {"id": "actions", "layer": 9, "from": "legacy-store", "paths": ["bio-plane/src/actions/"], "tests": ["bio-plane/test/m/actions/"], "uses": ["jurisdictions", "legacy-checks", "record-core", "membership", "content", "inquiry", "strength", "conformance", "consequences"]},
+    {"id": "actions", "layer": 9, "from": "legacy-store", "paths": ["bio-plane/src/actions/"], "tests": ["bio-plane/test/m/actions/"], "uses": ["jurisdictions", "legacy-checks", "record-core", "membership", "content", "connections", "inquiry", "strength", "conformance", "consequences"]},
     {"id": "filings", "layer": 9, "paths": ["bio-plane/src/filings/"], "tests": ["bio-plane/test/m/filings/"], "uses": ["jurisdictions", "record-core", "membership", "publication", "standards", "actions", "consequences"]},
     {"id": "escalation", "layer": 9, "paths": ["bio-plane/src/escalation/"], "tests": ["bio-plane/test/m/escalation/"], "uses": ["record-core", "membership", "conformance", "consequences", "actions", "filings"]},
 
