@@ -1,6 +1,6 @@
 # pdf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/pdfstructure.mjs`.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6); N9's named services (R18, R19 restated; R30–R32 new) added by BOB #40, 2026-09-26 (K28). Layer 1. Code today: `bio-plane/src/pdfstructure.mjs`.
 R25 is not yet met: row D-591 (Tier 1 inflate refuses a Flate stream with trailing bytes and the page
 then reads empty with no marker). R26 is not yet met: row D-627 (a page whose only text is a folio
 over a full-page image carries no marker saying its content went unread); the exact image-share and
@@ -145,8 +145,8 @@ markers, `{page, reason, font, codes, count}` — `codes` a hex dump of the unre
   R11. `false` only when every content stream and every form on the walk was fully decoded and read and
   none ran one. `null` — UNDETERMINED, and a caller must not read it as `false` — when any part of the
   walk could not be resolved or decoded (an unresolved `/XObject`, a form nested past the limit or in a
-  cycle, an undecodable stream) before a `true` was found. `doc` is a `PdfDoc` that has already run
-  `scanTopLevel`/`loadObjectStreams`/`buildPageIndex`; `pageMap` is one page's resolved dict.
+  cycle, an undecodable stream) before a `true` was found. `doc` is a `PdfDoc` from `openPdf` (R30);
+  `pageMap` is one page's resolved dict (`pageDict`, R31).
 - Errors: never throws; `pageMap` falsy → `null`.
 
 **pdfPageImages(doc, pageIdx) → Promise\<{images, why}\>**
@@ -160,9 +160,9 @@ markers, `{page, reason, font, codes, count}` — `codes` a hex dump of the unre
   `DCTDecode`-filtered stream, `"image/jp2"` for `JPXDecode`, else `null` (the bytes are samples, not
   a file); `filters` names the stream's filter chain (`[]` for an inline image). `name` is the
   XObject's resource name, or `null` for an inline image — a filing label, not the address (page+rect
-  is). `axis_aligned` is `false` when the composed CTM rotates or skews the unit square. Each
-  placement carries its underlying stream object and composed CTM as its own, non-enumerable
-  `_stream`/`_ctm` properties (`_stream:null` for an inline image, which has no XObject).
+  is). `axis_aligned` is `false` when the composed CTM rotates or skews the unit square. A placement
+  has exactly these enumerable properties; its stream and CTM are reached only through
+  `imagePlacementSource` (R32).
 - **R17** `{images:null, why}` — NEVER a partial list — when any part of the page's paint sequence
   could not be walked: the page itself unreadable (`` `page_unreadable:<pageIdx>` ``), its content
   stream(s) undecodable (`` `content_stream_undecodable:page <pageIdx>` ``), a `Do` naming an
@@ -176,15 +176,28 @@ is `null`/`"encrypted"` for an encrypted document (no page walked); otherwise ev
 `pdfPageImages` result concatenated in page order, or the FIRST page's `why` (R17) the moment one page
 cannot be walked — the same never-partial rule as R17, for the whole document.
 
-**PdfDoc** — the shared lenient PDF object/stream reader. `pdf-worker` constructs and drives it
-directly (not only through `extractPdfStructure`), so its methods below and the two fields it reads
-directly (`.objects`, `._pageOrder`, despite the leading underscore — there is no separate, cleaner
-accessor today) are this module's interface, not internal helpers:
-- **R18** `new PdfDoc(bytes)` holds the bytes and a latin1 decoding of them; `.objects` starts empty.
-- **R19** `scanTopLevel()` populates `.objects` (a `Map<objectNumber, parsedValue>`) per R8's top-level
-  scan. `await loadObjectStreams()` folds in every `/ObjStm`'s objects per R8's no-overwrite rule.
-  `buildPageIndex()` populates the page order per R8's Kids-walk-then-fallback rule; after it runs, the
-  page object numbers in page order are at `._pageOrder` (an array) and `.pageCount` is its length.
+**openPdf(bytes) → Promise\<PdfDoc|null\>**
+- **R30** Returns a `PdfDoc` over `bytes` that has run R8's whole lenient read (top-level scan, object
+  streams, page index), exactly as `extractPdfStructure` opens its own document, ready for every
+  service below. `bytes` not a `Uint8Array`, or no `%PDF-` signature in the first 1024 bytes → `null`.
+- Errors: never throws.
+
+**imagePlacementSource(placement) → {stream, ctm} | null**
+- **R32** For a placement `pdfPageImages` returned: `stream`, the image XObject's stream value (readable
+  with `resolve`, `streamRawBytes`, `streamDecoded`), or `null` for an inline image; `ctm`, a fresh copy
+  of the six-number composed CTM `[a,b,c,d,e,f]` its `rect` was computed from (R16). Anything else,
+  a copy of a placement included → `null`.
+- Errors: never throws.
+
+**PdfDoc** — the shared lenient PDF object/stream reader. `pdf-worker` drives it through `openPdf`. Its
+interface is the members below and nothing else; every other field is private.
+- **R18** `new PdfDoc(bytes)` holds the bytes; `scanTopLevel()`, `await loadObjectStreams()` and
+  `buildPageIndex()` perform R8's three steps in that order (`openPdf` runs all three).
+- **R19** `.pageCount` is the number of pages in R8's page order once `buildPageIndex()` has run; `0`
+  before it runs or when the document has no pages.
+- **R31** `pageDict(pageIdx)` returns the resolved dict (`map`) of the page at 0-based `pageIdx` in page
+  order; `null` when `pageIdx` is not an integer in `[0, pageCount)` or the page object is unresolvable.
+  Its result is a valid `pageMap` for `pageShowsText` (R15).
 - **R20** `resolve(v)` follows an indirect-reference chain (`{t:"ref", n, g}`) up to 64 hops and
   returns the resolved value, or `null` for an unresolvable reference, a reference cycle beyond the cap,
   or a non-reference value passed through unchanged.
@@ -268,11 +281,6 @@ accessor today) are this module's interface, not internal helpers:
   Layer 1 "no access to the record" module cannot do. `tier3Extend`/`needsTier3` are defined in
   `bio-plane/src/index.mjs` today; the row belongs against whichever module ends up owning that
   read-time orchestration (`index.mjs`'s extraction, when it is extracted) or `pdf-worker`, not here.
-- **`.objects` and `._pageOrder` are read directly by `pdf-worker`** (`pagepixels.mjs`,
-  `imagecrop.mjs`) despite the underscore, and `_stream`/`_ctm` on an image placement the same way.
-  Renaming or restructuring any of the four without updating `pdf-worker` in the same job breaks it
-  silently (no import-time check catches a field read); a future job may want to give `PdfDoc` a named
-  accessor for the page order instead of a leading-underscore field doing public-interface duty.
 - The existing hand-built PDF fixtures in `bio-plane/test/pdfstructure.test.mjs` (and the sibling
   `cpdf18-pdf-images.test.mjs`, `d608-form-text.test.mjs`, `producer-provenance.test.mjs`,
   `textshown.test.mjs`) already cover most of R1-R24 byte-for-byte; R25/R26's tests want a fixture with
