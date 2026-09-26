@@ -1,6 +1,6 @@
 # jurisdictions — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: none; `jurisdictions/` does not exist. The local facts it will hold are in code today: `bio-plane/src/idspaces.mjs`, the `docprofile/doctypes/` recognisers, `readingNamePlan` in `bio-plane/src/store.mjs`, and `ACTION_KINDS` with `governingLawsOf` in `bio-plane/checks/bio-checks.mjs`. R1–R22 are not yet met: plan entry N1. UNDETERMINED: which measurement ids back the agenda and calendar vocabulary (their headers cite dated measurements of 2026-07-30 with no M-id) and the default search terms (no measurement found). N1's job settles each from the measurement log, and writes `UNMEASURED` where the log holds none.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: none; `jurisdictions/` does not exist. The local facts it will hold are in code today: `bio-plane/src/idspaces.mjs`, the `docprofile/doctypes/` recognisers, `readingNamePlan` in `bio-plane/src/store.mjs`, and `ACTION_KINDS` with `governingLawsOf` in `bio-plane/checks/bio-checks.mjs`. R1–R22 are not yet met: plan entry N1. R23–R30, added 2026-09-26 for layer 9 (Action) and APPROVED by Bob the same day, are not yet met: plan entry N11. UNDETERMINED: which measurement ids back the agenda and calendar vocabulary (their headers cite dated measurements of 2026-07-30 with no M-id) and the default search terms (no measurement found). N1's job settles each from the measurement log, and writes `UNMEASURED` where the log holds none.
 
 ## Public
 
@@ -28,6 +28,13 @@ Holds the jurisdiction profiles: every local fact the product uses, as data, eac
   - `report_titles`, `report_sections`, `recommendation_openers` and `template_blanks`: the staff-report template's titles, section headings, the words that open a recommendation, and unfilled template text that is no part of what a document says.
 - **R7** `practice`: `{minutes_due_days?: {value, basis}}`, the days after a meeting at which absent minutes raise a question. `search_terms`: `[{term, basis}]`, the terms a search uses when its caller names none. `records_laws`: `[{level, name, citation, basis}]`, the public-records laws that govern the jurisdiction's agencies, by level (`state`, `county`, `city`).
 
+**The action sections** (added 2026-09-26 for layer 9, Action, `build/layers.md`; every entry carries a `basis`, R2).
+- **R23** `standard_sources`: `[{source, kind, issuer, cite, code?, basis}]`, where the standards a government act is measured against come from. `kind` is one of `statute`, `regulation`, `ordinance`, `court`, `policy` and `commitment`. `issuer` names the body that makes them. `cite` is a pattern for how one is cited. `code` names a `vocabulary.codes` key when the source is a code of law cited by section.
+- **R24** `counterparties`: `[{role, body, level, elected, basis}]`, the offices an action is addressed to, named by official role and body, never by a person. `level` is `state`, `county`, `city` or `district`. `elected: true` marks an elected office, the kind stage 7 (political accountability) addresses.
+- **R25** `action_kinds`: `[{kind, label, tier, laws?, venue, template?, basis}]`, what a group can file or send. `kind` matches `^[a-z][a-z0-9_]*$` and names no place (a records request is `records_request`, not a law's name). `tier` is `1`, `2` or `3` (Design Requirement 8). `laws` names `records_laws` or `standard_sources` entries that govern it. `venue` is `{name, how, basis}`: where it is filed and by what means (`portal`, `mail`, `email`, `in_person`, `court`). `template` is the text a filing is pre-filled into, with named blanks; a Tier 3 kind has none (Design Requirement 8, amended 2026-09-26).
+- **R26** `deadlines`: `[{rule, applies_to, days, count, starts, extension?, citation, basis}]`, the periods the law sets. `applies_to` names an `action_kinds` kind, or `claim` for a period that binds a legal claim. `count` is `calendar` or `business`. `starts` says what event starts it (`received`, `filed`, `act`, `known`). `extension` is `{days, count, when}`. `citation` is the provision the period comes from.
+- **R27** An absent action section means the profile supplies nothing there. A module that needs one of these facts and finds none answers undetermined, never a default (R16).
+
 **list() → `[{id, name, covers, test}]`**
 - **R8** Lists every profile held, sorted by `id`. Never throws.
 
@@ -37,6 +44,7 @@ Holds the jurisdiction profiles: every local fact the product uses, as data, eac
 **validate(profile) → `{ok, errors}`**
 - **R10** `ok` is `true` exactly when `errors` is empty. Each error is `{path, code, detail}`, where `path` names the field (`spaces.parcel.forms[0].pattern`). Every error found is reported, not only the first. Never throws.
 - **R11** The codes: `NOT_A_PROFILE` (not an object); `ID_INVALID`, `NAME_MISSING` and `COVERS_MISSING` (R1); `UNKNOWN_SECTION`, `UNKNOWN_SPACE` and `UNKNOWN_VOCABULARY` (a key outside R3–R7); `BASIS_MISSING` and `BASIS_INVALID` (R2, including `TEST` outside a test profile); `PATTERN_INVALID` (the source does not compile, or a flag is outside R2); `NORMAL_INVALID` (a group the pattern lacks, or a transform outside R3); `DUPLICATE_FORM` (one form name twice in a space); `SYSTEM_UNKNOWN` (a floor or file number naming an origin that none of the profile's systems has); `CROSSWALK_UNSOURCED`, `CROSSWALK_FORM_UNKNOWN` and `CROSSWALK_VALUE_INVALID` (no `source`, a form the space lacks, or a pair value its form does not recognise); `HOST_CONFLICT` (a host that is mixed and also in a system entry with no `path`); `VALUE_INVALID` (a field of the wrong type, such as a floor or `minutes_due_days` that is not a positive integer).
+- **R28** The codes for the action sections: `SOURCE_KIND_UNKNOWN`, `LEVEL_UNKNOWN`, `KIND_INVALID` and `COUNT_UNKNOWN` (a value outside R23–R26); `TIER_INVALID` (a tier other than 1, 2 or 3); `TEMPLATE_TIER3` (a template on a Tier 3 kind); `CODE_UNKNOWN` (a `code` no `vocabulary.codes` entry has); `LAW_UNKNOWN` (a `laws` entry no `records_laws` or `standard_sources` entry has); `DEADLINE_KIND_UNKNOWN` (an `applies_to` that is neither `claim` nor a kind of the profile); `DUPLICATE_KIND` (one kind twice).
 
 **combine(list) → `{ok: true, view, conflicts}` or `{ok: false, errors}`.** `list` is the active profiles, in order: each is a held profile's `id` or a profile object. Which profiles are active is an instance setting held by the record. This module takes the list and does not store it.
 - **R12** An `id` that is not held gives `UNKNOWN_PROFILE`. An object that fails `validate` gives `INVALID_PROFILE`, with its errors. A profile given twice is combined once. Never throws.
@@ -44,6 +52,7 @@ Holds the jurisdiction profiles: every local fact the product uses, as data, eac
 - **R14** List facts are unioned in the order given. An entry equal to an earlier one in everything but its basis and `profile` is kept once, carrying both. Order is kept, because a consumer may take the first match (id-spaces R13). A space's distinct labels are joined with "; ".
 - **R15** A fact with one value per key is kept only when every profile that gives it gives the same value. Such facts are a kind's floor, a form's definition under its name, a `practice` value, and the origin named by a host and path. When the profiles disagree, the fact is withheld from the view, and `conflicts` gets `{at, values: [{profile, value, basis}], says}`. Two system entries conflict when they share a host, give the same `path` (or both give none), and name different origins. A host that one profile marks mixed and another puts in a system entry with no `path` also conflicts. **combine never chooses between profiles that disagree.** A consumer then finds no fact there, and answers undetermined.
 - **R16** An empty list gives `ok: true` and a view with no facts. An instance with no active profile is valid, and every consumer answers undetermined wherever it needs a local fact.
+- **R29** In the action sections, a kind's `tier`, `venue` and `template`, and a deadline's `days`, `count` and `starts` under one `rule` and `applies_to`, are facts with one value per key (R15). Profiles that disagree on one have it withheld and reported in `conflicts`.
 
 ## Private
 
@@ -63,6 +72,7 @@ None.
   - `vocabulary`: the jurisdiction's and its offices' names that the recognisers skip as page furniture, and the legislative record's link labels. Also the body-name forms and the member title; the enactment series marker; the municipal code's name and abbreviation, with its key prefix and label; the legislative file-number form; and the staff-report template's titles, section headings, recommendation opener and unfilled template text (M-18, M-24, and the recognisers' dated measurements).
   - `practice`: the minutes-due period, with basis `UNMEASURED`, as its code states. `search_terms`: `readingNamePlan`'s default terms. `records_laws`: the state public-records law that the action kind `cpra_request` and its undetermined sentence name today (D-149).
 - **R22** A test profile is held: `test: true`, covering a fictional jurisdiction, with every basis `TEST`. It supplies every section and vocabulary key that the first profile supplies, with values that differ from the first profile's in each, and it shares no host with the first profile. Every module that takes local facts is tested against it (`build/layers.md`, rule 3).
+- **R30** The first profile holds the action sections as far as they are measured: the action kinds of `ACTION_KINDS` in `bio-plane/checks/bio-checks.mjs` at the snapshot, renamed to R25's form, each with its tier from Roadmap v5 §8 where §8 names it; the records law's response period and its citation; and the offices those kinds are addressed to. Each fact without a measurement has basis `UNMEASURED`. The test profile (R22) supplies every action section too.
 
 ### Satisfies
 
@@ -71,6 +81,7 @@ None.
 - `DOCUMENT-PROFILES.md`, "The failure asymmetry, which governs every default": a rule is added only on measurement.
 - `BIO_Case_Making_v0_1.md` §2, "A records request names every law that governs it" (D-149).
 - `BIO_Distribution_v0_1.md` §1–§2: an instance is installed by a group anywhere.
+- `BIO_Design_Requirements_v2.md` §7 and §8 (as amended 2026-09-26) and `BIO_State_Rules_Consistency_v1_5.md` §4.4: action kinds, risk tiers, and deadlines that name their basis (R23–R30).
 
 ### Suggestions
 

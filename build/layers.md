@@ -88,7 +88,7 @@ Uses, all earlier in the order: `standards` uses jurisdictions, record-core, con
 2. *Tier 3.* `filings` prepares a counsel packet for named counsel (the `filings` row). This amends Design Requirement 8.
 3. *Political stage.* Escalation gains stage 7, **political accountability**, entered from response evaluation or legal tools and aimed at compliance restored and consequences addressed: asking elected officials to act on the breach, oversight and audit requests, testimony, and legislation that restores or enforces an existing requirement. Policy advocacy and candidate support stay out; Operational Principle 1 stands. This amends Design Requirement 7.
 
-**What it changed.** `modules.json` gained five modules and moved `actions`; the layers renumbered to eleven (58 modules). Layer 1 is unaffected except `jurisdictions`, whose profile gains the laws, bodies, filing kinds and venues these modules read: entry N11 in `plan/next.md`, not a change to its approved requirements now.
+**What it changed.** `modules.json` gained five modules and moved `actions`; the layers renumbered to eleven (58 modules). Layer 1 is unaffected except `jurisdictions`, whose profile gains the sources of standards, the offices addressed, the action kinds with their tiers and venues, and the legal deadlines these modules read: R23–R30 of its requirements, approved by Bob 2026-09-26, built with the module itself (entries N1 and N11).
 
 ## Paths that are not product
 

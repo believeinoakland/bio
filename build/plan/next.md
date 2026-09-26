@@ -19,7 +19,7 @@
 **pdf-reader**, **pdf-worker**
 - N9 · 2026-09-25 · `pdf-worker` reads `pdf-reader`'s private fields (`PdfDoc.objects`, `._pageOrder`, an image placement's `_stream` and `_ctm`), so a rename breaks it with no error at import. `pdf-reader` provides what `pdf-worker` needs as named services, and `pdf-worker` uses only those. Applied by `pdf-reader`'s job, with `pdf-worker`'s job in the same layer.
 
-- N11 · 2026-09-26 · **jurisdictions**: the Action layer (`layers.md`, layer 9) reads local facts from the profile: the sources of standards (codes, regulators, courts) and how each is cited; the bodies and officials' roles an action is addressed to; the filing kinds by risk tier, their templates and where each is filed; the deadlines the law sets for a response (for example the records law's response period), each with its basis. BOB writes these as new profile sections in `requirements/jurisdictions.md` (a change of meaning, so with Bob) before the tranche that builds layer 9, and this entry is applied by that tranche's `jurisdictions` job. It extends `records_laws` (R7).
+- N11 · 2026-09-26 · **jurisdictions**: build the action sections, R23–R30 of `requirements/jurisdictions.md` (approved by Bob 2026-09-26), in the same job as N1, so the module is created once with every section the product will read.
 
 ## Later layers
 
