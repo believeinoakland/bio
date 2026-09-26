@@ -41,5 +41,12 @@ None.
 - Layer tests: none named in `build/manifest.md`. No provided service changed, so no users' tests to run.
 - `node checks/format.mjs` — `format: 61 modules, 19 requirements files; 0 failures`
 - `node checks/architecture.mjs … test-support` — `architecture: 2 product files, 1 relative imports (0 naming no tracked file, not judged); 0 failures`
-- `node checks/coverage.mjs … test-support` — COVERAGE_LINE
-- `node checks/ownership.mjs … test-support tranche/T2` — OWNERSHIP_LINE
+- `node checks/coverage.mjs … test-support` — `coverage: 1 modules, 9 of 9 live requirement ids named by a test; 0 failures`
+- `node checks/ownership.mjs … test-support tranche/T2` — `ownership: 2 files changed by test-support between tranche/T2 and HEAD; 0 failures`
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01ASkdafQGFCeqoncTyWGLPC,job,test-support,2091008,73442,44,25711,22,3,237
+```
