@@ -110,7 +110,7 @@ export function makeRecord() {
 /** membership, as its Provides state it, with the facts a test sets. */
 export function makeMembership() {
   const m = {
-    hidden: new Set(), discoverable: new Set(), owners: new Map(), joined: new Map(), invited: new Map(), created: [],
+    hidden: new Set(), discoverable: new Set(), owners: new Map(), joined: new Map(), invited: new Map(), leaving: new Map(), created: [],
     sight(id, viewer) {
       if (!viewer) return "NONE";
       if (m.hidden.has(id)) return m.discoverable.has(id) && String(viewer).startsWith("member:") ? "EXISTENCE" : "NONE";
@@ -121,6 +121,7 @@ export function makeMembership() {
       if (m.isProjectOwner(p, who)) return { state: "joined", owner: 1 };
       if ((m.joined.get(p) || []).includes(who)) return { state: "joined", owner: 0 };
       if ((m.invited.get(p) || []).includes(who)) return { state: "invited", owner: 0 };
+      if ((m.leaving.get(p) || []).includes(who)) return { state: "leaving", owner: 0 };
       return null;
     },
     projectAuthority(p, identity, need, act) {
