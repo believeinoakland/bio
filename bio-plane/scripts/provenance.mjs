@@ -61,12 +61,12 @@
  * ---- WHAT THIS CHECK CANNOT SEE. Stated here, in the instrument, because a
  * matcher that does not publish its blind spots is read as though it had none.
  *
- *  - CONTENT. `ls-tree HEAD --name-only` answers about a PATH. A tracked file
- *    whose CONTENT was replaced — by a `stash pop`, by an editor, by anything —
- *    is in the commit by this test and reads as reproducible. This check
- *    detects an ARRIVAL, not a MODIFICATION. `git status` sees modifications and
- *    is the wrong instrument for arrivals, which is why the two are different
- *    questions and this one answers only the second.
+ *  - CONTENT, IN `state`. `ls-tree HEAD --name-only` answers about a PATH, so
+ *    `state` detects an ARRIVAL, not a MODIFICATION: a tracked file whose
+ *    content was replaced is "in the commit" there, and every walk that counts
+ *    reproducible items keeps that meaning. The modification is a SECOND
+ *    question, answered separately as `content` ("unchanged", "changed",
+ *    "UNVERIFIED") from `git diff HEAD`, and reported on its own line.
  *  - HEAD ITSELF. If the worktree's HEAD is not what the reader thinks it is,
  *    every answer here is about a commit nobody else has. The short SHA is
  *    printed for exactly that reason and is worth reading.
@@ -99,6 +99,9 @@ export function readGitProvenance(repoRoot) {
     repoRoot,
     inHead: setOf(git(["ls-tree", "-r", "--name-only", "-z", "HEAD"])),
     inIndex: setOf(git(["ls-files", "-z"])),
+    /* Tracked paths whose working content differs from HEAD, staged or not,
+       deleted included; spelled like `ls-tree`'s answer. */
+    changed: setOf(git(["diff", "--relative", "--name-only", "--no-renames", "-z", "HEAD"])),
     headSha: (git(["rev-parse", "--short", "HEAD"]) || "").trim(),
   };
 }
@@ -114,19 +117,29 @@ export function stateOf(prov, path) {
   return prov.inIndex.has(path) ? "staged, not yet committed" : "UNTRACKED";
 }
 
+/* The modification question, for a path in the commit: is its content now the
+   committed content? `null` for a path not in the commit; "UNVERIFIED" when git
+   could not say (rule 4). */
+export function contentStateOf(prov, path) {
+  if (prov.inHead === null || !prov.changed) return "UNVERIFIED";
+  if (!prov.inHead.has(path)) return null;
+  return prov.changed.has(path) ? "changed" : "unchanged";
+}
+
 /* `items` is what a walk ACTUALLY COUNTED: [{ path, what, counted }], `path`
    repo-relative. Returns the classification and, deliberately, the size of the
    corpus it was handed — a caller that prints `accounted` prints its own reach,
    and a walk that narrowed to nothing cannot hide behind a clean report. */
 export function classifyDiscovered(prov, items) {
   const verified = prov.inHead !== null;
-  const rows = items.map((it) => ({ ...it, state: stateOf(prov, it.path) }));
+  const rows = items.map((it) => ({ ...it, state: stateOf(prov, it.path), content: contentStateOf(prov, it.path) }));
   return {
     verified,
     headSha: prov.headSha,
     accounted: rows.length,
     rows,
     off: verified ? rows.filter((r) => r.state !== "in the commit") : [],
+    changed: verified ? rows.filter((r) => r.content === "changed") : [],
     inCommit: verified ? rows.filter((r) => r.state === "in the commit").map((r) => r.path) : [],
   };
 }
@@ -148,6 +161,10 @@ export function reportProvenance({ prov, items, instrument, corpus = "", totals 
   }
   log(`provenance: ${c.accounted - c.off.length} of ${c.accounted} discovered item(s)`
     + ` are in the commit at HEAD (${c.headSha})${corpus ? ` · ${corpus}` : ""}`);
+  if (c.changed.length) {
+    log(`  CHANGED SINCE THE COMMIT — in the commit at ${c.headSha}, but not with the content ${instrument} read:`);
+    for (const r of c.changed) log(`    ${r.path}  (changed since the commit) — ${r.what}: ${r.counted}`);
+  }
   if (!c.off.length) return c;
   log(`  NOT IN ANY COMMIT — ${instrument} COUNTED work no other checkout can see (D-238):`);
   for (const r of c.off) log(`    ${r.path}  (${r.state}) — ${r.what}: ${r.counted}`);
