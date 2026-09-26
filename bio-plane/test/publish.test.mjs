@@ -65,6 +65,7 @@
  * ssh-keygen, so this suite SKIPS LOUDLY WITH A NAMED REASON when ssh-keygen is
  * not on PATH rather than dying mid-run (ratify.test.mjs's precedent, D-93).
  */
+import { docDate } from "./docdates.mjs";
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -369,7 +370,7 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     ...(id === null ? {} : { bundleId: id }), base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
-            current_state: state, created: NOW, last_updated: LATER },
+            current_state: state, /* promotion R12 */ created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]

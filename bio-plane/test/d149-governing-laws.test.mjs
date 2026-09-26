@@ -28,6 +28,7 @@
  * WHAT IT CANNOT SEE: whether a citation is the RIGHT law for the agency — by design nobody but a member can,
  * and the plane does not try. It drives no machine PROPOSAL of a list, because none is built.
  */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -123,7 +124,7 @@ const promote = async (tok, id, text, base = null) =>
     files: [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }],
     register: [],
     meta: { object_type: "action", group: "believe-in-oakland",
-            current_state: "planned", created: NOW, last_updated: LATER },
+            current_state: "planned", created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
   }));
 const headOf = async (id) => rP(await GET(`op=projection&token=${NADIA}&id=${encodeURIComponent(id)}`))?.bundle_sha;
 

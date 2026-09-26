@@ -43,7 +43,7 @@ const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-aud&"
 
 const NOW = "2026-07-24T00:00:00Z";
 const md = (id, i, broken) => [
-  "---", `id: ${broken === "id" ? "INFO-2026-9999-wrong" : id}`,
+  "---", `id: ${id}`,
   "object_type: information", "schema: information@1",
   `title: "Synthetic ${i}"`, `current_state: ${broken === "state" ? "elevated" : "collected"}`,
   "prior_state: null", `created: ${NOW}`, `last_updated: ${NOW}`,
@@ -58,7 +58,7 @@ const md = (id, i, broken) => [
   "source_status: unchanged", "source:",
   "  locator: in hand", "  authority: synthetic", `  retrieved: ${NOW}`,
   "monitoring:", "  enabled: false", "  frequency: none", "---", "",
-  "## Summary", "", `Synthetic ${i}.`, "", "## Provenance Notes", "",
+  broken === "section" ? "## Abstract" : "## Summary", "", `Synthetic ${i}.`, "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
 
@@ -80,8 +80,11 @@ const make = async (i, broken) => {
 
 const N = 25;
 for (let i = 0; i < N; i++) await make(i);
-/* Three different broken shapes, so the tally has something to distinguish. */
-await make(101, "id"); await make(102, "ref"); await make(103, "state");
+/* Three different broken shapes, so the tally has something to distinguish.
+   CORRECTED 2026-09-26 (T3, legacy-tests; promotion R14), never exempted: the first shape was a document whose `id:`
+   disagreed with its folder (C-1.1), which the write path now refuses, so it can no longer be in the record for the
+   audit to find. A missing required section (C-3.1), which the write admits and the catalogue refuses, takes its place. */
+await make(101, "section"); await make(102, "ref"); await make(103, "state");
 
 console.log("\n--- the pass agrees with gating from outside ---");
 const outside = async () => {
@@ -108,7 +111,7 @@ t("the same number of clean bundles", ins.clean, ext.clean);
 t("the same number with errors", ins.withErrors, ext.bad);
 t("the same tally, check for check", ins.tally, ext.tally);
 t("and it found the three broken ones", ins.withErrors, 3);
-t("naming the checks that caught them", Object.keys(ins.tally).sort(), ["C-1.1", "C-4.1", "C-6.2"]);
+t("naming the checks that caught them", Object.keys(ins.tally).sort(), ["C-3.1", "C-4.1", "C-6.2"]);
 
 console.log("\n--- it is paginated and resumable ---");
 {

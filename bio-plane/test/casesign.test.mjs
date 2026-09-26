@@ -160,6 +160,7 @@
  *     own scaffolding — `caseproduction.test.mjs`'s reason one item earlier.
  */
 
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -301,7 +302,7 @@ const promote = async (id, text, objectType, state, base) => rP(await POST("op=p
   bundleId: id, base: base ?? null,
   snapKey: `20260910T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: objectType, group: "believe-in-oakland",
-          current_state: state, created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" },
+          current_state: state, created: docDate(text, "created") ?? "2026-07-01T00:00:00Z", last_updated: docDate(text, "last_updated") ?? "2026-07-02T00:00:00Z" },
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: [],
 }));

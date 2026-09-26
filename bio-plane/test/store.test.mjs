@@ -115,7 +115,9 @@ console.log("\n--- a promotion cannot silently delete files ---");
      path did the same for anyone editing a captured document. Both were the
      default behaviour of a caller doing the obvious thing. */
   const DID = "INFO-2026-0003-two-files";
-  const body = pkg("collected", 1).files[0].text;
+  /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R14), never exempted: the document states the bundle it is
+     filed under, since a document naming another id is now refused (C-1.1, BUNDLE_ID_DISAGREES). */
+  const body = pkg("collected", 1).files[0].text.replace(/^id: .*$/m, `id: ${DID}`);
   const extra = JSON.stringify({ note: "beside the record" }, null, 1);
   const two = { ...pkg("collected", 1), bundleId: DID, base: null,
     snapKey: "20260723T120000Z_dddd1111",

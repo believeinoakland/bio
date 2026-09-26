@@ -293,11 +293,22 @@ const badPkg = {
      home; sending it in the payload would be refused as REFS_IN_PAYLOAD. */
   register: [],
 };
-const bc = await POST("op=promote&token=mem-ratify", badPkg);
+/* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R14), never exempted: a document whose `id:` disagrees with its
+   folder can no longer be WRITTEN — the write path refuses it by C-1.1 — so the C-1.1 half of this image is asserted
+   at the write, and the gate is shown the image the write admits, with the dangling reference (C-6.2) alone. */
+const wrongId = await POST("op=promote&token=mem-ratify", badPkg);
+t("the frontmatter id that disagrees with the folder is refused at the write, by C-1.1",
+  [wrongId.result?.ok, wrongId.result?.reason, wrongId.result?.check], [false, "BUNDLE_ID_DISAGREES", "C-1.1"]);
+const danglingMd = mkMd(1, BAD).replace("references: []",
+  ["references:", "  - rel: cites", "    target: INFO-2026-0000-does-not-exist",
+   "    status: confirmed", '    note: ""'].join("\n"));
+const bc = await POST("op=promote&token=mem-ratify", { ...badPkg,
+  files: [{ path: "bundle.md", text: danglingMd, bytes: danglingMd.length, sha256: sha(danglingMd) }] });
+t("the image with only the dangling reference is written", bc.result?.ok, true);
 const bad = await POST(RAT, { bundleId: BAD, expectedSha: bc.result.bundleSha, sig: signRatify("sparky", BAD, bc.result.bundleSha) });
 t("gate refuses", bad.reason, "GATE_REFUSED");
 const checks = bad.findings.map((f) => f.check).sort();
-t("and says exactly why, in the catalog's own vocabulary", checks, ["C-1.1", "C-6.2"]);
+t("and says exactly why, in the catalog's own vocabulary", checks, ["C-6.2"]);
 t("the refused bundle published nothing", (await GET(`op=verify&sha256=${bc.result.bundleSha}`)).published, false);
 
 console.log("\n--- revocation stops attestation ---");

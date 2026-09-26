@@ -41,6 +41,7 @@
  * Every refusal is asserted to have WRITTEN NOTHING (the case document still
  * unratified, no published case), and every success to have committed.
  * ========================================================================= */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -192,7 +193,7 @@ const promote = async (id, text, objectType, state, label = id) => {
     ...(id ? { bundleId: id } : {}), base: null,
     snapKey: `20260918T${String(800000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland",
-            current_state: state, created: NOW, last_updated: LATER },
+            current_state: state, created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [] });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);

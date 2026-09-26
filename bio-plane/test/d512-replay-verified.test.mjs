@@ -27,6 +27,7 @@
  * isolate, one store; (iii) the migration tool end to end — `migrate.test.mjs` owns that, and it now names the
  * provenance on every revision; (iv) a caller outside this repository.
  * ========================================================================= */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -90,7 +91,7 @@ const pkgOf = (id, base, md, { legacy = true, ...over } = {}) => ({
   bundleId: id, base, snapKey: `20260724T01${String(++seq).padStart(4, "0")}Z_d512aaaa`,
   author: "drive-migration",
   meta: { object_type: "information", group: "believe-in-oakland", title: `Fixture ${id}`,
-          current_state: "collected", created: NOW, last_updated: NOW },
+          current_state: "collected", created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? NOW },
   files: [file("bundle.md", md), ...(legacy ? [file("data/gathering.json", LEGACY)] : [])],
   register: [], ...over,
 });
