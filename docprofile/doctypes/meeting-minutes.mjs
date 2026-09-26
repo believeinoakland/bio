@@ -64,8 +64,8 @@
  * not treat a draft as final: `Meeting Minutes - DRAFT` is recorded as a fact so a
  * member can see that the record they are citing is one the body has not yet approved.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies }
-  from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies,
+         vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The masthead, line-anchored. `Meeting Minutes`, `Minutes`, either followed by a
@@ -74,12 +74,17 @@ import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mj
    must not match, which line anchoring alone settles. */
 const MINUTES_MASTHEAD = /^(?:Meeting\s+)?Minutes(?:\s*[-–—]\s*\S.*)?$/i;
 
-/* A Legistar legislation file number alone on its line. Same shape as the agenda's and
+/* The legislative record's file number alone on its line. Same rule as the agenda's and
    for the same reason: an inline mention inside a recommendation's prose is a
-   cross-reference, not an item of THIS meeting. Named differently from the agenda's
-   `FILE_LINE` because the flattened copy in `civicos-ui/app.html` puts every doctype in
-   ONE scope and a duplicate top-level name is a runtime collision the bundler refuses. */
-const MINUTES_FILE_LINE = /^(\d{2}-\d{4})$/;
+   cross-reference, not an item of THIS meeting. Its SHAPE is the view's `file_numbers`
+   (N3). Named differently from the agenda's helpers because the flattened copy in
+   `civicos-ui/app.html` puts every doctype in ONE scope and a duplicate top-level name
+   is a runtime collision the bundler refuses. */
+const minutesFileLines = (ctx) => vocabPatterns(ctx, "file_numbers", (re) => `^\\s*(${re})\\s*$`);
+const minutesFileKey = (pats, line) => {
+  for (const re of pats) { const m = re.exec(line); if (m) return m[1]; }
+  return null;
+};
 /* An agenda item number. It starts at ONE — `0` alone on a line is the tally under a
    `NO VOTE:` label, and admitting it made the Council's minutes report `item: "0"` for
    every matter that followed a recorded vote. Items are numbered from 1; a zero is
@@ -103,22 +108,25 @@ const ADJOURNED = /\badjourned\b[^.]{0,80}?\bat\s+\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\
 const ROSTER_LABEL = /^(Present|Absent|Excused|Abstained|Recused)$/i;
 
 /* Page furniture skipped when scanning back for an item's heading. Deliberately narrow:
-   an unrecognised line is treated as substance, which is the conservative direction. */
+   an unrecognised line is treated as substance, which is the conservative direction.
+   What stays here is what any clerk's print carries; the jurisdiction's and its
+   offices' names, and its record's link labels, are the view's `furniture` (N3). */
 const MINUTES_FURNITURE = [
   /^Page \d+$/i,
-  /^City of Oakland$/i,
   /^Printed on /i,
   /^View Report$/i,
   /^View Legislation$/i,
   /^View (Attachment|Supplemental)\b/i,
   /^Attachments:$/i,
   /^Sponsors:$/i,
-  /^Office of the City Clerk$/i,
   MINUTES_MASTHEAD,
   /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
   /^[A-Z][a-z]+ \d{1,2}, \d{4}$/,
 ];
-const isMinutesFurniture = (l) => MINUTES_FURNITURE.some((re) => re.test(l));
+const minutesFurniture = (ctx) => {
+  const local = vocabPatterns(ctx, "furniture");
+  return (l) => MINUTES_FURNITURE.some((re) => re.test(l)) || anyMatch(local, l);
+};
 
 const MINUTES_MONTHS = { january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6,
                          august: 7, september: 8, october: 9, november: 10, december: 11 };
@@ -224,6 +232,10 @@ export default {
        the honest null rather than a TypeError. */
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const flat = flatten(raw);
+    const filePats = minutesFileLines(ctx);
+    const isMinutesFurniture = minutesFurniture(ctx);
+    const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
+    const memberTitles = vocabPatterns(ctx, "member_titles");
 
     /* The meeting's own facts. Every one of them may honestly be null; an unread fact
        is never invented. */
@@ -256,9 +268,9 @@ export default {
       for (let i = 0; i < Math.min(lines.length, 40) && !body; i++) {
         const l = lines[i];
         if (!l || l.length > 80) continue;
-        if (!/(Committee|City Council|Commission|Board|Authority)\s*$/.test(l)) continue;
+        if (!anyMatch(bodyEnds, l)) continue;
         if (/^(and|or|of|the)\b/i.test(l) || /^[a-z]/.test(l)) continue;
-        if (/^Councilmember/i.test(l) || isMinutesFurniture(l)) continue;
+        if (anyMatch(memberTitles, l) || isMinutesFurniture(l)) continue;
         if ((freq.get(l) || 0) < FURNITURE_RECURS) continue;
         /* THE WRAP TEST, and it is what stopped this reader naming the wrong body. A
            header the producer broke across lines repeats EVERY ONE of its lines at the
@@ -275,6 +287,8 @@ export default {
       }
     }
     const body_why = body ? null
+      : !bodyEnds.length
+      ? "no active jurisdiction profile says how a body is named, so which body met is not read"
       : "no single line of this document names the body at the rate a running header "
       + "does, so which body met is not stated here rather than guessed from one line";
     const convened = clockOf(flat, CONVENED);
@@ -323,7 +337,7 @@ export default {
          `From:` / `Recommendation: ...` / `26-0910` — so scanning back from the file
          line hits the recommendation's prose and gives up, which is why the first
          driven run reported `item: null` for every item of both documents. */
-      if (MINUTES_ITEM_LINE.test(line) && !MINUTES_FILE_LINE.test(line)) { pendingItem = line; continue; }
+      if (MINUTES_ITEM_LINE.test(line) && minutesFileKey(filePats, line) == null) { pendingItem = line; continue; }
       const lab = /^(Subject|From):\s*(.*)$/.exec(line);
       if (lab) {
         if (lab[2]) { if (lab[1] === "Subject") pendingSubject = lab[2]; else pendingFrom = lab[2]; expect = null; }
@@ -335,9 +349,8 @@ export default {
         expect = null;
         continue;
       }
-      const file = MINUTES_FILE_LINE.exec(line);
-      if (!file) continue;
-      const key = file[1];
+      const key = minutesFileKey(filePats, line);
+      if (key == null) continue;
       if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
 
       /* A section item with no Subject block takes its heading from the nearest
@@ -349,8 +362,9 @@ export default {
         if (!prev) continue;
         hops++;
         if (MINUTES_ITEM_LINE.test(prev)) continue;
-        if (isMinutesFurniture(prev) || MINUTES_FILE_LINE.test(prev)) {
-          if (MINUTES_FILE_LINE.test(prev)) break;
+        const prevFile = minutesFileKey(filePats, prev) != null;
+        if (isMinutesFurniture(prev) || prevFile) {
+          if (prevFile) break;
           continue;
         }
         heading = prev;
@@ -363,7 +377,7 @@ export default {
          item's result, and the window is read as flattened text because both shapes
          wrap across lines. */
       let end = lines.length;
-      for (let j = i + 1; j < lines.length; j++) if (MINUTES_FILE_LINE.test(lines[j])) { end = j; break; }
+      for (let j = i + 1; j < lines.length; j++) if (minutesFileKey(filePats, lines[j]) != null) { end = j; break; }
       const window = flatten(lines.slice(i + 1, end).join("\n"));
       /* Shape 1, a motion: who moved, who seconded, what was moved, and whether it
          carried. Shape 2, a disposition: `This <matter kind> be <action>`. */
@@ -401,6 +415,8 @@ export default {
 
     return {
       entities, body, body_why, date, convened, adjourned, status,
+      references_why: filePats.length ? null
+        : "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no matter was read",
       attendance: Object.keys(roster).length ? roster : null,
       also_satisfies: alsoSatisfies(ctx, "meeting_minutes"),
       at: ctx.at || null,
@@ -449,7 +465,8 @@ export default {
       b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
-      confirmed: { entries: b.entities.length, intact },
+      /* What was verified unchanged, or null when nothing was (R16). */
+      confirmed: intact ? { entries: b.entities.length, intact } : null,
       why: events.length
         ? `${intact} of ${a.entities.length} matters unchanged; ${d.gone.length} gone, `
           + `${d.appeared.length} added, ${d.altered.length} altered`

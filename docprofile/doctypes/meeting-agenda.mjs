@@ -36,15 +36,21 @@
  * list of legislation references — nothing more is claimed. What the body DID
  * with each item is the minutes' business, not the agenda's.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies }
-  from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
+         vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
-/* A Legistar legislation file number, alone on its line: two-digit year, dash,
-   four-digit serial. Line-anchored on purpose — an inline mention inside a
-   recommendation's prose is a cross-reference, not an item on THIS agenda, and
-   the measured document carries each item's number on its own line exactly once. */
-const FILE_LINE = /^(\d{2}-\d{4})$/;
+/* The legislative record's file number, alone on its line. Its SHAPE is the
+   jurisdiction's (Legistar's two-digit-year–dash–serial in the measured instance)
+   and comes from the view's `file_numbers` (N3); only the line anchoring is this
+   reader's. Line-anchored on purpose — an inline mention inside a recommendation's
+   prose is a cross-reference, not an item on THIS agenda, and the measured document
+   carries each item's number on its own line exactly once. */
+const agendaFileLines = (ctx) => vocabPatterns(ctx, "file_numbers", (re) => `^\\s*(${re})\\s*$`);
+const agendaFileKey = (pats, line) => {
+  for (const re of pats) { const m = re.exec(line); if (m) return m[1]; }
+  return null;
+};
 const ITEM_LINE = /^\d+(?:\.\d+)*$/;
 
 /* The agenda's own masthead, line-anchored. The measured packet's is ` Agenda -
@@ -56,10 +62,12 @@ const AGENDA_MASTHEAD = /^(?:Meeting\s+)?Agenda(?:\s*[-–—]\s*\S.*)?$/i;
 
 /* The page furniture the measured document repeats; skipped when scanning back
    for a section heading. Deliberately narrow: an unrecognised line is treated as
-   substance (the conservative direction), not as furniture. */
+   substance (the conservative direction), not as furniture. What stays here is
+   what any clerk's print carries (a page number, a print stamp, the masthead, a
+   date line, the record system's own field labels); the jurisdiction's and its
+   offices' names, and its record's link labels, are the view's `furniture` (N3). */
 const FURNITURE = [
   /^Page \d+$/i,
-  /^City of Oakland$/i,
   /^Printed on /i,
   /^Agenda(?:\s*-.*)?$/i,
   /^View Report$/i,
@@ -67,7 +75,10 @@ const FURNITURE = [
   /^Sponsors:$/i,
   /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
 ];
-const isFurniture = (l) => FURNITURE.some((re) => re.test(l));
+const agendaFurniture = (ctx) => {
+  const local = vocabPatterns(ctx, "furniture");
+  return (l) => FURNITURE.some((re) => re.test(l)) || anyMatch(local, l);
+};
 
 const MONTHS = { january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6,
                  august: 7, september: 8, october: 9, november: 10, december: 11 };
@@ -122,7 +133,8 @@ export default {
     /* Line-anchored file numbers are the definitive signal: HTML never carries
        them alone on a line, and a staff report about ONE file does not list
        them item after item. */
-    const files = t.match(/^\s*\d{2}-\d{4}\s*$/gm) || [];
+    const filePats = agendaFileLines(ctx);
+    const files = t.split(/\r?\n/).filter((l) => agendaFileKey(filePats, l) != null);
     if (files.length) signals.push(`${files.length} legislation file number line(s)`);
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
@@ -130,7 +142,11 @@ export default {
     const furniture = named >= FURNITURE_RECURS;
     if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
     else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
-    if (/Roll Call|Office of the City Clerk/i.test(t)) signals.push("meeting front matter");
+    /* Front matter: a roll call, or a line the jurisdiction's own furniture names
+       (its clerk's office, in the measured instance). */
+    const isFurn = agendaFurniture(ctx);
+    if (/Roll Call/i.test(t) || t.split(/\r?\n/).some((l) => { const x = l.trim(); return x && !FURNITURE.some((re) => re.test(x)) && isFurn(x); }))
+      signals.push("meeting front matter");
     /* CERTAIN needs the file-number lines AND the item blocks AND the masthead at
        furniture rate — all three measured on the real packet, where the masthead
        ` Agenda - SUPPLEMENTAL` recurs on every one of 33 pages. */
@@ -184,13 +200,23 @@ export default {
     /* The meeting's facts. Date: the first long-form date line (the measured
        document opens with it). Body: the first header-ish line naming a body.
        Both may honestly be null — an unread fact is never invented. */
+    /* Which words name a body, and which title marks a member rather than a body,
+       are the jurisdiction's (`bodies`, `member_titles`, N3). With none supplied the
+       body is not read, and `body_why` says so. */
+    const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
+    const memberTitles = vocabPatterns(ctx, "member_titles");
     let date = null, body = null;
     for (const l of lines.slice(0, 60)) {
       if (!date && /^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) date = parseLongDate(l);
-      if (!body && /(Committee|City Council|Commission|Board|Authority)\s*$/.test(l) && !/^Councilmember/i.test(l))
-        body = l.replace(/^[*\s]+/, "").trim();
+      if (!body && anyMatch(bodyEnds, l) && !anyMatch(memberTitles, l))
+        body = l.replace(/^[*\s]+/, "").trim() || null;
       if (date && body) break;
     }
+    const body_why = body ? null
+      : bodyEnds.length ? "no line at the head of this agenda names a body in the words the active jurisdiction profiles give"
+      : "no active jurisdiction profile says how a body is named, so which body meets is not read";
+    const filePats = agendaFileLines(ctx);
+    const isFurniture = agendaFurniture(ctx);
 
     const entities = [];
     /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
@@ -212,9 +238,8 @@ export default {
         expect = null;
         continue;
       }
-      const file = FILE_LINE.exec(line);
-      if (!file) continue;
-      const key = file[1];
+      const key = agendaFileKey(filePats, line);
+      if (key == null) continue;
       /* The same file listed twice is one item of legislation; first mention
          carries the description in the measured layout. */
       if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
@@ -227,7 +252,8 @@ export default {
         if (!prev) continue;
         hops++;
         if (item == null && ITEM_LINE.test(prev)) { item = prev; continue; }
-        if (isFurniture(prev) || FILE_LINE.test(prev)) { if (FILE_LINE.test(prev)) break; continue; }
+        const prevFile = agendaFileKey(filePats, prev) != null;
+        if (isFurniture(prev) || prevFile) { if (prevFile) break; continue; }
         heading = prev;
         break;
       }
@@ -245,7 +271,10 @@ export default {
        Oakland publishes agenda packets that genuinely contain an agenda, its staff
        reports and its draft resolutions. Stated as a document fact so a packet read
        as an agenda does not let that single verdict stand for the whole document. */
-    return { entities, body, date, also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
+    return { entities, body, body_why, date,
+             references_why: filePats.length ? null
+               : "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read",
+             also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
              at: ctx.at || null };
   },
 
@@ -281,7 +310,8 @@ export default {
       b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
-      confirmed: { entries: b.entities.length, intact },
+      /* What was verified unchanged, or null when nothing was (R16). */
+      confirmed: intact ? { entries: b.entities.length, intact } : null,
       why: events.length
         ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered`
         : `all ${b.entities.length} items on this agenda are unchanged`,
