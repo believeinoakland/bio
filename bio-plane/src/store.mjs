@@ -18496,7 +18496,6 @@ export class Store extends DurableObject {
         }
       }
       /* END DEC-49 REGION bias-set-refusal */
-      return null;
   }
 
   /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
