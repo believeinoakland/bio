@@ -7,8 +7,7 @@
  *
  * REACHED as `promotionOf(host, deps)`: one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps` and returned to every later caller. `deps`:
- *   record      record-core's services: transact, commit, head, manifestEntry, livePaths, readFile, mintOpaqueId,
- *               bundleInfo, listByType (head, manifestEntry, livePaths and commit's projection inputs: job record Q2).
+ *   record      record-core, `recordOf(host)` unless a test passes its own (K61).
  *   membership  sight, isProjectOwner, projectAuthority, projectCreated, visibilitySettingRefusal, projectVisibility,
  *               participation (a member's state in a project, for `forkProject`: job record Q8).
  *   now         the module's clock, an ISO instant (default: the wall clock).
@@ -19,7 +18,10 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
+import { recordOf } from "../record-core/index.mjs";
+import { checkBundle } from "../../checks/bio-checks.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
+import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
@@ -361,6 +363,15 @@ class Promotion {
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
       const head = record.head(bundleId);
+      /* R11, R12: the head's `created` and `last_updated` are what its own document states (the row is written from
+         it); read from the held bundle.md, and undefined where the head holds none it can read. */
+      if (head) {
+        const heldMd = record.readFile(bundleId, "bundle.md");
+        const heldFm0 = heldMd && typeof heldMd.text === "string" ? parseFrontmatter(heldMd.text).data : null;
+        const heldFm = isObj(heldFm0) ? heldFm0 : {};
+        if (head.created === undefined) head.created = textStated(heldFm.created) ?? undefined;
+        if (head.lastUpdated === undefined) head.lastUpdated = textStated(heldFm.last_updated) ?? undefined;
+      }
 
       /* R20: a revision the stamped actor may not see is answered as one of a bundle not held. */
       if (head && base !== null && pkg.actorIdentity != null) {
@@ -450,7 +461,7 @@ class Promotion {
           + `revision changes what a document says, never what kind of thing it is. Nothing was written.`,
           { head_type: normalizeType(head.type), revision_type: promotedType });
       /* R12: a revision never redates its creation. */
-      if (head && !has(carriedFields, "created") && !sameInstant(promotedCreated, head.created) && !replay)
+      if (head && head.created !== undefined && !has(carriedFields, "created") && !sameInstant(promotedCreated, head.created) && !replay)
         return rowRefusal(PROMOTION_CHECKS.REVISION_REDATES_CREATION, "REVISION_REDATES_CREATION",
           `${cut(bundleId, 80)} was created '${cut(head.created, 40)}' and this revision says `
           + `'${cut(promotedCreated, 40)}'. A revision changes what a document says, never when it was made. Send it `
@@ -826,8 +837,44 @@ const instances = new WeakMap();
 /** The one promotion instance for `host` (the Durable Object's `ctx`); `deps` are read on the first call only. */
 export function promotionOf(host, deps) {
   let p = instances.get(host);
-  if (!p) { p = new Promotion(deps); instances.set(host, p); }
+  if (!p) { p = new Promotion({ ...(deps || {}), record: (deps && deps.record) || recordOf(host) }); instances.set(host, p); }
   return p;
+}
+
+/** K64: record-core's audit pass (R18–R20) with the checks this module took from the catalogue (C-4.2, C-17.2,
+ *  C-18.8, C-20.1) run over the same page, so the audit loses none of them. A bundle the moved checks find in error
+ *  is re-judged whole, so `clean`, `withErrors`, the tallies and `offenders` count it once, as the catalogue's pass
+ *  would have. Takes and answers `auditPass`'s own shape. */
+export async function recordAudit(host, opts = {}) {
+  const record = recordOf(host);
+  const pass = await record.auditPass(opts);
+  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
+  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
+  const tallyDetail = { ...(pass.tallyDetail || {}) };
+  const out = { ...pass, tally: { ...pass.tally }, offenders: [...pass.offenders] };
+  for (const id of pass.page || []) {
+    const img = record.readImage(id) || {};
+    const files = new Map(), elided = new Set();
+    for (const [path, v] of Object.entries(img)) (typeof v === "string" ? files.set(path, v) : elided.add(path));
+    const moved = (await recordChecks({ folderName: id, files, sha256 })).filter((f) => f.severity === "error");
+    if (!moved.length) continue;
+    const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided, sha256, sha512,
+      resolveTarget: (t) => !!record.bundleInfo(t),
+      ...(typeof opts.context === "function" ? (opts.context(id) || {}) : {}) });
+    const before = findings.filter((f) => f.severity === "error");
+    if (!before.length) { out.clean--; out.withErrors++; }
+    for (const e of moved) {
+      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
+      if (e.code) { const k = `${e.check}/${e.code}`; tallyDetail[k] = (tallyDetail[k] || 0) + 1; }
+    }
+    const errors = [...before, ...moved].slice(0, 5).map((e) => ({ check: e.check, detail: e.message }));
+    const at = out.offenders.findIndex((o) => o.bundleId === id);
+    if (at >= 0) out.offenders[at] = { bundleId: id, errors };
+    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors });
+  }
+  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
+  return out;
 }
 
 /** What a registered step receives (R39): the promotion's context, as the promotion built it. */

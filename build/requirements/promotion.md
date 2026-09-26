@@ -71,6 +71,12 @@ The one write path by which a bundle enters or changes in the record. It holds t
   that needs it with `FACT_UNAVAILABLE`, naming the fact; it is never read as false.
 - Errors: never throws.
 
+**forkProject({projectId, newId, title, by, viewer, visibility}) → `{ok: true, projectId, newId, title, origin, rel: "derived_from", owner, participantsCopied: 0, bundleSha, visibility}` or refusal** (N16, K68; moved unchanged from the store)
+- **R41** A named `newId` is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3) before anything is looked up, echoing no id: a fork's id is minted, as a project's creation's is (R19).
+- **R42** Sight before position: a project the `viewer` sees at existence only answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (its id and name only); one it does not see, and an id naming nothing, both answer `NO_SUCH_PROJECT`, identically. With no `viewer` the caller is internal and sight is not asked.
+- **R43** Refusals, each with its reason: `NOT_A_PROJECT` for a bundle that is not a project; `NOT_A_PARTICIPANT` for a `by` with no participation, and `NOT_JOINED` (with its `state`) for one invited or leaving (Membership v2 §7.12), both read through `membership.participation`; `NO_TITLE` for a title with no name; `NAME_TAKEN` when the title collides with any project's as R19 compares names, naming no other project; `NO_DOCUMENT` when the origin's `bundle.md` is not held as text; `UNSPLICEABLE_REFERENCES` when its `references` block cannot be extended in place.
+- **R44** The fork is a creation through `promote`, every rule of R1–R20 applying and its refusal returned: the origin's document without its `id:` line (the fork's id minted and written, R19), `title` set, `current_state: forming`, `created` and `last_updated` the act's time, a `derived_from` reference to the origin noting who forked it, and a Session Log entry; every other live file of the origin is carried. `by` is its sole owner and no other participant is copied; `visibility` is the forker's choice under R19's rules, absent meaning hidden, and the answer reads it back.
+
 ## Private
 
 ### Uses
