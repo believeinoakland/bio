@@ -1,3 +1,5 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 2fc4bd58-74cc-5fbb-b099-1ed7d4aa83b7,BOB,,29157451,290659,282,135769,141,,
 session_01DskKyz9F8BW9BtAVJNqBFG,BOB,,128737858,623590,701,295739,334,,
+session_01DskKyz9F8BW9BtAVJNqBFG,BOB-final,,164518316,1314865,13920,409222,,,
+session_01CwZ4uAzLd9wAPzEWVpNVRY,BOB-final (D3 dry run),,4169194,125625,5954,23096,,,
