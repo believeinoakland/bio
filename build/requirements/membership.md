@@ -1,6 +1,6 @@
 # membership — requirements
 
-**Status** · DRAFT, reviewed for BOB #40, 2026-09-26; for Bob's approval (a product module, P17). Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, and seven rules found unbuilt in this review (marked "new").
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17), with his two rulings as R62 (organisation-wide AI keys: administrators only) and R63 (an owner's removal reason is kept). Reviewed for BOB #40. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, seven rules found unbuilt in this review (marked "new"), and R62–R63.
 
 ## Public
 
@@ -31,7 +31,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R12** `memberAdd({memberId, cover, role, capabilities, expertise, by})` is refused `NOT_AN_ADMIN` when `by` names a member who is not an administrator (a machine credential is accepted and recorded as itself). Then, in order: `BAD_MEMBER_ID` (not 2–41 of `a-z0-9-`, starting alphanumeric); `MEMBER_ID_RESERVED` for `admin`; `NO_COVER`; `EXISTS`; `EXPERTISE_IS_NOT_ASSIGNED` for any `expertise`; `ADMINS_FIRST` for an ordinary member while fewer than two administrators exist.
 - **R13** An ordinary member, or an administrator while fewer than two administrators exist, is created `invited` with `invited_by` and `status_by` = `by`, capabilities as given (unknown words dropped) or `["contribute"]`, and a one-time invitation returned once and never again (only its hash is kept).
 - **R14** An administrator while two or more exist is created `proposed`; `by`'s own endorsement is recorded if `by` is an administrator; the answer is `CONSENSUS_REQUIRED` and no invitation exists until R6 completes.
-- **R15** `inviteLook({invite})` returns `{cover, role, capabilities}` for a live invitation and never the member id. A spent invitation and one that never existed answer the identical `NO_SUCH_INVITATION`.
+- **R15** `inviteLook({invite})` returns `{cover, role, capabilities, expertise}` for a live invitation and never the member id. A spent invitation and one that never existed answer the identical `NO_SUCH_INVITATION`.
 - **R16** `enroll({invite, handle, password})`: `NO_SUCH_INVITATION` as R15; `NO_HANDLE`; `BAD_HANDLE` (R12's pattern); `HANDLE_TAKEN` (exact comparison); `PASSWORD_TOO_SHORT` under 12. Success sets the handle and password, makes the member `active` with `status_by` = the member, and spends the invitation. Cover, role and capabilities are never taken from this call.
 - **R17** `memberList({administer})` lists every member with handle, role, status, `status_by`, `invited_by` (each `not recorded` when never stamped), capabilities and expertise as R24 answers it. `cover` is present only when the control plane stamped `administer: true`; otherwise the key is absent.
 - **R18** Each row of an administrator's roster lists the projects that member participates in. *(not yet met: new, §7.8)*
@@ -51,6 +51,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 
 **AI credentials**
 - **R28** `aiCredentialMint({who, tokenId, secretSha, principalKind, principalMember, taskScope, writes, note, confinedTo})`: `AI_CREDENTIAL_MINT_NOT_A_MEMBER` when `who` is absent or a machine; `AI_CREDENTIAL_PRINCIPAL_UNSTATED` unless `principalKind` is `organisation` or `member`; `AI_CREDENTIAL_IDENTITY_TAKEN` for an empty or used `tokenId`. Records the credential with `minted_by` = `who`; never stores a secret, only its hash.
+- **R62** An organisation-scoped credential (`principalKind: organisation`) is minted only by an active administrator (the founder included); anyone else is refused `AI_CREDENTIAL_ORG_NOT_ADMIN`. *(not yet met: Bob, 2026-09-26)*
 - **R29** A member-scoped credential's principal is `who` itself; naming another member is refused. *(not yet met: new — the principal is taken from `principalMember`)*
 - **R30** `aiCredentialRevoke({who, tokenId})`: refuses a machine or absent `who` and an unknown id; revoking twice answers `already: true`. `aiCredentialLook({secretSha})` and `aiCredentials({limit})` never return the secret; the list is capped (default 200, at most 500) with a measured `truncated`.
 
@@ -61,6 +62,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R34** `projectJoin({projectId, by, viewer})`: `NOT_INVITED` for a non-participant; otherwise the participant is `joined` (idempotent; it withdraws a request to leave).
 - **R35** `projectLeave({projectId, by, comment, viewer})`: `NOT_A_PARTICIPANT`; `NOT_JOINED`; records `leaving` with the comment (at most 280 characters) and removes nobody. An owner is refused `LAST_COMMITTED_OWNER` when no other owner is committed (an owner not `leaving`). *(not yet met: REC-224 — today it counts every owner and answers `LAST_OWNER_CANNOT_LEAVE`)*
 - **R36** `projectRemove({projectId, handle, by, comment, viewer})`: `NOT_THE_OWNER` (administrators included); `NO_SUCH_HANDLE`; `NOT_A_PARTICIPANT`; `OWNER` for an owner (R40 first). Removes the participant whether or not they asked to leave.
+- **R63** Every removal a project owner makes stays recorded with who removed whom, when and the owner's reason (`comment`), and every participant of the project can read it. *(not yet met: Bob, 2026-09-26)*
 - **R37** `projectParticipants({projectId, by})` gives a participant or an administrator every participant's handle, state, owner flag and comment; anyone else is answered `NO_SUCH_PROJECT`.
 
 **Project ownership**
@@ -89,6 +91,18 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R54** `isProjectOwner(projectId, memberId)` is true exactly for a participant with the owner flag; `isJoinedParticipant` for a participant `joined` or `leaving`.
 - **R55** `projectAuthority(projectId, identity, need, act)` returns null or a refusal: `need: "owner"` refuses `PROJECT_ACT_NOT_THE_OWNER` to anyone but an owner; `need: "joined"` refuses `PROJECT_ACT_NOT_A_PARTICIPANT` to anyone not joined or leaving. Sight, administrator status and the founder's session confer neither. An identity naming no member (absent, or a machine credential) is not asked.
 - **R56** `caseAuthority({project, deliveredBy, signer, act, subject})`: unless `deliveredBy` is the founder, delivery needs `projectAuthority(project, deliveredBy, "joined")`; then the signer must be an owner of the project, else `CASE_SIGNER_NOT_AN_OWNER`, which is also the answer for a production naming no project.
+
+**Facts later modules read (K57)**
+- **R64** `isAdministrator(memberId)` is true exactly for the founder (`admin`, once claimed) and an `active` member with role `admin`.
+- **R65** `projectOwners(projectId)` lists the owners' member ids in the order they became owners; `[]` for no owner or no such project.
+- **R66** `isProjectEditor(projectId, memberId)` is true exactly for an owner or a `joined` participant (never one `leaving`; R54's joined-or-leaving is a different set).
+- **R67** `ownsAnyProject(memberId)` is true exactly when the member owns at least one project.
+- **R68** `memberFacts(memberId)` answers `{cover, handle, role, status}` or `null`; never a credential, key or expertise.
+- **R69** `activeParticipants(projectId)` lists the member ids of participants `joined` (not `leaving`, not invited) whose member is `active`.
+- **R70** `attestingKeys()` answers the signer keys that attest, the one predicate R27 states, for every reader that splices it today (`signerList`, the gate's facts, a case's document facts).
+- **R71** `projectCreated({projectId, ownerId, visibility, by})` is what `promotion` calls when a promotion creates a project: it makes `ownerId` the sole initial owner (R31), records the creation visibility (R45's settings), and reindexes the project's sight, in the caller's transaction. *(not yet met: K57 — `promote()` writes these rows itself)*
+- **R72** `bootstrapState(tokenFp)` answers `{claimed, rearmed, consumedAt}`: `claimed` once the bootstrap credential is spent, unless `tokenFp` differs from the one recorded at the claim (`rearmed`, R1); `consumedAt` is the instant the instance was claimed, `null` when re-armed. It names nobody and returns no secret.
+- **R73** `setPassword({role, password})` stores a salted, derived hash for `role`, replacing any earlier one, and never the password. Who may call it is the control plane's rule (the `setpassword` op).
 
 ## Private
 

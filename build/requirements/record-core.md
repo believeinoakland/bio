@@ -1,6 +1,6 @@
 # record-core — requirements
 
-**Status** · DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB; for Bob's approval (a product module, P17). Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10). BOB #40 added `transact`, `commit`, `bundleInfo` and `listBundles` (R32–R35) and gave `auditPass` a caller's visibility predicate, from the promotion and membership reviews (K31).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10). BOB #40 added `transact`, `commit`, `bundleInfo` and `listBundles` (R32–R35) and gave `auditPass` a caller's visibility predicate, from the promotion and membership reviews (K31).
 
 ## Public
 
@@ -116,6 +116,11 @@ and every other module that stores anything, write through and read from.
 - **R35** `listBundles` lists held bundle ids in id order after `after`, limited to `project` when
   given, at most `limit`; `cursor` is the last id listed.
 - Errors: never throws.
+
+**listByType({type, after, limit}) → `{ids, cursor}`; the `bundles` read contract; evidenceStore() → `{head, get, put}`** (K57)
+- **R36** `listByType` lists held bundle ids of one `object_type` in id order after `after`, at most `limit`; `cursor` is the last id listed. Never throws.
+- **R37** The table `bundles` and its columns `bundle_id` and `object_type` are a stated read contract: a later module may join them in its own SQL (a projection bounded by SQL, as membership's directory is, D-497), and this module changes neither column's name, type or meaning without a requirement change carried to every such reader (P5). No other column is part of the contract.
+- **R38** `evidenceStore()` answers the instance's evidence store (R2 bucket) as `{head(key), get(key), put(key, bytes)}`, the object key of a digest being fixed by this module; `null` when the instance has none bound, so callers answer undetermined (provenance R8–R9). *(not yet met: K49 — callers reach the binding directly today)*
 
 ## Private
 

@@ -1,6 +1,6 @@
 # promotion — requirements
 
-**Status** · DRAFT, reviewed for BOB #40, 2026-09-26; for Bob's approval (a product module, P17). Layer 2. Drafted for BOB #38 from the T1 extraction survey; reviewed against the code. Code today: `bio-plane/src/gate.mjs` (owned already), and `promote()` (`bio-plane/src/store.mjs` 17881–20109) and `reopen()` (7984–8250) inside `legacy-store`, extracted by this module's first job. Not yet met: R11–R15, R17, R18 (carried rows D-578, D-628, D-707, D-615, D-692, D-726, D-738, D-546, D-741, D-695, D-717), R30–R32 (D-700, D-718, D-673, entry N8 / K10). Later modules join a promotion through R39–R40 (K31).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17). DRAFT, reviewed for BOB #40, 2026-09-26; for Bob's approval (a product module, P17). Layer 2. Drafted for BOB #38 from the T1 extraction survey; reviewed against the code. Code today: `bio-plane/src/gate.mjs` (owned already), and `promote()` (`bio-plane/src/store.mjs` 17881–20109) and `reopen()` (7984–8250) inside `legacy-store`, extracted by this module's first job. Not yet met: R11–R15, R17, R18 (carried rows D-578, D-628, D-707, D-615, D-692, D-726, D-738, D-546, D-741, D-695, D-717), R30–R32 (D-700, D-718, D-673, entry N8 / K10). Later modules join a promotion through R39–R40 (K31).
 
 ## Public
 

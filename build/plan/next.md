@@ -40,16 +40,19 @@
 
 ## Tranche T3, prepared (P18): ready to open when T2 closes
 
-Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). **T3 opens only when Bob has approved the three modules' requirements** (product modules, P17; asked on the layer-2 page, 2026-09-26).
+Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). Bob approved the three modules' requirements on 2026-09-26 (K56). **T3 opens only after the extraction fix is certified** (handoff §6 step 1, P3).
 
 **record-core** (map: `build/extraction/record-core.md`)
 - T3-1 · Extract the module from `legacy-store` per its map and requirements (K23, K31); requirement-named tests for every live id.
+- K57 · `listByType` (R36), the `bundles` read contract (R37), `evidenceStore()` (R38).
 - D-674 · R16, not yet met (see the requirement).
 - N10 · The instance's active jurisdiction profiles as a setting (R26); the installer's and instance-setup's shares stay with those modules.
 
 **membership** (map: `build/extraction/membership.md`, in preparation)
 - T3-2 · Extract the module from `legacy-store` per its map and requirements; requirement-named tests for every live id.
 - N18 · (above) the canon rules found unbuilt and the defects found.
+- R62, R63 · Bob's rulings (K56): organisation-wide AI keys by administrators only; an owner's removal reason kept and readable.
+- K57 · the map's settled points: R2's check moves into `login()`; R15 returns `expertise`, the `members.expertise` column dropped; R64–R73 stated; `viewerPredicate` takes `GATE_MARK`.
 - REC-224, REC-226 · the carried rows its requirements mark not yet met.
 
 **promotion** (map: `build/extraction/promotion.md`)
