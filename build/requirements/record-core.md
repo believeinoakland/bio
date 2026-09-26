@@ -64,9 +64,11 @@ and every other module that stores anything, write through and read from.
   each named by a fixed derivation from its path and the snapshot key that archived it; and one manifest
   document listing every promotion recorded for the bundle (its key, kind, base, author, created time,
   and the files it touched).
-- **R16** Manifest entries are given back in the order this module recorded them (write order), never
-  resorted by a caller-chosen key. *(not yet met: `readImage` sorts entries by `snap_key` text, which is
-  not write order — see report §3, D-674's amendment to State Rules I-20.)*
+- **R16** Write order is never lost: every manifest entry given back carries `seq`, its rank in the order
+  this module recorded the entries, and a caller that needs write order takes it from `seq`, never from
+  the snap key. The manifest document itself lists its entries by key, as the catalogue's C-12.1 requires
+  (the D-700 form; K65). *(not yet met on `main`: `readImage` gives no write order — D-674's amendment to
+  State Rules I-20.)*
 - **R17** Returns `null` when the bundle is not held.
 - Errors: never throws.
 
