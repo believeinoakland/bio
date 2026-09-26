@@ -144,6 +144,41 @@ console.log("\n--- R18: several images ---");
   t("R18 and no bytes", r.bytes, undefined);
 }
 
+console.log("\n--- R17, R18: images are counted from what the page paints (K27) ---");
+{
+  const A = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G);
+  const B = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G.map((v) => 255 - v));
+  const shared = (ops) => makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 /Resources << /XObject << /A 5 0 R /B 6 0 R /Fm 7 0 R >> >> >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 3 2] /Contents 4 0 R >>",
+    content(ops), A, B,
+    { dict: "<< /Type /XObject /Subtype /Form /BBox [0 0 3 2] /Resources << /XObject << /B 6 0 R >> >> >>", data: new TextEncoder().encode("q 3 0 0 2 0 0 cm /B Do Q") },
+  ]);
+  const one = await render(shared("q 3 0 0 2 0 0 cm /A Do Q"), 0);
+  t("R18 a page that paints one of the two images its shared /Resources lists renders that one",
+    [one.ok, one.route, one.pixels_sha256], [true, "raw-samples-grey8", hex(G)]);
+  const none = await render(shared("q Q"), 0);
+  t("R17 a page whose /Resources list images it never paints: NO_IMAGE_ON_PAGE", [none.ok, none.reason], [false, "NO_IMAGE_ON_PAGE"]);
+  const noneVec = await render(shared("0 0 3 2 re f"), 0);
+  t("R17 ...and with a vector mark: NOT_IMAGE_ONLY", noneVec.reason, "NOT_IMAGE_ONLY");
+  const form = await render(shared("/Fm Do"), 0);
+  t("R17 R18 an image painted inside a Form XObject is counted and rendered",
+    [form.ok, form.pixels_sha256], [true, hex(G.map((v) => 255 - v))]);
+  const both = await render(shared("q 3 0 0 2 0 0 cm /A Do Q /Fm Do"), 0);
+  t("R18 one image painted directly and one inside a form: MULTIPLE_IMAGES_ON_PAGE",
+    fields(both, "reason", "imageCount", "images"), ["MULTIPLE_IMAGES_ON_PAGE", 2,
+      [{ width: 3, height: 2, filters: [] }, { width: 3, height: 2, filters: [] }]]);
+  const twice = await render(shared("q 3 0 0 2 0 0 cm /A Do /A Do Q"), 0);
+  t("R18 the same image painted twice is two paintings: MULTIPLE_IMAGES_ON_PAGE", fields(twice, "reason", "imageCount"), ["MULTIPLE_IMAGES_ON_PAGE", 2]);
+  const lost = await render(shared("q 3 0 0 2 0 0 cm /Missing Do Q"), 0);
+  t("R15 R17 a paint sequence that cannot be walked: PAGE_UNREADABLE, not a guessed count",
+    fields(lost, "ok", "reason", "note"), [false, "PAGE_UNREADABLE", "xobject_unresolvable:page 0:Missing"]);
+  const inline = await render(onePage({ box: [0, 0, 3, 2], ops: "q 3 0 0 2 0 0 cm BI /W 3 /H 2 /CS /G /BPC 8 ID abcdef EI Q" }), 0);
+  t("R17 R19 a page painting only an inline image paints an image; reading it is not built: IMAGE_UNREADABLE",
+    fields(inline, "ok", "reason", "page"), [false, "IMAGE_UNREADABLE", 0]);
+}
+
 console.log("\n--- R19: the image's own refusal, with page added ---");
 {
   const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /JPXDecode", new Uint8Array(64))), 0);

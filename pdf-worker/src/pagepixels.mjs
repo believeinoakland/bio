@@ -74,7 +74,7 @@
  * RGBA frame is the whole reason this fits.
  */
 
-import { PdfDoc, pageShowsText } from "../../bio-plane/src/pdfstructure.mjs";
+import { PdfDoc, pageShowsText, pdfPageImages } from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
@@ -146,15 +146,6 @@ function decodeParms(doc, dict, idx) {
   let p = doc.resolve(dict.DecodeParms) ?? doc.resolve(dict.DP);
   if (p && p.t === "arr") p = doc.resolve(p.items[idx] ?? p.items[p.items.length - 1]);
   return p && p.t === "dict" ? p.map : null;
-}
-
-/** A page's /Resources, walking /Parent for the inherited case. */
-function pageResources(doc, pageMap, depth = 0) {
-  if (!pageMap || depth > 32) return null;
-  const res = doc.dictOf(pageMap.Resources);
-  if (res) return res;
-  const parent = doc.dictOf(pageMap.Parent);
-  return parent ? pageResources(doc, parent, depth + 1) : null;
 }
 
 /** An inheritable page attribute (/MediaBox, /Rotate): the leaf's own value, else
@@ -260,6 +251,25 @@ function maskedContent(s) {
  * purpose — a clip path paints nothing and every scanned page has one. */
 const VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
 
+/** One painted image, as the decoder reads it: the placement's own width,
+ *  height, filters and name, and its stream's sample layout. An inline image has
+ *  no stream (`obj` null). */
+export function imageOf(doc, placement) {
+  const st = placement._stream || null;
+  const d = st ? st.dict : {};
+  return {
+    name: placement.name,
+    inline: placement.inline === true,
+    obj: st,
+    width: placement.width,
+    height: placement.height,
+    bpc: numOf(doc, d.BitsPerComponent),
+    colorSpace: nameOf(doc, d.ColorSpace) || (d.ColorSpace ? "«indirect»" : null),
+    isMask: doc.resolve(d.ImageMask) === true,
+    filters: placement.filters,
+  };
+}
+
 /** What is actually ON this page: images, text, vector marks. The three are
  *  reported separately and NONE of them is inferred from another — "no fonts"
  *  is not "no text" (a Type3 or a broken resource dict), and "has an image" is
@@ -270,28 +280,11 @@ export async function analyzePage(doc, pageIndex) {
   const pageMap = doc.dictOf({ t: "ref", n: order[pageIndex] });
   if (!pageMap) return null;
 
-  const res = pageResources(doc, pageMap);
-  const xobjDict = res ? doc.dictOf(res.XObject) : null;
-
-  const images = [];
-  if (xobjDict) {
-    for (const key of Object.keys(xobjDict)) {
-      if (key.startsWith("__")) continue;
-      const st = doc.resolve(xobjDict[key]);
-      if (!st || st.t !== "stream") continue;
-      if (nameOf(doc, st.dict.Subtype) !== "Image") continue;
-      images.push({
-        name: key,
-        obj: st,
-        width: numOf(doc, st.dict.Width),
-        height: numOf(doc, st.dict.Height),
-        bpc: numOf(doc, st.dict.BitsPerComponent),
-        colorSpace: nameOf(doc, st.dict.ColorSpace) || (st.dict.ColorSpace ? "«indirect»" : null),
-        isMask: doc.resolve(st.dict.ImageMask) === true,
-        filters: filterNames(doc, st.dict),
-      });
-    }
-  }
+  /* R17/R18 (K27): the images the page PAINTS, in painting order, including
+   * those a Form XObject draws — never the image XObjects its /Resources list,
+   * which a scanner commonly shares across every page of the document. */
+  const painted = await pdfPageImages(doc, pageIndex);
+  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
 
   let content = "";
   try { content = await pageContentText(doc, pageMap); } catch { content = ""; }
@@ -299,8 +292,6 @@ export async function analyzePage(doc, pageIndex) {
   let textShown = null;
   try { textShown = await pageShowsText(doc, pageMap); } catch { textShown = null; }
 
-  const drawn = [...masked.matchAll(/\/([^\s/<>[\]()]+)\s+Do(?=[\s]|$)/g)].map((m) => m[1]);
-  const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
 
   const mediaBox = (() => {
     const m = inheritedAttr(doc, pageMap, "MediaBox");
@@ -320,7 +311,8 @@ export async function analyzePage(doc, pageIndex) {
     hasInlineImage: masked.includes("INLINEIMAGE"),
     images: images.map(({ obj, ...rest }) => rest),
     _images: images,
-    drawnImageNames: drawnImages,
+    imagesWhy: painted.why,
+    drawnImageNames: images.map((im) => im.name),
     imageCount: images.length,
     mediaBox,
     rotate: pageRotate(doc, pageMap),
@@ -358,6 +350,9 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   if (a.hasTextOps && !opts.allowTextPage) {
     return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
   }
+  if (a.imagesWhy) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
+  }
   if (a.imageCount === 0) {
     return refuse(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
       page: pageIndex, hasVectorOps: a.hasVectorOps, hasInlineImage: a.hasInlineImage,
@@ -371,6 +366,9 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   }
 
   const im = a._images[0];
+  if (!im.obj) {
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+  }
   const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
 

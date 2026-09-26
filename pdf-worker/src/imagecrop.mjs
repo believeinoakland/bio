@@ -29,7 +29,7 @@
  */
 
 import { pdfPageImages } from "../../bio-plane/src/pdfstructure.mjs";
-import { loadPdf, decodeImage } from "./pagepixels.mjs";
+import { loadPdf, decodeImage, imageOf } from "./pagepixels.mjs";
 
 export const CROP_REFUSALS = Object.freeze({
   NOT_AN_IMAGE_EXTENT: "the extent is not an `image` extent in its PDF form ({kind:'image', page, rect})",
@@ -88,16 +88,7 @@ export async function cropImage(bytes, extent) {
   const hit = hits[0];
   if (hit.inline || !hit._stream) return refuse("INLINE_IMAGE", { page: e.page, rect: want });
 
-  const st = hit._stream;
-  const num = (v) => { v = doc.resolve(v); return typeof v === "number" ? v : null; };
-  const cs = doc.resolve(st.dict.ColorSpace);
-  const im = {
-    name: hit.name, obj: st, width: hit.width, height: hit.height,
-    bpc: num(st.dict.BitsPerComponent),
-    colorSpace: cs && cs.t === "name" ? cs.v : (st.dict.ColorSpace ? "«indirect»" : null),
-    isMask: doc.resolve(st.dict.ImageMask) === true,
-    filters: hit.filters,
-  };
+  const im = imageOf(doc, hit);
   const out = await decodeImage(doc, im, { rotate: 0 });
   if (!out.ok) return refuse("DECODE_REFUSED", { page: e.page, rect: want, decoder: out.reason, decoderWhy: out.why });
 
