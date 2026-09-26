@@ -6,6 +6,8 @@ import { extractPdfStructure, pageShowsText, openPdf } from "../../../src/pdfstr
 import { build, doc, flate, hex } from "./pdf.mjs";
 
 const text = async (bytes) => (await extractPdfStructure(bytes)).text;
+/** R14 speaks of no_text_layer alone; an image page that shows text may also carry R26's marker. */
+const r14 = (p) => p.undetermined.filter((m) => !m.reason.startsWith("image_content"));
 const page1 = async (content, o = {}) => (await text(doc([{ content, ...o }], o))).pages[0];
 const ENC = "<< /Filter /Standard /V 1 /R 2 /O (owner) /U (user) /P -4 >>";
 const IMG = { dict: "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8", data: "\x80" };
@@ -170,20 +172,20 @@ test("R13: inside TJ, a forward displacement beyond 0.1 em inserts a space; a ba
 
 test("R14: a page that shows no text and declares an image carries exactly one no_text_layer marker", async () => {
   const noFont = await page1("q 600 0 0 800 0 0 cm /Im Do Q", { resources: "/XObject << /Im 20 0 R >>", objs: { 20: IMG } });
-  assert.deepEqual(noFont.undetermined, [{ page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 }]);
+  assert.deepEqual(r14(noFont), [{ page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 }]);
   const unusedFonts = await page1("BT ET q 600 0 0 800 0 0 cm /Im Do Q", { resources: `${"/Font << /F1 10 0 R >>"} /XObject << /Im 20 0 R >>`, objs: { 20: IMG } });
-  assert.deepEqual(unusedFonts.undetermined, [{ page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 }]);
+  assert.deepEqual(r14(unusedFonts), [{ page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 }]);
 });
 
 test("R14: no no_text_layer when the page shows text, declares no image, or its showing is undetermined", async () => {
   const shows = await page1("BT /F1 10 Tf ( ) Tj ET /Im Do", { resources: `/Font << /F1 10 0 R >> /XObject << /Im 20 0 R >>`, objs: { 20: IMG } });
-  assert.deepEqual(shows.undetermined, []);
+  assert.deepEqual(r14(shows), []);
   const blank = await page1("", { resources: "" });
   assert.deepEqual(blank.undetermined, []);
   const unknown = await page1("/Im Do /Gone Do", { resources: `/Font << /F1 10 0 R >> /XObject << /Im 20 0 R /Gone 99 0 R >>`, objs: { 20: IMG } });
   assert.ok(!unknown.undetermined.some((m) => m.reason === "no_text_layer"));
   const otherMarker = await page1("BT (x) Tj ET /Im Do", { resources: "/XObject << /Im 20 0 R >>", objs: { 20: IMG } });
-  assert.deepEqual(otherMarker.undetermined.map((m) => m.reason), ["no_current_font"]);
+  assert.deepEqual(r14(otherMarker).map((m) => m.reason), ["no_current_font"]);
 });
 
 test("R15: pageShowsText is true, false, or null (undetermined) — never false for what it could not read", async () => {
