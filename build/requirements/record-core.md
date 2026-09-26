@@ -1,6 +1,6 @@
 # record-core — requirements
 
-**Status** · DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB; for Bob's approval (a product module, P17). Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10).
+**Status** · DRAFT by BOB #38, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code, reviewed by BOB; for Bob's approval (a product module, P17). Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs`; the module is extracted from them by its first job. R16 and R26 are not yet met (D-674, N10). BOB #40 added `transact`, `commit`, `bundleInfo` and `listBundles` (R32–R35) and gave `auditPass` a caller's visibility predicate, from the promotion and membership reviews (K31).
 
 ## Public
 
@@ -70,13 +70,14 @@ and every other module that stores anything, write through and read from.
 - **R17** Returns `null` when the bundle is not held.
 - Errors: never throws.
 
-**auditPass({after, limit, viewer}) → page report**
+**auditPass({after, limit, visible}) → page report**
 - **R18** Runs the check catalogue (`legacy-checks`) against a bounded page of bundles in id order from
   `after`, and reports, for the page: how many bundles were clean, how many carried an error, and every
   error tallied both by check and by check-and-code.
 - **R19** Every reference a check must resolve is resolved against the WHOLE corpus, never the viewer's
   slice of it, so a check never manufactures a dangling-reference finding out of a viewer's position; the
-  page returned, and any bundle it names, is limited to what the given viewer may see.
+  page returned, and any bundle it names, is limited to the bundles the caller's `visible(bundleId)`
+  predicate admits (the sight rule is `membership`'s; this module never decides it).
 - **R20** Resumable: the cursor returned is the last bundle id seen on the page, independent of any
   snapshot of the store.
 - Errors: never throws.
@@ -94,6 +95,28 @@ and every other module that stores anything, write through and read from.
 - **R25** Holds the instance's settings as named values, each recorded with who set it and when. `getSetting` returns the value last set, or `null` when none was. Settings are exempt from `purge`.
 - **R26** The instance's active jurisdiction profiles are the setting `jurisdiction_profiles`: an ordered list of profile ids, which a consumer passes to `jurisdictions.combine`. *(not yet met: N10)*
 
+**transact(fn) → fn's result**
+- **R32** Runs `fn` as one transaction over the whole store: when `fn` throws or returns a refusal
+  (`ok:false`), every row written inside it, in any module's tables, is rolled back, and no id allocated
+  inside it is spent. Nested calls join the outer transaction.
+- Errors: rethrows what `fn` throws, after the rollback.
+
+**commit({bundleId, type, title, project, snapKey, kind, base, author, writer, operation, files}) → `{bundleSha, rowVersion}`**
+- **R33** The one write path into this module's tables, called inside `transact`: it copies every live
+  file the commit replaces into `history` under `snapKey`, writes the new live files (inline text, or a
+  blob reference), sets the bundle's row, and appends exactly one `manifest` entry recording the key,
+  kind, base, author, time, writer, operation and each file's digest. It never modifies or removes an
+  existing `history` row or `manifest` entry. What may be committed is decided by its caller
+  (`promotion`), never here.
+- Errors: never throws for a well-formed call.
+
+**bundleInfo(bundleId) → `{id, type, title, project}` or null; listBundles({project, after, limit}) → `{ids, cursor}`**
+- **R34** `bundleInfo` answers a held bundle's type, title and project from this module's tables, or
+  `null` when it is not held.
+- **R35** `listBundles` lists held bundle ids in id order after `after`, limited to `project` when
+  given, at most `limit`; `cursor` is the last id listed.
+- Errors: never throws.
+
 ## Private
 
 ### Uses
@@ -109,8 +132,8 @@ and every other module that stores anything, write through and read from.
   `DRAFT`, `RVG`, `TASK`); those objects' ids are opaque and minted only by the act that creates them.
 - **R28** An id this module has allocated or minted is never handed out to a second object, by any path,
   purged store or not (D-432).
-- **R29** `history` and `manifest` are append-only: no service of this module modifies or deletes a row
-  of either; the only sanctioned removal is `purge`.
+- **R29** `history` and `manifest` are append-only: `commit` (R33) only appends to them, no service of
+  this module modifies or deletes a row of either, and the only sanctioned removal is `purge`.
 - **R30** A lease is never held under an anonymous actor (R10 restated as the rule the module keeps, not
   merely the shape of one refusal).
 - **R31** Every service of this module reads and writes only this module's own tables and the system
@@ -134,11 +157,6 @@ and every other module that stores anything, write through and read from.
 
 ### Suggestions
 
-- The inline `INSERT`s into `files`, `history`, `manifest` and `bundles` that `promote()` performs today
-  (`store.mjs` roughly lines 19289–19363) belong at this module's own interface, as write primitives
-  (for example a `commitFiles`/`writeBundle` service) that `promotion` calls, rather than `promotion`
-  reaching into these tables' rows directly. That is an extraction decision, not a requirement of
-  behaviour.
 - `#mintProjectId`'s slug derivation is project-specific; whether it stays here (a thin wrapper over
   `mintOpaqueId`) or moves to `promotion` (the module that actually mints `PROJ` ids) is an open
   extraction question, not a requirement.
