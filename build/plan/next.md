@@ -16,6 +16,7 @@
 - N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1.
 - N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
 - N23 · 2026-09-26 · **legacy-tests**: `nc-rec203.mjs`'s negative-control anchors no longer match the rewritten `idspaces.mjs` (N2), so its arms do not arm; re-anchor or retire it with the old interface (N6). Reported by ID-SPACES #1.
+- N24 · 2026-09-26 · **legacy-tests**: `bio-plane/test/signpage.test.mjs` (line ~38) and `fleetbundles.control.mjs` arm (7) read `tools/sign-release.html`; point them at `bio-plane/src/sign-release.html` (K33), after which BOB removes `tools/sign-release.html` (K46). Reported by SIGNATURES #1.
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
 
