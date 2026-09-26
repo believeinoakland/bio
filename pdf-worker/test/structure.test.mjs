@@ -6,7 +6,7 @@
  * recording `env` where the question is what the Worker touches (R1, R37). */
 import "../../bio-plane/test/sandbox.mjs";
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
@@ -322,7 +322,8 @@ console.log("\n--- R38: no place named ---");
   /* The code itself, comments removed: only a comment may cite where a
      measurement was taken (layers.md, rule 6). */
   const code = (f) => readFileSync(here(`../src/${f}`), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-  const files = ["index.mjs", "pagepixels.mjs", "dctdecode.mjs", "imagecrop.mjs", "pagepixels-worker.mjs"];
+  const files = readdirSync(here("../src")).filter((f) => f.endsWith(".mjs")).sort();
+  t("R38 (every source file is read: the decoders included)", ["jbig2decode.mjs", "jpxdecode.mjs", "mq.mjs"].every((f) => files.includes(f)), true);
   t("R38 no place is named in the module's code", files.filter((f) => PLACES.test(code(f))), []);
 }
 
