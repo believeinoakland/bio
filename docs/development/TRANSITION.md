@@ -7,11 +7,12 @@
 | what | where |
 | --- | --- |
 | the restore point: `main` at 95fe7bc7, plus every branch tip of 2026-09-25 ~14:45Z, including batch30 and all unmerged worker branches | branch `snapshot/pre-refactor-2026-09-25` @ 5b9c2643 |
-| the principles, the mechanics, this plan, and the frozen old plan | branch `land/bob/process-design` (not on `main`; see §5, C2) |
+| the principles and the mechanics | `believeinoakland/civicos-process`, branch `main` (since 2026-09-26) |
+| this plan, the build state and the frozen old plan | branch `land/bob/process-design` (not on `main`; see §5, C2) |
 | the old plan, frozen as it stood when the old process stopped | `docs/development/transition/old-plan/QUEUE-2026-09-25.txt` and `BACKLOG-2026-09-25.txt` (coord @ 85f3a9f7) |
 | the index of its 216 open rows, the working sheet for step T5 | `docs/development/transition/old-plan/index.csv` |
 
-**To resume:** read `PROCESS-DESIGN.md`, `PROCESS-MECHANICS.md` and this file, each whole; §6 is the latest handoff. Check out `land/bob/process-design`. Continue at the first step in §3 that is not done. Do not follow the old process's `CLAUDE.md`, kickoffs, lanes or `coord` ledgers; see §5, C1.
+**To resume:** read `PROCESS-DESIGN.md` and `PROCESS-MECHANICS.md` in the process repository `believeinoakland/civicos-process` (attach it to the session; moved there 2026-09-26), and this file, each whole; §6 is the latest handoff. Check out `land/bob/process-design`. Continue at the first step in §3 that is not done. Do not follow the old process's `CLAUDE.md`, kickoffs, lanes or `coord` ledgers; see §5, C1.
 
 ## 2. The old plan's open rows
 
@@ -79,6 +80,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-26 · T4 · views republished: the Action layer page marked approved (same link), and the regenerated architecture view published as a new page, because the earlier one is not editable from this session · https://claude.ai/artifact/YNyEwrTPWneyNxgBFDLFbF · —
 - 2026-09-26 · T6 · Bob asked why the `jurisdictions` additions for the Action layer were deferred; no reason held (the module is created in the first tranche anyway), so BOB #38 wrote them now: R23–R30 (sources of standards, offices addressed, action kinds with tiers, venues and templates, legal deadlines; their validation and combination; what the first profile holds). Approved ids unchanged. Bob approved. N11 now builds them in the same job as N1 · `build/requirements/jurisdictions.md`, `build/plan/next.md` · next: Bob creates the process repository (C11)
 - 2026-09-26 · T7 · Bob created `believeinoakland/civicos-process` (private) and gave Claude access; BOB #38 attached it, and a first commit (a README saying what the repository is) was pushed to its `main` and read back from GitHub (7c91cff), so C11 is resolved · `believeinoakland/civicos-process` · next: T7, move the principles and mechanics there and build the four checks
+- 2026-09-26 · T7 · the principles and mechanics moved to `believeinoakland/civicos-process` (verbatim apart from their Status lines, checked by diff); their files here are now pointers, and §1 says where to read them · both repositories · next: the four checks
 
 ## 5. Challenges identified
 
