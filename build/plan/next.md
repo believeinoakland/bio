@@ -38,6 +38,7 @@
 - N43 · 2026-09-26 · **legacy-index**: `index.mjs`'s op table routes membership's five new ops (`adminresign`, `hostingaccessset`, `hostingaccess`, `memberpairingset`, `memberpairings`; N18) with their classes; until then they are unreachable from outside. Reported by MEMBERSHIP #1.
 - N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
 - N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
+- N46 · 2026-09-26 · **legacy-tests** (with N37): `meaningread` and `meaningquery` pin the gate's mint sites in `query.mjs`'s text; re-anchor them when `query.mjs` re-exports membership's `viewerPredicate` (K75).
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
