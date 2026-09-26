@@ -56,3 +56,29 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 
 **pdf-worker**
 - D-622 · 2026-09-26 · Decoders for JBIG2 and JPX image-only pages (old-plan row D-622), held out of T1 as too large for the certification run. (N9 moved to T1.)
+
+## Job sessions (layer 1, started 2026-09-26 16:52 UTC)
+
+| module | session | title |
+| --- | --- | --- |
+| jurisdictions | `session_014szwz88Jt9EWztKH5wfE1v` | JURISDICTIONS #1 |
+| test-support | `session_01ASkdafQGFCeqoncTyWGLPC` | TEST-SUPPORT #1 |
+| bundler | `session_015mpX96po6BkGDjNJ5AVwMB` | BUNDLER #1 |
+| runtime-limits | `session_019P3M1pLBD1XzdjzkJULhF6` | RUNTIME-LIMITS #1 |
+| signatures | `session_01GJC6ytwQrBRdr2Y8KdcybF` | SIGNATURES #1 |
+| id-spaces | `session_01JxBcyrvDmhXth7LevtRM2H` | ID-SPACES #1 |
+| office-readers | `session_01Evj8HyEdBGojZqKJhpkumU` | OFFICE-READERS #1 |
+| odf-reader | `session_0191Ek5BuDhcVCoPJoHo62Ge` | ODF-READER #1 |
+| format-registry | `session_019LnvZG7rvC4fK35bUVv3MW` | FORMAT-REGISTRY #1 |
+| text-chain | `session_011N1d8x7gArcfWDvLkY3fC5` | TEXT-CHAIN #1 |
+| docprofile | `session_01QLCYkFnXjtMweB8KWin4FT` | DOCPROFILE #1 |
+| ocr-worker | `session_01LumujCtUSN1WBLyoke2Hz2` | OCR-WORKER #1 |
+| pdf-worker | `session_01SSonB7dLsY8mZoHgBAoHT6` | PDF-WORKER #2 |
+
+## Completions verified by BOB (ownership, coverage, module tests on the job branch)
+
+- format-registry · `job/T2/format-registry` @ de542e00 · 27/27 ids, 27 pass · 2026-09-26 17:03
+- test-support · `job/T2/test-support` @ 381fbc11 · 9/9 ids, 22 pass · 2026-09-26 17:04; N22 deferred to next.md
+- runtime-limits · `job/T2/runtime-limits` @ 3303a511 · 25/25 ids, 25 pass; four flaws fixed in `cpu.mjs`; REPORT: pdf-worker and ocr-worker bundles stale (input `cpu.mjs`), regenerated at the close · 2026-09-26 17:05
+- id-spaces · `job/T2/id-spaces` @ 165a608e · COMPLETE reported 17:07; verified after `jurisdictions` merges (its adapter imports it); REPORT: plane bundle stale; N23 to next.md; K45
+- signatures · `job/T2/signatures` @ 886fc4e6 · 32/32 ids, 42 pass; REPORT: plane and newgroup bundles stale (regenerated at the close; newgroup added to the manifest, K46); N24; bundler comment forwarded · 2026-09-26 17:10

@@ -140,9 +140,13 @@ engine_loaded, engine_unavailable?}`.
   dictionary pass, no joining of hyphenated lines, no cleanup of any kind. Output text is exactly
   what the decoder decoded.
 - **R19** The engine's identity (`ENGINE_NAME`, `ENGINE_VERSION`, `MODEL_NAME`) and the wasm/model
-  byte sizes it was measured at (`WASM_BYTES`, `MODEL_BYTES`) are fixed constants, checked against
-  what actually loaded before any page is processed (R13); a member serving different engine bytes
-  than the ones its `cap` was measured on refuses rather than answering under that `cap`.
+  byte sizes it was measured at (`WASM_BYTES`, `MODEL_BYTES`) are fixed constants, and the
+  committed `assets/` core and model are exactly that long. Before any page is processed (R13) the
+  member checks what it can observe: the core loaded as a compiled `WebAssembly.Module` and the
+  model's length equals `MODEL_BYTES`, refusing `ENGINE_ABSENT` otherwise. The core's exact bytes
+  are pinned before deploy by the bundle manifest's hash of `assets/tesseract-core.wasm` (bundler
+  R4, R6). So a member serving different engine bytes than its `cap` was measured on refuses
+  rather than answering under that `cap`.
 - **R20** No place is named in this module's behaviour, and no requirement above depends on which
   jurisdiction the document belongs to; the same inputs (bytes, page, namespace, engine settings)
   produce the same class of answer for any capture, in any instance. The one place-name in this
