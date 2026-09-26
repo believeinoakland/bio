@@ -87,6 +87,17 @@ import {
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
+/* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
+ * byte values; anything else reads as no bytes, so a wrong argument is a
+ * named refusal downstream, never a throw (R21; ooxml.mjs's own policy). */
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try { return new Uint8Array(x ?? 0); } catch { return new Uint8Array(0); }
+}
+const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+
+
 export const DOCX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const CONTENT_TYPES_PART = "[Content_Types].xml";
@@ -135,7 +146,9 @@ function decodeEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
       const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      /* Past U+10FFFF fromCodePoint THROWS; such a reference is not a
+       * character, so it stays as written (R21). */
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
     }
     return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
   });
@@ -167,9 +180,12 @@ const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
  *    bookmarks:Map(name -> para), changes:[{change,author,date,text,para,run}],
  *    commentRefs:Map(id -> {para,run}), ridUsage:Map(rid -> {para,run}) }.
  *
- *  Paragraph index: EVERY `<w:p>` in document order (paragraphs never nest in
- *  WordprocessingML — a table cell's paragraphs are `<w:p>` elements too, and
- *  they count). Run index: `<w:r>` opens within the current paragraph,
+ *  Paragraph index: EVERY `<w:p>` in document order, numbered as it OPENS (a
+ *  table cell's paragraphs are `<w:p>` elements too, and they count). A
+ *  paragraph CAN hold another: a text box (`<w:txbxContent>`) sits inside a
+ *  run of its anchoring paragraph. The inner paragraph takes the next number,
+ *  and when it closes the walk returns to the outer one, whose later text,
+ *  runs and links stay its own — never dropped for the inner close. Run index: `<w:r>` opens within the current paragraph,
  *  0-based, wherever they sit (inside hyperlinks and tracked changes
  *  included) — one sequence per paragraph, so a run index means the same
  *  thing to every reference into that paragraph. */
@@ -184,6 +200,8 @@ export function walkDocumentBody(xml) {
   let para = -1;   // current 0-based paragraph index
   let run = -1;    // current 0-based run index within the paragraph
   let inPara = false;
+  let last = -1;          // the highest paragraph number given so far
+  const outer = [];       // {para, run} of the paragraphs an open one sits in
   let textTarget = null;            // "t" | "delText" | null, while inside one
   const hyperStack = [];            // open <w:hyperlink> contexts
   const insStack = [];              // open <w:ins> contexts
@@ -220,7 +238,10 @@ export function walkDocumentBody(xml) {
 
     if (closing) {
       if (name === "t" || name === "delText") textTarget = null;
-      else if (name === "p") { inPara = false; }
+      else if (name === "p") {
+        if (outer.length) ({ para, run } = outer.pop());
+        else inPara = false;
+      }
       else if (name === "hyperlink") { const h = hyperStack.pop(); if (h) hyperlinks.push(h); }
       else if (name === "ins") { const c = insStack.pop(); if (c) changes.push(c); }
       else if (name === "del") { const c = delStack.pop(); if (c) changes.push(c); }
@@ -230,8 +251,13 @@ export function walkDocumentBody(xml) {
     const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
     switch (name) {
       case "p":
-        if (!selfClosed) { para++; run = -1; inPara = true; paragraphs.push({ para, text: "" }); }
-        else { para++; run = -1; paragraphs.push({ para, text: "" }); }
+        if (!selfClosed) {
+          if (inPara) outer.push({ para, run });
+          para = ++last; run = -1; inPara = true; paragraphs.push({ para, text: "" });
+        } else {
+          paragraphs.push({ para: ++last, text: "" });
+          if (!inPara) { para = last; run = -1; }
+        }
         break;
       case "r":
         if (inPara && !selfClosed) {
@@ -380,7 +406,7 @@ function resolveRelTarget(relsPart, target) {
  *    undetermined:[{part,why}...] }    // parts that exist but cannot be read
  *  or { ok:false, why, signals } when the bytes are not a readable DOCX. */
 async function docxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const d = await discriminate(b);
   if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
   if (d.format !== "docx") {
@@ -717,13 +743,13 @@ export const docxEntry = {
     /* Accept either parts() output or raw bytes, so detect→structure works
      * uniformly at the registry seam (formats.test.mjs's stub pattern) while
      * a caller that already paid for parts() does not pay twice. */
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
     return docxStructure(parts);
   },
   text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` — every image under word/media/, content-

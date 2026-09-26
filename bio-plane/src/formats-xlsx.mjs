@@ -73,13 +73,24 @@
 
 import {
   hasZipMagic, readContainer, readPart, discriminate,
-  CONTENT_TYPES_PART, parseRels, relsPartFor, normalizePartName,
+  CONTENT_TYPES_PART, relsPartFor, normalizePartName, walkRels,
   sizeGuard, declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
   withContainerImages,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
+
+/* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
+ * byte values; anything else reads as no bytes, so a wrong argument is a
+ * named refusal downstream, never a throw (R21; ooxml.mjs's own policy). */
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try { return new Uint8Array(x ?? 0); } catch { return new Uint8Array(0); }
+}
+const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+
 
 export const XLSX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -100,7 +111,9 @@ function decodeXmlEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
       const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      /* A code point past U+10FFFF makes fromCodePoint THROW; such a
+       * reference is not a character, so it stays as written (R21). */
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
     }
     return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
   });
@@ -132,9 +145,13 @@ function elements(xml, localName) {
   return out;
 }
 
-/** The concatenated <t> text of a run container (an <si> or an <is>). */
+/** The concatenated <t> text of a run container (an <si> or an <is>). A
+ *  phonetic run (`<rPh>`, East Asian reading guides) carries its own <t>, which
+ *  is a reading aid and not the cell's text: it is removed first, or the guide
+ *  would be glued onto the string the sheet displays. */
 function textRuns(inner) {
-  return elements(inner, "t").map((t) => decodeXmlEntities(t.inner)).join("");
+  const bare = String(inner).replace(/<((?:[\w.-]+:)?rPh)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, "");
+  return elements(bare, "t").map((t) => decodeXmlEntities(t.inner)).join("");
 }
 
 const HEX = "0123456789abcdef";
@@ -187,6 +204,125 @@ export function columnLetters(n) {
 export function usedSheetRange(name, usedRows, usedCols) {
   if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
   return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
+}
+
+/* ------------------------------------------------------------------ *
+ * D-415 — A WORKBOOK'S NAMED UNITS (R9; EXTRACTION-BREADTH §3.3 item 1).
+ * ------------------------------------------------------------------ *
+ *
+ * `usedSheetRange` names the WHOLE sheet. A workbook also names FINER units
+ * itself: a DEFINED NAME (`<definedName>` in workbook.xml) and a TABLE
+ * (`xl/tables/tableN.xml`, reached through a sheet's own rels). Each that
+ * names ONE rectangle on ONE sheet of THIS workbook is emitted as a
+ * `sheet-range` unit through the one builder, carrying the name its author
+ * gave it. Everything else a name can hold — several areas, a formula or
+ * constant, `#REF!`, a whole row or column, another workbook, a sheet this
+ * workbook does not have, an address past the grid — is SKIPPED WITH ITS
+ * REASON, never dropped and never approximated: a unit widened or guessed
+ * would be the record claiming an extent the author did not name (R22).
+ *
+ * Judged at the T2 job from the snapshot's D-415 (48245247) and kept as built
+ * for `.xlsx`; the `.ods` half is `odf-reader`'s. `rangeUnitFor` is the one
+ * place a rectangle becomes a unit, exported so that half can reuse it.
+ */
+
+/** One A1 corner (`$B$14`, `b14`) -> {col,row}, or null. */
+export function a1Corner(s) {
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
+
+/** A rectangle on a named sheet -> {unit} or {why}. `a`/`b` are corners from
+ *  `a1Corner`; `sheets` the workbook's sheet names; `grid` the format's bound
+ *  or null. A sheet name matches exactly, else case-insensitively when exactly
+ *  one sheet answers (the format resolves sheet names without case); the unit
+ *  carries the WORKBOOK's spelling. */
+export function rangeUnitFor(sheetName, a, b, sheets, grid) {
+  let sheet = sheets.includes(sheetName) ? sheetName : null;
+  if (sheet == null) {
+    const ci = sheets.filter((s) => String(s).toLowerCase() === String(sheetName).toLowerCase());
+    if (ci.length === 1) sheet = ci[0];
+  }
+  if (sheet == null) return { why: "no_such_sheet" };
+  const c1 = Math.min(a.col, b.col), c2 = Math.max(a.col, b.col);
+  const r1 = Math.min(a.row, b.row), r2 = Math.max(a.row, b.row);
+  if (grid && (c2 > grid.cols || r2 > grid.rows)) return { why: "outside_grid" };
+  return { unit: sheetRangeRef(sheet, `${columnLetters(c1)}${r1}:${columnLetters(c2)}${r2}`) };
+}
+
+/** Split at every top-level `sep` — outside a quoted sheet name and outside
+ *  parentheses — so `'a,b'!A1` is one area and `A1,B2` is two. */
+function splitTopLevel(s, sep) {
+  const out = [];
+  let depth = 0, quoted = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted && s[i + 1] === "'") { cur += "''"; i++; continue; }
+      quoted = !quoted;
+    } else if (!quoted && ch === "(") depth++;
+    else if (!quoted && ch === ")") depth--;
+    else if (!quoted && depth === 0 && ch === sep) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+/** A defined name's formula text -> {unit} or {why}. The ONE grammar read is
+ *  `Sheet!A1` / `Sheet!A1:B2` / `'Quoted ''Sheet'''!$A$1:$B$2`; anything else
+ *  is a stated reason. A sheet name cannot hold `:` or `[`, so a `:` before the
+ *  `!` is a 3-D (multi-sheet) reference and a `[..]` is another workbook. */
+function definedNameUnit(formula, sheets) {
+  const f = String(formula ?? "").trim();
+  if (!f) return { why: "empty_reference" };
+  if (/#REF!/i.test(f)) return { why: "broken_reference" };
+  if (splitTopLevel(f, ",").length > 1 || /^\(.*\)$/.test(f)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f);
+  if (!m) return { why: "not_a_range_reference" };
+  const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+  if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
+  if (sheetName.includes(":")) return { why: "multi_sheet_reference" };
+  const corners = m[3].split(":");
+  if (corners.length > 2) return { why: "not_a_range_reference" };
+  const a = a1Corner(corners[0]);
+  const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+  if (!a || !b) {
+    if (corners.every((c) => /^\$?(?:[A-Za-z]{1,3}|\d+)$/.test(c.trim()))) return { why: "whole_row_or_column" };
+    return { why: "not_a_range_reference" };
+  }
+  return rangeUnitFor(sheetName, a, b, sheets, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS });
+}
+
+/** R9 — every defined name and table part as a `sheet-range` unit, or skipped
+ *  with its reason. `scope` is the sheet a sheet-scoped name belongs to
+ *  (`localSheetId`) or a table's sheet, null for a workbook-scoped name;
+ *  `hidden` is the file's own flag, carried and never a reason to omit (R23).
+ *  Read from workbook.xml, the sheets' rels and the table parts only, so it is
+ *  emitted over the text bound too. */
+function xlsxRangeUnits(parts) {
+  const names = parts.sheets.map((s) => s.name);
+  const units = [], skipped = [];
+  for (const dn of parts.definedNames) {
+    const r = definedNameUnit(dn.ref, names);
+    const scope = dn.localSheetId != null ? (parts.sheets[dn.localSheetId]?.name ?? null) : null;
+    if (r.unit) units.push({ source: "defined-name", name: dn.name, scope, hidden: dn.hidden, unit: r.unit });
+    else skipped.push({ source: "defined-name", name: dn.name, ref: dn.ref, why: r.why });
+  }
+  for (const t of parts.tables) {
+    if (t.why) { skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: t.why }); continue; }
+    const corners = String(t.ref ?? "").split(":");
+    const a = corners.length <= 2 ? a1Corner(corners[0]) : null;
+    const b = corners.length === 2 ? a1Corner(corners[1]) : a;
+    const r = a && b ? rangeUnitFor(t.sheet, a, b, names, { rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS })
+                     : { why: "not_a_range_reference" };
+    if (r.unit) units.push({ source: "table", name: t.name, scope: t.sheet, hidden: false, unit: r.unit });
+    else skipped.push({ source: "table", name: t.name, ref: t.ref, part: t.part, why: r.why });
+  }
+  return { rangeUnits: units, rangeUnitsSkipped: skipped };
 }
 
 /* ------------------------------------------------------------------ *
@@ -270,7 +406,7 @@ function resolveTarget(fromPart, target) {
  * ------------------------------------------------------------------ */
 
 async function xlsxParts(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const undetermined = [];
 
   /* The full discrimination (magic + parts + declared main content type). A
@@ -289,19 +425,29 @@ async function xlsxParts(bytes) {
   if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
   const wbXml = UTF8.decode(wbRead.bytes);
 
+  /* Every _rels/*.rels part, walked ONCE: the workbook's (sheet parts), each
+   * sheet's (hyperlink targets, table parts) and every other part's outbound
+   * relationships (a drawing's hyperlinks, an external link's workbook path)
+   * all come from this one walk, and an unreadable one is stated by it. */
+  const rels = await walkRels(b, container);
+  const relsOf = (part) => rels.byPart.find((p) => p.part === relsPartFor(part)) ?? null;
+
   /* workbook.xml.rels: r:id -> worksheet part, resolved against xl/. */
   const relsById = new Map();
-  const wbRelsRead = await readPart(b, container, relsPartFor(WORKBOOK_PART));
-  if (wbRelsRead.ok) {
-    const parsed = parseRels(UTF8.decode(wbRelsRead.bytes));
-    if (parsed.ok) {
-      for (const r of parsed.relationships) if (r.id) relsById.set(r.id, r);
-    } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: parsed.why });
-  } else undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: wbRelsRead.why });
+  const wbRels = relsOf(WORKBOOK_PART);
+  if (wbRels) {
+    for (const r of wbRels.relationships) if (r.id) relsById.set(r.id, r);
+  } else {
+    const stated = rels.undetermined.find((u) => u.part === relsPartFor(WORKBOOK_PART));
+    undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: stated?.why ?? "part_absent" });
+  }
 
   const sheets = elements(wbXml, "sheet").map((s, index) => {
     const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
     const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
+    /* A <sheet> must carry a name; one that does not is stated, and the
+     * placeholder it is given is said to be one (R22). */
+    if (s.attrs.name == null) undetermined.push({ part: WORKBOOK_PART, why: `sheet_name_absent:${index}` });
     return {
       index,
       name: s.attrs.name ?? `sheet${index + 1}`,
@@ -314,10 +460,34 @@ async function xlsxParts(bytes) {
     };
   });
 
-  /* Defined names -> anchor material (workbook-scoped). */
+  /* Defined names -> anchor material, and R9's units. `localSheetId` and
+   * `hidden` ride along for the units; the anchor links read name/ref only. */
   const definedNames = elements(wbXml, "definedName")
     .filter((d) => d.attrs.name != null)
-    .map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities(d.inner).trim() }));
+    .map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities(d.inner).trim(),
+      localSheetId: /^\d+$/.test(d.attrs.localSheetId ?? "") ? parseInt(d.attrs.localSheetId, 10) : null,
+      hidden: d.attrs.hidden === "1" || d.attrs.hidden === "true" }));
+
+  /* R9 — TABLE PARTS, reached through each sheet's OWN rels (relationship
+   * type …/table), never by filename. Workbook metadata, read even over the
+   * text bound as hidden sheets are: a table part names an address, not text.
+   * An unreadable table part is carried as a skip with its reason. */
+  const tables = [];
+  for (const sheet of sheets) {
+    const sr = sheet.part ? relsOf(sheet.part) : null;
+    sheet.rels = sr;
+    if (!sr) continue;
+    for (const r of sr.relationships) {
+      if (r.external || !r.target || !/\/table$/.test(String(r.type ?? ""))) continue;
+      const part = resolveTarget(sheet.part, r.target);
+      const tr = await readPart(b, container, part);
+      if (!tr.ok) { tables.push({ sheet: sheet.name, part, name: null, ref: null, why: `table_part_unreadable:${tr.why}` }); continue; }
+      const t = elements(UTF8.decode(tr.bytes), "table")[0];
+      tables.push({ sheet: sheet.name, part,
+        name: t ? (t.attrs.displayName ?? t.attrs.name ?? null) : null, ref: t ? (t.attrs.ref ?? null) : null,
+        why: t ? null : "table_element_absent" });
+    }
+  }
 
   /* THE MEASURED BOUND (COFF-6, enacted in ooxml.mjs): declared uncompressed
    * text-part bytes — the sheets and sharedStrings — summed from the central
@@ -362,7 +532,7 @@ async function xlsxParts(bytes) {
 
   return {
     ok: true, format: "xlsx", bytes: b, container,
-    sheets, definedNames, sharedStrings, core, declared, guard, undetermined,
+    sheets, definedNames, tables, rels, sharedStrings, core, declared, guard, undetermined,
   };
 }
 
@@ -453,19 +623,11 @@ async function xlsxStructure(parts) {
   const evUndetermined = [...parts.undetermined];
 
   for (const sheet of sheets) {
-    /* The rels half: this sheet's own .rels, where the TARGETS live. */
+    /* The rels half: this sheet's own .rels, where the TARGETS live (read
+     * once, by parts()'s walk; an unreadable one is stated below). */
     const relTargets = new Map();
-    if (sheet.part) {
-      const relsPart = relsPartFor(sheet.part);
-      if (container.byName.has(relsPart)) {
-        const read = await readPart(bytes, container, relsPart);
-        const parsed = read.ok ? parseRels(UTF8.decode(read.bytes)) : null;
-        if (parsed && parsed.ok) {
-          for (const r of parsed.relationships) if (r.id) relTargets.set(r.id, r);
-        } else {
-          evUndetermined.push({ part: relsPart, why: read.ok ? parsed.why : read.why });
-        }
-      }
+    if (sheet.rels) {
+      for (const r of sheet.rels.relationships) if (r.id) relTargets.set(r.id, r);
     }
 
     if (sheet.xml == null) {
@@ -489,6 +651,7 @@ async function xlsxStructure(parts) {
     }
 
     const walked = walkSheetXml(sheet.xml);
+    const usedRels = new Set();
 
     /* Hyperlinks: the sheet XML knows the CELL, the rels know the TARGET. */
     for (const h of walked.hyperlinks) {
@@ -505,6 +668,7 @@ async function xlsxStructure(parts) {
             target: { why: "hyperlink_rel_not_external", relId: h.relId, part: rel.target }, source });
           continue;
         }
+        usedRels.add(rel);
         const partition = classifyUrl(rel.target);
         links.push({
           partition,
@@ -523,6 +687,20 @@ async function xlsxStructure(parts) {
       }
       links.push({ partition: "undetermined", wrapper: null,
         target: { why: "hyperlink_without_target" }, source });
+    }
+
+    /* An external relationship no <hyperlink> of this sheet uses is still an
+     * outbound reference the file carries: carried once, with no cell to name
+     * (R7's "an unused rel"), never dropped. */
+    for (const [, r] of relTargets) {
+      if (!r.external || usedRels.has(r)) continue;
+      const partition = classifyUrl(r.target);
+      links.push({
+        partition,
+        wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
+        target: { url: r.target },
+        source: null,
+      });
     }
 
     /* DEC-5: formulas BESIDE their cached values — two named fields on one
@@ -549,6 +727,28 @@ async function xlsxStructure(parts) {
       evItems.push({ kind: "hidden-cols", sheet: sheet.name,
         cols: walked.hiddenCols, count: walked.hiddenCols.length, source: null });
     }
+  }
+
+  /* Every OTHER part's outbound relationships (a drawing's hyperlinks, an
+   * external link's workbook path, the package's own): document-level facts
+   * with no cell to name. The sheets' own rels were handled above. */
+  const sheetRelsParts = new Set(sheets.filter((s) => s.part).map((s) => relsPartFor(s.part)));
+  for (const r of parts.rels.outbound) {
+    if (sheetRelsParts.has(r.part)) continue;
+    const partition = classifyUrl(r.target);
+    links.push({
+      partition,
+      wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
+      target: { url: r.target },
+      source: null,
+    });
+  }
+  /* An unreadable .rels part means links MAY be missing: stated as a link,
+   * never read as zero (R7, R22) — the docx/pptx form. */
+  for (const u of parts.rels.undetermined) {
+    links.push({ partition: "undetermined", wrapper: null,
+      target: { why: "rels_unreadable", part: u.part, detail: u.why }, source: null });
+    if (sheetRelsParts.has(u.part)) evUndetermined.push({ part: u.part, why: u.why });
   }
 
   /* DEC-5: a hidden SHEET is a first-class finding — from workbook.xml,
@@ -647,6 +847,7 @@ function xlsxText(parts) {
      * exactly this), never a silent truncation. */
     return {
       ok: true, container: "xlsx", document: null, sheets: [],
+      ...xlsxRangeUnits(parts),
       undetermined: [guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
     };
@@ -709,6 +910,9 @@ function xlsxText(parts) {
     container: "xlsx",
     document,
     sheets: outSheets,
+    /* R9 / D-415: the defined names and tables as `sheet-range` units,
+       beside each sheet's whole-sheet `range`. */
+    ...xlsxRangeUnits(parts),
     undetermined: allUndetermined,
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount,
       undetermined: allUndetermined.length },
@@ -751,13 +955,13 @@ export const xlsxEntry = {
      detect→structure works uniformly at the registry seam while a caller that
      already paid for parts() does not pay twice. */
   structure: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     return xlsxStructure(parts);
   },
   text: async (partsOrBytes) => {
-    const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+    const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
