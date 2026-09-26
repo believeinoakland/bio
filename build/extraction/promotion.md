@@ -1,4 +1,4 @@
-<!-- UNREVIEWED: written by a drafting worker for BOB #38 on 2026-09-26 (P18 preparation) and never reviewed; the membership draft's worker was stopped mid-run when P3 stopped product work. BOB reviews it before it becomes build/requirements/<module>.md. -->
+<!-- The promotion extraction survey, written for BOB #38 on 2026-09-26; superseded where it disagrees with build/requirements/promotion.md (reviewed by BOB #40, K31). -->
 # promotion — extraction report
 
 ## 1. Extraction map (measured, `grep -a`-verified line ranges)

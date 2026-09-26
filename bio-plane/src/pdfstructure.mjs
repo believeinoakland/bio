@@ -72,23 +72,78 @@ function isDelimiter(c) {
 
 /** FlateDecode via the native DecompressionStream — no bundled dependency.
  *  /FlateDecode is zlib-wrapped deflate, which is exactly what the "deflate"
- *  format decodes. Returns null on any decode failure (leniency: an
- *  unreadable stream is an absence, never a throw that loses the whole doc). */
+ *  format decodes. Returns `{ data, trailing }`, `trailing` the count of bytes
+ *  after the compressed data's own end (D-591), or null on any other decode
+ *  failure (leniency: an unreadable stream is an absence, never a throw that
+ *  loses the whole doc). */
 async function inflate(u8) {
   try {
-    const ds = new DecompressionStream("deflate");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-    return new Uint8Array(await out.arrayBuffer());
+    return { data: await inflateWhole(u8, "deflate"), trailing: 0 };
   } catch {
+    const kept = await inflateWithTrailing(u8);
+    if (kept) return kept;
     /* Some producers emit raw deflate with no zlib header. Try that. */
     try {
-      const ds = new DecompressionStream("deflate-raw");
-      const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-      return new Uint8Array(await out.arrayBuffer());
+      return { data: await inflateWhole(u8, "deflate-raw"), trailing: 0 };
     } catch {
       return null;
     }
   }
+}
+
+async function inflateWhole(u8, format) {
+  const out = new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream(format)));
+  return new Uint8Array(await out.arrayBuffer());
+}
+
+/* D-591 — A FLATE STREAM WITH BYTES AFTER ITS OWN END STILL DECODES.
+ *
+ * The native decoder refuses a zlib stream followed by anything (a stray EOL a
+ * producer counted into /Length, padding), and the whole page then read as
+ * empty. The decoder does hand over everything it inflated before it refuses,
+ * so that output is kept, but ONLY when it is provably complete. A zlib stream
+ * ends with the Adler-32 of its output, so the output is complete exactly when
+ * that checksum sits in the input and the prefix ending there inflates cleanly
+ * to the same bytes. A truncated or corrupt stream fails that proof and stays
+ * undecodable. Raw deflate carries no checksum, so it gets no such recovery.
+ * The test does not depend on the wording of any runtime's error message. */
+async function inflateWithTrailing(u8) {
+  if (u8.length < 6 || (u8[0] & 0x0f) !== 8 || ((u8[0] << 8) | u8[1]) % 31 !== 0) return null;
+  const chunks = [];
+  let total = 0;
+  try {
+    const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return null; // it did not fail this time: not a trailing-bytes case
+      chunks.push(value); total += value.length;
+    }
+  } catch { /* expected: the decoder refused what followed the end */ }
+  const data = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { data.set(c, off); off += c.length; }
+  const sum = adler32(data);
+  const want = [(sum >>> 24) & 0xff, (sum >>> 16) & 0xff, (sum >>> 8) & 0xff, sum & 0xff];
+  for (let i = 2; i + 4 < u8.length; i++) {
+    if (u8[i] !== want[0] || u8[i + 1] !== want[1] || u8[i + 2] !== want[2] || u8[i + 3] !== want[3]) continue;
+    const end = i + 4;
+    try {
+      const again = await inflateWhole(u8.subarray(0, end), "deflate");
+      if (again.length === data.length && again.every((b, k) => b === data[k])) {
+        return { data, trailing: u8.length - end };
+      }
+    } catch { /* not the end: keep looking */ }
+  }
+  return null;
+}
+
+function adler32(u8) {
+  let a = 1, b = 0;
+  for (let i = 0; i < u8.length; i++) {
+    a = (a + u8[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
 }
 
 /** Undo a PNG predictor (Predictor >= 10) applied before Flate. Xref and some
@@ -316,22 +371,30 @@ function parseDict(buf, s, pos) {
  * Document model: objects, streams, pages
  * ------------------------------------------------------------------ */
 
-/* EXPORTED for CPDF-12 (2026-08-08). `pdf-worker/src/pagepixels.mjs` needs the
- * SAME object/stream reader this module already has — xref-free top-level scan,
- * /ObjStm folding, page ordering, raw and Flate-decoded stream bytes. Writing a
- * second one in the fleet member is the D-164 lesson repeated (two mechanisms
- * for one job is how the next one goes stale in silence), so the class is
- * exported rather than copied. This is ADDITIVE and changes no behaviour: not
- * one line of logic here moved, and `extractPdfStructure` is untouched. */
+/* The ONE PDF object/stream reader in the codebase (CPDF-12): `pdf-worker`
+ * drives it too rather than growing a second one (the D-164 lesson). Its
+ * interface is `openPdf` below and the members the requirements name (R18-R23,
+ * R31): `pageCount`, `pageDict`, `resolve`, `dictOf`, `streamRawBytes`,
+ * `streamDecoded`, `isEncrypted`, and the three load steps. Every other field
+ * (`objects`, `_pageOrder`, `pageIndexByObj`, …) is private (N9, K28). */
 export class PdfDoc {
   constructor(bytes) {
     this.bytes = bytes;
     this.s = LATIN1.decode(bytes);
     this.objects = new Map();      // num -> value
     this.pageIndexByObj = new Map(); // page object num -> 0-based index
+    this._pageOrder = [];            // page object nums in page order
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
+    this._trailingNoted = new WeakSet(); // streams already noted flate_trailing_bytes
+  }
+
+  /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
+   *  (R31). */
+  pageDict(pageIdx) {
+    if (!Number.isInteger(pageIdx) || pageIdx < 0 || pageIdx >= this.pageCount) return null;
+    return this.dictOf({ t: "ref", n: this._pageOrder[pageIdx] });
   }
 
   note(msg) { this.notes.push(msg); }
@@ -355,6 +418,9 @@ export class PdfDoc {
       v = this.objects.get(v.n);
       seen++;
     }
+    /* A chain still a reference after 64 hops is a cycle: unresolvable (R20),
+       never the reference itself handed back as if it were a value. */
+    if (v && v.t === "ref") return null;
     return v ?? null;
   }
 
@@ -408,8 +474,13 @@ export class PdfDoc {
       filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [];
     if (names.length === 0) return raw; // unfiltered
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null; // not our phase-1 job
-    let data = await inflate(raw);
-    if (!data) return null;
+    const inflated = await inflate(raw);
+    if (!inflated) return null;
+    let data = inflated.data;
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
+      this._trailingNoted.add(streamObj);
+      this.note(`flate_trailing_bytes:${inflated.trailing}`);
+    }
     // Optional PNG predictor via /DecodeParms.
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
@@ -455,7 +526,7 @@ export class PdfDoc {
         const off = header[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
         if (this.objects.has(objNum)) continue;
-        const r = parseValue(null, inner, first + off);
+        const r = parseValueSafe(inner, first + off);
         if (r) this.objects.set(objNum, r.value);
       }
     }
@@ -1319,20 +1390,28 @@ function pageResources(doc, pageMap) {
   return null;
 }
 
-/** Concatenate a page's content stream(s) into one decoded latin1 string. */
+/** Concatenate a page's content stream(s) into one decoded latin1 string, and
+ *  name every part of it that could not be read (R25): a stream that would not
+ *  decode (`content_stream_undecodable`), or a /Contents entry that resolves to
+ *  no stream at all (`content_stream_unresolvable`). A page with no /Contents
+ *  is genuinely blank and names nothing. */
 async function pageContent(doc, pageMap) {
+  const unread = [];
+  if (pageMap.Contents == null) return { text: "", unread };
   const c = doc.resolve(pageMap.Contents);
-  if (!c) return "";
+  if (!c) return { text: "", unread: ["content_stream_unresolvable"] };
   const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
   const parts = [];
   for (const st of streams) {
     if (st && st.t === "stream") {
       const data = await doc.streamDecoded(st);
       if (data) parts.push(LATIN1.decode(data));
-      else doc.note("content_stream_undecodable");
+      else { doc.note("content_stream_undecodable"); unread.push("content_stream_undecodable"); }
+    } else {
+      unread.push("content_stream_unresolvable");
     }
   }
-  return parts.join("\n");
+  return { text: parts.join("\n"), unread };
 }
 
 /* D-481 — THE TEXT MATRIX, ENOUGH OF IT TO KNOW WHERE A LINE IS.
@@ -1460,10 +1539,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
   const content = await pageContent(doc, pageMap);
-  const toks = tokenizeContent(content);
+  const toks = tokenizeContent(content.text);
 
   const pieces = [];
-  const undetermined = [];
+  /* D-591 (R25): a page whose content could not be read says so on the PAGE,
+     so it is never indistinguishable from a page that is actually blank. */
+  const undetermined = content.unread.map((reason) =>
+    ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
   let curFont = null;      // font info, or null
   let curFontName = null;  // the resource name last selected by Tf
   const stack = [];
@@ -2072,7 +2154,7 @@ function pageDrawsImage(doc, resources) {
 }
 
 /** Document text (Tier 1). Extends the I2 output; see the module header. */
-async function extractText(doc, pageOrder) {
+async function extractText(doc) {
   /* D-251: WHO MADE THIS LAYER. Read ONCE, from the file's own /Info, and
      carried on the text shape rather than on the document — because the claim
      it bounds is a claim about the TEXT, and a consumer holding the text is the
@@ -2093,9 +2175,15 @@ async function extractText(doc, pageOrder) {
   const fontCache = new Map();
   const pages = [];
   const allUndetermined = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
-    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
-    if (!pageMap) { pages.push({ page: idx, text: "", undetermined: [] }); continue; }
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pageMap = doc.pageDict(idx);
+    if (!pageMap) {
+      /* R27: a page object that does not resolve is UNREAD, not blank. */
+      const marker = { page: idx, reason: "page_unreadable", font: null, codes: "", count: 0 };
+      pages.push({ page: idx, text: "", undetermined: [marker] });
+      allUndetermined.push(marker);
+      continue;
+    }
     let res;
     try {
       res = await extractPageText(doc, idx, pageMap, fontCache);
@@ -2230,16 +2318,27 @@ async function decodeContentStreams(doc, contents) {
   return { text: parts.join("\n") };
 }
 
+/* N9 (R32): each placement's stream and composed CTM, held OUTSIDE the
+ * placement so its enumerable shape (R16) is exactly the IC-1 reference and no
+ * parser object can be read off it by a field name. `pdf-worker`'s crop asks
+ * `imagePlacementSource` instead. A copy of a placement is not a key. */
+const PLACEMENT_SOURCE = new WeakMap();
+
+/** The stream and composed CTM behind one placement `pdfPageImages` returned:
+ *  `{ stream, ctm }` (`stream` null for an inline image; `ctm` a fresh copy), or
+ *  null for anything else (R32). Never throws. */
+export function imagePlacementSource(placement) {
+  if (!placement || typeof placement !== "object") return null;
+  const src = PLACEMENT_SOURCE.get(placement);
+  return src ? { stream: src.stream, ctm: src.ctm.slice() } : null;
+}
+
 /**
  * Every image one page PAINTS, in painting order, with its rectangle.
  * Returns `{ images:[placement…], why:null }` or `{ images:null, why }`.
- * A placement carries `_stream` (the image XObject's stream object, or null for
- * an inline image) and `_ctm` (the matrix it was painted through) as
- * NON-ENUMERABLE properties, so the I2 output never holds a parser object while `pdf-worker`'s crop can still find the bytes it names.
  */
 export async function pdfPageImages(doc, pageIdx) {
-  const order = doc._pageOrder || [];
-  const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
+  const pageMap = doc.pageDict(pageIdx);
   if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
   const top = await decodeContentStreams(doc, pageMap.Contents);
   if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
@@ -2283,8 +2382,7 @@ export async function pdfPageImages(doc, pageIdx) {
               filters,
               axis_aligned: ctm[1] === 0 && ctm[2] === 0,
             });
-            Object.defineProperty(placement, "_stream", { value: st, enumerable: false });
-            Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+            PLACEMENT_SOURCE.set(placement, { stream: st, ctm });
             images.push(placement);
           } else if (sub === "Form") {
             const key = ref && ref.t === "ref" ? ref.n : null;
@@ -2310,8 +2408,7 @@ export async function pdfPageImages(doc, pageIdx) {
             mime: null, name: null, inline: true, width: null, height: null,
             filters: [], axis_aligned: ctm[1] === 0 && ctm[2] === 0,
           });
-          Object.defineProperty(placement, "_stream", { value: null, enumerable: false });
-          Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+          PLACEMENT_SOURCE.set(placement, { stream: null, ctm });
           images.push(placement);
           break;
         }
@@ -2329,15 +2426,133 @@ export async function pdfPageImages(doc, pageIdx) {
 }
 
 /** Every page's images, or NULL with the reason — never a partial list. */
-async function extractImages(doc, pageOrder) {
+async function extractImages(doc) {
   if (doc.isEncrypted()) return { images: null, why: "encrypted" };
   const all = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
+  for (let idx = 0; idx < doc.pageCount; idx++) {
     const got = await pdfPageImages(doc, idx);
     if (!got.images) return { images: null, why: got.why };
     for (const im of got.images) all.push(im);
   }
   return { images: all, why: null };
+}
+
+/* ------------------------------------------------------------------ *
+ * D-627 (R26) — A PAGE WHOSE CONTENT IS A PAINTED IMAGE, WHILE ITS TEXT IS A
+ * FOLIO
+ * ------------------------------------------------------------------ *
+ *
+ * D-608 made tier 1 read text inside Form XObjects, so a page that paints an
+ * image of a table and draws its folio through a form now BEARS text and
+ * rightly carries no `no_text_layer`. Its CONTENT is still unread: a folio does
+ * not read a page an image fills. This marker states that second fact, and the
+ * escalation that reads markers can route it to OCR as it routes a no-text page.
+ *
+ * THE TWO FIGURES, both carried on the marker:
+ *   - `image_share`: the share of the page's visible box (CropBox inside
+ *     MediaBox, inherited) that the UNION of its painted images' rectangles
+ *     (R16) covers, each clipped to the box: an overlap counts once and a part
+ *     off the page counts nothing. Rounded to 4 places.
+ *   - `glyphs`: the text the page SHOWS: its decoded non-whitespace code
+ *     points, plus the `count` of its undetermined markers (characters shown
+ *     that tier 1 could not decode). A folio with no /ToUnicode is 3 either way.
+ *
+ * THE THRESHOLDS ARE MEASURED (M-178, snapshot `land/worker/D-627`), not
+ * guessed: over 1,788 pages of three budget and audit documents, the 17 pages
+ * that paint an image and show at most a folio are all images of content, with
+ * shares 0.1897 to 0.6542; every other image-painting page shows at least 22
+ * glyphs. So at most 4 glyphs with a share of at least 0.18 reads
+ * `image_content_unread`; a page in either measured gap (5 to 21 glyphs, or a
+ * share above 0 and under 0.18) or whose page box cannot be read reads
+ * `image_content_undetermined` — never forced either way; 22 glyphs or more
+ * says nothing. These are general PDF-reading parameters (R29): where they were
+ * measured is provenance, not jurisdiction. Pending BOB's statement of the
+ * figures in R26 (QUESTION Q1 in the job record).
+ *
+ * WHAT THIS CANNOT SEE (M-178): a chart painted as an image under a text title
+ * has the same two figures as a photo page with captions, so it reads no
+ * marker. With `images` null (a walk that did not finish, or an encrypted file)
+ * no share can be measured and nothing is said. A page already marked
+ * `no_text_layer` is left alone: that marker already says it is unread. */
+const IMAGE_CONTENT_MAX_GLYPHS = 4;
+const IMAGE_CONTENT_MIN_SHARE = 0.18;
+const IMAGE_CONTENT_TEXT_GLYPHS = 22;
+
+/** A page's visible box, [x0,y0,x1,y1]: CropBox inside MediaBox, each inherited
+ *  through /Parent. Null when there is no readable MediaBox. */
+function pageBox(doc, pageMap) {
+  const read = (key) => {
+    let p = pageMap, d = 0;
+    while (p && d++ < 32) {
+      const a = doc.resolve(p[key]);
+      if (a && a.t === "arr" && a.items.length === 4) {
+        const v = a.items.map((x) => doc.resolve(x));
+        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
+          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+        return null;
+      }
+      p = doc.dictOf(p.Parent);
+    }
+    return null;
+  };
+  const mb = read("MediaBox");
+  if (!mb) return null;
+  const cb = read("CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+
+const clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
+const rectArea = (r) => Math.max(0, r[2] - r[0]) * Math.max(0, r[3] - r[1]);
+
+/** The area the union of axis-aligned rectangles covers, each point once. */
+function unionArea(rects) {
+  const rs = rects.filter((r) => rectArea(r) > 0);
+  const xs = [...new Set(rs.flatMap((r) => [r[0], r[2]]))].sort((a, b) => a - b);
+  let total = 0;
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const x0 = xs[i], x1 = xs[i + 1];
+    const spans = rs.filter((r) => r[0] <= x0 && r[2] >= x1).map((r) => [r[1], r[3]]).sort((a, b) => a[0] - b[0]);
+    let covered = 0, lo = null, hi = null;
+    for (const [a, b] of spans) {
+      if (lo === null || a > hi) { if (lo !== null) covered += hi - lo; lo = a; hi = b; }
+      else hi = Math.max(hi, b);
+    }
+    if (lo !== null) covered += hi - lo;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+
+/** Add D-627's markers to tier 1's text, in place. `images` is R16's list. */
+function markImageContent(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = pg.undetermined;
+    if (marks.some((m) => m.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch of pg.text) if (!/\s/u.test(ch)) decoded++;
+    const glyphs = decoded + marks.reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0
+      ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 10000) / 10000
+      : null;
+    if (share === 0) continue;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    pg.undetermined = [...marks, {
+      page: pg.page, reason: unread ? "image_content_unread" : "image_content_undetermined",
+      font: null, codes: "", count: 0, image_share: share, glyphs,
+    }];
+    added++;
+  }
+  if (!added) return;
+  text.undetermined = [...text.pages.flatMap((p) => p.undetermined),
+                       ...text.undetermined.filter((m) => !Number.isInteger(m.page))];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
 }
 
 /* ------------------------------------------------------------------ *
@@ -2362,6 +2577,25 @@ async function extractImages(doc, pageOrder) {
  *          "authored" determination and there must never be one — see the D-251
  *          block above.
  */
+/** R8's whole lenient read, the one way a document is opened here and in
+ *  `pdf-worker`. The caller has checked the bytes. */
+async function loadPdf(bytes) {
+  const doc = new PdfDoc(bytes);
+  doc.scanTopLevel();
+  await doc.loadObjectStreams();
+  doc.buildPageIndex();
+  return doc;
+}
+
+/** Open a PDF for reading (R30): a `PdfDoc` that has run R8's whole read, or
+ *  null when `bytes` is not a Uint8Array or carries no `%PDF-` signature in its
+ *  first 1024 bytes. Never throws. */
+export async function openPdf(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
+  return loadPdf(bytes);
+}
+
 export async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -2372,21 +2606,11 @@ export async function extractPdfStructure(bytes) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
 
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  // Tag page dicts with their own object number so tree-walk fallbacks work.
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
-  }
-  doc.buildPageIndex();
-
+  const doc = await loadPdf(bytes);
   const links = [];
-  const pageOrder = doc._pageOrder || [];
 
-  for (let pageIdx = 0; pageIdx < pageOrder.length; pageIdx++) {
-    const pageNum = pageOrder[pageIdx];
-    const page = doc.dictOf({ t: "ref", n: pageNum });
+  for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
+    const page = doc.pageDict(pageIdx);
     if (!page) continue;
     const annots = doc.resolve(page.Annots);
     if (!annots || annots.t !== "arr") continue;
@@ -2446,14 +2670,16 @@ export async function extractPdfStructure(bytes) {
   for (const l of links) counts[l.partition]++;
 
   // Tier 1 text (CPDF-4): extends this same I2 output object; do not fork it.
-  const text = await extractText(doc, pageOrder);
+  const text = await extractText(doc);
 
   /* CPDF-18: the images each page PAINTS, as IC-1 `image {page, rect}`
      references. TOP-LEVEL on the structure object rather than on `text`,
      because the pdf-worker (I6) REPLACES `text` with its Tier-2 decode and an
      image list riding there would vanish on exactly the documents Tier 2
      reads. NULL with `imagesWhy` when not walked; an empty list is a zero. */
-  const imgs = await extractImages(doc, pageOrder);
+  const imgs = await extractImages(doc);
+  /* D-627 (R26): a page an image fills while its text is a folio says so. */
+  if (imgs.images) markImageContent(doc, text, imgs.images);
 
   return {
     ok: true,
