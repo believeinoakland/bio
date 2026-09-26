@@ -121,6 +121,8 @@ import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* D-431: the case document is signed BEFORE its finding is ratified — the ceremony's own order. */
 import { ratifyCase } from "./caseceremony.mjs";
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
+import { moduleFiles } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's extracted modules */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -148,6 +150,12 @@ const decomment = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
   .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
 const STORE_BARE = decomment(STORE_SRC);
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions): BAD_HANDLE (`enroll`),
+   NOT_ACTIVE, NOT_AN_OWNER and NO_OWNERS moved with their methods into `src/membership/`, so §1's walk reads
+   `store.mjs` AND the modules extracted from it, EACH FILE WALKED ON ITS OWN (a method's span never runs across a
+   file boundary). The refusals are still read out of the plane's source, never trusted from the debt row. */
+const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion")]
+  .map((f) => decomment(readFileSync(SRC(f), "utf8")))];
 const INDEX_BARE = decomment(INDEX_SRC);
 
 /* THE SET, AS A SET. Typed here ONCE and then CONFIRMED against `store.mjs`
@@ -286,7 +294,9 @@ const promote = async (id, text, type, tok = RUTH, meta = {}, extraFiles = [], r
     register,
     meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : type === "project" ? "active" : "collected",
-            created: NOW, last_updated: LATER, ...meta } });
+            /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R12): the envelope's dates are the document's own,
+               where it states them — an envelope contradicting them is refused ENVELOPE_DATES_DISAGREE. */
+            created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER, ...meta } });
 const mustPromote = async (...a) => {
   const r = await promote(...a);
   if (!r.ok) throw new Error(`promote ${a[0]}: ${JSON.stringify(r).slice(0, 600)}`);
@@ -318,10 +328,12 @@ console.log("\n=== REC-78 / D-230 · the eight shadowed refusals no suite pinned
  * ==================================================================== */
 console.log("\n--- 1. the eight are confirmed against the plane, and each still shadows something ---");
 {
-  const heads = [...STORE_BARE.matchAll(/^ {2}(?:static\s+)?(?:async\s+)?(#?[A-Za-z_$][\w$]*)\s*\(/gm)]
-    .filter((m) => !/^(if|for|while|switch|catch|return|constructor)$/.test(m[1]));
-  const methods = heads.map((h, i) => ({
-    name: h[1], body: STORE_BARE.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : STORE_BARE.length) }));
+  const methods = WALKED_BARE.flatMap((BARE) => {
+    const heads = [...BARE.matchAll(/^ {2}(?:static\s+)?(?:async\s+)?(#?[A-Za-z_$][\w$]*)\s*\(/gm)]
+      .filter((m) => !/^(if|for|while|switch|catch|return|constructor)$/.test(m[1]));
+    return heads.map((h, i) => ({
+      name: h[1], body: BARE.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : BARE.length) }));
+  });
   const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})")/g;
 
   /* Every refusal site in the file, with what sits BEHIND it in its own method. */
@@ -352,7 +364,8 @@ console.log("\n--- 1. the eight are confirmed against the plane, and each still 
     [methods.length >= 350, sites.length >= 450], [true, true]);
 
   const deepest = (code) => sites.filter((s) => s.code === code).sort((a, b) => b.shadows - a.shadows)[0] ?? null;
-  t("every one of the eight is a refusal THIS PLANE STILL MINTS — read out of `store.mjs`, never "
+  t("every one of the eight is a refusal THIS PLANE STILL MINTS — read out of `store.mjs` (and the modules "
+  + "extracted from it, T3), never "
   + "trusted from the debt row", EIGHT.filter((c) => !deepest(c)), []);
   t("and every one of them still SHADOWS at least one refusal behind it in its own method, which is "
   + "the whole reason a complete payload was needed to pin any of them",
@@ -735,7 +748,8 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
       /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: the label said `published` over bytes whose state is their
          own; it is now refused, so the label names no state and the record takes the bytes'. */
       meta: { object_type: "inquiry", group: GROUP,
-              created: NOW, last_updated: LATER } });
+              /* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R12): the document's own dates. */
+              created: docDate(next, "created") ?? NOW, last_updated: docDate(next, "last_updated") ?? LATER } });
     if (!r.ok) throw new Error(`revise to edition ${n}: ${JSON.stringify(r).slice(0, 400)}`);
     return r;
   };

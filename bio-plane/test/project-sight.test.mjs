@@ -953,6 +953,21 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     if (m) { cur = m[1]; routes[cur] = ""; }
     if (cur) routes[cur] += lines[i];
   }
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): the store's map now spreads
+     `membershipOps(...)`, the routes membership contributes (`projectparticipants`, `projectvisibility`,
+     `projectrequests`, `projectownerarith` among them), declared in `src/membership/index.mjs` at the same indent.
+     They are store routes still, and are read from there into the same table (a store route of the same name wins). */
+  { const mlines = src("membership/index.mjs").split("\n");
+    const mat = mlines.findIndex((l) => /^export function membershipOps\(/.test(l));
+    let mcur = null;
+    for (let i = mat + 1; mat >= 0 && i < mlines.length && !/^  \};/.test(mlines[i]); i++) {
+      const m = mlines[i].match(/^        ([a-z0-9]+): /);
+      if (m) { mcur = m[1] in routes ? null : m[1]; if (mcur) routes[mcur] = ""; }
+      if (mcur) routes[mcur] += mlines[i];
+    }
+    t("11g00: membership's routes were read (the map it contributes is not empty)",
+      ["projectparticipants", "projectvisibility", "projectrequests"].every((r) => routes[r] !== undefined), true);
+  }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");

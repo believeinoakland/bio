@@ -217,7 +217,9 @@ t("the positions, as measured: invite is the OWNER's; join the not-yet-joined pa
    at("projectownerremove", "iris", "PA").offered, at("projectownerremove", "iris", "PC").offered,
    at("projectownerrescue", "ruth", "PR").offered, at("projectownerrescue", "founder", "PR").offered,
    at("projectownerrescue", "ruth", "PA").offered],
-  [true, false, true, true, false, false, false, false, "LAST_OWNER_CANNOT_LEAVE",
+  /* UPDATED 2026-09-26 (T3, legacy-tests; membership R35, REC-224): the only owner's leave is refused
+     LAST_COMMITTED_OWNER (no other owner is committed), no longer LAST_OWNER_CANNOT_LEAVE. The position is unchanged. */
+  [true, false, true, true, false, false, false, false, "LAST_COMMITTED_OWNER",
    false, false, true, false, true, true, true, false]);
 
 /* ============================ 2. CROSS-PROJECT: the liar's route, named */
@@ -381,10 +383,18 @@ t("the roster fact is asked of `by` through the predicates the roster refusals r
    /ownerMath\(this\.#owners\(/.test(rosterFact), /#rescueRefusal\(/.test(rosterFact),
    /\bidentity\b/.test(rosterFact.replace(/\/\*[\s\S]*?\*\//g, "")), /#ownsAnyProject/.test(rosterFact)],
   [true, true, true, true, true, false, false]);
-const rescue = (() => { const s = storeSrc.indexOf("  projectOwnerRescue({"); return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s)); })();
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): `projectOwnerRescue` and the rescue predicate
+   moved to `src/membership/`. The store's `projectOwnerRescue` and `#rescueRefusal` are one-line delegations to
+   membership's `projectOwnerRescue` and `rescueRefusal`; so the act is read in membership's source, where it calls
+   `this.rescueRefusal(projectId, by)`, and both store delegations are asserted — the fact's `#rescueRefusal` and the
+   act's predicate are still ONE. */
+const membershipSrc = readFileSync(new URL("../src/membership/index.mjs", import.meta.url), "utf8");
+const rescue = (() => { const s = membershipSrc.indexOf("  projectOwnerRescue({"); return s === -1 ? "" : membershipSrc.slice(s, membershipSrc.indexOf("\n  }\n", s)); })();
 t("and the rescue ACT runs the same `#rescueRefusal` the fact asks — one predicate, not a copy",
-  [rescue.length > 200, /this\.#rescueRefusal\(projectId, by\)/.test(rescue), /OWNERS_ARE_ACTIVE/.test(rescue)],
-  [true, true, false]);
+  [rescue.length > 200, /this\.rescueRefusal\(projectId, by\)/.test(rescue), /OWNERS_ARE_ACTIVE/.test(rescue),
+   /^  #rescueRefusal\(\.\.\.a\) \{ return membershipOf\(this\.ctx\)\.rescueRefusal\(\.\.\.a\); \}/m.test(storeSrc),
+   /^  projectOwnerRescue\(\.\.\.a\) \{ return membershipOf\(this\.ctx\)\.projectOwnerRescue\(\.\.\.a\); \}/m.test(storeSrc)],
+  [true, true, false, true, true]);
 
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack || e}`);

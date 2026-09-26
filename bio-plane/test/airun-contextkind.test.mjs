@@ -305,7 +305,10 @@ console.log("\n--- 7. a machine sees no more than its principal: vera's agent an
   /* An `ai` credential carries its principal member's viewer and stamps NO actor (it is not asked about
      participation). BOB #16: its open over an id its PRINCIPAL cannot see answers as absent, exactly as that
      member's own open does. The first build let it through (a machine was not refused an unheld id). */
-  const cred = await POST(`op=aicredentialmint&token=${RUTH}`, {
+  /* UPDATED 2026-09-26 (T3, legacy-tests; membership R29): a member-scoped credential's principal is the minter
+     itself, and ruth minting vera's is now refused AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER; so vera mints her own
+     agent. The principal — and so the viewer the agent carries — is vera exactly as before. */
+  const cred = await POST(`op=aicredentialmint&token=${VERA}`, {
     tokenId: "vera-agent-153", principalKind: "member", principalMember: "vera",
     taskScope: "runs", writes: ["airunopen"], note: "vera's agent, allowed to open its own runs" });
   const AK = cred?.token;

@@ -195,6 +195,7 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
+import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 /* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
@@ -211,7 +212,12 @@ const t = (label, got, want) => {
 /* ==========================================================================
  * THE WALK — every published collection, read off the plane's own source.
  * ========================================================================== */
-const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions): this walk's subject is the
+   store's class read as a census (op -> method off the dispatch map, each method's returns), and the extraction left
+   it reading one-line delegations and a spread of `membershipOps(...)`. The corpus is the store's text with the
+   extracted methods RE-INLINED where the store delegates to them (`inlinedStore`, `extracted-sources.mjs`, which
+   states each substitution); every figure and name below is unchanged. */
+const SRC_STORE = inlinedStore();
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own

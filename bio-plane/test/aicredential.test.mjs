@@ -40,6 +40,7 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
+import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's corpus with its extracted modules */
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -47,9 +48,14 @@ import { AI_CREDENTIAL_CHECKS, isMachineIdentity, isMachineStamp } from "../chec
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions, machine-fences' precedent):
+   the four ai-credential methods, their DEC-49 regions and the session-token generator moved to `src/membership/`,
+   and `reopen` (MACHINE_CANNOT_REOPEN) to `src/promotion/`; the store's corpus is `store.mjs` AND those modules. */
+const STORE_SRC = storeCorpus(["membership", "promotion"]);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* The ai_credentials DDL moved with membership's tables (R57–R59) into `src/membership/schema.mjs`. */
+const MEMBERSHIP_SCHEMA_SRC = readFileSync(SRC("membership/schema.mjs"), "utf8");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 
 let pass = 0, fail = 0;
@@ -202,11 +208,18 @@ const mint = async (over = {}, tok = RUTH) => drive(await POST(`op=aicredentialm
  * ====================================================================== */
 console.log("\n--- 1. one class, and D-199 (2): the scope is a ROW, not a binding ---");
 {
-  const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS ai_credentials");
-  const gov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
-  t("ai_credentials exists in schema.mjs", tbl > -1, true);
-  t("and is declared BEFORE the host_governor block (CLAUDE.md's trap)", tbl > -1 && gov > -1 && tbl < gov, true);
-  const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R59, the extraction of membership's tables): the table's
+     DDL moved out of the legacy `schema.mjs` into `src/membership/schema.mjs`, which membership's own `migrate()`
+     runs AFTER the legacy schema pass (store.mjs, `membershipOf(this.ctx).migrate()`). The host_governor trap was a
+     property of the legacy schema text, whose pass the table no longer rides; what carries over is that the table
+     is declared ONCE, in the module's schema, and nowhere in the legacy text — so there is one DDL to read. That the
+     table is really CREATED in a booted store is driven by every mint below. */
+  const tbl = MEMBERSHIP_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS ai_credentials");
+  t("ai_credentials exists in membership's schema (src/membership/schema.mjs)", tbl > -1, true);
+  t("and is declared there ONCE and NOWHERE in the legacy schema.mjs, whose host_governor trap it no longer rides",
+    [MEMBERSHIP_SCHEMA_SRC.split("CREATE TABLE IF NOT EXISTS ai_credentials").length - 1,
+     SCHEMA_SRC.includes("CREATE TABLE IF NOT EXISTS ai_credentials")], [1, false]);
+  const body = MEMBERSHIP_SCHEMA_SRC.slice(tbl, MEMBERSHIP_SCHEMA_SRC.indexOf("\n);", tbl));
   t("the row names WHO minted it and WHEN — an authored, dated act, which is what a settings row "
   + "is not (D-199 (2), DEC-17 transplanted)",
     [/minted_by\s+TEXT NOT NULL/.test(body), /minted_at\s+TEXT NOT NULL/.test(body)], [true, true]);
@@ -478,7 +491,11 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
  * ====================================================================== */
 console.log("\n--- 6. the STATED viewer, and why D-199 (4) is a measurement rather than a label ---");
 {
-  const annaKey = await mint({ tokenId: "annas-agent", principalKind: "member", principalMember: "anna" });
+  /* UPDATED 2026-09-26 (T3, legacy-tests; membership R29): a member-scoped credential's principal is the minter
+     itself, and ruth minting one for anna is now refused AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER; so anna mints her
+     own agent. What this block measures — the principal IS the stamped viewer — is unchanged. */
+  const annaKey = await mint({ tokenId: "annas-agent", principalKind: "member", principalMember: "anna" }, ANNA);
+  t("(anna's own agent was minted — the arms below are not read off a refusal)", [annaKey?.ok, typeof annaKey?.token], [true, "string"]);
   const orgSees = await GET(`op=list&token=${ORG.token}`);
   const annaSees = await GET(`op=list&token=${annaKey.token}`);
   const ruthSees = await GET(`op=list&token=${AK}`);
@@ -626,7 +643,7 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      `machine-fences.test.mjs` block 3b (D-503). The corpus is NOT widened here: this suite's subject
      is the store's fence set under a credential, and widening it would make this arm red over acts
      it was never written to drive. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under an `ai` credential — a complete "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3) mints was driven under an `ai` credential — a complete "
   + "sweep OF THAT CORPUS, and it says so because it was checked, not because it looks like one. The "
   + "five `src/index.mjs` mints are machine-fences.test.mjs block 3b's (D-503)",
     minted.filter((c) => !(c in ACTS)), []);

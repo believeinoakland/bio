@@ -322,8 +322,11 @@ console.log("\n--- 6. a member enrolled as `admin` BEFORE the reservation is REP
     cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
     /* The legacy build: this tree's own store with the reservation neutered at its ONE
        site — the build a real instance ran before C-55 — over a PERSISTED store. */
-    const ANCHOR = "if (memberId === Store.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"";
-    const storePath = join(root, "bio-plane", "src", "store.mjs");
+    /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): `memberAdd` and its reservation moved
+       from `store.mjs` into `src/membership/index.mjs`, where the constant is `Membership.ROOT_ADMIN`; the legacy
+       build neuters the same ONE site in that file. */
+    const ANCHOR = "if (memberId === Membership.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"";
+    const storePath = join(root, "bio-plane", "src", "membership", "index.mjs");
     const src = readFileSync(storePath, "utf8");
     const occurrences = src.split(ANCHOR).length - 1;
     writeFileSync(storePath, src.replace(ANCHOR, "if (false)\n      return refusal(\"MEMBER_ID_RESERVED\""));

@@ -348,17 +348,27 @@ console.log("\n--- 6. a grant goes to an ACTIVE member who is NOT already a part
   t("6b: the owner can still decline it", [d?.ok, d?.state], [true, "declined"]);
   must("kai asks", await POST(`op=projectrequest&token=${KAI}&projectId=${P}`));
   must("iris invites kai directly", await POST(`op=projectinvite&token=${IRIS}&projectId=${P}&handle=kai`));
+  /* UPDATED 2026-09-26 (T3, legacy-tests; membership R33, REC-226): an invitation now CLOSES the invitee's open
+     request `granted`, by the inviter, in the same act — so after iris's invitation kai has no open request, a grant
+     finds none (C-95.4) and kai has none to withdraw (R50). The grant's C-95.8 refusal (R51) stands, and is no
+     longer reachable through the ops by this route: an invitation was the way a requester became a participant
+     with the request still open. It is driven at the module, test/m/membership/requests-fence-facts.test.mjs (R51). */
+  const kReq = (await GET(`op=projectrequests&token=${IRIS}&projectId=${P}`))?.requests?.filter((q) => q.handle === "kai").at(-1);
+  t("6c0: iris's invitation CLOSED kai's open request `granted` — the invitation is the answer (R33)",
+    kReq?.state, "granted");
   const k = await POST(`op=projectrequestanswer&token=${IRIS}&projectId=${P}&handle=kai&answer=grant`);
-  t("6c: granting a member already a participant is refused C-95.8 — a grant would invite nobody new",
-    [codeOf(k), k?.check], ["PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT", "C-95.8"]);
+  t("6c: so a grant to kai, now a participant, finds no open request (C-95.4) — a grant would invite nobody new",
+    [codeOf(k), k?.check], ["PROJECT_REQUEST_NONE_OPEN", "C-95.4"]);
   const kw = await POST(`op=projectrequestwithdraw&token=${KAI}&projectId=${P}`);
-  t("6d: and kai, now invited, can still withdraw his own open request", [kw?.ok, kw?.state], [true, "withdrawn"]);
+  t("6d: and kai, now invited, has no open request left to withdraw (R50)", [kw?.ok, codeOf(kw)], [false, "PROJECT_REQUEST_NONE_OPEN"]);
 }
 
 /* ======================================== 8. THE REQUESTS READ IS BOUNDED, AND THE BOUND IS PUBLISHED (bounds.test) */
 console.log("\n--- 8. op=projectrequests is PAGED: `limit` applied, `truncated` measured one row past the cap ---");
 {
-  const CEIL = Number((/static PROJECT_REQUESTS_LIMIT = (\d+);/.exec(readFileSync(join(SRC_DIR, "store.mjs"), "utf8")) || [])[1]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction, R53): the cap is declared in
+     `src/membership/index.mjs` (the store's `PROJECT_REQUESTS_LIMIT` now an alias of membership's), and read there. */
+  const CEIL = Number((/static PROJECT_REQUESTS_LIMIT = (\d+);/.exec(readFileSync(join(SRC_DIR, "membership", "index.mjs"), "utf8")) || [])[1]);
   const whole = await GET(`op=projectrequests&token=${PAM}`);
   const bite = await GET(`op=projectrequests&token=${PAM}&limit=2`);
   const over = await GET(`op=projectrequests&token=${PAM}&limit=${CEIL * 10}`);

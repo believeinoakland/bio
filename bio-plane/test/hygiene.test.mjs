@@ -79,6 +79,10 @@ import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, GRADE_
 /* REC-46: the viewer compiler, so the STATED LIMIT below can pin what the
    function ANSWERS rather than what its source says. */
 import { viewerPredicate } from "../src/query.mjs";
+/* ADDED 2026-09-26 (T3, legacy-tests; record-core R21, R23, membership R59): the purge census reads the extracted
+   modules' own purge declarations at their interface. */
+import { RecordCore } from "../src/record-core/index.mjs";
+import { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "../src/membership/index.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -473,7 +477,38 @@ console.log("\n--- the schema template is intact ---");
     i += 1;
   }
   t("no unescaped backtick inside it", ticks, 0);
-  t("and no interpolation at all: the schema is static text", interps, 0);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R1, the schema divided by module): "and no interpolation at
+     all: the schema is static text" counted `${` in schema.mjs's literal and wanted 0. record-core's tables moved to
+     `src/record-core/schema.mjs`, and the legacy literal now interpolates that module's DDL (`${RECORD_SCHEMA}`) until
+     it is divided. The claim is kept for the whole text the store runs: every interpolation is a bare identifier
+     IMPORTED from an extracted module's directory, and that module's own literal is static text (no interpolation, no
+     unescaped backtick). Anything else interpolated fails here by name. */
+  const imports = new Map([...src.matchAll(/^import\s*\{([^}]*)\}\s*from\s*"\.\/([\w-]+)\/[\w.-]+\.mjs";/gm)]
+    .flatMap((m) => m[1].split(",").map((n) => [n.trim(), m[2]]).filter(([n]) => n)));
+  const staticLiteral = (dir, name) => {
+    for (const f of readdirSync(join(DIR, "..", "src", dir)).filter((n) => n.endsWith(".mjs"))) {
+      const text = readFileSync(join(DIR, "..", "src", dir, f), "utf8");
+      const head = `export const ${name} = \``;
+      const at = text.indexOf(head);
+      if (at < 0) continue;
+      let k = at + head.length, tk = 0, ip = 0;
+      for (; k < text.length; k++) {
+        if (text[k] === "\\") { k++; continue; }
+        if (text[k] === "`") break;
+        if (text[k] === "$" && text[k + 1] === "{") ip++;
+      }
+      return { file: `${dir}/${f}`, closed: k < text.length, interps: ip };
+    }
+    return null;
+  };
+  const interpolated = [...body.matchAll(/\$\{([^}]*)\}/g)].map((m) => m[1].trim());
+  const notStatic = interpolated.filter((name) => {
+    if (!/^\w+$/.test(name) || !imports.has(name)) return true;
+    const lit = staticLiteral(imports.get(name), name);
+    return !lit || !lit.closed || lit.interps !== 0;
+  });
+  t(`and no interpolation but an extracted module's own schema, itself static text (${interps} interpolated: ${JSON.stringify(interpolated)})`,
+    [interpolated.length, notStatic], [interps, []]);
   let loaded = null;
   try { loaded = (await import("../src/schema.mjs")).SCHEMA; } catch (e) {
     console.log("    load error:", e.message);
@@ -697,8 +732,20 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      first enumeration listed a table named "does" for exactly that reason. */
   const storeTables = [...new Set(
     [...store.matchAll(/CREATE (?:VIRTUAL )?TABLE IF NOT EXISTS\s+(\w+)\s*(?:\(|USING\s)/g)].map((m) => m[1]))];
-  t("store.mjs's hand-created tables are seen too (D-137)", storeTables.length >= 8, true);
-  const allTables = [...new Set([...schemaTables, ...storeTables])];
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R1, membership R57-R59): "store.mjs's hand-created tables
+     are seen too (D-137)" wanted at least eight CREATEs in store.mjs; the extraction moved record-core's tables into
+     `src/record-core/schema.mjs` and membership's (four of the hand-created ones among them) into
+     `src/membership/schema.mjs`, whose DDL the modules run themselves. D-137's lesson, "closing a class by parsing one
+     file closes it only for that file", is applied to them: the census's corpus is WIDENED to every extracted
+     module's files, and the floor of eight is asked of what is created outside schema.mjs's own literal. */
+  const srcRoot = fileURLToPath(new URL("../src", import.meta.url));
+  const moduleDirs = readdirSync(srcRoot, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  const moduleTables = [...new Set(moduleDirs.flatMap((d) => readdirSync(join(srcRoot, d)).filter((n) => n.endsWith(".mjs"))
+    .flatMap((n) => [...readFileSync(join(srcRoot, d, n), "utf8")
+      .matchAll(/CREATE (?:VIRTUAL )?TABLE IF NOT EXISTS\s+(\w+)\s*(?:\(|USING\s)/g)].map((m) => m[1]))))];
+  t(`store.mjs's hand-created tables are seen too (D-137), and the extracted modules' (${moduleDirs.join(", ")})`,
+    [...new Set([...storeTables, ...moduleTables])].length >= 8, true);
+  const allTables = [...new Set([...schemaTables, ...storeTables, ...moduleTables])];
 
   /* What the WHOLE-STORE purge clears. Sliced from the purge method's source so
      the check reads the real deletion list rather than a copy of it: the TABLES
@@ -709,11 +756,31 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
   const pEnd = store.indexOf("---- credentials ----", pStart);
   t("the purge method is locatable in store.mjs", pStart > -1 && pEnd > pStart, true);
   const purgeSrc = store.slice(pStart, pEnd);
-  const tablesArr = /const TABLES\s*=\s*\[([^\]]*)\]/.exec(purgeSrc);
-  const fromArray = tablesArr ? [...tablesArr[1].matchAll(/"(\w+)"/g)].map((m) => m[1]) : [];
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21-R23): purge's `const TABLES = [` list and its DELETE
+     lines moved to record-core, where each module DECLARES the tables it owns, and those purge never clears (exempt).
+     The census now reads every declaration: legacy-store's `.declarePurge("legacy-store", [...])` in store.mjs (its
+     entries' names, not their `keys` columns or `whole` clauses), and the extracted modules' at their interface —
+     record-core's OWN_TABLES / EXEMPT_TABLES and membership's MEMBERSHIP_PROJECT_TABLES / MEMBERSHIP_EXEMPT_TABLES,
+     the lists each passes to `declarePurge`. The hand DELETEs still in store.mjs's purge (bundles_fts) count too. */
+  const declAt = store.indexOf('.declarePurge("legacy-store", [');
+  let declEnd = declAt, depth = 0;
+  for (let k = store.indexOf("[", declAt); declAt > -1 && k < store.length; k++) {
+    if (store[k] === "[") depth++;
+    else if (store[k] === "]" && --depth === 0) { declEnd = k; break; }
+  }
+  const legacyDecl = declAt > -1 ? store.slice(store.indexOf("[", declAt) + 1, declEnd)
+    .replace(/keys:\s*\[[^\]]*\]/g, "").replace(/whole:\s*"[^"]*"/g, "") : "";
+  const fromLegacy = [...legacyDecl.matchAll(/"(\w+)"/g)].map((m) => m[1]);
+  t("legacy-store's purge declaration is locatable in store.mjs and names tables", fromLegacy.length >= 10, true);
+  const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES];
+  const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES];
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
-  const purged = new Set([...fromArray, ...fromDeletes]);
+  const purged = new Set([...fromLegacy, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
+  for (const name of moduleExempt) {
+    t(`a module's declared exemption "${name}" names a real table`, allTables.includes(name), true);
+    t(`a module's declared exemption "${name}" is not also purged`, purged.has(name), false);
+  }
 
   /* Tables a whole-store purge MUST NOT clear. Each is not derived from the
      corpus; the reason is stated so the exemption can be audited rather than
@@ -849,7 +916,9 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
   }
 
   /* The load-bearing assertion: nothing falls through the crack, in EITHER file. */
-  const uncovered = allTables.filter((tbl) => !purged.has(tbl) && !(tbl in EXEMPT));
+  /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R23, membership R59): a table a module declares exempt to
+     record-core is a stated exemption too; it is checked above to name a real table and not to be purged. */
+  const uncovered = allTables.filter((tbl) => !purged.has(tbl) && !(tbl in EXEMPT) && !moduleExempt.includes(tbl));
   t(`${allTables.length - uncovered.length} of ${allTables.length} tables covered by purge or a stated exemption (uncovered: ${JSON.stringify(uncovered)})`,
     uncovered, []);
 }
@@ -1008,7 +1077,10 @@ console.log("\n--- no source file carries a raw control byte (D-131) ---");
 console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
 {
   const srcDir = join(DIR, "..", "src");
-  const files = readdirSync(srcDir).filter((n) => n.endsWith(".mjs")).sort();
+  /* UPDATED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted to `src/<module>/`): the walk
+     DESCENDS, as REACH C0 below said whoever added a directory must make it; a module's file is named by its path
+     under src/ (`record-core/index.mjs`). */
+  const files = readdirSync(srcDir, { recursive: true }).map(String).filter((n) => n.endsWith(".mjs")).sort();
   const raw = new Map(files.map((f) => [f, readFileSync(join(srcDir, f), "utf8")]));
 
   const uncomment = (s) => s
@@ -1134,8 +1206,15 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
      detector. Asserting flatness is the honest fix at this altitude — it fails
      the moment the assumption stops holding, and whoever adds the directory then
      makes the walk recursive deliberately instead of never learning it mattered. */
-  t("the src walk's flat-directory assumption still holds (no subdirectory escapes any detector)",
-    readdirSync(srcDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name),
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the extraction of record-core, membership and promotion): "the src
+     walk's flat-directory assumption still holds (no subdirectory escapes any detector)" wanted src/ to have no
+     subdirectory, and the extraction added three. As this arm asked, the walk above now descends; the arm asks that
+     it does: every subdirectory of src/ holding a module is reached by the walk, so none escapes any detector. */
+  const srcSubdirs = readdirSync(srcDir, { recursive: true, withFileTypes: true }).filter((e) => e.isDirectory())
+    .map((e) => join(e.parentPath ?? e.path, e.name).slice(srcDir.length + 1)).sort();
+  t(`the src walk reaches every subdirectory (${srcSubdirs.join(", ")}): no subdirectory escapes any detector`,
+    srcSubdirs.filter((d) => !files.some((f) => f.startsWith(`${d}/`))
+      && readdirSync(join(srcDir, d)).some((n) => n.endsWith(".mjs"))),
     []);
 
   /* REACH C1: (C) fires in EVERY file's own stripped text, measured as a DELTA
@@ -1292,7 +1371,8 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
 console.log("\n--- one machine-identity predicate, and every asking site reads it (REC-46) ---");
 {
   const roots = ["src", "checks"];
-  const files = roots.flatMap((r) => readdirSync(join(DIR, "..", r))
+  /* UPDATED 2026-09-26 (T3, legacy-tests; the extraction into `src/<module>/`): the walk DESCENDS (REACH R0 below). */
+  const files = roots.flatMap((r) => readdirSync(join(DIR, "..", r), { recursive: true }).map(String)
     .filter((n) => n.endsWith(".mjs")).sort().map((n) => `${r}/${n}`));
   const raw = new Map(files.map((f) => [f, readFileSync(join(DIR, "..", f), "utf8")]));
   const uncomment = (s) => s
@@ -1374,10 +1454,18 @@ console.log("\n--- one machine-identity predicate, and every asking site reads i
      above and closed it there; the same walk written a second time would have
      reopened it, so it is asserted here too rather than assumed to be somebody
      else's problem. */
-  for (const r of roots)
-    t(`the ${r} walk's flat-directory assumption still holds (nothing escapes either detector)`,
-      readdirSync(join(DIR, "..", r), { withFileTypes: true })
-        .filter((e) => e.isDirectory()).map((e) => e.name), []);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the extraction of record-core, membership and promotion into
+     `src/<module>/`): "the <root> walk's flat-directory assumption still holds (nothing escapes either detector)"
+     wanted no subdirectory; src/ now has three. The walk descends, and the arm asks that every subdirectory holding a
+     module is reached by it. */
+  for (const r of roots) {
+    const base = join(DIR, "..", r);
+    const subdirs = readdirSync(base, { recursive: true, withFileTypes: true }).filter((e) => e.isDirectory())
+      .map((e) => join(e.parentPath ?? e.path, e.name).slice(base.length + 1)).sort();
+    t(`the ${r} walk reaches every subdirectory (${subdirs.join(", ") || "none"}): nothing escapes either detector`,
+      subdirs.filter((d) => !files.some((f) => f.startsWith(`${r}/${d}/`))
+        && readdirSync(join(base, d)).some((n) => n.endsWith(".mjs"))), []);
+  }
 
   /* REACH R1: the walk found both trees, and by name the three modules that
      carry this question. A rename moving one out fails here rather than leaving
@@ -1916,7 +2004,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      though it were the plane's. Same class, same directory-it-does-not-control,
      same report. */
   const srcRoots = ["src", "checks"];
-  const srcFiles = srcRoots.flatMap((r) => readdirSync(join(DIR, "..", r))
+  /* UPDATED 2026-09-26 (T3, legacy-tests): the two sweeps now descend into `src/<module>/`, so this report does too. */
+  const srcFiles = srcRoots.flatMap((r) => readdirSync(join(DIR, "..", r), { recursive: true }).map(String)
     .filter((n) => n.endsWith(".mjs")).sort().map((n) => `${r}/${n}`));
 
   const items = [
@@ -2195,7 +2284,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        census and nothing it prints is a figure anybody quotes. Provenance would tell
        it something true and useless, which is the same reason `ref-variance-probe.mjs`
        is named rather than guarded. */
-    "bio-plane/test/mintid.test.mjs",             // its own mkdtemp sandbox, asserting the probe left nothing behind
+    /* RETIRED 2026-09-26 (T3, legacy-tests; K84, N14): "bio-plane/test/mintid.test.mjs" was named here; the suite was
+       retired with the old process's tooling (commit 2abbe2e7d0), so the entry went stale. */
     /* ADDED 2026-08-08 by D-237, AND THE RATCHET WORKED AGAIN — this walk was
        named by the census on its first full battery, before anyone read the diff.
        WHY IT IS NAMED AND NOT GUARDED, and this one is a CATEGORY difference
@@ -2284,7 +2374,23 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        `rmdirSync`. It discovers nothing, feeds no assertion and floors on nothing; a phantom deposited in the pen can only
        leave the pen standing, which the driver's own exit line reports. Provenance would tell it something true and
        useless. */
-    "bio-plane/test/occupancy.control.mjs",       // its own pen, read for emptiness before rmdir; discovers nothing
+    /* RETIRED 2026-09-26 (T3, legacy-tests; K84, N14): "bio-plane/test/occupancy.control.mjs" was named here; the
+       driver was retired with the old process's tooling (commit 2abbe2e7d0), so the entry went stale. */
+    /* ADDED 2026-09-26 (T3, legacy-tests): the ratchet caught it on its first run. NAMED AND NOT GUARDED, on
+       `mint-ledger.test.mjs`'s and `instance-group.test.mjs`'s reasoning one step removed: it is the corpus helper the
+       old battery's source censuses use since the extraction, listing `src/<module>/` for the modules a suite NAMES
+       (record-core, membership, promotion) and handing back their text; it prints nothing and floors on nothing. A
+       phantom module deposited there adds text to a corpus a suite then searches — the same exposure those suites'
+       own walks of `src/` already carry and are named for. Its callers' floors, if any, are theirs to guard. */
+    "bio-plane/test/extracted-sources.mjs",       // src/<module>/ of the named extracted modules, a corpus; floors on nothing
+    /* ADDED 2026-09-26 (T3, legacy-tests; record-core R6, promotion): the ratchet caught both on their first run. NAMED
+       AND NOT GUARDED, on `mint-ledger.test.mjs`'s reasoning: each lists `src/<module>/` of the three extracted modules
+       (or of the armed copy its control points it at) only to read the opaque minter and the gated mint sites where
+       the extraction moved them. What that corpus feeds is PRESENCE pins by name (the minter, each prefix's call) and
+       a CEILING AT ZERO (no gated prefix counted); the one floor, `>= 3` counter prefixes, is met by store.mjs alone.
+       Both suites also drive every gated mint through its op, which no phantom file can satisfy. */
+    "bio-plane/test/opaque-ids.test.mjs",         // src/<module>/, reads the minter and its call sites by name
+    "bio-plane/test/project-mint.test.mjs",       // src/<module>/, reads the PROJ mint's call by name
     /* ADDED 2026-09-24 by D-548's item; the ratchet caught it on the item's first gate. NAMED AND NOT GUARDED: the
        control driver lists the repository root and `bio-plane/` only to SYMLINK each entry into its own `mkdtemp`
        mirror, where an armed copy of d84-case-manifest.test.mjs runs. It counts nothing and floors on nothing; a
@@ -2399,7 +2505,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 47)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 46)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2414,7 +2520,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        the only walker the item adds (its control driver sits in the worker's scratchpad and is not committed). */
     /* MOVED 45 -> 47 by CONDUCT #22 at D-535's merge onto c22-batch29 (2026-09-25): D-454 and D-535 each moved 44 -> 45
        on their own trees; the merged tree PRINTED `47 walking file(s)`. */
-    census.length >= 47, true);
+    /* MOVED 47 -> 44 2026-09-26 (T3, legacy-tests; K84, N14), from the figure this suite PRINTED on the job's tree
+       (`44 walking file(s)`): four walkers were retired with the old process's tooling (commit 2abbe2e7d0) —
+       mintid.test.mjs and occupancy.control.mjs (named above), planning-hygiene.test.mjs and statepaths.test.mjs
+       (guarded) — and one was added, test/extracted-sources.mjs (named above). */
+    /* MOVED 44 -> 46 the same day (T3, legacy-tests), from the figure this suite PRINTED (`46 walking file(s)`):
+       opaque-ids.test.mjs and project-mint.test.mjs now walk the extracted modules' directories (named above). */
+    census.length >= 46, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

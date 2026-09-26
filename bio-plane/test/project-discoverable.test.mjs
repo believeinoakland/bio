@@ -162,7 +162,10 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
   cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
-  const schemaPath = join(tree, "bio-plane", "src", "schema.mjs");
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R59, the extraction of membership's tables): the act log's
+     and the sight index's DDL moved from the legacy `schema.mjs` into `src/membership/schema.mjs`, which
+     membership's `migrate()` runs; the predecessor strips them THERE. */
+  const schemaPath = join(tree, "bio-plane", "src", "membership", "schema.mjs");
   const schema = readFileSync(schemaPath, "utf8");
   const TABLE = /CREATE TABLE IF NOT EXISTS project_visibility \([\s\S]*?\);\nCREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility\(project_id, seq\);\n/;
   /* CORRECTED 2026-09-24 by D-497, and the old arm was WRONG rather than merely narrow: it stripped the
@@ -185,6 +188,29 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   const storeSrc = readFileSync(storePath, "utf8");
   const CALL = "this.#reindexProjectSight(";
   const callHits = storeSrc.split(CALL).length - 1;
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction, R71): the derivation moved to membership
+     (`reindexProjectSight`, the store's `#reindexProjectSight` a delegation to it). Of D-497's THREE calls, the boot's
+     and the promotion's stay in `store.mjs` and the owner's act's moved with `projectVisibilitySet` into
+     `src/membership/index.mjs`, where R71's `projectCreated` (not yet called: K62) adds a fourth. EVERY call is
+     neutered, in both files, each count asserted exactly. */
+  const memPath = join(tree, "bio-plane", "src", "membership", "index.mjs");
+  const memSrc = readFileSync(memPath, "utf8");
+  const MEM_CALL = "this.reindexProjectSight(";
+  const memCallHits = memSrc.split(MEM_CALL).length - 1;
+  /* …and R71's `projectCreated`, which promotion now calls at a project's creation, answers the setting it just
+     derived — a read of the sight index on this fixture's path, neutered to the predecessor's answer (none). */
+  const MEM_READ = "return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };";
+  const memReadHits = memSrc.split(MEM_READ).length - 1;
+  writeFileSync(memPath, memSrc.split(MEM_CALL).join(`false && ${MEM_CALL}`)
+    .split(MEM_READ).join("return { ok: true, projectId, owner };"));
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the promotion extraction, promotion R19): the creation answer's read
+     (REC-197) moved with `promote` into `src/promotion/index.mjs`, where it asks membership's `visibilityOf`; the
+     store's copy beside it in `#promoteProjections` stays (below). Both are neutered, each count asserted. */
+  const promPath = join(tree, "bio-plane", "src", "promotion", "index.mjs");
+  const promSrc = readFileSync(promPath, "utf8");
+  const PROM_READ = `...(!head && promotedType === "project" ? { visibility: membership.visibilityOf(bundleId) } : {}),`;
+  const promReadHits = promSrc.split(PROM_READ).length - 1;
+  writeFileSync(promPath, promSrc.split(PROM_READ).join("...{},"));
   /* CORRECTED 2026-09-25 by REC-197, never exempted: a project's creation now ANSWERS its setting, read back
      through `#visibilityOf` — a second reader of the sight index on this fixture's path, and a store with no such
      table throws at it exactly as it would at a derivation call. The predecessor answered no setting at all, so the
@@ -193,11 +219,15 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   const readHits = storeSrc.split(READ).length - 1;
   writeFileSync(storePath, storeSrc.split(CALL).join(`false && ${CALL}`).split(READ).join("...{},"));
   t("1a0: the predecessor's STORE is armed too — every call into the sight derivation is neutered, and the "
-  + "count is the one D-497 landed; and the creation answer's read of it (REC-197) is gone",
+  + "count is the one D-497 landed (two in the store, the owner's act's in membership, with R71's `projectCreated` "
+  + "beside it); and the creation answer's read of it (REC-197) is gone",
     [callHits, readFileSync(storePath, "utf8").split(`false && ${CALL}`).length - 1, readHits,
-     readFileSync(storePath, "utf8").split(READ).length - 1], [3, 3, 1, 0]);
+     readFileSync(storePath, "utf8").split(READ).length - 1,
+     memCallHits, readFileSync(memPath, "utf8").split(`false && ${MEM_CALL}`).length - 1,
+     promReadHits, readFileSync(promPath, "utf8").split(PROM_READ).length - 1,
+     memReadHits, readFileSync(memPath, "utf8").split(MEM_READ).length - 1], [2, 2, 1, 0, 2, 2, 1, 0, 1, 0]);
   t("1a: the predecessor is ARMED — the act log's DDL and the sight index's DDL each occur exactly once in "
-  + "this tree's schema and BOTH were removed",
+  + "this tree's schema (membership's, since T3) and BOTH were removed",
     [hits, sightHits, readFileSync(schemaPath, "utf8").includes("project_visibility ("),
      readFileSync(schemaPath, "utf8").includes("project_sight (")], [1, 1, false, false]);
   const old = planeAt(join(tree, "bio-plane", "src", "index.mjs"));
