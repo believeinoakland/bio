@@ -74,3 +74,7 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 | docprofile | `session_01QLCYkFnXjtMweB8KWin4FT` | DOCPROFILE #1 |
 | ocr-worker | `session_01LumujCtUSN1WBLyoke2Hz2` | OCR-WORKER #1 |
 | pdf-worker | `session_01SSonB7dLsY8mZoHgBAoHT6` | PDF-WORKER #2 |
+
+## Completions verified by BOB (ownership, coverage, module tests on the job branch)
+
+- format-registry · `job/T2/format-registry` @ de542e00 · 27/27 ids, 27 pass · 2026-09-26 17:03
