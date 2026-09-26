@@ -45,7 +45,7 @@ The full battery on the job branch before any change (`tranche/T3` @ `062e69f669
 
 ## Found in other modules (REPORT)
 
-Each keeps an old-battery assertion red on the tranche; each assertion was pointed at today's behaviour and left honest, never relaxed.
+Each keeps an old-battery assertion red on the tranche; each assertion was pointed at today's behaviour and left honest, never relaxed. By K95 they stay red, listed here with their owning entries (items 1, 6, 7: N44, N68; items 2–5 reported to BOB for routing).
 1. **legacy-checks, N44** · `rec-186-leave-join`: the refusal an owner's leave now meets, `LAST_COMMITTED_OWNER` (membership R35), has no catalogue row (DEC-49: check, region, translation).
 2. **affordances, N45** · `d311-roster-affordances` "THE AGREEMENT": `op=affordances` offers `projectleave` to pam@PC, whom membership R35 refuses `LAST_COMMITTED_OWNER`.
 3. **membership (the plane's bound rule, REC-57)** · `meaning-bounds` RATCHET (45 bare reads, ceiling 43): three reads publish a collection from `#rows` with no LIMIT and no published bound: `hostingaccess` (R11's `history`), `memberpairings` (R19's `pairings`) and `projectowneradd`'s new `deciders`. Membership's requirements state no cap for them; a requirement (or a bound) is BOB's to decide.
