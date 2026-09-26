@@ -71,4 +71,20 @@ Each keeps an old-battery assertion red on the tranche; each assertion was point
 
 ## Open
 
+- **The push** (K84 (1)): every commit after `d017b994` is on the local branch only; the retired `pre-push` hook this job's first run reinstalled refuses it, and removing that hook waits on Bob's permission in this session. Nothing else is open in this job.
+- Deferred: none. The sweep of the controls this job did not touch is N57 (K84 (2)).
+
 ## Tests and checks run
+
+- **The battery**, `node scripts/battery.mjs` from `bio-plane/`, on the main checkout at this branch (run 24226.7ba27a): **381 suites (369 plane, 12 fleet), 10 RED**; then pen-sweep's one red, which was this job's (it named three retired controls), fixed: 41/0. So **9 RED, every one a REPORT above** with its owning entry: d311-roster-affordances (2, N45), machinefences-dec49 (8, N44), meaning-bounds (3–5), op-claims (7, N68), owed-controls (10), rec-186-leave-join (1, N44), refusal-wire (8), skilldoctrine and skillpack (9). Baseline was 412 suites, 86 red. `civicos-ui/check-semantics.mjs` (not a battery suite) fails only on item 6.
+- **Controls run**: N23's `nc-rec203` (5/5), N29's `nc-coff11` and `nc-d346` (every arm), N32's 39 harnesses (none ENOENT), d526-refusal-order (6/6), mint-ledger (4/4), opaque-ids (5/5), project-discoverable (2/2), ratify-authority (8/8), rec173-migration-replay (10/10), airun-contextkind, d511, d512 green; provenance-floor, walkfloor and d301-census (N31) red at their baselines only through the suites they drive, each such suite a REPORT above or now green.
+- **Checks** (civicos-process, from its clone, `<product>` = this worktree): `format: 65 modules, 59 requirements files; 0 failures` · `architecture: 866 product files, 2031 relative imports (64 naming no tracked file, not judged); 0 failures` (55 before N14) · `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures` (no requirements file) · `ownership: 198 files changed by legacy-tests between tranche/T3 and HEAD; 0 failures`.
+- Layer tests: none named in `build/manifest.md`.
+- Test runs in the metrics row: about 260 (two full batteries, about 230 single-suite runs, about 30 control runs), counted from this session, not measured.
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_016rDfwRdhPxZqNpBWWNS5Xa,job,legacy-tests,94280177,438362,690,151667,333,260,4277
+```
