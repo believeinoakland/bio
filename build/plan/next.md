@@ -42,7 +42,7 @@
 - N47 · 2026-09-26 · DONE (K79) · **connections** (K76, K77): themes (store.mjs ~22904–23215, `themes`, `theme_placements`, `THEME_CHECKS`) are connections'; their requirements and map join `connections.md` before Bob approves it.
 - N48 · 2026-09-26 · **extraction** (K76): REC-206's item-to-file derivation, and the name of its `membership.mjs` file changed so it is not confused with the module.
 - N49 · 2026-09-26 · **ai-runs**, **affordances**, **queue** (K78): each re-exports, from the layer-5 module that took a copy, the vocabulary and checks it held for that module (observation-log's in `airun.mjs`; progressions' `STAGE_REQUIREDNESS`, `DISPOSITIONS` in `affordances.mjs`; `QUEUE_CONDITION_KINDS` in `queuestate.mjs`), and deletes its own copy.
-- N50 · 2026-09-26 · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.
+- N50 · 2026-09-26 · DONE (K80) · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
