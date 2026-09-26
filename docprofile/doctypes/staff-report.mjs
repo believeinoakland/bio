@@ -63,8 +63,8 @@
  * the fact.
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
-         vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, codePatterns,
-         LINE_START, IN_PROSE } from "./index.mjs";
+         vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
+         IN_PROSE } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
@@ -76,7 +76,7 @@ const MEMO_LABEL = /\b(TO|FROM|SUBJECT|DATE)\s*:/gi;
    costs, who was consulted and what it asks the body to do, under whatever headings
    its staff use. Each is tested as a HEADING — at the start of a line of its own —
    because the same words inside a sentence are not a section. */
-const reportSectionPatterns = (ctx) => vocabPatterns(ctx, "report_sections", LINE_START);
+const reportSectionPatterns = (ctx) => vocabPatterns(ctx, "report_sections");
 /* The heading that opens the recommendation itself, in the language's own word: any
    template names its recommendation so, and it is read only when it is one of the
    jurisdiction's section headings as well. */
@@ -91,7 +91,7 @@ const PREPARED = /\bPrepared\s+by\s*:/i;
 /* Self-naming, on a line of its own, in the titles the jurisdiction's reports carry
    (the view's `report_titles`, N3). Unlike a masthead this appears ONCE, on the title
    page — measured at 1 in the real document — so it is never a rate here. */
-const reportTitlePatterns = (ctx) => vocabPatterns(ctx, "report_titles", LINE_START);
+const reportTitlePatterns = (ctx) => vocabPatterns(ctx, "report_titles");
 
 /** The memorandum header as a BLOCK, which is the whole discipline of this family.
  *
@@ -290,7 +290,7 @@ export default {
       entities.push(e);
     };
     for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
-      const n = m.groups && m.groups.num;
+      const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
       if (!n) continue;
       take(`${tag.kind}:${n}`, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
            { instrument: tag.kind, number: n }, m.index);

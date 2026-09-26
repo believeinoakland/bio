@@ -37,7 +37,7 @@
  * with each item is the minutes' business, not the agenda's.
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
-         vocabPatterns, anyMatch, WHOLE_LINE, LINE_START, LINE_END } from "./index.mjs";
+         vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The legislative record's file number, alone on its line. Its SHAPE is the
@@ -76,7 +76,7 @@ const FURNITURE = [
   /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
 ];
 const agendaFurniture = (ctx) => {
-  const local = vocabPatterns(ctx, "furniture", WHOLE_LINE);
+  const local = vocabPatterns(ctx, "furniture");
   return (l) => FURNITURE.some((re) => re.test(l)) || anyMatch(local, l);
 };
 
@@ -204,7 +204,7 @@ export default {
        are the jurisdiction's (`bodies`, `member_titles`, N3). With none supplied the
        body is not read, and `body_why` says so. */
     const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
-    const memberTitles = vocabPatterns(ctx, "member_titles", LINE_START);
+    const memberTitles = vocabPatterns(ctx, "member_titles");
     let date = null, body = null;
     for (const l of lines.slice(0, 60)) {
       if (!date && /^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) date = parseLongDate(l);

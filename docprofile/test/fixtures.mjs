@@ -5,12 +5,11 @@
  * `basis: "TEST"`. They differ in every fact a content type reads, so a test can show
  * a reader following the view it is given and nothing else (R6).
  *
- * `view(...)` combines profiles into the shape `jurisdictions.combine` returns (its
- * R13–R14): the profile shape, plus `profiles`, `covers`, `test`, and each fact
- * carrying the id of the profile it came from. It is built here by hand because
- * `jurisdictions` is being written in the same tranche; once it merges, the tests
- * also run against its own `combine` and its held profile (see the suite).
+ * `view(...)` is `jurisdictions.combine` of the profiles given (its R12–R16): the
+ * view a caller passes as `ctx.view`. Patterns are written the way the held profiles
+ * write them, anchors and groups included.
  */
+import { combine, validate } from "../../jurisdictions/index.mjs";
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const fact = (pattern, extra) => ({ pattern, basis: "TEST", ...(extra || {}) });
@@ -20,24 +19,24 @@ export const PORT_ALDER = {
   spaces: {
     enactment: {
       label: "Port Alder bylaws and orders",
-      forms: [{ form: "serial", pattern: p("\\d{4}"), normal: [{ group: 0 }], basis: "TEST" }],
+      forms: [{ form: "serial", pattern: p("^0*(\\d{3,4})$"), normal: [{ group: 1 }], basis: "TEST" }],
       kinds: [
-        { kind: "bylaw", prefix: p("Bylaw", "i"), basis: "TEST" },
-        { kind: "order", prefix: p("Order", "i"), basis: "TEST" },
+        { kind: "bylaw", prefix: p("bylaw\\s+(?:no\\.?\\s*)?", "i"), basis: "TEST" },
+        { kind: "order", prefix: p("order\\s+(?:no\\.?\\s*)?", "i"), basis: "TEST" },
       ],
     },
   },
   systems: [{ origin: "pa-records", name: "Port Alder records", hosts: ["records.portalder.test"], basis: "TEST" }],
   vocabulary: {
-    furniture: [fact(p("Town of Port Alder")), fact(p("Office of the Town Recorder")), fact(p("View Record"))],
-    bodies: [fact(p("Harbor Commission", "i")), fact(p("Select Board", "i")), fact(p("Committee"))],
-    member_titles: [fact(p("Selectperson"))],
+    furniture: [fact(p("^Town of Port Alder$")), fact(p("^Office of the Town Recorder$")), fact(p("^View Record$"))],
+    bodies: [fact(p("(Harbor Commission|Select Board|Committee)\\s*$", "i"))],
+    member_titles: [fact(p("^Selectperson"))],
     enactment_markers: [fact(p("T\\.B\\.S\\."))],
     codes: [{ key: "pac", label: "P.A.C.", pattern: p("P\\.A\\.C\\.|Port Alder Code"), basis: "TEST" }],
     file_numbers: [{ pattern: p("PA-\\d{3}"), system: "pa-records", basis: "TEST" }],
-    report_titles: [fact(p("MEMO TO THE (?:BOARD|COMMISSION)"))],
-    report_sections: [fact(p("RECOMMENDATION")), fact(p("SUMMARY")), fact(p("COST")), fact(p("HISTORY")),
-                      fact(p("NEXT STEPS"))],
+    report_titles: [fact(p("^MEMO TO THE (?:BOARD|COMMISSION)\\b"))],
+    report_sections: [fact(p("^RECOMMENDATION\\b")), fact(p("^SUMMARY\\b")), fact(p("^COST\\b")),
+                      fact(p("^HISTORY\\b")), fact(p("^NEXT STEPS\\b"))],
     recommendation_openers: [fact(p("The Manager advises that", "i"))],
     template_blanks: [fact(p("SPONSOR: \\[NAME\\]"))],
   },
@@ -49,45 +48,38 @@ export const LAKEMONT = {
   spaces: {
     enactment: {
       label: "Lakemont ordinances",
-      forms: [{ form: "serial", pattern: p("L\\d{3}"), normal: [{ group: 0 }], basis: "TEST" }],
-      kinds: [{ kind: "ordinance", prefix: p("Ordinance", "i"), basis: "TEST" }],
+      forms: [{ form: "serial", pattern: p("^(L\\d{3})$", "i"), normal: [{ group: 1, upper: true }], basis: "TEST" }],
+      kinds: [{ kind: "ordinance", prefix: p("ordinance\\s+(?:no\\.?\\s*)?", "i"), basis: "TEST" }],
     },
   },
+  systems: [{ origin: "lk-records", name: "Lakemont records", hosts: ["records.lakemont.test"], basis: "TEST" }],
   vocabulary: {
-    furniture: [fact(p("City of Lakemont"))],
-    bodies: [fact(p("Lakemont Council", "i"))],
-    member_titles: [fact(p("Alderman"))],
+    furniture: [fact(p("^City of Lakemont$"))],
+    bodies: [fact(p("Lakemont Council\\s*$", "i"))],
+    member_titles: [fact(p("^Alderman"))],
     codes: [{ key: "lmc", label: "L.M.C.", pattern: p("L\\.M\\.C\\."), basis: "TEST" }],
     file_numbers: [{ pattern: p("LK\\d{5}"), system: "lk-records", basis: "TEST" }],
-    report_titles: [fact(p("COUNCIL BRIEFING"))],
-    report_sections: [fact(p("RECOMMENDATION")), fact(p("CONTEXT")), fact(p("BUDGET")), fact(p("RISKS"))],
+    report_titles: [fact(p("^COUNCIL BRIEFING\\b"))],
+    report_sections: [fact(p("^RECOMMENDATION\\b")), fact(p("^CONTEXT\\b")), fact(p("^BUDGET\\b")), fact(p("^RISKS\\b"))],
     recommendation_openers: [fact(p("Officers propose that", "i"))],
   },
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
 };
 
-/** A combined view, in `jurisdictions.combine`'s shape (its R13): each list fact
- *  tagged with the profile it came from, unioned in order. Enough for these tests;
- *  the real `combine` is exercised once `jurisdictions` merges. */
+/** `jurisdictions.combine` of these profiles, as a caller would pass it. Every
+ *  fixture profile must validate, or the tests are not testing what they claim. */
 export function view(...profiles) {
-  const tag = (x, id) => ({ ...x, profile: id });
-  const v = { profiles: [], covers: [], test: false, vocabulary: {}, spaces: {}, systems: [], practice: {} };
   for (const pr of profiles) {
-    v.profiles.push(pr.id);
-    v.covers.push(...pr.covers);
-    v.test = v.test || !!pr.test;
-    for (const [k, list] of Object.entries(pr.vocabulary || {}))
-      v.vocabulary[k] = [...(v.vocabulary[k] || []), ...list.map((x) => tag(x, pr.id))];
-    for (const [k, sp] of Object.entries(pr.spaces || {})) {
-      const into = v.spaces[k] || (v.spaces[k] = { label: sp.label, forms: [], kinds: [] });
-      into.forms.push(...(sp.forms || []).map((x) => tag(x, pr.id)));
-      into.kinds.push(...(sp.kinds || []).map((x) => tag(x, pr.id)));
-    }
-    v.systems.push(...(pr.systems || []).map((x) => tag(x, pr.id)));
-    for (const [k, val] of Object.entries(pr.practice || {})) v.practice[k] = tag(val, pr.id);
+    const v = validate(pr);
+    if (!v.ok) throw new Error(`fixture profile ${pr.id} is invalid: ${JSON.stringify(v.errors)}`);
   }
-  return v;
+  const r = combine(profiles);
+  if (!r.ok) throw new Error(`fixture views do not combine: ${JSON.stringify(r.errors)}`);
+  return r.view;
 }
+
+/** A view with no profile in it: nothing local is known. */
+export const EMPTY = combine([]).view;
 
 /* ---- documents written in Port Alder's vocabulary ---- */
 

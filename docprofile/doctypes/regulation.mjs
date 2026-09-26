@@ -53,7 +53,7 @@
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
-         vocabPatterns, anyMatch, allMatches, enactmentPatterns, codePatterns } from "./index.mjs";
+         vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
@@ -113,8 +113,11 @@ const regBodyEnds = (ctx) => vocabPatterns(ctx, "bodies", (re) => `(?:${re})[^A-
  *  wrong in twice. */
 function ownCaption(flat, captions, bodies) {
   for (const { m, tag } of allMatches(captions, flat)) {
+    /* Tested as printed and in capitals: a caption's body is set in capitals, and a
+       profile may write a body's name in either case. */
     const before = flat.slice(Math.max(0, m.index - 120), m.index);
-    if (anyMatch(bodies, before)) return { m, kind: tag.kind, number: (m.groups && m.groups.num) || null };
+    if (anyMatch(bodies, before) || anyMatch(bodies, before.toUpperCase()))
+      return { m, kind: tag.kind, number: enactmentNumber(tag.forms, m.groups && m.groups.num) };
   }
   return null;
 }
@@ -244,7 +247,7 @@ export default {
        more thing than it does. */
     const ownKey = number ? `${instrument}:${number}` : null;
     for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
-      const n = m.groups && m.groups.num;
+      const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
       if (!n) continue;
       const key = `${tag.kind}:${n}`;
       if (key === ownKey) continue;

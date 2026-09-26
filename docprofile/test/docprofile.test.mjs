@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as dp from "../registry.mjs";
 import {
-  PORT_ALDER, LAKEMONT, view, PA_AGENDA, PA_AGENDA_REVISED, PA_MINUTES, PA_REPORT, PA_BYLAW,
+  PORT_ALDER, LAKEMONT, view, EMPTY, PA_AGENDA, PA_AGENDA_REVISED, PA_MINUTES, PA_REPORT, PA_BYLAW,
   PA_DIRECTORY, calendarHtml, wordpressArticle, shellHtml,
 } from "./fixtures.mjs";
 
@@ -197,12 +197,23 @@ test("R6 every content type takes its vocabulary from ctx.view and holds none of
     .find((c) => c.relation === "minutes_not_yet_published").expected_by;
   assert.equal(due(PA), "2026-03-12");
   assert.equal(due(LK), "2026-04-01");
-  assert.equal(due(undefined), null);
+  assert.equal(due(EMPTY), null, "a view with no profile sets no date");
 
   // the directory reads no local vocabulary: the same under either view, or none
   const d = (v) => keys(typeOf("staff_directory").parse({ text: PA_DIRECTORY, view: v }));
   assert.deepEqual(d(PA), d(LK));
-  assert.deepEqual(d(PA), d(undefined));
+  assert.deepEqual(d(PA), d(EMPTY));
+
+  // K39: a caller that passes NO view (legacy-index, until N21) reads with every non-test
+  // profile jurisdictions holds, and never with a test profile
+  const legacy = PA_AGENDA.replace(/PA-(\d)(\d\d)/g, "26-0$1$2");
+  assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: legacy })), ["26-0101", "26-0102", "26-0103"]);
+  assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: legacy, view: EMPTY })), []);
+  const ellery = PA_AGENDA.replace(/PA-(\d{3})/g, "M$1/26");
+  assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: ellery })), [], "a test profile is never the fallback");
+  assert.equal(due(undefined), "2026-03-23", "the held profile's 21 days");
+  const noView = readText(legacy, {});
+  assert.deepEqual(keys(noView.parsed), ["26-0101", "26-0102", "26-0103"]);
 });
 
 /* -------------------------------------------------------------------- digests */
@@ -605,16 +616,16 @@ test("R30 every content type reads under a profile that is not Oakland's, and no
   // the measured instance's own shapes are NOT recognised when no profile supplies them
   const oaklandShaped = PA_AGENDA.replace(/PA-(\d)(\d\d)/g, "26-0$1$2")
     .replace("Town of Port Alder", "City of Oakland");
-  for (const v of [PA, undefined]) {
+  for (const v of [PA, EMPTY]) {
     const r = typeOf("meeting_agenda").parse({ text: oaklandShaped, view: v });
     assert.deepEqual(keys(r), [], "a file number the view does not describe is not read");
   }
   const cites = "Staff recommends amending O.M.C. Section 8.28 per Ordinance No. 13314 C.M.S. and file 26-0910.";
   assert.deepEqual(keys(typeOf("staff_report").parse({ text: cites, view: PA })), []);
-  assert.deepEqual(keys(typeOf("regulation").parse({ text: cites + " DOES ORDAIN", view: undefined })), []);
-  // with no view at all, a reader says why it read no references
-  assert.match(typeOf("meeting_agenda").parse({ text: PA_AGENDA }).references_why, /no active jurisdiction profile/);
-  assert.match(typeOf("meeting_minutes").parse({ text: PA_MINUTES }).body_why, /no active jurisdiction profile/);
+  assert.deepEqual(keys(typeOf("regulation").parse({ text: cites + " DOES ORDAIN", view: EMPTY })), []);
+  // with no profile active, a reader says why it read no references
+  assert.match(typeOf("meeting_agenda").parse({ text: PA_AGENDA, view: EMPTY }).references_why, /no active jurisdiction profile/);
+  assert.match(typeOf("meeting_minutes").parse({ text: PA_MINUTES, view: EMPTY }).body_why, /no active jurisdiction profile/);
 });
 
 test("R31 the same bytes and the same ctx give the same answer", async () => {
@@ -700,6 +711,6 @@ test("R35 every no says which no and why", async () => {
   assert.match(u.why, /not recognised well enough/);
   const html = calendarHtml([["7", "Harbor Commission", "3/2/2026"]]);
   const parsed = typeOf("meeting_calendar").parse({ text: html });
-  const c = typeOf("meeting_calendar").connections(parsed, parsed, { now: NOW });
+  const c = typeOf("meeting_calendar").connections(parsed, parsed, { now: NOW, view: EMPTY });
   assert.match(c.find((x) => x.relation === "minutes_not_yet_published").why, /not known/);
 });

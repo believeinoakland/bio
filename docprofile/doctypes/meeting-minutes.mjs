@@ -65,7 +65,7 @@
  * member can see that the record they are citing is one the body has not yet approved.
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies,
-         vocabPatterns, anyMatch, WHOLE_LINE, LINE_START, LINE_END } from "./index.mjs";
+         vocabPatterns, anyMatch, LINE_END } from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* The masthead, line-anchored. `Meeting Minutes`, `Minutes`, either followed by a
@@ -124,7 +124,7 @@ const MINUTES_FURNITURE = [
   /^[A-Z][a-z]+ \d{1,2}, \d{4}$/,
 ];
 const minutesFurniture = (ctx) => {
-  const local = vocabPatterns(ctx, "furniture", WHOLE_LINE);
+  const local = vocabPatterns(ctx, "furniture");
   return (l) => MINUTES_FURNITURE.some((re) => re.test(l)) || anyMatch(local, l);
 };
 
@@ -235,7 +235,7 @@ export default {
     const filePats = minutesFileLines(ctx);
     const isMinutesFurniture = minutesFurniture(ctx);
     const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
-    const memberTitles = vocabPatterns(ctx, "member_titles", LINE_START);
+    const memberTitles = vocabPatterns(ctx, "member_titles");
 
     /* The meeting's own facts. Every one of them may honestly be null; an unread fact
        is never invented. */

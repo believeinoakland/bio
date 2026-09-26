@@ -136,6 +136,8 @@ export function alsoSatisfies(ctx, selfKey) {
   try { return f(selfKey) || []; } catch { return []; }
 }
 
+import { combine as jurisdictionsCombine, list as jurisdictionsList } from "../../jurisdictions/index.mjs";
+
 /* ------------------------------------------------------------------------- *
  * N3 — LOCAL VOCABULARY COMES FROM THE JURISDICTION VIEW, never from here.
  *
@@ -147,12 +149,43 @@ export function alsoSatisfies(ctx, selfKey) {
  * documents share: the words of the kind (minutes, agenda, ordain, WHEREAS),
  * the publishing vendor's own page shapes, and the measured structural floors.
  *
- * NO VIEW, OR A VIEW WITHOUT THE FACT, MEANS NO LOCAL RECOGNITION — never a
- * default. An absent section supplies nothing (jurisdictions R1, R16), so a type
- * reads fewer references and says so; it never falls back to one place's words.
- * A pattern that does not compile is skipped, not thrown: `validate` refuses such
- * a profile upstream, and a reader must not fail on one that slipped through.
+ * A VIEW WITHOUT THE FACT MEANS NO LOCAL RECOGNITION — never a default. An absent
+ * section supplies nothing (jurisdictions R1, R16), so a type reads fewer references
+ * and says so; it never falls back to one place's words.
+ *
+ * NO VIEW AT ALL is a legacy caller (K39): `legacy-index` does not pass one yet.
+ * Until it does (plan entry N21), such a caller reads with `jurisdictions.combine` of
+ * every NON-TEST profile `jurisdictions` holds, so the instance keeps recognising the
+ * documents it recognised before N3. A caller that wants no local recognition passes
+ * an empty view (`combine([]).view`), which is a view.
+ *
+ * A pattern is used AS ITS PROFILE WROTE IT, anchors and all, wherever it names a
+ * whole thing a line may be (furniture, a member's title, a report's title or
+ * section); a reader wraps it only where the reader supplies the position (a file
+ * number alone on its line, or bounded inside prose; a code's name before the part
+ * cited). A pattern that does not compile is skipped, not thrown: `validate` refuses
+ * such a profile upstream, and a reader must not fail on one that slipped through.
  * ------------------------------------------------------------------------- */
+
+let LEGACY_VIEW = null;
+/** The view a reader uses: the caller's, or for a caller that gives none (K39), the
+ *  combination of every non-test held profile, computed once. */
+export function readerView(ctx) {
+  const v = ctx && ctx.view;
+  if (v && typeof v === "object") return v;
+  if (LEGACY_VIEW === null) {
+    LEGACY_VIEW = {};
+    try {
+      /* `typeof`, because the UI's flattened copy of this package carries no
+         `jurisdictions`, and there the fallback is an empty view, not a crash. */
+      if (typeof jurisdictionsCombine === "function" && typeof jurisdictionsList === "function") {
+        const r = jurisdictionsCombine(jurisdictionsList().filter((x) => !x.test).map((x) => x.id));
+        if (r && r.ok && r.view) LEGACY_VIEW = r.view;
+      }
+    } catch { LEGACY_VIEW = {}; }
+  }
+  return LEGACY_VIEW;
+}
 
 const VOCAB_REGEX_CACHE = new Map();
 
@@ -175,7 +208,7 @@ export function vocabRegex(p, wrap, extra) {
 
 /** The entries of one `vocabulary` key in the view, or an empty list. */
 export function vocabulary(ctx, key) {
-  const v = ctx && ctx.view && typeof ctx.view === "object" ? ctx.view.vocabulary : null;
+  const v = readerView(ctx).vocabulary;
   const list = v && typeof v === "object" ? v[key] : null;
   return Array.isArray(list) ? list.filter((e) => e && typeof e === "object") : [];
 }
@@ -190,11 +223,8 @@ export function vocabPatterns(ctx, key, wrap, extra) {
   return out;
 }
 
-/** Wrappers for the shapes readers test a pattern in. A pattern is a NAME (a body,
- *  an office, a code) and the reader decides where it must sit: a whole line, the
- *  start of a line, or bounded by non-letters inside prose. */
-export const WHOLE_LINE = (re) => `^(?:${re})$`;
-export const LINE_START = (re) => `^(?:${re})(?![A-Za-z0-9])`;
+/** Wrappers for the positions a reader supplies: a body's name ending a line, or a
+ *  reference bounded by non-letters inside prose. */
 export const LINE_END = (re) => `(?:${re})\\s*$`;
 export const IN_PROSE = (re) => `(?<![A-Za-z0-9])(${re})(?![A-Za-z0-9])`;
 
@@ -238,11 +268,12 @@ function vocabPiece(re) {
  *  proposed instrument's own caption (`ORDINANCE NO. ____`). Each result is
  *  `{re, tag: {kind}}` with the number in the named group `num`. */
 export function enactmentPatterns(ctx, { blankNumber = false } = {}) {
-  const sp = ctx && ctx.view && ctx.view.spaces && ctx.view.spaces.enactment;
+  const v = readerView(ctx);
+  const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const forms = (Array.isArray(sp.forms) ? sp.forms : [])
-    .map((f) => f && f.pattern && typeof f.pattern.re === "string" ? vocabPiece(f.pattern.re) : null)
-    .filter((s) => s && vocabRegex({ re: s }));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : [])
+    .filter((f) => f && f.pattern && typeof f.pattern.re === "string" && vocabRegex(f.pattern));
+  const forms = formList.map((f) => vocabPiece(f.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers")
     .map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null)
     .filter((s) => s && vocabRegex({ re: s }));
@@ -260,9 +291,43 @@ export function enactmentPatterns(ctx, { blankNumber = false } = {}) {
     /* Case follows the kind's own words: the prefix's flags decide, so a profile
        that wrote its kinds case-insensitively matches a capitalised caption. */
     const re = vocabRegex({ re: body, flags: k.prefix.flags }, null, "g");
-    if (re) out.push({ re, tag: { kind: k.kind.toLowerCase() } });
+    if (re) out.push({ re, tag: { kind: k.kind.toLowerCase(), forms: formList } });
   }
   return out;
+}
+
+/** An instrument's number as the space's own form normalises it (jurisdictions R3):
+ *  the matched text is cleaned as the form says, matched by the form AS WRITTEN, and
+ *  composed from its `normal` parts. A form never changes a digit; a text no form
+ *  recognises gives null, and the reference is not read rather than read wrongly. */
+export function enactmentNumber(forms, text) {
+  if (typeof text !== "string" || !text.trim()) return null;
+  for (const f of forms || []) {
+    let t = text.trim();
+    const c = f.clean || {};
+    for (const s of Array.isArray(c.strip) ? c.strip : []) {
+      const re = vocabRegex(s, (x) => `^(?:${x})`);
+      if (re) t = t.replace(re, "");
+    }
+    if (c.spaces === "remove") t = t.replace(/\s+/g, "");
+    else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
+    if (c.upper === true) t = t.toUpperCase();
+    const re = vocabRegex(f.pattern);
+    const m = re && re.exec(t);
+    if (!m) continue;
+    let out = "";
+    for (const part of Array.isArray(f.normal) ? f.normal : []) {
+      if (typeof part === "string") { out += part; continue; }
+      if (!part || !Number.isInteger(part.group)) continue;
+      let g = m[part.group];
+      if (g == null) g = typeof part.default === "string" ? part.default : "";
+      if (part.unpad) g = g.replace(/^0+(?=.)/, "");
+      if (part.upper) g = g.toUpperCase();
+      out += g;
+    }
+    if (out) return out;
+  }
+  return null;
 }
 
 /** The codes of law the view names (jurisdictions R6 `codes`), each as a recogniser
@@ -284,7 +349,7 @@ export function codePatterns(ctx) {
 /** The view's `practice` value for `name`, or null when no profile supplies it (or
  *  profiles disagreed and it was withheld, jurisdictions R15). */
 export function practiceValue(ctx, name) {
-  const p = ctx && ctx.view && ctx.view.practice;
+  const p = readerView(ctx).practice;
   const v = p && p[name];
   return v && Number.isInteger(v.value) && v.value > 0 ? { value: v.value, basis: v.basis || null } : null;
 }
