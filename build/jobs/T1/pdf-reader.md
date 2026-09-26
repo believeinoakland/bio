@@ -1,8 +1,17 @@
 # pdf-reader · T1 job record
 
-**Status** · COMPLETE, 2026-09-26. Job for `pdf-reader`, tranche T1, started by BOB #38. N9 was answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. All four entries are applied. Two questions remain open (below); both are built on my best readings, and an answer that differs is a small change.
+**Status** · COMPLETE, 2026-09-26. Re-completed after K30 and K32: R2, R25 and R26 merged from `tranche/T1` @ `c4bcdcd2`. No question is open. Job for `pdf-reader`, tranche T1, started by BOB #38. N9 was answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. All four entries are applied. Two questions remain open (below); both are built on my best readings, and an answer that differs is a small change.
 
-## QUESTION to BOB (2026-09-26)
+## QUESTION to BOB (2026-09-26, 16:31): R26 and no_text_layer pages. Answered by K32: a `no_text_layer` page carries neither R26 marker. Built.
+
+K30 answered Q1 and Q2 (below), and this branch now follows R26 as K30 words it @ `005985c8`. One point is still open.
+
+**Q3.** R26 says a page with at most 4 glyphs and a share of at least 0.18 carries `image_content_unread`. It makes no exception for a page R14 already marks `no_text_layer`, and it says "neither replaces `no_text_layer`". My Q1 had excluded those pages.
+*My best reading, now built:* the literal text. A no-text-layer page that paints an image carries BOTH markers. Separately, a page that paints an image whose share rounds to 0 gets `image_content_undetermined`, because it "paints an image" with "a share under 0.18".
+*What it costs:* 5 assertions in legacy-tests fail, and only those. Four are in `textshown.test.mjs` §2, which pins the reasons as exactly `["no_text_layer"]`. One is in `cpdf18-pdf-images.test.mjs`, the Tier-1 text digest over its image fixture. `pdf-worker`'s own tests are unaffected.
+If you meant to keep the exclusion (a `no_text_layer` page carries only that marker), say so. The change is one line and one test, and those 5 legacy assertions come back.
+
+## QUESTION to BOB (2026-09-26), answered by K30
 
 **Q1 · R26's figures.** R26 leaves the image-share threshold and the glyph floor UNDETERMINED "until D-627's own measurement is run". That measurement exists: M-178, on the snapshot branch at `land/worker/D-627` @ `056d3092` (`docs/development/measurements/M-178.md`). It ran over the FY23-25 budget book and M-174's other two documents: 1,788 pages, 307 of them painting an image. It found 17 image-only pages with at most 4 glyphs and image shares from 0.1897 to 0.6542. Every other page that paints an image shows at least 22 glyphs, and no page falls between. This job cannot re-run it: the corpus is in the instance's store, not in the repository.
 *My best reading, which I am building:* adopt M-178's figures.
@@ -79,7 +88,11 @@ What stays interface, unchanged: `resolve`, `dictOf`, `streamRawBytes`, `streamD
   - A zlib stream followed by trailing bytes now keeps its inflated output. The output is kept only when it is proven complete: its Adler-32 must appear in the input, and the prefix ending there must inflate to the same bytes. The proof does not depend on any runtime's error wording.
   - The count is noted once per stream as `flate_trailing_bytes:<n>` (Q2).
   - A page whose content stream will not decode carries `content_stream_undecodable`. A page whose `/Contents` resolves to no stream carries `content_stream_unresolvable`. Both are page-level markers with count 0, so neither reads as a blank page.
-- **D-627 (R26).** I kept the built work at `land/worker/D-627` @ `056d3092` for `pdfstructure.mjs` only, adapted to `pageDict`. Its three thresholds are no longer exported. It emits `image_content_unread` and `image_content_undetermined`, both carrying `image_share` and `glyphs`, on M-178's figures (Q1).
+- **D-627 (R26).** Built as R26 now reads (K30, K32).
+  - A `no_text_layer` page carries neither R26 marker.
+  - A page that paints an image with a share rounding to 0, and shows fewer than 22 glyphs, reads `image_content_undetermined`.
+  - An unreadable page box reads `image_content_undetermined` only below 22 glyphs. At 22 or more the page carries neither marker; a test pins this.
+  - I kept the built work at `land/worker/D-627` @ `056d3092` for `pdfstructure.mjs` only, adapted to `pageDict`. Its three thresholds are no longer exported. It emits `image_content_unread` and `image_content_undetermined`, both carrying `image_share` and `glyphs`, on M-178's figures (Q1).
   - Not kept: the built work's `index.mjs` routing, which belongs to legacy-index (see Reported).
   - Not kept: its fixture, a real budget-book excerpt. R29 wants hand-built fixtures.
 - **T1-3.** `bio-plane/test/m/pdf-reader/` holds 48 tests in 4 files, plus `pdf.mjs`, a hand-built PDF writer. They name all 32 live ids and check them through the module's exports only.
@@ -104,22 +117,20 @@ Nothing is deferred. Two figures and one field name depend on BOB's answers: R26
 
 ### Tests and checks run
 
-- `node --test bio-plane/test/m/pdf-reader/`: tests 48, pass 48, fail 0.
+- `node --test bio-plane/test/m/pdf-reader/`: tests 48, pass 48, fail 0 (re-run after K32).
 - Layer tests: none are named in `build/manifest.md`.
 - Users of the changed service, run against this branch:
   - `pdf-worker/test/pdf-worker.test.mjs`: 67 passed, 0 failed.
   - `pdf-worker/test/pagepixels.test.mjs`: 120 passed, 0 failed.
-- The old battery's PDF tests, run for regressions: `pdfstructure` 170/0, `d608-form-text` 16/0, `producer-provenance` 58/0, `textshown` 34/0, `pdfstructure-op` 29/0, `tier-pagewise` 127/0, `capture-pagecount` 22/0, `cpdf18-pdf-images` 25 pass / 4 fail (the pdf-worker crops above).
+- The old battery's PDF tests, run for regressions: `pdfstructure` 170/0, `d608-form-text` 16/0, `producer-provenance` 58/0, `pdfstructure-op` 29/0, `tier-pagewise` 127/0, `capture-pagecount` 22/0, and after K32 `textshown` 34/0, `cpdf18-pdf-images` 25 pass / 4 fail (the pdf-worker crops above).
 - `checks/format.mjs`: 61 modules, 17 requirements files; 0 failures.
 - `checks/architecture.mjs pdf-reader`: 6 product files, 11 relative imports; 0 failures.
 - `checks/coverage.mjs pdf-reader`: 32 of 32 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs pdf-reader tranche/T1`: 7 files changed by pdf-reader; 0 failures.
-
-### Metrics
+- `checks/ownership.mjs pdf-reader tranche/T1`: 5 files changed by pdf-reader since the merge at `c4bcdcd2`; 0 failures.
 
 ## Metrics
 
 ```csv
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
-session_01V8T49KLDauzP7JvxJMpQSz,job,pdf-reader,11616898,285766,134,77386,67,12,2731
+session_01V8T49KLDauzP7JvxJMpQSz,job,pdf-reader,18200096,314992,184,93474,90,20,2730
 ```
