@@ -2,7 +2,7 @@
 
 **Session** · `session_0191Ek5BuDhcVCoPJoHo62Ge` (ODF-READER #1)
 
-**Status** · COMPLETE, 2026-09-26. Job for module `odf-reader`, tranche T2, branch `job/T2/odf-reader`. Entries T2-8, D-612 and D-346 are applied. Q1 (below) is still open: it asks for wording changes to R3, R10, R28 and R30, which R29 now contradicts, and for one Uses line. The module and its tests follow my stated reading. A `CHANGE` that reads it differently re-opens this job.
+**Status** · COMPLETE, 2026-09-26. Job for module `odf-reader`, tranche T2, branch `job/T2/odf-reader`. Entries T2-8, D-612 and D-346 are applied. Q1 was answered by K34, which matches the reading built here; `origin/tranche/T2` @ 332aff0c02 is merged and steps 5–7 were re-run on it (45/45; all four checks 0 failures). Still open: the Q1 addendum (R10's empty lists, below). For BOB: the "not yet met" notes on R29 and R36, and the Status line saying the same, can now be cleared.
 
 ## Questions to BOB
 
@@ -62,7 +62,7 @@ R10 says that over the guard, or with no readable body, `links` is `[]` and `evi
 - **ooxml, requirements only.** `IMAGE_MIME_BY_EXT` is exported and used here, but ooxml's Provides does not list it (Q1).
 - **No generated artifact is made stale.** None of the four bundles lists `odf.mjs` among its inputs (`build/manifest.md`).
 
-## Tests and checks run (on `job/T2/odf-reader`, tranche/T2 @ 79e6ccd829 merged)
+## Tests and checks run (on `job/T2/odf-reader`, tranche/T2 @ 79e6ccd829 merged; the suite and the four checks re-run after merging @ 332aff0c02 with K34, with the same results)
 
 - `node --test bio-plane/test/m/odf-reader/`: `pass 45, fail 0`, over 14 runs in the job. The first runs found the empty-body bug, the dropped `draw:a` link and the nested double count; each is fixed.
 - Layer tests: none named in `build/manifest.md`.
