@@ -38,5 +38,12 @@ Re-run on the merged branch (tranche/T1 @ d3a6d2e4; this module's requirements u
 - `checks/format.mjs` · 61 modules, 17 requirements files; 0 failures.
 - `checks/architecture.mjs` · 2 product files, 2 relative imports; 0 failures.
 - `checks/coverage.mjs` · 33 of 33 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs` (tranche/T1) · OWNERSHIP_LINE
+- `checks/ownership.mjs` (tranche/T1) · 3 files changed by subresources between tranche/T1 and HEAD; 0 failures
 - The metrics row this job first wrote to `build/metrics/T1.csv` (a file this job created) is withdrawn; the row is now below, by `record.mjs --record`.
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01TR5tc4CR3PvM4NtHk3yrSw,job,subresources,6392289,302294,90,58828,45,8,1374
+```
