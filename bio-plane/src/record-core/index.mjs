@@ -20,10 +20,10 @@ const te = new TextEncoder();
 
 const instances = new WeakMap();
 
-/** The one RecordCore for this object's storage. `ctx` is the Durable Object state (anything with
- *  `storage.sql` and `storage.transactionSync`). `opts` is read on the first call only:
- *  `evidence` — the instance's evidence bucket (R2) or null; `storeName` — the namespace this object
- *  is, or a function answering it, which prefixes every evidence key. */
+/** R39: the one RecordCore for this object's storage. `ctx` is the Durable Object state (anything with
+ *  `storage.sql` and `storage.transactionSync`), or that storage itself. `opts` is read on the first call
+ *  only: `evidence` — the instance's evidence bucket (R2) or null; `evidencePrefix` — what every evidence
+ *  key begins with (`<store>/captures/`), or a function answering it when it is asked. */
 export function recordOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let rc = instances.get(storage);
@@ -48,16 +48,14 @@ export class RecordCore {
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
   static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
 
-  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #storeName;
+  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix;
 
-  constructor(storage, { evidence = null, storeName = null } = {}) {
+  constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#evidence = evidence && typeof evidence.get === "function" ? evidence : null;
-    this.#storeName = storeName;
-    this.declarePurge("record-core", ["files", "history", "manifest", "leases",
-      { name: "bundles", last: true }], {});
-    this.declarePurge("record-core", [], { exempt: RecordCore.EXEMPT_TABLES });
+    this.#evidencePrefix = evidencePrefix;
+    this.declarePurge("record-core", RecordCore.OWN_TABLES, { exempt: RecordCore.EXEMPT_TABLES });
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -267,6 +265,31 @@ export class RecordCore {
     return r ? { id: r.bundle_id, type: r.object_type, title: r.title ?? null, project: r.project ?? null } : null;
   }
 
+  /** R41 */
+  head(bundleId) {
+    const r = this.#one(`SELECT bundle_sha, row_version, object_type, title, current_state, prior_state, group_id
+                           FROM bundles WHERE bundle_id=?`, bundleId);
+    return r ? { bundleSha: r.bundle_sha, rowVersion: r.row_version, type: r.object_type, title: r.title ?? null,
+                 currentState: r.current_state, priorState: r.prior_state ?? null, groupId: r.group_id } : null;
+  }
+
+  /** R42 */
+  manifestEntry(bundleId, snapKey) {
+    const r = this.#one(`SELECT kind, base, author, created, files_json, writer, operation FROM manifest
+                          WHERE bundle_id=? AND snap_key=?`, bundleId, snapKey);
+    if (!r) return null;
+    let files;
+    try { files = JSON.parse(r.files_json); } catch { files = []; }
+    return { kind: r.kind, base: r.base ?? null, author: r.author ?? null, created: r.created,
+             files: Array.isArray(files) ? files : [], writer: r.writer ?? null, operation: r.operation ?? null };
+  }
+
+  /** R43 */
+  livePaths(bundleId) {
+    if (!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, bundleId)) return null;
+    return this.#rows(`SELECT path FROM files WHERE bundle_id=? ORDER BY path`, bundleId).map((r) => r.path);
+  }
+
   static #bound(limit) { return Math.max(1, Math.min(1000, Math.trunc(Number(limit)) || 200)); }
 
   /** R35 */
@@ -294,12 +317,14 @@ export class RecordCore {
    *  `snapKey`; the new live files are written; the bundle's row is set; exactly one `manifest` entry is
    *  appended, `created` being this module's own clock (D-674). Nothing already in `history` or
    *  `manifest` is modified or removed (R29): a snap key already used for the bundle fails the
-   *  append loudly (their primary keys) rather than rewriting it. `columns` optionally sets further
-   *  columns of the bundle's row that the caller's module owns (state, group, times). */
+   *  append loudly (their primary keys) rather than rewriting it. R44: the row records the state, prior
+   *  state, group, times and criticality as the caller gives them, and the entry's time is `at`, the
+   *  caller's stated time (this module's clock when it states none). */
   commit({ bundleId, type, title = null, project = null, snapKey, kind = "promotion", base = null, author = null,
-           writer = null, operation = null, files = [], columns = {} }) {
+           writer = null, operation = null, files = [], state, priorState, group, created, lastUpdated, criticality,
+           at }) {
     return this.transact(() => {
-      const now = new Date().toISOString();
+      const now = at ?? new Date().toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -317,25 +342,19 @@ export class RecordCore {
           bundleId, f.path, f.text ?? null, f.blobSha ?? null,
           f.bytes ?? (typeof f.text === "string" ? te.encode(f.text).length : 0), f.sha256);
       const bundleSha = (files.find((f) => f.path === "bundle.md") || files[0] || {}).sha256 ?? "";
-      const known = new Set(this.#rows(`PRAGMA table_info(bundles)`).map((r) => r.name));
-      const fixed = new Set(["bundle_id", "object_type", "title", "project", "bundle_sha", "row_version"]);
-      const extra = Object.entries(columns || {}).filter(([k]) => IDENT.test(k) && known.has(k) && !fixed.has(k));
-      const val = (k, d) => { const e = extra.find(([x]) => x === k); return e ? e[1] : d; };
-      const firstRow = ["group_id", "current_state", "created", "last_updated"];
-      const rest = cur ? extra : extra.filter(([k]) => !firstRow.includes(k));
+      const given = [["current_state", state], ["prior_state", priorState], ["group_id", group], ["created", created],
+                     ["last_updated", lastUpdated], ["criticality", criticality]].filter(([, v]) => v !== undefined);
       if (cur)
         this.#sql.exec(
-          `UPDATE bundles SET object_type=?, title=?, project=?, bundle_sha=?, last_updated=?, row_version=row_version+1
-            WHERE bundle_id=?`, type, title, project, bundleSha, val("last_updated", now), bundleId);
+          `UPDATE bundles SET object_type=?, title=?, project=?, bundle_sha=?, row_version=row_version+1
+            ${given.map(([k]) => `, ${k}=?`).join("")} WHERE bundle_id=?`,
+          type, title, project, bundleSha, ...given.map(([, v]) => v ?? null), bundleId);
       else
         this.#sql.exec(
-          `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,created,last_updated,bundle_sha,row_version,project)
-           VALUES (?,?,?,?,?,?,?,?,1,?)`,
-          bundleId, type, val("group_id", ""), title, val("current_state", ""), val("created", now),
-          val("last_updated", now), bundleSha, project);
-      if (rest.length)
-        this.#sql.exec(`UPDATE bundles SET ${rest.map(([k]) => `${k}=?`).join(", ")} WHERE bundle_id=?`,
-                       ...rest.map(([, v]) => v), bundleId);
+          `INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,prior_state,created,last_updated,
+                                criticality,bundle_sha,row_version,project) VALUES (?,?,?,?,?,?,?,?,?,?,1,?)`,
+          bundleId, type, group ?? "", title, state ?? "", priorState ?? null, created ?? now, lastUpdated ?? now,
+          criticality ?? null, bundleSha, project);
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
@@ -395,23 +414,25 @@ export class RecordCore {
 
   /* ---- purge (R21–R24) ---- */
 
-  /** R21: a module declares the tables it owns, once, at start. An entry is a table name, keyed to a
-   *  bundle by `bundle_id`, or `{name, bundle, whole}`: `bundle` the condition (each `?` bound to the
-   *  bundle id) selecting a bundle's rows, or null when only the whole-store form clears the table;
-   *  `whole` a condition limiting what the whole-store form clears. `exempt` names tables purge never
-   *  clears. A table declared twice, or by two modules, is refused. */
+  /** R21, R46: a module declares the tables it owns, once, at start. An entry is a table name, keyed to a
+   *  bundle by its `bundle_id` column when it has one, or `{name, keys, whole}`: keyed to a bundle by the
+   *  named columns (any of them matching; none, and only the whole-store form clears it), and cleared by
+   *  the whole-store form only where the `whole` clause holds. `exempt` names tables purge never clears.
+   *  A table declared twice, or by two modules, is refused, and the refused declaration declares nothing. */
   declarePurge(module, tables = [], { exempt = [] } = {}) {
     const entries = [...tables.map((t) => (typeof t === "string" ? { name: t } : { ...t })),
                      ...exempt.map((name) => ({ name, exempt: true }))];
+    const names = new Set();
     for (const e of entries) {
-      if (!IDENT.test(String(e.name)))
+      if (!IDENT.test(String(e.name)) || (e.keys != null && !(Array.isArray(e.keys) && e.keys.every((k) => IDENT.test(String(k))))))
         return { ok: false, reason: "TABLE_NAME_INVALID", table: String(e.name), module };
-      if (this.#declared.has(e.name))
-        return { ok: false, reason: "TABLE_DECLARED", table: e.name, module, declaredBy: this.#declared.get(e.name).module };
+      if (this.#declared.has(e.name) || names.has(e.name))
+        return { ok: false, reason: "TABLE_DECLARED", table: e.name, module,
+                 declaredBy: this.#declared.has(e.name) ? this.#declared.get(e.name).module : module };
+      names.add(e.name);
     }
     for (const e of entries) {
-      const d = { module, name: e.name, exempt: !!e.exempt, last: !!e.last,
-                  bundle: e.bundle === undefined ? "bundle_id=?" : e.bundle, whole: e.whole || null };
+      const d = { module, name: e.name, exempt: !!e.exempt, keys: e.keys == null ? null : [...e.keys], whole: e.whole || null };
       this.#declared.set(e.name, d);
       this.#order.push(d);
     }
@@ -425,15 +446,17 @@ export class RecordCore {
    *  undeclared table is never touched. Evidence objects are untouched (content-addressed, immutable). */
   purge({ bundleId = null } = {}) {
     const one = bundleId != null && bundleId !== "";
-    const plan = [...this.#order.filter((d) => !d.exempt && !d.last), ...this.#order.filter((d) => !d.exempt && d.last)];
+    const isRow = (d) => d.module === "record-core" && d.name === "bundles";
+    const plan = [...this.#order.filter((d) => !d.exempt && !isRow(d)), ...this.#order.filter((d) => !d.exempt && isRow(d))];
     const removed = {};
     this.transact(() => {
       for (const d of plan) {
         removed[d.name] = 0;
         let where, args = [];
         if (one) {
-          if (!d.bundle) continue;
-          where = d.bundle; args = Array.from({ length: (d.bundle.match(/\?/g) || []).length }, () => bundleId);
+          const keys = d.keys ?? (this.#rows(`PRAGMA table_info(${d.name})`).some((c) => c.name === "bundle_id") ? ["bundle_id"] : []);
+          if (!keys.length) continue;
+          where = keys.map((k) => `${k}=?`).join(" OR "); args = keys.map(() => bundleId);
         } else where = d.whole || "1=1";
         const n = this.#one(`SELECT COUNT(*) AS n FROM ${d.name} WHERE ${where}`, ...args);
         removed[d.name] = n ? Number(n.n) : 0;
@@ -473,13 +496,13 @@ export class RecordCore {
   /* ---- the evidence store (R38) ---- */
 
   /** R38: the instance's evidence bucket, addressed by digest; the object key of a digest is fixed
-   *  here (`<store>/captures/<digest>`). `put` hands the bucket the digest, so it verifies the bytes.
+   *  here (the prefix R39's `evidencePrefix` gives, then the digest). `put` hands the bucket the digest, so it verifies the bytes.
    *  Null when no bucket is bound. */
   evidenceStore() {
     const bucket = this.#evidence;
     if (!bucket) return null;
-    const name = typeof this.#storeName === "function" ? this.#storeName() : this.#storeName;
-    const key = (digest) => `${name || "bio"}/captures/${String(digest)}`;
+    const prefix = typeof this.#evidencePrefix === "function" ? this.#evidencePrefix() : this.#evidencePrefix;
+    const key = (digest) => `${prefix ?? ""}${String(digest)}`;
     return {
       head: (digest) => bucket.head(key(digest)),
       get: (digest) => bucket.get(key(digest)),

@@ -147,7 +147,7 @@ test("R9: mintOpaqueId returns null only when 64 draws in a row collide", () => 
   assert.equal(m, 64);
 });
 
-test("R28: seedMintLedger learns the live ids its caller names and every id the counter issued to an untailed gated prefix", () => {
+test("R28 R40: seedMintLedger learns the live ids its caller names and every id the counter issued to an untailed gated prefix", () => {
   const { s, rc } = fresh();
   s.db.exec(`CREATE TABLE cases (case_id TEXT)`);
   s.db.exec(`INSERT INTO cases VALUES ('CASE-2026-0500'), ('INFO-2026-0500')`);
@@ -253,7 +253,7 @@ test("R33 R29: commit archives what it replaces, writes live files and the row, 
   const { s, rc } = fresh();
   const id = "PROJ-2026-1234-p";
   const r1 = rc.commit({ bundleId: id, type: "project", title: "P", project: id, snapKey: "K1", base: null, author: "a",
-                         files: [file("bundle.md", "one"), file("notes.md", "n")], columns: { current_state: "open", group_id: "g" } });
+                         files: [file("bundle.md", "one"), file("notes.md", "n")], state: "open", group: "g" });
   assert.deepEqual(r1, { bundleSha: sha("one"), rowVersion: 1 });
   assert.equal(rows(s, `SELECT COUNT(*) AS n FROM history`)[0].n, 0, "a first commit replaces nothing");
   const hist0 = () => JSON.stringify(rows(s, `SELECT * FROM history ORDER BY rowid`));
@@ -338,10 +338,10 @@ test("R37: bundles.bundle_id and bundles.object_type are a read contract a later
   assert.equal(rc.listByType({ type: "project" }).ids[0], "PROJ-2026-0001-p", "object_type means the type commit was given");
 });
 
-test("R38: evidenceStore answers head/get/put by digest at a key fixed by this module, or null with no bucket bound", async () => {
+test("R38 R39: evidenceStore answers head/get/put by digest at a key fixed by this module, or null with no bucket bound", async () => {
   assert.equal(fresh().rc.evidenceStore(), null);
   const b = bucket();
-  const { rc } = fresh({ evidence: b, storeName: () => "scratch" });
+  const { rc } = fresh({ evidence: b, evidencePrefix: () => "scratch/captures/" });
   const ev = rc.evidenceStore();
   const d = sha("bytes");
   await ev.put(d, new Uint8Array([1, 2]));
@@ -350,7 +350,7 @@ test("R38: evidenceStore answers head/get/put by digest at a key fixed by this m
   assert.equal(await ev.head(sha("other")), null);
   assert.deepEqual(b.calls.slice(1).map((c) => c[1]), [`scratch/captures/${d}`, `scratch/captures/${d}`, `scratch/captures/${sha("other")}`]);
   const b2 = bucket();
-  const { rc: rc2 } = fresh({ evidence: b2, storeName: "bio" });
+  const { rc: rc2 } = fresh({ evidence: b2, evidencePrefix: "bio/captures/" });
   await rc2.evidenceStore().head(d);
   assert.equal(b2.calls[0][1], `bio/captures/${d}`);
 });
@@ -385,7 +385,7 @@ test("R26: the active jurisdiction profiles are the setting jurisdiction_profile
   assert.deepEqual(rc.getSetting("jurisdiction_profiles"), []);
 });
 
-test("R21: tables are declared once; a table declared twice or by two modules is refused with TABLE_DECLARED", () => {
+test("R21 R46: tables are declared once; a table declared twice or by two modules is refused with TABLE_DECLARED", () => {
   const { rc } = fresh();
   for (const t of ["files", "history", "manifest", "leases", "bundles", "seq", "minted_ids", "settings"]) {
     const r = rc.declarePurge("membership", [t]);
@@ -393,7 +393,7 @@ test("R21: tables are declared once; a table declared twice or by two modules is
   }
   assert.deepEqual(rc.declarePurge("membership", ["members"]), { ok: true });
   assert.equal(rc.declarePurge("membership", ["members"]).reason, "TABLE_DECLARED");
-  assert.equal(rc.declarePurge("promotion", [{ name: "members", bundle: null }]).reason, "TABLE_DECLARED");
+  assert.equal(rc.declarePurge("promotion", [{ name: "members", keys: [] }]).reason, "TABLE_DECLARED");
   assert.equal(rc.declarePurge("x", [], { exempt: ["members"] }).reason, "TABLE_DECLARED");
   const r = rc.declarePurge("x", ["a_ok", "members"]);
   assert.equal(r.reason, "TABLE_DECLARED");
@@ -409,8 +409,8 @@ function purgeFixture() {
              CREATE TABLE partial (bundle_id TEXT, ratified INTEGER);
              CREATE TABLE identity (k TEXT);
              CREATE TABLE undeclared (bundle_id TEXT)`);
-  assert.deepEqual(rc.declarePurge("m1", ["derived", { name: "pairs", bundle: "a_bundle_id=? OR b_bundle_id=?" },
-                                          { name: "registry", bundle: null }, { name: "partial", whole: "ratified IS NULL" }],
+  assert.deepEqual(rc.declarePurge("m1", ["derived", { name: "pairs", keys: ["a_bundle_id", "b_bundle_id"] },
+                                          { name: "registry", keys: [] }, { name: "partial", whole: "ratified IS NULL" }],
                                    { exempt: ["identity"] }), { ok: true });
   for (const id of ["INFO-2026-0001-a", "INFO-2026-0002-b"]) {
     put(rc, id, "K1"); put(rc, id, "K2", `second ${id}`);
@@ -427,7 +427,7 @@ function purgeFixture() {
 }
 const count = (s, t, w = "1=1", ...a) => rows(s, `SELECT COUNT(*) AS n FROM ${t} WHERE ${w}`, ...a)[0].n;
 
-test("R22 R24: purge of one bundle clears only the rows keyed to it, and reports each declared table's count", () => {
+test("R22 R24 R46: purge of one bundle clears only the rows keyed to it, and reports each declared table's count", () => {
   const { s, rc } = purgeFixture();
   const r = rc.purge({ bundleId: "INFO-2026-0001-a" });
   assert.equal(r.ok, true); assert.equal(r.scope, "INFO-2026-0001-a");
@@ -443,7 +443,7 @@ test("R22 R24: purge of one bundle clears only the rows keyed to it, and reports
                    "every declared, non-exempt table is named even when it removed nothing");
 });
 
-test("R22 R23 R24: the whole-store purge clears every declared, non-exempt table and never seq, minted_ids, settings or an exempt table", () => {
+test("R22 R23 R24 R46: the whole-store purge clears every declared, non-exempt table and never seq, minted_ids, settings or an exempt table", () => {
   const { s, rc } = purgeFixture();
   const keep = dump(s, ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry", "partial"]);
   const r = rc.purge({});
@@ -479,7 +479,7 @@ async function expected(rc, id, known, extra = {}) {
   return findings.filter((f) => f.severity === "error");
 }
 
-test("R18: auditPass runs the check catalogue over a page and reports clean, with-error and tallies by check and by check-and-code", async () => {
+test("R18 R45: auditPass runs the check catalogue over a page and reports clean, with-error and tallies by check and by check-and-code", async () => {
   const { rc, ids } = await auditFixture();
   const known = new Set(ids);
   const r = await rc.auditPass({ limit: 10 });
@@ -532,7 +532,7 @@ test("R20: the cursor is the last bundle id on a full page, and a pass resumes f
 });
 
 test("R31: every service reads and writes only this module's tables and the clock, and makes no network call", async () => {
-  const { s, rc } = fresh({ evidence: bucket(), storeName: "bio" });
+  const { s, rc } = fresh({ evidence: bucket(), evidencePrefix: "bio/captures/" });
   s.db.exec(`CREATE TABLE other_a (bundle_id TEXT, v TEXT); CREATE TABLE other_b (k TEXT)`);
   s.sql.exec(`INSERT INTO other_a VALUES ('INFO-2026-0001-a', 'keep')`); s.sql.exec(`INSERT INTO other_b VALUES ('keep')`);
   const others = () => JSON.stringify([rows(s, `SELECT * FROM other_a`), rows(s, `SELECT * FROM other_b`)]);
@@ -563,4 +563,84 @@ test("R29: history and manifest are append-only under every service but purge", 
   const [H0, M0] = JSON.parse(h0), [H1, M1] = JSON.parse(h1);
   assert.deepEqual(H1.slice(0, H0.length), H0); assert.deepEqual(M1.slice(0, M0.length), M0);
   assert.equal(M1.length, M0.length + 1);
+});
+
+test("R39: recordOf answers one instance per storage, the same to every caller, reading its options on the first call only", async () => {
+  const s = storage(), s2 = storage();
+  const b = bucket();
+  const a = recordOf({ storage: s }, { evidence: b, evidencePrefix: "one/captures/" });
+  assert.equal(recordOf({ storage: s }), a, "a second caller with another ctx object over the same storage gets the same instance");
+  assert.equal(recordOf({ storage: s }, { evidence: null, evidencePrefix: "two/" }), a);
+  assert.equal(recordOf(s), a, "the storage itself reaches it too");
+  await a.evidenceStore().head("d");
+  assert.deepEqual(b.calls[0], ["head", "one/captures/d"], "the first call's options stand");
+  const c = recordOf({ storage: s2 });
+  assert.notEqual(c, a); assert.equal(c.evidenceStore(), null);
+  // one transaction depth: a transact through one handle joins another's
+  a.migrate();
+  assert.throws(() => a.transact(() => { recordOf({ storage: s }).allocId("INFO", "2026"); throw new Error("x"); }));
+  assert.equal(a.allocId("INFO", "2026").id, "INFO-2026-0001");
+  // one declaration list
+  assert.deepEqual(recordOf({ storage: s }).declarePurge("m", ["t1"]), { ok: true });
+  assert.equal(a.declarePurge("n", ["t1"]).reason, "TABLE_DECLARED");
+  // the services are its methods, by their names
+  for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
+                   "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
+                   "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths"])
+    assert.equal(typeof a[m], "function", m);
+});
+
+test("R40: seedMintLedger reads only the tables and columns its caller names, nothing else of another module's", () => {
+  const { s, rc } = fresh();
+  s.db.exec(`CREATE TABLE tasks (id TEXT, note TEXT); CREATE TABLE unnamed (id TEXT)`);
+  s.sql.exec(`INSERT INTO tasks VALUES ('TASK-2026-0007-x', 'TASK-2026-0008-x')`);
+  s.sql.exec(`INSERT INTO unnamed VALUES ('TASK-2026-0009-x')`);
+  rc.seedMintLedger([["TASK", "tasks", "id"]]);
+  assert.equal(draws([7, 8], () => rc.mintOpaqueId("TASK", "2026", "-x", () => false)), "TASK-2026-0008-x", "the named column was learned");
+  assert.equal(draws([9], () => rc.mintOpaqueId("TASK", "2026", "-x", () => false)), "TASK-2026-0009-x", "an unnamed table was not read");
+});
+
+test("R41 R42 R43: head, manifestEntry and livePaths answer a held bundle's row, an entry and its live paths, or null", () => {
+  const { rc } = fresh();
+  assert.equal(rc.head("INFO-2026-0001-a"), null);
+  assert.equal(rc.manifestEntry("INFO-2026-0001-a", "K1"), null);
+  assert.equal(rc.livePaths("INFO-2026-0001-a"), null);
+  rc.commit({ bundleId: "INFO-2026-0001-a", type: "information", title: "T", snapKey: "K1", kind: "promotion", base: null, author: "a",
+              writer: "w", operation: "o", state: "collected", priorState: null, group: "g1",
+              files: [file("z.md", "z"), file("bundle.md", "b"), file("a/b.json", "{}")] });
+  assert.deepEqual(rc.head("INFO-2026-0001-a"), { bundleSha: sha("b"), rowVersion: 1, type: "information", title: "T",
+                                                  currentState: "collected", priorState: null, groupId: "g1" });
+  const e = rc.manifestEntry("INFO-2026-0001-a", "K1");
+  assert.deepEqual({ ...e, created: null }, { kind: "promotion", base: null, author: "a", created: null, writer: "w", operation: "o",
+    files: [{ name: "z.md", sha256: sha("z") }, { name: "bundle.md", sha256: sha("b") }, { name: "a/b.json", sha256: sha("{}") }] });
+  assert.ok(!Number.isNaN(Date.parse(e.created)));
+  assert.equal(rc.manifestEntry("INFO-2026-0001-a", "K2"), null);
+  assert.deepEqual(rc.livePaths("INFO-2026-0001-a"), ["a/b.json", "bundle.md", "z.md"]);
+  rc.commit({ bundleId: "INFO-2026-0001-a", type: "information", snapKey: "K2", files: [] });
+  assert.deepEqual(rc.livePaths("INFO-2026-0001-a"), [], "a held bundle with no live file answers an empty list");
+});
+
+test("R44: commit records state, prior state, group, times and criticality as given, and the entry's time is the caller's at", () => {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a";
+  rc.commit({ bundleId: id, type: "information", snapKey: "K1", files: [file("bundle.md", "1")], state: "collected", priorState: null,
+              group: "grp", created: "2026-01-01T00:00:00Z", lastUpdated: "2026-01-02T00:00:00Z", criticality: "high",
+              at: "2026-01-02T00:00:00Z" });
+  assert.deepEqual(rc.head(id), { bundleSha: sha("1"), rowVersion: 1, type: "information", title: null, currentState: "collected",
+                                  priorState: null, groupId: "grp" });
+  assert.equal(rc.manifestEntry(id, "K1").created, "2026-01-02T00:00:00Z");
+  rc.commit({ bundleId: id, type: "information", snapKey: "K2", files: [file("bundle.md", "2")], state: "verified",
+              priorState: "collected", group: "grp", lastUpdated: "2026-02-01T00:00:00Z", criticality: null, at: "2026-02-01T00:00:00Z" });
+  assert.deepEqual(rc.head(id), { bundleSha: sha("2"), rowVersion: 2, type: "information", title: null, currentState: "verified",
+                                  priorState: "collected", groupId: "grp" });
+  assert.equal(rc.manifestEntry(id, "K2").created, "2026-02-01T00:00:00Z");
+  const img = rc.readImage(id);
+  assert.equal(JSON.parse(img["_history/promotion_K2.json"]).created, "2026-02-01T00:00:00Z");
+  const row = rows(s, `SELECT created, last_updated, criticality FROM bundles WHERE bundle_id=?`, id)[0];
+  assert.deepEqual([row.created, row.last_updated, row.criticality], ["2026-01-01T00:00:00Z", "2026-02-01T00:00:00Z", null],
+                   "created kept from the first commit (not given again), last_updated and criticality as given");
+  rc.commit({ bundleId: "INFO-2026-0002-b", type: "information", snapKey: "K1", files: [file("bundle.md", "3")], criticality: "low",
+              created: "2025-05-05T00:00:00Z", lastUpdated: "2025-06-06T00:00:00Z" });
+  const r2 = rows(s, `SELECT created, last_updated, criticality FROM bundles WHERE bundle_id='INFO-2026-0002-b'`)[0];
+  assert.deepEqual([r2.created, r2.last_updated, r2.criticality], ["2025-05-05T00:00:00Z", "2025-06-06T00:00:00Z", "low"]);
 });

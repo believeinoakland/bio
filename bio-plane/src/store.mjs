@@ -860,40 +860,41 @@ export class Store extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
-    // record-core (R21): the tables legacy-store still owns, declared to purge. A name is keyed to a bundle by
-    // bundle_id; `bundle` says how the others are (null: only the whole-store purge clears it); `whole` limits
-    // what the whole-store purge clears. Each owner declares its own when it is extracted (K23).
-    recordOf(ctx, { evidence: env.CAPTURES ?? null, storeName: () => this.#ownNamespace() }).declarePurge("legacy-store", [
+    // record-core (R21, R46): the tables legacy-store still owns, declared to purge in the order its purge cleared
+    // them. A name is keyed to a bundle by bundle_id; `keys` names the others' (none: only the whole-store purge
+    // clears it); `whole` limits what the whole-store purge clears. Each owner declares its own when extracted (K23).
+    recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` })
+      .declarePurge("legacy-store", [
       "refs", "register", "readings", "reading_refs", "reading_ref_terms", "reading_text_source",
       "text_attestations", "resolutions", "progression_instances", "reading_history", "progression_exceptions", "inquiry_basis",
       "inquiry_exclusions", "inquiry_basis_versions", "inquiry_basis_version_legs", "action_basis", "correspondence", "bias_statements",
       "action_quotes", "action_law_proposals", "provenance_route_marks", "case_revision_flags", "content", "transcriptions",
       "transcription_attestations", "lead_shares", "observation_attributions", "theme_placements", "proposed_readings", "inquiry_run_surfacings",
       "inquiry_migration_replays", "capture_text",
-      { name: "bias_adoptions", bundle: "bundle_id=? OR scope_id=?" },
-      { name: "bundles_fts", bundle: "rowid IN (SELECT fts_id FROM bundles WHERE bundle_id=?)" },
-      { name: "connections", bundle: "a_bundle_id=? OR b_bundle_id=?" },
-      { name: "contradiction_candidates", bundle: "a_bundle_id=? OR b_bundle_id=?" },
-      { name: "connection_pair_choices", bundle: "a_bundle_id=? OR b_bundle_id=?" },
-      { name: "project_participants", bundle: "project_id=?" },
-      { name: "project_owner_votes", bundle: "project_id=?" },
-      { name: "project_visibility", bundle: "project_id=?" },
-      { name: "project_sight", bundle: "project_id=?" },
-      { name: "project_join_requests", bundle: "project_id=?" },
-      { name: "queue_state", bundle: "case_id=?" },
-      { name: "published_edges", bundle: "from_bundle=? OR to_bundle=?" },
-      { name: "monitor_fired", bundle: "subject=?" },
-      { name: "suggest_refusals", bundle: "target=?" },
-      { name: "capture_requests", bundle: "target=?" },
-      { name: "case_documents", bundle: null, whole: "ratified_at IS NULL" },
-      { name: "case_exclusions", bundle: null, whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
-      { name: "capture_text_fts", bundle: null }, { name: "selection_items", bundle: null }, { name: "selections", bundle: null }, { name: "review_comments", bundle: null }, { name: "statement_acknowledgements", bundle: null }, { name: "review_grants", bundle: null },
-      { name: "case_drafts", bundle: null }, { name: "tasks", bundle: null }, { name: "task_queue", bundle: null }, { name: "source_reachability", bundle: null }, { name: "monitor_tick_epoch", bundle: null }, { name: "monitor_address_type", bundle: null },
-      { name: "link_verdicts", bundle: null }, { name: "links", bundle: null }, { name: "captured_locators", bundle: null }, { name: "site_asset_refs", bundle: null }, { name: "site_assets", bundle: null }, { name: "reuse_verdicts", bundle: null },
-      { name: "capture_sessions", bundle: null }, { name: "entity_relations", bundle: null }, { name: "entity_aliases", bundle: null }, { name: "entities", bundle: null }, { name: "progression_stages", bundle: null }, { name: "progression_defs", bundle: null },
-      { name: "progression_stage_versions", bundle: null }, { name: "progression_def_versions", bundle: null }, { name: "connection_dirty", bundle: null }, { name: "proposal_dispositions", bundle: null }, { name: "finding_dispositions", bundle: null }, { name: "queue_item_mutes", bundle: null },
-      { name: "observation_log", bundle: null }, { name: "leads", bundle: null }, { name: "themes", bundle: null }, { name: "ai_run_bounds", bundle: null }, { name: "bias_debts", bundle: null }, { name: "bias_debt_settlements", bundle: null },
-      { name: "bias_debt_sweeps", bundle: null }, { name: "ai_runs", bundle: null },
+      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },
+      { name: "bundles_fts", keys: [] },
+      { name: "connections", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "contradiction_candidates", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "connection_pair_choices", keys: ["a_bundle_id", "b_bundle_id"] },
+      { name: "project_participants", keys: ["project_id"] },
+      { name: "project_owner_votes", keys: ["project_id"] },
+      { name: "project_visibility", keys: ["project_id"] },
+      { name: "project_sight", keys: ["project_id"] },
+      { name: "project_join_requests", keys: ["project_id"] },
+      { name: "queue_state", keys: ["case_id"] },
+      { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
+      { name: "monitor_fired", keys: ["subject"] },
+      { name: "suggest_refusals", keys: ["target"] },
+      { name: "capture_requests", keys: ["target"] },
+      { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
+      { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
+      { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
+      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
+      { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
+      { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
+      { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
+      { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
+      { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
     ]);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
@@ -31781,7 +31782,7 @@ export class Store extends DurableObject {
         proj, find.slice(0, 400), kd, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), atS);
       return { ok: true, scope: "project", project: proj, finding: find.slice(0, 400),
                key: `${proj}::${find.slice(0, 400)}`, kind: kd,
-               to: st, state: st, reason: why, decided_by: by, at: atS, bundle: null,
+               to: st, state: st, reason: why, decided_by: by, at: atS, keys: [],
                detail: "recorded for THIS project and for no other. One team's dismissal of a "
                      + "judgment-layer finding governs that team's feed and nothing else (D-266, "
                      + "§7/D-216, R5) — no other project's queue moved by an item, and the finding "
@@ -31895,7 +31896,7 @@ export class Store extends DurableObject {
          definition_version=excluded.definition_version`,
       pk, sk, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), at, definitionVersionWritten);
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
-             to: st, state: st, reason: why, decided_by: by, at, bundle: null,
+             to: st, state: st, reason: why, decided_by: by, at, keys: [],
              definition_version: definitionVersionWritten };
   }
 
@@ -33662,6 +33663,8 @@ export class Store extends DurableObject {
     const before = this.#counts({ proof: true });
     // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
     recordOf(this.ctx).transact(() => {
+      const fts = bundleId ? this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId) : null;
+      if (fts && fts.fts_id != null) this.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, fts.fts_id);
       recordOf(this.ctx).purge({ bundleId });
       if (bundleId) this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
     });
