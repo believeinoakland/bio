@@ -2,12 +2,12 @@
 
 Session: `session_01JxBcyrvDmhXth7LevtRM2H` (ID-SPACES #1)
 
-**Status** · COMPLETE, 2026-09-26, against `jurisdictions` as it stands on `origin/job/T2/jurisdictions` @ 3e5f3d7825 (read, not merged: its files were placed in the working tree, untracked, to run the tests). Job for module `id-spaces`, tranche T2, branch `job/T2/id-spaces` (`origin/tranche/T2` merged, including K35). **Waiting on:** BOB's CHANGE when `jurisdictions` merges into `tranche/T2`. Until then this branch alone does not load: the module imports `jurisdictions/index.mjs` (R26), which only that merge brings. On the CHANGE I merge `tranche/T2` and re-run steps 5–7.
+**Status** · COMPLETE, 2026-09-26, re-run after BOB's CHANGE (jurisdictions merged): `origin/tranche/T2` @ 1d8f9c8e0e merged into `job/T2/id-spaces`, the untracked copy of `jurisdictions/` dropped, steps 5–7 repeated against the real `oakland-alameda` profile. Job for module `id-spaces`, tranche T2. No open question; K35 and K45 applied (K45: `CMS_FLOOR` in R26; R21's `referent.by` exactly "the caller's reading", as built).
 
 ## Entries applied
 
 - **N2** · `bio-plane/src/idspaces.mjs` takes every space's forms, the enactment kinds and their floors, the systems, the mixed hosts and the crosswalks from `view` (the combined view, with its `conflicts`; a whole `combine` result is accepted too). Spaces renamed `enactment`, `project`, `fund`, `parcel`. Services: `spaces`, `recognise`, `reach`, `parcelStanding`, `systemOf`, `judgePair` (R1–R25). No place is named (R24): every Oakland fact now lives in the `oakland-alameda` profile.
-- **K35 / R26** · the legacy adapter at the foot of the module: `ID_SPACES`, `recognise(space, raw)`, `apnStanding`, `systemOfAddresses`, `judgePair(space, a, b, reading?)` over the view `combine` makes of every non-test held profile, `cms`↔`enactment`, `apn`↔`parcel` mapped in and out. The old call shape of `recognise`/`judgePair` is told by a string first argument. Also exported: `CMS_FLOOR` (each kind's floor in that view), because the old battery's `rec203-idspaces.test.mjs` imports it; R26 does not list it (see below).
+- **K35 / R26** · the legacy adapter at the foot of the module: `ID_SPACES`, `recognise(space, raw)`, `apnStanding`, `systemOfAddresses`, `judgePair(space, a, b, reading?)` over the view `combine` makes of every non-test held profile, `cms`↔`enactment`, `apn`↔`parcel` mapped in and out. The old call shape of `recognise`/`judgePair` is told by a string first argument. Also `CMS_FLOOR` (each kind's floor in that view), which the old battery imports; K45 added it to R26.
 - **T2-6** · `bio-plane/test/m/id-spaces/`: `idspaces.test.mjs` (26 tests, R1–R25), `legacy.test.mjs` (6 tests, R26), `fixtures.mjs` (four made-up test profiles: two jurisdictions with different forms, systems and a crosswalk; one disagreeing on a floor; one with a kind and no floor). Every view is made by the real `jurisdictions.combine`, which validates each profile.
 
 ## Decisions made in the job (for BOB to record if he wishes)
@@ -28,17 +28,18 @@ None.
 
 - **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`; BOB regenerates at the layer close). `idspaces.mjs` changed and now imports `jurisdictions/index.mjs` and its profiles, which become new bundle inputs.
 - **legacy-tests:** `bio-plane/test/nc-rec203.mjs`, REC-203's negative-control driver, arms by editing anchors in the old `idspaces.mjs` text. Those anchors are gone, so every arm now stops with "THE ARM DID NOT ARM". It is not run by the battery; it needs new anchors, or retiring with the adapter (N6).
-- **Requirements (R26):** `CMS_FLOOR` is exported beyond R26's list because `rec203-idspaces.test.mjs` imports it. BOB may add it to R26, or have the old test read the floor another way.
+- **Requirements (R26):** `CMS_FLOOR` was exported beyond R26's list because `rec203-idspaces.test.mjs` imports it. Resolved by K45.
 - **legacy-store (for N6):** `op=idmatch` still speaks the old space names and reads `ID_SPACES`. The new interface is `spaces(view)` and the view-first services.
 
 ## Tests and checks run
 
-Run with `jurisdictions/` from `origin/job/T2/jurisdictions` @ 3e5f3d7825 in the working tree (untracked):
-- `node --test bio-plane/test/m/id-spaces/` — `tests 32, pass 32, fail 0` (about 12 runs; failures on the way were my tests' wording, three module wordings brought in line with the old battery, and fixture profiles made valid for the real `validate`).
-- Callers (legacy-tests, through legacy-store's `op=idmatch`): `node test/rec203-idspaces.test.mjs` — `rec203-idspaces: 45 pass, 0 fail` (the same 45 as the old module's baseline); `node test/bounds.test.mjs` — `206 pass, 0 fail`.
+Re-run on the merged branch (`tranche/T2` @ 1d8f9c8e0e, the real `jurisdictions`):
+- `node --test bio-plane/test/m/id-spaces/` — `tests 32, pass 32, fail 0`. About 14 runs in the job. Failures on the way were the wording of my tests, three module wordings brought in line with the old battery, and fixture profiles made valid for the real `validate`.
+- `node --test jurisdictions/test/` (the module this one uses): `tests 35, pass 35, fail 0`.
+- Callers (legacy-tests, through legacy-store's `op=idmatch`; each loads the whole plane under Miniflare, so the plane loads): `node test/rec203-idspaces.test.mjs` — `rec203-idspaces: 45 pass, 0 fail`; `node test/bounds.test.mjs` — `206 pass, 0 fail`.
 - Layer tests: none named in `build/manifest.md`.
-- `node checks/format.mjs .` — `format: 61 modules, 19 requirements files; 0 failures`
-- `node checks/architecture.mjs . id-spaces` — `architecture: 4 product files, 6 relative imports (3 naming no tracked file, not judged); 0 failures` (the three are the `jurisdictions` imports, not yet tracked on this branch)
+- `node checks/format.mjs .` — `format: 61 modules, 23 requirements files; 0 failures`
+- `node checks/architecture.mjs . id-spaces` — `architecture: 4 product files, 6 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `node checks/coverage.mjs . id-spaces` — `coverage: 1 modules, 26 of 26 live requirement ids named by a test; 0 failures`
 - `node checks/ownership.mjs . id-spaces tranche/T2` — `ownership: 5 files changed by id-spaces between tranche/T2 and HEAD; 0 failures`
 
@@ -55,9 +56,10 @@ Run with `jurisdictions/` from `origin/job/T2/jurisdictions` @ 3e5f3d7825 in the
 
 **Addendum (measured after the module was rewritten, commit on this branch):** the break is not confined to `op=idmatch`. `store.mjs` imports `ID_SPACES` statically, so with the new module the whole plane fails to load (`bio-plane/test/rec203-idspaces.test.mjs`: workerd `SyntaxError: The requested module './idspaces.mjs' does not provide an export named 'ID_SPACES'`). Every Miniflare test of the old battery that loads `index.mjs` fails the same way until legacy-store changes or this module keeps the old names. This makes the alternative (a temporary adapter under the old names) the safer choice unless the legacy-store change lands in this tranche. Until BOB answers, the module on this branch exports only the required interface.
 
+
 ## Metrics
 
 ```csv
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
-session_01JxBcyrvDmhXth7LevtRM2H,job,id-spaces,7127564,153033,98,67277,48,12,463
+session_01JxBcyrvDmhXth7LevtRM2H,job,id-spaces,10552881,170821,136,73047,64,14,463
 ```
