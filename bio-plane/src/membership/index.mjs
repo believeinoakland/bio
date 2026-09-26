@@ -1442,9 +1442,11 @@ export class Membership {
     return !!(p && p.state === "joined");
   }
 
+  /* R74: one member's participation in one project, `{state, owner}`, or null (promotion's forkProject reads it). */
   participation(projectId, memberId) {
-    return this.#one(`SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
+    const p = this.#one(`SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
       projectId, memberId);
+    return p ? { state: p.state, owner: p.owner === 1 } : null;
   }
 
   /** 7.1: the creator is the owner. Called when a project bundle is promoted by

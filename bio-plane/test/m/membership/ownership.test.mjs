@@ -99,7 +99,7 @@ test("R41 projectOwnerRescue: an administrator adds an owner only when every own
   assert.equal(resc("PROJ-P", "dee", "second").reason, "NOT_ACTIVE");
   const ok = resc("PROJ-P", "bob", "admin");
   assert.deepEqual([ok.ok, ok.owners, ok.addedNotReplaced], [true, ["ann", "bob"], true]);
-  assert.equal(w.m.participation("PROJ-P", "ann").owner, 1, "the inactive owner keeps the row");
+  assert.equal(w.m.participation("PROJ-P", "ann").owner, true, "the inactive owner keeps the row");
 });
 
 test("R42 every ownership decision is kept with its deciders and reason, readable by every participant", async () => {

@@ -107,3 +107,14 @@ test("R37 projectParticipants: a participant or an administrator reads every par
   assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "dee" }).reason, "NO_SUCH_PROJECT");
   assert.equal(w.m.projectParticipants({ projectId: "NOPE", by: "dee" }).reason, "NO_SUCH_PROJECT");
 });
+
+test("R74 participation answers one member's state in one project and whether an owner, or null", async () => {
+  const w = await projectWorld();
+  w.m.projectLeave({ projectId: "PROJ-P", by: "bob", viewer: V("bob") });
+  assert.deepEqual(w.m.participation("PROJ-P", "ann"), { state: "joined", owner: true });
+  assert.deepEqual(w.m.participation("PROJ-P", "bob"), { state: "leaving", owner: false });
+  assert.deepEqual(w.m.participation("PROJ-P", "cal"), { state: "invited", owner: false });
+  assert.equal(w.m.participation("PROJ-P", "dee"), null);
+  assert.equal(w.m.participation("PROJ-NEVER", "ann"), null);
+  assert.equal(w.m.participation(null, undefined), null, "never throws");
+});
