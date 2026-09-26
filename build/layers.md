@@ -4,17 +4,17 @@
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
-| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | legacy-checks, jurisdictions, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, pdf-worker, ocr-worker |
+| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | legacy-checks, jurisdictions, test-support, bundler, runtime-limits, signatures, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, docprofile, pdf-worker, ocr-worker |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, promotion |
 | 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, capture-sources, capture |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | extraction, content |
 | 5 | Meaning, bias and retrieval | 6, 7, 9 | Everything derived over content, with its grade; the four-level search, which says at which level absence was found. | entities, connections, progressions, bias, observation-log, query-language, retrieval |
-| 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry, basis-versions, strength, contradiction, review, skills, ai-runs, agent-worker |
+| 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry, basis-versions, strength, contradiction, review, ai-runs, skills, agent-worker |
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
 | 8 | Publication | 13 | What the group stands behind leaves one way. | publication |
 | 9 | Action | Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on a published finding and a standard held in the record; the group decides every act, the AI prepares and never files; compliance is recorded as carefully as noncompliance; every deadline names its basis. | standards, conformance, consequences, actions, filings, escalation |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler, legacy-store |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, queue, instance-setup, control-plane, legacy-index, legacy-ui, installer, legacy-tests |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
@@ -37,6 +37,7 @@ The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carr
 | legacy-store | `store.mjs`, `schema.mjs` | 54,618 and 4,287 | It is last among the store-backed modules, so extraction runs bottom-up: an extracted module never calls back into it, and it calls the extracted modules. |
 | legacy-index | `index.mjs` | 13,438 | It is after legacy-store, because it imports it. |
 | legacy-ui | `civicos-ui/` | 26,489 in `app.html` | It talks to the plane over HTTP only. |
+| legacy-tests | `bio-plane/test/`, `civicos-ui/test/` and the UI's two check scripts | the old battery | Added 2026-09-26 by BOB #38 (P17). The old battery tests every layer, so it is last in the order and may use anything earlier. The extracted modules' own tests live in `bio-plane/test/m/<module>/`, which the most specific path assigns to each module. It shrinks as extraction replaces it (C5) and is retired when empty. |
 
 A module marked `from` in `modules.json` is extracted from that legacy module by its own job. Which functions go to which module is an informed guess from their names (for example `promote`, `reopen`, `captureProgressions`). The extraction job reads the legacy code and confirms it.
 
@@ -89,6 +90,14 @@ Uses, all earlier in the order: `standards` uses jurisdictions, record-core, con
 3. *Political stage.* Escalation gains stage 7, **political accountability**, entered from response evaluation or legal tools and aimed at compliance restored and consequences addressed: asking elected officials to act on the breach, oversight and audit requests, testimony, and legislation that restores or enforces an existing requirement. Policy advocacy and candidate support stay out; Operational Principle 1 stands. This amends Design Requirement 7.
 
 **What it changed.** `modules.json` gained five modules and moved `actions`; the layers renumbered to eleven (58 modules). Layer 1 is unaffected except `jurisdictions`, whose profile gains the sources of standards, the offices addressed, the action kinds with their tiers and venues, and the legal deadlines these modules read: R23–R30 of its requirements, approved by Bob 2026-09-26, built with the module itself (entries N1 and N11).
+
+## Helper modules (BOB #38, 2026-09-26, under P17)
+
+Found by the architecture check's first run: shared helpers that later modules used from the top of the order.
+- **test-support** (layer 1): the test sandbox and stdio guard (`bio-plane/test/sandbox.mjs`, `stdio.mjs`) that the workers' tests and the old battery share.
+- **bundler** (layer 1): `bio-plane/scripts/fleet-bundle.mjs` and its `provenance.mjs`, which build the plane and the three workers.
+
+Declared uses the code already had were added (affordances, query-language and skills on legacy-checks; agent-worker on runtime-limits, legacy-checks, query-language, ai-runs and skills; ocr-worker on legacy-checks and text-chain), `skills` moved after `ai-runs`, and `ai-runs`'s stale use of `skills` was removed. `not_product` in `modules.json` lists the paths no module owns.
 
 ## Paths that are not product
 
