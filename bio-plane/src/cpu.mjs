@@ -77,7 +77,10 @@ export function makeMeter() {
     report() {
       const calls = Object.values(seg).reduce((a, e) => a + e.calls, 0);
       const bytes = Object.values(seg).reduce((a, e) => a + e.bytes, 0);
-      return { work_calls: calls, work_bytes: bytes, segments: { ...seg },
+      // A copy down to each segment, so a report is a fixed reading: later calls on the meter
+      // do not change it, and changing it does not change the meter.
+      const segments = Object.fromEntries(Object.entries(seg).map(([k, e]) => [k, { calls: e.calls, bytes: e.bytes }]));
+      return { work_calls: calls, work_bytes: bytes, segments,
         measured_ms: null,
         note: "COUNTS, not times. Cloudflare freezes Date.now() during synchronous execution as a "
             + "timing-attack defence, so a Worker cannot measure its own compute and any millisecond "
@@ -96,8 +99,11 @@ export function makeMeter() {
  *  roughly the same every time. Deliberately not crypto: a digest's cost depends
  *  on input size and platform acceleration, which makes steps incomparable. */
 export function burn(iterations) {
+  // Anything but a number is no work: comparing a Symbol, or an object whose valueOf throws,
+  // would throw inside the loop, and this never throws.
+  const n = typeof iterations === "number" ? iterations : 0;
   let x = 1;
-  for (let i = 0; i < iterations; i++) x = (x * 1103515245 + 12345) % 2147483647;
+  for (let i = 0; i < n; i++) x = (x * 1103515245 + 12345) % 2147483647;
   return x;
 }
 
@@ -110,14 +116,17 @@ export function burn(iterations) {
  *  buffered until the end. That is the entire design of this thing. */
 export async function cpuProbe({ checkpoint, startStep = 0, maxStep = 40,
                                  iterationsPerStep = 2_000_000, budgetMs = 20_000,
-                                 now = () => Date.now() }) {
+                                 now = () => Date.now() } = {}) {
+  // Refused before any work: without a checkpoint the probe leaves no trail, which is its whole point.
+  if (typeof checkpoint !== "function") throw new TypeError("cpuProbe: checkpoint must be a function");
   const t0 = now();
-  let step = startStep;
+  let step = startStep, elapsed = 0;
   for (; step < maxStep; step++) {
     burn(iterationsPerStep);
-    const elapsed = now() - t0;
+    elapsed = now() - t0;
     await checkpoint(step + 1, elapsed);
     if (elapsed >= budgetMs) return { completed: step + 1, elapsed_ms: elapsed, reason: "BUDGET_REACHED" };
   }
-  return { completed: step, elapsed_ms: now() - t0, reason: "MAX_STEP_REACHED" };
+  // The elapsed time of the last completed step, the one its checkpoint recorded (0 when none ran).
+  return { completed: step, elapsed_ms: elapsed, reason: "MAX_STEP_REACHED" };
 }
