@@ -1,6 +1,6 @@
 # control-plane — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so (`build/extraction/control-plane.md` has the table). Code today, measured on `tranche/T3` @ `f324df9b`, in `index.mjs`:
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so (`build/extraction/control-plane.md` has the table). Code today, measured on `tranche/T3` @ `f324df9b`, in `index.mjs`:
 - the op declarations: `OPS` 419–1670, the act lists 1671–2063, `SESSION_OPS` 2064–2262, `NEEDS` 2263–2829, `UNATTENDED_BY_DECISION` 4316–4359;
 - authentication: `classify`, `scopeFor`, `namespaceGate`, `pinnedNamespaceGate`, `confinedNamespaceGate`, `aiCredentialPresented`, `aiConfinementDeclaration`, `aiReachesAsMember`, `aiScopeDeclaration`, `aiTaskScope` 3137–3663, and `resolveSession`, `reviewAnswer`, `caseReader` 3664–3758;
 - the envelope: `json`, `dec49Row`/`dec49Decorate`/`dec49Attach`, `doAnswer` 3768–3962, `storeSilent` 4020–4041, the row readers 4175–4230, `sessionOpGate` and `requiredArgument` 4360–4466, `StoreSilent` 4538–4540;
@@ -8,7 +8,7 @@
 
 From `store.mjs`: `Store.fetch`'s frame (48479–48509, 49799–49811) and `PROJECT_NAMING_READS`, `PROJECT_NAMING_READS_NOT`, `#existenceRead` (33195–33258). Not yet met: R24 (D-679), R25 (D-629), R19's last sentence (D-586). Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file).
 
-**Size (P6).** About 5,990 lines move, about 1,610 without comment-only and blank lines. `index.mjs` accounts for 5,500 (1,331 code), `bio-checks.mjs` for 382 (202) and `store.mjs` for 108 (74). The forward range (11860–13438) is an upper bound: the op-specific arms inside it leave with their modules. The raw figure is past the 4,000-line mark (`layers.md` ruling 1). Open for Bob 2 reports it.
+**Size (P6).** About 5,990 lines move, about 1,610 without comment-only and blank lines. `index.mjs` accounts for 5,500 (1,331 code), `bio-checks.mjs` for 382 (202) and `store.mjs` for 108 (74). The forward range (11860–13438) is an upper bound: the op-specific arms inside it leave with their modules. The raw figure is past the 4,000-line mark (`layers.md` ruling 1). K93 keeps it one module.
 
 ## Public
 
@@ -79,7 +79,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers.
 - `legacy-checks`: the rows of R32 until they move; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `legacy-store`: its store routes and class until each module takes its own.
-- Every module whose op handlers or store routes it routes. These uses are declared as each module is extracted (Open for Bob 1).
+- Every module whose op handlers or store routes it routes. These uses are declared as each module is extracted (K93).
 
 ### Invariants
 
@@ -109,7 +109,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 
 ## Open for Bob
 
-None. Both questions the draft raised are technical, and BOB #43 decided them (K93): the Durable Object class is this module's once it is extracted (the one place that starts every module and routes their ops; until then `legacy-index` wraps `legacy-store`'s class); and the module stays one module, about 1,610 lines of code, since P6 counts reading and the op declarations are a table (as K85 read it).
+None: answered by Bob 2026-09-26 (K102). The draft's two questions were technical, and BOB #43 decided them (K93): the Durable Object class is this module's once it is extracted (the one place that starts every module and routes their ops; until then `legacy-index` wraps `legacy-store`'s class); and the module stays one module, about 1,610 lines of code, since P6 counts reading and the op declarations are a table (as K85 read it).
 
 ## Decided by BOB
 
