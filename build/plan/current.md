@@ -27,6 +27,14 @@ Layer 2: the first extractions from `legacy-store`, each by its target module's 
 **legacy-tests**
 - T3-4 · Bring the old battery green on the tranche: N32 first (39 harnesses red since T2), then N14, N15, N20, N23, N24, N29, N31 (its share), N33; each red test is fixed, re-anchored, or retired with the code it anchors on, never skipped.
 
+## Job sessions (layer 2, started 2026-09-26 18:16 UTC)
+
+| module | session | title |
+| --- | --- | --- |
+| record-core | `session_0128RDfHecKMSruEijV3kfAe` | RECORD-CORE #1 |
+| membership | `session_01LSy7nZpkVyvEV81G4a5SYA` | MEMBERSHIP #1 |
+| promotion | `session_01LPQSJzgT8fbw2kcionFsh3` | PROMOTION #1 |
+
 ## The entries named above
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
