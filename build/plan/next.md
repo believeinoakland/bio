@@ -43,6 +43,8 @@
 - N48 · 2026-09-26 · **extraction** (K76): REC-206's item-to-file derivation, and the name of its `membership.mjs` file changed so it is not confused with the module.
 - N49 · 2026-09-26 · **ai-runs**, **affordances**, **queue** (K78): each re-exports, from the layer-5 module that took a copy, the vocabulary and checks it held for that module (observation-log's in `airun.mjs`; progressions' `STAGE_REQUIREDNESS`, `DISPOSITIONS` in `affordances.mjs`; `QUEUE_CONDITION_KINDS` in `queuestate.mjs`), and deletes its own copy.
 - N50 · 2026-09-26 · DONE (K80) · **retrieval** (K78): its draft requirements and map gain `op=frontier`'s arms (about 1,116 lines) before Bob approves it.
+- N51 · 2026-09-26 · **record-core**: `auditPass` offers a registration for later modules' audit checks (the K31 pattern), so `promotion.recordAudit` stops re-judging only the bundles the moved checks flag. Reported by PROMOTION #1.
+- N52 · 2026-09-26 · **affordances**: import promotion's `REOPENABLE_FROM` instead of keeping its own. Reported by PROMOTION #1.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
