@@ -32,3 +32,51 @@
 - N6 · 2026-09-25 · **entities**: `op=idmatch` takes the renamed spaces (N2), passes the combined profile view, and passes each end's addresses from the record. **affordances**: `idmatch`'s outward text names no local system (it says "C.M.S.", "APN" and "Legistar's floor" today).
 - N10 · 2026-09-25 · **record-core**, **installer**, **instance-setup**: the instance holds the list of its active jurisdiction profiles as a setting, and the installer offers the choice. Rule 2 of "No jurisdiction in the product".
 - California's records law as a kind name (`cpra_request`) and in outward text is carried as old-plan row REC-201 against `actions`; the profile's `records_laws` section is where the law's name comes from.
+
+## Tranche T2, prepared (P18): ready to open when T1 closes
+
+Every remaining layer-1 module. Each job also writes requirement-named tests for every live id, so the coverage check passes (P7). Within the layer, `jurisdictions` provides the profiles `id-spaces` and `docprofile` use (N1–N3, N11), so its branch merges into the tranche as soon as it completes (mechanics §4). Built work named in a row sits on the snapshot branch and is judged against the requirements at the job. The layer-1 entries listed above in this file (N1–N3, N7, N11, D-622) are T2's too.
+
+
+**jurisdictions** (30 ids)
+- T2-1 · Requirement-named tests for every live id.
+
+**test-support** (9 ids)
+- T2-2 · Requirement-named tests for every live id.
+
+**bundler** (10 ids)
+- T2-3 · Requirement-named tests for every live id.
+
+**runtime-limits** (25 ids)
+- T2-4 · Requirement-named tests for every live id.
+
+**signatures** (29 ids)
+- T2-5 · Requirement-named tests for every live id.
+
+**id-spaces** (25 ids)
+- T2-6 · Requirement-named tests for every live id.
+
+**office-readers** (25 ids)
+- T2-7 · Requirement-named tests for every live id.
+- D-415 · A WORKBOOK'S `sheet-range` UNITS ARE WHOLE SHEETS ONLY: `formats-xlsx.mjs` turns `definedNames` into anchor links and emits one `usedSheetRange` per sheet; table parts and ODF named ranges are not read. — owner COFF. Built work: `land/worker/D-415` @ 48245247, judged at the job.
+- DIST-14 · THE CSV SIZE BOUND (20 MiB, reused from COFF-6) IS NOT SETTLED: node measured 254.5 MiB of heap at the bound against Cloudflare's documented 128 MiB isolate (their claim), and local workerd walked a 73.6 MB body without the production cap a
+
+**odf-reader** (43 ids)
+- T2-8 · Requirement-named tests for every live id.
+- D-612 · EVERY REAL GOOGLE DOC EXPORT EMBEDS `Fonts/fontN.ttf`, REFERENCED BY `svg:font-face-uri`, AND D-351's MEMBER RULE REFUSES THOSE REFERENCES, so the .odt digest reads UNDETERMINED on ALL 8 real Docs (M-167) and the monitor's false "changed" a Built work: `land/worker/D-612` @ f2dcbc6c, judged at the job.
+- D-346 · THE THREE OPENDOCUMENT ENTRIES EMIT NO `core-properties` AND NO `intra` LINK: `odf.mjs` never reads `meta.xml` or the manifest and says so with `outside_content_xml_not_read` markers, while Content Framework §16 says the formats "preserve t Built work: `land/worker/D-346` @ 96eeb2d5, judged at the job.
+
+**format-registry** (27 ids)
+- T2-9 · Requirement-named tests for every live id.
+
+**text-chain** (86 ids)
+- T2-10 · Requirement-named tests for every live id.
+- D-633 · WHEN TIER 2 WINS A PAGE, `mergeTier2Text` REPLACES ITS MARKERS, SO D-627's `image_content_unread` IS LOST AND THE PAGE ROUTES NOWHERE. Reproduced through op=acquire with an answering tier-2 stub (the held INFO-2026-0301 does not escalate, s Built work: `land/worker/D-633` @ cbc5ae9b, judged at the job.
+- D-723 · A PAGE TWO PARTS SHARE (D-635: folio from the text layer, OCR transcription appended) READS `ocr` — the part appended last — though BOB #35's 09:35Z rule makes a unit covered by steps of different kinds `mixed`; the record calls the text-la Built work: `land/worker/D-723` @ fe2b9a6d, judged at the job.
+- D-416 · A READING POSITION CANNOT FALL INSIDE A `sheet-range` EXTENT: `readingPositionInExtent` (`textchain.mjs`) returns false whenever the reading's arm and the extent's differ, so a cell reading never earns the connection its range should. The i
+
+**docprofile** (35 ids)
+- T2-11 · Requirement-named tests for every live id.
+
+**ocr-worker** (21 ids)
+- T2-12 · Requirement-named tests for every live id.
