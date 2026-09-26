@@ -2,7 +2,8 @@
 
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/cpu.mjs`,
 `bio-plane/src/tokens.mjs`. No row of the old plan and no entry in `build/plan/next.md` targets this
-module; every requirement below is met by the code as it stands.
+module; every requirement below is met by the code as it stands. N63 folded by a drafting worker for BOB #43,
+2026-09-26: R26 (`unattendedCredential`, K90 (2)), not yet met.
 
 ## Public
 
@@ -15,7 +16,8 @@ the runtime enforces, by a stepped probe that checkpoints after every step so th
 isolate being killed mid-probe. `tokens.mjs` is token hygiene: whether a secret value is live rather than
 a value that has ever been published in this repository, and the status of the two instance-level
 credentials an instance may hold as deploy secrets (the Anthropic account that pays for a run, and BIO's
-own `ai` credential that resumes one). Neither half holds a store, reads the network, or has any way to
+own `ai` credential that resumes one), and which bound credential the instance's unattended work spends.
+Neither half holds a store, reads the network, or has any way to
 set a credential.
 
 ### Provides
@@ -95,6 +97,14 @@ set a credential.
 - **R20** Any other non-empty string `v`: `{token: v, reason: null}`.
 - Errors: never throws.
 
+**unattendedCredential(env) → {bound, token}** (K90 (2): the choice `monitoring` and `capture-requests` share)
+- **R26** `bound` is a boolean, computed synchronously: `true` exactly when `env.DAEMON_TOKEN` or
+  `env.ADMIN_TOKEN` is present and non-empty (presence only; publication is not asked). `token()` answers a
+  `Promise<string | null>`: `env.DAEMON_TOKEN` when it is a string that is `liveToken`, else
+  `env.ADMIN_TOKEN` on the same test, else `null`. The object itself never carries a credential's value.
+  *(not yet met: N63; the store holds it as `#monitorTokenBound` and `#monitorToken`)*
+- Errors: never throws; `token()` never rejects.
+
 **The reason constants**
 - **R21** `CASCADE_UNSET`, `CASCADE_PUBLISHED`, `INSTANCE_AI_UNSET` and `INSTANCE_AI_PUBLISHED` are
   exported string constants (`"NO_INSTANCE_ACCOUNT"`, `"INSTANCE_ACCOUNT_REVOKED_BY_PUBLICATION"`,
@@ -105,7 +115,8 @@ set a credential.
 
 ### Uses
 
-- None. `runtime-limits` is Layer 1 with no `uses` entry in `modules.json`.
+- None. `runtime-limits` is Layer 1 with no `uses` entry in `modules.json`. `unattendedCredential` (R26) calls
+  this module's own `liveToken`.
 
 ### Invariants
 
@@ -142,6 +153,9 @@ of either file — this module owns no C-numbered check today.
   (a store write) before it resolves: the whole design rests on the last completed step's checkpoint
   surviving an isolate kill that `cpuProbe` itself cannot detect or report, and a `checkpoint` that only
   buffers in memory defeats that.
+- `unattendedCredential` (R26) is read by `capture-requests` and `monitoring` until their in-process paths
+  (capture-requests R16, monitoring R23) leave them nothing to spend; `monitoring` keeps its own
+  `MONITOR_NO_LIVE_CREDENTIAL` sentence for a `token()` of `null`.
 - Today's callers: `subresources` uses `makeMeter`; `legacy-index` uses `cpuProbe`, `liveToken` (to admit
   `ADMIN_TOKEN`/`MEMBER_TOKEN`/`PROBE_TOKEN`/`DAEMON_TOKEN`) and re-exports `PUBLISHED_TOKEN_HASHES`;
   `legacy-store` uses `liveToken`, `sha256hex`, `instanceAiCredential` and `instanceClaudeToken`;

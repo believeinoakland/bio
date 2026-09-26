@@ -1,6 +1,6 @@
 # instance-setup — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. Code today (measured on `tranche/T3` @ `f324df9b`): its own paths `bio-plane/src/setup.mjs` (1,424 lines: `groupLine`, `setupPage`, `SETUP_HTML` and its page script) and `bio-plane/src/livefire.mjs` (247: `livefire`); and, moving in at its extraction (K69, N38; `build/extraction/instance-setup.md` has the table), the group-identity cluster C-64 in `bio-plane/src/store.mjs` 32566–32933 (`GROUP_SLUG_RE`, `#producingGroup`, `#recordGroupAtFirstBoot`, `NO_GROUP_RECORDED`, `instanceGroup`, `instanceGroupPublic`, `instanceGroupSeed`, `#groupUndetermined`, the display name and domain methods to `GROUP_DOMAIN_CHECKS_MAX`), the alarm consumer `group-domain-recheck` (3745–3753), the fact registration (900), the dispatch entries (49548–49560); `schema.mjs` 42–62 (`instance_group`) and 3622–3658 (`group_identity_history`, `group_domain_checks`); `bio-checks.mjs` 14080–14147 (`INSTANCE_GROUP_CHECKS` less C-64.1 and C-64.4); and from `index.mjs` `publicInstanceGroup` (3744–3766), `FLEET_BINDINGS` and `memberVersions` (4043–4097), the `instancegroup` and `groupidentity` arms (6257–6311), the `bootstrap` arm (6829–6847), `selftest` (7311–7384) and `livefire` (7402–7437). `from` should read `["legacy-store", "legacy-checks", "legacy-index"]`. Not yet met: R12–R16 (N10), R25 (D-719). Carried old-plan row: D-719.
+**Status** · DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. Code today (measured on `tranche/T3` @ `f324df9b`): its own paths `bio-plane/src/setup.mjs` (1,424 lines: `groupLine`, `setupPage`, `SETUP_HTML` and its page script) and `bio-plane/src/livefire.mjs` (247: `livefire`); and, moving in at its extraction (K69, N38; `build/extraction/instance-setup.md` has the table), the group-identity cluster C-64 in `bio-plane/src/store.mjs` 32566–32933 (`GROUP_SLUG_RE`, `#producingGroup`, `#recordGroupAtFirstBoot`, `NO_GROUP_RECORDED`, `instanceGroup`, `instanceGroupPublic`, `instanceGroupSeed`, `#groupUndetermined`, the display name and domain methods to `GROUP_DOMAIN_CHECKS_MAX`), the alarm consumer `group-domain-recheck` (3745–3753), the fact registration (900), the dispatch entries (49548–49560); `schema.mjs` 42–62 (`instance_group`) and 3622–3658 (`group_identity_history`, `group_domain_checks`); `bio-checks.mjs` 14080–14147 (`INSTANCE_GROUP_CHECKS` less C-64.1 and C-64.4); and from `index.mjs` `publicInstanceGroup` (3744–3766), `FLEET_BINDINGS` and `memberVersions` (4043–4097), the `instancegroup` and `groupidentity` arms (6257–6311), the `bootstrap` arm (6829–6847), `selftest` (7311–7384) and `livefire` (7402–7437). `from` should read `["legacy-store", "legacy-checks", "legacy-index"]`. Not yet met: R12–R16 (N10), R25 (D-719). Carried old-plan row: D-719. N65 (3) and N66 folded by a drafting worker for BOB #43, 2026-09-26: R32, not yet met; the first boot named as record-core's `isFirstBoot` (its R54).
 
 **Size (P6).** About 2,440 lines once extracted (about 1,860 of code): its own files 1,671 (1,230), `store.mjs` 390 (245), `schema.mjs` 58 (24), `bio-checks.mjs` 68 (50), `index.mjs` 262 (127). Well under 4,000.
 
@@ -12,7 +12,7 @@ What this copy is and whose it is. It records once which group produces the reco
 
 ### Provides
 
-Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s grammar (3 to 40 of `a-z`, `0-9` and `-`, beginning and ending with a letter or digit). The **first boot** is the boot at which the store had never held the record's schema (record-core). **Scratch** is the instance's rehearsal namespace; each namespace holds its own values and nothing here crosses between them.
+Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s grammar (3 to 40 of `a-z`, `0-9` and `-`, beginning and ending with a letter or digit). The **first boot** is the boot at which the store had never held the record's schema (record-core's `isFirstBoot`, its R54). **Scratch** is the instance's rehearsal namespace; each namespace holds its own values and nothing here crosses between them.
 
 **The producing group: `producingGroup()`, `instanceGroup()`, `instanceGroupPublic()`, `instanceGroupSeed({slug, author})`** (`op=instancegroup`, `op=instancegroupseed`)
 - **R1** `producingGroup()` answers the recorded slug, or `null` when none is recorded. It is the one reader: this module registers it with `promotion` as the fact `producingGroup` (promotion R40) at start, and every stamp and default in the record reads it there. It reads the store only, never a deploy-time variable.
@@ -48,15 +48,17 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - **R23** After sign-in it offers only the acts `op=whoami` reports the session holds, and the members and keys section only to a session that administers.
 - **R24** Its intake form offers the catalogue's own first states, headings and risk tiers; for an action, a named counterparty or "not determined yet" with a basis, and a risk tier, with nothing preselected (an untouched tier is written `undetermined`).
 - **R25** A bundle's history is listed in write order when every entry carries a distinct integer `seq`, else by snap key, and the page says which order it shows. *(not yet met: D-719)*
+- **R32** The risk tiers R24's form offers, and the tier it writes, are `actions`' `RISK_TIERS` and `riskTierState` (N65 (3)), never a copy; the page states `action_kind: other`, a product kind (actions R10), and offers no other kind. *(not yet met: N65; the page reads `RISK_TIERS` and `riskTierState` from `legacy-checks`)*
 
 ## Private
 
 ### Uses
 
 - `jurisdictions`: `list`, `get`, `combine` (R12–R16).
-- `legacy-checks`: C-64's rows until they move (R30); `STATES`, `HEADINGS`, `deriveInquiryTitle`, `RISK_TIERS`, `riskTierState` for the page; `civicosUserAgent`.
+- `legacy-checks`: C-64's rows until they move (R30); `STATES`, `HEADINGS`, `deriveInquiryTitle` for the page, and `RISK_TIERS`, `riskTierState` until `actions` holds them (R32); `civicosUserAgent`.
+- `actions`: `RISK_TIERS`, `riskTierState` (R24, R32). *(not declared)*
 - `runtime-limits`: `liveToken`, `PUBLISHED_TOKEN_HASHES` (R17–R19).
-- `record-core`: `recordOf(ctx)`, `getSetting`/`setSetting` (R12–R14), `declarePurge` (R28), and whether this is the first boot (R2, R13). *(not declared; the first-boot service is not in record-core's file: see Suggestions)*
+- `record-core`: `recordOf(ctx)`, `getSetting`/`setSetting` (R12–R14), `declarePurge` (R28), and `isFirstBoot` (its R54; R2, R13). *(not declared)*
 - `membership`: `isAdministrator` (R64), `bootstrapState` (R72). *(not declared)*
 - `promotion`: `registerFact` (R1). *(not declared)*
 - `host-governor`: `governorAdmit`, `governorReport` (R8). *(not declared; K69)*
@@ -82,8 +84,8 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 
 ### Suggestions
 
-- **Factory and start.** `instanceSetupOf(ctx, env)` (K61). The Durable Object's composition root calls it at start: registers R1's fact, the purge exemptions and the scheduler consumer, and runs R2 and R13 when record-core reports the first boot. Until `control-plane` holds the root (control-plane Open for Bob 1), `legacy-index`'s `Store` export wraps `legacy-store`'s class to do it, since `legacy-store`, earlier, cannot call this module.
-- **The first boot.** record-core decides it today inside `#migrate` (`PRAGMA table_info(bundles)` empty before the schema pass). It needs to offer that answer (for example `firstBoot()`, true only during that boot); a record-core requirement BOB adds before this extraction.
+- **Factory and start.** `instanceSetupOf(ctx, env)` (K61). The Durable Object's composition root calls it at start: registers R1's fact, the purge exemptions and the scheduler consumer, and runs R2 and R13 when record-core's `isFirstBoot()` is true. Until `control-plane` holds the root (control-plane Open for Bob 1), `legacy-index`'s `Store` export wraps `legacy-store`'s class to do it, since `legacy-store`, earlier, cannot call this module.
+- **The first boot.** record-core decides it today inside `#migrate` (`PRAGMA table_info(bundles)` empty before the schema pass); it offers the answer as `isFirstBoot()` (record-core R54, N66).
 - **Readers of the group elsewhere** (testify, the divide, the group bar, attribution) read `promotion`'s fact (N56) and refuse C-64.1 with promotion's row; `#groupUndetermined` stays in `legacy-store` for them until each is extracted.
 - **For the installer.** It imports `GROUP_SLUG_RE` and `FLEET_BINDINGS` from here, instead of a test pinning two copies by source text (`instance-group.test.mjs`, the wizard suite).
 - **Tests.** R2 and R13 need a store booted twice (first and later boot); R8 needs a fake governor and fetch covering all four verdicts; R19 runs against a scratch store and a broken fixture per arm (its own negative controls).
