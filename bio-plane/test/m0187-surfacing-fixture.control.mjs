@@ -88,6 +88,7 @@ const run = (name) => {
     cpSync(join(PLANE, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
     cpSync(join(PLANE, "test", "surfacing-run.mjs"), join(tree, FIXTURE));
     for (const [file, from, to] of arm.patches) {
       const p = join(tree, file);

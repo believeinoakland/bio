@@ -90,6 +90,7 @@ const run = (name) => {
     cpSync(join(PLANE, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
     if (arm.patch) {
       const p = join(tree, "bio-plane", "src", "index.mjs");
       const s = readFileSync(p, "latin1");

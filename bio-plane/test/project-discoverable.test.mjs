@@ -161,6 +161,7 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   cpSync(SRC_DIR, join(tree, "bio-plane", "src"), { recursive: true });
   cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+  cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
   const schemaPath = join(tree, "bio-plane", "src", "schema.mjs");
   const schema = readFileSync(schemaPath, "utf8");
   const TABLE = /CREATE TABLE IF NOT EXISTS project_visibility \([\s\S]*?\);\nCREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility\(project_id, seq\);\n/;

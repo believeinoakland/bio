@@ -521,6 +521,7 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
     /* index.mjs imports the profile registry from BESIDE the plane (I6's
        topology), so the mirror carries it too rather than the import failing. */
     cpSync(fileURLToPath(new URL("../../docprofile", import.meta.url)), join(dir, "docprofile"), { recursive: true });
+    cpSync(fileURLToPath(new URL("../../jurisdictions", import.meta.url)), join(dir, "jurisdictions"), { recursive: true });
 
     const catPath = join(dir, "bio-plane/checks/bio-checks.mjs");
     const catSrc = readFileSync(catPath, "utf8");

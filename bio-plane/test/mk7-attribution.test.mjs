@@ -400,6 +400,7 @@ const SB = mkdtempSync(join(tmpdir(), "mk7-legacy-"));
 cpSync(fileURLToPath(new URL("../src", import.meta.url)), join(SB, "bio-plane", "src"), { recursive: true });
 cpSync(fileURLToPath(new URL("../checks", import.meta.url)), join(SB, "bio-plane", "checks"), { recursive: true });
 cpSync(fileURLToPath(new URL("../../docprofile", import.meta.url)), join(SB, "docprofile"), { recursive: true });
+cpSync(fileURLToPath(new URL("../../jurisdictions", import.meta.url)), join(SB, "jurisdictions"), { recursive: true });
 const storePath = join(SB, "bio-plane", "src", "store.mjs");
 let st = readFileSync(storePath, "utf8");
 /* EDIT 1 — a member enrolled before handles existed: enrolling with the handle `zz-nohandle` leaves it NULL. */

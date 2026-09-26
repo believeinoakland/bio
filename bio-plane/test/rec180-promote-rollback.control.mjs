@@ -43,6 +43,7 @@ const run = (name) => {
   cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
   cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+  cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
   const storePath = join(root, "bio-plane", "src", "store.mjs");
   let s = readFileSync(storePath, "utf8");
   const counts = arm.patches.map(([from]) => s.split(from).length - 1);

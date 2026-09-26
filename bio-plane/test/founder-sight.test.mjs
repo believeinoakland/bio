@@ -319,6 +319,7 @@ console.log("\n--- 6. a member enrolled as `admin` BEFORE the reservation is REP
     cpSync(SRC_DIR, join(root, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
     /* The legacy build: this tree's own store with the reservation neutered at its ONE
        site — the build a real instance ran before C-55 — over a PERSISTED store. */
     const ANCHOR = "if (memberId === Store.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"";

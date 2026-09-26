@@ -230,7 +230,7 @@ function preitem() {
   const root = join(SAFE, `pristine-${BASE}`);
   if (!existsSync(join(root, "bio-plane", "src", "index.mjs"))) {
     mkdirSync(root, { recursive: true });
-    const tar = execFileSync("git", ["-C", REPO, "archive", BASE, "bio-plane/src", "bio-plane/checks", "docprofile"],
+    const tar = execFileSync("git", ["-C", REPO, "archive", BASE, "bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions"],
       { maxBuffer: 256 * 1024 * 1024 });
     execFileSync("tar", ["-x", "-C", root], { input: tar });
   }

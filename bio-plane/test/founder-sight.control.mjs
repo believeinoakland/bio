@@ -112,6 +112,7 @@ const runArm = (name) => {
     cpSync(join(root, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
     const r = spawnSync(process.execPath, [SUITE], { env: { ...process.env, FOUNDER_SIGHT_SRC: join(tree, "bio-plane", "src") },
                                                      encoding: "utf8", maxBuffer: 64 << 20 });
     rmSync(tree, { recursive: true, force: true });
@@ -135,7 +136,7 @@ const adminBytes = async () => {
     return tree;
   };
   const baseTree = mk("base", (tree) => {
-    const tar = execFileSync("git", ["archive", base, "bio-plane/src", "bio-plane/checks", "docprofile"],
+    const tar = execFileSync("git", ["archive", base, "bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions"],
                              { cwd: REPO, maxBuffer: 256 << 20 });
     execFileSync("tar", ["-x", "-C", tree], { input: tar });
   });
@@ -143,6 +144,7 @@ const adminBytes = async () => {
     cpSync(join(PLANE, "src"), join(tree, "bio-plane", "src"), { recursive: true });
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
+    cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
   });
   const { Miniflare } = await import("miniflare");
   /* CORRECTED 2026-09-18 (REC-141, IC-158): THIS tree's plane MINTS a project's id

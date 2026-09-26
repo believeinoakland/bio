@@ -1777,6 +1777,7 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
       cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
       cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
       cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+      cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
       const ANCHOR = "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
       const LEGACY = "    const bad = (entry.authority_kind === \"run\" && entry.state === \"PRESENT\" "
         + "&& (entry.result_ref == null || entry.result_ref === \"\")) ? null "

@@ -80,7 +80,7 @@ const run = (name) => {
   const root = mkdtempSync(join(tmpdir(), `d260-resume-${name}-`));
   try {
     const tree = join(root, "tree");
-    for (const d of ["bio-plane/src", "bio-plane/checks", "agent-worker/src", "docprofile"])
+    for (const d of ["bio-plane/src", "bio-plane/checks", "agent-worker/src", "docprofile", "jurisdictions"])
       cpSync(join(REPO, d), join(tree, d), { recursive: true });
     for (const [file, from, to] of arm.patches) {
       const p = join(tree, file);
