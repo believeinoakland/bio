@@ -1,5 +1,6 @@
 {
   "status": "APPROVED by Bob 2026-09-25 (TRANSITION.md T4), drafted by BOB #37 the same day. Order is the total order (P4). from names the legacy module a target module is extracted from; a module with no from already exists at its paths. AMENDED by Bob 2026-09-26: the Action layer (layer 9: standards, conformance, consequences, actions, filings, escalation), with Publication (8) and Operations (10) split from the old layer 8 (layers.md).",
+  "not_product": ["docs/", "requirements/", "build/", "tools/", "release/", ".claude/", ".github/", "README.md", "CLAUDE.md", ".gitignore", ".env.example", ".worktreeinclude", "bio-plane/dist/", "bio-plane/DEPLOY-DASHBOARD.md", "bio-plane/DEPLOY.md", "bio-plane/DRY-RUN.md", "bio-plane/INSTALLER.md", "bio-plane/KICKOFF.md", "bio-plane/SESSION-HANDOFF.md", "bio-plane/SETUP.md", "bio-plane/checks/README.md", "bio-plane/migrate/README.md"],
   "modules": [
     {"id": "legacy-checks", "layer": 1, "legacy": true, "paths": ["bio-plane/checks/bio-checks.mjs"], "tests": [], "uses": []},
     {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": []},
@@ -66,8 +67,8 @@
     {"id": "queue", "layer": 11, "from": "legacy-store", "paths": ["bio-plane/src/queuestate.mjs", "bio-plane/src/queue/"], "tests": ["bio-plane/test/m/queue/"], "uses": ["membership", "inquiry", "review", "legacy-store"]},
     {"id": "instance-setup", "layer": 11, "paths": ["bio-plane/src/setup.mjs", "bio-plane/src/livefire.mjs"], "tests": ["bio-plane/test/m/instance-setup/"], "uses": ["jurisdictions", "legacy-checks", "runtime-limits"]},
     {"id": "control-plane", "layer": 11, "from": "legacy-index", "paths": ["bio-plane/src/control-plane/"], "tests": ["bio-plane/test/m/control-plane/"], "uses": ["membership", "legacy-store"]},
-    {"id": "legacy-index", "layer": 11, "legacy": true, "paths": ["bio-plane/src/index.mjs", "bio-plane/wrangler.jsonc", "bio-plane/package.json", "bio-plane/scripts/"], "tests": [], "uses": ["*earlier"]},
+    {"id": "legacy-index", "layer": 11, "legacy": true, "paths": ["bio-plane/src/index.mjs", "bio-plane/wrangler.jsonc", "bio-plane/package.json", "bio-plane/package-lock.json", "bio-plane/.gitignore", "bio-plane/.dev.vars.example", "bio-plane/scripts/", "bio-plane/migrate/"], "tests": [], "uses": ["*earlier"]},
     {"id": "legacy-ui", "layer": 11, "legacy": true, "paths": ["civicos-ui/"], "tests": ["civicos-ui/test/"], "uses": ["legacy-checks"]},
-    {"id": "installer", "layer": 11, "paths": ["newgroup/"], "tests": ["newgroup/test/"], "uses": ["jurisdictions", "signatures", "runtime-limits"]}
+    {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/"], "uses": ["jurisdictions", "signatures", "runtime-limits"]}
   ]
 }
