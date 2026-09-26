@@ -34,4 +34,4 @@ Deferred: none.
 - `checks/format.mjs` · 61 modules, 14 requirements files; 0 failures.
 - `checks/architecture.mjs` · 1 product files, 1 relative imports; 0 failures.
 - `checks/coverage.mjs` · 33 of 33 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs` · see below.
+- `checks/ownership.mjs` (against `origin/tranche/T1`) · 3 files changed by subresources; 0 failures.
