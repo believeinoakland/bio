@@ -110,7 +110,7 @@ const F = {
   /* no font at all: the structural half, KEPT — marked before this item and still */
   noFont:      page({ second: "BT\n\nET\n", fonts: false }),
 };
-const firstPageMap = (doc) => doc.dictOf({ t: "ref", n: doc._pageOrder[0] });
+const firstPageMap = (doc) => doc.pageDict(0);   /* pdf-reader R31 (N20): the page order is private (K28) */
 const tier1 = async (bytes) => {
   const s = await extractPdfStructure(bytes);
   const p = (s.text?.pages || [])[0] || {};

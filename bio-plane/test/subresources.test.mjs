@@ -35,6 +35,7 @@ import {
   normalizeCitation, fragmentOf, partFetchSpread,
 } from "../src/subresources.mjs";
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
+import { recordChecks } from "../src/promotion/index.mjs";
 import { cpuProbe, makeMeter } from "../src/cpu.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -326,8 +327,14 @@ console.log("\n--- the manifest is what the viewer resolves against ---");
   t("it declares the placeholder scheme rather than the viewer guessing", m.placeholder_scheme, "about:capture#<sha256>");
   t("every entry the viewer will fetch carries a sha256 to verify against",
     m.subresources.filter((r) => r.ok).every((r) => /^[0-9a-f]{64}$/.test(r.sha256)), true);
-  t("every entry carries the address it came from and when", 
-    m.subresources.every((r) => r.url && r.fetched_at), true);
+  /* N15 (subresources R17, D-603): every record carries its address and `considered_at`, when this run took it
+     up; `fetched_at` only a record whose fetch was issued this run (fetched, SOURCE_REFUSED, FETCH_FAILED,
+     TOO_LARGE), never a reused, skipped, deferred, capped or refused one. */
+  t("every entry carries the address it came from and when this run considered it (R17)",
+    m.subresources.every((r) => r.url && r.considered_at), true);
+  const issued = (r) => r.ok === true || ["SOURCE_REFUSED", "FETCH_FAILED", "TOO_LARGE"].includes(r.reason);
+  t("and exactly the entries whose fetch was issued carry `fetched_at` (R17)",
+    m.subresources.filter((r) => ("fetched_at" in r) !== issued(r)).map((r) => `${r.url} ${r.reason || "ok"}`), []);
   t("every record lands in exactly one bucket",
     m.counts.fetched + m.counts.failed + m.counts.refused + m.counts.skipped, m.subresources.length);
   t("it round-trips as JSON", typeof JSON.parse(JSON.stringify(m)), "object");
@@ -485,7 +492,8 @@ console.log("\n--- the ceiling is discovered, never declared ---");
     hit.manifest.counts.deferred, 21);
   t("no reference is recorded as the SOURCE failing", hit.manifest.counts.failed, 0);
   t("the capture says it is incomplete", hit.manifest.complete, false);
-  t("and how much is outstanding", hit.manifest.outstanding, 21);
+  /* N15: the reference the runtime refused is outstanding too, retried on resume (subresources R10, R12, R13). */
+  t("and how much is outstanding: the 21 deferred and the one the runtime refused", hit.manifest.outstanding, 22);
   t("the refusal says the source was never asked", /never asked/.test(
     hit.subresources.find(r => r.reason === "PLATFORM_LIMIT").detail), true);
 
@@ -1322,10 +1330,36 @@ console.log("\n--- the catalog accepts a bundle carrying the derived artifacts -
 
 console.log("\n--- the mechanical envelope admits the manifest, and nothing else new ---");
 {
-  const src = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
-  const m = /const MECHANICAL_APPEND_FILES = \[([^\]]*)\]/.exec(src);
-  t("the envelope is exactly these three files", m[1].replace(/['\s]/g, "").split(","),
-    ["data/changes.json", "data/provenance.json", "data/snapshot-manifest.json"]);
+  /* Re-anchored (T3, legacy-tests): C-20.1 moved from the catalogue's source to `promotion` (K64), so the envelope
+     is asserted through promotion's interface, `recordChecks`, by what a mechanical promotion may write, instead of
+     read out of a source file. A mechanical `member-attest` that restamps `last_updated` and writes one more file:
+     the three append-only files pass, any other file is outside the envelope. */
+  const ID = "INFO-2026-0001-report", h = (v) => createHash("sha256").update(v).digest("hex");
+  const md = (lu) => ["---", "id: " + ID, "object_type: information", "schema: information@1", 'title: "A report"',
+    "current_state: collected", "prior_state: null", 'created: "2026-07-01T00:00:00Z"', `last_updated: "${lu}"`,
+    "state_history: []", "---", "", "## Summary", "", "text", "", "## Session Log", ""].join("\n");
+  const c20 = async (extra) => {
+    const a = md("2026-07-01T00:00:00Z"), b = md("2026-07-02T00:00:00Z"), files = ["bundle.md", extra];
+    const img = {
+      "_history/promotion_p1.json": JSON.stringify({ base: h(""), files: [{ name: "bundle.md", sha256: h(a) }] }),
+      "_history/bundle_p2.md": a,
+      "_history/promotion_p2.json": JSON.stringify({ base: h(a), writer: "mechanical", operation: "member-attest",
+        files: files.map((n) => ({ name: n, sha256: n === "bundle.md" ? h(b) : h(n) })) }),
+      "_history/manifest.json": JSON.stringify({ entries: [
+        { key: "p1", kind: "promotion", base: h(""), created: "2026-07-01T00:00:00Z", files: ["bundle.md"], seq: 1 },
+        { key: "p2", kind: "promotion", base: h(a), created: "2026-07-02T00:00:00Z", files, seq: 2,
+          writer: "mechanical", operation: "member-attest" }] }),
+      "bundle.md": b };
+    const found = await recordChecks({ folderName: ID, files: new Map(Object.entries(img)), sha256: async (v) => h(v) });
+    return found.filter((f) => f.check === "C-20.1" && f.severity === "error").map((f) => f.message);
+  };
+  const inside = {};
+  for (const f of ["data/changes.json", "data/provenance.json", "data/snapshot-manifest.json"]) inside[f] = await c20(f);
+  t("the envelope admits each of the three append-only files, the snapshot manifest among them", inside,
+    { "data/changes.json": [], "data/provenance.json": [], "data/snapshot-manifest.json": [] });
+  const outside = await c20("data/other.json");
+  t("and nothing else new: a fourth file is outside the mechanical envelope",
+    outside.length === 1 && /outside the mechanical envelope/.test(outside[0]), true);
 }
 
 console.log("\n--- D-58: an ordinary capture files its address, so it can be a link target ---");

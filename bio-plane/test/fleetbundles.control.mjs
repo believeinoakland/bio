@@ -368,7 +368,7 @@ ARMS["5b-code"] = {
  * proofs — and NEVER `store.mjs` or `schema.mjs`, which is FL-10's own claim
  * rule made physical here. */
 const PLANE_ENTRY = join(PLANE, "src/index.mjs");
-const SIGNPAGE_HTML = join(REPO, "tools/sign-release.html");
+const SIGNPAGE_HTML = join(PLANE, "src/sign-release.html");
 
 ARMS["6"] = {
   label: "(6) FL-10's OWN ARM — a PLANE source moves and the committed plane bundle does not. Append one export "
@@ -405,13 +405,13 @@ ARMS["6b"] = {
 };
 
 ARMS["7"] = {
-  label: "(7) THE GENERATED-INPUT LOOP — tools/sign-release.html changes and src/signpage.mjs was never "
+  label: "(7) THE GENERATED-INPUT LOOP — bio-plane/src/sign-release.html changes and src/signpage.mjs was never "
     + "re-rendered. Every input hash stays TRUE (signpage.mjs itself did not move), so only the render "
     + "comparison can see it. Append one HTML comment to the page.",
   run: () => withAppended(SIGNPAGE_HTML, "\n<!-- fl10 armed probe -->\n", () => {
     const r = report("7", runSuite(), {
       mustFail: "exit non-zero on the ONE assertion comparing committed src/signpage.mjs against the render "
-        + "of tools/sign-release.html — naming the stale render",
+        + "of bio-plane/src/sign-release.html — naming the stale render",
       mustNot: "any input-hash or byte-identity arm, plane or member: no hashed input moved",
     });
     console.log(`     the render assertion fired: ${named(r, "committed src/signpage.mjs IS the render")}`);
