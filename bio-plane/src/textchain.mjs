@@ -302,9 +302,21 @@ function extentOf(step) {
   if (e == null) return "all";
   if (e && typeof e === "object" && !Array.isArray(e) && e.kind === "pages"
       && Array.isArray(e.pages) && e.pages.length
-      && e.pages.every((p) => Number.isInteger(p) && p >= 0))
+      && e.pages.every((p) => Number.isInteger(p) && p >= 0)
+      /* D-723: a `part` that is present must be a readable index, or the extent is unreadable. */
+      && (e.part === undefined || (Number.isInteger(e.part) && e.part >= 0)))
     return e.pages;
   return "unreadable";
+}
+
+/* D-723 — WHICH PART A SCOPED STEP BELONGS TO. While a document's parts PARTITION its pages a part
+   is named by its page list. Two parts may list the same page (a folio decoded from the layer and an
+   OCR transcription over the same pages), and may even list the same pages exactly; `mergedChain`
+   then stamps each part's index as `extent.part`, and a part is named by that index. A partitioned
+   chain carries no `part` and is named by its pages, as before. */
+function partKeyOf(step) {
+  const e = step.extent;
+  return Number.isInteger(e && e.part) ? `#${e.part}` : extentOf(step).join(",");
 }
 
 /** "page 3" / "pages 0-2" / "pages 0-1, 4" — contiguous runs collapsed, because
@@ -362,18 +374,25 @@ export function mergedChain(parts) {
     return bad || parts[0].chain;
   }
   const out = [];
-  for (const part of parts) {
+  const pagesOf = (part) => (part && Array.isArray(part.pages)
+    ? [...new Set(part.pages.filter((p) => Number.isInteger(p) && p >= 0))].sort((a, b) => a - b)
+    : []);
+  /* D-723: do any two parts share a page? Only then is each part's index stamped (`partKeyOf`). */
+  const seen = new Set();
+  let overlap = false;
+  for (const part of parts)
+    for (const p of pagesOf(part)) { if (seen.has(p)) overlap = true; seen.add(p); }
+  for (const [index, part] of parts.entries()) {
     const bad = checkChain(part && part.chain);
     if (bad) return bad;
-    const pages = Array.isArray(part.pages)
-      ? [...new Set(part.pages.filter((p) => Number.isInteger(p) && p >= 0))].sort((a, b) => a - b)
-      : [];
+    const pages = pagesOf(part);
     for (const step of part.chain) {
       /* A VERIFICATION step is copied through UNSCOPED. Attestation carries its
          own extent, checked by `extentCovers`, and stamping a second one on it
          would give one fact two homes that can disagree. */
       out.push(STEP_KINDS[step.step].role === "derivation"
-        ? { ...step, extent: { kind: "pages", pages } } : { ...step });
+        ? { ...step, extent: overlap ? { kind: "pages", pages, part: index } : { kind: "pages", pages } }
+        : { ...step });
     }
   }
   return out;
@@ -527,8 +546,10 @@ export function appendStep(chain, step) {
 /** The chain a document's OWN text layer produces (FW-15's case, restated as a
  *  chain). `cap` is the measured fidelity a text layer supports and arrives
  *  from the caller for the reason in the header — it is a measurement. */
-export function layerChain({ tier = null, container = null, cap = null, measured_by = null,
-                             calibration = null } = {}) {
+export function layerChain(args) {
+  /* Never throws (R83): a `null` or non-object argument is every default, not a TypeError. */
+  const { tier = null, container = null, cap = null, measured_by = null, calibration = null } =
+    args && typeof args === "object" ? args : {};
   return [{ step: "layer", tier, container, cap, measured_by, calibration }];
 }
 
@@ -652,7 +673,7 @@ export function derivationCap(chain, target = null) {
        unchanged: an unmeasured step neither raises nor lowers, and the part's
        cap is the weakest MEASURED step in it. A part with no measured step at
        all is the undetermined one. */
-    const key = ext.join(",");
+    const key = partKeyOf(step);
     const m = measured(step);
     if (!parts.has(key)) parts.set(key, null);
     if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
@@ -779,6 +800,42 @@ function unionExtent(a, b) {
  *  at a glance, without re-deriving the chain everywhere. */
 export function terminalStep(chain) {
   return checkChain(chain) ? null : chain[chain.length - 1].step;
+}
+
+/** The word a page read in MORE THAN ONE way answers (BOB #35 09:35Z, BOB #36 11:05Z, D-723). Not a
+ *  step kind — no step is `mixed` — so it lives here beside the function that answers it. */
+export const CHAIN_KIND_MIXED = "mixed";
+
+/** D-723 — HOW WAS THIS PAGE READ? `target` is `{page}` or a 0-based page number.
+ *
+ *  Each PART covering the page (`partKeyOf`) answers the kind of its LAST derivation step — `pixels`
+ *  then `ocr` is one reading, `ocr` — and the page reads that kind when every covering part agrees and
+ *  `mixed` when they differ, so a page two parts share (a folio from the layer, an OCR transcription
+ *  appended) reads `mixed` rather than the part appended last. Walked from the END: an unscoped step
+ *  met first read every page last and answers alone; one met after a covering part is history the
+ *  parts came after and ends the walk. A verification step is not how the text was produced and is
+ *  never the answer. UNDETERMINED (`null`), stated, for a malformed chain, a target with no page, a
+ *  page no derivation step covers, or any step whose extent this module cannot read (R30's rule: it
+ *  could be a part covering this page). `terminalStep` is unchanged and stays document-level. */
+export function chainKindFor(chain, target) {
+  if (checkChain(chain)) return null;
+  const want = Number.isInteger(target) ? target : target && target.page;
+  if (!Number.isInteger(want) || want < 0) return null;
+  const derivations = chain.filter((s) => STEP_KINDS[s.step].role === "derivation");
+  if (derivations.some((s) => extentOf(s) === "unreadable")) return null;
+  const byPart = new Map();
+  for (let i = derivations.length - 1; i >= 0; i--) {
+    const ext = extentOf(derivations[i]);
+    if (ext === "all") {
+      if (!byPart.size) return derivations[i].step;
+      break;
+    }
+    const key = partKeyOf(derivations[i]);
+    if (ext.includes(want) && !byPart.has(key)) byPart.set(key, derivations[i].step);
+  }
+  if (!byPart.size) return null;
+  const kinds = new Set(byPart.values());
+  return kinds.size === 1 ? [...kinds][0] : CHAIN_KIND_MIXED;
 }
 
 /** A one-line human sentence for the whole chain. Composed FROM the chain, so
@@ -1202,6 +1259,16 @@ export function readingPositionInExtent(position, extentKind, extent) {
   if (!p) return false;
   if (!isNonEmptyString(extentKind)) return false;
   if (extentKind === "document") return true;
+  /* D-416 — A CELL READING INSIDE A `sheet-range` EXTENT (EXTRACTION-BREADTH-DESIGN §3.2: `{sheet,
+     range}`, A1-style). The one arm pair where a finer READING sits inside a coarser EXTENT of a
+     different kind: a range is a set of cells. Same sheet, and the cell within the range's bounds,
+     both parsed; anything unparseable is the honest no. */
+  if (extentKind === "sheet-range") {
+    const e = extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null;
+    if (p.kind !== "sheet-cell" || !e || !isNonEmptyString(e.sheet) || e.sheet !== p.sheet) return false;
+    const cell = a1Cell(p.cell), box = a1Range(e.range);
+    return !!(cell && box && cell.col >= box.c0 && cell.col <= box.c1 && cell.row >= box.r0 && cell.row <= box.r1);
+  }
   if (extentKind !== p.kind) return false;
   const e = extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null;
   if (!e) return false;
@@ -1229,6 +1296,33 @@ export function readingPositionInExtent(position, extentKind, extent) {
   if (!isIndex(e.slide) || e.slide !== p.slide) return false;
   if (!isIndex(e.shape)) return true;
   return e.shape === p.shape;
+}
+
+/* A1 notation, read strictly: `B3` or `$B$3` as a cell; `A1:D20`, a single cell, a whole-column
+   span `A:C` or a whole-row span `2:5` as a range (either corner order). Columns and rows are
+   1-based. Anything else answers null, never a guess. */
+const A1_COL = (letters) => [...letters.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+function a1Cell(s) {
+  const m = typeof s === "string" && /^\$?([A-Za-z]{1,3})\$?([1-9][0-9]{0,6})$/.exec(s.trim());
+  return m ? { col: A1_COL(m[1]), row: Number(m[2]) } : null;
+}
+function a1Range(s) {
+  if (typeof s !== "string" || !s.trim()) return null;
+  const [a, b, extra] = s.trim().split(":");
+  if (extra !== undefined) return null;
+  const end = b === undefined ? a : b;
+  const ca = a1Cell(a), cb = a1Cell(end);
+  if (ca && cb) return { c0: Math.min(ca.col, cb.col), c1: Math.max(ca.col, cb.col),
+                         r0: Math.min(ca.row, cb.row), r1: Math.max(ca.row, cb.row) };
+  if (b === undefined) return null;
+  const col = /^\$?([A-Za-z]{1,3})$/, row = /^\$?([1-9][0-9]{0,6})$/;
+  const [xa, xb] = [col.exec(a), col.exec(b)];
+  if (xa && xb) { const [p, q] = [A1_COL(xa[1]), A1_COL(xb[1])];
+    return { c0: Math.min(p, q), c1: Math.max(p, q), r0: 1, r1: Infinity }; }
+  const [ya, yb] = [row.exec(a), row.exec(b)];
+  if (ya && yb) { const [p, q] = [Number(ya[1]), Number(yb[1])];
+    return { c0: 1, c1: Infinity, r0: Math.min(p, q), r1: Math.max(p, q) }; }
+  return null;
 }
 
 /*__CPDF20_PER_PAGE_START__*/
@@ -1506,9 +1600,20 @@ export function mergeTier2Text(base, t2) {
     const winner = perPageTierWinner(b, cand);
     if (winner === "tier2" && cand) {
       replaced.push(b.page);
-      pages.push({ page: b.page,
+      /* D-633 — THE PAGE KEEPS WHAT TIER 1 SAID ABOUT ITS IMAGES. `pdf-reader`'s `image_content_*`
+         markers (R26) are facts about the images the page paints and its box, not about which decode
+         won, and tier 2 reads no image: taking tier 2's markers alone dropped `image_content_unread`,
+         so a page tier 2 won routed nowhere. They are carried unchanged after tier 2's own markers,
+         unless tier 2 already states one; they count 0 undetermined characters, so no award moves.
+         A field so named on the page itself is carried too. */
+      const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
+      const images = own.some(isImage) ? []
+        : (Array.isArray(b.undetermined) ? b.undetermined : []).filter(isImage);
+      const fields = Object.fromEntries(Object.entries(b).filter(([k]) => k.startsWith("image_content_")));
+      pages.push({ ...fields, page: b.page,
                    text: typeof cand.text === "string" ? cand.text : "",
-                   undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+                   undetermined: images.length ? [...own, ...images] : own,
                    tier: 2 });
     } else {
       kept.push(b.page);
