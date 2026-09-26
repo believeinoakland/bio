@@ -118,8 +118,10 @@ t("the estate's in-worktree-DIRTY drivers have not grown past what M0-182 left (
    this ceiling holds at the union without its 18 -> 19. The 13 left are each a parameter-built pen, an
    `arm.file` bound to several roots or a `.replace()` on an unknown: NAMED in the report, not this row's. */
 t("the estate's UNCLASSIFIED drivers have not grown past what M0-196 left (<= 13)", g("UNCLASSIFIED").length <= 13, true);
-t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and REC-180 read their tree root and are classified",
-  ["d510-promoted-type", "d526-refusal-order", "d547-revision-retype", "d548-block", "rec180-promote-rollback"]
+/* T3 (legacy-tests; K84 (2)), 2026-09-26: D-510's, D-547's and REC-180's drivers retired with the promote code they
+   mutated (moved to `promotion`); the arm holds the two copy-source drivers that remain, by name. */
+t("M0-196, BY NAME: the copy-source drivers of D-526 and D-548 read their tree root and are classified",
+  ["d526-refusal-order", "d548-block"]
     .map((n) => [n, (real.drivers.find((d) => d.file === `bio-plane/test/${n}.control.mjs`) || {}).grade])
     .filter(([, gr]) => gr === "UNCLASSIFIED" || gr === undefined).map(([n, gr]) => `${n}: ${gr}`), []);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
