@@ -1527,8 +1527,8 @@ export class Membership {
         return { ok: false, reason: "LAST_COMMITTED_OWNER", owners: this.projectOwners(projectId).sort(),
                  detail: "no other owner of this project is committed to it (every other owner has asked to leave, "
                        + "or there is none), and one committed owner is the floor, so a request to leave could never "
-                       + "be carried out. Add another owner first (7.10), then ask to leave; or deactivate the "
-                       + "project (7.11). Nothing was written." };
+                       + "be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or "
+                       + "deactivate the project (7.11). Nothing was written." };
     }
     /* END DEC-49 REGION is-leave-owner-floor */
     const c = comment === null ? null : String(comment).slice(0, 280);
