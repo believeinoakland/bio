@@ -666,7 +666,7 @@ test("R25 SIGN_HTML is one non-empty, self-contained HTML document that names no
   assert.doesNotMatch(script, /\b(localStorage|sessionStorage|indexedDB|document\.cookie)\b/);
 });
 
-test("R25 the page served is the current render of src/sign-release.html (N7)", () => {
+test("R30 the page served is the byte-identical render of src/sign-release.html by embed-signpage", () => {
   assert.equal(SIGNPAGE_SRC, fileURLToPath(new URL("../../../src/sign-release.html", import.meta.url)));
   assert.equal(SIGNPAGE_OUT, fileURLToPath(new URL("../../../src/signpage.mjs", import.meta.url)));
   const html = readFileSync(SIGNPAGE_SRC, "utf8");
@@ -690,21 +690,24 @@ function loadPage(html) {
   const els = new Map();
   const el = () => ({ value: "", innerHTML: "", disabled: false, files: [], onclick: null,
     classList: { toggle() {} }, setAttribute() {} });
+  const created = [];
   const sandbox = {
-    crypto: webcrypto, TextEncoder, atob, btoa, console, setTimeout,
+    crypto: webcrypto, TextEncoder, atob, btoa, console, setTimeout, Blob,
+    URL: { createObjectURL: () => "blob:local", revokeObjectURL() {} },
     navigator: { clipboard: { writeText: async () => {} } },
     document: {
       getElementById: (id) => (els.has(id) || els.set(id, el()), els.get(id)),
-      addEventListener: () => {}, createElement: () => ({ style: {}, select() {}, click() {} }),
+      addEventListener: () => {},
+      createElement: (tag) => { const e = { tag, style: {}, select() {}, click() {} }; created.push(e); return e; },
       body: { appendChild() {}, removeChild() {} }, execCommand: () => true,
     },
   };
   vm.createContext(sandbox);
-  vm.runInContext(`${script}\n;globalThis.__page = { sshsig, keysFromSeed, pubLine, generateAll, KEYS };`, sandbox);
-  return { ...sandbox.__page, el: (id) => sandbox.document.getElementById(id) };
+  vm.runInContext(`${script}\n;globalThis.__page = { sshsig, keysFromSeed, pubLine, generateAll, KEYS, parseKeyString, wrapKey };`, sandbox);
+  return { ...sandbox.__page, el: (id) => sandbox.document.getElementById(id), created };
 }
 
-test("R25 the served page's signatures are accepted by verifySshsig, and bound to their namespace and bytes", async () => {
+test("R31 the served page's signatures are accepted by verifySshsig, and bound to their namespace and bytes", async () => {
   const page = loadPage(SIGN_HTML);
   const made = await page.generateAll();
   const relPub = made["bio-release"].pub, ratPub = made["bio-ratify"].pub;
@@ -728,7 +731,7 @@ test("R25 the served page's signatures are accepted by verifySshsig, and bound t
   assert.equal((await verifyAndLog(fromButton, stmt, NS_RATIFY, [ratPub])).ok, true);
 });
 
-test("R25 the served page's signatures are accepted by stock ssh-keygen -Y verify", { skip: NO_SSH_KEYGEN }, async () => {
+test("R31 the served page's signatures are accepted by stock ssh-keygen -Y verify", { skip: NO_SSH_KEYGEN }, async () => {
   const page = loadPage(SIGN_HTML);
   const seed = new Uint8Array(32).map((_, i) => (i * 37 + 11) % 256);
   const { priv, raw32 } = await page.keysFromSeed(seed);
@@ -741,6 +744,31 @@ test("R25 the served page's signatures are accepted by stock ssh-keygen -Y verif
   const ratSig = await page.sshsig(priv, raw32, NS_RATIFY, stmt);
   assert.equal(keygenVerifies(pub, NS_RATIFY, ratSig, stmt), true);
   assert.equal(keygenVerifies(pub, NS_RATIFY, ratSig, ratifyStatement("BUNDLE-2", "1".repeat(64))), false);
+});
+
+test("R32 the page's visible text names CivicOS, never BIO, and its wire formats are unchanged", async () => {
+  /* Everything a person can read: the text between tags, attribute values, and
+     the strings the script writes into the page. BIO survives only as the
+     BIOKEY key prefixes, which are wire format. */
+  assert.doesNotMatch(SIGN_HTML, /\bBIO\b/);
+  assert.match(SIGN_HTML, /<title>CivicOS signing keys<\/title>/);
+  assert.match(SIGN_HTML, /<h1>CivicOS signing keys<\/h1>/);
+  const page = loadPage(SIGN_HTML);
+  await assert.rejects(page.parseKeyString("hello"), /does not look like a CivicOS private key/);
+  /* Wire formats: key prefixes, namespaces and the download name. */
+  const made = await page.generateAll();
+  assert.ok(made["bio-release"].priv.startsWith("BIOKEY-RAW1.bio-release."));
+  assert.ok(made["bio-ratify"].priv.startsWith("BIOKEY-RAW1.bio-ratify."));
+  assert.match(made["bio-release"].pub, / bio-release$/);
+  const seed = (await page.parseKeyString(made["bio-release"].priv)).seed;
+  const wrapped = await page.wrapKey(seed, "a long passphrase", "bio-release");
+  assert.ok(wrapped.startsWith("BIOKEY1.bio-release."));
+  assert.equal((await page.parseKeyString(wrapped, "a long passphrase")).label, "bio-release");
+  await page.el("gen").onclick();
+  assert.match(page.el("gen-out").innerHTML, /CivicOS goes to real groups/);
+  assert.doesNotMatch(page.el("gen-out").innerHTML, /\bBIO\b/);
+  page.el("dl").onclick();
+  assert.equal(page.created.find((e) => e.tag === "a").download, "bio-signing-keys.txt");
 });
 
 /* ===================================================================== R26 */
