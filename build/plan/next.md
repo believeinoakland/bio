@@ -19,6 +19,8 @@
 **pdf-reader**, **pdf-worker**
 - N9 · 2026-09-25 · `pdf-worker` reads `pdf-reader`'s private fields (`PdfDoc.objects`, `._pageOrder`, an image placement's `_stream` and `_ctm`), so a rename breaks it with no error at import. `pdf-reader` provides what `pdf-worker` needs as named services, and `pdf-worker` uses only those. Applied by `pdf-reader`'s job, with `pdf-worker`'s job in the same layer.
 
+- N11 · 2026-09-26 · **jurisdictions**: the Action layer (`layers.md`, layer 9) reads local facts from the profile: the sources of standards (codes, regulators, courts) and how each is cited; the bodies and officials' roles an action is addressed to; the filing kinds by risk tier, their templates and where each is filed; the deadlines the law sets for a response (for example the records law's response period), each with its basis. BOB writes these as new profile sections in `requirements/jurisdictions.md` (a change of meaning, so with Bob) before the tranche that builds layer 9, and this entry is applied by that tranche's `jurisdictions` job. It extends `records_laws` (R7).
+
 ## Later layers
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.

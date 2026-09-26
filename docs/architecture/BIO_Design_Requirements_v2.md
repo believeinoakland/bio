@@ -1,6 +1,6 @@
 # BIO Design Requirements
 
-**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-14.
+**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-26.
 
 **Place in the system** · The engineering baseline of the mission level (`BIO_System_Design.md` §2): "If any text in this roadmap conflicts with the Design Requirements document, the Design Requirements document governs", and the Technical Architecture Decisions defer to it likewise. Requirements 1, 2, 13 and 14 are cited by name across the corpus; Requirement 1's "at least two individuals" is realised as Membership v2's two-administrator floor; Requirement 6 fixes the naming policy the whole corpus follows.
 
@@ -159,6 +159,8 @@ institutional recordkeeping is itself a compliance issue.
 
 ### 7. The escalation protocol operates on defined stages with documented trigger conditions.
 
+**Amended by Bob, 2026-09-26** (`build/layers.md`, layer 9): a seventh stage, **Political Accountability**, entered from Response Evaluation or Escalation to Legal Tools and aimed, like the others, at compliance restored and consequences addressed: asking elected officials to act on the breach, oversight and audit requests, testimony, and legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not part of it; Operational Principle 1 stands.
+
 Six stages: Discovery and Documentation, Notification, Clock Starts,
 Response Evaluation, Escalation to Legal Tools, Sustained Attention.
 Each stage has defined entry conditions, defined actions, defined
@@ -169,6 +171,8 @@ the next stage activates. This removes the human hesitation that the
 protection system exploits.
 
 ### 8. Evidence is separated from legal strategy. Available actions are classified by risk.
+
+**Amended by Bob, 2026-09-26** (`build/layers.md`, layer 9): for Tier 3, CivicOS prepares a **counsel packet** for counsel the group names (the facts with their citations, a chronology, exhibits with provenance, the standards' text, candidate legal theories and remedies, and any deadline that binds a claim), marked as prepared for counsel's review, never published, and never in a form that can be filed as it stands. Counsel drafts and files. Tier 3 filing templates remain excluded from evidence packages.
 
 Evidence packages contain all factual findings, source documents, and
 analysis. These are fully public and available to all. This includes
