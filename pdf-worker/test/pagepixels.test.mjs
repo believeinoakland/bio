@@ -181,8 +181,8 @@ console.log("\n--- R17, R18: images are counted from what the page paints (K27) 
 
 console.log("\n--- R19: the image's own refusal, with page added ---");
 {
-  const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /JPXDecode", new Uint8Array(64))), 0);
-  t("R19 a decode refusal carries the page", fields(r, "ok", "reason", "page", "filter"), [false, "UNSUPPORTED_FILTER", 0, "JPXDecode"]);
+  const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /LZWDecode", new Uint8Array(64))), 0);
+  t("R19 a decode refusal carries the page", fields(r, "ok", "reason", "page", "filters"), [false, "UNSUPPORTED_FILTER", 0, ["LZWDecode"]]);
 }
 
 console.log("\n--- R20, R23, R40: the scanned CCITT page against an independent decoder ---");
@@ -239,15 +239,18 @@ console.log("\n--- R23: the CCITT filter chain, K and truncation ---");
 
 console.log("\n--- R24: raw samples, no filter or FlateDecode ---");
 {
-  /* 1-bit: 10x3, bit pattern known. For grey 1 = white, as in PNG; for an
-     /ImageMask 1 = paint (black), so the PNG holds its inverse. */
+  /* 1-bit: 10x3, bit pattern known. For grey 1 = white, as in PNG. For an
+     /ImageMask 0 is where it paints (PDF 32000-1 8.9.6.2), i.e. black, as in PNG,
+     so the PNG holds the samples too; MuPDF 1.28.2 renders an all-0 mask black
+     and an all-0 mask with /Decode [1 0] white (checked 2026-09-26, D-622). */
   const bits = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
   const pad = (u) => Uint8Array.from(u, (b, i) => (i % 2 ? b & 0b11000000 : b));
   for (const [label, extra, want] of [
     ["1-bpc grey", "/ColorSpace /DeviceGray /BitsPerComponent 1", pad(bits)],
     ["1-bpc grey with /Decode [1 0]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
-    ["an /ImageMask", "/ImageMask true", pad(bits.map((b) => ~b & 0xff))],
-    ["an /ImageMask, FlateDecode", "/ImageMask true /Filter /FlateDecode", pad(bits.map((b) => ~b & 0xff))],
+    ["an /ImageMask", "/ImageMask true", pad(bits)],
+    ["an /ImageMask, FlateDecode", "/ImageMask true /Filter /FlateDecode", pad(bits)],
+    ["an /ImageMask with /Decode [1 0]", "/ImageMask true /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
   ]) {
     const data = /FlateDecode/.test(extra) ? deflateSync(bits) : bits;
     const r = await render(imagePage(image(10, 3, extra, data), { w: 10, h: 3 }), 0);
@@ -403,11 +406,13 @@ console.log("\n--- R22: DCT through the renderer ---");
   t("R22 R40 a small page through the whole route matches Pillow", small.pixels_sha256, VARIANTS.find((v) => v.name === "rgb-444").pillow_sha256);
 }
 
-console.log("\n--- R25 (interim; D-622 is deferred): JBIG2 and JPX ---");
+console.log("\n--- R25: JBIG2 and JPX are jbig2.test.mjs's and jpx.test.mjs's; here, a stream that is neither ---");
 {
-  for (const f of ["JBIG2Decode", "JPXDecode"]) {
+  /* Eight zero bytes: to JBIG2 a segment header that runs out; to JPEG 2000
+     neither a codestream nor a JP2 file. */
+  for (const [f, reason] of [["JBIG2Decode", "TRUNCATED_IMAGE_DATA"], ["JPXDecode", "DECODE_FAILED"]]) {
     const r = await render(imagePage(image(8, 8, `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /${f}`, new Uint8Array(8))), 0);
-    t(`R25 ${f}: UNSUPPORTED_FILTER naming the filter, no bytes`, fields(r, "ok", "reason", "filter", "bytes"), [false, "UNSUPPORTED_FILTER", f, undefined]);
+    t(`R25 ${f} over eight zero bytes: ${reason}, no bytes`, fields(r, "ok", "reason", "bytes"), [false, reason, undefined]);
   }
 }
 

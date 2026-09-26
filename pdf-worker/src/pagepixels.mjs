@@ -61,8 +61,13 @@
  *                       verifies it PIXEL-EXACT against an independent decoder.
  *   FlateDecode /
  *   no filter        -> raw samples, 1/8-bit grey or 8-bit RGB, to PNG.
- *   JBIG2Decode      -> REFUSED by name. A real decoder, not built.
- *   JPXDecode        -> REFUSED by name. Likewise.
+ *   JBIG2Decode      -> DECODED HERE (D-622, `jbig2decode.mjs`): every region
+ *                       type a page composes from, to a 1-bit PNG checked
+ *                       pixel-exact against jbig2dec; what it does not decode
+ *                       is refused UNSUPPORTED_FILTER naming the feature.
+ *   JPXDecode        -> DECODED HERE (D-622, `jpxdecode.mjs`): JPEG 2000, 8-bit
+ *                       grey or RGB, to an 8-bit PNG checked pixel-exact
+ *                       against OpenJPEG; the rest refused by name.
  *
  * PNG is written by hand (CRC32 + `CompressionStream("deflate")`, which is zlib-
  * wrapped and therefore exactly what an IDAT holds). Bilevel pages are written
@@ -76,6 +81,8 @@
 
 import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
+import { decodeJbig2, Jbig2Refusal } from "./jbig2decode.mjs";
+import { decodeJpx, JpxRefusal } from "./jpxdecode.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -393,6 +400,8 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
     page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
     ...(out.ccitt ? { ccitt: out.ccitt } : {}),
     ...(out.dct ? { dct: out.dct } : {}),
+    ...(out.jbig2 ? { jbig2: out.jbig2 } : {}),
+    ...(out.jpx ? { jpx: out.jpx } : {}),
     /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
      * the cross-runtime arm of the probe found the file digest to be RUNTIME-
      * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
@@ -416,9 +425,6 @@ export async function decodeImage(doc, im, opts) {
   const filters = im.filters;
   const last = filters[filters.length - 1] || null;
 
-  if (last === "JBIG2Decode" || last === "JPXDecode") {
-    return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
-  }
 
   /* DCTDecode: the stream IS a JPEG. Hand the publisher's own bytes on — or,
    * when the caller asked for pixels it can read, decode them (D-320). */
@@ -497,6 +503,85 @@ export async function decodeImage(doc, im, opts) {
              ccitt: { K, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded } };
   }
 
+  /* JBIG2Decode: decode here (D-622). Only FlateDecode may come before it, as
+   * for CCITT; the /JBIG2Globals stream holds the segments pages share. */
+  if (last === "JBIG2Decode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const p = decodeParms(doc, dict, filters.length - 1);
+    let globals = null;
+    if (p && p.JBIG2Globals !== undefined) {
+      const g = doc.resolve(p.JBIG2Globals);
+      globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
+      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+    }
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    let out;
+    try {
+      out = decodeJbig2(data, globals);
+    } catch (e) {
+      if (!(e instanceof Jbig2Refusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jbig2: e.code, ...e.detail });
+    }
+    if (out.width !== im.width || out.height > im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
+    }
+    if (out.height < im.height) {
+      return refuse("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
+    }
+    /* JBIG2's 1 is black; the filter's output is its inverse (a PDF sample 0
+     * is black in DeviceGray, and paints for an /ImageMask), so the PDF samples
+     * are the complement of the decoded page. */
+    const samples = out.packed.map((b) => ~b & 0xff);
+    const bi = await bilevelPng(doc, dict, samples, im.width, im.height, opts.rotate || 0);
+    return { ok: true, route: "decoded-jbig2", mediaType: "image/png", ...bi, upright: true,
+             jbig2: { ...out.detail, globals_bytes: globals ? globals.length : 0, stream_bytes: data.length } };
+  }
+
+  /* JPXDecode: decode here (D-622). The stream IS a JPEG 2000 file (JP2 or a
+   * bare codestream), so like DCT nothing may come before it but FlateDecode.
+   * The picture is the file's own samples: a /Decode array, or a PDF colour
+   * space that says the samples mean something other than grey or RGB, would
+   * make the PNG a picture no independent decoder of these bytes produces, so
+   * each is refused rather than applied or ignored. */
+  if (last === "JPXDecode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
+    if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
+    const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
+    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    let out;
+    try {
+      out = decodeJpx(data);
+    } catch (e) {
+      if (!(e instanceof JpxRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
+    }
+    if (pdfComps !== null && pdfComps !== out.comps) {
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+    }
+    if (out.width !== im.width || out.height !== im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+    }
+    const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
+    out.samples = null;
+    return { ok: true, route: "decoded-jpx", mediaType: "image/png", upright: true, width: rot.width, height: rot.height,
+             pixelsSha256: await sha256Hex(rot.samples),
+             bytes: await encodePng8(rot.samples, rot.width, rot.height, out.comps),
+             jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length } };
+  }
+
   /* FlateDecode or unfiltered raw samples. */
   if (filters.length === 0 || filters.every((f) => f === "FlateDecode" || f === "Fl")) {
     const data = await doc.streamDecoded(im.obj);
@@ -514,18 +599,8 @@ export async function decodeImage(doc, im, opts) {
       });
     }
     if (bpc === 1 && comps === 1) {
-      /* An /ImageMask's sample 1 is where the mask PAINTS, i.e. black, which is
-       * the inverse of PNG grey-1. /Decode [1 0] flips it back. */
-      const dec = doc.resolve(dict.Decode);
-      const decOne = dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1;
-      const invert = im.isMask ? !decOne : decOne;
-      const src = data.subarray(0, need);
-      const packed0 = invert ? Uint8Array.from(src, (b) => ~b & 0xff) : Uint8Array.from(src);
-      const rot = rotateBilevel(normalisePacked(packed0, im.width, im.height), im.width, im.height, opts.rotate || 0);
-      return { ok: true, route: "raw-samples-1bit", mediaType: "image/png",
-               width: rot.width, height: rot.height, upright: true,
-               pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
-               bytes: await encodePng1(rot.packed, rot.width, rot.height) };
+      const bi = await bilevelPng(doc, dict, data.subarray(0, need), im.width, im.height, opts.rotate || 0);
+      return { ok: true, route: "raw-samples-1bit", mediaType: "image/png", upright: true, ...bi };
     }
     if (bpc === 8) {
       /* 8-bit rotation, BUILT BY D-320 (it was named and not built while this
@@ -542,6 +617,36 @@ export async function decodeImage(doc, im, opts) {
   }
 
   return refuse("UNSUPPORTED_FILTER", { filters });
+}
+
+/** PDF 1-bit samples (packed rows) to a grey-1 PNG, rotated. A sample 0 is
+ *  black: in DeviceGray, and for an /ImageMask, where 0 is where the mask
+ *  PAINTS under the default /Decode [0 1] (PDF 32000-1 8.9.6.2; MuPDF renders
+ *  it so). PNG grey-1's 0 is black too, so the samples are copied as they are,
+ *  and /Decode [1 0] inverts them. D-622 found the mask case the other way
+ *  round: an /ImageMask came out as its negative. */
+async function bilevelPng(doc, dict, samples, width, height, rotate) {
+  const dec = doc.resolve(dict.Decode);
+  const invert = !!(dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1);
+  const packed0 = invert ? Uint8Array.from(samples, (b) => ~b & 0xff) : Uint8Array.from(samples);
+  const rot = rotateBilevel(normalisePacked(packed0, width, height), width, height, rotate);
+  return { width: rot.width, height: rot.height,
+           pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
+           bytes: await encodePng1(rot.packed, rot.width, rot.height) };
+}
+
+/** A JPX image's PDF colour space, as the number of components it implies:
+ *  null when absent (the JPEG 2000 file's own colour decides), 1 or 3 for
+ *  DeviceGray, DeviceRGB or an ICCBased profile of that /N, false otherwise. */
+function jpxColourComponents(doc, csv) {
+  const cs = doc.resolve(csv);
+  if (cs == null) return null;
+  if (cs.t === "name") return cs.v === "DeviceGray" ? 1 : cs.v === "DeviceRGB" ? 3 : false;
+  if (cs.t === "arr" && nameOf(doc, cs.items[0]) === "ICCBased") {
+    const n = numOf(doc, doc.dictOf(cs.items[1])?.N);
+    return n === 1 || n === 3 ? n : false;
+  }
+  return false;
 }
 
 /* ── DCT, decoded (D-320) ─────────────────────────────────────────────────────
