@@ -2,7 +2,7 @@
 
 **Session** · `session_0191Ek5BuDhcVCoPJoHo62Ge` (ODF-READER #1)
 
-**Status** · COMPLETE, 2026-09-26. Job for module `odf-reader`, tranche T2, branch `job/T2/odf-reader`. Entries T2-8, D-612 and D-346 are applied. Q1 was answered by K34, which matches the reading built here; `origin/tranche/T2` @ 332aff0c02 is merged and steps 5–7 were re-run on it (45/45; all four checks 0 failures). Still open: the Q1 addendum (R10's empty lists, below). For BOB: the "not yet met" notes on R29 and R36, and the Status line saying the same, can now be cleared.
+**Status** · COMPLETE, 2026-09-26. Job for module `odf-reader`, tranche T2, branch `job/T2/odf-reader`. Entries T2-8, D-612 and D-346 are applied. Q1 was answered by K34, which matches the reading built here; `origin/tranche/T2` @ 332aff0c02 is merged and steps 5–7 were re-run on it (45/45; all four checks 0 failures). The Q1 addendum is answered by K52 (tranche/T2 @ 1d8f9c8e): R10 as built, no re-open. `formats-odf.test.mjs` stays red until N29 (BOB). Waiting on nothing; available until BOB archives the session. For BOB: the "not yet met" notes on R29 and R36, and the Status line saying the same, can now be cleared.
 
 ## Questions to BOB
 
