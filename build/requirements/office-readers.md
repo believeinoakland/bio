@@ -1,16 +1,6 @@
 # office-readers — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/docx.mjs`,
-`bio-plane/src/pptx.mjs`, `bio-plane/src/formats-xlsx.mjs`, `bio-plane/src/csv.mjs`.
-R9's xlsx defined-name/table-part behaviour is not fully met: main carries only the
-workbook-scoped anchor link for a defined name; it does not read `xl/tables/*.xml` table
-parts, so no `sheet-range` unit is emitted for either today (row D-415, old plan; its
-"integrated" commit `48245247` is on `snapshot/pre-refactor-2026-09-25`, not an ancestor
-of `main`). R11's csv bound is UNDETERMINED-SETTLED: `MEASURED_CSV_TEXT_BOUND_BYTES`
-reuses the OOXML figure (20 MiB) because the deciding measurement — a deployed plane
-reading a >20 MiB CSV in its own scratch namespace — has not been taken (row DIST-14,
-old plan, blocked on a DIST deploy). Both rows are carried; neither changes this file's
-statement of the ruled behaviour.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/docx.mjs`, `bio-plane/src/pptx.mjs`, `bio-plane/src/formats-xlsx.mjs`, `bio-plane/src/csv.mjs`. R9 (D-415, K36) built in T2. R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14, carried in `build/plan/next.md`). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 
@@ -95,7 +85,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   `slideN.xml` filenames, which record creation order; when that order cannot be read,
   affected slides and their sources are `null` (never numbered off the filename); `xlsx`
   sources are `sheetCellRef`.
-- **R9** *(not yet met: D-415)* `xlsxEntry.structure`: each workbook `definedName` (multi-area ones included) in
+- **R9** `xlsxEntry.structure`: each workbook `definedName` (multi-area ones included) in
   `xl/workbook.xml` emits one `anchor` link with `source:null` and
   `target:{definedName, ref, fragment:"#<ref>"}`. `xlsxEntry.text()` also carries, over the size
   guard too, `rangeUnits: [{source:"defined-name"|"table", name, scope, hidden, unit}]`, one per

@@ -1,6 +1,6 @@
 # jurisdictions — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: none; `jurisdictions/` does not exist. The local facts it will hold are in code today: `bio-plane/src/idspaces.mjs`, the `docprofile/doctypes/` recognisers, `readingNamePlan` in `bio-plane/src/store.mjs`, and `ACTION_KINDS` with `governingLawsOf` in `bio-plane/checks/bio-checks.mjs`. R1–R22 are not yet met: plan entry N1. R23–R30, added 2026-09-26 for layer 9 (Action) and APPROVED by Bob the same day, are not yet met: plan entry N11. UNDETERMINED: which measurement ids back the agenda and calendar vocabulary (their headers cite dated measurements of 2026-07-30 with no M-id) and the default search terms (no measurement found). N1's job settles each from the measurement log, and writes `UNMEASURED` where the log holds none.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6); R23–R30 APPROVED by Bob 2026-09-26. Layer 1. Code: `jurisdictions/index.mjs` and `jurisdictions/profiles/` (the first profile, Oakland and Alameda County, and a test profile). Built by T2 (N1, N11); the first profile's bases are settled from the measurement log, `UNMEASURED` where it holds none. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 

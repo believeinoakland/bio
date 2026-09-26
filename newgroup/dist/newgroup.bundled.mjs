@@ -322,15 +322,25 @@ function parseSshsig(armored) {
   };
 }
 async function verifySshsig(armored, message, expectNamespace, allowedKeys) {
+  try {
+    return await verify(armored, message, expectNamespace, allowedKeys);
+  } catch (e) {
+    return { ok: false, reason: "MALFORMED", detail: String(e && e.message || e) };
+  }
+}
+var isBytes = (m) => m instanceof ArrayBuffer || ArrayBuffer.isView(m);
+async function verify(armored, message, expectNamespace, allowedKeys) {
   let p;
   try {
     p = parseSshsig(armored);
   } catch (e) {
     return { ok: false, reason: "MALFORMED", detail: String(e.message || e) };
   }
+  if (!isBytes(message))
+    return { ok: false, reason: "MALFORMED", detail: "sshsig: the message is not bytes" };
   if (p.namespace !== expectNamespace)
     return { ok: false, reason: "NAMESPACE", expected: expectNamespace, got: p.namespace };
-  const allowed = (allowedKeys || []).map(normalizeKey).filter(Boolean);
+  const allowed = (Array.isArray(allowedKeys) ? allowedKeys : []).map(normalizeKey).filter(Boolean);
   if (!allowed.includes(p.pubB64))
     return { ok: false, reason: "UNKNOWN_KEY", keyB64: p.pubB64 };
   const hash = await crypto.subtle.digest(p.hashAlg === "sha512" ? "SHA-512" : "SHA-256", message);

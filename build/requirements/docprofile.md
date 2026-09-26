@@ -1,15 +1,6 @@
 # docprofile — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `docprofile/index.mjs`,
-`docprofile/pipeline.mjs`, `docprofile/recogniser.mjs`, `docprofile/registry.mjs`,
-`docprofile/events.mjs`, `docprofile/readtext.mjs`, `docprofile/handlers/*.mjs`,
-`docprofile/doctypes/*.mjs`. R6 and R30 are not yet met: every registered content type's
-masthead/self-naming phrases, furniture lines, operative-voice and caption vocabulary,
-code-citation vocabulary, report-template section headings, reference-line shapes, directory
-floors and measured practice thresholds are fixed in `docprofile/doctypes/*.mjs` — mostly
-naming Oakland and its Legistar instance by name or by measurement — rather than read from a
-jurisdiction profile, because the `jurisdictions` module and its profiles do not exist yet
-(plan entry N3). The four built-in host-stack handlers need no such move (see Purpose).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (index, pipeline, recogniser, registry, events, readtext, handlers, doctypes). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) retires with N21. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 
@@ -52,7 +43,7 @@ profiles that `jurisdictions.combine` gives.
   states all of them rather than letting the first match stand for the whole document. A type
   whose `detect` throws during this pass is reported as an error entry in `also`, never dropped
   and never propagated.
-- **R6** *(not yet met: N3)* Every registered content type's own `detect`/`parse`/`assess` takes
+- **R6** Every registered content type's own `detect`/`parse`/`assess` takes
   every LOCAL fact it tests for (furniture, bodies, member titles, enactment kinds, forms and
   markers, codes, file numbers, report titles and sections, recommendation openers, template
   blanks, practice deadlines) from `ctx.view`, under the keys `jurisdictions` defines (its R6–R7),
@@ -222,7 +213,7 @@ reported "unchanged") (**R29**).
 
 ### Invariants
 
-- **R30** *(not yet met: N3)* No place is named in this module's own code. Every local fact a
+- **R30** No place is named in this module's own code. Every local fact a
   content type tests for (R6) comes from the active jurisdiction profiles; the tests include at
   least one profile that is not Oakland's, for every content type. The four stack handlers hold no
   such facts and need none, because they recognise technology, never place.

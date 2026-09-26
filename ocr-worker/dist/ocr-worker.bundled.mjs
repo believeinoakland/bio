@@ -1362,7 +1362,7 @@ function idctIslow(coef, q, out, o, stride) {
     ws[24 + c] = t13 + tmp0 + R1 >> D1;
     ws[32 + c] = t13 - tmp0 + R1 >> D1;
   }
-  const L = IDCT_LIMIT;
+  const L2 = IDCT_LIMIT;
   for (let r = 0; r < 8; r++) {
     const w = r * 8, d = o + r * stride;
     let z2 = ws[w + 2], z3 = ws[w + 6];
@@ -1394,14 +1394,14 @@ function idctIslow(coef, q, out, o, stride) {
     tmp1 += z2 + z4;
     tmp2 += z2 + z3;
     tmp3 += z1 + z4;
-    out[d] = L[t10 + tmp3 + R2 >> D2 & 1023];
-    out[d + 7] = L[t10 - tmp3 + R2 >> D2 & 1023];
-    out[d + 1] = L[t11 + tmp2 + R2 >> D2 & 1023];
-    out[d + 6] = L[t11 - tmp2 + R2 >> D2 & 1023];
-    out[d + 2] = L[t12 + tmp1 + R2 >> D2 & 1023];
-    out[d + 5] = L[t12 - tmp1 + R2 >> D2 & 1023];
-    out[d + 3] = L[t13 + tmp0 + R2 >> D2 & 1023];
-    out[d + 4] = L[t13 - tmp0 + R2 >> D2 & 1023];
+    out[d] = L2[t10 + tmp3 + R2 >> D2 & 1023];
+    out[d + 7] = L2[t10 - tmp3 + R2 >> D2 & 1023];
+    out[d + 1] = L2[t11 + tmp2 + R2 >> D2 & 1023];
+    out[d + 6] = L2[t11 - tmp2 + R2 >> D2 & 1023];
+    out[d + 2] = L2[t12 + tmp1 + R2 >> D2 & 1023];
+    out[d + 5] = L2[t12 - tmp1 + R2 >> D2 & 1023];
+    out[d + 3] = L2[t13 + tmp0 + R2 >> D2 & 1023];
+    out[d + 4] = L2[t13 - tmp0 + R2 >> D2 & 1023];
   }
 }
 var FIX16 = (x) => Math.floor(x * 65536 + 0.5);
@@ -1517,14 +1517,14 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
   }
   if (br.fabricated())
     throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
-  const W = frame.width, H = frame.height;
-  const full = planes.map((pl) => upsample(pl, W, H, hmax, vmax));
+  const W2 = frame.width, H = frame.height;
+  const full = planes.map((pl) => upsample(pl, W2, H, hmax, vmax));
   const deg = ((rotate | 0) % 360 + 360) % 360;
   if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
-  const [W2, H2] = deg === 90 || deg === 270 ? [H, W] : [W, H];
-  const out = new Uint8Array(W2 * H2 * nc);
+  const [W22, H2] = deg === 90 || deg === 270 ? [H, W2] : [W2, H];
+  const out = new Uint8Array(W22 * H2 * nc);
   for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
+    for (let x = 0; x < W2; x++) {
       let X, Y;
       if (deg === 0) {
         X = x;
@@ -1533,13 +1533,13 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
         X = H - 1 - y;
         Y = x;
       } else if (deg === 180) {
-        X = W - 1 - x;
+        X = W2 - 1 - x;
         Y = H - 1 - y;
       } else {
         X = y;
-        Y = W - 1 - x;
+        Y = W2 - 1 - x;
       }
-      const o = (Y * W2 + X) * nc;
+      const o = (Y * W22 + X) * nc;
       if (nc === 1) {
         out[o] = full[0].data[y * full[0].stride + x];
         continue;
@@ -1557,12 +1557,12 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
     }
   }
   return {
-    width: W2,
+    width: W22,
     height: H2,
     comps: nc,
     samples: out,
     source: {
-      width: W,
+      width: W2,
       height: H,
       process: frame.process,
       sampling,
@@ -1571,7 +1571,7 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
     }
   };
 }
-function upsample(pl, W, H, hmax, vmax) {
+function upsample(pl, W2, H, hmax, vmax) {
   const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
   if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
   const { data: src, stride: ss, dw, dh } = pl;
@@ -1638,6 +1638,2443 @@ function h2v1Row(src, r, dw, dst, o) {
   v = src[r + dw - 1];
   dst[q++] = v * 3 + src[r + dw - 2] + 1 >> 2;
   dst[q] = v;
+}
+
+// ../pdf-worker/src/mq.mjs
+var QE = [
+  [22017, 1, 1, 1],
+  [13313, 2, 6, 0],
+  [6145, 3, 9, 0],
+  [2753, 4, 12, 0],
+  [1313, 5, 29, 0],
+  [545, 38, 33, 0],
+  [22017, 7, 6, 1],
+  [21505, 8, 14, 0],
+  [18433, 9, 14, 0],
+  [14337, 10, 14, 0],
+  [12289, 11, 17, 0],
+  [9217, 12, 18, 0],
+  [7169, 13, 20, 0],
+  [5633, 29, 21, 0],
+  [22017, 15, 14, 1],
+  [21505, 16, 14, 0],
+  [20737, 17, 15, 0],
+  [18433, 18, 16, 0],
+  [14337, 19, 17, 0],
+  [13313, 20, 18, 0],
+  [12289, 21, 19, 0],
+  [10241, 22, 19, 0],
+  [9217, 23, 20, 0],
+  [8705, 24, 21, 0],
+  [7169, 25, 22, 0],
+  [6145, 26, 23, 0],
+  [5633, 27, 24, 0],
+  [5121, 28, 25, 0],
+  [4609, 29, 26, 0],
+  [4353, 30, 27, 0],
+  [2753, 31, 28, 0],
+  [2497, 32, 29, 0],
+  [2209, 33, 30, 0],
+  [1313, 34, 31, 0],
+  [1089, 35, 32, 0],
+  [673, 36, 33, 0],
+  [545, 37, 34, 0],
+  [321, 38, 35, 0],
+  [273, 39, 36, 0],
+  [133, 40, 37, 0],
+  [73, 41, 38, 0],
+  [37, 42, 39, 0],
+  [21, 43, 40, 0],
+  [9, 44, 41, 0],
+  [5, 45, 42, 0],
+  [1, 45, 43, 0],
+  [22017, 46, 46, 0]
+];
+var Q_E = Int32Array.from(QE, (r) => r[0]);
+var Q_NMPS = Uint8Array.from(QE, (r) => r[1]);
+var Q_NLPS = Uint8Array.from(QE, (r) => r[2]);
+var Q_SWITCH = Uint8Array.from(QE, (r) => r[3]);
+var mqContexts = (n) => new Uint8Array(n);
+var MqDecoder = class {
+  /** Decode `data[start, end)`. */
+  constructor(data, start = 0, end = data.length) {
+    this.d = data;
+    this.bp = start;
+    this.end = end;
+    this.overrun = 0;
+    this.C = (start < end ? data[start] : 255) * 65536;
+    this.byteIn();
+    this.C = this.C << 7 >>> 0;
+    this.ct -= 7;
+    this.A = 32768;
+  }
+  byteIn() {
+    const d = this.d, bp = this.bp;
+    const b = bp < this.end ? d[bp] : 255;
+    if (b === 255) {
+      const b12 = bp + 1 < this.end ? d[bp + 1] : 255;
+      if (b12 > 143) {
+        this.C += 65280;
+        this.ct = 8;
+        if (bp + 1 >= this.end) this.overrun++;
+      } else {
+        this.bp = bp + 1;
+        this.C += b12 << 9;
+        this.ct = 7;
+      }
+    } else {
+      this.bp = bp + 1;
+      if (bp + 1 < this.end) this.C += d[bp + 1] << 8;
+      else {
+        this.C += 65280;
+        this.overrun++;
+      }
+      this.ct = 8;
+    }
+  }
+  /** One binary decision in context `cx` of `ctx` (a `mqContexts` array). */
+  decode(ctx, cx) {
+    const s = ctx[cx];
+    let i = s >> 1, mps = s & 1;
+    const qe = Q_E[i];
+    let a = this.A - qe;
+    let d;
+    if (this.C / 65536 < qe) {
+      if (a < qe) {
+        a = qe;
+        d = mps;
+        i = Q_NMPS[i];
+      } else {
+        a = qe;
+        d = 1 - mps;
+        if (Q_SWITCH[i]) mps = d;
+        i = Q_NLPS[i];
+      }
+    } else {
+      this.C -= qe * 65536;
+      if (a & 32768) {
+        this.A = a;
+        return mps;
+      }
+      if (a < qe) {
+        d = 1 - mps;
+        if (Q_SWITCH[i]) mps = d;
+        i = Q_NLPS[i];
+      } else {
+        d = mps;
+        i = Q_NMPS[i];
+      }
+    }
+    do {
+      if (this.ct === 0) this.byteIn();
+      a <<= 1;
+      this.C = this.C << 1 >>> 0;
+      this.ct--;
+    } while ((a & 32768) === 0);
+    this.A = a;
+    ctx[cx] = i << 1 | mps;
+    return d;
+  }
+};
+
+// ../pdf-worker/src/jbig2decode.mjs
+var Jbig2Refusal = class extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.feature ? `: ${detail.feature}` : detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+};
+var unsupported = (feature, extra = {}) => new Jbig2Refusal("UNSUPPORTED", { feature, ...extra });
+var corrupt = (note, extra = {}) => new Jbig2Refusal("CORRUPT", { note, ...extra });
+var truncated = (note, extra = {}) => new Jbig2Refusal("TRUNCATED", { note, ...extra });
+var JBIG2_REFUSES = Object.freeze({
+  "colour extension": "a region's colour-extension flag (T.88 Amendment 3) is set",
+  "12 adaptive-template pixels": "a generic region's extended template (EXTTEMPLATE) is used",
+  "reused bitmap coding contexts": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
+  "Huffman-coded refinement": "a Huffman-coded symbol dictionary or text region refines its symbols",
+  "a necessary extension segment": "an extension segment the decoder must understand and does not",
+  "segment type": "a segment type T.88 does not define",
+  "several pages": "the stream holds more than one page",
+  "no page": "the stream holds no page information segment"
+});
+var bitmap = (w, h, fill = 0) => {
+  if (!(Number.isInteger(w) && Number.isInteger(h)) || w < 0 || h < 0) throw corrupt(`bitmap size ${w}x${h}`);
+  if (w * h > 1 << 28) throw corrupt(`bitmap of ${w}x${h} pixels is beyond any page`);
+  const d = new Uint8Array(w * h);
+  if (fill) d.fill(1);
+  return { w, h, d };
+};
+function compose(dst, src, x, y, op) {
+  const x0 = Math.max(0, x), y0 = Math.max(0, y);
+  const x1 = Math.min(dst.w, x + src.w), y1 = Math.min(dst.h, y + src.h);
+  if (x0 >= x1 || y0 >= y1) return;
+  const D = dst.d, S2 = src.d;
+  for (let yy = y0; yy < y1; yy++) {
+    let di = yy * dst.w + x0, si = (yy - y) * src.w + (x0 - x);
+    const de = yy * dst.w + x1;
+    switch (op) {
+      case 0:
+        for (; di < de; di++, si++) D[di] |= S2[si];
+        break;
+      case 1:
+        for (; di < de; di++, si++) D[di] &= S2[si];
+        break;
+      case 2:
+        for (; di < de; di++, si++) D[di] ^= S2[si];
+        break;
+      case 3:
+        for (; di < de; di++, si++) D[di] = 1 - (D[di] ^ S2[si]);
+        break;
+      case 4:
+        for (; di < de; di++, si++) D[di] = S2[si];
+        break;
+      default:
+        throw corrupt(`combination operator ${op}`);
+    }
+  }
+}
+var Reader = class {
+  constructor(d, p = 0, end = d.length) {
+    this.d = d;
+    this.p = p;
+    this.end = end;
+  }
+  need(n, what) {
+    if (this.p + n > this.end) throw truncated(`${what}: ${n} bytes needed, ${this.end - this.p} left`);
+  }
+  u8(what = "a byte") {
+    this.need(1, what);
+    return this.d[this.p++];
+  }
+  u16(what = "a 16-bit field") {
+    this.need(2, what);
+    const v = this.d[this.p] << 8 | this.d[this.p + 1];
+    this.p += 2;
+    return v;
+  }
+  u32(what = "a 32-bit field") {
+    this.need(4, what);
+    const d = this.d, p = this.p;
+    this.p += 4;
+    return (d[p] << 24 | d[p + 1] << 16 | d[p + 2] << 8 | d[p + 3]) >>> 0;
+  }
+  i32(what) {
+    return this.u32(what) | 0;
+  }
+  i8(what) {
+    const v = this.u8(what);
+    return v > 127 ? v - 256 : v;
+  }
+};
+var OOB = null;
+var iaCtx = () => mqContexts(512);
+function iaDecode(mq, ctx) {
+  let prev = 1;
+  const bit = () => {
+    const b = mq.decode(ctx, prev);
+    prev = prev < 256 ? prev << 1 | b : (prev << 1 | b) & 511 | 256;
+    return b;
+  };
+  const s = bit();
+  let n, off;
+  if (!bit()) {
+    n = 2;
+    off = 0;
+  } else if (!bit()) {
+    n = 4;
+    off = 4;
+  } else if (!bit()) {
+    n = 6;
+    off = 20;
+  } else if (!bit()) {
+    n = 8;
+    off = 84;
+  } else if (!bit()) {
+    n = 12;
+    off = 340;
+  } else {
+    n = 32;
+    off = 4436;
+  }
+  let v = 0;
+  for (let i = 0; i < n; i++) v = v * 2 + bit();
+  v = Math.min(v + off, 2147483647);
+  if (s && v === 0) return OOB;
+  return s ? -v : v;
+}
+function iaidDecode(mq, ctx, len) {
+  let prev = 1;
+  for (let i = 0; i < len; i++) prev = prev << 1 | mq.decode(ctx, prev);
+  return prev - (1 << len);
+}
+var intOrThrow = (v, what) => {
+  if (v === OOB) throw corrupt(`OOB where ${what} is required`);
+  return v;
+};
+var L = (p, r, low, kind = "") => [p, r, low, kind];
+var STANDARD_TABLES = {
+  1: [L(1, 4, 0), L(2, 8, 16), L(3, 16, 272), L(3, 32, 65808, "high")],
+  2: [L(1, 0, 0), L(2, 0, 1), L(3, 0, 2), L(4, 3, 3), L(5, 6, 11), L(6, 32, 75, "high"), L(6, 0, 0, "oob")],
+  3: [
+    L(8, 8, -256),
+    L(1, 0, 0),
+    L(2, 0, 1),
+    L(3, 0, 2),
+    L(4, 3, 3),
+    L(5, 6, 11),
+    L(8, 32, -257, "low"),
+    L(7, 32, 75, "high"),
+    L(6, 0, 0, "oob")
+  ],
+  4: [L(1, 0, 1), L(2, 0, 2), L(3, 0, 3), L(4, 3, 4), L(5, 6, 12), L(5, 32, 76, "high")],
+  5: [
+    L(7, 8, -255),
+    L(1, 0, 1),
+    L(2, 0, 2),
+    L(3, 0, 3),
+    L(4, 3, 4),
+    L(5, 6, 12),
+    L(7, 32, -256, "low"),
+    L(6, 32, 76, "high")
+  ],
+  6: [
+    L(5, 10, -2048),
+    L(4, 9, -1024),
+    L(4, 8, -512),
+    L(4, 7, -256),
+    L(5, 6, -128),
+    L(5, 5, -64),
+    L(4, 5, -32),
+    L(2, 7, 0),
+    L(3, 7, 128),
+    L(3, 8, 256),
+    L(4, 9, 512),
+    L(4, 10, 1024),
+    L(6, 32, -2049, "low"),
+    L(6, 32, 2048, "high")
+  ],
+  7: [
+    L(4, 9, -1024),
+    L(3, 8, -512),
+    L(4, 7, -256),
+    L(5, 6, -128),
+    L(5, 5, -64),
+    L(4, 5, -32),
+    L(4, 5, 0),
+    L(5, 5, 32),
+    L(5, 6, 64),
+    L(4, 7, 128),
+    L(3, 8, 256),
+    L(3, 9, 512),
+    L(3, 10, 1024),
+    L(5, 32, -1025, "low"),
+    L(5, 32, 2048, "high")
+  ],
+  8: [
+    L(8, 3, -15),
+    L(9, 1, -7),
+    L(8, 1, -5),
+    L(9, 0, -3),
+    L(7, 0, -2),
+    L(4, 0, -1),
+    L(2, 1, 0),
+    L(5, 0, 2),
+    L(6, 0, 3),
+    L(3, 4, 4),
+    L(6, 1, 20),
+    L(4, 4, 22),
+    L(4, 5, 38),
+    L(5, 6, 70),
+    L(5, 7, 134),
+    L(6, 7, 262),
+    L(7, 8, 390),
+    L(6, 10, 646),
+    L(9, 32, -16, "low"),
+    L(9, 32, 1670, "high"),
+    L(2, 0, 0, "oob")
+  ],
+  9: [
+    L(8, 4, -31),
+    L(9, 2, -15),
+    L(8, 2, -11),
+    L(9, 1, -7),
+    L(7, 1, -5),
+    L(4, 1, -3),
+    L(3, 1, -1),
+    L(3, 1, 1),
+    L(5, 1, 3),
+    L(6, 1, 5),
+    L(3, 5, 7),
+    L(6, 2, 39),
+    L(4, 5, 43),
+    L(4, 6, 75),
+    L(5, 7, 139),
+    L(5, 8, 267),
+    L(6, 8, 523),
+    L(7, 9, 779),
+    L(6, 11, 1291),
+    L(9, 32, -32, "low"),
+    L(9, 32, 3339, "high"),
+    L(2, 0, 0, "oob")
+  ],
+  10: [
+    L(7, 4, -21),
+    L(8, 0, -5),
+    L(7, 0, -4),
+    L(5, 0, -3),
+    L(2, 2, -2),
+    L(5, 0, 2),
+    L(6, 0, 3),
+    L(7, 0, 4),
+    L(8, 0, 5),
+    L(2, 6, 6),
+    L(5, 5, 70),
+    L(6, 5, 102),
+    L(6, 6, 134),
+    L(6, 7, 198),
+    L(6, 8, 326),
+    L(6, 9, 582),
+    L(6, 10, 1094),
+    L(7, 11, 2118),
+    L(8, 32, -22, "low"),
+    L(8, 32, 4166, "high"),
+    L(2, 0, 0, "oob")
+  ],
+  11: [
+    L(1, 0, 1),
+    L(2, 1, 2),
+    L(4, 0, 4),
+    L(4, 1, 5),
+    L(5, 1, 7),
+    L(5, 2, 9),
+    L(6, 2, 13),
+    L(7, 2, 17),
+    L(7, 3, 21),
+    L(7, 4, 29),
+    L(7, 5, 45),
+    L(7, 6, 77),
+    L(7, 32, 141, "high")
+  ],
+  12: [
+    L(1, 0, 1),
+    L(2, 0, 2),
+    L(3, 1, 3),
+    L(5, 0, 5),
+    L(5, 1, 6),
+    L(6, 1, 8),
+    L(7, 0, 10),
+    L(7, 1, 11),
+    L(7, 2, 13),
+    L(7, 3, 17),
+    L(7, 4, 25),
+    L(8, 5, 41),
+    L(8, 32, 73, "high")
+  ],
+  13: [
+    L(1, 0, 1),
+    L(3, 0, 2),
+    L(4, 0, 3),
+    L(5, 0, 4),
+    L(4, 1, 5),
+    L(3, 3, 7),
+    L(6, 1, 15),
+    L(6, 2, 17),
+    L(6, 3, 21),
+    L(6, 4, 29),
+    L(6, 5, 45),
+    L(7, 6, 77),
+    L(7, 32, 141, "high")
+  ],
+  14: [L(3, 0, -2), L(3, 0, -1), L(1, 0, 0), L(3, 0, 1), L(3, 0, 2)],
+  15: [
+    L(7, 4, -24),
+    L(6, 2, -8),
+    L(5, 1, -4),
+    L(4, 0, -2),
+    L(3, 0, -1),
+    L(1, 0, 0),
+    L(3, 0, 1),
+    L(4, 0, 2),
+    L(5, 1, 3),
+    L(6, 2, 5),
+    L(7, 4, 9),
+    L(7, 32, -25, "low"),
+    L(7, 32, 25, "high")
+  ]
+};
+function table(lines) {
+  const maxLen = Math.max(0, ...lines.map((l) => l[0]));
+  const count = new Array(maxLen + 1).fill(0);
+  for (const l of lines) if (l[0]) count[l[0]]++;
+  const byLen = /* @__PURE__ */ new Map();
+  let first = 0;
+  for (let len = 1; len <= maxLen; len++) {
+    first = (first + count[len - 1]) * 2;
+    let code = first;
+    for (const l of lines) if (l[0] === len) byLen.set(len * 4294967296 + code++, l);
+  }
+  return { maxLen, byLen };
+}
+var STD = {};
+var standardTable = (n) => STD[n] ||= table(STANDARD_TABLES[n]);
+var Bits2 = class {
+  constructor(d, p, end) {
+    this.d = d;
+    this.p = p;
+    this.end = end;
+    this.bit = 0;
+  }
+  read(n) {
+    let v = 0;
+    for (let i = 0; i < n; i++) {
+      if (this.p >= this.end) throw truncated("Huffman-coded data ends early");
+      v = v * 2 + (this.d[this.p] >> 7 - this.bit & 1);
+      if (++this.bit === 8) {
+        this.bit = 0;
+        this.p++;
+      }
+    }
+    return v;
+  }
+  align() {
+    if (this.bit) {
+      this.bit = 0;
+      this.p++;
+    }
+  }
+  /** Decode one value with table `t` (B.4). OOB is `null`. */
+  huff(t) {
+    let code = 0;
+    for (let len = 1; len <= t.maxLen; len++) {
+      code = code * 2 + this.read(1);
+      const l = t.byLen.get(len * 4294967296 + code);
+      if (!l) continue;
+      const [, rangeLen, low, kind] = l;
+      if (kind === "oob") return OOB;
+      const off = this.read(rangeLen);
+      return kind === "low" ? low - off : low + off;
+    }
+    throw corrupt("a Huffman code no table line holds");
+  }
+};
+function parseTableSegment(data) {
+  const r = new Reader(data);
+  const flags = r.u8("table flags");
+  const htoob = flags & 1, htps = (flags >> 1 & 7) + 1, htrs = (flags >> 4 & 7) + 1;
+  const low = r.i32("HTLOW"), high = r.i32("HTHIGH");
+  const b = new Bits2(data, r.p, data.length);
+  const lines = [];
+  let cur = low;
+  while (cur < high) {
+    const p = b.read(htps), rl = b.read(htrs);
+    lines.push(L(p, rl, cur));
+    cur += 2 ** rl;
+    if (lines.length > 1 << 16) throw corrupt("a custom Huffman table with no end");
+  }
+  lines.push(L(b.read(htps), 32, low - 1, "low"));
+  lines.push(L(b.read(htps), 32, high, "high"));
+  if (htoob) lines.push(L(b.read(htps), 0, 0, "oob"));
+  return table(lines);
+}
+var TPGD_CONTEXT = [39717, 1941, 229, 405];
+function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at, skip = null) {
+  const bm = bitmap(w, h);
+  const D = bm.d;
+  const nat = template === 0 ? 4 : 1;
+  for (let i = 0; i < nat; i++) {
+    const ax = at[2 * i], ay = at[2 * i + 1];
+    if (ay > 0 || ay === 0 && ax >= 0) throw corrupt(`adaptive template pixel (${ax},${ay}) is not yet decoded`);
+  }
+  const px = (x, y) => x < 0 || x >= w || y < 0 ? 0 : D[y * w + x];
+  let ltp = 0;
+  const sltp = TPGD_CONTEXT[template];
+  const [a1x, a1y, a2x, a2y, a3x, a3y, a4x, a4y] = at;
+  for (let y = 0; y < h; y++) {
+    if (tpgdon) {
+      ltp ^= mq.decode(ctx, sltp);
+      if (ltp) {
+        if (y > 0) D.copyWithin(y * w, (y - 1) * w, y * w);
+        continue;
+      }
+    }
+    const r0 = y * w, r1 = r0 - w, r2 = r1 - w;
+    const has1 = y >= 1, has2 = y >= 2;
+    const p1 = (x) => has1 && x >= 0 && x < w ? D[r1 + x] : 0;
+    const p2 = (x) => has2 && x >= 0 && x < w ? D[r2 + x] : 0;
+    let c0 = 0, c1, c2;
+    if (template === 0) {
+      c1 = p1(-2) << 4 | p1(-1) << 3 | p1(0) << 2 | p1(1) << 1 | p1(2);
+      c2 = p2(-1) << 2 | p2(0) << 1 | p2(1);
+    } else if (template === 1) {
+      c1 = p1(-2) << 4 | p1(-1) << 3 | p1(0) << 2 | p1(1) << 1 | p1(2);
+      c2 = p2(-1) << 3 | p2(0) << 2 | p2(1) << 1 | p2(2);
+    } else if (template === 2) {
+      c1 = p1(-2) << 3 | p1(-1) << 2 | p1(0) << 1 | p1(1);
+      c2 = p2(-1) << 2 | p2(0) << 1 | p2(1);
+    } else {
+      c1 = p1(-3) << 4 | p1(-2) << 3 | p1(-1) << 2 | p1(0) << 1 | p1(1);
+      c2 = 0;
+    }
+    for (let x = 0; x < w; x++) {
+      let bit = 0;
+      if (!(skip && skip.d[y * w + x])) {
+        let cx;
+        if (template === 0) {
+          cx = c0 | px(x + a1x, y + a1y) << 4 | c1 << 5 | px(x + a2x, y + a2y) << 10 | px(x + a3x, y + a3y) << 11 | c2 << 12 | px(x + a4x, y + a4y) << 15;
+        } else if (template === 1) {
+          cx = c0 & 7 | px(x + a1x, y + a1y) << 3 | c1 << 4 | c2 << 9;
+        } else if (template === 2) {
+          cx = c0 & 3 | px(x + a1x, y + a1y) << 2 | c1 << 3 | c2 << 7;
+        } else {
+          cx = c0 | px(x + a1x, y + a1y) << 4 | c1 << 5;
+        }
+        bit = mq.decode(ctx, cx);
+      }
+      D[r0 + x] = bit;
+      c0 = (c0 << 1 | bit) & 15;
+      if (template === 0) {
+        c1 = c1 << 1 & 31 | p1(x + 3);
+        c2 = c2 << 1 & 7 | p2(x + 2);
+      } else if (template === 1) {
+        c1 = c1 << 1 & 31 | p1(x + 3);
+        c2 = c2 << 1 & 15 | p2(x + 3);
+      } else if (template === 2) {
+        c1 = c1 << 1 & 15 | p1(x + 2);
+        c2 = c2 << 1 & 7 | p2(x + 2);
+      } else {
+        c1 = c1 << 1 & 31 | p1(x + 2);
+      }
+    }
+  }
+  return bm;
+}
+var MODES = [
+  // [bits, code, mode, delta]
+  [1, 1, "V", 0],
+  [3, 3, "V", 1],
+  [3, 2, "V", -1],
+  [3, 1, "H", 0],
+  [4, 1, "P", 0],
+  [6, 3, "V", 2],
+  [6, 2, "V", -2],
+  [7, 3, "V", 3],
+  [7, 2, "V", -3]
+];
+var WHITE = [
+  [8, 53, 0],
+  [6, 7, 1],
+  [4, 7, 2],
+  [4, 8, 3],
+  [4, 11, 4],
+  [4, 12, 5],
+  [4, 14, 6],
+  [4, 15, 7],
+  [5, 19, 8],
+  [5, 20, 9],
+  [5, 7, 10],
+  [5, 8, 11],
+  [6, 8, 12],
+  [6, 3, 13],
+  [6, 52, 14],
+  [6, 53, 15],
+  [6, 42, 16],
+  [6, 43, 17],
+  [7, 39, 18],
+  [7, 12, 19],
+  [7, 8, 20],
+  [7, 23, 21],
+  [7, 3, 22],
+  [7, 4, 23],
+  [7, 40, 24],
+  [7, 43, 25],
+  [7, 19, 26],
+  [7, 36, 27],
+  [7, 24, 28],
+  [8, 2, 29],
+  [8, 3, 30],
+  [8, 26, 31],
+  [8, 27, 32],
+  [8, 18, 33],
+  [8, 19, 34],
+  [8, 20, 35],
+  [8, 21, 36],
+  [8, 22, 37],
+  [8, 23, 38],
+  [8, 40, 39],
+  [8, 41, 40],
+  [8, 42, 41],
+  [8, 43, 42],
+  [8, 44, 43],
+  [8, 45, 44],
+  [8, 4, 45],
+  [8, 5, 46],
+  [8, 10, 47],
+  [8, 11, 48],
+  [8, 82, 49],
+  [8, 83, 50],
+  [8, 84, 51],
+  [8, 85, 52],
+  [8, 36, 53],
+  [8, 37, 54],
+  [8, 88, 55],
+  [8, 89, 56],
+  [8, 90, 57],
+  [8, 91, 58],
+  [8, 74, 59],
+  [8, 75, 60],
+  [8, 50, 61],
+  [8, 51, 62],
+  [8, 52, 63],
+  [5, 27, 64],
+  [5, 18, 128],
+  [6, 23, 192],
+  [7, 55, 256],
+  [8, 54, 320],
+  [8, 55, 384],
+  [8, 100, 448],
+  [8, 101, 512],
+  [8, 104, 576],
+  [8, 103, 640],
+  [9, 204, 704],
+  [9, 205, 768],
+  [9, 210, 832],
+  [9, 211, 896],
+  [9, 212, 960],
+  [9, 213, 1024],
+  [9, 214, 1088],
+  [9, 215, 1152],
+  [9, 216, 1216],
+  [9, 217, 1280],
+  [9, 218, 1344],
+  [9, 219, 1408],
+  [9, 152, 1472],
+  [9, 153, 1536],
+  [9, 154, 1600],
+  [6, 24, 1664],
+  [9, 155, 1728]
+];
+var BLACK = [
+  [10, 55, 0],
+  [3, 2, 1],
+  [2, 3, 2],
+  [2, 2, 3],
+  [3, 3, 4],
+  [4, 3, 5],
+  [4, 2, 6],
+  [5, 3, 7],
+  [6, 5, 8],
+  [6, 4, 9],
+  [7, 4, 10],
+  [7, 5, 11],
+  [7, 7, 12],
+  [8, 4, 13],
+  [8, 7, 14],
+  [9, 24, 15],
+  [10, 23, 16],
+  [10, 24, 17],
+  [10, 8, 18],
+  [11, 103, 19],
+  [11, 104, 20],
+  [11, 108, 21],
+  [11, 55, 22],
+  [11, 40, 23],
+  [11, 23, 24],
+  [11, 24, 25],
+  [12, 202, 26],
+  [12, 203, 27],
+  [12, 204, 28],
+  [12, 205, 29],
+  [12, 104, 30],
+  [12, 105, 31],
+  [12, 106, 32],
+  [12, 107, 33],
+  [12, 210, 34],
+  [12, 211, 35],
+  [12, 212, 36],
+  [12, 213, 37],
+  [12, 214, 38],
+  [12, 215, 39],
+  [12, 108, 40],
+  [12, 109, 41],
+  [12, 218, 42],
+  [12, 219, 43],
+  [12, 84, 44],
+  [12, 85, 45],
+  [12, 86, 46],
+  [12, 87, 47],
+  [12, 100, 48],
+  [12, 101, 49],
+  [12, 82, 50],
+  [12, 83, 51],
+  [12, 36, 52],
+  [12, 55, 53],
+  [12, 56, 54],
+  [12, 39, 55],
+  [12, 40, 56],
+  [12, 88, 57],
+  [12, 89, 58],
+  [12, 43, 59],
+  [12, 44, 60],
+  [12, 90, 61],
+  [12, 102, 62],
+  [12, 103, 63],
+  [10, 15, 64],
+  [12, 200, 128],
+  [12, 201, 192],
+  [12, 91, 256],
+  [12, 51, 320],
+  [12, 52, 384],
+  [12, 53, 448],
+  [13, 108, 512],
+  [13, 109, 576],
+  [13, 74, 640],
+  [13, 75, 704],
+  [13, 76, 768],
+  [13, 77, 832],
+  [13, 114, 896],
+  [13, 115, 960],
+  [13, 116, 1024],
+  [13, 117, 1088],
+  [13, 118, 1152],
+  [13, 119, 1216],
+  [13, 82, 1280],
+  [13, 83, 1344],
+  [13, 84, 1408],
+  [13, 85, 1472],
+  [13, 90, 1536],
+  [13, 91, 1600],
+  [13, 100, 1664],
+  [13, 101, 1728]
+];
+var EXT = [
+  [11, 8, 1792],
+  [11, 12, 1856],
+  [11, 13, 1920],
+  [12, 18, 1984],
+  [12, 19, 2048],
+  [12, 20, 2112],
+  [12, 21, 2176],
+  [12, 22, 2240],
+  [12, 23, 2304],
+  [12, 28, 2368],
+  [12, 29, 2432],
+  [12, 30, 2496],
+  [12, 31, 2560]
+];
+function runLookup(codes) {
+  const t = new Int32Array(1 << 13);
+  for (const [n, code, run] of [...codes, ...EXT]) {
+    const base = code << 13 - n;
+    for (let i = 0; i < 1 << 13 - n; i++) t[base | i] = n << 16 | run + 1;
+  }
+  return t;
+}
+var WHITE_LUT = runLookup(WHITE);
+var BLACK_LUT = runLookup(BLACK);
+var MmrBits = class {
+  constructor(d, p, end) {
+    this.d = d;
+    this.p0 = p;
+    this.pos = p * 8;
+    this.endBit = end * 8;
+  }
+  peek(n) {
+    let v = 0;
+    for (let i = 0; i < n; i++) {
+      const b = this.pos + i;
+      v = v << 1 | (b < this.endBit ? this.d[b >> 3] >> 7 - (b & 7) & 1 : 0);
+    }
+    return v;
+  }
+  skip(n) {
+    this.pos += n;
+  }
+  get left() {
+    return this.endBit - this.pos;
+  }
+};
+function mmrRun(br, lut) {
+  let total = 0;
+  for (; ; ) {
+    const e = lut[br.peek(13)];
+    if (!e || e >> 16 > br.left) return -1;
+    br.skip(e >> 16);
+    const run = (e & 65535) - 1;
+    total += run;
+    if (run < 64) return total;
+  }
+}
+function decodeMmr(d, p, end, w, h) {
+  const bm = bitmap(w, h);
+  const br = new MmrBits(d, p, end);
+  let ref = [w, w];
+  for (let y = 0; y < h; y++) {
+    if (br.peek(24) === 4097 && br.left >= 24) throw truncated(`MMR data ends (EOFB) after ${y} of ${h} rows`);
+    const cur = [];
+    let a0 = -1, colour = 0;
+    const b12 = () => {
+      let i = 0;
+      while (i < ref.length && ref[i] <= a0) i++;
+      if (a0 < 0) i = 0;
+      while (i < ref.length && (i & 1) !== colour) i++;
+      return i < ref.length ? ref[i] : w;
+    };
+    const b1Index = () => {
+      let i = 0;
+      while (i < ref.length && (a0 >= 0 ? ref[i] <= a0 : false)) i++;
+      while (i < ref.length && (i & 1) !== colour) i++;
+      return i;
+    };
+    let guard = 0;
+    while (a0 < w) {
+      if (++guard > 4 * w + 16) throw corrupt("an MMR row that does not end");
+      let hit = null;
+      for (const m of MODES) if (br.left >= m[0] && br.peek(m[0]) === m[1]) {
+        hit = m;
+        break;
+      }
+      if (!hit) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+      br.skip(hit[0]);
+      if (hit[2] === "H") {
+        const start = a0 < 0 ? 0 : a0;
+        const r1 = mmrRun(br, colour ? BLACK_LUT : WHITE_LUT);
+        const r2 = r1 < 0 ? -1 : mmrRun(br, colour ? WHITE_LUT : BLACK_LUT);
+        if (r1 < 0 || r2 < 0) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+        const m1 = Math.min(w, start + r1), m2 = Math.min(w, m1 + r2);
+        cur.push(m1, m2);
+        a0 = m2;
+      } else if (hit[2] === "P") {
+        const i = b1Index();
+        a0 = i + 1 < ref.length ? ref[i + 1] : w;
+      } else {
+        const a1 = Math.max(0, Math.min(w, b12() + hit[3]));
+        if (a1 < a0) throw corrupt(`MMR row ${y} runs backwards`);
+        cur.push(a1);
+        a0 = a1;
+        colour ^= 1;
+      }
+    }
+    const row = y * w;
+    let pos = 0, c = 0;
+    for (const t of cur) {
+      if (c) bm.d.fill(1, row + pos, row + Math.min(t, w));
+      pos = t;
+      c ^= 1;
+    }
+    if (c && pos < w) bm.d.fill(1, row + pos, row + w);
+    ref = cur.length ? [...cur, w, w] : [w, w];
+  }
+  if (br.left >= 24 && br.peek(24) === 4097) br.skip(24);
+  return { bm, end: Math.min(end, Math.ceil(br.pos / 8)) };
+}
+function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at) {
+  const bm = bitmap(w, h);
+  const D = bm.d, R3 = ref.d, rw = ref.w, rh = ref.h;
+  if (template === 0) {
+    if (at[1] > 0 || at[1] === 0 && at[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
+  }
+  const g = (x, y) => x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x];
+  const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R3[y * rw + x];
+  const ctxOf = template === 0 ? (x, y) => {
+    const i = x - dx, j = y - dy;
+    return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x + at[0], y + at[1]) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i - 1, j + 1) << 6 | r(i + 1, j) << 7 | r(i, j) << 8 | r(i - 1, j) << 9 | r(i + 1, j - 1) << 10 | r(i, j - 1) << 11 | r(i + at[2], j + at[3]) << 12;
+  } : (x, y) => {
+    const i = x - dx, j = y - dy;
+    return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x - 1, y - 1) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i + 1, j) << 6 | r(i, j) << 7 | r(i - 1, j) << 8 | r(i, j - 1) << 9;
+  };
+  const sltp = template === 0 ? 256 : 64;
+  let ltp = 0;
+  for (let y = 0; y < h; y++) {
+    if (tpgron) ltp ^= mq.decode(ctx, sltp);
+    for (let x = 0; x < w; x++) {
+      if (ltp) {
+        const i = x - dx, j = y - dy, m = r(i, j);
+        if (r(i - 1, j - 1) === m && r(i, j - 1) === m && r(i + 1, j - 1) === m && r(i - 1, j) === m && r(i + 1, j) === m && r(i - 1, j + 1) === m && r(i, j + 1) === m && r(i + 1, j + 1) === m) {
+          D[y * w + x] = m;
+          continue;
+        }
+      }
+      D[y * w + x] = mq.decode(ctx, ctxOf(x, y));
+    }
+  }
+  return bm;
+}
+var CORNER = { BOTTOMLEFT: 0, TOPLEFT: 1, BOTTOMRIGHT: 2, TOPRIGHT: 3 };
+function decodeTextRegion(p, syms, dec) {
+  const reg = bitmap(p.w, p.h, p.defPixel);
+  const huff = !!dec.bits;
+  const num = (name) => {
+    if (huff) return dec.bits.huff(dec.tables[name]);
+    return iaDecode(dec.mq, dec.ia[name]);
+  };
+  let stript = -intOrThrow(num("DT"), "the first strip's T") * p.strips;
+  let firsts = 0, n = 0;
+  while (n < p.numInstances) {
+    stript += intOrThrow(num("DT"), "a strip's T") * p.strips;
+    let first = true, curs = 0;
+    for (; ; ) {
+      if (first) {
+        firsts += intOrThrow(num("FS"), "a strip's first S");
+        curs = firsts;
+        first = false;
+      } else {
+        const ids = num("DS");
+        if (ids === OOB) break;
+        curs += ids + p.dsOffset;
+      }
+      let curt = 0;
+      if (p.strips !== 1) curt = huff ? dec.bits.read(p.logStrips) : intOrThrow(iaDecode(dec.mq, dec.ia.IT), "a symbol's T");
+      const t = stript + curt;
+      const id = huff ? intOrThrow(dec.bits.huff(dec.symCodes), "a symbol id") : iaidDecode(dec.mq, dec.ia.ID, dec.idLen);
+      if (id < 0 || id >= syms.length || !syms[id]) throw corrupt(`symbol id ${id} of ${syms.length}`);
+      let ib = syms[id];
+      const ri = p.refine ? huff ? dec.bits.read(1) : intOrThrow(iaDecode(dec.mq, dec.ia.RI), "a refinement flag") : 0;
+      if (ri) {
+        const rdw = intOrThrow(iaDecode(dec.mq, dec.ia.RDW), "RDW"), rdh = intOrThrow(iaDecode(dec.mq, dec.ia.RDH), "RDH");
+        const rdx = intOrThrow(iaDecode(dec.mq, dec.ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(dec.mq, dec.ia.RDY), "RDY");
+        if (ib.w + rdw < 0 || ib.h + rdh < 0) throw corrupt("a refined symbol of negative size");
+        ib = decodeRefinement(
+          dec.mq,
+          dec.gr,
+          ib.w + rdw,
+          ib.h + rdh,
+          p.rTemplate,
+          ib,
+          (rdw >> 1) + rdx,
+          (rdh >> 1) + rdy,
+          false,
+          p.rAt
+        );
+      }
+      if (!p.transposed && p.refCorner > 1) curs += ib.w - 1;
+      else if (p.transposed && !(p.refCorner & 1)) curs += ib.h - 1;
+      const s = curs;
+      let x, y;
+      const [u, v] = p.transposed ? [t, s] : [s, t];
+      switch (p.refCorner) {
+        case CORNER.TOPLEFT:
+          x = u;
+          y = v;
+          break;
+        case CORNER.TOPRIGHT:
+          x = u - ib.w + 1;
+          y = v;
+          break;
+        case CORNER.BOTTOMLEFT:
+          x = u;
+          y = v - ib.h + 1;
+          break;
+        default:
+          x = u - ib.w + 1;
+          y = v - ib.h + 1;
+          break;
+      }
+      compose(reg, ib, x, y, p.combOp);
+      if (!p.transposed && p.refCorner < 2) curs += ib.w - 1;
+      else if (p.transposed && p.refCorner & 1) curs += ib.h - 1;
+      n++;
+      if (n > p.numInstances + 1e6) throw corrupt("a text region with no end");
+    }
+  }
+  return reg;
+}
+function readSymbolIdTable(bits, numSyms) {
+  const runLines = [];
+  for (let i = 0; i < 35; i++) runLines.push(L(bits.read(4), 0, i));
+  const runTable = table(runLines);
+  const lens = [];
+  while (lens.length < numSyms) {
+    const code = bits.huff(runTable);
+    if (code === OOB || code > 34) throw corrupt("a symbol-id length code outside the run table");
+    if (code < 32) lens.push(code);
+    else {
+      const [rep, val] = code === 32 ? [3 + bits.read(2), lens.length ? lens[lens.length - 1] : -1] : code === 33 ? [3 + bits.read(3), 0] : [11 + bits.read(7), 0];
+      if (val < 0) throw corrupt("a repeated symbol-id length with nothing before it");
+      for (let i = 0; i < rep; i++) lens.push(val);
+    }
+  }
+  if (lens.length > numSyms) throw corrupt("more symbol-id lengths than symbols");
+  bits.align();
+  return table(lens.map((len, i) => L(len, 0, i)));
+}
+function regionInfo(r) {
+  const w = r.u32("region width"), h = r.u32("region height"), x = r.u32("region x"), y = r.u32("region y");
+  const flags = r.u8("region flags");
+  if (flags & 8) throw unsupported("colour extension");
+  return { w, h, x, y, op: flags & 7 };
+}
+function readAt(r, n) {
+  const at = [];
+  for (let i = 0; i < n; i++) at.push(r.i8("an adaptive-template x"), r.i8("an adaptive-template y"));
+  return at;
+}
+function readSegments(d, into, limit = d.length) {
+  const r = new Reader(d, 0, limit);
+  while (r.p < limit) {
+    const number = r.u32("a segment number");
+    const flags = r.u8("segment flags");
+    const type = flags & 63;
+    const pageAssoc4 = flags & 64;
+    let count = r.u8("the referred-to count") >> 5;
+    if (count === 7) {
+      r.p--;
+      count = r.u32("a long referred-to count") & 536870911;
+      const bytes = Math.ceil((count + 1) / 8);
+      r.need(bytes, "retention flags");
+      r.p += bytes;
+    } else if (count > 4) throw corrupt(`referred-to count ${count}`);
+    const refSize = number <= 256 ? 1 : number <= 65536 ? 2 : 4;
+    const refs = [];
+    for (let i = 0; i < count; i++) refs.push(refSize === 1 ? r.u8("a referred-to segment") : refSize === 2 ? r.u16("a referred-to segment") : r.u32("a referred-to segment"));
+    const page = pageAssoc4 ? r.u32("a page association") : r.u8("a page association");
+    let length = r.u32("a segment data length");
+    const start = r.p;
+    if (length === 4294967295) {
+      if (type !== 38 && type !== 39) throw corrupt(`segment ${number} of type ${type} has an unknown length`);
+      length = unknownLengthGeneric(d, start, limit);
+    }
+    r.need(length, `segment ${number}'s data`);
+    into.push({ number, type, refs, page, data: d.subarray(start, start + length) });
+    r.p = start + length;
+    if (type === 51) break;
+  }
+}
+function unknownLengthGeneric(d, start, limit) {
+  if (start + 18 > limit) throw truncated("a generic region's header");
+  const mmr = d[start + 17] & 1;
+  const hdr = 18 + (mmr ? 0 : (d[start + 17] >> 1 & 3) === 0 ? 8 : 2);
+  for (let i = start + hdr; i + 6 <= limit; i++) {
+    if (mmr ? d[i] === 0 && d[i + 1] === 0 : d[i] === 255 && d[i + 1] === 172) return i + 6 - start;
+  }
+  throw truncated("a generic region of unknown length never ends");
+}
+function decodeJbig2(data, globals = null) {
+  const segs = [];
+  if (globals) readSegments(globals, segs);
+  const nGlobal = segs.length;
+  readSegments(data, segs);
+  const results = /* @__PURE__ */ new Map();
+  const tables = /* @__PURE__ */ new Map();
+  let page = null, pageInfo = null;
+  const used = /* @__PURE__ */ new Set();
+  for (let si = 0; si < segs.length; si++) {
+    const seg = segs[si];
+    try {
+      page = decodeSegment(seg, page);
+    } catch (e) {
+      if (e instanceof Jbig2Refusal) e.detail = { segmentType: seg.type, segment: seg.number, ...e.detail };
+      throw e;
+    }
+  }
+  function decodeSegment(seg, page2) {
+    const r = new Reader(seg.data);
+    const t = seg.type;
+    switch (t) {
+      case 48: {
+        if (page2) throw unsupported("several pages");
+        const w = r.u32("page width"), h = r.u32("page height");
+        r.u32("x resolution");
+        r.u32("y resolution");
+        const flags = r.u8("page flags");
+        const striping = r.u16("page striping");
+        const unknownHeight = h === 4294967295;
+        if (unknownHeight && !(striping & 32768)) throw corrupt("a page of unknown height that is not striped");
+        pageInfo = {
+          w,
+          h: unknownHeight ? 0 : h,
+          unknownHeight,
+          defPixel: flags >> 2 & 1,
+          op: flags >> 3 & 3,
+          maxStripe: striping & 32767
+        };
+        page2 = bitmap(w, unknownHeight ? 0 : h, pageInfo.defPixel);
+        used.add("page information");
+        break;
+      }
+      case 49:
+      case 51:
+      case 52:
+        break;
+      // end of page, end of file, profiles
+      case 50: {
+        const endRow = r.u32("end of stripe row");
+        if (pageInfo?.unknownHeight && endRow + 1 > page2.h) page2 = grow(page2, endRow + 1, pageInfo.defPixel);
+        break;
+      }
+      case 53: {
+        tables.set(seg.number, parseTableSegment(seg.data));
+        used.add("custom Huffman table");
+        break;
+      }
+      case 62: {
+        const kind = r.u32("an extension type");
+        if (kind & 2147483648) throw unsupported("a necessary extension segment", { extension: kind >>> 0 });
+        break;
+      }
+      case 0: {
+        results.set(seg.number, { kind: "symbols", ...decodeSymbolDict(seg, r, results, tables, used) });
+        break;
+      }
+      case 4:
+      case 6:
+      case 7:
+      case 20:
+      case 22:
+      case 23:
+      case 36:
+      case 38:
+      case 39:
+      case 40:
+      case 42:
+      case 43: {
+        if (!page2) throw unsupported("no page");
+        const info = regionInfo(r);
+        let reg;
+        if (t <= 7) reg = decodeTextSegment(seg, r, info, results, tables, used);
+        else if (t <= 23) reg = decodeHalftoneSegment(seg, r, info, results, used);
+        else if (t <= 39) reg = decodeGenericSegment(seg, r, info, used);
+        else reg = decodeRefinementSegment(seg, r, info, results, page2, used);
+        if (t === 4 || t === 20 || t === 36 || t === 40) {
+          results.set(seg.number, { kind: "region", bm: reg, info });
+        } else {
+          if (pageInfo.unknownHeight && info.y + info.h > page2.h) page2 = grow(page2, info.y + info.h, pageInfo.defPixel);
+          compose(page2, reg, info.x, info.y, info.op);
+        }
+        break;
+      }
+      case 16: {
+        results.set(seg.number, { kind: "patterns", patterns: decodePatternDict(seg, r, used) });
+        break;
+      }
+      default:
+        throw unsupported("segment type");
+    }
+    return page2;
+  }
+  if (!page) throw unsupported("no page");
+  const rowBytes = Math.ceil(page.w / 8);
+  const packed = new Uint8Array(rowBytes * page.h);
+  for (let y = 0; y < page.h; y++) {
+    const row = y * page.w, o = y * rowBytes;
+    for (let x = 0; x < page.w; x++) if (page.d[row + x]) packed[o + (x >> 3)] |= 128 >> (x & 7);
+  }
+  return { width: page.w, height: page.h, packed, detail: {
+    segments: segs.length,
+    global_segments: nGlobal,
+    decoded: [...used].sort()
+  } };
+}
+function grow(bm, h, fill) {
+  const nb = bitmap(bm.w, h, fill);
+  nb.d.set(bm.d.subarray(0, Math.min(bm.d.length, nb.d.length)));
+  return nb;
+}
+function referredSymbols(seg, results) {
+  const out = [];
+  for (const n of seg.refs) {
+    const s = results.get(n);
+    if (s && s.kind === "symbols") out.push(...s.exported);
+  }
+  return out;
+}
+function referredTables(seg, tables) {
+  return seg.refs.filter((n) => tables.has(n)).map((n) => tables.get(n));
+}
+function decodeGenericSegment(seg, r, info, used) {
+  const flags = r.u8("generic region flags");
+  const mmr = flags & 1, template = flags >> 1 & 3, tpgdon = flags >> 3 & 1;
+  if (flags & 16) throw unsupported("12 adaptive-template pixels");
+  if (mmr) {
+    used.add("generic region, MMR");
+    const { bm: bm2 } = decodeMmr(seg.data, r.p, seg.data.length, info.w, info.h);
+    return bm2;
+  }
+  const at = readAt(r, template === 0 ? 4 : 1);
+  used.add(`generic region, arithmetic, template ${template}${tpgdon ? ", TPGDON" : ""}`);
+  let end = seg.data.length;
+  const mq = new MqDecoder(seg.data, r.p, end);
+  const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at);
+  if (mq.overrun) throw truncated(`the generic region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  return bm;
+}
+function decodeRefinementSegment(seg, r, info, results, page, used) {
+  const flags = r.u8("refinement region flags");
+  const template = flags & 1, tpgron = flags >> 1 & 1;
+  const at = template === 0 ? readAt(r, 2) : [0, 0, 0, 0];
+  let ref;
+  const inter = seg.refs.map((n) => results.get(n)).find((s) => s && s.kind === "region");
+  if (inter) {
+    ref = inter.bm;
+  } else {
+    ref = bitmap(info.w, info.h);
+    compose(ref, page, -info.x, -info.y, 4);
+  }
+  used.add(`generic refinement region, template ${template}${tpgron ? ", TPGRON" : ""}`);
+  const mq = new MqDecoder(seg.data, r.p, seg.data.length);
+  const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at);
+  if (mq.overrun) throw truncated(`the refinement region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  return bm;
+}
+function decodeSymbolDict(seg, r, results, tables, used) {
+  const flags = r.u16("symbol dictionary flags");
+  const huff = flags & 1, refagg = flags >> 1 & 1;
+  const selDH = flags >> 2 & 3, selDW = flags >> 4 & 3, selBM = flags >> 6 & 1, selAI = flags >> 7 & 1;
+  const ctxUsed = flags >> 8 & 1;
+  const template = flags >> 10 & 3, rTemplate = flags >> 12 & 1;
+  if (ctxUsed) throw unsupported("reused bitmap coding contexts");
+  if (huff && refagg) throw unsupported("Huffman-coded refinement");
+  const at = huff ? [] : readAt(r, template === 0 ? 4 : 1);
+  const rAt = refagg && rTemplate === 0 ? readAt(r, 2) : [0, 0, 0, 0];
+  const numEx = r.u32("SDNUMEXSYMS"), numNew = r.u32("SDNUMNEWSYMS");
+  const inSyms = referredSymbols(seg, results);
+  const custom = referredTables(seg, tables);
+  let ci = 0;
+  const pick = (sel, std) => {
+    if (sel === 3 || std.length === 1 && sel === 1) {
+      if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to");
+      return custom[ci++];
+    }
+    if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+    return standardTable(std[sel]);
+  };
+  let tDH, tDW, tBM;
+  if (huff) {
+    tDH = pick(selDH, [4, 5]);
+    tDW = pick(selDW, [2, 3]);
+    tBM = pick(selBM, [1]);
+    pick(selAI, [1]);
+  }
+  used.add(`symbol dictionary, ${huff ? "Huffman" : "arithmetic"}${refagg ? ", refinement/aggregate" : ""}`);
+  const total = inSyms.length + numNew;
+  let idLen = 0;
+  while (2 ** idLen < total) idLen++;
+  const newSyms = [];
+  const d = seg.data;
+  let mq = null, bits = null;
+  const gb = mqContexts(1 << 16), gr = mqContexts(1 << 13);
+  const ia = {
+    DH: iaCtx(),
+    DW: iaCtx(),
+    EX: iaCtx(),
+    AI: iaCtx(),
+    DT: iaCtx(),
+    FS: iaCtx(),
+    DS: iaCtx(),
+    IT: iaCtx(),
+    RI: iaCtx(),
+    RDW: iaCtx(),
+    RDH: iaCtx(),
+    RDX: iaCtx(),
+    RDY: iaCtx(),
+    ID: mqContexts(1 << idLen + 1)
+  };
+  if (huff) bits = new Bits2(d, r.p, d.length);
+  else mq = new MqDecoder(d, r.p, d.length);
+  const num = (name, tbl) => huff ? bits.huff(tbl) : iaDecode(mq, ia[name]);
+  let hcHeight = 0;
+  while (newSyms.length < numNew) {
+    hcHeight += intOrThrow(num("DH", tDH), "a height-class delta");
+    if (hcHeight < 0) throw corrupt("a negative height class");
+    let symWidth = 0, totWidth = 0;
+    const widths = [];
+    for (; ; ) {
+      const dw = num("DW", tDW);
+      if (dw === OOB) break;
+      if (newSyms.length + widths.length >= numNew && !huff) throw corrupt("more symbols than SDNUMNEWSYMS");
+      symWidth += dw;
+      if (symWidth < 0) throw corrupt("a negative symbol width");
+      totWidth += symWidth;
+      if (huff) {
+        widths.push(symWidth);
+        continue;
+      }
+      if (!refagg) {
+        newSyms.push(decodeGenericArith(mq, gb, symWidth, hcHeight, template, 0, at));
+        continue;
+      }
+      const nInst = intOrThrow(iaDecode(mq, ia.AI), "REFAGGNINST");
+      if (nInst <= 0) throw corrupt("a refinement/aggregate symbol of no instances");
+      const syms = [...inSyms, ...newSyms];
+      if (nInst > 1) {
+        newSyms.push(decodeTextRegion({
+          w: symWidth,
+          h: hcHeight,
+          numInstances: nInst,
+          strips: 1,
+          logStrips: 0,
+          refine: 1,
+          defPixel: 0,
+          combOp: 0,
+          transposed: 0,
+          refCorner: CORNER.TOPLEFT,
+          dsOffset: 0,
+          rTemplate,
+          rAt
+        }, syms, { mq, ia, idLen, gr }));
+      } else {
+        const id = iaidDecode(mq, ia.ID, idLen);
+        const rdx = intOrThrow(iaDecode(mq, ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(mq, ia.RDY), "RDY");
+        if (id >= syms.length) throw corrupt(`refinement of symbol ${id} of ${syms.length}`);
+        newSyms.push(decodeRefinement(mq, gr, symWidth, hcHeight, rTemplate, syms[id], rdx, rdy, false, rAt));
+      }
+    }
+    if (huff) {
+      const bmSize = intOrThrow(bits.huff(tBM), "BMSIZE");
+      bits.align();
+      let coll;
+      if (bmSize === 0) {
+        const stride = Math.ceil(totWidth / 8);
+        if (bits.p + stride * hcHeight > d.length) throw truncated("an uncompressed collective bitmap");
+        coll = bitmap(totWidth, hcHeight);
+        for (let y = 0; y < hcHeight; y++) for (let x2 = 0; x2 < totWidth; x2++)
+          coll.d[y * totWidth + x2] = d[bits.p + y * stride + (x2 >> 3)] >> 7 - (x2 & 7) & 1;
+        bits.p += stride * hcHeight;
+      } else {
+        if (bits.p + bmSize > d.length) throw truncated("an MMR collective bitmap");
+        coll = decodeMmr(d, bits.p, bits.p + bmSize, totWidth, hcHeight).bm;
+        bits.p += bmSize;
+      }
+      let x = 0;
+      for (const w of widths) {
+        const s = bitmap(w, hcHeight);
+        for (let y = 0; y < hcHeight; y++) s.d.set(coll.d.subarray(y * totWidth + x, y * totWidth + x + w), y * w);
+        newSyms.push(s);
+        x += w;
+      }
+    }
+  }
+  const all = [...inSyms, ...newSyms];
+  const exported = [];
+  let exFlag = 0, i = 0;
+  while (i < all.length) {
+    const run = intOrThrow(huff ? bits.huff(standardTable(1)) : iaDecode(mq, ia.EX), "an export run");
+    if (run < 0 || i + run > all.length) throw corrupt("an export run past the symbols");
+    if (exFlag) exported.push(...all.slice(i, i + run));
+    i += run;
+    exFlag ^= 1;
+  }
+  if (exported.length !== numEx) throw corrupt(`${exported.length} symbols exported where SDNUMEXSYMS is ${numEx}`);
+  if (mq && mq.overrun) throw truncated(`the symbol dictionary's arithmetic data ran out (${mq.overrun} bytes short)`);
+  return { exported };
+}
+function decodeTextSegment(seg, r, info, results, tables, used) {
+  const flags = r.u16("text region flags");
+  const huff = flags & 1, refine = flags >> 1 & 1, logStrips = flags >> 2 & 3, refCorner = flags >> 4 & 3;
+  const transposed = flags >> 6 & 1, combOp = flags >> 7 & 3, defPixel = flags >> 9 & 1;
+  let dsOffset = flags >> 10 & 31;
+  if (dsOffset > 15) dsOffset -= 32;
+  const rTemplate = flags >> 15 & 1;
+  if (huff && refine) throw unsupported("Huffman-coded refinement");
+  let hflags = 0;
+  if (huff) hflags = r.u16("text region Huffman flags");
+  const rAt = refine && rTemplate === 0 ? readAt(r, 2) : [0, 0, 0, 0];
+  const numInstances = r.u32("SBNUMINSTANCES");
+  const syms = referredSymbols(seg, results);
+  used.add(`text region, ${huff ? "Huffman" : "arithmetic"}${refine ? ", refinement" : ""}`);
+  const p = {
+    w: info.w,
+    h: info.h,
+    numInstances,
+    strips: 1 << logStrips,
+    logStrips,
+    refine,
+    defPixel,
+    combOp,
+    transposed,
+    refCorner,
+    dsOffset,
+    rTemplate,
+    rAt
+  };
+  const d = seg.data;
+  if (huff) {
+    const custom = referredTables(seg, tables);
+    let ci = 0;
+    const pick = (sel, std) => {
+      if (sel === 3) {
+        if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to");
+        return custom[ci++];
+      }
+      if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+      return standardTable(std[sel]);
+    };
+    const tbl = {
+      FS: pick(hflags & 3, [6, 7]),
+      DS: pick(hflags >> 2 & 3, [8, 9, 10]),
+      DT: pick(hflags >> 4 & 3, [11, 12, 13])
+    };
+    for (const [sh, std] of [[6, [14, 15]], [8, [14, 15]], [10, [14, 15]], [12, [14, 15]]]) if ((hflags >> sh & 3) === 3) pick(3, std);
+    if (hflags >> 14 & 1) pick(3, [1]);
+    const bits = new Bits2(d, r.p, d.length);
+    const symCodes = readSymbolIdTable(bits, syms.length);
+    return decodeTextRegion(p, syms, { bits, tables: tbl, symCodes });
+  }
+  let idLen = 0;
+  while (2 ** idLen < syms.length) idLen++;
+  const mq = new MqDecoder(d, r.p, d.length);
+  const ia = {
+    DT: iaCtx(),
+    FS: iaCtx(),
+    DS: iaCtx(),
+    IT: iaCtx(),
+    RI: iaCtx(),
+    RDW: iaCtx(),
+    RDH: iaCtx(),
+    RDX: iaCtx(),
+    RDY: iaCtx(),
+    ID: mqContexts(1 << idLen + 1)
+  };
+  const reg = decodeTextRegion(p, syms, { mq, ia, idLen, gr: mqContexts(1 << 13) });
+  if (mq.overrun) throw truncated(`the text region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  return reg;
+}
+function decodePatternDict(seg, r, used) {
+  const flags = r.u8("pattern dictionary flags");
+  const mmr = flags & 1, template = flags >> 1 & 3;
+  const pw = r.u8("HDPW"), ph = r.u8("HDPH"), grayMax = r.u32("GRAYMAX");
+  if (!pw || !ph) throw corrupt("a pattern of no size");
+  const w = (grayMax + 1) * pw;
+  used.add(`pattern dictionary, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
+  let coll;
+  if (mmr) coll = decodeMmr(seg.data, r.p, seg.data.length, w, ph).bm;
+  else {
+    const at = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
+    const mq = new MqDecoder(seg.data, r.p, seg.data.length);
+    coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at);
+    if (mq.overrun) throw truncated("the pattern dictionary's arithmetic data ran out");
+  }
+  const pats = [];
+  for (let g = 0; g <= grayMax; g++) {
+    const p = bitmap(pw, ph);
+    for (let y = 0; y < ph; y++) p.d.set(coll.d.subarray(y * w + g * pw, y * w + g * pw + pw), y * pw);
+    pats.push(p);
+  }
+  return pats;
+}
+function decodeHalftoneSegment(seg, r, info, results, used) {
+  const flags = r.u8("halftone region flags");
+  const mmr = flags & 1, template = flags >> 1 & 3, enableSkip = flags >> 3 & 1;
+  const combOp = flags >> 4 & 7, defPixel = flags >> 7 & 1;
+  const gw = r.u32("HGW"), gh = r.u32("HGH"), gx = r.i32("HGX"), gy = r.i32("HGY");
+  const rx = r.u16("HRX"), ry = r.u16("HRY");
+  const dict = seg.refs.map((n) => results.get(n)).find((s) => s && s.kind === "patterns");
+  if (!dict) throw corrupt("a halftone region with no pattern dictionary");
+  const pats = dict.patterns;
+  const pw = pats[0].w, ph = pats[0].h;
+  used.add(`halftone region, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
+  const reg = bitmap(info.w, info.h, defPixel);
+  const place = (m, n) => [Math.floor((gx + m * ry + n * rx) / 256), Math.floor((gy + m * rx - n * ry) / 256)];
+  let skip = null;
+  if (enableSkip) {
+    skip = bitmap(gw, gh);
+    for (let m = 0; m < gh; m++) for (let n = 0; n < gw; n++) {
+      const [x, y] = place(m, n);
+      if (x + pw <= 0 || x >= info.w || y + ph <= 0 || y >= info.h) skip.d[m * gw + n] = 1;
+    }
+  }
+  let bpp = 0;
+  while (2 ** bpp < pats.length) bpp++;
+  const planes = new Array(bpp);
+  const at = [template <= 1 ? 3 : 2, -1, -3, -1, 2, -2, -2, -2];
+  const d = seg.data;
+  let mq = null, gb = null, p = r.p;
+  if (!mmr) {
+    mq = new MqDecoder(d, p, d.length);
+    gb = mqContexts(1 << 16);
+  }
+  for (let j = bpp - 1; j >= 0; j--) {
+    if (mmr) {
+      const o = decodeMmr(d, p, d.length, gw, gh);
+      planes[j] = o.bm;
+      p = o.end;
+    } else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at, skip);
+    if (j < bpp - 1) for (let i = 0; i < planes[j].d.length; i++) planes[j].d[i] ^= planes[j + 1].d[i];
+  }
+  if (mq && mq.overrun) throw truncated("the halftone region's arithmetic data ran out");
+  for (let m = 0; m < gh; m++) for (let n = 0; n < gw; n++) {
+    let g = 0;
+    for (let j = bpp - 1; j >= 0; j--) g = g << 1 | planes[j].d[m * gw + n];
+    if (g >= pats.length) g = pats.length - 1;
+    const [x, y] = place(m, n);
+    compose(reg, pats[g], x, y, combOp);
+  }
+  return reg;
+}
+
+// ../pdf-worker/src/jpxdecode.mjs
+var JpxRefusal = class extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.feature ? `: ${detail.feature}` : detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+};
+var unsupported2 = (feature, extra = {}) => new JpxRefusal("UNSUPPORTED", { feature, ...extra });
+var samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { note, ...extra });
+var corrupt2 = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
+var truncated2 = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
+var JPX_REFUSES = Object.freeze({
+  "high-throughput coding": "the codestream uses Part 15 (HTJ2K) block coding",
+  "a JP2 palette": "the image's samples index a palette (pclr box)",
+  "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+  "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
+  "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked"
+});
+var f32 = Math.fround;
+function boxes(d, p, end) {
+  const out = [];
+  while (p + 8 <= end) {
+    let len = (d[p] << 24 | d[p + 1] << 16 | d[p + 2] << 8 | d[p + 3]) >>> 0;
+    const type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
+    let hdr = 8;
+    if (len === 1) {
+      if (p + 16 > end) throw truncated2("a JP2 box's extended length");
+      len = ((d[p + 8] << 24 | d[p + 9] << 16 | d[p + 10] << 8 | d[p + 11]) >>> 0) * 2 ** 32 + ((d[p + 12] << 24 | d[p + 13] << 16 | d[p + 14] << 8 | d[p + 15]) >>> 0);
+      hdr = 16;
+    } else if (len === 0) len = end - p;
+    if (len < hdr || p + len > end) throw truncated2(`the JP2 box '${type}' runs past the data`);
+    out.push({ type, start: p + hdr, end: p + len });
+    p += len;
+  }
+  return out;
+}
+function container(d) {
+  if (d.length >= 2 && d[0] === 255 && d[1] === 79) return { cs: [0, d.length], colour: null, jp2: false };
+  if (d.length < 12 || !(d[4] === 106 && d[5] === 80 && d[6] === 32 && d[7] === 32))
+    throw corrupt2("neither a JPEG 2000 codestream (SOC) nor a JP2 file (signature box)");
+  let colour = null, cs = null, palette = false;
+  for (const b of boxes(d, 0, d.length)) {
+    if (b.type === "jp2c") {
+      cs = [b.start, b.end];
+      break;
+    }
+    if (b.type === "jp2h") {
+      for (const h of boxes(d, b.start, b.end)) {
+        if (h.type === "pclr") palette = true;
+        if (h.type === "colr" && !colour) {
+          const meth = d[h.start];
+          colour = meth === 1 ? { method: "enumerated", enumCs: (d[h.start + 3] << 24 | d[h.start + 4] << 16 | d[h.start + 5] << 8 | d[h.start + 6]) >>> 0 } : { method: meth === 2 ? "icc" : `method ${meth}` };
+        }
+      }
+    }
+  }
+  if (!cs) throw truncated2("the JP2 file holds no codestream (jp2c box)");
+  if (palette) throw unsupported2("a JP2 palette");
+  if (colour && colour.method === "enumerated" && colour.enumCs === 18) throw unsupported2("sYCC colour");
+  return { cs, colour, jp2: true };
+}
+var R = class {
+  constructor(d, p, end) {
+    this.d = d;
+    this.p = p;
+    this.end = end;
+  }
+  need(n, what) {
+    if (this.p + n > this.end) throw truncated2(`${what} runs past the codestream`);
+  }
+  u8(w = "a field") {
+    this.need(1, w);
+    return this.d[this.p++];
+  }
+  u16(w = "a field") {
+    this.need(2, w);
+    const v = this.d[this.p] << 8 | this.d[this.p + 1];
+    this.p += 2;
+    return v;
+  }
+  u32(w = "a field") {
+    this.need(4, w);
+    const d = this.d, p = this.p;
+    this.p += 4;
+    return (d[p] << 24 | d[p + 1] << 16 | d[p + 2] << 8 | d[p + 3]) >>> 0;
+  }
+};
+function readSiz(r, len) {
+  const end = r.p + len - 2;
+  const rsiz = r.u16("Rsiz");
+  const s = { rsiz, X: r.u32(), Y: r.u32(), XO: r.u32(), YO: r.u32(), XT: r.u32(), YT: r.u32(), XTO: r.u32(), YTO: r.u32() };
+  const n = r.u16("Csiz");
+  s.comps = [];
+  for (let i = 0; i < n; i++) {
+    const ssiz = r.u8("Ssiz");
+    s.comps.push({ prec: (ssiz & 127) + 1, sgnd: ssiz >> 7, dx: r.u8("XRsiz"), dy: r.u8("YRsiz") });
+  }
+  r.p = end;
+  if (!s.XT || !s.YT || s.X <= s.XO || s.Y <= s.YO || s.XTO > s.XO || s.YTO > s.YO || s.XTO + s.XT <= s.XO || s.YTO + s.YT <= s.YO)
+    throw corrupt2("an image and tile geometry the standard does not allow");
+  if (rsiz & 16384) throw unsupported2("high-throughput coding");
+  if (rsiz & 32768) throw unsupported2("an extended capability", { rsiz });
+  return s;
+}
+function readSpcod(r, precincts) {
+  const c = {
+    nl: r.u8("decomposition levels"),
+    xcb: (r.u8("code-block width") & 15) + 2,
+    ycb: (r.u8("code-block height") & 15) + 2,
+    cblksty: r.u8("code-block style"),
+    qmfbid: r.u8("the wavelet")
+  };
+  if (c.nl > 32) throw corrupt2(`${c.nl} decomposition levels`);
+  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt2("a code-block larger than 4096 samples");
+  if (c.cblksty & 64) throw unsupported2("high-throughput coding");
+  c.prc = [];
+  for (let i = 0; i <= c.nl; i++) {
+    if (precincts) {
+      const b = r.u8("a precinct size");
+      c.prc.push([b & 15, b >> 4]);
+    } else c.prc.push([15, 15]);
+  }
+  return c;
+}
+function readQcd(r, len) {
+  const end = r.p + len;
+  const s = r.u8("Sqcd");
+  const style = s & 31, guard = s >> 5;
+  const steps = [];
+  if (style === 0) while (r.p < end) steps.push({ expn: r.u8("an exponent") >> 3, mant: 0 });
+  else while (r.p + 1 < end) {
+    const v = r.u16("a step size");
+    steps.push({ expn: v >> 11, mant: v & 2047 });
+  }
+  r.p = end;
+  if (style > 2 || !steps.length) throw corrupt2(`quantisation style ${style}`);
+  return { style, guard, steps };
+}
+function parseCodestream(d, start, end) {
+  const r = new R(d, start, end);
+  if (r.u16("SOC") !== 65359) throw corrupt2("no SOC marker");
+  const main = { cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null };
+  let siz = null;
+  const tiles = /* @__PURE__ */ new Map();
+  const readSeg = (h, m, len) => {
+    const segEnd = r.p + len - 2;
+    const wide = siz && siz.comps.length > 256;
+    const comp = () => wide ? r.u16("a component index") : r.u8("a component index");
+    switch (m) {
+      case 65362: {
+        const scod = r.u8("Scod");
+        h.cod = {
+          scod,
+          prog: r.u8("the progression order"),
+          layers: r.u16("the layer count"),
+          mct: r.u8("the colour transform"),
+          sp: readSpcod(r, scod & 1)
+        };
+        break;
+      }
+      case 65363: {
+        const c = comp();
+        const s = r.u8("Scoc");
+        h.coc[c] = readSpcod(r, s & 1);
+        break;
+      }
+      case 65372:
+        h.qcd = readQcd(r, len - 2);
+        break;
+      case 65373: {
+        const c = comp();
+        h.qcc[c] = readQcd(r, segEnd - r.p);
+        break;
+      }
+      case 65374: {
+        const c = comp();
+        r.u8("Srgn");
+        h.rgn[c] = r.u8("the ROI shift");
+        break;
+      }
+      case 65375: {
+        const list = [];
+        while (r.p < segEnd) list.push({ rs: r.u8(), cs: comp(), lye: r.u16(), re: r.u8(), ce: wide ? r.u16() : r.u8() || 256, prog: r.u8() });
+        h.poc = (h.poc || []).concat(list);
+        break;
+      }
+      case 65376:
+      case 65377:
+        throw unsupported2("packed packet headers", { marker: m === 65376 ? "PPM" : "PPT" });
+      case 65360:
+        throw unsupported2("an extended capability", { marker: "CAP" });
+      default:
+        break;
+    }
+    r.p = segEnd;
+  };
+  for (; ; ) {
+    const m = r.u16("a main-header marker");
+    if (m === 65424) {
+      r.p -= 2;
+      break;
+    }
+    if (m === 65497) throw truncated2("the codestream ends before any tile");
+    if ((m & 65280) !== 65280) throw corrupt2("a main-header marker expected");
+    const len = r.u16("a marker segment length");
+    if (len < 2) throw corrupt2("a marker segment length under 2");
+    r.need(len - 2, "a marker segment");
+    if (m === 65361) {
+      siz = readSiz(r, len);
+      continue;
+    }
+    if (!siz) throw corrupt2("a marker before SIZ");
+    readSeg(main, m, len);
+  }
+  if (!siz || !main.cod || !main.qcd) throw corrupt2("the main header lacks SIZ, COD or QCD");
+  while (r.p + 2 <= end) {
+    const m = r.u16("a tile-part marker");
+    if (m === 65497) break;
+    if (m !== 65424) throw corrupt2(`marker 0x${m.toString(16)} where SOT was expected`);
+    const sotAt = r.p - 2;
+    r.u16("Lsot");
+    const isot = r.u16("Isot"), psot = r.u32("Psot");
+    r.u8("TPsot");
+    r.u8("TNsot");
+    const tpEnd = psot ? sotAt + psot : end;
+    if (tpEnd > end) throw truncated2(`tile-part of tile ${isot} runs past the codestream`);
+    let t = tiles.get(isot);
+    const first = !t;
+    if (!t) {
+      t = { index: isot, cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, data: [] };
+      tiles.set(isot, t);
+    }
+    for (; ; ) {
+      const mm = r.u16("a tile-part header marker");
+      if (mm === 65427) break;
+      const len = r.u16("a marker segment length");
+      r.need(len - 2, "a marker segment");
+      if (!first && mm !== 65377) {
+        r.p += len - 2;
+        continue;
+      }
+      readSeg(t, mm, len);
+    }
+    t.data.push(d.subarray(r.p, Math.min(tpEnd, end)));
+    r.p = tpEnd;
+  }
+  return { siz, main, tiles };
+}
+var ceilDiv = (a, b) => Math.ceil(a / b);
+var floorLog2 = (v) => 31 - Math.clz32(v);
+var TagTree = class {
+  constructor(w, h) {
+    this.levels = [];
+    do {
+      this.levels.push({ w, h, value: new Int32Array(w * h).fill(2147483647), low: new Int32Array(w * h) });
+      if (w === 1 && h === 1) break;
+      w = ceilDiv(w, 2);
+      h = ceilDiv(h, 2);
+    } while (true);
+  }
+  /** Decode leaf (x, y) against `threshold`: true when its value is below it. */
+  decode(bio, x, y, threshold) {
+    const path = [];
+    for (let l = 0; l < this.levels.length; l++) {
+      path.push(y * this.levels[l].w + x);
+      x >>= 1;
+      y >>= 1;
+    }
+    let low = 0;
+    for (let l = this.levels.length - 1; l >= 0; l--) {
+      const lv = this.levels[l], i = path[l];
+      if (low > lv.low[i]) lv.low[i] = low;
+      else low = lv.low[i];
+      while (low < threshold && low < lv.value[i]) {
+        if (bio.bit()) lv.value[i] = low;
+        else low++;
+      }
+      lv.low[i] = low;
+    }
+    return this.levels[0].value[path[0]] < threshold;
+  }
+  value(x, y) {
+    return this.levels[0].value[y * this.levels[0].w + x];
+  }
+};
+var Bio = class {
+  constructor(d, p, end) {
+    this.d = d;
+    this.p = p;
+    this.end = end;
+    this.buf = 0;
+    this.ct = 0;
+  }
+  byteIn() {
+    this.buf = this.buf << 8 & 65535;
+    this.ct = this.buf === 65280 ? 7 : 8;
+    if (this.p < this.end) this.buf |= this.d[this.p++];
+    else {
+      this.p++;
+      this.over = true;
+    }
+  }
+  bit() {
+    if (this.ct === 0) this.byteIn();
+    this.ct--;
+    return this.buf >> this.ct & 1;
+  }
+  bits(n) {
+    let v = 0;
+    for (let i = 0; i < n; i++) v = v << 1 | this.bit();
+    return v;
+  }
+  /** Byte-align after a header: a final 0xFF is followed by a stuffed byte. */
+  align() {
+    if ((this.buf & 255) === 255) this.byteIn();
+    this.ct = 0;
+  }
+};
+var N = 1;
+var S = 2;
+var W = 4;
+var E = 8;
+var NW = 16;
+var NE = 32;
+var SW = 64;
+var SE = 128;
+var SGN_N = 256;
+var SGN_S = 512;
+var SGN_W = 1024;
+var SGN_E = 2048;
+var SIG = 4096;
+var NEG = 8192;
+var REFINED = 16384;
+var VISIT = 32768;
+var NBR = 255;
+var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f) => {
+  let h = ((f & W) !== 0) + ((f & E) !== 0), v = ((f & N) !== 0) + ((f & S) !== 0);
+  const d = ((f & NW) !== 0) + ((f & NE) !== 0) + ((f & SW) !== 0) + ((f & SE) !== 0);
+  if (orient === 1) [h, v] = [v, h];
+  if (orient === 3) {
+    const hv = h + v;
+    if (!d) return hv === 0 ? 0 : hv === 1 ? 1 : 2;
+    if (d === 1) return hv === 0 ? 3 : hv === 1 ? 4 : 5;
+    if (d === 2) return hv === 0 ? 6 : 7;
+    return 8;
+  }
+  if (!h) return !v ? !d ? 0 : d === 1 ? 1 : 2 : v === 1 ? 3 : 4;
+  if (h === 1) return !v ? !d ? 5 : 6 : 7;
+  return 8;
+}));
+var SC = new Uint8Array(256);
+var SPB = new Uint8Array(256);
+for (let i = 0; i < 256; i++) {
+  const sig = (b) => i >> b & 1, neg = (b) => i >> 4 + b & 1;
+  const pos = (b) => sig(b) && !neg(b), ng = (b) => sig(b) && neg(b);
+  const hc = Math.min(pos(2) + pos(3), 1) - Math.min(ng(2) + ng(3), 1);
+  const vc0 = Math.min(pos(0) + pos(1), 1) - Math.min(ng(0) + ng(1), 1);
+  SPB[i] = !hc && !vc0 ? 0 : !(hc > 0 || !hc && vc0 > 0) ? 1 : 0;
+  let h = hc, v = vc0;
+  if (h < 0) {
+    h = -h;
+    v = -v;
+  }
+  SC[i] = !h ? v ? 1 : 0 : v === -1 ? 2 : v === 0 ? 3 : 4;
+}
+var CTX_SC = 9;
+var CTX_MAG = 14;
+var CTX_AGG = 17;
+var CTX_UNI = 18;
+var RawDecoder = class {
+  constructor(d, p, end) {
+    this.d = d;
+    this.bp = p;
+    this.end = end;
+    this.c = 0;
+    this.ct = 0;
+  }
+  bit() {
+    if (this.ct === 0) {
+      const next = this.bp < this.end ? this.d[this.bp] : 255;
+      if (this.c === 255) {
+        if (next > 143) {
+          this.c = 255;
+          this.ct = 8;
+        } else {
+          this.c = next;
+          this.bp++;
+          this.ct = 7;
+        }
+      } else {
+        this.c = next;
+        this.bp++;
+        this.ct = 8;
+      }
+    }
+    this.ct--;
+    return this.c >> this.ct & 1;
+  }
+};
+function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out) {
+  const fw = w + 2;
+  const flags = new Uint16Array(fw * (h + 2));
+  const ctx = mqContexts(19);
+  const resetCtx = () => {
+    ctx.fill(0);
+    ctx[CTX_UNI] = 46 << 1;
+    ctx[CTX_AGG] = 3 << 1;
+    ctx[0] = 4 << 1;
+  };
+  resetCtx();
+  const zc = ZC[orient];
+  const vsc = cblksty & 8, lazy = cblksty & 1, reset = cblksty & 2, segsym = cblksty & 32;
+  let bpno = numbps;
+  let passtype = 2;
+  const at = (x, y) => (y + 1) * fw + x + 1;
+  const setSig = (x, y, neg) => {
+    const i = at(x, y);
+    flags[i] |= SIG | (neg ? NEG : 0);
+    flags[i - fw] |= S | (neg ? SGN_S : 0);
+    flags[i + fw] |= N | (neg ? SGN_N : 0);
+    flags[i - 1] |= E | (neg ? SGN_E : 0);
+    flags[i + 1] |= W | (neg ? SGN_W : 0);
+    flags[i - fw - 1] |= SE;
+    flags[i - fw + 1] |= SW;
+    flags[i + fw - 1] |= NE;
+    flags[i + fw + 1] |= NW;
+  };
+  const nbr = (f, y) => vsc && (y & 3) === 3 ? f & ~(S | SW | SE | SGN_S) : f;
+  const scIndex = (f) => (f & N ? 1 : 0) | (f & S ? 2 : 0) | (f & W ? 4 : 0) | (f & E ? 8 : 0) | (f & SGN_N ? 16 : 0) | (f & SGN_S ? 32 : 0) | (f & SGN_W ? 64 : 0) | (f & SGN_E ? 128 : 0);
+  for (const seg of segs) {
+    const raw = lazy && bpno <= lazyFrom - 4 && passtype < 2;
+    const mq = raw ? null : new MqDecoder(seg.data, 0, seg.data.length);
+    const rd = raw ? new RawDecoder(seg.data, 0, seg.data.length) : null;
+    for (let pass = 0; pass < seg.passes && bpno >= 1; pass++) {
+      const one = 1 << bpno, half = one >> 1, oneplushalf = one | half;
+      if (passtype === 0) {
+        for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
+          const i = at(x, y), f = nbr(flags[i], y);
+          if (f & SIG || !(f & NBR)) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, zc[f & NBR]);
+          if (bit) {
+            let neg;
+            if (raw) neg = rd.bit();
+            else {
+              const k = scIndex(f);
+              neg = mq.decode(ctx, CTX_SC + SC[k]) ^ SPB[k];
+            }
+            out[y * w + x] = neg ? -oneplushalf : oneplushalf;
+            setSig(x, y, neg);
+          }
+          flags[i] |= VISIT;
+        }
+      } else if (passtype === 1) {
+        for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
+          const i = at(x, y), f = flags[i];
+          if ((f & (SIG | VISIT)) !== SIG) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, f & REFINED ? CTX_MAG + 2 : nbr(f, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
+          const v = out[y * w + x];
+          out[y * w + x] = v + (bit ^ (v < 0 ? 1 : 0) ? half : -half);
+          flags[i] |= REFINED;
+        }
+      } else {
+        for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) {
+          let y = y0;
+          if (y0 + 4 <= h) {
+            let quiet = true;
+            for (let k = 0; k < 4 && quiet; k++) {
+              const f = nbr(flags[at(x, y0 + k)], y0 + k);
+              if (f & (SIG | VISIT | NBR)) quiet = false;
+            }
+            if (quiet) {
+              if (!mq.decode(ctx, CTX_AGG)) continue;
+              const k = mq.decode(ctx, CTX_UNI) << 1 | mq.decode(ctx, CTX_UNI);
+              y = y0 + k;
+              const f = nbr(flags[at(x, y)], y);
+              const sk = scIndex(f);
+              const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
+              out[y * w + x] = neg ? -oneplushalf : oneplushalf;
+              setSig(x, y, neg);
+              y++;
+            }
+          }
+          for (; y < y0 + 4 && y < h; y++) {
+            const i = at(x, y), f = nbr(flags[i], y);
+            if (f & (SIG | VISIT)) continue;
+            if (mq.decode(ctx, zc[f & NBR])) {
+              const sk = scIndex(f);
+              const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
+              out[y * w + x] = neg ? -oneplushalf : oneplushalf;
+              setSig(x, y, neg);
+            }
+          }
+        }
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) flags[at(x, y)] &= ~VISIT;
+        if (segsym) for (let k = 0; k < 4; k++) mq.decode(ctx, CTX_UNI);
+      }
+      if (reset && !raw) resetCtx();
+      if (++passtype === 3) {
+        passtype = 0;
+        bpno--;
+      }
+    }
+  }
+}
+var K = f32(1.230174105);
+var TWO_INVK = f32(1.625732422);
+var ALPHA = f32(-1.586134342);
+var BETA = f32(-0.052980118);
+var GAMMA = f32(0.882911075);
+var DELTA = f32(0.443506852);
+function idwt53(x, n, cas) {
+  if (n === 1) {
+    if (cas) x[0] = Math.trunc(x[0] / 2);
+    return;
+  }
+  const at = (i) => x[i < 0 ? -i : i >= n ? 2 * (n - 1) - i : i];
+  for (let i = cas ? 1 : 0; i < n; i += 2) x[i] -= Math.floor((at(i - 1) + at(i + 1) + 2) / 4);
+  for (let i = cas ? 0 : 1; i < n; i += 2) x[i] += Math.floor((at(i - 1) + at(i + 1)) / 2);
+}
+function idwt97(x, n, cas) {
+  const sn = cas ? n >> 1 : n + 1 >> 1, dn = n - sn;
+  if (cas === 0) {
+    if (!(dn > 0 || sn > 1)) return;
+  } else if (!(sn > 0 || dn > 1)) return;
+  const a = cas, b = 1 - cas;
+  for (let i = 0; i < sn; i++) x[a + 2 * i] = f32(x[a + 2 * i] * K);
+  for (let i = 0; i < dn; i++) x[b + 2 * i] = f32(x[b + 2 * i] * TWO_INVK);
+  step97(x, b, a + 1, sn, Math.min(sn, dn - a), f32(-DELTA));
+  step97(x, a, b + 1, dn, Math.min(dn, sn - b), f32(-GAMMA));
+  step97(x, b, a + 1, sn, Math.min(sn, dn - a), f32(-BETA));
+  step97(x, a, b + 1, dn, Math.min(dn, sn - b), f32(-ALPHA));
+}
+function step97(x, l, w, end, m, c) {
+  const imax = Math.min(end, m);
+  let fl = l, fw = w;
+  for (let i = 0; i < imax; i++) {
+    x[fw - 1] = f32(x[fw - 1] + f32(f32(x[fl] + x[fw]) * c));
+    fl = fw;
+    fw += 2;
+  }
+  if (m < end) x[fw - 1] = f32(x[fw - 1] + f32(x[fl] * f32(c + c)));
+}
+function packetOrder(tc, layers, progs, tile, comps) {
+  const out = [], seen = /* @__PURE__ */ new Set();
+  const push = (l, r, c, p) => {
+    const k = `${l}.${r}.${c}.${p}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push([l, r, c, p]);
+    }
+  };
+  for (const pg of progs) {
+    const LYE = Math.min(pg.lye, layers), RE = pg.re, CE = Math.min(pg.ce, comps.length);
+    const cs = [], rs = [];
+    for (let c = pg.cs; c < CE; c++) cs.push(c);
+    for (let r = pg.rs; r < RE; r++) rs.push(r);
+    const has = (c, r) => r < tc[c].res.length;
+    if (pg.prog === 0 || pg.prog === 1) {
+      for (const o1 of pg.prog === 0 ? [...Array(LYE).keys()] : rs)
+        for (const o2 of pg.prog === 0 ? rs : [...Array(LYE).keys()])
+          for (const c of cs) {
+            const [l, r] = pg.prog === 0 ? [o1, o2] : [o2, o1];
+            if (!has(c, r)) continue;
+            const res = tc[c].res[r];
+            for (let p = 0; p < res.npw * res.nph; p++) push(l, r, c, p);
+          }
+      continue;
+    }
+    const items = [];
+    for (const c of cs) for (const r of rs) {
+      if (!has(c, r)) continue;
+      const res = tc[c].res[r], n = tc[c].nl - r, cp = comps[c];
+      for (let py = 0; py < res.nph; py++) for (let px = 0; px < res.npw; px++) {
+        const gx = res.pgx + px << res.ppx, gy = res.pgy + py << res.ppy;
+        const X = gx <= res.x0 ? (res.x0 << n) * cp.dx % (cp.dx << res.ppx + n) === 0 ? res.x0 * cp.dx << n : tile.x0 : gx * cp.dx << n;
+        const Y = gy <= res.y0 ? (res.y0 << n) * cp.dy % (cp.dy << res.ppy + n) === 0 ? res.y0 * cp.dy << n : tile.y0 : gy * cp.dy << n;
+        items.push({ c, r, p: py * res.npw + px, X, Y });
+      }
+    }
+    const key = { 2: (a) => [a.r, a.Y, a.X, a.c], 3: (a) => [a.Y, a.X, a.c, a.r], 4: (a) => [a.c, a.Y, a.X, a.r] }[pg.prog];
+    if (!key) throw corrupt2(`progression order ${pg.prog}`);
+    items.sort((a, b) => {
+      const ka = key(a), kb = key(b);
+      for (let i = 0; i < 4; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
+      return 0;
+    });
+    for (const it of items) for (let l = 0; l < LYE; l++) push(l, it.r, it.c, it.p);
+  }
+  return out;
+}
+function decodeTile(cs, t, tileNo) {
+  const { siz, main } = cs;
+  const cod = t.cod || main.cod;
+  const nTx = ceilDiv(siz.X - siz.XTO, siz.XT);
+  const p = tileNo % nTx, q = Math.floor(tileNo / nTx);
+  const tile = {
+    x0: Math.max(siz.XTO + p * siz.XT, siz.XO),
+    y0: Math.max(siz.YTO + q * siz.YT, siz.YO),
+    x1: Math.min(siz.XTO + (p + 1) * siz.XT, siz.X),
+    y1: Math.min(siz.YTO + (q + 1) * siz.YT, siz.Y)
+  };
+  const comps = siz.comps;
+  const tc = comps.map((cp, c) => {
+    const sp = t.coc[c] || (t.cod ? t.cod.sp : null) || main.coc[c] || main.cod.sp;
+    const qc = t.qcc[c] || t.qcd || main.qcc[c] || main.qcd;
+    const roi = t.rgn[c] ?? main.rgn[c] ?? 0;
+    const x0 = ceilDiv(tile.x0, cp.dx), y0 = ceilDiv(tile.y0, cp.dy), x1 = ceilDiv(tile.x1, cp.dx), y1 = ceilDiv(tile.y1, cp.dy);
+    const res = [];
+    for (let r = 0; r <= sp.nl; r++) {
+      const sc = 2 ** (sp.nl - r);
+      const R0 = { r, x0: ceilDiv(x0, sc), y0: ceilDiv(y0, sc), x1: ceilDiv(x1, sc), y1: ceilDiv(y1, sc) };
+      const [ppx, ppy] = sp.prc[r];
+      R0.ppx = ppx;
+      R0.ppy = ppy;
+      R0.pgx = Math.floor(R0.x0 / 2 ** ppx);
+      R0.pgy = Math.floor(R0.y0 / 2 ** ppy);
+      R0.npw = R0.x1 > R0.x0 ? ceilDiv(R0.x1, 2 ** ppx) - R0.pgx : 0;
+      R0.nph = R0.y1 > R0.y0 ? ceilDiv(R0.y1, 2 ** ppy) - R0.pgy : 0;
+      const bandSpecs = r === 0 ? [[0, 0, 0]] : [[1, 1, 0], [2, 0, 1], [3, 1, 1]];
+      const nb = r === 0 ? sp.nl : sp.nl - r + 1;
+      const xcb = Math.min(sp.xcb, r === 0 ? ppx : ppx - 1), ycb = Math.min(sp.ycb, r === 0 ? ppy : ppy - 1);
+      R0.bands = bandSpecs.map(([bandno, xob, yob]) => {
+        const s = 2 ** nb, hx = xob ? 2 ** (nb - 1) : 0, hy = yob ? 2 ** (nb - 1) : 0;
+        const B = { bandno, x0: ceilDiv(x0 - hx, s), y0: ceilDiv(y0 - hy, s), x1: ceilDiv(x1 - hx, s), y1: ceilDiv(y1 - hy, s) };
+        const bi = r === 0 ? 0 : 3 * (r - 1) + bandno;
+        const st = qc.style === 1 ? { expn: Math.max(0, qc.steps[0].expn - (r === 0 ? 0 : Math.floor((bi - 1) / 3))), mant: qc.steps[0].mant } : qc.steps[bi];
+        if (!st) throw corrupt2(`no quantisation step for band ${bi}`);
+        B.numbps = st.expn + qc.guard - 1;
+        const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
+        B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
+        const bpx = r === 0 ? ppx : ppx - 1, bpy = r === 0 ? ppy : ppy - 1;
+        B.prec = [];
+        for (let py = 0; py < R0.nph; py++) for (let px = 0; px < R0.npw; px++) {
+          const X0 = Math.max(B.x0, (R0.pgx + px) * 2 ** bpx), Y0 = Math.max(B.y0, (R0.pgy + py) * 2 ** bpy);
+          const X1 = Math.min(B.x1, (R0.pgx + px + 1) * 2 ** bpx), Y1 = Math.min(B.y1, (R0.pgy + py + 1) * 2 ** bpy);
+          const pr = { cblks: [], cw: 0, ch: 0 };
+          if (X1 > X0 && Y1 > Y0) {
+            const cx0 = Math.floor(X0 / 2 ** xcb), cy0 = Math.floor(Y0 / 2 ** ycb);
+            pr.cw = ceilDiv(X1, 2 ** xcb) - cx0;
+            pr.ch = ceilDiv(Y1, 2 ** ycb) - cy0;
+            for (let j = 0; j < pr.ch; j++) for (let i = 0; i < pr.cw; i++) {
+              pr.cblks.push({
+                x0: Math.max(X0, (cx0 + i) * 2 ** xcb),
+                y0: Math.max(Y0, (cy0 + j) * 2 ** ycb),
+                x1: Math.min(X1, (cx0 + i + 1) * 2 ** xcb),
+                y1: Math.min(Y1, (cy0 + j + 1) * 2 ** ycb),
+                included: false,
+                numbps: 0,
+                lblock: 3,
+                segs: [],
+                passes: 0
+              });
+            }
+            pr.incl = new TagTree(pr.cw, pr.ch);
+            pr.imsb = new TagTree(pr.cw, pr.ch);
+          }
+          B.prec.push(pr);
+        }
+        return B;
+      });
+      res.push(R0);
+    }
+    return { x0, y0, x1, y1, nl: sp.nl, sp, qc, roi, res };
+  });
+  const progs = t.poc || main.poc ? (t.poc || main.poc).map((pg) => ({ ...pg, re: Math.min(pg.re, 33) })) : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
+  const packets = packetOrder(tc, cod.layers, progs, tile, comps);
+  const body = concat(t.data);
+  let bp = 0;
+  const sop = cod.scod & 2, eph = cod.scod & 4;
+  for (const [l, r, c, pi] of packets) {
+    const res = tc[c].res[r];
+    const sp = tc[c].sp;
+    if (sop && bp + 6 <= body.length && body[bp] === 255 && body[bp + 1] === 145) bp += 6;
+    const bio = new Bio(body, bp, body.length);
+    const contrib = [];
+    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q2) => q2[0] === l && q2[1] === r && q2[2] === c && q2[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.bit()) {
+      for (const B of res.bands) {
+        const pr = B.prec[pi];
+        for (let k = 0; k < pr.cblks.length; k++) {
+          const cb = pr.cblks[k], cx = k % pr.cw, cy = Math.floor(k / pr.cw);
+          let inc;
+          if (!cb.included) inc = pr.incl.decode(bio, cx, cy, l + 1);
+          else inc = bio.bit();
+          if (!inc) continue;
+          if (!cb.included) {
+            let i = 0;
+            while (!pr.imsb.decode(bio, cx, cy, i)) i++;
+            cb.numbps = B.numbps + 1 - i;
+            cb.included = true;
+          }
+          let np;
+          if (!bio.bit()) np = 1;
+          else if (!bio.bit()) np = 2;
+          else {
+            const v = bio.bits(2);
+            if (v < 3) np = 3 + v;
+            else {
+              const v2 = bio.bits(5);
+              np = v2 < 31 ? 6 + v2 : 37 + bio.bits(7);
+            }
+          }
+          while (bio.bit()) cb.lblock++;
+          let left = np;
+          while (left > 0) {
+            let seg = cb.segs[cb.segs.length - 1];
+            if (!seg || seg.claimed >= seg.max) {
+              const max = sp.cblksty & 4 ? 1 : sp.cblksty & 1 ? !seg ? 10 : seg.max === 1 || seg.max === 10 ? 2 : 1 : 109;
+              seg = { max, passes: 0, claimed: 0, chunks: [] };
+              cb.segs.push(seg);
+            }
+            const n = Math.min(left, seg.max - seg.claimed);
+            seg.claimed += n;
+            const len = bio.bits(cb.lblock + floorLog2(n));
+            contrib.push({ seg, len, n });
+            left -= n;
+          }
+        }
+      }
+    }
+    bio.align();
+    bp = bio.p;
+    if (eph && bp + 2 <= body.length && body[bp] === 255 && body[bp + 1] === 146) bp += 2;
+    for (const k of contrib) {
+      if (bp + k.len > body.length) throw truncated2(`a packet's code-block data runs past the tile (${bp + k.len - body.length} bytes)`);
+      k.seg.chunks.push(body.subarray(bp, bp + k.len));
+      k.seg.passes += k.n;
+      bp += k.len;
+    }
+  }
+  const irreversible = tc.map((x) => x.sp.qmfbid === 0);
+  const planes = tc.map((x, c) => {
+    const w = x.x1 - x.x0, h = x.y1 - x.y0;
+    const plane = irreversible[c] ? new Float32Array(w * h) : new Int32Array(w * h);
+    const tmp = new Int32Array(4096);
+    for (let r = 0; r < x.res.length; r++) {
+      const R0 = x.res[r], prev = r ? x.res[r - 1] : null;
+      for (const B of R0.bands) {
+        const offx = B.bandno & 1 ? prev.x1 - prev.x0 : 0, offy = B.bandno & 2 ? prev.y1 - prev.y0 : 0;
+        const half = f32(0.5 * B.stepsize);
+        for (const pr of B.prec) for (const cb of pr.cblks) {
+          const cw = cb.x1 - cb.x0, ch = cb.y1 - cb.y0;
+          const segs = cb.segs.filter((s) => s.passes > 0).map((s) => ({ data: concat(s.chunks), passes: s.passes }));
+          if (!segs.length) continue;
+          const bpn = x.roi + cb.numbps;
+          if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
+          tmp.fill(0, 0, cw * ch);
+          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp);
+          if (x.roi) {
+            const th = 2 ** x.roi;
+            for (let i = 0; i < cw * ch; i++) {
+              const v = tmp[i], m = Math.abs(v);
+              if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi;
+            }
+          }
+          const bx = cb.x0 - B.x0 + offx, by = cb.y0 - B.y0 + offy;
+          for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+            const v = tmp[j * cw + i];
+            plane[(by + j) * w + bx + i] = irreversible[c] ? f32(f32(v) * half) : Math.trunc(v / 2);
+          }
+        }
+      }
+    }
+    for (let r = 1; r < x.res.length; r++) {
+      const R0 = x.res[r], prev = x.res[r - 1];
+      const rw = R0.x1 - R0.x0, rh = R0.y1 - R0.y0, sw = prev.x1 - prev.x0, sh = prev.y1 - prev.y0;
+      const casx = R0.x0 & 1, casy = R0.y0 & 1;
+      const line = irreversible[c] ? new Float32Array(Math.max(rw, rh)) : new Int32Array(Math.max(rw, rh));
+      const oneD = irreversible[c] ? idwt97 : idwt53;
+      for (let y = 0; y < rh; y++) {
+        const o = y * w;
+        for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = plane[o + i];
+        for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = plane[o + sw + i];
+        oneD(line, rw, casx);
+        for (let i = 0; i < rw; i++) plane[o + i] = line[i];
+      }
+      for (let xx = 0; xx < rw; xx++) {
+        for (let i = 0; i < sh; i++) line[casy ? 2 * i + 1 : 2 * i] = plane[i * w + xx];
+        for (let i = 0; i < rh - sh; i++) line[casy ? 2 * i : 2 * i + 1] = plane[(sh + i) * w + xx];
+        oneD(line, rh, casy);
+        for (let i = 0; i < rh; i++) plane[i * w + xx] = line[i];
+      }
+    }
+    return plane;
+  });
+  if (cod.mct && comps.length >= 3) {
+    const [a, b, c] = planes;
+    if (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2]) throw corrupt2("a colour transform over mixed wavelets");
+    if (irreversible[0]) {
+      for (let i = 0; i < a.length; i++) {
+        const y = a[i], u = b[i], v = c[i];
+        a[i] = f32(y + f32(v * f32(1.402)));
+        b[i] = f32(f32(y - f32(u * f32(0.34413))) - f32(v * f32(0.71414)));
+        c[i] = f32(y + f32(u * f32(1.772)));
+      }
+    } else {
+      for (let i = 0; i < a.length; i++) {
+        const y = a[i], u = b[i], v = c[i];
+        const g = y - Math.floor((u + v) / 4);
+        a[i] = v + g;
+        b[i] = g;
+        c[i] = u + g;
+      }
+    }
+  }
+  return { tile, tc, planes, irreversible };
+}
+function concat(parts) {
+  if (parts.length === 1) return parts[0];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0;
+  for (const p of parts) {
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+}
+function rintEven(v) {
+  const f = Math.floor(v), d = v - f;
+  if (d < 0.5) return f;
+  if (d > 0.5) return f + 1;
+  return f % 2 === 0 ? f : f + 1;
+}
+function decodeJpx(d) {
+  const box = container(d);
+  const cs = parseCodestream(d, box.cs[0], box.cs[1]);
+  const { siz } = cs;
+  const nc = siz.comps.length;
+  if (nc !== 1 && nc !== 3) throw samples(`${nc} components; only 1 (grey) or 3 (colour) are decoded here`, { components: nc });
+  for (const cp of siz.comps) {
+    if (cp.dx !== 1 || cp.dy !== 1) throw samples("a sub-sampled component", { dx: cp.dx, dy: cp.dy });
+    if (cp.sgnd) throw samples("signed samples");
+    if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
+  }
+  const W2 = siz.X - siz.XO, H = siz.Y - siz.YO;
+  const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
+  let out = nTiles > 1 ? new Uint8Array(W2 * H * nc) : null;
+  if (cs.tiles.size < nTiles) throw truncated2(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  let transform = null;
+  for (const [no, t] of cs.tiles) {
+    if (no >= nTiles) throw corrupt2(`tile ${no} of ${nTiles}`);
+    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no);
+    transform ??= irreversible[0] ? "9/7" : "5/3";
+    const shift = 1 << 7;
+    if (!out) out = new Uint8Array(planes[0].buffer, 0, W2 * H * nc);
+    for (let c = 0; c < nc; c++) {
+      const x = tc[c], w = x.x1 - x.x0, pl = planes[c];
+      for (let j = 0; j < x.y1 - x.y0; j++) for (let i = 0; i < w; i++) {
+        const v = pl[j * w + i];
+        let s = irreversible[c] ? v > 2147483647 ? 255 : v < -2147483648 ? 0 : rintEven(v) + shift : v + shift;
+        s = s < 0 ? 0 : s > 255 ? 255 : s;
+        out[((tile.y0 - siz.YO + j) * W2 + (tile.x0 - siz.XO + i)) * nc + c] = s;
+      }
+    }
+  }
+  const cod = cs.main.cod;
+  return {
+    width: W2,
+    height: H,
+    comps: nc,
+    samples: out,
+    detail: {
+      container: box.jp2 ? "jp2" : "codestream",
+      colour: box.colour,
+      tiles: nTiles,
+      layers: cod.layers,
+      levels: cod.sp.nl,
+      transform,
+      progression: ["LRCP", "RLCP", "RPCL", "PCRL", "CPRL"][cod.prog] ?? cod.prog,
+      colour_transform: !!cod.mct
+    }
+  };
 }
 
 // ../pdf-worker/src/pagepixels.mjs
@@ -1877,6 +4314,8 @@ async function renderPageToPixels(bytes, pageIndex, opts = {}) {
     page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
     ...out.ccitt ? { ccitt: out.ccitt } : {},
     ...out.dct ? { dct: out.dct } : {},
+    ...out.jbig2 ? { jbig2: out.jbig2 } : {},
+    ...out.jpx ? { jpx: out.jpx } : {},
     /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
      * the cross-runtime arm of the probe found the file digest to be RUNTIME-
      * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
@@ -1895,9 +4334,6 @@ async function decodeImage(doc, im, opts) {
   const dict = im.obj.dict;
   const filters = im.filters;
   const last = filters[filters.length - 1] || null;
-  if (last === "JBIG2Decode" || last === "JPXDecode") {
-    return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
-  }
   if (last === "DCTDecode" || last === "DCT") {
     if (filters.length > 1) return refuse("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
     const raw = doc.streamRawBytes(im.obj);
@@ -1925,15 +4361,15 @@ async function decodeImage(doc, im, opts) {
     }
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
     const p = decodeParms(doc, dict, filters.length - 1) || {};
-    const K = numOf(doc, p.K) ?? 0;
+    const K2 = numOf(doc, p.K) ?? 0;
     const columns = numOf(doc, p.Columns) ?? 1728;
     const rows = numOf(doc, p.Rows) ?? im.height;
-    if (K > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
+    if (K2 > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
     const blackIs1 = doc.resolve(p.BlackIs1) === true;
     const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
     let bits;
     try {
-      bits = ccittDecode(data, { K, columns, rows, byteAlign });
+      bits = ccittDecode(data, { K: K2, columns, rows, byteAlign });
     } catch (e) {
       return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
     }
@@ -1962,7 +4398,86 @@ async function decodeImage(doc, im, opts) {
       height: rot.height,
       upright: true,
       pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
-      ccitt: { K, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded }
+      ccitt: { K: K2, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded }
+    };
+  }
+  if (last === "JBIG2Decode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const p = decodeParms(doc, dict, filters.length - 1);
+    let globals = null;
+    if (p && p.JBIG2Globals !== void 0) {
+      const g = doc.resolve(p.JBIG2Globals);
+      globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
+      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+    }
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    let out;
+    try {
+      out = decodeJbig2(data, globals);
+    } catch (e) {
+      if (!(e instanceof Jbig2Refusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jbig2: e.code, ...e.detail });
+    }
+    if (out.width !== im.width || out.height > im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
+    }
+    if (out.height < im.height) {
+      return refuse("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
+    }
+    const samples2 = out.packed.map((b) => ~b & 255);
+    const bi = await bilevelPng(doc, dict, samples2, im.width, im.height, opts.rotate || 0);
+    return {
+      ok: true,
+      route: "decoded-jbig2",
+      mediaType: "image/png",
+      ...bi,
+      upright: true,
+      jbig2: { ...out.detail, globals_bytes: globals ? globals.length : 0, stream_bytes: data.length }
+    };
+  }
+  if (last === "JPXDecode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
+    if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
+    const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
+    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    let out;
+    try {
+      out = decodeJpx(data);
+    } catch (e) {
+      if (!(e instanceof JpxRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
+    }
+    if (pdfComps !== null && pdfComps !== out.comps) {
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+    }
+    if (out.width !== im.width || out.height !== im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+    }
+    const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
+    out.samples = null;
+    return {
+      ok: true,
+      route: "decoded-jpx",
+      mediaType: "image/png",
+      upright: true,
+      width: rot.width,
+      height: rot.height,
+      pixelsSha256: await sha256Hex(rot.samples),
+      bytes: await encodePng8(rot.samples, rot.width, rot.height, out.comps),
+      jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length }
     };
   }
   if (filters.length === 0 || filters.every((f) => f === "FlateDecode" || f === "Fl")) {
@@ -1983,22 +4498,8 @@ async function decodeImage(doc, im, opts) {
       });
     }
     if (bpc === 1 && comps === 1) {
-      const dec = doc.resolve(dict.Decode);
-      const decOne = dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1;
-      const invert = im.isMask ? !decOne : decOne;
-      const src = data.subarray(0, need);
-      const packed0 = invert ? Uint8Array.from(src, (b) => ~b & 255) : Uint8Array.from(src);
-      const rot = rotateBilevel(normalisePacked(packed0, im.width, im.height), im.width, im.height, opts.rotate || 0);
-      return {
-        ok: true,
-        route: "raw-samples-1bit",
-        mediaType: "image/png",
-        width: rot.width,
-        height: rot.height,
-        upright: true,
-        pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
-        bytes: await encodePng1(rot.packed, rot.width, rot.height)
-      };
+      const bi = await bilevelPng(doc, dict, data.subarray(0, need), im.width, im.height, opts.rotate || 0);
+      return { ok: true, route: "raw-samples-1bit", mediaType: "image/png", upright: true, ...bi };
     }
     if (bpc === 8) {
       const rot = rotate8(data.subarray(0, need), im.width, im.height, comps, opts.rotate || 0);
@@ -2016,6 +4517,28 @@ async function decodeImage(doc, im, opts) {
     return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
   }
   return refuse("UNSUPPORTED_FILTER", { filters });
+}
+async function bilevelPng(doc, dict, samples2, width, height, rotate) {
+  const dec = doc.resolve(dict.Decode);
+  const invert = !!(dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1);
+  const packed0 = invert ? Uint8Array.from(samples2, (b) => ~b & 255) : Uint8Array.from(samples2);
+  const rot = rotateBilevel(normalisePacked(packed0, width, height), width, height, rotate);
+  return {
+    width: rot.width,
+    height: rot.height,
+    pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
+    bytes: await encodePng1(rot.packed, rot.width, rot.height)
+  };
+}
+function jpxColourComponents(doc, csv) {
+  const cs = doc.resolve(csv);
+  if (cs == null) return null;
+  if (cs.t === "name") return cs.v === "DeviceGray" ? 1 : cs.v === "DeviceRGB" ? 3 : false;
+  if (cs.t === "arr" && nameOf2(doc, cs.items[0]) === "ICCBased") {
+    const n = numOf(doc, doc.dictOf(cs.items[1])?.N);
+    return n === 1 || n === 3 ? n : false;
+  }
+  return false;
 }
 var DCT_TO_REFUSAL = {
   UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
@@ -2286,15 +4809,15 @@ var BitReader = class {
     this.pos = this.pos + 7 & ~7;
   }
 };
-function readRun(br, table) {
+function readRun(br, table2) {
   let total = 0;
   for (; ; ) {
     let hit = null;
     const window = br.peek(MAX_CODE_BITS);
     for (let len = 2; len <= MAX_CODE_BITS; len++) {
       const key = `${len}:${window.slice(0, len)}`;
-      if (key in table) {
-        hit = { len, run: table[key] };
+      if (key in table2) {
+        hit = { len, run: table2[key] };
         break;
       }
     }
@@ -2305,22 +4828,22 @@ function readRun(br, table) {
     if (br.eof) return total;
   }
 }
-function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false }) {
+function ccittDecode(data, { K: K2 = 0, columns = 1728, rows = 0, byteAlign = false }) {
   const br = new BitReader(data);
   const rowBytes = Math.ceil(columns / 8);
   const out = [];
   let ref = [columns, columns];
   const maxRows = rows && rows > 0 ? rows : 1 << 20;
   const eol = () => br.peek(12) === "000000000001";
-  if (K > 0) throw new Error("mixed-mode (K>0) CCITT is not decoded here");
+  if (K2 > 0) throw new Error("mixed-mode (K>0) CCITT is not decoded here");
   for (let r = 0; r < maxRows; r++) {
     if (byteAlign) br.align();
     while (eol()) {
       br.skip(12);
-      if (K > 0) br.skip(1);
+      if (K2 > 0) br.skip(1);
     }
     if (br.eof) break;
-    const twoD = K < 0;
+    const twoD = K2 < 0;
     const cur = [];
     let a0 = -1;
     let color = 0;
@@ -2434,12 +4957,12 @@ function setBit(packed, rowBytes, x, y, v) {
   if (v) packed[i] |= m;
   else packed[i] &= ~m;
 }
-function rotate8(samples, width, height, comps, deg) {
+function rotate8(samples2, width, height, comps, deg) {
   const d = (deg % 360 + 360) % 360;
-  if (d === 0) return { samples, width, height };
+  if (d === 0) return { samples: samples2, width, height };
   if (d !== 90 && d !== 180 && d !== 270) throw new Error(`unsupported rotation ${deg}`);
   const [w2, h2] = d === 180 ? [width, height] : [height, width];
-  const out = new Uint8Array(samples.length);
+  const out = new Uint8Array(samples2.length);
   for (let Y = 0; Y < h2; Y++) {
     for (let X = 0; X < w2; X++) {
       let sx, sy;
@@ -2454,7 +4977,7 @@ function rotate8(samples, width, height, comps, deg) {
         sy = X;
       }
       const o = (Y * w2 + X) * comps, i = (sy * width + sx) * comps;
-      for (let c = 0; c < comps; c++) out[o + c] = samples[i + c];
+      for (let c = 0; c < comps; c++) out[o + c] = samples2[i + c];
     }
   }
   return { samples: out, width: w2, height: h2 };
@@ -2579,7 +5102,7 @@ function normalisePacked(packed, width, height) {
   for (let y = 0; y < height; y++) out[(y + 1) * rowBytes - 1] &= mask;
   return out;
 }
-async function encodePng8(samples, width, height, comps) {
+async function encodePng8(samples2, width, height, comps) {
   const rowBytes = width * comps;
   const band = Math.max(1, Math.floor((1 << 20) / (rowBytes + 1)));
   const cs = new CompressionStream("deflate");
@@ -2598,7 +5121,7 @@ async function encodePng8(samples, width, height, comps) {
     const n = Math.min(band, height - y0);
     const raw = new Uint8Array((rowBytes + 1) * n);
     for (let k = 0; k < n; k++) {
-      raw.set(samples.subarray((y0 + k) * rowBytes, (y0 + k + 1) * rowBytes), k * (rowBytes + 1) + 1);
+      raw.set(samples2.subarray((y0 + k) * rowBytes, (y0 + k + 1) * rowBytes), k * (rowBytes + 1) + 1);
     }
     await w.write(raw);
   }
@@ -2625,7 +5148,7 @@ var PNG_REFUSALS = {
   PNG_SHORT_RASTER: "the inflated raster is shorter than the header's dimensions require"
 };
 var refuse2 = (code, detail = {}) => ({ ok: false, reason: code, detail: PNG_REFUSALS[code], ...detail });
-var SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+var SIG2 = [137, 80, 78, 71, 13, 10, 26, 10];
 async function inflateZlib(bytes) {
   const ds = new DecompressionStream("deflate");
   const w = ds.writable.getWriter();
@@ -2649,7 +5172,7 @@ async function inflateZlib(bytes) {
 }
 async function pngToSamples(bytes) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  if (b.length < 8 || SIG.some((v, i) => b[i] !== v)) return refuse2("NOT_A_PNG");
+  if (b.length < 8 || SIG2.some((v, i) => b[i] !== v)) return refuse2("NOT_A_PNG");
   const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
   let width = 0, height = 0, bitDepth = 0, colorType = -1, interlace = 0, sawIhdr = false;
   const idats = [];
@@ -2816,21 +5339,21 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
         bound_bytes: MAX_FRAME_BYTES,
         why: `a ${rendered.width}x${rendered.height} page needs a ${frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is ${MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.`
       };
-    const samples = await pngToSamples(rendered.bytes);
-    if (!samples.ok)
+    const samples2 = await pngToSamples(rendered.bytes);
+    if (!samples2.ok)
       return {
         ok: false,
         reason: "PIXELS_UNREADABLE",
         detail: REFUSALS2.PIXELS_UNREADABLE,
         page,
         route: rendered.route,
-        png: samples
+        png: samples2
       };
-    const rgba = samplesToRgba(samples);
-    samples.packed = null;
+    const rgba = samplesToRgba(samples2);
+    samples2.packed = null;
     let out;
     try {
-      out = await engine.transcribeFrame(rgba, samples.width, samples.height, { psm });
+      out = await engine.transcribeFrame(rgba, samples2.width, samples2.height, { psm });
     } catch (e) {
       out = { ok: false, error: String(e && e.message || e), name: e && e.name };
     }
@@ -2871,8 +5394,8 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
           rect: [l, t0, r, b],
           space: "image-px",
           image: {
-            width: samples.width,
-            height: samples.height,
+            width: samples2.width,
+            height: samples2.height,
             route: rendered.route,
             upright: rendered.upright,
             rotate_deg: rendered.rotate_deg,
@@ -2882,17 +5405,17 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
         confidence: rated ? { value: c, basis: "engine" } : "none"
       });
     }
-    const boxes = Number.isInteger(out.boxCount) ? out.boxCount : (out.regions || []).length;
+    const boxes2 = Number.isInteger(out.boxCount) ? out.boxCount : (out.regions || []).length;
     if (!regions.length)
       return {
         ok: false,
         reason: "NOTHING_TRANSCRIBED",
         detail: REFUSALS2.NOTHING_TRANSCRIBED,
         page,
-        boxes,
+        boxes: boxes2,
         blank,
         unanchored,
-        why: `the engine boxed ${boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.`
+        why: `the engine boxed ${boxes2} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.`
       };
     return {
       ok: true,
@@ -2903,8 +5426,8 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
       unrated,
       grain: out.grain,
       image: {
-        width: samples.width,
-        height: samples.height,
+        width: samples2.width,
+        height: samples2.height,
         frame_bytes: frame,
         route: rendered.route,
         upright: rendered.upright,
@@ -3060,21 +5583,21 @@ function requestResponseMessage(ep, msg, transfers) {
 function generateUUID() {
   return new Array(4).fill(0).map(() => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16)).join("-");
 }
-function imageDataFromBitmap(bitmap) {
+function imageDataFromBitmap(bitmap2) {
   let canvas;
   if (typeof OffscreenCanvas !== "undefined") {
-    canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    canvas = new OffscreenCanvas(bitmap2.width, bitmap2.height);
   } else if (typeof HTMLCanvasElement !== "undefined") {
     const canvasEl = document.createElement("canvas");
-    canvasEl.width = bitmap.width;
-    canvasEl.height = bitmap.height;
+    canvasEl.width = bitmap2.width;
+    canvasEl.height = bitmap2.height;
     canvas = canvasEl;
   } else {
     throw new Error("No canvas implementation available");
   }
   const context = canvas.getContext("2d");
-  context.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
-  return context.getImageData(0, 0, bitmap.width, bitmap.height);
+  context.drawImage(bitmap2, 0, 0, bitmap2.width, bitmap2.height);
+  return context.getImageData(0, 0, bitmap2.width, bitmap2.height);
 }
 var Module = (() => {
   var _scriptDir = import.meta.url;
@@ -5683,9 +8206,9 @@ async function transcribeFrame(rgba, width, height, { psm = null } = {}) {
     engine.loadModel(new Uint8Array(MODEL));
     if (psm) engine.setVariable("tessedit_pageseg_mode", String(psm));
     engine.loadImage({ data: rgba, width, height });
-    const boxes = engine.getTextBoxes(REGION_GRAIN) || [];
+    const boxes2 = engine.getTextBoxes(REGION_GRAIN) || [];
     const regions = [];
-    for (const b of boxes) {
+    for (const b of boxes2) {
       const text = typeof b.text === "string" ? b.text : "";
       const r = b.rect || {};
       if (![r.left, r.top, r.right, r.bottom].every((n) => typeof n === "number" && Number.isFinite(n)))
@@ -5693,7 +8216,7 @@ async function transcribeFrame(rgba, width, height, { psm = null } = {}) {
       const c = typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null;
       regions.push({ text, rect: [r.left, r.top, r.right, r.bottom], confidence: c });
     }
-    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes.length };
+    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes2.length };
   } catch (e) {
     return {
       ok: false,

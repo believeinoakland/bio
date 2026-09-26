@@ -1,13 +1,6 @@
 # text-chain — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/textchain.mjs`.
-Not yet met: R77 (D-633, `mergeTier2Text` does not carry a base page's `image_content_*` markers onto
-a page tier 2 wins), R81 (D-723, no service yet answers a page covered by two step kinds `mixed`), R72
-(D-416, `readingPositionInExtent` has no `sheet-range` extent arm). No local fact: this module names
-no place and holds no jurisdiction data, so `layers.md`'s rule needs no plan entry against it. Two
-carried rows, D-635 and D-665, name `textchain.mjs` in their headline but their scope is
-`mergeTier3Text` and OCR-routing measurement, both in `index.mjs` (outside this module's `paths`); they
-are not requirements of this file — see the reply for the flag.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/textchain.mjs`. R72 (D-416), R77 (D-633, K38) and R81 (D-723, K38) built in T2. No local fact is held here. Carried rows D-635 and D-665 concern `mergeTier3Text` and OCR routing in `index.mjs`, outside this module. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 
@@ -136,7 +129,7 @@ of a document with its own provenance, each `chain` already built by `appendStep
 **`terminalStep(chain) → step name | null`**
 - **R32** The `.step` of the chain's LAST entry; `null` for a malformed chain. Always document-level:
   it never distinguishes a page covered by two different step kinds from one covered by a single kind
-  (see R81, not yet met, for that question).
+  (R81 answers that question).
 - Errors: never throws.
 
 **`tiersEvidenced(chain) → {tiers: [{tier, steps, covers}], unclassified: string[]}`**
@@ -280,7 +273,7 @@ contain the place a reference was read? The default is NO.
   - `sheet-cell`: `extent.sheet === position.sheet` and `extent.cell === position.cell`, exact.
   - `slide-shape`: `extent.slide === position.slide`; when `extent.shape` is absent the whole slide
     counts, when present it must equal the position's `.shape`.
-- **R72** *(not yet met: D-416)* A `sheet-cell` position is contained in a `sheet-range` extent when its
+- **R72** A `sheet-cell` position is contained in a `sheet-range` extent when its
   `.sheet` is the range's sheet and its `.cell` falls within the range's bounds. Today R71's equal-kind rule
   answers `false`. Design: `EXTRACTION-BREADTH-DESIGN.md` §3.2. The units this reads are emitted by
   `office-readers` R9 (D-415, built but not merged).
@@ -306,7 +299,7 @@ page. `base`/`t2` are `{document, pages:[{page, text, undetermined:[{count}]}], 
   2's page has strictly FEWER undetermined characters (summed `.undetermined[].count`) than tier 1's
   AND strictly MORE glyphs (`glyphCount` of `.text`, R73) than tier 1's. Otherwise tier 1's page is
   kept, spread unchanged plus `tier:1`.
-- **R77** *(not yet met: D-633)* When tier 2 wins a page (R76), every entry of the base page's
+- **R77** When tier 2 wins a page (R76), every entry of the base page's
   `undetermined` list whose `reason` starts with `image_content_`, and every base-page field whose
   name starts with `image_content_`, is carried onto the merged page unchanged, never re-graded,
   after tier 2's own markers (not duplicated when tier 2 already states one): they are facts about
@@ -332,7 +325,7 @@ covered by derivation steps of two different kinds (D-635's shape: a text layer'
 transcription appended over the same page). BOB #35's 09:35Z rule (in D-723) is that such a page reads
 `mixed`, and BOB #36 superseded D-686's page rule for this one case (11:05Z, 2026-09-25). This module
 must add a service that:
-- **R81** *(not yet met: D-723)* `chainKindFor(chain, target) → kind | "mixed" | null`, `target`
+- **R81** `chainKindFor(chain, target) → kind | "mixed" | null`, `target`
   `{page}` or a page number; `CHAIN_KIND_MIXED` is `"mixed"`. Each part covering the page (the
   extent test of R22/R27; a step's extent, or unscoped meaning the whole document) answers the
   kind of its LAST derivation step; an unscoped step met first from the end answers alone. The

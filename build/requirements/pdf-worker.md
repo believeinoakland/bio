@@ -75,7 +75,7 @@ member has no member-facing route for it).
 - **R20** On success: `{ok:true, page, route, mediaType, bytes, width, height, upright, rotate_deg,
   source:{filters, colorSpace, bitsPerComponent, imageMask}, page_geometry:{mediaBoxPt, rotate, dpi},
   page_marks:{hasTextOps, hasVectorOps}, …(ccitt|dct detail when decoded), …(pixels_sha256 when
-  decoded)}`.
+  decoded)}`. Its success `detail` also covers `jbig2` and `jpx` beside `ccitt` and `dct` (K54).
 - **R21** `rotate_deg` and the rotation applied to the pixels are the page's `/Rotate`, an inheritable
   attribute: the page's own value, else the nearest `/Parent` ancestor's, else 0; normalised to 0/90/180/270.
   A `/Rotate` that is not a multiple of 90 answers `PAGE_UNREADABLE` (R15), never a guessed turn.
@@ -102,8 +102,8 @@ member has no member-facing route for it).
   samples (grey or RGB) are copied/rotated to a PNG the same way, `upright:true`, carrying
   `pixels_sha256` on the 8-bit route. Any other colour-space/bit-depth combination (CMYK, 16-bit, …)
   answers `UNSUPPORTED_SAMPLES`; data short of the declared height answers `TRUNCATED_IMAGE_DATA`; a
-  missing width/height or unreadable stream answers `IMAGE_UNREADABLE`.
-- **R25** *(not yet met: D-622)* A `JBIG2Decode` image (at least generic and generic-refinement regions,
+  missing width/height or unreadable stream answers `IMAGE_UNREADABLE`. For an `/ImageMask`, a sample 0 paints and a sample 1 leaves the page unpainted under the default `/Decode` (PDF §8.9.6.2; K54).
+- **R25** A `JBIG2Decode` image (at least generic and generic-refinement regions,
   symbol-dictionary and text regions, MMR/Huffman and arithmetic coding, with `JBIG2Globals`; pattern
   and halftone regions where the job can build them small) and a `JPXDecode` image are decoded to a PNG like R23 and R24, carrying `pixels_sha256`,
   pixel-exact against an independent reference decoder. What cannot be decoded answers `UNSUPPORTED_FILTER`,
@@ -190,10 +190,4 @@ Status.
 
 ---
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `pdf-worker/src/index.mjs`,
-`pdf-worker/src/pagepixels.mjs`, `pdf-worker/src/dctdecode.mjs`, `pdf-worker/src/imagecrop.mjs`,
-`pdf-worker/src/pagepixels-worker.mjs` (the last a workerd-only test entry point, not a requirement).
-R21 reworded by BOB #40, 2026-09-26 (K27): it had stated the D-671 defect as the requirement. R17 and R18
-count painted images (K27). R25 is not yet met: JBIG2- and JPX-filtered
-images are refused rather than decoded, leaving 14 held pages unread by every tier (D-622, queued,
-M-166).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `pdf-worker/src/` (index, pagepixels, dctdecode, imagecrop, and the JBIG2, JPX and MQ decoders built in T2); `pagepixels-worker.mjs` is a workerd-only test entry point, not a requirement. R21 reworded by BOB #40 (K27); R17 and R18 count painted images (K27); R25 (D-622, K43) built in T2. A JPX memory refusal and a split review are carried (N34). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).

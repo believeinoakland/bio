@@ -1,15 +1,6 @@
 # odf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/odf.mjs`.
-R29 is not yet met: row D-346 (`.odt`/`.ods`/`.odp` structure() still emits the unconditional
-`meta.xml`/manifest "not read" markers of R28, never the `core-properties` item or the `intra`
-links R29 rules). R36 is not yet met: row D-612 (`odfEvidentiaryDigest`'s reference scan still
-refuses on a `font-face-uri` href, so a real Google Docs `.odt` export with embedded fonts and no
-image reads `determined:false`, never the `determined:true` R36 rules). Both rows are already
-coded on the unlanded `batch30` tree (PROCESS-MECHANICS §12.5): D-612 at tip `f2dcbc6c`, D-346 at
-tip `96eeb2d5` (stacked on it) — the job should read and keep what meets R29/R36 rather than
-re-deriving it. No local fact (a place, a system, a vocabulary) was found in this module; no
-plan entry was needed for that.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 
@@ -173,7 +164,7 @@ deckLength, undetermined, counts:{chars, notesChars, undetermined}}`; `images` i
 - **R28** Every successful `structure()` call states, in `evidentiary.undetermined`, each part
   of the package it did not read, as `{part, why, detail?}`: under R29, `meta.xml` absent
   (`why:"part_absent"`) or unreadable (its `why`), and the manifest unreadable (its `why`).
-- **R29** *(not yet met: D-346)* narrows R28: when `meta.xml` is present,
+- **R29** narrows R28: when `meta.xml` is present,
   `structure()` reads it and emits one `core-properties` item (creator, title, created/
   modified, revision — each `null` when the file omits it); a
   package without `meta.xml` still states the absence. When the manifest is present,
@@ -207,7 +198,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   attribute in any namespace, a package member whose bytes are not `content.xml` (naming up to
   3 of them, with the total count) — a digest of `content.xml` alone cannot speak for a member
   it does not hold, so none is claimed.
-- **R36** *(not yet met: D-612)* narrows R35: an `href` on an element whose local
+- **R36** narrows R35: an `href` on an element whose local
   name is `font-face-uri` does not count as a referenced member. A `Pictures/`- or
   `Object N/`-referencing `href` still refuses under R35 unchanged.
 - **R37** The digested bytes are, for `.odt`, `content.xml` with every `<text:list

@@ -1,6 +1,6 @@
 # test-support — requirements
 
-**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code today: `bio-plane/test/sandbox.mjs`, `bio-plane/test/stdio.mjs`. The module's own tests do not exist yet (`bio-plane/test/m/test-support/`): R1–R9 are not yet met as tested requirements (T2 entry).
+**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code: `bio-plane/test/sandbox.mjs`, `bio-plane/test/stdio.mjs`; tests `bio-plane/test/m/test-support/`. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 

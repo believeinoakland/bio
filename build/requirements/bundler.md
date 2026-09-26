@@ -1,6 +1,6 @@
 # bundler — requirements
 
-**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code today: `bio-plane/scripts/fleet-bundle.mjs`, `bio-plane/scripts/provenance.mjs`. The module's own tests do not exist yet (`bio-plane/test/m/bundler/`): R1–R10 are not yet met as tested requirements (T2 entry).
+**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code: `bio-plane/scripts/fleet-bundle.mjs`, `bio-plane/scripts/provenance.mjs`; tests `bio-plane/test/m/bundler/`. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
 
 ## Public
 
