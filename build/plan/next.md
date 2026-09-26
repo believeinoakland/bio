@@ -96,6 +96,7 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 - T4-4 · Extract the module per its map and requirements (K48, K49, K58); requirement-named tests for every live id. The capture requests stay in `legacy-store` for `capture-requests` (K58); `capture` keeps the trusted in-process arm.
 - D-701 (K76): `op=links` and `navchanges`, as capture's map places them.
 - R17 (N3, N10), R18 (D-698), R20 (K60, co-attestation at every capture), R28–R29 (D-340, D-702), R11 and R42 (K49: the reading block moves to `extraction`, not here), R41 (K48): the rows its requirements mark not yet met; built work for D-340, D-698, D-702 on the snapshot, judged against the requirements.
+- K98, K99 · the doorbell: R47–R53 (tests), R54 (bytes before the row), R55 (the compute-measurement registration), R56 (a keyed source fingerprint); C-85 stays in `legacy-checks` (K72 (1)).
 
 **legacy-index** (layer 11, K53)
 - N43 · route membership's five new ops. Also N12, N19, N21 where their modules have landed.
@@ -113,8 +114,8 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
 
 **Layer 2, first (record-core, promotion revisited; small)**
-- **record-core** · N40 (`digestCensus`, `snapKeyCensus`; BOB writes their requirements first), N51 (`auditPass` registration), N58 (R47–R48, `stampInstant` and `instantOrder`, so layer 6 takes them from here).
-- **promotion** · N56 (`fact(name)`, D-592 `reopen`).
+- **record-core** · N40 (R56–R58: `digestCensus`, `snapKeyCensus`, the shared digest and size computation), N51 (`auditPass` registration), N58 (R47–R48, `stampInstant` and `instantOrder`, so layer 6 takes them from here).
+- **promotion** · N56 (`fact(name)`, D-592 `reopen`); drop its own `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` for record-core's (R58).
 
 **Layer 4** (order: `calibration`, `extraction`, `content`)
 - **calibration** · T5-1 · Extract per map and requirements (K73, K74); D-587, D-668.
