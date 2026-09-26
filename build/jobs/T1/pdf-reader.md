@@ -1,8 +1,8 @@
 # pdf-reader · T1 job record
 
-**Status** · COMPLETE, 2026-09-26; re-completed after K30 (R2, R25, R26 merged from `tranche/T1` @ `005985c8`), with Q3 open. Job for `pdf-reader`, tranche T1, started by BOB #38. N9 was answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. All four entries are applied. Two questions remain open (below); both are built on my best readings, and an answer that differs is a small change.
+**Status** · COMPLETE, 2026-09-26. Re-completed after K30 and K32: R2, R25 and R26 merged from `tranche/T1` @ `c4bcdcd2`. No question is open. Job for `pdf-reader`, tranche T1, started by BOB #38. N9 was answered by BOB #40 (K28) and merged from `tranche/T1` @ `d3a6d2e4`. All four entries are applied. Two questions remain open (below); both are built on my best readings, and an answer that differs is a small change.
 
-## QUESTION to BOB (2026-09-26, 16:40): R26 and no_text_layer pages
+## QUESTION to BOB (2026-09-26, 16:31): R26 and no_text_layer pages. Answered by K32: a `no_text_layer` page carries neither R26 marker. Built.
 
 K30 answered Q1 and Q2 (below), and this branch now follows R26 as K30 words it @ `005985c8`. One point is still open.
 
@@ -88,7 +88,11 @@ What stays interface, unchanged: `resolve`, `dictOf`, `streamRawBytes`, `streamD
   - A zlib stream followed by trailing bytes now keeps its inflated output. The output is kept only when it is proven complete: its Adler-32 must appear in the input, and the prefix ending there must inflate to the same bytes. The proof does not depend on any runtime's error wording.
   - The count is noted once per stream as `flate_trailing_bytes:<n>` (Q2).
   - A page whose content stream will not decode carries `content_stream_undecodable`. A page whose `/Contents` resolves to no stream carries `content_stream_unresolvable`. Both are page-level markers with count 0, so neither reads as a blank page.
-- **D-627 (R26).** Now as K30 words R26. Two things changed from my first completion: a `no_text_layer` page that paints an image also carries the image-content marker (see Q3), and a page that paints an image with a share rounding to 0 reads `image_content_undetermined`. Before that: I kept the built work at `land/worker/D-627` @ `056d3092` for `pdfstructure.mjs` only, adapted to `pageDict`. Its three thresholds are no longer exported. It emits `image_content_unread` and `image_content_undetermined`, both carrying `image_share` and `glyphs`, on M-178's figures (Q1).
+- **D-627 (R26).** Built as R26 now reads (K30, K32).
+  - A `no_text_layer` page carries neither R26 marker.
+  - A page that paints an image with a share rounding to 0, and shows fewer than 22 glyphs, reads `image_content_undetermined`.
+  - An unreadable page box reads `image_content_undetermined` only below 22 glyphs. At 22 or more the page carries neither marker; a test pins this.
+  - I kept the built work at `land/worker/D-627` @ `056d3092` for `pdfstructure.mjs` only, adapted to `pageDict`. Its three thresholds are no longer exported. It emits `image_content_unread` and `image_content_undetermined`, both carrying `image_share` and `glyphs`, on M-178's figures (Q1).
   - Not kept: the built work's `index.mjs` routing, which belongs to legacy-index (see Reported).
   - Not kept: its fixture, a real budget-book excerpt. R29 wants hand-built fixtures.
 - **T1-3.** `bio-plane/test/m/pdf-reader/` holds 48 tests in 4 files, plus `pdf.mjs`, a hand-built PDF writer. They name all 32 live ids and check them through the module's exports only.
@@ -108,27 +112,25 @@ Nothing is deferred. Two figures and one field name depend on BOB's answers: R26
   - `pagepixels.mjs` should switch `loadPdf` to `openPdf`, `_pageOrder.length` to `pageCount`, and the page lookup to `pageDict`. It still works today only because the private fields kept their names.
   - `pdf-worker`'s own tests pass on this branch: `pdf-worker` 67/67 and `pagepixels` 120/120, the same as before my change.
 - **legacy-index.** D-627's routing half is not in this module. For `image_content_unread` to reach OCR, `needsTier3` in `bio-plane/src/index.mjs` must treat that marker as it treats `no_text_layer`. The built work at `056d3092` has that 14-line change.
-- **legacy-tests.** `textshown.test.mjs` reads `doc._pageOrder`, which is now private; it should use `pageDict`. The `cpdf18` crop failures are listed under pdf-worker. Under K30's R26 (Q3), 5 more old assertions pin the pre-R26 marker set: `textshown` §2 (4, exactly `["no_text_layer"]`) and `cpdf18`'s Tier-1 text digest (1).
+- **legacy-tests.** `textshown.test.mjs` reads `doc._pageOrder`, which is now private; it should use `pageDict`. The `cpdf18` crop failures are listed under pdf-worker.
 - **Generated artifacts made stale** (manifest §Generated artifacts; not written by me): `pdf-worker/dist/pdf-worker.bundled.mjs`, `ocr-worker/dist/ocr-worker.bundled.mjs` and `bio-plane/dist/bio-plane.bundled.mjs`, with their `.bundle.json` files. All three embed `pdfstructure.mjs`.
 
 ### Tests and checks run
 
-- `node --test bio-plane/test/m/pdf-reader/`: tests 48, pass 48, fail 0 (re-run after K30).
+- `node --test bio-plane/test/m/pdf-reader/`: tests 48, pass 48, fail 0 (re-run after K32).
 - Layer tests: none are named in `build/manifest.md`.
 - Users of the changed service, run against this branch:
   - `pdf-worker/test/pdf-worker.test.mjs`: 67 passed, 0 failed.
   - `pdf-worker/test/pagepixels.test.mjs`: 120 passed, 0 failed.
-- The old battery's PDF tests, run for regressions: `pdfstructure` 170/0, `d608-form-text` 16/0, `producer-provenance` 58/0, `pdfstructure-op` 29/0, `tier-pagewise` 127/0, `capture-pagecount` 22/0; after K30, `textshown` 30/4 and `cpdf18-pdf-images` 24/5 (the 4 pdf-worker crops, plus the R26 pins above).
+- The old battery's PDF tests, run for regressions: `pdfstructure` 170/0, `d608-form-text` 16/0, `producer-provenance` 58/0, `pdfstructure-op` 29/0, `tier-pagewise` 127/0, `capture-pagecount` 22/0, and after K32 `textshown` 34/0, `cpdf18-pdf-images` 25 pass / 4 fail (the pdf-worker crops above).
 - `checks/format.mjs`: 61 modules, 17 requirements files; 0 failures.
 - `checks/architecture.mjs pdf-reader`: 6 product files, 11 relative imports; 0 failures.
 - `checks/coverage.mjs pdf-reader`: 32 of 32 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs pdf-reader tranche/T1`: 7 files changed by pdf-reader; 0 failures.
-
-### Metrics
+- `checks/ownership.mjs pdf-reader tranche/T1`: 5 files changed by pdf-reader since the merge at `c4bcdcd2`; 0 failures.
 
 ## Metrics
 
 ```csv
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
-session_01V8T49KLDauzP7JvxJMpQSz,job,pdf-reader,11616898,285766,134,77386,67,12,2731
+session_01V8T49KLDauzP7JvxJMpQSz,job,pdf-reader,18200096,314992,184,93474,90,20,2730
 ```

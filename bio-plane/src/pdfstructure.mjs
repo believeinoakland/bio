@@ -2467,8 +2467,8 @@ async function extractImages(doc) {
  * `image_content_undetermined` — never forced either way; 22 glyphs or more
  * says nothing. R26 states these figures (K30). They are general PDF-reading
  * parameters (R29): where they were measured is provenance, not jurisdiction.
- * Neither marker replaces `no_text_layer` (R14): a page that bears no text
- * layer carries that marker AND this one.
+ * R26 applies only to a page that shows text: a page carrying `no_text_layer`
+ * (R14) already says it is unread and carries neither marker (K32).
  *
  * WHAT THIS CANNOT SEE (M-178): a chart painted as an image under a text title
  * has the same two figures as a photo page with captions, so it reads no
@@ -2531,6 +2531,7 @@ function markImageContent(doc, text, images) {
     const painted = images.filter((im) => im.page === pg.page);
     if (!painted.length) continue;
     const marks = pg.undetermined;
+    if (marks.some((m) => m.reason === "no_text_layer")) continue; // R26 is for a page that shows text (K32)
     let decoded = 0;
     for (const ch of pg.text) if (!/\s/u.test(ch)) decoded++;
     const glyphs = decoded + marks.reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);

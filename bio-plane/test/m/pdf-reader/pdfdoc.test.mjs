@@ -184,7 +184,7 @@ test("R27: every undetermined, why and reason names its kind — never a bare fa
       assert.notEqual(await pageShowsText(d, d.pageDict(p.page)), true);
     }
   }
-  assert.equal(seen, 10);
+  assert.equal(seen, 9);
 });
 
 test("R28: producer.determination is only ever 'ocr' with a named engine, or 'undetermined' — never 'authored'", async () => {

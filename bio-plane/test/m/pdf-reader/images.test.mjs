@@ -95,6 +95,7 @@ test("R26: a page an image fills while it shows at most a folio carries image_co
     { content: "q 600 0 0 400 0 0 cm /I Do Q BT /N 10 Tf (abc) Tj ET", resources: "/Font << /N 13 0 R >> /XObject << /I 20 0 R >>" }, // 8: undecoded folio
     page("(1)", "600 0 0 400 0 0", { box: "" }),                            // 9: no page box
     page("(1)", "0 0 0 0 0 0"),                                             // 10: painted, share 0
+    page(`(${"x".repeat(22)})`, "600 0 0 400 0 0", { box: "" }),            // 11: no page box, 22 glyphs
   ], { objs }));
   const m = (i) => r.text.pages[i].undetermined.filter((x) => x.reason.startsWith("image_content"));
   const mk = (page, reason, image_share, glyphs) => [{ page, reason, font: null, codes: "", count: 0, image_share, glyphs }];
@@ -109,19 +110,19 @@ test("R26: a page an image fills while it shows at most a folio carries image_co
   assert.deepEqual(m(8), mk(8, "image_content_unread", 0.5, 3));
   assert.deepEqual(m(9), mk(9, "image_content_undetermined", null, 1));
   assert.deepEqual(m(10), mk(10, "image_content_undetermined", 0, 1));
+  assert.deepEqual(m(11), []);
   assert.deepEqual(r.text.undetermined, r.text.pages.flatMap((p) => p.undetermined));
   assert.equal(r.text.counts.undetermined, r.text.undetermined.length);
 });
 
-test("R26: overlapping images count once; a no_text_layer page carries both markers; no images, no marker", async () => {
+test("R26: overlapping images count once; a no_text_layer page carries neither R26 marker; no images, no marker", async () => {
   const r = await extractPdfStructure(doc([
     { content: "q 600 0 0 400 0 0 cm /I Do Q q 600 0 0 400 0 0 cm /I Do Q q 300 0 0 400 0 0 cm /I Do Q BT /F1 10 Tf (7) Tj ET", resources: "/Font << /F1 10 0 R >> /XObject << /I 20 0 R >>" },
     { content: "q 600 0 0 800 0 0 cm /I Do Q", resources: "/XObject << /I 20 0 R >>" },
     { content: "BT /F1 10 Tf (7) Tj ET" },
   ], { objs: { 20: img() } }));
   assert.deepEqual(r.text.pages[0].undetermined.map((x) => [x.reason, x.image_share]), [["image_content_unread", 0.5]]);
-  assert.deepEqual(r.text.pages[1].undetermined.map((x) => [x.reason, x.image_share, x.glyphs]),
-    [["no_text_layer", undefined, undefined], ["image_content_unread", 1, 0]]);
+  assert.deepEqual(r.text.pages[1].undetermined.map((x) => x.reason), ["no_text_layer"]);
   assert.deepEqual(r.text.pages[2].undetermined, []);
   // images null (a page could not be walked): no share can be measured and nothing is said
   const n = await extractPdfStructure(doc([
