@@ -108,23 +108,24 @@
  *           drawing-page style in automatic styles (where LibreOffice writes
  *           it) or on the page element. Extracted in full and FLAGGED.
  *
- *   NOT CARRIED BY content.xml — SAID, on every entry, in
- *   `evidentiary.undetermined`:
+ *   NOT CARRIED BY content.xml, and READ FROM THEIR OWN PARTS (D-346,
+ *   2026-09-25 — until then each was stated in `evidentiary.undetermined` as
+ *   `outside_content_xml_not_read`, and both markers are gone because both
+ *   parts are now read):
  *     core-properties (creator, title, created/modified, revision) live in
- *           `meta.xml`, which is a DIFFERENT part of the package. The OOXML
- *           entries emit a `core-properties` item from `docProps/core.xml`;
- *           these entries emit NONE, and its absence from `items[]` is NOT
- *           evidence the document carries no author. The named marker
- *           `{part:"meta.xml", why:"outside_content_xml_not_read"}` is what
- *           keeps that distinction visible.
- *     embedded objects (`Object 1/`, `Pictures/`) are separate package
- *           members listed in `META-INF/manifest.xml`. The OOXML entries
- *           content-address each container's own `embeddings/` directory
- *           into the `intra` partition;
- *           these entries read one part and so emit NO `intra` link, with
- *           `{part:"META-INF/manifest.xml", why:"outside_content_xml_not_read"}`
- *           saying so. An empty `intra` count here means NOT LOOKED, not NONE
- *           PRESENT.
+ *           `meta.xml`. Emitted as the SAME `core-properties` item, with the
+ *           SAME fields and no others, that the OOXML entries build from
+ *           `docProps/core.xml` — mapped by MEANING, not by element name,
+ *           because ODF's `dc:creator` is the last editor (`parseOdfMeta`).
+ *           A package WITHOUT meta.xml (OpenDocument permits it) is stated as
+ *           `{part:"meta.xml", why:"part_absent"}`, so a missing item is
+ *           never read as "this document has no author".
+ *     embedded members (`Object 1/…`, an OLE blob, `ObjectReplacements/`)
+ *           are listed in `META-INF/manifest.xml`, walked, and content-
+ *           addressed into `intra` by sha256 exactly as the OOXML entries
+ *           address `embeddings/`. Images under `Pictures/` are `text()`'s
+ *           IC-124 `images`, not `intra` (`manifestIntraLinks` states the
+ *           rule and what it cannot see).
  *
  *   DOES NOT EXIST IN OPENDOCUMENT AT ALL, as distinct from not read:
  *     a sheet's numeric id (xlsx's `sheetId`) — ODF identifies a table by
@@ -163,7 +164,7 @@
 
 import {
   hasZipMagic, readContainer, readPart, normalizePartName, crc32,
-  discriminate, sizeGuard, declaredTextBytes,
+  discriminate, sizeGuard, declaredTextBytes, IMAGE_MIME_BY_EXT,
   CONTAINER_FLAVOURS, ODF_MIMETYPE_PART, ODF_MANIFEST_PART, ODF_MIMETYPE_MAX_BYTES,
   withContainerImages,
 } from "./ooxml.mjs";
@@ -173,6 +174,17 @@ import { sheetCellRef, usedSheetRange } from "./formats-xlsx.mjs";
 import { slideShapeRef } from "./pptx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
+
+/** Bytes as a Uint8Array view, from a Uint8Array, an ArrayBuffer, any typed
+ *  view or a plain byte array; anything else reads as NO bytes (null), so a
+ *  caller's odd argument is answered as "not this format", never a throw. */
+function asBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (x instanceof ArrayBuffer) return new Uint8Array(x);
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  if (Array.isArray(x)) { try { return Uint8Array.from(x); } catch { return null; } }
+  return null;
+}
 
 /* ------------------------------------------------------------------ *
  * The part-map, taken from COFF-9's TABLE and never from a literal
@@ -210,9 +222,8 @@ export const ODP_CONTENT_TYPE = ODP_ROW.mimetype;
 /** The one part every entry reads. Taken from the row, not spelled here. */
 const CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
 
-/** `meta.xml` and `META-INF/manifest.xml` are NAMED so the two DEC-5 absences
- *  above can be stated with the part that would have carried them. Neither is
- *  read. */
+/** `meta.xml` — read for the `core-properties` item (D-346); named so its
+ *  absence or unreadability is stated with the part that would have carried it. */
 const META_PART = "meta.xml";
 
 /* ------------------------------------------------------------------ *
@@ -228,9 +239,11 @@ function decodeEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
       const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      /* An out-of-range code point (`&#99999999;`) is left as written: it
+         names no character, and fromCodePoint would throw on it. */
+      return Number.isInteger(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
     }
-    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
   });
 }
 
@@ -267,7 +280,7 @@ const tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\
  *  closes of the same local name, so `<draw:g>` inside `<draw:g>` does not
  *  end the outer one early. Only TOP-LEVEL occurrences are returned (a nested
  *  match is inside its parent's `inner`, where the caller can recurse). */
-function elementsNested(xml, localName) {
+function elementsNested(xml, localName, limit = Infinity) {
   const out = [];
   const RE = tokens();
   let m, depth = 0, start = -1, openAttrs = null;
@@ -281,11 +294,15 @@ function elementsNested(xml, localName) {
       if (depth === 0 && start >= 0) {
         out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
         start = -1; openAttrs = null;
+        if (out.length >= limit) break;
       }
       continue;
     }
     if (selfClosed) {
-      if (depth === 0) out.push({ attrs: attrsOf(m[2]), inner: "" });
+      if (depth === 0) {
+        out.push({ attrs: attrsOf(m[2]), inner: "" });
+        if (out.length >= limit) break;
+      }
       continue;
     }
     if (depth === 0) { start = RE.lastIndex; openAttrs = attrsOf(m[2]); }
@@ -472,18 +489,25 @@ function readStoredMemberSync(bytes, container, name, maxBytes) {
  * detect() — shared by all three entries, parameterised by the ROW
  * ------------------------------------------------------------------ */
 
-function detectOdf(row, bytes, contentType) {
-  if (bytes) {
-    if (!hasZipMagic(bytes)) return null;
+function detectOdf(row, raw, contentType) {
+  try { return detectOdfUnguarded(row, raw, contentType); } catch { return null; }
+}
+
+function detectOdfUnguarded(row, raw, contentType) {
+  if (raw) {
+    const bytes = asBytes(raw);
+    if (!bytes || !hasZipMagic(bytes)) return null;
     const container = readContainer(bytes);
     if (!container.ok) return null;                       // the 1 KiB acquire seam: no EOCD, no claim
     /* The FIRST-member requirement, checked the way COFF-9 checks it: the
-     * mimetype must head the central directory. A package that fails it is
-     * not this entry's — `discriminate()` will state WHY when parts() runs;
-     * answering null here keeps detect from claiming what the container
-     * cannot support. */
+     * mimetype must head the central directory AND no member may lie earlier
+     * in the file (the ZIP format does not tie the two orders together). A
+     * package that fails it is not this entry's — `discriminate()` will state
+     * WHY when parts() runs; answering null here keeps detect from claiming
+     * what the container cannot support. */
     const first = container.entries[0];
     if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
+    if (container.entries.some((e) => e.localHeaderOffset < first.localHeaderOffset)) return null;
     const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
     if (declared !== row.mimetype) return null;           // EXACT, never trimmed — COFF-9's rule
     const main = normalizePartName(row.conventionalMainPart);
@@ -519,14 +543,23 @@ function detectOdf(row, bytes, contentType) {
  * ------------------------------------------------------------------ */
 
 async function odfParts(row, bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  try { return await odfPartsUnguarded(row, bytes); } catch (e) {
+    /* R38's last line of defence: nothing below is expected to throw, and if
+       something does the caller still gets a stated refusal, never an
+       exception. */
+    return { ok: false, container: row.flavour, why: `reader_failed:${e?.name ?? "Error"}`, part: null, flavourDeclared: null, signals: [] };
+  }
+}
+
+async function odfPartsUnguarded(row, bytes) {
+  const b = asBytes(bytes) ?? new Uint8Array(0);
 
   /* The full discrimination (magic + first-and-stored mimetype + the declared
    * main part present), through COFF-9's own branch. A container that is not
    * honestly this flavour yields a STATED refusal, never a walk of something
    * else's parts. */
   const d = await discriminate(b);
-  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
+  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, part: null, flavourDeclared: null, signals: d.signals };
   if (d.format !== row.flavour) {
     /* THE ABSENCE IS NAMED. `discriminate` reports a package whose mimetype
      * declares a flavour but whose main part is missing as
@@ -541,13 +574,16 @@ async function odfParts(row, bytes) {
       container: row.flavour,
       why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
       part: absent ? CONTENT_PART : null,
-      flavourDeclared: d.flavourDeclared ?? null,
+      /* The flavour the package's own mimetype named: stated by
+         `discriminate` on an undetermined read, and the flavour it found on a
+         package of another OpenDocument kind (`not_odt:ods` declared ods). */
+      flavourDeclared: d.flavourDeclared ?? (ODF_ROWS.some((r) => r.flavour === d.format) ? d.format : null),
       signals: d.signals,
     };
   }
 
   const container = readContainer(b);
-  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
+  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, part: null, flavourDeclared: null, signals: d.signals };
 
   const undetermined = [];
 
@@ -568,24 +604,226 @@ async function odfParts(row, bytes) {
    * marker itself is the statement, carried by structure()'s envelope and by
    * text() verbatim (the docx.mjs pattern). */
 
-  /* THE TWO NAMED ABSENCES (DEC-5). These are pushed on EVERY read, including
-   * a completely successful one, because their whole purpose is to stop a
-   * consumer reading an absent `core-properties` item as "this document has
-   * no author" or a zero `intra` count as "this document embeds nothing".
-   * `CLAUDE.md`: absence at one level is not evidence of absence at the next,
-   * and saying which is true is a first-class obligation. */
-  undetermined.push({
-    part: META_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none",
-  });
-  undetermined.push({
-    part: ODF_MANIFEST_PART,
-    why: "outside_content_xml_not_read",
-    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT",
-  });
+  /* D-346 — THE TWO PARTS BESIDE content.xml THAT CARRY DEC-5 EVIDENCE.
+   * Until D-346 neither was read, and each was STATED as not read (the
+   * `outside_content_xml_not_read` markers) so a consumer could not mistake
+   * silence for a fact. Both are now read, in the siblings' treatment: a
+   * `core-properties` item from meta.xml (docx.mjs's fields, no others) and
+   * sha256 `intra` links for the embedded members META-INF/manifest.xml lists
+   * (docx.mjs's `word/embeddings/` treatment). What cannot be read is still
+   * STATED, by the part and the reason — including a package with NO meta.xml,
+   * which OpenDocument permits and which is therefore said, not left silent:
+   * no core-properties item and no statement would read as "no author". */
+  let core = null;
+  if (hasMember(container, META_PART)) {
+    const read = await readPart(b, container, META_PART);
+    const c = read.ok ? parseOdfMeta(UTF8.decode(read.bytes)) : { ok: false, why: read.why };
+    if (c.ok) core = c;
+    else undetermined.push({ part: META_PART, why: c.why });
+  } else {
+    undetermined.push({
+      part: META_PART,
+      why: "part_absent",
+      detail: "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",
+    });
+  }
 
-  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+  const manifest = await manifestIntraLinks(b, container, contentXml, undetermined);
+
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, core,
+    embedded: manifest.links, manifestWhy: manifest.why, undetermined };
+}
+
+/* ------------------------------------------------------------------ *
+ * D-346 — meta.xml into `core-properties`, the manifest into `intra`
+ * ------------------------------------------------------------------ */
+
+function hasMember(container, name) {
+  return container.byName.has(name)
+    || container.entries.some((e) => normalizePartName(e.name) === name);
+}
+
+const HEX = "0123456789abcdef";
+async function sha256Hex(u8) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  let out = "";
+  for (let i = 0; i < d.length; i++) out += HEX[d[i] >> 4] + HEX[d[i] & 15];
+  return out;
+}
+
+/** meta.xml's `<office:meta>` as the SAME fields `parseCoreProperties` reads
+ *  from OOXML's docProps/core.xml — and NO others. meta.xml can carry more
+ *  (keywords, description, user-defined fields, the generator, statistics);
+ *  it is personal data in part, and this entry emits only what the OOXML
+ *  path already emits, so no consumer meets a field from an .odt it would
+ *  not meet from a .docx.
+ *
+ *  THE MAPPING, because the two vocabularies name the people differently
+ *  (OpenDocument 1.2 part 1 §4.3): OOXML's `dc:creator` is the AUTHOR and
+ *  `cp:lastModifiedBy` the last editor; ODF's `meta:initial-creator` is the
+ *  author and ODF's `dc:creator` is the LAST EDITOR. So
+ *    creator        ← meta:initial-creator
+ *    lastModifiedBy ← dc:creator
+ *    created        ← meta:creation-date
+ *    modified       ← dc:date
+ *    title          ← dc:title
+ *    revision       ← meta:editing-cycles  (revisionNumber when an integer)
+ *  Mapping by NAME (`dc:creator` → `creator`) would put the last editor in
+ *  the author's field — a false attribution, which is the defect this record
+ *  exists to avoid. Each field is the string the file carries or null when
+ *  absent — never filled in from another. */
+function parseOdfMeta(xml) {
+  const doc = elementsNested(xml, "document-meta")[0];
+  const meta = doc ? elementsNested(doc.inner, "meta")[0] : null;
+  if (!meta) return { ok: false, why: "core_properties_unparseable" };
+  const field = (local) => {
+    const el = elementsNested(meta.inner, local)[0];
+    return el ? visibleText(el.inner) : null;
+  };
+  const revision = field("editing-cycles");
+  const revisionNumber = revision != null && /^\d+$/.test(revision.trim())
+    ? parseInt(revision.trim(), 10) : null;
+  return {
+    ok: true,
+    creator: field("initial-creator"),
+    lastModifiedBy: field("creator"),
+    revision,
+    revisionNumber,
+    created: field("creation-date"),
+    modified: field("date"),
+    title: field("title"),
+  };
+}
+
+/** The `core-properties` item, field for field the one docx.mjs,
+ *  formats-xlsx.mjs and pptx.mjs push (IC-2 as accepted). */
+function corePropertiesItems(parts) {
+  if (!parts.core) return [];
+  const c = parts.core;
+  return [{
+    kind: "core-properties",
+    creator: c.creator, lastModifiedBy: c.lastModifiedBy,
+    revision: c.revision, revisionNumber: c.revisionNumber,
+    created: c.created, modified: c.modified, title: c.title,
+    source: null,
+  }];
+}
+
+/* The package's OWN parts (OpenDocument 1.2 part 3 §3, plus LibreOffice's
+ * `Configurations2/` UI state): the document itself and its machinery, not
+ * something embedded in it. */
+const PACKAGE_OWN = new Set(["mimetype", "content.xml", "styles.xml", "meta.xml", "settings.xml", "manifest.rdf"]);
+const PACKAGE_OWN_DIRS = ["META-INF/", "Thumbnails/", "Configurations2/"];
+
+/** META-INF/manifest.xml walked for the EMBEDDED members, each content-
+ *  addressed into `intra` by the sha256 of its inflated bytes — exactly the
+ *  link docx.mjs builds from `word/embeddings/`.
+ *
+ *  THE RULE IS AN INVERSION, not a list of what counts as embedded: every
+ *  file entry the manifest names is `intra` EXCEPT
+ *    - the package's own parts (PACKAGE_OWN / PACKAGE_OWN_DIRS);
+ *    - an image under `Pictures/` — `text()` already content-addresses those
+ *      as IC-124 `images`, the OOXML `word/media/` treatment, and a second
+ *      address for the same bytes would count one image twice;
+ *    - a font face content.xml names through `font-face-uri` (D-612's
+ *      presentational judgment; OOXML's `word/fonts/` is not `intra` either).
+ *  So an `Object N/` sub-document's members, an OLE blob, an
+ *  `ObjectReplacements/` rendering, and a video or other non-image member are
+ *  `intra`. A directory entry (`Object 1/`) is not a member; its files are
+ *  listed, and linked, on their own.
+ *
+ *  WHAT IS STATED RATHER THAN LINKED: a manifest that cannot be read or
+ *  parsed (the envelope names it — `intra` then means NOT LOOKED); a listed
+ *  member the container does not hold, one encrypted (its stored bytes are
+ *  ciphertext, and a hash of them would address nothing a reader holds), and
+ *  one that will not inflate — each an `undetermined` link naming it.
+ *
+ *  WHAT IT CANNOT SEE: a container member the manifest does NOT list
+ *  (OpenDocument requires the listing; a non-conforming producer can omit
+ *  one); a font face named only from styles.xml, which is not read, and any
+ *  font face when content.xml was not read (over the bound) — those are
+ *  linked as `intra`, an over-inclusion, never an omission. `source` is null:
+ *  locating a member to the `draw:object` that references it is not built. */
+async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
+  const read = await readPart(bytes, container, ODF_MANIFEST_PART);
+  if (!read.ok) {
+    undetermined.push({ part: ODF_MANIFEST_PART, why: read.why });
+    return { links: [], why: read.why };
+  }
+  const xml = UTF8.decode(read.bytes);
+  const root = elementsNested(xml, "manifest", 1)[0];
+  if (!root) {
+    undetermined.push({ part: ODF_MANIFEST_PART, why: "manifest_unparseable" });
+    return { links: [], why: "manifest_unparseable" };
+  }
+
+  const fonts = new Set();
+  if (contentXml != null) {
+    for (const f of elementsNested(contentXml, "font-face-uri")) {
+      const href = f.attrs.href;
+      if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
+    }
+  }
+
+  /* First the listing: which members are embedded, each once (a manifest
+     naming a member twice does not make two embeddings). */
+  const listed = [];
+  const seen = new Set();
+  for (const fe of elementsNested(root.inner, "file-entry")) {
+    const path = fe.attrs["full-path"];
+    if (typeof path !== "string" || !path || path.endsWith("/")) continue;
+    const name = normalizePartName(path);
+    if (seen.has(name)) continue;
+    seen.add(name);
+    if (PACKAGE_OWN.has(name) || PACKAGE_OWN_DIRS.some((d) => name.startsWith(d))) continue;
+    if (name.startsWith("Pictures/")) {
+      const dot = name.lastIndexOf(".");
+      if (dot > name.lastIndexOf("/") && IMAGE_MIME_BY_EXT[name.slice(dot + 1).toLowerCase()]) continue;
+    }
+    if (fonts.has(name)) continue;
+    listed.push({ name, encrypted: elementsNested(fe.inner, "encryption-data", 1).length > 0 });
+  }
+
+  const undeterminedLink = (why, name) => ({ partition: "undetermined", wrapper: null,
+    target: { why, name }, source: null });
+
+  /* THE SAME BOUND AND METRIC AS THE TEXT PART AND THE IMAGES (COFF-6):
+     hashing inflates every embedded member, so their DECLARED uncompressed
+     bytes are summed from the central directory first. Over the bound none is
+     inflated and each is stated by name — never a partial set of links read
+     as the whole. */
+  let total = 0;
+  for (const l of listed) {
+    if (l.encrypted) continue;
+    const e = container.byName.get(l.name) ?? container.entries.find((x) => normalizePartName(x.name) === l.name);
+    if (e) total += e.uncompressedSize;
+  }
+  const g = sizeGuard(total);
+
+  const links = [];
+  for (const { name, encrypted } of listed) {
+    if (encrypted) { links.push(undeterminedLink("embedding_encrypted", name)); continue; }
+    if (!hasMember(container, name)) { links.push(undeterminedLink("manifest_member_absent", name)); continue; }
+    if (!g.ok) { links.push(undeterminedLink(`embeddings_over_size_bound:${total}>${g.bound}`, name)); continue; }
+    const got = await readPart(bytes, container, name);
+    if (!got.ok) { links.push(undeterminedLink(`embedding_unreadable:${got.why}`, name)); continue; }
+    const sha = await sha256Hex(got.bytes);
+    links.push({ partition: "intra", wrapper: linkWrapper.intra(sha),
+      target: { sha256: sha, name, bytes: got.bytes.length },
+      source: null });
+  }
+  return { links, why: null };
+}
+
+/** Why `intra` holds nothing, when it holds nothing — so an empty partition
+ *  is never read as "this package embeds nothing" when the manifest was not
+ *  read, and says so plainly when the manifest was read and lists none. */
+function intraNotes(parts) {
+  if (parts.manifestWhy) {
+    return [`no intra link: ${ODF_MANIFEST_PART} could not be read (${parts.manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)`];
+  }
+  if (!parts.embedded.length) return [`no intra link: ${ODF_MANIFEST_PART} lists no embedded member`];
+  return [];
 }
 
 /* The body of content.xml for a given office body kind, or null. Every walk
@@ -593,7 +831,9 @@ async function odfParts(row, bytes) {
  * styles and font declarations can never be mistaken for content. */
 function officeBody(contentXml, kind) {
   if (contentXml == null) return null;
-  const body = elementsNested(contentXml, "body")[0];
+  /* An EMPTY body ("" — a document with no paragraphs, sheets or pages) is a
+     body read, not a body missing: callers test for null, never falsiness. */
+  const body = elementsNested(contentXml, "body", 1)[0];
   if (!body) return null;
   const inner = elementsNested(body.inner, kind)[0];
   return inner ? inner.inner : null;
@@ -624,11 +864,6 @@ function countPartitions(links) {
   for (const l of links) counts[l.partition]++;
   return counts;
 }
-
-/* The note every entry carries, so the `intra`-is-zero fact is visible in
- * `notes` as well as in the envelope — a reader scanning either surface must
- * meet it. */
-const NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
 
 /* ================================================================== *
  * .odt — the TEXT document, in docx.mjs's shape
@@ -686,7 +921,9 @@ function walkTextBody(bodyXml) {
       /* The annotation's markup runs to its close; capture it whole and take
        * its text out of the host paragraph. */
       const rest = served.slice(m.index);
-      const ann = elementsNested(rest, "annotation")[0];
+      /* Only the FIRST: scanning the rest of the body for every annotation
+         made a comment-heavy document quadratic. */
+      const ann = elementsNested(rest, "annotation", 1)[0];
       annotations.push({ attrs: attrsOf(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
       skipDepth = 1;
       prev = RE.lastIndex;
@@ -733,18 +970,32 @@ function walkTextBody(bodyXml) {
   return { paragraphs, hyperlinks, annotations, marks, openChanges };
 }
 
-/** The inserted text of a change region, taken from the BODY between its
- *  `<text:change-start>` and `<text:change-end>` marks. The declaration block
- *  carries a deletion's wording but NOT an insertion's — the insertion is in
- *  the document as served, which is why it is also in the text stream. */
-function insertedTextFor(bodyXml, id) {
-  const served = stripElement(bodyXml, "tracked-changes");
-  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
-  const s = served.match(startRe);
-  const e = served.match(endRe);
-  if (!s || !e || e.index < s.index) return null;   // null, never "" — absent is not empty
-  return visibleText(served.slice(s.index + s[0].length, e.index));
+/** The inserted text of every change region, taken from the BODY between
+ *  its `<text:change-start>` and `<text:change-end>` marks: `Map(id → text)`.
+ *  The declaration block carries a deletion's wording but NOT an insertion's —
+ *  the insertion is in the document as served, which is why it is also in the
+ *  text stream. One token walk over the served body for every region (the
+ *  marks are matched by local name and `change-id`, in either quote style); a
+ *  region with no start, no end, or an end before its start is absent from
+ *  the map, and its text is null — absent is not empty. An annotation inside
+ *  the region is the annotation's text, not the insertion's. */
+function insertedTexts(servedXml) {
+  const out = new Map();
+  const starts = new Map();
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(servedXml)) !== null) {
+    if (m[1] === undefined || m[0][1] === "/") continue;
+    const name = localOf(m[1]);
+    if (name !== "change-start" && name !== "change-end") continue;
+    const id = attrsOf(m[2])["change-id"];
+    if (id == null) continue;
+    if (name === "change-start") { if (!starts.has(id)) starts.set(id, RE.lastIndex); }
+    else if (starts.has(id) && !out.has(id)) {
+      out.set(id, visibleText(stripElement(servedXml.slice(starts.get(id), m.index), "annotation")));
+    }
+  }
+  return out;
 }
 
 /** `<text:tracked-changes>`: one entry per `<text:changed-region>`, each an
@@ -780,18 +1031,18 @@ function odtStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = intraNotes(parts);
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "text");
-  if (!body) {
+  if (body == null) {
     notes.push(parts.guard
       ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
       : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
   }
 
   let paragraphs = null;
-  if (body) {
+  if (body != null) {
     const walk = walkTextBody(body);
     paragraphs = walk.paragraphs.length;
 
@@ -803,6 +1054,7 @@ function odtStructure(parts) {
      * paragraph the body's mark sits in. A region the body never marks is
      * still carried — with source null and the reason stated — because the
      * change is evidence whether or not we can place it. */
+    const inserted = insertedTexts(stripElement(body, "tracked-changes"));
     const markFor = new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
@@ -815,7 +1067,7 @@ function odtStructure(parts) {
         source: at == null ? null : docParaRef(at),
       };
       if (c.change === "deletion") item.superseded = c.superseded;
-      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
+      else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
       if (at === undefined) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
@@ -840,6 +1092,10 @@ function odtStructure(parts) {
       });
     }
   }
+
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
 
   return {
     ok: true,
@@ -909,8 +1165,8 @@ function odtText(parts) {
     };
   }
   const body = officeBody(parts.contentXml, "text");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+  if (body == null) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true, container: "odt", document: null, paragraphs: [], tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
@@ -1052,11 +1308,11 @@ function odsStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = intraNotes(parts);
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
+  if (body == null) {
     notes.push(parts.guard
       ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
       : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
@@ -1064,7 +1320,7 @@ function odsStructure(parts) {
   if (parts.guard) notes.push("text_parts_over_bound");
 
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: new Map(), pageVisible: new Map() };
-  const sheets = body ? sheetsOf(body, styles) : [];
+  const sheets = body != null ? sheetsOf(body, styles) : [];
 
   for (const sheet of sheets) {
     const walked = walkSheet(sheet.xml);
@@ -1105,6 +1361,10 @@ function odsStructure(parts) {
     if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
   }
 
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
+
   return {
     ok: true,
     container: "ods",
@@ -1128,8 +1388,8 @@ function odsText(parts) {
     };
   }
   const body = officeBody(parts.contentXml, "spreadsheet");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+  if (body == null) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
     return {
       ok: true, container: "ods", document: null, sheets: [],
@@ -1229,35 +1489,112 @@ function walkPage(pageXml) {
   let m;
   let index = -1;
   const open = [];
+  /* EACH LINK IS LOCATED ONCE, to the shape that owns it. A `<text:a>` inside
+     a paragraph belongs to the innermost shape open around it — never also to
+     the groups enclosing that shape, which counted one link once per level.
+     A `<draw:a>` outside any paragraph WRAPS a shape (OpenDocument's
+     clickable shape) and belongs to the first shape it opens; one that wraps
+     no shape belongs to the shape around it, or, at page level, to the page
+     itself (`page`), never dropped. */
+  const hrefsOf = new Map();                  // shape index → hrefs
+  const pageHrefs = [];
+  const pending = [];                         // draw:a hrefs waiting for their shape
+  const aStack = [];                          // for each open <a>: its pending entry, or null
+  let paraDepth = 0;
+  const own = (href) => {
+    const top = open.length ? open[open.length - 1].index : null;
+    if (top == null) pageHrefs.push(href);
+    else { if (!hrefsOf.has(top)) hrefsOf.set(top, []); hrefsOf.get(top).push(href); }
+  };
   while ((m = RE.exec(slideOnly)) !== null) {
     if (m[1] === undefined) continue;
     const name = localOf(m[1]);
-    if (!ODP_SHAPE_TAGS.has(name)) continue;
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
+    if (name === "p" || name === "h") {
+      if (!selfClosed) paraDepth = Math.max(0, paraDepth + (closing ? -1 : 1));
+      continue;
+    }
+    if (name === "a") {
+      if (closing) {
+        const entry = aStack.pop();
+        if (entry && !entry.placed) {
+          pending.splice(pending.indexOf(entry), 1);
+          own(entry.href);
+        }
+        continue;
+      }
+      const href = attrsOf(m[2]).href;
+      if (href == null) { if (!selfClosed) aStack.push(null); continue; }
+      if (paraDepth > 0 || selfClosed) { own(href); if (!selfClosed) aStack.push(null); continue; }
+      const entry = { href, placed: false };
+      pending.push(entry);
+      aStack.push(entry);
+      continue;
+    }
+    if (!ODP_SHAPE_TAGS.has(name)) continue;
     if (closing) {
       const o = open.pop();
       if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
       continue;
     }
     index++;
+    if (pending.length) {
+      hrefsOf.set(index, pending.map((e) => e.href));
+      for (const e of pending) e.placed = true;
+      pending.length = 0;
+    }
     if (selfClosed) { shapes.push({ shape: index, inner: "" }); continue; }
     open.push({ index, start: RE.lastIndex });
+  }
+  /* An unclosed wrapper at the end of the page still states its link. */
+  for (const e of pending) pageHrefs.push(e.href);
+  /* A shape left open at the end of the page (malformed markup) still counts
+     and still carries its text, to the end of the page. */
+  while (open.length) {
+    const o = open.pop();
+    shapes.push({ shape: o.index, inner: slideOnly.slice(o.start) });
   }
   shapes.sort((a, b) => a.shape - b.shape);
   return {
     count: index + 1,
+    pageHrefs,
     shapes: shapes.map((s) => ({
       shape: s.shape,
       /* A group's text is the text of the shapes inside it, which are their
          own entries; taking the group's inner markup would double-count it in
-         the slide's text, so a shape's OWN text is its `<draw:text-box>`
-         paragraphs only. */
-      text: elementsNested(s.inner, "text-box").map((tb) =>
-        elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
-      hrefs: hrefsIn(s.inner),
+         the slide's text, so a shape's OWN text is the paragraphs outside
+         every shape nested in it: a frame's `<draw:text-box>` or table, and
+         the paragraphs a custom shape or rectangle holds DIRECTLY (which a
+         text-box-only reading dropped). */
+      text: ownShapeText(s.inner),
+      hrefs: hrefsOf.get(s.shape) ?? [],
     })),
   };
+}
+
+/** The paragraphs (`<text:p>`/`<text:h>`) of a shape's inner markup that lie
+ *  outside every shape nested in it, each as visible text, newline-joined. */
+function ownShapeText(xml) {
+  const paras = [];
+  const RE = tokens();
+  let m, shapeDepth = 0, paraDepth = 0, start = -1;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === undefined) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (ODP_SHAPE_TAGS.has(name)) {
+      if (closing) shapeDepth = Math.max(0, shapeDepth - 1);
+      else if (!selfClosed) shapeDepth++;
+      continue;
+    }
+    if (shapeDepth > 0 || (name !== "p" && name !== "h")) continue;
+    if (selfClosed) { if (paraDepth === 0) paras.push(""); continue; }
+    if (!closing) { if (paraDepth++ === 0) start = RE.lastIndex; continue; }
+    if (paraDepth > 0 && --paraDepth === 0) paras.push(visibleText(xml.slice(start, m.index)));
+  }
+  return paras.join("\n");
 }
 
 function notesTextOf(pageXml) {
@@ -1289,17 +1626,17 @@ function odpStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  const notes = [NO_INTRA_NOTE];
+  const notes = intraNotes(parts);
   const links = [];
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
+  if (body == null) {
     notes.push(parts.guard
       ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
       : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
   }
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: new Map(), pageVisible: new Map() };
-  const deck = body ? deckOf(body, styles) : null;
+  const deck = body != null ? deckOf(body, styles) : null;
 
   if (deck) {
     for (const page of deck) {
@@ -1307,6 +1644,7 @@ function odpStructure(parts) {
       for (const s of walked.shapes) {
         for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
       }
+      for (const href of walked.pageHrefs) links.push(linkRecord(href, slideShapeRef(page.slide)));
       /* DEC-5: SPEAKER NOTES — routinely more candid than the slide, and
          removed from every presented form. Their own envelope kind, their own
          text unit, never merged. */
@@ -1323,6 +1661,10 @@ function odpStructure(parts) {
       }
     }
   }
+
+  /* D-346: the manifest's embedded members, and meta.xml's core properties. */
+  links.push(...parts.embedded);
+  items.push(...corePropertiesItems(parts));
 
   return {
     ok: true,
@@ -1351,8 +1693,8 @@ function odpText(parts) {
     };
   }
   const body = officeBody(parts.contentXml, "presentation");
-  if (!body) {
-    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+  if (body == null) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART);
     return {
       ok: true, container: "odp", document: null, slides: [], speakerNotes: [],
       deckLength: null,
@@ -1407,7 +1749,14 @@ function odpText(parts) {
  * this axis exists to keep)
  * ================================================================== */
 
+/** Raw bytes in any form `asBytes` accepts are read through parts(); anything
+ *  else is taken as parts()'s own output. */
+const isRawBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+
 function entryFor(row, structureOf, textOf) {
+  /* R38: a stated refusal, never an exception, whatever the argument. */
+  const failed = (e) => ({ ok: false, container: row.flavour, reason: `reader_failed:${e?.name ?? "Error"}`, part: null });
+  const partsOf = async (partsOrBytes) => (isRawBytes(partsOrBytes) ? odfParts(row, partsOrBytes) : partsOrBytes);
   return {
     format: row.flavour,
     detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
@@ -1415,19 +1764,19 @@ function entryFor(row, structureOf, textOf) {
     /* Accept either parts() output or raw bytes, exactly as the three OOXML
        entries do, so detect→structure works uniformly at the registry seam
        while a caller that already paid for parts() does not pay twice. */
-    structure: async (partsOrBytes) => structureOf(
-      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
-        ? await odfParts(row, partsOrBytes) : partsOrBytes),
+    structure: async (partsOrBytes) => {
+      try { return structureOf(await partsOf(partsOrBytes)); } catch (e) { return failed(e); }
+    },
     /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
        exhaustive or NULL, through the one enumerator the OOXML entries use.
        Read off the central directory, so it does NOT depend on
-       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
-       the manifest stays TRUE and stays emitted: it speaks about `intra`
-       embedded objects, which this does not content-address. */
+       META-INF/manifest.xml; the manifest walk (D-346) leaves these images
+       out of `intra` so one image is never addressed twice. */
     text: async (partsOrBytes) => {
-      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
-        ? await odfParts(row, partsOrBytes) : partsOrBytes;
-      return withContainerImages(textOf(parts), parts, "Pictures/");
+      try {
+        const parts = await partsOf(partsOrBytes);
+        return await withContainerImages(textOf(parts), parts, "Pictures/");
+      } catch (e) { return failed(e); }
     },
   };
 }
@@ -1459,7 +1808,8 @@ export const odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
  * judgment §5 licenses: `meta.xml` (generation timestamps, the producer's
  * stamp — mechanical), `settings.xml` (view state — mechanical), the ZIP
  * envelope (per-request timestamps and order — mechanical, MEASURED to move),
- * `styles.xml` and `Thumbnails/` (page styles and a preview — presentational).
+ * `styles.xml`, `Thumbnails/` and the font faces content.xml names (page
+ * styles, a preview and glyph shapes — presentational; D-612, below).
  *
  * WHY content.xml CAN SPEAK FOR THE SUBSTANCE, AND WHEN IT CANNOT. OpenDocument
  * puts the whole body — every cell, its formula beside its value, every
@@ -1501,7 +1851,7 @@ export const ODF_EVIDENTIARY_VERSION = 1;
  *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
   odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
@@ -1512,7 +1862,21 @@ const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
  *  the container actually holds. Every href-bearing attribute is read, in any
  *  namespace prefix (`attrsOf` keys by local name); a scheme-bearing URL or a
  *  bare fragment is not a package member. A directory reference (`./Object 1`)
- *  matches the members under it. */
+ *  matches the members under it.
+ *
+ *  D-612 — ONE ELEMENT IS NOT COUNTED: `font-face-uri` (by local name, any
+ *  prefix; Google writes `svg:font-face-uri`). Every real Google Doc export
+ *  embeds its fonts as `Fonts/fontN.ttf` and names them from
+ *  `office:font-face-decls` (M-167: 8 of 8 Docs, 8–9 fonts each), so counting
+ *  them refused the digest on every real Doc. A font face is presentational —
+ *  how a glyph is drawn, not what the document says — the same §5 judgment that
+ *  discounts `styles.xml`. The exemption is the ELEMENT, not the `Fonts/`
+ *  directory: an image or embedded object (`Pictures/`, `Object N/`) is
+ *  referenced from `draw:image` / `draw:object` and still refuses, wherever the
+ *  producer puts it. WHAT IT DOES NOT SEE: a font whose glyphs were redrawn
+ *  under an unchanged name would render differently with content.xml
+ *  unchanged; the rule discounts that as it discounts a restyled styles.xml. */
+const PRESENTATIONAL_REF = new Set(["font-face-uri"]);
 function referencedMembers(contentXml, container) {
   const names = container.entries.map((e) => normalizePartName(e.name));
   const hit = new Set();
@@ -1520,6 +1884,7 @@ function referencedMembers(contentXml, container) {
   let m;
   while ((m = RE.exec(contentXml)) !== null) {
     if (m[1] === undefined || m[0][1] === "/") continue;
+    if (PRESENTATIONAL_REF.has(localOf(m[1]))) continue;
     const href = attrsOf(m[2]).href;
     if (typeof href !== "string" || !href || href.startsWith("#")) continue;
     if (/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(href)) continue;
@@ -1587,7 +1952,14 @@ const ODF_EVIDENTIARY_NORMALISE = Object.freeze({
  *  or { determined:false, flavour|null, evidentiary:null, basis }. Never throws
  *  on bad bytes: every failure is a sentence. */
 export async function odfEvidentiaryDigest(bytes, sha256Hex) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  try { return await odfEvidentiaryDigestUnguarded(bytes, sha256Hex); } catch (e) {
+    return { determined: false, flavour: null, evidentiary: null,
+      basis: `the digest could not be taken (${e?.name ?? "Error"}: ${e?.message ?? "no message"}), so none is claimed` };
+  }
+}
+
+async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex) {
+  const b = asBytes(bytes) ?? new Uint8Array(0);
   const no = (flavour, basis) => ({ determined: false, flavour, evidentiary: null, basis });
   /* CERTAIN detection only — the mimetype member read first, stored,
      CRC-verified, compared exactly, and the main part present. A content type
@@ -1609,7 +1981,15 @@ export async function odfEvidentiaryDigest(bytes, sha256Hex) {
   if (!guard.ok) return no(flavour, `content.xml is over the declared-uncompressed text bound (${guard.why || "size_guard"}), so it was not inflated and no digest was taken`);
   const read = await readPart(b, container, CONTENT_PART);
   if (!read.ok) return no(flavour, `content.xml could not be read whole (${read.why})`);
-  const refs = referencedMembers(UTF8.decode(read.bytes), container);
+  /* STRICT UTF-8 for every flavour, before anything is read out of it: a
+     lossy decode could hide an href behind a replacement character, and a
+     digest of bytes that are not the text they claim to be speaks for
+     nothing (R37). */
+  let xml;
+  try { xml = UTF8_STRICT.decode(read.bytes); } catch {
+    return no(flavour, "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken");
+  }
+  const refs = referencedMembers(xml, container);
   if (refs.length)
     return no(flavour, `content.xml references ${refs.length} package member(s) whose bytes it does not hold (${refs.slice(0, 3).join(", ")}${refs.length > 3 ? ", …" : ""}); a digest of content.xml cannot speak for them, so none is claimed`);
   const norm = ODF_EVIDENTIARY_NORMALISE[flavour];
@@ -1618,6 +1998,6 @@ export async function odfEvidentiaryDigest(bytes, sha256Hex) {
   return {
     determined: true, flavour, over: CONTENT_PART,
     evidentiary: await sha256Hex(digested),
-    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml and thumbnails are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
+    basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`,
   };
 }
