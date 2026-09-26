@@ -77,7 +77,7 @@ console.log("\n--- R30: matching the rect ---");
 
 console.log("\n--- R31: decoding, rotation forced to 0 ---");
 {
-  const jpx = await crop(page({ img: image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /JPXDecode", new Uint8Array(6)) }), EXTENT);
+  const jpx = await crop(page({ img: image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /LZWDecode", new Uint8Array(6)) }), EXTENT);
   t("R31 a decode refusal: DECODE_REFUSED naming the decoder's reason and why", fields(jpx, "ok", "reason", "decoder", "decoderWhy"),
     [false, "DECODE_REFUSED", "UNSUPPORTED_FILTER", REFUSALS.UNSUPPORTED_FILTER]);
   const short = await crop(page({ img: image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", new Uint8Array(2)) }), EXTENT);

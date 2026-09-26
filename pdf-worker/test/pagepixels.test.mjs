@@ -181,8 +181,8 @@ console.log("\n--- R17, R18: images are counted from what the page paints (K27) 
 
 console.log("\n--- R19: the image's own refusal, with page added ---");
 {
-  const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /JPXDecode", new Uint8Array(64))), 0);
-  t("R19 a decode refusal carries the page", fields(r, "ok", "reason", "page", "filter"), [false, "UNSUPPORTED_FILTER", 0, "JPXDecode"]);
+  const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /LZWDecode", new Uint8Array(64))), 0);
+  t("R19 a decode refusal carries the page", fields(r, "ok", "reason", "page", "filters"), [false, "UNSUPPORTED_FILTER", 0, ["LZWDecode"]]);
 }
 
 console.log("\n--- R20, R23, R40: the scanned CCITT page against an independent decoder ---");
@@ -406,11 +406,13 @@ console.log("\n--- R22: DCT through the renderer ---");
   t("R22 R40 a small page through the whole route matches Pillow", small.pixels_sha256, VARIANTS.find((v) => v.name === "rgb-444").pillow_sha256);
 }
 
-console.log("\n--- R25 (interim): JPX; JBIG2 is jbig2.test.mjs's ---");
+console.log("\n--- R25: JBIG2 and JPX are jbig2.test.mjs's and jpx.test.mjs's; here, a stream that is neither ---");
 {
-  for (const f of ["JPXDecode"]) {
+  /* Eight zero bytes: to JBIG2 a segment header that runs out; to JPEG 2000
+     neither a codestream nor a JP2 file. */
+  for (const [f, reason] of [["JBIG2Decode", "TRUNCATED_IMAGE_DATA"], ["JPXDecode", "DECODE_FAILED"]]) {
     const r = await render(imagePage(image(8, 8, `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /${f}`, new Uint8Array(8))), 0);
-    t(`R25 ${f}: UNSUPPORTED_FILTER naming the filter, no bytes`, fields(r, "ok", "reason", "filter", "bytes"), [false, "UNSUPPORTED_FILTER", f, undefined]);
+    t(`R25 ${f} over eight zero bytes: ${reason}, no bytes`, fields(r, "ok", "reason", "bytes"), [false, reason, undefined]);
   }
 }
 
