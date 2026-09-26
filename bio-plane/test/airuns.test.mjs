@@ -118,6 +118,8 @@ import { MEANING } from "../src/query.mjs";
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' sources, for the SWEEP's corpus (record-core R21). */
+import { moduleFiles, moduleSources } from "./extracted-sources.mjs";
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -543,16 +545,31 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
  *           question that has NO index behind it. The last is the big one: this
  *           finds paths built and unused, never questions nobody prepared for.
  *           It is a FLOOR on the class, not a census of it. */
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): layer 2 of T3 extracted `record-core`,
+   `membership` and `promotion` out of store.mjs, each with its own `schema.mjs`, so the corpus is widened to their
+   files on BOTH sides (their indexes, their SQL) — the store's corpus as it stood before the extraction. And purge's
+   per-bundle arm, which was literal `DELETE … WHERE a_bundle_id=? OR b_bundle_id=?` lines, is now ONE statement
+   record-core COMPOSES from each table's declared `keys` (`declarePurge`) — this sweep's declared blind spot, a
+   dynamically composed fragment. So the statement purge composes is composed HERE from the same declarations and
+   read like any other, rather than letting `connections(a_bundle_id)`, `connections(b_bundle_id)` and
+   `published_edges(to_bundle)` arrive on the roster as gaps they are not. */
+const EXTRACTED = ["record-core", "membership", "promotion"];
+const EXTRACTED_SRC = moduleSources(EXTRACTED);
+const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
+  .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)
+  .map(([name, keys]) => `DELETE FROM ${name} WHERE ${keys.map((k) => `${k}=?`).join(" OR ")}`).join("\n");
 const SQLSRC = decomment(SRC_STORE) + "\n"
-             + decomment(readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8"));
-const INDEXES = [...SRC_SCHEMA.matchAll(/CREATE INDEX IF NOT EXISTS\s+(\w+)\s+ON\s+(\w+)\s*\(([^)]*)\)/g)]
+             + decomment(readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8")) + "\n"
+             + decomment(EXTRACTED_SRC) + "\n" + PURGE_COMPOSED;
+const INDEXES = [...(SRC_SCHEMA + "\n" + EXTRACTED.flatMap(moduleFiles).filter((f) => f.endsWith("/schema.mjs"))
+  .map((f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")).join("\n")).matchAll(/CREATE INDEX IF NOT EXISTS\s+(\w+)\s+ON\s+(\w+)\s*\(([^)]*)\)/g)]
   .map((m) => ({ index: m[1], table: m[2], lead: m[3].split(",")[0].trim() }));
 const filtersOn = (col) =>
   new RegExp(`(?:WHERE|AND|OR)\\s+(?:\\w+\\.)?${col}\\s*(?:=|IN|>|<|LIKE|IS)`, "i").test(SQLSRC)
   || new RegExp(`\\blower\\((?:\\w+\\.)?${col}\\)\\s*=`, "i").test(SQLSRC);
 const unread = INDEXES.filter((ix) => !filtersOn(ix.lead));
-console.log(`  SWEEP CORPUS: ${INDEXES.length} indexes declared in schema.mjs, read against `
-          + `${SQLSRC.length} chars of comment-stripped SQL in store.mjs + query.mjs`);
+console.log(`  SWEEP CORPUS: ${INDEXES.length} indexes declared in schema.mjs + the extracted modules' schema.mjs, read against `
+          + `${SQLSRC.length} chars of comment-stripped SQL in store.mjs + query.mjs + src/{${EXTRACTED.join(",")}}/ + purge's composed deletes`);   /* T3 (legacy-tests), 2026-09-26: the widened corpus, printed */
 console.log(`  SWEEP REACH: ${INDEXES.length - unread.length} of ${INDEXES.length} indexes have a `
           + `statement filtering their leading column; ${unread.length} do not`);
 for (const ix of unread) console.log(`    UNREAD  ${ix.index}  ->  ${ix.table}(${ix.lead})`);

@@ -376,8 +376,12 @@ console.log("\n--- 4. the refusals, BY NAME, each checked before anything moves 
   const concluded = await reopen(NADIA, { target: INQ_CONCL, reason: "the finding did not hold" });
   t("a CONCLUDED inquiry is refused NOT_SET_DOWN, not ILLEGAL_TRANSITION: the edge IS legal and this is not its act",
     [concluded.ok, concluded.reason, concluded.from], [false, "NOT_SET_DOWN", "concluded"]);
+  /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R24): reopening moved to `promotion`, whose NOT_SET_DOWN detail
+     says the same thing in its own words — "moves forward by publishing a new edition" — and no longer spells the
+     ruling's number `EDITION (DEC-12)`. The arm still asks that the refusal names where the act lives: a new EDITION,
+     made by PUBLISHING. */
   t("and the refusal says where that act lives — an EDITION (DEC-12), which is REC-14's machinery",
-    /EDITION \(DEC-12\)/.test(concluded.detail), true);
+    /\bpublishing a new edition\b/i.test(concluded.detail), true);
   t("the concluded inquiry is untouched: nothing half-ran", await stateOf(INQ_CONCL), "concluded");
 
   /* THE MAP RULE with teeth. A legacy focus document's ROW says inquiry
@@ -535,14 +539,20 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
        envelope. The rehearsal is unchanged in what it does (neuter the stored column's normalisation so a
        legacy-spelled ROW exists) and unchanged in what it proves; only the marker moved, which is exactly
        what the arm below is for and it CAUGHT IT. */
-    const patchedStore = readFileSync(storePath, "utf8").replace(
-      "const projectedType = promotedType;",
-      "const projectedType = meta.object_type;");
+    /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R3, R9): `promote` moved to `src/promotion/index.mjs`,
+       which decides the type once from the document (normalised) and writes the row through record-core's `commit`
+       with `type: promotedType`. The neutering moves with it, to that one write, and does what it always did: the
+       stored column takes the ENVELOPE's raw spelling, so a legacy-spelled ROW exists. The mirror is a copy of
+       `src/`, so the module file is patched there; nothing outside the temporary tree is touched. */
+    const promotionPath = join(dir, "bio-plane/src/promotion/index.mjs");
+    const WRITE = "bundleId, type: promotedType, title: projectedTitle,";
+    const RAW_WRITE = "bundleId, type: (envelope && envelope.object_type) || promotedType, title: projectedTitle,";
+    const patchedStore = readFileSync(promotionPath, "utf8").replace(WRITE, RAW_WRITE);
     t("the rehearsal's two patches found their sites (markers moved if this fails)",
-      [patchedCat !== catSrc, patchedStore.includes("const projectedType = meta.object_type;")],
+      [patchedCat !== catSrc, patchedStore.includes(RAW_WRITE)],
       [true, true]);
     writeFileSync(catPath, patchedCat);
-    writeFileSync(storePath, patchedStore);
+    writeFileSync(promotionPath, patchedStore);
 
     const tmpIdx = join(dir, "bio-plane/src/index.mjs");
     const mf2 = withSurfacingRun(new Miniflare({

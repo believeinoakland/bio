@@ -77,6 +77,8 @@ import * as CATALOGUE from "../checks/bio-checks.mjs";
 import { machineFences } from "../src/skillpack.mjs";
 /* M0-18 — ONE mechanism, imported. The reason ARM A1 needed it is at the walk. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
+/* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for ARM D's `where` resolution. */
+import { storeCorpus } from "./extracted-sources.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, "..", "src");
@@ -484,8 +486,16 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     + "misses — the other direction, without which a shrinking copy would pass",
     live.filter((l) => !pinned.includes(l)), []);
   const srcCache = new Map();
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): layer 2 of T3 extracted `record-core`, `membership` and `promotion`
+     from store.mjs, and the catalogue's `where` still names `src/store.mjs` for the fences that went with them. A
+     `where` naming `src/store.mjs` is resolved against the STORE'S CORPUS as it stood before the extraction —
+     store.mjs first, then the extracted modules' files — so a region that moved WITH ITS MARKERS is found where it
+     now lives. A span that resolves in store.mjs resolves exactly as before. What this does NOT do is invent a
+     region: a fence whose markers did not move, or a row naming a code the plane no longer mints, stays red. */
   const read = (rel) => {
-    if (!srcCache.has(rel)) srcCache.set(rel, fs.readFileSync(path.join(HERE, "..", rel), "utf8"));
+    if (!srcCache.has(rel)) srcCache.set(rel, rel === "src/store.mjs"
+      ? storeCorpus(["record-core", "membership", "promotion"])
+      : fs.readFileSync(path.join(HERE, "..", rel), "utf8"));
     return srcCache.get(rel);
   };
 

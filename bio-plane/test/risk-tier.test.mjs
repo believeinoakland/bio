@@ -41,6 +41,8 @@ import { join } from "node:path";
 import { createHash, webcrypto } from "node:crypto";
 import { checkBundle, RISK_TIERS, riskTierState, SURFACE_CHECKS as CHECK_CATALOGUE_SURFACE } from "../checks/bio-checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for (viii)'s one-writer census. */
+import { moduleFiles } from "./extracted-sources.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -699,9 +701,27 @@ console.log("\n--- 7. D-505: the fence reads the DOCUMENT's type, not the envelo
   /* (viii) THE MATCHER'S REACH, stated: `promote` is the ONE writer of `bundle.md` in `src/store.mjs`, so a
      fence there is a fence on the write. Pinned structurally, because the sentence above is load-bearing and
      a second writer added later would silently make it false. */
-  const storeSrc = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
-  const inserts = storeSrc.match(/INSERT INTO files \(bundle_id,path,content,blob_sha,bytes,sha256\)/g) ?? [];
-  t("…and `promote` is still the ONE writer of a bundle's files in src/store.mjs", inserts.length, 1);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R3, record-core): `promote` moved to `src/promotion/`, and
+     the one write of a bundle's files is now record-core's `commit`, which promotion's `promote` calls ("R3: the one
+     write, through record-core"). The same sentence is pinned where it now lives: across the whole plane's source
+     (store.mjs and the extracted modules), exactly ONE statement inserts into `files`, it is inside record-core's
+     `commit`, and the only caller of `commit` is `promote` (its body, `#promote`, which the public door runs). */
+  const planeFiles = ["store.mjs", "index.mjs", ...["record-core", "membership", "promotion"].flatMap(moduleFiles)];
+  const srcOf = (f) => readFileSync(join(SRC_DIR, f), "utf8");
+  const inserts = planeFiles.flatMap((f) =>
+    (srcOf(f).match(/INSERT INTO files \(bundle_id,path,content,blob_sha,bytes,sha256\)/g) ?? []).map(() => f));
+  const rc = srcOf("record-core/index.mjs");
+  const commitAt = rc.indexOf("\n  commit({"), commitEnd = rc.indexOf("\n  }\n", commitAt);
+  const insertAt = rc.indexOf("INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256)");
+  const pr = srcOf("promotion/index.mjs");
+  const promoteAt = pr.indexOf("\n  #promote(pkg) {");   /* the body `promote(pkg)` runs (its guard wraps it) */
+  const nextMethod = /\n  (?:async\s+)?[#\w$]+\([^\n]*\)\s*\{/g; nextMethod.lastIndex = promoteAt + 5;
+  const promoteEnd = (nextMethod.exec(pr) || { index: pr.length }).index;
+  const callers = planeFiles.flatMap((f) => [...srcOf(f).matchAll(/\.commit\(\{/g)].map((m) => ({ f, i: m.index })));
+  t("…and `promote` is still the ONE writer of a bundle's files in src/store.mjs",
+    [inserts, commitAt > -1 && insertAt > commitAt && insertAt < commitEnd,
+     callers.map((c) => c.f === "promotion/index.mjs" && c.i > promoteAt && c.i < promoteEnd)],
+    [["record-core/index.mjs"], true, [true]]);
 
   /* (ix) THE RESIDUE — INVERTED 2026-09-24 BY D-511, NEVER DELETED, WHICH IS WHAT D-505 WROTE IT FOR. It asserted
      a HOLE, deliberately: a machine credential asserting `replay` in the body still landed a stated tier, because

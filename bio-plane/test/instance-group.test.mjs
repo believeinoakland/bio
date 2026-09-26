@@ -191,7 +191,11 @@ try {
 /* ======================================================================= 0. THE SOURCE */
 console.log("\n--- 0. the plane's source names no group of its own, and the value is written once ---");
 {
-  const files = readdirSync(SRC_DIR).filter((f) => f.endsWith(".mjs"));
+  /* WIDENED 2026-09-26 (T3, legacy-tests): layer 2 of T3 extracted `record-core`, `membership` and `promotion` into
+     `src/<module>/`, and a flat walk of `src/` no longer sees them; the corpus takes their files in (`<module>/x.mjs`). */
+  const files = [...readdirSync(SRC_DIR).filter((f) => f.endsWith(".mjs")),
+                 ...["record-core", "membership", "promotion"].flatMap((m) =>
+                   readdirSync(join(SRC_DIR, m)).filter((f) => f.endsWith(".mjs")).map((f) => `${m}/${f}`))];
   const bytes = files.reduce((n, f) => n + readFileSync(join(SRC_DIR, f)).length, 0);
   const hits = files.flatMap((f) => {
     const n = readFileSync(join(SRC_DIR, f), "latin1").split(LITERAL).length - 1;
@@ -207,7 +211,7 @@ console.log("\n--- 0. the plane's source names no group of its own, and the valu
     hits, []);
   const store = codeOnly(readFileSync(join(SRC_DIR, "store.mjs"), "utf8"));
   const writes = [...store.matchAll(/(INSERT(?:\s+OR\s+\w+)?\s+INTO\s+instance_group\b[\s\S]*?)[`"]/g)].map((m) => m[1]);
-  const allCode = readdirSync(SRC_DIR).filter((f) => f.endsWith(".mjs"))
+  const allCode = files   /* T3 (legacy-tests), 2026-09-26: the widened corpus above, extracted modules included */
     .map((f) => codeOnly(readFileSync(join(SRC_DIR, f), "utf8"))).join("\n");
   const writeOnce = (w) => /ON\s+CONFLICT\s*\(\s*id\s*\)\s+DO\s+NOTHING/i.test(w) || /^INSERT\s+OR\s+IGNORE\b/i.test(w);
   t("S2: the value is WRITTEN ONCE — every statement writing instance_group is an insert that does nothing on "
@@ -225,8 +229,11 @@ console.log("\n--- 0. the plane's source names no group of its own, and the valu
   const plane = /static GROUP_SLUG_RE = (\/[^\n]+\/);/.exec(readFileSync(join(SRC_DIR, "store.mjs"), "utf8"));
   t("S4: the plane checks a slug by the INSTALLER'S OWN grammar — the two sources are byte-equal, so neither moves alone",
     [!!installer, !!plane, installer && plane ? installer[1] === plane[1] : false], [true, true, true]);
-  const stamp = /static #stampGroup\(files, slug\)\s*\{([\s\S]*?)\n  \}/.exec(store);
-  t("S5: the store's stamp writes the group through the catalogue's ONE definition, `withProducingGroup` — the function "
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R13): the stamp moved with `promote` from store.mjs's
+     `static #stampGroup` to `src/promotion/index.mjs`'s module function `stampGroup`; the same pin, read there. */
+  const promotionCode = codeOnly(readFileSync(join(SRC_DIR, "promotion", "index.mjs"), "utf8"));
+  const stamp = /\nfunction stampGroup\(files, slug\)\s*\{([\s\S]*?)\n\}/.exec(promotionCode);
+  t("S5: the store's stamp (promotion's, T3) writes the group through the catalogue's ONE definition, `withProducingGroup` — the function "
     + "the corrected suites judge a composer's bytes by — and not a second copy of the rule",
     [!!stamp, !!stamp && /withProducingGroup\(f\.text, slug\)/.test(stamp[1]), !!stamp && /setOrAddScalar/.test(stamp[1])],
     [true, true, false]);

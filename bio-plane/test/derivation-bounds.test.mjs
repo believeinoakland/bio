@@ -311,6 +311,8 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for the CENSUS's corpus. */
+import { moduleFiles } from "./extracted-sources.mjs";
 import { createHash } from "node:crypto";
 
 let pass = 0, fail = 0;
@@ -628,12 +630,22 @@ const ADMITTED = new Map(D384_STAYS.map((s) => [s.name, s]));
    a member the walk cannot see is still a member, and it is named, not counted into a hole. */
 const CLASS_ALL = new Set([...CLASS.keys(), ...ADMITTED.keys()]);
 const DISPATCHED = dispatchedOps(CODE);
-const SCANNING = [...SEGMENTS].filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted in T3 layer 2): the
+   CENSUS (and only the census) is widened to the extracted modules' files, walked by the same segmenter one file
+   at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
+   store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
+   row sources, which is the direction the FLOOR exists to refuse. */
+const MODULE_SEGMENTS = new Map(["record-core", "membership", "promotion"].flatMap(moduleFiles).flatMap((f) =>
+  [...segments(decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))]
+    .map(([n, b]) => [`${f.replace(/\.mjs$/, "")}:${n}`, b])));
+const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
+const SCANNING = CENSUS_SEGMENTS.filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
 const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
   .map(([op, meth]) => `${op}->${meth}`).sort();
 
 console.log("\n--- WALK: every method that DERIVES over an unbounded scan (REC-66's class) ---");
-console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${SEGMENTS.size} method segments, `
+console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${SEGMENTS.size} method segments `
+          + `(+ ${MODULE_SEGMENTS.size} in the extracted modules, census only), `   /* T3 (legacy-tests), 2026-09-26 */
           + `${SCANNING} scanning UNBOUNDED, ${CLASS_ALL.size} in the class (${CLASS.size} by the walk + `
           + `${ADMITTED.size} admitted by name), reaching ${CLASS_OPS.length} of `
           + `${DISPATCHED.size} DISPATCHED ops`);
@@ -1258,7 +1270,7 @@ t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the a
  * class one step further on and they are D-369, not this item: pinning the roster means a
  * SEVENTH such shape must be declared here before it can pass.
  */
-const SCANNING_NAMES = [...SEGMENTS].filter(([, b]) => scans(b).some((s) => !s.bounded))
+const SCANNING_NAMES = CENSUS_SEGMENTS.filter(([, b]) => scans(b).some((s) => !s.bounded))   /* T3 (legacy-tests), 2026-09-26: the widened census, above */
   .map(([n]) => n).sort();
 console.log(`  CENSUS ROSTER (${SCANNING_NAMES.length} methods scanning UNBOUNDED): ${SCANNING_NAMES.join(", ")}`);
 
@@ -1428,7 +1440,28 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    (REC-220), `#runContextQuestions` (D-451) and `#conditionsRenderDeferred` (D-523) — each named in its own note above,
    D-523's as an admitted defect — and `#monitorSubjects` (REC-191), which took over `#monitorCadencePlan`'s row source
    (REC-191's correction of that admission, above), so `#monitorCadencePlan` left the roster as it arrived. */
-const SCANNING_MEASURED_2026_09_15 = 122;
+/* UPDATED 2026-09-26 (T3, legacy-tests), 122 -> 135, READ FROM THE CENSUS ROSTER THIS RUN PRINTED over the WIDENED
+   corpus (store.mjs + `src/{record-core,membership,promotion}/`, see MODULE_SEGMENTS) and DIFFED BY NAME against
+   the 122 of store.mjs at 972dc648 (before record-core #1), never 122 + 13. The layer-2 extraction took sixteen
+   methods' row sources out of store.mjs and store.mjs gained one: DEPARTED `#activeAdmins #owners #ownsAnyProject
+   adminEndorse adminRemove caseDocumentFacts expertiseList forkProject memberAdd memberList projectOwnerAdd
+   projectOwnerRemove projectParticipants projectVisibility promote signerList`, ARRIVED `#promoteProjections` (107).
+   THE MODULES' 28, each accounted for:
+     - 13 ARE THE DEPARTURES, MOVED: membership/index:{activeAdmins, projectOwners (was #owners), ownsAnyProject,
+       adminEndorse, adminRemove, expertiseList, memberAdd, memberList, projectOwnerAdd, projectOwnerRemove,
+       projectParticipants, projectVisibility, signerList}.
+     - 1 carries `caseDocumentFacts`' row source: membership/index:attestingKeys (the D-158 signer predicate, membership
+       R70; caseDocumentFacts now calls it, a helper this walk does not follow).
+     - 4 are the reader's own definitions, `#rows`/`#one` in record-core and in membership — the same two store.mjs's
+       roster has always carried for its own.
+     - 5 are record-core's (`promote`'s and `forkProject`'s reads now go through its interface): auditPass, commit,
+       livePaths, migrate, purge — per-bundle reads (commit, livePaths), purge's per-table COUNT, the schema walk, the
+       audit's pass.
+     - 5 are membership's NEW behaviours (T3): #committedOwners (R35), #projectsOf, activeParticipants — per-key reads
+       of one project's or one member's rows — and hostingAccess (R19, the whole hosting-access history) and
+       memberPairings (R11, every member with a published pairing), which read a whole table with no bound. Those two
+       are ARRIVALS NAMED, not graded here. */
+const SCANNING_MEASURED_2026_09_15 = 135;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

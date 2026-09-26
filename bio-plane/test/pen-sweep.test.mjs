@@ -123,9 +123,12 @@ t("M0-196, BY NAME: the copy-source drivers of D-510, D-526, D-547, D-548 and RE
     .map((n) => [n, (real.drivers.find((d) => d.file === `bio-plane/test/${n}.control.mjs`) || {}).grade])
     .filter(([, gr]) => gr === "UNCLASSIFIED" || gr === undefined).map(([n, gr]) => `${n}: ${gr}`), []);
 /* The named drivers this row moved FIRST, each by name rather than by a count. */
+/* RETIRED 2026-09-26 (T3, legacy-tests; K84, N14), IN PART: three of the six names — `delegations.control.mjs`,
+   `entries.control.mjs` and `train.control.mjs` — were controls of the old process's tooling, deleted from
+   `bio-plane/test/` with the 57 suites and controls that tested it (2abbe2e7d0), so they can be graded no longer.
+   The arm holds the three that remain, by name. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
-  ["coord.control.mjs", "delegations.control.mjs", "entries.control.mjs", "m0107-budget.control.mjs",
-   "owed-controls.control.mjs", "train.control.mjs"]
+  ["coord.control.mjs", "m0107-budget.control.mjs", "owed-controls.control.mjs"]
     .map((n) => (real.drivers.find((d) => d.file === `bio-plane/test/${n}`) || {}).grade)
     .filter((x) => x === "IN-WORKTREE/DIRTY" || x === "UNCLASSIFIED" || x === undefined), []);
 t("every ledgered path carries a WHY (a judgement with no reason is a name on a list)",
@@ -147,9 +150,13 @@ t("(a) ...and a DECLARED in-worktree pen PASSES in the floored class, because BO
    naming ONE pen, which is what "item-named" exists to prevent; `.rec79-control-pristine` is nc-d355
    READING refusal-partition's pen to assert it is absent, not sharing it; `pdf-worker/node_modules` is not
    a pen at all, and this walk cannot tell a pen from any other untracked path, which the REACH line says. */
+/* UPDATED 2026-09-26 (T3, legacy-tests): `pdf-worker/node_modules` left the list because one of its two namers,
+   `pdf-worker/test/pdf-worker.control.mjs`, was deleted by pdf-worker's T1 job (fb23efe7c0, requirement-named
+   tests); `bio-plane/test/fleetbundles.control.mjs` is now the only driver naming it, so it is shared by no one.
+   It was never a pen (above). The other three stand, by name. */
 t("(b) the in-worktree pen paths named by more than one driver are the four measured, by NAME",
   real.shared.map((x) => x.pen).sort(),
-  [".d266-harness", "civicos-ui/app.html.pristine-*", "civicos-ui/test/.rec79-control-pristine", "pdf-worker/node_modules"]);
+  [".d266-harness", "civicos-ui/app.html.pristine-*", "civicos-ui/test/.rec79-control-pristine"]);
 t("(b) ...and no driver in the FLOORED class shares a pen with another driver as its own writing space",
   real.shared.filter((x) => x.drivers.filter((f) => FLOORED(f)).length > 1).map((x) => x.pen), []);
 

@@ -30,6 +30,8 @@ import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+/* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for the APPEND-ONLY census (record-core R21). */
+import { moduleFiles } from "./extracted-sources.mjs";
 import { createHash } from "node:crypto";
 import { K1, K2, K3, K4, REQUIRED_SHAPES } from "./contradiction-corpus.mjs";
 import { measure, gate, pairId, KEYS, LABELS, THRESHOLD } from "./contradiction-gate.mjs";
@@ -390,9 +392,26 @@ t("AND A DIFFERENT LABEL OVER THE SAME REFERENTS IS NOT A NEW CANDIDATE — the 
   t("§8's ONE APPEND SITE: exactly one insert into contradiction_candidates in the plane's bundled sources, and it "
   + "is inside #appendContradictionCandidate",
     [files.includes("src/store.mjs") && files.length > 20, inserts.length, inSite], [true, 1, 1]);
+  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): purge's two arms were two literal
+     `DELETE FROM contradiction_candidates` lines in store.mjs. Purge moved to `record-core`, which deletes from each
+     DECLARED table with its one generic statement, in both arms (per bundle by the declared keys, whole-store by
+     declaration). So the census is widened to the extracted modules' files (any the manifest lacks) and asks:
+     no statement anywhere updates or names a delete from the table; the only generic delete is record-core's purge;
+     and the table's owner declares it to purge keyed to BOTH bundle columns, so both arms reach it. */
+  const extFiles = ["record-core", "membership", "promotion"].flatMap(moduleFiles).map((f) => `src/${f}`)
+    .filter((f) => !files.includes(f));
+  const hitsW = (re) => [...files, ...extFiles].flatMap((f) =>
+    [...readFileSync(planeRoot + f, "latin1").matchAll(re)].map((m) => ({ f, i: m.index })));
+  const purgeSrc = readFileSync(planeRoot + "src/record-core/index.mjs", "latin1");
+  const purgeAt = purgeSrc.indexOf("  purge({ bundleId = null } = {}) {");
+  const purgeEnd = purgeSrc.indexOf("\n  }\n", purgeAt);
+  const generic = hitsW(/\bDELETE\s+FROM\s+\$\{/g);
   t("APPEND-ONLY: nothing updates a candidate, and only purge's two arms delete one",
-    [hits(/\bUPDATE\s+contradiction_candidates\b/gi).length, hits(/\bDELETE\s+FROM\s+contradiction_candidates\b/gi).length],
-    [0, 2]);
+    [[...files, ...extFiles].includes("src/record-core/index.mjs"), hitsW(/\bUPDATE\s+contradiction_candidates\b/gi).length,
+     hitsW(/\bDELETE\s+FROM\s+contradiction_candidates\b/gi).length,
+     generic.map((h) => h.f === "src/record-core/index.mjs" && h.i > purgeAt && h.i < purgeEnd),
+     /\{ name: "contradiction_candidates", keys: \["a_bundle_id", "b_bundle_id"\] \}/.test(storeSrc)],
+    [true, 0, 0, [true], true]);
 }
 /* GUARDED so a disabled K2 (the `pairing` control arm) FAILS here BY NAME and the suite still reaches its foot,
    rather than a TypeError ending the module with no tally (kickoffs/WORKER.md). */
