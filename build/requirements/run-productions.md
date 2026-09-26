@@ -47,7 +47,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 - `connections`: `citesInto` (R1's context rule).
 - `inquiry`: the retired-target predicate (R3; `citation`'s once N55 splits it) and the content legs a member cited (R12).
 - `basis-versions`: `appendVersion` (R4), the read-back of a version (R5), the held compositions (C-27.10), `SUGGEST_KINDS` (R6), the version legs that cite a row (R12), the candidate source (R14).
-- `strength`: the pair over a candidate's legs to its depth bound, and the independence trace with its origin limit (R3, R5).
+- `strength`: `candidatePair` and `candidateIndependence` (its R26, R27), the pair over a candidate's legs to its depth bound and the independence trace with its origin limit (R3, R5).
 - `ai-runs`: `runFor`, `runPrincipalGate`, `boundOf`, `consumeBound` (R1, R10–R11).
 
 ### Invariants

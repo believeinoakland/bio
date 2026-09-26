@@ -138,6 +138,10 @@ and every other module that stores anything, write through and read from.
 - **R42** `manifestEntry` answers the manifest entry recorded under `snapKey` as `{kind, base, author, created, files, writer, operation}`, or `null`.
 - **R43** `livePaths` answers the paths of a held bundle's live files in path order, or `null` when the bundle is not held. None of the three throws.
 
+**stampInstant(precision, when?) → string; instantOrder(a, b) → number** (N58, K85; module-level functions, not methods)
+- **R47** `stampInstant` spells the instant `when` (milliseconds since the epoch, default now) in UTC as ISO 8601: `"second"` gives `YYYY-MM-DDTHH:MM:SSZ`, `"millisecond"` gives `YYYY-MM-DDTHH:MM:SS.sssZ`; any other precision throws, naming it. *(not yet met: N58 — the store exports it today)*
+- **R48** `instantOrder` compares two instants in either spelling as instants, never as strings (`…:00Z` is before `…:00.123Z`): negative, zero or positive as a comparator, and NaN when either side is not a non-empty readable instant. Never throws. *(not yet met: N58)*
+
 ## Private
 
 ### Uses

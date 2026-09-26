@@ -50,9 +50,9 @@
 - N55 · 2026-09-26 · DONE (K85) · **inquiry**, **citation** (K83): BOB splits `build/requirements/inquiry.md` into `inquiry.md` and `citation.md` (cite, sever, reinstate), adds `citation` directly after `inquiry` in `modules.json`, before Bob approves either.
 - N56 · 2026-09-26 · **promotion** (K83): a read `fact(name, ...args)` of facts registered with it (R40), for later modules; and D-592 (`reopen`), re-targeted to promotion.
 - N57 · 2026-09-26 · **legacy-tests** (K84): a sweep of the 227 `*.control.mjs` and 99 `nc-*.mjs` negative controls no entry named in T3, each run as declared, re-anchored or retired with the code it anchors on.
-- N58 · 2026-09-26 · **record-core** (K85): provides `stampInstant(precision, when)` (store.mjs ~814–826), which later modules take from it instead of the store; with its requirement, before layer 6's tranche.
-- N59 · 2026-09-26 · **bias** (K82 (3), K86): its draft requirements take the bias-debt mechanism (ai-runs' old R39–R44, and members' work if Bob says yes to bias question 3) before Bob approves it.
-- N60 · 2026-09-26 · **strength** (K86): its draft gains a service answering the strength pair over a candidate's legs, which run-productions reads, before Bob approves it.
+- N58 · 2026-09-26 · **record-core** (K85): provides `stampInstant(precision, when)` (store.mjs ~814–826), which later modules take from it instead of the store; with its requirement, before layer 6's tranche. *Requirement written by BOB #43 (K87): `record-core` R47–R48, not yet met.*
+- N59 · 2026-09-26 · **bias** (K82 (3), K86): its draft requirements take the bias-debt mechanism (ai-runs' old R39–R44, and members' work if Bob says yes to bias question 3) before Bob approves it. *Requirements done by BOB #43 (K87): `bias` R33–R40.*
+- N60 · 2026-09-26 · **strength** (K86): its draft gains a service answering the strength pair over a candidate's legs, which run-productions reads, before Bob approves it. *Requirements done by BOB #43 (K87): `strength` R26–R27.*
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
