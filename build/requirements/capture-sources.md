@@ -1,6 +1,6 @@
 # capture-sources — requirements
 
-**Status** · DRAFT for BOB #41, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code; for BOB's review. Layer 3. Code today: its own files, `bio-plane/src/render.mjs` (the rendered capture's record), `bio-plane/src/browserrender.mjs` (the in-plane CDP renderer), `bio-plane/src/cdx.mjs` (the web-archive index) and `bio-plane/src/drive.mjs` (the Google Drive host stack); no extraction from a legacy module. Not yet met: R26 (old-plan row D-570, owner this module: the quiet-window wait), R37 (the archive lookup speaks Memento; `ARCHIVE-FALLBACK.md` §Build to Memento, not to Wayback, [ABSENT]) and R36 (the archive hop's evidence omits the CDX `urlkey`; found in drafting, no row).
+**Status** · DRAFT by BOB #41, 2026-09-26 (P18), from a drafting worker's reading of the code, reviewed by BOB (K47–K49); for Bob's approval (a product module, P17). Layer 3. Code today: its own files, `bio-plane/src/render.mjs` (the rendered capture's record), `bio-plane/src/browserrender.mjs` (the in-plane CDP renderer), `bio-plane/src/cdx.mjs` (the web-archive index) and `bio-plane/src/drive.mjs` (the Google Drive host stack); no extraction from a legacy module. Not yet met: R26 (old-plan row D-570: the quiet-window wait, as K48 rules it), R36 (the CDX `urlkey`, fixed in the first job, K48), R54 (the render locale from the profiles, K48), and R37 (Memento; stays here, unscheduled, K48).
 
 ## Public
 
@@ -13,14 +13,17 @@ The source-specific halves of capture that decide what a fetch from a particular
 #### Rendered capture: the record (`render.mjs`)
 
 **Constants**
-- **R1** `RENDER_DEFAULTS`, frozen: `navigation_timeout_ms` = `RENDER_NAVIGATION_TIMEOUT_MS` = 10,000 (measured, M-151), `viewport` 1280 × 800, `dpr` 1, `locale` "en-US" (Q2), `timezone` "UTC", `wait` `{until: "networkidle", timeout_ms: 15000}`. `RENDERED_METHOD` = "rendered". `NON_DATA_TYPES` = `{script: "code", stylesheet: "layout", font: "layout"}`; every other type, including one never seen, is data.
+- **R1** `RENDER_DEFAULTS`, frozen: `navigation_timeout_ms` = `RENDER_NAVIGATION_TIMEOUT_MS` = 10,000 (measured, M-151), `viewport` 1280 × 800, `dpr` 1, `locale` "en-US" (the fallback only, R54), `timezone` "UTC", `wait` `{until: "networkidle", timeout_ms: 15000}`. `RENDERED_METHOD` = "rendered". `NON_DATA_TYPES` = `{script: "code", stylesheet: "layout", font: "layout"}`; every other type, including one never seen, is data.
 - **R2** `RENDER_TICK_UNDETERMINED` = "content undetermined — not watched: this source renders its content in the browser" and `RENDER_INCOMPLETE_READING` = "render may be incomplete (wait timed out)": the one copy of each sentence, which the record, the provenance assertion and the monitor read.
 
-**waitFiredClass(fired, askedWait) → "condition" | "timeout" | "undetermined"**
-- **R3** Of `fired` trimmed and lowercased: "timeout" when it matches `/timed?[ _-]?out|timeout/` (e.g. "timeout", "timed out", "time-out"); "condition" when it equals `askedWait.until` (trimmed, lowercased); "undetermined" otherwise, including a non-string or empty `fired` and a word never seen. Never throws.
+**renderLocaleFor(view) → string**
+- **R54** The locale a render asks for: the one the instance's active jurisdiction profiles name (`view`, `jurisdictions.combine`'s view, passed by the caller), else `RENDER_DEFAULTS.locale`. Never throws. *(not yet met: K48 — every render asks "en-US"; the profiles name no locale yet)*
+
+**waitFiredClass(fired, askedWait) → "condition" | "settled" | "timeout" | "undetermined"**
+- **R3** Of `fired` trimmed and lowercased: "timeout" when it matches `/timed?[ _-]?out|timeout/` (e.g. "timeout", "timed out", "time-out"); "settled" when it is "quiet_excluding_long_lived" (R26); "condition" when it equals `askedWait.until` (trimmed, lowercased); "undetermined" otherwise, including a non-string or empty `fired` and a word never seen. Never throws. *(not yet met for "settled": D-570, K48)*
 
 **completenessReading(render) → string | null**
-- **R4** `null` unless `render.completeness` is "undetermined"; then `RENDER_INCOMPLETE_READING` when `render.wait.fired_class` is "timeout", else "render completeness is undetermined (which wait ended the render was not established)". Never throws.
+- **R4** For `render.completeness` "settled_with_open_requests", R26's reading. Otherwise `null` unless it is "undetermined"; then `RENDER_INCOMPLETE_READING` when `render.wait.fired_class` is "timeout", else "render completeness is undetermined (which wait ended the render was not established)". Never throws.
 
 **renderAllowanceMs(env), renderConcurrencyCap(env), renderReserveMs(asked) → number**
 - **R5** `renderAllowanceMs` answers `env.RENDER_DAILY_ALLOWANCE_MS` floored when it is a finite number ≥ 0, else `RENDER_DAILY_ALLOWANCE_MS_DEFAULT` (1,200,000: 20 minutes a day, derived from the vendor's stated 10 browser-hours a month and labelled as theirs).
@@ -40,7 +43,7 @@ The source-specific halves of capture that decide what a fetch from a particular
 - **R11** `{ok: false, problem}` only when the answer is not `ok: true` (naming its `error`) or carries no non-empty `html`. Anything short of that is recorded with its gaps named.
 - **R12** `render.requests` counts the requests with a URL by outcome: `made`, `completed`, `failed`, `blocked`, `blocked_by` (per the browser's rule name, "unstated" when none), `outcome_unstated`. `render.subresources` lists every completed load with its digest from `digests[i]` (R8–R9) — or `undetermined` with "the plane did not keep this render's subresource bytes" when none was passed — and, for a hex digest, `bytes`, `body_as` and `digest_by: "plane"`. `render.data` is the completed loads whose lowercased type is not in `NON_DATA_TYPES`, each with `origin`/`host` from `subresources.originOf` against the page's host (`navigated_to`, else `pageUrl`), `approximate` when `originOf` says so, the same digest, and `reported_by: "renderer"`. When the renderer recorded no requests, all three are `null` and `render.undetermined` says so.
 - **R13** `render.scripts_executed` is the sorted distinct origins (R10) of the executed scripts; `render.third_party_executed` those whose `originOf` origin is not `same_host` (`same_site` counts as another origin). When the renderer could not record the set, both are the string "undetermined" and `render.undetermined` says so — never an empty list.
-- **R14** `render.wait` is `{asked, fired, fired_class}`: the renderer's own word and R3's reading of it. `render.completeness` is "condition_met" only when `fired_class` is "condition", else "undetermined", with a sentence in `render.undetermined` (for a timeout, containing `RENDER_INCOMPLETE_READING`, the asked timeout and condition, and that grade and method are kept).
+- **R14** `render.wait` is `{asked, fired, fired_class}`: the renderer's own word and R3's reading of it. `render.completeness` is "condition_met" only when `fired_class` is "condition", "settled_with_open_requests" when it is "settled" (R26), else "undetermined", with a sentence in `render.undetermined` (for a timeout, containing `RENDER_INCOMPLETE_READING`, the asked timeout and condition, and that grade and method are kept).
 - **R15** `render` also carries `of` (= `shellSha`), `engine`, `engine_version`, `viewport`, `dpr`, `locale`, `timezone`, `elapsed_ms` (each `null` with "<field>: not reported by the renderer" in `render.undetermined` when absent or malformed), `navigated_to`, `status`, `asked` (`{viewport, dpr, locale, timezone}` as asked) and `at`. No absent field is filled with a default.
 - Errors: never throws.
 
@@ -62,7 +65,7 @@ The source-specific halves of capture that decide what a fetch from a particular
 - **R23** The wait ends on `load` when that was asked and the load event fired; else on `networkidle` once the load event has fired and no request has been in flight for 500 ms; else on the deadline, answered `fired: "timeout"`. A timeout is an answer, not a failure.
 - **R24** `html` is the serialised document after the wait, its doctype rebuilt from the document's own (none when the page has none), and `navigated_to` its `location.href` from the same evaluation; no document fails the render by name. `status` is the main frame's document response status. A navigation the browser refuses fails the render naming the address and the browser's error.
 - **R25** After the document is taken, collects each completed load's body (`body_base64` or `body_text`), or states `body_unavailable` in a sentence (a redirect hop; no request id; past `SUBRESOURCE_CAP` bodies or `SUBRESOURCE_BUDGET` bytes; over `SUBRESOURCE_MAX`; the 10,000 ms collection bound or the render's reserved bound spent; the browser's own refusal). It hashes nothing. The session is closed on every path, the failing ones included.
-- **R26** After the load event, the wait also ends when for 500 ms no request younger than N seconds is in flight, N a measured figure stated with its measurement. `fired` names which rule ended the wait — `networkidle`, `quiet_excluding_long_lived` or `timeout` — and the answer carries N and the count and URLs of the long-lived requests not waited for; the `render` block records them, and the reading of such a render is "settled; N long-lived request(s) still open were not waited for", never "complete". *(not yet met: D-570, ruled (c) by BOB #34 2026-09-25; R23 alone never fires on a source that keeps a request open, so every render of it times out; Q1)*
+- **R26** After the load event, the wait also ends when for 500 ms no request younger than N seconds is in flight, N a measured figure stated with its measurement. `fired` names which rule ended the wait — `networkidle`, `quiet_excluding_long_lived` or `timeout` — and the answer carries N and the count and URLs of the long-lived requests not waited for. The `render` block records them with `fired_class` "settled" (R3) and `completeness` "settled_with_open_requests" (R14), whose reading, in `render.undetermined` and from R4, is "settled; N long-lived request(s) still open were not waited for", never "complete"; grade and method are kept, as for a timeout (R50). The rule is off until N is measured: until then no render fires it. *(not yet met: D-570, ruled (c) by BOB #34 2026-09-25, K48; R23 alone never fires on a source that keeps a request open, so every render of it times out)*
 
 #### Web archive (`cdx.mjs`)
 
@@ -88,8 +91,8 @@ The source-specific halves of capture that decide what a fetch from a particular
 **archiveHop(chosen, replay, {mementoDatetime, warcSource}) → hop**
 - **R34** `{who: "Internet Archive Wayback Machine", asserts, evidence, bound: false, unsigned_reason, via: "archive.org", document_address: chosen.original}`. `asserts` states these bytes were served for the original at `archived_at` with its status; `evidence` names the CDX timestamp and digest (as their base32 SHA-1 over the body as they stored it), the MIME type, the WARC record length (stated as theirs and not our length), the Memento-Datetime and `x-archive-src` when given, and the replay address; `unsigned_reason` says no cryptographic attestation exists and this is a dated third-party claim trusted, not verified.
 - **R35** Every fact in the hop comes from the CDX record and the replay the caller fetched, never from a request (D-112).
-- **R36** The hop's evidence also names the CDX `urlkey`. *(not yet met: `selectCapture` drops `urlkey` and `archiveHop` never names it; `ARCHIVE-FALLBACK.md` §Shape on the capture lists it; found in drafting, no row)*
-- **R37** The archive lookup speaks Memento (RFC 7089), so any compliant archive can serve it; the Wayback CDX is one such source, not the interface. *(not yet met: `ARCHIVE-FALLBACK.md` §Build to Memento, not to Wayback is [ABSENT], deferred to M6 with D-145; no row targets this module; Q3)*
+- **R36** The hop's evidence also names the CDX `urlkey`. *(not yet met: K48 — `selectCapture` drops `urlkey` and `archiveHop` never names it; `ARCHIVE-FALLBACK.md` §Shape on the capture lists it)*
+- **R37** The archive lookup speaks Memento (RFC 7089), so any compliant archive can serve it; the Wayback CDX is one such source, not the interface. *(not yet met: K48 — unscheduled; `ARCHIVE-FALLBACK.md` §Build to Memento, not to Wayback is [ABSENT], deferred to M6 with D-145; the WARC interchange is `capture`'s and `publication`'s)*
 
 #### Google Drive (`drive.mjs`)
 
@@ -124,7 +127,6 @@ The source-specific halves of capture that decide what a fetch from a particular
 
 - `subresources.originOf`: the origin of each data load and executed script (R12, R13).
 - `subresources.SUBRESOURCE_CAP`, `SUBRESOURCE_MAX`, `SUBRESOURCE_BUDGET`: the ceilings on a render's kept bodies (R9, R25).
-- `runtime-limits` is a declared use and nothing in this module calls it today (Q4).
 
 ### Invariants
 
@@ -147,15 +149,9 @@ The source-specific halves of capture that decide what a fetch from a particular
 
 ### Suggestions
 
+- The render locale: `capture` passes R54 its view (`jurisdictions.combine` of the active profiles) and asks the renderer with the answer; timezone stays UTC.
 - `cdpConnection` and `collectBodies` are exported for tests; they are internals of R19–R25, not services.
 - `rendererFor`'s service renderer rejects when the service's own `fetch` throws; wrapping it to answer `{ok: false, error}` would match R19.
 - The archive's 24/min appetite for web.archive.org is set by `capture`'s archive lookup through `host-governor`; it belongs with the archive knowledge here or in `capture`, never in the governor.
 - Today's tests: `bio-plane/test/cdx.test.mjs`, `drive.test.mjs`, `drive-convert.test.mjs`, `d525-driveshells.test.mjs`, `browser-render.test.mjs`, and the render half of `rendered-capture.test.mjs`; `modules.json` places this module's at `bio-plane/test/m/capture-sources/`.
 
-## Open questions for BOB
-
-1. **D-570's quiet-window rule (R26): what do `fired_class` and `completeness` say for `quiet_excluding_long_lived`?** R3 today reads any word other than the asked condition or a timeout as `undetermined`. *Recommended: `fired_class: "condition"` is wrong (the page never went fully idle); add a fourth `fired_class`, "settled", and `completeness: "settled_with_open_requests"` with the ruled sentence in `render.undetermined`, grade untouched as for a timeout. N is measured by the job before it is set; until then the rule is not enabled.*
-2. **`RENDER_DEFAULTS.locale` is "en-US".** A page's language and formats follow the locale, which is local knowledge. *Recommended: take the locale from the instance's jurisdiction profile (a field it gains), with "en-US" only as the fallback when the profile names none; timezone stays UTC.*
-3. **Memento (R37).** *Recommended: keep R37 as not yet met in this module (the archive lookup is here) and leave it unscheduled until M6 is taken up; the WARC interchange belongs to `capture` and `publication`, not here.*
-4. **The declared use of `runtime-limits` is unused.** *Recommended: remove the edge from `modules.json` (a BOB-level change under P17); re-add it if a job meters a render's compute.*
-5. **R36 (`urlkey`).** *Recommended: fix in this module's first job; the query already asks for the field.*
