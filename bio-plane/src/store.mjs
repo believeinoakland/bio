@@ -31897,6 +31897,7 @@ export class Store extends DurableObject {
     return { ok: true, key: pk + "::" + sk, progression_key: pk, stage_key: sk,
              to: st, state: st, reason: why, decided_by: by, at, bundle: null,
              definition_version: definitionVersionWritten };
+  }
 
   /** REC-141: a NEW project's id — `PROJ-<year>-<rand>-<slug>`, the slug from the project's name the way
    *  both intake surfaces already slugged a title, in `BUNDLE_ID_RE`'s shape.
