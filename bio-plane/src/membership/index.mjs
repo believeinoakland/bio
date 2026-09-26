@@ -617,8 +617,8 @@ export class Membership {
   }
 /* Membership Architecture v2 section 7: authority over a project belongs to its
    OWNERS, and to nobody else. An administrator sees every project (7.3, 7.8) and
-   directs none of them (v2 4.9), the single exception being 7.13, which is not
-   built yet.
+   directs none of them (v2 4.9), the single exception being 7.13, the rescue of a
+   project whose owners are all inactive (`projectOwnerRescue`, R41).
 
    This REVERSES v1.4 7.7, which gave removal to administrators and denied it to
    owners, in those words, reasoning from Design Requirement 1 that authority
