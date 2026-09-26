@@ -43,4 +43,4 @@ In progress. T1-4 and D-671 are applied and checked; N9 waits for `pdf-reader`'s
 - `checks/format.mjs` — 61 modules, 14 requirements files; 0 failures
 - `checks/architecture.mjs … pdf-worker` — 26 product files, 25 relative imports; 0 failures
 - `checks/coverage.mjs … pdf-worker` — 40 of 40 live requirement ids named by a test; 0 failures
-- `checks/ownership.mjs … pdf-worker tranche/T1` — see the commit's own run below
+- `checks/ownership.mjs … pdf-worker origin/tranche/T1` — 12 files changed by pdf-worker; 0 failures
