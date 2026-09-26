@@ -1,6 +1,6 @@
 # T1 · subresources — job record
 
-**Status** · COMPLETE, 2026-09-26. Branch `job/T1/subresources`. No open question for BOB.
+**Status** · COMPLETE, 2026-09-26; re-run on the merged branch after BOB #40's CHANGE (tranche/T1 @ d3a6d2e4). Branch `job/T1/subresources`. No open question for BOB.
 
 ## Entries applied
 
@@ -24,14 +24,19 @@ Deferred: none.
 
 ## Found in another module
 
+(Confirmed by BOB #40 as entry N15 against legacy-tests in `build/plan/next.md`.)
+
 - **legacy-tests** · `bio-plane/test/subresources.test.mjs` now fails 2 of 357, both by design: line 330 ("every entry carries the address it came from and when") asserts `fetched_at` on every record, the unmet behaviour the requirements say must be corrected (check `considered_at` there instead, or `fetched_at` only on issued fetches); line ~487 ("and how much is outstanding") expects 21 where the queue now holds 22, since the refused reference is outstanding too. Neither file is this module's to change.
 
 ## Tests and checks run
 
+Re-run on the merged branch (tranche/T1 @ d3a6d2e4; this module's requirements unchanged by the merge).
+
 - `node --test bio-plane/test/m/subresources/` · tests 34, pass 34, fail 0.
 - Layer tests: none named in `build/manifest.md`.
-- Tests of the modules that use this one (none have `test/m/` tests yet), run from the legacy battery: `formats-docx`, `formats-pptx`, `formats-xlsx`, `formats-odf`, `pdfstructure`, `drive`, `cap13-reuse-pages`, `cap14-reused-from`, `reuse-ratify`, `d543-instant-precision`, `d57selflink`, `multicase`, and in `civicos-ui/test/` `capture-honesty`, `snapshot-render`, `link-surface`, `refusal-codes`: all exit 0. `bio-plane/test/subresources.test.mjs`: 355 pass, 2 fail (above; 357 pass before this job).
-- `checks/format.mjs` · 61 modules, 14 requirements files; 0 failures.
-- `checks/architecture.mjs` · 1 product files, 1 relative imports; 0 failures.
+- Tests of the modules that use this one (none have `test/m/` tests yet), run from the legacy battery before the merge: `formats-docx`, `formats-pptx`, `formats-xlsx`, `formats-odf`, `pdfstructure`, `drive`, `cap13-reuse-pages`, `cap14-reused-from`, `reuse-ratify`, `d543-instant-precision`, `d57selflink`, `multicase`, and in `civicos-ui/test/` `capture-honesty`, `snapshot-render`, `link-surface`, `refusal-codes`: all exit 0. `bio-plane/test/subresources.test.mjs`: 355 pass, 2 fail (N15, above; 357 pass before this job).
+- `checks/format.mjs` · 61 modules, 17 requirements files; 0 failures.
+- `checks/architecture.mjs` · 2 product files, 2 relative imports; 0 failures.
 - `checks/coverage.mjs` · 33 of 33 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs` (against `origin/tranche/T1`) · 3 files changed by subresources; 0 failures.
+- `checks/ownership.mjs` (tranche/T1) · OWNERSHIP_LINE
+- The metrics row this job first wrote to `build/metrics/T1.csv` (a file this job created) is withdrawn; the row is now below, by `record.mjs --record`.
