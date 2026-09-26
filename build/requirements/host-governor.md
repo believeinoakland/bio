@@ -39,8 +39,8 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - **R14** `governorHolding` answers every host whose cool-off ends after `now`, ordered by host, each as R13's row. `isHeld` answers whether one host's cool-off ends after `now`, `false` for a host with no state. Both use exactly R4's test (`cooloff_until > now`), spend no token and write nothing. (Today these are direct reads of the table by their consumers, `store.mjs` `#conditionsGovernorHolding` and `#captureRequestHostHeld`, and `index.mjs`'s subresource fetch through `governorstate`; extraction gives them this one interface.)
 - Errors: never throws.
 
-**governedFetch(target, {userAgent, fetch}) → `{res}` or `{refusedByGovernor: true, reason, retry_in_ms, last_refusal_status}`**
-- **R15** Asks R1–R6 for the target's host (its URL `host`). When refused, returns the refusal with nothing fetched.
+**governedFetch(target, {userAgent, fetch, governor}) → `{res}` or `{refusedByGovernor: true, reason, retry_in_ms, last_refusal_status}`**
+- **R15** Asks R1–R6 for the target's host (its URL `host`), through `governor` (`{admit, report}`, this module's R1–R6 as the caller reaches them: in process, or through the Durable Object from a Worker; K72). When refused, returns the refusal with nothing fetched.
 - **R16** When admitted, waits `wait_ms`, then fetches the target once, following redirects, with the user agent the caller supplied (this module composes none), and reports the response's status to R8–R10 with its `Retry-After` converted to milliseconds (delta-seconds × 1000, or an HTTP-date minus now, never below 0; `null` when absent). Returns `{res}`.
 - **R17** A governor that cannot be reached, or a target whose host cannot be read, never blocks the fetch: it proceeds ungoverned, and a report that cannot be recorded is dropped (politeness, not coordination; K47). A fetch that throws propagates its error, and nothing is reported.
 

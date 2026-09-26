@@ -106,6 +106,9 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **R34** When this instance files an archive-sourced capture, it signs its own receipt: that on this date it fetched these bytes from this retrieval locator and they hashed to this value. The signing key is the instance's own, one per instance, held as a secret and replaceable by the operator; a receipt signed before a replacement stays verifiable against the public key it was signed with (Bob, K59). *(not yet met: ARCHIVE-FALLBACK §Shape on the capture; the plane holds no key today)*
 - Errors: never throws for a well-formed call; an authority or archive failure is an attempt, never a throw.
 
+**The register's read contract** (K72)
+- **R48** The tables `register` (its capture digest, `bundle_id` and path columns) and `captured_locators` (its locator and capture digest columns) are a stated read contract: a later module may join them in its own SQL, and this module changes none of those columns' names or meaning without a change to this requirement. Every write to them stays this module's.
+
 ## Private
 
 ### Uses
