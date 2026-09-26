@@ -1,101 +1,27 @@
-/* pagepixels.test.mjs — CPDF-12's battery-resident half. HERMETIC: no network,
- * no OCR engine, no python. The measurement lives in
- * `pagepixels-corpus.probe.mjs`; what is pinned here is the behaviour a
- * regression would break.
+/* renderPageToPixels and the shared decode rules: R13–R26, R39 and R40 of
+ * build/requirements/pdf-worker.md.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * THE ONE THING THAT MAKES THIS SUITE WORTH HAVING
- * ─────────────────────────────────────────────────────────────────────────────
- * The expected pixel digests below were NOT produced by the subject. They come
- * from an INDEPENDENT decoder — Pillow (libtiff's CCITT G4) reached through
- * pypdf 6.14.2 / Pillow 11.3.0, run 2026-08-08 — which shares no line of source
- * with `pagepixels.mjs`. A decoder pinned against its own output agrees for
- * free, and an outcome that costs nothing to produce is not evidence. The
- * command that reproduces the expected values is in the probe; the values are
- * COPIED here so the battery stays hermetic, and if the fixture ever changes
- * they must be RE-DERIVED from the independent decoder rather than from a
- * failing run's "got".
+ * INDEPENDENT EXPECTATIONS (R40). The CCITT digests come from Pillow (libtiff's
+ * G4) through pypdf 6.14.2 / Pillow 11.3.0, run 2026-08-08; the DCT digests and
+ * `fixtures/dct-variants.json` from Pillow 11.3.0 (libjpeg-turbo 3.1.1), written
+ * by `fixtures/make-dct-fixtures.py` on 2026-09-25. Neither shares a line with
+ * this module. For the synthetic images below the expected samples are known by
+ * construction, and every PNG is read back with node's own zlib (`readPng`), not
+ * the subject's encoder. If a fixture changes, re-derive its digest from the
+ * independent decoder, never from a failing run's output.
  *
- * FIXTURE PROVENANCE: `fixtures/scan-ccitt-g4-page.pdf` wraps the EXACT
- * CCITTFaxDecode stream (84,797 bytes, copied byte for byte, K=-1, 3300x2550)
- * of page 2 of Oakland Legistar attachment 15721260 — the scanned City Council
- * resolution CPDF-9 ground-truthed — in a minimal one-page document with a real
- * xref table, `/Rotate 270` preserved from the original. The xref matters: a
- * fixture only OUR reader can open cannot be independently checked, which is
- * the whole point of it.
- *
- * NEGATIVE CONTROL: EIGHT arms since D-585 (seven before; (h) is D-585's), each run ALONE by
- * `node pdf-worker/test/pagepixels.control.mjs`, which re-runs them in one step
- * and verifies every restore by sha256 AND by byte comparison against a
- * per-arm pristine copy whose byte count it prints and floors. RUN 2026-08-08
- * against a baseline of 63 pass / 0 fail; all seven agreed on the final run.
- *   (a) neuter the CCITT 2D VERTICAL-MODE branch in `ccittDecode` (V0 falls
- *       through to the unknown-code path) -> 59 pass, 4 fail, naming the
- *       independent pixel digests and the decoded row count.
- *   (b) invert the padding mask in `normalisePacked` -> 59 pass, 4 fail. The arm
- *       that proves the DIGESTS are doing the work: every dimension, byte count
- *       and row count still agrees and only the digests move.
- *   (c) make `refuse()` return `{ ok: true, bytes: new Uint8Array(0) }` -> 52
- *       pass, 11 fail. The blank-frame hazard the queue row names, caught here
- *       rather than downstream where a blank page and a page with no text on it
- *       are indistinguishable.
- *   (d) drop the `/Rotate` application -> 57 pass, 6 fail. MEASURED COST of not
- *       catching it: the OCR arm scored 8.67% characters with 355 MINTED digits
- *       on a sideways page, and the engine announced nothing (probe, 2026-08-08).
- *   (e) drop the string/inline-image masking so a naive scan reads the whole
- *       content stream -> 61 pass, 2 fail. **CORRECTED BY D-585, 2026-09-25, not
- *       exempted:** the text question left this module for the plane's shared
- *       `pageShowsText`, whose tokenizer reads a string as a string, so dropping
- *       the MASK no longer moves `hasTextOps` and the arm as written would arm at
- *       nothing. Its subject is unchanged — an operator spelled inside a string
- *       must not read as text — so it now breaks THAT: a naive `Tj` scan of the
- *       UNMASKED content joins the answer again (see the driver). Re-run figures
- *       are on the D-585 line below. **THIS ARM CAME BACK A SURPRISING
- *       GREEN THE FIRST TIME (63 pass, 0 fail) AND THAT WAS A FINDING ABOUT
- *       THIS SUITE, NOT ABOUT THE SUBJECT:** the real scanned page's content
- *       stream is `q … cm /Im0 Do Q` and contains no strings at all, so the
- *       masking pass changed nothing and the arm tested nothing. It is recorded
- *       rather than smoothed, and the fixture with a marked-content string
- *       carrying the letters `Tj` was added to un-absorb it.
- *   (f) let `decodeImage` accept JPXDecode -> 62 pass, 1 fail.
- *   (g) OVER-STRICTNESS ARM: add a real but irrelevant field to `analyzePage`'s
- *       return -> 63 pass, 0 fail, as declared. A suite that fails on any change
- *       at all is a suite nobody can edit.
- * D-585 (2026-09-25) RE-RAN ALL EIGHT against a baseline of 65 pass / 0 fail, and
- * ADDED (h): count a bare `BT` as text again (`SHOW_TEXT_BLOCK` rejoins
- * `hasTextOps`) -> the two D-585 assertions fail by name. Figures from the run:
- * (a) 61/4, (b) 61/4, (c) 54/11, (d) 59/6, (e) as corrected 63/2, (f) 64/1,
- * (h) 63/2, (g) 65/0 as declared — 8 of 8 as declared, every restore sha256 AND
- * byte-compare identical (42,153 B). The same break on the plane's side, and the
- * two halves named separately, is `bio-plane/test/nc-d585.mjs`.
- * D-320 (2026-09-25) RE-RAN ALL of them against a baseline of 120 pass / 0 fail and
- * ADDED FOUR, each judged BY NAME (the driver now reads WHICH assertions went red:
- * `failsBy` must all fail, `spares` must all pass):
- *   (i) a NO-OP DCT decoder (the IDCT writes nothing; every dimension still agrees)
- *       -> 100/20, and all 20 are Pillow-digest assertions by name.
- *   (j) the decoded DCT route drops the page's /Rotate -> 114/6.
- *   (k) `rotate8` turns 270 the wrong way -> 119/1.
- *   (l) SOF2 (progressive) let through to the baseline path -> 118/2.
- * Earlier arms on the new baseline: (a) 116/4, (b) 116/4, (c) 104/16, (d) 114/6,
- * (e) 118/2, (f) 119/1, (h) 118/2, (g) 120/0 as declared — 12 of 12 as declared,
- * every restore sha256 AND byte-compare identical (pagepixels.mjs 47,791 B,
- * dctdecode.mjs 27,941 B).
- * ONE MORE THING THE CONTROLS FOUND, kept because it is the instrument working:
- * arm (e)'s first hardened run ended through a TypeError rather than through an
- * assertion, and the FOOT SENTINEL printed `53 pass, 2 fail — SUITE ENDED
- * BEFORE ITS OWN FOOT` instead of the module dying silently with a clean tally.
- */
+ * FIXTURES. `scan-ccitt-g4-page.pdf` wraps the exact CCITT G4 stream (84,797 B,
+ * K=-1, 3300x2550, /Rotate 270) of a scanned council resolution; `scan-dct-page.pdf`
+ * wraps the exact DCT stream (261,747 B, 3300x2550, 4:2:0, restart interval 1656,
+ * /Rotate 270) of another page of the same document. */
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { createHash } from "node:crypto";
-import {
-  renderPageToPixels, loadPdf, analyzePage, ccittDecode, normalisePacked,
-  rotateBilevel, rotate8, REFUSALS,
-} from "../src/pagepixels.mjs";
+import { renderPageToPixels, loadPdf, analyzePage, REFUSALS } from "../src/pagepixels.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "../src/dctdecode.mjs";
+import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -103,455 +29,438 @@ const { Miniflare } = await (async () => {
   return await import(pathToFileURL(createRequire(planePkg).resolve("miniflare")).href);
 })();
 
-const hex = (b) => createHash("sha256").update(b).digest("hex");
 const F = (p) => new Uint8Array(readFileSync(fileURLToPath(new URL(p, import.meta.url))));
+const { t, finish } = runner("pagepixels");
 
-let pass = 0, fail = 0, footReached = false;
-/* THE FOOT SENTINEL. A TypeError inside an assertion goes through no assertion
- * at all: the module ends and the tally line never prints, which a runner can
- * read as "unknown" rather than as red. This prints a tally WITH A FAILURE in
- * that case, so an early death is a red rather than a silence. */
-process.on("exit", () => {
-  if (!footReached) console.log(`\npagepixels: ${pass} passed, ${fail + 1} failed — SUITE ENDED BEFORE ITS OWN FOOT`);
-});
-const t = (label, got, want) => {
-  const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
-  ok ? pass++ : fail++;
-};
+/* Every answer is kept, so R39 can be checked over all of them at the end. */
+const answers = [];
+const render = async (...a) => { const r = await renderPageToPixels(...a); answers.push(r); return r; };
+const fields = (r, ...k) => k.map((x) => r[x]);
 
-/* Expected values with INDEPENDENT provenance (pypdf 6.14.2 + Pillow 11.3.0). */
 const IND_UNROTATED_SHA = "e54f07066bcf32a7b105cf43bb331e29c95dafa05e1cf0176c2164811f3417ef";
-const IND_UPRIGHT_SHA   = "ac4eb57f0f966f5d5b07eca8c97b065ab56746f32cfe33f3ba8b31cd1579efbc";
-const IND_WHITE_BITS    = 7915462;
-
-const SCAN = F("fixtures/scan-ccitt-g4-page.pdf");
-const TEXT_PDF = F("../../bio-plane/test/fixtures/legistar-agenda-1425405.pdf");
-
-/* ---- the decode, checked against a decoder that shares no code with it ---- */
-console.log("\n--- CCITT G4: the picture, not the shape ---");
-{
-  const doc = await loadPdf(SCAN);
-  t("the fixture opens", !!doc, true);
-  const a = await analyzePage(doc, 0);
-  t("one image on the page", a.imageCount, 1);
-  t("no text operators", a.hasTextOps, false);
-  t("no vector marks", a.hasVectorOps, false);
-  t("the page declares its rotation", a.rotate, 270);
-  t("filter chain", a.images[0].filters, ["CCITTFaxDecode"]);
-
-  const raw = doc.streamRawBytes(a._images[0].obj);
-  t("the CCITT stream is the original 84,797 bytes", raw.length, 84797);
-  const d = ccittDecode(raw, { K: -1, columns: 3300, rows: 2550, byteAlign: false });
-  t("every declared row decoded", d.rowsDecoded, 2550);
-  const norm = normalisePacked(d.packed, 3300, 2550);
-  t("UNROTATED pixels match the independent decoder", hex(norm), IND_UNROTATED_SHA);
-  let white = 0;
-  for (const b of norm) { let v = b; while (v) { white += v & 1; v >>= 1; } }
-  t("white-bit count matches the independent decoder", white, IND_WHITE_BITS);
-}
-
-/* ---- the whole route, and the page a reader actually sees ---- */
-console.log("\n--- the render: upright, digested, and self-describing ---");
-{
-  const r = await renderPageToPixels(SCAN, 0);
-  t("it renders", r.ok, true);
-  t("route", r.route, "decoded-ccitt-g4");
-  t("media type", r.mediaType, "image/png");
-  t("the page's own /Rotate is applied", [r.width, r.height], [2550, 3300]);
-  t("and it says the pixels are upright", r.upright, true);
-  t("and it states the rotation it applied", r.rotate_deg, 270);
-  t("UPRIGHT pixels match the independent decoder", r.pixels_sha256, IND_UPRIGHT_SHA);
-  t("300 dpi against the page box", r.page_geometry.dpi, { x: 300, y: 300 });
-  t("the source is described, not summarised away",
-    [r.source.filters, r.source.bitsPerComponent, r.source.colorSpace],
-    [["CCITTFaxDecode"], 1, "DeviceGray"]);
-  t("every declared row survived into the render", r.ccitt.rowsDecoded, 2550);
-
-  // A real PNG, checked structurally rather than by "it has some bytes".
-  const png = r.bytes;
-  t("PNG signature", [...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  const dv = new DataView(png.buffer, png.byteOffset);
-  t("IHDR width", dv.getUint32(16), 2550);
-  t("IHDR height", dv.getUint32(20), 3300);
-  t("IHDR bit depth 1, colour type 0 (grey)", [png[24], png[25]], [1, 0]);
-  t("IEND terminates it", String.fromCharCode(...png.subarray(png.length - 8, png.length - 4)), "IEND");
-  t("a decoded page is smaller than the RGBA frame a canvas would need",
-    png.length < 2550 * 3300 * 4, true);
-}
-
-/* ---- rotation is exact, and reversible ---- */
-console.log("\n--- rotation lands a bit on a bit ---");
-{
-  const w = 24, h = 16, rowBytes = 3;
-  const src = new Uint8Array(rowBytes * h);
-  for (let i = 0; i < src.length; i++) src[i] = (i * 37) & 0xff;
-  const r90 = rotateBilevel(src, w, h, 90);
-  t("90 turns the box", [r90.width, r90.height], [16, 24]);
-  const back = rotateBilevel(rotateBilevel(rotateBilevel(r90.packed, 16, 24, 90).packed, 24, 16, 90).packed, 16, 24, 90);
-  t("four quarter turns are the identity", hex(back.packed), hex(src));
-  t("180 twice is the identity",
-    hex(rotateBilevel(rotateBilevel(src, w, h, 180).packed, w, h, 180).packed), hex(src));
-  t("0 is a no-op", hex(rotateBilevel(src, w, h, 0).packed), hex(src));
-  let threw = null;
-  try { rotateBilevel(src, w, h, 45); } catch (e) { threw = e.message; }
-  t("an angle that cannot land a bit on a bit THROWS", /unsupported rotation/.test(threw || ""), true);
-}
-
-/* ---- refusals: stated, declared, and never an image ---- */
-console.log("\n--- a refusal is a refusal, not a blank page ---");
-{
-  const cases = [
-    ["not a PDF", await renderPageToPixels(new Uint8Array([1, 2, 3, 4]), 0), "NOT_A_PDF"],
-    ["a page past the end", await renderPageToPixels(SCAN, 9), "NO_SUCH_PAGE"],
-    ["a text-layer page", await renderPageToPixels(TEXT_PDF, 0), "PAGE_HAS_TEXT_LAYER"],
-  ];
-  for (const [label, r, reason] of cases) {
-    t(`${label} is refused`, r.ok, false);
-    t(`${label} names ${reason}`, r.reason, reason);
-    t(`${label} carries the reason in words`, typeof r.why === "string" && r.why.length > 10, true);
-    t(`${label} hands back NO bytes`, r.bytes, undefined);
-  }
-  t("a real page count is reported with NO_SUCH_PAGE", (await renderPageToPixels(SCAN, 9)).pageCount, 1);
-  t("every reason the module can emit is DECLARED",
-    cases.every(([, r]) => r.reason in REFUSALS), true);
-  /* 14 since D-320 added UNSUPPORTED_JPEG_PROCESS (13 before). */
-  t("the declared set has not silently shrunk", Object.keys(REFUSALS).length >= 14, true);
-}
-
-/* ---- the synthetic pages: one image, several images, a filter with no decoder ---- */
-console.log("\n--- what the renderer will not pretend to do ---");
-{
-  const mk = (objs) => {
-    let pdf = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n";
-    const off = [];
-    objs.forEach((b, i) => { off[i] = pdf.length; pdf += `${i + 1} 0 obj\n${b}\nendobj\n`; });
-    const x = pdf.length;
-    let xr = `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-    for (let i = 0; i < objs.length; i++) xr += `${String(off[i]).padStart(10, "0")} 00000 n \n`;
-    pdf += xr + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${x}\n%%EOF\n`;
-    return new Uint8Array(Buffer.from(pdf, "latin1"));
-  };
-  const img = (n, extra, len) =>
-    `<< /Type /XObject /Subtype /Image /Width 8 /Height 8 /ColorSpace /DeviceGray /BitsPerComponent 1 ${extra} /Length ${len} >>\nstream\n${"\x00".repeat(len)}\nendstream`;
-  const page = (xobjs, content) =>
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 8 8] /Resources << /XObject << ${xobjs} >> >> /Contents 3 0 R >>`;
-
-  const two = mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 34 >>\nstream\nq 8 0 0 8 0 0 cm /A Do /B Do Q\nendstream",
-    page("/A 5 0 R /B 6 0 R"),
-    img("A", "", 8), img("B", "", 8),
-  ]);
-  const r2 = await renderPageToPixels(two, 0);
-  t("a page composed of several images is refused by name", r2.reason, "MULTIPLE_IMAGES_ON_PAGE");
-  t("and it says how many", r2.imageCount, 2);
-
-  const jpx = mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 26 >>\nstream\nq 8 0 0 8 0 0 cm /A Do Q\nendstream",
-    page("/A 5 0 R"),
-    img("A", "/Filter /JPXDecode", 8),
-  ]);
-  const rj = await renderPageToPixels(jpx, 0);
-  t("a filter with no decoder is refused by name", rj.reason, "UNSUPPORTED_FILTER");
-  t("and the filter is named", rj.filter, "JPXDecode");
-
-  const short = mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 26 >>\nstream\nq 8 0 0 8 0 0 cm /A Do Q\nendstream",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 64 64] /Resources << /XObject << /A 5 0 R >> >> /Contents 3 0 R >>`,
-    `<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Length 8 >>\nstream\n${"\x00".repeat(8)}\nendstream`,
-  ]);
-  const rs = await renderPageToPixels(short, 0);
-  t("data short of the declared height is refused, NOT padded", rs.reason, "TRUNCATED_IMAGE_DATA");
-  t("and it says how short", [rs.declaredHeight, rs.needBytes, rs.haveBytes], [64, 512, 8]);
-  t("a truncated page yields no image at all", rs.bytes, undefined);
-
-  /* Ink and no ink must be DISTINGUISHABLE — the blank-frame hazard, asserted
-   * rather than assumed. Two 64x64 bilevel pages differing only in samples. */
-  const raw = (fill) => {
-    const s = new Uint8Array(64 * 8);
-    if (fill) s.fill(0xff, 0, 64);
-    return String.fromCharCode(...s);
-  };
-  const mkRaw = (fill) => mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 26 >>\nstream\nq 8 0 0 8 0 0 cm /A Do Q\nendstream",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 64 64] /Resources << /XObject << /A 5 0 R >> >> /Contents 3 0 R >>`,
-    `<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Length 512 >>\nstream\n${raw(fill)}\nendstream`,
-  ]);
-  /* THE ARM THAT WAS ABSORBED, AND THE FIXTURE THAT UN-ABSORBS IT. Control arm
-   * (e) — drop the string/inline-image masking so a naive scan for `Tj` reads
-   * the whole content stream — came back a SURPRISING GREEN the first time it
-   * ran: 61 pass, 0 fail. The cause was the fixture, not the subject. The real
-   * scanned page's content stream is `q … cm /Im0 Do Q` and contains no strings
-   * at all, so masking changed nothing and the arm tested nothing. This page
-   * carries a marked-content string with the letters `Tj` inside it, which is
-   * what a real `/ActualText` or `/Alt` entry looks like, and it is the only
-   * assertion in the suite that can tell the two readings apart. */
-  const stringy = mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 78 >>\nstream\n/Span << /ActualText (a note Tj about the scan) >> BDC q 8 0 0 8 0 0 cm /A Do Q EMC\nendstream",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 64 64] /Resources << /XObject << /A 5 0 R >> >> /Contents 3 0 R >>`,
-    `<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Length 512 >>\nstream\n${"\x00".repeat(512)}\nendstream`,
-  ]);
-  const rst = await renderPageToPixels(stringy, 0);
-  t("an operator-shaped token INSIDE a string is not a text layer", rst.ok, true);
-  /* `?.` deliberately: when arm (e) is armed this is a REFUSAL with no
-   * `page_marks`, and a TypeError here would end the module through no
-   * assertion at all. The foot sentinel caught exactly that on the first run
-   * (it printed `53 pass, 2 fail — SUITE ENDED BEFORE ITS OWN FOOT`), which is
-   * the sentinel working; the assertion is still hardened so the arm fails as
-   * an ASSERTION rather than as a crash. */
-  t("and the page is still reported as carrying no text", rst.page_marks?.hasTextOps ?? "REFUSED", false);
-
-  /* D-585 — AN EMPTY TEXT OBJECT IS NOT A TEXT LAYER. `0201-cafr-2002`'s scanned pages carry, beside the
-   * scan, a font dictionary and a second content stream that is exactly `BT\n\nET\n`: a text object opened
-   * and closed with no glyph shown. This module counted the bare `BT` as text and refused 161 such pages
-   * PAGE_HAS_TEXT_LAYER (M-157), so the OCR member could not read a page Tier 1 had nothing from. The page
-   * below is that shape: fonts declared, the paint stream and the empty text object as two streams. */
-  const cafrShape = mk([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
-    "<< /Length 26 >>\nstream\nq 8 0 0 8 0 0 cm /A Do Q\nendstream",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 64 64] /Resources << /Font << /F1 7 0 R >> /XObject << /A 5 0 R >> >> /Contents [3 0 R 6 0 R] >>`,
-    `<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceGray /BitsPerComponent 1 /Length 512 >>\nstream\n${"\x00".repeat(512)}\nendstream`,
-    "<< /Length 7 >>\nstream\nBT\n\nET\nendstream",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-  ]);
-  const rcafr = await renderPageToPixels(cafrShape, 0);
-  t("D-585: an empty BT…ET beside the scan is NOT a text layer — the page renders", rcafr.ok ? "ok" : rcafr.reason, "ok");
-  t("D-585: and is reported as carrying no text", rcafr.page_marks?.hasTextOps ?? "REFUSED", false);
-
-  const blank = await renderPageToPixels(mkRaw(false), 0);
-  const inked = await renderPageToPixels(mkRaw(true), 0);
-  t("a uniform page renders", blank.ok, true);
-  t("a page with ink renders", inked.ok, true);
-  t("and the two are NOT the same picture", blank.pixels_sha256 === inked.pixels_sha256, false);
-}
-
-
-/* ---- D-320: the DCT route DECODED, checked against Pillow, never against itself ---- */
-/* EXPECTED VALUES WITH INDEPENDENT PROVENANCE. `fixtures/dct-variants.json` and
- * `fixtures/scan-dct-page.pdf` are written by `fixtures/make-dct-fixtures.py`,
- * and every digest in them — and the two below — is PILLOW 11.3.0's decode
- * (libjpeg-turbo 3.1.1), run 2026-09-25, rotated CLOCKWISE by the page's
- * /Rotate. `dctdecode.mjs` shares no line of source with it. If a fixture
- * changes, RE-RUN the generator; never copy a failing run's "got".
- * FIXTURE PROVENANCE: `scan-dct-page.pdf` wraps the EXACT DCTDecode stream
- * (261,747 bytes, 3300x2550, 4:2:0, restart interval 1656) of page 4 of the same
- * Oakland attachment 15721260 the CCITT fixture comes from, `/Rotate 270`
- * preserved — one of the three DCT pages at /Rotate 270 CPDF-12 counted (D-244). */
-const DCT_UPRIGHT_SHA   = "2afca4d5af6d1d463ee61eac64d5a270a3ac09334567727d5b90b48663225b94";
+const IND_UPRIGHT_SHA = "ac4eb57f0f966f5d5b07eca8c97b065ab56746f32cfe33f3ba8b31cd1579efbc";
+const IND_WHITE_BITS = 7915462;
+const DCT_UPRIGHT_SHA = "2afca4d5af6d1d463ee61eac64d5a270a3ac09334567727d5b90b48663225b94";
 const DCT_UNROTATED_SHA = "5e0adab5d8376c1617cf3620c2f2a6123615eeb9c060c27182533db444ded706";
-const DCT_STREAM_SHA    = "a537b2e0c19d384234695e5f9724b60c4b19857d20102211003ae0cbffc4a15b";
+const DCT_STREAM_SHA = "a537b2e0c19d384234695e5f9724b60c4b19857d20102211003ae0cbffc4a15b";
+const SCAN = F("fixtures/scan-ccitt-g4-page.pdf");
 const DCT_SCAN = F("fixtures/scan-dct-page.pdf");
 const VARIANTS = JSON.parse(Buffer.from(F("fixtures/dct-variants.json")).toString("utf8")).variants;
+const jpeg = (name) => new Uint8Array(Buffer.from(VARIANTS.find((v) => v.name === name).jpeg_b64, "base64"));
 
-console.log("\n--- D-320: a baseline JPEG, decoded bit-exact with an independent decoder ---");
+/* The raw CCITT stream of the scan, for pages that re-wrap it. */
+const CCITT = await (async () => {
+  const doc = await loadPdf(SCAN);
+  return doc.streamRawBytes((await analyzePage(doc, 0))._images[0].obj);
+})();
+
+/* A page painting one image named /Im at the full page box. */
+const imagePage = (img, { w = 8, h = 8, pageExtra = "", pagesExtra = "", ops } = {}) => onePage({
+  box: [0, 0, w, h], res: "/XObject << /Im 5 0 R >>", pageExtra, pagesExtra,
+  ops: ops ?? `q ${w} 0 0 ${h} 0 0 cm /Im Do Q`, more: [img],
+});
+const gray8 = (w, h) => Uint8Array.from({ length: w * h }, (_, i) => (i * 37 + 11) & 0xff);
+const G = gray8(3, 2);
+const GREY_IMG = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G);
+
+console.log("\n--- R13: a %PDF- header in the first 1024 bytes ---");
+{
+  const doc = imagePage(GREY_IMG, { w: 3, h: 2 });
+  for (const [label, bytes] of [
+    ["an ArrayBuffer", doc.buffer], ["a string", "%PDF-1.7"], ["null", null],
+    ["four bytes", new Uint8Array([1, 2, 3, 4])],
+    ["the header after byte 1024", new Uint8Array([...new Uint8Array(1100).fill(0x20), ...doc])],
+  ]) {
+    const r = await render(bytes, 0);
+    t(`R13 ${label}: NOT_A_PDF`, [r.ok, r.reason], [false, "NOT_A_PDF"]);
+  }
+  const late = new Uint8Array([...new Uint8Array(1000).fill(0x20), ...doc]);
+  t("R13 a header at byte 1000 is read", (await render(late, 0)).ok, true);
+}
+
+console.log("\n--- R14: encrypted ---");
+{
+  const enc = onePage({ ops: "q 8 0 0 8 0 0 cm /Im Do Q", res: "/XObject << /Im 5 0 R >>",
+    more: [GREY_IMG, "<< /Filter /Standard /V 1 /R 2 /O (owner) /U (user) /P -4 >>"], trailer: "/Encrypt 6 0 R" });
+  const r = await render(enc, 0);
+  t("R14 an encrypted document: ENCRYPTED", [r.ok, r.reason], [false, "ENCRYPTED"]);
+}
+
+console.log("\n--- R15: the page index ---");
+{
+  const doc = imagePage(GREY_IMG, { w: 3, h: 2 });
+  for (const i of [-1, 1, 7]) {
+    const r = await render(doc, i);
+    t(`R15 page ${i} of 1: NO_SUCH_PAGE with pageCount`, fields(r, "ok", "reason", "pageCount"), [false, "NO_SUCH_PAGE", 1]);
+  }
+  /* pdf-reader's page index admits only dictionaries, so the one way an in-range
+     page reads short is an attribute that cannot be read: a /Rotate that is not a
+     multiple of 90 (R21). */
+  const r = await render(imagePage(GREY_IMG, { w: 3, h: 2, pageExtra: "/Rotate 45" }), 0);
+  t("R15 an in-range page that cannot be read: PAGE_UNREADABLE", fields(r, "ok", "reason", "page"), [false, "PAGE_UNREADABLE", 0]);
+}
+
+console.log("\n--- R16: a page that shows text ---");
+{
+  const FONT = "/Font << /F1 6 0 R >>";
+  const helv = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+  const withOps = (ops, res = "") => onePage({ box: [0, 0, 3, 2], res: `/XObject << /Im 5 0 R ${res} >> ${FONT}`,
+    ops: `q 3 0 0 2 0 0 cm /Im Do Q ${ops}`, more: [GREY_IMG, helv, content("BT /F1 1 Tf (x) Tj ET").replace("<<", "<< /Type /XObject /Subtype /Form /BBox [0 0 3 2] /Resources << /Font << /F1 6 0 R >> >>")] });
+  for (const [label, ops] of [["Tj", "BT /F1 1 Tf (a) Tj ET"], ["TJ", "BT /F1 1 Tf [(a) 5 (b)] TJ ET"],
+    ["'", "BT /F1 1 Tf 1 TL (a) ' ET"], ['"', 'BT /F1 1 Tf 1 TL 0 0 (a) " ET'], ["a Form XObject's Tj", "/Fm Do"]]) {
+    const r = await render(withOps(ops, "/Fm 7 0 R"), 0);
+    t(`R16 ${label}: PAGE_HAS_TEXT_LAYER with imageCount`, fields(r, "ok", "reason", "imageCount"), [false, "PAGE_HAS_TEXT_LAYER", 1]);
+  }
+  const allowed = await render(withOps("BT /F1 1 Tf (a) Tj ET", "/Fm 7 0 R"), 0, { allowTextPage: true });
+  t("R16 allowTextPage renders it", [allowed.ok, allowed.page_marks?.hasTextOps], [true, true]);
+  for (const [label, ops] of [["a bare BT … ET", "BT ET"], ["BT with only a font set", "BT /F1 1 Tf ET"],
+    ["Tj spelled inside a string", "/Span << /ActualText (a note Tj about it) >> BDC EMC"]]) {
+    const r = await render(withOps(ops), 0);
+    t(`R16 ${label} is not text: the page renders`, [r.ok ? "ok" : r.reason, r.page_marks?.hasTextOps], ["ok", false]);
+  }
+}
+
+console.log("\n--- R17: no image on the page ---");
+{
+  const page = (ops) => onePage({ ops, box: [0, 0, 8, 8] });
+  for (const [label, ops, reason] of [
+    ["nothing painted", "q Q", "NO_IMAGE_ON_PAGE"], ["a clip alone", "0 0 8 8 re W n", "NO_IMAGE_ON_PAGE"],
+    ["a stroke", "0 0 m 8 8 l S", "NOT_IMAGE_ONLY"], ["a fill", "0 0 8 8 re f", "NOT_IMAGE_ONLY"],
+    ["an even-odd fill", "0 0 8 8 re f*", "NOT_IMAGE_ONLY"], ["fill and stroke", "0 0 8 8 re B", "NOT_IMAGE_ONLY"],
+    ["a close-and-stroke", "0 0 m 8 8 l s", "NOT_IMAGE_ONLY"], ["a shading", "/Sh0 sh", "NOT_IMAGE_ONLY"],
+  ]) {
+    const r = await render(page(ops), 0);
+    t(`R17 ${label}: ${reason}`, [r.ok, r.reason], [false, reason]);
+  }
+}
+
+console.log("\n--- R18: several images ---");
+{
+  const two = onePage({ box: [0, 0, 8, 8], res: "/XObject << /A 5 0 R /B 6 0 R >>", ops: "q 8 0 0 8 0 0 cm /A Do /B Do Q",
+    more: [image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G), image(4, 4, "/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /FlateDecode", deflateSync(new Uint8Array(4)))] });
+  const r = await render(two, 0);
+  t("R18 MULTIPLE_IMAGES_ON_PAGE with every image's size and filters", fields(r, "ok", "reason", "imageCount", "images"),
+    [false, "MULTIPLE_IMAGES_ON_PAGE", 2, [{ width: 3, height: 2, filters: [] }, { width: 4, height: 4, filters: ["FlateDecode"] }]]);
+  t("R18 and no bytes", r.bytes, undefined);
+}
+
+console.log("\n--- R17, R18: images are counted from what the page paints (K27) ---");
+{
+  const A = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G);
+  const B = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", G.map((v) => 255 - v));
+  const shared = (ops) => makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 /Resources << /XObject << /A 5 0 R /B 6 0 R /Fm 7 0 R >> >> >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 3 2] /Contents 4 0 R >>",
+    content(ops), A, B,
+    { dict: "<< /Type /XObject /Subtype /Form /BBox [0 0 3 2] /Resources << /XObject << /B 6 0 R >> >> >>", data: new TextEncoder().encode("q 3 0 0 2 0 0 cm /B Do Q") },
+  ]);
+  const one = await render(shared("q 3 0 0 2 0 0 cm /A Do Q"), 0);
+  t("R18 a page that paints one of the two images its shared /Resources lists renders that one",
+    [one.ok, one.route, one.pixels_sha256], [true, "raw-samples-grey8", hex(G)]);
+  const none = await render(shared("q Q"), 0);
+  t("R17 a page whose /Resources list images it never paints: NO_IMAGE_ON_PAGE", [none.ok, none.reason], [false, "NO_IMAGE_ON_PAGE"]);
+  const noneVec = await render(shared("0 0 3 2 re f"), 0);
+  t("R17 ...and with a vector mark: NOT_IMAGE_ONLY", noneVec.reason, "NOT_IMAGE_ONLY");
+  const form = await render(shared("/Fm Do"), 0);
+  t("R17 R18 an image painted inside a Form XObject is counted and rendered",
+    [form.ok, form.pixels_sha256], [true, hex(G.map((v) => 255 - v))]);
+  const both = await render(shared("q 3 0 0 2 0 0 cm /A Do Q /Fm Do"), 0);
+  t("R18 one image painted directly and one inside a form: MULTIPLE_IMAGES_ON_PAGE",
+    fields(both, "reason", "imageCount", "images"), ["MULTIPLE_IMAGES_ON_PAGE", 2,
+      [{ width: 3, height: 2, filters: [] }, { width: 3, height: 2, filters: [] }]]);
+  const twice = await render(shared("q 3 0 0 2 0 0 cm /A Do /A Do Q"), 0);
+  t("R18 the same image painted twice is two paintings: MULTIPLE_IMAGES_ON_PAGE", fields(twice, "reason", "imageCount"), ["MULTIPLE_IMAGES_ON_PAGE", 2]);
+  const lost = await render(shared("q 3 0 0 2 0 0 cm /Missing Do Q"), 0);
+  t("R15 R17 a paint sequence that cannot be walked: PAGE_UNREADABLE, not a guessed count",
+    fields(lost, "ok", "reason", "note"), [false, "PAGE_UNREADABLE", "xobject_unresolvable:page 0:Missing"]);
+  const inline = await render(onePage({ box: [0, 0, 3, 2], ops: "q 3 0 0 2 0 0 cm BI /W 3 /H 2 /CS /G /BPC 8 ID abcdef EI Q" }), 0);
+  t("R17 R19 a page painting only an inline image paints an image; reading it is not built: IMAGE_UNREADABLE",
+    fields(inline, "ok", "reason", "page"), [false, "IMAGE_UNREADABLE", 0]);
+}
+
+console.log("\n--- R19: the image's own refusal, with page added ---");
+{
+  const r = await render(imagePage(image(8, 8, "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /JPXDecode", new Uint8Array(64))), 0);
+  t("R19 a decode refusal carries the page", fields(r, "ok", "reason", "page", "filter"), [false, "UNSUPPORTED_FILTER", 0, "JPXDecode"]);
+}
+
+console.log("\n--- R20, R23, R40: the scanned CCITT page against an independent decoder ---");
+{
+  const r = await render(SCAN, 0);
+  t("R20 the success shape", Object.keys(r).sort(), ["bytes", "ccitt", "height", "mediaType", "ok", "page", "page_geometry",
+    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "upright", "width"]);
+  t("R20 route, media type, page", fields(r, "ok", "page", "route", "mediaType"), [true, 0, "decoded-ccitt-g4", "image/png"]);
+  t("R20 source", r.source, { filters: ["CCITTFaxDecode"], colorSpace: "DeviceGray", bitsPerComponent: 1, imageMask: false });
+  t("R20 page geometry", r.page_geometry, { mediaBoxPt: { w: 792, h: 612 }, rotate: 270, dpi: { x: 300, y: 300 } });
+  t("R20 page marks", r.page_marks, { hasTextOps: false, hasVectorOps: false });
+  t("R23 ccitt detail", r.ccitt, { K: -1, columns: 3300, rows: 2550, blackIs1: false, byteAlign: false, rowsDecoded: 2550 });
+  t("R21 R23 the page's /Rotate 270 is applied: upright", fields(r, "width", "height", "upright", "rotate_deg"), [2550, 3300, true, 270]);
+  t("R23 R40 upright pixels match the independent decoder", r.pixels_sha256, IND_UPRIGHT_SHA);
+  const png = readPng(r.bytes);
+  t("R23 a 1-bit grey PNG", [png.width, png.height, png.bitDepth, png.colorType], [2550, 3300, 1, 0]);
+  t("R26 pixels_sha256 is the digest of the packed samples", hex(png.samples), r.pixels_sha256);
+  /* The rotation apart from the decode: turned back by an independent walk, the
+     picture matches the independent decoder's un-rotated one. */
+  const rb = png.rowBytes, W0 = 3300, H0 = 2550, rb0 = Math.ceil(W0 / 8);
+  const bit = (x, y) => (png.samples[y * rb + (x >> 3)] >> (7 - (x & 7))) & 1;
+  const back = new Uint8Array(rb0 * H0);
+  let white = 0;
+  for (let y = 0; y < H0; y++) for (let x = 0; x < W0; x++) {
+    const v = bit(y, W0 - 1 - x);     // original (x,y) lands at (y, W0-1-x) under a clockwise 270
+    if (v) { back[y * rb0 + (x >> 3)] |= 0x80 >> (x & 7); white++; }
+  }
+  t("R23 R40 un-rotated pixels match the independent decoder", hex(back), IND_UNROTATED_SHA);
+  t("R23 R40 white-bit count matches the independent decoder", white, IND_WHITE_BITS);
+}
+
+console.log("\n--- R23: the CCITT filter chain, K and truncation ---");
+{
+  const ccittPage = (filter, parms, data) => imagePage(image(3300, 2550,
+    `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter ${filter} /DecodeParms ${parms}`, data),
+    { w: 792, h: 612, pageExtra: "/Rotate 270" });
+  const P = "<< /K -1 /Columns 3300 /Rows 2550 >>";
+  const fl = await render(ccittPage("[/FlateDecode /CCITTFaxDecode]", `[null ${P}]`, deflateSync(CCITT)), 0);
+  t("R23 FlateDecode before CCITTFaxDecode is decoded first: same picture", [fl.ok, fl.pixels_sha256], [true, IND_UPRIGHT_SHA]);
+  const hexed = new TextEncoder().encode(Buffer.from(CCITT).toString("hex") + ">");
+  const ah = await render(ccittPage("[/ASCIIHexDecode /CCITTFaxDecode]", `[null ${P}]`, hexed), 0);
+  t("R23 any other predecessor: UNSUPPORTED_FILTER", [ah.ok, ah.reason], [false, "UNSUPPORTED_FILTER"]);
+  const k1 = await render(ccittPage("/CCITTFaxDecode", "<< /K 1 /Columns 3300 /Rows 2550 >>", CCITT), 0);
+  t("R23 mixed mode (K>0): UNSUPPORTED_FILTER", [k1.ok, k1.reason], [false, "UNSUPPORTED_FILTER"]);
+  const short = await render(ccittPage("/CCITTFaxDecode", P, CCITT.subarray(0, 20000)), 0);
+  t("R23 fewer rows than declared: TRUNCATED_IMAGE_DATA", fields(short, "ok", "reason", "declaredHeight"), [false, "TRUNCATED_IMAGE_DATA", 2550]);
+  t("R23 and fewer rows were decoded", short.rowsDecoded < 2550, true);
+  const whole = Buffer.from(ccittPage("/CCITTFaxDecode", P, CCITT));
+  const cut = whole.lastIndexOf("endstream");
+  const unreadable = new Uint8Array(Buffer.concat([whole.subarray(0, cut), Buffer.from("endstrXam"), whole.subarray(cut + 9)]));
+  const ur = await render(unreadable, 0);
+  t("R23 an unreadable stream: IMAGE_UNREADABLE", [ur.ok, ur.reason], [false, "IMAGE_UNREADABLE"]);
+}
+
+console.log("\n--- R24: raw samples, no filter or FlateDecode ---");
+{
+  /* 1-bit: 10x3, bit pattern known. For grey 1 = white, as in PNG; for an
+     /ImageMask 1 = paint (black), so the PNG holds its inverse. */
+  const bits = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
+  const pad = (u) => Uint8Array.from(u, (b, i) => (i % 2 ? b & 0b11000000 : b));
+  for (const [label, extra, want] of [
+    ["1-bpc grey", "/ColorSpace /DeviceGray /BitsPerComponent 1", pad(bits)],
+    ["1-bpc grey with /Decode [1 0]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
+    ["an /ImageMask", "/ImageMask true", pad(bits.map((b) => ~b & 0xff))],
+    ["an /ImageMask, FlateDecode", "/ImageMask true /Filter /FlateDecode", pad(bits.map((b) => ~b & 0xff))],
+  ]) {
+    const data = /FlateDecode/.test(extra) ? deflateSync(bits) : bits;
+    const r = await render(imagePage(image(10, 3, extra, data), { w: 10, h: 3 }), 0);
+    const png = r.ok ? readPng(r.bytes) : {};
+    t(`R24 ${label}: a 1-bit PNG of exactly those samples`, [r.route, r.upright, png.bitDepth, png.width, png.height, png.samples && hex(png.samples)],
+      ["raw-samples-1bit", true, 1, 10, 3, hex(want)]);
+    t(`R26 ${label}: pixels_sha256 over the packed samples`, r.pixels_sha256, hex(want));
+  }
+  const rgb = Uint8Array.from({ length: 3 * 2 * 3 }, (_, i) => (i * 29 + 3) & 0xff);
+  for (const [label, extra, samples, comps, route, colorType] of [
+    ["8-bit grey", "/ColorSpace /DeviceGray /BitsPerComponent 8", G, 1, "raw-samples-grey8", 0],
+    ["8-bit grey, FlateDecode", "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode", G, 1, "raw-samples-grey8", 0],
+    ["8-bit RGB", "/ColorSpace /DeviceRGB /BitsPerComponent 8", rgb, 3, "raw-samples-rgb8", 2],
+    ["8-bit RGB, FlateDecode", "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode", rgb, 3, "raw-samples-rgb8", 2],
+  ]) {
+    for (const deg of [0, 90, 180, 270]) {
+      const data = /FlateDecode/.test(extra) ? deflateSync(samples) : samples;
+      const r = await render(imagePage(image(3, 2, extra, data), { w: 3, h: 2, pageExtra: `/Rotate ${deg}` }), 0);
+      const png = r.ok ? readPng(r.bytes) : {};
+      const tr = turn((x, y) => samples.subarray((y * 3 + x) * comps, (y * 3 + x + 1) * comps), 3, 2, deg);
+      const want = new Uint8Array(tr.W * tr.H * comps);
+      for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) want.set(tr.at(X, Y), (Y * tr.W + X) * comps);
+      t(`R24 ${label}, /Rotate ${deg}: the turned samples, upright`,
+        [r.route, r.upright, r.rotate_deg, png.colorType, png.width, png.height, png.samples && hex(png.samples)],
+        [route, true, deg, colorType, tr.W, tr.H, hex(want)]);
+      t(`R24 R26 ${label}, /Rotate ${deg}: pixels_sha256 over the samples`, r.pixels_sha256, hex(want));
+    }
+  }
+  for (const [label, extra, data, reason] of [
+    ["CMYK", "/ColorSpace /DeviceCMYK /BitsPerComponent 8", new Uint8Array(24), "UNSUPPORTED_SAMPLES"],
+    ["16-bit grey", "/ColorSpace /DeviceGray /BitsPerComponent 16", new Uint8Array(12), "UNSUPPORTED_SAMPLES"],
+    ["4-bit grey", "/ColorSpace /DeviceGray /BitsPerComponent 4", new Uint8Array(4), "UNSUPPORTED_SAMPLES"],
+    ["an indirect colour space", "/ColorSpace [/Indexed /DeviceRGB 1 <000000ffffff>] /BitsPerComponent 8", new Uint8Array(6), "UNSUPPORTED_SAMPLES"],
+    ["data short of the height", "/ColorSpace /DeviceGray /BitsPerComponent 8", new Uint8Array(5), "TRUNCATED_IMAGE_DATA"],
+    ["a corrupt Flate stream", "/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode", new Uint8Array([1, 2, 3, 4, 5, 6]), "IMAGE_UNREADABLE"],
+  ]) {
+    const r = await render(imagePage(image(3, 2, extra, data), { w: 3, h: 2 }), 0);
+    t(`R24 ${label}: ${reason}`, [r.ok, r.reason, r.bytes], [false, reason, undefined]);
+  }
+  const noW = await render(imagePage({ dict: "<< /Type /XObject /Subtype /Image /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8 >>", data: G }, { w: 3, h: 2 }), 0);
+  t("R24 a missing width: IMAGE_UNREADABLE", [noW.ok, noW.reason], [false, "IMAGE_UNREADABLE"]);
+  const short = await render(imagePage(image(64, 64, "/ColorSpace /DeviceGray /BitsPerComponent 1", new Uint8Array(8)), { w: 64, h: 64 }), 0);
+  t("R24 short 1-bit data: TRUNCATED_IMAGE_DATA, stating how short", fields(short, "reason", "declaredHeight", "needBytes", "haveBytes"),
+    ["TRUNCATED_IMAGE_DATA", 64, 512, 8]);
+}
+
+console.log("\n--- R21: the page's own /Rotate, inherited, never the caller's ---");
+{
+  const tree = (pagesRot, leafRot) => makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    `<< /Type /Pages /Kids [3 0 R] /Count 1 ${pagesRot == null ? "" : `/Rotate ${pagesRot}`} >>`,
+    `<< /Type /Pages /Parent 2 0 R /Kids [4 0 R] /Count 1 >>`,
+    `<< /Type /Page /Parent 3 0 R /MediaBox [0 0 3 2] /Resources << /XObject << /Im 6 0 R >> >> /Contents 5 0 R ${leafRot == null ? "" : `/Rotate ${leafRot}`} >>`,
+    content("q 3 0 0 2 0 0 cm /Im Do Q"),
+    GREY_IMG,
+  ]);
+  const want = (deg) => {
+    const tr = turn((x, y) => G[y * 3 + x], 3, 2, deg);
+    const out = [];
+    for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) out.push(tr.at(X, Y));
+    return [deg, tr.W, tr.H, hex(Uint8Array.from(out))];
+  };
+  for (const [label, pagesRot, leafRot, deg] of [
+    ["inherited from the root /Pages, two levels up (D-671)", 90, null, 90],
+    ["inherited 180", 180, null, 180],
+    ["inherited 270", 270, null, 270],
+    ["the leaf's own 0 overrides an inherited 90", 90, 0, 0],
+    ["the leaf's own 270 overrides an inherited 90", 90, 270, 270],
+    ["none anywhere is 0", null, null, 0],
+    ["-90 is 270", null, -90, 270],
+    ["450 is 90", null, 450, 90],
+  ]) {
+    const r = await render(tree(pagesRot, leafRot), 0);
+    t(`R21 ${label}`, [r.rotate_deg, r.width, r.height, r.pixels_sha256], want(deg));
+    t(`R21 ${label}: page_geometry states it`, r.page_geometry?.rotate, deg);
+  }
+  const ignored = await render(tree(90, null), 0, { rotate: 180 });
+  t("R21 opts.rotate is ignored: the page's own value wins", [ignored.rotate_deg, ignored.pixels_sha256], [want(90)[0], want(90)[3]]);
+  const odd = await render(tree(45, null), 0);
+  t("R21 a /Rotate that is not a multiple of 90 is not guessed: PAGE_UNREADABLE", [odd.ok, odd.reason], [false, "PAGE_UNREADABLE"]);
+  /* The DCT pass-through under an inherited rotation states it, not upright. */
+  const dctTree = makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 /Rotate 90 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 63 47] /Resources << /XObject << /Im 5 0 R >> >> /Contents 4 0 R >>",
+    content("q 63 0 0 47 0 0 cm /Im Do Q"),
+    image(63, 47, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-420-h2v2")),
+  ]);
+  const pass = await render(dctTree, 0);
+  t("R21 R22 pass-through under an inherited 90: upright false, rotate_deg 90", fields(pass, "route", "upright", "rotate_deg"), ["passthrough-dct", false, 90]);
+  const dec = await render(dctTree, 0, { decodeDct: true });
+  t("R21 R22 decoded under an inherited 90: turned, matching Pillow's turn",
+    [dec.route, dec.upright, dec.width, dec.height, dec.pixels_sha256],
+    ["decoded-dct", true, 47, 63, VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256]);
+}
+
+console.log("\n--- R22, R40: DCT, the decoder against Pillow ---");
 {
   const ok = VARIANTS.filter((v) => v.expect === "ok"), no = VARIANTS.filter((v) => v.expect !== "ok");
-  /* THE CORPUS IS PRINTED AND FLOORED: a totality assertion over an empty list
-   * passes for free, and this suite would then say "every variant matched". */
-  console.log(`  (${ok.length} decodable variants, ${no.length} refusal variants: ${VARIANTS.map((v) => v.name).join(", ")})`);
-  t("the variant corpus is the one the generator wrote (12 decodable, 4 refused)", [ok.length, no.length], [12, 4]);
-  const kinds = new Set(ok.map((v) => v.name.replace(/-(cjpeg|rotate\d+)$/, "")));
-  t("and it spans grey, 4:4:4, 4:2:2, 4:2:0, 1x2, restart markers and Adobe no-transform",
-    ["grey-baseline", "rgb-444", "rgb-422-h2v1", "rgb-420-h2v2", "rgb-h1v2", "rgb-420-restart", "rgb-adobe-no-transform"]
-      .every((k) => kinds.has(k)), true);
+  t("R22 (the variant corpus: 12 decodable, 4 refused)", [ok.length, no.length], [12, 4]);
   for (const v of ok) {
     let r = null, err = null;
-    try { r = decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64")), { rotate: v.rotate }); }
-    catch (e) { err = e.code || e.message; }
-    t(`${v.name}: pixels match Pillow's`, r ? hex(r.samples) : `THREW ${err}`, v.pillow_sha256);
-    t(`${v.name}: dimensions after /Rotate ${v.rotate}`, r ? [r.width, r.height, r.comps] : null,
-      [v.width, v.height, v.mode === "L" ? 1 : 3]);
+    try { r = decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64")), { rotate: v.rotate }); } catch (e) { err = e.code || e.message; }
+    t(`R22 R40 ${v.name}: pixels match Pillow's`, r ? [hex(r.samples), r.width, r.height, r.comps] : `THREW ${err}`,
+      [v.pillow_sha256, v.width, v.height, v.mode === "L" ? 1 : 3]);
   }
   const wantCode = { "refuse-progressive": ["UNSUPPORTED_PROCESS", "progressive-huffman"],
-                     "refuse-arithmetic": ["UNSUPPORTED_PROCESS", "extended-sequential-arithmetic"],
-                     "refuse-cmyk": ["UNSUPPORTED_COMPONENTS", undefined],
-                     "refuse-truncated": ["TRUNCATED", undefined] };
+    "refuse-arithmetic": ["UNSUPPORTED_PROCESS", "extended-sequential-arithmetic"],
+    "refuse-cmyk": ["UNSUPPORTED_COMPONENTS", undefined], "refuse-truncated": ["TRUNCATED", undefined] };
   for (const v of no) {
-    let got = "DECODED — NOT REFUSED";
-    try { decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64"))); }
-    catch (e) { got = e instanceof DctRefusal ? [e.code, e.detail.process] : `THREW ${e.message}`; }
-    t(`${v.name}: refused BY NAME, never decoded`, got, wantCode[v.name]);
+    let got = "DECODED";
+    try { decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64"))); } catch (e) { got = e instanceof DctRefusal ? [e.code, e.detail.process] : `THREW ${e.message}`; }
+    t(`R22 ${v.name}: the decoder refuses by name`, got, wantCode[v.name]);
   }
 }
 
-console.log("\n--- D-320: the real DCT page — the publisher's bytes by default, upright pixels when asked ---");
+console.log("\n--- R22: DCT through the renderer ---");
 {
-  const pass = await renderPageToPixels(DCT_SCAN, 0);
-  t("BY DEFAULT the route is unchanged: the publisher's own JPEG", [pass.ok, pass.route, pass.mediaType],
-    [true, "passthrough-dct", "image/jpeg"]);
-  t("byte-identical to the stream", hex(pass.bytes), DCT_STREAM_SHA);
-  t("and still honest that it is sideways", [pass.upright, pass.rotate_deg], [false, 270]);
-
-  const r = await renderPageToPixels(DCT_SCAN, 0, { decodeDct: true });
-  t("asked to decode, it renders", r.ok ? "ok" : r.reason, "ok");
-  t("route names the transform", [r.route, r.mediaType], ["decoded-dct", "image/png"]);
-  t("the page's /Rotate 270 is applied", [r.width, r.height, r.upright, r.rotate_deg], [2550, 3300, true, 270]);
-  t("UPRIGHT pixels match Pillow's decode of the same stream", r.pixels_sha256, DCT_UPRIGHT_SHA);
-  t("the decode is described", [r.dct?.process, r.dct?.sampling, r.dct?.restart, r.dct?.stream_bytes],
-    ["baseline", "2x2,1x1,1x1", 1656, 261747]);
-  const dv = new DataView(r.bytes.buffer, r.bytes.byteOffset);
-  t("a real PNG: 2550x3300, bit depth 8, colour type 2 (RGB)",
-    [dv.getUint32(16), dv.getUint32(20), r.bytes[24], r.bytes[25]], [2550, 3300, 8, 2]);
-
-  /* THE ROTATION IS ASSERTED APART FROM THE DECODE: the same stream decoded
-   * UN-rotated matches Pillow's un-rotated picture, so a wrong turn and a wrong
-   * decode cannot cancel into a pass. */
+  const pass = await render(DCT_SCAN, 0);
+  t("R22 by default the publisher's own bytes, untouched", [pass.ok, pass.route, pass.mediaType, hex(pass.bytes)], [true, "passthrough-dct", "image/jpeg", DCT_STREAM_SHA]);
+  t("R22 R26 not upright under /Rotate 270, and no pixels_sha256", [pass.upright, pass.rotate_deg, "pixels_sha256" in pass], [false, 270, false]);
+  const r = await render(DCT_SCAN, 0, { decodeDct: true });
+  t("R22 R40 decodeDct: decoded-dct, turned, upright, matching Pillow", [r.route, r.mediaType, r.width, r.height, r.upright, r.pixels_sha256],
+    ["decoded-dct", "image/png", 2550, 3300, true, DCT_UPRIGHT_SHA]);
+  t("R22 dct detail", [r.dct?.process, r.dct?.sampling, r.dct?.restart, r.dct?.stream_bytes], ["baseline", "2x2,1x1,1x1", 1656, 261747]);
+  const png = readPng(r.bytes);
+  t("R22 R26 an 8-bit RGB PNG whose samples are the pixels_sha256", [png.bitDepth, png.colorType, hex(png.samples)], [8, 2, DCT_UPRIGHT_SHA]);
   const doc = await loadPdf(DCT_SCAN);
-  const a = await analyzePage(doc, 0);
-  const u = decodeBaselineJpeg(doc.streamRawBytes(a._images[0].obj), { rotate: 0 });
-  t("UNROTATED pixels match Pillow's too", hex(u.samples), DCT_UNROTATED_SHA);
-}
+  const u = decodeBaselineJpeg(doc.streamRawBytes((await analyzePage(doc, 0))._images[0].obj), { rotate: 0 });
+  t("R22 R40 un-rotated, Pillow's picture too", hex(u.samples), DCT_UNROTATED_SHA);
 
-console.log("\n--- D-320: 8-bit rotation lands a sample on a sample ---");
-{
-  /* INDEPENDENT: our un-rotated decode, turned by `rotate8`, against PILLOW's
-   * transpose of its own decode — two producers, one expectation. */
-  const v0 = VARIANTS.find((v) => v.name === "rgb-420-h2v2");
-  const base = decodeBaselineJpeg(new Uint8Array(Buffer.from(v0.jpeg_b64, "base64")));
-  for (const deg of [90, 180, 270]) {
-    const want = VARIANTS.find((v) => v.name === `rgb-420-rotate${deg}`);
-    const r = rotate8(base.samples, base.width, base.height, 3, deg);
-    t(`rotate8 ${deg} equals Pillow's turn of the same picture`, [hex(r.samples), r.width, r.height],
-      [want.pillow_sha256, want.width, want.height]);
+  const up = await render(imagePage(image(63, 47, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-444")), { w: 63, h: 47 }), 0);
+  t("R22 pass-through at /Rotate 0 is upright", [up.route, up.upright], ["passthrough-dct", true]);
+  const dct = (extra, data = jpeg("rgb-444"), cs = "/DeviceRGB") =>
+    imagePage(image(63, 47, `/ColorSpace ${cs} /BitsPerComponent 8 ${extra}`, data), { w: 63, h: 47 });
+  for (const [label, bytes, reason, detail] of [
+    ["progressive", dct("/Filter /DCTDecode", jpeg("refuse-progressive")), "UNSUPPORTED_JPEG_PROCESS", "progressive-huffman"],
+    ["arithmetic-coded", dct("/Filter /DCTDecode", jpeg("refuse-arithmetic")), "UNSUPPORTED_JPEG_PROCESS", "extended-sequential-arithmetic"],
+    ["truncated", dct("/Filter /DCTDecode", jpeg("refuse-truncated")), "TRUNCATED_IMAGE_DATA", undefined],
+    ["a /Decode array", dct("/Filter /DCTDecode /Decode [1 0 1 0 1 0]"), "UNSUPPORTED_SAMPLES", undefined],
+    ["a component count the colour space contradicts", dct("/Filter /DCTDecode", jpeg("rgb-444"), "/DeviceGray"), "UNSUPPORTED_SAMPLES", undefined],
+    ["a /ColorTransform the markers contradict", dct("/Filter /DCTDecode /DecodeParms << /ColorTransform 0 >>"), "UNSUPPORTED_SAMPLES", undefined],
+    ["a stream with no SOI", dct("/Filter /DCTDecode", new Uint8Array(64).fill(7)), "DECODE_FAILED", undefined],
+  ]) {
+    const r2 = await render(bytes, 0, { decodeDct: true });
+    t(`R22 decodeDct, ${label}: ${reason}`, [r2.ok, r2.reason, r2.process, r2.bytes], [false, reason, detail, undefined]);
   }
-  const g = new Uint8Array(5 * 3).map((_, i) => i * 17);
-  const four = [90, 90, 90, 90].reduce((acc) => rotate8(acc.samples, acc.width, acc.height, 1, 90), { samples: g, width: 5, height: 3 });
-  t("four quarter turns are the identity", [hex(four.samples), four.width], [hex(g), 5]);
-  let threw = null;
-  try { rotate8(g, 5, 3, 1, 45); } catch (e) { threw = e.message; }
-  t("an angle that cannot land a sample on a sample THROWS", /unsupported rotation/.test(threw || ""), true);
+  const behind = await render(dct("/Filter [/FlateDecode /DCTDecode]", deflateSync(jpeg("rgb-444"))), 0);
+  t("R22 anything before DCTDecode: UNSUPPORTED_FILTER", [behind.ok, behind.reason], [false, "UNSUPPORTED_FILTER"]);
+  const behind2 = await render(dct("/Filter [/FlateDecode /DCTDecode]", deflateSync(jpeg("rgb-444"))), 0, { decodeDct: true });
+  t("R22 ...with decodeDct too", behind2.reason, "UNSUPPORTED_FILTER");
+  const small = await render(dct("/Filter /DCTDecode"), 0, { decodeDct: true });
+  t("R22 R40 a small page through the whole route matches Pillow", small.pixels_sha256, VARIANTS.find((v) => v.name === "rgb-444").pillow_sha256);
 }
 
-console.log("\n--- D-320: what the decoded route refuses, through the renderer ---");
+console.log("\n--- R25 (interim; D-622 is deferred): JBIG2 and JPX ---");
 {
-  const wrap = (jpeg, w, h, rot = 0, extra = "") => {
-    const head = `%PDF-1.4\n`;
-    const objs = [
-      "<< /Type /Catalog /Pages 2 0 R >>",
-      "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Rotate ${rot} /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`,
-      `<< /Length 26 >>\nstream\nq ${w} 0 0 ${h} 0 0 cm /Im0 Do Q\nendstream`,
-    ];
-    let pdf = Buffer.from(head, "latin1");
-    const off = [];
-    for (let i = 0; i < objs.length; i++) {
-      off.push(pdf.length);
-      pdf = Buffer.concat([pdf, Buffer.from(`${i + 1} 0 obj\n${objs[i]}\nendobj\n`, "latin1")]);
-    }
-    off.push(pdf.length);
-    pdf = Buffer.concat([pdf, Buffer.from(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode ${extra} /Length ${jpeg.length} >>\nstream\n`, "latin1"), jpeg, Buffer.from("\nendstream\nendobj\n", "latin1")]);
-    const x = pdf.length;
-    let xr = `xref\n0 6\n0000000000 65535 f \n` + off.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
-    return new Uint8Array(Buffer.concat([pdf, Buffer.from(xr + `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${x}\n%%EOF\n`, "latin1")]));
-  };
-  const jb = (name) => Buffer.from(VARIANTS.find((v) => v.name === name).jpeg_b64, "base64");
-  const prog = await renderPageToPixels(wrap(jb("refuse-progressive"), 63, 47), 0, { decodeDct: true });
-  t("a PROGRESSIVE JPEG is refused by name, never mis-decoded",
-    [prog.ok, prog.reason, prog.process, prog.bytes], [false, "UNSUPPORTED_JPEG_PROCESS", "progressive-huffman", undefined]);
-  const arith = await renderPageToPixels(wrap(jb("refuse-arithmetic"), 63, 47), 0, { decodeDct: true });
-  t("an ARITHMETIC-CODED JPEG is refused by name", [arith.reason, arith.process],
-    ["UNSUPPORTED_JPEG_PROCESS", "extended-sequential-arithmetic"]);
-  const trunc = await renderPageToPixels(wrap(jb("refuse-truncated"), 63, 47), 0, { decodeDct: true });
-  t("a JPEG whose data ends early is refused, NOT grey-filled", [trunc.reason, trunc.jpeg, trunc.bytes],
-    ["TRUNCATED_IMAGE_DATA", "TRUNCATED", undefined]);
-  const progPass = await renderPageToPixels(wrap(jb("refuse-progressive"), 63, 47), 0);
-  t("and un-asked the progressive page is still handed on as the publisher's bytes",
-    [progPass.route, hex(progPass.bytes)], ["passthrough-dct", hex(jb("refuse-progressive"))]);
-  const conflict = await renderPageToPixels(wrap(jb("rgb-444"), 63, 47, 0, "/DecodeParms << /ColorTransform 0 >>"), 0, { decodeDct: true });
-  t("a /ColorTransform the file's own JFIF marker contradicts is refused, not picked",
-    [conflict.reason, conflict.jpeg], ["UNSUPPORTED_SAMPLES", "COLOR_TRANSFORM_CONFLICT"]);
-  const small = await renderPageToPixels(wrap(jb("rgb-444"), 63, 47), 0, { decodeDct: true });
-  t("a well-formed small page through the whole route matches Pillow", small.pixels_sha256,
-    VARIANTS.find((v) => v.name === "rgb-444").pillow_sha256);
-  const rot = await renderPageToPixels(wrap(jb("rgb-420-h2v2"), 63, 47, 90), 0, { decodeDct: true });
-  t("and /Rotate 90 through the whole route matches Pillow's turn", [rot.pixels_sha256, rot.width, rot.height],
-    [VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256, 47, 63]);
-  t("every D-320 refusal is DECLARED", [prog, arith, trunc, conflict].every((r) => r.reason in REFUSALS), true);
+  for (const f of ["JBIG2Decode", "JPXDecode"]) {
+    const r = await render(imagePage(image(8, 8, `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /${f}`, new Uint8Array(8))), 0);
+    t(`R25 ${f}: UNSUPPORTED_FILTER naming the filter, no bytes`, fields(r, "ok", "reason", "filter", "bytes"), [false, "UNSUPPORTED_FILTER", f, undefined]);
+  }
 }
 
-/* ---- workerd: the runtime the placement question is actually about ---- */
-console.log("\n--- it runs in workerd, and the DECODE is runtime-independent ---");
+console.log("\n--- R40: pure per call ---");
 {
-  /* BUNDLED, not concatenated. `pagepixels.mjs` and `pdfstructure.mjs` each have
-   * a private `nameOf` and a private `LATIN1`; pasting the two together produces
-   * a module that either throws on a duplicate declaration or — worse — silently
-   * resolves to the wrong one. esbuild is resolved the same two ways the suite
-   * resolves miniflare, and if neither answers this arm SKIPS LOUDLY WITH A
-   * NAMED REASON rather than quietly not running (D-93's rule). */
-  let bundled = null, skipWhy = null;
+  const key = (r) => JSON.stringify({ ...r, bytes: r.bytes ? hex(r.bytes) : null });
+  for (const [label, bytes, opts] of [["the CCITT scan", SCAN, {}], ["the DCT scan, decoded", DCT_SCAN, { decodeDct: true }],
+    ["a refusal", new Uint8Array(4), {}]]) {
+    const a = await render(bytes, 0, opts), b = await render(bytes, 0, opts);
+    t(`R40 ${label}: the same answer twice`, key(a) === key(b), true);
+  }
+  /* The decode runs the same in workerd, the runtime the fleet serves in. */
+  let bundled = null, why = null;
   try {
     const esbuild = await (async () => {
       try { return await import("esbuild"); } catch { /* fall through */ }
       const planePkg = fileURLToPath(new URL("../../bio-plane/package.json", import.meta.url));
       return await import(pathToFileURL(createRequire(planePkg).resolve("esbuild")).href);
     })();
-    const r = await esbuild.build({
+    const out = await esbuild.build({
       stdin: {
         contents: `import { renderPageToPixels } from ${JSON.stringify(fileURLToPath(new URL("../src/pagepixels.mjs", import.meta.url)))};
-export default {
-  async fetch(req) {
-    const bytes = new Uint8Array(await req.arrayBuffer());
-    const r = await renderPageToPixels(bytes, 0, { decodeDct: new URL(req.url).searchParams.has("dct") });
-    if (!r.ok) return Response.json(r);
-    const d = await crypto.subtle.digest("SHA-256", r.bytes);
-    return Response.json({ ok: true, route: r.route, width: r.width, height: r.height,
-      upright: r.upright, bytes: r.bytes.length, pixels_sha256: r.pixels_sha256,
-      file_sha256: [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("") });
-  },
-};`,
-        resolveDir: fileURLToPath(new URL(".", import.meta.url)),
-        sourcefile: "pagepixels-under-test.mjs",
+export default { async fetch(req) {
+  const r = await renderPageToPixels(new Uint8Array(await req.arrayBuffer()), 0, { decodeDct: new URL(req.url).searchParams.has("dct") });
+  return Response.json(r.ok ? { ok: true, route: r.route, width: r.width, height: r.height, upright: r.upright, pixels_sha256: r.pixels_sha256 } : r);
+} };`,
+        resolveDir: fileURLToPath(new URL(".", import.meta.url)), sourcefile: "pagepixels-under-test.mjs",
       },
-      bundle: true, write: false, format: "esm", platform: "neutral",
-      external: ["cloudflare:workers", "node:*"],
+      bundle: true, write: false, format: "esm", platform: "neutral", external: ["cloudflare:workers", "node:*"],
     });
-    bundled = r.outputFiles[0].text;
-  } catch (e) {
-    skipWhy = String(e && e.message || e).split("\n")[0];
-  }
-  if (!bundled) {
-    console.log(`  SKIPPED — the workerd arm could not bundle: ${skipWhy}`);
-    console.log(`  (the node-side assertions above still ran; this arm is an ADDITIONAL claim)`);
-  } else {
-  const mf = new Miniflare({
-    modules: true, modulesRoot: "/", script: bundled, scriptPath: "/pagepixels-under-test.mjs",
-    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-  });
-  try {
-    const res = await mf.dispatchFetch("http://x/", { method: "POST", body: SCAN });
-    const j = await res.json();
-    t("workerd renders the scanned page", j.ok, true);
-    t("workerd applies the rotation too", [j.width, j.height, j.upright], [2550, 3300, true]);
-    t("workerd's PIXELS match the independent decoder", j.pixels_sha256, IND_UPRIGHT_SHA);
-    const local = await renderPageToPixels(SCAN, 0);
-    t("node and workerd agree on the PICTURE", j.pixels_sha256, local.pixels_sha256);
-    /* D-320: the DCT decoder in the runtime it is FOR. */
-    const jd = await (await mf.dispatchFetch("http://x/?dct=1", { method: "POST", body: DCT_SCAN })).json();
-    t("workerd DECODES the DCT page, upright", [jd.ok, jd.route, jd.width, jd.height, jd.upright],
-      [true, "decoded-dct", 2550, 3300, true]);
-    t("workerd's DCT pixels match Pillow's", jd.pixels_sha256, DCT_UPRIGHT_SHA);
-    /* AND THE CLAIM THAT IS DELIBERATELY NOT MADE. The FILE digests do NOT have
-     * to agree: `CompressionStream("deflate")` is a platform service and the two
-     * runtimes emit different valid deflate streams for identical input (the
-     * same page came out 147,251 B on workerd and 152,499 B on node). That is
-     * why `pixels_sha256` exists and why nothing here pins the file digest. */
-    t("the FILE digest is NOT asserted to be portable",
-      typeof j.file_sha256 === "string" && j.file_sha256.length === 64, true);
-  } finally { await mf.dispose(); }
+    bundled = out.outputFiles[0].text;
+  } catch (e) { why = String(e && e.message || e).split("\n")[0]; }
+  t("R40 (the workerd arm could be built)", why, null);
+  if (bundled) {
+    const mf = new Miniflare({ modules: true, modulesRoot: "/", script: bundled, scriptPath: "/pagepixels-under-test.mjs",
+      compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"] });
+    try {
+      const j = await (await mf.dispatchFetch("http://x/", { method: "POST", body: SCAN })).json();
+      t("R40 workerd: the CCITT page, upright, the independent decoder's pixels", [j.ok, j.width, j.height, j.upright, j.pixels_sha256], [true, 2550, 3300, true, IND_UPRIGHT_SHA]);
+      const jd = await (await mf.dispatchFetch("http://x/?dct=1", { method: "POST", body: DCT_SCAN })).json();
+      t("R40 workerd: the DCT page decoded, Pillow's pixels", [jd.ok, jd.route, jd.pixels_sha256], [true, "decoded-dct", DCT_UPRIGHT_SHA]);
+    } finally { await mf.dispose(); }
   }
 }
 
-footReached = true;
-console.log(`\npagepixels: ${pass} passed, ${fail} failed`);
-process.exit(fail ? 1 : 0);
+console.log("\n--- R39: every refusal is declared, in its own words ---");
+{
+  const refusals = answers.filter((r) => r && r.ok === false);
+  console.log(`  (${refusals.length} refusals over ${new Set(refusals.map((r) => r.reason)).size} reasons)`);
+  t("R39 (the refusals checked span most of the declared set)", new Set(refusals.map((r) => r.reason)).size >= 13, true);
+  t("R39 every reason is a key of REFUSALS", refusals.filter((r) => !(r.reason in REFUSALS)).map((r) => r.reason), []);
+  t("R39 every why is exactly that key's text", refusals.filter((r) => r.why !== REFUSALS[r.reason]).map((r) => r.reason), []);
+  t("R39 no refusal carries bytes", refusals.filter((r) => "bytes" in r).length, 0);
+}
+
+finish();

@@ -74,7 +74,7 @@
  * RGBA frame is the whole reason this fits.
  */
 
-import { PdfDoc, pageShowsText } from "../../bio-plane/src/pdfstructure.mjs";
+import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
@@ -106,19 +106,11 @@ const refuse = (reason, detail = {}) => {
 
 /* ── the document ─────────────────────────────────────────────────────────── */
 
-/** Load a PDF into the SAME reader `pdfstructure.mjs` uses (imported, never
- *  re-derived — see that file's export note). */
+/** Open a PDF with `pdf-reader`'s own `openPdf` — the one reader, never re-derived.
+ *  Everything below uses its named services only (N9): `pageCount`, `pageDict`,
+ *  `imagePlacementSource`, never a private field. */
 export async function loadPdf(bytes) {
-  if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
-  }
-  doc.buildPageIndex();
-  return doc;
+  return openPdf(bytes);
 }
 
 const nameOf = (doc, v) => {
@@ -148,13 +140,26 @@ function decodeParms(doc, dict, idx) {
   return p && p.t === "dict" ? p.map : null;
 }
 
-/** A page's /Resources, walking /Parent for the inherited case. */
-function pageResources(doc, pageMap, depth = 0) {
-  if (!pageMap || depth > 32) return null;
-  const res = doc.dictOf(pageMap.Resources);
-  if (res) return res;
-  const parent = doc.dictOf(pageMap.Parent);
-  return parent ? pageResources(doc, parent, depth + 1) : null;
+/** An inheritable page attribute (/MediaBox, /Rotate): the leaf's own value, else
+ *  the nearest ancestor's, walking /Parent. `undefined` when no node carries it.
+ *  D-671: /Rotate was read from the leaf only, so a page inheriting its rotation
+ *  from /Pages rendered un-turned. */
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap;
+  for (let d = 0; p && d <= 32; d++) {
+    if (p[key] !== undefined) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return undefined;
+}
+
+/** The page's /Rotate, normalised to 0/90/180/270. Absent is 0; a value that is
+ *  not a multiple of 90 is `null` — unreadable, never guessed. */
+function pageRotate(doc, pageMap) {
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  if (r === undefined) return 0;
+  if (!Number.isInteger(r) || r % 90 !== 0) return null;
+  return ((r % 360) + 360) % 360;
 }
 
 /** The page's content stream bytes, concatenated when /Contents is an array. */
@@ -238,38 +243,40 @@ function maskedContent(s) {
  * purpose — a clip path paints nothing and every scanned page has one. */
 const VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
 
+/** One painted image, as the decoder reads it: the placement's own width,
+ *  height, filters and name, and its stream's sample layout. An inline image has
+ *  no stream (`obj` null). */
+export function imageOf(doc, placement) {
+  const src = imagePlacementSource(placement);
+  const st = src ? src.stream : null;
+  const d = st ? st.dict : {};
+  return {
+    name: placement.name,
+    inline: placement.inline === true,
+    obj: st,
+    width: placement.width,
+    height: placement.height,
+    bpc: numOf(doc, d.BitsPerComponent),
+    colorSpace: nameOf(doc, d.ColorSpace) || (d.ColorSpace ? "«indirect»" : null),
+    isMask: doc.resolve(d.ImageMask) === true,
+    filters: placement.filters,
+  };
+}
+
 /** What is actually ON this page: images, text, vector marks. The three are
  *  reported separately and NONE of them is inferred from another — "no fonts"
  *  is not "no text" (a Type3 or a broken resource dict), and "has an image" is
  *  not "is a scan". */
 export async function analyzePage(doc, pageIndex) {
-  const order = doc._pageOrder || [];
-  if (pageIndex < 0 || pageIndex >= order.length) return null;
-  const pageMap = doc.dictOf({ t: "ref", n: order[pageIndex] });
+  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
+  const pageMap = doc.pageDict(pageIndex);
   if (!pageMap) return null;
 
-  const res = pageResources(doc, pageMap);
-  const xobjDict = res ? doc.dictOf(res.XObject) : null;
-
-  const images = [];
-  if (xobjDict) {
-    for (const key of Object.keys(xobjDict)) {
-      if (key.startsWith("__")) continue;
-      const st = doc.resolve(xobjDict[key]);
-      if (!st || st.t !== "stream") continue;
-      if (nameOf(doc, st.dict.Subtype) !== "Image") continue;
-      images.push({
-        name: key,
-        obj: st,
-        width: numOf(doc, st.dict.Width),
-        height: numOf(doc, st.dict.Height),
-        bpc: numOf(doc, st.dict.BitsPerComponent),
-        colorSpace: nameOf(doc, st.dict.ColorSpace) || (st.dict.ColorSpace ? "«indirect»" : null),
-        isMask: doc.resolve(st.dict.ImageMask) === true,
-        filters: filterNames(doc, st.dict),
-      });
-    }
-  }
+  /* R17/R18 (K27): the images the page PAINTS, in painting order, including
+   * those a Form XObject draws — never the image XObjects its /Resources list,
+   * which a scanner commonly shares across every page of the document. */
+  const painted = await pdfPageImages(doc, pageIndex);
+  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
 
   let content = "";
   try { content = await pageContentText(doc, pageMap); } catch { content = ""; }
@@ -277,13 +284,9 @@ export async function analyzePage(doc, pageIndex) {
   let textShown = null;
   try { textShown = await pageShowsText(doc, pageMap); } catch { textShown = null; }
 
-  const drawn = [...masked.matchAll(/\/([^\s/<>[\]()]+)\s+Do(?=[\s]|$)/g)].map((m) => m[1]);
-  const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
 
   const mediaBox = (() => {
-    let m = doc.resolve(pageMap.MediaBox);
-    let p = pageMap, d = 0;
-    while (!m && d++ < 32) { p = doc.dictOf(p.Parent); if (!p) break; m = doc.resolve(p.MediaBox); }
+    const m = inheritedAttr(doc, pageMap, "MediaBox");
     if (!m || m.t !== "arr" || m.items.length < 4) return null;
     const v = m.items.map((x) => numOf(doc, x));
     if (v.some((x) => x == null)) return null;
@@ -300,10 +303,11 @@ export async function analyzePage(doc, pageIndex) {
     hasInlineImage: masked.includes("INLINEIMAGE"),
     images: images.map(({ obj, ...rest }) => rest),
     _images: images,
-    drawnImageNames: drawnImages,
+    imagesWhy: painted.why,
+    drawnImageNames: images.map((im) => im.name),
     imageCount: images.length,
     mediaBox,
-    rotate: numOf(doc, pageMap.Rotate) ?? 0,
+    rotate: pageRotate(doc, pageMap),
   };
 }
 
@@ -326,14 +330,20 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
 
   const a = await analyzePage(doc, pageIndex);
   if (!a) {
-    const n = (doc._pageOrder || []).length;
+    const n = doc.pageCount;
     return pageIndex >= 0 && pageIndex < n
       ? refuse("PAGE_UNREADABLE", { page: pageIndex })
       : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
   }
 
+  if (a.rotate === null) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
+  }
   if (a.hasTextOps && !opts.allowTextPage) {
     return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
+  }
+  if (a.imagesWhy) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
   }
   if (a.imageCount === 0) {
     return refuse(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
@@ -348,7 +358,10 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   }
 
   const im = a._images[0];
-  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate || 0 });
+  if (!im.obj) {
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+  }
+  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
 
   return {
@@ -363,7 +376,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
      * apply the page's own /Rotate says so HERE rather than leaving a consumer
      * to discover it in its output. See the note on rotateBilevel. */
     upright: out.upright,
-    rotate_deg: a.rotate || 0,
+    rotate_deg: a.rotate,
     source: {
       filters: im.filters,
       colorSpace: im.colorSpace,
@@ -446,6 +459,9 @@ export async function decodeImage(doc, im, opts) {
     const K = numOf(doc, p.K) ?? 0;
     const columns = numOf(doc, p.Columns) ?? 1728;
     const rows = numOf(doc, p.Rows) ?? im.height;
+    /* Mixed mode (K>0) needs the per-row tag bit only an EOL carries, so it has
+     * no decoder here: a filter refusal, not a failed decode. */
+    if (K > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
     const blackIs1 = doc.resolve(p.BlackIs1) === true;
     const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
 
@@ -710,10 +726,15 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
     let a0 = -1;
     let color = 0;                     // 0 = white
     let guard = 0;
+    /* A row the data does not finish — the stream ends, or a code no table holds
+     * — is NOT kept: decoding stops before it, so the caller sees fewer rows and
+     * answers TRUNCATED_IMAGE_DATA. Before this, an unknown code ended the row as
+     * white without consuming a bit, and every remaining row was minted white. */
+    let broken = false;
 
     while (a0 < columns) {
       if (++guard > columns * 4 + 64) throw new Error("row did not terminate");
-      if (br.eof) break;
+      if (br.eof) { broken = true; break; }
 
       if (twoD) {
         const w = br.peek(7);
@@ -729,7 +750,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
           const s = a0 < 0 ? 0 : a0;
           const r1 = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
           const r2 = readRun(br, color === 0 ? BLACK_ALL : WHITE_ALL);
-          if (r1 == null || r2 == null) { a0 = columns; break; }
+          if (r1 == null || r2 == null) { broken = true; break; }
           const m1 = Math.min(columns, s + r1);
           const m2 = Math.min(columns, m1 + r2);
           cur.push(m1, m2);
@@ -748,7 +769,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
         } else if (w.startsWith("0000010")) {     // VL3
           br.skip(7); a1 = b1(ref, a0, color) - 3;
         } else {
-          a0 = columns; break;                    // EOFB / unknown: end the row
+          broken = true; break;                   // EOFB / unknown: the data ends here
         }
         a1 = Math.max(0, Math.min(columns, a1));
         cur.push(a1);
@@ -757,7 +778,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
       } else {
         const s = a0 < 0 ? 0 : a0;
         const run = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
-        if (run == null) { a0 = columns; break; }
+        if (run == null) { broken = true; break; }
         const m = Math.min(columns, s + run);
         cur.push(m);
         a0 = m;
@@ -765,7 +786,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
       }
     }
 
-    if (cur.length === 0 && br.eof) break;
+    if (broken) break;
 
     const row = new Uint8Array(rowBytes).fill(0xff);   // start all white
     let pos = 0, c = 0;

@@ -28,8 +28,8 @@
  * paints several, and choosing one would be inventing the citation's referent.
  */
 
-import { pdfPageImages } from "../../bio-plane/src/pdfstructure.mjs";
-import { loadPdf, decodeImage } from "./pagepixels.mjs";
+import { pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
+import { loadPdf, decodeImage, imageOf } from "./pagepixels.mjs";
 
 export const CROP_REFUSALS = Object.freeze({
   NOT_AN_IMAGE_EXTENT: "the extent is not an `image` extent in its PDF form ({kind:'image', page, rect})",
@@ -75,7 +75,7 @@ export async function cropImage(bytes, extent) {
   const doc = await loadPdf(bytes);
   if (!doc) return refuse("NOT_A_PDF");
   if (doc.isEncrypted()) return refuse("ENCRYPTED");
-  const n = (doc._pageOrder || []).length;
+  const n = doc.pageCount;
   if (e.page < 0 || e.page >= n) return refuse("NO_SUCH_PAGE", { page: e.page, pageCount: n });
 
   const got = await pdfPageImages(doc, e.page);
@@ -86,18 +86,10 @@ export async function cropImage(bytes, extent) {
     return refuse("NO_IMAGE_AT_RECT", { page: e.page, rect: want, painted: got.images.map((im) => im.rect) });
   if (hits.length > 1) return refuse("AMBIGUOUS_RECT", { page: e.page, rect: want, count: hits.length });
   const hit = hits[0];
-  if (hit.inline || !hit._stream) return refuse("INLINE_IMAGE", { page: e.page, rect: want });
+  const src = imagePlacementSource(hit);
+  if (hit.inline || !src?.stream) return refuse("INLINE_IMAGE", { page: e.page, rect: want });
 
-  const st = hit._stream;
-  const num = (v) => { v = doc.resolve(v); return typeof v === "number" ? v : null; };
-  const cs = doc.resolve(st.dict.ColorSpace);
-  const im = {
-    name: hit.name, obj: st, width: hit.width, height: hit.height,
-    bpc: num(st.dict.BitsPerComponent),
-    colorSpace: cs && cs.t === "name" ? cs.v : (st.dict.ColorSpace ? "«indirect»" : null),
-    isMask: doc.resolve(st.dict.ImageMask) === true,
-    filters: hit.filters,
-  };
+  const im = imageOf(doc, hit);
   const out = await decodeImage(doc, im, { rotate: 0 });
   if (!out.ok) return refuse("DECODE_REFUSED", { page: e.page, rect: want, decoder: out.reason, decoderWhy: out.why });
 
@@ -121,7 +113,7 @@ export async function cropImage(bytes, extent) {
        samples upright; otherwise this module does not know, and says null
        rather than true. */
     upright: (() => {
-      const m = hit._ctm;
+      const m = src.ctm;
       const plain = Array.isArray(m) && m[1] === 0 && m[2] === 0 && m[0] > 0 && m[3] > 0;
       return plain && out.upright === true ? true : null;
     })(),
