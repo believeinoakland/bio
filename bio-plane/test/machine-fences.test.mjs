@@ -162,6 +162,7 @@
  * same equality over them. Its own header says what the row that asked for it
  * got wrong, and what was actually missing.
  * ========================================================================= */
+import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -181,7 +182,12 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests): the store's promote and reopen were extracted to `promotion`
+   (src/promotion/, K31), taking MACHINE_CANNOT_REOPEN with them, so the store's corpus is `store.mjs` AND the
+   module extracted from it. The index's block (3b) is unchanged. */
+const STORE_SRC = [readFileSync(SRC("store.mjs"), "utf8"),
+  ...readdirSync(SRC("promotion")).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(SRC(`promotion/${f}`), "utf8"))]
+  .join("\n");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -250,6 +256,11 @@ const ANNA = await enrol("anna", "member", ["contribute"]);
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const GROUP = "believe-in-oakland";
+/* CORRECTED 2026-09-26 (T3, legacy-tests; promotion R13), never exempted: a creation takes the instance's producing
+   group (the INSTANCE_NAME binding below) into its document, and a revision stating another group is now refused
+   REVISION_REGROUPS_BUNDLE, so a REVISION's bytes state the group its creation recorded. */
+const PRODUCING = "biosmoke-rec73";
+const asRecorded = (md) => md.replace(`group: ${GROUP}`, `group: ${PRODUCING}`);
 
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -321,7 +332,7 @@ const promote = async (id, text, type, tok = RUTH, extraMeta = {}, extraFiles = 
     register,
     meta: { object_type: type, group: GROUP,
             current_state: type === "inquiry" ? "open" : "collected",
-            created: NOW, last_updated: LATER, ...extraMeta } });
+            created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER, ...extraMeta } });
 
 const mustPromote = async (id, text, type, tok = RUTH, extraMeta = {}, extraFiles = [], register = []) => {
   const a = await promote(id, text, type, tok, extraMeta, extraFiles, register);
@@ -836,13 +847,13 @@ const fence = (code, payload, machineAnswer) => {
   };
   const revise = async (tok, tierLine, plan) => {
     const { sha: base } = await view();
-    let text = actionMd(ACT).replace("risk_tier: 1", tierLine);
+    let text = asRecorded(actionMd(ACT)).replace("risk_tier: 1", tierLine);
     if (plan) text = text.replace("Ask for the transfer ledger.", plan);
     return POST(`op=promote&token=${tok}`, {
       bundleId: ACT, base, snapKey: `${ACT}-${String(++snapKeySeq).padStart(6, "0")}`,
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
       meta: { object_type: "action", group: GROUP, current_state: "planned",
-              created: NOW, last_updated: LATER } });
+              created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
   };
   const v0 = await view();
   t("  a member created the action at tier 1, so there is a stated tier to carry and one to change",
@@ -882,12 +893,12 @@ const fence = (code, payload, machineAnswer) => {
     return { sha: p?.bundle_sha ?? null, tier: p?.action?.risk_tier ?? null };
   };
   const { sha: base2 } = await view2();
-  const leftText = unsetMd.replace("Ask for the transfer ledger.", "Ask for the transfer ledger and the FY2023 memo.");
+  const leftText = asRecorded(unsetMd).replace("Ask for the transfer ledger.", "Ask for the transfer ledger and the FY2023 memo.");
   const left = await POST(`op=promote&token=${AI}`, {
     bundleId: ACT2, base: base2, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text: leftText, bytes: leftText.length, sha256: sha(leftText) }], register: [],
     meta: { object_type: "action", group: GROUP, current_state: "planned",
-            created: NOW, last_updated: LATER } });
+            created: docDate(leftText, "created") ?? NOW, last_updated: docDate(leftText, "last_updated") ?? LATER } });
   t("a machine credential's revision LEAVING UNDETERMINED A TIER NO MEMBER EVER SET lands, and reads undetermined",
     [left.ok, (await view2()).tier], [true, "undetermined"]);
   /* …and on that same never-set tier the machine still cannot STATE one: the change is asked of the version it
@@ -898,7 +909,7 @@ const fence = (code, payload, machineAnswer) => {
     bundleId: ACT2, base: base3, snapKey: `${ACT2}-${String(++snapKeySeq).padStart(6, "0")}`,
     files: [{ path: "bundle.md", text: setText, bytes: setText.length, sha256: sha(setText) }], register: [],
     meta: { object_type: "action", group: GROUP, current_state: "planned",
-            created: NOW, last_updated: LATER } });
+            created: docDate(setText, "created") ?? NOW, last_updated: docDate(setText, "last_updated") ?? LATER } });
   t("…and on a never-set tier the machine still cannot state 1 — refused by the same name",
     [codeOf(set1), (await view2()).tier], ["MACHINE_CANNOT_SET_RISK_TIER", "undetermined"]);
 
@@ -934,7 +945,7 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
      three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
      3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
      to be. The old wording was the defect this file exists to find, in this file. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under a COMPLETE payload — the codes "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/promotion/`, extracted from it) mints was driven under a COMPLETE payload — the codes "
   + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
@@ -1298,7 +1309,10 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
    * practice: assert on `unpinnedTree` and merely PRINT `unpinnedHead`. Reversing
    * costs one line, and the two sets are computed separately here so that it is
    * one line. */
-  const TEST_FILES = readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f !== SELF);
+  /* T3 (legacy-tests): with the corpus above, the extracted modules' own suites (`test/m/<module>/`) pin codes too. */
+  const TEST_FILES = [...readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f !== SELF),
+    ...readdirSync(join(DIR, "m")).sort().flatMap((m) => readdirSync(join(DIR, "m", m)).filter((f) => f.endsWith(".mjs"))
+      .map((f) => `m/${m}/${f}`))];
   const PROV = readGitProvenance(REPO);
   const committed = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, join(DIR, f)));
   const readOf = (f) => readFileSync(join(DIR, f), "utf8");
