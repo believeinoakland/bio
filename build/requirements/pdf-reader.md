@@ -1,7 +1,7 @@
 # pdf-reader — requirements
 
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6); N9's named services (R18, R19 restated; R30–R32 new) added by BOB #40, 2026-09-26 (K28). Layer 1. Code today: `bio-plane/src/pdfstructure.mjs`.
-R25 is not yet met: row D-591. R26 is not yet met: row D-627; its figures are M-178's (K30). D-616, also carried against this
+R25 (D-591) and R26 (D-627; M-178's figures, K30, K32) met in T1. D-616, also carried against this
 module in the old plan's index, does NOT belong here: its fix (`tier3Extend`/`needsTier3` seeding a
 re-read from the already-transcribed page tail) lives in `bio-plane/src/index.mjs`, reads and writes
 the stored reading, and cannot be met by a module whose layer-1 contract is "no access to the record"
@@ -230,12 +230,12 @@ interface is the members below and nothing else; every other field is private.
 - **R24** Pure: no store read or write, no network call, no clock. `extractPdfStructure`,
   `pageShowsText` and `pdfPageImages` answer only from their input bytes/`PdfDoc`, so the same input
   always gives the same output.
-- **R25** *(not yet met: D-591)* A Flate-compressed stream with bytes after the compressed data's own
+- **R25** A Flate-compressed stream with bytes after the compressed data's own
   end still decodes: the decoded bytes are kept, and `notes` gains `flate_trailing_bytes:<n>` once per such
   stream. A page whose content stream cannot be decoded carries the page marker `{page,
   reason:"content_stream_undecodable", font:null, codes:"", count:0}`, and one whose `/Contents`
   resolves to nothing carries `reason:"content_stream_unresolvable"`; neither reads as a blank page.
-- **R26** *(not yet met: D-627)* A page's image share is the area its painted images (R16) cover,
+- **R26** A page's image share is the area its painted images (R16) cover,
   as a share of its visible page box; its glyphs are the characters it shows (R11-R12). A page with
   at most 4 glyphs and an image share of at least 0.18 carries the marker `image_content_unread`. Any
   other page that paints an image and shows fewer than 22 glyphs (a share under 0.18, 5-21 glyphs, or a

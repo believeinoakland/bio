@@ -17215,11 +17215,28 @@ function delivererOf(stored) {
 // src/ooxml.mjs
 var UTF8 = new TextDecoder("utf-8", { fatal: false });
 var LATIN1 = new TextDecoder("latin1");
+function toBytes(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try {
+    return new Uint8Array(x ?? 0);
+  } catch {
+    return new Uint8Array(0);
+  }
+}
+function entriesOf(container) {
+  return Array.isArray(container?.entries) ? container.entries : [];
+}
+function findEntry(container, want) {
+  const byName = container?.byName;
+  return (byName instanceof Map ? byName.get(want) : void 0) ?? entriesOf(container).find((e) => normalizePartName(e?.name) === want);
+}
 var MEASURED_OOXML_TEXT_BOUND_BYTES = 20 * 1024 * 1024;
 function declaredTextBytes(container, isTextPart) {
   let total = 0;
   const parts = [];
-  for (const e of container.entries) {
+  if (typeof isTextPart !== "function") return { total, parts };
+  for (const e of entriesOf(container)) {
     const name = normalizePartName(e.name);
     if (!isTextPart(name)) continue;
     total += e.uncompressedSize;
@@ -17228,7 +17245,12 @@ function declaredTextBytes(container, isTextPart) {
   return { total, parts };
 }
 function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES) {
-  if (!(declaredBytes > bound)) return { ok: true };
+  let under = false;
+  try {
+    under = declaredBytes <= bound;
+  } catch {
+  }
+  if (under) return { ok: true };
   return {
     ok: false,
     text: "undetermined",
@@ -17249,7 +17271,8 @@ var CRC_TABLE = (() => {
   }
   return t;
 })();
-function crc32(u8) {
+function crc32(bytes) {
+  const u8 = toBytes(bytes);
   let c = 4294967295;
   for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 255] ^ c >>> 8;
   return (c ^ 4294967295) >>> 0;
@@ -17260,13 +17283,18 @@ var SIG_LOCAL = 67324752;
 var SIG_CENTRAL = 33639248;
 var SIG_EOCD = 101010256;
 function hasZipMagic(bytes) {
-  return bytes.length >= 4 && u32(bytes, 0) === SIG_LOCAL;
+  const b = toBytes(bytes);
+  return b.length >= 4 && u32(b, 0) === SIG_LOCAL;
 }
 function normalizePartName(name) {
-  return String(name || "").replace(/^\/+/, "");
+  try {
+    return String(name ?? "").replace(/^\/+/, "");
+  } catch {
+    return "";
+  }
 }
 function readContainer(bytes) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   if (b.length < 22) return { ok: false, why: "too_short_for_zip" };
   const scanFloor = Math.max(0, b.length - 22 - 65535);
   let eocd = -1;
@@ -17315,19 +17343,37 @@ function readContainer(bytes) {
   }
   return { ok: true, entries, byName, count: entries.length };
 }
-async function inflateRaw(u8) {
+async function inflateRaw(u8, limit) {
   try {
-    const ds = new DecompressionStream("deflate-raw");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-    return new Uint8Array(await out.arrayBuffer());
+    const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+    const chunks = [];
+    let total = 0;
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > limit) {
+        reader.cancel().catch(() => {
+        });
+        return { over: total };
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(total);
+    let at = 0;
+    for (const c of chunks) {
+      bytes.set(c, at);
+      at += c.length;
+    }
+    return { bytes };
   } catch {
     return null;
   }
 }
 async function readPart(bytes, container, name) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const want = normalizePartName(name);
-  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
+  const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
   const lh = entry.localHeaderOffset;
   if (lh + 30 > b.length || u32(b, lh) !== SIG_LOCAL) {
@@ -17343,8 +17389,12 @@ async function readPart(bytes, container, name) {
   if (entry.method === 0) {
     out = raw.slice();
   } else if (entry.method === 8) {
-    out = await inflateRaw(raw);
-    if (out === null) return { ok: false, why: "inflate_failed", name: want };
+    const got = await inflateRaw(raw, entry.uncompressedSize);
+    if (got === null) return { ok: false, why: "inflate_failed", name: want };
+    if (got.over !== void 0) {
+      return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: got.over };
+    }
+    out = got.bytes;
   } else {
     return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
   }
@@ -17454,9 +17504,17 @@ var ODF_FLAVOURS = [
 ];
 var CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
 async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAVOURS) {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const b = toBytes(bytes);
   const signals = [];
-  if (contentType) signals.push(`declared-content-type:${contentType} (not used for the determination)`);
+  if (contentType) {
+    let declared;
+    try {
+      declared = String(contentType);
+    } catch {
+      declared = "(not a string)";
+    }
+    signals.push(`declared-content-type:${declared} (not used for the determination)`);
+  }
   if (!hasZipMagic(b)) {
     signals.push("magic:absent (no PK\\x03\\x04)");
     return { ok: false, why: "not_a_zip", signals };
@@ -17470,7 +17528,9 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
   signals.push(`container:zip entries=${container.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f2 of flavours) ((f2.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f2);
+  for (const f2 of Array.isArray(flavours) ? flavours : []) {
+    if (f2 && typeof f2 === "object") ((f2.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f2);
+  }
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
     const odf = odfRows.length ? await discriminateOdf(b, container, odfRows, signals) : null;
@@ -17565,7 +17625,7 @@ function relsPartFor(partName = null) {
   return `${dir}_rels/${base}.rels`;
 }
 function listRelsParts(container) {
-  return container.entries.map((e) => normalizePartName(e.name)).filter((n) => /(^|\/)_rels\/[^/]*\.rels$/.test(n));
+  return entriesOf(container).map((e) => normalizePartName(e.name)).filter((n) => /(^|\/)_rels\/[^/]*\.rels$/.test(n));
 }
 function parseRels(xml) {
   if (typeof xml !== "string" || !/<(?:[\w.-]+:)?Relationships\b/.test(xml)) {
@@ -17653,7 +17713,7 @@ async function containerImages(bytes, container, dir) {
   const want = normalizePartName(dir);
   const members = [];
   let declared = 0;
-  for (const e of container.entries) {
+  for (const e of entriesOf(container)) {
     const name = normalizePartName(e.name);
     if (!name.startsWith(want) || name === want || name.endsWith("/")) continue;
     const dot = name.lastIndexOf(".");
@@ -17970,7 +18030,7 @@ var attr = (as, n) => {
   const a = as.find((x) => x.name === n);
   return a ? a.value : null;
 };
-function srcsetUrls(v) {
+function srcsetCandidates(v) {
   const out = [];
   const s = String(v);
   let i = 0;
@@ -17982,48 +18042,53 @@ function srcsetUrls(v) {
     while (i < s.length && !isWs(s[i])) i++;
     let url = s.slice(start, i);
     if (url.endsWith(",")) {
-      out.push(url.replace(/,+$/, ""));
+      out.push({ url: url.replace(/,+$/, ""), descriptor: "" });
       continue;
     }
-    out.push(url);
-    let depth = 0;
+    const dstart = i;
+    let depth = 0, dend = s.length;
     while (i < s.length) {
       if (s[i] === "(") depth++;
       else if (s[i] === ")" && depth) depth--;
       else if (s[i] === "," && !depth) {
+        dend = i;
         i++;
         break;
       }
       i++;
     }
+    out.push({ url, descriptor: s.slice(dstart, Math.min(dend, i)).replace(/,$/, "").trim() });
   }
-  return out.filter(Boolean);
+  return out.filter((c) => c.url);
 }
-function cssRefs(css) {
+var CSS_COMMENT_RE = /\/\*[\s\S]*?\*\//g;
+function cssRefList(css) {
   const out = [];
-  CSS_URL_RE.lastIndex = 0;
+  const text = String(css).replace(CSS_COMMENT_RE, "");
   let m;
-  while (m = CSS_URL_RE.exec(css)) {
-    const u = m[1] ?? m[2] ?? m[3] ?? "";
-    if (u.trim()) out.push(u.trim());
-  }
   CSS_IMPORT_RE.lastIndex = 0;
-  while (m = CSS_IMPORT_RE.exec(css)) {
+  while (m = CSS_IMPORT_RE.exec(text)) {
     const u = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
-    if (u.trim()) out.push(u.trim());
+    if (u.trim()) out.push({ url: u.trim(), kind: "stylesheet" });
+  }
+  const rest = text.replace(CSS_IMPORT_RE, "");
+  CSS_URL_RE.lastIndex = 0;
+  while (m = CSS_URL_RE.exec(rest)) {
+    const u = m[1] ?? m[2] ?? m[3] ?? "";
+    if (u.trim()) out.push({ url: u.trim(), kind: "css-asset" });
   }
   return out;
 }
 var FURNITURE_TAGS = /* @__PURE__ */ new Set(["nav", "footer", "header", "aside"]);
 var FURNITURE_ROLES = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
 var BODY_TAGS = /* @__PURE__ */ new Set(["article", "main"]);
+var VOID_ELEMENTS = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
 function pickSrcsetCandidate(cands) {
-  const score = (raw) => {
-    const d = /\s(\d+(?:\.\d+)?)([wx])\s*$/.exec(raw || "");
-    if (!d) return 1;
-    return d[2] === "w" ? Number(d[1]) : Number(d[1]) * 1e3;
+  const score = (descriptor) => {
+    const d = /(?:^|\s)(\d+(?:\.\d+)?)[wx](?:\s|$)/i.exec(descriptor || "");
+    return d ? Number(d[1]) : 1;
   };
-  const sorted = [...cands].sort((a, b) => score(b.raw) - score(a.raw));
+  const sorted = [...cands].sort((a, b) => score(b.descriptor) - score(a.descriptor));
   return { pick: sorted[0], rest: sorted.slice(1) };
 }
 function parseHtmlRefs(html) {
@@ -18038,8 +18103,21 @@ function parseHtmlRefs(html) {
   };
   const add = (ref, kind, where, extra) => {
     if (!ref || !ref.trim()) return;
+    if (ref.trim().startsWith("#")) return;
     const r = here();
     refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
+  };
+  const addFamily = (cands, kind, where) => {
+    const { pick, rest } = pickSrcsetCandidate(cands);
+    const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
+    if (pick) add(pick.url, kind, where, meta);
+    for (const r of rest) add(r.url, kind, where, { ...meta, collapsed: true });
+  };
+  const skipTo = (tag, from) => {
+    const re = new RegExp(`<\\/${tag}\\s*>`, "gi");
+    re.lastIndex = from;
+    const e = re.exec(src);
+    return e ? { body: src.slice(from, e.index), end: e.index + e[0].length } : { body: src.slice(from), end: src.length };
   };
   TAG_RE.lastIndex = 0;
   let m;
@@ -18048,53 +18126,65 @@ function parseHtmlRefs(html) {
     const closing = raw.startsWith("/");
     const tag = (closing ? raw.slice(1) : raw).toLowerCase();
     if (closing) {
-      if (FURNITURE_TAGS.has(tag) || BODY_TAGS.has(tag)) {
-        for (let i = region.length - 1; i >= 0; i--)
-          if (region[i].tag === tag) {
-            region.splice(i, 1);
-            break;
-          }
-      }
+      for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) {
+          if (region[i].nest > 0) region[i].nest--;
+          else region.splice(i, 1);
+          break;
+        }
       continue;
     }
     const as = attrsOf(m[2] || "");
-    {
-      const role = (attr(as, "role") || "").toLowerCase().trim();
-      if (FURNITURE_ROLES.has(role)) region.push({ tag, region: "furniture", basis: `role=${role}` });
-      else if (role === "main" || role === "article") region.push({ tag, region: "body", basis: `role=${role}` });
-      else if (FURNITURE_TAGS.has(tag)) region.push({ tag, region: "furniture", basis: `<${tag}>` });
-      else if (BODY_TAGS.has(tag)) region.push({ tag, region: "body", basis: `<${tag}>` });
+    if (!VOID_ELEMENTS.has(tag) && m[3] !== "/") {
+      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
+      let entry = null;
+      if (FURNITURE_ROLES.has(role)) entry = { tag, region: "furniture", basis: `role=${role}` };
+      else if (role === "main" || role === "article") entry = { tag, region: "body", basis: `role=${role}` };
+      else if (FURNITURE_TAGS.has(tag)) entry = { tag, region: "furniture", basis: `<${tag}>` };
+      else if (BODY_TAGS.has(tag)) entry = { tag, region: "body", basis: `<${tag}>` };
+      if (entry) region.push({ ...entry, nest: 0 });
+      else for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) {
+          region[i].nest++;
+          break;
+        }
     }
     const inlineStyle = attr(as, "style");
-    if (inlineStyle) for (const u of cssRefs(inlineStyle)) add(u, "css-asset", `${tag}[style]`);
+    if (inlineStyle) for (const c of cssRefList(inlineStyle)) add(c.url, c.kind, `${tag}[style]`);
+    if (tag === "style") {
+      const { body, end } = skipTo("style", TAG_RE.lastIndex);
+      for (const c of cssRefList(body)) add(c.url, c.kind, "style");
+      TAG_RE.lastIndex = end;
+      continue;
+    }
     if (tag === "link") {
       const rel = (attr(as, "rel") || "").toLowerCase().split(/\s+/).filter(Boolean);
       const href = attr(as, "href");
-      if (!href) continue;
       if (rel.includes("stylesheet")) add(href, "stylesheet", "link[rel=stylesheet]");
       else if (rel.some((r) => r === "icon" || r === "shortcut" || r === "apple-touch-icon" || r === "mask-icon" || r === "apple-touch-icon-precomposed"))
         add(href, "icon", `link[rel=${rel.join(" ")}]`);
       else if (rel.includes("preload")) {
         const as_ = (attr(as, "as") || "").toLowerCase();
+        const iss = attr(as, "imagesrcset");
         if (as_ === "style") add(href, "stylesheet", "link[rel=preload][as=style]");
-        else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
+        else if (as_ === "image" && iss) {
+          const cands = srcsetCandidates(iss);
+          if (href && !cands.some((c) => c.url === href)) cands.push({ url: href, descriptor: "" });
+          addFamily(cands, "image", "link[imagesrcset]");
+        } else if (as_ === "image") add(href, "image", "link[rel=preload][as=image]");
         else if (as_ === "font") add(href, "font", "link[rel=preload][as=font]");
       }
       continue;
     }
     if (tag === "img" || tag === "input" || tag === "source" || tag === "video" || tag === "audio" || tag === "track" || tag === "image" || tag === "use") {
       if (tag === "input" && (attr(as, "type") || "").toLowerCase() !== "image") continue;
-      const kind = tag === "video" || tag === "audio" || tag === "track" ? "media" : "image";
-      const ss = attr(as, "srcset") || attr(as, "imagesrcset");
+      const kind = tag === "video" || tag === "audio" || tag === "track" || tag === "source" && !attr(as, "srcset") ? "media" : "image";
+      const ss = attr(as, "srcset");
       if (ss) {
-        const rawCands = ss.split(",").map((x) => x.trim()).filter(Boolean);
-        const cands = srcsetUrls(ss).map((u, i) => ({ url: u, raw: rawCands[i] || u }));
+        const cands = srcsetCandidates(ss);
         const fb = attr(as, "src");
-        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, raw: fb });
-        const { pick, rest } = pickSrcsetCandidate(cands);
-        const meta = { family: "srcset", family_size: cands.length, evidentiary_prior: "weak_against" };
-        if (pick) add(pick.url, kind, `${tag}[srcset]`, meta);
-        for (const r of rest) add(r.url, kind, `${tag}[srcset]`, { ...meta, collapsed: true });
+        if (fb && !cands.some((c) => c.url === fb)) cands.push({ url: fb, descriptor: "" });
+        addFamily(cands, kind, `${tag}[srcset]`);
         const po = attr(as, "poster");
         if (po) add(po, "image", `${tag}[poster]`);
         continue;
@@ -18108,12 +18198,10 @@ function parseHtmlRefs(html) {
     if (tag === "script") {
       const s = attr(as, "src");
       if (s) add(s, "script", "script[src]");
+      TAG_RE.lastIndex = skipTo("script", TAG_RE.lastIndex).end;
       continue;
     }
   }
-  STYLE_EL_RE.lastIndex = 0;
-  while (m = STYLE_EL_RE.exec(src))
-    for (const u of cssRefs(m[2] || "")) add(u, "css-asset", "style");
   return refs;
 }
 function classifyRef(ref, base, isPublic) {
@@ -18188,23 +18276,19 @@ function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
       if (a.name === "srcset" || a.name === "imagesrcset") {
         const live = [];
         let anyDead = false;
-        for (const cand of a.value.split(",")) {
-          const trimmed = cand.trim();
-          if (!trimmed) continue;
-          const bits = trimmed.split(/\s+/);
-          const t = resolve(bits[0], "image");
+        for (const cand of srcsetCandidates(a.value)) {
+          const t = resolve(cand.url, "image");
           if (t === PLACEHOLDER_MISSING) {
             anyDead = true;
             continue;
           }
-          bits[0] = t === null ? bits[0] : t;
-          live.push(bits.join(" "));
+          live.push({ url: t === null ? cand.url : t, descriptor: cand.descriptor });
         }
         if (!live.length) {
           put(PLACEHOLDER_MISSING);
           continue;
         }
-        put(live.length === 1 && anyDead ? live[0].split(/\s+/)[0] : live.join(", "));
+        put(live.length === 1 && anyDead ? live[0].url : live.map((c) => c.descriptor ? `${c.url} ${c.descriptor}` : c.url).join(", "));
         continue;
       }
       if (a.name === "href" || a.name === "src" || a.name === "poster" || a.name === "xlink:href" || a.name === "data") {
@@ -18246,27 +18330,42 @@ function originOf(url, baseHost) {
   return { origin: "third_party", host: h };
 }
 var FETCH_PRIORITY = { stylesheet: 0, "css-asset": 1, font: 1, icon: 2, image: 3, media: 4, script: 5 };
-var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) + (ref.region === "furniture" ? 10 : 0);
+var priorityOf = (ref) => (FETCH_PRIORITY[ref.kind] ?? 3) * 2 + (ref.region === "furniture" ? 1 : 0);
 function normalizeAddress(url) {
   let u;
   try {
     u = new URL(url);
   } catch {
-    return String(url || "").trim();
+    return String(url).trim();
   }
   u.hash = "";
   u.protocol = u.protocol.toLowerCase();
   u.hostname = u.hostname.toLowerCase();
   if (u.protocol === "https:" && u.port === "443" || u.protocol === "http:" && u.port === "80") u.port = "";
-  const ps = [...u.searchParams.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : 1);
-  u.search = ps.length ? "?" + ps.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+  const q = u.search.slice(1);
+  if (q) {
+    const dec = (x) => {
+      try {
+        return decodeURIComponent(x.replace(/\+/g, " "));
+      } catch {
+        return x;
+      }
+    };
+    const parts = q.split("&").map((p) => {
+      const i = p.indexOf("=");
+      return { p, k: dec(i === -1 ? p : p.slice(0, i)), v: dec(i === -1 ? "" : p.slice(i + 1)) };
+    });
+    const cmp = (x, y) => x < y ? -1 : x > y ? 1 : 0;
+    parts.sort((x, y) => cmp(x.k, y.k) || cmp(x.v, y.v));
+    u.search = "?" + parts.map((x) => x.p).join("&");
+  }
   return u.toString();
 }
 function normalizeCitation(url) {
   const raw = String(url || "").trim();
   const hash = raw.indexOf("#");
   if (hash === -1) return normalizeAddress(raw);
-  const frag = raw.slice(hash + 1);
+  const frag = raw.slice(hash + 1).trim();
   return normalizeAddress(raw.slice(0, hash)) + (frag ? "#" + frag : "");
 }
 function fragmentOf(url) {
@@ -18413,6 +18512,8 @@ async function captureSubresources({
      the runtime has. Network waits are never inside a segment. */
   meter = makeMeter()
 }) {
+  for (const [name, fn] of [["fetchOne", fetchOne], ["put", put], ["sha256", sha2562], ["isPublic", isPublic]])
+    if (typeof fn !== "function") throw new TypeError(`captureSubresources: ${name} must be a function`);
   const noReuse = [];
   const rec_noreuse = (stem, dec) => noReuse.push({ url: stem.url, kind: stem.kind, why: dec.why });
   const stamp = () => now().toISOString().split(".")[0] + "Z";
@@ -18450,7 +18551,7 @@ async function captureSubresources({
     }));
     const retry = new Set(queue.map((q) => q.retryUrl).filter(Boolean));
     for (let i = records.length - 1; i >= 0; i--)
-      if (records[i].reason === "DEFERRED" && retry.has(records[i].url)) {
+      if ((records[i].reason === "DEFERRED" || records[i].reason === "PLATFORM_LIMIT") && retry.has(records[i].url)) {
         byUrl.delete(records[i].url);
         records.splice(i, 1);
         discovered--;
@@ -18489,7 +18590,7 @@ async function captureSubresources({
       ...org,
       ...item.family ? { family: item.family, family_size: item.family_size } : {},
       ...item.evidentiary_prior ? { evidentiary_prior: item.evidentiary_prior } : {},
-      fetched_at: at
+      considered_at: at
     };
     if (!cls.ok) {
       settle(item, {
@@ -18555,7 +18656,7 @@ async function captureSubresources({
     }
     if (siteLookup) {
       const known = await siteLookup(normalizeAddress(cls.url));
-      const dec = reuseDecision(item, known, { now: Date.now(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
+      const dec = reuseDecision(item, known, { now: now().getTime(), freshWindowMs: reuseFreshWindowMs, minDocuments: reuseMinDocuments });
       if (dec.reuse) {
         reused++;
         const rec2 = {
@@ -18595,10 +18696,10 @@ async function captureSubresources({
           if (text != null) {
             rec2.css = true;
             rec2.rewrite = [];
-            for (const u of cssRefs(text))
+            for (const c of cssRefList(text))
               queue.push({
-                ref: u,
-                kind: "css-asset",
+                ref: c.url,
+                kind: c.kind,
                 where: `url() in ${cls.url}`,
                 depth: item.depth + 1,
                 from: cls.url,
@@ -18615,7 +18716,8 @@ async function captureSubresources({
       if (known) rec_noreuse(stem, dec);
     }
     attempted++;
-    let r;
+    const fetchedAt = at;
+    let r, limited = false;
     try {
       r = await fetchOne(cls.url);
     } catch (e) {
@@ -18627,17 +18729,33 @@ async function captureSubresources({
         reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
         detail: platform ? "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered" : msg
       };
+      limited = platform;
       if (platform && !platformHit) {
         platformHit = true;
         observedCeiling = attempted + subrequestsAlreadySpent;
       }
     }
+    if (limited) {
+      outstanding.push({
+        ...{ ...item, cssOwner: void 0 },
+        cssOwnerIdx: item.cssOwner ? records.indexOf(item.cssOwner) : null,
+        retryUrl: cls.url
+      });
+      const rec2 = { ...stem, ok: false, status: 0, reason: "PLATFORM_LIMIT", detail: r.detail };
+      byUrl.set(cls.url, rec2);
+      settle(item, rec2);
+      continue;
+    }
     if (!r || !r.ok) {
+      const named = r?.reason;
+      const reason = named === "SOURCE_REFUSED" || named === "FETCH_FAILED" ? named : named ? "FETCH_FAILED" : "SOURCE_REFUSED";
       const rec2 = {
         ...stem,
         ok: false,
         status: r ? r.status ?? null : null,
-        reason: r?.reason || "SOURCE_REFUSED",
+        reason,
+        ...named && named !== reason ? { fetch_reason: named } : {},
+        fetched_at: fetchedAt,
         ...r?.detail ? { detail: r.detail } : {}
       };
       byUrl.set(cls.url, rec2);
@@ -18652,7 +18770,8 @@ async function captureSubresources({
         status: r.status ?? 200,
         reason: "TOO_LARGE",
         bytes: bytes.length,
-        maxBytes: perMax
+        maxBytes: perMax,
+        fetched_at: fetchedAt
       };
       byUrl.set(cls.url, rec2);
       settle(item, rec2);
@@ -18669,7 +18788,8 @@ async function captureSubresources({
       sha256: sha,
       bytes: bytes.length,
       ...ct ? { content_type: ct } : {},
-      existed: !!existed
+      existed: !!existed,
+      fetched_at: fetchedAt
     };
     rec.fetched_this_capture = true;
     byUrl.set(cls.url, rec);
@@ -18693,10 +18813,10 @@ async function captureSubresources({
       }
       rec.css = true;
       rec.rewrite = [];
-      for (const u of meter.sync("parse_css", () => cssRefs(text)))
+      for (const c of meter.sync("parse_css", () => cssRefList(text)))
         queue.push({
-          ref: u,
-          kind: "css-asset",
+          ref: c.url,
+          kind: c.kind,
           where: `url() in ${cls.url}`,
           depth: item.depth + 1,
           from: cls.url,
@@ -18803,7 +18923,7 @@ async function captureSubresources({
     },
     /* D-191: when the parts this composite holds were fetched, per clock. */
     part_fetch_spread: partFetchSpread(records),
-    outstanding: deferred,
+    outstanding: outstanding.length,
     platform: {
       limited: platformHit,
       /* Discovered, never declared. null means this run never found the edge,
@@ -24108,18 +24228,63 @@ function isDelimiter(c) {
 }
 async function inflate(u8) {
   try {
-    const ds = new DecompressionStream("deflate");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-    return new Uint8Array(await out.arrayBuffer());
+    return { data: await inflateWhole(u8, "deflate"), trailing: 0 };
   } catch {
+    const kept = await inflateWithTrailing(u8);
+    if (kept) return kept;
     try {
-      const ds = new DecompressionStream("deflate-raw");
-      const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-      return new Uint8Array(await out.arrayBuffer());
+      return { data: await inflateWhole(u8, "deflate-raw"), trailing: 0 };
     } catch {
       return null;
     }
   }
+}
+async function inflateWhole(u8, format) {
+  const out = new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream(format)));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function inflateWithTrailing(u8) {
+  if (u8.length < 6 || (u8[0] & 15) !== 8 || (u8[0] << 8 | u8[1]) % 31 !== 0) return null;
+  const chunks = [];
+  let total = 0;
+  try {
+    const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) return null;
+      chunks.push(value);
+      total += value.length;
+    }
+  } catch {
+  }
+  const data = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    data.set(c, off);
+    off += c.length;
+  }
+  const sum = adler32(data);
+  const want = [sum >>> 24 & 255, sum >>> 16 & 255, sum >>> 8 & 255, sum & 255];
+  for (let i = 2; i + 4 < u8.length; i++) {
+    if (u8[i] !== want[0] || u8[i + 1] !== want[1] || u8[i + 2] !== want[2] || u8[i + 3] !== want[3]) continue;
+    const end = i + 4;
+    try {
+      const again = await inflateWhole(u8.subarray(0, end), "deflate");
+      if (again.length === data.length && again.every((b, k) => b === data[k])) {
+        return { data, trailing: u8.length - end };
+      }
+    } catch {
+    }
+  }
+  return null;
+}
+function adler32(u8) {
+  let a = 1, b = 0;
+  for (let i = 0; i < u8.length; i++) {
+    a = (a + u8[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return (b << 16 | a) >>> 0;
 }
 function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {}) {
   if (predictor < 10) return data;
@@ -24357,9 +24522,17 @@ var PdfDoc = class {
     this.s = LATIN12.decode(bytes);
     this.objects = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
+    this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
+    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+  }
+  /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
+   *  (R31). */
+  pageDict(pageIdx) {
+    if (!Number.isInteger(pageIdx) || pageIdx < 0 || pageIdx >= this.pageCount) return null;
+    return this.dictOf({ t: "ref", n: this._pageOrder[pageIdx] });
   }
   note(msg) {
     this.notes.push(msg);
@@ -24382,6 +24555,7 @@ var PdfDoc = class {
       v = this.objects.get(v.n);
       seen++;
     }
+    if (v && v.t === "ref") return null;
     return v ?? null;
   }
   dictOf(v) {
@@ -24427,8 +24601,13 @@ var PdfDoc = class {
     const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-    let data = await inflate(raw);
-    if (!data) return null;
+    const inflated = await inflate(raw);
+    if (!inflated) return null;
+    let data = inflated.data;
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
+      this._trailingNoted.add(streamObj);
+      this.note(`flate_trailing_bytes:${inflated.trailing}`);
+    }
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -24474,7 +24653,7 @@ var PdfDoc = class {
         const off = header[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
         if (this.objects.has(objNum)) continue;
-        const r = parseValue(null, inner, first + off);
+        const r = parseValueSafe(inner, first + off);
         if (r) this.objects.set(objNum, r.value);
       }
     }
@@ -25198,18 +25377,25 @@ function pageResources(doc, pageMap) {
   return null;
 }
 async function pageContent(doc, pageMap) {
+  const unread = [];
+  if (pageMap.Contents == null) return { text: "", unread };
   const c = doc.resolve(pageMap.Contents);
-  if (!c) return "";
+  if (!c) return { text: "", unread: ["content_stream_unresolvable"] };
   const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
   const parts = [];
   for (const st of streams) {
     if (st && st.t === "stream") {
       const data = await doc.streamDecoded(st);
       if (data) parts.push(LATIN12.decode(data));
-      else doc.note("content_stream_undecodable");
+      else {
+        doc.note("content_stream_undecodable");
+        unread.push("content_stream_undecodable");
+      }
+    } else {
+      unread.push("content_stream_unresolvable");
     }
   }
-  return parts.join("\n");
+  return { text: parts.join("\n"), unread };
 }
 var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
 function matMul(a, b) {
@@ -25230,9 +25416,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
   const content = await pageContent(doc, pageMap);
-  const toks = tokenizeContent(content);
+  const toks = tokenizeContent(content.text);
   const pieces = [];
-  const undetermined = [];
+  const undetermined = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
   let curFont = null;
   let curFontName = null;
   const stack = [];
@@ -25671,7 +25857,7 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText(doc, pageOrder) {
+async function extractText(doc) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -25687,10 +25873,12 @@ async function extractText(doc, pageOrder) {
   const fontCache = /* @__PURE__ */ new Map();
   const pages = [];
   const allUndetermined = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
-    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pageMap = doc.pageDict(idx);
     if (!pageMap) {
-      pages.push({ page: idx, text: "", undetermined: [] });
+      const marker = { page: idx, reason: "page_unreadable", font: null, codes: "", count: 0 };
+      pages.push({ page: idx, text: "", undetermined: [marker] });
+      allUndetermined.push(marker);
       continue;
     }
     let res;
@@ -25766,9 +25954,9 @@ async function decodeContentStreams(doc, contents) {
   }
   return { text: parts.join("\n") };
 }
+var PLACEMENT_SOURCE = /* @__PURE__ */ new WeakMap();
 async function pdfPageImages(doc, pageIdx) {
-  const order = doc._pageOrder || [];
-  const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
+  const pageMap = doc.pageDict(pageIdx);
   if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
   const top = await decodeContentStreams(doc, pageMap.Contents);
   if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
@@ -25815,8 +26003,7 @@ async function pdfPageImages(doc, pageIdx) {
               filters,
               axis_aligned: ctm[1] === 0 && ctm[2] === 0
             });
-            Object.defineProperty(placement, "_stream", { value: st, enumerable: false });
-            Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+            PLACEMENT_SOURCE.set(placement, { stream: st, ctm });
             images.push(placement);
           } else if (sub === "Form") {
             const key = ref && ref.t === "ref" ? ref.n : null;
@@ -25847,8 +26034,7 @@ async function pdfPageImages(doc, pageIdx) {
             filters: [],
             axis_aligned: ctm[1] === 0 && ctm[2] === 0
           });
-          Object.defineProperty(placement, "_stream", { value: null, enumerable: false });
-          Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+          PLACEMENT_SOURCE.set(placement, { stream: null, ctm });
           images.push(placement);
           break;
         }
@@ -25865,15 +26051,101 @@ async function pdfPageImages(doc, pageIdx) {
   }
   return { images, why: null };
 }
-async function extractImages(doc, pageOrder) {
+async function extractImages(doc) {
   if (doc.isEncrypted()) return { images: null, why: "encrypted" };
   const all = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
+  for (let idx = 0; idx < doc.pageCount; idx++) {
     const got = await pdfPageImages(doc, idx);
     if (!got.images) return { images: null, why: got.why };
     for (const im of got.images) all.push(im);
   }
   return { images: all, why: null };
+}
+var IMAGE_CONTENT_MAX_GLYPHS = 4;
+var IMAGE_CONTENT_MIN_SHARE = 0.18;
+var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function pageBox(doc, pageMap) {
+  const read = (key) => {
+    let p = pageMap, d = 0;
+    while (p && d++ < 32) {
+      const a = doc.resolve(p[key]);
+      if (a && a.t === "arr" && a.items.length === 4) {
+        const v = a.items.map((x) => doc.resolve(x));
+        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
+          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+        return null;
+      }
+      p = doc.dictOf(p.Parent);
+    }
+    return null;
+  };
+  const mb = read("MediaBox");
+  if (!mb) return null;
+  const cb = read("CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+var clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
+var rectArea = (r) => Math.max(0, r[2] - r[0]) * Math.max(0, r[3] - r[1]);
+function unionArea(rects) {
+  const rs = rects.filter((r) => rectArea(r) > 0);
+  const xs = [...new Set(rs.flatMap((r) => [r[0], r[2]]))].sort((a, b) => a - b);
+  let total = 0;
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const x0 = xs[i], x1 = xs[i + 1];
+    const spans = rs.filter((r) => r[0] <= x0 && r[2] >= x1).map((r) => [r[1], r[3]]).sort((a, b) => a[0] - b[0]);
+    let covered = 0, lo = null, hi = null;
+    for (const [a, b] of spans) {
+      if (lo === null || a > hi) {
+        if (lo !== null) covered += hi - lo;
+        lo = a;
+        hi = b;
+      } else hi = Math.max(hi, b);
+    }
+    if (lo !== null) covered += hi - lo;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+function markImageContent(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = pg.undetermined;
+    if (marks.some((m) => m.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch of pg.text) if (!/\s/u.test(ch)) decoded++;
+    const glyphs = decoded + marks.reduce((n, m) => n + (Number.isFinite(m.count) ? m.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0 ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 1e4) / 1e4 : null;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    pg.undetermined = [...marks, {
+      page: pg.page,
+      reason: unread ? "image_content_unread" : "image_content_undetermined",
+      font: null,
+      codes: "",
+      count: 0,
+      image_share: share,
+      glyphs
+    }];
+    added++;
+  }
+  if (!added) return;
+  text.undetermined = [
+    ...text.pages.flatMap((p) => p.undetermined),
+    ...text.undetermined.filter((m) => !Number.isInteger(m.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+async function loadPdf(bytes) {
+  const doc = new PdfDoc(bytes);
+  doc.scanTopLevel();
+  await doc.loadObjectStreams();
+  doc.buildPageIndex();
+  return doc;
 }
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
@@ -25884,18 +26156,10 @@ async function extractPdfStructure(bytes) {
   if (!sig) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  for (const [num2, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num2 };
-  }
-  doc.buildPageIndex();
+  const doc = await loadPdf(bytes);
   const links = [];
-  const pageOrder = doc._pageOrder || [];
-  for (let pageIdx = 0; pageIdx < pageOrder.length; pageIdx++) {
-    const pageNum = pageOrder[pageIdx];
-    const page = doc.dictOf({ t: "ref", n: pageNum });
+  for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
+    const page = doc.pageDict(pageIdx);
     if (!page) continue;
     const annots = doc.resolve(page.Annots);
     if (!annots || annots.t !== "arr") continue;
@@ -25940,8 +26204,9 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
-  const text = await extractText(doc, pageOrder);
-  const imgs = await extractImages(doc, pageOrder);
+  const text = await extractText(doc);
+  const imgs = await extractImages(doc);
+  if (imgs.images) markImageContent(doc, text, imgs.images);
   return {
     ok: true,
     container: "pdf",

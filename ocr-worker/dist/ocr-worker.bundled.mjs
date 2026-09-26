@@ -14,18 +14,63 @@ function isDelimiter(c) {
 }
 async function inflate(u8) {
   try {
-    const ds = new DecompressionStream("deflate");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-    return new Uint8Array(await out.arrayBuffer());
+    return { data: await inflateWhole(u8, "deflate"), trailing: 0 };
   } catch {
+    const kept = await inflateWithTrailing(u8);
+    if (kept) return kept;
     try {
-      const ds = new DecompressionStream("deflate-raw");
-      const out = new Response(new Blob([u8]).stream().pipeThrough(ds));
-      return new Uint8Array(await out.arrayBuffer());
+      return { data: await inflateWhole(u8, "deflate-raw"), trailing: 0 };
     } catch {
       return null;
     }
   }
+}
+async function inflateWhole(u8, format) {
+  const out = new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream(format)));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function inflateWithTrailing(u8) {
+  if (u8.length < 6 || (u8[0] & 15) !== 8 || (u8[0] << 8 | u8[1]) % 31 !== 0) return null;
+  const chunks = [];
+  let total = 0;
+  try {
+    const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) return null;
+      chunks.push(value);
+      total += value.length;
+    }
+  } catch {
+  }
+  const data = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    data.set(c, off);
+    off += c.length;
+  }
+  const sum = adler32(data);
+  const want = [sum >>> 24 & 255, sum >>> 16 & 255, sum >>> 8 & 255, sum & 255];
+  for (let i = 2; i + 4 < u8.length; i++) {
+    if (u8[i] !== want[0] || u8[i + 1] !== want[1] || u8[i + 2] !== want[2] || u8[i + 3] !== want[3]) continue;
+    const end = i + 4;
+    try {
+      const again = await inflateWhole(u8.subarray(0, end), "deflate");
+      if (again.length === data.length && again.every((b, k) => b === data[k])) {
+        return { data, trailing: u8.length - end };
+      }
+    } catch {
+    }
+  }
+  return null;
+}
+function adler32(u8) {
+  let a = 1, b = 0;
+  for (let i = 0; i < u8.length; i++) {
+    a = (a + u8[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return (b << 16 | a) >>> 0;
 }
 function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {}) {
   if (predictor < 10) return data;
@@ -263,9 +308,17 @@ var PdfDoc = class {
     this.s = LATIN1.decode(bytes);
     this.objects = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
+    this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
+    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+  }
+  /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
+   *  (R31). */
+  pageDict(pageIdx) {
+    if (!Number.isInteger(pageIdx) || pageIdx < 0 || pageIdx >= this.pageCount) return null;
+    return this.dictOf({ t: "ref", n: this._pageOrder[pageIdx] });
   }
   note(msg) {
     this.notes.push(msg);
@@ -288,6 +341,7 @@ var PdfDoc = class {
       v = this.objects.get(v.n);
       seen++;
     }
+    if (v && v.t === "ref") return null;
     return v ?? null;
   }
   dictOf(v) {
@@ -333,8 +387,13 @@ var PdfDoc = class {
     const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-    let data = await inflate(raw);
-    if (!data) return null;
+    const inflated = await inflate(raw);
+    if (!inflated) return null;
+    let data = inflated.data;
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
+      this._trailingNoted.add(streamObj);
+      this.note(`flate_trailing_bytes:${inflated.trailing}`);
+    }
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -380,7 +439,7 @@ var PdfDoc = class {
         const off = header[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
         if (this.objects.has(objNum)) continue;
-        const r = parseValue(null, inner, first + off);
+        const r = parseValueSafe(inner, first + off);
         if (r) this.objects.set(objNum, r.value);
       }
     }
@@ -780,6 +839,41 @@ var IMAGE_FILE_MIME = Object.freeze({
   JPXDecode: "image/jp2"
 });
 var FORM_DEPTH_LIMIT = 8;
+var r3 = (v) => {
+  const x = Math.round(v * 1e3) / 1e3;
+  return x === 0 ? 0 : x;
+};
+function pdfImageRef(page, rect, extra = {}) {
+  return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
+}
+function mulMatrix(m, c) {
+  return [
+    m[0] * c[0] + m[1] * c[2],
+    m[0] * c[1] + m[1] * c[3],
+    m[2] * c[0] + m[3] * c[2],
+    m[2] * c[1] + m[3] * c[3],
+    m[4] * c[0] + m[5] * c[2] + c[4],
+    m[4] * c[1] + m[5] * c[3] + c[5]
+  ];
+}
+function unitSquareRect(ctm) {
+  const pts = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return [r3(Math.min(...xs)), r3(Math.min(...ys)), r3(Math.max(...xs)), r3(Math.max(...ys))];
+}
+function matrixOf(doc, v) {
+  const a = doc.resolve(v);
+  if (!a || a.t !== "arr" || a.items.length !== 6) return null;
+  const n = a.items.map((x) => doc.resolve(x));
+  return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
+}
+function imageFilters(doc, dict) {
+  const f = doc.resolve(dict.Filter);
+  if (!f) return [];
+  if (f.t === "name") return [f.v];
+  if (f.t === "arr") return f.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  return [];
+}
 async function decodeContentStreams(doc, contents) {
   const c = doc.resolve(contents);
   if (!c) return { text: "" };
@@ -792,6 +886,120 @@ async function decodeContentStreams(doc, contents) {
     parts.push(LATIN1.decode(data));
   }
   return { text: parts.join("\n") };
+}
+var PLACEMENT_SOURCE = /* @__PURE__ */ new WeakMap();
+function imagePlacementSource(placement) {
+  if (!placement || typeof placement !== "object") return null;
+  const src = PLACEMENT_SOURCE.get(placement);
+  return src ? { stream: src.stream, ctm: src.ctm.slice() } : null;
+}
+async function pdfPageImages(doc, pageIdx) {
+  const pageMap = doc.pageDict(pageIdx);
+  if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
+  const images = [];
+  const walk = async (content, resources, ctm0, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    const toks = tokenizeContent(content, { inlineImages: true });
+    let ctm = ctm0;
+    const saved = [];
+    const operands = [];
+    for (const tk of toks) {
+      if (tk.t !== "op") {
+        operands.push(tk);
+        continue;
+      }
+      switch (tk.v) {
+        case "q":
+          saved.push(ctm);
+          break;
+        case "Q":
+          if (saved.length) ctm = saved.pop();
+          break;
+        case "cm": {
+          const nums = operands.filter((o) => o.t === "num").slice(-6).map((o) => o.v);
+          if (nums.length === 6) ctm = mulMatrix(nums, ctm);
+          break;
+        }
+        case "Do": {
+          const nameTok = [...operands].reverse().find((o) => o.t === "name");
+          const ref = nameTok && xobjects ? xobjects[nameTok.v] : null;
+          const st = ref ? doc.resolve(ref) : null;
+          if (!st || st.t !== "stream")
+            throw new Error(`xobject_unresolvable:page ${pageIdx}:${nameTok ? nameTok.v : "?"}`);
+          const sub = nameOf(doc, st.dict.Subtype);
+          if (sub === "Image") {
+            const filters = imageFilters(doc, st.dict);
+            const last = filters[filters.length - 1] || null;
+            const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+              mime: IMAGE_FILE_MIME[last] ?? null,
+              name: nameTok.v,
+              inline: false,
+              width: typeof doc.resolve(st.dict.Width) === "number" ? doc.resolve(st.dict.Width) : null,
+              height: typeof doc.resolve(st.dict.Height) === "number" ? doc.resolve(st.dict.Height) : null,
+              filters,
+              axis_aligned: ctm[1] === 0 && ctm[2] === 0
+            });
+            PLACEMENT_SOURCE.set(placement, { stream: st, ctm });
+            images.push(placement);
+          } else if (sub === "Form") {
+            const key = ref && ref.t === "ref" ? ref.n : null;
+            if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+              throw new Error(`form_nesting_unwalkable:page ${pageIdx}`);
+            }
+            const data = await doc.streamDecoded(st);
+            if (!data) throw new Error(`form_stream_undecodable:page ${pageIdx}`);
+            const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
+            const formRes = doc.dictOf(st.dict.Resources) || resources;
+            await walk(
+              LATIN1.decode(data),
+              formRes,
+              mulMatrix(m, ctm),
+              depth + 1,
+              key != null ? [...formChain, key] : formChain
+            );
+          }
+          break;
+        }
+        case "EI": {
+          const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+            mime: null,
+            name: null,
+            inline: true,
+            width: null,
+            height: null,
+            filters: [],
+            axis_aligned: ctm[1] === 0 && ctm[2] === 0
+          });
+          PLACEMENT_SOURCE.set(placement, { stream: null, ctm });
+          images.push(placement);
+          break;
+        }
+        default:
+          break;
+      }
+      operands.length = 0;
+    }
+  };
+  try {
+    await walk(top.text, pageResources(doc, pageMap), [1, 0, 0, 1, 0, 0], 0, []);
+  } catch (e) {
+    return { images: null, why: String(e && e.message || e).slice(0, 120) };
+  }
+  return { images, why: null };
+}
+async function loadPdf(bytes) {
+  const doc = new PdfDoc(bytes);
+  doc.scanTopLevel();
+  await doc.loadObjectStreams();
+  doc.buildPageIndex();
+  return doc;
+}
+async function openPdf(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
+  return loadPdf(bytes);
 }
 
 // ../pdf-worker/src/dctdecode.mjs
@@ -1454,17 +1662,8 @@ var refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
 };
-async function loadPdf(bytes) {
-  if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN12.decode(bytes.subarray(0, 1024)))) return null;
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  for (const [num, v] of doc.objects) {
-    if (v && v.t === "dict") v.map.__objnum = { t: "ref", n: num };
-  }
-  doc.buildPageIndex();
-  return doc;
+async function loadPdf2(bytes) {
+  return openPdf(bytes);
 }
 var nameOf2 = (doc, v) => {
   v = doc.resolve(v);
@@ -1474,24 +1673,24 @@ var numOf = (doc, v) => {
   v = doc.resolve(v);
   return typeof v === "number" ? v : null;
 };
-function filterNames(doc, dict) {
-  const f = doc.resolve(dict.Filter);
-  if (!f) return [];
-  if (f.t === "name") return [f.v];
-  if (f.t === "arr") return f.items.map((x) => nameOf2(doc, x)).filter(Boolean);
-  return [];
-}
 function decodeParms(doc, dict, idx) {
   let p = doc.resolve(dict.DecodeParms) ?? doc.resolve(dict.DP);
   if (p && p.t === "arr") p = doc.resolve(p.items[idx] ?? p.items[p.items.length - 1]);
   return p && p.t === "dict" ? p.map : null;
 }
-function pageResources2(doc, pageMap, depth = 0) {
-  if (!pageMap || depth > 32) return null;
-  const res = doc.dictOf(pageMap.Resources);
-  if (res) return res;
-  const parent = doc.dictOf(pageMap.Parent);
-  return parent ? pageResources2(doc, parent, depth + 1) : null;
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap;
+  for (let d = 0; p && d <= 32; d++) {
+    if (p[key] !== void 0) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return void 0;
+}
+function pageRotate(doc, pageMap) {
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  if (r === void 0) return 0;
+  if (!Number.isInteger(r) || r % 90 !== 0) return null;
+  return (r % 360 + 360) % 360;
 }
 async function pageContentText(doc, pageMap) {
   const c = doc.resolve(pageMap.Contents);
@@ -1554,32 +1753,28 @@ function maskedContent(s) {
   return out;
 }
 var VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
+function imageOf(doc, placement) {
+  const src = imagePlacementSource(placement);
+  const st = src ? src.stream : null;
+  const d = st ? st.dict : {};
+  return {
+    name: placement.name,
+    inline: placement.inline === true,
+    obj: st,
+    width: placement.width,
+    height: placement.height,
+    bpc: numOf(doc, d.BitsPerComponent),
+    colorSpace: nameOf2(doc, d.ColorSpace) || (d.ColorSpace ? "\xABindirect\xBB" : null),
+    isMask: doc.resolve(d.ImageMask) === true,
+    filters: placement.filters
+  };
+}
 async function analyzePage(doc, pageIndex) {
-  const order = doc._pageOrder || [];
-  if (pageIndex < 0 || pageIndex >= order.length) return null;
-  const pageMap = doc.dictOf({ t: "ref", n: order[pageIndex] });
+  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
+  const pageMap = doc.pageDict(pageIndex);
   if (!pageMap) return null;
-  const res = pageResources2(doc, pageMap);
-  const xobjDict = res ? doc.dictOf(res.XObject) : null;
-  const images = [];
-  if (xobjDict) {
-    for (const key of Object.keys(xobjDict)) {
-      if (key.startsWith("__")) continue;
-      const st = doc.resolve(xobjDict[key]);
-      if (!st || st.t !== "stream") continue;
-      if (nameOf2(doc, st.dict.Subtype) !== "Image") continue;
-      images.push({
-        name: key,
-        obj: st,
-        width: numOf(doc, st.dict.Width),
-        height: numOf(doc, st.dict.Height),
-        bpc: numOf(doc, st.dict.BitsPerComponent),
-        colorSpace: nameOf2(doc, st.dict.ColorSpace) || (st.dict.ColorSpace ? "\xABindirect\xBB" : null),
-        isMask: doc.resolve(st.dict.ImageMask) === true,
-        filters: filterNames(doc, st.dict)
-      });
-    }
-  }
+  const painted = await pdfPageImages(doc, pageIndex);
+  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
   let content = "";
   try {
     content = await pageContentText(doc, pageMap);
@@ -1593,16 +1788,8 @@ async function analyzePage(doc, pageIndex) {
   } catch {
     textShown = null;
   }
-  const drawn = [...masked.matchAll(/\/([^\s/<>[\]()]+)\s+Do(?=[\s]|$)/g)].map((m) => m[1]);
-  const drawnImages = drawn.filter((n) => images.some((im) => im.name === n));
   const mediaBox = (() => {
-    let m = doc.resolve(pageMap.MediaBox);
-    let p = pageMap, d = 0;
-    while (!m && d++ < 32) {
-      p = doc.dictOf(p.Parent);
-      if (!p) break;
-      m = doc.resolve(p.MediaBox);
-    }
+    const m = inheritedAttr(doc, pageMap, "MediaBox");
     if (!m || m.t !== "arr" || m.items.length < 4) return null;
     const v = m.items.map((x) => numOf(doc, x));
     if (v.some((x) => x == null)) return null;
@@ -1618,23 +1805,30 @@ async function analyzePage(doc, pageIndex) {
     hasInlineImage: masked.includes("INLINEIMAGE"),
     images: images.map(({ obj, ...rest }) => rest),
     _images: images,
-    drawnImageNames: drawnImages,
+    imagesWhy: painted.why,
+    drawnImageNames: images.map((im) => im.name),
     imageCount: images.length,
     mediaBox,
-    rotate: numOf(doc, pageMap.Rotate) ?? 0
+    rotate: pageRotate(doc, pageMap)
   };
 }
 async function renderPageToPixels(bytes, pageIndex, opts = {}) {
-  const doc = await loadPdf(bytes);
+  const doc = await loadPdf2(bytes);
   if (!doc) return refuse("NOT_A_PDF");
   if (doc.isEncrypted()) return refuse("ENCRYPTED");
   const a = await analyzePage(doc, pageIndex);
   if (!a) {
-    const n = (doc._pageOrder || []).length;
+    const n = doc.pageCount;
     return pageIndex >= 0 && pageIndex < n ? refuse("PAGE_UNREADABLE", { page: pageIndex }) : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
+  }
+  if (a.rotate === null) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
   }
   if (a.hasTextOps && !opts.allowTextPage) {
     return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
+  }
+  if (a.imagesWhy) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
   }
   if (a.imageCount === 0) {
     return refuse(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
@@ -1651,7 +1845,10 @@ async function renderPageToPixels(bytes, pageIndex, opts = {}) {
     });
   }
   const im = a._images[0];
-  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate || 0 });
+  if (!im.obj) {
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+  }
+  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
   return {
     ok: true,
@@ -1665,7 +1862,7 @@ async function renderPageToPixels(bytes, pageIndex, opts = {}) {
      * apply the page's own /Rotate says so HERE rather than leaving a consumer
      * to discover it in its output. See the note on rotateBilevel. */
     upright: out.upright,
-    rotate_deg: a.rotate || 0,
+    rotate_deg: a.rotate,
     source: {
       filters: im.filters,
       colorSpace: im.colorSpace,
@@ -1731,6 +1928,7 @@ async function decodeImage(doc, im, opts) {
     const K = numOf(doc, p.K) ?? 0;
     const columns = numOf(doc, p.Columns) ?? 1728;
     const rows = numOf(doc, p.Rows) ?? im.height;
+    if (K > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
     const blackIs1 = doc.resolve(p.BlackIs1) === true;
     const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
     let bits;
@@ -2127,9 +2325,13 @@ function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false 
     let a0 = -1;
     let color = 0;
     let guard = 0;
+    let broken = false;
     while (a0 < columns) {
       if (++guard > columns * 4 + 64) throw new Error("row did not terminate");
-      if (br.eof) break;
+      if (br.eof) {
+        broken = true;
+        break;
+      }
       if (twoD) {
         const w = br.peek(7);
         let a1;
@@ -2148,7 +2350,7 @@ function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false 
           const r1 = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
           const r2 = readRun(br, color === 0 ? BLACK_ALL : WHITE_ALL);
           if (r1 == null || r2 == null) {
-            a0 = columns;
+            broken = true;
             break;
           }
           const m1 = Math.min(columns, s + r1);
@@ -2173,7 +2375,7 @@ function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false 
           br.skip(7);
           a1 = b1(ref, a0, color) - 3;
         } else {
-          a0 = columns;
+          broken = true;
           break;
         }
         a1 = Math.max(0, Math.min(columns, a1));
@@ -2184,7 +2386,7 @@ function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false 
         const s = a0 < 0 ? 0 : a0;
         const run = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
         if (run == null) {
-          a0 = columns;
+          broken = true;
           break;
         }
         const m = Math.min(columns, s + run);
@@ -2193,7 +2395,7 @@ function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false 
         color ^= 1;
       }
     }
-    if (cur.length === 0 && br.eof) break;
+    if (broken) break;
     const row = new Uint8Array(rowBytes).fill(255);
     let pos = 0, c = 0;
     for (const t of cur) {
