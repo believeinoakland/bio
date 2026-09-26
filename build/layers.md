@@ -46,7 +46,7 @@ A module marked `from` in `modules.json` is extracted from that legacy module by
 2. **Ops move with their construct.** Each op's handler moves at extraction into the module whose service it is. `control-plane` keeps only routing, authentication and the response envelope.
 3. **Each module owns its tables.** `schema.mjs` is divided at extraction.
 4. **The UI is a placeholder, worked on elsewhere.** `legacy-ui` stays registered, so every product file has an owner, but no tranche plans work on it. Its replacement is placed in the top layer when it arrives. At T5, a row about the UI itself is dropped for that reason; a row about a plane service the UI needs is carried against the plane module that provides it.
-5. **Moving a function.** BOB moves a function between modules when the order and the declared uses still hold, and reports the move to Bob. A change to the order, a layer or a `uses` edge comes to Bob.
+5. **Moving a function.** BOB moves a function between modules when the order and the declared uses still hold, and reports the move to Bob. *Amended 2026-09-26 by P17:* a change to a layer, or adding or removing a module that carries product capability, comes to Bob; `uses` edges, order within a layer, file ownership and helper or legacy modules are BOB's, decided and reported.
 6. **`promotion` starts in layer 2.** If it needs a later module, it moves up with Bob's approval.
 
 **The checks are carried, never dropped (Bob: "very important to keep").** Every check in `bio-checks.mjs` moves, at extraction, into exactly one module, as an invariant with its own requirement id and test. `legacy-checks` is retired only when it is empty. A check is removed only by a recorded ruling.
