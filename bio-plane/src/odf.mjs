@@ -1851,7 +1851,7 @@ export const ODF_EVIDENTIARY_VERSION = 1;
  *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (MEASUREMENTS.md 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
+  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
   odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
