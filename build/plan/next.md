@@ -31,6 +31,7 @@
 - N36 · 2026-09-26 · **promotion** (from `legacy-checks`): catalogue rows for promotion's `EXISTS` and `ABSENT` refusals (N17). (C-18.8's removal moved into T3 by K64.)
 - N37 · 2026-09-26 · **query-language**: `viewerPredicate` and `GATE_MARK` become re-exports of membership's (K63).
 - N38 · 2026-09-26 · **instance-setup** (K69): the group-identity cluster (C-64) moves here from `legacy-store` at `instance-setup`'s extraction; BOB writes its requirements (the producing group, its history, the domain checks) and brings them to Bob before that tranche.
+- N39 · 2026-09-26 · **observation-log**, **ai-runs** (K71): each stops reading `capture_requests` directly and offers a registration `capture-requests` fills (the K31 pattern), at their extractions.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
