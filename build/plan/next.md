@@ -98,3 +98,29 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 - T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
 
 **Not in T4:** D-593, D-694, D-724 go with `extraction` (K49, layer 4); D-581, D-582, D-584 with `capture-requests` (K58, layer 6).
+
+## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
+
+Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
+
+**Layer 2, first (record-core, promotion revisited; small)**
+- **record-core** · N40 (`digestCensus`, `snapKeyCensus`; BOB writes their requirements first), N51 (`auditPass` registration), N58 (R47–R48, `stampInstant` and `instantOrder`, so layer 6 takes them from here).
+- **promotion** · N56 (`fact(name)`, D-592 `reopen`).
+
+**Layer 4** (order: `calibration`, `extraction`, `content`)
+- **calibration** · T5-1 · Extract per map and requirements (K73, K74); D-587, D-668.
+- **extraction** · T5-2 · Extract per map and requirements (K49, K73); D-593, D-694, D-724 (K49), D-614, D-616, D-684; N21 (the view to `docprofile`), N28 (`chainKindFor`), N48 (REC-206's derivation); the rows N42 routes through text-chain, pdf-reader and legacy-checks first go to those modules' jobs in the same tranche where they are in a lower layer's entries.
+- **content** · T5-3 · Extract per map and requirements; D-374, D-419, D-580, D-670, D-675, D-686, REC-204 (subject to Bob's content question 2).
+
+**Layer 5** (order: `entities`, `connections`, `progressions`, `bias`, `observation-log`, `query-language`, `retrieval`)
+- **entities** · T5-4 · N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225.
+- **connections** · T5-5 · themes included (K79); D-575, D-625, D-706, D-722, REC-206.
+- **progressions** · T5-6 · as its requirements.
+- **bias** · T5-7 · the debt mechanism with it (K82 (3), K87), reading work products `ai-runs` registers in T6 (until then the store's arm registers them).
+- **observation-log** · T5-8 · D-681, D-682; N39 (its share).
+- **query-language** · T5-9 · N37 (`viewerPredicate`, `GATE_MARK` re-exported from membership).
+- **retrieval** · T5-10 · the frontier included (K80); D-672, D-682, D-724.
+
+**Layer 11, last:** **legacy-index** (the routes of the ops layers 4–5 move, N43's pattern), **legacy-tests** (re-anchor or retire what layers 4–5 break; N46 with N37; N57's remainder).
+
+**Size.** Twelve jobs; T3's three extractions processed 236.6M tokens. BOB reports the measured T4 cost before opening T5, and may split T5 by layer (layer 4, then layer 5) if T4's cost per job says so.
