@@ -83,3 +83,6 @@ T2 builds every remaining layer-1 module: 13 jobs, all concurrent. Every job wri
 - id-spaces · `job/T2/id-spaces` @ 165a608e · COMPLETE reported 17:07; verified after `jurisdictions` merges (its adapter imports it); REPORT: plane bundle stale; N23 to next.md; K45
 - signatures · `job/T2/signatures` @ 886fc4e6 · 32/32 ids, 42 pass; REPORT: plane and newgroup bundles stale (regenerated at the close; newgroup added to the manifest, K46); N24; bundler comment forwarded · 2026-09-26 17:10
 - ocr-worker · `job/T2/ocr-worker` @ cc8f7103 · 21/21 ids, 195 pass (K40 merged); three flaws fixed; own bundle rebuilt · 2026-09-26 17:13
+- jurisdictions · `job/T2/jurisdictions` @ ca7ec6e6 · 30/30 ids, 35 pass · MERGED into `tranche/T2` @ 332aff0c at 17:12 (early, mechanics §4); CHANGE sent to id-spaces and docprofile
+- office-readers · `job/T2/office-readers` @ 9c5b4866 · 25/25 ids, 57 pass; nine flaws fixed; DIST-14 deferred (needs a deployed plane); N26, N27; plane bundle stale · 2026-09-26 17:13
+- text-chain · `job/T2/text-chain` @ 51a38ec0 · 86/86 ids, 86 pass; K50; N28; plane bundle stale · 2026-09-26 17:13

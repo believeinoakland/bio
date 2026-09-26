@@ -18,6 +18,10 @@
 - N23 · 2026-09-26 · **legacy-tests**: `nc-rec203.mjs`'s negative-control anchors no longer match the rewritten `idspaces.mjs` (N2), so its arms do not arm; re-anchor or retire it with the old interface (N6). Reported by ID-SPACES #1.
 - N24 · 2026-09-26 · **legacy-tests**: `bio-plane/test/signpage.test.mjs` (line ~38) and `fleetbundles.control.mjs` arm (7) read `tools/sign-release.html`; point them at `bio-plane/src/sign-release.html` (K33), after which BOB removes `tools/sign-release.html` (K46). Reported by SIGNATURES #1.
 - N25 · 2026-09-26 · **legacy-index**, **host-governor**: `governedFetch` and the ops `governorstate` and `governorconfig` move from `index.mjs` into `host-governor` (K47), the fetch and user agent passed in by the caller.
+- N26 · 2026-09-26 · **office-readers**: `.docx` `mc:AlternateContent` fallbacks are read twice; the fix renumbers ¶ references in stored readings, so it lands with a migration of those references. Deferred by OFFICE-READERS #1.
+- N27 · 2026-09-26 · **odf-reader**, **office-readers**: the `.ods` half of D-415 (named ranges and tables as `sheet-range` units, as `.xlsx` has by R9/K36); built work on the snapshot (`odf.mjs`); `office-readers` names `rangeUnitFor` and `a1Corner` in its Provides for it. Reported by OFFICE-READERS #1.
+- N28 · 2026-09-26 · **legacy-store** (at the extraction of its reader): a page's kind reads `chainKindFor` (text-chain R81), not `terminalStep(chain) || "layer"`. Reported by TEXT-CHAIN #1.
+- Local facts still in code, reported by JURISDICTIONS #1: `readingNamePlan`'s "oakland" (N4) and `legacy-checks`' `cpra_request` and `governingLawsOf`'s CPRA sentence (REC-201): each extraction reads them from the view.
 
 - N8 · 2026-09-25 · **promotion**: BOB #37 ruled that check C-18.8 (release-signature primitives, a second hand-written SSHSIG verifier in `bio-checks.mjs`, kept only for the Apps Script gate, which `gate.mjs` records as decommissioned) moves to `promotion`, which checks release records in bundles, and verifies through `signatures` instead. The duplicate verifier is retired.
 

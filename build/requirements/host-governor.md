@@ -1,6 +1,6 @@
 # host-governor — requirements
 
-**Status** · DRAFT for BOB #41, 2026-09-26 (P18 preparation), from a drafting worker's reading of the code; for BOB's review. Layer 3. Code today: inside the legacy modules — `bio-plane/src/store.mjs` (`Store.GOVERNOR`, `#governorRow`, `governorAdmit`, `governorReport`, `governorConfig`, `governorState`, about lines 40665–40795; the store-op routes `governoradmit`/`governorreport`/`governorconfig`/`governorstate`; direct reads of the table in `#conditionsGovernorHolding` and `#captureRequestHostHeld`), `bio-plane/src/schema.mjs` (table `host_governor`), and `bio-plane/src/index.mjs` (`governedFetch`; the `governorstate` and `governorconfig` op handlers and OPS rows). `modules.json` names `from: legacy-store` only; `governedFetch` and the two op handlers come from `legacy-index` (Q1, and layers.md ruling 2: ops move with their construct). No old-plan row and no `build/plan/next.md` entry targets this module. Not yet met: R3 (a negative binding value is obeyed) and R12 (the service stores any value; only the op validates), both found in drafting, no row.
+**Status** · DRAFT by BOB #41, 2026-09-26 (P18), from a drafting worker's reading of the code, reviewed by BOB (K47–K49); for Bob's approval (a product module, P17). Layer 3. Code today: inside the legacy modules — `bio-plane/src/store.mjs` (`Store.GOVERNOR`, `#governorRow`, `governorAdmit`, `governorReport`, `governorConfig`, `governorState`, about lines 40665–40795; the store-op routes `governoradmit`/`governorreport`/`governorconfig`/`governorstate`; direct reads of the table in `#conditionsGovernorHolding` and `#captureRequestHostHeld`), `bio-plane/src/schema.mjs` (table `host_governor`), and `bio-plane/src/index.mjs` (`governedFetch`; the `governorstate` and `governorconfig` op handlers and OPS rows). The extraction job moves the `legacy-store` code (its one `from`); `governedFetch` and the two op handlers (R15–R19) move out of `index.mjs` by entry N25 (K47; layers.md ruling 2: ops move with their construct). Not yet met: R3 and R12, fixed by the extraction job (K47).
 
 ## Public
 
@@ -13,7 +13,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 **governorAdmit({host}) → `{admitted: true, wait_ms, appetite_per_min}` or `{admitted: false, reason, retry_in_ms, …}`**
 - **R1** With no `host` (absent or empty), returns `{admitted: false, reason: "no host named"}` and writes nothing.
 - **R2** On first contact with a host, creates its state with a full burst of `burstTokens` (3) tokens, no cool-off and no refusals, before deciding.
-- **R3** The host's appetite (grants per minute) is, in order: the host's configured appetite (R11); else the instance binding `GOVERNOR_APPETITE_PER_MIN` when it is a positive finite number; else the default, 12. A binding that is absent, empty, non-numeric, zero or negative falls back to the default and is never obeyed. *(not yet met: a negative binding value is truthy and is obeyed, which makes the bucket's refill and gap negative; found in drafting, no row)*
+- **R3** The host's appetite (grants per minute) is, in order: the host's configured appetite (R11); else the instance binding `GOVERNOR_APPETITE_PER_MIN` when it is a positive finite number; else the default, 12. A binding that is absent, empty, non-numeric, zero or negative falls back to the default and is never obeyed. *(not yet met: K47 — a negative binding value is truthy and is obeyed, which makes the bucket's refill and gap negative)*
 - **R4** While the host's cool-off lies in the future, refuses with `{admitted: false, reason: "cooling_off", retry_in_ms: cooloff_until − now, refusals, last_refusal_status}`, whatever the token balance and whatever appetite is configured; spends no token and adds one to `refused_total`.
 - **R5** Otherwise tokens refill continuously at the appetite per minute from the last refill, capped at `burstTokens`. With fewer than 1 token, refuses with `{admitted: false, reason: "appetite", retry_in_ms}`, `retry_in_ms` = ceil((1 − tokens) / appetite × 60,000), records the refilled balance, and adds one to `refused_total`.
 - **R6** Otherwise admits: spends one token, adds one to `granted`, and returns `wait_ms` = max(0, round(gap − time since the previous grant)), where gap = (60,000 / appetite) × j and j is drawn uniformly from [0.6, 1.5) on each grant (a jittered gap, never a fixed one). The grant is recorded as taking place at now + `wait_ms`, so the next grant is spaced from when this fetch goes out.
@@ -28,7 +28,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 
 **governorConfig({host, appetite_per_min}) → `{configured, host, appetite_per_min}` or refusal**
 - **R11** With no `host`, returns `{configured: false}`; no global appetite can be set. With a host, creates its state if absent and sets its appetite to `appetite_per_min`, or, when it is `null` or omitted, clears it so R3's instance precedence applies again; returns `{configured: true, host, appetite_per_min}` (`null` when cleared).
-- **R12** A value that is present and not a positive finite number is refused with `BAD_APPETITE` and nothing is written. *(not yet met at the service: `governorConfig` stores it, and a 0 clears; only the `governorconfig` op refuses it today, `index.mjs`; found in drafting, no row)*
+- **R12** A value that is present and not a positive finite number is refused with `BAD_APPETITE` and nothing is written. *(not yet met: K47 — `governorConfig` stores it, and a 0 clears; only the `governorconfig` op refuses it today, `index.mjs`)*
 - Errors: never throws.
 
 **governorState({host}) → `{hosts: [row…]}`**
@@ -42,7 +42,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 **governedFetch(target, {userAgent, fetch}) → `{res}` or `{refusedByGovernor: true, reason, retry_in_ms, last_refusal_status}`**
 - **R15** Asks R1–R6 for the target's host (its URL `host`). When refused, returns the refusal with nothing fetched.
 - **R16** When admitted, waits `wait_ms`, then fetches the target once, following redirects, with the user agent the caller supplied (this module composes none), and reports the response's status to R8–R10 with its `Retry-After` converted to milliseconds (delta-seconds × 1000, or an HTTP-date minus now, never below 0; `null` when absent). Returns `{res}`.
-- **R17** A governor that cannot be reached, or a target whose host cannot be read, never blocks the fetch: it proceeds ungoverned, and a report that cannot be recorded is dropped. A fetch that throws propagates its error, and nothing is reported.
+- **R17** A governor that cannot be reached, or a target whose host cannot be read, never blocks the fetch: it proceeds ungoverned, and a report that cannot be recorded is dropped (politeness, not coordination; K47). A fetch that throws propagates its error, and nothing is reported.
 
 **op=governorstate** (a read)
 - **R18** Reached by the `admin`, `member` and `probe` classes and by every session. `host=` narrows to one host; absent, all. Answers `{ok: true, hosts}` from R13. A store that does not answer is reported as silence (`storeSilent`), never as an empty `{ok: true}`, which would claim the instance is holding nothing.
@@ -54,7 +54,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 
 ### Uses
 
-- `record-core.declarePurge`: declares `host_governor` (R24).
+- `record-core.declarePurge`: declares `host_governor` exempt from purge (R24).
 
 ### Invariants
 
@@ -62,7 +62,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - **R21** Our appetite is a configured constant; their capacity is learned only from refusals (R9). No outcome raises an appetite or shortens a cool-off, and nothing probes a host to find its ceiling.
 - **R22** A configured appetite never outlasts a counterparty's refusal: R4 refuses during a cool-off whatever R11 set.
 - **R23** The governor records capacity signals only. It holds no verdict on whether a source is reachable, and none of its refusals is a statement about the source.
-- **R24** `host_governor` is this module's own table and no other module writes it. It is declared to `record-core` exempt from `purge` (Q2), which is what `purge` does today (it does not clear it).
+- **R24** `host_governor` is this module's own table and no other module writes it. It is declared to `record-core` exempt from `purge` (K47), as today: a cool-off is a counterparty's refusal, and a purged instance still honours it.
 - **R25** No jurisdiction and no named counterparty: no host is named in this module. A per-host figure (the archive's 24/min) is set by the module that owns the knowledge of that counterparty, through R11.
 
 ### Satisfies
@@ -83,9 +83,3 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - The host key is the string given; callers pass a URL's `host` (lowercased, port kept). The group-domain verifier passes the claimed domain as stored. Normalising the key here would make that uniform.
 - `bio-plane/test/governor.test.mjs` holds today's tests; `modules.json` places this module's at `bio-plane/test/m/host-governor/`. The chosen constants are recorded as chosen in `docs/development/MEASUREMENTS.md` (reference).
 
-## Open questions for BOB
-
-1. **Does `governedFetch` (and the two op handlers) move here from `index.mjs`?** It is the one path that admits, waits, fetches and reports, and acquire, monitor, the archive lookup and the render arm all use it; the domain verifier in `store.mjs` repeats it by hand. *Recommended: yes — `governedFetch` with the fetch and the user agent injected, so this module composes no agent and the network stays injectable in tests; the two ops move by ruling 2. If not, drop R15–R17 and put them in `capture`.*
-2. **Is `host_governor` exempt from `purge`?** Today `purge` does not clear it. *Recommended: exempt. A cool-off is a counterparty's refusal; clearing it with the record would let a purged instance hit a host that asked it to stop.*
-3. **R3 and R12: fix, or state today's behaviour?** *Recommended: fix both in the extraction job (a negative or zero appetite is refused or falls back, never obeyed); they are defects with no row, and the op already refuses R12's values.*
-4. **Fail-open (R17).** An unreachable governor lets the fetch through ungoverned. *Recommended: keep it (the code's stated rule, "politeness, not coordination"), stated as a requirement so a job does not tighten it silently.*
