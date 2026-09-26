@@ -62,6 +62,26 @@ What the layer above gets from it: monitoring watches what objectives and findin
 
 **Beyond MVP: Discovery (Bob's candidate, 2026-09-25, not in the module list).** An AI assistant that searches documents, content, meaning and the results of inquiries for an understanding of what is working and what is not. It would sit in this layer. It enters `modules.json` only when Bob adds it.
 
+## Proposed: an Action layer (Bob, 2026-09-26; drafted by BOB #38, NOT YET APPROVED)
+
+Bob: once a group publishes a finding, the finding may claim that the government has acted out of conformance with a regulation, a court decision, stated public policy or another requirement. **The Action layer holds the modules that support the group in acting to bring the government back into conformance.** The canon already specifies this work: Functional Architecture v3 "Layer 3: Action" (escalate, communicate, track toward resolution) and "Function 1: Compare actions to standards"; Design Requirements v2 §7 (the six-stage escalation protocol) and §8 (evidence separated from legal strategy, three risk tiers); Roadmap v5 §8 (evidence packages); State Rules v1.5 §4.4 (the Action object and its clocks). T4 compressed all of it into one module, `actions`, inside layer 6. Nothing uses `actions` today, so it can move up freely.
+
+**Where it sits.** After publication, because a finding is published before a group acts on it, and a filing leaves the instance the way publication delivers. Before monitoring, because monitoring watches the actions' clocks and the government's response. So today's layer 8 splits, and the order becomes: 7 Understanding · **8 Publication** (publication) · **9 Action** · **10 Operations** (monitoring, scheduler, legacy-store) · 11 Interface and distribution.
+
+**Contract.** An action rests on a published finding and on a standard held in the record. The group decides every act; the AI prepares, never files. Compliance is documented as carefully as noncompliance. Every deadline names the statute, order or commitment it comes from.
+
+| module | what it does | source |
+| --- | --- | --- |
+| standards | The conformance requirements a government act is measured against: a statute, regulation, court decision or order, adopted policy, or public commitment. Each is held as content in the record, with its citation and the period it was in force. Which laws and bodies exist comes from the jurisdiction profile. | Functional Architecture, Function 1 and the Legal/Policy Lookup skill |
+| conformance | The determination that a named government act is compliant, noncompliant or unclear against named standards, resting on published findings. Unclear sends the question back to inquiry. A compliant determination is recorded too. Significance is a member's judgment, never computed. | Functional Architecture, analysis outputs and Function 4 |
+| actions | The Action object (moved from layer 6): kind, risk tier, counterparty, clock entries each with its basis, lifecycle, correspondence. It rests on a conformance determination. | State Rules §4.4; carries REC-215, REC-201, D-689, D-579 |
+| filings | What the group sends: Tier 1 and 2 filings pre-filled from the record; for Tier 3, the legal theory and a referral to counsel, never a filing. The kinds, templates and venues come from the jurisdiction profile. | Design Requirements §8, Roadmap §8 |
+| escalation | The six stages (discovery and documentation, notification, clock starts, response evaluation, legal tools, sustained attention), each with entry and trigger conditions; the next stage is proposed when its trigger is met, and a member advances it. It ends only when compliance is restored and the consequences are addressed. | Design Requirements §7, Functional Architecture Functions 3 and 5 |
+
+Uses, all earlier in the order: `standards` uses jurisdictions, record-core, content; `conformance` uses standards, inquiry, strength, reevaluation, publication; `actions` uses conformance and its current uses; `filings` uses actions, standards, publication, jurisdictions; `escalation` uses conformance, actions, filings. `monitoring` gains actions and escalation.
+
+**What changes if approved.** `modules.json` gains four modules and moves `actions`; the layers renumber to eleven (57 modules). Layer 1 is unaffected except `jurisdictions`, whose profile gains the laws, bodies, filing kinds and venues these modules read: an entry in `plan/next.md`, not a change to its approved requirements now.
+
 ## Paths that are not product
 
 `docs/`, `requirements/`, `build/`, `tools/`, `release/` and the old process's `.claude/` hooks are not modules. `release/` is produced by the distribution process (mechanics §11). `tools/` is the old process's tooling, retired at T7 (TRANSITION §5, C3).
