@@ -123,3 +123,10 @@ bio-plane/src/store.mjs:52238  lease: () => recordOf(this.ctx).acquireLease(url.
 bio-plane/src/store.mjs:52261  ? recordOf(this.ctx).readImage(url.searchParams.get("id")) : null,
 bio-plane/src/store.mjs:52263  ? recordOf(this.ctx).readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
 ```
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_0128RDfHecKMSruEijV3kfAe,job,record-core,33677084,285372,293,122607,144,12,648
+```
