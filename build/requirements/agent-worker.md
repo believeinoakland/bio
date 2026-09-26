@@ -1,6 +1,6 @@
 # agent-worker — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `062e69f6`): `agent-worker/src/index.mjs` 1,255 lines (512 without comments and blanks), `harness.mjs` 844 (299), `subsession.mjs` 587 (251), `cascade.mjs` 94 (38); `wrangler.jsonc` 87, `fleet-member.json` 14, `scripts/build.mjs` 44; the generated `dist/agent-worker.bundled.mjs` (1,390) and its manifest (build/manifest.md, generated artifacts). It already sits at its paths: nothing of it is in `store.mjs`, `schema.mjs`, `index.mjs` or `bio-checks.mjs` (the plane's dispatch to it, `#aiRunWake`, is `ai-runs`'; its binding list is `control-plane`'s), so it has no extraction map. Not yet met: R40, R41 (model turns and sub-sessions do not run; D-218, D-611), R47 (unmeasured). Measured 2026-09-26: its six suites pass (agent-worker 139, harness 258, fanout 184, cascade 29, versions 22, wire-vocabulary 83; 0 fail).
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `062e69f6`): `agent-worker/src/index.mjs` 1,255 lines (512 without comments and blanks), `harness.mjs` 844 (299), `subsession.mjs` 587 (251), `cascade.mjs` 94 (38); `wrangler.jsonc` 87, `fleet-member.json` 14, `scripts/build.mjs` 44; the generated `dist/agent-worker.bundled.mjs` (1,390) and its manifest (build/manifest.md, generated artifacts). It already sits at its paths: nothing of it is in `store.mjs`, `schema.mjs`, `index.mjs` or `bio-checks.mjs` (the plane's dispatch to it, `#aiRunWake`, is `ai-runs`'; its binding list is `control-plane`'s), so it has no extraction map. Not yet met: R40, R41 (model turns and sub-sessions do not run; D-218, D-611), R47 (unmeasured), R48 (K102). Measured 2026-09-26: its six suites pass (agent-worker 139, harness 258, fanout 184, cascade 29, versions 22, wire-vocabulary 83; 0 fail).
 
 **Size (P6).** 2,780 lines of source (1,100 without comments and blanks), plus 145 of configuration and build. Its tests and controls are 7,452 lines. Under the 4,000 at which BOB reports a module; a job reads the four source files whole with the public parts of its uses.
 
@@ -72,7 +72,7 @@ The answer:
 
 - `runtime-limits`: `PUBLISHED_TOKEN_HASHES`, `sha256hex` (`tokens.mjs`, a bundle input).
 - `bundler`: `discoverMembers`, `writeMember` (the build).
-- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44).
+- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); `renderPack` at runtime once R48 is met (K102).
 - `ai-runs`, `query-language`, `legacy-checks`: tests only; the suites read `OBSERVATION_LEVELS`, `OBSERVATION_STATES`, `RUN_ENDINGS`, the plane's namespaces and `OPS` table, and `SUGGEST_LEVELS` from the plane's source to pin this member's copies (R44). At runtime it uses them only over the wire.
 
 ### Invariants
@@ -90,6 +90,7 @@ The answer:
 - **R45** The committed bundle is byte-identical to a fresh build of `src/index.mjs`, and its manifest names every input, `bio-plane/src/tokens.mjs` included (the check is `bundler`'s).
 - **R46** No place is named in its behaviour or outward text; its `account_id` is the project's one Cloudflare account.
 - **R47** It is reachable only through the plane's service binding. *(not yet met: unmeasured; `wrangler.jsonc` does not set `workers_dev: false`, and every answer carries `access-control-allow-origin: *`)*
+- **R48** A run's model is instructed by the pack the run names. When model turns run (R40), this member renders the pack (`skills.renderPack`) and refuses a segment whose run's recorded skill version is not the rendered pack's version, before any turn and as it refuses a run whose recorded payer differs (R10): a 409 refusal carrying both versions. Until turns run it changes nothing. *(not yet met: K102)*
 
 ### Satisfies
 
@@ -103,9 +104,9 @@ The answer:
 - `SEGMENT_OVER_BOUND`'s detail says the bound is where the isolate's MEMORY ceiling sits; D-312 (M-168) measured that CPU binds, not memory. Correct the sentence (BOB's).
 - The plane publishes no `max_passes` on a run (grepped: no such column), so R15's limit is always 3. Either the run declares it or R15 says 3 is the table's (BOB's).
 - `build/manifest.md` says this bundle's inputs come from `agent-worker` only; its manifest lists `bio-plane/src/tokens.mjs` too.
+- **The mode gate in the record (K102).** `ai-runs` refuses opening a run in a mode that is not deployed (its R40); this member's gate (R14) stays as the first row.
 - Tests that name this module's behaviour outside `agent-worker/test/`: `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs` drive it with the plane; `fleetbundles.test.mjs`, `d116-serving-builds.test.mjs`, `memoryshare.test.mjs`, `m025-arm-anchor-witness.test.mjs`, `refusal-wire.test.mjs`, `resolveversion.test.mjs`, `owed-controls.test.mjs`, `airun.test.mjs` read its files; `skillsequencing.test.mjs` pins `MODES` (proposed to move here, `skills` Suggestions). The negative controls are `agent-worker/test/*.control.mjs`.
 
 ## Open for Bob
 
-1. **Must a run's model be instructed by the pack the run names?** A run records a skill version when it opens, and nothing checks that the instructions a model is given are that version; model turns do not run yet (R40). *Recommendation:* yes: when turns land, this member renders the pack and refuses a segment whose run names another version, as it already refuses a run whose recorded payer differs (R10). It changes nothing until then.
-2. **Should the record itself refuse a run in a mode that is not deployed?** Today the mode gate is one row in this member (R14); the plane stores any mode string, so a caller that never runs this member can open an `investigate` run. The canon says every "may not" must be a refusal in the plane (`INVESTIGATIVE-SESSION.md` §14b.4). *Recommendation:* yes: `ai-runs` refuses opening a run in a mode not deployed, by a catalogue code, reading the one deployment order; this member's gate stays as the first row.
+None: answered by Bob 2026-09-26 (K102).

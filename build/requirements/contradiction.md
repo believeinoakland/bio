@@ -1,6 +1,6 @@
 # contradiction — requirements
 
-**Status** · DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `35ea098`; `build/extraction/contradiction.md` has the table): `bio-plane/src/contradiction.mjs` 1–83 (the labels, the judgement prompt pinned by digest, the input rendering; already this module's path); `bio-plane/src/store.mjs` 14536–15304 (the pairing read `contradictionPairs` with its four keys, ladder and absence sentences; `#candidateSide`, `#appendContradictionCandidate`, `contradictionPropose`) and the dispatch entries `contradictionpropose`, `contradictionpairs` (49095–49105); `bio-plane/checks/bio-checks.mjs` 13829–13909 (C-60, C-93); `schema.mjs` 3906–3936 (`contradiction_candidates`). `from`: `legacy-store` and `legacy-checks` (K64's pattern); `index.mjs` holds only these ops' routing, classes, viewer gates and proposer stamps, which stay with `control-plane` (K3). Not yet met: R21 (the run gate by registration, K31). No old-plan row is carried here.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #42, 2026-09-26 (P18), from a reading of the code; for Bob's approval (a product module, P17). Layer 6. Code today (measured on `tranche/T3` @ `35ea098`; `build/extraction/contradiction.md` has the table): `bio-plane/src/contradiction.mjs` 1–83 (the labels, the judgement prompt pinned by digest, the input rendering; already this module's path); `bio-plane/src/store.mjs` 14536–15304 (the pairing read `contradictionPairs` with its four keys, ladder and absence sentences; `#candidateSide`, `#appendContradictionCandidate`, `contradictionPropose`) and the dispatch entries `contradictionpropose`, `contradictionpairs` (49095–49105); `bio-plane/checks/bio-checks.mjs` 13829–13909 (C-60, C-93); `schema.mjs` 3906–3936 (`contradiction_candidates`). `from`: `legacy-store` and `legacy-checks` (K64's pattern); `index.mjs` holds only these ops' routing, classes, viewer gates and proposer stamps, which stay with `control-plane` (K3). Not yet met: R21 (the run gate by registration, K31). No old-plan row is carried here.
 
 **Size (P6).** About 975 lines move (about 640 without comment-only lines): `store.mjs` 780, `contradiction.mjs` 83, `bio-checks.mjs` 81, `schema.mjs` 31. Well under 4,000; one session reads it with the public parts of its uses.
 
@@ -65,6 +65,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §2 (CHECK), §3 rules 3, 4 and 10 (DEC-24, DEC-49).
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (sight).
 - `build/layers.md`, layer 6's contract: the AI checks and never concludes.
+- What the judgement sees (K102): no change. The input stays as measured (R3, R4: each side's text, doctype, date and role, and K3's passage; 0/17 false conflicts, 9/9 recall, M-162), and the canon's text changes: CONTRADICTION-IDENTIFY-DESIGN §5 is amended to say so. The inquiry's question is added only with a new measurement on a corpus of real documents, the binding gap §7 names.
 
 ### Suggestions
 
@@ -75,4 +76,4 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 
 ## Open for Bob
 
-1. **What the judgement sees.** Design §5 says the machine sees the two sides and their immediate context, including the inquiry's question. The measured prompt input (R3, R4) carries only each side's text, doctype, date and role, and K3's passage; it omits the question. *Recommendation:* keep the input as measured (0/17 false conflicts, 9/9 recall, M-162), and amend §5; add the question only with a new measurement on a corpus of real documents, which §7 already names as the binding gap.
+None: answered by Bob 2026-09-26 (K102).
