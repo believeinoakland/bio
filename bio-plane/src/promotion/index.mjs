@@ -8,8 +8,7 @@
  * REACHED as `promotionOf(host, deps)`: one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps` and returned to every later caller. `deps`:
  *   record      record-core, `recordOf(host)` unless a test passes its own (K61).
- *   membership  sight, isProjectOwner, projectAuthority, projectCreated, visibilitySettingRefusal, projectVisibility,
- *               participation (a member's state in a project, for `forkProject`: job record Q8).
+ *   membership  membership, `membershipOf(host)` unless a test passes its own (K61).
  *   now         the module's clock, an ISO instant (default: the wall clock).
  *   order       the modules' total order (ids), which registered steps run in; unknown modules run last.
  */
@@ -19,6 +18,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
+import { membershipOf } from "../membership/index.mjs";
 import { checkBundle } from "../../checks/bio-checks.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
@@ -375,7 +375,7 @@ class Promotion {
 
       /* R20: a revision the stamped actor may not see is answered as one of a bundle not held. */
       if (head && base !== null && pkg.actorIdentity != null) {
-        const sight = membership.sight(bundleId, pkg.actorViewer ?? "");
+        const sight = String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase();
         if (sight === "EXISTENCE") return this.#existenceOnly(bundleId);
         if (sight !== "FULL") return ABSENT();
       }
@@ -608,12 +608,14 @@ class Promotion {
         created: promotedCreated, lastUpdated: promotedLastUpdated, criticality: envelope.criticality ?? null,
         at: promotedLastUpdated || this.#now() });
 
-      /* R19: the creating member is the project's sole owner, in the same transaction. */
+      /* R19 (membership R71): a project's creation is recorded with membership in the same transaction: the creating
+         member its sole owner (a machine's creation has none), the creation visibility, and the project's sight. */
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
-      if (!head && ownerMemberId && promotedType === "project") {
-        membership.projectCreated({ projectId: bundleId, ownerId: ownerMemberId, visibility: creationVisibility,
-                                    by: ownerMemberId });
+      if (!head && promotedType === "project") {
+        const made = membership.projectCreated({ projectId: bundleId, ownerId: ownerMemberId, visibility: creationVisibility,
+                                                 by: ownerMemberId });
+        if (made && made.ok === false) return made;
         owner = ownerMemberId;
       }
 
@@ -628,7 +630,7 @@ class Promotion {
         if (isObj(out)) for (const [k, v] of Object.entries(out)) if (!(k in extras)) extras[k] = v;
       }
       const answer = { ok: true, bundleId, bundleSha: committed.bundleSha, rowVersion: committed.rowVersion, owner,
-        ...(!head && promotedType === "project" ? { visibility: membership.projectVisibility({ projectId: bundleId }) } : {}),
+        ...(!head && promotedType === "project" ? { visibility: membership.visibilityOf(bundleId) } : {}),
         ...(typeCarried ? { type_carried: { object_type: typeCarried, from: "head",
           says: "neither the document nor the request stated a type, so this revision keeps the type the record "
               + "already held for it" } } : {}),
@@ -681,7 +683,7 @@ class Promotion {
         "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked.");
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
-    const sight = head && viewer !== null && viewer !== undefined ? membership.sight(projectId, viewer) : "FULL";
+    const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
     if (head && sight === "EXISTENCE") return this.#existenceOnly(projectId);
     if (!head || sight !== "FULL")
       return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
@@ -768,7 +770,7 @@ class Promotion {
     /* R23 */
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "reopening picks up ONE question: pass target=<inquiry id>" };
     const head = typeof target === "string" ? record.head(target) : null;
-    if (!head || membership.sight(target, viewer ?? "") !== "FULL") return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (!head || String(membership.sight(target, viewer ?? "")).toUpperCase() !== "FULL") return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(head.type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: head.type,
                detail: "reopening picks a question back up, and only an inquiry carries one." };
@@ -837,7 +839,11 @@ const instances = new WeakMap();
 /** The one promotion instance for `host` (the Durable Object's `ctx`); `deps` are read on the first call only. */
 export function promotionOf(host, deps) {
   let p = instances.get(host);
-  if (!p) { p = new Promotion({ ...(deps || {}), record: (deps && deps.record) || recordOf(host) }); instances.set(host, p); }
+  if (!p) {
+    const record = (deps && deps.record) || recordOf(host);
+    p = new Promotion({ ...(deps || {}), record, membership: (deps && deps.membership) || membershipOf(host, { record }) });
+    instances.set(host, p);
+  }
   return p;
 }
 

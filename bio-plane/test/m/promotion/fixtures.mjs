@@ -132,10 +132,11 @@ export function makeMembership() {
     },
     visibilitySettingRefusal: (v) => (v === "discoverable" || v === "hidden" ? null
       : { ok: false, reason: "PROJECT_VISIBILITY_UNKNOWN_SETTING" }),
-    projectVisibility: ({ projectId }) => (m.discoverable.has(projectId) ? "discoverable" : "hidden"),
+    visibilityOf: (projectId) => (m.discoverable.has(projectId) ? "discoverable" : "hidden"),
     projectCreated({ projectId, ownerId, visibility, by }) {
+      if (!ownerId && visibility == null) { m.ownerless = (m.ownerless || 0) + 1; return { ok: true }; }
       m.created.push({ projectId, ownerId, visibility, by });
-      m.owners.set(projectId, [ownerId]);
+      if (ownerId) m.owners.set(projectId, [ownerId]);
       if (visibility === "discoverable") m.discoverable.add(projectId);
     },
   };
