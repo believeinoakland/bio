@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V } from "./fixture.mjs";
+import { world, realWorld, V } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 import { MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_PROJECT_TABLES } from "../../../src/membership/index.mjs";
@@ -223,15 +223,35 @@ test("R59 members' tables are declared exempt from purge; project-keyed tables a
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["credentials", "sessions", "bootstrap", "members", "signers",
     "ai_credentials", "member_expertise", "admin_votes", "hosting_access"]));
-  const names = d.tables.map((t) => (typeof t === "string" ? t : t.name));
-  assert.deepEqual(new Set(names), new Set([...MEMBERSHIP_EXEMPT_TABLES, ...MEMBERSHIP_PROJECT_TABLES]));
-  for (const t of MEMBERSHIP_PROJECT_TABLES) {
-    assert.ok(!d.opts.exempt.includes(t));
-    assert.deepEqual(d.tables.find((x) => x.name === t), { name: t, keys: ["project_id"] }, "keyed by project (record-core R46)");
+  assert.deepEqual(d.tables, MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
+    "each project-keyed table once, keyed by project (record-core R46)");
+  for (const t of MEMBERSHIP_PROJECT_TABLES)
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "project_id"), `${t} is keyed by project`);
-  }
   const owned = w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('bundles','sqlite_sequence')`).map((r) => r.name);
-  assert.deepEqual(new Set(owned), new Set(names), "every table the module owns is declared");
+  assert.deepEqual(new Set(owned), new Set([...d.tables.map((t) => t.name), ...d.opts.exempt]), "every table the module owns is declared");
   w.m.migrate();
   assert.equal(w.declared.length, 1, "declared once");
+});
+
+test("R59 through the real record-core: a purge clears the project's rows and never a member's", async () => {
+  const w = await realWorld();
+  const { m, rc } = w;
+  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp" });
+  const s = await m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
+  await m.enroll({ invite: s.invite, handle: "second", password: "second-passphrase-x" });
+  const a = await m.memberAdd({ memberId: "ann", cover: "c", by: "admin" });
+  await m.enroll({ invite: a.invite, handle: "ann", password: "ann-passphrase-x" });
+  for (const id of ["PROJ-A", "PROJ-B"]) {
+    w.bundle(id);
+    m.projectClaimOwner({ projectId: id, memberId: "ann" });
+    m.projectVisibilitySet({ projectId: id, setting: "discoverable", by: "ann", viewer: V("ann") });
+  }
+  m.expertiseDeclare({ memberId: "ann", label: "CPA" });
+  const count = (t, where = "1=1") => w.row(`SELECT COUNT(*) AS n FROM ${t} WHERE ${where}`).n;
+  rc.purge({ bundleId: "PROJ-A" });
+  assert.deepEqual(["project_participants", "project_visibility", "project_sight"].map((t) => count(t, "project_id='PROJ-A'")), [0, 0, 0]);
+  assert.deepEqual(["project_participants", "project_visibility", "project_sight"].map((t) => count(t, "project_id='PROJ-B'")), [1, 1, 1]);
+  rc.purge({});
+  for (const t of MEMBERSHIP_PROJECT_TABLES) assert.equal(count(t), 0, t);
+  assert.deepEqual(["members", "credentials", "member_expertise"].map((t) => count(t)), [2, 3, 1], "identity survives");
 });

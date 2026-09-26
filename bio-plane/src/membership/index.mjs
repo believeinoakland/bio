@@ -91,10 +91,14 @@ export class Membership {
   /* R59, through record-core's `declarePurge` (its R21) once record-core provides it. */
   declareTables() {
     if (this.#declared) return false;
-    /* record-core R46: the project-keyed tables are keyed to a bundle (the project) by `project_id`. */
-    this.core.declarePurge("membership",
-      [...MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })), ...MEMBERSHIP_EXEMPT_TABLES],
+    /* record-core R21/R46: the project-keyed tables, keyed to a bundle (the project) by `project_id`, and the
+       exempt ones named once, as exempt. Its answer is read: a refusal (a table another module declared) is
+       thrown, because a purge that silently skipped these tables would leave the participation graph behind. */
+    const answer = this.core.declarePurge("membership",
+      MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
       { exempt: [...MEMBERSHIP_EXEMPT_TABLES] });
+    if (answer && answer.ok === false)
+      throw new Error(`membership: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;
   }

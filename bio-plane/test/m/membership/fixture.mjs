@@ -3,6 +3,7 @@
    (bundle_id, object_type) and a title, passed to `membershipOf` as a test's own record-core (K61). Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { membershipOf, membershipOps } from "../../../src/membership/index.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -67,3 +68,24 @@ export function world() {
 }
 
 export const V = (id) => `member:${id}`;
+
+/* The module over the REAL record-core (its schema and `recordOf`), for what only the two together show (R59). */
+export async function realWorld() {
+  const db = new DatabaseSync(":memory:");
+  const sql = sqlOver(db);
+  const storage = { sql, transactionSync(fn) {
+    db.exec("SAVEPOINT t");
+    try { const r = fn(); db.exec("RELEASE t"); return r; } catch (e) { db.exec("ROLLBACK TO t"); db.exec("RELEASE t"); throw e; }
+  } };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const st of bare.split(";")) { const t = st.trim(); if (t) db.exec(t); }
+  const ctx = { storage };
+  const rc = recordOf(ctx);
+  if (typeof rc.migrate === "function") rc.migrate();
+  const m = membershipOf(ctx);
+  m.migrate();
+  return { db, sql, rc, m,
+    bundle(id, type = "project") { db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated,
+      bundle_sha) VALUES (?,?,'g',?,'forming','t','t','sha')`).run(id, type, id); m.reindexProjectSight(id); },
+    row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };
+}
