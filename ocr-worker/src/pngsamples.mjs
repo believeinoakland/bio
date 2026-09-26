@@ -132,7 +132,7 @@ export async function pngToSamples(bytes) {
 /** Samples -> the RGBA frame the engine will accept.
  *
  *  THE FRAME IS THE MEMORY, AND THE CALLER IS EXPECTED TO HAVE CHECKED ITS SIZE
- *  BEFORE CALLING (`transcribe.mjs` does, against a bound CPDF-15 established BY
+ *  BEFORE CALLING (`member.mjs` does, against a bound CPDF-15 established BY
  *  REFUSAL). This function allocates it; it does not judge whether it should.
  *
  *  Bit depth 1: sample 1 is WHITE in PNG greyscale, which is what
