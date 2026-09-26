@@ -21,3 +21,22 @@
 - N6 · 2026-09-25 · **entities**: `op=idmatch` takes the renamed spaces (N2), passes the combined profile view, and passes each end's addresses from the record. **affordances**: `idmatch`'s outward text names no local system (it says "C.M.S.", "APN" and "Legistar's floor" today).
 - N10 · 2026-09-25 · **record-core**, **installer**, **instance-setup**: the instance holds the list of its active jurisdiction profiles as a setting, and the installer offers the choice. Rule 2 of "No jurisdiction in the product".
 - California's records law as a kind name (`cpra_request`) and in outward text is carried as old-plan row REC-201 against `actions`; the profile's `records_laws` section is where the law's name comes from.
+
+## Tranche T3, prepared (P18): ready to open when T2 closes
+
+Layer 2: the first extractions from `legacy-store`, each by its target module's job (mechanics §12.2), bottom-up within the layer's order: `record-core`, then `membership`, then `promotion`, which use each other in that order. All three jobs run concurrently (P10); a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE. Each job writes requirement-named tests for every live id at its interface (P7). **T3 opens only when Bob has approved the three modules' requirements** (product modules, P17; asked on the layer-2 page, 2026-09-26).
+
+**record-core** (map: `build/extraction/record-core.md`)
+- T3-1 · Extract the module from `legacy-store` per its map and requirements (K23, K31); requirement-named tests for every live id.
+- D-674 · R16, not yet met (see the requirement).
+- N10 · The instance's active jurisdiction profiles as a setting (R26); the installer's and instance-setup's shares stay with those modules.
+
+**membership** (map: `build/extraction/membership.md`, in preparation)
+- T3-2 · Extract the module from `legacy-store` per its map and requirements; requirement-named tests for every live id.
+- N18 · (above) the canon rules found unbuilt and the defects found.
+- REC-224, REC-226 · the carried rows its requirements mark not yet met.
+
+**promotion** (map: `build/extraction/promotion.md`)
+- T3-3 · Extract `promote` and `reopen` from `legacy-store` per its map and requirements (K31: later modules register checks, projections and facts); requirement-named tests for every live id.
+- N8, N16 (promotion's share), N17 · (above).
+- R11–R15, R17, R18 · the carried rows its requirements mark not yet met.
