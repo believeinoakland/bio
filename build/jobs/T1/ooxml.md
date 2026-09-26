@@ -21,12 +21,19 @@ None.
 - **legacy-tests:** `bio-plane/test/ooxml.test.mjs` (167 assertions) still tests this module from the old battery. It passes against the changed module; it now duplicates this module's own suite and can be retired with the battery.
 - **Requirements (for BOB, no change needed to pass):** R15 does not say whether `relsPartFor` normalizes a leading `/` (the code does: `/word/document.xml` → `word/_rels/document.xml.rels`). Not tested either way.
 
-## Tests and checks run
+## Tests and checks run (re-run on the merged branch, tranche/T1 @ d3a6d2e4d3)
 
-- `node --test bio-plane/test/m/ooxml/` — `tests 35, pass 35, fail 0` (2 runs; the first found 3 failures: one arithmetic slip in the test, two never-throw gaps in the module, both fixed).
-- Tests of callers of this module (the service behaviour changed only for refusals), each run once: `formats-odf: 142 pass, 0 fail`; `formats-xlsx: 88 pass, 0 fail`; `fw19-extent-arms 36 pass, 0 fail`; `multifinding: 84 pass, 0 fail`; `ooxml: 167 passed, 0 failed`; `publishedcase: 129 pass, 0 fail`.
+- `node --test bio-plane/test/m/ooxml/` — `tests 35, pass 35, fail 0` (3 runs in the job; the first found 3 failures: one arithmetic slip in the test, two never-throw gaps in the module, both fixed).
+- Tests of callers of this module (service behaviour changed only for refusals): `formats-odf: 142 pass, 0 fail`; `formats-xlsx: 88 pass, 0 fail`; `fw19-extent-arms 36 pass, 0 fail`; `multifinding: 84 pass, 0 fail`; `ooxml: 167 passed, 0 failed`; `publishedcase: 129 pass, 0 fail`.
 - Layer tests: none named in `build/manifest.md`.
-- `node checks/format.mjs` — `format: 61 modules, 14 requirements files; 0 failures`
+- `node checks/format.mjs` — `format: 61 modules, 17 requirements files; 0 failures`
 - `node checks/architecture.mjs … ooxml` — `architecture: 3 product files, 2 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `node checks/coverage.mjs … ooxml` — `coverage: 1 modules, 26 of 26 live requirement ids named by a test; 0 failures`
-- `node checks/ownership.mjs … ooxml tranche/T1` — `ownership: 3 files changed by ooxml between tranche/T1 and HEAD; 0 failures`
+- `node checks/ownership.mjs … ooxml tranche/T1` — `ownership: 4 files changed by ooxml between tranche/T1 and HEAD; 0 failures`
+
+## Metrics
+
+```csv
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01Mmqeeq6yg2Gv2fHR6pg3aM,job,ooxml,6802975,334280,94,58304,46,3,1003
+```
