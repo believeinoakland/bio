@@ -24,6 +24,7 @@ import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, splice
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
+export { recordChecks } from "./record-checks.mjs";
 
 /** The empty-string SHA-256: the base a creation's manifest entry records (R3). */
 export const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -31,6 +32,10 @@ export const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934
 export const INLINE_MAX = 1024 * 1024;
 /** The dispositions an inquiry is reopened from (R24). */
 export const REOPENABLE_FROM = ["deferred", "dismissed"];
+/** R16: the words `retire` refuses a cited item with, so the two doors give one answer. */
+export const RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects "
+  + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
+  + "sever the edge with a reason. Sever first, then retire.";
 /** The edge-reason bound a reopening's reason is held to (R22). */
 export const EDGE_REASON_MAX = 160;
 
@@ -478,8 +483,7 @@ class Promotion {
         const citedBy = Array.isArray(c.value) ? c.value : [];
         if (citedBy.length)
           return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
-                   detail: "these are still cited by live edges. Retiring them would leave those citations pointing "
-                         + "at a retired item; sever or replace the citing edges first. Nothing was written." };
+                   detail: RETIRE_CITED_DETAIL };
       }
 
       /* R6 */

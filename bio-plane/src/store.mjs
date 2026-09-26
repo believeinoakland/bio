@@ -221,7 +221,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          lawProposalLabel } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
-import { promotionOf, stepContext } from "./promotion/index.mjs";
+import { promotionOf, stepContext, recordChecks } from "./promotion/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -16218,6 +16218,7 @@ export class Store extends DurableObject {
           };
         })(),
       });
+      findings.push(...await recordChecks({ folderName: row.bundle_id, files, sha256 }));
       const errs = findings.filter((f) => f.severity === "error");
       if (!errs.length) { clean++; continue; }
       withErrors++;
