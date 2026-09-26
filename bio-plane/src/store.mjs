@@ -31161,27 +31161,6 @@ export class Store extends DurableObject {
     return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
   }
 
-  /** REC-141: a NEW project's id — `PROJ-<year>-<rand>-<slug>`, the slug from the project's name the way
-   *  both intake surfaces already slugged a title, in `BUNDLE_ID_RE`'s shape.
-   *
-   *  `<rand>` IS OPAQUE AND NEVER A COUNTER (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16,
-   *  2026-09-19). `allocId`'s sequence is per prefix per year, so a counted suffix told a creator how many
-   *  projects were minted before theirs, hidden ones included. So the suffix is four digits drawn from the
-   *  runtime's CSPRNG (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally
-   *  likely), fixed length because `BUNDLE_ID_RE` requires `\d{4}` there, and `allocId` is NOT read or
-   *  stepped. Uniqueness is checked against `bundles` inside the caller's (promote's) transaction and a
-   *  collision draws again; the full id includes the slug, so a collision needs the same name AND the
-   *  same draw. Null only if 64 draws all collide.
-   *  D-432: `bundles` is not the only thing asked any more — the one minter also asks its own purge-exempt
-   *  ledger, so a project purged whole or by itself leaves its id spent rather than free for the next project
-   *  of the same name (`#mintOpaqueId` says why). */
-  #mintProjectId(title) {
-    const year = new Date().toISOString().slice(0, 4);
-    const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-      .slice(0, 40).replace(/-+$/, "") || "project";
-    return this.#mintOpaqueId("PROJ", year, `-${slug}`,
-      (id) => !!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id));
-  }
 
   /** REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): THE PREFIXES WHOSE OBJECTS
    *  A READ WITHHOLDS FROM SOME CALLER. Their ids are minted by `#mintOpaqueId` and never from `allocId`'s counter,
@@ -34260,22 +34239,6 @@ export class Store extends DurableObject {
   static #inlineBytesOf(f) {
     return f && typeof f.text === "string" ? new TextEncoder().encode(f.text).length : null;
   }
-  static #digestFiles(files) {
-    const disagree = [];
-    const out = files.map((f) => {
-      const computed = Store.#fileDigestOf(f);
-      if (computed === null) return f;
-      const supplied = f.sha256;
-      if (supplied === undefined || supplied === null) return { ...f, sha256: computed };
-      if (typeof supplied !== "string" || supplied.toLowerCase() !== computed) {
-        disagree.push({ path: f.path ?? null, kind: typeof f.text === "string" ? "inline" : "blob",
-                        supplied: typeof supplied === "string" ? supplied : String(supplied), computed });
-        return f;
-      }
-      return supplied === computed ? f : { ...f, sha256: computed };
-    });
-    return { files: out, disagree };
-  }
 
   /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
      content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
@@ -34315,22 +34278,6 @@ export class Store extends DurableObject {
                  + "so its bytes are not judged." };
   }
 
-  /* A CREATED document names THIS instance's group in its own bytes, whatever the caller wrote — D-78's rule for
-     `surfaced_by` one field over: the store byte-trusts bundle.md, so the one honest place to decide the producer
-     is the one write path, and it fixes every writer at once (the setup page, the member UI, the plane's own).
-     REC-141's order, MINT, WRITE, THEN HASH: the bytes and their sha256 are recomputed from the written text, so
-     the sha the answer carries is the sha of what is held. HOW the line is written is the catalogue's ONE
-     definition, `withProducingGroup` — replaced, or opened immediately before the closing fence — and a document
-     already naming this group, in any spelling the catalogue's parser reads as it, comes back byte-identical. */
-  static #stampGroup(files, slug) {
-    return files.map((f) => {
-      if (!f || f.path !== "bundle.md" || typeof f.text !== "string") return f;
-      const text = withProducingGroup(f.text, slug);
-      if (text === f.text) return f;
-      const bytes = new TextEncoder().encode(text);
-      return { ...f, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
-    });
-  }
 
   /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
      because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
@@ -35554,31 +35501,6 @@ export class Store extends DurableObject {
     const arr = safeJson(filesJson);
     return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
   }
-  /* REC-176: IS THIS THE PROMOTION THE ROW RECORDS? Every file by name AND digest (a set: the order a caller lists
-     files in is not part of what was promoted), the base, and who wrote it and as what. A digest either side does not
-     state as a non-empty string makes the answer NO — two absent digests agree on nothing (CLAUDE.md section 5), so an
-     undetermined identity falls through to the refusal rather than being answered as a no-op. */
-  static #samePromotion(row, want) {
-    const norm = (v) => (v === undefined || v === null ? null : String(v));
-    if (norm(row.base) !== norm(want.base) || norm(row.kind) !== norm(want.kind)
-        || norm(row.author) !== norm(want.author) || norm(row.writer) !== norm(want.writer)
-        || norm(row.operation) !== norm(want.operation)) return false;
-    const held = Store.#manifestFiles(row.files_json);
-    if (!held.length || held.length !== want.files.length) return false;
-    const digestOf = (v) => (typeof v === "string" && v !== "" ? v.toLowerCase() : null);
-    const byName = new Map();
-    for (const f of held) {
-      const d = digestOf(f.sha256);
-      if (typeof f.name !== "string" || d === null || byName.has(f.name)) return false;
-      byName.set(f.name, d);
-    }
-    for (const f of want.files) {
-      const d = f ? digestOf(f.sha256) : null;
-      if (!f || typeof f.path !== "string" || d === null || byName.get(f.path) !== d) return false;
-      byName.delete(f.path);
-    }
-    return byName.size === 0;
-  }
   /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
      repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
      the record claiming more than it holds. WHAT MAKES IT MEASURABLE: `manifest` has ONE writer (`promote`, one row
@@ -35741,9 +35663,6 @@ export class Store extends DurableObject {
       `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.capture_sha = ? LIMIT 1`, s),
       acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s) };
-  }
-  static #promoteAbsent() {
-    return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
   }
   static #noSuchProject(project) {
     return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
