@@ -35,6 +35,9 @@
 - N40 · 2026-09-26 · **record-core** (K72): `digestCensus` and `snapKeyCensus` (store.mjs ~34223–34300) read only record-core's tables and move to it, with requirements BOB writes first.
 - N41 · 2026-09-26 · DONE (K74) · **calibration**, **extraction** (K73): BOB splits `build/requirements/extraction.md` into `calibration.md` and `extraction.md` and adds `calibration` to `modules.json` (layer 4, before `extraction`), before Bob approves either.
 - N42 · 2026-09-26 · **text-chain**, **pdf-reader**, **legacy-checks**, **retrieval** (K73): rows routed to extraction touch these first: D-697 and D-635 (text-chain), D-665 (pdf-reader), D-685 (legacy-checks), and D-672 (retrieval), on which D-684, D-685 and D-724 are stacked; each gets an entry against its own module in the tranche before extraction's.
+- N43 · 2026-09-26 · **legacy-index**: `index.mjs`'s op table routes membership's five new ops (`adminresign`, `hostingaccessset`, `hostingaccess`, `memberpairingset`, `memberpairings`; N18) with their classes; until then they are unreachable from outside. Reported by MEMBERSHIP #1.
+- N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
+- N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
 
 ## Tranche T4, prepared (P18): ready to open when T3 closes
 
@@ -68,6 +71,12 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 **capture**
 - T4-4 · Extract the module per its map and requirements (K48, K49, K58); requirement-named tests for every live id. The capture requests stay in `legacy-store` for `capture-requests` (K58); `capture` keeps the trusted in-process arm.
 - R17 (N3, N10), R18 (D-698), R20 (K60, co-attestation at every capture), R28–R29 (D-340, D-702), R11 and R42 (K49: the reading block moves to `extraction`, not here), R41 (K48): the rows its requirements mark not yet met; built work for D-340, D-698, D-702 on the snapshot, judged against the requirements.
+
+**legacy-index** (layer 11, K53)
+- N43 · route membership's five new ops. Also N12, N19, N21 where their modules have landed.
+
+**legacy-checks** (layer 1, first, K53)
+- N44 · catalogue rows for membership's new refusal codes; N36 · promotion's `EXISTS` and `ABSENT` rows.
 
 **legacy-tests** (layer 11, after layer 3, K53)
 - T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
