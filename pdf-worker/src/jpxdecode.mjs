@@ -30,7 +30,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT IT REFUSES, BY NAME (JPX_REFUSES) — never a picture it guessed at
  * ─────────────────────────────────────────────────────────────────────────────
- * High-throughput coding (Part 15), sub-sampled components, a palette, sYCC,
+ * High-throughput coding (Part 15), packed packet headers, sub-sampled
+ * components, a palette, sYCC,
  * signed samples and any precision but 8 bits, and more than three components.
  * Every error thrown is a `JpxRefusal` carrying a code: UNSUPPORTED (with the
  * feature), UNSUPPORTED_SAMPLES, TRUNCATED or CORRUPT.
@@ -56,6 +57,7 @@ export const JPX_REFUSES = Object.freeze({
   "a JP2 palette": "the image's samples index a palette (pclr box)",
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
+  "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
 });
 
 const f32 = Math.fround;
@@ -169,10 +171,10 @@ function readQcd(r, len) {
 function parseCodestream(d, start, end) {
   const r = new R(d, start, end);
   if (r.u16("SOC") !== 0xff4f) throw corrupt("no SOC marker");
-  const main = { cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, ppm: [] };
+  const main = { cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null };
   let siz = null;
   const tiles = new Map();
-  const readSeg = (h, m, len, forTile) => {
+  const readSeg = (h, m, len) => {
     const segEnd = r.p + len - 2;
     const wide = siz && siz.comps.length > 256;
     const comp = () => (wide ? r.u16("a component index") : r.u8("a component index"));
@@ -193,12 +195,10 @@ function parseCodestream(d, start, end) {
         h.poc = (h.poc || []).concat(list);
         break;
       }
-      case 0xff60: r.u8("Zppm"); h.ppm.push(d.subarray(r.p, segEnd)); break;
-      case 0xff61: r.u8("Zppt"); h.ppt.push(d.subarray(r.p, segEnd)); break;
+      case 0xff60: case 0xff61: throw unsupported("packed packet headers", { marker: m === 0xff60 ? "PPM" : "PPT" });
       case 0xff50: throw unsupported("an extended capability", { marker: "CAP" });
       default: break;                                   // TLM, PLM, PLT, CRG, COM, CPF: not needed
     }
-    void forTile;
     r.p = segEnd;
   };
   /* The main header. */
@@ -212,7 +212,7 @@ function parseCodestream(d, start, end) {
     r.need(len - 2, "a marker segment");
     if (m === 0xff51) { siz = readSiz(r, len); continue; }
     if (!siz) throw corrupt("a marker before SIZ");
-    readSeg(main, m, len, false);
+    readSeg(main, m, len);
   }
   if (!siz || !main.cod || !main.qcd) throw corrupt("the main header lacks SIZ, COD or QCD");
   /* The tile-parts. */
@@ -221,22 +221,21 @@ function parseCodestream(d, start, end) {
     if (m === 0xffd9) break;
     if (m !== 0xff90) throw corrupt(`marker 0x${m.toString(16)} where SOT was expected`);
     const sotAt = r.p - 2;
-    const lsot = r.u16("Lsot");
+    r.u16("Lsot");
     const isot = r.u16("Isot"), psot = r.u32("Psot");
     r.u8("TPsot"); r.u8("TNsot");
-    void lsot;
     const tpEnd = psot ? sotAt + psot : end;
     if (tpEnd > end) throw truncated(`tile-part of tile ${isot} runs past the codestream`);
     let t = tiles.get(isot);
     const first = !t;
-    if (!t) { t = { index: isot, cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, ppt: [], ppm: [], data: [] }; tiles.set(isot, t); }
+    if (!t) { t = { index: isot, cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, data: [] }; tiles.set(isot, t); }
     for (;;) {
       const mm = r.u16("a tile-part header marker");
       if (mm === 0xff93) break;
       const len = r.u16("a marker segment length");
       r.need(len - 2, "a marker segment");
-      if (!first && mm !== 0xff61 && mm !== 0xff64) { r.p += len - 2; continue; }
-      readSeg(t, mm, len, true);
+      if (!first && mm !== 0xff61) { r.p += len - 2; continue; }   // a later tile-part may carry PPT (refused) and PLT/COM
+      readSeg(t, mm, len);
     }
     t.data.push(d.subarray(r.p, Math.min(tpEnd, end)));
     r.p = tpEnd;
@@ -451,11 +450,9 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out) {
           }
         }
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) flags[at(x, y)] &= ~VISIT;
-        if (segsym) {
-          let v = 0;
-          for (let k = 0; k < 4; k++) v = (v << 1) | mq.decode(ctx, CTX_UNI);
-          void v;       // 1010 when intact; OpenJPEG does not act on it, so neither does this
-        }
+        /* the segmentation symbol, 1010 when intact: OpenJPEG decodes it and
+         * does not act on it, so neither does this */
+        if (segsym) for (let k = 0; k < 4; k++) mq.decode(ctx, CTX_UNI);
       }
       if (reset && !raw) resetCtx();
       if (++passtype === 3) { passtype = 0; bpno--; }
@@ -615,19 +612,15 @@ function decodeTile(cs, t, tileNo) {
     : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
   const packets = packetOrder(tc, cod.layers, progs, tile, comps);
   const body = concat(t.data);
-  const headers = t.ppt.length ? concat(t.ppt) : null;
-  const ppm = cs.ppmTile ? cs.ppmTile(tileNo) : null;
-  let bp = 0, hp = 0;
-  const hdrSrc = headers || ppm;
+  let bp = 0;
   const sop = cod.scod & 2, eph = cod.scod & 4;
   for (const [l, r, c, pi] of packets) {
     const res = tc[c].res[r];
     const sp = tc[c].sp;
     if (sop && bp + 6 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x91) bp += 6;
-    const hsrc = hdrSrc || body;
-    const bio = new Bio(hsrc, hdrSrc ? hp : bp, hsrc.length);
+    const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= hsrc.length) throw truncated(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -667,11 +660,8 @@ function decodeTile(cs, t, tileNo) {
       }
     }
     bio.align();
-    let hend = bio.p;
-    if (eph) {
-      if (hend + 2 <= hsrc.length && hsrc[hend] === 0xff && hsrc[hend + 1] === 0x92) hend += 2;
-    }
-    if (hdrSrc) hp = hend; else bp = hend;
+    bp = bio.p;
+    if (eph && bp + 2 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x92) bp += 2;
     for (const k of contrib) {
       if (bp + k.len > body.length) throw truncated(`a packet's code-block data runs past the tile (${bp + k.len - body.length} bytes)`);
       k.seg.chunks.push(body.subarray(bp, bp + k.len));
@@ -788,18 +778,6 @@ export function decodeJpx(d) {
     if (cp.dx !== 1 || cp.dy !== 1) throw samples("a sub-sampled component", { dx: cp.dx, dy: cp.dy });
     if (cp.sgnd) throw samples("signed samples");
     if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
-  }
-  /* PPM: the main header's packed packet headers, dealt out to tiles in order. */
-  if (cs.main.ppm.length) {
-    const all = concat(cs.main.ppm);
-    const per = [];
-    let p = 0;
-    while (p + 4 <= all.length) {
-      const n = ((all[p] << 24) | (all[p + 1] << 16) | (all[p + 2] << 8) | all[p + 3]) >>> 0;
-      per.push(all.subarray(p + 4, p + 4 + n)); p += 4 + n;
-    }
-    const order = [...cs.tiles.keys()];
-    cs.ppmTile = (no) => per[order.indexOf(no)] || null;
   }
   const W = siz.X - siz.XO, H = siz.Y - siz.YO;
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);

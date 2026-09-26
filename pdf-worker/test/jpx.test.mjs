@@ -55,12 +55,12 @@ const pageOf = (v, opts) => jpxPage(bytesOf(v), v.width, v.height, opts);
 console.log(`\n--- R25: the fixture corpus (${FIX.provenance}) ---`);
 {
   const ok = V.filter((v) => v.expect === "ok"), no = V.filter((v) => v.expect !== "ok");
-  t("R25 (the corpus: 112 decodable, 12 refused or cut short)", [ok.length, no.length], [112, 12]);
+  t("R25 (the corpus: 114 decodable, 13 refused or cut short)", [ok.length, no.length], [114, 13]);
   const names = ok.map((v) => v.name).join(" ");
   for (const f of ["5-3-levels-0", "9-7-levels-5", "9-7-lossy-layers", "cblk-4x4", "precincts", "progression-LRCP",
     "progression-RLCP", "progression-RPCL", "progression-PCRL", "progression-CPRL", "offsets-tiles", "mode-bypass",
     "mode-reset", "mode-termall", "mode-vsc", "mode-pterm", "mode-segsym", "mode-all-9-7", "sop-eph", "tile-parts",
-    "image-offset", "poc", "roi-9-7", "plt-tlm", "no-colour-transform", "tiny-1x1", "tiny-1x9", "pillow-lossy-rgb"]) {
+    "image-offset", "poc", "roi-9-7", "plt-tlm", "no-colour-transform", "tiny-1x1", "tiny-1x9", "pillow-lossy-rgb", "derived-quantisation"]) {
     t(`R25 (the corpus exercises: ${f})`, names.includes(f), true);
   }
   t("R25 (both containers: JP2 and a bare codestream)", [...new Set(ok.map((v) => v.container))].sort(), ["j2k", "jp2"]);

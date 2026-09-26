@@ -127,6 +127,15 @@ def main():
             try: data = encode(grey.crop((10, 10, 10 + w, 10 + h)), args, "j2k")
             except RuntimeError: continue
             keep(f"tiny-{w}x{h}-{'-'.join(args[1:])}", data, "j2k", args)
+    # scalar-derived quantisation (QCD style 1): no encoder here writes it, so a
+    # 9/7 stream's QCD is rewritten to it, keeping the LL band's step; the packets
+    # are unchanged, so the picture is a different one, and opj_decompress says which
+    for label, img in (("grey", grey), ("rgb", colour)):
+        s97 = encode(img, ["-n", "3", "-I"], "j2k")
+        q = s97.index(b"\xff\x5c"); lq = struct.unpack(">H", s97[q + 2:q + 4])[0]
+        sq = s97[q + 4]; first = s97[q + 5:q + 7]
+        derived = b"\xff\x5c" + struct.pack(">HB", 5, (sq & 0xe0) | 1) + first
+        keep(f"derived-quantisation-{label}", s97[:q] + derived + s97[q + 2 + lq:], "j2k", ["QCD style 1"])
     # the same picture from Pillow's writer (a different caller of OpenJPEG's encoder)
     for label, img, kw in (("pillow-lossless-grey", grey, {}), ("pillow-lossy-rgb", colour, {"quality_mode": "rates", "quality_layers": [30, 10], "irreversible": True})):
         buf = io.BytesIO(); img.save(buf, "JPEG2000", **kw)
@@ -167,6 +176,12 @@ def main():
     keep("TRUNCATED:the codestream cut in half", base[:len(base) // 2], "j2k", [], expect="TRUNCATED")
     keep("TRUNCATED:a JP2 file with no codestream box", jp2_join([(t, b) for t, b in bs if t != b"jp2c"]), "jp2", [], expect="TRUNCATED")
     keep("CORRUPT:neither a codestream nor a JP2 file", b"\x00\x01\x02\x03" * 16, "j2k", [], expect="CORRUPT")
+    # PPT: a marker segment placed in the first tile-part header (no encoder here writes one)
+    sot = base.index(b"\xff\x90"); sod = base.index(b"\xff\x93", sot)
+    ppt = b"\xff\x61" + struct.pack(">HB", 3, 0)
+    psot = struct.unpack(">I", base[sot + 6:sot + 10])[0]
+    withppt = bytearray(base[:sod] + ppt + base[sod:]); withppt[sot + 6:sot + 10] = struct.pack(">I", psot + len(ppt) if psot else 0)
+    keep("UNSUPPORTED:packed packet headers", bytes(withppt), "j2k", [], expect="UNSUPPORTED")
     bad = bytearray(base); bad[siz + 30:siz + 34] = b"\x00\x00\x10\x00"   # XTOsiz past XOsiz
     keep("CORRUPT:a tile geometry the standard does not allow", bytes(bad), "j2k", [], expect="CORRUPT")
 
