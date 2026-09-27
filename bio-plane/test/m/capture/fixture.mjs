@@ -47,16 +47,16 @@ export function bucket() {
   };
 }
 
-/* host-governor's R1–R17 as capture reaches them: admit/report/config/isHeld, each call recorded; `refuse` names
+/* host-governor's R1–R14 as capture reaches them (`governorOf(ctx)`'s methods), each call recorded; `refuse` names
    hosts to refuse and `held` hosts cooling off. */
 export function governor({ refuse = [], held = [] } = {}) {
   const calls = [];
   return {
     calls, configured: [],
-    admit({ host }) { calls.push(["admit", host]); return refuse.includes(host)
+    governorAdmit({ host }) { calls.push(["admit", host]); return refuse.includes(host)
       ? { admitted: false, reason: "cooling_off", retry_in_ms: 5000 } : { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
-    report(r) { calls.push(["report", r.host, r.status]); return { recorded: true }; },
-    config(c) { this.configured.push(c); return { configured: true, ...c }; },
+    governorReport(r) { calls.push(["report", r.host, r.status, r.retry_after_ms]); return { recorded: true }; },
+    governorConfig(c) { this.configured.push(c); return { configured: true, ...c }; },
     isHeld(host) { calls.push(["isHeld", host]); return held.includes(host); },
   };
 }
@@ -87,7 +87,7 @@ export function fresh({ env = {}, evidence = null, gov = null, prov = undefined 
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
   core.migrate();
   membershipOf(ctx).migrate();
-  const c = new Capture(s, { record: core, env: { ...env, ...(evidence ? { CAPTURES: evidence } : {}) }, governor: gov,
+  const c = new Capture(s, { record: core, env: { ...env, ...(evidence ? { CAPTURES: evidence } : {}) }, governor: gov ?? governor(),
                              provenance: prov === undefined ? provenance(s) : prov });
   c.migrate();
   return { s, c, core, rows: (q, ...a) => s.sql.exec(q, ...a) };

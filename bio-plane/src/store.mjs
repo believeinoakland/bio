@@ -224,6 +224,7 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { recordOf } from "./record-core/index.mjs";
+import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps } from "./capture/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
@@ -1388,6 +1389,7 @@ export class Store extends DurableObject {
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
     membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
+    governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
@@ -27912,8 +27914,7 @@ export class Store extends DurableObject {
    *  DOCUMENTS behind it, derived exactly as every other item's are. */
   #conditionsGovernorHolding(viewer, now, identity = null) {
     const out = [];
-    for (const r of this.#rows(
-      `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {
+    for (const r of governorOf(this.ctx).governorHolding({ now })) {
       const subj = this.#conditionBundlesForHost(r.host, viewer);
       const refusedAt = Number(r.last_refusal_at);
       out.push({
@@ -35966,135 +35967,12 @@ export class Store extends DurableObject {
     return { step, elapsed_ms: elapsedMs };
   }
 
-  /* ------------------------------------------------------------------ *
-   * D-95: the per-host request governor
-   *
-   * Our APPETITE is a configured constant because it is ours. Their CAPACITY
-   * is discovered by being refused and recorded, the pattern capture_limits
-   * proved. This lives here because the Durable Object serialises, so one
-   * token bucket is globally correct for the instance for free; a bucket in
-   * Worker memory governs nothing, since every invocation is independent.
-   *
-   * Pacing resembles a person rather than a loop: grants to one host are
-   * separated by a JITTERED gap around the appetite's base interval, never a
-   * metronome. The chosen constants are recorded in MEASUREMENTS.md as chosen,
-   * not measured. A 429 overrides the bucket entirely: cooloff_until in the
-   * future refuses admission regardless of token balance, honouring
-   * Retry-After when the counterparty names one and escalating with
-   * consecutive refusals when it does not, mirroring their own escalation.
-   * Success decays the escalation to zero. This governs OUR instance only and
-   * cannot solve the shared-egress problem; that is D-95's recorded limit.
-   * ------------------------------------------------------------------ */
-
-  static GOVERNOR = {
-    defaultAppetitePerMin: 12,   /* chosen: one document fetch every ~5s on average */
-    jitterLow: 0.6, jitterHigh: 1.5,
-    burstTokens: 3,              /* a person opens a few tabs; a loop opens forty */
-    cooloff429BaseMs: 60_000,  cooloff429CapMs: 3_600_000,
-    cooloffRefusedBaseMs: 30_000, cooloffRefusedCapMs: 1_800_000,
-  };
-
-  #governorRow(host, now) {
-    let r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
-    if (!r) {
-      this.sql.exec(
-        `INSERT INTO host_governor (host, tokens, refilled_at, updated_at) VALUES (?, ?, ?, ?)`,
-        host, Store.GOVERNOR.burstTokens, now, new Date(now).toISOString());
-      r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
-    }
-    return r;
-  }
-
-  governorAdmit({ host }) {
-    if (!host) return { admitted: false, reason: "no host named" };
-    const G = Store.GOVERNOR;
-    const now = Date.now();
-    const r = this.#governorRow(host, now);
-    /* Precedence: the host's own configured row, then the instance's
-       GOVERNOR_APPETITE_PER_MIN binding (an operator knob, and what lets a
-       test suite drive the real path without pacing a fake host), then the
-       chosen default recorded in MEASUREMENTS.md. */
-    const appetite = r.appetite_per_min
-      || Number(this.env && this.env.GOVERNOR_APPETITE_PER_MIN)
-      || G.defaultAppetitePerMin;
-    const baseGapMs = 60_000 / appetite;
-
-    /* A cool-off overrides the bucket entirely. */
-    if (r.cooloff_until > now) {
-      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        new Date(now).toISOString(), host);
-      return { admitted: false, reason: "cooling_off", retry_in_ms: r.cooloff_until - now,
-               refusals: r.refusals, last_refusal_status: r.last_refusal_status };
-    }
-
-    /* Refill, capped at a small burst: a person opens a few tabs at once and
-       then reads; a loop opens forty and keeps going. */
-    const tokens = Math.min(G.burstTokens, r.tokens + ((now - r.refilled_at) / 60_000) * appetite);
-    if (tokens < 1) {
-      const retryIn = Math.ceil(((1 - tokens) / appetite) * 60_000);
-      this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        tokens, now, new Date(now).toISOString(), host);
-      return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
-    }
-
-    /* Admitted. The caller waits wait_ms before fetching, which is where the
-       human-shaped gap comes from: jittered around the base interval, and only
-       when this grant follows the last one closely enough to need spacing. */
-    const jitter = G.jitterLow + Math.random() * (G.jitterHigh - G.jitterLow);
-    const gapWanted = baseGapMs * jitter;
-    const sinceLast = now - (r.last_grant_at || 0);
-    const wait = sinceLast >= gapWanted ? 0 : Math.round(gapWanted - sinceLast);
-    this.sql.exec(
-      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
-      tokens - 1, now, now + wait, new Date(now).toISOString(), host);
-    return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
-  }
-
-  governorReport({ host, status, retry_after_ms = null }) {
-    if (!host) return { recorded: false };
-    const G = Store.GOVERNOR;
-    const now = Date.now();
-    const r = this.#governorRow(host, now);
-    const s = Number(status) || 0;
-    if (s >= 200 && s < 400) {
-      /* They relented, or never objected; the escalation resets. */
-      this.sql.exec(`UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`,
-        new Date(now).toISOString(), host);
-      return { recorded: true, refusals: 0 };
-    }
-    if (s === 429 || s === 403 || s === 503) {
-      const refusals = (r.refusals || 0) + 1;
-      const base = s === 429 ? G.cooloff429BaseMs : G.cooloffRefusedBaseMs;
-      const cap  = s === 429 ? G.cooloff429CapMs  : G.cooloffRefusedCapMs;
-      const escalated = Math.min(cap, base * Math.pow(2, refusals - 1));
-      /* Retry-After is the counterparty naming their own capacity; honour it
-         when it is longer than our escalation, never shorter. */
-      const cooloff = now + Math.max(escalated, Number(retry_after_ms) || 0);
-      this.sql.exec(
-        `UPDATE host_governor SET refusals = ?, last_refusal_at = ?, last_refusal_status = ?, cooloff_until = ?, updated_at = ? WHERE host = ?`,
-        refusals, now, s, cooloff, new Date(now).toISOString(), host);
-      return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
-    }
-    /* Other statuses (404, 500, network shapes reported as 0) are outcomes for
-       monitoring, not capacity signals; the governor records nothing. */
-    return { recorded: true, ignored: s };
-  }
-
-  governorConfig({ host, appetite_per_min = null }) {
-    if (!host) return { configured: false };
-    const now = Date.now();
-    this.#governorRow(host, now);
-    this.sql.exec(`UPDATE host_governor SET appetite_per_min = ?, updated_at = ? WHERE host = ?`,
-      appetite_per_min ? Number(appetite_per_min) : null, new Date(now).toISOString(), host);
-    return { configured: true, host, appetite_per_min: appetite_per_min ? Number(appetite_per_min) : null };
-  }
-
-  governorState({ host = null }) {
-    const rows = host
-      ? [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)]
-      : [...this.sql.exec(`SELECT * FROM host_governor ORDER BY host`)];
-    return { hosts: rows.map((r) => ({ ...r })) };
-  }
+  /* D-95, the per-host request governor: `host-governor`'s (T4-1). These delegate, so the object's RPC callers and
+     this file's own callers reach the one instance on this ctx (K61, K63). */
+  governorAdmit(...a) { return governorOf(this.ctx).governorAdmit(...a); }
+  governorReport(...a) { return governorOf(this.ctx).governorReport(...a); }
+  governorConfig(...a) { return governorOf(this.ctx).governorConfig(...a); }
+  governorState(...a) { return governorOf(this.ctx).governorState(...a); }
 
   /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version
@@ -40524,8 +40402,7 @@ export class Store extends DurableObject {
    *  own `governedFetch` spends one on the way out and a double spend would
    *  make this instance pace itself twice as hard as it declared. */
   #captureRequestHostHeld(host, nowMs) {
-    const r = this.#one(`SELECT cooloff_until FROM host_governor WHERE host=?`, host);
-    return !!(r && Number(r.cooloff_until) > nowMs);
+    return governorOf(this.ctx).isHeld(host, nowMs);
   }
 
   /** The member agent RECORDED on the inquiry, or null. Read from the question's
@@ -48221,10 +48098,7 @@ export class Store extends DurableObject {
                                      viewer: url.searchParams.get("viewer") }),
         taskforward: () => this.taskForward(body || {}),
         taskresolve: () => this.taskResolve(body || {}),
-        governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
-        governorreport: () => this.governorReport(body || {}),
-        governorconfig: () => this.governorConfig(body || {}),
-        governorstate: () => this.governorState(body || { host: url.searchParams.get("host") }),
+        ...governorRoutes(governorOf(this.ctx), url, body),
         /* IS-6. The investigative run, on the capture-session shape and routed
            beside it. `viewer` on the two READS is the control plane's
            server-side stamp and never a caller's word: the run names an inquiry

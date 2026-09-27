@@ -55,10 +55,29 @@ export const RENDER_DEFAULTS = Object.freeze({
   navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
+  /* R54: the FALLBACK only. The locale a render asks for is the one the instance's
+     jurisdiction profiles name (`renderLocaleFor`); this is used when they name none. */
   locale: "en-US",
   timezone: "UTC",
   wait: Object.freeze({ until: "networkidle", timeout_ms: 15000 }),
 });
+
+/* R54 — THE LOCALE A RENDER ASKS FOR, FROM THE JURISDICTION PROFILES (K48).
+   `view` is `jurisdictions.combine`'s view of the instance's active profiles, passed by
+   the caller, so this module needs no edge to `jurisdictions`. The view's `locale` is a
+   one-value fact shaped as the profiles shape one (`{value, basis}`, with `profile`
+   beside it): a view whose profiles disagree has it withheld, and then, as when no
+   profile names one, the render asks `RENDER_DEFAULTS.locale`. A value that is not a
+   well-formed language tag is not asked of a browser. Never throws. */
+const LANGUAGE_TAG = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$/;
+
+export function renderLocaleFor(view) {
+  try {
+    const fact = view && typeof view === "object" ? view.locale : null;
+    const v = fact && typeof fact === "object" ? fact.value : null;
+    return typeof v === "string" && LANGUAGE_TAG.test(v) ? v : RENDER_DEFAULTS.locale;
+  } catch { return RENDER_DEFAULTS.locale; }
+}
 
 /* The render method string BOB #32 ruled. The shell keeps its own method. */
 export const RENDERED_METHOD = "rendered";
@@ -93,6 +112,8 @@ export const RENDER_TICK_UNDETERMINED =
  * and it is THREE-valued on purpose:
  *
  *   "condition"     the word IS the condition this plane asked for;
+ *   "settled"       the word is `quiet_excluding_long_lived`, D-570's rule (R26):
+ *                   the page went quiet but for requests older than the measured N;
  *   "timeout"       the word names the timeout;
  *   "undetermined"  anything else, INCLUDING a word this module has never seen.
  *
@@ -105,11 +126,15 @@ export const RENDER_TICK_UNDETERMINED =
  * CANNOT SEE: whether the renderer's word is TRUE. It is the renderer's claim,
  * like its request and script lists; the plane hashes only the document. */
 const TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
+/* D-570 (BOB #34, 2026-09-25, ruled (c)): the word the in-plane driver answers when the
+   quiet window excluding long-lived requests ended the wait (`browserrender.mjs`). */
+const SETTLED_WORD = "quiet_excluding_long_lived";
 
 export function waitFiredClass(fired, askedWait) {
   if (!isStr(fired)) return "undetermined";
   const f = fired.trim().toLowerCase();
   if (TIMEOUT_WORD.test(f)) return "timeout";
+  if (f === SETTLED_WORD) return "settled";
   const until = askedWait && isStr(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
   return until && f === until ? "condition" : "undetermined";
 }
@@ -119,10 +144,19 @@ export function waitFiredClass(fired, askedWait) {
    and a hand copy in either would agree for free and drift for free. */
 export const RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
 
+/* D-570: what a render settled by the quiet window reads. Never "complete": the requests
+   it did not wait for may still have been bringing data. `count` is how many were open. */
+function settledReading(count) {
+  return `settled; ${Number.isInteger(count) && count >= 0 ? count : "an unstated number of"} long-lived request(s) still open were not waited for`;
+}
+
 /** The reading, derived from a built render block. `null` when the wait met the
  *  condition that was asked, which is the only case that says nothing. */
 export function completenessReading(render) {
-  if (!render || render.completeness !== "undetermined") return null;
+  if (!render) return null;
+  if (render.completeness === "settled_with_open_requests")
+    return settledReading(render.wait && render.wait.long_lived ? render.wait.long_lived.count : null);
+  if (render.completeness !== "undetermined") return null;
   if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
   return "render completeness is undetermined (which wait ended the render was not established)";
 }
@@ -136,10 +170,14 @@ export function completenessReading(render) {
    fence, so spending is visible and an unattended sweep cannot run up a bill. */
 export const RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1000;
 
+/* A setting or an asked bound as a number: a number, or a string of one (an env var is
+   a string). Anything else is NaN, never 0: `Number(null)`, `Number(" ")` and
+   `Number(true)` read as 0 or 1, and a blank setting must not mean "no renders". */
+const figure = (v) => (typeof v === "number" ? v
+  : typeof v === "string" && /\S/.test(v) ? Number(v) : NaN);
+
 export function renderAllowanceMs(env) {
-  const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
-  if (v === undefined || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
-  const n = Number(v);
+  const n = figure(env && env.RENDER_DAILY_ALLOWANCE_MS);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
 }
 
@@ -164,9 +202,7 @@ export function renderAllowanceMs(env) {
 export const RENDER_CONCURRENCY_CAP_DEFAULT = 10;
 
 export function renderConcurrencyCap(env) {
-  const v = env && env.RENDER_CONCURRENCY_CAP;
-  if (v === undefined || v === null || v === "") return RENDER_CONCURRENCY_CAP_DEFAULT;
-  const n = Number(v);
+  const n = figure(env && env.RENDER_CONCURRENCY_CAP);
   /* A cap of 0 or a figure that is not a positive whole number falls back to the
      default rather than to "no renders" or "no cap": either reading of a typo would
      change what the instance does without anyone having decided it. */
@@ -188,7 +224,7 @@ export function renderConcurrencyCap(env) {
    failure direction is over-charging (an unreported render stays charged, D-492),
    which under-uses the allowance and never overruns it. */
 export function renderReserveMs(asked = RENDER_DEFAULTS) {
-  const pos = (v, fallback) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : fallback; };
+  const pos = (v, fallback) => { const n = figure(v); return Number.isFinite(n) && n >= 0 ? n : fallback; };
   const wait = pos(asked && asked.wait && asked.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
   const nav = pos(asked && asked.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
   return Math.ceil(wait + nav);
@@ -329,7 +365,10 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     return { ok: false, problem: "the renderer answered with no rendered document" };
 
   const undetermined = [];
-  const pageHost = (() => { try { return new URL(answer.navigated_to || pageUrl).hostname.toLowerCase(); } catch { return null; } })();
+  /* The page's host: where the browser ended, else the address asked; an unparseable
+     `navigated_to` falls back to `pageUrl` rather than losing the host. */
+  const hostOf = (u) => { try { return isStr(u) ? new URL(u).hostname.toLowerCase() : null; } catch { return null; } };
+  const pageHost = hostOf(answer.navigated_to) || hostOf(pageUrl);
 
   /* REQUESTS — counted by outcome; blocked ones by the rule that blocked them. */
   let requests = null, data = null, subresources = null;
@@ -337,8 +376,9 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     /* D-529: the digest for request i is `digests[i]`, from `keepRenderBodies`; a caller
        that kept nothing passes none, and every loaded subresource then reads undetermined
        saying so — never a hex digest the plane did not compute. */
+    const at = new Map(answer.requests.map((r, i) => [r, i]));
     const digestOf = (r) => {
-      const i = answer.requests.indexOf(r);
+      const i = at.get(r);
       const d = Array.isArray(digests) ? digests[i] : null;
       if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
       return { sha256: "undetermined", digest_reason: "the plane did not keep this render's subresource bytes",
@@ -412,8 +452,23 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
      beside the gap that caused it, and so the classifier is read once. */
   const waitFired = pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null);
   const firedClass = waitFiredClass(waitFired, asked.wait);
-  const completeness = firedClass === "condition" ? "condition_met" : "undetermined";
-  if (firedClass === "timeout")
+  const completeness = firedClass === "condition" ? "condition_met"
+    : firedClass === "settled" ? "settled_with_open_requests" : "undetermined";
+  /* D-570 (R26): what the driver reports of the requests the quiet window did not wait
+     for — N, and their count and addresses — carried as reported, or null. */
+  const ll = answer.wait && answer.wait.long_lived && typeof answer.wait.long_lived === "object" ? answer.wait.long_lived : null;
+  const longLived = ll ? {
+    older_than_s: num(ll.older_than_s),
+    count: Number.isInteger(ll.count) && ll.count >= 0 ? ll.count : null,
+    urls: Array.isArray(ll.urls) ? ll.urls.filter(isStr) : null,
+  } : null;
+  if (firedClass === "settled")
+    undetermined.push(`completeness: ${settledReading(longLived ? longLived.count : null)}`
+      + `${longLived && longLived.older_than_s !== null ? ` (requests open longer than ${longLived.older_than_s} s)` : ""}`
+      + ` — the renderer's wait ended on its quiet window, which does not wait for them, so what they would have `
+      + `brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the `
+      + `whole page (D-570, BOB #34, 2026-09-25).`);
+  else if (firedClass === "timeout")
     undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} — the renderer's wait ended on its timeout`
       + `${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}`
       + `${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}`
@@ -436,7 +491,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
     timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
     /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
-    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass },
+    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass, ...(longLived ? { long_lived: longLived } : {}) },
     /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
        not that the page was finished, which no renderer reports. `undetermined`
        carries its reason in `undetermined[]` above. The GRADE is untouched either
@@ -528,8 +583,15 @@ export function renderedAuthority({ asserted, render, at }) {
 export function rendererFor(env) {
   if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
     return { kind: "service", render: async (req) => {
-      const r = await env.RENDERER.fetch("http://renderer/render", {
-        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
+      let r;
+      /* A service that cannot be reached is a failed render, answered as R19's driver
+         answers one, never a rejection the caller has to catch. */
+      try {
+        r = await env.RENDERER.fetch("http://renderer/render", {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
+      } catch (e) {
+        return { ok: false, error: `the renderer service could not be reached: ${String((e && e.message) || e).slice(0, 200)}` };
+      }
       return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
     } };
   if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")

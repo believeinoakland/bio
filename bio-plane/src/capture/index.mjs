@@ -14,6 +14,7 @@ import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { KNOCK } from "./doorbell.mjs";
 import { acquire, archiveLookup } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
+import { governorOf } from "../host-governor/index.mjs";
 import { viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
@@ -43,6 +44,10 @@ export const SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetc
    fortnight, which reads OUR MONITORING NEGLECT as the source being unreachable — D-104's mistake one level up. So
    the age arm requires corroboration too. */
 export const REACHABILITY_DEFAULTS = Object.freeze({ failures: 3, days: 14, minForAge: 2 });
+/* The names of those settings in record-core, and of R19's stagger. */
+export const REACHABILITY_SETTINGS = Object.freeze({ failures: "reachability_consecutive_failures",
+                                                     days: "reachability_stale_days", minForAge: "reachability_min_failures_for_age" });
+export const SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
 
 /* R23: a ceiling only ever learned downward would leave an upgraded account at the old caps forever. */
 const PROBE_EVERY = 25;
@@ -54,13 +59,17 @@ export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute"
 const instances = new WeakMap();
 
 /** K61: the one Capture for this object's storage. `opts` is read on the first call only: `env` (the object's
- *  bindings: the evidence bucket for the inbox, the renderer, the instance's name and settings), and, until
- *  their early merges, `governor` and `provenance` (host-governor's and provenance's services, as their Provides
- *  state them; QUESTION 1). A test may pass its own. */
+ *  bindings: the evidence bucket for the inbox, the renderer, the instance's name), `governor` (host-governor's,
+ *  `governorOf(ctx)` by default) and `provenance` (provenance's services, taken injected until its early merge,
+ *  K120 (1)). A test may pass its own. */
 export function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
-  if (!c) { c = new Capture(storage, { record: opts.record ?? recordOf(ctx), ...opts }); instances.set(storage, c); }
+  if (!c) {
+    c = new Capture(storage, { ...opts, record: opts.record ?? recordOf(ctx),
+                               governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }) });
+    instances.set(storage, c);
+  }
   return c;
 }
 
@@ -1031,14 +1040,23 @@ export class Capture {
    * D-104: source reachability (R8, R43)
    * ==================================================================== */
 
-  /** R43, R8: the three figures as they stand. Overridable PER INSTANCE at deploy time, never at runtime: a runtime
-   *  setting would be a fence anyone holding a credential could lower. Bad values fall back to the defaults. */
+  /** R43, R8 (K120 (3)): the three figures as they stand, instance settings in record-core (`getSetting`), a
+   *  setting not set answering its default. A value that is not a number at or above its floor is never obeyed. */
   reachabilityThresholds() {
-    const env = this.env || {};
+    const get = (name) => { try { return this.core && typeof this.core.getSetting === "function" ? this.core.getSetting(name) : null; } catch { return null; } };
     const pick = (v, dflt, min) => { const n = Number(v); return v != null && v !== "" && Number.isFinite(n) && n >= min ? n : dflt; };
-    return { failures: pick(env.FALLBACK_CONSECUTIVE_FAILURES, REACHABILITY_DEFAULTS.failures, 1),
-             days: pick(env.FALLBACK_STALE_DAYS, REACHABILITY_DEFAULTS.days, 0),
-             minForAge: pick(env.FALLBACK_MIN_FAILURES_FOR_AGE, REACHABILITY_DEFAULTS.minForAge, 1) };
+    return { failures: pick(get(REACHABILITY_SETTINGS.failures), REACHABILITY_DEFAULTS.failures, 1),
+             days: pick(get(REACHABILITY_SETTINGS.days), REACHABILITY_DEFAULTS.days, 0),
+             minForAge: pick(get(REACHABILITY_SETTINGS.minForAge), REACHABILITY_DEFAULTS.minForAge, 1) };
+  }
+
+  /** R19 (K120 (3)): the subresource stagger, an instance setting in record-core in milliseconds; not set, a jittered
+   *  50–250 ms. */
+  subresourceStaggerMs() {
+    let v = null;
+    try { v = this.core && typeof this.core.getSetting === "function" ? this.core.getSetting(SUBRESOURCE_STAGGER_SETTING) : null; } catch { v = null; }
+    const n = Number(v);
+    return v != null && v !== "" && Number.isFinite(n) && n >= 0 ? n : 50 + Math.floor(Math.random() * 200);
   }
 
   /** R8. One attempt at one document address. A governed refusal is counted in its own column and never as a

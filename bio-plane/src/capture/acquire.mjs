@@ -17,6 +17,7 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts } from "../drive.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "../cdx.mjs";
 import * as render from "../render.mjs";
+import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 
 const { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs,
         renderConcurrencyCap, renderReserveMs, renderBlock, renderedAuthority, rendererFor } = render;
@@ -114,39 +115,12 @@ export function profileView(core) {
    own fallback. */
 const renderLocale = (view) => (typeof render.renderLocaleFor === "function" ? render.renderLocaleFor(view) : RENDER_DEFAULTS.locale);
 
-/* R7, R36, host-governor R15–R17: every outbound fetch through the host governor. `cap.governor.governedFetch` is
-   host-governor's own when it is bound; until then the same three steps are taken through its admit and report. */
+/* R7, R36: every outbound fetch through the host governor (host-governor R15–R17), under the agent this module
+   composes. The governor is reached in process (K72 (2)). */
 async function governedFetch(cap, target, purpose, delegated = null) {
   const g = cap.governor;
-  const ua = userAgent(cap.env, purpose, delegated);
-  if (g && typeof g.governedFetch === "function")
-    return g.governedFetch(target, { userAgent: ua, fetch: (u, i) => fetch(u, i), governor: g });
-  let host = null;
-  try { host = new URL(target).host; } catch { host = null; }
-  let waitMs = 0;
-  if (host && g) {
-    try {
-      const a = await g.admit({ host });
-      if (a && a.admitted === false)
-        return { refusedByGovernor: true, reason: a.reason || "governed", retry_in_ms: a.retry_in_ms || 0,
-                 last_refusal_status: a.last_refusal_status || null };
-      waitMs = (a && a.wait_ms) || 0;
-    } catch { /* ungoverned is better than unfetched: politeness, not coordination */ }
-  }
-  if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
-  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": ua } });
-  if (host && g) {
-    try { await g.report({ host, status: res.status, retry_after_ms: retryAfterMs(res) }); }
-    catch { /* an unrecorded outcome is not a failed fetch */ }
-  }
-  return { res };
-}
-
-function retryAfterMs(r) {
-  const ra = r.headers.get("retry-after");
-  if (!ra) return null;
-  const n = Number(ra);
-  return Number.isFinite(n) ? n * 1000 : Math.max(0, Date.parse(ra) - Date.now() || 0);
+  return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated), fetch: (u, i) => fetch(u, i),
+    governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null });
 }
 
 /** R3's decision, in ONE place so the lookup and the capture cannot disagree about when the fallback may fire or
@@ -160,7 +134,7 @@ async function archiveSelect(cap, address) {
       reachability: reach } };
   /* THEIR figure, ours to obey conservatively (ARCHIVE-FALLBACK.md): set on first contact, a third-party number,
      never presented as measured (K72 (12)). */
-  try { await cap.governor?.config?.({ host: "web.archive.org", appetite_per_min: 24 }); }
+  try { await cap.governor?.governorConfig({ host: "web.archive.org", appetite_per_min: 24 }); }
   catch { /* the default appetite already governs */ }
   let res;
   try {
@@ -366,7 +340,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     try { rHost = new URL(locator).host; } catch { rHost = null; }
     if (rHost && cap.governor) {
       let g = null;
-      try { g = await cap.governor.admit({ host: rHost }); } catch { g = null; }
+      try { g = await cap.governor.governorAdmit({ host: rHost }); } catch { g = null; }
       if (g && g.admitted === false)
         return answer(429, { ok: false, reason: "RENDER_HOST_COOLING_OFF", ...renderRow("RENDER_HOST_COOLING_OFF"),
           op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
@@ -608,7 +582,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
     /* The render's own navigation, reported to the governor like any load. */
     if (typeof renderRecorded.status === "number" && cap.governor) {
-      try { await cap.governor.report({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }); }
+      try { await cap.governor.governorReport({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null }); }
       catch { /* an unrecorded outcome is not a failed render */ }
     }
     sha = rsha; total = rbytes.length; ct = "text/html"; existed = renderedExisted;
@@ -810,16 +784,15 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
          take a small jittered stagger, and REPORT every outcome; a host cooling off stops the rest. */
       let subHost = null;
       try { subHost = new URL(u).host; } catch { /* refused below by the fetch itself */ }
-      if (subHost && cap.governor && typeof cap.governor.isHeld === "function") {
+      if (subHost && cap.governor) {
         try { if (await cap.governor.isHeld(subHost, Date.now())) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" }; }
         catch { /* an unreadable governor never blocks */ }
       }
-      const stagger = env.GOVERNOR_SUBRESOURCE_STAGGER_MS !== undefined
-        ? Number(env.GOVERNOR_SUBRESOURCE_STAGGER_MS) || 0 : 50 + Math.floor(Math.random() * 200);
+      const stagger = cap.subresourceStaggerMs();
       if (stagger) await new Promise((s) => setTimeout(s, stagger));
       const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
       if (subHost && cap.governor) {
-        try { await cap.governor.report({ host: subHost, status: r.status, retry_after_ms: retryAfterMs(r) }); }
+        try { await cap.governor.governorReport({ host: subHost, status: r.status, retry_after_ms: retryAfterMs(r.headers.get("retry-after")) }); }
         catch { /* an unrecorded outcome is not a failed fetch */ }
       }
       if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };

@@ -92,3 +92,5 @@ Layer 3, started 2026-09-27 ~02:14 UTC, concurrently:
 - `provenance` · PROVENANCE #1 · `session_01U29KuhspMg4rYkaVV3DM5k`
 - `capture-sources` · CAPTURE-SOURCES #1 · `session_013dcTX498bqp3qZbH6dTpQN`
 - `capture` · CAPTURE #1 · `session_0151qXkKcpqs1Km6yrLbXgtp`
+
+HOST-GOVERNOR #1 complete at `70321b6a28`, merged early (`337804c`): ownership 0 failures (legacy-store +13/−163, legacy-index +6/−82; every added line read by BOB: imports from `host-governor/` and delegating calls, §12.2); its suite 28/28 on the tranche. CHANGE sent to provenance, capture-sources and capture. For legacy-tests' T4-5: the 10 source-anchored reds it names (the six schema-order tests, `plane-envelope` 2, `derivation-bounds` 2).

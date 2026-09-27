@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, receipt, register, H } from "./fixture.mjs";
-import { captureOf, REACHABILITY_DEFAULTS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { captureOf, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
 
 const A = H("a"), B = H("b"), C = H("c"), D = H("d");
 
@@ -31,14 +31,19 @@ test("R8 R43: each attempt is recorded by kind, governed counted apart, eligibil
   /* one failure never retried is not eligible, however old */
   await c.recordSourceOutcome({ addressNorm: "https://y.example/", outcome: "fetch_failed", at: "2026-01-01T00:00:00Z" });
   assert.equal(c.sourceReachability({ addressNorm: "https://y.example/", now: "2026-03-01T00:00:00Z" }).fallback_eligible, false);
-  /* R43: the figures, the instance settings else the defaults; a bad setting is never obeyed */
+  /* R43 (K120): the figures, record-core's instance settings else the defaults; a bad setting is never obeyed */
   assert.deepEqual(c.reachabilityThresholds(), REACHABILITY_DEFAULTS);
-  const t = fresh({ env: { FALLBACK_CONSECUTIVE_FAILURES: "1", FALLBACK_STALE_DAYS: "0", FALLBACK_MIN_FAILURES_FOR_AGE: "abc" } }).c;
-  assert.deepEqual(t.reachabilityThresholds(), { failures: 1, days: 0, minForAge: 2 });
-  await t.recordSourceOutcome({ addressNorm: addr, outcome: "fetch_failed" });
-  assert.equal(t.sourceReachability({ addressNorm: addr }).fallback_eligible, true);
-  assert.deepEqual(t.sourceReachability({ addressNorm: addr }).thresholds, { failures: 1, days: 0, minForAge: 2 });
-  assert.deepEqual(fresh({ env: { FALLBACK_CONSECUTIVE_FAILURES: "0" } }).c.reachabilityThresholds().failures, 3);
+  const t = fresh();
+  t.core.setSetting(REACHABILITY_SETTINGS.failures, 1, "member:admin");
+  t.core.setSetting(REACHABILITY_SETTINGS.days, 0, "member:admin");
+  t.core.setSetting(REACHABILITY_SETTINGS.minForAge, "abc", "member:admin");
+  assert.deepEqual(t.c.reachabilityThresholds(), { failures: 1, days: 0, minForAge: 2 });
+  await t.c.recordSourceOutcome({ addressNorm: addr, outcome: "fetch_failed" });
+  assert.equal(t.c.sourceReachability({ addressNorm: addr }).fallback_eligible, true);
+  assert.deepEqual(t.c.sourceReachability({ addressNorm: addr }).thresholds, { failures: 1, days: 0, minForAge: 2 });
+  const z = fresh(); z.core.setSetting(REACHABILITY_SETTINGS.failures, 0, "member:admin");
+  assert.equal(z.c.reachabilityThresholds().failures, 3, "a figure below its floor falls back");
+  assert.equal(fresh({ env: { FALLBACK_CONSECUTIVE_FAILURES: "1" } }).c.reachabilityThresholds().failures, 3, "a binding is not the setting");
 });
 
 test("R44: listeners for source outcomes and tasks are called after the write, in registration order, and a failing one fails nothing", async () => {
