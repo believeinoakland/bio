@@ -44,7 +44,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { makePublishingProject } from "./publishingproject.mjs";
-import { moduleSources } from "./extracted-sources.mjs";
+import { moduleSources, storeCorpus } from "./extracted-sources.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -226,12 +226,21 @@ console.log("\n--- 4. no hand-spelled whole-second stamp is left in store.mjs or
   /* CODE ONLY: block and line comments blanked, so a comment QUOTING the old spelling (this landing's own
      does) is not counted as a site. */
   const codeOf = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  const store = codeOf(readFileSync(SRC("store.mjs"), "latin1"));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): layers 2, 4 and 5 of T5 moved code out of store.mjs into
+     src/<module>/ (record-core, calibration, extraction, content, entities, connections, progressions, bias,
+     observation-log, retrieval); `stampInstant` itself now lives in record-core (store.mjs re-exports it) and the
+     modules import it, so the store's named calls fell 57 -> 47 with the code that makes them (extraction,
+     connections' themes, bias, observation-log). The "store" corpus is therefore store.mjs AND those modules'
+     files — the store as it stood before the extraction (`storeCorpus`) — and its floor, the store's own size, is
+     asked of that whole; the sweep and the call count read it too. */
+  const T5_MODULES = ["record-core", "calibration", "extraction", "content", "entities", "connections",
+    "progressions", "bias", "observation-log", "retrieval"];
+  const store = codeOf(storeCorpus(T5_MODULES, "latin1"));
   const index = codeOf(readFileSync(SRC("index.mjs"), "utf8"));
   const HAND = /toISOString\(\)\s*\.\s*(?:replace\(\/\\\.\\d\+Z\$\/|split\(\s*["']\.["']\s*\)\s*\[\s*0\s*\]\s*\+\s*["']Z["'])/g;
   const calls = (store.match(/stampInstant\("(?:second|millisecond)"/g) || []).length
               + (index.match(/stampInstant\("(?:second|millisecond)"/g) || []).length;
-  console.log(`  corpus: store.mjs ${store.length} code chars, index.mjs ${index.length}; stampInstant calls ${calls}`);
+  console.log(`  corpus: store.mjs + T5 modules ${store.length} code chars, index.mjs ${index.length}; stampInstant calls ${calls}`);
   t("the corpus is the real source (a sweep over an empty read passes over nothing)",
     [store.length > 1_000_000, index.length > 100_000], [true, true]);
   t("NO site spells a whole-second stamp by hand — `.replace(/\\.\\d+Z$/, \"Z\")` or `.split(\".\")[0] + \"Z\"` "

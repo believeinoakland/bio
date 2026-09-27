@@ -86,6 +86,16 @@ import { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "../src/memb
 /* T4 (legacy-tests): capture's and provenance's purge declarations, read at their interfaces (the census below). */
 import { CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "../src/capture/schema.mjs";
 import { provenanceOf } from "../src/provenance/index.mjs";
+/* T5 (legacy-tests, T5-12): layers 4-5's modules' purge declarations, read at their interfaces (the census below). */
+import { EXTRACTION_TABLES, EXTRACTION_WHOLE_ONLY } from "../src/extraction/index.mjs";
+import { ENTITIES_TABLES } from "../src/entities/index.mjs";
+import { CONTENT_TABLES } from "../src/content/schema.mjs";
+import { CONNECTIONS_TABLES } from "../src/connections/schema.mjs";
+import { PROGRESSIONS_TABLES } from "../src/progressions/schema.mjs";
+import { OBSERVATION_LOG_TABLES } from "../src/observation-log/schema.mjs";
+import { RETRIEVAL_PURGE } from "../src/retrieval/schema.mjs";
+import { CALIBRATION_TABLES } from "../src/calibration/schema.mjs";
+import { biasOf } from "../src/bias/index.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -793,11 +803,40 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
       return { ok: true }; } },
     membership: {}, promotion: { registerStep: () => ({ ok: true }) } });
   t("provenance's purge declaration is read at its interface and names tables", provDecl.tables.length >= 3, true);
-  const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables];
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; K23, record-core R21/R46): layers 4 and 5 moved nine more owners out
+     of the store, and each declares its own tables to record-core (legacy-store's list above now filters them out, so
+     it no longer names, e.g., `progression_threads` or `capture_text_state`). Each is read at its interface: the
+     list the module passes to `declarePurge`, exported — extraction's EXTRACTION_TABLES + EXTRACTION_WHOLE_ONLY (what
+     `extractionOwns` answers), entities' ENTITIES_TABLES, content's CONTENT_TABLES, connections' CONNECTIONS_TABLES,
+     progressions' PROGRESSIONS_TABLES, observation-log's OBSERVATION_LOG_TABLES, retrieval's RETRIEVAL_PURGE and
+     calibration's CALIBRATION_TABLES (all three declared EXEMPT, `{ exempt: CALIBRATION_TABLES }`) — and bias, which
+     writes its declaration inline in `biasOf` (with `bias_debt_sweeps` exempt), by calling `biasOf` over a record that
+     only records what it is told, as provenance's above. */
+  const named = (x) => (typeof x === "string" ? x : x.name);
+  const biasDecl = { tables: [], exempt: [] };
+  biasOf({ storage: { sql: null } }, {
+    record: { declarePurge: (m, tables = [], { exempt = [] } = {}) => {
+      biasDecl.tables.push(...tables.map(named)); biasDecl.exempt.push(...exempt); return { ok: true }; },
+              registerAuditCheck: () => ({ ok: true }) },
+    membership: {}, entities: null,
+    promotion: { registerStep: () => ({ ok: true }), onCommitted: () => ({ ok: true }) } });
+  t("bias's purge declaration is read at its interface and names tables", biasDecl.tables.length >= 3, true);
+  const fromT5 = [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY, ...ENTITIES_TABLES, ...CONTENT_TABLES,
+                  ...CONNECTIONS_TABLES, ...PROGRESSIONS_TABLES, ...OBSERVATION_LOG_TABLES, ...RETRIEVAL_PURGE,
+                  ...biasDecl.tables].map(named);
+  const exemptT5 = [...CALIBRATION_TABLES, ...biasDecl.exempt];
+  const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables,
+                       ...fromT5];
   const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
-                        ...provDecl.exempt];
+                        ...provDecl.exempt, ...exemptT5];
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
-  const purged = new Set([...fromLegacy, ...fromModules, ...fromDeletes]);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): legacy-store's list is read as TEXT, and since T5 the store filters
+     it at run time by every extracted owner's list (`.filter((t) => !BIAS_TABLES.includes(…))`, `!extractionOwns(t)`,
+     …), so its text still names tables it no longer declares. One of them is now EXEMPT: bias declares
+     `bias_debt_sweeps` exempt (bias R30), which the text read counted as purged. legacy-store's share is therefore
+     what its text names less what a module declares, purged or exempt, which is the store's own filter. */
+  const legacyOwn = fromLegacy.filter((n) => !fromModules.includes(n) && !moduleExempt.includes(n));
+  const purged = new Set([...legacyOwn, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
   for (const name of moduleExempt) {
     t(`a module's declared exemption "${name}" names a real table`, allTables.includes(name), true);

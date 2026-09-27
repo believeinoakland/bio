@@ -984,6 +984,28 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     t("11g000: capture's routes were read (the map it contributes is not empty)",
       ["sourcereach", "inboxget", "linksto"].every((r) => routes[r] !== undefined), true);
   }
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; T5's layers 4 and 5): the store's map now also spreads the routes of
+     calibration, bias, extraction, connections, observation-log, entities and progressions (`...<fn>(<module>Of(
+     this.ctx), url, body[, this.env]),`) and retrieval's (`...retrievalRoutes(…)`), each declared in its module's
+     index.mjs one indent level in, reading parameters through a local `q("<name>")` (retrieval: `q.get("<name>")`,
+     `q` = `url.searchParams`). They are store routes still, read into the same table exactly as capture's are above
+     (a store route of the same name wins); each module's map is floored as non-empty by one route it must carry. */
+  for (const [mod, fn, witness] of [
+    ["calibration", "calibrationOps", "calibrations"], ["bias", "biasOps", "biasmanifest"],
+    ["extraction", "extractionOps", "reading"], ["connections", "connectionsOps", "backlinks"],
+    ["observation-log", "observationLogOps", "leadread"], ["entities", "entitiesOps", "readingname"],
+    ["progressions", "progressionOps", "captureprogressions"], ["retrieval", "retrievalRoutes", "projection"]]) {
+    const xlines = src(`${mod}/index.mjs`).split("\n");
+    const xat = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));
+    let xcur = null;
+    for (let i = xat + 1; xat >= 0 && i < xlines.length && !/^  \};/.test(xlines[i]); i++) {
+      const m = xlines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { xcur = m[1] in routes ? null : m[1]; if (xcur) routes[xcur] = ""; }
+      if (xcur) routes[xcur] += xlines[i].replace(/\bq\("/g, 'searchParams.get("').replace(/\bq\.get\("/g, 'searchParams.get("');
+    }
+    t(`11g000 (T5): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
+      routes[witness] !== undefined, true);
+  }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");

@@ -416,8 +416,16 @@ const scans = (body) => {
   }
   return out;
 };
+/* CORRECTED 2026-09-27 (T5-12, legacy-tests), not exempted: `(?<!#)`, so a local named `rows` is not "mentioned" by every
+   `this.#rows(` call in the method. `\b` sits between `#` and `r`, so a method with a local `rows` tainted EVERY scan
+   assigned in it, bounded or not. It surfaced on extraction's `documentsByReference` (EXTRACTION #1, R48 bounded it):
+   its per-document occurrences read is assigned to `rows`, which tainted `docs`, the LIMIT-bounded published page above
+   it, so the page's loop read as a loop over an unbounded collection and the method joined the CLASS — the member D-384
+   says LEAVES (per-row work over a LIMIT-bounded, published page). MEASURED: on the T5 opening tree (64386f16eb) every
+   roster this file prints is byte-identical with and without the correction; on this tree the only movement is that
+   one method. The over-strictness fixture `NC_ROWS_LOCAL` below pins both directions. */
 const mentions = (expr, ids) =>
-  [...ids].some((id) => new RegExp(`\\b${id.replace(/\$/g, "\\$")}\\b`).test(expr));
+  [...ids].some((id) => new RegExp(`(?<!#)\\b${id.replace(/\$/g, "\\$")}\\b`).test(expr));
 
 /* THE ANALYSIS. Seeds, fixed-point taint, tainted loops, amplification. */
 const analyse = (body) => {
@@ -574,8 +582,17 @@ const CLASS = classMembers(CENSUS_SEGMENTS);
  * must still occur in the member's comment-stripped segment, and the helpers it names must still
  * reach a read within three calls. Move the call and the admission reds and must be re-examined —
  * which is the property this row exists for: no membership held by say-so. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; CONNECTIONS #1, T5-5, connections R22): `#citesInto` MOVED WHOLE into
+   connections as `citesInto` (the store keeps a one-line delegation), so the member is read where it now lives
+   (`home`, the ADMITTED name; `name` stays the D-384 population's). RE-READ, not re-pinned: the module's method is the
+   same unbounded `SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'` in its `for` header and the same
+   per-row severance read, now `this.edgeSevered(…)` — connections' `edgeSevered` (was `#refEdgeSevered`), which reads the
+   citer's `bundle.md` through record-core's `readFile` (the same `files` row, `#one`) and parses its references. The
+   four store members below that still call `this.#refEdgeSevered(…)` keep that site: the store's `#refEdgeSevered` is
+   now a delegation to `connectionsOf(this.ctx).edgeSevered`, and `readsThrough` follows it there (see it). */
 const D384_STAYS = [
-  { name: "#citesInto", site: `this.#refEdgeSevered(r.bundle_id, id, "cites")`, helpers: ["#refEdgeSevered"],
+  { name: "#citesInto", home: "connections/index:citesInto", site: `this.edgeSevered(r.bundle_id, id, "cites")`,
+    helpers: ["edgeSevered"],
     amplification: "per citing row, #refEdgeSevered reads the citer's bundle.md and parses its "
       + "frontmatter — `refs` drops the withdrawal status, so it can only be read from the document (D-267)" },
   { name: "#conditionsCaptureRequested", site: "case: this.#conditionHomes([r.target], viewer),",
@@ -619,6 +636,10 @@ const D384_STAYS = [
     amplification: "per citing project edge, #refEdgeSevered's document read, inside a `.find` — a "
       + "callback form this walk does not follow. It stops at the first live citer, so the read is paid "
       + "once per consecutively-withdrawn citer ahead of it (D-280's own note)" },
+  /* RE-READ 2026-09-27 (T5-12, legacy-tests; PROGRESSIONS #1, T5-6): `queueFeed` still calls `this.proposalsFeed(nowMs)`
+     as written; the store's `proposalsFeed` is now a delegation to progressions' `proposalsFeed` (R18), which
+     `readsThrough` follows, and which is itself ADMITTED below (`T5_STAYS`) for the per-instance `#assemble` it still
+     makes over every threaded instance. The site and the per-proposal instance loop are unchanged. */
   { name: "queueFeed", site: "for (const inst of p.instances)", helpers: ["proposalsFeed", "#queueAncestors", "#queueOptions"],
     amplification: "per proposal — proposalsFeed's output, itself derived over an unbounded scan and "
       + "in this class — one progression_instances scan per instance, and #queueAncestors and "
@@ -628,11 +649,18 @@ const D384_STAYS = [
 const D384_LEAVES = [
   { name: "#caseClaimInBytes", why: "one pass over unsigned case documents parsing each row's OWN text — "
       + "linear, no read per row. Where it IS amplified is named: #restsOnLive reaches it once per leg" },
-  { name: "#frontierContent", why: "every per-row read (#frontierVerification, the register read in "
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; RETRIEVAL #1, T5-10): the frontier's levels MOVED into retrieval's
+     Frontier reader (`src/retrieval/frontier.mjs`), `frontier` as `#document`, `#frontierContent` as `#content`,
+     `#frontierMeaning` as `#meaning`; and `danglingRefs` into connections as `dangling` (CONNECTIONS #1). `home` names
+     each where it lives, so the OUT check below reads the method and not a name nothing carries any more. The
+     reasons are unchanged: the per-row reads (now `this.obs.verification`, the register `#one`, `missingCause`) run
+     over the page `#page` fetches at the published cap; the tally is read once. `provenanceRoutesMarked` (T4's
+     move into provenance) is given its `home` the same way. */
+  { name: "#frontierContent", home: "retrieval/frontier:#content", why: "every per-row read (#frontierVerification, the register read in "
       + "`seen`, #missingContentCause) runs over a LIMIT-bounded page under the published "
       + "FRONTIER_LIMIT_MAX; its unbounded scans — the index-state read over the page's own subjects and "
       + "the tally GROUP BY — are each read ONCE. REC-94's admission states the bound itself" },
-  { name: "#frontierMeaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
+  { name: "#frontierMeaning", home: "retrieval/frontier:#meaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
       + "row over a (cap+1)*3 page and three LIMIT cap+1 scans; the only unbounded scan is the tally, "
       + "read ONCE. REC-95's admission states the bound itself" },
   /* CORRECTED 2026-09-25 (REC-191), not exempted: the plan's row source moved into
@@ -661,23 +689,43 @@ const D384_LEAVES = [
      can be trusted: before the fix this member LEFT the class for a reason the reader could not
      see, and a disposition believed on the strength of a stale explanation is the defect this list
      exists to prevent. */
-  { name: "danglingRefs", why: "its own body is one anti-join, returned — judged on that body alone "
+  { name: "danglingRefs", home: "connections/index:dangling", why: "its own body is one anti-join, returned — judged on that body alone "
       + "since D-414 closed the segmenter's generator gap (2026-09-19). Before that it was credited "
       + "with the NEXT segment's header scan, because `*eachImage` could not open a segment of its "
       + "own; that generator now opens one, is counted in the CENSUS in its own right, and this "
       + "verdict no longer depends on the reader's blind spot" },
   { name: "earnedBasisRegistry", why: "one pass folding the union scan into a Map, then one pass over "
       + "the Map — linear, no read per row. REC-88's worked example: inline and hoisted now agree" },
-  { name: "frontier", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
+  { name: "frontier", home: "retrieval/frontier:#document", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
       + "page under the published FRONTIER_LIMIT_MAX; the only unbounded scan is the tally GROUP BY, "
       + "read ONCE. REC-93's own admission: \"the scan underneath it is LIMIT-bounded\"" },
-  { name: "provenanceRoutesMarked", why: "its page is LIMIT-bounded and its census is ONE GROUP BY — "
+  { name: "provenanceRoutesMarked", home: "provenance/index:provenanceRoutesMarked", why: "its page is LIMIT-bounded and its census is ONE GROUP BY — "
       + "linear; the correlated MAX(seq) in it is work INSIDE SQL, which this walk states it cannot see, "
       + "and no row is read again in JS. REC-116's note that the census puts it in this class was the "
       + "header credit speaking" },
   { name: "publishedCaseRegistryFor", why: "one pass folding editions per case, a parse per row" },
 ];
-const ADMITTED = new Map(D384_STAYS.map((s) => [s.name, s]));
+/* T5-12, 2026-09-27: TWO MEMBERS WHOSE ROW SOURCE MOVED INTO A HELPER, admitted on D-384's terms. Progressions (T5-6)
+   moved `#overdueScan` and `proposalsFeed` and, in moving them, took their one unbounded scan — `SELECT DISTINCT
+   progression_key, entity_id FROM progression_instances` — into a shared helper `#pairs()`, which both now iterate in a
+   `for` header. The work is the same (every threaded instance, and `#assemble` — the old `#assembleInstance`, itself a
+   CLASS member by the walk — per instance), but the walk reads one method at a time and cannot see a scan inside a helper
+   (the header's first declared limitation), so both LEFT the walk's roster on the move and nothing else. They are
+   ADMITTED by name, each held by its row source call and its per-row call AS WRITTEN, exactly as the D-384 admissions
+   are (`#conditionsGovernorHolding`'s `rowSource` is the precedent), and checked by the same arm below. */
+const T5_STAYS = [
+  { name: "progressions/index:overdueScan", site: "this.#deadlines(this.#assemble(p.progression_key, p.entity_id))",
+    rowSource: { call: "for (const p of this.#pairs())", module: "progressions/index:#pairs" },
+    helpers: ["#assemble"],
+    amplification: "per threaded instance (#pairs: every DISTINCT progression_key, entity_id, unbounded), #assemble "
+      + "re-derives the instance (its stages, placements and discharges, three unbounded reads) and #deadlines walks it" },
+  { name: "progressions/index:proposalsFeed", site: "const inst = this.#assemble(p.progression_key, p.entity_id);",
+    rowSource: { call: "for (const p of this.#pairs())", module: "progressions/index:#pairs" },
+    helpers: ["#assemble"],
+    amplification: "per threaded instance, #assemble re-derives the whole instance and the findings are grouped per "
+      + "(progression, stage) — REC-6's one walk, unchanged by the move but for the scan now living in #pairs" },
+];
+const ADMITTED = new Map([...D384_STAYS, ...T5_STAYS].map((s) => [s.home || s.name, s]));
 /* THE CLASS IS THE WALK'S MEMBERS AND THE ADMITTED ONES, and the ceiling below grades the union —
    a member the walk cannot see is still a member, and it is named, not counted into a hole. */
 const CLASS_ALL = new Set([...CLASS.keys(), ...ADMITTED.keys()]);
@@ -725,8 +773,11 @@ for (const [name, a] of CLASS)
 console.log(`  CLASS OPS: ${CLASS_OPS.join(", ")}`);
 
 /* ------------------------------------------------------------------- GUARDS. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the old anchor `static SEARCH_ORPHAN_MAX = 100;` left the store with
+   retrieval (RETRIEVAL #1, T5-10), where it is a module `export const`; the guard asks the same of another of the store's
+   own numeric statics, the one `bounds.test.mjs`'s guard re-anchored on. */
 t("WALK GUARD: comments are blanked, and a known CODE line SURVIVES it",
-  /static SEARCH_ORPHAN_MAX = 100;/.test(CODE), true);
+  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — this file's own subject is named in the source's comments",
   /the DERIVATION was unbounded, not merely the response/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -780,9 +831,16 @@ t("SUBJECT SHAPE: and the taint reached it through TWO hops — the Map it was c
 t("REC-66: `op=connect` is OFF this class roster — the derivation's scan is bounded, and this is "
 + "measured off the source by the walk that would otherwise name it",
   CLASS_OPS.filter((e) => e.startsWith("connect->")), []);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; CONNECTIONS #1, T5-5, connections R1-R2): `deriveConnections` MOVED
+   into connections as `derive` (`op=connect` reaches it through `...connectionsOps(...)`), so the three arms below read
+   its segment there. The SQL is byte-for-byte the pinned one. The pair is connections' own named constants,
+   `CONNECTIONS_LIMIT_DEFAULT` 500 / `CONNECTIONS_LIMIT_MAX` 5000 (the values of the store's `#MEANING_LIMIT_*`, which
+   entities now exports as `MEANING_LIMIT_*`; ENTITIES #1's REPORT 8 asks connections to import those), and the
+   document bound is derived by `Connections.maxEndsForPairs(cap)` — still no literal at the call site. */
+const DERIVE_SEG = ALL_SEGMENTS.get("connections/index:derive") || "";
 t("REC-66: and `deriveConnections` scans rows and has NO unbounded scan left in it — stated "
 + "positively, so the arm fails if the method is ever returned to the state this item found it in",
-  (() => { const a = analyse(SEGMENTS.get("deriveConnections") || ""); return [a.scans > 0, a.unbounded]; })(),
+  (() => { const a = analyse(DERIVE_SEG); return [a.scans > 0, a.unbounded]; })(),
   [true, 0]);
 /* D-227's PIN, one step earlier than D-227 wrote it. The published envelope cannot stand in
    for the SQL bound — CONDUCT measured an honest envelope over an unbounded scan at REC-60's
@@ -791,17 +849,17 @@ t("REC-66 / D-227: the SQL bounds themselves, pinned off `deriveConnections`' co
 + "segment — the scan is bounded by DOCUMENTS (the inner select) and by ROWS (the outer LIMIT), "
 + "and both ask for one more than they may use so the answer can tell that more existed",
   [/SELECT capture_sha FROM resolutions WHERE entity_id=\? GROUP BY capture_sha\s+ORDER BY capture_sha LIMIT \?/
-     .test(SEGMENTS.get("deriveConnections") || ""),
+     .test(DERIVE_SEG),
    /* CORRECTED 2026-09-18 by REC-120, not exempted: the outer ORDER BY gained `, ref`
       so the pair's tie-break is a named rule rather than SQLite's row order (D-161 act 2).
       The BOUND this pins is unchanged — the same LIMIT with the same `rowCap + 1`. */
    /ORDER BY capture_sha, ref LIMIT \?`, entityId, entityId, endsCap \+ 1, rowCap \+ 1\)/
-     .test(SEGMENTS.get("deriveConnections") || "")], [true, true]);
+     .test(DERIVE_SEG)], [true, true]);
 t("REC-66: the bound is the plane's OWN pair and is not a literal at the call site — the document "
 + "bound is DERIVED from the pair bound by #maxEndsForPairs, so the two can never disagree",
-  [/Store\.#MEANING_LIMIT_DEFAULT/.test(SEGMENTS.get("deriveConnections") || ""),
-   /Store\.#MEANING_LIMIT_MAX/.test(SEGMENTS.get("deriveConnections") || ""),
-   /Store\.#maxEndsForPairs\(cap\)/.test(SEGMENTS.get("deriveConnections") || "")], [true, true, true]);
+  [/\bCONNECTIONS_LIMIT_DEFAULT\b/.test(DERIVE_SEG),
+   /\bCONNECTIONS_LIMIT_MAX\b/.test(DERIVE_SEG),
+   /\bConnections\.maxEndsForPairs\(cap\)/.test(DERIVE_SEG)], [true, true, true]);
 
 /* ------------------------------------------------------------------ THE RATCHET.
    The class is REAL and this item does not pretend to have emptied it: 29 methods derive
@@ -1138,7 +1196,7 @@ const hoistRowSources = (body) => {
 
 const HOIST = { fragile: [], stable: [], noInlineSource: [] };
 for (const name of CLASS.keys()) {
-  const h = hoistRowSources(SEGMENTS.get(name) || "");
+  const h = hoistRowSources(ALL_SEGMENTS.get(name) || "");   /* T5-12: a member may be a module's (see EXTRACTED) */
   if (!h.hoists) { HOIST.noInlineSource.push(name); continue; }
   const a = analyse(h.body);
   (a.unbounded && a.loops && a.amplified ? HOIST.stable : HOIST.fragile).push(name);
@@ -1208,35 +1266,63 @@ t("M0-63 (D-384): no disposition is bare — every STAYS names its amplification
    ...D384_LEAVES.map((l) => [l.name, l.why.length > 20])].filter(([, ok]) => !ok), []);
 t("M0-63 (D-384): every LEAVES member is OUT of the class, and every STAYS member is IN it — as an "
 + "ADMITTED member the walk does NOT see, which is the only ground on which one may stay",
-  [D384_LEAVES.filter((l) => CLASS_ALL.has(l.name)).map((l) => l.name),
-   D384_STAYS.filter((s) => !CLASS_ALL.has(s.name) || CLASS.has(s.name)).map((s) => s.name)],
+  /* T5-12: each read at its `home` where it moved (see the lists), and T5's two admissions with D-384's. */
+  [D384_LEAVES.filter((l) => CLASS_ALL.has(l.home || l.name)).map((l) => l.name),
+   [...D384_STAYS, ...T5_STAYS].filter((s) => !CLASS_ALL.has(s.home || s.name) || CLASS.has(s.home || s.name)).map((s) => s.name)],
   [[], []]);
 
 /* THE ADMISSION IS CHECKED, NOT TAKEN ON ITS WORD. A STAYS member must still (1) hold an unbounded
    row source and a loop over it by the walk's own reading, (2) contain the per-row call its entry
    names, exactly as written, and (3) name helpers that still reach a read within three calls. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a helper may now live in a module, and a store helper may now be a
+   one-line delegation to one (`#refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }`,
+   `proposalsFeed`). So a call is followed to where its code is: `this.x(` inside a module's method to the same file's
+   (else the same module's) `x`; `<m>Of(this.ctx).y(` to module `<m>`'s `y`; `this.record.y(` / `this.#record.y(` — the
+   record-core service a module holds — to record-core's `y`. A read is also `this.#sql.exec(` (the modules' spelling,
+   see `analyse`). Each hop counts toward the same depth of three; nothing else about the check changed. */
+const OF_MODULE = { recordOf: "record-core", membershipOf: "membership", promotionOf: "promotion", governorOf: "host-governor",
+  provenanceOf: "provenance", captureOf: "capture", calibrationOf: "calibration", extractionOf: "extraction",
+  contentOf: "content", entitiesOf: "entities", connectionsOf: "connections", progressionsOf: "progressions",
+  biasOf: "bias", observationLogOf: "observation-log", retrievalOf: "retrieval" };
+const inModule = (mod, y, file = null) => (file && ALL_SEGMENTS.has(`${file}:${y}`) ? `${file}:${y}`
+  : [...MODULE_SEGMENTS.keys()].find((k) => k.startsWith(`${mod}/`) && k.endsWith(`:${y}`)) || null);
+const calleesOf = (name, b) => {
+  const file = name.includes(":") ? name.slice(0, name.indexOf(":")) : null;
+  const out = [];
+  for (const m of b.matchAll(/this\.(#?[A-Za-z_$][\w$]*)\s*\(/g))
+    out.push(file ? inModule(file.split("/")[0], m[1], file) : m[1]);
+  for (const m of b.matchAll(/\b([A-Za-z]+Of)\(this\.ctx\)\s*\.\s*([A-Za-z_$][\w$]*)\s*\(/g))
+    if (OF_MODULE[m[1]]) out.push(inModule(OF_MODULE[m[1]], m[2]));
+  for (const m of b.matchAll(/this\.#?record\.([A-Za-z_$][\w$]*)\s*\(/g)) out.push(inModule("record-core", m[1]));
+  return out.filter(Boolean);
+};
 const readsThrough = (name, depth = 3, seen = new Set()) => {
   if (seen.has(name)) return false;
   seen.add(name);
-  const b = SEGMENTS.get(name);
+  const b = ALL_SEGMENTS.get(name);
   if (!b) return false;
-  if (/#rows\(|#one\(|this\.sql\.exec\(/.test(b)) return true;
+  if (/#rows\(|#one\(|this\.#?sql\.exec\(/.test(b)) return true;
   if (!depth) return false;
-  return [...b.matchAll(/this\.(#?[A-Za-z_$][\w$]*)\s*\(/g)].some((m) => readsThrough(m[1], depth - 1, seen));
+  return calleesOf(name, b).some((c) => readsThrough(c, depth - 1, seen));
 };
 t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a loop over it, still "
 + "makes the per-row call its entry names AS WRITTEN, and every helper it names still reaches a read. "
 + "Move the call and this reds naming the member — its admission must then be re-read, not re-pinned",
-  D384_STAYS.map((s) => {
-    const body = SEGMENTS.get(s.name) || "";
+  /* T5-12: T5's two admissions are checked by this same arm; a member is read at its `home` where it moved, and its
+     helpers relative to it (a module member's `x` is its own file's `x`). */
+  [...D384_STAYS, ...T5_STAYS].map((s) => {
+    const key = s.home || s.name;
+    const body = ALL_SEGMENTS.get(key) || "";
     const a = analyse(body);
     /* T4: a row source reached through a module's interface (`rowSource`, above) is held when the member loops
        over that call AND the module's method still scans unbounded; otherwise the walk's own reading, as before. */
     const src = s.rowSource
       ? body.includes(s.rowSource.call) && scans(MODULE_SEGMENTS.get(s.rowSource.module) || "").some((x) => !x.bounded)
       : a.unbounded > 0 && a.loops > 0;
+    const at = (h) => (key.includes(":") && !h.includes(":")
+      ? inModule(key.split("/")[0], h, key.slice(0, key.indexOf(":"))) || h : h);
     return [s.name, src, body.includes(s.site),
-            s.helpers.filter((h) => !readsThrough(h))];
+            s.helpers.filter((h) => !readsThrough(at(h)))];
   }).filter(([, src, site, dead]) => !src || !site || dead.length),
   []);
 
@@ -1288,6 +1374,26 @@ const NC_BOUNDED_HEADER = `class Z {
   }
   end() { return 1; }
 }`;
+/* T5-12, 2026-09-27: the `mentions` correction's own fixture, both directions. A LIMIT-bounded page whose per-row read
+   is assigned to a local named `rows` is NOT the class (its loop is over the bounded page); the same method with the
+   page UNBOUNDED is. Without the correction the first is enrolled; the second is in the class either way. */
+const NC_ROWS_LOCAL = `class Z {
+  ncRowsLocal({ ref, cap } = {}) {
+    const docs = this.#rows(\`SELECT DISTINCT sha FROM refs WHERE ref=? ORDER BY sha LIMIT ?\`, ref, cap + 1);
+    const out = [];
+    for (const d of docs.slice(0, cap)) {
+      const rows = this.#rows(\`SELECT pos FROM refs WHERE ref=? AND sha=? ORDER BY seq\`, ref, d.sha);
+      out.push({ sha: d.sha, n: rows.length });
+    }
+    return { ok: true, out, truncated: docs.length > cap };
+  }
+  end() { return 1; }
+}`;
+t("T5-12 OVER-STRICTNESS (`mentions`): a per-row read assigned to a local named `rows` over a LIMIT-bounded page is NOT "
++ "the class, and the same shape over an UNBOUNDED page IS — the name of a local is not a row source",
+  [classMembers(NC_ROWS_LOCAL).has("ncRowsLocal"),
+   classMembers(NC_ROWS_LOCAL.replace(" ORDER BY sha LIMIT ?`, ref, cap + 1)", " ORDER BY sha`, ref)")).has("ncRowsLocal")],
+  [false, true]);
 t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is in no class and "
 + "therefore in no roster this block builds — the new arm can only ever NAME members, never enrol "
 + "one. A classifier that over-collects is worse here than one that under-collects",

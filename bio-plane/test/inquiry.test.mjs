@@ -358,11 +358,19 @@ console.log("\n--- 6. the boot normaliser converts pre-REC-10 rows (site 2, exer
     + "    if (r && r.ok && pkg && pkg.meta && pkg.meta.object_type)\n"
     + "      this.sql.exec(\"UPDATE bundles SET object_type=? WHERE bundle_id=?\", pkg.meta.object_type, pkg.bundleId);\n"
     + "    return r;\n  }";
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; PROMOTION #3, commit 8a258e2505): the dispatch's `promote` route
+     now calls `promotionOf(this.ctx).promote(body)` directly, so a `/promote` no longer passes through the store's
+     door above and the neutered door was never reached (the row came back canonical). The route is pointed back at
+     the door in the neutered build only — the door is still the store's public `promote`, which its own callers
+     use — so the patch has the effect it always had. A PRESENCE test like the other two. */
+  const ROUTE = "        promote: () => promotionOf(this.ctx).promote(body),";
   const neutered = STORE_SRC
     .replace("Object.entries(LEGACY_TYPE_ALIASES))", "[])")
-    .replace(DOOR, RAW_DOOR);
-  t("the neutering patch found both sites (markers moved if this fails)",
-    neutered !== STORE_SRC && neutered.includes(RAW_DOOR)
+    .replace(DOOR, RAW_DOOR)
+    .replace(ROUTE, "        promote: () => this.promote(body),");
+  t("the neutering patch found all three sites (markers moved if this fails)",
+    neutered !== STORE_SRC && neutered.includes(RAW_DOOR) && STORE_SRC.includes(ROUTE)
+      && neutered.includes("        promote: () => this.promote(body),")
       && !neutered.includes("Object.entries(LEGACY_TYPE_ALIASES))"), true);
   const mkMf = (src) => new Miniflare({
     modules: true, script: src, modulesRoot: "/", scriptPath: SRC("store.mjs"),

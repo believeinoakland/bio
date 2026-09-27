@@ -179,7 +179,14 @@ console.log("\n--- phrases, prefixes, and what a member types that is not syntax
         /* Only these may survive: the operators, the column filters, the
            parentheses, the prefix star and whitespace. Anything else is a
            member's character reaching FTS5 as syntax. */
-        if (!/^[@\s()*]*(?:(?:AND|OR|NOT|\{[a-z]+\}|:)[@\s()*]*)*$/.test(s)) leaks.push([q, e, s]);
+        /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; query-language R24, K105): proximity is now compiler syntax —
+           `NEAR(a b)` compiles to FTS5's own `NEAR(… , n)`, the terms moving only as literals and `n` the compiler's
+           whole number (10 when absent, clamped). So `NEAR(` and the `, n)` that closes it join the operators; every
+           member-typed TERM must still be inside a literal, and the NEAR must be one the parser built (the AST's
+           `near`), never text that escaped one. */
+        if (!/^[@\s()*]*(?:(?:AND|OR|NOT|NEAR(?=\()|,\s*\d{1,3}(?=\))|\{[a-z]+\}|:)[@\s()*]*)*$/.test(s)) leaks.push([q, e, s]);
+        if (/NEAR\(/.test(s) && !JSON.stringify(compile({ q, viewer: M }).ast).includes('"near":['))
+          leaks.push([q, e, "a NEAR the parser did not build"]);
         if (s.includes('"')) leaks.push([q, e, "unbalanced literal"]);
       }
     t("no member-typed character reaches FTS5 as syntax, over an adversarial corpus", leaks, []);
@@ -561,7 +568,10 @@ console.log("\n--- D-255: the atom carries no field that nothing reads, and FTS5
   t("the corpus this sweep runs over is not empty", texts.length > 12, true);
   t("NOT ONE atom in the corpus carries a field the compiler never reads",
     [...new Set(nodes.flatMap((n) => Object.keys(n)))].sort(),
-    ["cmp", "col", "column", "json", "kid", "kids", "op", "prefix", "value"]);
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; query-language R1, R13): `explicit` arrived on an `and` node the
+       member wrote with an explicit AND (`(a OR "b c") AND d` here), and it HAS its reader: `widenable` reads
+       `ast.explicit` (R13: a run holding an explicit AND is not the bare implicit conjunction that may widen). */
+    ["cmp", "col", "column", "explicit", "json", "kid", "kids", "op", "prefix", "value"]);
 }
 
 console.log("\n--- D-258: the meaning descriptor carries exactly what op=meaningrows reads ---");

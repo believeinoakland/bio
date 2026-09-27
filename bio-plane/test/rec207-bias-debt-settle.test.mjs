@@ -412,13 +412,17 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
      patched trees are graded on their own catalogue and this arm cannot be satisfied by a file the run
      never used. */
   const CAT = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-26.13–C-26.19 moved with the bias debt out of the catalogue
+     into `src/bias/checks.mjs` (BIAS #1, R29, K146); read from the same (possibly armed) source tree. C-33.45–47
+     are still the catalogue's. */
+  const BIAS = await import(join(SRC_DIR, "bias", "checks.mjs"));
   const rows = [
-    ["BIAS_DEBT_NO_RUN", "C-26.13", CAT.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.14", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.15", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_NO_REASON", "C-26.16", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_REASON_TOO_LONG", "C-26.17", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.18", CAT.BIAS_CHECKS],
-    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.19", CAT.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_RUN", "C-26.13", BIAS.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.14", BIAS.BIAS_CHECKS],
+    ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.15", BIAS.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_REASON", "C-26.16", BIAS.BIAS_CHECKS],
+    ["BIAS_DEBT_REASON_TOO_LONG", "C-26.17", BIAS.BIAS_CHECKS],
+    ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.18", BIAS.BIAS_CHECKS],
+    ["BIAS_DEBT_ALREADY_SETTLED", "C-26.19", BIAS.BIAS_CHECKS],
     ["AI_RUN_RERUN_SELF", "C-33.45", CAT.ACT_SHAPE_CHECKS],
     ["AI_RUN_RERUN_UNKNOWN", "C-33.46", CAT.ACT_SHAPE_CHECKS],
     ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.47", CAT.ACT_SHAPE_CHECKS],
@@ -440,7 +444,7 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
   t("ARM C3 (THE UNDRIVEN ONE, NAMED): BIAS_DEBT_NO_ACTOR is unreachable through the control plane, and the "
     + "evidence is that a member's call reaches the SUBJECT refusals instead — it got past the actor checks, "
     + "so an actor was stamped. The code is pinned here by name and STATED rather than counted as driven",
-    [CAT.BIAS_CHECKS.BIAS_DEBT_NO_ACTOR.check,
+    [BIAS.BIAS_CHECKS.BIAS_DEBT_NO_ACTOR.check,
      (await resolve(ALICE, { run: RES.run, reason: "a member on this call always has a name" }))?.code,
      (await readDebt(RES.run))?.settlements?.length],
     ["C-26.14", "BIAS_DEBT_ALREADY_SETTLED", 1]);

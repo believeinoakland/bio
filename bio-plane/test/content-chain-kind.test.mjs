@@ -94,9 +94,13 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
   t("the `chain` sub-field reads the COLUMN", MEANING.content.sub.chain.col, "chain_kind");
   const st = compile({ q: "content:ocr", viewer: M, facets: [] }).statements.page();
   const i = st.sql.indexOf("FROM content");
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; K143 (1), content R14, DEC-4): `ocr` is a machine reading, so
+     `content:ocr` selects its own kind OR `mixed` (a unit read in more than one step kind): a set membership on the
+     column, both words as ARGUMENTS. Still the column, still no parse, still no member text as syntax. */
   t("`content:ocr` compiles to an equality on the column, with the step as an ARGUMENT",
-    [st.sql.slice(i, st.sql.indexOf(")", i)).replace(/\s+/g, " ").trim(), st.args.includes("ocr")],
-    ["FROM content WHERE chain_kind = ?", true]);
+    [st.sql.slice(i, st.sql.indexOf(")", i) + 1).replace(/\s+/g, " ").trim(), st.args.includes("ocr"),
+     st.args.includes("mixed")],
+    ["FROM content WHERE chain_kind IN (?, ?)", true, true]);
   const frag = (q) => { const s = compile({ q, viewer: M, facets: [] }).statements.page().sql;
     const j = s.indexOf("FROM content"); return s.slice(j, s.indexOf(")", j)).replace(/\s+/g, " ").trim(); };
   t("`content:chain=*` is presence on the column", frag("content:chain=*"), "FROM content WHERE chain_kind IS NOT NULL");

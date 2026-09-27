@@ -44,7 +44,7 @@ import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): t
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { AI_CREDENTIAL_CHECKS, isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
+import { AI_CREDENTIAL_CHECKS, isMachineIdentity, isMachineStamp, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -525,7 +525,12 @@ console.log("\n--- 6. the STATED viewer, and why D-199 (4) is a measurement rath
     [true, true, true]);
   t("viewerPredicate recognises class:ai — leaving it out would not have been narrower, it would "
   + "have made an organisation key read ABSENT for every bundle (REC-33's arm (b))",
-    /admin\|member\|probe\|daemon\|ai/.test(QUERY_SRC), true);
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N37, K75): the recognition is membership's `viewerPredicate`,
+       which query.mjs now only re-exports; the source anchor moves there and the arm is also asked of the
+       interface, the predicate query.mjs exports: a class:ai stamp is recognised (not DENY). */
+    [/admin\|member\|probe\|daemon\|ai/.test(readFileSync(SRC("membership/index.mjs"), "utf8")),
+     (await import("../src/query.mjs")).viewerPredicate(`${MACHINE_CLASS_PREFIX}ai`).scope !== "DENY"],
+    [true, true]);
 }
 
 /* ====================================================================== 7

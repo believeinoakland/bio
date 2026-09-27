@@ -232,8 +232,16 @@ const t = (label, got, want) => {
    content, entities, connections, progressions, bias, observation-log, retrieval) left the store behind one-line
    delegations and spreads of their routes (`...entitiesOps(...)`, `...retrievalRoutes(...)`), so the walk read
    delegations again. The corpus is T4's with those delegations and routes re-inlined too (`reinlineLayer5(…,
-   { ops: true })`, `t5-extracted.mjs`, which states each substitution), as `bounds.test.mjs`'s; every figure and name
-   below is diffed BY NAME against this suite's print on the T5 opening (64386f16eb), not re-pinned. */
+   { ops: true })`, `t5-extracted.mjs`, which states each substitution), as `bounds.test.mjs`'s — and, this walk's
+   own need, with `privates: true`: T5 moved the PRIVATE helpers behind several reads with them (entities'
+   `#resolveOne` behind `op=resolve`, retrieval's frontier reader's `#document`/`#content`/… behind `op=frontier`,
+   progressions' `#answer` behind `op=instance`), and this walk's RETURN-DELEGATE rule follows a method into the
+   private segments it returns, so those helpers are appended as `#x$<module>Of` and a store method that returns a
+   module's answer through a local (`resolveReferences` arms the derive sweep around entities' `resolve`, so it is
+   not a pure delegation) is read as returning that private (rule (5) of `t5-extracted.mjs`; opt-in, the other
+   callers' corpus is byte-identical). Without it the walk printed `op=resolve` and `op=frontier` as publishing NO
+   collection and `op=instance` as neither. Every figure and name below is diffed BY NAME against this suite's
+   print on the T5 opening (64386f16eb, 93 pass / 3 fail), not re-pinned. */
 const SRC_STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
@@ -816,8 +824,11 @@ console.log(`    EXCLUDED WHILE PUBLISHING A COLLECTION — the returns this rea
    A reader that silently yielded nothing makes every assertion below vacuous —
    which is the exact failure this whole file exists to prevent, so it is checked
    in its own instrument first. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `static SEARCH_ORPHAN_MAX = 100;` left the store with retrieval
+   (T5-10), where it is a module constant (`export const`), outside the class this walk reads; the guard asks the same
+   of another of the store's own numeric statics, as `bounds.test.mjs`'s guard does. */
 t("WALK GUARD: comments are blanked, and a known CODE line SURVIVES it",
-  /static SEARCH_ORPHAN_MAX = 100;/.test(CODE), true);
+  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — this file's subject is named in dozens of comments",
   /the most important entity produces the largest unbounded response/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -825,9 +836,12 @@ t("WALK GUARD: the segmenter partitions the class into a plausible number of met
 /* Anchored on text that PREDATES this item deliberately: a guard tied to the change it
    guards fails under this file's own negative control and reports the control as a broken
    instrument. Its job is to prove the segmenter's BOUNDARY, nothing else. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `resolutionsForCapture` and `documentsConcerning` moved to entities
+   (T5-4) as `resolutionsFor` and `concerns`, re-inlined into the corpus in the same order (the one followed by the
+   other), so the same boundary is asked of the same two reads under their module names. */
 t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it",
-  [/ORDER BY ref, entity_id/.test(segments(CODE).get("resolutionsForCapture")),
-   /documentsConcerning\(\{/.test(segments(CODE).get("resolutionsForCapture"))], [true, false]);
+  [/ORDER BY ref, entity_id/.test(segments(CODE).get("resolutionsFor")),
+   /concerns\(\{/.test(segments(CODE).get("resolutionsFor"))], [true, false]);
 /* ===== THE RETURN-DELEGATE RULE, DRIVEN RATHER THAN DESCRIBED. A mechanism believed on the
    strength of its EXISTENCE rather than its behaviour is the defect this project meets most, so
    the rule is asked what it does on fixtures whose answers are decidable by reading them. */
@@ -852,7 +866,11 @@ t("RETURN-DELEGATE OVER-STRICTNESS: a private method merely CONSULTED and not re
 t("RETURN-DELEGATE: `op=resolve` is on the BARE roster again, reached through `#resolveOne`. D-291 "
 + "moved the one-document act out of `resolveReferences` unchanged; the op did not get better and "
 + "the READER lost sight of it, which is REC-60's shape arriving through a refactor",
-  [BARE_OPS.includes("resolve"), (DELEGATED.get("resolveReferences") || []).includes("#resolveOne")],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#resolveOne` moved to entities (T5-4) with `resolve`; the store's
+     `resolveReferences` returns entities' answer (arming the derive sweep around it), which the corpus reads as the
+     private `#resolve$entitiesOf`, returning `#resolveOne$entitiesOf` (rule (5), above): the same helper, spelled
+     apart by module, reached by the same rule. */
+  [BARE_OPS.includes("resolve"), (DELEGATED.get("resolveReferences") || []).includes("#resolveOne$entitiesOf")],
   [true, true]);
 t("RETURN-DELEGATE: `op=caseratify` likewise, reached through `#caseEditionState` — and this one was "
 + "ALREADY LOST on origin/main 548eb2c5, measured there with this rule on and off (43 -> 44). It "
@@ -973,6 +991,12 @@ t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal 
 + "more return objects than `/\\bok\\s*:\\s*false/`, in more than one verdict spelling, and NOT ONE "
 + "return the old literal excluded is now graded. A widening that dropped a refusal would inflate the "
 + "BARE ceiling, which is the failure this correction exists to remove",
+  /* T5 (legacy-tests, T5-12), 2026-09-27 — still red, one arrival NAMED: `#fact[silent]` is the T5 opening's red
+     (64386f16eb). SEVEN `pdfStructure[silent]` arrive with extraction's `pdfStructure` (T5-2, R52), now a class
+     method reached through `extractionRoutes` and so in the corpus; it was the Worker's route in `src/index.mjs`
+     before, outside it. Each is a refusal written in the route's envelope, `{ status: 4xx, body: { ok: false, … } }`:
+     the verdict sits one level down, the old literal matched it anywhere, and `verdictOf` reads the top level. None
+     carries a collection, so none can reach a roster; recorded, not corrected (the reader is D-240's shared one). */
   [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
   [true, true, []]);
 /* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
@@ -1295,6 +1319,19 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
      (R28-R29, D-701), one host's rows.
      REPORTED to capture (via the job's report): each publishes a collection off an unbounded row source with no
      bound published. */
+  /* T5 (legacy-tests, T5-12), 2026-09-27 — NOT MOVED, still red for T3's and T4's reasons above. With layers 4-5
+     re-inlined (the corpus note at the top) the walk PRINTS 52 against the T5 opening's (64386f16eb) 51, diffed BY
+     NAME against that print (`resolve` stays, via `#resolveOne$entitiesOf`; the renamed members, below, are the
+     same ops). ONE DEPARTURE: `readingref` (`documentsByReference`) is now BOUNDED — EXTRACTION's R48 put
+     `limit`/`truncated` on it (bounds.test.mjs's arrival too). TWO ARRIVALS:
+       `filemembership` (`fileMembership`, connections R59 (R49), a NEW op): `stored` and `pending` off two scans of
+       `asserted_connections` and `file_membership_pending` with no LIMIT, no bound published. REPORTED (one agenda
+       capture's pairs: growth bounded by one parent row, which this walk says it cannot judge — see the header).
+       `projection` (BOUNDED -> BARE ARRAY): A MISREAD, NOT A NEW READ. The page read is unchanged (`LIMIT ?`,
+       `limit`, `cursor`, `total`); the one-bundle read, now retrieval's (T5-10), merges its registered decorations
+       with `Promise.all(parts.map(…)).then(merge)`, and this reader takes a returned `.map(` for a bare array. The
+       answer is one row object. Recorded rather than corrected: a reader change is not this job's.
+     The renamed members (`readingnameplan -> namingPlan`) are the same ops under their module's method names. */
   BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
@@ -1388,6 +1425,11 @@ t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPA
      its answer publishes `occurrences` with `limit` and `truncated`, but every success return is built by the act's
      local `answer` closure, which this walk does not read, and its other returns are refusals it excludes by design —
      so it lands here: a WRITE path scanning rows for its own logic, the residual's own class. Pinned by name below. */
+  /* T5 (legacy-tests, T5-12), 2026-09-27 — NOT MOVED. Green at 10 on the T5 opening (64386f16eb); with layers 4-5
+     re-inlined the walk prints 12: NO DEPARTURE (`connectionchoose` is the same op under connections' `choose`), TWO
+     ARRIVALS: `reproject->reproject` (moved code now read in its own segment; named in the residual below) and
+     `connectionsasserted->asserted` (connections R56's new read: a real new blind spot, see the residual; REPORTED).
+     A ceiling that fails on a new blind spot is doing its job; moving it is BOB's call, not this job's. */
   OPAQUE.length <= 10, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
@@ -1411,10 +1453,23 @@ t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so 
 t("REACH: and the residual is NAMED, not merely counted — a bare count is satisfied by ANY eight "
 + "ops, so the identities are pinned and a swap fails here",
   OPAQUE, [/* ADDED 2026-09-25 (D-454): the write path's bounded occurrence read; the ceiling above says why. */
-           "connectionchoose->chooseConnectionPair",
+           /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `chooseConnectionPair` is connections' `choose` (T5-5),
+              the same act, reached through `connectionsOps`' entry. */
+           "connectionchoose->choose",
            "projectfork->forkProject", "projectionplan->projectionPlan",
            "projectowneradd->projectOwnerAdd",
-           "registeraudit->registerAudit", "select->selectionCreate",
+           "registeraudit->registerAudit",
+           /* ADDED 2026-09-27 by legacy-tests (T5-12) — AN ARRIVAL, NAMED, of moved code: op=reproject's scan (`LIMIT ?`
+              at a clamp of 500/5000, answering counts and `remaining`) sat in the store's private `#backfillProjection`,
+              outside the method's own segment, so it read as NO_COLLECTION; retrieval (T5-10) wrote it inline in
+              `reproject`, so the op lands here: a write path scanning rows for its own logic and answering scalars,
+              this residual's own class. The same read as before; the reader sees it now.
+              NOT ADDED: `connectionsasserted->asserted` (connections R56, a NEW op), which also lands here and is the
+              blind spot this arm exists to catch: it publishes `member`/`source`/`containment` built by a local
+              closure this walk does not read, off `asserted_connections` scanned with NO LIMIT and sliced in memory
+              to `cap` (`limit` and `truncated` are published). REPORTED (via the job's report) rather than absorbed. */
+           "reproject->reproject",
+           "select->selectionCreate",
            "selectionrelease->selectionRelease",
            /* T4 (legacy-tests), 2026-09-27 — AN ARRIVAL, NAMED: `siteAssets` moved to capture and its scan is now
               written `this.#rows(…)`, which this reader sees (the store's `[...this.sql.exec(…)]` it did not), so the
@@ -1486,7 +1541,10 @@ t("REC-70: NEITHER FIGURE IS NEW — 200 is op=exportlog's default (the plane's 
   [/static AI_RUN_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
    /static AI_RUN_LOG_LIMIT_MAX = 5000;/.test(SRC_STORE),
    /static EXPORT_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
-   /static PROJECTION_LIMIT_MAX = 5000;/.test(SRC_STORE)], [true, true, true, true]);
+   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=projection's ceiling moved with the projection to retrieval
+      (T5-10), where it is a module constant of `src/retrieval/projection.mjs`; the same figure, read at its home. */
+   /^export const PROJECTION_LIMIT_MAX = 5000;$/m.test(readFileSync(new URL("../src/retrieval/projection.mjs", import.meta.url), "utf8"))],
+  [true, true, true, true]);
 /* A MARKER PIN, stated as one: it proves the reasoning was WRITTEN where the
    next reader meets the code, and claims nothing about what it says. The cause
    of the blindness belongs at the site, not only in a queue item — the whole

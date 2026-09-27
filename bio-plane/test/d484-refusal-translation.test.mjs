@@ -139,9 +139,25 @@ for (const [code, region] of [["NO_BASIS", "is-act-no-basis"], ["NO_CITATION", "
   t(`that one site is INSIDE ${region} — the span the row's \`where\` claims`,
     !!span && span.includes(`reason: "${code}"`) && span.includes(`code: "${code}"`), true);
 }
-t("every former site now returns through a helper: 4 actNoBasis + 3 actNoCitation call sites",
-  [(store.match(/return actNoBasis\(/g) || []).length, (store.match(/return actNoCitation\(/g) || []).length],
-  [4, 3]);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): five of the seven former sites left store.mjs with their ops
+   (entities R4/R8's relationdeclare and testify: entities REPORT 2; progressions' progressiondefine revision and
+   exception document: progressions REPORT 1). Each module mints them through its OWN helper over the SAME
+   catalogue row (`actShape` in src/entities/index.mjs, `refusal` in src/progressions/index.mjs, whose row falls back
+   to ACT_SHAPE_CHECKS for exactly these two codes). The count is the same seven, per file, named: store keeps
+   op=conclude and the grouping partition (2 NO_BASIS); entities has testify (NO_BASIS) and relationdeclare
+   (NO_CITATION); progressions has the revision's NO_BASIS and NO_CITATION and the exception's NO_CITATION. */
+const ENT = readFileSync(fileURLToPath(new URL("../src/entities/index.mjs", import.meta.url)), "utf8");
+const PRG = readFileSync(fileURLToPath(new URL("../src/progressions/index.mjs", import.meta.url)), "utf8");
+const PRGC = readFileSync(fileURLToPath(new URL("../src/progressions/checks.mjs", import.meta.url)), "utf8");
+const cnt = (s, re) => (s.match(re) || []).length;
+t("every former site now returns through a helper: 4 NO_BASIS + 3 NO_CITATION call sites, per file",
+  { store: [cnt(store, /return actNoBasis\(/g), cnt(store, /return actNoCitation\(/g)],
+    entities: [cnt(ENT, /return actShape\("NO_BASIS"/g), cnt(ENT, /return actShape\("NO_CITATION"/g)],
+    progressions: [cnt(PRG, /return refusal\("NO_BASIS"/g), cnt(PRG, /return refusal\("NO_CITATION"/g)] },
+  { store: [2, 0], entities: [1, 1], progressions: [1, 2] });
+t("and neither module mints either code as a bare literal outside its helper (the helpers read the catalogue row)",
+  [cnt(ENT, /reason: "NO_(BASIS|CITATION)"/g), cnt(PRG, /reason: "NO_(BASIS|CITATION)"/g),
+   /ACT_SHAPE_CHECKS\[code\]/.test(ENT), /ACT_SHAPE_CHECKS\[code\]/.test(PRGC)], [0, 0, true, true]);
 
 /* ---------------------------------------------------------------------------
    ON THE WIRE, THROUGH THE OP.

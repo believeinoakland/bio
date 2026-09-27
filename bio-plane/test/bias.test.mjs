@@ -164,13 +164,17 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { OBJECT_TYPES, HEADINGS, STATES, BUNDLE_ID_RE, BIAS_STATEMENT_KINDS,
-         BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING,
+import { OBJECT_TYPES, HEADINGS, STATES, BUNDLE_ID_RE,
          normalizeType, checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the statement kinds, the predicates, `checkBiasExtension` (now
+   `checkBiasSet`) and the C-26 family moved out of the catalogue into `src/bias/checks.mjs` (BIAS #1, R29, K146);
+   the catalogue keeps only C-26.12's row, which the module re-exports inside its own family. */
+import { BIAS_STATEMENT_KINDS, BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING,
+         checkBiasSet } from "../src/bias/checks.mjs";
 import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -178,6 +182,11 @@ const SRC = (f) => join(ROOT, "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): biasAdopt, biasInhale and the refusal helper moved out of store.mjs
+   into `src/bias/` (BIAS #1, T5-7); store.mjs keeps one-line delegates. The bias module's own files are read as
+   BIAS_SRC, and the source arms on the moved methods read them there. */
+const BIAS_SRC = readdirSync(SRC("bias")).filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(join(SRC("bias"), f), "utf8")).join("\n");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 let pass = 0, fail = 0;
@@ -217,6 +226,7 @@ const block = async (name, fn) => {
 const decomment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 const STORE = decomment(STORE_SRC);
 const INDEX = decomment(INDEX_SRC);
+const BIAS = decomment(BIAS_SRC);
 
 /* The named method BODY, brace-matched off the source.
  *
@@ -272,12 +282,17 @@ console.log("\n--- S0. the comment stripper, guarded in BOTH directions ---");
    legacy-store's own purge declaration. */
 t("SEEK GUARD: a known CODE line survives decommenting",
   /\.declarePurge\("legacy-store", \[/.test(STORE), true);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the prose line this read ("the malformedness rule binds the machine
+   exactly as it binds a member") left store.mjs with the inhale; its successor is the inhale's own doc comment in
+   src/bias/index.mjs, and it is asserted PRESENT in the raw text too, so the guard is not passing over a line that
+   is simply gone. */
 t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning cannot satisfy an anchor",
-  /the malformedness rule binds the machine exactly as it binds a member/.test(STORE), false);
+  [/The malformedness rule binds the machine exactly as a member/.test(BIAS_SRC),
+   /The malformedness rule binds the machine exactly as a member/.test(BIAS)], [true, false]);
 t("CORPUS PRINTED — the size of what every source arm below is read over",
   [STORE_SRC.length > 500_000, INDEX_SRC.length > 100_000], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
-          + `index.mjs ${INDEX_SRC.length}, schema.mjs ${SCHEMA_SRC.length}`);
+          + `index.mjs ${INDEX_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
 
 /* ======================================================================= 1
  * THE OBJECT: the type, the id grammar, the heading set, the state machine.
@@ -374,13 +389,18 @@ const biasMd = (fm, residue = RESIDUE) => [
   "## What This Does Not Enforce", "", residue, "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `checkBundle` no longer calls the bias extension (BIAS #1 removed it
+   from the catalogue); the same rules run as bias's `checkBiasSet(fm, files)`, at the write, in the audit and at the
+   gate (R1–R7, R9). The findings are the catalogue's plus the module's, over the same document. */
 const findingsFor = async (fm, residue = RESIDUE) => {
   const text = biasMd(fm, residue);
+  const files = new Map([["bundle.md", text]]);
   const r = await checkBundle({
-    folderName: fm.id, files: new Map([["bundle.md", text]]),
+    folderName: fm.id, files,
     sha256: async (s) => sha(s), nowMs: Date.parse("2026-07-03T00:00:00Z"),
   });
-  return r.findings.filter((x) => x.severity === "error").map((x) => x.check);
+  return [...r.findings, ...checkBiasSet(parseFrontmatter(text).data, files)]
+    .filter((x) => x.severity === "error").map((x) => x.check);
 };
 const has = (list, code) => list.includes(code);
 
@@ -519,7 +539,7 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("NINETEEN refusals are allocated, and every one carries check + where + translation",
+  t("TWENTY refusals are allocated, and every one carries check + where + translation",
     /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
        and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
        WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
@@ -545,8 +565,11 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
        renumber's one missed reference visible, and it can only do that while it
        is moved by hand every time the family grows.
        NINETEEN AT THE UNION (CONDUCT #21, c21-batch28): D-468's C-26.12 and REC-207's seven, renumbered
-       C-26.13 to C-26.19 off that collision, together — twelve plus seven. */
-    [19, true]);
+       C-26.13 to C-26.19 off that collision, together — twelve plus seven.
+       RE-PINNED 2026-09-27 (T5-12, legacy-tests): TWENTY. One arrival, C-26.20 BIAS_ADOPTION_NOT_AN_ADMINISTRATOR
+       (K146, K102: an instance adoption is an administrator's act), no departure: the family is now read from
+       `src/bias/checks.mjs`, where C-26.12, whose row stays in the catalogue, is re-exported as one of its rows. */
+    [20, true]);
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",
@@ -558,17 +581,21 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
   t("the BAR refusal NAMES WHERE THE SENTENCE BELONGS rather than only refusing it — a member told only "
   + "`no` concludes BIO cannot express their standard, which ends in a standard claimed and not followed",
     /required strength/i.test(BIAS_CHECKS.BIAS_STATEMENT_IS_A_BAR.translation), true);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the refusals are minted by the bias module, whose `#refuse` reads
+     the family from its own `checks.mjs` (the one place the rows live now); store.mjs mints none. */
   t("the store reads the translations from the CATALOGUE and holds no second copy",
-    [/import \{ BIAS_CHECKS/.test(STORE),
-     /translation: ['"]/.test(bodyOf(STORE, "#biasRefuse("))],
-    [true, false]);
+    [/import \{ BIAS_CHECKS[^}]*\} from "\.\/checks\.mjs"/.test(BIAS),
+     /translation: ['"]/.test(bodyOf(BIAS, "#refuse(")), bodyOf(BIAS, "#refuse(").length > 40],
+    [true, false, true]);
 }
 
 /* ======================================================================= 5
  * DEC-54 (c) — INHALE PROPOSES AND NEVER INSTALLS, asserted at the SOURCE.
  * ===================================================================== */
 console.log("\n--- 5. DEC-54 (c): the inhale holds NO WRITE PATH, off store.mjs's own bytes ---");
-const INHALE = bodyOf(STORE, "biasInhale({");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): biasInhale and biasAdopt are the bias module's (src/bias/index.mjs);
+   store.mjs's `biasInhale(a)` is a one-line delegate. */
+const INHALE = bodyOf(BIAS, "biasInhale({");
 {
   t("ARM I0: the method was found, so the arms below are read over real bytes and not over an empty string",
     INHALE.length > 800, true);
@@ -577,7 +604,9 @@ const INHALE = bodyOf(STORE, "biasInhale({");
      through `promote` or a transaction wrapper. */
   t("ARM I5: no SQL execution",             /\bsql\.exec\(/.test(INHALE), false);
   t("ARM I5: no transaction",               /transactionSync\(/.test(INHALE), false);
-  t("ARM I5: no promotion",                 /this\.promote\(/.test(INHALE), false);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): widened from `this.promote(` to any `.promote(`, the module's
+     idiom being a call on its promotion dependency. */
+  t("ARM I5: no promotion",                 /\.promote\(/.test(INHALE), false);
   t("ARM I5: no adoption",                  /biasAdopt\(/.test(INHALE), false);
   t("ARM I5: no storage put",               /storage\.put\(/.test(INHALE), false);
   t("ARM I5: and no INSERT/UPDATE/DELETE of any kind anywhere in the body",
@@ -586,8 +615,8 @@ const INHALE = bodyOf(STORE, "biasInhale({");
     /biasinhale:\s*\{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(INDEX), true);
   t("SEEK GUARD on ARM I5: the SAME predicates DO fire on biasAdopt, which legitimately writes — so the "
   + "arms above are a fact about biasInhale and not a broken matcher",
-    [/\bsql\.exec\(/.test(bodyOf(STORE, "biasAdopt({")),
-     /INSERT/.test(bodyOf(STORE, "biasAdopt({"))],
+    [/\bsql\.exec\(/.test(bodyOf(BIAS, "biasAdopt({")),
+     /INSERT/.test(bodyOf(BIAS, "biasAdopt({"))],
     [true, true]);
 }
 
@@ -790,8 +819,14 @@ await block("8", async () => {
     [machine.ok, machine.reason, machine.check],
     [false, "BIAS_ADOPTION_NOT_AUTHORED", "C-26.9"]);
 
-  const adopted = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
-  t("a MEMBER adopts, and the record names them", [adopted.ok, adopted.author, adopted.reason ?? adopted.error ?? null], [true, "mo", null]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; K102, K146, bias R11): an adoption over the whole instance is an
+     ADMINISTRATOR's act, so an ordinary member's is refused C-26.20 and adele, an administrator, adopts. The claim
+     is unchanged: a named member adopts, and the record names them. */
+  const byMember = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
+  t("K102: an ORDINARY member's instance adoption is refused BY NAME, and nothing is adopted",
+    [byMember.ok, byMember.reason, byMember.check, byMember.scope], [false, "BIAS_ADOPTION_NOT_AN_ADMINISTRATOR", "C-26.20", "instance"]);
+  const adopted = await get("biasadopt", `bundleId=${INSTANCE_ID}`, ADMIN);
+  t("a MEMBER adopts, and the record names them", [adopted.ok, adopted.author, adopted.reason ?? adopted.error ?? null], [true, "adele", null]);
   t("DEC-54 (d): THE PIN is taken at the authored moment — the revision adopted, frozen",
     [typeof adopted.pinned?.bundle_sha === "string", adopted.pinned?.bundle_sha?.length ?? null], [true, 64]);
   t("and the answer STATES that the row alone does not put the lens in force, rather than leaving it "
@@ -827,7 +862,7 @@ await block("8", async () => {
      still.pins_proposed?.[0]?.pinned_state ?? null, still.pins_proposed?.[0]?.adopted_by ?? null,
      still.pins_proposed?.[0]?.scope ?? null,
      /REPLACED that scope's lens/.test(String(still.pins_proposed_stated))],
-    [1, INSTANCE_ID, true, "proposed", "mo", "instance", true]);
+    [1, INSTANCE_ID, true, "proposed", "adele", "instance", true]);   /* RE-PINNED 2026-09-27 (T5-12): adele, K102 */
 });
 
 /* ---- IN FORCE ---- */
@@ -867,7 +902,7 @@ await block("9", async () => {
   t("REC-210: ADOPTING AN ACCEPTED ONE DOES NOT MARK — with the pin moved to the adopted revision the "
   + "read carries NO marker and no sentence, which is what makes the field's PRESENCE mean something",
     [m.pins_proposed ?? null, m.pins_proposed_stated ?? null], [null, null]);
-  const again = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
+  const again = await get("biasadopt", `bundleId=${INSTANCE_ID}`, ADMIN);   /* RE-PINNED 2026-09-27 (T5-12): an administrator, K102 */
   const mAgain = await get("biasmanifest", "scope=instance", MEMBER);
   t("REC-210: and an adoption TAKEN while the set stands at `adopted` answers the marker FALSE, is in "
   + "force at once, and leaves the read unmarked and the hash where it was",
@@ -1243,7 +1278,7 @@ await block("15b", async () => {
 
   /* THE ACT THE RULING WAS ABOUT, on the head that now exists: re-adopting pins the ADOPTED revision, so
      nothing is replaced and nothing is marked — the lens stays in force at the same revision and hash. */
-  const re = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
+  const re = await get("biasadopt", `bundleId=${INSTANCE_ID}`, ADMIN);   /* RE-PINNED 2026-09-27 (T5-12): an administrator, K102 */
   const m2 = await get("biasmanifest", "scope=instance", MEMBER);
   t("the re-adoption, on a head the refused proposal did not move, pins the ADOPTED revision and carries NO "
   + "marker — and the read agrees: still in force, same revision, same hash, no pins_proposed",
