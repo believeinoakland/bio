@@ -110,6 +110,13 @@ const F = {
   /* no font at all: the structural half, KEPT — marked before this item and still */
   noFont:      page({ second: "BT\n\nET\n", fonts: false }),
 };
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; BOB's CHANGE after LEGACY-INDEX #2's QUESTION 1): section 4's text-shape
+   page was `F.tj`, whose 64x64 page is covered by a painted image and shows one glyph; since N19 the plane routes an
+   image-content page (pdf-reader R26: at most 4 glyphs, image share at least 0.18, `image_content_unread`) to OCR, so
+   `F.tj` is rightly a Tier-3 candidate and no longer the TEXT page the arm means. The arm is served the same
+   text-showing stream on a page that paints NO image, a text page by R26 ("a page that paints no image … carries
+   neither"). `F.tj` stays in the predicate corpus above, where it asks only whether text is SHOWN. */
+const TEXT_PAGE = page({ second: "BT /F1 12 Tf 10 10 Td (x) Tj ET", image: false });
 const firstPageMap = (doc) => doc.pageDict(0);   /* pdf-reader R31 (N20): the page order is private (K28) */
 const tier1 = async (bytes) => {
   const s = await extractPdfStructure(bytes);
@@ -192,7 +199,7 @@ const base = {
     const u = new URL(request.url);
     const bin = (b) => new Response(b, { headers: { "content-type": "application/pdf" } });
     if (u.pathname === "/cafr-shape.pdf") return bin(F.cafr);
-    if (u.pathname === "/text-shape.pdf") return bin(F.tj);
+    if (u.pathname === "/text-shape.pdf") return bin(TEXT_PAGE);
     return new Response("unscripted", { status: 500 });
   },
 };
