@@ -1,6 +1,6 @@
 # standards — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **none holds a standard.** Nearest, and staying where it is:
+**Status** · APPROVED by Bob 2026-09-26 (K102). N72 and the layer-9 maps' review folded 2026-09-27 (K171): R3's `level`, R9's `proposalLabel`; no meaning changed. DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code and the canon, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 9 (Action). A new module: no `from`, nothing moves. Code today (measured on `tranche/T3` @ `b0656fa`): **none holds a standard.** Nearest, and staying where it is:
 - D-149's governing laws of an action: `bio-plane/checks/bio-checks.mjs` 643–657 (`LAW_LEVELS`, `GOVERNING_LAWS_MAX`, `CITATION_MAX`), `governingLawsOf` (676), the proposal label (`lawProposalState`, `lawProposalLabel`, 770–800); `bio-plane/src/store.mjs` `actionLaws` 7180–7263, `#lawEntries` 7264, `actionLawsPropose` 7520–7576, `#lawProposalsFor` 7577. These are the laws the group's own request is made under, not the standard a government act is measured against: they stay `actions`' (REC-201 is carried there). Their member-states, machine-proposes, stored-apart pattern (REC-195) is the model for R9–R10.
 - `docprofile/doctypes/regulation.mjs` 255–260 and `staff-report.mjs` 301 emit `code_section` and `instrument` references from a document's text, keyed by the profile's `vocabulary.codes` and enactment kinds: the place a citation to a standard is first read. `id-spaces` normalises enactment numbers.
 - `jurisdictions` R23 (`standard_sources`), built in T2 with both profiles (`jurisdictions/profiles/*.mjs`).
@@ -16,12 +16,12 @@ A standard is what a government act is measured against: a statute, regulation, 
 
 ### Provides
 
-Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "not stated in the record", never "always". A **source** answer is `{state: "matched", source, kind, issuer, profile, basis}` or `{state: "undetermined", why}`.
+Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "not stated in the record", never "always". A **source** answer is `{state: "matched", source, kind, issuer, level, profile, basis}` or `{state: "undetermined", why}`; `level` is the source's level (`jurisdictions` R23, R31), or `undetermined` when the entry states none.
 
 **standardDeclare({cite, kind, issuer, text, period, supersedes?, author, viewer}) → `{ok: true, id, source, ...}` or refusal**
 - **R1** Refusals in order: `MACHINE_CANNOT_DECLARE` (an empty author or a machine identity: a machine proposes, R9); `STANDARD_NO_CITE` (an empty citation, or over 200 characters); `STANDARD_KIND_UNKNOWN` (outside `statute`, `regulation`, `ordinance`, `court`, `policy`, `commitment`, the set of `jurisdictions` R23); `STANDARD_NO_ISSUER`; `STANDARD_NO_TEXT` (no content id); `STANDARD_TEXT_UNRESOLVED` (a content id `content.contentRow` does not hold, naming it); `STANDARD_PERIOD_INVALID` (a date not `YYYY-MM-DD`, or `to` before `from`); `STANDARD_SUPERSEDES_UNKNOWN` (R6). *(not yet met: new module)*
 - **R2** `text` is one or more content ids: the standard's own words as captured. A standard is never held without a capture of its text (Intake Doctrine: material enters only with provenance). *(not yet met: new module)*
-- **R3** The citation is matched against the `cite` pattern of every `standard_sources` entry in the active profiles' combined view (`jurisdictions.combine` over the list `record-core` holds). The first match gives `source: matched` with that entry's `source`, `kind`, `issuer`, `profile` and `basis`. No match, no active profile, or a withheld fact (`jurisdictions` R15) gives `source: undetermined` with why; the standard is still held (K102): the profile describes local sources and does not decide what law a group may hold its government to. A declared `kind` or `issuer` that differs from the matched entry's is kept as declared and the difference is stated beside it, never corrected. *(not yet met: new module)*
+- **R3** The citation is matched against the `cite` pattern of every `standard_sources` entry in the active profiles' combined view (`jurisdictions.combine` over the list `record-core` holds). The first match gives `source: matched` with that entry's `source`, `kind`, `issuer`, `level`, `profile` and `basis`; a matched entry with no level answers `level: undetermined` beside the match (K108 (5), K171). No match, no active profile, or a withheld fact (`jurisdictions` R15) gives `source: undetermined` with why; the standard is still held (K102): the profile describes local sources and does not decide what law a group may hold its government to. A declared `kind` or `issuer` that differs from the matched entry's is kept as declared and the difference is stated beside it, never corrected. *(not yet met: new module)*
 - **R4** The answer and every later read carry who declared it and when (this module's clock), and the declaration is never edited: a correction is a new standard that supersedes it (R6). *(not yet met: new module)*
 
 **standardRead({id, viewer}) → answer or refusal**; **standardsIn({at?, kind?, source?, cite?, after?, limit?, viewer}) → `{items, cursor, truncated}`**
@@ -31,16 +31,16 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 - **R8** `standardsIn` lists the standards the filters admit, in id order, at most 200 per page (a lower `limit` is honoured, a higher one is not), `truncated` measured by reading one past the page. With `at`, a standard is listed with R7's answer for that date, and `not_in_force` ones are left out. *(not yet met: new module)*
 
 **standardPropose({cite, kind?, issuer?, text?, why, act?, proposer, viewer}) → `{ok, proposal}`**; **standardAdopt({proposal, author, viewer, ...R1's fields})**
-- **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`lawProposalLabel`'s three states, one composer), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so. *(not yet met: new module)*
+- **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`legacy-checks`' `proposalLabel(proposer, "standard")`: `lawProposalState`'s three states, one composer, K171), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so. *(not yet met: new module)*
 - **R10** `standardAdopt` is R1 by a member, naming the proposal; the new standard records the proposal it came from, and the proposal records its adoption. A proposal is adopted at most once. *(not yet met: new module)*
 
 ## Private
 
 ### Uses
 
-- `jurisdictions`: `combine` (R3); the kinds of R23.
+- `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31: not yet met there, built by the `jurisdictions` job before layer 9, K171).
 - `record-core`: `getSetting` (the active profiles), `allocId`, `transact`, `stampInstant`.
-- `legacy-checks`: `isMachineIdentity`, `lawProposalLabel` (R1, R9). *(not declared)*
+- `legacy-checks`: `isMachineIdentity`, `proposalLabel` (R1, R9; added by the head-of-layer `legacy-checks` job, K171); the `STD-` type registration (R15, K171).
 - `membership`: `viewerPredicate` (R5; a member sees every standard). *(not declared)*
 - `promotion`: `promote`, a standard being a record object (R15, K102). *(not declared)*
 - `content`: `contentRow`, `standings`, `passageNotice`.
@@ -64,8 +64,8 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 ### Suggestions
 
-- Id prefix `STD-` from `record-core.allocId`; tables `standards`, `standard_texts`, `standard_proposals`.
-- A standard is instance-wide, not a project's: public law is shared by every project; the viewer rule is R43's for non-project bundles.
+- Id prefix `STD-`: `record-core.allocId("STD", year)` followed by a slug the module writes, registered in the catalogue with the one state `recorded` and no edges (K171); tables `standards`, `standard_texts`, `standard_proposals`.
+- A standard is instance-wide, not a project's: public law is shared by every project; the viewer rule is R43's for non-project bundles. The job tests that `promote` creates a bundle outside any project (K171).
 - `docprofile`'s `code_section` and `instrument` references can seed a proposal (R9) naming the reading they came from; the reader that does so belongs to whoever runs it (an AI run), not here.
 - Tests: each refusal with a negative control; R3 against the test profile, an unmatched citation, and two profiles that disagree (withheld, so undetermined); R7's three answers.
 
@@ -77,5 +77,5 @@ None: answered by Bob 2026-09-26 (K102).
 
 - `standards`' uses gain `legacy-checks`, `membership` and `promotion` (the last for R15, K102).
 - A standard is superseded, never edited; one successor at most (R6).
-- Proposals follow D-149/REC-195's pattern and read `lawProposalLabel` from `legacy-checks` (one composer, never a second copy).
+- Proposals follow D-149/REC-195's pattern and read `proposalLabel` (subject `standard`) from `legacy-checks` (one composer, never a second copy; K171).
 - Page cap 200, as membership R48 and the other listing services.
