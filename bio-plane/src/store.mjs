@@ -752,8 +752,8 @@ export class Store extends DurableObject {
     const promotion = promotionOf(ctx);
     /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
     /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
-       observation-log's rows (its R6–R8), in the modules' total order (extraction R24). */
-    observations.listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
+     * observation-log's rows (its R6–R8), in the modules' total order (extraction R24). */
+    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
@@ -34830,7 +34830,7 @@ export class Store extends DurableObject {
   static #aiIso(ms) { return stampInstant("second", ms); }
 
   /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
-     file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
+   * file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
 
   /** WHOSE LOOK IS THIS? §4.1 rows 1 and 2, decided ONCE rather than at each of
    *  the drain's three exits.
@@ -35508,8 +35508,8 @@ export class Store extends DurableObject {
    */
 
   /* THE READER RUN, THE RESOLUTION ATTEMPT AND THE CONNECTION DERIVATION (§4.3): observation-log's writers (its R8).
-     The reader run is its listener on extraction's reading notice; the other two are called where they fire until
-     entities and connections are extracted and it registers on their notices. */
+   * The reader run is its listener on extraction's reading notice; the other two are called where they fire until
+   * entities and connections are extracted and it registers on their notices. */
 
   /** REC-95 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
    *  MEANING-LEVEL ROW, taken IN ORDER and never concluded from the first.

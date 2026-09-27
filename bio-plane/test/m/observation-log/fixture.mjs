@@ -1,5 +1,4 @@
-/* observation-log over the modules it uses, each the real one (record-core, membership, promotion, provenance, content's
-   table), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. Extraction's reading notice
+/* observation-log over the modules it uses, each the real one (record-core, membership, provenance, content's table), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. Extraction's reading notice
    (its R24) is a provider the test controls, as `observationLogOf`'s `deps.extraction` takes it: `w.ex.fire(e)` runs
    every registered listener, as extraction does after a write. Every test drives `observation-log` at its interface;
    the setup writes bundles, participants and content rows through their owners' read contracts. */
@@ -7,7 +6,6 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
@@ -61,43 +59,38 @@ export function world({ now = "2026-09-27T03:00:00Z" } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
+  const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
   const ex = extractionNotice();
   const content = contentOf(host, { record, membership, provenance: prov, extraction: ex, now: () => clock.now });
   content.migrate();
   const obs = observationLogOf(host, { record, membership, provenance: prov, extraction: ex, now: () => Date.parse(clock.now) });
   obs.migrate();
-  let k = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, obs, clock, ex,
+    st, host, record, membership, prov, content, obs, clock, ex,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     log: () => st.sql.exec(`SELECT * FROM observation_log ORDER BY seq`),
-    /** An information bundle holding one capture per text, registered through a promotion (provenance's register). */
+    /** An information bundle holding one capture per text: its row in record-core's `bundles` and its captures in
+     *  provenance's `register` (their R37 and R48 read contracts). Answers the captures' digests. */
     doc(id, texts = []) {
-      const caps = texts.map((t, i) => ({ path: `snapshots/c${i}.txt`, text: t, sha: sha(t) }));
-      const files = [{ path: "bundle.md", text: infoMd(id) }];
-      for (const c of caps) files.push({ path: c.path, text: c.text });
-      files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: caps.map((c) => provDoc(c)) }, null, 2) });
-      const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${k++}`, author: "member:alice", files,
-        meta: { object_type: "information" },
-        register: caps.map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
-      if (!r.ok) throw new Error(`fixture promote refused: ${JSON.stringify(r).slice(0, 400)}`);
-      return caps.map((c) => c.sha);
+      w.bundle(id, "information");
+      return texts.map((t, i) => {
+        const s = sha(t);
+        st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'utf8', ?, ?)`,
+                    s, id, `snapshots/c${i}.txt`, Buffer.byteLength(t), clock.now);
+        return s;
+      });
     },
-    /** A project (record-core's bundles read contract), its sight indexed by membership. */
-    project(id) {
+    bundle(id, type) {
       st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
-                   VALUES (?, 'project', 'g', ?, 'forming', 't', 't', 'sha')`, id, id);
+                   VALUES (?, ?, 'g', ?, 'forming', 't', 't', 'sha')`, id, type, id);
       membership.reindexProjectSight(id);
       return id;
     },
+    /** A project (record-core's bundles read contract), its sight indexed by membership. */
+    project(id) { return w.bundle(id, "project"); },
     /** A participant of a project, in a state (membership's roster). */
     participant(projectId, memberId, state = "joined") {
       st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
@@ -127,20 +120,3 @@ export const entry = (over = {}) => ({
   subject_kind: "address", subject: "https://example.org/a", state: "LOOKED_ABSENT", governed: false, condition: null,
   bound: null, result_kind: null, result_ref: null, detail: null, ...over,
 });
-
-export function infoMd(id) {
-  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
-          "current_state: collected", "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
-          `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", "criticality: supporting",
-          "---", "", "## Summary", "", "A document.", ""].join("\n");
-}
-
-export function provDoc(c) {
-  return {
-    file: c.path, locator: `https://example.org/${c.path}`, retrieved: "2026-09-27T00:00:00Z",
-    authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
-    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: c.sha, encoding: "utf8",
-               bytes: Buffer.byteLength(c.text) },
-    origin: { kind: "named_request" },
-  };
-}
