@@ -87,3 +87,14 @@ None of my own.
 - `node checks/ownership.mjs /home/user/bio legacy-checks tranche/T6`: `ownership: 2 files changed by legacy-checks between tranche/T6 and HEAD; 0 failures`
 
 Size: test runs 250, module lines 14620
+
+## QUESTION 2 (sent 2026-09-27, after reading BOB's ANSWER to QUESTION 1)
+
+BOB's ANSWER (14:39, K162 on `tranche/T6` @ `81320207c2`) accepted QUESTION 1's readings as I first wrote them. It reached this session only after I had revised points 2 and 3 on evidence found while reading the families whole (the "Revised while working" paragraph above), and my COMPLETE (15:08) describes the revised work. **The pushed catalogue therefore differs from K162 in two places:**
+- **(2)** The extract rows are `EXTRACT_PROPOSE_CHECKS` (C-104), not C-27. Their `where`s name regions, not whole functions. `NO_TARGET`, `NO_SUCH_BUNDLE` and `NO_SCOPE` have no row. Why:
+  - `suggest.test.mjs` drives SUGGEST_CHECKS whole as the suggest endpoint's registry, and pins its three regions. C-27 rows there turned it red (99/2); with C-104 it is green.
+  - The catalogue's REC-64 rule (ACT_SHAPE_CHECKS' header) names `NO_SUCH_BUNDLE` itself as a code a single `where` cannot claim.
+  - A whole `extractPropose` would conscript those two row-less codes and the relayed refusals.
+- **(3)** C-28.18 names `captureRequestRetry > is-capture-request-retry`, a region, because `capturerequests.test.mjs` pins C-28's rule that every `where` is a region. Everything else in (3) is as K162 says.
+
+**Asked of BOB:** either a ruling that replaces K162 (2) and (3) with the revision, or a CHANGE telling me to conform to K162 as written. I will apply either at once. My recommendation is the revision, with run-productions minting its own codes for the three without a row.
