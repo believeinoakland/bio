@@ -229,6 +229,8 @@ import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/ind
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
+import { extractionOf, extractionOps, extractionOwns, labelTerms, normAlias, refTermSources, CAPTURE_TEXT_UNIT_CAP,
+         CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "./extraction/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -429,7 +431,6 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
    re-grades nothing; a BETTER one raises nothing) is `drifted`'s and is asked
    rather than restated, because a rule restated at its call site is a rule that
    can come to disagree with itself. */
-import { driftObligations } from "./calibration.mjs";
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
@@ -669,97 +670,6 @@ function actNoCitation(detail, extra = {}) {
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
 
-/* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.3 -- THE TWO BOUNDS ON THE
- * CONTENT-GRAIN TEXT INDEX. **Both are SET FROM A MEASUREMENT and neither is a
- * preference**: `MEASUREMENTS.md` M-20, 2026-09-14, `tools/m031-index-measure.mjs`
- * over COFF-6's census corpus -- 762 OOXML documents as a CENSUS and 1,000 of
- * 27,783 PDFs as M-13's own seeded draw. The figure each rests on is beside it
- * so a later reader can overturn it with evidence rather than with an opinion.
- *
- * PER UNIT. The same 131,072 B `query.mjs` already caps an FTS column at, KEPT
- * rather than re-chosen, and kept on evidence: over M-20's 148,413 units the
- * largest anywhere was 21,224 B (a PDF page), with `doc-para` topping out at
- * 2,931 B and a slide at 2,329 B. The cap is 6.2x the largest unit the census
- * produced and is never approached -- it is a guard against a pathological
- * document, not a policy about ordinary ones. A second, smaller number here
- * would cost a second vocabulary beside the one the existing index already
- * carries, and would bound nothing that matters, because **a per-unit cap bounds
- * nothing when a document carries 20,571 units.** What actually bounds a promote
- * is the figure below. It is DECLARED here rather than imported from `query.mjs`
- * because that constant is not exported and because the two caps are equal today
- * by evidence rather than by definition: `bundles_fts` caps a COLUMN spanning a
- * whole bundle's inline files, this caps ONE passage of one document, and a
- * later item that moves one must not silently move the other.
- *
- * PER CAPTURE, ACROSS ALL OF ONE CAPTURE'S UNITS. One number for every
- * container, because the `indexed` state is one vocabulary and a per-format
- * bound would need two. It admits 100 % of M-20's measured 1,000-PDF sample
- * FULLY -- the largest PDF in it carries 1,354,686 B of text, so the bound has
- * 54.8 % headroom over the worst document measured -- where 1 MiB would already
- * leave two of the thousand `partial`. The exclusions are NAMED rather than
- * implied: none in the measured sample, and the sample is 3.60 % of the PDF
- * population, so captures over the bound certainly exist in the other 96.4 %.
- * Those take the `partial` path, which is what that path is for.
- *
- * AND WHAT THIS BOUND DOES **NOT** BOUND, stated here because section 4.3's own
- * argument for it does not hold at every grain and this build MEASURED that.
- * Section 4.3 reasons that a capture at the bound costs 45.7 % of the measured
- * per-invocation CPU window, "so the bound cannot by itself push a promote over
- * the ceiling". That is true AT PAGE GRAIN and false at paragraph grain: M-20's
- * own ladder puts the census's worst docx -- 20,571 units, 1,187,253 B, well
- * INSIDE this byte bound -- at 218 ms, **84.8 % of the 257 ms window**. Bytes do
- * not bound the UNIT COUNT, and the unit count is the dominant term for a
- * word-processing container. Reported as a DESIGN GAP against section 4.3
- * rather than closed here with a unit cap this item was not scoped to choose:
- * a second bound is a decision about what a member's promote may cost, it wants
- * the chunk-across-ticks remedy section 4.1 already names, and inventing one
- * inside this item would be a fence tighter than its rule.
- *
- * REC-111 CLOSED THAT GAP, AND IT CLOSED IT WITH THE OTHER REMEDY -- a unit
- * budget, NOT chunk-across-ticks -- FOR A REASON THAT IS A MEASUREMENT AND NOT
- * A PREFERENCE (M-35, and the decision is recorded in section 4.3 with the
- * alternative named). Chunking is the remedy for a write that does not FIT a
- * tick. REC-111 measured BOTH routes that can reach this method and NEITHER can
- * produce one: the acquire wire admits at most **4,064** units (its 524,288 B
- * budget divided by the smallest chargeable unit, one text byte plus the 128 B
- * envelope), predicted by M-20's fit at 58.5 ms -- **22.8 %** of the 257 ms
- * window; a caller-authored `data/provenance.json` admits at most **13,720**,
- * because `INLINE_MAX` refuses the file above 1,048,576 B and the store reads
- * that file only as INLINE TEXT (an R2-backed one is not read at all), at
- * 105.0 ms -- **40.9 %**. There is no write to chunk, and making one would
- * require RAISING the wire's byte budget first, which is the exact regression
- * section 4.3 was corrected for. Chunking would also have to coin a fifth
- * `indexed` state for *written so far, resuming*, against a vocabulary this
- * file says at `#observeIndexed` is CLOSED -- and a capture promoted with a
- * half-written index and nothing saying so is the record claiming coverage it
- * does not have.
- *
- * SO WHAT WAS ACTUALLY WRONG WAS NOT THAT THE UNIT COUNT WAS UNBOUNDED -- IT
- * WAS THAT BOTH BOUNDS WERE ACCIDENTS. 4,064 falls out of a JSON envelope
- * ESTIMATE; 13,720 falls out of an inline-file limit that knows nothing about
- * indexing. Neither is written anywhere, both move silently the day either
- * constant moves, and nobody could state what a promote may cost without doing
- * the arithmetic REC-111 did. Section 4.3 asked for both bounds "stated in one
- * place" so "neither hides the other"; today the byte bound HIDES the unit
- * bound. That is what the constant below is for.
- *
- * THE FIGURE IS M-20's OWN SENTENCE, not a judgement: *"THE LARGEST PROMOTE
- * THAT FITS is ~3,900 units at this corpus's mean unit size"* -- taken at the
- * resolution the adjacent constants already use (524,288 / 128 = 4,096 exactly).
- * At 4,096 units with the byte bound below ALSO at its maximum, M-20's fit
- * predicts 141.7 ms, 55.1 % of the window.
- *
- * AND IT REFUSES NOTHING THE RECORD ACCEPTS TODAY, which is the arm that decides
- * this is safe to ship rather than the overflow arm. The acquire wire's own
- * ceiling (4,064) is BELOW it, so the product's own route is untouched --
- * M-20's worst PDF is 1,181 units, and M-20's worst docx (20,571) already lands
- * `partial` at the wire today, where its 60 B mean paragraph costs 188 B against
- * a 524,288 B budget. It bites on exactly one thing: a caller-authored
- * provenance document of many tiny units, which is the case section 4.3 named
- * and the case nothing stated. */
-const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
-const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
-const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
  * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
@@ -839,7 +749,7 @@ export class Store extends DurableObject {
       { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
       { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
-    ].filter((t) => !captureOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name)));   /* each extracted owner declares its own (K23) */
+    ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name)));   /* each extracted owner declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
@@ -848,13 +758,28 @@ export class Store extends DurableObject {
     provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" })
       .onReceipt("legacy-store", (e) => this.#receiptLook(e));
     const promotion = promotionOf(ctx);
+    /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20), and legacy-store registers
+       with it (R24) the content stale mark (REC-82) and the observation log's indexed, extraction and reader-run rows until
+       content and observation-log are extracted. */
+    extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }).onReading("legacy-store", (e) => {
+      const staled = this.#markContentStale(e.captureSha, e.chainAfter);
+      const container = typeof e.reading.text_container === "string" ? e.reading.text_container : null;
+      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
+      this.#observeIndexed(e.bundleId, e.captureSha, e.indexed, { author: e.author, hadText: e.reading.read_from_text === true,
+        unitArm: armed, armReason: armed ? null : container
+          ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, `
+            + "and the `sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; "
+            + "HTML has no `dom` producer)"
+          : "this record does not hold which container this capture is, so it has no unit arm to name" });
+      const ex = this.#observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
+      this.#observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
+      return { staled, observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
+                                   refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
+    });
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* calibration (K61, R16, R12): legacy-store derives each record's obligations until extraction registers its own. */
-    calibrationOf(ctx).onCalibration("legacy-store", ({ supersedes, drift }) => !drift.raises_obligation ? []
-      : ((obligations) => ({ obligations, truncated: !!obligations.truncated }))(this.#calDriftFor(supersedes)));
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
@@ -926,27 +851,6 @@ export class Store extends DurableObject {
       const cols = [...this.sql.exec(`PRAGMA table_info(published_bundles)`)].map((r) => r.name);
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
-    }
-    /* D-454: reading_refs is RE-KEYED (capture_sha, ref, occurrence). It is DERIVED, so the
-       links/captured_locators DROP above would be defensible — and it is NOT taken, because
-       the row that ordered this (and the rows every connection's pair and every member's
-       choice were read from) says keep every existing row, and a drop would leave each store
-       with no reference index until every capture is re-promoted. Unlike those tables, an old
-       row here is not WRONG under the new key: it is the first occurrence (the readers kept
-       only the first sighting), which is exactly `seq` 0 at its own place. So the old table is
-       renamed out of the way here and copied forward after the schema, published_bundles'
-       precedent.
-       THE TWO INDEXES ARE DROPPED WITH THE RENAME, and that is load-bearing: a renamed table
-       KEEPS its indexes under their old names, so the schema's CREATE INDEX IF NOT EXISTS
-       would find the names taken and create nothing, and the DROP of the interim table below
-       would then remove them — a re-keyed table with neither lookup index, failing nothing. */
-    {
-      const cols = [...this.sql.exec(`PRAGMA table_info(reading_refs)`)].map((r) => r.name);
-      if (cols.length && !cols.includes("occurrence")) {
-        this.sql.exec(`ALTER TABLE reading_refs RENAME TO reading_refs_preoccurrence`);
-        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_ref`);
-        this.sql.exec(`DROP INDEX IF EXISTS reading_refs_bundle`);
-      }
     }
 
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
@@ -1179,15 +1083,6 @@ export class Store extends DurableObject {
          either side of a project's bar moving. The full reasoning is at the
          column in schema.mjs. */
       ["published_cases", "bar", "TEXT"],
-      /* CPDF-13 / D-253: the calibration ids a reading's chain references.
-         Additive and nullable, and NULL here needs no backfill reasoning of the
-         kind the two rows above needed — because this column is DERIVED. Every
-         other column on `reading_text_source` is computed from the stored chain
-         and rebuilt with it, so a store migrated forward fills this in on each
-         reading's next projection and cannot disagree with the chain meanwhile.
-         A chain written before calibrations existed names none, which is exactly
-         what NULL says and exactly what is true of it. */
-      ["reading_text_source", "calibrations", "TEXT"],
       /* REC-82 / IC-83: WHAT PART OF THE DOCUMENT A BASIS LEG RESTS ON. Additive
          and nullable for the reason every column above is, and NULL here is a
          state of the record rather than a missing value: a leg promoted before
@@ -1210,19 +1105,6 @@ export class Store extends DurableObject {
          the same reason the three unlanded extent arms are named in
          CONTENT_EXTENT_KINDS rather than added later. */
       ["inquiry_basis_version_legs", "content_id", "TEXT"],
-      /* FW-17 / IC-86: WHERE A REFERENCE WAS READ. Additive and nullable, and
-         ALTER rather than the DROP-and-rebuild the three derived tables above
-         get, because the distinction that list turns on does not apply: those
-         three gained a column that was part of the KEY, so old rows keyed the
-         old way were WRONG and could only be re-derived. These three are not in
-         the key — an old row is not wrong, it is a row whose reading carried no
-         position, which is exactly what NULL says here. Dropping the table would
-         throw away every reference index in the store to add a column that
-         changes nothing about what the existing rows mean, and the next
-         promotion rewrites them anyway (#writeReadings replaces per capture). */
-      ["reading_refs", "pos_kind", "TEXT"],
-      ["reading_refs", "pos", "TEXT"],
-      ["reading_refs", "pos_ref", "TEXT"],
       /* FW-17 / D-161 / Bob's 5.4: THE DETERMINING REFERENCE PAIR on a
          connection. Eight columns rather than a second table, because a
          connection has exactly two ends and always exactly two — the row IS the
@@ -1270,11 +1152,6 @@ export class Store extends DurableObject {
          recorded nothing, and the only value a backfill could reach for is the manifest the run was HANDED,
          the very value this column exists to be compared WITH. NULL reads back as `not recorded`, stated. */
       ["ai_runs", "lens_at_open", "TEXT"],
-      /* D-440: the capture's FORMAT key, projected at promote from the provenance document's profile.
-         NULLABLE AND NEVER BACK-FILLED: a reading persisted before this column existed recorded no format,
-         and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
-         states the kind UNDETERMINED rather than guessing it. */
-      ["readings", "capture_format", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
          disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
          column existed recorded no version, and the one value a backfill could reach for is the
@@ -1353,6 +1230,7 @@ export class Store extends DurableObject {
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
+    extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
        between the store's birth and the record of whose store it is. */
@@ -1412,29 +1290,6 @@ export class Store extends DurableObject {
            SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
            FROM published_bundles_preeditions`);
         this.sql.exec(`DROP TABLE published_bundles_preeditions`);
-      }
-    }
-    /* D-454: the copy-forward. EVERY row survives: the old key (capture_sha, ref) was unique,
-       so the new one is too, with each old row as its reference's first occurrence (seq 0) at
-       the place it recorded — `occurrence` is computed from the two columns the row already
-       carries, the rule `readingOccurrenceKey` states, and '' where it carried none. A store
-       older than FW-17 has no position columns at all and every row lands unplaced, which is
-       what it was. Keyed on the INTERIM table rather than on the rename above, so a boot that
-       died between the two finishes the copy on the next; OR IGNORE is for that re-run only,
-       since a row already copied is the same row. */
-    {
-      const old = [...this.sql.exec(`PRAGMA table_info(reading_refs_preoccurrence)`)].map((r) => r.name);
-      if (old.length) {
-        const col = (c) => (old.includes(c) ? c : "NULL");
-        this.sql.exec(
-          `INSERT OR IGNORE INTO reading_refs
-             (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
-           SELECT capture_sha, bundle_id, ref, ${col("ref_kind")}, ${col("ref_key")}, ${col("label")},
-                  ${col("pos_kind")}, ${col("pos")}, ${col("pos_ref")},
-                  CASE WHEN ${col("pos_kind")} IS NOT NULL AND ${col("pos")} IS NOT NULL
-                       THEN ${col("pos_kind")} || ':' || ${col("pos")} ELSE '' END, 0
-             FROM reading_refs_preoccurrence`);
-        this.sql.exec(`DROP TABLE reading_refs_preoccurrence`);
       }
     }
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
@@ -1509,79 +1364,6 @@ export class Store extends DurableObject {
       `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
 
-    /*__REC91_FTS_DDL_START__*/
-    /* REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 — THE CONTENT-GRAIN TEXT
-     * INDEX, and it is the OPPOSITE choice from `bundles_fts` eight lines up.
-     *
-     * `bundles_fts` is a REGULAR content table and its own comment says why: it
-     * spans every inline text file in the bundle, so no single table could
-     * reconstruct its columns. `capture_text_fts` is EXTERNAL CONTENT over
-     * exactly one column of exactly one table, ROWID ALIGNED, so `snippet()` and
-     * `highlight()` read `capture_text.text` itself rather than a second copy of
-     * it. At M-20's measured ratios that choice is 0.462 stored bytes per text
-     * byte for the index against 1.536 for the base row — a second copy would
-     * have cost about a third again on every indexed byte, on a store whose
-     * per-object ceiling is the thing M6 wants to know about.
-     *
-     * WHY THE DDL IS HERE AND NOT IN `schema.mjs`. Two reasons and both are
-     * mechanical rather than stylistic. A VIRTUAL TABLE is not a `CREATE TABLE`
-     * and `bundles_fts` already established this file as where one lives. And
-     * the three TRIGGERS below carry `;` INSIDE `BEGIN` / `END`, while `#migrate`
-     * splits the schema literal on `;` before executing it — so a trigger in
-     * `schema.mjs` would be truncated mid-statement and every `promote` would
-     * then fail with `SQLITE_ERROR: incomplete input`, which is PL-1's trap
-     * exactly, met from the other direction.
-     *
-     * WHY TRIGGERS AT ALL, AND THIS WAS MEASURED RATHER THAN PREFERRED. An
-     * external-content FTS5 table is not maintained by writes to its base table;
-     * it is maintained by the documented `'delete'` command, and a plain
-     * `DELETE FROM capture_text_fts WHERE rowid = ?` answers
-     * `SQLITE_CORRUPT_VTAB` on workerd — measured, not read in a vendor
-     * document. Triggers put that command at the ONE place a row actually
-     * leaves the base table, which is what makes `purge`'s two arms, the
-     * chain-move replacement and any future deleter correct by construction
-     * rather than by each caller remembering. The alternative — every deleter
-     * issuing the command by hand — is the eleven-copies-of-one-predicate shape
-     * this record has already paid for.
-     *
-     * AND THE ONE RULE THE TRIGGERS DO NOT COVER, STATED HERE BECAUSE IT IS A
-     * SILENT CORRUPTION AND NOT AN ERROR: `INSERT OR REPLACE` into
-     * `capture_text` DOES NOT FIRE THE DELETE TRIGGER (SQLite does not run
-     * delete triggers for REPLACE conflict resolution unless
-     * `recursive_triggers` is on), so the replaced row's index entry is
-     * ORPHANED and still MATCHES — a search would return a passage the record no
-     * longer holds, which is the record claiming more than it can support, in
-     * the one surface a member reads absence from. Measured on workerd: a
-     * REPLACE left the superseded text matching while the base table held only
-     * the new text. **So `#writeCaptureText` DELETES the capture's rows and then
-     * plainly INSERTs, which is also what section 4.1 mandates in its own
-     * words** — the rule and the hazard happen to point the same way, and the
-     * suite drives it rather than trusting this paragraph. */
-    this.sql.exec(
-      `CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5(
-         text, content='capture_text', content_rowid='rowid', tokenize='unicode61')`);
-    this.sql.exec(
-      `CREATE TRIGGER IF NOT EXISTS capture_text_ai AFTER INSERT ON capture_text BEGIN
-         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
-       END`);
-    this.sql.exec(
-      `CREATE TRIGGER IF NOT EXISTS capture_text_ad AFTER DELETE ON capture_text BEGIN
-         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
-           VALUES ('delete', old.rowid, old.text);
-       END`);
-    /* The UPDATE trigger addresses no write this plane makes today — the writer
-       deletes and inserts — and it is here anyway, because an external-content
-       index left unmaintained on an UPDATE nobody has written yet fails as a
-       WRONG ANSWER rather than as an error. A guard that only covers the writes
-       that exist is a guard against the writes that exist. */
-    this.sql.exec(
-      `CREATE TRIGGER IF NOT EXISTS capture_text_au AFTER UPDATE ON capture_text BEGIN
-         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
-           VALUES ('delete', old.rowid, old.text);
-         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
-       END`);
-    /*__REC91_FTS_DDL_END__*/
-
     /* S-10 step 5: server-side selections.
      *
      * A selection is the FIRST thing in this store that is legitimately
@@ -1650,14 +1432,6 @@ export class Store extends DurableObject {
        milliseconds, but a large store finishes over successive constructions
        rather than timing out on one. */
     this.#backfillProjection(500);
-
-    /* REC-36: the same for the name index. A store promoted before
-       `reading_ref_terms` existed holds readings whose labels index nothing, and
-       an EMPTY index is indistinguishable from "no document mentions this
-       subject" — which is the answer that would be silently wrong. Cheaper than
-       the projection backfill because it re-reads no document: the labels are
-       already persisted on reading_refs. */
-    this.#backfillRefTerms(500);
 
     /* REC-17: the same backfill for the supersession reverse index, and it is
        NOT bounded by a page count because it cannot be. It is bounded by the
@@ -17861,21 +17635,6 @@ export class Store extends DurableObject {
          index or nothing does. */
       this.#writeText(bundleId, files);
 
-      /* CONSTRUCTS Step 3 (FW-5): persist the READING the doctype's reader
-         produced at acquire. It rides on the acquire document in
-         data/provenance.json, so it is DERIVED from the document here rather than
-         threaded as a second payload field — the same discipline the refs
-         projection above follows, in the SAME transaction, so the reading and its
-         entity-reference index can never be a revision behind the document they
-         describe. A reading indexed by its raw entity references is the reverse
-         index Step 4 resolves entities across documents with. */
-      /* REC-94: `author` is threaded in for the content-level observation's
-         `actor`. It is the control plane's SERVER-SIDE stamp from the
-         authenticated session (the comment on `ownerMemberId` below states the
-         rule), so it is the one value here that says WHO caused this look
-         without a caller being able to name themselves something else. */
-      this.#writeReadings(bundleId, files, author);
-
       /* MK-1 / D-184: the testimony path's own writes — the words' passage index
          and the content row over them — IN THIS TRANSACTION, so an authored
          bundle never exists without the content its readers expect. It throws
@@ -17976,664 +17735,6 @@ export class Store extends DurableObject {
                          content_id: r.content_id ?? null })) } : {}) };
   }
 
-  /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it
-     by entity reference. Called inside the promote transaction, from the acquire
-     document carried in data/provenance.json — the reading is a projection of the
-     document, derived here exactly as `refs` is derived from bundle.md, so it can
-     never disagree with the document it describes. A re-promotion REPLACES this
-     capture's reading and its reference rows, so a revised reader never leaves
-     stale references behind. Every reference is stored AS IT APPEARS — the raw
-     kind:key — and is NEVER resolved to a canonical entity (Step 4 / D-83). */
-  #writeReadings(bundleId, files, author = null) {
-    const prov = files.find((f) => f.path === "data/provenance.json");
-    if (!prov || typeof prov.text !== "string") return;
-    let docs;
-    try { docs = JSON.parse(prov.text).documents; } catch { return; }
-    if (!Array.isArray(docs)) return;
-    for (const doc of docs) {
-      const sha = doc && doc.capture && doc.capture.sha256;
-      const reading = doc && doc.reading;
-      if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
-      /* CPDF-19 / D-319 — A RE-PROMOTION CARRYING THE PRE-RE-EXTRACTION COPY OF
-         THE SAME ACQUIRE DOES NOT SILENTLY UNDO THE RE-EXTRACTION.
-         *
-         * A read-time re-extraction (`reextract` below) replaces this capture's
-         * reading and its projections WITHOUT minting a new version of the bundle,
-         * because it is a re-read of bytes the record already holds and not an
-         * edit of the finding. So the bundle's own `data/provenance.json` still
-         * carries the reading the ACQUIRE produced — and the next ordinary revision
-         * of that bundle (a member editing its summary) re-submits that file, and
-         * this loop would re-derive the OLDER chain from it: every row minted under
-         * the tier-3 chain staled, the units put back to the empty layer, and the
-         * member's act gone with nothing saying so.
-         *
-         * THE TEST IS NARROW ON PURPOSE: the stored reading carries a
-         * `reextracted` stamp, the incoming one does not, and both are readings of
-         * the SAME RETRIEVAL (`at` is the capture instant, which a re-extraction
-         * keeps). A NEW acquire of the document carries a new `at` and replaces
-         * as it always did; a reading that itself says it was re-extracted
-         * replaces as it always did. Only the stale copy of the one retrieval is
-         * held back, and nothing else about this promotion changes. */
-      if (this.#heldByReextraction(sha, reading)) continue;
-      this.#writeOneReading(bundleId, sha, doc, reading, author);
-    }
-  }
-
-  /* CPDF-19 — the guard's one read. A primary-key lookup, and only for a
-     capture that has a reading at all. */
-  #heldByReextraction(sha, reading) {
-    if (reading && reading.reextracted) return false;
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
-    const prior = row ? safeJson(row.reading) : null;
-    return !!(prior && prior.reextracted && typeof prior.at === "string"
-              && typeof reading.at === "string" && prior.at === reading.at);
-  }
-
-  /* CPDF-19: THE PER-CAPTURE BODY OF `#writeReadings`, MOVED VERBATIM into its
-     own method so the read-time re-extraction (`reextract`, D-319) persists a
-     reading through EXACTLY the writer promote uses — the chain projection, the
-     stale mark (REC-82), the text units (REC-91), the content-level observations
-     (REC-94) and the reference index — rather than a second copy of the sequence
-     that would drift from it. It returns what each of those did, which only the
-     re-extraction reads. */
-  #writeOneReading(bundleId, sha, doc, reading, author) {
-      const entities = Array.isArray(reading.entities) ? reading.entities : [];
-      /* Replace, so a re-promotion carries no orphan references. REC-36's term
-         projection goes with them: it is derived from `label`, so a stale term
-         row would keep offering a document as a candidate for a name its revised
-         reading no longer carries. */
-      this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
-      this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
-      /* CPDF-10: the transcription projection goes with them, and it is rebuilt
-         below from the chain the reading carries. A revised reading that no
-         longer names OCR must not leave a row saying this document was OCR'd —
-         that is the same staleness the term projection above guards against,
-         pointed at a claim about how the text was produced rather than about
-         what it names. */
-      this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
-      this.#writeTextSource(bundleId, sha, reading.text_source);
-      /* REC-82 / IC-83: A RE-EXTRACTION MARKS CONTENT ROWS STALE, NEVER DELETES
-         THEM — and it happens HERE, beside the projection rebuild above and in
-         the same transaction, for the same reason that one is here: the moment
-         the reading is replaced is the only moment the OLD chain and the NEW one
-         are both in hand. The row above is a PROJECTION and is rebuilt; a
-         content row is FIRST-CLASS, an authored edge holds it, and Bob ruled
-         2026-09-14 that the record never moves an authored edge's target without
-         a member's act. So it is marked and it still resolves, saying so.
-         Distinct from the lines above in the direction that matters: this one
-         must NOT be a delete-then-rebuild, and writing it as one is exactly how
-         the rule would be lost to a pattern the surrounding code establishes. */
-      const staled = this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
-      /* REC-94 / IC-95 — THE CONTENT-LEVEL OBSERVATION, written HERE, in
-         promote's one transaction, beside the reading it is about and beside the
-         stale mark it is not.
-         *
-         * WHY HERE. `OBSERVATION-LOG-DESIGN.md` section 4.2's writer is "at
-         * promote", and this is the only place in this plane where a capture's
-         * reading is persisted. The row must be written in the SAME transaction
-         * as the reading for the reason every projection in this method is:
-         * either the store advances with its coverage record or neither does.
-         * A coverage record that can be a revision behind the corpus it
-         * describes is the one kind of staleness this table cannot carry,
-         * because its whole value is saying WHICH ABSENCE IS TRUE.
-         *
-         * IT IS NOT THE STALE MARK AND MUST NOT BE FOLDED INTO IT. The line
-         * above is REC-82's, about content rows a member's edge points at; this
-         * is about whether we ever got the text at all. They fire on the same
-         * event and answer different questions, and the direction that matters
-         * is that a re-promotion carrying the SAME chain stales nothing and
-         * still writes an observation — we looked again, and this is what we
-         * had. */
-      /* REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 -- THE CONTENT-GRAIN
-         TEXT INDEX, WRITTEN HERE, in promote's one transaction, beside the
-         reading it projects and BEFORE the extraction observation that ends
-         this capture's content-level story.
-         *
-         * WHY BEFORE `#observeExtraction` AND NOT AFTER, which is the one
-         * ordering decision in this block. Both write content-level rows about
-         * this capture, and the FRONTIER is the LATEST row per (level,
-         * subject_kind, subject) -- so whichever runs last is what a frontier
-         * read answers with. The EXTRACTION row is the one that must win: it
-         * says what the record GOT, which is the fact the content axis is about,
-         * and the index row says what the record can SEARCH, which is a fact
-         * about a derived structure over it. `contentAxis` keeps the two apart
-         * by AUTHORITY (`extract` against `derive`) rather than by order, so
-         * neither read depends on this line -- but the frontier does, and an
-         * ordering that quietly changed what `op=frontier` answers about every
-         * extracted capture would have been this item's blast radius landing in
-         * REC-93's surface.
-         *
-         * THE DELETE IS UNCONDITIONAL AND THE WRITE IS NOT. `#writeCaptureText`
-         * clears the capture's previous units whatever the new reading carries,
-         * which is the same rule the three `DELETE`s above follow and is what
-         * makes a re-extraction that recovers LESS text honest rather than
-         * stale. */
-      const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
-      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
-      /* WHAT THE ACQUIRE WIRE ITSELF DROPPED BEFORE THIS STORE EVER SAW IT, and
-         it is FOLDED INTO the store's own over-bound count rather than reported
-         separately. Two bounds bit the same capture for the same reason — its
-         text did not fit — and a member does not need to know which of our two
-         numbers stopped it; they need to know the index is PARTIAL. What the
-         two bounds ARE is on the observation's `bound` sentence and in the
-         design, which is where a reader who does need to know will look.
-         A caller that does not carry the key drops nothing, which is the same
-         answer as a capture nothing was dropped from — correctly, because a
-         caller that never offered the units did not have them truncated. */
-      if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
-        indexed.over_bound += doc.text_units_over_bound;
-        indexed.offered += doc.text_units_over_bound;
-      }
-      /* WHAT THE OBSERVATION IS TOLD, and each of the three is a DIFFERENT fact
-         that a single boolean would have collapsed:
-           `hadText`   -- did extraction produce any text at all. Read off the
-                          reading's own `read_from_text`, the same field
-                          `contentObservationsFor` branches on, so the two
-                          cannot disagree about whether this document was read.
-           `unitArm`   -- does this CONTAINER have an indexing unit arm. A
-                          workbook and an HTML page do not (section 4.1), and
-                          that is not an absence of text.
-           `armReason` -- which container, in the producer's own word, so the
-                          sentence names the thing rather than the category.
-         `text_units` being ABSENT is not the same as being EMPTY and is not
-         read as "no unit arm": a capture promoted before this landing, or by a
-         caller that does not carry the sibling yet, offers nothing and is
-         recorded as having produced no addressable passage -- which is true,
-         and is what a re-promotion fixes. */
-      const container = typeof reading.text_container === "string" ? reading.text_container : null;
-      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
-      this.#observeIndexed(bundleId, sha, indexed, {
-        author,
-        hadText: reading.read_from_text === true,
-        unitArm: armed,
-        armReason: armed ? null
-          : container
-            ? `a ${container} has no indexing unit arm in this build `
-              /* CORRECTED IN PLACE BY FW-19, NOT DELETED: this said `sheet-range`
-                 "waits on EXTRACTION-BREADTH section 3.2", which was true until
-                 the arm landed. What is still absent is the UNIT, not the arm —
-                 nothing writes a workbook's sheet-range units into the index. */
-              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the "
-              + "`sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's "
-              + "sheet-range units into the index; HTML has no `dom` producer)"
-            : "this record does not hold which container this capture is, so it has no unit arm to name",
-      });
-      const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
-      /* REC-95 — THE MEANING-LEVEL OBSERVATION, written HERE for the reason the
-       * content-level one above is written here, and kept a SEPARATE ROW from it
-       * on purpose.
-       *
-       * §4.3's first act: *one row per reader run per capture*. The line below is
-       * the whole of what used to be missing — §2's table says the RESULT is on
-       * the reading and *the LOOK is not recorded anywhere*, so a reader that ran
-       * over this document and found nobody left `found: false` and no trace that
-       * anything had ever looked. From here it leaves a row that says so.
-       *
-       * IT IS NOT `#observeExtraction` AND MUST NOT BE FOLDED INTO IT. That one
-       * answers *did we get this document's TEXT*; this answers *did anything
-       * READ that text for who it mentions*. They fire on the same event and a
-       * document can be whole at one level and empty at the other in either
-       * direction — which is exactly the four-level rule CLAUDE.md states:
-       * absence at one level is not evidence of absence at the next. */
-      this.#observeReaderRun(bundleId, sha, reading, { author });
-      /* D-440 — THE CAPTURE'S FORMAT, projected from the SAME provenance document
-         the reading is, so the two cannot come from different sources. It is the
-         profile's `format.format` (COFF-1's FORMAT axis: magic bytes first, the
-         declared Content-Type second), and it exists so `contentContextFor` can
-         say whether this capture is an office container at all — the one fact
-         the image arm's `{part}` needs and no reading field carried for a page
-         read as text. A re-extraction hands no profile, so the prior value is
-         KEPT (the COALESCE): the bytes did not change, so neither did their
-         format, and a NULL written over it would un-know a fact. */
-      const prof = doc && doc.profile && typeof doc.profile === "object" ? doc.profile : null;
-      const fmtKey = prof && prof.format && typeof prof.format === "object"
-        && typeof prof.format.format === "string" && prof.format.format.trim()
-        ? prof.format.format.trim() : null;
-      /* D-536 — BOTH READINGS ARE KEPT, AND NEITHER OVERWRITES (BOB #33, 21:25Z). The row below
-         REPLACES this capture's reading, so the history is written FIRST, while the reading it replaces
-         is still in hand, in the same transaction. */
-      const kept = this.#keepReading(bundleId, sha, reading);
-      this.sql.exec(
-        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
-         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
-        sha, bundleId,
-        typeof reading.content_type === "string" ? reading.content_type : null,
-        Number.isInteger(reading.reader_version) ? reading.reader_version : null,
-        reading.found ? 1 : 0, entities.length,
-        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null,
-        fmtKey, sha);
-      for (const e of entities) {
-        if (!e || (e.key == null && e.kind == null)) continue;
-        /* The reference exactly as the reading carries it: the reader's own
-           composed ref when present, otherwise kind:key. Raw, source-assigned,
-           unresolved. */
-        const ref = typeof e.ref === "string" && e.ref
-          ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
-        /* FW-17 / IC-86 — WHERE THIS REFERENCE WAS READ.
-           RE-NORMALISED HERE AND NOT TRUSTED, because this projection is
-           derived from `data/provenance.json` and a provenance document is
-           something a caller can AUTHOR. The intake path normalises what a
-           reader emitted; this normalises what a document CLAIMS a reader
-           emitted, and those are two different trust boundaries with one
-           function between them, which is the only arrangement in which they
-           cannot drift. An unrecognised kind, a missing human form, a `dom` arm
-           that no producer emits — every one of them lands as NULL, so the
-           reading writes and the position is simply absent.
-           ALL THREE COLUMNS MOVE TOGETHER: `readingSource` returns the whole
-           canonical object or nothing, so a row can never carry a kind with no
-           form or a form with no fields. */
-        /* D-454 — EVERY OCCURRENCE, NOT THE LAST. The key was (capture_sha, ref) and this was
-           an INSERT OR REPLACE, so a reference read at several places kept one row; the readers
-           had already dropped every sighting but the first, so which one survived was never
-           tested. Now a reader's `occurrences` (every place, in reading order, `source` first)
-           writes one row per DISTINCT place, `seq` counting them from 0, and a reference read
-           once writes exactly the one row it always did (`source`, seq 0). `source` leads even
-           where a provenance document's `occurrences` omits it, because it is the field every
-           reader before this one emitted. Two reads of one place are one occurrence (the key is
-           the place), and every unplaced read is the one '' occurrence. A document naming
-           `occurrences` and no `source` is taken at its list: prepending the absent `source`
-           would record an unplaced read nobody claimed. */
-        const all = Array.isArray(e.occurrences) ? e.occurrences : [];
-        const listed = all.slice(0, Store.#OCCURRENCES_PER_REF);
-        const places = (e.source || !listed.length ? [e.source] : []).concat(listed).map(readingSource);
-        /* PAST THE BOUND, THE REST ARE READS THIS PROJECTION DOES NOT PLACE — so they are the '' (unplaced)
-           occurrence, which is exactly true of them here, and which the unchosen-mention check reads as
-           possibly inside any part (C-49.4). Dropping them instead would let a portion answer a definite
-           outside while a dropped read sat inside it. */
-        if (all.length > listed.length) places.push(null);
-        const wrote = new Set();
-        for (const pos of places) {
-          const occ = readingOccurrenceKey(pos);
-          if (wrote.has(occ)) continue;
-          this.sql.exec(
-            `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref,occurrence,seq)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-            sha, bundleId, ref,
-            e.kind == null ? null : String(e.kind),
-            e.key == null ? null : String(e.key),
-            e.label == null ? null : String(e.label),
-            pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null,
-            occ, wrote.size);
-          wrote.add(occ);
-        }
-        /* REC-36/REC-40: the name index, written in the SAME transaction as the
-           row it projects, exactly as the row is a projection of the document
-           (D-21). A string the reader did not carry produces no terms and no
-           rows -- an absent label is an absent name, never an empty one that
-           matches -- and each source is indexed under its OWN `src`, so a
-           registered name is never satisfied by words taken from two of them. */
-        for (const [src, text] of Store.#refTermSources({
-          ref, ref_key: e.key == null ? null : String(e.key), label: e.label == null ? null : String(e.label) }))
-          for (const term of Store.#labelTerms(text))
-            this.sql.exec(
-              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
-              sha, bundleId, ref, src, term);
-      }
-      return { staled, indexed, extraction, kept };
-  }
-
-  /* ===================================================================== *
-   * CPDF-19 / D-319 — READ-TIME RE-EXTRACTION, THE STORE'S HALF.
-   * ===================================================================== *
-   *
-   * `EXTRACTION-BREADTH-DESIGN.md` §5.1: a member asks `op=pdfstructure` with
-   * `ocr=1`, the control plane runs the tier-3 seam over bytes the record
-   * already holds, and the NEW reading replaces this capture's — so its text
-   * units are replaced (REC-91), its content rows go `stale` by REC-82's
-   * mechanism, and a content-level observation says who asked, when, under
-   * which engine (REC-94). **This method adds no writer.** It hands the new
-   * reading to `#writeOneReading`, which is promote's own per-capture body,
-   * so every one of those effects happens by the rule that already governs a
-   * re-promotion with a moved chain — the design's own sentence for it.
-   *
-   * WHY NOT A NEW BUNDLE VERSION. A re-read of bytes the record already holds
-   * is not an edit of the finding: the member's words, legs and state do not
-   * move, and minting a version would flag every case pinning the finding for
-   * a change in nothing it says. What moved is the record's READING of the
-   * evidence, which is exactly what the stale mark exists to surface (Bob's
-   * 5.8: a member who cited page 14 under `layer` sees the flag and nothing
-   * moves under them). The cost of that choice is that the bundle's
-   * `data/provenance.json` still carries the acquire-time reading, and
-   * `#heldByReextraction` is what stops an ordinary revision from quietly
-   * undoing the re-read with it. That residue is stated in the design's
-   * Incomplete sections rather than here alone.
-   *
-   * D-15 AT THIS DOOR: a capture whose bundle the viewer may not see answers
-   * exactly as a capture the record never read. Re-reading is a write, and a
-   * write that answered differently for a hidden document would be an oracle
-   * for its existence. */
-  reextractBasis({ captureSha = null, viewer = null } = {}) {
-    const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
-    const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
-    if (!row || !this.#viewerSees(row.bundle_id, viewer)) return { held: false };
-    /* THE LOCATOR THE ACQUIRE READ THE DOCUMENT UNDER, from the bundle's own
-       provenance document by its primary key — so the re-read hands the content
-       type recognisers the same context the first read had, rather than a
-       context this re-read invented. Absent is stated as null, never guessed. */
-    const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
-    const docs = (safeJson(f && f.content) || {}).documents;
-    const doc = Array.isArray(docs)
-      ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
-    return { held: true, reading: safeJson(row.reading) || {},
-             locator: doc && typeof doc.locator === "string" ? doc.locator : null };
-  }
-
-  reextract(pkg = {}) {
-    const sha = typeof pkg.captureSha === "string" ? pkg.captureSha.trim().toLowerCase() : "";
-    const reading = pkg.reading;
-    /* The control plane stamps `reextracted` and composes the reading; a body
-       without one did not come from the re-extraction and is not written as
-       one. Refused rather than repaired, because a reading this method
-       completed would be a reading nobody composed. */
-    if (!sha || !reading || typeof reading !== "object" || !reading.reextracted)
-      return { ok: false, held: false };
-    return this.ctx.storage.transactionSync(() => {
-      const row = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha);
-      if (!row || !this.#viewerSees(row.bundle_id, pkg.viewer)) return { ok: false, held: false };
-      const doc = { capture: { sha256: sha }, reading,
-                    ...(Array.isArray(pkg.textUnits) ? { text_units: pkg.textUnits } : {}),
-                    ...(Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0
-                      ? { text_units_over_bound: pkg.textUnitsOverBound } : {}) };
-      const author = typeof pkg.author === "string" && pkg.author ? pkg.author : null;
-      const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
-      const ex = out.extraction || {};
-      return { ok: true, held: true,
-               /* D-536: the re-read against the reading it replaced, attributed — both kept. */
-               compared: out.kept ? out.kept.compared : null,
-               staled: out.staled || 0,
-               indexed: out.indexed ? { written: out.indexed.written ?? 0, offered: out.indexed.offered ?? 0,
-                                        over_bound: out.indexed.over_bound ?? 0 } : null,
-               observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
-                           refused: Array.isArray(ex.refused) ? ex.refused.length : 0,
-                           unclassified: ex.unclassified ?? null } };
-    });
-  }
-
-  /* D-536 — KEEP THIS READING, AND COMPARE IT WITH THE ONE BEFORE IT (Part II §16, "Reading
-   * provenance"; BOB #33's ruling of 2026-09-24 21:25Z).
-   *
-   * `readings` holds one row per capture and `#writeOneReading` REPLACES it, so until this landed a
-   * re-read that classified different text left no trace of what it replaced: M-143 measured the class
-   * of a document moving between two walks of one sample and nothing in the record could say which
-   * tier's text had moved. `reading_history` keeps every DISTINCT reading, in order.
-   *
-   * THE READING THIS ONE REPLACES IS KEPT FIRST, when it predates the history. A capture read before
-   * D-536 has a `readings` row and no history, and writing only the incoming reading would lose the one
-   * it replaces — the overwrite the ruling forbids, done by the table built to prevent it. Its
-   * provenance is whatever it carries, and a reading from before D-536 carries none: UNDETERMINED,
-   * stated, and never inferred from its `text_tier` or its chain.
-   *
-   * A READING EQUAL TO THE LATEST KEPT ONE IS NOT KEPT AGAIN. An ordinary revision of a bundle
-   * re-submits the same `data/provenance.json`, and that is the same reading promoted twice, not a
-   * re-read; keeping it twice would make "how many times was this read" count revisions. Compared by a
-   * SHA-256 of the reading's JSON, the bytes `readings.reading` stores. A reading that goes A -> B -> A
-   * is kept three times, because the third IS a re-read that disagreed with the second.
-   *
-   * THE COMPARISON IS STORED, NOT RE-DERIVED ON READ, so what the record said at the moment of the
-   * re-read is what it says later, whatever `compareProvenance` becomes. */
-  #keepReading(bundleId, sha, reading) {
-    const json = JSON.stringify(reading);
-    const digest = sha256HexSync(json);
-    const provOf = (r) => (r && typeof r === "object" && r.provenance && typeof r.provenance === "object"
-                           && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null);
-    const textShaOf = (p) => (p && typeof p.text_sha256 === "string" ? p.text_sha256 : null);
-    const now = stampInstant("second");
-    let last = this.#one(
-      `SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
-    if (!last) {
-      const prior = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
-      if (prior) {
-        const pr = safeJson(prior.reading);
-        const pp = provOf(pr);
-        const pd = sha256HexSync(prior.reading);
-        this.sql.exec(
-          `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
-           VALUES (?,?,?,?,?,?,?,NULL,?)`,
-          sha, 1, prior.bundle_id, pd, prior.reading, pp ? JSON.stringify(pp) : null, textShaOf(pp), now);
-        last = { seq: 1, reading_sha256: pd, provenance: pp ? JSON.stringify(pp) : null };
-      }
-    }
-    if (last && last.reading_sha256 === digest) return { seq: last.seq, added: false, compared: null };
-    const np = provOf(reading);
-    const compared = last ? compareProvenance(safeJson(last.provenance), np) : null;
-    const seq = last ? last.seq + 1 : 1;
-    this.sql.exec(
-      `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      sha, seq, bundleId, digest, json, np ? JSON.stringify(np) : null, textShaOf(np),
-      compared ? JSON.stringify(compared) : null, now);
-    return { seq, added: true, compared };
-  }
-
-  /* D-536: the kept readings of one capture, newest first, as `op=reading` serves them — the
-     provenance and the attribution of each, not the readings themselves (the latest IS the
-     `readings` row, and the rest are one row each here). BOUNDED AT BIRTH, `limit` beside
-     `truncated`, the plane's own spelling (REC-60/REC-70). */
-  #readingHistoryOf(captureSha, cap = 16) {
-    const page = this.#rows(
-      `SELECT seq, reading_sha256, provenance, text_sha256, compared, kept_at FROM reading_history
-        WHERE capture_sha=? ORDER BY seq DESC LIMIT ?`, captureSha, cap + 1);
-    const n = this.#one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, captureSha).c;
-    return { kept: n, limit: cap, truncated: page.length > cap,
-             readings: page.slice(0, cap).map((r) => {
-               const prov = safeJson(r.provenance);
-               return { seq: r.seq, kept_at: r.kept_at, reading_sha256: r.reading_sha256,
-                        text_sha256: r.text_sha256,
-                        provenance: prov || { state: "undetermined",
-                          why: "this reading carries no reading provenance (it was written before D-536, or by a "
-                             + "caller that did not carry it), so the tier, the member and the text it classified "
-                             + "are UNDETERMINED and are not inferred" },
-                        compared: safeJson(r.compared) };
-             }) };
-  }
-
-  /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
-   *
-   * The accepts-when says an OCR'd document and a text-layer document must be
-   * "distinguishable in the projection, the index and an export". A chain
-   * inside a JSON blob is distinguishable to a reader who parses it and to
-   * nothing else: it cannot be filtered, counted, or asked for. This is the
-   * index half, derived in the SAME transaction as the reading it projects, on
-   * `reading_refs`' own precedent (D-21 -- a projection derived here can never
-   * disagree with the document it describes).
-   *
-   * A READING WITH NO CHAIN WRITES NO ROW, and that is deliberate rather than a
-   * default. Absence of a row means "this document's text provenance was never
-   * recorded", which is a different fact from "this document's text was not
-   * transcribed" (transcribed = 0). Writing a zero row for an unrecorded chain
-   * would collapse the two, and CLAUDE.md's sparse-at-every-level rule is
-   * exactly that no absence may stand in for another.
-   *
-   * A MALFORMED CHAIN ALSO WRITES NO ROW, and it is not silent: `checkChain`
-   * refuses it and the reading itself still carries whatever it carried, so the
-   * disagreement is visible rather than smoothed into a row that looks derived.
-   * The store is not the place to refuse it -- op=acquire built it and
-   * op=attesttext refuses one at its own door. */
-  #writeTextSource(bundleId, sha, chain) {
-    if (checkChain(chain)) return;
-    const engines = [...new Set(chain.filter((s) => typeof s.engine === "string" && s.engine)
-                                     .map((s) => s.engine))];
-    /* CPDF-13 / D-253: the calibration ids the chain names, projected here so
-       the drift handler's "which transcriptions rest on CAL-n" is an indexed
-       read rather than a scan of every reading's JSON. DERIVED like every other
-       column on this table — `calibrationsOf` reads the chain and this file
-       holds no second opinion about what a chain references. NULL, not "[]",
-       when the chain names none: an empty array would say "this chain was asked
-       and named nothing", which is true, but NULL is what every pre-CPDF-13 row
-       already reads as and the two must not be distinguishable by accident. */
-    const cals = calibrationsOf(chain);
-    this.sql.exec(
-      `INSERT OR REPLACE INTO reading_text_source
-         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain,calibrations)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      sha, bundleId, isTranscribed(chain) ? 1 : 0, terminalStep(chain),
-      JSON.stringify(engines), derivationCap(chain), chain.length, JSON.stringify(chain),
-      cals.length ? JSON.stringify(cals) : null);
-  }
-
-  /*__REC91_WRITER_START__*/
-  /** REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 and 4.3 -- THE CONTENT-GRAIN
-   *  TEXT INDEX, WRITTEN AT PROMOTE, INSIDE PROMOTE'S ONE TRANSACTION.
-   *
-   *  WHERE IT SITS AND WHY. Beside `#writeTextSource` above and
-   *  `#observeExtraction` below, in `#writeReadings`, because this is the one
-   *  moment in this plane where a capture's reading is persisted -- and because
-   *  the rule section 4.1 states is the rule every projection in that method
-   *  already follows: **the capture's previous text rows are DELETED FIRST**, so
-   *  a revised chain never leaves a unit claiming an engine that did not produce
-   *  it. Text is a PROJECTION and is re-derived rather than versioned. A content
-   *  row is the opposite and is REC-82's line, a few lines away: an authored
-   *  edge holds one, so a re-extraction MARKS it stale and never rewrites it.
-   *  The two lines look alike and mean opposite things, which is exactly why
-   *  this one says so.
-   *
-   *  THE DELETE IS ALSO WHAT KEEPS THE FTS INDEX TRUE, and that is MEASURED
-   *  rather than assumed -- see the DDL region in `#migrate`. `INSERT OR
-   *  REPLACE` here would leave the superseded text MATCHING, because SQLite does
-   *  not fire delete triggers for REPLACE conflict resolution. So the two
-   *  statements below are delete-then-plain-INSERT and must stay that way.
-   *
-   *  THE UNITS ARE READ, NEVER RE-DERIVED. They arrive on the acquire document's
-   *  `text_units` (I1's additive sibling, emitted at the one place `i2text` is
-   *  final) in the SAME `data/provenance.json` this method already reads the
-   *  reading out of. This file re-walks no container and holds no second opinion
-   *  about what a page or a paragraph is -- the producers already answer that,
-   *  and `canonicalExtent` / `describeExtent` answer what its address and its
-   *  human form are.
-   *
-   *  AND THE EXTENT IS THE CONTENT ADDRESS, WHICH IS THE WHOLE POINT. Two
-   *  spellings of one passage must produce one string or section 4.5's "a hit is
-   *  a mintable row's identity" is a claim rather than a mechanism, so the
-   *  extent written here is `canonicalExtent`'s output and nothing else. For a
-   *  PDF page that means **`rect: null`, which is the record's own spelling for
-   *  THE WHOLE PAGE** -- not a literal rectangle. Section 4.1's phrase is *"the
-   *  page's full rectangle"*, and writing a literal rect would compute a
-   *  DIFFERENT `contentIdFor` from the one a member citing page 14 produces, so
-   *  the hit and the citation would address one passage under two ids. The
-   *  degenerate `rect` is what makes them one, and `describeExtent` already
-   *  reads it as *"page 14"* rather than *"page 14, a region of it"*.
-   *
-   *  The same reasoning one container over is Bob's ruling of 2026-09-15: a
-   *  deck's unit is ONE PER SLIDE, written as a `slide-shape` extent with the
-   *  SHAPE OMITTED, which `covers()` accepts as covering the whole slide. **What
-   *  a slide-grain unit CANNOT be, stated here rather than found later: a
-   *  reading POSITION.** `readingSource()` requires both `slide` and `shape`, so
-   *  deck-grain SEARCH ships complete while deck-grain CONNECTIONS wait on
-   *  `pptx.mjs` emitting per-shape text -- FW-17's axis, not this one.
-   *
-   *  THREE BOUNDS, ALL THREE FROM M-20 AND NONE INVENTED HERE (section 4.3):
-   *
-   *   - PER UNIT, `CAPTURE_TEXT_UNIT_CAP` (131,072 B). Over M-20's 148,413 units
-   *     the largest was 21,224 B, so the cap is 6.2x the largest unit that
-   *     census produced and is never approached -- it is a guard, not a policy.
-   *     A unit over it is stored TO it with `truncated = 1`, never a silent
-   *     prefix (M5's rule, and section 2 carries it as a constraint).
-   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_BOUND` (2,097,152 B) across a
-   *     capture's units. It admits 100 % of M-20's measured 1,000-PDF sample
-   *     fully, with 54.8 % headroom over the worst document in it. Over the
-   *     bound the capture is indexed TO the bound IN READING ORDER and its
-   *     `indexed` observation reads `partial` -- which is why `seq` exists and
-   *     why the units are sorted before they are written: a partial index must
-   *     be a PREFIX a reader can reason about, not an arbitrary subset.
-   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` (4,096 units), REC-111.
-   *     The index costs ROWS AND FTS ENTRIES and the two bounds above count
-   *     BYTES, so until this one existed a container of many tiny units was
-   *     bounded only by accident -- see the long note at the constant for the
-   *     two accidents, their measured sizes and why a unit budget was built
-   *     rather than section 4.1's chunk-across-ticks. Over it the capture is
-   *     indexed TO it IN READING ORDER and reads `partial`, exactly as the byte
-   *     bound does: one state, one vocabulary, and the sentence says which bound
-   *     bit. **It bites nothing the product's own wire can send** (that wire
-   *     admits at most 4,064 units), which is deliberate -- a bound that refused
-   *     a document the record accepts today would be a regression wearing the
-   *     costume of caution, and section 4.3 has already shipped one of those.
-   *
-   *  Returns what it did, for the observation below and for the caller's own
-   *  surface. It refuses nothing and can fail no promotion: a document whose
-   *  container has no unit arm is a document with no units, which is a STATED
-   *  absence and not an error. */
-  #writeCaptureText(bundleId, captureSha, units, chain) {
-    /* The capture's previous units go whatever happens next, INCLUDING when the
-       new reading carries none. A re-extraction that recovers nothing must not
-       leave the previous engine's text standing as though it were current --
-       that is the staleness this whole method exists to refuse, and writing the
-       delete inside a `units.length` branch is how it would be lost. */
-    this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
-
-    const chainKind = terminalStep(chain) || "layer";
-    const list = Array.isArray(units) ? units : [];
-    /* READING ORDER IS THE RECORD'S, NOT THE CALLER'S. `provenance.json` is a
-       document a caller can AUTHOR, so the order the units are indexed in is
-       taken from each unit's own `seq` rather than from the array's order --
-       otherwise "the first 2 MiB in reading order" would mean whatever a caller
-       shuffled the array to. */
-    /* D-531 -- A UNIT WITH NO GLYPH IS NOT A UNIT WITH TEXT. This filter read
-       `u.text.length`, so a unit of pure whitespace was written, indexed and
-       COUNTED toward `PRESENT` -- the record saying it holds a searchable passage
-       where it holds none, and a capture whose every unit was blank reading as
-       fully indexed rather than as `LOOKED_ABSENT`. It is the same judgment
-       D-514 moved onto `glyphCount` at every other site that asks it, and this
-       is the site a caller's authored `provenance.json` reaches directly, so the
-       acquire-side filter in `index.mjs` cannot stand in for it. A dropped blank
-       unit is not counted in `offered`, exactly as an empty one never was. */
-    const ordered = list
-      .filter((u) => u && typeof u === "object" && typeof u.text === "string"
-                     && glyphCount(u.text) > 0)
-      .map((u, i) => ({ extent: u.extent, text: u.text,
-                        seq: Number.isInteger(u.seq) ? u.seq : i }))
-      .sort((a, b) => a.seq - b.seq);
-
-    let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
-    /* DEDUPED BY THE ADDRESS, AND THE DROPPED ONES ARE COUNTED RATHER THAN
-       SWALLOWED. The primary key IS the address, so two units at one address
-       would throw on the second plain INSERT -- and `INSERT OR IGNORE` would
-       drop one silently, which is a unit this record does not hold and does not
-       know it does not hold. The count comes back and reaches the observation's
-       own sentence, so a producer that ever emits a colliding or unnamed
-       address is NAMED rather than scored zero. */
-    const seen = new Set();
-    for (const u of ordered) {
-      const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string"
-        ? u.extent.kind : null;
-      if (!kind) { unaddressable++; continue; }
-      const extent = canonicalExtent(u.extent);
-      if (seen.has(extent)) { unaddressable++; continue; }
-      seen.add(extent);
-      const full = u.text;
-      const capped = full.length > CAPTURE_TEXT_UNIT_CAP
-        ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
-      /* BYTES, NOT CHARACTERS, because the bound is a STORAGE bound and M-20
-         measured it in UTF-8 bytes. A character count would admit a different
-         amount of text per document depending on its script, which is a bound
-         that means something different for a Spanish agenda than for an English
-         one -- and this record serves both. */
-      const size = new TextEncoder().encode(capped).length;
-      /* REC-111 -- THE UNIT BOUND IS TESTED BESIDE THE BYTE BOUND, IN THE SAME
-         BRANCH, AND THAT PLACEMENT IS THE ITEM. Section 4.3 asked for a unit
-         budget "beside the byte budget ... so both are stated in one place and
-         neither hides the other", and an `if` three lines away from this one
-         would have satisfied the letter and not the point: a reader asking WHAT
-         STOPS A PROMOTE has to find one place, not two. Both are counted into
-         the SAME `over_bound`, because `#observeIndexed` publishes one `partial`
-         state and a second tally would be a distinction a member cannot act on.
-         WHICH one bit is named in the observation's sentence, where it belongs.
-         `>=` and not `>`: `written` is the count already in the table, so the
-         unit now being considered would be the (bound + 1)th. */
-      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND
-          || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
-      bytes += size;
-      if (capped.length < full.length) truncatedUnits++;
-      this.sql.exec(
-        `INSERT INTO capture_text
-           (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        captureSha, bundleId, kind, extent, describeExtent(u.extent), u.seq,
-        capped, capped.length < full.length ? 1 : 0, chainKind);
-      written++;
-    }
-    return { written, bytes, truncated: truncatedUnits, over_bound: overBound,
-             unaddressable, offered: ordered.length, chain_kind: chainKind };
-  }
 
   /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
    *  CONTENT-AXIS OBSERVATION AND NOT AS A COLUMN OF ITS OWN.
@@ -20026,7 +19127,7 @@ export class Store extends DurableObject {
   // `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the words ARE the text. It
   // throws to roll the whole promotion back rather than return a half.
   #testimonyWithin(bid, pkg) {
-    const indexed = this.#writeCaptureText(bid, pkg[TESTIMONY_PATH].captureSha,
+    const indexed = extractionOf(this.ctx).indexUnits(bid, pkg[TESTIMONY_PATH].captureSha,
       [{ extent: { kind: "document" }, text: pkg[TESTIMONY_PATH].words, seq: 0 }], null);
     this.#observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
     const m = this.mintContent({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha, extent: { kind: "document" },
@@ -22050,287 +21151,17 @@ export class Store extends DurableObject {
      to nothing (all punctuation) is re-examined on each pass rather than
      excluded: that is a bounded cost the `examined` count reports, and it is the
      conservative direction now that being skipped means being invisible. */
-  #backfillRefTerms(limit) {
-    /* REC-57: clamped, for #backfillProjection's reason — a bound taken from a
-       request body and passed to SQL unexamined is not a bound this op can name. */
-    limit = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
-    const stale = this.#rows(
-      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
-         FROM reading_refs rr
-        WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
-                           WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
-        ORDER BY rr.capture_sha, rr.ref LIMIT ?`, limit);
-    let n = 0;
-    for (const r of stale) {
-      let wrote = 0;
-      for (const [src, text] of Store.#refTermSources(r))
-        for (const term of Store.#labelTerms(text)) {
-          this.sql.exec(
-            `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
-            r.capture_sha, r.bundle_id, r.ref, src, term);
-          wrote++;
-        }
-      if (wrote) n++;
-    }
-    return {
-      indexed: n, examined: stale.length,
-      /* REC-57, and this one was NOT in the item's brief — it is the same defect
-         as `op=tasks` between two SIBLINGS one layer down. `#backfillProjection`
-         above publishes `remaining` and this one published only `examined`, the
-         count of what it TOOK, which equals the cap on exactly the run where more
-         is left. So `op=reproject` could tell an operator to run it again and
-         the DO path `reindexnames` could not (M0-12: that one is DO-internal and
-         no op reaches it), and the two backfills answered the same
-         question in two shapes. `remaining` is its sibling's word, deliberately,
-         rather than a third spelling. */
-      limit,
-      remaining: this.#one(
-        `SELECT count(*) c FROM reading_refs rr
-          WHERE rr.seq = 0 AND NOT EXISTS (SELECT 1 FROM reading_ref_terms t
-                             WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)`).c,
-    };
-  }
-
-  /** Test and repair support, on `projectionClear`/`reproject`'s precedent
-   *  exactly: clear the name index so a reference looks like it predates the
-   *  table, and re-derive it. A backfill nothing can exercise is a repair path
-   *  nobody has ever run — which is the state the projection backfill was in
-   *  before its own pair existed. DO-only; no control-plane op reaches these. */
-  readingTermsClear({ captureSha = null } = {}) {
-    if (captureSha) this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, captureSha);
-    else this.sql.exec(`DELETE FROM reading_ref_terms`);
-    return { ok: true, cleared: captureSha || "ALL",
-             remaining: this.#one(`SELECT count(*) c FROM reading_ref_terms`).c };
-  }
-  /* D-536: test support on `readingTermsClear`'s precedent — clear a capture's kept readings so its
-     `readings` row looks like one written before D-536, which is the only way to drive the path that
-     KEEPS a pre-D-536 reading rather than overwriting it. DO-only; no control-plane op reaches it. */
-  readingHistoryClear({ captureSha = null } = {}) {
-    if (captureSha) this.sql.exec(`DELETE FROM reading_history WHERE capture_sha=?`, captureSha);
-    else this.sql.exec(`DELETE FROM reading_history`);
-    return { ok: true, cleared: captureSha || "ALL",
-             remaining: this.#one(`SELECT count(*) c FROM reading_history`).c };
-  }
-  reindexNames({ limit = 500 } = {}) {
-    return { ok: true, ...this.#backfillRefTerms(limit) };
-  }
-
-  /* CONSTRUCTS Step 3 read side: the reading of one captured document, by its
-     capture identity (register.capture_sha). Returns the stored reading —
-     entities[] + document facts — or found:false when the store holds none. */
-  readingFor(captureSha, viewer = null) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "a reading is read by its capture sha256" };
-    const row = this.#one(
-      `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at
-         FROM readings WHERE capture_sha=?`, captureSha);
-    if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
-    let reading = null;
-    try { reading = JSON.parse(row.reading); } catch { /* a malformed stored reading is surfaced as null */ }
-    /* REC-30: the reading is OF A CAPTURE and is addressed by its sha — the
-       bundle id is the back-reference to where that capture is filed, and it is
-       withheld when it names a bundle this viewer may not see. The reading
-       itself is the document's own content and is not a project's property. */
-    /* CPDF-10: the projection half of "the two are distinguishable in the
-       projection". A caller reading one reading gets the chain SPELLED OUT --
-       what produced this text, in order, and what the weakest step in it
-       supports -- rather than having to know that `reading.text_source` is a
-       chain and how to walk it. `text_says` is composed from the chain by
-       `describeChain`, so it cannot describe a chain other than this one. */
-    const ts = this.#one(
-      `SELECT transcribed, terminal_step, engines, derivation_cap, steps
-         FROM reading_text_source WHERE capture_sha=?`, captureSha);
-    const chain = reading && reading.text_source !== undefined ? reading.text_source : null;
-    return { ok: true, found: true, capture_sha: row.capture_sha,
-             bundle_id: this.#bundleRedactor(viewer)(row.bundle_id),
-             content_type: row.content_type, reader_version: row.reader_version,
-             reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading,
-             text_provenance: ts
-               ? { transcribed: !!ts.transcribed, terminal_step: ts.terminal_step,
-                   engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
-                   steps: ts.steps, chain, says: describeChain(chain) }
-               /* Not "false" and not an empty object: NOTHING WAS RECORDED, which
-                  is a third answer and the one this record is obliged to state. */
-               : { recorded: false,
-                   why: `this reading carries no text provenance, which is not the same as its `
-                      + `text not having been transcribed -- nobody recorded how it was produced`  },
-             /* D-536: every reading this record has held for this capture, with each re-read's
-                attribution against the one before it. `kept: 0` is a capture promoted before D-536
-                and not read since — its one reading is the `readings` row above, provenance
-                UNDETERMINED. */
-             reading_history: this.#readingHistoryOf(row.capture_sha) };
-  }
-
-  /* CPDF-10: THE INDEX HALF. Which captured documents' text a machine produced,
-   * answerable as a QUERY rather than by parsing every reading. `transcribed`
-   * is TRUE for a text layer too -- a layer is somebody else's transcription
-   * (CPDF-9 measured ABBYY FineReader in 3 of 14 recent Legistar attachments),
-   * so filtering on `terminal_step` or `engines` is how a caller asks the
-   * narrower question about OCR specifically. */
-  transcribedDocuments({ terminalStep: step = null, transcribed = null,
-                         limit = null, viewer = null } = {}) {
-    const where = [], args = [];
-    if (transcribed !== null) { where.push(`transcribed=?`); args.push(transcribed ? 1 : 0); }
-    if (typeof step === "string" && step) { where.push(`terminal_step=?`); args.push(step); }
-    /* BOUNDED AT BIRTH (REC-60/REC-70's ratchet). This read enumerates one row
-       per captured document, which is a table that only grows, and shipping it
-       unbounded would have added a fortieth op to the bare roster in the very
-       item whose thesis is that the record must not claim more than it can
-       support. The pair is the plane's OWN spelling -- `limit` beside
-       `truncated` -- and the bound is asked for as `cap + 1` so `truncated` is a
-       MEASUREMENT of whether more exists rather than an inference from a full
-       page. */
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.TEXT_SOURCE_LIMIT_DEFAULT),
-                                     Store.TEXT_SOURCE_LIMIT_MAX));
-    const page = this.#rows(
-      `SELECT capture_sha, bundle_id, transcribed, terminal_step, engines, derivation_cap, steps
-         FROM reading_text_source${where.length ? ` WHERE ${where.join(" AND ")}` : ""}
-        ORDER BY bundle_id, capture_sha LIMIT ?`, ...args, cap + 1);
-    const rows = page.slice(0, cap);
-    const keep = this.#bundleRedactor(viewer);
-    return { ok: true, count: rows.length, limit: cap, truncated: page.length > cap,
-             kinds: Object.keys(STEP_KINDS),
-             documents: rows.map((r) => ({
-               capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
-               transcribed: !!r.transcribed, terminal_step: r.terminal_step,
-               engines: safeJson(r.engines) || [], derivation_cap: r.derivation_cap,
-               steps: r.steps })) };
-  }
-
-  /** THE ASYMMETRIC DRIFT HANDLER'S ANSWER — derived, never stored.
-   *
-   *  Which transcriptions rest on a calibration that a LATER probe measured
-   *  WORSE? The supersessions are calibration's (`worseSupersessions`, its R11)
-   *  and the join is one indexed read on `reading_text_source.calibrations`; the verdict comes from
-   *  `drifted()`, so the direction rule has exactly one home.
-   *
-   *  THE SET IS EXACT IN BOTH DIRECTIONS AND THE SUITE ASSERTS THE ABSENCES AS
-   *  HARD AS THE PRESENCES. Not here: a transcription bound to a calibration
-   *  superseded by a BETTER measurement; one bound to a calibration nothing has
-   *  superseded; one whose chain names no calibration at all. That last one is
-   *  the subtle absence and it is correct — text that never rested on a
-   *  measurement is not affected by that measurement moving, and sweeping it in
-   *  because it happens to name the same engine would be the record raising an
-   *  obligation nobody can discharge. */
-  #calDriftFor(supersededId = null) {
-    const supers = calibrationOf(this.ctx)
-      .worseSupersessions({ supersededId, limit: Store.TEXT_SOURCE_LIMIT_MAX }).supersessions;
-    if (!supers.length) return [];
-    const wanted = new Set(supers.map((s) => s.superseded.calibration_id));
-    /* BOUNDED AT BIRTH (REC-60/REC-70's ratchet, and `test/derivation-bounds.test.mjs`
-       caught the unbounded first draft of exactly this loop). The row source is
-       one per captured document — a table that only grows — and an amplifying
-       loop runs over what comes out of it, which is the class that ratchet
-       exists to refuse. The bound is the plane's OWN pair for this table
-       (`Store.TEXT_SOURCE_LIMIT_*`, the one `transcribedDocuments` already
-       publishes) rather than a second vocabulary, and it is asked for as
-       `cap + 1` so truncation is a MEASUREMENT rather than an inference from a
-       full page.
-       ONLY ROWS THAT NAME A CALIBRATION ARE READ AT ALL — the index makes the
-       NULL majority free, which is what the projected column is for, and it is
-       also what makes this bound generous rather than tight: the rows it can
-       return are the transcriptions that rest on a measurement, never the
-       corpus. */
-    const cap = Store.TEXT_SOURCE_LIMIT_MAX;
-    const page = this.#rows(
-      `SELECT capture_sha, bundle_id, derivation_cap, chain, calibrations
-         FROM reading_text_source WHERE calibrations IS NOT NULL
-        ORDER BY capture_sha LIMIT ?`, cap + 1);
-    const truncated = page.length > cap;
-    const bound = [];
-    for (const r of page.slice(0, cap)) {
-      for (const id of (safeJson(r.calibrations) || [])) {
-        if (!wanted.has(id)) continue;
-        bound.push({ id: r.capture_sha, capture_sha: r.capture_sha, bundle_id: r.bundle_id,
-                     calibration_id: id, derivation_cap_recorded: r.derivation_cap ?? null });
-      }
-    }
-    const out = driftObligations(supers, bound);
-    /* THE TRUNCATION IS CARRIED OUT, NOT SWALLOWED. An obligation list that
-       silently stopped short would be the record UNDERSTATING a blast radius,
-       which is the one direction this item must never fail in — a member would
-       read a short list as the whole of the work. */
-    out.truncated = truncated;
-    out.limit = cap;
-    return out;
-  }
-
-  /** op=calibrationdrift. The derived obligation, gated the way every read that
-   *  names a bundle is (REC-30): a row ABOUT a bundle the viewer may not see is
-   *  WITHHELD WHOLE with no count of what was withheld, because that count is
-   *  the leak. */
-  calibrationDrift({ engine = null, viewer = null } = {}) {
-    const visible = this.#bundleRedactor(viewer);
-    const raw = this.#calDriftFor(null);
-    const all = raw
-      .filter((o) => (engine ? o.engine === engine : true))
-      .filter((o) => visible(o.bundle_id) !== null);
-    return { ok: true, ...(engine ? { engine } : {}),
-             obligations: all, count: all.length,
-             /* `limit` beside `truncated`, the plane's own spelling (REC-60's
-                pair). An UNDERSTATED obligation list is the one direction this
-                read must never fail in, so the shortfall is published rather
-                than inferred. */
-             limit: raw.limit, truncated: !!raw.truncated,
-             /* STATED IN EVERY ANSWER, including the empty one, because the
-                property this item is accepted on is that nothing moved. A
-                reader should not have to infer it from an absence. */
-             regraded: 0,
-             why: all.length
-               ? `${all.length} transcription(s) were graded under a measurement a later probe `
-                 + `found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: `
-                 + `this names the work so a member can do it (DEC-4)`
-               : `no transcription in this store rests on a calibration that a later probe measured `
-                 + `worse. A calibration that measured BETTER raises nothing by design — a grade `
-                 + `rises only by an authored act` };
-  }
+  readingTermsClear(...a) { return extractionOf(this.ctx).readingTermsClear(...a); }
+  readingHistoryClear(...a) { return extractionOf(this.ctx).readingHistoryClear(...a); }
+  reindexNames(...a) { return extractionOf(this.ctx).reindexNames(...a); }
+  readingFor(...a) { return extractionOf(this.ctx).readingFor(...a); }
+  transcribedDocuments(...a) { return extractionOf(this.ctx).transcribedDocuments(...a); }
 
   /* The reverse index Step 4 builds on: every captured document whose reading
      carries this entity reference. The reference is matched AS IT APPEARS — the
      raw kind:key — and is NOT resolved to a canonical entity, so two documents
      that name the same source id land together without any identity model. */
-  documentsByReference(ref, viewer = null) {
-    if (typeof ref !== "string" || !ref)
-      return { ok: true, ref: typeof ref === "string" ? ref : null, count: 0, documents: [] };
-    const rows = this.#rows(
-      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
-              rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
-         FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
-        WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha, rr.seq`, ref);
-    /* REC-30: the reverse index answers WHICH DOCUMENTS carry a reference — a
-       fact about captures. The bundle back-reference is withheld where the
-       viewer may not see the bundle; `count` counts documents, not names.
-
-       FW-17 / IC-86: AND WHERE IN EACH DOCUMENT IT WAS READ, which is the
-       question this read has always implied and never answered — "which
-       documents carry this reference" landing a reader on a whole document is
-       D-161's defect seen from the reference side rather than the connection
-       side. `position` is null where the reading could not say, and that null is
-       a statement (the reading's own basis says whose absence it is), never an
-       assertion that the whole document was meant.
-
-       IT IS ALSO WHAT GIVES THE THREE COLUMNS A READER A CALLER CAN REACH.
-       Without this they would be read only by `deriveConnections` — true, but
-       internal, and a projection nothing outside the store can ask for is a
-       projection the next session cannot verify. */
-    const keep = this.#bundleRedactor(viewer);
-    /* D-454: `reading_refs` holds one row per OCCURRENCE, and this read answers per DOCUMENT
-       (`count` counts documents). So the rows fold by capture: the entry is the first
-       occurrence's, `position` exactly what it was before the re-key, and a document that read
-       the reference at more than one place lists EVERY place in `occurrences`, in reading
-       order — carried only then, so a reference read once answers in its old shape. */
-    const byDoc = new Map();
-    for (const r of rows) {
-      const position = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
-      const cur = byDoc.get(r.capture_sha);
-      if (cur) { (cur.occurrences ||= [cur.position]).push(position); continue; }
-      byDoc.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
-        ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
-        position });
-    }
-    const documents = [...byDoc.values()];
-    return { ok: true, ref, count: documents.length, documents };
-  }
+  documentsByReference(...a) { return extractionOf(this.ctx).documentsByReference(...a); }
 
   /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
    *  whose reading NAMES this subject, where the source assigned no reference the
@@ -22702,7 +21533,7 @@ export class Store extends DurableObject {
   /* The case-folded, whitespace-collapsed form the alias reverse index keys on, so
      "City Clerk", "city clerk" and "  City   Clerk " are one lookup. */
   static #normAlias(s) {
-    return String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase().slice(0, 200);
+    return normAlias(s);
   }
   static #cleanLabel(s) {
     return String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
@@ -22730,7 +21561,7 @@ export class Store extends DurableObject {
      that would bind more than this is truncated rather than allowed to meet a
      limit at run time on somebody's live instance. The measured maximum is 12. */
   static #labelTerms(s) {
-    return [...new Set(Store.#normAlias(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean))].slice(0, 24);
+    return labelTerms(s);
   }
 
   /* REC-40: THE THREE STRINGS A READING REFERENCE CARRIES, each indexed under
@@ -22750,14 +21581,7 @@ export class Store extends DurableObject {
      (`keyNorm && keyNorm !== refNorm`). Written here once so the index and the
      recogniser cannot disagree about whether a B tier exists for a reference. */
   static #refTermSources(rr) {
-    const ref = rr && rr.ref == null ? "" : String(rr.ref);
-    const key = rr && rr.ref_key == null ? "" : String(rr.ref_key);
-    const label = rr && rr.label == null ? "" : String(rr.label);
-    const out = [];
-    if (ref) out.push(["ref", ref]);
-    if (key && Store.#normAlias(key) !== Store.#normAlias(ref)) out.push(["key", key]);
-    if (label) out.push(["label", label]);
-    return out;
+    return refTermSources(rr);
   }
 
   /* REC-40: THE ONE STATEMENT the name/identifier lookup runs, built here and
@@ -39419,7 +38243,7 @@ export class Store extends DurableObject {
        bounded read, which is exactly what `test/derivation-bounds.test.mjs`
        exists to refuse and what it caught in the first draft of `#calDriftFor`
        itself. */
-    const drift = this.#calDriftFor(null);
+    const drift = extractionOf(this.ctx).driftFor(null);
     /*__REC91_AXIS_LIST_START__*/
     /* REC-91 — THE INDEX STATE FOR THE WHOLE PAGE IN ONE SET-BASED READ, never
        one per row. The rule is the `#calDriftFor` line directly above and
@@ -44977,6 +43801,7 @@ export class Store extends DurableObject {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
         ...captureOps(captureOf(this.ctx), url, body, this.env),
         ...calibrationOps(calibrationOf(this.ctx), url, body),
+        ...extractionOps(extractionOf(this.ctx), url, body, this.env),
         promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
@@ -45126,14 +43951,6 @@ export class Store extends DurableObject {
         /* REC-30: `viewer` is stamped by the control plane, never read from a
            caller's own parameters there, and an absent one fails closed — the
            bundle back-reference is withheld rather than the answer refused. */
-        reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
-        /* CPDF-19 / D-319: the read-time re-extraction's two DO paths. Neither is an
-           op a caller can name — `op=pdfstructure` with `ocr=1` is the only route,
-           and the control plane stamps `viewer` and `author` from the credential. */
-        reextractbasis: () => this.reextractBasis({ captureSha: url.searchParams.get("sha256"),
-                                                    viewer: url.searchParams.get("viewer") }),
-        reextract: () => this.reextract(body || {}),
-        readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
         /* CPDF-10. Three arms, and the split is the item's own doctrine.
            `textprovenance` READS which documents' text a machine produced — the
            index half of "distinguishable in the projection, the index and an
@@ -45144,12 +43961,6 @@ export class Store extends DurableObject {
            in the OPS table), and `checkAttestation` refuses it again at the
            store, because an act refusable at one door only is an act with one
            door left open. */
-        textprovenance: () => this.transcribedDocuments({
-          terminalStep: url.searchParams.get("step"),
-          transcribed: url.searchParams.get("transcribed") == null ? null
-            : url.searchParams.get("transcribed") === "1",
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer") }),
         textattest: () => this.attestationsFor(url.searchParams.get("sha256"),
           url.searchParams.get("page") == null ? null
             : { page: Number(url.searchParams.get("page")),
@@ -45166,12 +43977,6 @@ export class Store extends DurableObject {
            attested*), so a route that skipped the stamp fails closed. */
         attesttext: () => this.attestText({ ...(body || {}),
                                             member: url.searchParams.get("attestor") }),
-        /* CPDF-13 / D-253: `calibrationdrift` is a READ, and takes the viewer
-           stamp for REC-30's reason exactly — its rows NAME the bundles a capture
-           is filed in. The other four calibration ops are `calibrationOps`'. */
-        calibrationdrift: () => this.calibrationDrift({
-          engine: url.searchParams.get("engine"),
-          viewer: url.searchParams.get("viewer") }),
         /* REC-36: the same reverse question asked by NAME rather than by the
            source's own reference — section 8.1's grade-C tier. Entity-driven, so
            the registry's aliases do the matching; the viewer stamp is the same
@@ -45184,9 +43989,6 @@ export class Store extends DurableObject {
         }),
         readingnameplan: () => this.readingNamePlan(
           (url.searchParams.get("terms") || "").split(",").map((s) => s.trim()).filter(Boolean)),
-        readingtermsclear: () => this.readingTermsClear(body || {}),
-        readinghistoryclear: () => this.readingHistoryClear(body || {}),
-        reindexnames: () => this.reindexNames(body || {}),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;
            read an entity BY KEY, entities BY ALIAS, and one relation by id. A
