@@ -79,4 +79,4 @@ Size: test runs 19, module lines 1493
 - `progressionsOf` now reaches entities through `entitiesOf(ctx)` (`has` R7, `readEntity` R5 read as `{found, entity}`, `strongestByCapture` R16), with the grade order and `established` from its exports. The CHANGE named `GRADE_RANK`, but the newer tranche state (entities R33, `8796d21a47`) exports `gradeRank`, so I used that. The bridge now answers only `connections`' `weakerGrade`, over `gradeRank`, until connections merges.
 - Module tests: 41, pass 40, fail 0, todo 1. Checks: format 0 failures (69 modules); architecture 0; coverage 34 of 34; ownership 0 (legacy-store 17/1,412, legacy-checks 0/66). Behaviour suites through the store and the real `entitiesOf`, all green: progression-instance, progression-exception, progression-versions, overdue-successor, proposals-feed, capture-progressions, d552-instance-disposition, proposedispose, queue, queue-state, current, versions, gate-reads, connection.
 
-Size: test runs 22, module lines 1476
+Size: test runs 22, module lines 1463
