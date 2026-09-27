@@ -857,9 +857,11 @@ class Provenance {
     if (!now.length) return null;
     let held = new Set();
     if (head) {
-      const img = this.#record.readImage(bundleId) || {};
       const live = {};
-      for (const [p, v] of Object.entries(img)) if (!p.startsWith("_history/")) live[p] = v;
+      for (const p of this.#record.livePaths(bundleId) || []) {
+        const f = this.#record.readFile(bundleId, p);
+        if (f) live[p] = typeof f.text === "string" ? f.text : { blobSha: f.blobSha };
+      }
       held = new Set(registerChecks(imageForChecks(live)).filter((x) => x.severity === "error")
         .map((x) => `${x.check}\u0000${x.message}`));
     }
