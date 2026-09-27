@@ -495,8 +495,8 @@ import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
          describeExtent, contentIdFor, legContentId, contentCitedAs, mintUndetermined,
          contentOf, mintLabel, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, CONTENT_TABLES } from "./content/index.mjs";
 /* retrieval (K61): the projection, the text index, search, selections, the content axis and the frontier are its; the
-   store delegates to it, registers the later modules' parts with it, and passes it observation-log's services until that
-   module is extracted. */
+ * store delegates to it, registers the later modules' parts with it, and passes it observation-log's services until that
+ * module is extracted. */
 import { retrievalOf, retrievalRoutes, answerChanged, SELECTION_ID_CHUNK, RETRIEVAL_TABLES } from "./retrieval/index.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
