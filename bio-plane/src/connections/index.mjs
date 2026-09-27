@@ -25,7 +25,8 @@
  *   entities     `entitiesOf(host)` unless a test passes its own: `has`, `readEntity` (R1's label) and
  *                `onResolved` (its R13), on which this module marks dirt (R17); the resolutions themselves are read
  *                through their read contract.
- *   env          the bindings `CONNECTION_DERIVE_DELAY_MS` and `CONNECTION_DERIVE_BATCH` (R18).
+ *   env          the bindings `CONNECTION_DERIVE_DELAY_MS` and `CONNECTION_DERIVE_BATCH` (R18); also handed to the
+ *                capture and extraction this module creates when none is passed (K155).
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity, BUNDLE_ID_RE, MACHINE_CLASS_PREFIX, parseFrontmatter, sha256HexSync,
@@ -1090,21 +1091,24 @@ export class Connections {
     };
   }
 
-  /** R31, R32, R49 (`op=connectionsasserted`): a document's connections asserted apart from derivation — a member's,
-   *  a source's, the system's containment — each row whose other end the viewer cannot see omitted (R33). */
+  /** R31, R32, R49, R54 (`op=connectionsasserted`): a document's connections asserted apart from derivation — a
+   *  member's, a source's, the system's containment — each row whose other end the viewer cannot see omitted (R33).
+   *  Sight is asked in the SQL, so the read is bounded at `cap + 1` and `truncated` counts only visible rows. */
   asserted({ bundleId = null, viewer = null, limit = null } = {}) {
     const id = str(bundleId);
     if (!id || !this.record.bundleInfo(id) || !this.sees(id, viewer))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: id || null };
     const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
     const keep = this.redactor(viewer);
-    const rows = this.#rows(`SELECT * FROM asserted_connections WHERE a_bundle_id=? OR b_bundle_id=?
-                              ORDER BY kind, connection_id`, id, id)
-      .filter((r) => keep(r.a_bundle_id === id ? r.b_bundle_id : r.a_bundle_id));
+    const seen = this.#bundleGate("x.other_end", viewer);
+    const rows = this.#rows(
+      `SELECT x.* FROM (SELECT ac.*, CASE WHEN ac.a_bundle_id = ? THEN ac.b_bundle_id ELSE ac.a_bundle_id END AS other_end
+                          FROM asserted_connections ac WHERE ac.a_bundle_id = ? OR ac.b_bundle_id = ?) x
+        WHERE (${seen.sql}) ORDER BY x.kind, x.connection_id LIMIT ?`, id, id, id, ...seen.args, cap + 1);
     const shown = rows.slice(0, cap).map((r) => this.#assertedView(r, keep));
-    const of = (k) => shown.filter((r) => r.kind === k);
     return { ok: true, bundle_id: id, limit: cap, truncated: rows.length > cap,
-             member: of("member"), source: of("link"), containment: of("containment"),
+             member: shown.filter((r) => r.kind === "member"), source: shown.filter((r) => r.kind === "link"),
+             containment: shown.filter((r) => r.kind === "containment"),
              says: "connections asserted by a member, by a source's own link and by the system's positional inference, "
                  + "each labelled with who asserts it and kept apart from the connections derived from resolutions" };
   }
@@ -1200,20 +1204,29 @@ export class Connections {
     return n;
   }
 
-  /** R30, R49 (`op=filemembership`): an agenda capture's stored pairs (with their judgements) and its pending ones, each
-   *  labelled machine work, inferred, never the publisher's link. */
-  fileMembership({ captureSha = null, viewer = null } = {}) {
+  /** R30, R49, R56 (`op=filemembership`): an agenda capture's stored pairs (with their judgements) and its pending ones,
+   *  each labelled machine work, inferred, never the publisher's link. Each list is read at most `limit` (as R54's),
+   *  bounded in the SQL at `cap + 1` with sight asked there too, and says whether it was cut. */
+  fileMembership({ captureSha = null, viewer = null, limit = null } = {}) {
     const sha = str(captureSha).toLowerCase();
     const home = sha ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha) : null;
     if (!home || !this.sees(home.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CAPTURE", capture_sha: sha || null };
+    const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
     const keep = this.redactor(viewer);
-    const stored = this.#rows(`SELECT * FROM asserted_connections WHERE kind='containment' AND origin=? ORDER BY connection_id`, sha)
-      .filter((r) => keep(r.a_bundle_id) && keep(r.b_bundle_id)).map((r) => ({ ...this.#assertedView(r, keep), stored: true }));
-    const pending = this.#rows(`SELECT * FROM file_membership_pending WHERE agenda_capture=? ORDER BY item_norm, file_norm`, sha)
+    const ga = this.#bundleGate("ac.a_bundle_id", viewer), gb = this.#bundleGate("ac.b_bundle_id", viewer);
+    const storedRows = this.#rows(
+      `SELECT ac.* FROM asserted_connections ac WHERE ac.kind = 'containment' AND ac.origin = ?
+          AND (${ga.sql}) AND (${gb.sql}) ORDER BY ac.connection_id LIMIT ?`, sha, ...ga.args, ...gb.args, cap + 1);
+    const pendingRows = this.#rows(
+      `SELECT * FROM file_membership_pending WHERE agenda_capture = ? ORDER BY item_norm, file_norm LIMIT ?`, sha, cap + 1);
+    const stored = storedRows.slice(0, cap).map((r) => ({ ...this.#assertedView(r, keep), stored: true }));
+    const pending = pendingRows.slice(0, cap)
       .map((p) => ({ ...MEMBERSHIP_LABEL, stored: false, item_address: p.item_address, file_address: p.file_address,
                      why: "not both documents are held yet, so this pair is served at the read and not stored" }));
-    return { ok: true, capture_sha: sha, ...MEMBERSHIP_LABEL, stored, pending,
+    return { ok: true, capture_sha: sha, ...MEMBERSHIP_LABEL, stored, pending, limit: cap,
+             truncated: storedRows.length > cap || pendingRows.length > cap,
+             stored_truncated: storedRows.length > cap, pending_truncated: pendingRows.length > cap,
              says: "an agenda item's membership in a file, derived from where the file is printed; the publisher "
                  + "linked neither end to the other, so this is the plane's inference, to be confirmed, never the publisher's own link" };
   }
@@ -1324,9 +1337,13 @@ export function connectionsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
-    const content = d.content || contentOf(host);
-    const extraction = d.extraction || extractionOf(host);
-    const capture = d.capture || captureOf(host);
+    /* K155: a module this one creates is created with this module's `env`. capture, extraction and host-governor
+       keep the FIRST instance per storage, so one created here without it would leave the plane's capture with no
+       bindings (no renderer, no governor appetite) whoever asks for it later. */
+    const env = d.env ?? null;
+    const extraction = d.extraction || extractionOf(host, { record, membership, promotion, env });
+    const content = d.content || contentOf(host, { record, membership, extraction });
+    const capture = d.capture || captureOf(host, { record, env });
     const entities = d.entities || entitiesOf(host, { record, membership });
     k = new Connections({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, extraction,
                           capture, entities });
@@ -1375,7 +1392,7 @@ export function connectionsOps(k, url, body, env) {
                                        member: q("author"), viewer: q("viewer") }),
     connectionsasserted: () => k.asserted({ bundleId: q("bundle"), viewer: q("viewer"), limit: q("limit") }),
     filemembershipstore: () => k.storeFileMembership({ captureSha: q("sha256"), viewer: q("viewer"), env }),
-    filemembership: () => k.fileMembership({ captureSha: q("sha256"), viewer: q("viewer") }),
+    filemembership: () => k.fileMembership({ captureSha: q("sha256"), viewer: q("viewer"), limit: q("limit") }),
     filemembershipjudge: () => k.judgeFileMembership({ id: (b && b.id) || q("id"), verdict: (b && b.verdict) || q("verdict"),
                                                        reason: b ? b.reason : null, member: q("author"), viewer: q("viewer") }),
     themedeclare: () => k.declareTheme({ name: b ? b.name : null, test: b ? b.test : null, declarer: q("declarer"),

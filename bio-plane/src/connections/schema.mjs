@@ -106,6 +106,12 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- NO INDEX ON connections(grade), stated rather than left: D-222 named it beside
+-- resolutions_grade, and no arm of the meaning compiler reads it -- concerns joins
+-- resolutions, the base relation a connection is DERIVED from (both ends of every
+-- connection have a resolution row for the shared entity). An index nothing queries is
+-- write cost on D-224's k(k-1)/2 curve for no read at all. It is earned when an arm
+-- reads it.
 -- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
 -- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
 -- for, not merely permitted). The connection's own pair stays the machine's
