@@ -1,6 +1,6 @@
 # capture-sources (T7)
 
-**Status** · session_01KeNRofea8FepQThMPbuAiL · depth 2 · WORKING · handled B1
+**Status** · session_01KeNRofea8FepQThMPbuAiL · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
