@@ -9408,13 +9408,6 @@ export const ACT_SHAPE_CHECKS = {
       + 'the spacing and punctuation are taken off, so there would be nothing for anybody to '
       + 'search on later.',
   },
-  UNKNOWN_AFTER: {
-    check: 'C-33.26',
-    where: 'src/store.mjs defineProgression > is-progression-order',
-    translation: 'One step here says it comes after a step this sequence does not contain, so the '
-      + 'order cannot be worked out. Name a step that exists, or leave the ordering off and let it '
-      + 'stand on its own.',
-  },
   KIND_NOT_PERSONAL: {
     check: 'C-33.27',
     where: 'src/store.mjs queueMute > is-mute-class',
@@ -9652,65 +9645,6 @@ export const ACT_SHAPE_CHECKS = {
       + 'claiming more than it can show. Name where the source is published or held — if it is not '
       + 'public, say who holds it and how it was seen, which is still an address and is still '
       + 'checkable.',
-  },
-  /* -------------------------------------------------------------------------
-     REC-211 / IC-273 — A DISPOSITION BINDS THE DEFINITION VERSION THE MEMBER
-     SAW, AND THESE ARE THE TWO REFUSALS THAT MAKE THAT ENFORCEABLE.
-
-     BOB #32 ruled it on 2026-09-24 (~03:14Z), on REC-184's own worker's finding:
-     *"a disposition binds the definition version the member SAW: the act carries
-     definitionVersion; if the definition has moved since, it is refused
-     DEFINITION_MOVED by name, and the member re-reads and acts again. Authored
-     acts bind what was authored."* Home: `BIO_Content_Framework_v0_10.md` §8.2,
-     "The declared flow, and its revisions".
-
-     WHY REC-184 DID NOT ALREADY CLOSE IT, and this is the part worth reading
-     before touching either row. REC-184 stamps `proposal_dispositions.definition_version`
-     from the STORE at the moment the write arrives, never from the caller — which
-     is right for authorship and is exactly what makes the remaining hole
-     invisible. A member reads the question at version 3, a revision lands, the
-     member decides: the row is stamped 3+1, the read half compares the stamp
-     against the current version, finds them equal, and publishes `applies: true`.
-     The record then says a member judged a declared flow they never read, and
-     says it with no mark of doubt anywhere. That is the record claiming more than
-     it can support (CLAUDE.md §2), and no read-side rule can recover it, because
-     the two numbers it has to compare are the same number.
-
-     SO THE ACT CARRIES WHAT THE MEMBER SAW, AND THE STORE COMPARES. Two
-     conditions, and they are two rows rather than one because they are two
-     different facts about the request and DEC-49 gives one code one sentence:
-     C-33.42 is *this act does not say which version it judged*; C-33.43 is *it
-     says one, and it is not the version standing now*.
-
-     C-33.43's TRANSLATION DOES NOT SAY "REVISED SINCE YOU READ IT" although that
-     is the case it exists for. The plane knows only that the named version is not
-     the current one; a caller naming a version that never stood reaches the same
-     line, and a sentence asserting a revision would be the plane inventing the
-     reason. It says what is true of every route in — the version named is not the
-     one standing — and the refusal carries both numbers beside it.
-
-     NEITHER ROW REACHES THE JUDGMENT-LAYER ARM. `op=proposedispose`'s second key
-     shape ({project, finding}) ages a finding in one team's feed and no declared
-     flow governs it, so there is no version to name and nothing here to ask.
-     ------------------------------------------------------------------------- */
-  NO_DEFINITION_VERSION: {
-    check: 'C-33.42',
-    where: 'src/store.mjs proposeDispose > is-dispose-version-named',
-    translation: 'Setting aside one of the record\'s own questions is a decision about the way a '
-      + 'body is said to work — and that description is written down, dated, and rewritten when the '
-      + 'group learns better. This request does not say which of those versions you were reading '
-      + 'when you decided, so the record cannot say what you actually judged. Open the question '
-      + 'again and send the version shown beside it. Nothing was recorded.',
-  },
-  DEFINITION_MOVED: {
-    check: 'C-33.43',
-    where: 'src/store.mjs proposeDispose > is-dispose-version-current',
-    translation: 'The version of the declared flow this decision names is not the one standing now. '
-      + 'Rather than file your decision against a description you did not read, the record keeps it '
-      + 'out and asks you to look again: read the question against the version in force and decide '
-      + 'again. The answer may well be the same one, and it will then be yours. Both versions are '
-      + 'named beside this message, the earlier one still reads back in full, and nothing was '
-      + 'recorded.',
   },
   /* REC-186 (BOB #31, 2026-09-23 21:37Z): the last owner's request to leave. C-33.48, not the next
      free number on main, because REC-205 and REC-207's unmerged branches already hold C-33.44..46 in
@@ -14891,36 +14825,6 @@ export const RISK_TIER_REVISION_CHECKS = {
     where: 'src/store.mjs actionRiskTier > is-risk-tier-act',
     translation: 'This action\'s record of earlier risk tiers is not in a shape the act can add to without '
       + 'rewriting it, and the act only ever adds. Nothing was written.',
-  },
-};
-
-/* REC-203 / C-91 — `op=idmatch`, the identifier-space judgement (`BIO_Content_Framework_v0_10.md` §8.3 "WHAT
- * MAKES A SHARED IDENTIFIER COUNT"). THREE refusals, and each is a request the judgement cannot be asked, never
- * a verdict: a pair that does not count (different forms, one system, an unread referent) is an ANSWER with
- * `counts: false` and its reason, because "these do not join" is a fact about the record, not a fault in the
- * question. The capture refusal answers a document the caller may not see EXACTLY as one the record does not
- * hold, `contentmint`'s reason: otherwise the judgement is a way to learn that a document exists. */
-export const IDSPACE_CHECKS = {
-  IDSPACE_UNKNOWN: {
-    check: 'C-91.1',
-    where: 'src/store.mjs idMatch > is-idspace-unknown',
-    translation: 'That is not an identifier space the record knows how to judge. The spaces are the resolution '
-      + 'or ordinance number (cms), the project number (project), the fund code (fund) and the assessor\'s parcel '
-      + 'number (apn). Nothing was judged.',
-  },
-  IDSPACE_VALUE_NOT_IN_SPACE: {
-    check: 'C-91.2',
-    where: 'src/store.mjs idMatch > is-idspace-value-shape',
-    translation: 'The value given does not have the shape of any form of that identifier space, so the record '
-      + 'cannot say what it would join. Give the identifier as the document writes it (for a project, C329142 or '
-      + '1000858; for a parcel, 011-0836-017-00). Nothing was judged.',
-  },
-  IDSPACE_CAPTURE_NOT_HELD: {
-    check: 'C-91.3',
-    where: 'src/store.mjs idMatch > is-idspace-capture',
-    translation: 'Each value in a pair has to be named with the captured document it was read in, one the record '
-      + 'holds and you can see: which system published a document is read from where the record retrieved it, '
-      + 'never taken from the request. One of the two names no such document. Nothing was judged.',
   },
 };
 

@@ -12,6 +12,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { readingSourceJson, readingOccurrenceKey } from "../../../src/textchain.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
@@ -39,14 +40,6 @@ export function storage() {
   };
 }
 
-/* entities' two tables as the legacy schema holds them (its read contract, until entities is extracted). */
-const ENTITIES_DDL = `
-CREATE TABLE IF NOT EXISTS entities (entity_id TEXT PRIMARY KEY, kind TEXT NOT NULL, label TEXT NOT NULL, note TEXT,
-  declared_by TEXT, at TEXT);
-CREATE TABLE IF NOT EXISTS resolutions (capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL, ref TEXT NOT NULL,
-  entity_id TEXT NOT NULL, grade TEXT NOT NULL, method TEXT NOT NULL, basis TEXT, established INTEGER NOT NULL DEFAULT 0,
-  raised_from TEXT, resolved_by TEXT, at TEXT, PRIMARY KEY (capture_sha, ref, entity_id));`;
-
 /** A text layer's chain, unscoped (content's fixture's). */
 export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }];
 
@@ -58,7 +51,6 @@ export function world({ now = "2026-09-27T03:00:00.000Z", env = {} } = {}) {
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  st.db.exec(ENTITIES_DDL);
   const clock = { now };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -84,11 +76,13 @@ export function world({ now = "2026-09-27T03:00:00.000Z", env = {} } = {}) {
   content.migrate();
   const capture = captureOf(host, { record, governor: {}, provenance: prov });
   capture.migrate();
-  const k = connectionsOf(host, { record, membership, promotion, content, extraction, capture, env, now: () => clock.now });
+  const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => clock.now });
+  entities.migrate();
+  const k = connectionsOf(host, { record, membership, promotion, content, extraction, capture, entities, env, now: () => clock.now });
   k.migrate();
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, capture, k, clock, structures, readingListeners,
+    st, host, record, membership, promotion, prov, content, capture, entities, k, clock, structures, readingListeners,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

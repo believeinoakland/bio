@@ -19,7 +19,7 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 
 **observe(entry, at?, terminal?) → null or refusal** The one append site.
 - **R2** Refusals, in order: C-22.6 (the entry names a bundle to be written into); C-22.9 (an authority kind absent or not in R1); C-22.1 (a state not in R1); C-22.2 (a definitive state on a `governed` entry); C-22.3 (`PRESENT` with the condition `client-rendered-shell`); C-22.10 (`PRESENT` with no `result_ref`, or an `observation` referent that is not an earlier `PRESENT` row of the same authority, the fault named as `not_earlier`, `unresolved`, `other_authority` or `not_present`); C-22.4 (a condition not in the condition vocabulary). A refused entry writes nothing.
-- **R3** `NEVER_LOOKED` is refused at the append: it is never stored. *(not yet met: no row; the append accepts it today)*
+- **R3** `NEVER_LOOKED` is refused at the append as a look at a subject: it is never stored as one. The one exception is a run's terminal entry (terminal, authority `run`), whose rollup says the run looked at nothing (ai-runs R14; K148). *(not yet met: no row; the append accepts it today)*
 - **R4** An accepted entry is one row with a store-wide `seq` that only increases and is never reused, and `at` (the writer's instant, else now, to the second). It answers null.
 
 **Writers** Each is registered on an earlier module's event (K31's pattern) or called by a later module; each derives the actor class from the author (a member, a machine identity, else the plane with no actor), never naming a member who did not look.
@@ -47,6 +47,9 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 
 - **R20** `leadList({limit, viewer})`: every lead this viewer may read (R15), each once with its own latest state, bounded and saying so. *(not yet met: D-681)*
 - **R21** `op=leadread` and the internet frontier carry `vocabulary {states, outcomes}` with member-facing words for every state, `partial` included. *(not yet met: D-682)*
+
+**The read contract** (K142)
+- **R29** The table `observation_log` and its columns `seq` (the key, store-wide, only increasing, R4), `at` (whole-second UTC), `actor_class`, `actor`, `authority_kind`, `authority`, `level`, `subject_kind`, `subject`, `state`, `governed` (0 or 1), `condition`, `bound`, `terminal` (0 or 1), `result_kind`, `result_ref` and `detail`, each with R1's vocabulary where it has one; the table `leads` and its columns `lead_id` (the key), `author`, `words`, `locator`, `at`; and the table `lead_shares` and its columns `lead_id`, `bundle_id` (the project), `sharer`, `at`, are a stated read contract: a later module may join them in its own SQL, on the terms of record-core R37 and content R45, and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's (R2, R14, R16, R22).
 
 ## Private
 

@@ -22,12 +22,13 @@
  * `deps`:
  *   record, membership, promotion, content, extraction, capture   the modules it uses, through their factories on
  *                the same host unless a test passes its own.
- *   entities     `{has, entityOf, onResolved?}`; until `entities` is extracted a bridge over the `resolutions`
- *                read contract and the `entities` table (K120's pattern), and `legacy-store` marks dirt (R17).
+ *   entities     `entitiesOf(host)` unless a test passes its own: `has`, `readEntity` (R1's label) and
+ *                `onResolved` (its R13), on which this module marks dirt (R17); the resolutions themselves are read
+ *                through their read contract.
  *   env          the bindings `CONNECTION_DERIVE_DELAY_MS` and `CONNECTION_DERIVE_BATCH` (R18).
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
-import { isMachineIdentity, BASIS_GRADES, BUNDLE_ID_RE, MACHINE_CLASS_PREFIX, parseFrontmatter, sha256HexSync,
+import { isMachineIdentity, BUNDLE_ID_RE, MACHINE_CLASS_PREFIX, parseFrontmatter, sha256HexSync,
          CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, themeLegFindings }
   from "../../checks/bio-checks.mjs";
 import { readingSourceFromColumns, readingSourceJson, readingOccurrenceKey, readingPositionInExtent }
@@ -40,6 +41,7 @@ import { contentOf } from "../content/index.mjs";
 import { extractionOf, OCCURRENCES_PER_REF } from "../extraction/index.mjs";
 import { MEMBERSHIP_LABEL, checkMembershipLabel } from "../extraction/filemembership.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
 import { CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES, migrateConnections } from "./schema.mjs";
 import { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 import { Themes, THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
@@ -69,10 +71,8 @@ export const ASSERT_BASIS_MAX = 4000;
 /** R29: the machine viewer the system's own re-projection reads through. */
 const SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 
-/* §8.1's rank, a function of the catalogue's vocabulary (A strongest). */
-const GRADE_RANK = Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i]));
-const rank = (g) => GRADE_RANK[g] || 0;
-const isEstablished = (g) => g === "A" || g === "B";
+/* §8.1's rank (entities R33, K149): A strongest; a grade outside the vocabulary ranks below every one. */
+const rank = (g) => gradeRank[g] || 0;
 
 /** R34 (FW-8): the weaker of two §8.1 grades — a connection is no stronger than its weaker end. Both ends measure the
  *  same thing on the same scale and neither is null on a connection row; a caller composing anything else short-
@@ -86,16 +86,11 @@ const str = (v) => (typeof v === "string" ? v.trim() : v == null ? "" : String(v
 const clamp = (limit, dflt, max) => Math.max(1, Math.min(Number(limit) || dflt, max));
 const cut = (s, n) => String(s ?? "").slice(0, n);
 
-/* ------------------------------------------------------------------ the entities bridge (Q3, K120) */
-
-/** What this module reads of `entities` until it is extracted: `has`, and the entity's kind and label (R1's basis),
- *  over the `entities` table; the resolutions themselves are read through their read contract below. */
-function entitiesBridge(sql) {
-  const one = (q, ...a) => { for (const r of sql.exec(q, ...a)) return r; return null; };
-  return {
-    has: (id) => !!(id && one(`SELECT 1 AS x FROM entities WHERE entity_id=?`, id)),
-    entityOf: (id) => (id ? one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id) : null),
-  };
+/* The entity's kind and label for R1's basis, through entities' R5 read. */
+function entityOf(entities, id) {
+  if (!id || !entities || typeof entities.readEntity !== "function") return null;
+  const r = entities.readEntity({ entityId: id });
+  return r && r.found && r.entity ? { entity_id: r.entity.entity_id, kind: r.entity.kind, label: r.entity.label } : null;
 }
 
 /* ------------------------------------------------------------------ the module */
@@ -113,7 +108,7 @@ export class Connections {
     this.content = content;
     this.extraction = extraction;
     this.capture = capture;
-    this.entities = entities || entitiesBridge(storage.sql);
+    this.entities = entities;
     this.env = env || {};
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.themes = new Themes(this);
@@ -201,7 +196,7 @@ export class Connections {
       return { ok: false, reason: "CONNECTION_AUTHOR_NOT_DERIVED", asserted_by: author,
                detail: `a derivation is the system's inference from two resolutions, never a ${author}'s assertion; a `
                      + `member asserts a connection with op=connectionassert, and a source's link is projected with op=linkproject` };
-    const ent = this.entities.entityOf(entityId);
+    const ent = entityOf(this.entities, entityId);
     const cap = clamp(limit, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX);
     const endsCap = Connections.maxEndsForPairs(cap);
     const rowCap = CONNECTIONS_LIMIT_MAX;
@@ -1316,7 +1311,7 @@ const instances = new WeakMap();
 /** The one connections instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
  *  first call only. At creation it declares its tables (R36) and registers its projection and fact with promotion
  *  (R19, R23), its link notice (R29) and its re-derivation with extraction (R49), and marks dirt on entities'
- *  `onResolved` when `entities` provides it (R17). */
+ *  `onResolved` (R17). */
 export function connectionsOf(host, deps) {
   let k = instances.get(host);
   if (!k) {
@@ -1327,8 +1322,9 @@ export function connectionsOf(host, deps) {
     const content = d.content || contentOf(host);
     const extraction = d.extraction || extractionOf(host);
     const capture = d.capture || captureOf(host);
+    const entities = d.entities || entitiesOf(host, { record, membership });
     k = new Connections({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, extraction,
-                          capture });
+                          capture, entities });
     instances.set(host, k);
     record.declarePurge("connections", CONNECTIONS_TABLES);
     promotion.registerStep("connections", { project: (c) => k.projectRefs(c) });
@@ -1336,6 +1332,7 @@ export function connectionsOf(host, deps) {
     promotion.onCommitted("connections", ({ bundleId, replay }) => (replay ? null : k.relinkTargetsOf(bundleId)));
     if (typeof extraction.onReading === "function")
       extraction.onReading("connections", (e) => ({ membership_rederived: k.rederiveMembership(e.captureSha) }));
+    /* R17: an inserted or raised resolution marks its entity, inside the resolving transaction (entities R13). */
     if (k.entities && typeof k.entities.onResolved === "function")
       k.entities.onResolved("connections", (e) => k.markDirty(e.entityId));
   }

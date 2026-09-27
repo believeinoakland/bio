@@ -167,6 +167,21 @@ test("R17: many marks of one entity are one row, inside the caller's transaction
   assert.equal(w.count("connection_dirty"), 2);
 });
 
+test("R17: registered on entities' onResolved — an inserted or raised resolution marks its entity inside the resolving transaction; a kept one marks nothing", () => {
+  const w = world();
+  const made = w.entities.createEntity({ kind: "ordinance", label: "Ord. 13,579", declaredBy: "member:alice" });
+  assert.equal(made.ok, true);
+  const [a] = w.doc("INFO-2026-0001-a", ["a"]);
+  w.read(a, "INFO-2026-0001-a", "Ord. 13,579", [1]);
+  const r = w.entities.resolve({ captureSha: a, resolvedBy: "member:alice" });
+  assert.equal(r.ok, true);
+  assert.deepEqual(w.rows(`SELECT entity_id FROM connection_dirty`), [{ entity_id: made.entity_id }]);
+  w.st.sql.exec(`DELETE FROM connection_dirty`);
+  w.entities.resolve({ captureSha: a, resolvedBy: "member:alice" });
+  assert.equal(w.count("connection_dirty"), 0, "a kept resolution marks nothing");
+  assert.equal(w.entities.onResolved("connections", () => {}).reason, "LISTENER_DECLARED", "connections registered once");
+});
+
 test("R18: wake is null when nothing is marked, else now plus the delay (a binding may set it); sweep derives a batch, oldest first, clearing each after", () => {
   const w = world({ env: { CONNECTION_DERIVE_DELAY_MS: "5", CONNECTION_DERIVE_BATCH: "1" } });
   assert.equal(w.k.wake(1000), null);
