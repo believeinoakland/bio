@@ -7,8 +7,8 @@
  * order is not a clock. An image with no `seq` on every entry is still walked, in key order, and the finding says so. */
 
 import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES, MECHANICAL_FIELD_SETS } from "../../checks/bio-checks.mjs";
+import { EMPTY_STRING_SHA } from "../record-core/index.mjs";
 
-const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairs } : {}) });
 const asText = (v) => (typeof v === "string" ? v : new TextDecoder().decode(v));
 const readJson = (files, path) => {

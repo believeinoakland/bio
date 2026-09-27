@@ -125,3 +125,23 @@ test("R32: an undeclared edge in the document's own state_history is an error, r
   const cat = await checkBundle({ folderName: ID, files: new Map(Object.entries(alone)), sha256: async (v) => sha(v), resolveTarget: () => true });
   assert.deepEqual(cat.findings.filter((f) => f.check === "C-4.2"), []);
 });
+
+test("R30, R32: the audit runs the moved checks too — promotion registers them once with record-core's audit (its R59), with the caller's release registry", async () => {
+  const { makePromotion } = await import("./fixtures.mjs");
+  const { record } = makePromotion();
+  assert.deepEqual(record.auditChecks.map((c) => c.module), ["promotion"]);
+  const [{ check }] = record.auditChecks;
+  const promos = [{ key: "z1", text: md() }, { key: "a1", text: md({ title: '"Retitled"' }), writer: "mechanical", operation: "sweep" }];
+  for (const img of [image(promos), { "bundle.md": md({ prior_state: "verified" }) }]) {
+    const files = new Map(Object.entries(img).filter(([, v]) => typeof v === "string"));
+    const got = await check({ folderName: ID, bundleId: ID, image: img, files, elidedPaths: new Set(), sha256: async (v) => sha(v),
+                              resolveTarget: () => true });
+    assert.deepEqual(got, await all(img));
+    assert.ok(got.some((f) => f.severity === "error"));
+  }
+  /* The context's release registry reaches C-18.8: an unreadable one is an error the audit reports. */
+  const md2 = md({ schema: "information@2" });
+  const got = await check({ folderName: ID, files: new Map([["bundle.md", md2]]), sha256: async (v) => sha(v),
+                            releaseRegistry: { unavailable: true, reason: "down" } });
+  assert.ok(got.some((f) => f.check === "C-18.8" && f.severity === "error"));
+});

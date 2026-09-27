@@ -76,6 +76,9 @@ export function makeRecord() {
       }
       return null;
     },
+    /** record-core R59: the audit checks a module registers, kept for a test to run. */
+    auditChecks: [],
+    registerAuditCheck(module, check) { record.auditChecks.push({ module, check }); return { ok: true, module }; },
     commits: 0,
     commit({ bundleId, type, title, snapKey, kind, base, author, writer, operation, files, state, priorState, group,
              created, lastUpdated, criticality, at }) {
