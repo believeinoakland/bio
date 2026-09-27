@@ -48,6 +48,6 @@ Nothing.
 - `node pdf-worker/test/jpx.test.mjs`: jpx: 201 passed, 0 failed
 - Users of the module: `node ocr-worker/test/ocr-worker.test.mjs`: 194 passed, 1 failed (REPORT 1 above, the stale bundle only). `content` has no tests yet (`bio-plane/test/m/content/` does not exist).
 - No layer tests (`build/manifest.md`).
-- `checks/format.mjs`: 0 failures · `architecture.mjs … pdf-pixels`: 0 failures · `coverage.mjs … pdf-pixels`: 25 of 25 live ids named, 0 failures · `ownership.mjs … pdf-pixels tranche/T4`: see the commit below.
+- `checks/format.mjs`: 0 failures · `architecture.mjs … pdf-pixels`: 0 failures · `coverage.mjs … pdf-pixels`: 25 of 25 live ids named, 0 failures · `ownership.mjs … pdf-pixels tranche/T4`: 7 files changed, 0 failures.
 
 Size: test runs 15, module lines 1074
