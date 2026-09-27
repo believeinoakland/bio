@@ -1712,7 +1712,53 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
        liveCaptureSessions (the unexpired capture sessions), provenance/index:{capturesOf (R12, D-580: one bundle's
        register rows), captureGrade (R24-R27: one capture's receipt routes), registeredFor (one bundle's register),
        signedReceipts (R34: one capture's signed receipts)}. ARRIVALS NAMED, not graded here. */
-const SCANNING_MEASURED_2026_09_15 = 158;
+/* UPDATED 2026-09-27 (T5-12, legacy-tests), 158 -> 190, READ FROM THE CENSUS ROSTER THIS RUN PRINTED over the corpus
+   widened by T5's nine modules (see EXTRACTED) and DIFFED BY NAME against the same census run on the T5 opening tree
+   64386f16eb (158), never 158 + 32. THIRTY-EIGHT DEPARTED from store.mjs; SEVENTY ARRIVED in the modules:
+     - 32 MOVED, one for one, the same read under the module's name: #assembleInstance -> progressions/index:#assemble,
+       #citesInto -> connections/index:citesInto, #contentStandings -> content/index:projectStandings,
+       #dispositionsByStage -> progressions/index:#decisionsByStage, #entitiesByAliasNorm -> entities/index:#entitiesByNorm,
+       #entityView -> entities/index:#entityView, #filesOf -> retrieval/index:#filesOf, #frontierContent ->
+       retrieval/frontier:#content, #frontierInternet -> retrieval/frontier:#internet, #instanceDeadlines ->
+       progressions/index:#deadlines, #progressionCurrent -> progressions/index:#current, #resolveOne ->
+       entities/index:#resolveOne, #runQuery -> retrieval/index:runQuery, #strongestResolutionsFor ->
+       entities/index:strongestByCapture, #sweepSelections -> retrieval/index:sweepSelections, backlinks ->
+       connections/index:backlinks, biasManifest -> bias/index:biasManifest, captureProgressions ->
+       progressions/index:captureProgressions, danglingRefs -> connections/index:dangling, documentsByReference ->
+       extraction/index:documentsByReference (R48 bounded its page; its per-document occurrences read is not),
+       documentsNamingEntity -> entities/index:namingDocuments, entitiesByAlias -> entities/index:entitiesByAlias,
+       projectionPlan -> retrieval/index:projectionPlan, proposalsFeed -> progressions/index:proposalsFeed,
+       readExceptions -> progressions/index:readExceptions, readProgression -> progressions/index:readProgression,
+       readingNamePlan -> entities/index:namingPlan, selectionCreate / selectionList / selectionRelease / selectionResolve ->
+       retrieval/index:{selectionCreate, selectionList, selectionRelease, selectionResolve}, threadInstance ->
+       progressions/index:threadInstance.
+     - 3 MOVED INTO A SHARED HELPER, still seen there: the tally GROUP BY that `frontier` and `#frontierMeaning` held (their
+       only unbounded scan; `#frontierContent` keeps its own index-state read) is retrieval/frontier:#tally, one helper for
+       the levels; `#overdueScan`'s pairs scan is progressions/index:#pairs, shared with proposalsFeed (which keeps its
+       dispositions read). Two arrivals for three departures.
+     - 3 GONE, each by a requirement: #calDriftFor (its supersession join is now calibration's `worseSupersessions`,
+       LIMIT-bounded by calibration R11/R6, and extraction's `driftFor` reads it — CALIBRATION #1, EXTRACTION #1; its page
+       stays graded as `extraction/index:driftFor:page`); #calNextProbe (calibration R15: one `MIN(probe_by_ms)` row, no
+       signal list); calibrationSubjects (calibration R15: `#subjects` is `LIMIT cap + 1` with `truncated`, graded below as
+       `calibration/index:#subjects:page`).
+     - 22 are the readers' own definitions, the same helpers every module has carried since T3: `#rows`/`#one` in bias,
+       calibration, content, observation-log, progressions and retrieval/index, `#rows`/`#one`/`#cols` in entities and
+       extraction, `#rows` in connections/index, connections/themes and retrieval/frontier, and retrieval/index:rowsOf (the
+       Frontier reader's `#rows`, handed through).
+     - 14 are NEW reads or reads the reader never saw, each named with its source:
+       connections/index:{asserted (R54, `op=connectionsasserted`: every asserted connection of one document, read whole and
+       filtered by sight — its `truncated` is REC-99's violation below, REPORTED), #assertedView (R54: one containment's
+       judgements), fileMembership (R30/R49: one agenda capture's stored and pending pairs), rederiveMembership (R49: the
+       pending pairs naming one capture's addresses), relinkTargetsOf (R29: the deferred links a promoted bundle's captures
+       answer), projectRefs (R19: the promoted bundle's own edges, kept as `refsReplaced`), portionGrades (the batched
+       portion grade: the connections through the given portions' captures)} — CONNECTIONS #1, K102;
+       content/index:markStale (R41, K102 — see the CLASS ratchet's note); entities/index:{#restingOn, #withdrawnNames}
+       (R8's withdrawals, per entity); extraction/index:{reextractBasis (now also one capture's whole pdf-page units, so a
+       re-read seeds tier 3 with what is transcribed — extraction R35, D-616, EXTRACTION #1), unitsOf (R36: one capture's skipped ranges;
+       its units carry the unit bound)}; progressions/index:#threads (R8: one instance's threadings); retrieval/index:migrate
+       (the store's `#migrate` spelled `[...this.sql.exec(…)]`, which this reader does not see, now `#rows`). Per-key reads
+       but for `asserted`, `portionGrades` and `markStale`. ARRIVALS NAMED, not graded here. */
+const SCANNING_MEASURED_2026_09_15 = 190;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
