@@ -24,10 +24,11 @@ export const ENTITY_KINDS = Object.freeze(["source", "institution", "office", "m
 /* The three DECLARED-relation predicates safeguard 4 names, and only these. */
 export const RELATION_KINDS = Object.freeze(["proxy_for", "member_of", "overlaps"]);
 
-/* REC-51: the grade rank DERIVED from the catalogue's own strongest-first order, never restated; a higher number
-   is a stronger grade. Shared with `connections`, `progressions` and the earned-basis registry (map §5.5). */
-export const GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
-/* established is a PROPERTY OF THE GRADE (R10, R27): A and B rest on a captured identifier at both ends; C is
+/* R33 (REC-51, K76 (3), K147): the grade rank DERIVED from the catalogue's own strongest-first order, never
+   restated; a higher number is a stronger grade, and a value that is no grade has no rank. Read by `connections`,
+   `progressions`, `bias` and the earned-basis registry. */
+export const gradeRank = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
+/* R34: established is a PROPERTY OF THE GRADE (R10, R27): A and B rest on a captured identifier at both ends; C is
    correspondence awaiting a member's confirmation; D is bare testimony. */
 export const isEstablished = (grade) => grade === "A" || grade === "B";
 
@@ -436,7 +437,7 @@ export class Entities {
     const b = basis == null ? null : String(basis).slice(0, 400);
     const by = resolvedBy == null ? null : String(resolvedBy).slice(0, 200);
     const existing = this.#one(`SELECT grade FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
-    if (existing && !(GRADE_RANK[grade] > (GRADE_RANK[existing.grade] || 0)))
+    if (existing && !(gradeRank[grade] > (gradeRank[existing.grade] || 0)))
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade: existing.grade,
                established: isEstablished(existing.grade), needs_confirmation: existing.grade === "C", raised: false, kept: true };
     if (!existing)
@@ -592,7 +593,7 @@ export class Entities {
     const byCapture = new Map();
     for (const r of rows) {
       const cur = byCapture.get(r.capture_sha);
-      if (!cur || GRADE_RANK[r.grade] > GRADE_RANK[cur.grade]) byCapture.set(r.capture_sha, r);
+      if (!cur || gradeRank[r.grade] > gradeRank[cur.grade]) byCapture.set(r.capture_sha, r);
     }
     return byCapture;
   }

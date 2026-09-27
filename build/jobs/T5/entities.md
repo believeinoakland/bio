@@ -20,6 +20,14 @@
 
 - **Q1 · ANSWER** (K143, `tranche/T5` @ `5ed5b476f9`, merged here): the reading stands. `entities` stops using the adapter and does not touch `id-spaces`' files; removing the adapter and retiring id-spaces R26 is N105 (T6, layer 1); `rec203-idspaces` is in legacy-tests' T5-12. Verified after the merge: nothing in the plane imports the adapter. The only importer of `idspaces.mjs` in `bio-plane/src` is `entities/index.mjs`, which imports the view-first `spaces`, `recognise`, `parcelStanding`, `systemOf` and `judgePair`; no file names `ID_SPACES`, `CMS_FLOOR`, `apnStanding` or `systemOfAddresses`.
 
+- **CHANGE (K147, 08:15 UTC):** state and export `gradeRank` and `isEstablished(grade)` in Provides under those names (progressions and bias read them). Applied: the export `GRADE_RANK` is renamed `gradeRank` (the one name; nothing outside this module imported the old one), tests R33 and R34 added, the text proposed below. `tranche/T5` @ `4643e032ce` was already contained in this branch.
+
+## Proposed requirements (K147; for BOB to fold into `build/requirements/entities.md`, Provides)
+
+**gradeRank; isEstablished(grade)** (module-level exports, not methods; K76 (3), K147)
+- **R33** `gradeRank` is a frozen map from each grade of the catalogue's `BASIS_GRADES` to its rank, derived from that list's strongest-first order and never restated: the strongest grade ranks highest (`A` 4, `B` 3, `C` 2, `D` 1 while the catalogue reads A–D), and a value that is not a grade has no entry (`undefined`), never a rank below `D`. It is the one rank R10 raises by and R15–R16 collapse by; `connections`, `progressions`, `bias` and the earned-basis registry read it and hold no copy.
+- **R34** `isEstablished(grade)` is true exactly for `A` and `B` (a captured identifier at both ends) and false for every other value, `C` and `D` included; it is the one rule behind R10's `established`.
+
 ## Decisions made in the module (P17: recorded, not asked)
 
 - **R20's view is the active profiles only.** `idMatch` combines record-core's `jurisdiction_profiles` (R26) and nothing else, as `capture` (R17) and `extraction` (R18) do; an instance holding none has an empty view, over which every value answers `IDSPACE_VALUE_NOT_IN_SPACE` with `forms: []` and says the profiles give the space no form. K35's every-non-test-profile fallback lived only in the adapter N6 retires, and R20 names the active profiles. Consequence: on an instance whose installer has not yet set its profiles (N10's instance-setup share), `op=idmatch` recognises nothing; the answer carries `profiles` so this is visible.
@@ -28,7 +36,7 @@
 - **R32 (K102):** for a document the viewer may not see, R14 and R15 keep the row and digest and answer `bundle_id: null`, `resolved_by: null`, and a grade-D row's `method` as a fixed sentence without the testifier. An absent viewer sees nothing (fails closed).
 - **R19 (N4):** `namingPlan()` with no terms takes the active view's `search_terms`, each folded into terms by extraction's `labelTerms`, at most 24; with none it answers `{determined: false, terms: [], sql: null, plan: null, why}`. Every answer carries `determined` and `from` (`caller` or `profiles`).
 - **R13:** listeners run inside the resolving transaction; a throwing listener's error propagates and the whole resolve rolls back (`record-core.transact`). The store's scheduler arming (async) stays in its two delegating methods, `resolveReferences` and `testifyResolution`, which call the service and arm when a resolution was inserted or raised, as before; `op=resolve` and `op=resolvetestify` therefore stay in the store's dispatch, and every other op of this module is `entitiesOps`, spread in like `extractionOps`.
-- **The shared constants (map §5.5):** `GRADE_RANK`, `isEstablished`, `MEANING_LIMIT_DEFAULT`/`MAX` are exported. The store keeps its own `#GRADE_RANK`, `#isEstablished`, `#MEANING_LIMIT_*` and `#OCCURRENCES_PER_REF`, because connections', progressions' and the earned registry's code in the store still reads them (about 40 sites); each later job imports ours when it moves its code.
+- **The shared constants (map §5.5):** `gradeRank` (R33, K147), `isEstablished` (R34), `MEANING_LIMIT_DEFAULT`/`MAX` are exported. The store keeps its own `#GRADE_RANK`, `#isEstablished`, `#MEANING_LIMIT_*` and `#OCCURRENCES_PER_REF`, because connections', progressions' and the earned registry's code in the store still reads them (about 40 sites); each later job imports ours when it moves its code.
 - **The store's other readers of these tables** (map §3) stay as SQL over the read contract the Suggestions state (`resolutions(capture_sha, bundle_id, ref, entity_id, grade, established)`, and `entities.entity_id` for the has-checks); I did not rewire them, because every one sits in code `connections`, `progressions`, `inquiry` or `retrieval` is extracting concurrently in this layer, and editing those lines would only make their merges conflict. `#strongestResolutionsFor` stays as a one-line delegate to `strongestByCapture` (R16), so its callers are unchanged.
 - **The set form of `resolve` (C-75)** takes its identity groups (`[[captureSha], [captureSha, ref]]`, shared `ref`) as a local constant equal to `affordances`' `PER_ITEM_ACTS` row, which this module cannot import (layer 11).
 - **`NO_ALIAS`, `NO_BASIS`, `NO_CITATION`** carry the catalogue's `ACT_SHAPE_CHECKS` rows (code, check, translation) at this module's interface, per the Provides' refusal rule.
@@ -57,16 +65,16 @@
 5. **affordances** (N13): `affordances.mjs` still defines `ENTITY_KINDS` and `RELATION_KINDS`; it should re-export them from `src/entities/index.mjs` (equal today). Its `PER_ITEM_ACTS` `resolve` row is copied here as a constant. `store.mjs` still imports the two arrays from `affordances.mjs`, unused now (removing them is an edit to an import from a module not mine, which ownership refuses).
 6. **extraction**: R9–R19 read `readings`, `reading_refs` (seq 0) and `reading_ref_terms` in SQL; extraction's Provides should state them as a read contract (as provenance R48), with the term fold (`normAlias`, `labelTerms`) named in Provides (entities' Uses already rely on both).
 7. **id-spaces**: its legacy adapter now has no caller in the plane (Q1).
-8. **connections, observation-log** (this layer): register with R13 (`onResolved` for the dirty mark, `onResolveAttempt` for the attempt row) and drop `legacy-store`'s registrations; import `GRADE_RANK`, `isEstablished`, `MEANING_LIMIT_*` from here. **progressions** and the earned-basis registry: `strongestByCapture` (R16) and `has` (R7).
+8. **connections, observation-log** (this layer): register with R13 (`onResolved` for the dirty mark, `onResolveAttempt` for the attempt row) and drop `legacy-store`'s registrations; import `gradeRank`, `isEstablished`, `MEANING_LIMIT_*` from here. **progressions** and the earned-basis registry: `strongestByCapture` (R16) and `has` (R7).
 9. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest are stale (the plane's sources changed).
 
 10. **BOB (process state):** after merging `tranche/T5` @ `5ed5b476f9`, the format check fails on `build/requirements/progressions.md` (ids given twice: R8, R33, R31); it fails identically on `tranche/T5` itself, so it is not this job's.
 
 ## Tests and checks
 
-- **Module:** `node --test bio-plane/test/m/entities/` on `c364655db2`: tests 32, pass 32, fail 0 (5 files: registry, resolve, reads, naming, idmatch; each live id R1–R32 named in a title).
+- **Module:** `node --test bio-plane/test/m/entities/` on `c364655db2`: tests 32, pass 32, fail 0 (5 files: registry, resolve, reads, naming, idmatch; each live id R1–R32 named in a title). After K147: tests 34, pass 34, fail 0 (R33, R34 in `resolve.test.mjs`).
 - **Layer tests:** none named in `build/manifest.md`.
-- **After the merge of `5ed5b476f9`:** module 32/32; architecture, coverage and ownership unchanged (0 failures); format 1 failure, `progressions.md`'s duplicate ids, present on `tranche/T5` (item 10).
+- **After the merge of `5ed5b476f9`:** module 32/32 (34/34 after K147); architecture, coverage and ownership unchanged (0 failures); format 1 failure, `progressions.md`'s duplicate ids, present on `tranche/T5` (item 10).
 - **Checks** (civicos-process `main` @ `7549c0b6`, before the merge): format 69 modules, 64 requirements files, 0 failures; architecture 9 product files, 21 relative imports, 0 failures; coverage 32 of 32 live ids named, 0 failures; ownership 13 files, legacy-store 27 added / 1,375 removed, legacy-checks 0 / 30, 0 failures.
 
-Size: test runs 15, module lines 1008
+Size: test runs 16, module lines 1008

@@ -151,3 +151,25 @@ test("R27 grade states how a reference was matched and nothing else: a C never r
   assert.equal(e.resolve({ captureSha: sha("r27") }).resolved_count, 0);
   assert.equal(e.resolutionsFor({ captureSha: sha("r27"), viewer: MACHINE }).resolutions[0].grade, "B", "never falls");
 });
+
+test("R33 gradeRank ranks the catalogue's grades in its own order, strongest highest; no other value has a rank", async () => {
+  const { gradeRank } = await import("../../../src/entities/index.mjs");
+  const { BASIS_GRADES } = await import("../../../checks/bio-checks.mjs");
+  assert.deepEqual(Object.keys(gradeRank), [...BASIS_GRADES]);
+  for (let i = 1; i < BASIS_GRADES.length; i++) assert.ok(gradeRank[BASIS_GRADES[i - 1]] > gradeRank[BASIS_GRADES[i]]);
+  assert.deepEqual(gradeRank, { A: 4, B: 3, C: 2, D: 1 });
+  for (const v of [null, undefined, "", "E", "a", "established"]) assert.equal(gradeRank[v], undefined);
+  assert.ok(Object.isFrozen(gradeRank));
+  /* the rank R10 raises by: D < C < B < A */
+  const { e, read } = world();
+  const ent = e.createEntity({ kind: "office", label: "Rank" }).entity_id;
+  read("INFO-1", sha("r33"), [{ kind: "k", key: "1", label: "Rank" }]);
+  e.testify({ captureSha: sha("r33"), ref: "k:1", entityId: ent, basis: "b" });
+  assert.equal(e.resolve({ captureSha: sha("r33") }).resolved[0].raised_from, "D");
+});
+
+test("R34 isEstablished(grade) is true exactly for A and B", async () => {
+  const { isEstablished } = await import("../../../src/entities/index.mjs");
+  assert.deepEqual(["A", "B", "C", "D", null, undefined, "", "a", "E"].map((g) => isEstablished(g)),
+                   [true, true, false, false, false, false, false, false, false]);
+});
