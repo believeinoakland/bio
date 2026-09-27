@@ -2,7 +2,7 @@
 
 **Session** ENTITIES #1, `session_01FFJSjwZY11KjjofLSWARDy`, on `job/T5/entities` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main` @ `7549c0b6`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE, 2026-09-27 (head `c364655db2` before this record). Every entry applied; Provides final (REPORT sent for the early merge); Q1 answered (K143) and applied. `tranche/T5` merged @ `5ed5b476f9` after BOB's ANSWER. Entry T5-4: extract `entities` from `legacy-store` and `legacy-checks` per `build/extraction/entities.md` and `build/requirements/entities.md`, with N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225 and every requirement marked not yet met (R8, R19, R20, R23, R25, R32).
+**Status** · COMPLETE again after K147/K149, 2026-09-27 ~08:22 UTC; first COMPLETE (head `c364655db2` before this record). Every entry applied; Provides final (REPORT sent for the early merge); Q1 answered (K143) and applied. `tranche/T5` merged @ `5ed5b476f9` after BOB's ANSWER. Entry T5-4: extract `entities` from `legacy-store` and `legacy-checks` per `build/extraction/entities.md` and `build/requirements/entities.md`, with N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225 and every requirement marked not yet met (R8, R19, R20, R23, R25, R32).
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS §1–§16, `build/manifest.md`, `build/layers.md`, `build/requirements/entities.md`, `build/extraction/entities.md`, `build/plan/current.md`, the public parts of `jurisdictions`, `id-spaces`, `record-core`, `membership`, `provenance`, `extraction` (legacy-checks has no requirements file), rulings K1, K3, K4, K6, K23, K31, K35, K53, K61, K64, K102, K106, K120, K134, K138, K140, K141; `build/jobs/T5/content.md` (the pattern); `bio-plane/src/idspaces.mjs`; the legacy code the map names, measured again below. No snapshot branch carries built work for N4, N6 or REC-225.
 
@@ -22,7 +22,9 @@
 
 - **CHANGE (K147, 08:15 UTC):** state and export `gradeRank` and `isEstablished(grade)` in Provides under those names (progressions and bias read them). Applied: the export `GRADE_RANK` is renamed `gradeRank` (the one name; nothing outside this module imported the old one), tests R33 and R34 added, the text proposed below. `tranche/T5` @ `4643e032ce` was already contained in this branch.
 
-## Proposed requirements (K147; for BOB to fold into `build/requirements/entities.md`, Provides)
+- **K149 (after the 08:19 ANSWER):** BOB's 08:19 message naming `GRADE_RANK` was superseded by K149, which adopts `gradeRank` and `isEstablished` as R33–R34 as worded below; acted on the newest state, so no revert. `tranche/T5` @ `5af5183f89` merged here; my earlier commits were already in it (merged early @ `4405b936fe`).
+
+## Proposed requirements (K147, folded by K149; for BOB to fold into `build/requirements/entities.md`, Provides)
 
 **gradeRank; isEstablished(grade)** (module-level exports, not methods; K76 (3), K147)
 - **R33** `gradeRank` is a frozen map from each grade of the catalogue's `BASIS_GRADES` to its rank, derived from that list's strongest-first order and never restated: the strongest grade ranks highest (`A` 4, `B` 3, `C` 2, `D` 1 while the catalogue reads A–D), and a value that is not a grade has no entry (`undefined`), never a rank below `D`. It is the one rank R10 raises by and R15–R16 collapse by; `connections`, `progressions`, `bias` and the earned-basis registry read it and hold no copy.
@@ -72,9 +74,9 @@
 
 ## Tests and checks
 
-- **Module:** `node --test bio-plane/test/m/entities/` on `c364655db2`: tests 32, pass 32, fail 0 (5 files: registry, resolve, reads, naming, idmatch; each live id R1–R32 named in a title). After K147: tests 34, pass 34, fail 0 (R33, R34 in `resolve.test.mjs`).
+- **Module:** `node --test bio-plane/test/m/entities/` on `c364655db2`: tests 32, pass 32, fail 0 (5 files: registry, resolve, reads, naming, idmatch; each live id R1–R32 named in a title). After K147: tests 34, pass 34, fail 0 (R33, R34 in `resolve.test.mjs`). After merging `5af5183f89`: format 0 failures, architecture 0, coverage 34 of 34 live ids, ownership 0 (no diff against the tranche but this record).
 - **Layer tests:** none named in `build/manifest.md`.
 - **After the merge of `5ed5b476f9`:** module 32/32 (34/34 after K147); architecture, coverage and ownership unchanged (0 failures); format 1 failure, `progressions.md`'s duplicate ids, present on `tranche/T5` (item 10).
 - **Checks** (civicos-process `main` @ `7549c0b6`, before the merge): format 69 modules, 64 requirements files, 0 failures; architecture 9 product files, 21 relative imports, 0 failures; coverage 32 of 32 live ids named, 0 failures; ownership 13 files, legacy-store 27 added / 1,375 removed, legacy-checks 0 / 30, 0 failures.
 
-Size: test runs 16, module lines 1008
+Size: test runs 17, module lines 1008
