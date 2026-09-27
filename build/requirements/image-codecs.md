@@ -9,23 +9,23 @@ Pure image decoders: an image stream's bytes to samples, pixel-exact against an 
 ### Provides
 
 **`decodeBaselineJpeg(d, {rotate, expectComps, colorTransform}) → samples`, `readJpegHeader(d)`, `colourTransformOf(h)`, `DctRefusal`** (`dctdecode.mjs`)
-- **R1** Decodes a baseline or extended-sequential Huffman, 8-bit JPEG to 8-bit samples bit-exact with libjpeg (ISLOW IDCT, fancy chroma upsampling, fixed-point YCbCr, libjpeg's colour-transform rule, which `colourTransformOf` states for a header). Anything else throws a `DctRefusal` whose reason is one of `UNSUPPORTED_JPEG_PROCESS`, `UNSUPPORTED_SAMPLES`, `TRUNCATED_IMAGE_DATA`, `DECODE_FAILED`, as the bytes require.
+- **R1** Decodes a baseline or extended-sequential Huffman, 8-bit JPEG to 8-bit samples bit-exact with libjpeg (ISLOW IDCT, fancy chroma upsampling, fixed-point YCbCr, libjpeg's colour-transform rule, which `colourTransformOf` states for a header). Anything else throws a `DctRefusal` carrying its own `code` and a `detail` that says why (which process, which sampling, where the data ran out); `pdf-pixels` maps each code to its own reasons.
 
 **`ccittDecode(data, {K, columns, rows, byteAlign}) → packed 1-bit rows`** (`ccittdecode.mjs`)
 - **R2** Decodes CCITT Group 3 one-dimensional (`K = 0`) and Group 4 (`K < 0`) data to packed 1-bit rows, one per decoded row. Mixed mode (`K > 0`) is refused. A stream that cannot be read is refused; a stream ending early returns the rows decoded, so the caller can see fewer rows than it declared.
 
 **`decodeJbig2(data, globals) → samples`, `JBIG2_REFUSES`, `Jbig2Refusal`** (`jbig2decode.mjs`)
-- **R3** Decodes JBIG2 embedded streams, with their `JBIG2Globals`: at least generic and generic-refinement regions, symbol-dictionary and text regions, MMR/Huffman and arithmetic coding; pattern and halftone regions where built (K43). What it cannot decode throws a `Jbig2Refusal` whose reason is a key of `JBIG2_REFUSES`, naming the feature (the segment type).
+- **R3** Decodes JBIG2 embedded streams, with their `JBIG2Globals`: at least generic and generic-refinement regions, symbol-dictionary and text regions, MMR/Huffman and arithmetic coding; pattern and halftone regions where built (K43). What it cannot decode throws a `Jbig2Refusal`: an unsupported feature as code `UNSUPPORTED` whose `detail.feature` is a key of `JBIG2_REFUSES` (the segment type), and damaged or short data under the codec's own codes.
 
 **`decodeJpx(d) → samples`, `JPX_REFUSES`, `JpxRefusal`** (`jpxdecode.mjs`)
-- **R4** Decodes a JPEG 2000 codestream or JP2 file. What it cannot decode throws a `JpxRefusal` whose reason is a key of `JPX_REFUSES`, naming the feature.
+- **R4** Decodes a JPEG 2000 codestream or JP2 file. What it cannot decode throws a `JpxRefusal`: an unsupported feature as code `UNSUPPORTED` whose `detail.feature` is a key of `JPX_REFUSES`, and damaged or short data under the codec's own codes. A decode whose working set would pass the memory bound is refused as the feature "an image past the memory bound" before any allocation, with the working set, the bound and the image's size in `detail` (N34).
 
 **`MqDecoder`, `mqContexts(n)`** (`mq.mjs`)
 - **R5** The MQ arithmetic decoder (ITU-T T.88 Annex E, T.800 Annex C) shared by R3 and R4: the same bytes and context states decode the same decisions as the standard's reference procedure.
 
 **All codecs**
 - **R6** Each decode is checked pixel-exact against a named independent decoder over fixtures that carry the raw stream and the reference's hash (libjpeg-turbo for R1, jbig2dec for R3, OpenJPEG for R4; CCITT against the page fixtures' reference hashes), never against this module's own earlier output.
-- **R7** A refusal's reason is a key of that codec's declared refusal set; renaming or removing a key is a change to this requirement.
+- **R7** Every `UNSUPPORTED` refusal's feature is a key of that codec's declared set, and every key is reachable; renaming or removing a key, or a refusal code, is a change to this requirement.
 
 ## Private
 

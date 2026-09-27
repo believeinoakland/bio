@@ -60,6 +60,8 @@ exported from `pagepixels.mjs`; the function `ocr-worker` imports directly (neve
   `image-codecs` (its R3, R4) to a PNG like R23 and R24, carrying `pixels_sha256`. A codec's refusal
   answers `UNSUPPORTED_FILTER`, naming the feature (for JBIG2, the segment type), or the `REFUSALS` reason
   this module maps that refusal key to; the mapping is total over `JBIG2_REFUSES` and `JPX_REFUSES`.
+  The JPX memory-bound key (N34) maps to `IMAGE_TOO_LARGE` ("decoding the image would need more memory
+  than a decode may use here"), carrying the codec's feature and figures in its detail (K116).
 - **R26** A route that DECODES samples (R23, R24, or R22 with `decodeDct`) carries `pixels_sha256`, a
   SHA-256 over the normalised packed/interleaved samples taken before any container is built; a
   pass-through route (R22 default) carries none, its bytes being the publisher's own and byte-stable by
