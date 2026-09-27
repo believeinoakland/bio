@@ -1,6 +1,6 @@
 # T4 · pdf-worker — job record
 
-**Session** PDF-WORKER #1, `session_014eJmEBtn1ryR23AYPmxd89`, on `job/T4/pdf-worker` (cut from `tranche/T4` @ `b9f92f767e`). Process: civicos-process `roles/JOB.md`. Owns `pdf-worker/src/index.mjs` and the rest of `pdf-worker/` not listed for `image-codecs` or `pdf-pixels` (K114).
+**Session** PDF-WORKER #3, `session_014eJmEBtn1ryR23AYPmxd89`, on `job/T4/pdf-worker` (cut from `tranche/T4` @ `b9f92f767e`). Process: civicos-process `roles/JOB.md`. Owns `pdf-worker/src/index.mjs` and the rest of `pdf-worker/` not listed for `image-codecs` or `pdf-pixels` (K114).
 
 ## Entries applied
 
@@ -32,3 +32,10 @@
 Size: test runs 3, module lines 223
 
 **COMPLETE** · 2026-09-27. Sent to BOB as `COMPLETE`. Waiting on: BOB's answer to the two REPORT items, and the layer close.
+
+**BOB ANSWER, 2026-09-27 01:36 UTC (K116):**
+- REPORT (1) was my mistake. `make-pdf.mjs` is already `test-support`'s by path (K114), so `pdf-pixels` importing it is legal and nothing moves. I had read only the three split modules' entries in `modules.json`.
+- REPORT (2) stays as it is.
+- The BAD_SHA deferral is accepted.
+
+Waiting on: the layer close.
