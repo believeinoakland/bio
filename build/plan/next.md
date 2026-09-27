@@ -102,6 +102,8 @@
 
 - N106 · 2026-09-27 · **retrieval**, **query-language** (RETRIEVAL #1 Q1, K144): K75 (3)'s move of retrieval's projection columns and `fts_id` off `bundles` into a table of retrieval's own, done by both jobs together (query-language's compiled statements read `b.<column>` and key the text index through `b.fts_id`); record-core R37's note then goes.
 
+- N107 · 2026-09-27 · **queue** (PROGRESSIONS #1, K147): aggregate progressions' `cardinality_exceeded` finding into its proposal items with its own wording (it is not "required and absent").
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
