@@ -360,6 +360,9 @@ test("R20: a revision of a bundle the stamped actor may not see answers exactly 
   const ex = p.promote(revise(ID, head.bundleSha, infoDoc(ID), { actorIdentity: "member:eve", actorViewer: "member:eve" }));
   assert.equal(ex.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
   assert.deepEqual([ex.project, ex.name], [ID, "A report"]);
+  /* C-70.1 is minted once, by membership (R77): the answer is membership's own, byte for byte. */
+  assert.deepEqual(ex, membership.existenceAct(ID, "member:eve"));
+  assert.equal(ex.check, "C-70.1");
   /* An internal write (no stamped identity) is not a caller. */
   assert.equal(p.promote(revise(ID, head.bundleSha, infoDoc(ID, { title: "x" }))).ok, true);
   void record;

@@ -4,6 +4,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { promotionOf } from "../../../src/promotion/index.mjs";
+import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 export const EMPTY = sha("");
@@ -132,6 +133,14 @@ export function makeMembership() {
     },
     visibilitySettingRefusal: (v) => (v === "discoverable" || v === "hidden" ? null
       : { ok: false, reason: "PROJECT_VISIBILITY_UNKNOWN_SETTING" }),
+    /* R77: C-70.1, minted by membership; the id and name only. `titleOf` is set by makePromotion from the record. */
+    titleOf: () => null,
+    existenceAct(projectId, viewer) {
+      if (viewer === null || viewer === undefined || m.sight(projectId, viewer) !== "EXISTENCE") return null;
+      const row = PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT;
+      return { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", code: "PROJECT_SEEN_NOT_A_PARTICIPANT", check: row.check,
+               translation: row.translation, detail: "membership's words", project: projectId, name: m.titleOf(projectId) };
+    },
     visibilityOf: (projectId) => (m.discoverable.has(projectId) ? "discoverable" : "hidden"),
     projectCreated({ projectId, ownerId, visibility, by }) {
       if (!ownerId && visibility == null) { m.ownerless = (m.ownerless || 0) + 1; return { ok: true }; }
@@ -147,6 +156,7 @@ export function makeMembership() {
 export function makePromotion({ group = "test-group", citedBy = {}, caseMember = new Set(), facts = true,
                                 now = () => "2026-09-26T12:00:00.000Z" } = {}) {
   const record = makeRecord(), membership = makeMembership();
+  membership.titleOf = (id) => record.bundleInfo(id)?.title ?? null;
   const host = {};
   const p = promotionOf(host, { record, membership, now });
   if (facts) {

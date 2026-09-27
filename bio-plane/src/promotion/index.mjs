@@ -459,7 +459,8 @@ class Promotion {
       if (base !== null) {
         const sight = head && pkg.actorIdentity != null
           ? String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase() : "FULL";
-        if (head && sight === "EXISTENCE") return this.#existenceOnly(bundleId);
+        const seen = head && sight === "EXISTENCE" ? membership.existenceAct(bundleId, pkg.actorViewer ?? "") : null;
+        if (seen) return seen;
         if (!head || sight !== "FULL")
           return refusal("ABSENT", "update attempted against a bundle that does not exist");
       }
@@ -761,14 +762,6 @@ class Promotion {
     }
   }
 
-  /* R20 (membership R44): the one answer an act gives a caller who sees a project at EXISTENCE: its id and name. */
-  #existenceOnly(projectId) {
-    const info = this.#record.bundleInfo(projectId);
-    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
-      "this project is discoverable and you are not one of its participants. Its existence and name are all it shows "
-      + "you; asking to join is the one act open to you.", { project: projectId, name: info ? info.title ?? null : null });
-  }
-
   /* ---------------------------------------------------------------- forkProject (N16, §7.12) */
 
   forkProject(args = {}) {
@@ -790,7 +783,8 @@ class Promotion {
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
     const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
-    if (head && sight === "EXISTENCE") return this.#existenceOnly(projectId);
+    const seen = head && sight === "EXISTENCE" ? membership.existenceAct(projectId, viewer) : null;
+    if (seen) return seen;
     if (!head || sight !== "FULL")
       return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
                detail: "no project answers to that id here. A project you cannot see is answered exactly as one that "
