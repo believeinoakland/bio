@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership, viewerPredicate, GATE_MARK } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX, PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
 
 /* H hidden, D discoverable, both owned by ann; bob invited to H; info I */
 async function sightWorld() {
@@ -156,4 +156,48 @@ test("R48 projectDirectory: needs a member; discoverable projects not at FULL, o
   const exact = w.m.projectDirectory({ viewer: V("cal"), limit: 5 });
   assert.equal(exact.truncated, false, "measured by reading one past the cap");
   assert.equal(w.m.projectDirectory({ viewer: V("cal"), limit: 10_000 }).limit, 200, "never raised");
+});
+
+test("R77 existenceAct: C-70.1 (id and name only) at EXISTENCE; null at FULL, at NONE and with no viewer; never throws", async () => {
+  const w = await sightWorld();
+  w.bundle("INFO-K");
+  const row = PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT;
+  assert.equal(row.check, "C-70.1");
+  // EXISTENCE: a discoverable project, a member outside it (an ordinary member, and one invited elsewhere)
+  for (const who of ["cal", "bob"]) {
+    const ex = w.m.existenceAct("PROJ-D", V(who));
+    assert.deepEqual(ex, { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", code: "PROJECT_SEEN_NOT_A_PARTICIPANT",
+      check: "C-70.1", translation: row.translation, detail: ex.detail, project: "PROJ-D", name: "Discoverable D" }, who);
+    assert.equal(typeof ex.detail, "string");
+    for (const secret of ["ann", "owner", "joined", "invited"]) assert.ok(!ex.detail.includes(secret), secret);
+  }
+  // FULL: the owner, an invited participant, an administrator, the founder, every machine credential
+  assert.equal(w.m.existenceAct("PROJ-D", V("ann")), null);
+  w.m.projectInvite({ projectId: "PROJ-D", handle: "bob", by: "ann", viewer: V("ann") });
+  assert.equal(w.m.existenceAct("PROJ-D", V("bob")), null, "invited is FULL");
+  assert.equal(w.m.existenceAct("PROJ-D", V("second")), null, "an administrator is FULL");
+  assert.equal(w.m.existenceAct("PROJ-D", "admin"), null, "the founder is FULL");
+  for (const cls of ["admin", "member", "probe", "daemon", "ai"])
+    assert.equal(w.m.existenceAct("PROJ-D", `${MACHINE_CLASS_PREFIX}${cls}`), null, cls);
+  // NONE: hidden, absent, not a project, a viewer naming nobody
+  for (const [id, v] of [["PROJ-H", V("cal")], ["PROJ-NEVER", V("cal")], ["INFO-K", V("cal")], ["PROJ-D", "junk"],
+                         ["PROJ-D", ""], ["PROJ-D", "member:"], ["PROJ-D", 7]])
+    assert.equal(w.m.existenceAct(id, v), null, `${id} ${JSON.stringify(v)}`);
+  // no viewer given: an internal caller, not asked
+  assert.equal(w.m.existenceAct("PROJ-D", null), null);
+  assert.equal(w.m.existenceAct("PROJ-D", undefined), null);
+  assert.equal(w.m.existenceAct("PROJ-D"), null);
+  // going hidden takes EXISTENCE away; going discoverable gives it
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+  assert.equal(w.m.existenceAct("PROJ-D", V("cal")), null);
+  w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "discoverable", by: "ann", viewer: V("ann") });
+  assert.equal(w.m.existenceAct("PROJ-H", V("cal")).project, "PROJ-H");
+  // never throws, whatever it is handed
+  for (const id of [null, undefined, "", 0, {}, [], "x'; DROP TABLE members; --"])
+    for (const v of [V("cal"), "admin", {}, [], 0, true])
+      assert.doesNotThrow(() => w.m.existenceAct(id, v), `${JSON.stringify(id)} ${JSON.stringify(v)}`);
+  // it is the one mint of C-70.1: every project-naming act at EXISTENCE answers it byte for byte (R44's list)
+  const ex = w.m.existenceAct("PROJ-H", V("cal"));
+  assert.deepEqual(w.m.projectJoin({ projectId: "PROJ-H", by: "cal", viewer: V("cal") }), ex);
+  assert.deepEqual(w.m.projectOwnerAdd({ projectId: "PROJ-H", handle: "cal", by: "cal", viewer: V("cal") }), ex);
 });
