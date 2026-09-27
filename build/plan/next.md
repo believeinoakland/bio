@@ -62,7 +62,7 @@
 
 - N77 · 2026-09-27 · **jurisdictions** (CAPTURE-SOURCES #1 Q1, K119): a profile key `locale` (`{value, basis}`, one BCP 47 tag, validated), combined like `practice`'s keys, so capture-sources R54 reads the render locale from the profiles; the first profile states its locale.
 
-- N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`.
+- N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`. *(DONE by BOB #45: M-186; CLIENT-RENDERED.md.)*
 
 - N79 · 2026-09-27 · **subresources** (CAPTURE #1, T4): `captureSubresources`' links carry each link's containment in a chrome region, so capture R28 files it on live captures (D-340's `furnitureLinks`, built on the snapshot).
 - N80 · 2026-09-27 · **affordances**, **capture** (CAPTURE #1, T4): `acquireGradeNote` (acquire's `ACQUIRE_GRADE_NOTE`) moves out of `affordances.mjs` to `capture` or `legacy-checks`, so capture composes its own answer; until then the op handler adds it.
