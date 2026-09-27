@@ -10170,20 +10170,28 @@ var RecordCore = class _RecordCore {
     return { ok: true, module };
   }
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
-   *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). `known`, what a
-   *  reference resolves against, is the WHOLE corpus and never leaves this method: filtering it would
-   *  manufacture dangling-reference findings out of a viewer's position (REC-30). What is gated is what
-   *  leaves: the page holds only bundles `visible(id)` admits. `context(id)` adds the caller's further
-   *  checkBundle options for a bundle (the earned and published registries later modules build).
-   *  Blob-backed files are declared elided: existence assertions see them, byte checks skip them. */
+   *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). What a reference
+   *  resolves against is the WHOLE corpus, asked of `bundles` by its key one reference at a time, and never
+   *  leaves this method: filtering it would manufacture dangling-reference findings out of a viewer's
+   *  position (REC-30). What is gated is what leaves: the page holds only bundles `visible(id)` admits.
+   *  N117: every read here carries an SQL `LIMIT` — the cursor read takes the ids after `after` a page's
+   *  worth at a time and stops once the page is full, and no read loads the corpus's ids whole.
+   *  `context(id)` adds the caller's further checkBundle options for a bundle (the earned and published
+   *  registries later modules build). Blob-backed files are declared elided: existence assertions see them,
+   *  byte checks skip them. */
   async auditPass({ after = "", limit = 200, visible = null, context = null } = {}) {
     const cap = _RecordCore.#bound(limit);
-    const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
     const page = [];
-    for (const r of this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id`, String(after ?? ""))) {
-      if (typeof visible === "function" && !visible(r.bundle_id)) continue;
-      page.push(r.bundle_id);
-      if (page.length >= cap) break;
+    let scan = String(after ?? "");
+    for (; ; ) {
+      const batch = this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, scan, cap);
+      for (const r of batch) {
+        if (typeof visible === "function" && !visible(r.bundle_id)) continue;
+        page.push(r.bundle_id);
+        if (page.length >= cap) break;
+      }
+      if (page.length >= cap || batch.length < cap) break;
+      scan = batch[batch.length - 1].bundle_id;
     }
     const sha2562 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
     const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
@@ -10199,7 +10207,7 @@ var RecordCore = class _RecordCore {
         else elided.add(path);
       }
       const extra = typeof context === "function" ? context(id) || {} : {};
-      const resolveTarget2 = (t) => known.has(t);
+      const resolveTarget2 = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
       const { findings } = await checkBundle({
         folderName: id,
         files,
@@ -15091,7 +15099,7 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.35.0";
+var CATALOG_VERSION = "1.36.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -33057,50 +33065,62 @@ function membershipOps(m, url, body, env) {
 var PROMOTION_CHECKS = {
   STATE_MOVE_UNDECLARED: {
     check: "C-86.6",
+    where: "src/promotion/index.mjs #promote > is-state-move-undeclared",
     translation: "That is not a move this item can make from where it stands. Each kind of thing has a set of moves its rules allow, and this one is not among them, so nothing was written. Move it by a step the rules allow, or leave it where it stands and record what changed."
   },
   PROMOTED_TYPE_UNSTATED: {
     check: "C-86.5",
+    where: "src/promotion/index.mjs #promote > is-promoted-type-unstated",
     translation: "This is a new item and nothing says what kind of thing it is: neither the document nor the request names a type. What it is decides which rules protect it, so the record will not guess. Nothing was written. Say in the document what kind of thing it is, and send it again."
   },
   ENVELOPE_DATES_DISAGREE: {
     check: "C-86.7",
+    where: "src/promotion/index.mjs #promote > is-promoted-dates-disagree",
     translation: "The document being filed says when it was made or last changed, and the request that carried it says a different time. The record keeps its history in the order those dates give, and it goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request giving the document's dates, or giving none, or change the document first."
   },
   PROMOTED_FIELD_UNSTATED: {
     check: "C-86.8",
+    where: "src/promotion/index.mjs #promote > is-promoted-field-unstated",
     translation: "This is a new item and it does not say where it stands, or when it was made or last changed: neither the document nor the request gives it. The record keeps its history in the order those dates give and decides what may be done with a thing by where it stands, so it will not guess. Nothing was written. Say it in the document, and send it again."
   },
   REVISION_REDATES_CREATION: {
     check: "C-86.9",
+    where: "src/promotion/index.mjs #promote > is-revision-redates-creation",
     translation: "This change says the item was made at a different time than the record holds. A change can alter what a document says, but not when it was made: the record orders its history by that date, and letting a later change move it would let anyone backdate something. Nothing was written. Send it again with the date the record holds, or with none."
   },
   PROMOTE_SNAP_KEY_UNSTATED: {
     check: "C-86.10",
+    where: "src/promotion/index.mjs #promote > is-promote-request-named",
     translation: "This change does not say what to call it in the item's history: the request carries no snapshot key. Every change is kept under its own name so it can be found and compared later, and the record will not make one up. Nothing was written. Send it again with a snapshot key."
   },
   PROMOTED_FILE_PATH_UNSTATED: {
     check: "C-86.11",
+    where: "src/promotion/index.mjs #promote > is-promote-request-named",
     translation: "A file in this change has no name: it gives no path, or it is not a file at all. The record keeps every file under its name and will not guess one. Nothing was written. Name each file, and send it again."
   },
   PROMOTED_FILE_CONTENT_UNSTATED: {
     check: "C-86.12",
+    where: "src/promotion/index.mjs #promote > is-promote-request-named",
     translation: "A file in this change holds nothing the record can keep: it carries neither its text nor the address of stored bytes. The record keeps only what it can check, so nothing was written. Give each file its text or the address its bytes are stored under, and send it again."
   },
   PROMOTED_FILE_BYTES_UNSTATED: {
     check: "C-86.13",
+    where: "src/promotion/index.mjs #promote > is-promote-request-named",
     translation: "A stored file in this change does not say how large it is. The record keeps that size beside the file and checks it against the bytes it holds, and it will not guess one. Nothing was written. Give each stored file its size in bytes, and send it again."
   },
   REVISION_REGROUPS_BUNDLE: {
     check: "C-86.14",
+    where: "src/promotion/index.mjs #promote > is-revision-regroups-bundle",
     translation: "This change says the item was produced by a different group than the record holds. A change can alter what a document says, but not whose it is: the record keeps who produced each thing so it can be held to account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it again with the group the record holds, or with none."
   },
   BUNDLE_ID_DISAGREES: {
     check: "C-1.1",
+    where: "src/promotion/index.mjs #promote > is-promote-bundle-id",
     translation: "The document says it is a different item from the one it is being filed under. The record files a document under the id it states, so it will not put it somewhere else. Nothing was written. Send it under the id the document states, or correct the document's id."
   },
   BUNDLE_MD_UNREADABLE: {
     check: "C-2.1",
+    where: "src/promotion/index.mjs #promote > is-promote-readable",
     translation: "The document in this change cannot be read: it is not held as text, or it does not begin with a readable front matter block. Every rule about a change reads the document first, so nothing was written. Send the document as text with its front matter, and send it again."
   }
 };
@@ -33274,6 +33294,7 @@ function stampGroup(files, slug) {
     return { ...f5, text, bytes: inlineBytesOf({ text }), sha256: fileDigestOf({ text }) };
   });
 }
+var factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", fact, detail });
 var NAME_TAKEN = () => ({
   ok: false,
   reason: "NAME_TAKEN",
@@ -33290,6 +33311,8 @@ var Promotion = class {
   // name -> {module, fn}
   #listeners = [];
   // {module, fn, seq}: R45's post-commit notice
+  #reopenListeners = [];
+  // {module, fn, seq}: R46's notice of an accepted reopening
   #notices = /* @__PURE__ */ new Map();
   // accepted promotions awaiting their notice, by bundle and snap key
   #delivering = false;
@@ -33319,15 +33342,23 @@ var Promotion = class {
     const i = this.#order.indexOf(m);
     return i === -1 ? Infinity : i;
   }
-  /* R45: a later module's listener, called once after each accepted promotion has committed. */
-  onCommitted(module, fn) {
+  /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
+  #listen(list2, module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
+    if (list2.some((l) => l.module === module))
       return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    list2.push({ module, fn, seq: list2.length });
+    list2.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
+  }
+  /* R45: a later module's listener, called once after each accepted promotion has committed. */
+  onCommitted(module, fn) {
+    return this.#listen(this.#listeners, module, fn);
+  }
+  /* R46 (N62, K157): a later module's listener, called once after each accepted reopening; its answer joins the reply. */
+  onReopened(module, fn) {
+    return this.#listen(this.#reopenListeners, module, fn);
   }
   /* R45: `promote` may run inside a caller's transaction, which record-core joins (its R32), so the commit it waits for
      may be the caller's. record-core's transaction is synchronous, so by the time a microtask runs the outermost one has
@@ -33369,12 +33400,10 @@ var Promotion = class {
   fact(name, ...args) {
     const held = typeof name === "string" ? this.#facts.get(name) : void 0;
     if (!held)
-      return {
-        ok: false,
-        reason: "FACT_UNAVAILABLE",
-        fact: typeof name === "string" ? name : null,
-        detail: `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`
-      };
+      return factUnavailable(
+        typeof name === "string" ? name : null,
+        `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`
+      );
     try {
       return { ok: true, fact: name, value: held.fn(...args) };
     } catch (e) {
@@ -33403,12 +33432,7 @@ var Promotion = class {
   /* A fact's value, or FACT_UNAVAILABLE naming it: never read as false (R40). */
   #fact(name, ...args) {
     const held = this.#facts.get(name);
-    if (!held) return { unavailable: {
-      ok: false,
-      reason: "FACT_UNAVAILABLE",
-      fact: name,
-      detail: `no module provides the fact '${name}' this act needs, so the act is refused rather than answered as if it were false. Nothing was written.`
-    } };
+    if (!held) return { unavailable: factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act is refused rather than answered as if it were false. Nothing was written.`) };
     return { value: held.fn(...args) };
   }
   /* ---------------------------------------------------------------- promote */
@@ -34047,6 +34071,65 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     };
   }
   /* ---------------------------------------------------------------- reopen */
+  /* (Moved from `store.mjs` with the act it explains, T6; the rules are R21–R26, and R46's listeners follow them.)
+   *
+   * REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
+   * open, on op=conclude's shape and for op=conclude's reasons.
+   *
+   * WHY IT EXISTS. `deferred -> open` and `dismissed -> open` have been legal
+   * edges in the catalog's table since REC-10, and NO op wrote them: op=dispose
+   * only ever targets the disposition set. REC-13 made that a real hole rather
+   * than an untidiness — a deferred inquiry cannot be concluded (it is picked
+   * back up first, which is what the edge is for), so a question the group set
+   * down was unrecoverable except by hand-editing the document. An act the
+   * table permits and no caller can perform is the state machine lying.
+   *
+   * CONCLUDE'S PROPERTIES, CARRIED OVER, and each for its own reason:
+   * 1. A NAMED MEMBER reopens. The author stamp arrives from the session and a
+   *    machine credential's is `token:<class>`, refused BY SHAPE
+   *    (MACHINE_CANNOT_REOPEN, the MACHINE_CANNOT_RELEASE/CONCLUDE precedent).
+   *    A machine may SURFACE a question (D-78) and PURSUE what a member
+   *    authored (DEC-24); deciding that the group's own decision to set
+   *    something down no longer holds is a member's judgement about the
+   *    record, not a scheduler's.
+   * 2. THE REASON IS AUTHORED AND NEVER PREFILLED. Refused when absent, exactly
+   *    as dispose's is and as conclude's conclusion and falsifier are. Nothing
+   *    is derived or proposed: "reopened" with no account of why is a state
+   *    change wearing a decision's clothes, and the member who deferred it is
+   *    owed the argument. It lands in the state_history entry and the Session
+   *    Log, the two places this record keeps WHY.
+   * 3. NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute`
+   *    reopens, and the act is ATTRIBUTED. Disagreeing with a disposition is
+   *    precisely the disagreement DEC-30 says is expressed by acting and
+   *    signing the act, not by a vote.
+   *
+   * THE MACHINE IS THE CATALOG'S, and there is NO SECOND EDGE SOURCE: legality
+   * is vocabFor(STATES, <declared type>) offering `open`, the same one table
+   * op=affordances publishes from. A legacy focus/problem document is refused
+   * ILLEGAL_TRANSITION — its own vocabulary has no `open` at all (its open
+   * state is spelled `surfaced`), and inventing the move would judge it by a
+   * contract it was not authored under.
+   *
+   * SCOPED TO REOPENABLE_FROM, DELIBERATELY. The FROM state must be in that
+   * one published array — exported by this module and read by the act, so the
+   * publication and this refusal cannot disagree about what "reopenable" means.
+   *
+   * `concluded -> open` is ALSO a legal edge and this op does NOT write it, for
+   * the reason REC-31 gave and REC-14 did not change: reopening a conclusion
+   * here would produce an `open` inquiry still wearing its conclusion and its
+   * falsifier with NO EDITION RECORDED — exactly the overclaim the edition
+   * machinery exists to prevent — so it is refused BY NAME rather than by
+   * omission, and op=publish is where a conclusion moves forward.
+   *
+   * `published -> open` IS written here, added at the REC-31 x REC-14 merge,
+   * and the distinction is the recorded edition rather than a softening. DEC-12
+   * rules that reopening does not unpublish: edition 1 keeps answering with its
+   * own signature, attestor, time and gate version whatever happens to the
+   * working document afterwards. So there is nothing to erase and nothing to
+   * revert silently — the opposite of the concluded case — and published ->
+   * open is the ONLY route to a second edition, which makes THIS act the front
+   * door of a revision. An act the catalog permits and no caller can perform is
+   * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     try {
       return this.#reopen({ target, reason, viewer, author });
@@ -34175,7 +34258,22 @@ Changes: state ${head.currentState} to open. Reason: ${why}.
       }
     });
     if (!promoted.ok) return { ...promoted, target };
-    return { ok: true, target, from: head.currentState, to: "open", why, author: who2, at: when, weight: "single" };
+    const answer = { ok: true, target, from: head.currentState, to: "open", why, author: who2, at: when, weight: "single" };
+    for (const l of this.#reopenListeners) {
+      let out;
+      try {
+        out = l.fn({ target, from: head.currentState, at: when, author: who2, viewer });
+      } catch {
+        continue;
+      }
+      if (out && typeof out.then === "function") {
+        out.then(null, () => {
+        });
+        continue;
+      }
+      if (isObj2(out) && !has(answer, l.module)) answer[l.module] = out;
+    }
+    return answer;
   }
 };
 var instances2 = /* @__PURE__ */ new WeakMap();
@@ -64956,6 +65054,7 @@ var Store = class _Store extends DurableObject {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
       if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
     });
+    promotionOf(ctx).onReopened("reevaluation", ({ target, viewer, at: at2 }) => ({ source: "reopened", since: at2, raised: this.#reevalRaisedBy(target, viewer) }));
     const capture = captureOf(ctx, { env });
     capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
     capture.on("source-outcome", "legacy-store", async (o) => o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null);
@@ -70164,66 +70263,8 @@ Changes: responds_to edge added to ${actionId}.
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
-  /* REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
-   * open, on op=conclude's shape and for op=conclude's reasons.
-   *
-   * WHY IT EXISTS. `deferred -> open` and `dismissed -> open` have been legal
-   * edges in the catalog's table since REC-10, and NO op wrote them: op=dispose
-   * only ever targets the disposition set. REC-13 made that a real hole rather
-   * than an untidiness — a deferred inquiry cannot be concluded (it is picked
-   * back up first, which is what the edge is for), so a question the group set
-   * down was unrecoverable except by hand-editing the document. An act the
-   * table permits and no caller can perform is the state machine lying.
-   *
-   * CONCLUDE'S PROPERTIES, CARRIED OVER, and each for its own reason:
-   * 1. A NAMED MEMBER reopens. The author stamp arrives from the session and a
-   *    machine credential's is `token:<class>`, refused BY SHAPE
-   *    (MACHINE_CANNOT_REOPEN, the MACHINE_CANNOT_RELEASE/CONCLUDE precedent).
-   *    A machine may SURFACE a question (D-78) and PURSUE what a member
-   *    authored (DEC-24); deciding that the group's own decision to set
-   *    something down no longer holds is a member's judgement about the
-   *    record, not a scheduler's.
-   * 2. THE REASON IS AUTHORED AND NEVER PREFILLED. Refused when absent, exactly
-   *    as dispose's is and as conclude's conclusion and falsifier are. Nothing
-   *    is derived or proposed: "reopened" with no account of why is a state
-   *    change wearing a decision's clothes, and the member who deferred it is
-   *    owed the argument. It lands in the state_history entry and the Session
-   *    Log, the two places this record keeps WHY.
-   * 3. NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute`
-   *    reopens, and the act is ATTRIBUTED. Disagreeing with a disposition is
-   *    precisely the disagreement DEC-30 says is expressed by acting and
-   *    signing the act, not by a vote.
-   *
-   * THE MACHINE IS THE CATALOG'S, and there is NO SECOND EDGE SOURCE: legality
-   * is vocabFor(STATES, <declared type>) offering `open`, the same one table
-   * op=affordances publishes from. A legacy focus/problem document is refused
-   * ILLEGAL_TRANSITION — its own vocabulary has no `open` at all (its open
-   * state is spelled `surfaced`), and inventing the move would judge it by a
-   * contract it was not authored under.
-   *
-   * SCOPED TO REOPENABLE_FROM, DELIBERATELY. The FROM state must be in that
-   * one published array — imported here and by the act, so the publication and
-   * this refusal cannot disagree about what "reopenable" means.
-   *
-   * `concluded -> open` is ALSO a legal edge and this op does NOT write it, for
-   * the reason REC-31 gave and REC-14 did not change: reopening a conclusion
-   * here would produce an `open` inquiry still wearing its conclusion and its
-   * falsifier with NO EDITION RECORDED — exactly the overclaim the edition
-   * machinery exists to prevent — so it is refused BY NAME rather than by
-   * omission, and op=publish is where a conclusion moves forward.
-   *
-   * `published -> open` IS written here, added at the REC-31 x REC-14 merge,
-   * and the distinction is the recorded edition rather than a softening. DEC-12
-   * rules that reopening does not unpublish: edition 1 keeps answering with its
-   * own signature, attestor, time and gate version whatever happens to the
-   * working document afterwards. So there is nothing to erase and nothing to
-   * revert silently — the opposite of the concluded case — and published ->
-   * open is the ONLY route to a second edition, which makes THIS act the front
-   * door of a revision. An act the catalog permits and no caller can perform is
-   * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
-    const r = promotionOf(this.ctx).reopen({ target, reason, viewer, author });
-    return r.ok ? { ...r, reevaluation: { source: "reopened", since: r.at, raised: this.#reevalRaisedBy(target, viewer) } } : r;
+    return promotionOf(this.ctx).reopen({ target, reason, viewer, author });
   }
   /* ================================================================   * REC-14: PUBLISHING a case. concluded -> published, and it is the act that
    * writes the completeness assertion, the frozen pair and the declared bar
