@@ -296,7 +296,7 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
 import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "./derive-bindings.mjs";
-import { stripJsonc } from "../../tools/jsonc.mjs";
+import { stripJsonc } from "./jsonc.mjs";   /* N12: the product's own reader */
 const wranglerCfg = JSON.parse(stripJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")));
 const meta = {

@@ -40,7 +40,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT, discoverMembers, planeMember } from "./fleet-bundle.mjs";
-import { parseJsonc } from "../../tools/jsonc.mjs";
+import { parseJsonc } from "./jsonc.mjs";   /* N12: the product's own reader */
 
 /* fleet-bundle.mjs is FLEET's (FL-9/FL-10) and is CONSUMED here, never edited:
    discovery must not be re-implemented, or the set this checks could drift from

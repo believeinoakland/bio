@@ -108,3 +108,9 @@ HOST-GOVERNOR #1 archived at 03:03, ahead of the layer close (complete, fully me
 CAPTURE #1 complete at `062fd252ff`: ownership 0 (legacy-store +46/−1448, legacy-index +17/−1974; BOB read every added line: imports, one-line delegations, listener registrations and op glue); merged. All four modules merged: suites host-governor 28/0, provenance 54/0, capture-sources 53/0, capture 45/0; layer 2's record-core 33/0, membership 73/0, promotion 50/0 on the merged tree. Format 0; architecture 0 for all four; coverage full (25, 48, 54, 56) and promotion 44/45 (R45, N63, as on the base). The bio-plane bundle regenerated; `fleetbundles` fails only arm 2a, as before. Met marks cleared in capture, provenance, host-governor and capture-sources; capture R28 now waits on N79 and R41 on N77. Sessions archived, rows from their archives. For legacy-tests' T4-5 from CAPTURE #1: `acquire` 90/5, `d522` 19/1, `drive` 158/2, `capturerequests` 132/5, `subresources` (reads `document` on a continuation, R11), `refusal-wire` 41/1, `plane-envelope` 61/3, `doorbell` 71/1.
 
 Process findings recorded for the next revision (P3: recorded, not patched): (1) the backstop reads a job waiting on its own long-running command as idle (CAPTURE-SOURCES #1, 02:33); (2) the ownership check's own-name pattern misses a spread `...name` (CAPTURE #1's REPORT 7).
+
+Layer 11, started 2026-09-27 03:20 UTC, concurrently:
+- `legacy-index` · LEGACY-INDEX #1 · `session_01WqPRmYSbsF2qV78iQdWxhc`
+- `legacy-tests` · LEGACY-TESTS #2 · `session_019sbQinGJRZm3pZkVZqMGvj`
+
+LEGACY-INDEX #1 complete at `2f6ecb9b`, merged: ownership 0; N43, N12, N19 applied; N21 deferred (its setting is instance-setup's, N10). Its readings confirmed (K124). For legacy-tests (forwarded): the suites N12's removal of `op-claims` breaks. affordances is N84; the pairing read is N85.

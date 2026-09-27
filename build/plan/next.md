@@ -84,6 +84,9 @@
 - N82 · 2026-09-27 · **strength** (PROVENANCE #1, T4): the earned registry reads provenance's `captureGrade`.
 - N83 · 2026-09-27 · **record-core** (PROVENANCE #1, T4): R37's read contract gains the `files`, `history` and `bundles` columns provenance reads.
 
+- N84 · 2026-09-27 · **affordances** (LEGACY-INDEX #1, T4): `NON_ACTS` rows for `adminresign`, `hostingaccessset`, `memberpairingset` (the totality test reads 98/1 after N43).
+- N85 · 2026-09-27 · **membership** (K124): `memberpairings` answers each viewer only the pairings R19 lets it see (a pairing its member has not published reaches only that member and the administrators); a test at the interface.
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
