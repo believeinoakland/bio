@@ -66,6 +66,9 @@
 - N71 · 2026-09-26 · **canon**, all requirements (K106): Bob called the word "bundle" outdated. New requirement and canon text avoids it; an existing file is reworded when next touched; the code's identifiers (`bundle_id`, the `bundles` table) are interface names and change only with a migration BOB schedules. BOB asks Bob which word the member-facing text uses.
 - N72 · 2026-09-26 · **standards**, **escalation**, **filings** (K108): standards R3's match carries the source's level; escalation R12's oversight and audit requests check the office's `oversight` marker (jurisdictions R24); filings R9's claim deadlines count business days on the profile's holiday calendar (jurisdictions R33). Written into those requirements before layer 9's tranche; the escalation file also states it is a record object.
 
+- N73 · 2026-09-27 · **membership** (LEGACY-CHECKS #1, T4): `#ownRefusal` builds R29 and R62 from `AI_CREDENTIAL_CHECKS` (C-29.11, C-29.12) as its other mint refusals do; mark its three DEC-49 regions; `PROJECT_SEEN_NOT_A_PARTICIPANT` minted once, promotion calling membership's `#existenceOnly` instead of its copy.
+- N74 · 2026-09-27 · **record-core** (LEGACY-CHECKS #1, T4): mark the `is-allocid-prefix-gated` region in `allocIdOp`.
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.

@@ -32,7 +32,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * High-throughput coding (Part 15), packed packet headers, sub-sampled
  * components, a palette, sYCC,
- * signed samples and any precision but 8 bits, and more than three components.
+ * signed samples and any precision but 8 bits, more than three components, and
+ * an image whose decode would pass the memory bound (below), refused before a
+ * plane is allocated.
  * Every error thrown is a `JpxRefusal` carrying a code: UNSUPPORTED (with the
  * feature), UNSUPPORTED_SAMPLES, TRUNCATED or CORRUPT.
  */
@@ -58,7 +60,35 @@ export const JPX_REFUSES = Object.freeze({
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: 4 bytes a sample for every component of the largest tile, and a tiled image's 8-bit output beside them",
 });
+
+/* THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
+ * The working set is what a decode must hold at once: every component's plane
+ * of the largest tile at 4 bytes a sample (float32 or int32, which the bit-exact
+ * paths need), plus, for a tiled image, the 8-bit output the tiles are written
+ * into. 61.3 MB is the largest working set measured to complete in the OCR
+ * member's isolate (CPDF-15: a 61.3 MB frame completed there beside the OCR
+ * engine, a 75.7 MB one was killed `exceededMemory`). Measured in node on
+ * 2026-09-27 (heap plus external memory, sampled every 2 ms from outside the
+ * decoding thread), the decoder's live peak is the working set plus 11-18 MB
+ * of its own (the code-blocks, tag trees and input): 1700x2200 colour (44.9 MB)
+ * peaks at 57 MB above the idle isolate, 2550x3300 grey (33.7 MB) at 46 MB;
+ * a single-tile 2550x3300 colour page (101 MB) at 119 MB is refused. */
+const MEMORY_BOUND = 61_300_000;
+
+/** What decoding this codestream must hold at once, from its SIZ alone. */
+function workingSet(siz) {
+  const span = (o, to, t, end) => {
+    const n = ceilDiv(end - to, t);
+    let max = 0;
+    for (const p of new Set([0, Math.min(1, n - 1), n - 1])) max = Math.max(max, Math.min(to + (p + 1) * t, end) - Math.max(to + p * t, o));
+    return { n, max };
+  };
+  const x = span(siz.XO, siz.XTO, siz.XT, siz.X), y = span(siz.YO, siz.YTO, siz.YT, siz.Y);
+  const nc = siz.comps.length;
+  return nc * x.max * y.max * 4 + (x.n * y.n > 1 ? (siz.X - siz.XO) * (siz.Y - siz.YO) * nc : 0);
+}
 
 const f32 = Math.fround;
 
@@ -356,9 +386,13 @@ class RawDecoder {
  * Decode one code-block's passes into `out` (w×h, doubled units, signed).
  * `segs` are the codeword segments `[{data, passes}]` in order.
  */
-function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out) {
+function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scratch) {
   const fw = w + 2;
-  const flags = new Uint16Array(fw * (h + 2));
+  /* The flags live in the decode's one scratch array (a code-block is at most
+   * 4096 samples, so (w+2)(h+2) <= 1026*6), cleared for each block: a fresh
+   * array per block was garbage enough to add a fifth to a page's peak. */
+  const flags = scratch.subarray(0, fw * (h + 2));
+  flags.fill(0);
   const ctx = mqContexts(19);
   const resetCtx = () => { ctx.fill(0); ctx[CTX_UNI] = 46 << 1; ctx[CTX_AGG] = 3 << 1; ctx[0] = 4 << 1; };
   resetCtx();
@@ -542,7 +576,7 @@ function packetOrder(tc, layers, progs, tile, comps) {
   return out;
 }
 
-function decodeTile(cs, t, tileNo) {
+function decodeTile(cs, t, tileNo, pool) {
   const { siz, main } = cs;
   const cod = t.cod || main.cod;
   const nTx = ceilDiv(siz.X - siz.XTO, siz.XT);
@@ -672,9 +706,15 @@ function decodeTile(cs, t, tileNo) {
 
   /* Tier 1, dequantisation and the inverse transforms, component by component. */
   const irreversible = tc.map((x) => x.sp.qmfbid === 0);
+  const flagScratch = new Uint16Array(1026 * 6);
   const planes = tc.map((x, c) => {
     const w = x.x1 - x.x0, h = x.y1 - x.y0;
-    const plane = irreversible[c] ? new Float32Array(w * h) : new Int32Array(w * h);
+    /* A tile's planes reuse the previous tile's buffers (`pool`, one per
+     * component), zeroed: each tile's own would lie as garbage beside the page
+     * until collected, measured at twice the tiled page's working set. */
+    if (!pool[c] || pool[c].byteLength < w * h * 4) pool[c] = new ArrayBuffer(w * h * 4);
+    const plane = irreversible[c] ? new Float32Array(pool[c], 0, w * h) : new Int32Array(pool[c], 0, w * h);
+    plane.fill(0);
     const tmp = new Int32Array(4096);
     for (let r = 0; r < x.res.length; r++) {
       const R0 = x.res[r], prev = r ? x.res[r - 1] : null;
@@ -688,7 +728,7 @@ function decodeTile(cs, t, tileNo) {
           const bpn = x.roi + cb.numbps;
           if (bpn >= 31) throw corrupt("a code-block of 31 or more bit-planes");
           tmp.fill(0, 0, cw * ch);
-          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp);
+          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, flagScratch);
           if (x.roi) {
             const th = 2 ** x.roi;
             for (let i = 0; i < cw * ch; i++) { const v = tmp[i], m = Math.abs(v); if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi; }
@@ -780,13 +820,18 @@ export function decodeJpx(d) {
     if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
   }
   const W = siz.X - siz.XO, H = siz.Y - siz.YO;
+  const need = workingSet(siz);
+  if (need > MEMORY_BOUND) {
+    throw unsupported("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
+  }
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   let out = nTiles > 1 ? new Uint8Array(W * H * nc) : null;
   if (cs.tiles.size < nTiles) throw truncated(`${cs.tiles.size} of ${nTiles} tiles are present`);
   let transform = null;
+  const pool = [];
   for (const [no, t] of cs.tiles) {
     if (no >= nTiles) throw corrupt(`tile ${no} of ${nTiles}`);
-    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no);
+    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no, pool);
     transform ??= irreversible[0] ? "9/7" : "5/3";
     const shift = 1 << 7;
     /* MEMORY. A single-tile page's samples are written into the first
