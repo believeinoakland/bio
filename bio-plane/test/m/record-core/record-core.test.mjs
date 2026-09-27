@@ -555,6 +555,42 @@ test("R20: the cursor is the last bundle id on a full page, and a pass resumes f
   assert.deepEqual(vis.page, ["INFO-2026-0002-b", "INFO-2026-0002-bb"]); assert.equal(vis.cursor, "INFO-2026-0002-bb");
 });
 
+test("R18 R19 R20 (N117): auditPass reads the store a page at a time, never the corpus whole, and pages past invisible bundles to a full page", async () => {
+  const s = storage();
+  const reads = [];
+  const exec = s.sql.exec;
+  s.sql.exec = (q, ...a) => { const r = exec(q, ...a); if (/^\s*SELECT/i.test(q)) reads.push({ q, n: r.length }); return r; };
+  const rc = recordOf({ storage: s }); rc.migrate();
+  const ids = Array.from({ length: 23 }, (_, i) => `INFO-2026-${String(i + 1).padStart(4, "0")}-x`);
+  const md = (id, t) => `---\nid: ${id}\nobject_type: information\ncurrent_state: collected\nreferences:\n  - target: ${t}\n    rel: cites\n    status: active\n---\n\n## Summary\n\nx\n`;
+  // every bundle cites the first one, which no viewer below sees: it must still resolve (R19)
+  for (const id of ids) rc.commit({ bundleId: id, type: "information", snapKey: "K1", files: [file("bundle.md", md(id, ids[0]))] });
+  const seen = (id) => Number(id.slice(10, 14)) % 5 === 0;       // 0005, 0010, 0015, 0020
+  const want = ids.filter(seen);
+  const pages = []; let after = "";
+  for (;;) {
+    reads.length = 0;
+    const p = await rc.auditPass({ after, limit: 3, visible: seen });
+    assert.ok(reads.every((r) => r.n <= 3), `no read returns more than a page's rows: ${JSON.stringify(reads.filter((r) => r.n > 3))}`);
+    assert.ok(p.page.length === 3 || p.cursor === null, "a short page ends the pass");
+    pages.push(p.page);
+    if (!p.cursor) break;
+    assert.equal(p.cursor, p.page.at(-1), "R20: the cursor is the last bundle id on the full page");
+    after = p.cursor;
+  }
+  assert.deepEqual(pages, [want.slice(0, 3), want.slice(3)], "the visible bundles, in id order, in full pages across the invisible ones");
+  const all = await rc.auditPass({ visible: seen, limit: 10 });
+  assert.deepEqual(all.page, want);
+  assert.ok(!("C-6.2" in all.tally), "R19: the unseen cited bundle still resolves: no dangling reference is manufactured");
+  // and one read never answers every bundle, however large the page asked for
+  reads.length = 0;
+  const one = await rc.auditPass({ limit: 1, visible: (id) => id === ids[22] });
+  assert.deepEqual(one.page, [ids[22]]); assert.equal(one.cursor, ids[22]);
+  assert.ok(reads.every((r) => r.n <= 1), "an unseen corpus is paged past one page's worth at a time");
+  const none = await rc.auditPass({ after: ids[22], limit: 5 });
+  assert.deepEqual([none.page, none.cursor], [[], null]);
+});
+
 test("R31: every service reads and writes only this module's tables and the clock, and makes no network call", async () => {
   const { s, rc } = fresh({ evidence: bucket(), evidencePrefix: "bio/captures/" });
   s.db.exec(`CREATE TABLE other_a (bundle_id TEXT, v TEXT); CREATE TABLE other_b (k TEXT)`);
