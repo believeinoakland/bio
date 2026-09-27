@@ -107,7 +107,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - Errors: never throws for a well-formed call; an authority or archive failure is an attempt, never a throw.
 
 **The register's read contract** (K72)
-- **R48** The tables `register` (its capture digest, `bundle_id` and path columns) and `captured_locators` (its locator and capture digest columns) are a stated read contract: a later module may join them in its own SQL, and this module changes none of those columns' names or meaning without a change to this requirement. Every write to them stays this module's.
+- **R48** The tables `register` (its `capture_sha`, `bundle_id`, `path` and `registered` columns) and `captured_locators` (its `address_norm`, `address`, `retrieval_locator` and `capture_sha` columns) are a stated read contract: a later module may join them in its own SQL, and this module changes none of those columns' names or meaning without a change to this requirement. `registered` is this module's clock at the register write (R1), an ISO instant, never a caller's time; `address_norm` is the document address as the acquisition that wrote the receipt normalised it (R13), the key a later module seeks a document address on. Every write to them stays this module's. *(widened by N111, K173)*
 
 ## Private
 
