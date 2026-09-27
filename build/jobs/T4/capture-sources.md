@@ -18,7 +18,7 @@ R54 says the render locale is "the one the instance's active jurisdiction profil
 
 ## Waiting on
 
-- The N measurement for R26 (running).
+- The N measurement for R26: 13 of 32 runs done at 02:36Z (about 60 s a run), finishing about 02:55Z. Everything else is built and tested; the Provides are final (no signature or shape changes from N: it only switches R26's rule on).
 
 ## Progress (work in progress, not complete)
 
