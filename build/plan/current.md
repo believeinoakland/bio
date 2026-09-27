@@ -11,6 +11,7 @@ Seven layers, lowest first (P10): 1, 2, 3, 4, 6, 7, 11. Each extraction is done 
 - F2 · A job that ends its turn waiting on BOB's ANSWER reads `need_input` / `BLOCKED` with a `needs_action`, which Bob's app shows as waiting on him, and which mechanics §5 tells BOB to relay to Bob as an approval (ID-SPACES #2, 14:35).
 - F3 · A one-time routine lands 40–60 s after the minute it names; a job pushes its record before its routine, so BOB answers from the record and the job's own message arrives after the answer (ordering as §13 allows, but every exchange is doubled).
 - F4 · ROOT's `STARTED` notice goes to the predecessor BOB, which is finished and which its successor archives; it is a message with no reader (BOB #48 deleted it unfired).
+- F5 · An ANSWER can answer a question the job has already revised: LEGACY-CHECKS #2 revised Q1 on evidence while BOB's ANSWER (K162) was in flight, then had to ask again (Q2; K163). The record and the message named no version of the question.
 - Carried from T5 and D7: K140; a job waiting on its own long command reads idle; auto-mode refusals (K153; merge to `main`); archiving outside one's lineage (D7 finding 1); the dry-run toy's `run.mjs` baseline (D7 finding 2).
 
 **Forwarded to T6 jobs at their start** (P9; each is in its reporter's record, read there):
