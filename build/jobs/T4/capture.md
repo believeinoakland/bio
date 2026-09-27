@@ -56,6 +56,10 @@ The legacy store keeps its public capture methods as one-line delegations (old t
 5. **capture's requirements (BOB's):** D-701's viewer filter is not stated in R27; suggested wording: "Every row passes the caller's viewer (membership R43, through the register's bundle) before it is listed or counted; a capture filed in no bundle is visible." The not-yet-met notes of R11, R17, R18, R28, R29, R41, R42, R45, R46, R54, R55, R56 can go when this job completes; R20's and R12's when provenance is wired.
 6. **R32's fence:** "only a signed-in member lists, reads and resolves" is the control plane's (`SESSION_OPS`), not testable at capture's interface; R32's test checks the inbox's own behaviour.
 
+## Routed by BOB
+
+REPORT 1 (sent ~02:54): R27 states D-701's viewer filter (K123; merged, tested by R27's viewer test); subresources' containment and affordances' grade note are N79–N80 (next tranche); the four old-battery reds go to legacy-tests' T4-5; BOB regenerates the bundle and clears the not-yet-met marks at the layer close.
+
 ## Questions
 
 **QUESTION 1** (sent 2026-09-27 ~02:19; ANSWERED by K120): (1) providers injected until their merges, their names adopted on the CHANGE — host-governor's adopted (`governorOf`, `governedFetch`, `retryAfterMs`); (2) `odf-reader` is a use; (3) R8's figures are record-core settings, not bindings (applied); (4) R56's key as I read it.
