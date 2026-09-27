@@ -2422,6 +2422,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        phantom module deposited there adds text to a corpus a suite then searches — the same exposure those suites'
        own walks of `src/` already carry and are named for. Its callers' floors, if any, are theirs to guard. */
     "bio-plane/test/extracted-sources.mjs",       // src/<module>/ of the named extracted modules, a corpus; floors on nothing
+    /* ADDED 2026-09-27 (T4, legacy-tests): the ratchet caught it on its first run. NAMED AND NOT GUARDED, on
+       `extracted-sources.mjs`'s reasoning above: T4's helper lists `src/{provenance,capture,host-governor}/` only to
+       re-inline their code where the store now delegates to them (`reinlineLayer3`), for the source censuses that walk
+       the store's class; it prints nothing and floors on nothing. Its callers' floors are theirs to guard. */
+    "bio-plane/test/t4-extracted.mjs",            // src/<module>/ of T4 layer 3's modules, re-inlined; floors on nothing
     /* ADDED 2026-09-26 (T3, legacy-tests; record-core R6, promotion): the ratchet caught both on their first run. NAMED
        AND NOT GUARDED, on `mint-ledger.test.mjs`'s reasoning: each lists `src/<module>/` of the three extracted modules
        (or of the armed copy its control points it at) only to read the opaque minter and the gated mint sites where
@@ -2565,6 +2570,9 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        (guarded) — and one was added, test/extracted-sources.mjs (named above). */
     /* MOVED 44 -> 46 the same day (T3, legacy-tests), from the figure this suite PRINTED (`46 walking file(s)`):
        opaque-ids.test.mjs and project-mint.test.mjs now walk the extracted modules' directories (named above). */
+    /* HELD AT 46 on 2026-09-27 (T4, legacy-tests), from the figure this suite PRINTED on `job/T4/legacy-tests`
+       (`46 walking file(s)`): one departure, `bio-plane/scripts/op-claims.mjs` (removed with the old tooling,
+       legacy-index N12), and one arrival, `bio-plane/test/t4-extracted.mjs` (named above). */
     census.length >= 46, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
@@ -2848,6 +2856,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "bio-plane/scripts/fleet-bundle.mjs":
       "its walk-derived exports BUILD and WRITE fleet members; driving one in a suite would "
       + "produce artifacts. No cross-module comparison derives from it — asserted below",
+    /* ADDED 2026-09-27 (T4, legacy-tests): `reinlineLayer3` hands back the store's text with T4 layer 3's modules
+       re-inlined, a CORPUS for source censuses; it publishes no figure, and no cross-module comparison derives from
+       it (its callers compare what they count in the text, each at its own site). */
+    "bio-plane/test/t4-extracted.mjs":
+      "its walk-derived export is a corpus TEXT (the store with T4 layer 3's modules re-inlined), never a figure; "
+      + "no cross-module comparison derives from it — asserted below",
     "bio-plane/scripts/residue.mjs":
       "its walk-derived exports scan the SHARED temp root, which is not isolated between "
       + "sessions (PL-10). No cross-module comparison derives from it — asserted below",
