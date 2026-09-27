@@ -77,6 +77,9 @@
 
 - N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`.
 
+- N79 · 2026-09-27 · **subresources** (CAPTURE #1, T4): `captureSubresources`' links carry each link's containment in a chrome region, so capture R28 files it on live captures (D-340's `furnitureLinks`, built on the snapshot).
+- N80 · 2026-09-27 · **affordances**, **capture** (CAPTURE #1, T4): `acquireGradeNote` (acquire's `ACQUIRE_GRADE_NOTE`) moves out of `affordances.mjs` to `capture` or `legacy-checks`, so capture composes its own answer; until then the op handler adds it.
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
