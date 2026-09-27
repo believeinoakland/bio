@@ -75,12 +75,13 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 ### Uses
 
 - `legacy-checks`: the C-45, C-52 and C-80 rows until they move here (R38), `isMachineIdentity`, `canonicalJson`, `sha256HexSync`.
-- `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`. *(not declared in `modules.json` today)*
+- `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`.
+- `format-registry`: `getFormat(...).parts`, for a container's kind (K134).
 - `pdf-pixels` (K70): the crop (R32).
 - `record-core`: `recordOf(ctx)`, `transact`, `bundleInfo` (a target's type), `declarePurge`.
 - `membership`: `membershipOf(ctx)`, `viewerPredicate` (R37).
 - `provenance`: `capturesOf` (R11), `versionChain` and the captured locators (R29).
-- `extraction`: `contentContextFor` (R7, R12, R30), the text attestations over a set of captures (R19, R21), the text units and index state of a capture (R31), and `onReading` (R22).
+- `extraction`: `readingOf` (its R30), under this module's `contentContextFor`; `unitsOf` (its R36), for the text units and index state of a capture (R31); and `onReading` (R22). `attestText`, `attestationsFor`, `text_attestations` and `contentContextFor` are this module's (K73 (1), K134).
 - `capture`, `id-spaces`: nothing in this module's share calls them (map §5).
 
 ### Invariants

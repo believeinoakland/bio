@@ -1,85 +1,1453 @@
 {
   "status": "APPROVED by Bob 2026-09-25 (TRANSITION.md T4), drafted by BOB #37 the same day. Order is the total order (P4). from names the legacy module a target module is extracted from; a module with no from already exists at its paths. AMENDED by Bob 2026-09-26: the Action layer (layer 9: standards, conformance, consequences, actions, filings, escalation), with Publication (8) and Operations (10) split from the old layer 8 (layers.md). AMENDED by BOB #38 2026-09-26 under P17: not_product, helper modules test-support and bundler, legacy-tests, and the uses the code already had (layers.md, \"Helper modules\"). AMENDED by BOB #44 2026-09-27: K70, the pdf-worker split into image-codecs, pdf-pixels and pdf-worker.",
-  "not_product": ["docs/", "requirements/", "build/", "tools/", "release/", ".claude/", ".github/", "README.md", "CLAUDE.md", ".gitignore", ".env.example", ".worktreeinclude", "bio-plane/dist/", "bio-plane/DEPLOY-DASHBOARD.md", "bio-plane/DEPLOY.md", "bio-plane/DRY-RUN.md", "bio-plane/INSTALLER.md", "bio-plane/KICKOFF.md", "bio-plane/SESSION-HANDOFF.md", "bio-plane/SETUP.md", "bio-plane/checks/README.md", "bio-plane/migrate/README.md"],
+  "not_product": [
+    "docs/",
+    "requirements/",
+    "build/",
+    "tools/",
+    "release/",
+    ".claude/",
+    ".github/",
+    "README.md",
+    "CLAUDE.md",
+    ".gitignore",
+    ".env.example",
+    ".worktreeinclude",
+    "bio-plane/dist/",
+    "bio-plane/DEPLOY-DASHBOARD.md",
+    "bio-plane/DEPLOY.md",
+    "bio-plane/DRY-RUN.md",
+    "bio-plane/INSTALLER.md",
+    "bio-plane/KICKOFF.md",
+    "bio-plane/SESSION-HANDOFF.md",
+    "bio-plane/SETUP.md",
+    "bio-plane/checks/README.md",
+    "bio-plane/migrate/README.md"
+  ],
   "modules": [
-    {"id": "legacy-checks", "layer": 1, "legacy": true, "paths": ["bio-plane/checks/bio-checks.mjs"], "tests": [], "uses": []},
-    {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": []},
-    {"id": "test-support", "layer": 1, "paths": ["bio-plane/test/sandbox.mjs", "bio-plane/test/stdio.mjs", "pdf-worker/test/make-pdf.mjs"], "tests": ["bio-plane/test/m/test-support/"], "uses": []},
-    {"id": "bundler", "layer": 1, "paths": ["bio-plane/scripts/fleet-bundle.mjs", "bio-plane/scripts/provenance.mjs"], "tests": ["bio-plane/test/m/bundler/"], "uses": []},
-    {"id": "runtime-limits", "layer": 1, "paths": ["bio-plane/src/cpu.mjs", "bio-plane/src/tokens.mjs"], "tests": ["bio-plane/test/m/runtime-limits/"], "uses": []},
-    {"id": "signatures", "layer": 1, "paths": ["bio-plane/src/sshsig.mjs", "bio-plane/src/tsa.mjs", "bio-plane/src/signpage.mjs", "bio-plane/src/sign-release.html", "bio-plane/scripts/embed-signpage.mjs"], "tests": ["bio-plane/test/m/signatures/"], "uses": []},
-    {"id": "id-spaces", "layer": 1, "paths": ["bio-plane/src/idspaces.mjs"], "tests": ["bio-plane/test/m/id-spaces/"], "uses": ["jurisdictions"]},
-    {"id": "subresources", "layer": 1, "paths": ["bio-plane/src/subresources.mjs"], "tests": ["bio-plane/test/m/subresources/"], "uses": ["runtime-limits"]},
-    {"id": "ooxml", "layer": 1, "paths": ["bio-plane/src/ooxml.mjs"], "tests": ["bio-plane/test/m/ooxml/"], "uses": []},
-    {"id": "office-readers", "layer": 1, "paths": ["bio-plane/src/docx.mjs", "bio-plane/src/pptx.mjs", "bio-plane/src/formats-xlsx.mjs", "bio-plane/src/csv.mjs"], "tests": ["bio-plane/test/m/office-readers/"], "uses": ["subresources", "ooxml"]},
-    {"id": "odf-reader", "layer": 1, "paths": ["bio-plane/src/odf.mjs"], "tests": ["bio-plane/test/m/odf-reader/"], "uses": ["subresources", "ooxml", "office-readers"]},
-    {"id": "pdf-reader", "layer": 1, "paths": ["bio-plane/src/pdfstructure.mjs"], "tests": ["bio-plane/test/m/pdf-reader/"], "uses": ["subresources"]},
-    {"id": "format-registry", "layer": 1, "paths": ["bio-plane/src/formats.mjs"], "tests": ["bio-plane/test/m/format-registry/"], "uses": ["office-readers", "odf-reader", "pdf-reader"]},
-    {"id": "text-chain", "layer": 1, "paths": ["bio-plane/src/textchain.mjs"], "tests": ["bio-plane/test/m/text-chain/"], "uses": ["legacy-checks"]},
-    {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": ["jurisdictions"]},
-    {"id": "image-codecs", "layer": 1, "paths": ["pdf-worker/src/mq.mjs", "pdf-worker/src/dctdecode.mjs", "pdf-worker/src/jbig2decode.mjs", "pdf-worker/src/jpxdecode.mjs", "pdf-worker/src/ccittdecode.mjs"], "tests": ["pdf-worker/test/codecs/", "pdf-worker/test/fixtures/make-dct-fixtures.py", "pdf-worker/test/fixtures/dct-variants.json", "pdf-worker/test/fixtures/make-jbig2-fixtures.py", "pdf-worker/test/fixtures/jbig2-variants.json", "pdf-worker/test/fixtures/make-jpx-fixtures.py", "pdf-worker/test/fixtures/jpx-variants.json"], "uses": ["test-support"]},
-    {"id": "pdf-pixels", "layer": 1, "paths": ["pdf-worker/src/pagepixels.mjs", "pdf-worker/src/imagecrop.mjs", "pdf-worker/src/pagepixels-worker.mjs"], "tests": ["pdf-worker/test/pagepixels.test.mjs", "pdf-worker/test/imagecrop.test.mjs", "pdf-worker/test/jbig2.test.mjs", "pdf-worker/test/jpx.test.mjs", "pdf-worker/test/pagepixels-corpus.probe.mjs", "pdf-worker/test/agenda-scan-census.probe.mjs", "pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf", "pdf-worker/test/fixtures/scan-dct-page.pdf", "pdf-worker/test/fixtures/jbig2-scan-page.pdf", "pdf-worker/test/fixtures/jpx-scan-page.pdf"], "uses": ["pdf-reader", "image-codecs", "test-support"]},
-    {"id": "pdf-worker", "layer": 1, "paths": ["pdf-worker/"], "tests": ["pdf-worker/test/"], "uses": ["pdf-reader", "bundler", "test-support"]},
-    {"id": "ocr-worker", "layer": 1, "paths": ["ocr-worker/"], "tests": ["ocr-worker/test/"], "uses": ["pdf-pixels", "bundler", "legacy-checks", "text-chain", "test-support"]},
-
-    {"id": "record-core", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/"], "uses": ["legacy-checks", "id-spaces"]},
-    {"id": "membership", "layer": 2, "from": "legacy-store", "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/"], "uses": ["legacy-checks", "signatures", "record-core"]},
-    {"id": "promotion", "layer": 2, "from": ["legacy-checks", "legacy-store"], "paths": ["bio-plane/src/gate.mjs", "bio-plane/src/promotion/"], "tests": ["bio-plane/test/m/promotion/"], "uses": ["legacy-checks", "signatures", "record-core", "membership"]},
-
-    {"id": "host-governor", "layer": 3, "from": ["legacy-store", "legacy-index"], "paths": ["bio-plane/src/host-governor/"], "tests": ["bio-plane/test/m/host-governor/"], "uses": ["record-core"]},
-    {"id": "provenance", "layer": 3, "from": ["legacy-checks", "legacy-store", "legacy-index"], "paths": ["bio-plane/src/provenance/"], "tests": ["bio-plane/test/m/provenance/"], "uses": ["legacy-checks", "signatures", "record-core", "promotion", "membership"]},
-    {"id": "capture-sources", "layer": 3, "paths": ["bio-plane/src/render.mjs", "bio-plane/src/browserrender.mjs", "bio-plane/src/cdx.mjs", "bio-plane/src/drive.mjs"], "tests": ["bio-plane/test/m/capture-sources/"], "uses": ["subresources"]},
-    {"id": "capture", "layer": 3, "from": ["legacy-store", "legacy-index"], "paths": ["bio-plane/src/capture/"], "tests": ["bio-plane/test/m/capture/"], "uses": ["jurisdictions", "legacy-checks", "subresources", "odf-reader", "format-registry", "docprofile", "record-core", "membership", "host-governor", "provenance", "capture-sources"]},
-
-    {"id": "calibration", "layer": 4, "from": ["legacy-checks", "legacy-store"], "paths": ["bio-plane/src/calibration.mjs", "bio-plane/src/calibration/"], "tests": ["bio-plane/test/m/calibration/"], "uses": ["legacy-checks", "record-core"]},
-    {"id": "extraction", "layer": 4, "from": ["legacy-checks", "legacy-store", "legacy-index"], "paths": ["bio-plane/src/extractrun.mjs", "bio-plane/src/readingprov.mjs", "bio-plane/src/extraction/"], "tests": ["bio-plane/test/m/extraction/"], "uses": ["jurisdictions", "legacy-checks", "text-chain", "format-registry", "docprofile", "pdf-worker", "ocr-worker", "record-core", "membership", "capture", "promotion", "calibration"]},
-    {"id": "content", "layer": 4, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/content/"], "tests": ["bio-plane/test/m/content/"], "uses": ["legacy-checks", "text-chain", "pdf-pixels", "record-core", "membership", "provenance", "extraction"]},
-
-    {"id": "entities", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/entities/"], "tests": ["bio-plane/test/m/entities/"], "uses": ["jurisdictions", "legacy-checks", "id-spaces", "record-core", "membership", "provenance", "extraction"]},
-    {"id": "connections", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/connections/"], "tests": ["bio-plane/test/m/connections/"], "uses": ["legacy-checks", "text-chain", "record-core", "membership", "promotion", "provenance", "capture", "extraction", "content", "entities"]},
-    {"id": "progressions", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/progressions/"], "tests": ["bio-plane/test/m/progressions/"], "uses": ["legacy-checks", "record-core", "membership", "provenance", "extraction", "entities", "connections"]},
-    {"id": "bias", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/bias/"], "tests": ["bio-plane/test/m/bias/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "entities"]},
-    {"id": "observation-log", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/observation-log/"], "tests": ["bio-plane/test/m/observation-log/"], "uses": ["legacy-checks", "record-core", "membership", "provenance", "extraction", "content", "entities", "connections"]},
-    {"id": "query-language", "layer": 5, "paths": ["bio-plane/src/query.mjs"], "tests": ["bio-plane/test/m/query-language/"], "uses": ["text-chain", "legacy-checks", "membership", "content"]},
-    {"id": "retrieval", "layer": 5, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/retrieval/"], "tests": ["bio-plane/test/m/retrieval/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "provenance", "capture", "extraction", "content", "entities", "connections", "observation-log", "query-language"]},
-
-    {"id": "inquiry", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/inquiry/"], "tests": ["bio-plane/test/m/inquiry/"], "uses": ["legacy-checks", "text-chain", "record-core", "membership", "promotion", "provenance", "extraction", "content", "entities", "connections", "observation-log", "retrieval"]},
-    {"id": "citation", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/citation/"], "tests": ["bio-plane/test/m/citation/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "retrieval", "inquiry"]},
-    {"id": "basis-versions", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/basis-versions/"], "tests": ["bio-plane/test/m/basis-versions/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "extraction", "content", "entities", "connections", "inquiry"]},
-    {"id": "strength", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/strength/"], "tests": ["bio-plane/test/m/strength/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "provenance", "inquiry", "basis-versions"]},
-    {"id": "contradiction", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/contradiction.mjs", "bio-plane/src/contradiction/"], "tests": ["bio-plane/test/m/contradiction/"], "uses": ["legacy-checks", "record-core", "membership", "extraction", "content", "entities", "inquiry", "basis-versions"]},
-    {"id": "ai-runs", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/airun.mjs", "bio-plane/src/ai-runs/"], "tests": ["bio-plane/test/m/ai-runs/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "connections", "bias", "observation-log", "retrieval", "inquiry", "contradiction"]},
-    {"id": "run-productions", "layer": 6, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/run-productions/"], "tests": ["bio-plane/test/m/run-productions/"], "uses": ["legacy-checks", "text-chain", "record-core", "membership", "extraction", "content", "connections", "inquiry", "citation", "basis-versions", "strength", "ai-runs"]},
-    {"id": "capture-requests", "layer": 6, "from": "legacy-store", "paths": ["bio-plane/src/capture-requests/"], "tests": ["bio-plane/test/m/capture-requests/"], "uses": ["legacy-checks", "record-core", "membership", "host-governor", "capture", "observation-log", "inquiry", "ai-runs"]},
-    {"id": "skills", "layer": 6, "from": "legacy-checks", "paths": ["bio-plane/src/skilldoctrine.mjs", "bio-plane/src/skillpack.mjs"], "tests": ["bio-plane/test/m/skills/"], "uses": ["legacy-checks", "observation-log", "ai-runs", "run-productions"]},
-    {"id": "agent-worker", "layer": 6, "paths": ["agent-worker/"], "tests": ["agent-worker/test/"], "uses": ["legacy-checks", "test-support", "bundler", "runtime-limits", "query-language", "ai-runs", "skills"]},
-
-    {"id": "intent", "layer": 7, "from": "legacy-checks", "paths": ["bio-plane/src/intent/"], "tests": ["bio-plane/test/m/intent/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "entities", "progressions", "inquiry", "ai-runs"]},
-    {"id": "reevaluation", "layer": 7, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/reevaluation/"], "tests": ["bio-plane/test/m/reevaluation/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "provenance", "content", "connections", "inquiry", "basis-versions", "strength"]},
-
-    {"id": "publication", "layer": 8, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/container.mjs", "bio-plane/src/inband.mjs", "bio-plane/src/deliverer.mjs", "bio-plane/src/publication/"], "tests": ["bio-plane/test/m/publication/"], "uses": ["legacy-checks", "signatures", "ooxml", "record-core", "membership", "promotion", "provenance", "connections", "inquiry", "basis-versions"]},
-    {"id": "ratification", "layer": 8, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/ratification/"], "tests": ["bio-plane/test/m/ratification/"], "uses": ["legacy-checks", "signatures", "record-core", "membership", "promotion", "provenance", "capture", "inquiry", "basis-versions", "publication"]},
-    {"id": "case-authoring", "layer": 8, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/case-authoring/"], "tests": ["bio-plane/test/m/case-authoring/"], "uses": ["legacy-checks", "record-core", "membership", "provenance", "extraction", "content", "bias", "observation-log", "inquiry", "basis-versions", "strength", "reevaluation", "publication", "ratification"]},
-    {"id": "review", "layer": 8, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/review/"], "tests": ["bio-plane/test/m/review/"], "uses": ["legacy-checks", "record-core", "membership", "provenance", "strength", "publication", "case-authoring"]},
-
-    {"id": "standards", "layer": 9, "paths": ["bio-plane/src/standards/"], "tests": ["bio-plane/test/m/standards/"], "uses": ["jurisdictions", "legacy-checks", "record-core", "membership", "promotion", "content"]},
-    {"id": "conformance", "layer": 9, "paths": ["bio-plane/src/conformance/"], "tests": ["bio-plane/test/m/conformance/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "inquiry", "strength", "reevaluation", "publication", "standards"]},
-    {"id": "consequences", "layer": 9, "paths": ["bio-plane/src/consequences/"], "tests": ["bio-plane/test/m/consequences/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "inquiry", "strength", "conformance"]},
-    {"id": "actions", "layer": 9, "from": ["legacy-store", "legacy-checks"], "paths": ["bio-plane/src/actions/"], "tests": ["bio-plane/test/m/actions/"], "uses": ["legacy-checks", "jurisdictions", "record-core", "membership", "promotion", "provenance", "content", "connections", "inquiry", "conformance"]},
-    {"id": "filings", "layer": 9, "paths": ["bio-plane/src/filings/"], "tests": ["bio-plane/test/m/filings/"], "uses": ["legacy-checks", "jurisdictions", "record-core", "membership", "provenance", "content", "publication", "standards", "conformance", "consequences", "actions"]},
-    {"id": "escalation", "layer": 9, "paths": ["bio-plane/src/escalation/"], "tests": ["bio-plane/test/m/escalation/"], "uses": ["legacy-checks", "jurisdictions", "record-core", "membership", "conformance", "consequences", "actions", "filings"]},
-
-    {"id": "monitoring", "layer": 10, "from": ["legacy-store", "legacy-index", "legacy-checks"], "paths": ["bio-plane/src/monitoring/"], "tests": ["bio-plane/test/m/monitoring/"], "uses": ["legacy-checks", "runtime-limits", "format-registry", "docprofile", "record-core", "membership", "promotion", "host-governor", "provenance", "capture-sources", "capture", "observation-log", "retrieval", "intent", "reevaluation", "publication", "actions", "escalation"]},
-    {"id": "scheduler", "layer": 10, "from": "legacy-store", "paths": ["bio-plane/src/scheduler/"], "tests": ["bio-plane/test/m/scheduler/"], "uses": ["promotion", "capture", "calibration", "entities", "connections", "progressions", "bias", "retrieval", "ai-runs", "capture-requests", "intent", "monitoring"]},
-    {"id": "legacy-store", "layer": 10, "legacy": true, "paths": ["bio-plane/src/store.mjs", "bio-plane/src/schema.mjs"], "tests": [], "uses": ["*earlier"]},
-
-    {"id": "affordances", "layer": 11, "from": ["legacy-store", "legacy-index"], "paths": ["bio-plane/src/affordances.mjs", "bio-plane/src/affordances/"], "tests": ["bio-plane/test/m/affordances/"], "uses": ["legacy-checks", "record-core", "membership", "promotion", "content", "entities", "connections", "progressions", "inquiry", "citation", "basis-versions", "publication", "ratification", "actions"]},
-    {"id": "queue", "layer": 11, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/queuestate.mjs", "bio-plane/src/queue/"], "tests": ["bio-plane/test/m/queue/"], "uses": ["legacy-checks", "record-core", "membership", "host-governor", "provenance", "capture", "connections", "progressions", "bias", "observation-log", "inquiry", "basis-versions", "ai-runs", "capture-requests", "publication", "scheduler", "legacy-store", "affordances"]},
-    {"id": "instance-setup", "layer": 11, "from": ["legacy-store", "legacy-checks", "legacy-index"], "paths": ["bio-plane/src/setup.mjs", "bio-plane/src/livefire.mjs"], "tests": ["bio-plane/test/m/instance-setup/"], "uses": ["legacy-checks", "jurisdictions", "runtime-limits", "record-core", "membership", "promotion", "host-governor", "scheduler"]},
-    {"id": "control-plane", "layer": 11, "from": ["legacy-index", "legacy-store", "legacy-checks"], "paths": ["bio-plane/src/control-plane/"], "tests": ["bio-plane/test/m/control-plane/"], "uses": ["legacy-checks", "runtime-limits", "signatures", "membership", "publication", "ratification", "case-authoring", "legacy-store", "instance-setup"]},
-    {"id": "legacy-index", "layer": 11, "legacy": true, "paths": ["bio-plane/src/index.mjs", "bio-plane/wrangler.jsonc", "bio-plane/package.json", "bio-plane/package-lock.json", "bio-plane/.gitignore", "bio-plane/.dev.vars.example", "bio-plane/scripts/", "bio-plane/migrate/"], "tests": [], "uses": ["*earlier"]},
-    {"id": "legacy-ui", "layer": 11, "legacy": true, "paths": ["civicos-ui/"], "tests": [], "uses": ["*earlier"]},
-    {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/"], "uses": ["jurisdictions", "signatures", "instance-setup"]},
-    {"id": "legacy-tests", "layer": 11, "legacy": true, "paths": ["civicos-ui/check-refusal-codes.mjs", "civicos-ui/check-semantics.mjs"], "tests": ["bio-plane/test/", "civicos-ui/test/"], "uses": ["*earlier"]}
+    {
+      "id": "legacy-checks",
+      "layer": 1,
+      "legacy": true,
+      "paths": [
+        "bio-plane/checks/bio-checks.mjs"
+      ],
+      "tests": [],
+      "uses": []
+    },
+    {
+      "id": "jurisdictions",
+      "layer": 1,
+      "paths": [
+        "jurisdictions/"
+      ],
+      "tests": [
+        "jurisdictions/test/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "test-support",
+      "layer": 1,
+      "paths": [
+        "bio-plane/test/sandbox.mjs",
+        "bio-plane/test/stdio.mjs",
+        "pdf-worker/test/make-pdf.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/test-support/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "bundler",
+      "layer": 1,
+      "paths": [
+        "bio-plane/scripts/fleet-bundle.mjs",
+        "bio-plane/scripts/provenance.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/bundler/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "runtime-limits",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/cpu.mjs",
+        "bio-plane/src/tokens.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/runtime-limits/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "signatures",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/sshsig.mjs",
+        "bio-plane/src/tsa.mjs",
+        "bio-plane/src/signpage.mjs",
+        "bio-plane/src/sign-release.html",
+        "bio-plane/scripts/embed-signpage.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/signatures/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "id-spaces",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/idspaces.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/id-spaces/"
+      ],
+      "uses": [
+        "jurisdictions"
+      ]
+    },
+    {
+      "id": "subresources",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/subresources.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/subresources/"
+      ],
+      "uses": [
+        "runtime-limits"
+      ]
+    },
+    {
+      "id": "ooxml",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/ooxml.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/ooxml/"
+      ],
+      "uses": []
+    },
+    {
+      "id": "office-readers",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/docx.mjs",
+        "bio-plane/src/pptx.mjs",
+        "bio-plane/src/formats-xlsx.mjs",
+        "bio-plane/src/csv.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/office-readers/"
+      ],
+      "uses": [
+        "subresources",
+        "ooxml"
+      ]
+    },
+    {
+      "id": "odf-reader",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/odf.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/odf-reader/"
+      ],
+      "uses": [
+        "subresources",
+        "ooxml",
+        "office-readers"
+      ]
+    },
+    {
+      "id": "pdf-reader",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/pdfstructure.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/pdf-reader/"
+      ],
+      "uses": [
+        "subresources"
+      ]
+    },
+    {
+      "id": "format-registry",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/formats.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/format-registry/"
+      ],
+      "uses": [
+        "office-readers",
+        "odf-reader",
+        "pdf-reader"
+      ]
+    },
+    {
+      "id": "text-chain",
+      "layer": 1,
+      "paths": [
+        "bio-plane/src/textchain.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/text-chain/"
+      ],
+      "uses": [
+        "legacy-checks"
+      ]
+    },
+    {
+      "id": "docprofile",
+      "layer": 1,
+      "paths": [
+        "docprofile/"
+      ],
+      "tests": [
+        "docprofile/test/"
+      ],
+      "uses": [
+        "jurisdictions"
+      ]
+    },
+    {
+      "id": "image-codecs",
+      "layer": 1,
+      "paths": [
+        "pdf-worker/src/mq.mjs",
+        "pdf-worker/src/dctdecode.mjs",
+        "pdf-worker/src/jbig2decode.mjs",
+        "pdf-worker/src/jpxdecode.mjs",
+        "pdf-worker/src/ccittdecode.mjs"
+      ],
+      "tests": [
+        "pdf-worker/test/codecs/",
+        "pdf-worker/test/fixtures/make-dct-fixtures.py",
+        "pdf-worker/test/fixtures/dct-variants.json",
+        "pdf-worker/test/fixtures/make-jbig2-fixtures.py",
+        "pdf-worker/test/fixtures/jbig2-variants.json",
+        "pdf-worker/test/fixtures/make-jpx-fixtures.py",
+        "pdf-worker/test/fixtures/jpx-variants.json"
+      ],
+      "uses": [
+        "test-support"
+      ]
+    },
+    {
+      "id": "pdf-pixels",
+      "layer": 1,
+      "paths": [
+        "pdf-worker/src/pagepixels.mjs",
+        "pdf-worker/src/imagecrop.mjs",
+        "pdf-worker/src/pagepixels-worker.mjs"
+      ],
+      "tests": [
+        "pdf-worker/test/pagepixels.test.mjs",
+        "pdf-worker/test/imagecrop.test.mjs",
+        "pdf-worker/test/jbig2.test.mjs",
+        "pdf-worker/test/jpx.test.mjs",
+        "pdf-worker/test/pagepixels-corpus.probe.mjs",
+        "pdf-worker/test/agenda-scan-census.probe.mjs",
+        "pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf",
+        "pdf-worker/test/fixtures/scan-dct-page.pdf",
+        "pdf-worker/test/fixtures/jbig2-scan-page.pdf",
+        "pdf-worker/test/fixtures/jpx-scan-page.pdf"
+      ],
+      "uses": [
+        "pdf-reader",
+        "image-codecs",
+        "test-support"
+      ]
+    },
+    {
+      "id": "pdf-worker",
+      "layer": 1,
+      "paths": [
+        "pdf-worker/"
+      ],
+      "tests": [
+        "pdf-worker/test/"
+      ],
+      "uses": [
+        "pdf-reader",
+        "bundler",
+        "test-support"
+      ]
+    },
+    {
+      "id": "ocr-worker",
+      "layer": 1,
+      "paths": [
+        "ocr-worker/"
+      ],
+      "tests": [
+        "ocr-worker/test/"
+      ],
+      "uses": [
+        "pdf-pixels",
+        "bundler",
+        "legacy-checks",
+        "text-chain",
+        "test-support"
+      ]
+    },
+    {
+      "id": "record-core",
+      "layer": 2,
+      "from": "legacy-store",
+      "paths": [
+        "bio-plane/src/record-core/"
+      ],
+      "tests": [
+        "bio-plane/test/m/record-core/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "id-spaces"
+      ]
+    },
+    {
+      "id": "membership",
+      "layer": 2,
+      "from": "legacy-store",
+      "paths": [
+        "bio-plane/src/membership/"
+      ],
+      "tests": [
+        "bio-plane/test/m/membership/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "signatures",
+        "record-core"
+      ]
+    },
+    {
+      "id": "promotion",
+      "layer": 2,
+      "from": [
+        "legacy-checks",
+        "legacy-store"
+      ],
+      "paths": [
+        "bio-plane/src/gate.mjs",
+        "bio-plane/src/promotion/"
+      ],
+      "tests": [
+        "bio-plane/test/m/promotion/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "signatures",
+        "record-core",
+        "membership"
+      ]
+    },
+    {
+      "id": "host-governor",
+      "layer": 3,
+      "from": [
+        "legacy-store",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/host-governor/"
+      ],
+      "tests": [
+        "bio-plane/test/m/host-governor/"
+      ],
+      "uses": [
+        "record-core"
+      ]
+    },
+    {
+      "id": "provenance",
+      "layer": 3,
+      "from": [
+        "legacy-checks",
+        "legacy-store",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/provenance/"
+      ],
+      "tests": [
+        "bio-plane/test/m/provenance/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "signatures",
+        "record-core",
+        "promotion",
+        "membership"
+      ]
+    },
+    {
+      "id": "capture-sources",
+      "layer": 3,
+      "paths": [
+        "bio-plane/src/render.mjs",
+        "bio-plane/src/browserrender.mjs",
+        "bio-plane/src/cdx.mjs",
+        "bio-plane/src/drive.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/capture-sources/"
+      ],
+      "uses": [
+        "subresources"
+      ]
+    },
+    {
+      "id": "capture",
+      "layer": 3,
+      "from": [
+        "legacy-store",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/capture/"
+      ],
+      "tests": [
+        "bio-plane/test/m/capture/"
+      ],
+      "uses": [
+        "jurisdictions",
+        "legacy-checks",
+        "subresources",
+        "odf-reader",
+        "format-registry",
+        "docprofile",
+        "record-core",
+        "membership",
+        "host-governor",
+        "provenance",
+        "capture-sources"
+      ]
+    },
+    {
+      "id": "calibration",
+      "layer": 4,
+      "from": [
+        "legacy-checks",
+        "legacy-store"
+      ],
+      "paths": [
+        "bio-plane/src/calibration.mjs",
+        "bio-plane/src/calibration/"
+      ],
+      "tests": [
+        "bio-plane/test/m/calibration/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core"
+      ]
+    },
+    {
+      "id": "extraction",
+      "layer": 4,
+      "from": [
+        "legacy-checks",
+        "legacy-store",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/extractrun.mjs",
+        "bio-plane/src/readingprov.mjs",
+        "bio-plane/src/extraction/"
+      ],
+      "tests": [
+        "bio-plane/test/m/extraction/"
+      ],
+      "uses": [
+        "jurisdictions",
+        "legacy-checks",
+        "text-chain",
+        "format-registry",
+        "docprofile",
+        "pdf-worker",
+        "ocr-worker",
+        "record-core",
+        "membership",
+        "capture",
+        "promotion",
+        "calibration"
+      ]
+    },
+    {
+      "id": "content",
+      "layer": 4,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/content/"
+      ],
+      "tests": [
+        "bio-plane/test/m/content/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "text-chain",
+        "format-registry",
+        "pdf-pixels",
+        "record-core",
+        "membership",
+        "provenance",
+        "extraction"
+      ]
+    },
+    {
+      "id": "entities",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/entities/"
+      ],
+      "tests": [
+        "bio-plane/test/m/entities/"
+      ],
+      "uses": [
+        "jurisdictions",
+        "legacy-checks",
+        "id-spaces",
+        "record-core",
+        "membership",
+        "provenance",
+        "extraction"
+      ]
+    },
+    {
+      "id": "connections",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/connections/"
+      ],
+      "tests": [
+        "bio-plane/test/m/connections/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "text-chain",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "capture",
+        "extraction",
+        "content",
+        "entities"
+      ]
+    },
+    {
+      "id": "progressions",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/progressions/"
+      ],
+      "tests": [
+        "bio-plane/test/m/progressions/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "provenance",
+        "extraction",
+        "entities",
+        "connections"
+      ]
+    },
+    {
+      "id": "bias",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/bias/"
+      ],
+      "tests": [
+        "bio-plane/test/m/bias/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "entities"
+      ]
+    },
+    {
+      "id": "observation-log",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/observation-log/"
+      ],
+      "tests": [
+        "bio-plane/test/m/observation-log/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "provenance",
+        "extraction",
+        "content",
+        "entities",
+        "connections"
+      ]
+    },
+    {
+      "id": "query-language",
+      "layer": 5,
+      "paths": [
+        "bio-plane/src/query.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/query-language/"
+      ],
+      "uses": [
+        "text-chain",
+        "legacy-checks",
+        "membership",
+        "content"
+      ]
+    },
+    {
+      "id": "retrieval",
+      "layer": 5,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/retrieval/"
+      ],
+      "tests": [
+        "bio-plane/test/m/retrieval/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "capture",
+        "extraction",
+        "content",
+        "entities",
+        "connections",
+        "observation-log",
+        "query-language"
+      ]
+    },
+    {
+      "id": "inquiry",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/inquiry/"
+      ],
+      "tests": [
+        "bio-plane/test/m/inquiry/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "text-chain",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "extraction",
+        "content",
+        "entities",
+        "connections",
+        "observation-log",
+        "retrieval"
+      ]
+    },
+    {
+      "id": "citation",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/citation/"
+      ],
+      "tests": [
+        "bio-plane/test/m/citation/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "content",
+        "retrieval",
+        "inquiry"
+      ]
+    },
+    {
+      "id": "basis-versions",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/basis-versions/"
+      ],
+      "tests": [
+        "bio-plane/test/m/basis-versions/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "extraction",
+        "content",
+        "entities",
+        "connections",
+        "inquiry"
+      ]
+    },
+    {
+      "id": "strength",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/strength/"
+      ],
+      "tests": [
+        "bio-plane/test/m/strength/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "inquiry",
+        "basis-versions"
+      ]
+    },
+    {
+      "id": "contradiction",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/contradiction.mjs",
+        "bio-plane/src/contradiction/"
+      ],
+      "tests": [
+        "bio-plane/test/m/contradiction/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "extraction",
+        "content",
+        "entities",
+        "inquiry",
+        "basis-versions"
+      ]
+    },
+    {
+      "id": "ai-runs",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/airun.mjs",
+        "bio-plane/src/ai-runs/"
+      ],
+      "tests": [
+        "bio-plane/test/m/ai-runs/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "connections",
+        "bias",
+        "observation-log",
+        "retrieval",
+        "inquiry",
+        "contradiction"
+      ]
+    },
+    {
+      "id": "run-productions",
+      "layer": 6,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/run-productions/"
+      ],
+      "tests": [
+        "bio-plane/test/m/run-productions/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "text-chain",
+        "record-core",
+        "membership",
+        "extraction",
+        "content",
+        "connections",
+        "inquiry",
+        "citation",
+        "basis-versions",
+        "strength",
+        "ai-runs"
+      ]
+    },
+    {
+      "id": "capture-requests",
+      "layer": 6,
+      "from": "legacy-store",
+      "paths": [
+        "bio-plane/src/capture-requests/"
+      ],
+      "tests": [
+        "bio-plane/test/m/capture-requests/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "host-governor",
+        "capture",
+        "observation-log",
+        "inquiry",
+        "ai-runs"
+      ]
+    },
+    {
+      "id": "skills",
+      "layer": 6,
+      "from": "legacy-checks",
+      "paths": [
+        "bio-plane/src/skilldoctrine.mjs",
+        "bio-plane/src/skillpack.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/skills/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "observation-log",
+        "ai-runs",
+        "run-productions"
+      ]
+    },
+    {
+      "id": "agent-worker",
+      "layer": 6,
+      "paths": [
+        "agent-worker/"
+      ],
+      "tests": [
+        "agent-worker/test/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "test-support",
+        "bundler",
+        "runtime-limits",
+        "query-language",
+        "ai-runs",
+        "skills"
+      ]
+    },
+    {
+      "id": "intent",
+      "layer": 7,
+      "from": "legacy-checks",
+      "paths": [
+        "bio-plane/src/intent/"
+      ],
+      "tests": [
+        "bio-plane/test/m/intent/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "entities",
+        "progressions",
+        "inquiry",
+        "ai-runs"
+      ]
+    },
+    {
+      "id": "reevaluation",
+      "layer": 7,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/reevaluation/"
+      ],
+      "tests": [
+        "bio-plane/test/m/reevaluation/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "content",
+        "connections",
+        "inquiry",
+        "basis-versions",
+        "strength"
+      ]
+    },
+    {
+      "id": "publication",
+      "layer": 8,
+      "from": [
+        "legacy-store",
+        "legacy-checks",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/container.mjs",
+        "bio-plane/src/inband.mjs",
+        "bio-plane/src/deliverer.mjs",
+        "bio-plane/src/publication/"
+      ],
+      "tests": [
+        "bio-plane/test/m/publication/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "signatures",
+        "ooxml",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "connections",
+        "inquiry",
+        "basis-versions"
+      ]
+    },
+    {
+      "id": "ratification",
+      "layer": 8,
+      "from": [
+        "legacy-store",
+        "legacy-checks",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/ratification/"
+      ],
+      "tests": [
+        "bio-plane/test/m/ratification/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "signatures",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "capture",
+        "inquiry",
+        "basis-versions",
+        "publication"
+      ]
+    },
+    {
+      "id": "case-authoring",
+      "layer": 8,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/case-authoring/"
+      ],
+      "tests": [
+        "bio-plane/test/m/case-authoring/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "provenance",
+        "extraction",
+        "content",
+        "bias",
+        "observation-log",
+        "inquiry",
+        "basis-versions",
+        "strength",
+        "reevaluation",
+        "publication",
+        "ratification"
+      ]
+    },
+    {
+      "id": "review",
+      "layer": 8,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/review/"
+      ],
+      "tests": [
+        "bio-plane/test/m/review/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "provenance",
+        "strength",
+        "publication",
+        "case-authoring"
+      ]
+    },
+    {
+      "id": "standards",
+      "layer": 9,
+      "paths": [
+        "bio-plane/src/standards/"
+      ],
+      "tests": [
+        "bio-plane/test/m/standards/"
+      ],
+      "uses": [
+        "jurisdictions",
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "content"
+      ]
+    },
+    {
+      "id": "conformance",
+      "layer": 9,
+      "paths": [
+        "bio-plane/src/conformance/"
+      ],
+      "tests": [
+        "bio-plane/test/m/conformance/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "content",
+        "inquiry",
+        "strength",
+        "reevaluation",
+        "publication",
+        "standards"
+      ]
+    },
+    {
+      "id": "consequences",
+      "layer": 9,
+      "paths": [
+        "bio-plane/src/consequences/"
+      ],
+      "tests": [
+        "bio-plane/test/m/consequences/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "content",
+        "inquiry",
+        "strength",
+        "conformance"
+      ]
+    },
+    {
+      "id": "actions",
+      "layer": 9,
+      "from": [
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/actions/"
+      ],
+      "tests": [
+        "bio-plane/test/m/actions/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "jurisdictions",
+        "record-core",
+        "membership",
+        "promotion",
+        "provenance",
+        "content",
+        "connections",
+        "inquiry",
+        "conformance"
+      ]
+    },
+    {
+      "id": "filings",
+      "layer": 9,
+      "paths": [
+        "bio-plane/src/filings/"
+      ],
+      "tests": [
+        "bio-plane/test/m/filings/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "jurisdictions",
+        "record-core",
+        "membership",
+        "provenance",
+        "content",
+        "publication",
+        "standards",
+        "conformance",
+        "consequences",
+        "actions"
+      ]
+    },
+    {
+      "id": "escalation",
+      "layer": 9,
+      "paths": [
+        "bio-plane/src/escalation/"
+      ],
+      "tests": [
+        "bio-plane/test/m/escalation/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "jurisdictions",
+        "record-core",
+        "membership",
+        "conformance",
+        "consequences",
+        "actions",
+        "filings"
+      ]
+    },
+    {
+      "id": "monitoring",
+      "layer": 10,
+      "from": [
+        "legacy-store",
+        "legacy-index",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/monitoring/"
+      ],
+      "tests": [
+        "bio-plane/test/m/monitoring/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "runtime-limits",
+        "format-registry",
+        "docprofile",
+        "record-core",
+        "membership",
+        "promotion",
+        "host-governor",
+        "provenance",
+        "capture-sources",
+        "capture",
+        "observation-log",
+        "retrieval",
+        "intent",
+        "reevaluation",
+        "publication",
+        "actions",
+        "escalation"
+      ]
+    },
+    {
+      "id": "scheduler",
+      "layer": 10,
+      "from": "legacy-store",
+      "paths": [
+        "bio-plane/src/scheduler/"
+      ],
+      "tests": [
+        "bio-plane/test/m/scheduler/"
+      ],
+      "uses": [
+        "promotion",
+        "capture",
+        "calibration",
+        "entities",
+        "connections",
+        "progressions",
+        "bias",
+        "retrieval",
+        "ai-runs",
+        "capture-requests",
+        "intent",
+        "monitoring"
+      ]
+    },
+    {
+      "id": "legacy-store",
+      "layer": 10,
+      "legacy": true,
+      "paths": [
+        "bio-plane/src/store.mjs",
+        "bio-plane/src/schema.mjs"
+      ],
+      "tests": [],
+      "uses": [
+        "*earlier"
+      ]
+    },
+    {
+      "id": "affordances",
+      "layer": 11,
+      "from": [
+        "legacy-store",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/affordances.mjs",
+        "bio-plane/src/affordances/"
+      ],
+      "tests": [
+        "bio-plane/test/m/affordances/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "promotion",
+        "content",
+        "entities",
+        "connections",
+        "progressions",
+        "inquiry",
+        "citation",
+        "basis-versions",
+        "publication",
+        "ratification",
+        "actions"
+      ]
+    },
+    {
+      "id": "queue",
+      "layer": 11,
+      "from": [
+        "legacy-store",
+        "legacy-checks",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/queuestate.mjs",
+        "bio-plane/src/queue/"
+      ],
+      "tests": [
+        "bio-plane/test/m/queue/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "record-core",
+        "membership",
+        "host-governor",
+        "provenance",
+        "capture",
+        "connections",
+        "progressions",
+        "bias",
+        "observation-log",
+        "inquiry",
+        "basis-versions",
+        "ai-runs",
+        "capture-requests",
+        "publication",
+        "scheduler",
+        "legacy-store",
+        "affordances"
+      ]
+    },
+    {
+      "id": "instance-setup",
+      "layer": 11,
+      "from": [
+        "legacy-store",
+        "legacy-checks",
+        "legacy-index"
+      ],
+      "paths": [
+        "bio-plane/src/setup.mjs",
+        "bio-plane/src/livefire.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/m/instance-setup/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "jurisdictions",
+        "runtime-limits",
+        "record-core",
+        "membership",
+        "promotion",
+        "host-governor",
+        "scheduler"
+      ]
+    },
+    {
+      "id": "control-plane",
+      "layer": 11,
+      "from": [
+        "legacy-index",
+        "legacy-store",
+        "legacy-checks"
+      ],
+      "paths": [
+        "bio-plane/src/control-plane/"
+      ],
+      "tests": [
+        "bio-plane/test/m/control-plane/"
+      ],
+      "uses": [
+        "legacy-checks",
+        "runtime-limits",
+        "signatures",
+        "membership",
+        "publication",
+        "ratification",
+        "case-authoring",
+        "legacy-store",
+        "instance-setup"
+      ]
+    },
+    {
+      "id": "legacy-index",
+      "layer": 11,
+      "legacy": true,
+      "paths": [
+        "bio-plane/src/index.mjs",
+        "bio-plane/wrangler.jsonc",
+        "bio-plane/package.json",
+        "bio-plane/package-lock.json",
+        "bio-plane/.gitignore",
+        "bio-plane/.dev.vars.example",
+        "bio-plane/scripts/",
+        "bio-plane/migrate/"
+      ],
+      "tests": [],
+      "uses": [
+        "*earlier"
+      ]
+    },
+    {
+      "id": "legacy-ui",
+      "layer": 11,
+      "legacy": true,
+      "paths": [
+        "civicos-ui/"
+      ],
+      "tests": [],
+      "uses": [
+        "*earlier"
+      ]
+    },
+    {
+      "id": "installer",
+      "layer": 11,
+      "paths": [
+        "newgroup/",
+        "bio-plane/public/newgroup/"
+      ],
+      "tests": [
+        "newgroup/test/"
+      ],
+      "uses": [
+        "jurisdictions",
+        "signatures",
+        "instance-setup"
+      ]
+    },
+    {
+      "id": "legacy-tests",
+      "layer": 11,
+      "legacy": true,
+      "paths": [
+        "civicos-ui/check-refusal-codes.mjs",
+        "civicos-ui/check-semantics.mjs"
+      ],
+      "tests": [
+        "bio-plane/test/",
+        "civicos-ui/test/"
+      ],
+      "uses": [
+        "*earlier"
+      ]
+    }
   ]
 }
