@@ -162,6 +162,7 @@ import fs from "fs"; import vm from "vm"; import path from "path";
 import { webcrypto } from "crypto";
 import { fileURLToPath } from "url";
 import { appScript } from "./extract.mjs";
+import { storeCorpus } from "../../bio-plane/test/extracted-sources.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UIROOT = path.dirname(HERE);
@@ -222,7 +223,13 @@ const WIRE_FIELD = "handle";
 /* `store.mjs` carries a stray byte that makes plain grep treat it as binary
    (CLAUDE.md's trap list); read as text here, the way `check-semantics.mjs` and
    `preauth-vocabulary.test.mjs` already read it. */
-const STORE_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; membership, T3 layer 2): the roster ops whose signatures declare the
+   field — `projectInvite`, `projectRemove`, `projectOwnerAdd`, `projectOwnerRescue` (and `projectRequestAnswer`,
+   `projectOwnerRemove`) — moved out of `store.mjs`, which keeps one-line `(...a)` delegations to them, into
+   `src/membership/index.mjs`. The wire walk is a census of the plane's SOURCE, so its corpus is widened to the
+   store and every extracted module (`bio-plane/test/extracted-sources.mjs`); what is asked is unchanged: the field
+   is a declared parameter of the plane's own methods, and every act that takes it binds to one of them. */
+const STORE_SRC = storeCorpus(["record-core", "membership", "promotion", "host-governor", "provenance", "capture"]);
 /* THE STORE'S OWN METHOD SIGNATURES declare the field — `projectInvite({
    projectId, handle, by })` and its twelve siblings. Read out of the plane
    rather than typed here, and GUARDED: an extraction that silently yielded
@@ -230,10 +237,10 @@ const STORE_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "s
 const STORE_METHODS_WITH_FIELD = [...new Set(
   [...STORE_SRC.matchAll(new RegExp("^  ([a-zA-Z]+)\\(\\{[^}]*\\b" + WIRE_FIELD + "\\b", "gm"))].map(m => m[1])
 )].sort();
-ok("WALK 1 REACH: the plane's own source was read and is the real thing — store.mjs "
+ok("WALK 1 REACH: the plane's own source was read and is the real thing — store.mjs and the extracted modules "
    + STORE_SRC.length + " characters", STORE_SRC.length > 100000);
 ok("WALK 1: `" + WIRE_FIELD + "` is the PLANE's field name and not this surface's word — it stands in "
-   + "bio-plane/src/store.mjs " + (STORE_SRC.split(WIRE_FIELD).length - 1) + " times and is a declared "
+   + "bio-plane/src/store.mjs and the extracted modules " + (STORE_SRC.split(WIRE_FIELD).length - 1) + " times and is a declared "
    + "PARAMETER of " + STORE_METHODS_WITH_FIELD.length + " store methods [" + STORE_METHODS_WITH_FIELD.join(", ")
    + "]. Moving it is an I3 interface change (INTERFACE-CHANGES.md), not a reword — which is exactly why "
    + "this walk is anchored on it and why UI-34 did not propose moving it.",

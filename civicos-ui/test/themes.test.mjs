@@ -74,6 +74,7 @@ import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
 /* THE TIE (DEC-49): the plane's OWN canned translations, imported — a copy here would agree for free. */
 import { THEME_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -138,19 +139,23 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
 /* D-162's own fixture shape (`bio-plane/test/theme.test.mjs`): a document with a CAPTURE and a reading whose
-   OCR chain gives it pages, so a passage can be minted over it. */
-const readingOf = (captureSha) => ({
+   OCR chain gives it pages, so a passage can be minted over it.
+   T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused at
+   the write, naming the capture at the path the register below gives it (`bio-plane/test/register-doc.mjs`), as
+   theme.test.mjs's own fixture now does; `promote` carries that capture in the bundle's files. */
+const readingOf = (captureSha) => registerDoc({
   capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW, entities: [],
              text_source: [{ step: "pixels", extent: { kind: "pages", pages: [0, 1] } },
                            { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" },
-                             extent: { kind: "pages", pages: [0, 1] } }] } });
+                             extent: { kind: "pages", pages: [0, 1] } }] } }, { file: "captures/doc.pdf" });
 const promote = async (id, readings = []) => {
   const text = infoMd(id);
   const files = [{ path: "bundle.md", text, bytes: Buffer.byteLength(text), sha256: sha(text) }];
   if (readings.length) {
     const prov = JSON.stringify({ documents: readings });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(...readings.map((d) => registerFile(d)));   /* T4 (legacy-tests; provenance K121): each capture the documents name, held in the bundle */
   }
   return POST(`op=promote&token=${NADIA}`, {
     bundleId: id, base: null,

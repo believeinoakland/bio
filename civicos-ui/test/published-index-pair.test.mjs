@@ -56,6 +56,7 @@ import { join } from "path";
 import { appScript } from "./extract.mjs";
 import { ratifyCase } from "../../bio-plane/test/caseceremony.mjs";
 import { parseFrontmatter } from "../../bio-plane/checks/bio-checks.mjs";
+import { docDate } from "../../bio-plane/test/docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -248,8 +249,12 @@ const promote = async (id, text, type, base = null) => POST(`op=promote&token=${
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
   /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
      state, and is now refused; a project document here states no title, so the label stays its only name. */
+  /* T4 (legacy-tests; promotion R12): the envelope carries the document's own dates, as the carried fixture
+     (rec170-manifest-pair.test.mjs) now does. Q0's re-grade states `last_updated` 2026-07-03 and the envelope said
+     LATER, which promotion refuses ENVELOPE_DATES_DISAGREE (C-86.7) before anything is written. */
   meta: { object_type: type, group: "believe-in-oakland", ...(type === "project" ? { title: `Bundle ${id}` } : {}),
-          current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
+          current_state: type === "inquiry" ? "open" : "collected",
+          created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER } });
 const createProject = async (label, text) => {
   const r = await POST(`op=promote&token=${IRIS}`, {
     base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,

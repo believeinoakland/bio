@@ -139,13 +139,21 @@ const LINKS = {
 };
 
 /* ---- STRUCTURAL: the fields the UI reads must exist in the plane ---- */
-const storeSrc = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url).pathname, "utf8");
-const resolveSrc = storeSrc.slice(storeSrc.indexOf("resolveLinks({"), storeSrc.indexOf("projectLinks({"));
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R27): `resolveLinks` and `recordLinks` moved out of
+   `bio-plane/src/store.mjs` (which keeps only one-line delegations to them) into the capture module,
+   `bio-plane/src/capture/index.mjs`, where they are the methods whose field names this structural check holds the
+   surface to. The slices are now taken there, each bounded by the method the module defines after it
+   (`recordLinkVerdict(` after `resolveLinks(`, `linksTo(` after `recordLinks(`), on the methods' own signatures so
+   the dispatch map's calls further down the file are not matched. What is asked is unchanged: every field the UI
+   reads off a link is one the plane's own method emits or records. */
+const storeSrc = fs.readFileSync(new URL("../../bio-plane/src/capture/index.mjs", import.meta.url).pathname, "utf8");
+const resolveSrc = storeSrc.slice(storeSrc.indexOf("  resolveLinks({ sourceCapture"), storeSrc.indexOf("  recordLinkVerdict({"));
 ok("resolveLinks was found in the plane source", resolveSrc.length > 400);
 for (const f of ["resolution", "verdict", "basis", "detail", "target_capture", "target_bundle",
                  "target_last_seen", "tally", "verdicts", "contemporaneous", "superseded", "undetermined"])
   ok(`the plane still emits ${f}`, resolveSrc.includes(f));
-const recordSrc = storeSrc.slice(storeSrc.indexOf("recordLinks({"), storeSrc.indexOf("linksTo({"));
+const recordSrc = storeSrc.slice(storeSrc.indexOf("  recordLinks({ sourceCapture"), storeSrc.indexOf("  linksTo({ address_norm"));
+ok("recordLinks was found in the plane source", recordSrc.length > 400);
 for (const f of ["address", "citation_norm", "fragment", "partition", "chrome"])
   ok(`the plane still records ${f} on a link`, recordSrc.includes(f));
 /* And the partitions the UI names must be the ones the capture layer assigns. */

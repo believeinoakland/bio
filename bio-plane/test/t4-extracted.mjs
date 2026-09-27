@@ -34,15 +34,38 @@ function classMethods(mod) {
   return out;
 }
 
-/** The store's text with each pure layer-3 delegation re-inlined; `reinlined` lists `store <- module.method`. */
-export function reinlineLayer3(storeText) {
+/** The store's text with each pure layer-3 delegation re-inlined; `reinlined` lists `store <- module.method`.
+ *  With `{ ops: true }`, ALSO (T3's step (4) and (5), for capture's routes): the dispatch map's
+ *  `...captureOps(captureOf(this.ctx), url, body, this.env),` is replaced by the entries `captureOps` returns, their
+ *  receiver `c.` read as `this.`, and every capture class method those entries reach that the store has no method of
+ *  that name for is appended after the store's text (the rest are already the store's re-inlined delegations). */
+export function reinlineLayer3(storeText, { ops = false } = {}) {
   const methods = Object.fromEntries(Object.entries(MODULES).map(([of, mod]) => [of, classMethods(mod)]));
   const reinlined = [];
-  const text = storeText.split("\n").map((l) => {
+  let text = storeText.split("\n").map((l) => {
     const d = DELEGATION.exec(l);
     if (!d || !methods[d[3]].has(d[4])) return l;
     reinlined.push(`${d[2]} <- ${MODULES[d[3]]}.${d[4]}`);
     return methods[d[3]].get(d[4]).replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${d[2]}`);
   }).join("\n");
+  if (ops) {
+    const capText = readdirSync(`${SRC_DIR}capture`).filter((f) => f.endsWith(".mjs")).sort()
+      .map((f) => readFileSync(`${SRC_DIR}capture/${f}`, "utf8")).join("\n");
+    const fn = /^export function captureOps\([^)]*\) \{[\s\S]*?\n  return \{\n([\s\S]*?)\n  \};\n\}/m.exec(capText);
+    const SPREAD = /^( +)\.\.\.captureOps\(captureOf\(this\.ctx\), url, body, this\.env\),$/m;
+    const sp = SPREAD.exec(text);
+    if (fn && sp) {
+      const entries = fn[1].split("\n").map((l) => l.replace(/\bc\.([A-Za-z_$][\w$]*)\(/g, "this.$1("));
+      text = text.replace(SPREAD, entries.map((l) => sp[1] + l.trim()).join("\n"));
+      reinlined.push(`captureOps spread <- ${entries.filter((l) => /:\s*\(\)\s*=>/.test(l)).length} entries`);
+      const have = new Set([...text.matchAll(/^ {2}(?:static\s+|async\s+)*(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/gm)].map((m) => m[1]));
+      const reached = [...new Set([...fn[1].matchAll(/\bc\.([A-Za-z_$][\w$]*)\(/g)].map((m) => m[1]))];
+      const add = reached.filter((n) => !have.has(n) && methods.captureOf.has(n));
+      if (add.length) {
+        text += "\n" + add.map((n) => methods.captureOf.get(n)).join("\n");
+        reinlined.push(`appended capture methods: ${add.join(", ")}`);
+      }
+    }
+  }
   return { text, reinlined };
 }

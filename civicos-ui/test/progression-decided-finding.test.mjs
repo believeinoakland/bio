@@ -52,6 +52,7 @@ import { webcrypto, createHash } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -181,14 +182,17 @@ const eG = await post("entitycreate", { kind:"fund", label:"Grant G", aliases:["
 const gAward = sha("ui108-G-award");
 {
   const id = "INFO-2026-0001-ui108", md = bundleMd(id);
-  const prov = JSON.stringify({ documents: [{ capture:{ sha256:gAward, encoding:"binary", bytes:10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const doc = registerDoc({ capture:{ sha256:gAward, encoding:"binary", bytes:10 },
     reading:{ content_type:"meeting_calendar", reader_version:1, found:true, at:NOW,
-              entities:[{ ref:"fund:G", kind:"fund", key:"G", label:"Grant G" }] } }] });
+              entities:[{ ref:"fund:G", kind:"fund", key:"G", label:"Grant G" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const pr = await post("promote", { bundleId:id, base:null, snapKey:"20260925T010000Z_dddd4444", author:"ui108",
     meta:{ object_type:"information", group:"believe-in-oakland", title:`Doc ${id}`,
            current_state:"collected", created:NOW, last_updated:NOW },
     files:[{ path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
-           { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) }], register:[] }, IRIS);
+           { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) }, registerFile(doc)], register:[] }, IRIS);
   ok("a real captured document is on the record for the flow to be threaded with", pr && pr.ok !== false);
 }
 await post("resolve", { captureSha:gAward }, IRIS);

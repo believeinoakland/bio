@@ -48,6 +48,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -104,12 +105,15 @@ for (let i = 1; i <= 4; i++) {
     "produced_by:", "  mode: agent", "  capability_tier: high", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "---", "", "## Summary", "", "A notice.", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-  const prov = JSON.stringify({ documents: [{ capture: { sha256: cap, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: cap, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: AT,
-               entities: [{ ref: "contract:D291", kind: "contract", key: "D291", label: "D-291 contract" }] } }] });
+               entities: [{ ref: "contract:D291", kind: "contract", key: "D291", label: "D-291 contract" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const r = rP(await POST(`op=promote&token=${MONA}`, { bundleId: id, base: null, snapKey: `d291-${i}`,
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }], register: [],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)], register: [],
     meta: { object_type: "information", group: "believe-in-oakland", title: `Contract notice ${i}`,
             current_state: "collected", created: AT, last_updated: AT } }));
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);

@@ -679,8 +679,15 @@ ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outsi
    extraction that silently yielded "" would make the whole measurement report
    nothing and pass. */
 const STORE_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; membership, T3 layer 2): `login()` and its `LOGIN_REFUSAL_DETAIL`
+   constant moved out of `store.mjs` (which keeps only `static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;`,
+   an alias carrying no sentence) into `src/membership/index.mjs`. The sentence is read out of the module that holds
+   it, the same textual read for the same reason; what is asked is unchanged. Every other plane sentence this file
+   reads (NOT_PUBLISHED, the review copy's three, `case_detail`/`graph_detail`) stayed in `store.mjs` and is still
+   read there. */
+const LOGIN_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "membership", "index.mjs"), "utf8");
 function planeLoginRefusal(){
-  const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(STORE_SRC);
+  const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(LOGIN_SRC);
   if(!block) return null;
   const out = {};
   for(const part of block[1].split(/^ {4}(?=[A-Z_]+:)/m)){

@@ -301,7 +301,11 @@ arm("(e)", [{
   to: `  'M2 reason:<expr>':  src => {
     const out = new Set(); if (out) return out;`,
 }], guard, r => ({
-  ok: r.exit === 1 && /the plane census is \d+ refusal codes, floor is/.test(r.out)
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the census FAIL has read "…is N refusal codes THAT ARE IN THE COMMIT
+     AT HEAD (M over the working tree), floor is F" since D-257, so the old `codes, floor is` could never match and
+     this arm could not pass on any tree. Anchored on the sentence's two ends; the claim (the CENSUS floor fires) is
+     unchanged. */
+  ok: r.exit === 1 && /the plane census is \d+ refusal codes[^\n]*, floor is/.test(r.out)
       && /M2 reason:<expr>\s+0 codes/.test(r.out),
   what: "the guard exits 1 on the CENSUS FLOOR with M2 printed at 0 codes",
 }));

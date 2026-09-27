@@ -56,6 +56,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -153,12 +154,15 @@ const ent = await POST(`op=entitycreate&token=${MACHINE}`,
 const AWARD_DOC = "INFO-2026-0197-award";
 const awardSha = sha("ui97-award");
 {
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const doc = registerDoc({
     capture: { sha256: awardSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "procurement", reader_version: 1, found: true, at: AWARD_AT,
-               entities: [{ ref: "contract:CU", kind: "contract", key: "CU", label: "Contract U" }] } }] });
+               entities: [{ ref: "contract:CU", kind: "contract", key: "CU", label: "Contract U" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   await promote(AWARD_DOC, infoMd(AWARD_DOC), "information", "collected", [],
-    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }]);
+    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)]);
 }
 await POST(`op=resolve&token=${MACHINE}`, { captureSha: awardSha });
 const thr = await POST(`op=thread&token=${MACHINE}`, {

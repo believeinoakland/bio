@@ -146,9 +146,10 @@ const t = (label, got, want) => {
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 moved more of the store's
    methods out behind one-line delegations — among them `versionChain` and `provenanceRoutesMarked` (provenance), both
    capped reads on this roster, which fell off it while still capped and still driven (the walk printed 45 against 47).
-   The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined too (`reinlineLayer3`,
-   `t4-extracted.mjs`, which states the substitution); every figure and anchor below is unchanged. */
-const SRC_STORE = reinlineLayer3(inlinedStore()).text;
+   The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined too, and capture's routes (the
+   dispatch map's `...captureOps(...)` spread) read as entries of the map (`reinlineLayer3(…, { ops: true })`,
+   `t4-extracted.mjs`, which states each substitution); every figure and anchor below is unchanged. */
+const SRC_STORE = reinlineLayer3(inlinedStore(), { ops: true }).text;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
