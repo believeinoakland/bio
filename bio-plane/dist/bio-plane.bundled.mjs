@@ -9855,6 +9855,112 @@ var IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 var REFUSED = Symbol("record-core-refusal");
 var hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
+function stampInstant(precision, when = Date.now()) {
+  if (precision !== "millisecond" && precision !== "second")
+    throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
+  const iso2 = new Date(when).toISOString();
+  return precision === "millisecond" ? iso2 : iso2.replace(/\.\d+Z$/, "Z");
+}
+function instantOrder(a, b) {
+  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
+  return x - y;
+}
+var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+function fileDigestOf(f4) {
+  if (f4 && typeof f4.text === "string") return createSha256().update(te.encode(f4.text)).hex();
+  if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
+  return null;
+}
+function inlineBytesOf(f4) {
+  return f4 && typeof f4.text === "string" ? te.encode(f4.text).length : null;
+}
+function censusCap(limit) {
+  const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+  return Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+}
+function manifestFiles(filesJson) {
+  let arr2;
+  try {
+    arr2 = filesJson == null ? null : JSON.parse(filesJson);
+  } catch {
+    arr2 = null;
+  }
+  return Array.isArray(arr2) ? arr2.filter((f4) => f4 && typeof f4 === "object") : [];
+}
+var PER_ITEM_MAX = 100;
+function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys = null } = {}) {
+  const refusal8 = (code, detail, extra) => {
+    const row = PER_ITEM_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
+  };
+  const { items, ...shared } = body && typeof body === "object" ? body : {};
+  const count = Array.isArray(items) ? items.length : 0;
+  if (!Array.isArray(items) || items.length === 0)
+    return refusal8(
+      "SET_NO_ITEMS",
+      `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or send one item's fields without \`items\` for the single act. Nothing was done.`,
+      { op: act, weight: "per-item", count: 0 }
+    );
+  if (items.length > PER_ITEM_MAX)
+    return refusal8(
+      "SET_TOO_LARGE",
+      `op=${act} acts on at most ${PER_ITEM_MAX} items at once and this set holds ${items.length}. Refused WHOLE, before any item was tried, so no item moved.`,
+      { op: act, weight: "per-item", count: items.length, max: PER_ITEM_MAX }
+    );
+  const echo = (it) => {
+    const o = {};
+    for (const [k, v] of Object.entries(it)) {
+      if (typeof v === "string") o[k] = v.slice(0, 400);
+      else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+    }
+    return o;
+  };
+  const groups = Array.isArray(itemKeys) ? itemKeys.filter(Array.isArray) : [];
+  const shareable = new Set(Array.isArray(sharedKeys) ? sharedKeys : []);
+  const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
+  const namesIt = (o, k) => typeof o[k] === "string" && o[k].trim() !== "";
+  const sharedFor = (it) => {
+    const named = [...identity].filter((k) => namesIt(it, k));
+    if (named.length === 0) return shared;
+    const reach2 = /* @__PURE__ */ new Set();
+    for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach2.add(k);
+    const narrowed = { ...shared };
+    for (const k of identity) if (!reach2.has(k)) delete narrowed[k];
+    return narrowed;
+  };
+  const outcomes = [];
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    if (!it || typeof it !== "object" || Array.isArray(it)) {
+      outcomes.push({ ...refusal8("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was left as it was and the other items were still tried.`), index: i, outcome: "retained", asked: null });
+      continue;
+    }
+    let r;
+    try {
+      const b = { ...sharedFor(it), ...it, ...stamped };
+      delete b.items;
+      r = one(b);
+    } catch (e) {
+      r = refusal8("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: ` + String(e && e.message || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+    }
+    const res = r && typeof r === "object" ? r : { ok: false };
+    outcomes.push({ ...res, index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it) });
+  }
+  const applied = outcomes.filter((o) => o.outcome === "applied").length;
+  const retained = outcomes.length - applied;
+  const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+  if (retained === 0)
+    return { ok: true, ...head, detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
+  return {
+    ok: false,
+    reason: "SET_ITEMS_RETAINED",
+    code: "SET_ITEMS_RETAINED",
+    check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+    translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+    detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand \u2014 this is not a rollback.`,
+    ...head
+  };
+}
 var instances = /* @__PURE__ */ new WeakMap();
 function recordOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
@@ -9886,9 +9992,17 @@ var RecordCore = class _RecordCore {
   #order = [];
   #evidence;
   #evidencePrefix;
+  #firstBoot;
+  #auditChecks = [];
+  // R59: {module, check}, in registration order
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
+    try {
+      this.#firstBoot = [...this.#sql.exec(`PRAGMA table_info(bundles)`)].length === 0;
+    } catch {
+      this.#firstBoot = false;
+    }
     this.#evidence = evidence && typeof evidence.get === "function" ? evidence : null;
     this.#evidencePrefix = evidencePrefix;
     this.declarePurge("record-core", _RecordCore.OWN_TABLES, { exempt: _RecordCore.EXEMPT_TABLES });
@@ -9900,6 +10014,11 @@ var RecordCore = class _RecordCore {
     const r = this.#rows(q, ...a);
     return r.length ? r[0] : null;
   }
+  /** R54: true throughout the boot at which the store had never held the record's schema, decided once, when
+   *  this instance was made; false at every later boot. `instance-setup` reads it. */
+  isFirstBoot() {
+    return this.#firstBoot === true;
+  }
   /** Additive columns this module's tables gained after a store was first written. Called by the
    *  store after its schema pass; idempotent. */
   migrate() {
@@ -9910,9 +10029,10 @@ var RecordCore = class _RecordCore {
   /* ---- transactions (R32) ---- */
   /** Runs `fn` as one transaction over the whole store. A throw, or a returned refusal (`ok:false`),
    *  rolls back every row written inside it, in any module's tables; a refusal is then returned, a
-   *  throw rethrown. A call made inside another joins it, so the outermost act decides. */
+   *  throw rethrown. A call made inside another joins it as a savepoint (a Durable Object's
+   *  `transactionSync` nests so, measured in Miniflare): a nested call that throws or refuses rolls back
+   *  its own writes and ids and nothing else, and the outer call decides the rest (R32, K133). */
   transact(fn) {
-    if (this.#depth > 0) return fn();
     let result;
     this.#depth++;
     try {
@@ -10193,6 +10313,164 @@ var RecordCore = class _RecordCore {
     ).map((r) => r.bundle_id);
     return { ids, cursor: ids.length ? ids[ids.length - 1] : null };
   }
+  /** R53: each held bundle, in id order after `after`, with at least one manifest entry whose author begins with
+   *  `authorPrefix`, as `{bundleId, latest, firstOther}`. Entries are ordered by `created` and then by write order
+   *  (rowid): `created` is the caller's stated time, and two entries stamped alike are ordered by the record, never
+   *  by the snap key's lexical order, which is not a clock. `firstOther` is the earliest entry whose author is
+   *  non-empty and does not begin with the prefix. What a viewer may see of the list is its caller's to decide. */
+  manifestByAuthor({ authorPrefix = "", after = "", limit = 200 } = {}) {
+    try {
+      const cap = _RecordCore.#bound(limit);
+      const pre = String(authorPrefix ?? "");
+      const begins = `(author IS NOT NULL AND substr(author, 1, length(?)) = ?)`;
+      const ids = this.#rows(
+        `SELECT b.bundle_id FROM bundles b
+          WHERE b.bundle_id > ? AND EXISTS (SELECT 1 FROM manifest m WHERE m.bundle_id = b.bundle_id AND ${begins.replaceAll("author", "m.author")})
+          ORDER BY b.bundle_id LIMIT ?`,
+        String(after ?? ""),
+        pre,
+        pre,
+        cap
+      ).map((r) => r.bundle_id);
+      const entry = (r) => r ? {
+        snapKey: r.snap_key,
+        kind: r.kind,
+        base: r.base ?? null,
+        author: r.author ?? null,
+        created: r.created,
+        writer: r.writer ?? null,
+        operation: r.operation ?? null
+      } : null;
+      const cols = `snap_key, kind, base, author, created, writer, operation`;
+      const bundles = ids.map((id) => ({
+        bundleId: id,
+        latest: entry(this.#one(`SELECT ${cols} FROM manifest WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`, id)),
+        firstOther: entry(this.#one(`SELECT ${cols} FROM manifest WHERE bundle_id=? AND author IS NOT NULL AND author <> ''
+                                       AND NOT ${begins} ORDER BY created, rowid LIMIT 1`, id, pre, pre))
+      }));
+      return { bundles, cursor: ids.length ? ids[ids.length - 1] : null };
+    } catch {
+      return { bundles: [], cursor: null };
+    }
+  }
+  /* ---- the censuses (R56, R57): read-only audits of this module's own tables ---- */
+  /** R56, REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own
+   *  stored content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that
+   *  is the point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read,
+   *  and which of the two (bytes or digest) is wrong is not decidable from here. A row is recomputed by the one
+   *  `fileDigestOf` (R58); `bytes` is judged beside it for live inline rows only, by the one `inlineBytesOf`, as a
+   *  SEPARATE figure (history holds no size). Bounded by `limit` rows listed per table; the counts are always whole. */
+  digestCensus({ limit } = {}) {
+    const cap = censusCap(limit);
+    const walk = (table) => {
+      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
+      try {
+        for (const r of this.#sql.exec(table === "files" ? `SELECT bundle_id, NULL AS snap_key, path, content, blob_sha, bytes, sha256 FROM files` : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
+          out.rows++;
+          const inline = r.content !== null && r.content !== void 0;
+          if (inline) out.inline++;
+          else out.blob++;
+          const computed = fileDigestOf(inline ? { text: r.content } : { blobSha: r.blob_sha });
+          const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
+          const bBad = inline && table === "files" && Number(r.bytes) !== inlineBytesOf({ text: r.content });
+          if (dBad) out.digest_disagrees++;
+          if (bBad) out.bytes_disagree++;
+          if ((dBad || bBad) && out.listed.length < cap)
+            out.listed.push({
+              bundle_id: r.bundle_id,
+              ...table === "history" ? { snap_key: r.snap_key } : {},
+              path: r.path,
+              stored: r.sha256,
+              computed,
+              ...bBad ? { bytes_stored: r.bytes } : {},
+              digest: dBad ? "disagrees" : "agrees"
+            });
+        }
+      } catch {
+      }
+      return out;
+    };
+    return {
+      ok: true,
+      files: walk("files"),
+      history: walk("history"),
+      rewritten: 0,
+      note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, so its bytes are not judged."
+    };
+  }
+  /** R57, REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ENTRIES — read-only; a bundle short of entries is REPORTED,
+   *  never repaired: an entry an overwrite destroyed is not recoverable, and inventing it back would be the record
+   *  claiming more than it holds. WHAT MAKES IT MEASURABLE: `commit` (R33) is the one writer of `manifest`, one entry
+   *  per promotion, and steps `row_version` by one and nothing else does, so `row_version - COUNT(manifest)` is the
+   *  number of promotions whose entry is gone. WHAT IT CANNOT DECIDE, stated per bundle rather than rounded: a bundle
+   *  with NO creation entry (base = EMPTY_STRING_SHA) may have lost it to an overwrite OR predate the creation entry
+   *  being written at all, so one promotion of such a bundle's deficit is `undetermined`, the rest `overwritten`.
+   *  Which KEY collided is recorded nowhere and is not guessed; an entry whose base is none of the bundle's own
+   *  entries' `bundle.md` digest (`unanchored`) is listed as the trace an overwrite leaves in the chain. Entries of
+   *  a bundle id not held are counted apart. Bounded by `limit` bundles listed; the counts are always whole. */
+  snapKeyCensus({ limit } = {}) {
+    const cap = censusCap(limit);
+    const out = {
+      ok: true,
+      bundles: 0,
+      manifest_rows: 0,
+      promotions: 0,
+      overwritten: 0,
+      undetermined: 0,
+      bundles_with_deficit: 0,
+      excess: 0,
+      orphan_manifest_bundles: 0,
+      listed: [],
+      rewritten: 0
+    };
+    try {
+      const rowsBy = /* @__PURE__ */ new Map();
+      for (const r of this.#sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
+        if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
+        rowsBy.get(r.bundle_id).push(r);
+      }
+      const seen = /* @__PURE__ */ new Set();
+      for (const b of this.#sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
+        out.bundles++;
+        seen.add(b.bundle_id);
+        const rows = rowsBy.get(b.bundle_id) || [];
+        const promotions = Number(b.row_version) || 0;
+        out.manifest_rows += rows.length;
+        out.promotions += promotions;
+        const deficit = promotions - rows.length;
+        if (deficit < 0) out.excess += -deficit;
+        const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
+        const outputs = new Set(rows.map((r) => {
+          const md = manifestFiles(r.files_json).find((f4) => f4.name === "bundle.md");
+          return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
+        }).filter(Boolean));
+        const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
+        if (deficit <= 0 && !unanchored.length) continue;
+        const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
+        const overwritten = deficit > 0 ? deficit - undetermined : 0;
+        out.overwritten += overwritten;
+        out.undetermined += undetermined;
+        if (deficit > 0) out.bundles_with_deficit++;
+        if (out.listed.length < cap)
+          out.listed.push({
+            bundle_id: b.bundle_id,
+            promotions,
+            manifest_rows: rows.length,
+            overwritten,
+            undetermined,
+            creation_row: hasCreation,
+            unanchored
+          });
+      }
+      for (const [id, rows] of rowsBy) if (!seen.has(id)) {
+        out.orphan_manifest_bundles++;
+        out.manifest_rows += rows.length;
+      }
+    } catch {
+    }
+    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
+    return out;
+  }
   /* ---- the write path (R33) ---- */
   /** R33: the one write into this module's tables, called inside `transact` by `promotion`, which alone
    *  decides what may be committed. Every live file the commit replaces is copied into `history` under
@@ -10300,7 +10578,20 @@ var RecordCore = class _RecordCore {
       return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
   }
-  /* ---- the audit sweep (R18–R20) ---- */
+  /* ---- the audit sweep (R18–R20, R45, R59) ---- */
+  /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
+   *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
+   *  `checkBundle` gets (`bundleId`/`folderName`, `files`, `elidedPaths`, `sha256`, `sha512`, R19's `resolveTarget`)
+   *  and `raw`, the bundle's `readImage`; `context` is R45's for the bundle (`{}` when the caller gives none), so a check that left the catalogue for its module is not
+   *  lost to the audit, and the bundle is judged once, whole. */
+  registerAuditCheck(module, check) {
+    if (typeof module !== "string" || !module || typeof check !== "function")
+      return { ok: false, reason: "AUDIT_CHECK_MALFORMED", detail: "an audit check names its module and is a function" };
+    if (this.#auditChecks.some((c) => c.module === module))
+      return { ok: false, reason: "AUDIT_CHECK_DECLARED", module, detail: `${module} has already registered its audit check` };
+    this.#auditChecks.push({ module, check });
+    return { ok: true, module };
+  }
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
    *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). `known`, what a
    *  reference resolves against, is the WHOLE corpus and never leaves this method: filtering it would
@@ -10330,15 +10621,40 @@ var RecordCore = class _RecordCore {
         if (typeof v === "string") files.set(path, v);
         else elided.add(path);
       }
+      const extra = typeof context === "function" ? context(id) || {} : {};
+      const resolveTarget2 = (t) => known.has(t);
       const { findings } = await checkBundle({
         folderName: id,
         files,
         elidedPaths: elided,
         sha256: sha2562,
         sha512,
-        resolveTarget: (t) => known.has(t),
-        ...typeof context === "function" ? context(id) || {} : {}
+        resolveTarget: resolveTarget2,
+        ...extra
       });
+      for (const { module, check } of this.#auditChecks) {
+        let more;
+        try {
+          more = await check({
+            bundleId: id,
+            folderName: id,
+            raw: img,
+            files,
+            elidedPaths: elided,
+            sha256: sha2562,
+            sha512,
+            resolveTarget: resolveTarget2
+          }, extra);
+        } catch (e) {
+          more = [{
+            check: module,
+            code: "AUDIT_CHECK_FAILED",
+            severity: "error",
+            message: `${module}'s audit check threw on ${id}: ${String(e && e.message || e).slice(0, 200)}`
+          }];
+        }
+        if (Array.isArray(more)) findings.push(...more.filter((f4) => f4 && typeof f4 === "object"));
+      }
       const errs = findings.filter((f4) => f4.severity === "error");
       if (!errs.length) {
         clean++;
@@ -15764,7 +16080,6 @@ state();
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/promotion/history.mjs
-var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var f2 = (check, severity, message, repairs) => ({ check, severity, message, ...repairs ? { repairs } : {} });
 var asText2 = (v) => typeof v === "string" ? v : new TextDecoder().decode(v);
 var readJson = (files, path) => {
@@ -16429,7 +16744,7 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.33.0";
+var CATALOG_VERSION = "1.34.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -23204,7 +23519,7 @@ var MACHINE_REFUSALS = {
   versioncurrent: "MACHINE_CANNOT_MOVE_VERSION",
   versionhide: "MACHINE_CANNOT_MOVE_VERSION"
 };
-var PER_ITEM_MAX = 100;
+var PER_ITEM_MAX2 = 100;
 var PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
      `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
@@ -32061,11 +32376,6 @@ var Membership = class _Membership {
   }
   #declared = false;
   /* ===== Services later modules read (K57, R64–R73), and the canon rules N18 built (R10, R11, R18, R19) ===== */
-  /* A refusal of this module's own that the legacy check catalogue has no row for yet (R29, R62): it carries the
-     requirement id as its check, and the words as its translation. */
-  #ownRefusal(code, requirement, detail, extra = {}) {
-    return { ok: false, reason: code, code, check: `membership.${requirement}`, translation: detail, detail, ...extra };
-  }
   /* R64: the founder (`admin`, once the instance is claimed) and every active member with role `admin`. */
   isAdministrator(memberId) {
     if (memberId === _Membership.ROOT_ADMIN) return this.#claimed();
@@ -32143,13 +32453,13 @@ var Membership = class _Membership {
         detail: "resigning administrator status is an active administrator's own act. Nothing was written."
       };
     const admins = this.activeAdmins();
+    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
     if (admins.length <= 2)
-      return {
-        ok: false,
-        reason: "RESIGN_AT_TWO",
-        administrators: admins.length,
-        detail: "administrative access is shared among at least two people (4.2), so an administrator may resign only while more than two exist. Nothing was written."
-      };
+      return refusal8(
+        "RESIGN_AT_TWO",
+        "administrative access is shared among at least two people (4.2), so an administrator may resign only while more than two exist. Nothing was written.",
+        { administrators: admins.length }
+      );
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`UPDATE members SET role='member', status_by=?, updated=? WHERE member_id=?`, by, now, by);
     return {
@@ -32178,7 +32488,8 @@ var Membership = class _Membership {
         detail: "the record of who holds hosting access is kept by the administrators (4.8). Nothing was written."
       };
     const h = String(holders ?? "").trim().slice(0, 500);
-    if (!h) return { ok: false, reason: "NO_HOLDERS", detail: "name who holds hosting access. Nothing was written." };
+    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
+    if (!h) return refusal8("NO_HOLDERS", "name who holds hosting access. Nothing was written.");
     const at = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
     this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at);
@@ -32199,13 +32510,13 @@ var Membership = class _Membership {
   memberPairingSet({ memberId, published, by = null } = {}) {
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
     if (by !== memberId && !this.isAdministrator(by))
-      return {
-        ok: false,
-        reason: "PAIRING_NOT_YOURS",
-        by,
-        detail: "whether a pairing is published is the member's own decision or an administrator's (section 3). Nothing was written."
-      };
+      return refusal8(
+        "PAIRING_NOT_YOURS",
+        "whether a pairing is published is the member's own decision or an administrator's (section 3). Nothing was written.",
+        { by }
+      );
     const want = published === true || published === 1 || published === "1" || published === "true";
     this.sql.exec(
       `UPDATE members SET pairing_published=?, updated=? WHERE member_id=?`,
@@ -32215,11 +32526,20 @@ var Membership = class _Membership {
     );
     return { ok: true, memberId, published: want, by };
   }
-  /* R19: the pairings their members (or an administrator) chose to publish, and no other. */
-  memberPairings() {
+  /* R19 (N85, K124): what each viewer may see of the pairings. A published pairing reaches every caller; one its
+     member has not published reaches only that member and the administrators. `viewer` is the control plane's viewer
+     stamp and `administer` its administer stamp (memberList's, D-157): an administrator is one the stamp says
+     administers, the founder's viewer once the instance is claimed, or a viewer naming an active administrator.
+     Fails closed: with neither stamp a caller is shown the published pairings alone. */
+  memberPairings({ viewer = null, administer = null } = {}) {
+    const self = this.positionalMember(viewer);
+    const admin = administer === true || administer === "1" || viewer === _Membership.ROOT_ADMIN && this.isAdministrator(_Membership.ROOT_ADMIN) || self !== null && this.isAdministrator(self);
     return { ok: true, pairings: this.#rows(
-      `SELECT handle, cover FROM members WHERE pairing_published=1 AND handle IS NOT NULL ORDER BY handle`
-    ) };
+      `SELECT handle, cover, pairing_published FROM members
+        WHERE handle IS NOT NULL AND (pairing_published=1 OR ? OR member_id=?) ORDER BY handle`,
+      admin ? 1 : 0,
+      self
+    ).map((r) => ({ handle: r.handle, cover: r.cover, published: r.pairing_published === 1 })) };
   }
   /* R18 (section 7.8): the projects a member participates in, for an administrator's roster. */
   #projectsOf(memberId) {
@@ -34855,16 +35175,14 @@ var Membership = class _Membership {
       );
     const minter = String(who2).trim();
     if (kind === "member" && principalMember !== null && principalMember !== void 0 && String(principalMember).trim() !== "" && String(principalMember).trim() !== minter)
-      return this.#ownRefusal(
+      return refusal8(
         "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
-        "R29",
         `a member-scoped credential acts for the member who mints it, and '${String(principalMember).slice(0, 60)}' is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing was written.`,
         { principalMember: String(principalMember).slice(0, 60) }
       );
     if (kind === "organisation" && !this.isAdministrator(minter))
-      return this.#ownRefusal(
+      return refusal8(
         "AI_CREDENTIAL_ORG_NOT_ADMIN",
-        "R62",
         `an organisation-wide AI credential acts for the whole group, so it is minted by an administrator, and '${minter.slice(0, 60)}' is not an active one. A member-scoped credential is open to every member. Nothing was written.`,
         { who: minter }
       );
@@ -35245,7 +35563,11 @@ function membershipOps(m, url, body, env) {
     hostingaccessset: () => m.hostingAccessSet({ ...body || {}, by: url.searchParams.get("by") }),
     hostingaccess: () => m.hostingAccess(),
     memberpairingset: () => m.memberPairingSet({ ...body || {}, by: url.searchParams.get("by") }),
-    memberpairings: () => m.memberPairings()
+    /* N85 (K124): the viewer and administer stamps decide what each caller sees; absent, the published alone. */
+    memberpairings: () => m.memberPairings({
+      viewer: url.searchParams.get("viewer"),
+      administer: url.searchParams.get("administer")
+    })
   };
 }
 
@@ -35391,13 +35713,10 @@ function spliceReferences(text, additions) {
 }
 
 // src/promotion/index.mjs
-var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var REOPENABLE_FROM2 = ["deferred", "dismissed"];
 var RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
 var EDGE_REASON_MAX = 160;
-var te4 = new TextEncoder();
-var hexOf = (text) => createSha256().update(te4.encode(text)).hex();
 var isObj2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var has = (o, k) => isObj2(o) && Object.prototype.hasOwnProperty.call(o, k);
 var textStated = (v) => typeof v === "string" && v.trim() !== "" ? v : null;
@@ -35426,14 +35745,6 @@ var refusal3 = (code, detail, extra) => {
   const row = rowOf(code);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
 };
-function fileDigestOf(f4) {
-  if (f4 && typeof f4.text === "string") return hexOf(f4.text);
-  if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
-  return null;
-}
-function inlineBytesOf(f4) {
-  return f4 && typeof f4.text === "string" ? te4.encode(f4.text).length : null;
-}
 function digestFiles(files) {
   const disagree = [];
   const out = files.map((f4) => {
@@ -35478,7 +35789,7 @@ function stampGroup(files, slug) {
     if (!f4 || f4.path !== "bundle.md" || typeof f4.text !== "string") return f4;
     const text = withProducingGroup(f4.text, slug);
     if (text === f4.text) return f4;
-    return { ...f4, text, bytes: te4.encode(text).length, sha256: hexOf(text) };
+    return { ...f4, text, bytes: inlineBytesOf({ text }), sha256: fileDigestOf({ text }) };
   });
 }
 var NAME_TAKEN = () => ({
@@ -35495,6 +35806,11 @@ var Promotion = class {
   // {module, check, project, seq}
   #facts = /* @__PURE__ */ new Map();
   // name -> {module, fn}
+  #listeners = [];
+  // {module, fn, seq}: R45's post-commit notice
+  #notices = /* @__PURE__ */ new Map();
+  // accepted promotions awaiting their notice, by bundle and snap key
+  #delivering = false;
   constructor({ record, membership, now, order } = {}) {
     this.#record = record;
     this.#membership = membership;
@@ -35513,12 +35829,80 @@ var Promotion = class {
       project: typeof project === "function" ? project : null,
       seq: this.#steps.length
     });
-    const rank4 = (m) => {
-      const i = this.#order.indexOf(m);
-      return i === -1 ? Infinity : i;
-    };
-    this.#steps.sort((a, b) => rank4(a.module) - rank4(b.module) || a.seq - b.seq);
+    this.#steps.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
+  }
+  /* A module's place in the total order; unknown modules run last, in the order they registered. */
+  #rank(m) {
+    const i = this.#order.indexOf(m);
+    return i === -1 ? Infinity : i;
+  }
+  /* R45: a later module's listener, called once after each accepted promotion has committed. */
+  onCommitted(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
+    if (this.#listeners.some((l) => l.module === module))
+      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    this.#listeners.push({ module, fn, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /* R45: `promote` may run inside a caller's transaction, which record-core joins (its R32), so the commit it waits for
+     may be the caller's. record-core's transaction is synchronous, so by the time a microtask runs the outermost one has
+     committed or rolled back. The notice is delivered then, and only when the promotion's own manifest entry (its snap
+     key, base and bundle.md digest) is held: a promotion rolled back with its caller's transaction is never announced. */
+  #announce(n) {
+    if (!this.#listeners.length) return;
+    this.#notices.set(`${n.bundleId}\0${String(n.snapKey)}`, n);
+    if (this.#delivering) return;
+    this.#delivering = true;
+    queueMicrotask(() => this.#deliver());
+  }
+  #deliver() {
+    this.#delivering = false;
+    const due = [...this.#notices.values()];
+    this.#notices.clear();
+    for (const n of due) {
+      let held = false;
+      try {
+        const e = this.#record.manifestEntry(n.bundleId, n.snapKey);
+        const md = e && Array.isArray(e.files) ? e.files.find((f4) => f4 && f4.name === "bundle.md") : null;
+        held = !!md && String(e.base) === String(n.base) && md.sha256 === n.bundleSha;
+      } catch {
+        held = false;
+      }
+      if (!held) continue;
+      for (const l of this.#listeners) {
+        try {
+          const r = l.fn({ bundleId: n.bundleId, bundleSha: n.bundleSha, type: n.type, replay: n.replay });
+          if (r && typeof r.then === "function") r.then(null, () => {
+          });
+        } catch {
+        }
+      }
+    }
+  }
+  /* N56 (R40): a fact registered with this module, for a later module that reads it. Unprovided, it answers
+     FACT_UNAVAILABLE and never a value, so it is never read as false; a provider that throws answers FACT_FAILED. */
+  fact(name, ...args) {
+    const held = typeof name === "string" ? this.#facts.get(name) : void 0;
+    if (!held)
+      return {
+        ok: false,
+        reason: "FACT_UNAVAILABLE",
+        fact: typeof name === "string" ? name : null,
+        detail: `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`
+      };
+    try {
+      return { ok: true, fact: name, value: held.fn(...args) };
+    } catch (e) {
+      return {
+        ok: false,
+        reason: "FACT_FAILED",
+        fact: name,
+        detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}`
+      };
+    }
   }
   registerFact(name, module, fn) {
     if (typeof name !== "string" || !name || typeof module !== "string" || !module || typeof fn !== "function")
@@ -35741,7 +36125,7 @@ var Promotion = class {
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");
-        const written = { ...files.find((f4) => f4.path === "bundle.md"), text, bytes: te4.encode(text).length, sha256: hexOf(text) };
+        const written = { ...files.find((f4) => f4.path === "bundle.md"), text, bytes: inlineBytesOf({ text }), sha256: fileDigestOf({ text }) };
         files = files.map((f4) => f4.path === "bundle.md" ? written : f4);
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
@@ -35755,14 +36139,15 @@ var Promotion = class {
       }
       if (base !== null) {
         const sight = head && pkg.actorIdentity != null ? String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase() : "FULL";
-        if (head && sight === "EXISTENCE") return this.#existenceOnly(bundleId);
+        const seen = head && sight === "EXISTENCE" ? membership.existenceAct(bundleId, pkg.actorViewer ?? "") : null;
+        if (seen) return seen;
         if (!head || sight !== "FULL")
           return refusal3("ABSENT", "update attempted against a bundle that does not exist");
       }
       const held = record.manifestEntry(bundleId, snapKey);
       const kind = replay ? "promotion-replay" : "promotion";
       if (held && samePromotion(held, {
-        base: base === null ? EMPTY_STRING_SHA2 : base,
+        base: base === null ? EMPTY_STRING_SHA : base,
         files,
         author: author ?? null,
         kind,
@@ -35999,7 +36384,7 @@ var Promotion = class {
         project: null,
         snapKey,
         kind,
-        base: head ? base : EMPTY_STRING_SHA2,
+        base: head ? base : EMPTY_STRING_SHA,
         author: author ?? null,
         writer,
         operation,
@@ -36054,6 +36439,14 @@ var Promotion = class {
         } } : {}
       };
       for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
+      this.#announce({
+        bundleId,
+        bundleSha: committed.bundleSha,
+        type: promotedType,
+        replay,
+        snapKey,
+        base: head ? base : EMPTY_STRING_SHA
+      });
       return answer;
     });
   }
@@ -36070,15 +36463,6 @@ var Promotion = class {
       if (page.ids.length < 200 || !page.cursor) return false;
       after = page.cursor;
     }
-  }
-  /* R20 (membership R44): the one answer an act gives a caller who sees a project at EXISTENCE: its id and name. */
-  #existenceOnly(projectId) {
-    const info = this.#record.bundleInfo(projectId);
-    return refusal3(
-      "PROJECT_SEEN_NOT_A_PARTICIPANT",
-      "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you.",
-      { project: projectId, name: info ? info.title ?? null : null }
-    );
   }
   /* ---------------------------------------------------------------- forkProject (N16, §7.12) */
   forkProject(args = {}) {
@@ -36101,7 +36485,8 @@ var Promotion = class {
       );
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     const sight = head && viewer !== null && viewer !== void 0 ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
-    if (head && sight === "EXISTENCE") return this.#existenceOnly(projectId);
+    const seen = head && sight === "EXISTENCE" ? membership.existenceAct(projectId, viewer) : null;
+    if (seen) return seen;
     if (!head || sight !== "FULL")
       return {
         ok: false,
@@ -36318,51 +36703,13 @@ function promotionOf(host, deps) {
     const record = deps && deps.record || recordOf(host);
     p = new Promotion({ ...deps || {}, record, membership: deps && deps.membership || membershipOf(host, { record }) });
     instances2.set(host, p);
+    record.registerAuditCheck("promotion", ({ folderName, files, sha256: sha2562 }, context) => recordChecks({ folderName, files, releaseRegistry: context && context.releaseRegistry || null, sha256: sha2562 }));
   }
   return p;
 }
 async function recordAudit(host, opts = {}) {
-  const record = recordOf(host);
-  const pass = await record.auditPass(opts);
-  const hex4 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  const sha2562 = async (v) => hex4(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te4.encode(v) : v));
-  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
-  const tallyDetail = { ...pass.tallyDetail || {} };
-  const out = { ...pass, tally: { ...pass.tally }, offenders: [...pass.offenders] };
-  for (const id of pass.page || []) {
-    const img = record.readImage(id) || {};
-    const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
-    for (const [path, v] of Object.entries(img)) typeof v === "string" ? files.set(path, v) : elided.add(path);
-    const moved = (await recordChecks({ folderName: id, files, sha256: sha2562 })).filter((f4) => f4.severity === "error");
-    if (!moved.length) continue;
-    const { findings } = await checkBundle({
-      folderName: id,
-      files,
-      elidedPaths: elided,
-      sha256: sha2562,
-      sha512,
-      resolveTarget: (t) => !!record.bundleInfo(t),
-      ...typeof opts.context === "function" ? opts.context(id) || {} : {}
-    });
-    const before = findings.filter((f4) => f4.severity === "error");
-    if (!before.length) {
-      out.clean--;
-      out.withErrors++;
-    }
-    for (const e of moved) {
-      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
-      if (e.code) {
-        const k = `${e.check}/${e.code}`;
-        tallyDetail[k] = (tallyDetail[k] || 0) + 1;
-      }
-    }
-    const errors = [...before, ...moved].slice(0, 5).map((e) => ({ check: e.check, detail: e.message }));
-    const at = out.offenders.findIndex((o) => o.bundleId === id);
-    if (at >= 0) out.offenders[at] = { bundleId: id, errors };
-    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors });
-  }
-  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
-  return out;
+  promotionOf(host);
+  return recordOf(host).auditPass(opts);
 }
 function stepContext(c) {
   return c;
@@ -36899,8 +37246,8 @@ var PROVENANCE_TABLES = [
   "signed_receipts",
   "receipt_keys"
 ];
-var te5 = new TextEncoder();
-var hexOf2 = (bytes) => createSha256().update(bytes).hex();
+var te4 = new TextEncoder();
+var hexOf = (bytes) => createSha256().update(bytes).hex();
 var hexBytes = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var rand2 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var isObj3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -37310,7 +37657,7 @@ async function provenanceAudit(host, opts = {}) {
   const record = recordOf(host);
   const out = { ...pass, tally: { ...pass.tally || {} }, offenders: [...pass.offenders || []] };
   const tallyDetail = { ...pass.tallyDetail || {} };
-  const sha2562 = async (v) => hexBytes(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te5.encode(v) : v));
+  const sha2562 = async (v) => hexBytes(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te4.encode(v) : v));
   const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
   for (const id of pass.page || []) {
     const moved = registerChecks(imageForChecks(record.readImage(id) || {})).filter((x) => x.severity === "error");
@@ -37959,7 +38306,7 @@ sha256: ${captureSha}
     const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
     const jwk = await crypto.subtle.exportKey("jwk", priv);
     const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
-    return { priv, pub: b64(pub), keyId: hexOf2(pub) };
+    return { priv, pub: b64(pub), keyId: hexOf(pub) };
   }
   /** Signs and keeps the receipt for an archive-sourced capture. Answers `{ok, statement, signature, key_id,
    *  public_key}`, or `RECEIPT_NO_KEY` when no key is bound (stated, never a silent skip), or `RECEIPT_MALFORMED`. */
@@ -37979,7 +38326,7 @@ sha256: ${captureSha}
         detail: "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds one as a secret; nothing is claimed signed until then"
       };
     const statement = _Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
-    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te5.encode(statement)));
+    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te4.encode(statement)));
     const at = this.#now();
     this.#record.transact(() => {
       this.#sql.exec(
@@ -38006,7 +38353,7 @@ sha256: ${captureSha}
       if (r.public_key) {
         try {
           const pub = await crypto.subtle.importKey("raw", unb64(r.public_key), { name: "Ed25519" }, false, ["verify"]);
-          verified = await crypto.subtle.verify({ name: "Ed25519" }, pub, unb64(r.signature), te5.encode(r.statement));
+          verified = await crypto.subtle.verify({ name: "Ed25519" }, pub, unb64(r.signature), te4.encode(r.statement));
         } catch {
           verified = false;
         }
@@ -38308,7 +38655,7 @@ sha256: ${captureSha}
       if (path === "data/provenance.json") continue;
       const f4 = this.#record.readFile(bundleId, path);
       if (!f4) continue;
-      carried.push(typeof f4.text === "string" ? { path, text: f4.text, bytes: te5.encode(f4.text).length, sha256: f4.sha256 } : { path, blobSha: f4.blobSha, sha256: f4.sha256, bytes: f4.bytes });
+      carried.push(typeof f4.text === "string" ? { path, text: f4.text, bytes: te4.encode(f4.text).length, sha256: f4.sha256 } : { path, blobSha: f4.blobSha, sha256: f4.sha256, bytes: f4.bytes });
     }
     const promoted = this.#promotion.promote({
       bundleId,
@@ -40968,8 +41315,8 @@ var CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_al
 var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var HEX643 = /^[0-9a-f]{64}$/;
-var te6 = new TextEncoder();
-var hexOf3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var te5 = new TextEncoder();
+var hexOf2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var TASK_KINDS = Object.freeze(["authority-undetermined"]);
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
@@ -41127,12 +41474,12 @@ var Capture = class _Capture {
    *  instance's own, generated once and held in `knock_key`. */
   #knockKey() {
     const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
-    if (bound) return te6.encode(bound);
+    if (bound) return te5.encode(bound);
     let r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
     if (!r) {
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf3(k), stampSecond3());
+      this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3());
       r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -41141,8 +41488,8 @@ var Capture = class _Capture {
    *  never an unkeyed hash, which can be reversed by trying every address. */
   async sourceFingerprint(address) {
     const key = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const mac = await crypto.subtle.sign("HMAC", key, te6.encode(String(address || "unknown")));
-    return hexOf3(mac).slice(0, 32);
+    const mac = await crypto.subtle.sign("HMAC", key, te5.encode(String(address || "unknown")));
+    return hexOf2(mac).slice(0, 32);
   }
   /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from the catalogue at
      the moment of the refusal, so this file holds no member-facing word, and THE CODE STAYS A STRING LITERAL AT ITS
@@ -41188,11 +41535,11 @@ var Capture = class _Capture {
     const nowMs = Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes;
     try {
-      bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te6.encode(String(content ?? ""));
+      bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te5.encode(String(content ?? ""));
     } catch {
       return { ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" };
     }
-    const sha = hexOf3(await crypto.subtle.digest("SHA-256", bytes));
+    const sha = hexOf2(await crypto.subtle.digest("SHA-256", bytes));
     const win = Math.floor(nowMs / windowMs);
     const elapsedFrac = (nowMs - win * windowMs) / windowMs;
     const fp = await this.sourceFingerprint(sourceAddress);
@@ -46078,23 +46425,12 @@ function actNoCitation(detail, extra = {}) {
     ...extra
   };
 }
-var EMPTY_STRING_SHA3 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX2 = 1024 * 1024;
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-function stampInstant(precision, when = Date.now()) {
-  const iso2 = new Date(when).toISOString();
-  if (precision === "millisecond") return iso2;
-  if (precision === "second") return iso2.replace(/\.\d+Z$/, "Z");
-  throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
-}
-function instantOrder(a, b) {
-  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
-  return x - y;
-}
 var SETTLED_BY_AN_ACT = /* @__PURE__ */ new Set(["rerun", "resolved"]);
 var taskSlug = (subject) => {
   const s = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
@@ -46204,6 +46540,10 @@ var Store = class _Store extends DurableObject {
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
+    promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
+      const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
+      if (monitored || this.#biasDebtPending()) await this.#armScheduler();
+    });
     const capture = captureOf(ctx, { env });
     capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
     capture.on("source-outcome", "legacy-store", async (o) => o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null);
@@ -46212,7 +46552,7 @@ var Store = class _Store extends DurableObject {
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
   #migrate() {
-    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;
+    const firstBoot = recordOf(this.ctx).isFirstBoot();
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const [table, needed] of [
       ["links", "citation_norm"],
@@ -75081,67 +75421,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   /* IC-246: declared BELOW its method, on REC-116's finding (`bounds.test.mjs`'s segmenter credits a constant to the
      method above it). The figure the old literal carried. */
   static GROUP_DOMAIN_CHECKS_MAX = 20;
-  /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
-     `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
-     about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
-     of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
-     A blob-backed file's digest is its content address, `blobSha`. Returns the files with every digest the
-     computed lowercase value, and each file whose SUPPLIED value named another digest. */
-  static #fileDigestOf(f4) {
-    if (f4 && typeof f4.text === "string") return createSha256().update(new TextEncoder().encode(f4.text)).hex();
-    if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
-    return null;
-  }
-  /* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
-     `files.content` column stores — read by `promote` (the stored figure and OVERSIZE_INLINE) and by `digestCensus`
-     (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
-  static #inlineBytesOf(f4) {
-    return f4 && typeof f4.text === "string" ? new TextEncoder().encode(f4.text).length : null;
-  }
-  /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
-     content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
-     point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
-     which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
-     `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
-     rows (UTF-8 length, by REC-178's one `#inlineBytesOf`, against the stored figure), as a SEPARATE figure: since
-     REC-178 promote stores the computed figure, so a disagreeing row is one written before it, and it is counted,
-     never rewritten. Bounded by `limit` rows listed per table (the counts are always whole). */
-  digestCensus({ limit } = {}) {
-    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
-    const walk = (table) => {
-      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
-      for (const r of this.sql.exec(table === "files" ? `SELECT bundle_id, path, content, blob_sha, bytes, sha256 FROM files` : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
-        out.rows++;
-        const f4 = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
-        const computed = _Store.#fileDigestOf(f4);
-        if (r.content !== null) out.inline++;
-        else out.blob++;
-        const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
-        const bBad = r.content !== null && table === "files" && Number(r.bytes) !== _Store.#inlineBytesOf({ text: r.content });
-        if (dBad) out.digest_disagrees++;
-        if (bBad) out.bytes_disagree++;
-        if ((dBad || bBad) && out.listed.length < cap)
-          out.listed.push({
-            bundle_id: r.bundle_id,
-            ...r.snap_key ? { snap_key: r.snap_key } : {},
-            path: r.path,
-            stored: r.sha256,
-            computed,
-            ...bBad ? { bytes_stored: r.bytes } : {},
-            digest: dBad ? "disagrees" : "agrees"
-          });
-      }
-      return out;
-    };
-    return {
-      ok: true,
-      files: walk("files"),
-      history: walk("history"),
-      rewritten: 0,
-      note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, so its bytes are not judged."
-    };
-  }
   static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;
   login(...a) {
     return membershipOf(this.ctx).login(...a);
@@ -75400,85 +75679,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
-  /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
-     An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
-  static #manifestFiles(filesJson) {
-    const arr2 = safeJson2(filesJson);
-    return Array.isArray(arr2) ? arr2.filter((f4) => f4 && typeof f4 === "object") : [];
-  }
-  /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
-     repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
-     the record claiming more than it holds. WHAT MAKES IT MEASURABLE: `manifest` has ONE writer (`promote`, one row
-     per successful promotion) and `bundles.row_version` is advanced by that same write and by nothing else, so for a
-     bundle `row_version - COUNT(manifest)` is the number of promotions whose row is no longer there. WHAT IT CANNOT
-     DECIDE, stated per bundle rather than rounded: a bundle with NO creation row (base = the empty-string sha) may
-     have lost it to an overwrite, OR predate the fix that began writing a creation's manifest row at all (this
-     method's own comment at the manifest write) — so one promotion of such a bundle's deficit is `undetermined`, and
-     only the rest is counted `overwritten`. Which KEY collided is not recorded anywhere and is not guessed; a row whose
-     base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
-     Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
-     Bounded by `limit` bundles listed (the counts are always whole). */
-  snapKeyCensus({ limit } = {}) {
-    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
-    const rowsBy = /* @__PURE__ */ new Map();
-    for (const r of this.sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
-      if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
-      rowsBy.get(r.bundle_id).push(r);
-    }
-    const out = {
-      ok: true,
-      bundles: 0,
-      manifest_rows: 0,
-      promotions: 0,
-      overwritten: 0,
-      undetermined: 0,
-      bundles_with_deficit: 0,
-      excess: 0,
-      orphan_manifest_bundles: 0,
-      listed: [],
-      rewritten: 0
-    };
-    const seen = /* @__PURE__ */ new Set();
-    for (const b of this.sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
-      out.bundles++;
-      seen.add(b.bundle_id);
-      const rows = rowsBy.get(b.bundle_id) || [];
-      const promotions = Number(b.row_version) || 0;
-      out.manifest_rows += rows.length;
-      out.promotions += promotions;
-      const deficit = promotions - rows.length;
-      if (deficit < 0) out.excess += -deficit;
-      const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA3);
-      const outputs = new Set(rows.map((r) => {
-        const md = _Store.#manifestFiles(r.files_json).find((f4) => f4.name === "bundle.md");
-        return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
-      }).filter(Boolean));
-      const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA3 && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
-      if (deficit <= 0 && !unanchored.length) continue;
-      const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
-      const overwritten = deficit > 0 ? deficit - undetermined : 0;
-      out.overwritten += overwritten;
-      out.undetermined += undetermined;
-      if (deficit > 0) out.bundles_with_deficit++;
-      if (out.listed.length < cap)
-        out.listed.push({
-          bundle_id: b.bundle_id,
-          promotions,
-          manifest_rows: rows.length,
-          overwritten,
-          undetermined,
-          creation_row: hasCreation,
-          unanchored
-        });
-    }
-    for (const [id, rows] of rowsBy) if (!seen.has(id)) {
-      out.orphan_manifest_bundles++;
-      out.manifest_rows += rows.length;
-    }
-    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
-    return out;
-  }
   /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
      provenance's (R5, R10). */
   homeCensus(...a) {
@@ -86319,144 +86519,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     );
     return { ok: true, id, status: "resolved", resolved_at: at };
   }
-  /* ==================================================================== D-126
-   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
-   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
-   * more, they'd stay in the list so that the user can take a different action."*).
-   *
-   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
-   * when the body carries `items` — the branch is the first statement of each act's own method, so the
-   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
-   * set form is NOT a second implementation of any act: every item goes through the SAME method the
-   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
-   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
-   *
-   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
-   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
-   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
-   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
-   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
-   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
-   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
-   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
-   *     truth about the set and a caller reading `items[]` is told the truth about each item.
-   *
-   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
-   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
-   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
-   * `reason`, `to` or disposition — and an item may override it for itself.
-   *
-   * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER, and this is what lets a
-   * MIXED selection be one act. `op=proposedispose` has three identity shapes (`key`;
-   * `progressionKey`+`stageKey`; `project`+`finding`) and it decides WHICH ACT IT IS by what the caller
-   * SENT. In a set, "what the caller sent" for an item is the shared body plus the item — so a caller
-   * that names the project ONCE for a selection all in one team (a legitimate shape: the item then
-   * carries only its `finding`) was silently making every OTHER item in that set project-scoped too. A
-   * progression finding beside it, naming a perfectly good `key`, came back NO_FINDING: *"a project with
-   * no finding names a team and no decision"* — true of the body the helper built and false of the act
-   * the member asked for. MEASURED at 1a7f0bcc0 before the fix, not inferred.
-   *
-   * SO THE NARROWING IS BY THE PUBLISHED SHAPES AND NOT BY A LIST HERE. `item_keys` already declares each
-   * act's identity groups and `op=affordances` already publishes them; an item that NAMES a key from one
-   * or more groups keeps the shared values of THOSE groups' keys and of `shared_keys`, and the shared
-   * values of the other groups' identity keys are dropped for that item alone. An item naming no identity
-   * at all is unchanged, so the wholly-shared subject still reaches the act to be refused in its own
-   * words. This is a no-op for the three acts with ONE identity group (`taskresolve`, `taskforward`) or
-   * whose second group's extra key is shared anyway (`resolve`'s `ref`) — measured, not assumed.
-   *
-   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
-   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
-  static PER_ITEM_MAX = PER_ITEM_MAX;
+  static PER_ITEM_MAX = PER_ITEM_MAX2;
   /* affordances.mjs: ONE number, published as set_acts[].max_items */
   #perItem(act, body, stamped, one) {
-    const refusal8 = (code, detail, extra) => {
-      const row = PER_ITEM_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const { items, ...shared } = body || {};
-    const count = Array.isArray(items) ? items.length : 0;
-    if (!Array.isArray(items) || items.length === 0)
-      return refusal8(
-        "SET_NO_ITEMS",
-        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or send one item's fields without \`items\` for the single act. Nothing was done.`,
-        { op: act, weight: "per-item", count: 0 }
-      );
-    if (items.length > _Store.PER_ITEM_MAX)
-      return refusal8(
-        "SET_TOO_LARGE",
-        `op=${act} acts on at most ${_Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. Refused WHOLE, before any item was tried, so no item moved.`,
-        { op: act, weight: "per-item", count: items.length, max: _Store.PER_ITEM_MAX }
-      );
-    const echo = (it) => {
-      const o = {};
-      for (const [k, v] of Object.entries(it)) {
-        if (typeof v === "string") o[k] = v.slice(0, 400);
-        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
-      }
-      return o;
-    };
-    const published = PER_ITEM_ACTS.find((a) => a.id === act) || null;
-    const groups = published && Array.isArray(published.item_keys) ? published.item_keys : [];
-    const shareable = new Set(published && Array.isArray(published.shared_keys) ? published.shared_keys : []);
-    const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
-    const namesIt = (o, k) => o && typeof o[k] === "string" && o[k].trim() !== "";
-    const sharedFor = (it) => {
-      if (identity.size === 0) return shared;
-      const named = [...identity].filter((k) => namesIt(it, k));
-      if (named.length === 0) return shared;
-      const reach2 = /* @__PURE__ */ new Set();
-      for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach2.add(k);
-      const narrowed = { ...shared };
-      for (const k of identity) if (!reach2.has(k)) delete narrowed[k];
-      return narrowed;
-    };
-    const outcomes = [];
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
-      if (!it || typeof it !== "object" || Array.isArray(it)) {
-        outcomes.push({
-          index: i,
-          outcome: "retained",
-          asked: null,
-          ...refusal8("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was left as it was and the other items were still tried.`)
-        });
-        continue;
-      }
-      let r;
-      try {
-        r = one({ ...sharedFor(it), ...it, ...stamped, items: void 0 });
-      } catch (e) {
-        r = refusal8("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: ` + String(e && e.message || e).slice(0, 200) + `. Nothing about the item is claimed.`);
-      }
-      const res = r && typeof r === "object" ? r : { ok: false };
-      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
-    }
-    const applied = outcomes.filter((o) => o.outcome === "applied").length;
-    const retained = outcomes.length - applied;
-    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
-    if (retained === 0)
-      return {
-        ok: true,
-        ...head,
-        detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.`
-      };
-    return {
-      ok: false,
-      reason: "SET_ITEMS_RETAINED",
-      code: "SET_ITEMS_RETAINED",
-      check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
-      translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
-      detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand \u2014 this is not a rollback.`,
-      ...head
-    };
+    const a = PER_ITEM_ACTS.find((x) => x.id === act);
+    return perItem(act, body, stamped, one, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
   }
   /* ===========================================================   *  CAP-3: the archive-fallback MONITORING consumer.
    *
@@ -87750,28 +87817,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
         ...captureOps(captureOf(this.ctx), url, body, this.env),
-        /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
-           wrapper is the producer-side ARM for the monitor-cadence consumer, in
-           the shape SCHEDULER.md prescribes ("arm it from whatever producer
-           creates its work"). A document that newly asks to be monitored is that
-           work, and without an arm here an IDLE instance holds no alarm and would
-           never wake to check it: the self-terminating property has to be paid
-           for by the producer. Gated on the consumer being configured and on the
-           promoted bundle actually being monitored, so nothing else pays. Arming
-           only ever SCHEDULES; it writes no work. */
-        promote: async () => {
-          const r = this.promote(body);
-          if (r && r.ok && r.bundleId && this.#monitorConfigured()) {
-            const row = this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, r.bundleId);
-            if (row && row.monitor_enabled === 1) await this.#armScheduler();
-          }
-          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
-          return r;
-        },
+        promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
-        snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
         /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({
@@ -89132,7 +89182,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* REC-138 */
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
-        digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
+        digestcensus: () => recordOf(this.ctx).digestCensus({ limit: url.searchParams.get("limit") }),
         /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
         gatefacts: () => this.gateFacts(
           url.searchParams.get("id"),
@@ -93496,7 +93546,7 @@ var index_default = {
             set_key: a.set_key,
             item_keys: a.item_keys,
             shared_keys: a.shared_keys,
-            max_items: PER_ITEM_MAX
+            max_items: PER_ITEM_MAX2
           })),
           detail: "pass target=<bundle id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state; set_acts take a selection as `items` under the per-item weight: each item is applied or RETAINED with its own act's reason, and none stops the others"
         }, store: storeName, tokenClass: cls }, 200);
