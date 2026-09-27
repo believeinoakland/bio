@@ -115,6 +115,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-27 · T5 · BOB #46: layer 11 run (LEGACY-INDEX #3, LEGACY-TESTS #3), a rendering regression found and fixed (CONNECTIONS #2, K155); T5 CLOSED and `main` fast-forwarded to e35861d317 (17 jobs, 1,346.9M tokens); rulings K150–K155; K154 (session lineage depth) stops product work until the mechanics are revised (P3); BOB #47 to be started by Bob.
 - 2026-09-27 · P3 (K154) · BOB #47, started by Bob at depth 0: measured the chain (BOB #38 → #40 → … → #46; BOB #46 at depth 7, its jobs at 8, the platform's limit) and that a routine-started session lacks the tools a BOB needs; revised the mechanics to Bob's design, a ROOT session that starts every BOB (K156; BOBs at depth 1, jobs at 2); certified by dry run D7 (stand-ins D7-BOB #2 and #3, job ALPHA #2, 3.78M tokens). Refused by the permission check and relayed to Bob (§16): fast-forwarding both repositories' `main` to the revision branch (Bob approved; civicos-process `main` @ 5d77655, bio `main` @ 7a6047c: the revision is in force) and archiving BOB #46 (Bob archived it himself; its `BOB-final` row under T5, 59.3M cache reads) · both repositories · next: Bob starts ROOT, then T6
 - 2026-09-27 · T6 · BOB #48 · session_01E4YZNiY3MRoRn59Wr5NnLW · depth 1 (parent ROOT #1): took over ~14:27 UTC from BOB #47's handoff (e794b5eaa2).
+- 2026-09-27 · T6 · OPENED by BOB #48 (~14:35 UTC): `tranche/T6` from `main`; 25 jobs over layers 1, 2, 3, 4, 6, 7, 11; layer 1 (id-spaces, legacy-checks) first.
 
 ## 5. Challenges identified
 
