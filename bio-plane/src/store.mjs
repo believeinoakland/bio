@@ -225,6 +225,7 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, provenanceAudit, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
          TESTIMONY_FORMAT, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
+import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
@@ -670,25 +671,6 @@ function actNoCitation(detail, extra = {}) {
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
 
-/* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
- * question from whether a given capture produced units and must not be folded
- * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
- * producer are the none-with-a-reason member of the content-axis vocabulary
- * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
- * PDF whose pages are scans. Both are absences and only one of them is about
- * the container.
- *
- * NAMED BY CONTAINER RATHER THAN DERIVED FROM THE UNITS, deliberately: deriving
- * it would make "this producer emitted nothing today" and "this record has no
- * way to address a passage of this kind of document" one answer, and section
- * 4.1's whole point about workbooks is that they are two. The spellings are
- * `reading.text_container`'s, which is `detectFormat`'s own format key.
- *
- * `odt` and `odp` ARE HERE and `ods` IS NOT, which is the rule rather than a
- * list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes --
- * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
- * The arm follows the SHAPE the producer returns, not the file extension. */
-const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
 /* REC-207 (BOB #32, 2026-09-23 23:42Z): the two settlements of a bias debt that a MEMBER or a RUN made,
@@ -750,34 +732,28 @@ export class Store extends DurableObject {
       { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
     ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name)));   /* each extracted owner declares its own (K23) */
+      .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name))
+      .filter((t) => !observationLogOwns(t)));   /* each extracted owner declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
-       runs before the store's projections that read it. The store registers observation-log's look on each receipt
-       (provenance R47) until that module is extracted. */
-    provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" })
-      .onReceipt("legacy-store", (e) => this.#receiptLook(e));
-    const promotion = promotionOf(ctx);
-    /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20), and legacy-store registers
-       with it (R24) the content stale mark (REC-82) and the observation log's indexed, extraction and reader-run rows until
-       content and observation-log are extracted. */
-    /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
-       legacy-store's listener, in the modules' total order. */
-    contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction.onReading("legacy-store", (e) => {
-      const container = typeof e.reading.text_container === "string" ? e.reading.text_container : null;
-      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
-      this.#observeIndexed(e.bundleId, e.captureSha, e.indexed, { author: e.author, hadText: e.reading.read_from_text === true,
-        unitArm: armed, armReason: armed ? null : container
-          ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, `
-            + "and the `sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; "
-            + "HTML has no `dom` producer)"
-          : "this record does not hold which container this capture is, so it has no unit arm to name" });
-      const ex = this.#observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
-      this.#observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
-      return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
-                                   refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
+       runs before the store's projections that read it. observation-log registers its look on each receipt (its R5,
+       provenance R47), and listens to extraction's reading notice once extraction exists (below). */
+    const observations = observationLogOf(ctx, { extraction: null,
+      provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }) });
+    /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
+       capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
+       extracted and register their own. */
+    observations.registerAuthority("sweep", (request) => {
+      const r = this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, request);
+      return r ? [r.target, r.lead_inquiry].filter(Boolean) : null;
     });
+    observations.registerAuthority("run", (run, viewer) => this.aiRunLog({ run, viewer, limit: 1 }).found === true);
+    const promotion = promotionOf(ctx);
+    /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
+    /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
+       observation-log's rows (its R6–R8), in the modules' total order (extraction R24). */
+    observations.listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
@@ -1201,6 +1177,7 @@ export class Store extends DurableObject {
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
+    observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before the run log folds into them below */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
        between the store's birth and the record of whose store it is. */
@@ -17706,122 +17683,6 @@ export class Store extends DurableObject {
   }
 
 
-  /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
-   *  CONTENT-AXIS OBSERVATION AND NOT AS A COLUMN OF ITS OWN.
-   *
-   *  Section 4.3's words, and its reason is the one CLAUDE.md's sparse rule
-   *  gives: *not extracted*, *extracted but over the bound* and *extracted and
-   *  indexed* must be ONE VOCABULARY IN ONE PLACE, or a member reading an empty
-   *  answer cannot tell which absence is true. So this goes through REC-93's ONE
-   *  append site, in the same transaction as the units it describes.
-   *
-   *  `authority_kind = derive` AND THAT IS LOAD-BEARING RATHER THAN A LABEL.
-   *  `#observeExtraction` writes under `extract`; indexing is a DERIVATION over
-   *  what extraction produced, and they are two different looks at one subject.
-   *  Keeping them apart BY AUTHORITY is what lets `contentAxis` go on reading
-   *  *what extraction established* and *what the index holds* as two facts --
-   *  the invariant that method already states in its own words, and which one
-   *  shared row would have collapsed on this item's first day.
-   *
-   *  NO NEW CONDITION WORD IS COINED. `queuestate.mjs`'s vocabulary is closed
-   *  and names nothing for *over the index bound* or *no unit arm for this
-   *  container*, and widening a write's vocabulary from inside this item would
-   *  be one item's blast radius becoming another's. The fact travels in `bound`
-   *  -- the column whose whole job is *which bound stopped it* -- and in
-   *  `detail`.
-   *
-   *  THE FOUR STATES, each the honest one rather than the convenient one:
-   *
-   *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
-   *   - indexed to the bound      -> `partial`, `bound` naming the figure
-   *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
-   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
-   *     and this record simply cannot address a passage of it yet, so *we looked
-   *     and there is nothing* would be a FALSE ABSENCE at the one level the
-   *     four-level search exists to keep honest.
-   *   - no text at all            -> `LOOKED_ABSENT`, and the REASON is already
-   *     on the extraction row beside it rather than restated here.
-   *
-   *  `result_kind: "reading"` / `result_ref: <capture_sha>` is the SAME referent
-   *  `#observeExtraction`'s own rows carry, and it is that rather than
-   *  `"content"` on purpose: C-22.10 requires a `PRESENT` row to point at what
-   *  it produced, the units are fetched by `capture_sha`, and `"content"` would
-   *  invite a reader to look up a content row that was deliberately NOT minted
-   *  (section 4.5 -- searching mints nothing, and neither does indexing). */
-  #observeIndexed(bundleId, captureSha, result, { author = null, hadText = false,
-                                                  unitArm = true, armReason = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    const r = result || { written: 0, bytes: 0, truncated: 0, over_bound: 0,
-                          unaddressable: 0, offered: 0 };
-    let state, bound = null, detail;
-    if (!hadText) {
-      state = "LOOKED_ABSENT";
-      detail = "no text was extracted from this capture, so there is nothing to index. "
-             + "WHY there is no text is on this capture's extraction observation, "
-             + "not on this one";
-    } else if (!unitArm) {
-      state = "LOOKED_INDETERMINATE";
-      bound = armReason || "this container has no indexing unit arm";
-      detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
-             + "That is not an absence of text and must not be read as one";
-    } else if (r.over_bound > 0) {
-      state = "partial";
-      /* REC-111 -- THE SENTENCE NAMES THE UNIT BOUND AND THE BYTE BOUND, AND IT
-         SAYS WHICH ONE BIT WHEN IT CAN TELL. A `partial` that named only one of
-         two possible causes is a failure a reader cannot act on: *this document
-         is too big* and *this document has too many pieces* want different
-         answers from a member, and the second is the one nothing could say until
-         this item. The discriminator is the unit count itself -- if the table
-         holds exactly the unit bound, the unit bound is what stopped it, because
-         the byte bound cannot stop a promote at a round number by coincidence.
-         When both could have bitten, BOTH are named rather than one guessed. */
-      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
-      bound = (byUnits
-                ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's "
-                + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
-                + "ROWS, not only bytes, and this capture offered more pieces than a promote "
-                + "may spend its CPU window on"
-                : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)")
-            + " or the acquire answer's own budget, whichever bit first -- the last is "
-            + "the smaller in bytes and is what the promote path's inline-file limit forces";
-      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
-             + `${r.over_bound} unit(s) past the bound are NOT indexed`;
-    } else if (r.written > 0) {
-      state = "PRESENT";
-      detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
-    } else {
-      /* TEXT WAS EXTRACTED, A UNIT ARM EXISTS, AND NOT ONE UNIT CAME BACK. That
-         is neither `full` nor `partial`, and it is not the no-arm case either --
-         it is a producer that answered with an empty list. Calling it `PRESENT`
-         over zero units is the headline failure this project has measured three
-         times: a totality assertion passing over an empty corpus. */
-      state = "LOOKED_ABSENT";
-      detail = "this container has an indexing unit arm and produced no unit carrying text "
-             + "(M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record "
-             + "holds no addressable passage of it";
-    }
-    if (r.truncated > 0)
-      detail += `; ${r.truncated} unit(s) stored to the per-unit cap and flagged truncated`;
-    if (r.unaddressable > 0)
-      detail += `; ${r.unaddressable} unit(s) offered an address this record could not index `
-             +  "separately (an unnamed or duplicate extent) and are NOT indexed";
-    return this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      authority: bundleId == null ? null : String(bundleId),
-      level: "content", subjectKind: "capture", subject: captureSha,
-      state, bound,
-      resultKind: state === "PRESENT" || state === "partial" ? "reading" : null,
-      resultRef: state === "PRESENT" || state === "partial" ? captureSha : null,
-      detail,
-    });
-  }
-  /*__REC91_WRITER_END__*/
 
   /* CPDF-10 / K73 (1): a member's attestation of a capture's text, and the attestations over a capture: content's. */
   attestText(...a) { return contentOf(this.ctx).attestText(...a); }
@@ -18183,7 +18044,7 @@ export class Store extends DurableObject {
   #testimonyWithin(bid, pkg) {
     const indexed = extractionOf(this.ctx).indexUnits(bid, pkg[TESTIMONY_PATH].captureSha,
       [{ extent: { kind: "document" }, text: pkg[TESTIMONY_PATH].words, seq: 0 }], null);
-    this.#observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
+    observationLogOf(this.ctx).observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
     const m = this.mintContent({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha, extent: { kind: "document" },
                                  mintedBy: pkg[TESTIMONY_PATH].author, at: pkg[TESTIMONY_PATH].recordedAt });
     if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
@@ -18200,357 +18061,17 @@ export class Store extends DurableObject {
   transcriptionAttest(...a) { return contentOf(this.ctx).transcriptionAttest(...a); }
   transcriptionRead(...a) { return contentOf(this.ctx).transcriptionRead(...a); }
 
-  /* ====================================================================== *
-   * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5).
-   * ====================================================================== *
-   *
-   * *"I was told the contract was amended; look at the Clerk's March agenda."*
-   * The same member knowledge as an observation, BEFORE the search. Three acts:
-   *
-   *   op=lead      a member AUTHORS a lead — a row in `leads`, and NOTHING in
-   *                `observation_log`: nobody has looked yet, and NEVER_LOOKED is
-   *                never stored (OBSERVATION-LOG-DESIGN.md §3). The row-level
-   *                reading of MK-4's accepts-when ("writes its row and an
-   *                observation_log entry") would force a look nobody made into
-   *                the log, so the entry is written by the act that IS the look.
-   *   op=leadlook  FOLLOWING it: one row of `observation_log` with
-   *                `authority_kind = 'lead'`, `authority = <lead_id>`, level
-   *                `internet`, subject kind `description` and the member's words
-   *                as the subject — §4.5's row exactly, through REC-93's ONE
-   *                append site (`#observe`), which this neither duplicates nor
-   *                modifies. So every C-22 refusal applies to the look as it is:
-   *                a PRESENT that names nothing is C-22.10, not a lead rule.
-   *   op=leadread  the lead and every look recorded against it.
-   *
-   * A LEAD IS NEVER EVIDENCE, and that is held in two places on purpose: the id
-   * shape (`LEAD-…`) is not a bundle id or a content id, so no leg grammar can
-   * accept one; and C-54.1 (`leadLegFindings`) refuses one BY NAME at every leg
-   * grammar. Nothing here mints a bundle or a content row.
-   *
-   * WHY A LEAD'S LOOKS CANNOT FALL INTO THE RUN-ROLLUP RULES. `#aiRunSearchState`
-   * reads `authority_kind = 'run'` only; C-22.10's `observation` arm fires only on
-   * `result_kind = 'observation'`, which this act refuses (C-54.7 admits capture
-   * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
-   * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
-   *
-   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
-   * provisional (author plus ANY unfiltered machine credential): the author; a
-   * project's participants once the author SHARES it there (`op=leadshare`); a
-   * machine credential only within a member's minted scope; nobody else, and
-   * everybody else answered exactly as for a lead that does not exist. See
-   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
-   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
-   * reads the internet level. */
-  static #leadRefusal(code, detail, extra) {
-    const row = LEAD_CHECKS[code];
-    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-             detail, ...(extra || {}) };
-  }
-
-  /** WHICH LEAD, and may this viewer read it. The one visibility decision for
-   *  all three acts, so the act, the look and the read cannot disagree. */
-  #leadFor(id, viewer, identity = null) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const lid = typeof id === "string" ? id.trim() : "";
-    const row = lid ? this.#one(
-      `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`, lid) : null;
-    const sees = !!row && this.#leadVisibleTo(row, viewer, identity);
-    /* DEC-49 REGION is-lead-source */
-    if (!sees)
-      return refusal("LEAD_NOT_FOUND",
-        lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record`
-            : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
-    /* END DEC-49 REGION is-lead-source */
-    return { ok: true, row };
-  }
-
-  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
-   *  positive arms and nothing else:
-   *
-   *    1. the AUTHOR;
-   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
-   *       authored dated act) — joined or leaving, the two states Membership
-   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
-   *       does not reach a lead;
-   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
-   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
-   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
-   *       answers arms 1 and 2 exactly as its member would, and no further. A
-   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
-   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
-   *       null` and it reaches NOTHING here. That is the correction of MK-4's
-   *       provisional, which let an unfiltered machine read every lead.
-   *
-   *  Everyone else is answered by the caller exactly as for a lead that does not
-   *  exist. Participation is read from `project_participants` directly and NOT
-   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
-   *  every administrator read every shared lead — the ruling names participants.
-   *
-   *  REC-129 / IC-143 — THE RULE IS NOW SPELLED ONCE, IN `#leadReach`, AND THIS
-   *  METHOD ASKS IT OF ONE LEAD. The frontier's internet level has to apply the
-   *  SAME rule to a whole level at once and INSIDE the statement — it groups the
-   *  latest look per subject over the looks this viewer may read, and gating after
-   *  the grouping would let a hidden look change which row a viewer sees (an
-   *  existence signal). A second spelling of the rule in SQL beside this JS one
-   *  would be the mirror-and-drift class in the one place it would leak, so both
-   *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
-   *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
-  #leadVisibleTo(row, viewer, identity = null) {
-    const reach = this.#leadReach(viewer, identity);
-    if (!reach) return false;
-    return !!this.#one(
-      `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
-      row.lead_id, ...reach.args);
-  }
-
-  /** REC-129 — BOB #14's LEAD-VISIBILITY RULING AS ONE SQL PREDICATE over a
-   *  `leads` row aliased `l`, or `null` when this viewer reaches NO lead at all.
-   *  The two positive arms — the AUTHOR; a JOINED (or leaving) participant of a
-   *  project the author SHARED it to — and nothing else. The third arm (a
-   *  machine credential only within a member's minted scope) is satisfied by the
-   *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
-   *  member, and a `class:*` credential carries `member: null` and reaches
-   *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
-  #leadReach(viewer, identity = null) {
-    /* REC-132 / D-422: THE RULING NAMES AUTHORS AND PARTICIPANTS, SO IT ASKS WHO THE
-       CALLER IS, NEVER WHAT IT MAY SEE. The founder's session sees as an administrator
-       (the bare `admin` viewer, which carries no member and would reach NOTHING here)
-       and is the author of its own leads by position — so the member this reads is the
-       POSITIONAL identity the control plane stamps beside the viewer. Nothing about the
-       administrator arm reaches this predicate, for the founder or anybody else. */
-    const who = this.#positionalMember(viewer, identity);
-    if (who == null) return null;
-    return {
-      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
-              ON pp.project_id = s.bundle_id
-             WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
-      args: [who, who],
-    };
-  }
+  /* MK-4 / IC-135 / IC-136 / D-681 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5): observation-log's (R14–R21).
+     These delegate, so the object's RPC callers and the frontier's internet arm reach the one instance on this ctx. */
+  lead(...a) { return observationLogOf(this.ctx).lead(...a); }
+  leadShare(...a) { return observationLogOf(this.ctx).leadShare(...a); }
+  leadLook(...a) { return observationLogOf(this.ctx).leadLook(...a); }
+  leadRead(...a) { return observationLogOf(this.ctx).leadRead(...a); }
+  leadList(...a) { return observationLogOf(this.ctx).leadList(...a); }
+  #leadReach(...a) { return observationLogOf(this.ctx).leadReach(...a); }
+  #leadReferentVisible(...a) { return observationLogOf(this.ctx).referentVisible(...a); }
 
   #positionalMember(...a) { return membershipOf(this.ctx).positionalMember(...a); }
-
-  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
-   *  never rewritten. `sharer` is the control plane's stamp. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof sharer === "string" ? sharer.trim() : "";
-    const pid = typeof project === "string" ? project.trim() : "";
-    const src = this.#leadFor(lead, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    const joined = who && pid ? this.#one(
-      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
-        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
-          AND b.object_type = 'project' LIMIT 1`, pid, who) : null;
-    /* DEC-49 REGION is-lead-share */
-    if (who !== L.author)
-      return refusal("LEAD_SHARE_NOT_AUTHOR",
-        `${L.lead_id} was written by another member; only its author shares it. A machine credential `
-        + `is never the author (the author is a member id, stamped when the lead was written)`,
-        { lead: L.lead_id });
-    /* ONE ANSWER for a project that does not exist, one the author cannot see, and one they
-       have not joined — so the act is no oracle for which projects exist. */
-    if (!joined)
-      return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
-        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
-            : `pass project=<PROJ-…>: the project to share this lead to`,
-        { lead: L.lead_id, project: pid || null });
-    /* END DEC-49 REGION is-lead-share */
-    const at = stampInstant("second");
-    this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
-                  L.lead_id, pid, who, at);
-    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
-    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at,
-             already: r.at !== at, evidence: false,
-             says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
-                 + `looks against it. It is still never evidence` };
-  }
-
-  /** op=lead — THE ACT. `author` is the control plane's stamp and never the
-   *  caller's (§7: *an author field supplied by the caller rather than stamped*
-   *  is refused — here by never being read from the body at all). */
-  lead({ words = null, locator = null, author = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof author === "string" ? author.trim() : "";
-    const typed = typeof words === "string" ? words : "";
-    const where = typeof locator === "string" && locator.trim() ? locator : null;
-    const bytes = (s) => new TextEncoder().encode(s).length;
-    /* DEC-49 REGION is-lead-act */
-    if (!who || isMachineIdentity(who))
-      return refusal("LEAD_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has `
-              + `reason to believe, in their own name`
-            : `this call carries nobody. The plane stamps the author from the credential that asked`);
-    if (!typed.trim())
-      return refusal("LEAD_NO_WORDS",
-        `the lead is empty. Its words are what the member was told or suspects, as they write it`);
-    if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || (where && bytes(where) > CAPTURE_TEXT_UNIT_CAP))
-      return refusal("LEAD_TOO_LONG",
-        `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the `
-        + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
-        + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
-    /* END DEC-49 REGION is-lead-act */
-    const at = stampInstant("second");
-    /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix `BUNDLE_ID_RE` does
-       not admit, so the id reads as a record id to a person and as nothing
-       citable to every leg grammar. */
-    const leadId = `LEAD-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
-    this.sql.exec(`INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
-                  leadId, who, typed, where, at);
-    return { ok: true, lead_id: leadId, author: who, words: typed, locator: where, at,
-             evidence: false, looks: 0, state: "NEVER_LOOKED",
-             says: `${who}'s lead is recorded. It is somewhere to look and never evidence: no leg can `
-                 + `rest on it. Following it is recorded with op=leadlook, and a look that finds `
-                 + `nothing is itself a finding with this lead behind it` };
-  }
-
-  /** op=leadlook — FOLLOWING A LEAD, recorded as §4.5's row. */
-  leadLook({ lead = null, state = null, resultKind = null, resultRef = null, condition = null,
-             detail = null, looker = null, viewer = null, identity = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof looker === "string" ? looker.trim() : "";
-    const st = typeof state === "string" ? state.trim() : "";
-    const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
-    const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
-    const note = typeof detail === "string" && detail.trim() ? detail : null;
-    /* DEC-49 REGION is-lead-look */
-    if (!who || isMachineIdentity(who))
-      return refusal("LEAD_LOOK_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its `
-              + `own run (authority_kind run), never under a member's lead`
-            : `this call carries nobody. The plane stamps who looked from the credential that asked`);
-    const src = this.#leadFor(lead, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    if (!Store.LEAD_LOOK_OUTCOMES.includes(st))
-      return refusal("LEAD_LOOK_STATE",
-        st === "NEVER_LOOKED"
-          ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all `
-            + `(OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of `
-            + `${Store.LEAD_LOOK_OUTCOMES.join(", ")}`
-          : `'${st.slice(0, 40) || "(absent)"}' is not one of ${Store.LEAD_LOOK_OUTCOMES.join(", ")}`,
-        { lead: L.lead_id });
-    if ((rk || rr) && !(rk && rr))
-      return refusal("LEAD_LOOK_REFERENT",
-        `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without `
-        + `the other names nothing`, { lead: L.lead_id });
-    if (rk && st !== "PRESENT" && st !== "partial")
-      return refusal("LEAD_LOOK_REFERENT",
-        `a look recorded as ${st} found nothing, so it cannot point at something it found`,
-        { lead: L.lead_id });
-    if (rk && rk !== "capture" && rk !== "content")
-      return refusal("LEAD_LOOK_REFERENT",
-        `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation `
-        + `referent is a rollup's (REC-100), and a member's look is never a rollup`,
-        { lead: L.lead_id });
-    if (rk && !this.#leadReferentVisible(rk, rr, viewer))
-      return refusal("LEAD_LOOK_REFERENT",
-        `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the `
-        + `look found first, then record the look against it`, { lead: L.lead_id });
-    /* END DEC-49 REGION is-lead-look */
-    /* C-54.4, whose region is the act's (`is-lead-act`): the same rule — refused, never cut —
-       applied to the look's own words, and relayed here rather than given a second region. */
-    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
-      return refusal("LEAD_TOO_LONG",
-        `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
-        { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP });
-    const bad = this.#observe({
-      actorClass: "member", actor: who,
-      authorityKind: "lead", authority: L.lead_id,
-      level: "internet", subjectKind: "description", subject: L.words,
-      state: st, condition, resultKind: rk, resultRef: rr, detail: note,
-    });
-    if (bad) return { ...bad, lead: L.lead_id };
-    const row = this.#one(
-      `SELECT seq, at FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq DESC LIMIT 1`, L.lead_id);
-    return { ok: true, lead_id: L.lead_id, seq: row ? row.seq : null, at: row ? row.at : null,
-             level: "internet", state: st, looked_by: who, result_kind: rk, result_ref: rr,
-             evidence: false,
-             says: st === "LOOKED_ABSENT"
-               ? `recorded: ${who} followed this lead and it is not there. That absence has a name and `
-                 + `a lead behind it, which is what makes it a finding rather than silence`
-               : `recorded: ${who} followed this lead (${st}). The lead is still not evidence; `
-                 + `${rk ? `the ${rk} the look found is what a leg can cite` : "nothing it found is citable through it"}` };
-  }
-
-  /* The states a look can STORE: `NEVER_LOOKED` is never one (§3). Declared BELOW
-     its method on REC-116's finding (`bounds.test.mjs`): a class constant belongs
-     to the member it serves, and the segment walker reads it that way. NAMED
-     `_OUTCOMES` AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads
-     every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
-     observation states (D-129) — the first draft was caught there by name. */
-  static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
-
-  /** Does a look's referent name something this viewer can read? One read per
-   *  kind, gated through `#viewerSees` — never a second gate. */
-  #leadReferentVisible(kind, ref, viewer) {
-    const r = kind === "capture"
-      ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, ref)
-      : this.#one(`SELECT bundle_id FROM content WHERE content_id = ? LIMIT 1`, ref);
-    return !!r && this.#viewerSees(r.bundle_id, viewer);
-  }
-
-  /** op=leadread — the lead and its looks, bounded, the bound published. */
-  leadRead({ id = null, limit = null, viewer = null, identity = null } = {}) {
-    const src = this.#leadFor(id, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_READ_LIMIT_DEFAULT),
-                                     Store.LEAD_READ_LIMIT_MAX));
-    const rows = this.#rows(
-      `SELECT seq, at, actor, authority_kind, authority, level, subject_kind, state, condition,
-              result_kind, result_ref, detail
-         FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq LIMIT ?`, L.lead_id, cap + 1);
-    const page = rows.slice(0, cap);
-    const looks = page.map((r) => {
-      /* A referent this viewer can no longer read is NOT published; the row is. */
-      const visible = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);
-      return { seq: r.seq, at: r.at, looked_by: r.actor, authority_kind: r.authority_kind,
-               authority: r.authority, level: r.level, subject_kind: r.subject_kind, state: r.state,
-               condition: r.condition, detail: r.detail,
-               result_kind: visible ? r.result_kind : null, result_ref: visible ? r.result_ref : null,
-               coverage: observationCoverage({ state: r.state, resultRef: r.result_ref }) };
-    });
-    /* WHERE IT IS SHARED, as far as this viewer may know: the author sees every
-       share; a participant sees only the projects they are joined to, so the read
-       is no oracle for which OTHER projects a member works in. */
-    const me = this.#positionalMember(viewer, identity);
-    const sharesRaw = this.#rows(
-      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
-        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
-          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
-        ORDER BY s.at, s.bundle_id LIMIT ?`, L.lead_id, me === L.author ? 1 : 0, me ?? "", cap + 1);
-    /* BOUNDED by the read's own `limit`, and the cut is published: a lead shared to more projects than
-       the page holds says so rather than reading as shared nowhere else. */
-    const shared_to = sharesRaw.slice(0, cap);
-    const last = this.#one(
-      `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq DESC LIMIT 1`, L.lead_id);
-    const latest = last ? last.state : null;
-    return {
-      ok: true, lead_id: L.lead_id, author: L.author, words: L.words, locator: L.locator, at: L.at,
-      evidence: false, shared_to, shared_to_truncated: sharesRaw.length > cap,
-      limit: cap, truncated: rows.length > cap, looks,
-      /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
-         assumed: a lead and its looks are written by this plane after the log
-         existed, and only the whole-store purge deletes either — which deletes
-         BOTH — so a lead standing with no look has had nobody look. Neither the
-         pre-log cause nor the purged cause is reachable for it. */
-      state: latest || "NEVER_LOOKED",
-      says: !looks.length
-        ? `nobody has followed this lead yet. That is established rather than inferred: the lead and `
-          + `any look at it are cleared only together, by a whole-store purge`
-        : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the `
-          + `latest found ${latest}. The lead itself is never evidence`,
-    };
-  }
-  /* op=leadread's bound, BELOW its method for the reason above. `op=frontier`'s
-     200/2000 pair, and for its reason: the population is looks at ONE subject. */
-  static LEAD_READ_LIMIT_DEFAULT = 200;
-  static LEAD_READ_LIMIT_MAX = 2000;
 
   /* ====================================================================== *
    * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
@@ -20481,8 +20002,8 @@ export class Store extends DurableObject {
         const considered = [rr.ref ? "the composite key" : null,
                             rr.ref_key ? "the source key" : null,
                             rr.label ? "the name" : null].filter(Boolean).join(", ");
-        this.#observeResolutionAttempt(rr.capture_sha, rr.bundle_id, rr, matches,
-                                       considered ? { considered } : null, { resolvedBy });
+        observationLogOf(this.ctx).observeResolutionAttempt({ captureSha: rr.capture_sha, bundleId: rr.bundle_id,
+          ref: rr.ref, matches, considered: considered || null, resolvedBy });
         if (matches.length === 0) { unresolved.push({ ref: rr.ref, kind: rr.ref_kind, key: rr.ref_key, label: rr.label }); continue; }
         for (const m of matches) resolved.push(m);
       }
@@ -20946,7 +20467,7 @@ export class Store extends DurableObject {
      * `actor_class` carries. `entityKnown` is `!!ent` and is the same fact the
      * answer publishes as `found`, read from the one variable so the row and the
      * answer cannot disagree. */
-    this.#observeConnectionDerivation(entityId, {
+    observationLogOf(this.ctx).observeConnectionDerivation({ entityId,
       count: connections.length, documents: ends.length, truncated,
       entityKnown: !!ent, assertedBy });
     return { ok: true, entity_id: entityId, found: !!ent,
@@ -31135,36 +30656,18 @@ export class Store extends DurableObject {
   /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version.
    * The plane's own acquisition receipts and the version chain are provenance's (R13–R18, R47); the receipt's
-   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's work, registered here
-   * as provenance's receipt listener until that module is extracted (the constructor).
+   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's (R5), its receipt
+   * listener.
    * ------------------------------------------------------------------ */
   recordCapturedLocator({ authorityKind = null, authority = null, actorClass = "plane", actor = null, observe = true,
                           ...receipt } = {}) {
     const r = provenanceOf(this.ctx).recordReceipt({ ...receipt,
       context: { authorityKind, authority, actorClass, actor, observe } });
     if (!r.recorded) return r;
-    const look = (r.listeners || []).find((l) => l.module === "legacy-store");
+    const look = (r.listeners || []).find((l) => l.module === OBSERVATION_LOG_MODULE);
     return { recorded: true, address_norm: r.address_norm, via: r.via, observation: r.observation,
              observation_written: !!(look && look.answer && look.answer.written === true),
              observation_refused: look && look.outcome === "refused" ? look.answer : null };
-  }
-  /* REC-93 (OBSERVATION-LOG-DESIGN.md §4.1): the document-level look a receipt is, `subject_kind = address`, `via` in
-     `detail`, so an archive capture and a direct capture of one address are two observations of one subject. §7'S
-     EDGE-TRIGGERED RULE: `unchanged` writes NO ROW (the receipt's counter is the record of it); `new` and `changed`
-     each write one. The archive fallback and a direct acquire are DIFFERENT AUTHORITIES for the same subject; a
-     caller that named its own authority (the sweep does) keeps it, and one that writes its own look (`observe:
-     false`) gets none here. Answers what happened: `{written}`, or the refusal that stopped the append. */
-  #receiptLook({ address_norm, capture_sha, via, retrieved, observation, context }) {
-    const c = context || {};
-    if (observation === "unchanged" || c.observe === false) return { written: false };
-    const refused = this.#observe({
-      actorClass: c.actorClass || "plane", actor: c.actor ?? null,
-      authorityKind: c.authorityKind || (via === "direct" ? "acquire" : "link"), authority: c.authority ?? null,
-      level: "document", subjectKind: "address", subject: address_norm,
-      state: "PRESENT", resultKind: "capture", resultRef: capture_sha,
-      detail: `${observation} (via ${via})`,
-    }, retrieved);
-    return refused ? { ...refused, ok: false } : { written: true };
   }
   capturedLocators(...a) { return provenanceOf(this.ctx).receipts(...a); }
   versionChain(...a) { return provenanceOf(this.ctx).versionChain(...a); }
@@ -35326,20 +34829,8 @@ export class Store extends DurableObject {
 
   static #aiIso(ms) { return stampInstant("second", ms); }
 
-  /* ==================================================================== *
-   * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
-   *
-   * `OBSERVATION-LOG-DESIGN.md` §3 and §4. Everything that looks at anything
-   * writes HERE, and the design's four refusals are a fence rather than a
-   * promise precisely because there is no second door. That is not tidiness:
-   * C-22.6 (the log may never be filed into a bundle) is only enforceable if
-   * one function does the inserting, and REC-94, REC-95 and REC-96 are three
-   * more writers arriving into this same function on purpose.
-   *
-   * THE APPEND IS THE ONLY WRITE. There is no UPDATE and no DELETE anywhere in
-   * this file for `observations` except the whole-store purge — §3's first rule,
-   * "a log that can be rewritten is not evidence of anything".
-   * ==================================================================== */
+  /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
+     file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
 
   /** WHOSE LOOK IS THIS? §4.1 rows 1 and 2, decided ONCE rather than at each of
    *  the drain's three exits.
@@ -35362,287 +34853,18 @@ export class Store extends DurableObject {
           actorClass: "plane" };
   }
 
-  /** APPEND ONE OBSERVATION. The single write site for `observations`.
-   *
-   *  Returns the refusal object on refusal and null on success, so callers can
-   *  collect refusals per entry and still write the rest — §14b.7's partial
-   *  results survive, applied to the log itself, and REC-93 keeps that property
-   *  because `op=airuntick` is built on it.
-   *
-   *  EVERY REFUSAL IS READ OUT OF THE MAP AND NONE IS TYPED HERE. `checkObservation`
-   *  in `airun.mjs` is pure and holds the whole judgement; this method's only job
-   *  is to put a judged row in. A C-number spelled at this site would be a second
-   *  copy of a rule, which is C-5's finding and the reason `checkCondition`
-   *  collapsed to one implementation in the first place. */
-  #observe({ actorClass = "plane", actor = null, authorityKind = null, authority = null,
-             level = "document", subjectKind = "unstated", subject = null,
-             state, governed = false, condition = null, bound = null,
-             resultKind = null, resultRef = null, detail = null, bundle = null } = {},
-           at = null, terminal = 0) {
-    /* The entry is handed to the pure checker in the SHAPE THE TABLE STORES —
-       snake_case, the column names — so that what was judged and what is written
-       are the same object and cannot drift into two spellings of one row. */
-    const entry = {
-      actor_class: actorClass, actor,
-      authority_kind: authorityKind, authority,
-      level, subject_kind: subjectKind, subject,
-      state, governed: governed === true, condition, bound,
-      result_kind: resultKind, result_ref: resultRef, detail, bundle,
-    };
-    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
-    if (bad) return bad;
-    const now = at || stampInstant("second");
-    /* `seq` is assigned by SQLite as the rowid, which is store-wide and
-       monotonic — §3's requirement. It is not reused, because nothing deletes a
-       row: the only DELETE is the whole-store purge, after which the table is
-       empty and a reused number can collide with nothing. */
-    this.sql.exec(
-      `INSERT INTO observation_log
-         (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-          state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      now,
-      String(entry.actor_class),
-      entry.actor == null ? null : String(entry.actor),
-      String(entry.authority_kind),
-      entry.authority == null ? null : String(entry.authority),
-      String(entry.level || "document"),
-      String(entry.subject_kind || "unstated"),
-      entry.subject == null ? null : String(entry.subject),
-      String(entry.state),
-      entry.governed === true ? 1 : 0,
-      entry.condition == null || entry.condition === "" ? null : String(entry.condition),
-      entry.bound == null || entry.bound === "" ? null : String(entry.bound),
-      terminal ? 1 : 0,
-      entry.result_kind == null || entry.result_kind === "" ? null : String(entry.result_kind),
-      entry.result_ref == null || entry.result_ref === "" ? null : String(entry.result_ref),
-      entry.detail == null ? null : String(entry.detail));
-    return null;
-  }
+  #observe(...a) { return observationLogOf(this.ctx).observe(...a); }
 
-  /** REC-100 / IC-130 — RESOLVE AN `observation` REFERENT FOR THE CHECKER, and
-   *  decide nothing. `checkObservation` in `airun.mjs` is pure and holds the
-   *  whole judgement (`observationReferentFault`); this reads the one row the
-   *  referent names plus the `seq` the new row will take, so the checker can say
-   *  which of the four faults it is. Any other `result_kind` resolves nothing
-   *  and costs no read. A referent that is not a positive integer is answered
-   *  `found: false` WITHOUT a query — it cannot name a row. */
-  #observationReferent(entry) {
-    if (!entry || entry.result_kind !== "observation") return null;
-    const ref = entry.result_ref == null ? "" : String(entry.result_ref);
-    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    const next_seq = (top && top.m != null ? Number(top.m) : 0) + 1;
-    if (!/^[1-9][0-9]*$/.test(ref)) return { found: false, seq: null, next_seq };
-    const row = this.#one(
-      `SELECT seq, authority_kind, authority, state FROM observation_log WHERE seq = ?`, Number(ref));
-    return row ? { found: true, seq: String(row.seq), next_seq, authority_kind: row.authority_kind,
-                   authority: row.authority, state: row.state }
-               : { found: false, seq: null, next_seq };
-  }
-
-  /** REC-94 / IC-95 — THE CONTENT-LEVEL WRITER. `OBSERVATION-LOG-DESIGN.md`
-   *  section 4.2, and section 8's row 2.
-   *
-   *  ONE ROW PER EXTRACTION ATTEMPT PER CAPTURE PER TIER, THROUGH REC-93'S ONE
-   *  APPEND SITE, WHICH THIS METHOD DOES NOT DUPLICATE AND DOES NOT MODIFY.
-   *  `#observe` is the single writer for `observation_log` and every refusal it
-   *  applies is read out of the map; this method's whole job is to turn a
-   *  persisted reading into the entries the design's table names, and even THAT
-   *  judgement is not made here — `contentObservationsFor` in `airun.mjs` is
-   *  pure and holds it, so a suite can hold the decision to this store's
-   *  behaviour without workerd. Nothing below types a C-number.
-   *
-   *  THE AUTHORITY IS THE BUNDLE, AND THE SUBJECT IS THE CAPTURE. Those are two
-   *  different facts and the design's indexes make each a read: `(level,
-   *  subject_kind, subject, seq)` answers *what has this document's text been
-   *  through*, and `(authority_kind, authority, seq)` answers *what did this
-   *  promotion extract*. The authority is never the capture, which would make
-   *  the two columns one fact written twice.
-   *
-   *  WHO LOOKED, DERIVED AND NEVER GUESSED. `contentMintState` is the record's
-   *  existing predicate for reading a principal as member / machine / the plane
-   *  and it is CONSUMED rather than copied — a second opinion about what a
-   *  machine identity looks like is the eleven-copies-of-one-predicate failure
-   *  REC-46 measured. A promotion with no author is the plane's own, which is
-   *  what `actor_class = plane` means and why `actor` is then NULL: attributing
-   *  a look to a member who did not make it is a false attribution in the one
-   *  field that says who looked.
-   *
-   *  THIS IS ALSO THE DOOR A READ-TIME RE-EXTRACTION COMES THROUGH (D-319,
-   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). CORRECTED 2026-09-18 by CPDF-19,
-   *  which built that seam: this sentence read *"does not exist on this tree"*,
-   *  true when REC-94 wrote it and false from `op=pdfstructure&ocr=1` onward — the
-   *  store's `reextract` path hands the re-read to `#writeOneReading`, which calls
-   *  THIS method, so the prediction below held with no change here. What section
-   *  5.1 requires of the WRITER is here and driven: a new
-   *  chain arriving for a capture that already has rows writes a NEW row under
-   *  `authority_kind = extract` with the member who asked as `actor`, which is
-   *  exactly what a re-promotion with a moved chain does today. `reextraction`
-   *  is therefore DERIVED from the store — has this capture been extracted
-   *  before — and not passed in by a caller, so the second row says so whether
-   *  or not the caller thought to mention it. */
-  #observeExtraction(bundleId, captureSha, reading, { author = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    /* DERIVED, NOT DECLARED: one bounded indexed read on the frontier key. A
-       capture that already has a content-level row has been extracted before, so
-       this attempt is a RE-extraction, and the log says which without anybody
-       having to remember to say it. */
-    /* REC-91 — `AND authority_kind = 'extract'`, AND THIS WAS A REAL DEFECT
-       CAUGHT BY THIS SUITE'S OWN C1b ARM rather than a precaution. The question
-       is *has this capture been EXTRACTED before*, and until REC-91 the content
-       level held one kind of row per capture, so any row WAS an extraction and
-       the unqualified read answered it correctly. REC-91 writes a second kind —
-       the index's `derive` row — in the same transaction, so on the very first
-       promotion of a document the index row was already present when this ran
-       and every FIRST extraction began reporting itself as a RE-extraction.
-       A false `re-extraction` is not cosmetic: it says the record looked at this
-       document before and is looking again, which is a claim about the history
-       of a document nobody had ever read. The narrowing is what the sentence
-       always meant. */
-    const before = this.#one(
-      `SELECT seq FROM observation_log
-        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
-          AND authority_kind = 'extract'
-        ORDER BY seq DESC LIMIT 1`, captureSha);
-    const { rows, unclassified } = contentObservationsFor(reading, captureSha, tiersEvidenced);
-    const written = [], refused = [];
-    for (const r of rows) {
-      const bad = this.#observe({
-        actorClass, actor,
-        authorityKind: "extract",
-        authority: bundleId == null ? null : String(bundleId),
-        level: "content",
-        subjectKind: "capture",
-        subject: captureSha,
-        state: r.state,
-        condition: r.condition,
-        resultKind: r.resultKind,
-        resultRef: r.resultRef,
-        detail: (before ? "re-extraction; " : "first extraction; ") + r.detail,
-      });
-      if (bad) refused.push(bad); else written.push(r.state);
-    }
-    /* A STEP KIND NOBODY CLASSIFIED IS NAMED, NEVER SCORED ZERO. If a sixth
-       chain step arrives without declaring whether it is an extraction tier, the
-       tier it contributed is invisible to every row above — so it is carried out
-       of here and stated, rather than the answer quietly being one row short.
-       WORKER.md's rule: a thing the matcher does not understand must be NAMED. */
-    return { written: written.length, states: written, refused,
-             reextraction: !!before, unclassified };
-  }
-
-  /** REC-94 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
-   *  CONTENT-LEVEL ROW, taken IN ORDER and never concluded from the first.
-   *
-   *  BOB #11's CORRECTION OF 2026-09-15 (`9954a9c`), applied at the content level.
-   *  **THE ATTRIBUTION MATTERS AND IS NOT A FORMALITY.** In this corpus `RULED by Bob`
-   *  means DOCTRINE no session may revisit; a session's own name means MECHANISM a later
-   *  session MAY revisit on evidence. `9954a9c` is the BOB #11 SESSION's commit, correcting
-   *  its own design's inference rule under Bob's standing delegation — mechanism, not
-   *  doctrine. A mechanism decision wearing doctrine's attribution becomes UNREVISABLE IN
-   *  PRACTICE: the next reader works around the rule instead of correcting it, which is the
-   *  more expensive direction. Corrected 2026-09-15 by CONDUCT #11 on BOB #11's own routing.
-   *  *A subject with no row has three possible causes and they are different
-   *  facts.* The document level's pre-log evidence is `captured_locators`; the
-   *  content level's is `readings`, which holds what a capture's extraction
-   *  produced and predates this log entirely.
-   *
-   *  (1) PRE-LOG, and it is the one cause with POSITIVE evidence rather than an
-   *      inability to exclude: a `readings` row for this capture says the text
-   *      WAS extracted and the look is recorded there. Every capture promoted
-   *      before this item's writer existed is in exactly that position, which is
-   *      why this is not a theoretical case — it is the whole existing corpus.
-   *  (2) PRE-LOG-OR-PURGED, which is an UNDETERMINED and not a finding: the
-   *      capture was registered before the earliest content-level row this log
-   *      holds, so either the writer did not exist yet or a whole-store purge
-   *      cleared the rows that described it (section 7). Those are different
-   *      facts and neither can be ruled out. A log with NO content-level rows at
-   *      all lands here too, because an empty table is equally the never-written
-   *      case and the purged one.
-   *  (3) NOBODY LOOKED — the log existed over this capture's whole lifetime and
-   *      was not purged since, AND the record holds nothing else about its text.
-   *      **This is the only cause that licenses a positive statement**, and
-   *      reaching it takes work: an absence that took no work to produce,
-   *      reported as a fact about the world, is the costs-nothing rule inverted.
-   *
-   *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
-   *  walk on the tally index; the `readings` probe is a primary-key read. */
-  /** REC-92 — THE RULE ITSELF, LIFTED OUT OF THE READ THAT FETCHES ITS INPUTS,
-   *  and it is a refactor this item was FORCED into rather than one it chose.
-   *
-   *  `#missingContentCause` below answers for ONE capture and pays two reads to
-   *  do it. §4.4's tally answers for a SET, and at `MEANING_AXIS_CAP` captures
-   *  the per-capture form is a thousand reads inside one Durable Object
-   *  invocation — so the tally reads the same three inputs in ONE joined
-   *  statement instead. That left two ways to spell the DECISION, and the
-   *  shared-vocabulary ruling says what to do with two spellings of one
-   *  decision: have one. The inputs are gathered differently; the rule is this
-   *  function and there is no second copy of it.
-   *
-   *  PURE AND STATIC, taking the three facts rather than the store, so the
-   *  suite drives every branch — including the tie on the second, which a real
-   *  corpus produces rarely and which was a real defect in the first draft of
-   *  the method below — without a corpus at all. */
+  /** REC-94 / REC-92 — WHICH OF SECTION 5.1's CAUSES EXPLAINS A MISSING CONTENT-LEVEL ROW: observation-log's rule
+   *  (its R11, `missingCause`), asked here with the content level's pre-log evidence, the `readings` table. The set-based
+   *  tally (`#contentAxisTally`) gathers the same inputs in one statement and asks the same rule. */
   static #missingCauseFrom({ hasReading = false, registeredAt = null, firstContentAt = null } = {}) {
-    if (hasReading) return "pre_log";
-    /* NO CONTENT ROW ANYWHERE: cause (1) and cause (2) are both live — an empty
-       table is equally the never-written case and the purged one — and the
-       answer says so rather than picking. */
-    if (!firstContentAt) return "purged";
-    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
-    if (!reg) return "purged";
-    /* D-500 — THE COMPARISON IS `enteredAfterFirstRow` IN `airun.mjs` AND THERE IS
-       NO SECOND COPY OF IT HERE. The reasoning is at that function and is
-       deliberately not restated: one rule with two spellings is the drift class,
-       and this method and `#missingMeaningCause` are the two spellings it had.
-       WHAT THIS REPLACED, kept rather than deleted because it is the defect and a
-       reader meeting the new rule should see what it corrected. REC-92's draft
-       compared the two sides as RAW strings, which mis-sorts inside a second
-       (`"…:15.900Z"` is LESS than `"…:15Z"` because `.` sorts below `Z`); REC-94
-       fixed that by truncating both to the second — `String(v).slice(0, 19)` —
-       and that stood until D-486 measured what it costs. Truncating compares two
-       FLOORS, so the answer turns on where a second boundary falls rather than on
-       the two instants' order, and a hidden run re-dating the watermark moved four
-       of an outsider's frontier keys on one run and not on the next (M-131). It
-       REC-94's reasoned tie is not reversed and is the reason the new rule reads
-       the way it does: the tie rests on SIMULTANEITY — the content writer runs
-       INSIDE promote's transaction — and a shared clock second was only ever the
-       proxy the stored precision allowed, so the tie is now applied over the
-       watermark's real one-second uncertainty instead. Every answer this suite
-       and the case document's `searched` section drive is unmoved; what moved is
-       that the answer no longer depends on where the second fell. */
-    /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE ANSWER IS THREE-WAY AND THIS SITE
-       MAPS IT, it does not re-decide it. The band is the one clock second before
-       the watermark's own second, where the stored precision leaves REC-94's tie
-       open; the reader states that rather than choosing a side, and the reason is
-       at the rule. A TERNARY HERE WOULD BE SILENTLY WRONG — every one of the three
-       answers is a truthy string — which is why the three arms are spelled out and
-       why arm M1b pins that no reader of this rule tests it as a boolean. */
-    const order = enteredAfterFirstRow(reg, firstContentAt);
-    if (order === WATERMARK_AFTER) return "never_looked";
-    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
-    return "purged";
+    return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: firstContentAt });
   }
 
   #missingContentCause(captureSha, registeredAt = null) {
-    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
-      return "pre_log";
-    const first = this.#one(
-      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
-    const firstAt = first && first.at ? String(first.at) : null;
-    /* REC-92: THE RULE IS `#missingCauseFrom` AND THIS METHOD IS NOW ONLY THE
-       READ THAT FETCHES ITS INPUTS. The `readings` lookup above already
-       answered `pre_log` and returned, so `hasReading` is false by the time we
-       get here; it is passed explicitly rather than relied on, because a reader
-       of this call should not have to know that the early return exists.
-       REC-94's suite drives this method unchanged and its assertions did not
-       move — the behaviour is identical for every input, which is the property
-       that makes this a refactor rather than a change. */
-    return Store.#missingCauseFrom({
-      hasReading: false, registeredAt, firstContentAt: firstAt });
+    const hasReading = !!this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha);
+    return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: observationLogOf(this.ctx).firstRowAt("content") });
   }
 
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
@@ -35826,39 +35048,8 @@ export class Store extends DurableObject {
     };
   }
 
-  /** THE FRONTIER, §5 — *the observation log and the frontier are the same table
-   *  seen from two angles.* A frontier entry is a subject together with its
-   *  CURRENT state and the observation that last set it, so the frontier at any
-   *  level is the latest row per `(level, subject_kind, subject)`.
-   *
-   *  A VIEW AND NEVER A TABLE, and that is §5's word rather than an
-   *  implementation preference: a second table holding "the current state" is a
-   *  second place to state a fact (D-21), and it would be the one place the log
-   *  could disagree with itself. `observations_frontier` is indexed exactly
-   *  `(level, subject_kind, subject, seq)` so this is an index walk.
-   *
-   *  `NEVER_LOOKED` IS NOT IN HERE, and its absence is the point: it is a
-   *  subject with NO ROW, so it cannot be a row of this view. §5 says where those
-   *  subjects come from — the `deferred` link partition at the document level —
-   *  and `#frontierNeverLooked` below supplies them from there. Reading only this
-   *  view and concluding "we have looked at everything" is the exact
-   *  false-coverage inversion the log exists to prevent. */
-  #frontierLatest(level, { limit = 200, subjectKind = null } = {}) {
-    const args = [level];
-    let where = `o.level = ?`;
-    if (subjectKind) { where += ` AND o.subject_kind = ?`; args.push(subjectKind); }
-    return this.#rows(
-      `SELECT o.level, o.subject_kind, o.subject, o.state, o.governed, o.condition,
-              o.authority_kind, o.authority, o.actor_class, o.result_kind, o.result_ref,
-              o.detail, o.at, o.seq
-         FROM observation_log o
-         WHERE ${where}
-           AND o.seq = (SELECT MAX(i.seq) FROM observation_log i
-                         WHERE i.level = o.level AND i.subject_kind = o.subject_kind
-                           AND i.subject IS o.subject)
-         ORDER BY o.seq DESC
-         LIMIT ?`, ...args, limit);
-  }
+  /** THE FRONTIER, §5 — the latest row per `(level, subject_kind, subject)`: observation-log's view (its R9). */
+  #frontierLatest(level, opts = {}) { return observationLogOf(this.ctx).latest(level, opts); }
 
   /** D-389 — THE ONE OVER-FETCH THE THREE BUNDLE ARMS SHARE, and the one place
    *  their `looked` page is gated, cut and CLAIMED. The document, content and
@@ -35920,22 +35111,8 @@ export class Store extends DurableObject {
     return { rows: gate ? raw.filter(gate) : raw, full: raw.length === limit };
   }
 
-  /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
-   *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
-   *  says HTTP obsoleted `last_verified` and that we must own it — this is where
-   *  it lives, DERIVED, rather than as a column anybody could set. */
-  #frontierVerification(level, subjectKind, subject) {
-    const present = this.#one(
-      `SELECT at, seq FROM observation_log
-        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'PRESENT'
-        ORDER BY seq DESC LIMIT 1`, level, subjectKind, subject);
-    const since = present ? this.#one(
-      `SELECT at FROM observation_log
-        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'LOOKED_INDETERMINATE'
-          AND seq > ? ORDER BY seq ASC LIMIT 1`, level, subjectKind, subject, present.seq) : null;
-    return { last_verified: present ? present.at : null,
-             unreachable_since: since ? since.at : null };
-  }
+  /** §5: `last_verified` and unreachable since, derived: observation-log's (its R10). */
+  #frontierVerification(...a) { return observationLogOf(this.ctx).verification(...a); }
 
   /** §5: the `NEVER_LOOKED` subjects at the DOCUMENT level, which are supplied by
    *  the `deferred` link partition — *a subject with `NEVER_LOOKED` state and
@@ -35963,171 +35140,9 @@ export class Store extends DurableObject {
         LIMIT ?`, limit);
   }
 
-  /** REC-103 / IC-105 — WHICH BUNDLES A DOCUMENT-LEVEL OBSERVATION NAMES, so
-   *  §6's withholding can be applied to the document arm the way REC-94 applied
-   *  it to the content arm.
-   *
-   *  THE DEFECT THIS CLOSES WAS DRIVEN, NOT INFERRED. `Store#frontier` accepted a
-   *  `viewer` and the document arm never read it, while `gate-reads.test.mjs`
-   *  classified the op GATED — a signature ADVERTISING a fence that was not
-   *  there, which is worse than an absent parameter because a reader of the
-   *  signature stops asking. Driven with `viewer=member:not-invited` against a
-   *  project that member is not a participant of, the arm handed over THE PROJECT
-   *  BUNDLE ID VERBATIM in `authority` (ratify's writer passes `bundleId`), the
-   *  capture sha of a document filed in that project in `result_ref` together
-   *  with a `result_purged` answer derived from `register`, and that same capture
-   *  sha as `from_document` on a never-looked row. **REC-94 found a leak of
-   *  exactly this shape one method over** — its per-capture read gated the
-   *  register lookup and then fell through — and left it for this row's owner
-   *  rather than widening a claim mid-wave.
-   *
-   *  ROW-WHOLE, WHICH IS THE DESIGN'S OWN WORD AND NOT A CHOICE TAKEN HERE. §6:
-   *  *"a subject discloses a project's interest, so REC-36's withholding applies
-   *  row-whole across the fence"*, and the reason it is not a column redaction is
-   *  in the op's own classification: *"a subject with its authority nulled still
-   *  names what was looked for."*
-   *
-   *  INVERTED RATHER THAN LISTED, which is the difference between a rule and a
-   *  set of spellings that goes stale the moment a tenth is written. The `default`
-   *  arm below resolves UNRESOLVED, so an authority kind added to
-   *  `OBSERVATION_AUTHORITY_KINDS` with no resolver here is WITHHELD until
-   *  somebody answers for it. `observation-log.test.mjs` drives every member of
-   *  that constant by name, so the silent direction is a red suite and never a
-   *  leak.
-   *
-   *  FAIL CLOSED ON WHAT CANNOT BE ATTRIBUTED, and both halves of that come from
-   *  landed precedent rather than from this item's preference: `#bundleGate`'s own
-   *  arm (*"a row pointing at something the store cannot show is withheld rather
-   *  than answered for"*) and `#frontierContent`'s (*"a capture the register does
-   *  not hold cannot be attributed to a bundle … it is WITHHELD rather than
-   *  shown"*). A NULL referent names no bundle and discloses nothing, so it
-   *  PASSES — that is `#bundleGate`'s other arm and it is what keeps this from
-   *  being a fence tighter than its rule.
-   *
-   *  THE ONE COST IS STATED RATHER THAN DISCOVERED. §7 says *a `result_ref` to a
-   *  PURGED capture is annotated at read time (`purged`)* — and a per-bundle purge
-   *  clears `register` (it is in `purge`'s own TABLES list), so after one the
-   *  capture is unattributable and the row is withheld from every identified
-   *  session, admins included. The annotation survives for the machine credential,
-   *  which is the operator path it was written for. Two landed rules cannot both
-   *  be satisfied for a member there; this takes the fail-closed one and raises
-   *  the collision against §7 rather than resolving it silently in the design. */
-  #observationBundles(row) {
-    const out = [];
-    let unresolved = false;
-    /* THE ONE REFERENT THIS METHOD DOES NOT RESOLVE ITSELF — see the `run` arm. */
-    let run = null;
-    const viaRegister = (sha) => {
-      const r = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
-      return r ? r.bundle_id : null;
-    };
-    /* `authority` AT THESE KINDS IS EITHER A BUNDLE OR A CAPTURE, and the reason
-       is the writer rather than a guess: ratify passes `bundleId || source_capture`
-       (`recordReuseVerdicts`), so one column carries two kinds of id and both are
-       bundle-scoped. Read the bundle first, because a bundle id and a capture sha
-       cannot collide and asking `bundles` costs one indexed probe. */
-    const bundleOrCapture = (id) =>
-      (this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, id) ? id : viaRegister(id));
-
-    /* THE BACK-REFERENCE. `result_kind = 'capture'` with a `result_ref` says THIS
-       RECORD HOLDS THIS DOCUMENT, and which documents a group holds is the line of
-       inquiry §6 fences. It is `op=contentaxis`' disclosure exactly — that op is
-       gated on this same register resolution, and the two answering differently
-       about one capture would be the mirror-and-drift class. */
-    if (row.result_kind === "capture" && row.result_ref) {
-      const b = viaRegister(row.result_ref);
-      if (b) out.push(b); else unresolved = true;
-    }
-    if (row.authority != null && row.authority !== "") {
-      const a = String(row.authority);
-      switch (row.authority_kind) {
-        /* A RUN IS GATED ON ITS CONTEXT, and handing a run id to a caller who
-           cannot see that context is `op=airuns`' disclosure by a new door —
-           that op was gated for precisely the reason that it is the run read a
-           caller can drive from an id they can already see.
-           **IT IS RETURNED FOR DELEGATION RATHER THAN RESOLVED HERE, AND THE
-           REASON IS A RATCHET THAT CAUGHT THIS METHOD BY NAME.** The first draft
-           read `SELECT context_id FROM ai_runs WHERE run = ?`, which made this a
-           THIRTEENTH reader of `ai_runs` and failed `run-conditions.test.mjs`
-           ARM W3 — and no role in that sweep's table fits a reader that projects
-           a stored column merely to describe the row, which ARM W9 then refuses.
-           `#aiRunAppend` met both arms on 2026-09-14 and the table keeps the
-           episode as a comment for the next reader tempted the same way. The
-           honest answer there was to stop reading, and it is the honest answer
-           here: `aiRunLog` ALREADY answers *may this viewer see this run* through
-           `#bundleGate("r.context_id", viewer)`, and a second implementation of
-           one gate is the mirror-and-drift class in the one place it would be
-           most dangerous. */
-        case "run": run = a; break;
-        /* THE SWEEP'S AUTHORITY IS A CAPTURE REQUEST, which is bundle-scoped in
-           TWO columns this plane already gates on elsewhere (`cr.target`, the
-           inquiry the run works under, and `cr.lead_inquiry`, PL-15/D-213's other
-           question). Both are taken, because withholding on one and not the other
-           would be a fence with a documented hole in it. */
-        case "sweep": {
-          const r = this.#one(
-            `SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, a);
-          if (r) { if (r.target) out.push(r.target); if (r.lead_inquiry) out.push(r.lead_inquiry); break; }
-          /* D-65 — THE RATIFIED-CADENCE ARM. `op=monitor`'s look names the BUNDLE whose
-             `monitoring.enabled` it runs under (`recordMonitorLook`), and a bundle is gated
-             exactly as `ratify`'s authority is. Anything that is neither stays UNRESOLVED. */
-          const b = this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, a);
-          if (b) out.push(a); else unresolved = true;
-          break;
-        }
-        case "ratify": case "link": case "acquire": case "extract": case "derive": {
-          const b = bundleOrCapture(a);
-          if (b) out.push(b); else unresolved = true;
-          break;
-        }
-        /* `objective` HAS NO WRITER ON THIS TREE, so there is nothing to resolve.
-           `lead` HAS ONE SINCE MK-4 (2026-09-18, `op=leadlook`) AND STAYS UNRESOLVED
-           ON PURPOSE: a lead names no bundle (MEMBER-KNOWLEDGE-DESIGN.md §5's field
-           list), its visibility is its AUTHOR's (`#leadFor`), and a row-whole gate
-           keyed on bundles has nothing to admit it by. Its looks are written at
-           level `internet`, which no frontier arm reads yet, so today this arm is
-           reached by no written row — and when one is, it withholds from every
-           identified session rather than inventing a bundle for a lead. */
-        case "lead": case "objective": unresolved = true; break;
-        /* THE INVERSION. Not a list of spellings: anything this method does not
-           UNDERSTAND is withheld, so a tenth `authority_kind` is refused by
-           default rather than waved through by omission. */
-        default: unresolved = true; break;
-      }
-    }
-    return { bundles: out, unresolved, run };
-  }
-
-  /** REC-103 — THE DOCUMENT ARM'S ROW PREDICATE. One compilation point, taken
-   *  from `viewerPredicate` like every other gate in this file and restating none
-   *  of it, including the two arms that are easy to get wrong by hand. */
-  #frontierDocumentVisible(viewer) {
-    const gate = viewerPredicate(viewer);
-    /* THE MACHINE CARVE-OUT, AND IT IS LOAD-BEARING HERE RATHER THAN INHERITED
-       DECORATION: `class:*` has no person behind it and therefore no participation
-       to check (D-15), and without it the fail-closed arm above would withhold
-       from the OPERATOR PATH the very rows §7's purge annotation exists to show. */
-    if (gate.scope === "member") return () => true;
-    /* AN ABSENT OR UNRECOGNISED STAMP SEES NOTHING, and it is spelled here rather
-       than left to fall out of the redactor: a row naming NO bundle at all would
-       otherwise pass a DENY viewer, because the redactor's job is ids and a row
-       with none has nothing for it to refuse. A missing control-plane stamp is an
-       outage and never a leak — `op=contentaxis`' D5c arm, at this level. */
-    if (gate.scope === "DENY") return () => false;
-    const visible = this.#bundleRedactor(viewer);
-    return (row) => {
-      const { bundles, unresolved, run } = this.#observationBundles(row);
-      if (unresolved) return false;
-      /* THE RUN REFERENT, DELEGATED TO THE READER THAT ALREADY GATES IT.
-         `aiRunLog` answers `found: false` for a run this viewer may not see AND
-         for one that does not exist — REC-30's own rule that the unknown run and
-         the unviewable one read identically — so both directions fail closed and
-         neither is spelled a second time. Bounded at one entry: nothing here
-         reads the log, only whether the run is reachable at all. */
-      if (run && this.aiRunLog({ run, viewer, limit: 1 }).found !== true) return false;
-      return bundles.every((id) => visible(id) !== null);
-    };
-  }
+  /** REC-103 / IC-105 — THE ROW-WHOLE FENCE (§6) over the document arm's rows: observation-log's (its R13), with the
+   *  `sweep` and `run` authorities answered by the resolvers the constructor registers (N39). */
+  #frontierDocumentVisible(viewer) { return observationLogOf(this.ctx).rowGate(viewer); }
 
   static FRONTIER_LIMIT_DEFAULT = 200;
   static FRONTIER_LIMIT_MAX = 2000;
@@ -36492,158 +35507,9 @@ export class Store extends DurableObject {
    * the site.
    */
 
-  /** THE READER RUN. Section 4.3's first act, written inside promote's one
-   *  transaction beside the reading it is about.
-   *
-   *  WHY IT IS HERE AND NOT SOMEWHERE TIDIER: `#writeReadings` is the only place
-   *  in this plane where a capture's reading is persisted, and the row must be
-   *  written in the SAME transaction as that reading for the reason every
-   *  projection in that method is — either the store advances with its coverage
-   *  record or neither does.
-   *
-   *  IT IS BESIDE REC-94's CONTENT-LEVEL WRITER AND IS NOT THE SAME ROW. The two
-   *  fire on the same event and answer different questions, and keeping them
-   *  apart is the whole of what §4.2 and §4.3 are for: `#observeExtraction` says
-   *  whether we got this document's TEXT, this says whether anything READ that
-   *  text for who it mentions. A document can be fully extracted and mention
-   *  nobody; a document can mention plenty and have been extracted in part. The
-   *  one field that looks like it could serve both — `found: false` — belongs to
-   *  THIS level (REC-94's arm B8 pins that it is not used at the content one).
-   *
-   *  WHO LOOKED, DERIVED AND NEVER GUESSED: `contentMintState` is the record's
-   *  existing predicate and is CONSUMED rather than copied, exactly as
-   *  `#observeExtraction` consumes it. A promotion with no author is the plane's
-   *  own, which is what `actor_class = plane` means and why `actor` is NULL —
-   *  attributing a look to a member who did not make it is a false attribution
-   *  in the one field that says who looked. */
-  #observeReaderRun(bundleId, captureSha, reading, { author = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    /* `readerRegistered: null` IS A FACT ABOUT THIS BUILD, PASSED AS A VALUE AND
-       NOT ASSUMED INSIDE THE PURE FUNCTION. Section 4.3's third outcome — *no
-       reader is registered for this type*, `LOOKED_INDETERMINATE` — needs to know
-       whether the doctype that produced this reading was the REGISTRY'S FALLBACK,
-       and that fact does not reach this store: the fallback type emits
-       `{ entities: [], facts: {} }`, byte-for-byte what a registered reader that
-       found nobody emits, and the only thing persisted is `content_type`, which
-       is the doctype's KEY and a spelling the registry may rename. The property
-       (`fallback: true`) lives in `docprofile`, which this Durable Object does
-       not import — every `store.mjs` import is from `bio-plane/src` or
-       `bio-plane/checks`, measured on this tree, and adding a cross-package
-       dependency to the DO is a larger decision than this row.
-       So the seam is PINNED and the fact is not invented, which is exactly what
-       REC-94 did with `contentAxisFor`'s `unitIndex`. Delegated with the one
-       field that closes it named. */
-    const { row } = readerRunObservation(reading, captureSha, { readerRegistered: null });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      authority: bundleId == null ? null : String(bundleId),
-      level: "meaning",
-      subjectKind: "capture",
-      subject: captureSha,
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
-
-  /** THE RESOLUTION ATTEMPT. Section 4.3's second act, one row per reference the
-   *  recogniser tried.
-   *
-   *  THE SUBJECT IS THE REFERENCE AND THE AUTHORITY IS THE CAPTURE, which are
-   *  two different facts and are exactly REC-94's arrangement one level up. The
-   *  design's indexes then make each a read: `(level, subject_kind, subject,
-   *  seq)` answers *what has this name been matched to*, and `(authority_kind,
-   *  authority, seq)` answers *what did resolving this document look for*.
-   *
-   *  THE UNRESOLVED ARM IS THE POINT AND IT ALREADY EXISTED — computed by
-   *  `resolveReferences`, pushed onto an `unresolved` array, returned to the
-   *  caller and persisted NOWHERE. This is the line that makes *we tried this
-   *  name against the registry and it holds no such subject* outlive the request
-   *  that discovered it. */
-  #observeResolutionAttempt(captureSha, bundleId, rr, matches, tier, { resolvedBy = null } = {}) {
-    const mint = contentMintState(resolvedBy);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(resolvedBy);
-    const { row } = resolutionObservation({ ref: rr && rr.ref, matches, tier });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      /* THE CAPTURE IS THE AUTHORITY: the reason we looked for this name is that
-         a document we hold carried it. The bundle is one hop further out and is
-         reachable from the capture through `register`, so putting it here would
-         be the coarser of the two facts in the column that names the finer. */
-      authority: captureSha == null ? null : String(captureSha),
-      level: "meaning",
-      subjectKind: "reference",
-      subject: rr && rr.ref ? String(rr.ref) : null,
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
-
-  /** THE CONNECTION DERIVATION. Section 4.3's third act, one row per derivation
-   *  over one entity.
-   *
-   *  IT FIRES ON BOTH DOORS AND THAT IS DELIBERATE. `deriveConnections` is
-   *  reached from `op=connect` and from the scheduled sweep
-   *  (`#deriveConnectionsSweep`, which has no op of its own and no caller
-   *  identity). Both are derivations and both belong in the coverage record;
-   *  what differs is WHO, and that is what `actor_class` is for.
-   *
-   *  `system` IS THE RECORD'S OWN WORD FOR AN UNATTRIBUTED DERIVATION and is
-   *  CONSUMED rather than re-decided here: it is `deriveConnections`' own
-   *  parameter default and it is what `connections.asserted_by` already stores
-   *  for both the sweep and an `op=connect` that named nobody. Mapping it to
-   *  `actor_class = plane` with a NULL actor is what keeps those two columns
-   *  agreeing; running it through `contentMintState` instead would classify it
-   *  `member_marked` and file the plane's own scheduler as a member called
-   *  "system", which is a false attribution in the one field that says who
-   *  looked. */
-  #observeConnectionDerivation(entityId, { count = null, documents = null, truncated = false,
-                                           entityKnown = null, assertedBy = null } = {}) {
-    const asserted = String(assertedBy || "system");
-    const mint = asserted === "system" ? "unstated" : contentMintState(asserted);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : asserted;
-    const { row } = derivationObservation({ entityId, count, documents, truncated, entityKnown });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      /* THE AUTHORITY IS THE ENTITY THE DERIVATION WAS ASKED FOR, and here it
-         genuinely is the subject as well — a derivation over a subject is made
-         BECAUSE of that subject and nothing else names it. That is stated rather
-         than dressed up: the two columns agree because the fact is one fact, and
-         the alternative (leaving the authority null) is refused by C-22.9 and
-         would be refused rightly, since a look with no reason behind it is not
-         recordable. */
-      authority: entityId == null ? null : String(entityId),
-      level: "meaning",
-      subjectKind: "entity",
-      subject: entityId == null ? null : String(entityId),
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
+  /* THE READER RUN, THE RESOLUTION ATTEMPT AND THE CONNECTION DERIVATION (§4.3): observation-log's writers (its R8).
+     The reader run is its listener on extraction's reading notice; the other two are called where they fire until
+     entities and connections are extracted and it registers on their notices. */
 
   /** REC-95 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
    *  MEANING-LEVEL ROW, taken IN ORDER and never concluded from the first.
@@ -36688,30 +35554,9 @@ export class Store extends DurableObject {
     const probe = Object.prototype.hasOwnProperty.call(EVIDENCE, subjectKind)
       ? EVIDENCE[subjectKind] : null;
     if (!probe) return "purged";
-    if (probe()) return "pre_log";
-    const first = this.#one(
-      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'meaning'`);
-    const firstAt = first && first.at ? String(first.at) : null;
-    if (!firstAt) return "purged";
-    const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
-    if (!entered) return "purged";
-    /* D-500 — THE SAME ONE COMPARISON THE CONTENT ARM ASKS, `enteredAfterFirstRow`
-       IN `airun.mjs`, AND THE POINT OF THE MOVE IS THAT THIS SITE NO LONGER
-       CARRIES ITS OWN COPY. This arm INHERITED REC-94's truncation verbatim —
-       which is how a rule ends up with two spellings — and D-486 then measured
-       what the truncation costs at BOTH levels: comparing two floors makes the
-       answer turn on where a second boundary falls, so a hidden run re-dating the
-       watermark moved this level's `never_looked` and `missing_unexplained` keys
-       on one run and not on the next (M-131). The reasoning, and REC-94's tie
-       narrowed to an equality of instants, are at the function. */
-    /* D-516 — THE SAME THREE-WAY ANSWER MAPPED THE SAME WAY, and the mapping is
-       the only thing this arm spells: the band's meaning-level sentence is in
-       `MEANING_MISSING_ROW_CAUSES` beside the other three, and the set it cannot
-       narrow comes from `causesNotRuledOut` exactly as `purged`'s does. */
-    const order = enteredAfterFirstRow(entered, firstAt);
-    if (order === WATERMARK_AFTER) return "never_looked";
-    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
-    return "purged";
+    /* §5.1's rule is observation-log's (its R11); this level's pre-log evidence is the probe above. */
+    return missingCause({ hasArtifact: !!probe(), registeredAt: enteredAt,
+                          firstRowAt: observationLogOf(this.ctx).firstRowAt("meaning") });
   }
 
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
@@ -41774,6 +40619,8 @@ export class Store extends DurableObject {
         ...captureOps(captureOf(this.ctx), url, body, this.env),
         ...calibrationOps(calibrationOf(this.ctx), url, body),
         ...extractionOps(extractionOf(this.ctx), url, body, this.env),
+        /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
+        ...observationLogOps(observationLogOf(this.ctx), url, body),
         promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
@@ -42323,25 +41170,6 @@ export class Store extends DurableObject {
         }),
         transcription: () => this.transcriptionRead({ id: url.searchParams.get("id"),
                                                       viewer: url.searchParams.get("viewer") }),
-        /* MK-4 / IC-136: THE LEAD. `author` and `looker` come from the QUERY STRING,
-           where the control plane stamped them, and never from the body — a body
-           field a caller can fill is a name a machine can post (§7). */
-        lead: () => this.lead({
-          words: body ? body.words : null,
-          locator: body ? body.locator : null,
-          author: url.searchParams.get("author"),
-        }),
-        leadlook: () => this.leadLook({
-          lead: (body && body.lead) || url.searchParams.get("lead"),
-          state: body ? body.state : null,
-          resultKind: body ? body.resultKind : null,
-          resultRef: body ? body.resultRef : null,
-          condition: body ? body.condition : null,
-          detail: body ? body.detail : null,
-          looker: url.searchParams.get("looker"),
-          viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity"),
-        }),
         /* MK-7: THE ATTRIBUTION ACT. WHO CHOSE comes from the QUERY STRING, where the control plane stamped
            it over anything the caller sent; nothing in the body can name the chooser. */
         attribute: () => this.attributeObservation({
@@ -42350,13 +41178,6 @@ export class Store extends DurableObject {
           observation: body ? body.observation : null,
           level: body ? body.level : null,
           by: url.searchParams.get("by"),
-        }),
-        leadshare: () => this.leadShare({
-          lead: (body && body.lead) || url.searchParams.get("lead"),
-          project: (body && body.project) || url.searchParams.get("project"),
-          sharer: url.searchParams.get("sharer"),
-          viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity"),
         }),
         /* D-162 / IC-241: THE THEME. `declarer`, `placer` and `proposer` come from the
            QUERY STRING, where the control plane stamped them, and never from the body. */
@@ -42394,10 +41215,6 @@ export class Store extends DurableObject {
                                           limit: url.searchParams.get("limit"),
                                           viewer: url.searchParams.get("viewer"),
                                           administer: url.searchParams.get("administer") }),
-        leadread: () => this.leadRead({ id: url.searchParams.get("id"),
-                                        limit: url.searchParams.get("limit"),
-                                        viewer: url.searchParams.get("viewer"),
-                                        identity: url.searchParams.get("identity") }),
         suggest: () => this.suggestVersion({
           ...(body || {}),
           target: (body && body.target) || url.searchParams.get("target"),

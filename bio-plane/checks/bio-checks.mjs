@@ -12692,9 +12692,6 @@ export const TESTIMONY_CHECKS = {
  *
  *   is-lead-not-evidence   THE REFUSAL THE ITEM EXISTS FOR (§7): a lead cited as
  *                          a leg, at every leg grammar, BY NAME
- *   is-lead-act            who wrote it (stamped, never a machine) and the words
- *   is-lead-source         which lead a look or a read names
- *   is-lead-look           who looked, what state, and what the look points at
  *
  * THE LIAR THIS FAMILY REFUSES is a lead that is merely an UNLABELLED
  * OBSERVATION — stored as a bundle or a content row, so a leg could cite it as
@@ -12714,67 +12711,6 @@ export const LEAD_CHECKS = {
       + 'suspects — and it is never evidence, so nothing can rest on it. Follow the lead: if the '
       + 'look finds the document, capture it and cite THAT; if you saw the thing yourself, write it '
       + 'up as your own observation.',
-  },
-  LEAD_NOT_A_MEMBER: {
-    check: 'C-54.2',
-    where: 'src/store.mjs lead > is-lead-act',
-    translation: 'A lead is a person saying what they were told or have reason to believe, in their '
-      + 'own name. The credential that asked is an automated one, which has nobody behind it to have '
-      + 'been told anything. Sign in and write it yourself.',
-  },
-  LEAD_NO_WORDS: {
-    check: 'C-54.3',
-    where: 'src/store.mjs lead > is-lead-act',
-    translation: 'The lead is empty. Write what you were told or suspect, and where it might be found; '
-      + 'nothing is filled in for you.',
-  },
-  LEAD_TOO_LONG: {
-    check: 'C-54.4',
-    where: 'src/store.mjs lead > is-lead-act',
-    translation: 'The lead, or the place to look you suggested, is longer than one passage this record '
-      + 'stores. It is refused rather than cut, because a lead silently shortened would be words you '
-      + 'did not write standing in your name. Write it more briefly or split it into two leads.',
-  },
-  LEAD_NOT_FOUND: {
-    check: 'C-54.5',
-    where: 'src/store.mjs #leadFor > is-lead-source',
-    translation: 'That request does not name a lead this record holds and you can read. A lead is named '
-      + 'by the id its own act returned, and a lead is readable by the member who wrote it.',
-  },
-  LEAD_LOOK_STATE: {
-    check: 'C-54.6',
-    where: 'src/store.mjs leadLook > is-lead-look',
-    translation: 'Say what the look found: that the thing is not there, that you could not tell, that '
-      + 'you found part of it, or that it is there. "Nobody looked" is never recorded — it is what '
-      + 'the record says when there is no look at all.',
-  },
-  LEAD_LOOK_REFERENT: {
-    check: 'C-54.7',
-    where: 'src/store.mjs leadLook > is-lead-look',
-    translation: 'What the look found has to be something this record holds and you can read — a '
-      + 'captured document or a part of one — and only a look that found something can point at '
-      + 'anything. Capture the document first, then record the look against it.',
-  },
-  LEAD_LOOK_NOT_A_MEMBER: {
-    check: 'C-54.8',
-    where: 'src/store.mjs leadLook > is-lead-look',
-    translation: 'Following a lead is recorded in the name of the member who looked. The credential '
-      + 'that asked is an automated one; an automated search is recorded under its own run, not '
-      + 'under a member\'s lead.',
-  },
-  /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
-     through an AUTHORED, DATED share by its author. */
-  LEAD_SHARE_NOT_A_PARTICIPANT: {
-    check: 'C-54.9',
-    where: 'src/store.mjs leadShare > is-lead-share',
-    translation: 'You can share a lead only to a project you have joined. Sharing it somewhere you are '
-      + 'not working would put your words in front of people you are not working with.',
-  },
-  LEAD_SHARE_NOT_AUTHOR: {
-    check: 'C-54.10',
-    where: 'src/store.mjs leadShare > is-lead-share',
-    translation: 'Only the member who wrote a lead can share it. A lead is what one person was told; '
-      + 'passing someone else\'s on is theirs to decide.',
   },
 };
 
