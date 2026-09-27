@@ -1,6 +1,6 @@
 # Job record: bias, T5
 
-**Status** · COMPLETE, 2026-09-27 (on the best readings of Q1–Q7; an ANSWER that differs re-opens it). BIAS #1, session `session_018B4eA3jst9ZcAUibKhY5FK`, branch `job/T5/bias` (cut from `tranche/T5`; `tranche/T5` @ f05090bcad merged in). Process: civicos-process @ 7549c0b, `roles/JOB.md`. Entry: T5-7 (the debt mechanism with it, K82 (3), K87; reading work products `ai-runs` registers in T6, and until then the store's arm registers them), extracting per `build/extraction/bias.md` and `build/requirements/bias.md` (mechanics §12.2), and every requirement marked *not yet met* (R11's instance scope, R24, R25, R26, R33–R41).
+**Status** · COMPLETE, 2026-09-27 (Q1–Q7 answered as read, K146; R25 wired to the merged entities module). BIAS #1, session `session_018B4eA3jst9ZcAUibKhY5FK`, branch `job/T5/bias` (cut from `tranche/T5`; `tranche/T5` @ f05090bcad merged in). Process: civicos-process @ 7549c0b, `roles/JOB.md`. Entry: T5-7 (the debt mechanism with it, K82 (3), K87; reading work products `ai-runs` registers in T6, and until then the store's arm registers them), extracting per `build/extraction/bias.md` and `build/requirements/bias.md` (mechanics §12.2), and every requirement marked *not yet met* (R11's instance scope, R24, R25, R26, R33–R41).
 
 **Read whole:** `roles/JOB.md`; `PROCESS-MECHANICS.md`; `build/manifest.md`; `build/requirements/bias.md`; `build/extraction/bias.md`; `build/layers.md`; the public parts of `record-core`, `membership`, `promotion`, `entities` (and `legacy-checks`, which has no requirements file); `ai-runs` R13, R19, R30 and `scheduler` R5, R9, `queue` R8, R12 (the users of this module's services); my entry in `build/plan/current.md`; rulings K3, K4, K6, K23, K31, K61, K62, K64, K78, K82, K86, K87, K90, K96, K102, K140; CALIBRATION #1's record (the precedent for this shape); in `store.mjs`: the bias import header, `SETTLED_BY_AN_ACT`, the store constructor's purge declaration and registrations, the `bias-debt` consumer and `onAlarm`, the bias-set refusal in `#promoteChecks` and the projection and re-pin in `#promoteProjections`, `publishCase`'s manifest stamp, `#counts`, `aiRunOpen`'s lens at the open, `aiRunClose`'s discharge, `aiRunRead` and `#biasForRun`, the whole D-86 sweep and REC-207 settlement region, `#obligationsBiasDebt`, the PL-12 region (`biasAdopt`, `biasManifest`, `biasInhale`), `#memberTextAtSha`, `#bundleGate`, and the dispatch arms; in `schema.mjs` the five bias tables; in `bio-checks.mjs` `BIAS_STATEMENT_KINDS`, the three predicates, `checkBiasExtension`, its call in `checkBundle`, and `BIAS_CHECKS` (C-26.1–C-26.19); `promotion/index.mjs` (its registry, `onCommitted`, the step context, R15's `bias-state-edge`, `promotionOf`), `gate.mjs`'s `runGate`, `record-core/index.mjs` (`readFile`, `readImage`, `head`, `registerAuditCheck`, `auditPass`, `declarePurge`), `membership/index.mjs` (`viewerPredicate`, `inSight`, `existenceAct`, `projectAuthority`, `positionalMember`, `isAdministrator`, `memberFacts`, `projectOwners`), `calibration/index.mjs` (the factory and ops shape).
 
@@ -18,7 +18,7 @@ Sent 2026-09-27 as one `QUESTION`. I carry on with every entry on the best readi
 
 ## Answers from BOB
 
-- None yet at completion. Every entry below is built on the best reading stated with each question.
+- **Q1–Q7** · ANSWER 08:07 UTC (K146, `tranche/T5` @ 9e8dc29840): every reading adopted; C-26.20 allocated in this family; legacy-index wraps `runGate` with `withBiasChecks` in T5-11; ai-runs deletes `bias/interim.mjs` in T6.
 
 ## Entries applied
 
@@ -75,3 +75,12 @@ ADDED bio-plane/src/store.mjs:40566  ...biasOps(biasOf(this.ctx), url, body),
 ```
 
 Size: test runs 24, module lines 1690
+
+## After K146 (re-opened 08:25 UTC; `tranche/T5` @ 5af5183f89 merged, entities merged there)
+
+- Merge conflict in the store's purge filter (entities' filter beside mine) resolved by keeping both lines.
+- **R25 met against the real registry:** `biasOf` reaches `entitiesOf(ctx)` by default (a test may pass its own, or `null` for none); the R25 test gains an arm over the real entities module. REPORT 6 (the CHANGE for entities) is no longer needed.
+- Tests: `node --test bio-plane/test/m/bias/` 46, 45 pass, 1 todo (R26); `node --test bio-plane/test/m/` 1,085, 1,081 pass, 2 fail (promotion's R18 arms, REPORT 1), 2 todo; `d86-bias-debt` 20/20, `d84-case-manifest` 44/44, `scheduler` 51/51, `publish` 99/99.
+- format 0 failures; architecture 10 files, 25 imports, 0 failures; coverage 41/41; ownership legacy-store 23 added, 1,412 removed, legacy-checks 0 added, 480 removed, 0 failures.
+
+Size: test runs 30, module lines 1694
