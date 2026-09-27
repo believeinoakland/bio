@@ -65,7 +65,7 @@ export function governor({ refuse = [], held = [] } = {}) {
 export function provenance(s, { registered = [], attestAnswer = null } = {}) {
   const receipts = [], attests = [];
   return {
-    receipts, attests, ARCHIVE_CAPTURE_GRADE: "C",
+    receipts, attests,
     recordReceipt(r) {
       receipts.push(r);
       s.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, retrieval_locator)
@@ -73,6 +73,8 @@ export function provenance(s, { registered = [], attestAnswer = null } = {}) {
                  r.addressNorm, r.address, r.captureSha, r.via || "direct", r.retrieved, r.retrieved, r.retrievalLocator);
       return { recorded: true };
     },
+    signed: [],
+    async signReceipt(r) { this.signed.push(r); return { ok: true, signed: true }; },
     registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: false }; },
     async attest(args, io) { attests.push(args); return attestAnswer ?? { ok: true, attempts: [
       { kind: "timestamp", service: "tsa.test", outcome: "ok", at: "2026-09-27T00:00:00Z" },

@@ -15,6 +15,7 @@ import { KNOCK } from "./doorbell.mjs";
 import { acquire, archiveLookup } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
@@ -60,14 +61,14 @@ const instances = new WeakMap();
 
 /** K61: the one Capture for this object's storage. `opts` is read on the first call only: `env` (the object's
  *  bindings: the evidence bucket for the inbox, the renderer, the instance's name), `governor` (host-governor's,
- *  `governorOf(ctx)` by default) and `provenance` (provenance's services, taken injected until its early merge,
- *  K120 (1)). A test may pass its own. */
+ *  `governorOf(ctx)` by default) and `provenance` (`provenanceOf(ctx)` by default). A test may pass its own. */
 export function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
   if (!c) {
     c = new Capture(storage, { ...opts, record: opts.record ?? recordOf(ctx),
-                               governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }) });
+                               governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
+                               provenance: opts.provenance ?? provenanceOf(ctx) });
     instances.set(storage, c);
   }
   return c;

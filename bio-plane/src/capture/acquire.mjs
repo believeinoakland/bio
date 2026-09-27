@@ -19,6 +19,7 @@ import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "..
 import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs, renderConcurrencyCap,
          renderReserveMs, renderBlock, renderedAuthority, rendererFor, renderLocaleFor } from "../render.mjs";
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
+import { attest as provenanceAttest, ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -174,18 +175,36 @@ export async function archiveLookup(cap, { address } = {}) {
         + "because the hop that reaches the record must be built by the same call that fetched the CDX record" } };
 }
 
-/** R20 (K60, K72 (10)): co-attestation at every capture, through provenance's `attest`: a trusted timestamp over the
- *  capture digest and, wherever the source permits, a co-archive of the locator at capture time. Every attempt and
- *  its outcome is recorded; a failure is an attempt, never a failed capture. The archive arm's locator is itself an
- *  archive replay, so no co-archive is asked of it. */
+/* R36: an outbound request that is not a plain GET of a document (the timestamp authorities' POSTs, the co-archive)
+   still asks the host governor for admission and reports its outcome, under this instance's agent. */
+function governedCall(cap, purpose) {
+  const g = cap.governor;
+  return async (u, init = {}) => {
+    let host = null;
+    try { host = new URL(String(u)).host; } catch { host = null; }
+    if (host && g) {
+      let a = null;
+      try { a = await g.governorAdmit({ host }); } catch { a = null; }
+      if (a && a.admitted === false) throw new Error(`the per-host governor is holding requests to ${host} (${a.reason || "governed"})`);
+      if (a && a.wait_ms > 0) await new Promise((r) => setTimeout(r, a.wait_ms));
+    }
+    const res = await fetch(u, { ...init, headers: { ...(init.headers || {}), "user-agent": userAgent(cap.env, purpose) } });
+    if (host && g) { try { await g.governorReport({ host, status: res.status, retry_after_ms: retryAfterMs(res.headers.get("retry-after")) }); } catch { /* not a failed call */ } }
+    return res;
+  };
+}
+
+/** R20 (K60, K72 (10)): co-attestation at every capture, through provenance's `attest` (R31–R33): a trusted
+ *  timestamp over the capture digest and, wherever the source permits, a co-archive of the locator at capture time.
+ *  Every attempt and its outcome is recorded; a failure is an attempt, never a failed capture. The archive arm's
+ *  locator is itself an archive replay, so no co-archive is asked of it. */
 async function coAttest(cap, { sha, locator, via, ev }) {
   const p = cap.provenance;
-  if (!p || typeof p.attest !== "function")
-    return [{ kind: "attest", outcome: "not_attempted", at: stampSecond(),
-              reason: "no attestation service is bound to this instance, so neither a timestamp nor a co-archive was requested" }];
+  const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : provenanceAttest;
   try {
-    const out = await p.attest({ sha256: sha, archive: via !== "archive.org", locator },
-      { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: (u, i) => fetch(u, i) });
+    const out = await attestFn({ sha256: sha, archive: via !== "archive.org", locator },
+      { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
+        holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
     const attempts = Array.isArray(out && out.attempts) ? out.attempts : [];
     return attempts.length ? attempts
       : [{ kind: "attest", outcome: "failed", at: stampSecond(), reason: String((out && (out.reason || out.note)) || "no attempt was reported") }];
@@ -606,6 +625,13 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res.url || locator), captureSha: sha, retrieved,
       via, retrievalLocator: locator });
   } catch { /* an unfiled receipt is not a failed capture */ }
+  /* provenance R34 (K59): an archive-sourced capture's receipt is signed with the instance's own key. A signing that
+     cannot be made (no key bound) is stated on the answer, never a failed capture. */
+  let receiptSignature = null;
+  if (via === "archive.org") {
+    try { receiptSignature = await cap.provenance?.signReceipt?.({ captureSha: sha, retrievalLocator: locator, retrieved }) ?? null; }
+    catch (e) { receiptSignature = { ok: false, reason: "RECEIPT_NOT_SIGNED", detail: String(e && e.message || e).slice(0, 200) }; }
+  }
 
   /* R14, D-98: an undetermined capture enqueues ONE event; that is the entire extent of what the capture path may do
      about it. The subject is the DOCUMENT for a Drive export, else the locator. */
@@ -669,7 +695,6 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R20: co-attestation at every capture (K60). */
   const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
 
-  const archiveGrade = cap.provenance && cap.provenance.ARCHIVE_CAPTURE_GRADE;
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
     profile,
@@ -699,7 +724,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
         : "bio-plane acquire, https fetch, hashed at receipt",
       /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
-      grade: via === "archive.org" ? (archiveGrade ?? null) : EARNED_CAPTURE_CEILING,
+      grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
       ...(via === "archive.org" ? { authority: "Internet Archive" } : {}),
       actor_class: member ? "member" : (cls === "probe" ? "session" : "daemon"),
       sha256: sha, encoding: "binary", bytes: total,
@@ -725,6 +750,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...(multipart ? { parts: parts.length } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
+    ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     store: storeName, tokenClass: cls,
   });
 }

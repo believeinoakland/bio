@@ -7,6 +7,7 @@ import { fresh, bucket, governor, provenance, network, sha, receipt, H } from ".
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
 import { EARNED_CAPTURE_CEILING, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
 import { SUBRESOURCE_STAGGER_SETTING, REACHABILITY_SETTINGS } from "../../../src/capture/index.mjs";
+import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 
 const HTML = (body = "<p>hello</p>") => `<!doctype html><html><head><title>t</title></head><body>${body}</body></html>`;
 const page = (body, headers = {}, status = 200) => new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", ...headers } });
@@ -92,6 +93,9 @@ test("R3: the archive arm needs an eligible address, queries the CDX through the
   const chain = r.body.document.provenance_chain;
   assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
   assert.equal(r.body.document.capture.authority, "Internet Archive");
+  /* provenance R34 (K59): the archive-sourced capture's receipt is signed */
+  assert.deepEqual(w.prov.signed.map((x) => [x.captureSha, x.retrievalLocator]), [[sha("archived bytes"), `https://web.archive.org/web/20250101000000id_/${addr}`]]);
+  assert.deepEqual(r.body.receipt_signature, { ok: true, signed: true });
   /* the named failures */
   await eligible(w);
   const thrown = await run(w, (u) => (u.includes("/cdx/") ? new Error("dns") : null), { via: "archive.org", address: addr }, { cls: "admin" });
@@ -373,7 +377,8 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
   const addr = "https://gone.example/doc";
   const a = await run(w, (u) => u.includes("/cdx/") ? CDX([cdxRow("20250101000000")]) : u.includes("/web/") ? page("a", { "content-type": "text/plain" }) : null,
                       { via: "archive.org", address: addr }, { cls: "admin" });
-  assert.equal(a.body.document.capture.grade, w.prov.ARCHIVE_CAPTURE_GRADE, "provenance's one definition");
+  assert.equal(a.body.document.capture.grade, ARCHIVE_CAPTURE_GRADE, "provenance's one definition");
+  assert.notEqual(ARCHIVE_CAPTURE_GRADE, EARNED_CAPTURE_CEILING);
 });
 
 const SITE = (links) => HTML(`<link rel="stylesheet" href="/s.css"><img src="/i.png"><nav><a href="/about">About</a></nav>${links || ""}`);
@@ -451,9 +456,20 @@ test("R20: every capture requests a timestamp and, wherever the source permits, 
   const f = await run(failing, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, { locator: "https://a.example/x" });
   assert.equal(f.status, 200);
   assert.deepEqual([f.body.document.attestation_attempts[0].outcome, f.body.document.attestation_attempts[0].reason], ["failed", "tsa down"]);
-  const unbound = world({ prov: { recordReceipt() {}, registerHolds: () => ({}) } });
-  const u = await run(unbound, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, { locator: "https://a.example/x" });
-  assert.equal(u.body.document.attestation_attempts[0].outcome, "not_attempted");
+  /* provenance's own attest, over a network where no authority answers: every attempt recorded, the capture filed,
+     and each authority asked through the governor under this instance's agent (R36) */
+  const real = world({ prov: { recordReceipt() {}, registerHolds: () => ({ registered: false, acquired: true }) } });
+  const u = await run(real, (url) => url === "https://a.example/x" ? page("x", { "content-type": "text/plain" }) : new Response("no", { status: 503 }),
+                      { locator: "https://a.example/x" });
+  assert.equal(u.status, 200);
+  assert.ok(u.body.document.attestation_attempts.length >= 1);
+  assert.ok(u.body.document.attestation_attempts.every((a) => a && typeof a === "object"));
+  const others = u.net.seen.filter((x) => x.url !== "https://a.example/x");
+  assert.ok(others.length >= 1, "the authorities were asked");
+  for (const o of others) {
+    assert.match(o.init.headers["user-agent"], /CivicOS/);
+    assert.ok(real.gov.calls.some((c) => c[0] === "admit" && c[1] === new URL(o.url).host), `${o.url} through the governor`);
+  }
 });
 
 test("R33 R34 R42: acquire writes no bundle or register row, keeps the raw bytes under their own digest beside separate derived artifacts, and answers no reading", async () => {
