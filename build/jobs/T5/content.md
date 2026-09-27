@@ -56,7 +56,7 @@
 ## Deferred
 
 - The grammar's core and the C-45/C-52/C-80 rows leave the catalogue only when their catalogue callers do (Q7).
-- R41's notice reaches members only when inquiry registers `onStale` (T6); extraction's R24 payload carries no units before the write, so through that listener every stale row is graded UNDETERMINED until it does (reported).
+- R41's notice reaches members only when inquiry registers `onStale` (T6). (Extraction's R24 payload now carries `unitsBefore`, K141; content's listener grades with it.)
 
 ## Found in other modules (REPORT)
 
@@ -93,3 +93,8 @@ Size: test runs 22, module lines 2184
 - Checks: format 0 failures; architecture 39 relative imports, 0 failures; coverage 45 of 45; ownership legacy-store 49 added / 2,294 removed, legacy-checks 0 / 34, 1 failure (above). Module tests 48/48. Old suites on the stale and notice paths green (`versionnotice`, `versiongrade`, `narrow`, `content-extent`, `content-extent-arms`, `rec121-chain-bytes`, `d420-image-page`); `content-reads`, `transcribe`, `content-machine-mint` red only on `op=attesttext` (REPORT 11).
 
 Size: test runs 26, module lines 2151
+
+## CHANGE 07:45 UTC · R24's `unitsBefore` (K141; `tranche/T5` @ `a616838ce4`, merged here)
+
+- R41 did need the prior units: without them every row a re-read staled was graded UNDETERMINED (its citers told, but never "unaffected" or a real grade). content's stale-mark listener now passes the payload's `unitsBefore` to `markStale`, which grades them against the units the write left (the index at the listener's call, which runs after the write). New R41 test drives content's registered listener with an R24-shaped payload: an unchanged page grades A and nobody is told; a rewritten one grades NOT_FOUND and is told.
+- Module tests 49/49. Checks below.

@@ -178,3 +178,23 @@ test("R37: every act and read naming a document or row answers one the viewer ma
   assert.equal(w.content.sees(DOC, V("bo")), true);
   assert.equal(w.content.sees(DOC, null), false, "no stamp sees nothing");
 });
+
+test("R41: through extraction's reading notice, the units before the write (its R24 unitsBefore) are graded against the units it left", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: OCR, pageCount: 2 });
+  const U = (page, text) => ({ extent: { kind: "pdf-page", page, rect: null }, ref: `page ${page + 1}`, text });
+  const same = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") }).content_id;
+  const moved = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "pdf-page", page: 1 }, mintedBy: V("bo") }).content_id;
+  const told = [];
+  w.content.onStale("inquiry", (n) => told.push(n));
+  const listener = w.ex.listeners.find((l) => l.module === "content");
+  assert.ok(listener, "content registers its stale mark with extraction");
+  /* the write has happened: the index holds the new units; the payload carries the old ones, extents parsed as R36 answers them */
+  w.ex.units[a.sha] = { units: [U(0, "unchanged words"), U(1, "rewritten entirely")].map((u) => ({ ...u, extent: canonicalExtent(u.extent) })), state: "whole" };
+  const NEW = [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "9", cap: "B", measured_by: "m" }];
+  const out = listener.fn({ bundleId: DOC, captureSha: a.sha, reading: {}, chainBefore: OCR, chainAfter: NEW,
+                            unitsBefore: { units: [U(0, "unchanged words"), U(1, "the original sentence here")], state: "whole" }, indexed: null, author: V("bo") });
+  assert.deepEqual(out, { staled: 2 });
+  assert.deepEqual(told.map((n) => [n.content_id, n.grade, n.affects]), [[moved, "NOT_FOUND", "affected"]], "the unchanged page is A: nobody is told");
+  assert.equal(told.some((n) => n.content_id === same), false);
+});

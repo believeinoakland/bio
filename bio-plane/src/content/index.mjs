@@ -1264,7 +1264,9 @@ export function contentOf(host, deps) {
     instances.set(host, c);
     record.declarePurge("content", CONTENT_TABLES);
     /* R22 (REC-82): the stale mark on every replaced reading, registered with extraction (its R24; K31's pattern). */
-    c.extraction.onReading("content", (e) => ({ staled: c.markStale(e.captureSha, e.chainAfter) }));
+    /* R41: the capture's units as they stood before the write (extraction R24's `unitsBefore`, K141) are graded against
+       the units the write left, which the index holds at this call (the listener runs after the write). */
+    c.extraction.onReading("content", (e) => ({ staled: c.markStale(e.captureSha, e.chainAfter, { unitsBefore: e.unitsBefore ?? null }) }));
   }
   return c;
 }
