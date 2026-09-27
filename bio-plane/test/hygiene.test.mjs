@@ -107,7 +107,8 @@ import { sweepWalkFloors, strip as stripSource, stripToCode } from "../scripts/w
    spelling can go round it, and these are what let this file ask whether a walking
    module actually applies it. The block at the foot of the census is the argument. */
 import { declarationOf, WalkFloorError, isWalkFigure, isWalkSet } from "../scripts/walkfigure.mjs";
-import { corpus as opCorpus, sweep as opSweep } from "../scripts/op-claims.mjs";
+/* T4 (legacy-tests; legacy-index N12): `scripts/op-claims.mjs` was removed with the old tooling; its walks are no
+   longer driven here (sections (6) and (7) below). */
 /* M0-134: the finally-exit reader, imported from its module so the rule has one implementation. */
 import { scanFinallyExits } from "../scripts/finallyexit.mjs";
 
@@ -2683,11 +2684,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      `op-claims` split must be FOUND. This is the arm that fails if the detector
      ever stops seeing across a module boundary — which BOTH of its own first-draft
      bugs did, each while reporting a clean estate. */
-  const opClaimsFloors = wf.sites.filter((s) => s.file === "bio-plane/test/op-claims.test.mjs");
-  t(`the REAL cross-file split is found: op-claims.test.mjs floors on op-claims.mjs's walk (${opClaimsFloors.length} site(s), floor 4)`,
-    [opClaimsFloors.length >= 4,
-     opClaimsFloors.every((s) => s.from.includes("bio-plane/scripts/op-claims.mjs"))],
-    [true, true]);
+  /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): "the REAL cross-file split is found" asked for
+     `op-claims.test.mjs`'s floors on `op-claims.mjs`'s walk, the estate's one cross-file split in another file; both
+     were removed with the old tooling. The detector's cross-module reach is still asked here of THIS suite's own
+     floors on walkfloor's walk, one import away ((5) below), and by `walkfloor.test.mjs`'s F1-F7 fixtures. */
 
   /* (3) THE FALSE-POSITIVE DIRECTION, ASSERTED OVER A REAL LINE AND NOT A FIXTURE.
      `LEDGER` is a STATIC exported array, floored (`LEDGER.length >= 20`) by THE SAME
@@ -2701,8 +2701,9 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      reports — `walkfloor.control.mjs modulegrain` RAN 2026-09-22 by the M0-116 worker: AS DECLARED, walkfloor
      40 pass / 4 fail, hygiene 946 pass / 5 fail, restore verified; `walkfigure.control.mjs overstrict`, whose
      fixture M0-116 corrected, walkfigure 32 / 0 and hygiene 951 / 0 as declared. */
-  t("a floor on a STATIC export of a walking module is NOT reported (the `LEDGER.length >= 20` shape)",
-    wf.sites.some((s) => /LEDGER/.test(s.expr)), false);
+  /* RETIRED 2026-09-27 (T4, legacy-tests; N12): its real line, `LEDGER.length >= 20` in `op-claims.test.mjs`, left
+     with that suite; the static-export shape stays asked by `walkfloor.test.mjs`'s benign arms and by
+     `walkfigure.control.mjs`'s overstrict arm. */
 
   /* (4) GUARDED OR NAMED — the ratchet. A new cross-file floor is a DECISION, not
      a silence, exactly as a new walk is above. */
@@ -2745,13 +2746,14 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      A delta and not two absolutes: a grader that answered GUARDED to everything
      would pass the first half and a grader that answered nothing would pass the
      second, and only the pair separates a working column from either. */
-  const ocSites = wf.sites.filter((s) => s.file === "bio-plane/test/op-claims.test.mjs");
-  t(`the five op-claims floors are GUARDED because the figures they stand on are declared `
-  + `REPRODUCIBLE, and this suite's own are not because its are declared WORKING-TREE — one `
-  + `run, both directions (op-claims: ${ocSites.map((s) => s.key).sort().join(", ")})`,
-    [ocSites.length, ocSites.every((s) => s.guarded && /Repro$/.test(s.key)),
-     selfSites.length > 0, selfSites.some((s) => s.guarded)],
-    [5, true, true, false]);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the GUARDED half's five real floors were
+     `op-claims.test.mjs`'s, on `op-claims.mjs`'s reproducible figures, and both left with the old tooling; no walk
+     left in the estate declares a reproducible figure, so that half has no real instance and is asked by
+     `walkfloor.test.mjs`'s fixtures. The WORKING-TREE half, over this suite's own floors, stays. */
+  t(`this suite's own floors are NOT graded GUARDED, because the figures they stand on are declared WORKING-TREE `
+  + `(the GUARDED half retired with op-claims, N12)`,
+    [selfSites.length > 0, selfSites.some((s) => s.guarded)],
+    [true, false]);
 
   /* (5b) AND THE OLD PREDICATE WAS NOT MERELY IMPRECISE — ON THIS ESTATE IT WAS
      EXACTLY INVERTED, WHICH IS WORTH MEASURING RATHER THAN ASSERTING. The grade
@@ -2771,10 +2773,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   + `floors are guarded ${JSON.stringify(guardedFiles)} import provenance.mjs in NONE of them, and `
   + `the ${importsProv.length} file(s) that DO import it ${JSON.stringify(importsProv)} have no `
   + `guarded site at all`,
-    [guardedFiles.length >= 1, importsProv.length >= 1,
+    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; N12): the one file with guarded floors, `op-claims.test.mjs`, retired,
+       so `guardedFiles` is empty on this estate; the inversion is asked in the direction that still has an instance
+       (every file that imports provenance.mjs has NO guarded site) and the other stays true of an empty set. */
+    [importsProv.length >= 1,
      guardedFiles.every((f) => !importsProv.includes(f)),
      importsProv.every((f) => !guardedFiles.includes(f))],
-    [true, true, true, true]);
+    [true, true, true]);
 
   /* ======================================================================== *
    *  D-265 — THE CENSUS'S SECOND QUESTION, AND IT IS ASKED OF THE VALUE
@@ -2824,9 +2829,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    * identically over ten modules and over six hundred; asking it over the whole
    * tree would put a second 3-second repository walk in this suite for nothing. */
   const NARROW = ["bio-plane/scripts"];
+  /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): op-claims' `corpus` and `sweep` left with the file. */
   const driven = [
-    { file: "bio-plane/scripts/op-claims.mjs", exp: "corpus", run: () => opCorpus(REPO, NARROW) },
-    { file: "bio-plane/scripts/op-claims.mjs", exp: "sweep", run: () => opSweep({ root: REPO, roots: NARROW }) },
     { file: "bio-plane/scripts/walkfloor.mjs", exp: "sweepWalkFloors",
       run: () => sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts"]]] }) },
   ];
@@ -2900,7 +2904,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    *
    * The planted set is FLOORED as well as counted, because a delta of 0 of 0 is
    * the shape that has passed three headline assertions in this repository. */
-  const realFigure = opCorpus(REPO, NARROW).chars;
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the real branded figure is walkfloor's corpus count
+     over the same root (op-claims' `corpus().chars` left with `scripts/op-claims.mjs`). */
+  const realWalk = sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts"]]] });
+  const realFigure = realWalk.corpus.count;
   const planted = [
     ["through a DATA STRUCTURE — walkfloor.mjs states it cannot see this, and pins it as an arm",
       () => { const a = []; a.push(realFigure); return a[0] >= 1; }],
@@ -2948,8 +2955,9 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   t(`a REPORT is not a floor: printing, interpolating and serialising a walk figure all still `
   + `work (${JSON.stringify(notFloors)})`, notFloors, []);
   t("and the figure a walk publishes is recognisable as one, so a suite can ask rather than guess",
-    [isWalkFigure(realFigure), isWalkSet(opCorpus(REPO, NARROW).files),
-     isWalkFigure(opCorpus(REPO, NARROW).charsRepro)],
+    /* T4: the set and the non-figure are walkfloor's (its corpus set, and its `provenance`, a data value). */
+    [isWalkFigure(realFigure), isWalkSet(realWalk.corpus),
+     isWalkFigure(realWalk.provenance)],
     [true, true, false]);
 
   /* ---- (8) THE CHOKEPOINT'S PASSAGES ARE NAMED ------------------------------
@@ -2979,10 +2987,8 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        D-265's residual — the only passage here that was a REAL FLOOR — and it is
        GONE, not re-justified, because `sweep()` now publishes `attributionsRepro`
        and the floor reads that. What is left is the shape the chokepoint is FOR. */
-    "bio-plane/test/op-claims.test.mjs": "two SUBSET/COLLAPSE checks whose subject IS the "
-      + "working-tree population (each written twice, once per branch of the UNVERIFIED "
-      + "collapse), and one dot-segment rule that must be asked of the whole walk. NO FLOOR "
-      + "PASSES THROUGH HERE ANY MORE — D-302 closed the last one",
+    /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): `bio-plane/test/op-claims.test.mjs`'s entry left with
+       that suite, retired with `scripts/op-claims.mjs`. */
     "bio-plane/test/hygiene.test.mjs": "this block's own REACH floors and the two roster reads "
       + "below them; the reasons are the named constants beside each one",
     "bio-plane/test/walkfloor.test.mjs": "the estate REACH floor, which is a claim about what "

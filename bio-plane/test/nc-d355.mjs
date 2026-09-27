@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* nc-d355.mjs — D-355's NEGATIVE-CONTROL DRIVER, SEVEN ARMS PLUS A BASELINE.
+/* nc-d355.mjs — D-355's NEGATIVE-CONTROL DRIVER, SEVEN ARMS PLUS A BASELINE (arm 3 retired 2026-09-27, T4: six run).
  *
  *     node bio-plane/test/nc-d355.mjs            # every arm, in order
  *     node bio-plane/test/nc-d355.mjs 4          # the baseline, then one arm
@@ -45,7 +45,6 @@ const RP_SUBJECTS = [path.join(ROOT, "checks", "bio-checks.mjs"), F.index,
 const RP = path.join(REPO, "civicos-ui", "test", "refusal-partition.control.mjs");
 const RP_PEN = path.join(REPO, "civicos-ui", "test", ".rec79-control-pristine");
 const REFSEL = "bio-plane/test/refselectivity.control.mjs";
-const OPCLAIMS = "bio-plane/test/op-claims.control.mjs";
 const LOGROOT = path.join(REPO, "_m025", "nc-d355");                  /* gitignored with `_m025/` */
 const PEN = controlPen("d355");                                       /* this file's own pristine copies */
 
@@ -207,20 +206,10 @@ arm("2b", "THE SAME DECAYED LOG, the fallback NEUTERED. DECLARED: `arms=?`, the 
       say: `log edited: ${changed} · refselectivity arms=${c.arms} · tally wrong ${c.wrong} · census exit ${c.code}` };
   });
 
-/* ===== (3) OVER-STRICTNESS — a driver the UNION already reads keeps its count exactly. */
-arm("3", "OVER-STRICTNESS — `op-claims.control.mjs`, RUN, which announces `ARM <id> —` AND prints an `(<id>)` summary "
-  + "line per arm. DECLARED: the census count equals its ARM announcements, read by the UNION (no `(enum)`), NOT "
-  + "doubled by the summary lines — and the summary lines exist, or this arm proves nothing.",
-  [],
-  async () => {
-    const logs = path.join(LOGROOT, "arm3", "logs");
-    const c = await census(OPCLAIMS, logs);
-    const log = fs.existsSync(logFile(logs, OPCLAIMS)) ? fs.readFileSync(logFile(logs, OPCLAIMS), "utf8") : "";
-    const announced = (log.match(/^ARM \S+ — /gm) || []).length;
-    const summary = (log.match(/^ {2}\([A-Za-z0-9]+\) /gm) || []).length;
-    return { ok: announced > 0 && summary > 0 && c.arms === String(announced),
-      say: `op-claims.control ${c.verdict} arms=${c.arms} · ARM lines in its log ${announced} · (id) summary lines ${summary} · census exit ${c.code}` };
-  });
+/* ===== (3) RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12). Its subject was `op-claims.control.mjs`, the one
+   driver that announced `ARM <id> —` AND printed an `(<id>)` summary line per arm; that control retired with
+   `scripts/op-claims.mjs`, and no other driver in `bio-plane/test/` or `civicos-ui/test/` prints both shapes (searched
+   for both spellings), so the over-strictness it asked has no real instance left to run. Six arms remain. */
 
 /* ===== (4) THE PEN — refusal-partition KILLED mid-arm, which is what the census's timeout does. */
 arm("4", "refusal-partition sent SIGTERM WHILE AN ARM IS ARMED (a subject differs from pristine and a copy is in "

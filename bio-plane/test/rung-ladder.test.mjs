@@ -65,7 +65,7 @@ import {
   IRREVERSIBLE_CORRECTION_PATH, VOCABULARIES,
 } from "../src/affordances.mjs";
 import { STATES, VERSION_REASON_REQUIRED, versionNeedsReason } from "../checks/bio-checks.mjs";
-import { readDispatch, routeOf, PLANE } from "../scripts/op-claims.mjs";
+import { readDispatch, routeOf, PLANE } from "./dispatch-reader.mjs";   /* T4 (legacy-tests): the reader op-claims.mjs held (N12) */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 

@@ -70,7 +70,8 @@ import {
   isWalkFigure, isWalkSet, isClassified, WalkFloorError, ESCAPES,
 } from "../scripts/walkfigure.mjs";
 import { sweepWalkFloors, REPO } from "../scripts/walkfloor.mjs";
-import { corpus as opCorpus, sweep as opSweep } from "../scripts/op-claims.mjs";
+/* T4 (legacy-tests; legacy-index N12): `scripts/op-claims.mjs` was removed with the old tooling, so its walks no
+   longer serve as this suite's real figures; walkfloor's own walk (`sweepWalkFloors`) is the real walk driven. */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -197,7 +198,9 @@ export function sweep(opts = {}) { const c = corpus(opts.d); return { files: c.f
 {
   /* And the brand, over a REAL figure from a REAL walk of this repository, through the
      same two routes plus the other three the header names. */
-  const real = opCorpus(REPO, ["bio-plane/scripts"]).chars;
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the real figure is walkfloor's corpus count over
+     the same root (op-claims' `corpus().chars` left with `scripts/op-claims.mjs`). */
+  const real = sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts"]]] }).corpus.count;
   const routes = {
     "held in an array": () => { const a = []; a.push(real); return a[0] >= 1; },
     "held in a Map": () => new Map([["k", real]]).get("k") >= 1,
@@ -256,24 +259,21 @@ t("`classificationOf` separates what carries the classification from what does n
    classified and that is answered identically over ten modules and over six hundred. */
 console.log("\n--- 7. the real walk boundaries, driven ---");
 {
-  const NARROW = ["bio-plane/scripts"];
-  const c = opCorpus(REPO, NARROW);
-  const s = opSweep({ root: REPO, roots: NARROW });
+  /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): op-claims' `corpus()` and `sweep()` boundaries and the
+     floors `op-claims.test.mjs` wrote on them (`files >= 300`, `chars >= 10_000_000`, `names.count >= 150`, and its
+     reproducible `filesRepro`) left with `scripts/op-claims.mjs` and that suite. Walkfloor's boundary stays driven. */
   const w = sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts"]]] });
-  console.log(`  corpus(): ${c.chars} chars over ${c.files.count} file(s) · `
-    + `sweep(): ${s.mentions} mention(s) over ${s.names.count} name(s) · `
-    + `sweepWalkFloors(): ${w.corpus.count} module(s)`);
-  for (const [name, r] of [["op-claims corpus()", c], ["op-claims sweep()", s], ["walkfloor sweepWalkFloors()", w]]) {
+  console.log(`  sweepWalkFloors(): ${w.corpus.count} module(s)`);
+  for (const [name, r] of [["walkfloor sweepWalkFloors()", w]]) {
     const d = declarationOf(r);
     t(`${name} declares every figure it publishes, launders none, and classifies at least one `
     + `(workingTree: ${d.declared ? d.buckets.workingTree.join(", ") : "—"})`,
       [d.declared, d.undeclared, d.laundered, d.declared && d.buckets.workingTree.length > 0],
       [true, [], [], true]);
   }
-  t("and the REAL floors that exist on these walks are refused at the line, not afterwards",
-    [outcome(() => s.files >= 300), outcome(() => s.chars >= 10_000_000),
-     outcome(() => s.names.count >= 150), outcome(() => s.filesRepro >= 0)],
-    ["REFUSED", "REFUSED", "REFUSED", "RAN"]);
+  t("and a floor on this walk's working-tree figures is refused at the line, not afterwards",
+    [outcome(() => w.corpus.count >= 1), outcome(() => w.walkModules.count >= 0)],
+    ["REFUSED", "REFUSED"]);
 }
 
 /* Every sandbox this suite minted is removed, and the count is floored so the check

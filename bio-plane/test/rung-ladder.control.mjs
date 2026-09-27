@@ -113,7 +113,9 @@ function arm({ id, what, mustFail, mustNotFail, files }) {
 }
 
 const INDEX = join(PLANE, "src/index.mjs");
-const OPCLAIMS = join(PLANE, "scripts/op-claims.mjs");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the dispatch reader left `scripts/op-claims.mjs` (removed)
+   for `test/dispatch-reader.mjs`, verbatim; arm (2) neuters the same line there. */
+const OPCLAIMS = join(DIR, "dispatch-reader.mjs");
 
 /* -------------------------------------------------------------- the arms */
 

@@ -31,7 +31,10 @@ const MIN_BYTES = 1000;
 
 const FILES = {
   figure: join(PLANE, "scripts", "walkfigure.mjs"),
-  opclaims: join(PLANE, "scripts", "op-claims.mjs"),
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): `scripts/op-claims.mjs` was removed with the old
+     tooling. Arms (2), (4) and (5) now plant around, or unbrand, walkfloor's `sweepWalkFloors()`, the walk hygiene
+     still drives; each arm asks what it asked of op-claims' `sweep()`. */
+  walkfloor: join(PLANE, "scripts", "walkfloor.mjs"),
 };
 
 /* The two suites every arm reads, and the two figures every row carries. */
@@ -127,13 +130,13 @@ ARMS.newfloor = () => {
   const rel = "d265-unanticipated.probe.mjs";
   const p = plant(rel,
 `/* D-265 control arm (newfloor). Planted and removed by test/walkfigure.control.mjs. */
-import { sweep } from "../scripts/op-claims.mjs";
+import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
 
-const r = sweep({ root: "${PLANE.split("\\").join("/")}", roots: ["scripts"] });
+const r = sweepWalkFloors({ repo: "${PLANE.split("\\").join("/")}/..", roots: [["bio-plane", ["scripts"]]] });
 
 /* Through a DATA STRUCTURE — walkfloor.mjs pins this as a shape it cannot see. */
 const held = [];
-held.push(r.chars);
+held.push(r.corpus.count);
 
 /* ...and then through a FUNCTION PARAMETER, which is the other stated gap. */
 const atLeast = (value, bar) => value >= bar;
@@ -206,16 +209,18 @@ ARMS.overstrict = () => {
   const rel = "d265-benign.probe.mjs";
   plant(rel,
 `/* D-265 control arm (overstrict). Planted and removed by test/walkfigure.control.mjs. */
-import { sweep, LEDGER_STATE } from "../scripts/op-claims.mjs";
+import { sweepWalkFloors, WALK_PRIMITIVES } from "../scripts/walkfloor.mjs";
 
 /* Imports a walking module. Never floors on the walk. Reports, and floors on a
    STATIC export — the benign shape a module-granularity detector cries wolf on.
    CORRECTED 2026-09-22 (M0-116): the static export was LEDGER, which left this
    module for op-claims-ledger.mjs; LEDGER_STATE is a static export of the SAME
-   walking module, so the arm asks what it asked. */
-const r = sweep({ root: "${PLANE.split("\\").join("/")}", roots: ["scripts"] });
-console.log("swept " + r.files + " files over " + r.names.count + " names");
-if (LEDGER_STATE.length >= 5) console.log("the ledger is populated");
+   walking module, so the arm asks what it asked.
+   RE-ANCHORED 2026-09-27 (T4, legacy-tests; N12): op-claims left; walkfloor's
+   static WALK_PRIMITIVES is the static export of the same walking module. */
+const r = sweepWalkFloors({ repo: "${PLANE.split("\\").join("/")}/..", roots: [["bio-plane", ["scripts"]]] });
+console.log("swept " + String(r.corpus.count) + " modules, " + String(r.walkModules.count) + " walking");
+if (WALK_PRIMITIVES.length >= 3) console.log("the primitive list is populated");
 `);
   const wfg = runSuite("walkfigure"), hyg = runSuite("hygiene");
   console.log(`    ACTUAL: walkfigure ${wfg.pass}/${wfg.fail} · hygiene ${hyg.pass}/${hyg.fail}`);
@@ -225,22 +230,21 @@ if (LEDGER_STATE.length >= 5) console.log("the ledger is populated");
 
 /* ----------------------------------------------------------------- unbranded */
 ARMS.unbranded = () => {
-  console.log("\n(5) unbranded — `sweep()` stops classifying its boundary and returns a bare");
+  console.log("\n(5) unbranded — `sweepWalkFloors()` stops classifying its boundary and returns a bare");
   console.log("    object, which is the pre-D-265 state of the world.");
-  console.log("    DECLARED: hygiene's TOTALITY arm FAILS naming op-claims.mjs · sweep(),");
+  console.log("    DECLARED: hygiene's TOTALITY arm FAILS naming walkfloor.mjs · sweepWalkFloors(),");
   console.log("    and it must fail on `declared: false` rather than on a missing key —");
   console.log("    a brand removed must not look like a brand that is merely incomplete.");
-  const snap = snapshot(["opclaims"], "unbranded");
-  const src = readFileSync(FILES.opclaims, "utf8");
-  const armed = src.replace("  return walkResult({\n    about: \"op-claims sweep()",
-    "  if (true) return { table, files: files.length, chars, mentions, dynamic, offLedger,\n"
-    + "    names: [...names].sort(), findings, attributions, ledgerDrift, plannedBuilt, skipped, prov,\n"
-    + "    filesRepro: repro.length, charsRepro, mentionsRepro, namesRepro: [...namesRepro].sort() };\n"
-    + "  return walkResult({\n    about: \"op-claims sweep()");
+  const snap = snapshot(["walkfloor"], "unbranded");
+  const src = readFileSync(FILES.walkfloor, "utf8");
+  const armed = src.replace("  return walkResult({\n    about: \"walkfloor sweepWalkFloors()",
+    "  if (true) return { corpus: files.map((f) => relative(repo, f)), walkModules, sites, ceilings, unknowns,\n"
+    + "    provenance: prov.inHead === null ? \"UNVERIFIED\" : \"VERIFIED\" };\n"
+    + "  return walkResult({\n    about: \"walkfloor sweepWalkFloors()");
   if (armed === src) { console.error("    ABORT: the unbranded patch matched ZERO times — an arm that did not arm is a finding"); process.exit(2); }
-  writeFileSync(FILES.opclaims, armed);
+  writeFileSync(FILES.walkfloor, armed);
   const hyg = runSuite("hygiene");
-  const totality = (hyg.text.match(/FAIL\s+bio-plane\/scripts\/op-claims\.mjs · sweep\(\)[^\n]*(\n[^\n]*){0,2}/) || ["(no totality failure)"])[0];
+  const totality = (hyg.text.match(/FAIL\s+bio-plane\/scripts\/walkfloor\.mjs · sweepWalkFloors\(\)[^\n]*(\n[^\n]*){0,2}/) || ["(no totality failure)"])[0];
   console.log(`    ACTUAL: hygiene ${hyg.pass}/${hyg.fail}`);
   console.log(`    ACTUAL totality arm: ${String(totality).trim().slice(0, 300)}`);
   const bad = restore(snap, "unbranded");

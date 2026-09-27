@@ -90,8 +90,6 @@ const F = {
   shadowed:   path.join(HERE, "shadowed-refusals.test.mjs"),
   bounds:     path.join(HERE, "bounds.test.mjs"),
   hygiene:    path.join(HERE, "hygiene.test.mjs"),
-  opclaimsT:  path.join(HERE, "op-claims.test.mjs"),
-  opclaimsS:  path.join(PLANE, "scripts", "op-claims.mjs"),
 };
 /* The phantoms. Written, never stashed. Each is removed by the arm that made it. */
 const PHANTOM_SRC     = path.join(PLANE, "src", "zz-m0-18-phantom.mjs");
@@ -108,7 +106,8 @@ let failures = 0, checks = 0;
    here; the foot fails naming any declared arm that did not run and any that ran undeclared. The
    cheapest way past a red arm is to delete it, and a deleted arm leaves no failing check behind — this
    is the check it leaves. `6 stage 1` is announced twice (a heading, then the arm) and counted once. */
-const DECLARED_ARMS = ["0", "1", "2a", "2b", "3", "4", "6-stage-1", "6a", "6b", "7", "8a", "8b"];
+/* T4 (legacy-tests; N12): 8a and 8b retired with op-claims (section (8)). */
+const DECLARED_ARMS = ["0", "1", "2a", "2b", "3", "4", "6-stage-1", "6a", "6b", "7"];
 const RAN = [];
 const report = (name, ok, detail) => {
   checks++;
@@ -214,7 +213,7 @@ const BASE = {};
 /* T3 (legacy-tests; N14, N31, K84): `planning-hygiene` retired with the old process's plan tooling it tested, and
    leaves this baseline, arm 3's git-shim list and arm 5 with it. */
 for (const [k, f] of [["identity", F.identity], ["dec49", F.dec49],
-                      ["fences", F.fences], ["bounds", F.bounds], ["opclaims", F.opclaimsT],
+                      ["fences", F.fences], ["bounds", F.bounds],   /* T4: op-claims retired (N12) */
                       ["hygiene", F.hygiene]]) {
   const r = runSuite(f);
   BASE[k] = { ...tally(r.out), exit: r.exit, out: r.out };
@@ -469,47 +468,9 @@ arm("7 · removing the guard's import fails the class census by name", {
   },
 });
 
-/* ---- (8) op-claims' DOT-SEGMENT RULE, THE PAIR ---------------------------- */
-/* THE `op=` TOKEN IS BUILT, NEVER TYPED, and this is the second half of the same
-   receipt as ARM 6. The first draft spelled it whole — and this file lives in
-   `bio-plane/test/`, which `scripts/op-claims.mjs` walks, so at BASELINE, before
-   any arm ran, op-claims read this harness's own prose as an unaccounted claim
-   about the dispatch table and reported 34 pass / 1 fail. *A sweep arm that
-   failed by citing itself*, caught by the baseline row and by nothing else. The
-   same construction `machinefences-dec49.test.mjs` uses on its own prefix, and
-   for the same reason: a suite whose subject is a token must not be the place the
-   token is written. */
-const CLAIM_TOKEN = "op" + "=" + "notarealopatall";
-const DOT_PROSE = "# a copy of real prose, of the kind a control harness makes\n\n"
-  + `The operator then runs ${CLAIM_TOKEN} and reads the findings.\n`;
-const OLD_SKIP = 'const SKIP_DIR = new Set(["node_modules", "dist", "coverage"]);';
-const OLD_SEG = "const skipSegment = (name) => SKIP_DIR.has(name) || name.startsWith(\".\");";
-arm("8a · a dot-directory of copied prose leaves op-claims GREEN (M0-18 rule)", {
-  writes: [{ file: PHANTOM_DOTFILE, text: DOT_PROSE }],
-  run() {
-    const r = runSuite(F.opclaimsT), tl = tally(r.out);
-    report("8a · GREEN — a mandatory negative control's pristine copies no longer red the battery, which "
-      + `is the state D-257 measured as TEN findings (${tl.pass} pass, ${tl.fail} fail)`,
-      r.exit === 0 && tl.fail === 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
-    return tl;
-  },
-});
-arm("8b · the SAME directory REDS op-claims under the pre-M0-18 named list", {
-  writes: [{ file: PHANTOM_DOTFILE, text: DOT_PROSE }],
-  edits: [
-    { file: F.opclaimsS, from: OLD_SKIP,
-      to: 'const SKIP_DIR = new Set(["node_modules", ".git", ".claude", "dist", "coverage", ".worktrees"]);' },
-    { file: F.opclaimsS, from: OLD_SEG, to: "const skipSegment = (name) => SKIP_DIR.has(name);" },
-  ],
-  run() {
-    const r = runSuite(F.opclaimsT), tl = tally(r.out);
-    report("8b · RED, naming `notarealopatall` — the walk descended into the dot-directory and read a COPY "
-      + `as a third party's claim about the dispatch table (${tl.pass} pass, ${tl.fail} fail)`,
-      r.exit !== 0 && tl.fail > 0 && /notarealopatall/.test(r.out),
-      `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
-    return tl;
-  },
-});
+/* ---- (8) RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12) ---------------------------------------------
+   Arms 8a and 8b drove `scripts/op-claims.mjs`'s dot-segment rule through `op-claims.test.mjs`; both were removed with
+   the old tooling, so the pair has no subject. The dot-directory phantom's cleanup above stays harmless. */
 
 /* ---- the arm roster (D-355) ---------------------------------------------- */
 {
