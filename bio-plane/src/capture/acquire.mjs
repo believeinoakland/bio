@@ -201,15 +201,20 @@ function governedCall(cap, purpose) {
 async function coAttest(cap, { sha, locator, via, ev }) {
   const p = cap.provenance;
   const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : provenanceAttest;
+  /* The register's shape (C-18.1): each attempt `{service, attempted, ok}`, `attempted` whether the service was
+     asked, `ok` whether it answered; provenance's instant and words are kept beside them. */
+  const recorded = (a) => ({ ...a, service: String(a.service || a.kind || "attest"), attempted: true, ok: a.ok === true,
+                             ...(typeof a.attempted === "string" ? { at: a.attempted } : {}) });
+  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
   try {
     const out = await attestFn({ sha256: sha, archive: via !== "archive.org", locator },
       { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
         holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
-    const attempts = Array.isArray(out && out.attempts) ? out.attempts : [];
-    return attempts.length ? attempts
-      : [{ kind: "attest", outcome: "failed", at: stampSecond(), reason: String((out && (out.reason || out.note)) || "no attempt was reported") }];
+    const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
+    return attempts.length ? attempts.map(recorded)
+      : notAsked(String((out && (out.reason || out.note || out.detail)) || "no attempt was reported"));
   } catch (e) {
-    return [{ kind: "attest", outcome: "failed", at: stampSecond(), reason: String(e && e.message || e).slice(0, 200) }];
+    return notAsked(String(e && e.message || e).slice(0, 200));
   }
 }
 

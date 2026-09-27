@@ -77,8 +77,8 @@ export function provenance(s, { registered = [], attestAnswer = null } = {}) {
     async signReceipt(r) { this.signed.push(r); return { ok: true, signed: true }; },
     registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: false }; },
     async attest(args, io) { attests.push(args); return attestAnswer ?? { ok: true, attempts: [
-      { kind: "timestamp", service: "tsa.test", outcome: "ok", at: "2026-09-27T00:00:00Z" },
-      ...(args.archive ? [{ kind: "archive", service: "archive.test", outcome: "ok", locator: args.locator }] : [])] }; },
+      { service: "tsa.test", attempted: "2026-09-27T00:00:00Z", ok: true },
+      ...(args.archive ? [{ service: "archive.test (anonymous)", attempted: "2026-09-27T00:00:00Z", ok: false, note: "http 500" }] : [])] }; },
   };
 }
 

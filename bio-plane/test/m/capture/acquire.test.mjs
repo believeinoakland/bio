@@ -446,7 +446,9 @@ test("R20: every capture requests a timestamp and, wherever the source permits, 
   const w = world();
   const d = await run(w, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, { locator: "https://a.example/x" });
   assert.deepEqual(w.prov.attests[0], { sha256: sha("x"), archive: true, locator: "https://a.example/x" });
-  assert.deepEqual(d.body.document.attestation_attempts.map((a) => a.kind), ["timestamp", "archive"]);
+  assert.deepEqual(d.body.document.attestation_attempts.map((a) => [a.service, a.attempted, a.ok, a.at]),
+                   [["tsa.test", true, true, "2026-09-27T00:00:00Z"], ["archive.test (anonymous)", true, false, "2026-09-27T00:00:00Z"]],
+                   "each attempt in the register's shape (C-18.1): {service, attempted, ok}, the instant kept");
   await eligible(w);
   await run(w, (u) => u.includes("/cdx/") ? CDX([cdxRow("20250101000000")]) : u.includes("/web/") ? page("a", { "content-type": "text/plain" }) : null,
             { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
@@ -455,7 +457,8 @@ test("R20: every capture requests a timestamp and, wherever the source permits, 
   failing.prov.attest = async () => { throw new Error("tsa down"); };
   const f = await run(failing, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, { locator: "https://a.example/x" });
   assert.equal(f.status, 200);
-  assert.deepEqual([f.body.document.attestation_attempts[0].outcome, f.body.document.attestation_attempts[0].reason], ["failed", "tsa down"]);
+  assert.deepEqual([f.body.document.attestation_attempts[0].attempted, f.body.document.attestation_attempts[0].ok,
+                    f.body.document.attestation_attempts[0].note], [false, false, "tsa down"]);
   /* provenance's own attest, over a network where no authority answers: every attempt recorded, the capture filed,
      and each authority asked through the governor under this instance's agent (R36) */
   const real = world({ prov: { recordReceipt() {}, registerHolds: () => ({ registered: false, acquired: true }) } });
@@ -463,7 +466,8 @@ test("R20: every capture requests a timestamp and, wherever the source permits, 
                       { locator: "https://a.example/x" });
   assert.equal(u.status, 200);
   assert.ok(u.body.document.attestation_attempts.length >= 1);
-  assert.ok(u.body.document.attestation_attempts.every((a) => a && typeof a === "object"));
+  assert.ok(u.body.document.attestation_attempts.every((a) => a.service && typeof a.attempted === "boolean" && typeof a.ok === "boolean"),
+            "provenance's own attempts recorded in the register's shape");
   const others = u.net.seen.filter((x) => x.url !== "https://a.example/x");
   assert.ok(others.length >= 1, "the authorities were asked");
   for (const o of others) {
