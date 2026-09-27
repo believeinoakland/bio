@@ -16,4 +16,9 @@
 
 ## Answers from BOB
 
-(none yet)
+- **Q1–Q3 · ANSWER** (K142, `tranche/T5` @ `c9b4ebe600`, merged here): all three readings adopted. `text-chain` is in the uses; Q2 as stated; Q3: R29's text below, for BOB to fold in.
+
+## Proposed requirements (K142; for BOB to fold into `build/requirements/observation-log.md`)
+
+**The log's read contract**
+- **R29** The table `observation_log` and its columns `seq` (the key, store-wide, only increasing, R4), `at` (whole-second UTC), `actor_class`, `actor`, `authority_kind`, `authority`, `level`, `subject_kind`, `subject`, `state`, `governed` (0 or 1), `condition`, `bound`, `terminal` (0 or 1), `result_kind`, `result_ref` and `detail`, each with R1's vocabulary where it has one; the table `leads` and its columns `lead_id` (the key), `author`, `words`, `locator`, `at`; and the table `lead_shares` and its columns `lead_id`, `bundle_id` (the project), `sharer`, `at`, are a stated read contract: a later module may join them in its own SQL, on the terms of record-core R37 and content R45, and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's (R2, R14, R16, R22).

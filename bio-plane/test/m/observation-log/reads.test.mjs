@@ -92,3 +92,21 @@ test("R12 one capture's content axis from its latest extract and derive rows and
   const rows = w.obs.contentRows(c);
   assert.deepEqual([rows.extraction.authority_kind, rows.index.authority_kind, rows.index.state], ["extract", "derive", "partial"]);
 });
+
+test("R29 the read contract: observation_log, leads and lead_shares hold the stated columns with their meaning, and only this module writes them", () => {
+  const w = world();
+  const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
+  assert.deepEqual(cols("observation_log"), ["seq", "at", "actor_class", "actor", "authority_kind", "authority", "level", "subject_kind",
+    "subject", "state", "governed", "condition", "bound", "terminal", "result_kind", "result_ref", "detail"]);
+  assert.deepEqual(cols("leads"), ["lead_id", "author", "words", "locator", "at"]);
+  assert.deepEqual(cols("lead_shares"), ["lead_id", "bundle_id", "sharer", "at"]);
+  // meaning: a row written through the module reads back in those columns as stated
+  w.obs.observe(entry({ governed: true, state: "LOOKED_INDETERMINATE", condition: "governor-holding-host", bound: "b" }), "2026-09-27T03:00:00Z");
+  const r = w.row(`SELECT * FROM observation_log WHERE seq = 1`);
+  assert.deepEqual([r.at, r.governed, r.terminal, r.condition, r.bound], ["2026-09-27T03:00:00Z", 1, 0, "governor-holding-host", "b"]);
+  w.project("PROJ-A"); w.participant("PROJ-A", "alice");
+  const L = w.obs.lead({ words: "w", locator: "l", author: "alice" });
+  w.obs.leadShare({ lead: L.lead_id, project: "PROJ-A", sharer: "alice", viewer: "member:alice" });
+  assert.deepEqual(w.row(`SELECT lead_id, author, words, locator, at FROM leads`), { lead_id: L.lead_id, author: "alice", words: "w", locator: "l", at: L.at });
+  assert.deepEqual(w.row(`SELECT lead_id, bundle_id, sharer FROM lead_shares`), { lead_id: L.lead_id, bundle_id: "PROJ-A", sharer: "alice" });
+});
