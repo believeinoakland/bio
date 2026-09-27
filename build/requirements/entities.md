@@ -51,6 +51,10 @@ Terms. An **entity** is `{entity_id, kind, label, note, declared_by, at, aliases
 - **R24** The verdict is `id-spaces.judgePair`'s; `referent` is read only as `agrees` or `disagrees`, and the answer says the reading is the caller's; the fund name is the only referent compared here. It writes nothing.
 - **R25** The C-91 translations and every sentence of the answer name no local system, office or example value (K1). *(not yet met: N6 — they name "cms", "apn" and local project and parcel numbers)*
 
+**The grade order** (K147, K149; module-level exports)
+- **R33** `gradeRank` is a frozen map from each grade of the catalogue's `BASIS_GRADES` to its rank, derived from that list's strongest-first order and never restated: the strongest grade ranks highest (`A` 4, `B` 3, `C` 2, `D` 1 while the catalogue reads A–D), and a value that is not a grade has no entry (`undefined`), never a rank below `D`. It is the one rank R10 raises by and R15–R16 collapse by; `connections`, `progressions`, `bias` and the earned-basis registry read it and hold no copy.
+- **R34** `isEstablished(grade)` is true exactly for `A` and `B` (a captured identifier at both ends) and false for every other value, `C` and `D` included; it is the one rule behind R10's `established`.
+
 ## Private
 
 ### Uses
