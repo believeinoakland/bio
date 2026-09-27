@@ -17,7 +17,8 @@
  *   membership  membership, `membershipOf(ctx)` unless a test passes its own.
  *   promotion   promotion, `promotionOf(ctx)` unless a test passes its own; this module registers its step and its
  *               post-commit notice with it on first reaching it.
- *   entities    the subject registry (`has(entityId)`, entities R7), for R25; absent, R25 answers undetermined.
+ *   entities    the subject registry (`has(entityId)`, entities R7), for R25: `entitiesOf(ctx)` unless a test passes its
+ *               own; `null` is no registry, and R25 then answers undetermined.
  *   env         the instance bindings: `BIAS_DEBT_DELAY_MS` (R41) and `BIAS_DEBT_BATCH` (R33).
  * The ops (`biasmanifest`, `biasadopt`, `biasinhale`, `biasdebtresolve`, `biasdebt`) are `biasOps`' entries, which the
  * legacy store's dispatcher spreads in.
@@ -28,6 +29,7 @@ import { normalizeType, parseFrontmatter, MACHINE_AUTHOR_PREFIX, isMachineStamp,
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING, checkBiasSet,
          checkBiasImage } from "./checks.mjs";
 
@@ -916,7 +918,8 @@ export function biasOf(ctx, deps = {}) {
     const record = (deps && deps.record) || recordOf(ctx);
     const membership = (deps && deps.membership) || membershipOf(ctx, { record });
     const promotion = (deps && deps.promotion) || promotionOf(ctx);
-    b = new Bias({ sql: storage.sql, record, membership, entities: deps && deps.entities, env: deps && deps.env });
+    const entities = deps && deps.entities !== undefined ? deps.entities : entitiesOf(ctx, { record, membership });
+    b = new Bias({ sql: storage.sql, record, membership, entities, env: deps && deps.env });
     OF.set(storage, b);
     record.declarePurge("bias", [
       "bias_statements",

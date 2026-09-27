@@ -60,7 +60,9 @@ export const biasMd = (fm, residue = RESIDUE) => [yaml(fm), "", "## Statements",
   ...(residue === null ? [] : ["## What This Does Not Enforce", "", residue, ""]),
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
-export function world({ entities = null, env = {} } = {}) {
+export function world(opts = {}) {
+  /* `entities` absent is no registry (null); `entities: undefined` given reaches the real one (`entitiesOf`). */
+  const entities = "entities" in opts ? opts.entities : null, env = opts.env || {};
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const st = db.prepare(q);

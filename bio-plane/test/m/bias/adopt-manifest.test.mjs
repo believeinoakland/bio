@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, T0 } from "./world.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
 import { BIAS_MANIFEST_LIMIT_MAX, BIAS_MANIFEST_LIMIT_DEFAULT } from "../../../src/bias/index.mjs";
 
 const A = "BIAS-2026-0001-a", B = "BIAS-2026-0002-b", P = "PROJ-2026-0001-p";
@@ -274,6 +275,16 @@ test("R25: a statement whose subject is not in the registry is listed for review
   failing.set(A, [S("s1")], "adopted");
   failing.bias.biasAdopt({ bundleId: A, ...ADMIN });
   assert.equal(failing.bias.biasManifest({ viewer: "admin" }).unregistered_subjects, null);
+  /* the real registry: `entitiesOf` on the same storage, reached by default */
+  const real = world({ entities: undefined });
+  await real.group();
+  const reg = entitiesOf(real.ctx);
+  reg.migrate();
+  const made = reg.createEntity({ kind: "office", label: "The records office", declaredBy: "admin" });
+  assert.equal(made.ok, true, JSON.stringify(made));
+  real.set(A, [S("s1", { subject: made.entity_id }), S("s2", { subject: "ENT-2026-0404" })], "adopted");
+  real.bias.biasAdopt({ bundleId: A, ...ADMIN });
+  assert.deepEqual(real.bias.biasManifest({ viewer: "admin" }).unregistered_subjects.map((u) => u.statement_id), ["s2"]);
 });
 
 test.todo("R26: a project statement that loosens an instance statement on the same subject is an override whatever it calls itself, and the strictest applies (deferred by K102 until evaluation findings exist)");
