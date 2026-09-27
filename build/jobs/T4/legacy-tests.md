@@ -98,9 +98,9 @@ Of these, d311-roster-affordances, meaning-bounds, op-claims, owed-controls, ref
 - Layer tests: none named in `build/manifest.md`.
 - Checks (civicos-process, `<product>` = this checkout):
   - `format: 69 modules, 64 requirements files; 0 failures`
-  - `architecture: 867 product files, 2170 relative imports (64 naming no tracked file, not judged); 0 failures`
+  - `architecture: 865 product files, 2165 relative imports (64 naming no tracked file, not judged); 0 failures`
   - `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures` (no requirements file)
-  - `ownership: 173 files changed by legacy-tests between tranche/T4 and HEAD; 0 failures`
+  - `ownership: 176 files changed by legacy-tests between tranche/T4 and HEAD; 0 failures`
 
 Size: test runs about 1,700 (two full plane runs and a diagnostic run of 126 suites, two civicos-ui runs, about 60 single-suite and 11 control runs by me, and about 900 suite runs by the seven workers, counted from their reports, not measured), module lines 175 files, +2,550 / -2,170 (`bio-plane/test/`, `civicos-ui/test/`, `civicos-ui/check-refusal-codes.mjs`, against `c03f169901`)
 
