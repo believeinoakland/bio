@@ -37,17 +37,17 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 ## Layer 5 (order: `entities`, `connections`, `progressions`, `bias`, `observation-log`, `query-language`, `retrieval`)
 
 - **entities** · T5-4 · N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225.
-- **connections** · T5-5 · themes included (K79); D-575, D-625, D-706, D-722, REC-206.
+- **connections** · T5-5 · themes included (K79); takes the portion connection axis on `op=earnedbasis` that content composes through `standings(ids, connectionByBundle)` (CONTENT #1 REPORT 8); D-575, D-625, D-706, D-722, REC-206.
 - **progressions** · T5-6 · as its requirements.
 - **bias** · T5-7 · the debt mechanism with it (K82 (3), K87), reading work products `ai-runs` registers in T6 (until then the store's arm registers them).
 - **observation-log** · T5-8 · D-681, D-682; N39 (its share).
-- **query-language** · T5-9 · N37 (`viewerPredicate`, `GATE_MARK` re-exported from membership).
+- **query-language** · T5-9 · N37 (`viewerPredicate`, `GATE_MARK` re-exported from membership); `content:ocr` reads `mixed` as containing machine-read text (content R14, DEC-4), and `CONTENT_EXTENT_KINDS` comes from content with `envelope` (CONTENT #1 REPORT 6).
 - **retrieval** · T5-10 · the frontier included (K80); D-672, D-682, D-724.
 
 ## Layer 11
 
-- **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); `op=calibrate` joins the ops the control plane stamps `identity` on (D-587's rule: session member, machine `class:<cls>`, AI its principal; calibration R5 refuses it unattributed until then, K136); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
-- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record; peritem's two STRUCTURAL arms, migrate-released.control's first-boot anchors, check-refusal-codes, instance-group.control, rec178-bytes.control and queue-peritem.control after record-core moved their anchors: RECORD-CORE #2's REPORT 5; calibration, bounds (roster 47→46), derivation-bounds, rec155-session-routes, reextract, check-refusal-codes and d470's C-42 reads: CALIBRATION #1's REPORT 1); N46 with N37; N57's remainder.
+- **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); `op=attesttext` joins the ops stamped with `viewer` (content R43; until then it answers `NO_READING`) and `op=contentcrop` gets its OPS/NEEDS/NON_ACTS rows (D-419), `contentIdFor` imported from content, not the catalogue (CONTENT #1 REPORTs 9, 11); `op=calibrate` joins the ops the control plane stamps `identity` on (D-587's rule: session member, machine `class:<cls>`, AI its principal; calibration R5 refuses it unattributed until then, K136); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
+- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record; peritem's two STRUCTURAL arms, migrate-released.control's first-boot anchors, check-refusal-codes, instance-group.control, rec178-bytes.control and queue-peritem.control after record-core moved their anchors: RECORD-CORE #2's REPORT 5; calibration, bounds (roster 47→46), derivation-bounds, rec155-session-routes, reextract, check-refusal-codes and d470's C-42 reads: CALIBRATION #1's REPORT 1; content's six source-anchored suites and the three temp-copy harnesses that must copy `pdf-worker/src` (observation-log, project-discoverable, reopen), meaningread and airuns: CONTENT #1's REPORTs 1, 12); N46 with N37; N57's remainder.
 
 ## Jobs
 
