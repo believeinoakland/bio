@@ -77,3 +77,7 @@ Layer 1, started 2026-09-27 01:27 UTC, concurrently:
 ## Layer 1 closed (BOB #44, 2026-09-27 ~01:58 UTC)
 
 All four jobs complete, each verified on its branch: ownership 0 failures (legacy-checks 2 files, image-codecs 8, pdf-pixels 7, pdf-worker 2); merged into `tranche/T4` without conflict. Bundles regenerated: `bio-plane` and `ocr-worker` changed, `pdf-worker` and `newgroup` unchanged; `newgroup-bundle-fresh` 1/0; `fleetbundles` fails one arm only, 2a, whose pinned ocr-worker input list lacks the new `ccittdecode.mjs` (a stale pin in the old battery, now `legacy-tests`' T4-5). On the merged tranche: image-codecs' six codec suites, pdf-pixels' four, pdf-worker's `structure`, `ocr-worker` all pass; format 0; architecture and coverage 0 failures for image-codecs (9/9), pdf-pixels (25/25), pdf-worker (17/17), ocr-worker (21/21).
+Layer 1's sessions archived and their rows written from their archives (`build/metrics/T4.csv`; 54.4M cache reads in all).
+
+Layer 2, started 2026-09-27 01:55 UTC:
+- `promotion` · PROMOTION #2 · `session_012BcNihVYcDtYdrcV3nWo8p`
