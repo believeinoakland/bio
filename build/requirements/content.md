@@ -76,7 +76,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 
 - `legacy-checks`: the C-45, C-52 and C-80 rows until they move here (R38), `isMachineIdentity`, `canonicalJson`, `sha256HexSync`.
 - `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`. *(not declared in `modules.json` today)*
-- `pdf-pixels` (K70; `pdf-worker` until T4 applies it): the crop (R32).
+- `pdf-pixels` (K70): the crop (R32).
 - `record-core`: `recordOf(ctx)`, `transact`, `bundleInfo` (a target's type), `declarePurge`.
 - `membership`: `membershipOf(ctx)`, `viewerPredicate` (R37).
 - `provenance`: `capturesOf` (R11), `versionChain` and the captured locators (R29).

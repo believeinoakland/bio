@@ -186,7 +186,7 @@ cannot be walked — the same never-partial rule as R17, for the whole document.
   a copy of a placement included → `null`.
 - Errors: never throws.
 
-**PdfDoc** — the shared lenient PDF object/stream reader. `pdf-worker` drives it through `openPdf`. Its
+**PdfDoc** — the shared lenient PDF object/stream reader. `pdf-pixels` drives it through `openPdf`. Its
 interface is the members below and nothing else; every other field is private.
 - **R18** `new PdfDoc(bytes)` holds the bytes; `scanTopLevel()`, `await loadObjectStreams()` and
   `buildPageIndex()` perform R8's three steps in that order (`openPdf` runs all three).

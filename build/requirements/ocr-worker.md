@@ -51,7 +51,7 @@ record, writes nothing, and reports the running build's own version.
   reported, and a page failing an earlier condition is never evaluated against a later one:
   1. `ENGINE_ABSENT` (200, `ok:false`) — the wasm core or the language model did not load as the
      measured pair (checked before any bytes are touched).
-  2. `PAGE_NOT_RENDERABLE` (200) — the page renderer (`pdf-worker`) refused it; this member forwards
+  2. `PAGE_NOT_RENDERABLE` (200) — the page renderer (`pdf-pixels`) refused it; this member forwards
      that refusal's own reason rather than reinterpreting it.
   3. `PIXELS_UNREADABLE` (200) — the renderer answered in a container this member cannot read at all
      (anything other than `image/png`).
@@ -115,11 +115,11 @@ engine_loaded, engine_unavailable?}`.
 
 ### Uses
 
-- `pdf-worker`: `renderPageToPixels(bytes, page, {decodeDct:true})` → `{ok:true, bytes, route,
+- `pdf-pixels` (K70): `renderPageToPixels(bytes, page, {decodeDct:true})` → `{ok:true, bytes, route,
   mediaType, width, height, upright, rotate_deg, pixels_sha256, page_geometry}` or a named refusal
   (a text layer, vector marks, several images on one page, an undecodable container, and others).
   This module always asks for `decodeDct:true` and forwards a refusal's `reason` verbatim as
-  `PAGE_NOT_RENDERABLE`'s own reason; it does not reinterpret or renumber pdf-worker's refusal set.
+  `PAGE_NOT_RENDERABLE`'s own reason; it does not reinterpret or renumber pdf-pixels' refusal set.
 
 ### Invariants
 
