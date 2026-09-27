@@ -47,7 +47,7 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 ## Layer 11
 
 - **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
-- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break; N46 with N37; N57's remainder.
+- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record); N46 with N37; N57's remainder.
 
 ## Jobs
 

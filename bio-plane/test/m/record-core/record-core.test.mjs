@@ -4,8 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { checkBundle } from "../../../checks/bio-checks.mjs";
-import { recordOf, RecordCore } from "../../../src/record-core/index.mjs";
+import { checkBundle, PER_ITEM_CHECKS } from "../../../checks/bio-checks.mjs";
+import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_ITEM_MAX, perItem, EMPTY_STRING_SHA, fileDigestOf,
+         inlineBytesOf } from "../../../src/record-core/index.mjs";
 import { storage, bucket } from "./storage.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
@@ -593,7 +594,8 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
   // the services are its methods, by their names
   for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
-                   "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths"])
+                   "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
+                   "digestCensus", "snapKeyCensus", "registerAuditCheck"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -650,4 +652,370 @@ test("R44: commit records state, prior state, group, times and criticality as gi
               created: "2025-05-05T00:00:00Z", lastUpdated: "2025-06-06T00:00:00Z" });
   const r2 = rows(s, `SELECT created, last_updated, criticality FROM bundles WHERE bundle_id='INFO-2026-0002-b'`)[0];
   assert.deepEqual([r2.created, r2.last_updated, r2.criticality], ["2025-05-05T00:00:00Z", "2025-06-06T00:00:00Z", "low"]);
+});
+
+/* ---- T5: R37's widened contract, R47–R59 ---- */
+
+test("R37: the read contract's tables and columns hold their stated names, types and meaning (N64, N83)", () => {
+  const { s, rc } = fresh();
+  const cols = (t) => Object.fromEntries(rows(s, `PRAGMA table_info(${t})`).map((r) => [r.name, r]));
+  const b = cols("bundles"), f = cols("files"), h = cols("history");
+  for (const [c, notnull] of [["bundle_id", 0], ["object_type", 1], ["current_state", 1], ["title", 0], ["criticality", 0],
+                              ["created", 1], ["last_updated", 1]])
+    { assert.equal(b[c].type, "TEXT", c); assert.equal(b[c].notnull, notnull, c); }
+  assert.equal(b.bundle_id.pk, 1);
+  for (const c of ["bundle_id", "path", "sha256"]) { assert.equal(f[c].type, "TEXT", `files.${c}`); assert.equal(h[c].type, "TEXT", `history.${c}`); }
+  assert.equal(h.snap_key.type, "TEXT");
+  assert.deepEqual([f.bundle_id.pk, f.path.pk], [1, 2]); assert.deepEqual([h.bundle_id.pk, h.snap_key.pk, h.path.pk], [1, 2, 3]);
+  const id = "INFO-2026-0001-a";
+  rc.commit({ bundleId: id, type: "information", title: "The title", snapKey: "K1", files: [file("bundle.md", "one"), file("n.md", "n")],
+              state: "collected", criticality: "high", created: "2026-01-01T00:00:00Z", lastUpdated: "2026-01-02T00:00:00Z" });
+  rc.commit({ bundleId: id, type: "information", title: "The title", snapKey: "K2", files: [file("bundle.md", "two")],
+              state: "verified", lastUpdated: "2026-01-03T00:00:00Z" });
+  // meaning: what commit was given, read back by a join in a later module's own SQL
+  assert.deepEqual({ ...rows(s, `SELECT bundle_id, object_type, current_state, title, criticality, created, last_updated FROM bundles`)[0] },
+    { bundle_id: id, object_type: "information", current_state: "verified", title: "The title", criticality: "high",
+      created: "2026-01-01T00:00:00Z", last_updated: "2026-01-03T00:00:00Z" });
+  assert.deepEqual(rows(s, `SELECT bundle_id, path, sha256 FROM files`).map((r) => ({ ...r })), [{ bundle_id: id, path: "bundle.md", sha256: sha("two") }],
+                   "files: the live files, each with its stored digest");
+  assert.deepEqual(rows(s, `SELECT bundle_id, snap_key, path, sha256 FROM history ORDER BY path`).map((r) => ({ ...r })),
+                   [{ bundle_id: id, snap_key: "K2", path: "bundle.md", sha256: sha("one") }, { bundle_id: id, snap_key: "K2", path: "n.md", sha256: sha("n") }],
+                   "history: each replaced file under the snap key of the commit that replaced it");
+  s.db.exec(`CREATE TABLE register (capture_sha TEXT, bundle_id TEXT)`);
+  s.sql.exec(`INSERT INTO register VALUES (?, ?)`, sha("one"), id);
+  assert.equal(rows(s, `SELECT h.snap_key FROM register r JOIN history h ON h.bundle_id = r.bundle_id AND h.sha256 = r.capture_sha`)[0].snap_key, "K2");
+});
+
+test("R47: stampInstant spells an instant in UTC at second or millisecond precision, and throws on any other, naming it", () => {
+  const when = Date.UTC(2026, 8, 27, 5, 6, 7, 89);
+  assert.equal(stampInstant("second", when), "2026-09-27T05:06:07Z");
+  assert.equal(stampInstant("millisecond", when), "2026-09-27T05:06:07.089Z");
+  assert.equal(stampInstant("second", Date.UTC(2026, 0, 1)), "2026-01-01T00:00:00Z");
+  assert.equal(stampInstant("millisecond", Date.UTC(2026, 0, 1)), "2026-01-01T00:00:00.000Z");
+  const t0 = Date.now(), now = stampInstant("millisecond"), t1 = Date.now();
+  assert.ok(Date.parse(now) >= t0 && Date.parse(now) <= t1, "defaults to now");
+  assert.match(stampInstant("second"), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  for (const bad of ["minute", "Second", "", undefined, null, 1])
+    assert.throws(() => stampInstant(bad, when), (e) => e.message.includes(JSON.stringify(bad) ?? "undefined"));
+});
+
+test("R48: instantOrder compares instants as instants in either spelling, NaN when either side is unreadable, never throwing", () => {
+  assert.ok(instantOrder("2026-01-01T00:00:00Z", "2026-01-01T00:00:00.123Z") < 0, "…:00Z is before …:00.123Z");
+  assert.ok("2026-01-01T00:00:00Z" > "2026-01-01T00:00:00.123Z", "(as strings they sort the other way)");
+  assert.ok(instantOrder("2026-01-01T00:00:00.123Z", "2026-01-01T00:00:00Z") > 0);
+  assert.equal(instantOrder("2026-01-01T00:00:00Z", "2026-01-01T00:00:00.000Z"), 0);
+  assert.ok(instantOrder("2025-12-31T23:59:59.999Z", "2026-01-01T00:00:00Z") < 0);
+  for (const [a, b] of [["", "2026-01-01T00:00:00Z"], ["2026-01-01T00:00:00Z", null], [undefined, undefined], ["not a time", "2026-01-01T00:00:00Z"],
+                        [1767225600000, "2026-01-01T00:00:00Z"], [{}, []]])
+    assert.ok(Number.isNaN(instantOrder(a, b)), `${a} vs ${b}`);
+  const xs = ["2026-01-01T00:00:01Z", "2026-01-01T00:00:00.500Z", "2026-01-01T00:00:00Z"];
+  assert.deepEqual([...xs].sort(instantOrder), ["2026-01-01T00:00:00Z", "2026-01-01T00:00:00.500Z", "2026-01-01T00:00:01Z"]);
+});
+
+/* A set act for perItem: answers ok for a subject it accepts, a refusal of its own otherwise, and records what it was given. */
+function act() {
+  const seen = [];
+  const one = (b) => { seen.push(b); if (b.boom) throw new Error("kaput"); return b.id === "bad" ? { ok: false, reason: "NOPE", extra: 1 } : { ok: true, id: b.id }; };
+  return { seen, one };
+}
+
+test("R49 R50 R55: perItem refuses a set with no items or more than PER_ITEM_MAX whole, before any item, with C-75.1 and C-75.2", () => {
+  assert.equal(PER_ITEM_MAX, 100);
+  for (const body of [{}, { items: [] }, { items: "x" }, { items: { 0: {} } }, null, undefined]) {
+    const { seen, one } = act();
+    const r = perItem("taskresolve", body, { actor: "m" }, one);
+    assert.deepEqual({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, op: r.op, weight: r.weight, count: r.count },
+                     { ok: false, reason: "SET_NO_ITEMS", code: "SET_NO_ITEMS", check: "C-75.1", op: "taskresolve", weight: "per-item", count: 0 });
+    assert.equal(r.translation, PER_ITEM_CHECKS.SET_NO_ITEMS.translation); assert.equal(seen.length, 0);
+  }
+  const { seen, one } = act();
+  const big = perItem("taskforward", { items: Array.from({ length: 101 }, (_, i) => ({ id: `t${i}` })) }, {}, one);
+  assert.deepEqual([big.ok, big.reason, big.check, big.count, big.max, big.op, big.weight], [false, "SET_TOO_LARGE", "C-75.2", 101, 100, "taskforward", "per-item"]);
+  assert.equal(big.translation, PER_ITEM_CHECKS.SET_TOO_LARGE.translation);
+  assert.equal(seen.length, 0, "no item was tried");
+  const full = perItem("taskforward", { items: Array.from({ length: 100 }, (_, i) => ({ id: `t${i}` })) }, {}, act().one);
+  assert.deepEqual([full.ok, full.count, full.applied], [true, 100, 100], "exactly PER_ITEM_MAX is allowed");
+});
+
+test("R50 R52 R55: perItem applies one to each item on its own, with shared values, the item's fields, then the stamps, and no items", () => {
+  const { seen, one } = act();
+  const long = "x".repeat(500);
+  const r = perItem("taskforward", { items: [{ id: "a", to: "m2", note: long, n: 3, o: { deep: 1 }, arr: [1] }, 7, { id: "bad" }, { id: "b", boom: true },
+                                            { id: "c", actor: "spoof" }, null, ["id"]], to: "m1", reason: "why" },
+                    { actor: "m" }, one);
+  assert.equal(seen.length, 4, "one call per object item");
+  assert.deepEqual(seen[0], { to: "m2", reason: "why", id: "a", note: long, n: 3, o: { deep: 1 }, arr: [1], actor: "m" },
+                   "shared values, overridden by the item's own, then the stamps; no items");
+  assert.ok(seen.every((b) => !("items" in b)));
+  assert.equal(seen[3].actor, "m", "a stamp wins over the item's own field");
+  assert.deepEqual(r.items.map((o) => [o.index, o.outcome]),
+    [[0, "applied"], [1, "retained"], [2, "retained"], [3, "retained"], [4, "applied"], [5, "retained"], [6, "retained"]]);
+  assert.deepEqual(r.items[0].asked, { id: "a", to: "m2", note: "x".repeat(400), n: 3 }, "asked: the scalar fields, strings cut at 400");
+  for (const i of [1, 5, 6]) {
+    assert.deepEqual([r.items[i].reason, r.items[i].check, r.items[i].asked], ["SET_ITEM_MALFORMED", "C-75.3", null]);
+    assert.equal(r.items[i].translation, PER_ITEM_CHECKS.SET_ITEM_MALFORMED.translation);
+  }
+  assert.deepEqual([r.items[2].ok, r.items[2].reason, r.items[2].extra, r.items[2].asked], [false, "NOPE", 1, { id: "bad" }], "the act's own answer, verbatim");
+  assert.deepEqual([r.items[3].reason, r.items[3].check, r.items[3].translation], ["SET_ITEM_FAILED", "C-75.4", PER_ITEM_CHECKS.SET_ITEM_FAILED.translation]);
+  assert.match(r.items[3].detail, /kaput/);
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "SET_ITEMS_RETAINED", "SET_ITEMS_RETAINED", "C-75.5", PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation]);
+  assert.deepEqual([r.op, r.weight, r.count, r.applied, r.retained], ["taskforward", "per-item", 7, 2, 5]);
+  assert.equal(r.applied + r.retained, r.count);
+  assert.equal(typeof r.detail, "string");
+  // a non-object answer is retained
+  const odd = perItem("x", { items: [{ id: "a" }] }, {}, () => "yes");
+  assert.deepEqual([odd.ok, odd.items[0].outcome, odd.items[0].ok], [false, "retained", false]);
+  // every item applied
+  const all = perItem("taskresolve", { items: [{ id: "a" }, { id: "b" }] }, { actor: "m" }, act().one);
+  assert.deepEqual(Object.keys(all).sort(), ["applied", "count", "detail", "items", "ok", "op", "retained", "weight"]);
+  assert.deepEqual([all.ok, all.op, all.weight, all.count, all.applied, all.retained], [true, "taskresolve", "per-item", 2, 2, 0]);
+  // a one that is not a function, and a body that is not an object: perItem never throws
+  assert.equal(perItem("x", { items: [{ id: "a" }] }, {}, null).items[0].reason, "SET_ITEM_FAILED");
+  assert.equal(perItem("x", "body", {}, act().one).reason, "SET_NO_ITEMS");
+});
+
+test("R52: items are not one transaction — an applied item stands whatever a later one does; perItem itself writes nothing", () => {
+  const { s, rc } = fresh();
+  const before = dump(s);
+  const r = perItem("mint", { items: [{ p: "INFO" }, { p: "INFO", fail: true }, { p: "ENT" }] }, {},
+                    (b) => rc.transact(() => { const { id } = rc.allocId(b.p, "2026"); return b.fail ? { ok: false, reason: "NO", id } : { ok: true, id }; }));
+  assert.deepEqual([r.ok, r.applied, r.retained], [false, 2, 1]);
+  assert.equal(rc.allocId("INFO", "2026").id, "INFO-2026-0002", "the refused item's step rolled back; the applied one stood");
+  assert.equal(rc.allocId("ENT", "2026").id, "ENT-2026-0002");
+  const { s: s2 } = fresh();
+  const b2 = dump(s2);
+  perItem("noop", { items: [{ a: 1 }, 2] }, {}, () => ({ ok: true }));
+  assert.deepEqual(dump(s2), b2);
+  assert.notDeepEqual(dump(s), before);
+});
+
+test("R51: an item naming an identity key receives only the shared values of the groups it names; one naming none receives them whole", () => {
+  const groups = { itemKeys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]], sharedKeys: ["to", "reason", "kind", "definitionVersion"] };
+  const { seen, one } = act();
+  perItem("proposedispose", { items: [{ finding: "F1" }, { key: "k2" }, { progressionKey: "p", stageKey: "s" }, { note: "none" }, { project: "  " }],
+                              project: "PROJ-1", key: "shared-key", stageKey: "shared-stage", to: "deferred", definitionVersion: 3 }, { decidedBy: "m" }, one, groups);
+  assert.deepEqual(seen[0], { project: "PROJ-1", finding: "F1", to: "deferred", definitionVersion: 3, decidedBy: "m" }, "the project group only");
+  assert.deepEqual(seen[1], { key: "k2", to: "deferred", definitionVersion: 3, decidedBy: "m" }, "the key group only");
+  assert.deepEqual(seen[2], { progressionKey: "p", stageKey: "s", to: "deferred", definitionVersion: 3, decidedBy: "m" });
+  assert.deepEqual(seen[3], { project: "PROJ-1", key: "shared-key", stageKey: "shared-stage", to: "deferred", definitionVersion: 3, note: "none", decidedBy: "m" },
+                   "an item naming no identity gets the shared values whole");
+  assert.equal(seen[4].key, "shared-key", "a blank identity names nothing");
+  // a key in a group and in sharedKeys is not an identity key: never narrowed away
+  const r2 = act();
+  perItem("resolve", { items: [{ captureSha: "c1" }, { captureSha: "c2", ref: "own" }], ref: "R" }, {}, r2.one,
+          { itemKeys: [["captureSha"], ["captureSha", "ref"]], sharedKeys: ["ref"] });
+  assert.deepEqual(r2.seen.map((b) => b.ref), ["R", "own"]);
+  // with no itemKeys nothing is narrowed
+  const r3 = act();
+  perItem("proposedispose", { items: [{ finding: "F" }], project: "P", key: "K" }, {}, r3.one);
+  assert.deepEqual(r3.seen[0], { project: "P", key: "K", finding: "F" });
+  // an item naming keys of two groups receives both groups' shared values
+  const r4 = act();
+  perItem("proposedispose", { items: [{ key: "k", finding: "f" }], project: "P", stageKey: "S" }, {}, r4.one, groups);
+  assert.deepEqual(r4.seen[0], { project: "P", key: "k", finding: "f" });
+});
+
+test("R53: manifestByAuthor lists held bundles with an entry by the prefix, with the latest entry and the first by another author", () => {
+  const { rc } = fresh();
+  const c = (id, k, author, at) => rc.commit({ bundleId: id, type: "information", snapKey: k, author, at, files: [file("bundle.md", `${id}${k}`)] });
+  c("INFO-2026-0001-a", "K1", "alice", "2026-01-01T00:00:00Z");
+  c("INFO-2026-0001-a", "K2", "token:capture", "2026-01-02T00:00:00Z");
+  c("INFO-2026-0002-b", "K1", "token:capture", "2026-01-01T00:00:00Z");
+  c("INFO-2026-0003-c", "K1", "bob", "2026-01-01T00:00:00Z");
+  c("INFO-2026-0004-d", "Z9", "token:x", "2026-02-01T00:00:00Z");
+  c("INFO-2026-0004-d", "A1", "carol", "2026-02-01T00:00:00Z");       // same instant, written later
+  c("INFO-2026-0004-d", "M5", "", "2026-01-15T00:00:00Z");            // earliest, but no author
+  c("INFO-2026-0005-e", "K1", "dave", "2026-03-01T00:00:00Z");
+  c("INFO-2026-0005-e", "K2", "token:y", "2026-02-01T00:00:00Z");     // written later, created earlier
+  const r = rc.manifestByAuthor({ authorPrefix: "token:" });
+  assert.deepEqual(r.bundles.map((b) => b.bundleId), ["INFO-2026-0001-a", "INFO-2026-0002-b", "INFO-2026-0004-d", "INFO-2026-0005-e"]);
+  assert.equal(r.cursor, "INFO-2026-0005-e");
+  const [a, b, d, e] = r.bundles;
+  assert.deepEqual(a.latest, { snapKey: "K2", kind: "promotion", base: null, author: "token:capture", created: "2026-01-02T00:00:00Z", writer: null, operation: null });
+  assert.equal(a.firstOther.author, "alice"); assert.equal(a.firstOther.snapKey, "K1");
+  assert.equal(b.firstOther, null, "no entry by anyone else");
+  assert.equal(d.latest.snapKey, "A1", "created ties are broken by write order, never by the snap key");
+  assert.equal(d.firstOther.snapKey, "A1", "an entry with an empty author is not another author");
+  assert.equal(e.latest.snapKey, "K1", "latest by created, not by write order"); assert.equal(e.firstOther.author, "dave");
+  const p1 = rc.manifestByAuthor({ authorPrefix: "token:", limit: 2 });
+  assert.deepEqual([p1.bundles.map((x) => x.bundleId), p1.cursor], [["INFO-2026-0001-a", "INFO-2026-0002-b"], "INFO-2026-0002-b"]);
+  assert.deepEqual(rc.manifestByAuthor({ authorPrefix: "token:", after: p1.cursor }).bundles.map((x) => x.bundleId), ["INFO-2026-0004-d", "INFO-2026-0005-e"]);
+  assert.deepEqual(rc.manifestByAuthor({ authorPrefix: "tok%" }), { bundles: [], cursor: null }, "the prefix is a literal, not a pattern");
+  assert.deepEqual(rc.manifestByAuthor({ authorPrefix: "nobody" }), { bundles: [], cursor: null });
+  // an entry of a bundle not held is never listed
+  rc.purge({ bundleId: "INFO-2026-0002-b" });
+  assert.ok(!rc.manifestByAuthor({ authorPrefix: "token:" }).bundles.some((x) => x.bundleId === "INFO-2026-0002-b"));
+  assert.deepEqual(recordOf({ storage: storage({ schema: false }) }).manifestByAuthor({ authorPrefix: "x" }), { bundles: [], cursor: null }, "never throws");
+});
+
+test("R54: isFirstBoot is true through the boot at which the store had no bundles table, and false at every later boot", () => {
+  const s = storage({ schema: false });
+  const rc = recordOf({ storage: s });
+  assert.equal(rc.isFirstBoot(), true);
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) s.db.exec(t);
+  rc.migrate(); put(rc, "INFO-2026-0001-a", "K1");
+  assert.equal(rc.isFirstBoot(), true, "decided once, before any table was created: still true through that boot");
+  // a later boot: a new object over the same database
+  const again = { ...s, sql: { exec: (...a) => s.sql.exec(...a) } };
+  assert.equal(recordOf({ storage: again }).isFirstBoot(), false);
+  assert.equal(fresh().rc.isFirstBoot(), false, "a store that already holds the schema");
+  const broken = { sql: { exec() { throw new Error("no"); } }, transactionSync: (f) => f() };
+  assert.equal(recordOf({ storage: broken }).isFirstBoot(), false, "never throws");
+});
+
+test("R58: fileDigestOf and inlineBytesOf are the one digest and size of a file", () => {
+  for (const t of ["", "hello", "  padded \r\n", "é ü 中文 🐘", "a\nb\r\nc"]) {
+    assert.equal(fileDigestOf({ text: t }), sha(t), "the UTF-8 bytes exactly as given");
+    assert.equal(inlineBytesOf({ text: t }), Buffer.byteLength(t, "utf8"));
+  }
+  assert.notEqual(fileDigestOf({ text: "a\r\n" }), fileDigestOf({ text: "a\n" }), "no line-ending change");
+  assert.notEqual(fileDigestOf({ text: " a" }), fileDigestOf({ text: "a" }), "no trimming");
+  assert.equal(fileDigestOf({ blobSha: "ABCDEF" + "0".repeat(58) }), "abcdef" + "0".repeat(58));
+  assert.equal(fileDigestOf({ text: "t", blobSha: "B" }), sha("t"), "an inline text is the file's content");
+  for (const f of [{}, { blobSha: "" }, { text: 5 }, null, undefined, { blobSha: 7 }]) assert.equal(fileDigestOf(f), null);
+  assert.equal(inlineBytesOf({ blobSha: "b".repeat(64) }), null);
+  for (const f of [{}, null, undefined, { text: 5 }]) assert.equal(inlineBytesOf(f), null);
+  assert.equal(EMPTY_STRING_SHA, sha(""), "the creation marker is the SHA-256 of the empty string");
+  assert.equal(fileDigestOf({ text: "" }), EMPTY_STRING_SHA);
+});
+
+/* Writes rows straight into the tables, as a store written before REC-175/176/178 could hold them. */
+function censusFixture() {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a";
+  rc.commit({ bundleId: id, type: "information", snapKey: "K1", base: EMPTY_STRING_SHA, files: [file("bundle.md", "one"), file("n.md", "n")] });
+  rc.commit({ bundleId: id, type: "information", snapKey: "K2", base: sha("one"), files: [file("bundle.md", "two"), { path: "c.pdf", blobSha: "C".repeat(64), bytes: 9, sha256: "c".repeat(64) }] });
+  return { s, rc, id };
+}
+
+test("R56: digestCensus counts every live and historical row, and lists the disagreeing ones, digest and size apart", () => {
+  const { s, rc, id } = censusFixture();
+  const clean = rc.digestCensus({});
+  assert.deepEqual(clean.files, { rows: 2, inline: 1, blob: 1, digest_disagrees: 0, bytes_disagree: 0, listed: [] });
+  assert.deepEqual(clean.history, { rows: 2, inline: 2, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] });
+  assert.deepEqual([clean.ok, clean.rewritten, typeof clean.note], [true, 0, "string"]);
+  assert.deepEqual(Object.keys(clean).sort(), ["files", "history", "note", "ok", "rewritten"]);
+  s.sql.exec(`UPDATE files SET sha256=? WHERE path='bundle.md'`, sha("TWO"));                  // digest disagrees
+  s.sql.exec(`INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`, id, "sz.md", "é", null, 1, sha("é")); // size only
+  s.sql.exec(`INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`, id, "up.md", "u", null, 1, sha("u").toUpperCase()); // agrees, lower-cased
+  s.sql.exec(`INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`, id, "b2.pdf", null, "d".repeat(64), 3, "e".repeat(64)); // blob disagrees
+  s.sql.exec(`INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`, id, "none", null, null, 0, "f".repeat(64)); // neither: not judged
+  s.sql.exec(`UPDATE history SET sha256=? WHERE path='n.md'`, sha("N"));
+  const before = dump(s);
+  const r = rc.digestCensus({});
+  assert.deepEqual(dump(s), before, "it writes nothing");
+  assert.deepEqual({ ...r.files, listed: null }, { rows: 6, inline: 3, blob: 3, digest_disagrees: 2, bytes_disagree: 1, listed: null });
+  assert.deepEqual(r.files.listed.sort((a, b) => a.path.localeCompare(b.path)), [
+    { bundle_id: id, path: "b2.pdf", stored: "e".repeat(64), computed: "d".repeat(64), digest: "disagrees" },
+    { bundle_id: id, path: "bundle.md", stored: sha("TWO"), computed: sha("two"), digest: "disagrees" },
+    { bundle_id: id, path: "sz.md", stored: sha("é"), computed: sha("é"), bytes_stored: 1, digest: "agrees" },
+  ]);
+  assert.deepEqual(r.history.listed, [{ bundle_id: id, snap_key: "K2", path: "n.md", stored: sha("N"), computed: sha("n"), digest: "disagrees" }]);
+  assert.equal(r.history.bytes_disagree, 0, "historical rows hold no size and are not judged for it");
+  // limit: an integer 0..500, 50 when absent, empty or not an integer; the counts stay whole
+  for (const [limit, n] of [[0, 0], [1, 1], [-5, 0], ["2", 2], [undefined, 3], ["", 3], [null, 3], [1.5, 3], ["x", 3], [9999, 3]]) {
+    const q = rc.digestCensus({ limit });
+    assert.equal(q.files.listed.length, n, `limit ${limit}`); assert.equal(q.files.digest_disagrees, 2);
+  }
+  for (let i = 0; i < 60; i++) s.sql.exec(`INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`, id, `X${i}`, "p", "p", null, "0", "t");
+  assert.equal(rc.digestCensus({}).history.listed.length, 50);
+  assert.equal(rc.digestCensus({ limit: 600 }).history.listed.length, 61, "a larger limit is 500");
+  assert.equal(rc.digestCensus({ limit: 600 }).history.digest_disagrees, 61);
+  assert.deepEqual(recordOf({ storage: storage({ schema: false }) }).digestCensus({}).files.rows, 0, "never throws");
+});
+
+test("R57: snapKeyCensus measures each bundle's promotions against its manifest entries, and lists deficits and unanchored entries", () => {
+  const { s, rc, id } = censusFixture();
+  const c0 = rc.snapKeyCensus({});
+  assert.deepEqual({ ...c0, note: null }, { ok: true, bundles: 1, manifest_rows: 2, promotions: 2, overwritten: 0, undetermined: 0, bundles_with_deficit: 0,
+                                            excess: 0, orphan_manifest_bundles: 0, listed: [], rewritten: 0, note: null });
+  assert.equal(typeof c0.note, "string");
+  // B: three promotions, two entries, a creation entry → one overwritten; its K3 is unanchored
+  const b = "INFO-2026-0002-b";
+  rc.commit({ bundleId: b, type: "information", snapKey: "K1", base: EMPTY_STRING_SHA, files: [file("bundle.md", "b1")] });
+  rc.commit({ bundleId: b, type: "information", snapKey: "K2", base: sha("b1"), files: [file("bundle.md", "b2")] });
+  rc.commit({ bundleId: b, type: "information", snapKey: "K3", base: sha("b2"), files: [file("bundle.md", "b3")] });
+  s.sql.exec(`DELETE FROM manifest WHERE bundle_id=? AND snap_key='K2'`, b);
+  // C: two promotions, one entry and no creation entry → one undetermined, none overwritten; a garbled file list
+  const c = "INFO-2026-0003-c";
+  rc.commit({ bundleId: c, type: "information", snapKey: "K1", base: null, files: [file("bundle.md", "c1")] });
+  rc.commit({ bundleId: c, type: "information", snapKey: "K2", base: sha("c1"), files: [file("bundle.md", "c2")] });
+  s.sql.exec(`DELETE FROM manifest WHERE bundle_id=? AND snap_key='K1'`, c);
+  s.sql.exec(`UPDATE manifest SET files_json='not json' WHERE bundle_id=?`, c);
+  // D: an excess entry, anchored (upper-case base); E: entries of a bundle not held
+  const d = "INFO-2026-0004-d";
+  rc.commit({ bundleId: d, type: "information", snapKey: "K1", base: EMPTY_STRING_SHA, files: [file("bundle.md", "d1")] });
+  s.sql.exec(`INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?)`, d, "K9", "promotion", sha("d1").toUpperCase(), "a", "t", "[]");
+  s.sql.exec(`INSERT INTO manifest (bundle_id,snap_key,kind,base,author,created,files_json) VALUES (?,?,?,?,?,?,?), (?,?,?,?,?,?,?)`,
+             "GONE-1", "K1", "promotion", null, "a", "t", "[]", "GONE-1", "K2", "promotion", null, "a", "t", "[]");
+  const before = dump(s);
+  const r = rc.snapKeyCensus({});
+  assert.deepEqual(dump(s), before, "it writes nothing");
+  assert.deepEqual({ ...r, listed: null, note: null }, { ok: true, bundles: 4, manifest_rows: 2 + 2 + 1 + 2 + 2, promotions: 2 + 3 + 2 + 1, overwritten: 1,
+    undetermined: 1, bundles_with_deficit: 2, excess: 1, orphan_manifest_bundles: 1, listed: null, rewritten: 0, note: null });
+  assert.deepEqual([...r.listed].sort((x, y) => x.bundle_id.localeCompare(y.bundle_id)), [
+    { bundle_id: b, promotions: 3, manifest_rows: 2, overwritten: 1, undetermined: 0, creation_row: true, unanchored: ["K3"] },
+    { bundle_id: c, promotions: 2, manifest_rows: 1, overwritten: 0, undetermined: 1, creation_row: false, unanchored: ["K2"] },
+  ]);
+  assert.ok(!r.listed.some((l) => l.bundle_id === d || l.bundle_id === id), "an anchored bundle without deficit is not listed");
+  assert.equal(rc.snapKeyCensus({ limit: 1 }).listed.length, 1);
+  assert.equal(rc.snapKeyCensus({ limit: 1 }).overwritten, 1, "the counts are always whole");
+  assert.equal(rc.snapKeyCensus({ limit: -1 }).listed.length, 0);
+  assert.equal(rc.snapKeyCensus({ limit: "nope" }).listed.length, 2);
+  assert.equal(recordOf({ storage: storage({ schema: false }) }).snapKeyCensus({}).ok, true, "never throws");
+});
+
+test("R59 R18: a registered audit check runs over every page bundle beside the catalogue, and a bundle is counted once", async () => {
+  const { rc, ids } = await auditFixture();
+  const known = new Set(ids);
+  const base = await rc.auditPass({ limit: 10 });
+  const got = [];
+  assert.deepEqual(rc.registerAuditCheck("later", async (input) => {
+    got.push(input);
+    return input.bundleId === ids[1] ? [{ check: "L-1", code: "LATE", severity: "error", message: "late finding" },
+                                        { check: "L-2", severity: "warning", message: "only a warning" }] : [];
+  }), { ok: true, module: "later" });
+  assert.equal(rc.registerAuditCheck("later", () => []).reason, "AUDIT_CHECK_DECLARED");
+  for (const [m, f] of [["", () => []], [null, () => []], ["x", "not a function"]]) assert.equal(rc.registerAuditCheck(m, f).reason, "AUDIT_CHECK_MALFORMED");
+  assert.equal(rc.registerAuditCheck("broken", (i) => { if (i.bundleId === ids[2]) throw new Error("bad check"); return null; }).ok, true);
+  const r = await rc.auditPass({ limit: 10, context: () => ({ earnedRegistry: null, marker: "ctx" }) });
+  assert.deepEqual(got.slice(-5).map((g) => g.bundleId), ids, "every page bundle, in order");
+  const g = got.at(-1);
+  assert.ok(g.files instanceof Map && g.elidedPaths instanceof Set && typeof g.sha256 === "function" && typeof g.sha512 === "function");
+  assert.equal(g.image["bundle.md"], rc.readImage(ids[4])["bundle.md"]);
+  assert.equal(g.marker, "ctx", "R45's context reaches the registered check");
+  assert.equal(g.resolveTarget(ids[0]), true); assert.equal(g.resolveTarget("INFO-2099-0000-x"), false);
+  const catOf = async (id) => (await expected(rc, id, known)).length;
+  const bErr = await catOf(ids[1]), cErr = await catOf(ids[2]);
+  assert.equal(r.tally["L-1"], 1); assert.equal(r.tallyDetail["L-1/LATE"], 1); assert.ok(!("L-2" in r.tally), "a warning is not tallied");
+  assert.equal(r.tally.broken, 1); assert.equal(r.tallyDetail["broken/AUDIT_CHECK_FAILED"], 1);
+  assert.equal(r.withErrors, base.withErrors + (bErr ? 0 : 1) + (cErr ? 0 : 1), "a bundle is counted once, however many checks found it");
+  assert.equal(r.clean + r.withErrors, r.checked);
+  const firstFive = async (id, more) => [...(await expected(rc, id, known)).map((e) => ({ check: e.check, detail: e.message })), ...more].slice(0, 5);
+  assert.deepEqual(r.offenders.find((o) => o.bundleId === ids[1]).errors,
+                   await firstFive(ids[1], [{ check: "L-1", detail: "late finding" }]), "its first five errors, the catalogue's first");
+  const oc = r.offenders.find((o) => o.bundleId === ids[2]).errors;
+  assert.deepEqual(oc.slice(0, -1), (await firstFive(ids[2], [{}])).slice(0, -1));
+  if (cErr < 5) assert.match(oc.at(-1).detail, /bad check/);
+  // a bundle only a registered check finds in error turns from clean to with-errors; one already in error stays one
+  const { rc: r2, ids: i2 } = await auditFixture();
+  const md = `---\nid: INFO-2026-0009-z\nobject_type: information\n---\n`;
+  r2.commit({ bundleId: "INFO-2026-0009-z", type: "information", snapKey: "K1", files: [file("bundle.md", md)] });
+  const plain = await r2.auditPass({});
+  r2.registerAuditCheck("only", () => [{ check: "O-1", severity: "error", message: "m" }]);
+  const all = await r2.auditPass({});
+  assert.deepEqual([all.clean, all.withErrors, all.tally["O-1"]], [0, plain.checked, plain.checked]);
+  for (const o of all.offenders) {
+    const before = (plain.offenders.find((p) => p.bundleId === o.bundleId) || { errors: [] }).errors;
+    assert.deepEqual(o.errors, [...before, { check: "O-1", detail: "m" }].slice(0, 5));
+  }
+  assert.equal(all.offenders.length, Math.min(20, plain.checked));
+  assert.deepEqual(Object.fromEntries(Object.entries(all.tally).filter(([k]) => k !== "O-1")), plain.tally, "the catalogue's tally is unchanged");
+  void i2;
+  assert.equal(new Set(r.offenders.map((o) => o.bundleId)).size, r.offenders.length);
+  // R19: a registered check sees only page bundles the viewer may see
+  got.length = 0;
+  await rc.auditPass({ visible: (id) => id === ids[3] });
+  assert.deepEqual(got.map((x) => x.bundleId), [ids[3]]);
 });

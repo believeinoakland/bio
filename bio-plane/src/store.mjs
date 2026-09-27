@@ -225,7 +225,8 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, provenanceAudit, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
          TESTIMONY_FORMAT, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
-import { recordOf } from "./record-core/index.mjs";
+import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
+export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
@@ -672,9 +673,6 @@ function actNoCitation(detail, extra = {}) {
  * root of trust, and the gate runs over a byte-complete image.
  */
 
-/* The SHA-256 of the empty string: the canonical base of a creation, as the
-   accelerator recorded it and as the check catalog recognises it. */
-const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
 
@@ -789,29 +787,6 @@ const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
  * The arm follows the SHAPE the producer returns, not the file extension. */
 const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-/* D-543 — THE STAMPING HELPER, AND IT NAMES ITS PRECISION AT EVERY CALL. The record spells an instant
-   two ways: `…:00Z` (whole seconds — the convention `ISO_TS_RE` holds a document's own bytes to, about
-   twenty gate checks) and `…:00.123Z` (milliseconds, `toISOString()`'s own spelling, which a row
-   stamped for ordering keeps). Neither is wrong; what was wrong is that the precision was carried by a
-   regex or a `split` at each site, in two spellings nobody named, so a site's precision could be learned
-   only by reading it. `stampInstant("second" | "millisecond", when)` says it; any other word throws.
-   `observation_log.at` stays whole-second by BOB #33's ruling (D-516), and it is a "second" call here
-   like any other, not an exception to the helper.
-   AND TWO SPELLINGS MUST NEVER BE COMPARED AS STRINGS: `Z` sorts above `.`, so `…:00Z` ranks AFTER
-   `…:00.123Z` though it names the earlier instant (read as `.000`). `instantOrder` compares INSTANTS —
-   negative, zero or positive like a comparator, and NaN when either side is not an instant, so a
-   `> 0` / `< 0` test is false for an unreadable stamp rather than ranking it as zero. Where a
-   comparison crosses act kinds, it goes through this. */
-export function stampInstant(precision, when = Date.now()) {
-  const iso = new Date(when).toISOString();
-  if (precision === "millisecond") return iso;
-  if (precision === "second") return iso.replace(/\.\d+Z$/, "Z");
-  throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
-}
-export function instantOrder(a, b) {
-  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
-  return x - y;
-}
 
 /* REC-207 (BOB #32, 2026-09-23 23:42Z): the two settlements of a bias debt that a MEMBER or a RUN made,
    as against the one the sweep derives when the lens moves back. The distinction is read on the sweep's
@@ -906,7 +881,7 @@ export class Store extends DurableObject {
        Asked through `PRAGMA table_info`, the form this function already runs against every live store at every boot
        (the DROP loop below), rather than through a catalogue read nothing else in the plane makes: a statement that
        threw here would throw inside blockConcurrencyWhile, and that bricks the Durable Object. */
-    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;
+    const firstBoot = recordOf(this.ctx).isFirstBoot();
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
        nothing a member wrote. When one of those changes shape, recreating it is
@@ -31675,61 +31650,6 @@ export class Store extends DurableObject {
      method above it). The figure the old literal carried. */
   static GROUP_DOMAIN_CHECKS_MAX = 20;
 
-  /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
-     `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
-     about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
-     of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
-     A blob-backed file's digest is its content address, `blobSha`. Returns the files with every digest the
-     computed lowercase value, and each file whose SUPPLIED value named another digest. */
-  static #fileDigestOf(f) {
-    if (f && typeof f.text === "string") return createSha256().update(new TextEncoder().encode(f.text)).hex();
-    if (f && typeof f.blobSha === "string" && f.blobSha) return f.blobSha.toLowerCase();
-    return null;
-  }
-  /* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
-     `files.content` column stores — read by `promote` (the stored figure and OVERSIZE_INLINE) and by `digestCensus`
-     (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
-  static #inlineBytesOf(f) {
-    return f && typeof f.text === "string" ? new TextEncoder().encode(f.text).length : null;
-  }
-
-  /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
-     content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
-     point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
-     which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
-     `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
-     rows (UTF-8 length, by REC-178's one `#inlineBytesOf`, against the stored figure), as a SEPARATE figure: since
-     REC-178 promote stores the computed figure, so a disagreeing row is one written before it, and it is counted,
-     never rewritten. Bounded by `limit` rows listed per table (the counts are always whole). */
-  digestCensus({ limit } = {}) {
-    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
-    const walk = (table) => {
-      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
-      for (const r of this.sql.exec(table === "files"
-          ? `SELECT bundle_id, path, content, blob_sha, bytes, sha256 FROM files`
-          : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
-        out.rows++;
-        const f = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
-        const computed = Store.#fileDigestOf(f);
-        if (r.content !== null) out.inline++; else out.blob++;
-        const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
-        const bBad = r.content !== null && table === "files"
-          && Number(r.bytes) !== Store.#inlineBytesOf({ text: r.content });
-        if (dBad) out.digest_disagrees++;
-        if (bBad) out.bytes_disagree++;
-        if ((dBad || bBad) && out.listed.length < cap)
-          out.listed.push({ bundle_id: r.bundle_id, ...(r.snap_key ? { snap_key: r.snap_key } : {}), path: r.path,
-                            stored: r.sha256, computed,
-                            ...(bBad ? { bytes_stored: r.bytes } : {}), digest: dBad ? "disagrees" : "agrees" });
-      }
-      return out;
-    };
-    return { ok: true, files: walk("files"), history: walk("history"),
-             rewritten: 0,
-             note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, "
-                 + "so its bytes are not judged." };
-  }
 
 
   static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;
@@ -31948,70 +31868,6 @@ export class Store extends DurableObject {
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
-  /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
-     An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
-  static #manifestFiles(filesJson) {
-    /* Through the module's one admitted `safeJson` rather than a catch of its own (provenance-marker's swallow ratchet):
-       an unreadable row is an EMPTY list, which the re-send test treats as UNDETERMINED and refuses, never as equal. */
-    const arr = safeJson(filesJson);
-    return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
-  }
-  /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
-     repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
-     the record claiming more than it holds. WHAT MAKES IT MEASURABLE: `manifest` has ONE writer (`promote`, one row
-     per successful promotion) and `bundles.row_version` is advanced by that same write and by nothing else, so for a
-     bundle `row_version - COUNT(manifest)` is the number of promotions whose row is no longer there. WHAT IT CANNOT
-     DECIDE, stated per bundle rather than rounded: a bundle with NO creation row (base = the empty-string sha) may
-     have lost it to an overwrite, OR predate the fix that began writing a creation's manifest row at all (this
-     method's own comment at the manifest write) — so one promotion of such a bundle's deficit is `undetermined`, and
-     only the rest is counted `overwritten`. Which KEY collided is not recorded anywhere and is not guessed; a row whose
-     base is no other row's bundle.md digest (`unanchored`) is listed as the trace an overwrite leaves in the chain.
-     Manifest rows for a bundle id with no `bundles` row have no row_version to compare with and are counted apart.
-     Bounded by `limit` bundles listed (the counts are always whole). */
-  snapKeyCensus({ limit } = {}) {
-    const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
-    const rowsBy = new Map();
-    for (const r of this.sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
-      if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
-      rowsBy.get(r.bundle_id).push(r);
-    }
-    const out = { ok: true, bundles: 0, manifest_rows: 0, promotions: 0, overwritten: 0, undetermined: 0,
-                  bundles_with_deficit: 0, excess: 0, orphan_manifest_bundles: 0, listed: [], rewritten: 0 };
-    const seen = new Set();
-    for (const b of this.sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
-      out.bundles++;
-      seen.add(b.bundle_id);
-      const rows = rowsBy.get(b.bundle_id) || [];
-      const promotions = Number(b.row_version) || 0;
-      out.manifest_rows += rows.length;
-      out.promotions += promotions;
-      const deficit = promotions - rows.length;
-      if (deficit < 0) out.excess += -deficit;
-      const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
-      const outputs = new Set(rows.map((r) => {
-        const md = Store.#manifestFiles(r.files_json).find((f) => f.name === "bundle.md");
-        return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
-      }).filter(Boolean));
-      const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA
-        && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
-      if (deficit <= 0 && !unanchored.length) continue;
-      const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
-      const overwritten = deficit > 0 ? deficit - undetermined : 0;
-      out.overwritten += overwritten;
-      out.undetermined += undetermined;
-      if (deficit > 0) out.bundles_with_deficit++;
-      if (out.listed.length < cap)
-        out.listed.push({ bundle_id: b.bundle_id, promotions, manifest_rows: rows.length, overwritten, undetermined,
-                          creation_row: hasCreation, unanchored });
-    }
-    for (const [id, rows] of rowsBy) if (!seen.has(id)) { out.orphan_manifest_bundles++; out.manifest_rows += rows.length; }
-    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated "
-      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation "
-      + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
-      + "recorded and is not guessed.";
-    return out;
-  }
   /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
      provenance's (R5, R10). */
   homeCensus(...a) { return provenanceOf(this.ctx).homeCensus(...a); }
@@ -44177,144 +44033,10 @@ export class Store extends DurableObject {
     return { ok: true, id, status: "resolved", resolved_at: at };
   }
 
-  /* ==================================================================== D-126
-   * THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
-   * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
-   * more, they'd stay in the list so that the user can take a different action."*).
-   *
-   * ONE HELPER, THREE ACTS. `op=proposedispose`, `op=taskresolve` and `op=taskforward` each take a SET
-   * when the body carries `items` — the branch is the first statement of each act's own method, so the
-   * dispatch map is unchanged — and without `items` each is the single-key act it was. The
-   * set form is NOT a second implementation of any act: every item goes through the SAME method the
-   * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
-   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
-   *
-   * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
-   *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
-   *     the loop, and the `refuse` weight's stop-on-drift is exactly the behaviour this weight is not.
-   *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
-   *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
-   *     item carries its act's `reason` (and `code`/`translation` where that act has them).
-   *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
-   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
-   *     truth about the set and a caller reading `items[]` is told the truth about each item.
-   *
-   * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the
-   * decider) or the URL carries (viewer, identity); it is spread LAST, so an item that names its own
-   * actor is overwritten exactly as a single-key body is. The rest of the body is SHARED — a common
-   * `reason`, `to` or disposition — and an item may override it for itself.
-   *
-   * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER, and this is what lets a
-   * MIXED selection be one act. `op=proposedispose` has three identity shapes (`key`;
-   * `progressionKey`+`stageKey`; `project`+`finding`) and it decides WHICH ACT IT IS by what the caller
-   * SENT. In a set, "what the caller sent" for an item is the shared body plus the item — so a caller
-   * that names the project ONCE for a selection all in one team (a legitimate shape: the item then
-   * carries only its `finding`) was silently making every OTHER item in that set project-scoped too. A
-   * progression finding beside it, naming a perfectly good `key`, came back NO_FINDING: *"a project with
-   * no finding names a team and no decision"* — true of the body the helper built and false of the act
-   * the member asked for. MEASURED at 1a7f0bcc0 before the fix, not inferred.
-   *
-   * SO THE NARROWING IS BY THE PUBLISHED SHAPES AND NOT BY A LIST HERE. `item_keys` already declares each
-   * act's identity groups and `op=affordances` already publishes them; an item that NAMES a key from one
-   * or more groups keeps the shared values of THOSE groups' keys and of `shared_keys`, and the shared
-   * values of the other groups' identity keys are dropped for that item alone. An item naming no identity
-   * at all is unchanged, so the wholly-shared subject still reaches the act to be refused in its own
-   * words. This is a no-op for the three acts with ONE identity group (`taskresolve`, `taskforward`) or
-   * whose second group's extra key is shared anyway (`resolve`'s `ref`) — measured, not assumed.
-   *
-   * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. Each single act writes
-   * at most once, after all of its own refusals, so an item that is refused has written nothing. */
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
   #perItem(act, body, stamped, one) {
-    const refusal = (code, detail, extra) => {
-      const row = PER_ITEM_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-               detail, ...(extra || {}) };
-    };
-    const { items, ...shared } = body || {};
-    const count = Array.isArray(items) ? items.length : 0;
-    /* DEC-49 REGION is-per-item-set-shape */
-    if (!Array.isArray(items) || items.length === 0)
-      return refusal("SET_NO_ITEMS",
-        `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or `
-        + `send one item's fields without \`items\` for the single act. Nothing was done.`,
-        { op: act, weight: "per-item", count: 0 });
-    if (items.length > Store.PER_ITEM_MAX)
-      return refusal("SET_TOO_LARGE",
-        `op=${act} acts on at most ${Store.PER_ITEM_MAX} items at once and this set holds ${items.length}. `
-        + `Refused WHOLE, before any item was tried, so no item moved.`,
-        { op: act, weight: "per-item", count: items.length, max: Store.PER_ITEM_MAX });
-    /* END DEC-49 REGION is-per-item-set-shape */
-    const echo = (it) => {
-      const o = {};
-      for (const [k, v] of Object.entries(it)) {
-        if (typeof v === "string") o[k] = v.slice(0, 400);
-        else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
-      }
-      return o;
-    };
-    /* REC-205 — THE SHARED BODY, NARROWED TO WHAT THIS ITEM'S OWN SHAPE ADMITS (the reasoning is in the
-       block comment above). `groups` is the act's published `item_keys`; `identity` is every key those
-       groups name that is NOT also a published `shared_key`, so a key an act declares shareable (op=resolve's
-       `ref`) is never taken away from an item that relies on it. NAMED is read the way the acts themselves
-       read an identity — a trimmed, non-empty string — so an item carrying `project: ""` has named nothing
-       and is not told it meant a project. An act not in the catalogue narrows nothing and behaves exactly
-       as it did before this landing; that it cannot happen is asserted structurally in the suite rather
-       than assumed here. */
-    const published = PER_ITEM_ACTS.find((a) => a.id === act) || null;
-    const groups = (published && Array.isArray(published.item_keys)) ? published.item_keys : [];
-    const shareable = new Set((published && Array.isArray(published.shared_keys)) ? published.shared_keys : []);
-    const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
-    const namesIt = (o, k) => o && typeof o[k] === "string" && o[k].trim() !== "";
-    const sharedFor = (it) => {
-      if (identity.size === 0) return shared;
-      const named = [...identity].filter((k) => namesIt(it, k));
-      if (named.length === 0) return shared;
-      const reach = new Set();
-      for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach.add(k);
-      const narrowed = { ...shared };
-      for (const k of identity) if (!reach.has(k)) delete narrowed[k];
-      return narrowed;
-    };
-    const outcomes = [];
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
-      /* DEC-49 REGION is-per-item-malformed */
-      if (!it || typeof it !== "object" || Array.isArray(it)) {
-        outcomes.push({ index: i, outcome: "retained", asked: null,
-          ...refusal("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was `
-            + `left as it was and the other items were still tried.`) });
-        continue;
-      }
-      /* END DEC-49 REGION is-per-item-malformed */
-      let r;
-      /* `items: undefined` LAST: an item cannot smuggle a nested set back into the act. */
-      try { r = one({ ...sharedFor(it), ...it, ...stamped, items: undefined }); }
-      catch (e) {
-        /* DEC-49 REGION is-per-item-failed */
-        r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
-          + String((e && e.message) || e).slice(0, 200) + `. Nothing about the item is claimed.`);
-        /* END DEC-49 REGION is-per-item-failed */
-      }
-      const res = (r && typeof r === "object") ? r : { ok: false };
-      outcomes.push({ index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it), ...res });
-    }
-    const applied = outcomes.filter((o) => o.outcome === "applied").length;
-    const retained = outcomes.length - applied;
-    const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
-    if (retained === 0)
-      return { ok: true, ...head,
-               detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
-    /* DEC-49 REGION is-per-item-retained */
-    /* Written out rather than spread from `refusal()`, so the verdict and the code are LITERALS at the
-       site the DEC-49 guard reads (a spread verdict is one its outcome walk cannot grade). */
-    return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
-             check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
-             translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
-             detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in `
-               + `items[] carries its own act's reason. The applied items stand — this is not a rollback.`,
-             ...head };
-    /* END DEC-49 REGION is-per-item-retained */
+    const a = PER_ITEM_ACTS.find((x) => x.id === act);
+    return perItem(act, body, stamped, one, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
   }
 
   /* ===========================================================   *  CAP-3: the archive-fallback MONITORING consumer.
@@ -45683,7 +45405,7 @@ export class Store extends DurableObject {
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
-        snapkeycensus: () => this.snapKeyCensus({ limit: url.searchParams.get("limit") }),
+        snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
         /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
            (see `changedFromAudit`). */
         changedfromaudit: () => this.changedFromAudit({
@@ -46868,7 +46590,7 @@ export class Store extends DurableObject {
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),   /* REC-138 */
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
-        digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
+        digestcensus: () => recordOf(this.ctx).digestCensus({ limit: url.searchParams.get("limit") }),
         /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
         gatefacts: () => this.gateFacts(url.searchParams.get("id"),
           url.searchParams.has("viewer") ? url.searchParams.get("viewer") : null),
