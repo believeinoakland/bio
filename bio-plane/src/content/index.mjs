@@ -818,10 +818,12 @@ export class Content {
    *  current again); nothing is deleted or moved; a null chain marks nothing (an unrecorded chain is not one that
    *  moved). A member's TYPING is never staled: its chain is `typed(member)` over the BYTES, which cannot change under
    *  a row that names them. ONE statement, not a loop (rows per capture are unbounded by design).
-   *  R41: each row marked is graded old text against new (`unitsBefore`, the capture's units as they stood, when the
-   *  caller holds them; without them the grade is UNDETERMINED and says so), and every registered listener is told of
-   *  each row whose grade is affected or undetermined. Returns the count. */
-  markStale(captureSha, chain, { unitsBefore = null } = {}) {
+   *  R41: each row marked is graded old text against new — `unitsBefore`, the capture's units as they stood, and
+   *  `unitsAfter`, as the replacing reading wrote them (default: the index as it stands at the call, which is the new
+   *  one only when the call follows the write, as extraction's R24 listener does); without the old units the grade is
+   *  UNDETERMINED and says so — and every registered listener is told of each row whose grade is affected or
+   *  undetermined. Returns the count. */
+  markStale(captureSha, chain, { unitsBefore = null, unitsAfter = null } = {}) {
     const live = Array.isArray(chain) ? JSON.stringify(chain) : null;
     if (live == null) return 0;
     const where = `capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0
@@ -834,7 +836,8 @@ export class Content {
     if (hit && hit.length) {
       const before = unitsBefore && Array.isArray(unitsBefore.units) ? unitsBefore
         : { units: [], state: null };
-      const after = this.extraction.unitsOf(captureSha) || { units: [], state: null };
+      const after = unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter
+        : this.extraction.unitsOf(captureSha) || { units: [], state: null };
       for (const row of hit) {
         const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
         const g = before.units.length ? gradeAcross(row, extent, before, after)
