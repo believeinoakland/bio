@@ -64,3 +64,4 @@ Layer 5, started 2026-09-27 ~07:50 UTC: ENTITIES #1 `session_01FFJSjwZY11KjjofLS
 **Size.** Fifteen jobs. T4: 13 jobs, 703.6M tokens, half of it legacy-tests (K126).
 
 Layer 5 merges (BOB #46): progressions' final branch @ 9c5044c955 (79a9b525d9); observation-log @ 09fa325d61 (3b2dfdea3e; ownership 0 failures, legacy-store +60/−1,368, every added line read: imports, delegations, calls, comments, and N39's two authority resolvers). PROMOTION #4 re-opens promotion after bias's merge (K150).
+Bias @ f4ae8957b6 merged (a31fe1aabd; ownership 0 failures, legacy-store +23/−1,412, every added line read; the purge-list conflict with observation-log resolved by keeping all three filters). All module tests 1,163/1,168, the 2 fails promotion's R18 arms (K150). PROMOTION #4 `session_01W2PTadnDKxA16EUS4CW7Bz` started ~08:32 UTC on `job/T5/promotion` (fast-forwarded to a31fe1aabd): R18's arms and `CATALOG_VERSION` 1.35.0 for every row layer 5 moves out of the catalogue.
