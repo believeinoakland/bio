@@ -2,7 +2,7 @@
 
 **Session** PROGRESSIONS #1, `session_01MqohHm1mTdqg92oxu4112q`, on `job/T5/progressions` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · IN PROGRESS. Entry T5-6: extract `progressions` from `legacy-store` and `legacy-checks` per `build/extraction/progressions.md` and `build/requirements/progressions.md`, with every requirement marked not yet met (R8, R14, R19, R27, R31, R33; R32 deferred by K102).
+**Status** · COMPLETE (~08:40 UTC); Q1–Q3 open with BOB, none blocking. Entry T5-6: extract `progressions` from `legacy-store` and `legacy-checks` per `build/extraction/progressions.md` and `build/requirements/progressions.md`, with every requirement marked not yet met (R8, R14, R19, R27, R31, R33; R32 deferred by K102).
 
 **Read whole:** `roles/JOB.md`; PROCESS-MECHANICS §12–§16; `build/manifest.md`; `build/requirements/progressions.md` and `README.md`; `build/extraction/progressions.md`; `build/layers.md`; `build/plan/current.md`; `build/modules.json`; the public parts of `entities` and `connections`, and of `record-core`, `membership`, `extraction`, `provenance` the services used (`transact`, `declarePurge`, `perItem` R49–R55, `viewerPredicate` R43, `readingOf` R30, `homeOf`); rulings K3, K4, K6, K23, K31, K57, K61, K64, K76, K78, K90, K96, K102, K107; the legacy code moved (`store.mjs` the definition, instance, exception, overdue, feed and dispose regions, the dispatch arms, the migration, the overdue consumer; `schema.mjs` the seven tables; `bio-checks.mjs` C-33.26, C-33.42, C-33.43); CONTENT #1's record as the pattern.
 
@@ -31,8 +31,36 @@ Sent together as one QUESTION. None blocks the job: each is built on the best re
 
 ## Entries applied (T5-6)
 
+- **Extraction** per map and requirements: `bio-plane/src/progressions/` (`index.mjs` the service, `progressionsOf(ctx, deps)` and `progressionOps`; `checks.mjs` the refusal rows; `schema.mjs` the tables and `migrateProgressions`). Removed: from `store.mjs` the definition and version code, the instance assembly, thread, read, discharge and exception reads, the overdue clock, `proposalsFeed`, `captureProgressions`, the progression arm of `proposeDispose`, REC-184's migration entry and eight dispatch arms (1,412 lines); from `schema.mjs` the seven tables (211); from `bio-checks.mjs` C-33.26, C-33.42, C-33.43 with REC-211's header (66). Kept in `store.mjs` as the map says: `#strongestResolutionsFor` (entities'), `#nowMs` (shared), the project arm and class bridge of `proposeDispose` (queue's). `legacy-store` now delegates (17 added lines, each listed by the ownership check below: the import, the purge filter, the `onThreaded` registration, the migrate call, the overdue consumer's two lines, eight delegating one-liners, the dispose delegation, the ops spread).
+- **R8 (K102):** every thread is a dated version (`progression_threads`, `progression_thread_placements`); nothing is overwritten.
+- **R14 (K102):** every recording of an exception is a dated version (`progression_exception_versions`); the current applies, earlier ones read back through R15.
+- **R19:** each instance of `captureProgressions` carries `open_finding_count` (and `finding_count`).
+- **R27:** every refusal carries its code, row and translation (26 rows; C-100 minted, Decisions above).
+- **R31 (K102):** `cardinality_exceeded`, a finding for a `1` or `0..1` stage holding more than one document.
+- **R33 (N63):** `onThreaded`; `threadInstance` no longer arms the store's scheduler itself.
+- **R28:** the three rows are the module's invariants with their tests; R11's unless_exception doctrine (DEC-9, K102) kept as built, the provisional marker gone.
+- **Built work (§12.5):** the requirements name D-623 and D-688, neither this module's (map §5.1–5.2); nothing else on the snapshot is named for it.
+
 ## Deferred
+
+- **R32** (junction checks): deferred by K102 until the record holds amounts and funds as values; named by a `test.todo`.
+- The bridge to `entities`/`connections` goes on their CHANGE (Q3).
 
 ## Found in other modules (REPORT)
 
+1. **legacy-tests** (T5-12): four old suites red on this change and green (or less red) on `tranche/T5`, all source-anchored on moved code, none on behaviour: `d484-refusal-translation` (counts `actNoBasis`/`actNoCitation` call sites in `store.mjs`: two sites moved to `refusal("NO_BASIS"|"NO_CITATION")` in the module; its behaviour arms, NO_BASIS/NO_CITATION translated through `op=progressiondefine`, pass); `machinefences-dec49` ARM D-PIN-A (the catalogue no longer holds C-33.26, C-33.42, C-33.43: they are `PROGRESSION_CHECKS` rows); `derivation-bounds` (70/2 → 64/8: its by-name rosters of `store.mjs` methods list `#assembleInstance`, `#overdueScan`, `proposalsFeed` and `op=proposals`' dispatch, which moved); `hygiene` (the purge-coverage census reads the legacy list: +3 uncovered, `progression_threads`, `progression_thread_placements`, `progression_exception_versions`, which the module declares to record-core, R29, tested). Also the map §4 anchors (`proposedispose`, `d266*.control`, `current.*`, `gate-reads`, `versions`, `queue-state`, `identity-claims.control`, `project-authority.control`) read moved text; those I ran are unchanged.
+2. **promotion** (`CATALOG_VERSION`, `gate.mjs`): three rows left the catalogue (C-33.26, C-33.42, C-33.43, now progressions' rows with ids and translations unchanged); the gate never ran them. `d470-catalog-census`'s own failures are unchanged by it (11/2 on both).
+3. **queue**: R31's `cardinality_exceeded` is published in `proposalsFeed.instances[]` but not aggregated into `proposals[]`, because `queueFeed` words each proposal "required and absent"; queue should aggregate and word it (Q1). `queueFeed` still reads `progression_instances` in SQL (Q2's R34). The project arm of `proposeDispose`, C-33.44 and `finding_dispositions` wait in `legacy-store` for queue's job.
+4. **affordances** (N49): `STAGE_REQUIREDNESS` and `DISPOSITIONS` are now `progressions`' exports (identical values); affordances should re-export them and delete its copy.
+5. **entities, connections** (Q3): their Provides should state the grade order, `isEstablished` and the weaker grade progressions reads (K76 (3)).
+6. **scheduler** (T6+): registers its `arm` with `onThreaded` (R33) and calls `overdueScan` (R17); until then `legacy-store` does both.
+7. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale (store, schema, catalogue changed; the plane now bundles `src/progressions/`); `newgroup/dist/newgroup.bundled.mjs` embeds the catalogue and is stale too.
+
 ## Tests and checks
+
+- **Module:** `node --test bio-plane/test/m/progressions/` on this branch: tests 40, pass 39, fail 0, todo 1 (R32) (6 files: define, instance, exceptions, overdue, feeds, dispose).
+- **Checks** (civicos-process `main`): `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 10 product files, 25 relative imports; 0 failures`; `coverage: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures`; `ownership: 13 files changed; legacy-store: 17 line(s) added, 1412 removed; legacy-checks: 0 line(s) added, 66 removed; 0 failures`.
+- **Old battery, before and after on the same machine:** the 37 `*.test.mjs` suites that drive or read these ops and tables (every one naming `progressiondefine`, `thread`, `instance`, `discharge`, `exceptions`, `proposals`, `captureprogressions`, `proposedispose`, `proposalsFeed` or a progression table), plus `hygiene`, against `tranche/T5` @ `f05090bcad`. 27 green on both, including every behaviour suite the map names (`progression-instance`, `progression-exception`, `progression-versions`, `overdue-successor`, `proposals-feed`, `capture-progressions`, `d552-instance-disposition`, `proposedispose`, `queue`, `queue-state`, `current`, `versions`, `gate-reads`). Red here only: `d484-refusal-translation`, `machinefences-dec49`, and more red: `derivation-bounds`, `hygiene` (REPORT 1). Red on both with identical failures: `affordances`, `d470-catalog-census`, `identity-claims`, `meaning-bounds`, `peritem`, `project-discoverable`, `project-sight`.
+- No layer tests are named in `build/manifest.md`; no extracted module uses progressions yet.
+
+Size: test runs 16, module lines 1493
