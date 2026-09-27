@@ -129,3 +129,9 @@ LEGACY-TESTS #2's REPORTs 5 and 10 are product faults this tranche made, so T4 d
 - T4-8 · N19's routing names a page that shows a text layer a tier-3 candidate (`textshown` 33/1): only a page marked `image_content_unread` or `no_text_layer` routes to OCR; restore that, with a test.
 
 The other REPORTs (6 legacy-store's `archivelookup` classification, 7/11 affordances' rungs (N84), 8 capture's six unbounded routes) go to the next plan (N89, N90).
+
+Repair jobs started 2026-09-27 05:25 UTC:
+- `capture` · CAPTURE #2 · `session_01T2Ek9JphkWwCkqAd6pVhzo`
+- `legacy-index` · LEGACY-INDEX #2 · `session_01587zDEWW3E6JZJLW7E3kK9`
+
+CAPTURE #2 complete at `2fad4a015f`, merged early (`c769c73`): `driveRow` exported with an interface test over every C-48 code; capture 46/46. Ownership: one failure, its record `capture-2.md` outside the expected name, which K125 chose; accepted.

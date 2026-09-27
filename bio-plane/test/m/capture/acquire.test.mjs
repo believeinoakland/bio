@@ -8,6 +8,7 @@ import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
 import { EARNED_CAPTURE_CEILING, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
 import { SUBRESOURCE_STAGGER_SETTING, REACHABILITY_SETTINGS } from "../../../src/capture/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
+import { driveRow } from "../../../src/capture/acquire.mjs";
 
 const HTML = (body = "<p>hello</p>") => `<!doctype html><html><head><title>t</title></head><body>${body}</body></html>`;
 const page = (body, headers = {}, status = 200) => new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", ...headers } });
@@ -500,4 +501,13 @@ test("R37 R38: each refusal carries its catalogue row, and nothing in the answer
     answers.push((await run(w, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, b)).body);
   for (const a of answers.slice(0, 3)) assert.ok(a.check && a.translation, `${a.reason} carries its row`);
   assert.ok(!/oakland|alameda/i.test(JSON.stringify(answers)));
+});
+
+test("R4 R37: driveRow answers every C-48 code's own catalogue row, read from the catalogue, and throws on a code with no sentence", () => {
+  const codes = Object.keys(DRIVE_CAPTURE_CHECKS);
+  assert.ok(codes.includes("DRIVE_TICK_EXPORT_IS_THE_SHELL") && codes.includes("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"));
+  for (const code of codes)
+    assert.deepEqual(driveRow(code), { code, check: DRIVE_CAPTURE_CHECKS[code].check, translation: DRIVE_CAPTURE_CHECKS[code].translation }, code);
+  for (const bad of ["NOT_A_DRIVE_CODE", "RENDER_FAILED", "", undefined])
+    assert.throws(() => driveRow(bad), /has no DRIVE_CAPTURE_CHECKS row/, String(bad));
 });
