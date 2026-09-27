@@ -73,3 +73,4 @@ Connections @ 5375f878a6 merged (ownership 0 failures, legacy-store +20/−1,774
 
 Layer 11, started 2026-09-27 ~09:02 UTC (BOB #46) from `tranche/T5` @ 054006d1d5: LEGACY-INDEX #3 `session_01R1fW8dH921CoT7ggxG5wrw`, LEGACY-TESTS #3 `session_01TW5ASSYtwo47MkR2AdX1H6`.
 Legacy-index @ 9433346287 merged early (3db2b9754e; ownership 0 failures; readings confirmed, K153); its COMPLETE reached BOB only through its record (K154). LEGACY-TESTS #3 told to take its REPORT 2.
+Legacy-tests @ ac785ce1ca merged (a9aba3d56e; ownership 0 failures; the old battery 93 red → 22, each owed a named owner); its COMPLETE reached BOB by its record (K154). Its REPORT 1 (rendering dead: K155) re-opens connections as CONNECTIONS #2 before T5 closes; REPORTs 3, 7–11, 13, 14 routed to next.md (N112, N117–N119, N122), REPORT 15 is N115.
