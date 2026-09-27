@@ -229,6 +229,7 @@ import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/ind
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
+import { connectionsOf, connectionsOps, connectionsOwns, weakerGrade, refsReplacedOf } from "./connections/index.mjs";
 import { extractionOf, extractionOps, extractionOwns, labelTerms, normAlias, refTermSources, CAPTURE_TEXT_UNIT_CAP,
          CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "./extraction/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
@@ -502,13 +503,6 @@ import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
    grammar of its own, because a second answer to "is this a legal extent" is
    D-164's own lesson arriving inside the construct built to close it. */
 import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
-/* FW-17 / D-161: what a PORTION may earn from a connection's determining pair.
-   Its own family because the question is its own — the extent checks above ask
-   whether an address is legal, this asks whether a link REACHES an address. */
-import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers,
-         checkConnectionMentionUnchosen } from "../checks/bio-checks.mjs";
-/* REC-122 / IC-232: the member's CHOICE of the on-point mention, and its refusals (C-74). */
-import { CONNECTION_CHOICE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-86 / IC-123: NARROW's refusals, its one predicate over two extents, and
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
@@ -523,8 +517,6 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 /* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
    to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
 import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
-/* D-162 / IC-241: THE THEME's refusals (C-81). */
-import { THEME_CHECKS } from "../checks/bio-checks.mjs";
 /* IC-246 / C-82: op=statementack's bound on the unsigned documents it re-authors — a refusal, never a cut. */
 import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
 /* D-448 / C-87: the review copy's eleven refusals, imported for the reason every other DEC-49
@@ -750,7 +742,8 @@ export class Store extends DurableObject {
       { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
     ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name)));   /* each extracted owner declares its own (K23) */
+      .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name))
+      .filter((t) => !connectionsOwns(t)));   /* each extracted owner declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
@@ -778,8 +771,11 @@ export class Store extends DurableObject {
       return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
                                    refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
     });
+    /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
+       (R19, R23); legacy-store registers observation-log's row per derivation and its statement (R3, R5) until then. */
+    connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => this.#observeConnectionDerivation(e.entityId, e));
+    connectionsOf(ctx).registerDerivationProvider("legacy-store", (id) => this.#connectionDerivationOf(id));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
-    promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
@@ -1107,34 +1103,6 @@ export class Store extends DurableObject {
          the same reason the three unlanded extent arms are named in
          CONTENT_EXTENT_KINDS rather than added later. */
       ["inquiry_basis_version_legs", "content_id", "TEXT"],
-      /* FW-17 / D-161 / Bob's 5.4: THE DETERMINING REFERENCE PAIR on a
-         connection. Eight columns rather than a second table, because a
-         connection has exactly two ends and always exactly two — the row IS the
-         pair, and a join table would let a row exist with three. Nullable for
-         two DIFFERENT reasons that the reads must keep apart: a_ref/b_ref are
-         null only on a row derived before this landing (the next op=connect
-         fills them, deterministically, from the same resolutions that set the
-         grade), while the POSITION columns are null whenever the reading could
-         not say where — which is most readings today and is not a gap to be
-         backfilled. */
-      ["connections", "a_ref", "TEXT"],
-      ["connections", "a_pos_kind", "TEXT"],
-      ["connections", "a_pos", "TEXT"],
-      ["connections", "a_pos_ref", "TEXT"],
-      ["connections", "b_ref", "TEXT"],
-      ["connections", "b_pos_kind", "TEXT"],
-      ["connections", "b_pos", "TEXT"],
-      ["connections", "b_pos_ref", "TEXT"],
-      /* REC-120 / D-161 act (2): how the pair was SELECTED. Null on every row
-         that exists before this column did, and null is the TRUE value for them:
-         their ties went to the scan's row order, which no read can recover. */
-      ["connections", "pair_rule", "TEXT"],
-      /* D-454: WHICH OCCURRENCE a member's on-point choice names. Null on every choice made
-         before it, and null is the TRUE value: those choices named a string when the record
-         held one occurrence per string, and no backfill can know which read the member meant
-         once a re-read finds more. The read answers such a choice only while its reference
-         has exactly one occurrence (connectionGradeForContent says why). */
-      ["connection_pair_choices", "occurrence", "TEXT"],
       /* REC-128 / IC-140: WHO DELIVERED a ratification — the authenticated
          session that performed the act, beside the signature's signer. NULLABLE
          AND NEVER BACK-FILLED, and that is the item rather than a convenience:
@@ -1198,6 +1166,7 @@ export class Store extends DurableObject {
     membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
     contentOf(this.ctx).migrate();      /* content's tables (R39), likewise, with the chain_kind and cited_as migrations */
+    connectionsOf(this.ctx).migrate();  /* connections' tables (R36), likewise, with the pair columns' migrations */
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
@@ -2950,78 +2919,6 @@ export class Store extends DurableObject {
     return Number.isFinite(v) && v >= 0 ? v : Store.TASK_DRAIN_DELAY_MS;
   }
 
-  /* REC-5 / D-122: how the SCHEDULED connection-derive sweep is paced and bounded.
-     DELAY_MS is deliberately far larger than the drain's second-scale cadence:
-     connections are a projection nobody is blocking on, deriving them a minute
-     after a resolve is well inside "eventually" for a civic record, and a slack
-     delay keeps the sweep off the resolve hot path. It is a tactical cadence, not
-     a doctrine — reversible by editing this one constant — and it sits between the
-     drain's 60s backstop and the selection TTL, so the alarm the resolve arms
-     never fires inside another suite's sub-second wall-time (the flakiness the
-     drain suite pins TASK_DRAIN_DELAY_MS out of its window to avoid). Overridable
-     by a binding for exactly that reason: a test pins it far out to drive onAlarm
-     by hand, or short to prove the real alarm fires. BATCH bounds the entities one
-     tick derives; more than that and the wake stays non-null so the next tick
-     drains the rest — bounded per tick, self-terminating overall. */
-  static CONNECTION_DERIVE_DELAY_MS = 60000;
-  static CONNECTION_DERIVE_BATCH = 100;
-
-  #connectionDeriveDelayMs() {
-    const v = Number(this.env && this.env.CONNECTION_DERIVE_DELAY_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Store.CONNECTION_DERIVE_DELAY_MS;
-  }
-  /* Overridable like the delay so a suite can pin the batch to 1 and PROVE the
-     sweep is bounded per tick and drains a larger dirty-set across several
-     self-re-arming ticks rather than in one full-store pass. */
-  #connectionDeriveBatch() {
-    const v = Number(this.env && this.env.CONNECTION_DERIVE_BATCH);
-    return Number.isFinite(v) && v >= 1 ? Math.floor(v) : Store.CONNECTION_DERIVE_BATCH;
-  }
-
-  /* Stamp an entity into the connection-derive dirty-set so the scheduled sweep
-     picks it up. Keyed by entity_id, so re-stamping the same entity is one row:
-     the set is bounded by the count of DISTINCT changed entities, never by the
-     number of resolutions that touched them. Runs inside the caller's resolve
-     transaction, so a resolution and the dirt it produces commit atomically. */
-  #stampConnectionDirty(entityId) {
-    if (typeof entityId !== "string" || !entityId) return;
-    this.sql.exec(
-      `INSERT INTO connection_dirty (entity_id, stamped_at) VALUES (?, ?)
-       ON CONFLICT(entity_id) DO UPDATE SET stamped_at=excluded.stamped_at`,
-      entityId, new Date().toISOString());
-  }
-
-  /* The connection-derive sweep's tick body: derive connections for a BOUNDED
-     batch of dirty entities, then clear each from the set. deriveConnections is
-     idempotent (it UPSERTS by the FW-8 connection key), so re-deriving an entity
-     is a no-op on the second run and the sweep is safe to re-run. Derive-then-
-     delete in that order means a crash between the two leaves the entity dirty and
-     it is simply re-derived next tick — the safe failure direction (re-derive, not
-     skip). The whole body is synchronous (deriveConnections uses transactionSync),
-     so no resolve can interleave between reading the batch and clearing it.
-
-     REC-66: THE SWEEP TAKES THE DEFAULT PAIR BOUND, AND THAT IS A CHOICE RATHER THAN AN
-     OMISSION. This is the path D-224 (ii) is about — background write amplification on a
-     Durable Object whose storage ceiling is itself unrecorded debt (D-190) — so the batch
-     bound and the per-entity bound now compose: at most `#connectionDeriveBatch()` entities
-     per tick, at most 496 pairs (32 documents) each. A caller who wants an entity derived
-     wider asks for it explicitly through op=connect, where the bound it applied is
-     published; an alarm that quietly derived at the CEILING would be the largest write in
-     the plane happening where nobody asked for it. */
-  #deriveConnectionsSweep() {
-    const batch = this.#rows(
-      `SELECT entity_id FROM connection_dirty ORDER BY stamped_at, entity_id LIMIT ?`,
-      this.#connectionDeriveBatch());
-    const swept = [];
-    for (const { entity_id } of batch) {
-      const r = this.deriveConnections({ entityId: entity_id, assertedBy: "system" });
-      this.sql.exec(`DELETE FROM connection_dirty WHERE entity_id=?`, entity_id);
-      swept.push({ entity_id, connections: r && r.ok ? r.count : 0 });
-    }
-    const remaining = this.#one(`SELECT count(*) c FROM connection_dirty`).c;
-    return { entities: swept.length, remaining, swept };
-  }
-
   /* The producer-side arm for the connection-derive consumer: a resolve that
      dirtied an entity reconciles the alarm to include the sweep's wake. Mirrors
      #armSweep / #armDrain — it only SCHEDULES, it never derives, so the
@@ -3161,9 +3058,8 @@ export class Store extends DurableObject {
          default): a scheduled derivation is a MACHINE act, never a member's. */
       { name: "connection-derive",
         due:  (now) => now,
-        wake: (now) => this.#one(`SELECT count(*) c FROM connection_dirty`).c > 0
-                         ? now + this.#connectionDeriveDelayMs() : null,
-        tick: ()    => ({ connderive: this.#deriveConnectionsSweep() }) },
+        wake: (now) => connectionsOf(this.ctx).wake(now),
+        tick: ()    => ({ connderive: connectionsOf(this.ctx).sweep() }) },
       /* REC-8 (CONSTRUCTS Step 7, AGEING): the OVERDUE-SUCCESSOR scan — the SECOND framework
          consumer on this alarm. It is the record's PROACTIVE noticing of a temporal expectation
          coming due (FW-8 gave each stage a `within_interval`; nothing checked it). It writes
@@ -4488,68 +4384,9 @@ export class Store extends DurableObject {
       .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role, state: l.state }));
   }
 
-  /* D-267: THE ONE SEVERANCE CONFIRMATION. Is the edge from `citingId` to
-   * `targetId` recorded as WITHDRAWN in the citing document's own frontmatter?
-   *
-   * IT EXISTS BECAUSE THE RULE HAD FOUR IMPLEMENTATIONS AND A FIFTH READER THAT
-   * DID NOT KNOW THE RULE EXISTED. Every projection this store keeps of
-   * `references[]` — `refs` and `inquiry_basis` alike — carries the RELATION and
-   * DROPS the STATUS, so a severed edge leaves a row in both tables and the only
-   * place the withdrawal is recorded is the document. Four readers already knew
-   * that and each re-derived it inline (#citesInto, #restsOnLive, backlinks,
-   * #projectsDrawingOn / versionAct's VERSION_CURRENT_UNRELATED pair);
-   * #queueAncestorEdges did not, and every producer whose homes come from
-   * #queueAncestors inherited the blindness — a project that WITHDREW from a
-   * question stayed a home for every item filed under it. The fix is not a fifth
-   * copy of the predicate at the walk: it is ONE predicate the readers share, so
-   * the answer cannot drift between the feed that routes a question's
-   * notifications and the act that refuses to move a withdrawn project's stance.
-   *
-   * TWO CONSERVATIVE ARMS, and both mean LIVE. A citing document that cannot be
-   * READ counts as live, which was retire's behaviour before it was anybody's
-   * rule. A document that records NO ENTRY for this target — or records it in a
-   * spelling this predicate does not recognise — counts as live too, because
-   * severance is a POSITIVE recorded decision and inferring one from a shape we
-   * failed to parse would drop a home nobody withdrew from. Severance therefore
-   * only ever narrows on evidence, never on absence.
-   *
-   * `rel` NARROWS OR IT IS NULL, and the two callers differ on purpose.
-   * #citesInto asks about the `cites` relation specifically. #restsOnLive asks
-   * about the target with no relation constraint, because a basis leg IS a
-   * reference entry (C-6.3 as REC-11 rewrote it) and the leg does not restate
-   * the rel. Both spellings were already in the source; this parameterises the
-   * difference rather than inventing a third answer. */
-  #refEdgeSevered(citingId, targetId, rel = null) {
-    const md = this.#one(
-      `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, citingId);
-    if (!md || md.content === null) return false;   // unreadable is LIVE
-    const refs = parseFrontmatter(md.content).data?.references;
-    const entry = (Array.isArray(refs) ? refs : [])
-      .find((x) => x && x.target === targetId && (rel === null || x.rel === rel));
-    return !!entry && entry.status === "severed";   // unrecorded is LIVE
-  }
+  #refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }
 
-  /* THE ONE live-cites predicate (REC-19). Who cites INTO a bundle, partitioned
-   * by edge status. `refs` is the projection of the citing documents'
-   * frontmatter, rewritten on every promotion, so a severed edge still has a
-   * row there and its STATUS lives in the document; the document is read rather
-   * than the projection, because the projection does not carry status. A citing
-   * document that cannot be read counts as LIVE — refusing on what cannot be
-   * verified is the conservative arm, and it was retire's behaviour already.
-   *
-   * Extracted from retire's CITED guard so that guard and op=affordances'
-   * publication run the SAME predicate: a pre-flight that could disagree with
-   * the refusal it fronts would be the drift DEC-8 forbids, wearing our colors.
-   *
-   * D-267: the status read itself now goes through #refEdgeSevered, unchanged in
-   * behaviour and no longer this method's private knowledge — the queue's
-   * ancestor walk needed the same answer and was giving a different one. */
-  #citesInto(id) {
-    const confirmed = [], severed = [];
-    for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id))
-      (this.#refEdgeSevered(r.bundle_id, id, "cites") ? severed : confirmed).push(r.bundle_id);
-    return { confirmed: confirmed.sort(), severed: severed.sort() };
-  }
+  #citesInto(id) { return connectionsOf(this.ctx).citesInto(id); }
 
   /* ================== CASE-4 / DEC-72: THE CASE RELATION ====================
    *
@@ -16028,74 +15865,6 @@ export class Store extends DurableObject {
     };
   }
 
-  /** REC-25: the plane-side gated BACKLINK read — every edge INTO a bundle,
-   *  with the citing bundle filtered by the VIEWER'S position (Membership
-   *  Architecture 7.9: derived reverse edges into projects are filtered by the
-   *  viewer's position). This is the read that lets the UI delete its
-   *  client-side reverseRefs walk (app.html), which rebuilt the leak by
-   *  walking every project's projection.
-   *
-   *  `cites` lives on the citing object, so an edge's STATUS lives in the
-   *  citing document, not in the refs projection — read here the way
-   *  #citesInto reads it, so the backlink surface and retire's CITED refusal
-   *  cannot disagree about what a live citation is. A citing document that
-   *  cannot be read counts as live (status defaults confirmed), the same
-   *  conservative arm #citesInto takes.
-   *
-   *  An invisible TARGET answers NO_SUCH_BUNDLE — the same shape as an absent
-   *  one — and invisible CITING bundles are simply not in the list. No count
-   *  of what was withheld is reported, because that count is the leak. */
-  backlinks({ target = null, viewer = null } = {}) {
-    if (!target) return { ok: false, reason: "NO_TARGET",
-      detail: "backlinks are asked of an object: pass target=<bundle id>" };
-    if (!this.#viewerSees(target, viewer))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    const gate = viewerPredicate(viewer);
-    const rows = this.#rows(
-      `SELECT r.bundle_id AS from_id, r.kind AS rel, b.object_type AS from_type,
-              b.title AS from_title, b.current_state AS from_state
-       FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
-       WHERE r.target_id = ? AND (${gate.sql})
-       ORDER BY r.bundle_id, r.kind`, target, ...gate.args);
-    const out = [];
-    for (const r of rows) {
-      let status = null, note = null;
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.from_id);
-      if (md && md.content !== null) {
-        const refs = parseFrontmatter(md.content).data?.references;
-        const entry = (Array.isArray(refs) ? refs : [])
-          .find((x) => x && x.rel === r.rel && x.target === target);
-        if (entry) { status = entry.status ?? "confirmed"; note = entry.note ?? null; }
-      }
-      out.push({ from: r.from_id, from_type: r.from_type, from_title: r.from_title,
-                 from_state: r.from_state, rel: r.rel,
-                 status: status ?? "confirmed", note });
-    }
-    return { ok: true, target, backlinks: out };
-  }
-
-  /** C-6.2: every reference whose target does not exist. A join, not a scan.
-   *
-   *  REC-30, and this is the leak the item was written from: the row NAMES THE
-   *  CITING BUNDLE, so a project that cited a target which does not exist handed
-   *  its own id to any member who asked — the one thing 7.9 says an uninvited
-   *  member must not learn. The citing bundle is the row's subject, so an
-   *  invisible one withholds the whole row (op=backlinks' posture) and no count
-   *  of what was withheld is reported, because that count is the leak.
-   *
-   *  The TARGET is deliberately not gated: by construction it names a bundle
-   *  that does not exist, and there is nothing about a nonexistent id to hide.
-   *
-   *  The join must alias the dangling-target probe to something other than `b`:
-   *  `b` belongs to viewerPredicate, and the gate's own subquery binds it. */
-  danglingRefs(viewer = null) {
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    return this.#rows(
-      `SELECT r.bundle_id, r.target_id FROM refs r
-       LEFT JOIN bundles tgt ON tgt.bundle_id=r.target_id
-       WHERE tgt.bundle_id IS NULL AND (${seen.sql})`, ...seen.args);
-  }
-
   /** Streaming whole-store pass. Peak memory is one image, measured at 37KB,
    *  against 558MB if every image is materialised at once. */
   *eachImage() {
@@ -17075,23 +16844,10 @@ export class Store extends DurableObject {
          it is idempotent: a revision that changes neither recomputes the same row. */
       this.#reindexProjectSight(bundleId);
 
-      /* Projected from the document, every promotion, so the table is a view of
-         bundle.md rather than a second place to state the same thing. */
       /* REC-17: the supersedes targets this revision is REPLACING, read before
          the delete. A revision that drops a `supersedes` edge must un-tell the
          parent, and after the delete there is nothing left to read. */
-      const supersededBefore = [...this.sql.exec(
-        `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`, bundleId)]
-        .map((r) => r.target_id);
-      this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-      const md = files.find((f) => f.path === "bundle.md");
-      const fmRefs = md && typeof md.text === "string"
-        ? (parseFrontmatter(md.text).data?.references ?? []) : [];
-      for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
-        if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
-        this.sql.exec(`INSERT OR REPLACE INTO refs (bundle_id,target_id,kind) VALUES (?,?,?)`,
-          bundleId, t.target, typeof t.rel === "string" ? t.rel : "");
-      }
+      const supersededBefore = refsReplacedOf(c, "supersedes");
       /* REC-17 / P-64: the reverse index, in the SAME transaction as the refs it
          derives from — the discipline every projection in this function keeps,
          so the lookup can never be a revision behind the edges. Three id sets
@@ -18552,318 +18308,9 @@ export class Store extends DurableObject {
   static LEAD_READ_LIMIT_DEFAULT = 200;
   static LEAD_READ_LIMIT_MAX = 2000;
 
-  /* ====================================================================== *
-   * D-162 / IC-241 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's
-   * ruling of 2026-09-21): a connection through an IDEA. Four acts:
-   *
-   *   op=themedeclare  a MEMBER declares a theme — its idea in a few words and
-   *                    its TEST, the sentence a document or a passage passes or
-   *                    fails. The declarer is stamped and never read from the
-   *                    body, and a machine stamp is refused BY NAME (C-81.2).
-   *   op=themeplace    a MEMBER places a document or a passage in it, or
-   *                    CONFIRMS a hunch already standing there: membership,
-   *                    graded D (§8.1 — asserted on that member's judgement that
-   *                    it passes the test, with an author and a date).
-   *   op=themepropose  anyone, a machine included, PROPOSES a placement: a
-   *                    HUNCH, graded C (§8.1 — correspondence, never
-   *                    established, flagged for a member), and never membership.
-   *   op=themeread     one theme with its members and its hunches apart, or the
-   *                    list of themes, searchable by `q`.
-   *
-   * A THEME IS NEVER EVIDENCE, held in two places on purpose, the lead's
-   * arrangement: the id shape (`THEME-…`) is no bundle id and no content id, and
-   * `ENTITY_KINDS` does not contain `theme`, so no leg grammar can accept one and
-   * no connection can run through one; and C-81.1 (`themeLegFindings`) refuses
-   * one BY NAME at every leg grammar — and a leg that claims membership in one.
-   * Nothing here mints a bundle, a content row, an entity or an edge.
-   *
-   * VISIBILITY. A theme is not existence-private — §8.4 says it may be
-   * searched, shown and followed — so every recognised viewer reads it. What a
-   * theme CONTAINS is gated per placement by `#inSight` on the placed document,
-   * so a theme is no oracle for a document in a project the reader was never
-   * invited to, and a placement the reader cannot see is omitted without a
-   * count. An unrecognised or absent viewer reads nothing (fail closed).
-   *
-   * WHO IS SHOWN (BOB #32, 2026-09-24: Membership v2 §3 governs). Members and
-   * the public see HANDLES; only administrators see cover and handle together.
-   * So every reading that names a declarer, a placer or a proposer shows a
-   * reader who does not administer the person's HANDLE ALONE — no member id
-   * (MK-6's precedent: the member id is not published in member-facing reads)
-   * and no cover. The member id and the cover go to ADMINISTRATORS only,
-   * through the `administer` projection `memberList` already follows: the
-   * control plane stamps it from the credential (index.mjs) and anything but
-   * the affirmative stamp yields handles, so a lost stamp loses the pairing
-   * rather than leaking it. A MACHINE stamp (`class:<cls>`) is no person and no
-   * pairing, and every reader is shown it — a hunch stays attributable to the
-   * credential that proposed it. This corrects D-162's first cut, which showed
-   * every reader the member id (IC-241's DESIGN GAP, ruled). */
-  static #themeRefusal(code, detail, extra) {
-    const row = THEME_CHECKS[code];
-    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-             detail, ...(extra || {}) };
-  }
-
-  /** A person on a theme reading, projected for THIS reader (see WHO IS SHOWN): the fields
-   *  `<prefix>_handle` for everyone; `<prefix>` (the member id) and `<prefix>_cover` for an
-   *  administrator alone. The cover is NOT SELECTED for anyone else, `memberList`'s way. */
-  #themePerson(prefix, stamp, administer) {
-    const pairs = administer === true || administer === "1";
-    if (stamp && isMachineIdentity(stamp))
-      return { [prefix]: stamp, [`${prefix}_handle`]: null, ...(pairs ? { [`${prefix}_cover`]: null } : {}) };
-    const m = stamp ? this.#one(`SELECT ${pairs ? "cover, " : ""}handle FROM members WHERE member_id = ?`, stamp) : null;
-    const handle = m && m.handle ? m.handle : null;
-    if (!pairs) return { [`${prefix}_handle`]: handle };
-    return { [prefix]: stamp || null, [`${prefix}_handle`]: handle, [`${prefix}_cover`]: m && m.cover ? m.cover : null };
-  }
-
-  /** The same person in a sentence (`says`), under the same projection: a handle, a machine's
-   *  stamp, or — for a reader who does not administer — never the member id. */
-  #themeName(stamp, administer) {
-    const p = this.#themePerson("by", stamp, administer);
-    return p.by_handle || p.by || "a member whose handle is not recorded";
-  }
-
-  /** WHICH THEME. One answer for a theme that does not exist and for a viewer the
-   *  gate does not recognise, so the act and the read cannot disagree. */
-  #themeFor(id, viewer) {
-    const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
-    const tid = typeof id === "string" ? id.trim() : "";
-    const g = viewerPredicate(viewer);
-    const row = tid && g.scope !== "DENY" ? this.#one(
-      `SELECT theme_id, declared_by, name, test, at FROM themes WHERE theme_id = ?`, tid) : null;
-    /* DEC-49 REGION is-theme-source */
-    if (!row)
-      return refusal("THEME_NOT_FOUND",
-        tid ? `no theme is recorded under ${tid.slice(0, 60)}`
-            : `pass theme=<THEME-…>: the id op=themedeclare returned`, { theme: tid || null });
-    /* END DEC-49 REGION is-theme-source */
-    return { ok: true, row };
-  }
-
-  /** WHAT IS BEING PLACED, and may this viewer name it. A bundle id is a
-   *  DOCUMENT; a content id is a PASSAGE of one. Either way the gate is asked of
-   *  the document, and a target the viewer cannot see answers exactly as one
-   *  that does not exist. */
-  #themeTarget(target, note, viewer) {
-    const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
-    const t = typeof target === "string" ? target.trim() : "";
-    const words = typeof note === "string" && note.trim() ? note : null;
-    const bytes = (s) => new TextEncoder().encode(s).length;
-    let kind = null, bundleId = null;
-    if (BUNDLE_ID_RE.test(t)) {
-      const b = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ?`, t);
-      if (b) { kind = "document"; bundleId = b.bundle_id; }
-    } else if (/^[0-9a-f]{64}$/.test(t)) {
-      const c = this.#one(`SELECT bundle_id FROM content WHERE content_id = ?`, t);
-      if (c) { kind = "content"; bundleId = c.bundle_id; }
-    }
-    const sees = !!bundleId && this.#inSight(bundleId, viewer);
-    /* DEC-49 REGION is-theme-target */
-    if (!sees)
-      return refusal("THEME_TARGET_NOT_FOUND",
-        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its bundle id or a passage by `
-            + `its content id`
-          : `pass target=<a document's bundle id, or a passage's content id>`, { target: t || null });
-    if (words && bytes(words) > CAPTURE_TEXT_UNIT_CAP)
-      return refusal("THEME_REASON_TOO_LONG",
-        `${bytes(words)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused `
-        + `rather than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
-    /* END DEC-49 REGION is-theme-target */
-    return { ok: true, target: t, kind, bundleId, note: words };
-  }
-
-  /** op=themedeclare — THE ACT. `declarer` is the control plane's stamp and never
-   *  the caller's. */
-  themeDeclare({ name = null, test = null, declarer = null, administer = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
-    const who = typeof declarer === "string" ? declarer.trim() : "";
-    const idea = typeof name === "string" ? name : "";
-    const criterion = typeof test === "string" ? test : "";
-    const bytes = (s) => new TextEncoder().encode(s).length;
-    /* DEC-49 REGION is-theme-declare */
-    if (!who || isMachineIdentity(who))
-      return refusal("THEME_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A theme is a PERSON's declared lens, in their `
-              + `own name (§8.4 fence 1); a machine may propose a placement, never declare a theme`
-            : `this call carries nobody. The plane stamps the declarer from the credential that asked`);
-    if (!criterion.trim())
-      return refusal("THEME_NO_TEST",
-        `a theme carries its TEST — the sentence a document or a passage passes or fails, so any member `
-        + `can check a placement against it (§8.4 fence 2). None was given, so nothing was declared`);
-    if (!idea.trim())
-      return refusal("THEME_NO_NAME",
-        `a theme names its idea in a few words beside its test. None was given, so nothing was declared`);
-    if (bytes(idea) > CAPTURE_TEXT_UNIT_CAP || bytes(criterion) > CAPTURE_TEXT_UNIT_CAP)
-      return refusal("THEME_TOO_LONG",
-        `${bytes(idea)} B of name and ${bytes(criterion)} B of test, over the ${CAPTURE_TEXT_UNIT_CAP} B `
-        + `one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
-        { limit: CAPTURE_TEXT_UNIT_CAP });
-    /* END DEC-49 REGION is-theme-declare */
-    const at = stampInstant("second");
-    /* `THEME-YYYY-MMDD-hex`: the lead's shape under its own prefix, which
-       `BUNDLE_ID_RE` does not admit and `ENTITY_KINDS` does not name — so it
-       reads as a record id to a person and as nothing citable to every leg. */
-    const themeId = `THEME-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
-    this.sql.exec(`INSERT INTO themes (theme_id, declared_by, name, test, at) VALUES (?, ?, ?, ?, ?)`,
-                  themeId, who, idea, criterion, at);
-    return { ok: true, theme_id: themeId, name: idea, test: criterion, at,
-             ...this.#themePerson("declared_by", who, administer), evidence: false,
-             says: `${this.#themeName(who, administer)}'s theme is declared, with its test. It is a lens for finding and `
-                 + `gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it `
-                 + `or on membership in it` };
-  }
-
-  /** op=themeplace — A MEMBER PLACES A DOCUMENT OR A PASSAGE, or CONFIRMS a hunch
-   *  standing at the same target. `placer` is the control plane's stamp. */
-  themePlace({ theme = null, target = null, note = null, placer = null, viewer = null, administer = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
-    const who = typeof placer === "string" ? placer.trim() : "";
-    /* DEC-49 REGION is-theme-place */
-    if (!who || isMachineIdentity(who))
-      return refusal("THEME_PLACEMENT_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. Placing is a member's judgement that the `
-              + `document passes the theme's test (§8.4 fence 3); a machine may only propose it, with `
-              + `op=themepropose, and the proposal stays a hunch until a member confirms it`
-            : `this call carries nobody. The plane stamps the placer from the credential that asked`);
-    /* END DEC-49 REGION is-theme-place */
-    const src = this.#themeFor(theme, viewer);
-    if (!src.ok) return src;
-    const T = src.row;
-    const tgt = this.#themeTarget(target, note, viewer);
-    if (!tgt.ok) return tgt;
-    const at = stampInstant("second");
-    const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
-                             T.theme_id, tgt.target);
-    if (!before)
-      this.sql.exec(
-        `INSERT INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
-                                       placed_by, placed_at, placement_note)
-         VALUES (?, ?, ?, ?, 'member', 'D', ?, ?, ?)`,
-        T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
-    else if (before.state === "hunch")
-      /* THE CONFIRMATION. The proposer and the proposal's note are KEPT: the record
-         says who saw it first and who judged it passes the test. */
-      this.sql.exec(
-        `UPDATE theme_placements SET state = 'member', grade = 'D', placed_by = ?, placed_at = ?,
-                placement_note = ? WHERE theme_id = ? AND target = ? AND state = 'hunch'`,
-        who, at, tgt.note, T.theme_id, tgt.target);
-    const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
-                          T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer),
-             confirmed_hunch: !!before && before.state === "hunch",
-             already: !!before && before.state === "member", evidence: false,
-             says: before && before.state === "member"
-               ? `${tgt.target} was already a member of this theme; nothing changed`
-               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#themeName(who, administer)}'s judgement that it `
-                 + `passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the `
-                 + `theme's other members through this lens only, and is never a basis leg` };
-  }
-
-  /** op=themepropose — A PROPOSED PLACEMENT, stored as a HUNCH. Any credential
-   *  may propose — the machine's half of §8.4 fence 3 — and the proposer is the
-   *  control plane's stamp (`class:<cls>` for a machine). A proposal at a target
-   *  already standing is not written again, and never demotes a member. */
-  themePropose({ theme = null, target = null, note = null, proposer = null, viewer = null, administer = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#themeRefusal(code, detail, extra);
-    const who = typeof proposer === "string" ? proposer.trim() : "";
-    /* DEC-49 REGION is-theme-propose */
-    if (!who)
-      return refusal("THEME_NO_PROPOSER",
-        `this call carries nobody. The plane stamps the proposer from the credential that asked, and a `
-        + `hunch nobody can be named for is one the record could say nothing about`);
-    /* END DEC-49 REGION is-theme-propose */
-    const src = this.#themeFor(theme, viewer);
-    if (!src.ok) return src;
-    const T = src.row;
-    const tgt = this.#themeTarget(target, note, viewer);
-    if (!tgt.ok) return tgt;
-    const at = stampInstant("second");
-    /* WHETHER ANYTHING STANDS THERE is read BEFORE the write, `themePlace`'s way — never inferred
-       from the row afterwards, which cannot tell a fresh hunch from the same proposer's second
-       proposal inside one second. */
-    const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
-                             T.theme_id, tgt.target);
-    if (!before)
-      this.sql.exec(
-        `INSERT INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
-                                       proposed_by, proposed_at, proposal_note)
-         VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
-        T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
-    const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
-                          T.theme_id, tgt.target);
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row, administer), already: !!before, evidence: false,
-             says: row.state === "member"
-               ? `${tgt.target} is already a member of this theme, placed by ${this.#themeName(row.placed_by, administer)}; the proposal `
-                 + `changed nothing`
-               : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch — not `
-                 + `membership — until a member checks it against the test and places it` };
-  }
-
-  /** One placement as this reader is shown it. `membership` is the only field a
-   *  reader should ask whether it counts, and it is true for `member` alone. The
-   *  placer and the proposer go through `#themePerson`'s projection. */
-  #placementView(r, administer) {
-    return { target: r.target, target_kind: r.target_kind, document: r.bundle_id,
-             state: r.state, membership: r.state === "member", hunch: r.state === "hunch", grade: r.grade,
-             ...this.#themePerson("placed_by", r.placed_by, administer), placed_at: r.placed_at, note: r.placement_note,
-             ...this.#themePerson("proposed_by", r.proposed_by, administer), proposed_at: r.proposed_at,
-             proposal_note: r.proposal_note };
-  }
-
-  /** op=themeread — ONE THEME (`id`), with its members and its hunches APART, or
-   *  THE THEMES (`q` narrows by a phrase in the name or the test). Bounded, and
-   *  the cut is published. */
-  themeRead({ id = null, q = null, limit = null, viewer = null, administer = null } = {}) {
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.THEME_READ_LIMIT_DEFAULT),
-                                     Store.THEME_READ_LIMIT_MAX));
-    const person = (m) => this.#themePerson("declared_by", m, administer);
-    if (id == null || String(id).trim() === "") {
-      const g = viewerPredicate(viewer);
-      const phrase = typeof q === "string" ? q.trim() : "";
-      /* FAIL CLOSED IN THE STATEMENT, not around it: an unrecognised viewer's `? = 1` is false, so the
-         one bounded row source is the only source and `truncated` is measured straight off it. */
-      const rows = this.#rows(
-        `SELECT theme_id, declared_by, name, test, at FROM themes
-          WHERE ? = 1 AND (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
-          ORDER BY at DESC, theme_id LIMIT ?`, g.scope === "DENY" ? 0 : 1, phrase, phrase, phrase, cap + 1);
-      return { ok: true, q: phrase || null, limit: cap, truncated: rows.length > cap, evidence: false,
-               themes: rows.slice(0, cap).map((r) => ({ theme_id: r.theme_id, name: r.name, test: r.test,
-                                                         at: r.at, ...person(r.declared_by) })) };
-    }
-    const src = this.#themeFor(id, viewer);
-    if (!src.ok) return src;
-    const T = src.row;
-    /* THE GATE IS ASKED PER PLACEMENT, over the placed DOCUMENT, INSIDE the
-       statement through `viewerPredicate` — the one compilation point `#inSight`
-       asks — so a placement the viewer cannot see is omitted without a trace (not
-       counted, not labelled) and the page is cut AFTER gating: `truncated` means
-       more VISIBLE rows exist. Each state is its own bounded statement. */
-    const g = viewerPredicate(viewer);
-    const page = (state) => this.#rows(
-      `SELECT p.* FROM theme_placements p JOIN bundles b ON b.bundle_id = p.bundle_id
-        WHERE p.theme_id = ? AND p.state = ? AND (${g.sql}) ORDER BY p.target LIMIT ?`,
-      T.theme_id, state, ...g.args, cap + 1);
-    const members = page("member");
-    const hunches = page("hunch");
-    const n = (rows) => `${Math.min(rows.length, cap)}${rows.length > cap ? "+" : ""}`;
-    return {
-      ok: true, theme_id: T.theme_id, name: T.name, test: T.test, at: T.at, ...person(T.declared_by),
-      evidence: false, limit: cap,
-      members: members.slice(0, cap).map((r) => this.#placementView(r, administer)),
-      members_truncated: members.length > cap,
-      hunches: hunches.slice(0, cap).map((r) => this.#placementView(r, administer)),
-      hunches_truncated: hunches.length > cap,
-      says: `a member's declared lens, and never the basis of a claim. `
-          + `${n(members)} member(s) you can see, placed by a member against the test; `
-          + `${n(hunches)} hunch(es) PROPOSED and not yet confirmed, which are not membership`,
-    };
-  }
-  /* op=themeread's bound, `op=leadread`'s pair and for its reason. */
-  static THEME_READ_LIMIT_DEFAULT = 200;
   /* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut,
      published beside the answer — never a claim that no more exist. */
   static LAW_PROPOSALS_READ_MAX = 12;
-  static THEME_READ_LIMIT_MAX = 2000;
 
   /* REC-203 — op=idmatch: ONE identifier judged under `BIO_Content_Framework_v0_10.md` §8.3 "WHAT MAKES A
    * SHARED IDENTIFIER COUNT", through `src/idspaces.mjs`, which holds the recognisers and the counting rule.
@@ -20280,14 +19727,6 @@ export class Store extends DurableObject {
    * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
   static #MEANING_LIMIT_DEFAULT = 500;
   static #MEANING_LIMIT_MAX = 5000;
-  /* D-454: the most occurrences of ONE reference a promotion projects. A provenance document is
-     something a caller can author, so its `occurrences` list is bounded here like every list
-     this store takes from one; a real reader's list is the number of times one file number or
-     instrument is printed in one document. The figure is a CHOSEN bound, not a measured one:
-     no census of occurrences per reference has been taken. Past it the reading blob still
-     carries every entry, and the projection keeps the first 256 places and records the rest
-     as the one unplaced occurrence (`#writeReadings` says why). */
-  static #OCCURRENCES_PER_REF = 256;
 
   /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
      re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
@@ -20309,7 +19748,7 @@ export class Store extends DurableObject {
       /* REC-5 / D-122: a NEW resolution can add a document to an entity, forming
          new pairs — stamp the entity so the scheduled sweep re-derives its
          connections. In the caller's transaction, so it commits with the row. */
-      this.#stampConnectionDirty(entityId);
+      connectionsOf(this.ctx).markDirty(entityId);
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
                established: !!est, needs_confirmation: grade === "C", raised: false, resolved_by: by, at };
     }
@@ -20321,7 +19760,7 @@ export class Store extends DurableObject {
       /* REC-5 / D-122: a RAISED grade can strengthen a connection end (the weaker
          end governs, FW-8), so the derived grade may change — stamp for re-derive.
          A kept (equal/weaker) resolution below changes nothing and dirties nothing. */
-      this.#stampConnectionDirty(entityId);
+      connectionsOf(this.ctx).markDirty(entityId);
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
                established: !!est, needs_confirmation: grade === "C", raised: true, raised_from: existing.grade,
                resolved_by: by, at };
@@ -20615,860 +20054,15 @@ export class Store extends DurableObject {
              limit: cap, truncated };
   }
 
-  /* ---- CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA, and the PROGRESSION
-   * DEFINITION as data (framework section 8, 8.1, 8.2). Absorbs D-67 (connections were
-   * emitted and stored nowhere) and D-72 (connections had no grade).
-   *
-   * A CONNECTION is the two-node base case of a progression: two captured documents that
-   * resolve to the SAME registry entity are connected, because two documents concerning
-   * one subject is the raw material of a connection (framework section 8). It is DERIVED
-   * from FW-7's resolutions -- built UNDER the reverse-index join documentsConcerning
-   * already makes, not a parallel path -- and it carries the section 8.1 GRADE: the
-   * WEAKER of how its two ends resolved to the shared entity, which is section 8.2's
-   * "a progression instance inherits the weakest connection grade along its chain" in
-   * its two-node base case. */
-
-  /* The weaker of two section-8.1 grades by rank (A strongest .. D weakest): a connection
-     is no stronger than its weaker end, because a case is only as strong as its weakest
-     link (framework 8.1).
-
-     CORRECTED 2026-08-04 (REC-12, RECONCILED.md §1.1 R1-m). The comment here used to end
-     "Reuses the resolution grade rank so the two axes cannot drift", and THAT SENTENCE WAS
-     WRONG IN BOTH HALVES — it stated as a design INTENT the two things R1 and R2 forbid,
-     which is why it is corrected rather than deleted (CLAUDE.md: correct a superseded claim
-     and say why the old one was wrong).
-
-       (1) "so the two axes cannot drift" wanted capture and connection to share one rank.
-           R2/DEC-21 rules the opposite: they are two measurements over two POPULATIONS —
-           capture over every DOCUMENT a conclusion reaches, connection over every EDGE it
-           rests on — and nothing may average, mix or collapse them. Two scales that cannot
-           drift apart are two scales that have been made one, which is the collapse itself.
-       (2) `|| 0` ranks an UNKNOWN grade BELOW D, i.e. below a member's signed testimony.
-           A null is the ABSENCE of a grade, not a weak one, and the two must not share a
-           rank (R1). Under DEC-18 an ungraded leg is INERT — excluded from the population
-           entirely — so a null must be short-circuited BEFORE any rank comparison happens.
-
-     WHAT THIS FUNCTION IS STILL FOR, unchanged and legitimate: composing a CONNECTION's own
-     grade from its two ends (`connections.a_grade`/`b_grade`) — how each end resolved to the
-     shared entity. Both ends measure the same kind of thing on the same scale, and neither
-     is ever null here (the resolver never stores one), so nothing above applies to its
-     callers. REC-12's inquiry-altitude derivation does NOT and MUST NOT reuse it; it carries
-     its own #weakestOf, per axis, with the null short-circuited first. */
-  static #weakerGrade(g1, g2) {
-    return (Store.#GRADE_RANK[g1] || 0) <= (Store.#GRADE_RANK[g2] || 0) ? g1 : g2;
-  }
-
-  /* The read-side view of a connection: established and needs_confirmation are surfaced
-     from the WEAKER grade so a connection resting on a C at either end is never read back
-     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1).
-
-     FW-17 / D-161 / Bob's 5.4: AND IT CARRIES THE DETERMINING PAIR, because following a
-     connection landing the reader on a whole document is the defect D-161 names and it is
-     a defect of THIS VIEW as much as of the row. `determining_pair` is one object rather
-     than eight flat keys so that a consumer cannot read half of it, and `positioned` is
-     stated rather than left for a caller to infer from two nulls — "the record cannot say
-     where" is a finding and must survive into the answer as one. A row derived before this
-     landing has no pair at all and says so with `null`, which is a THIRD state and not the
-     same as a pair that cannot place itself. */
-  /* REC-120 / D-161 act (2) — THE RULE THAT SELECTS THE PAIR, written onto every row
-     `deriveConnections` writes (`connections.pair_rule`) and read back by the view
-     below. One constant so the writer and the reader cannot spell it two ways. */
-  static #PAIR_RULE = "strongest-graded/first-reference-by-sort";
-
-  /* REC-120 / D-161 act (2) — WHAT THE PAIR IS, STATED ON THE PAIR. FW-17's pair is
-     the STRONGEST-GRADED mention on each end, not the ON-POINT one Bob ruled (5.4
-     second pass): nobody chose it, and nothing let anybody. `chosen: false` is
-     therefore always false today and is published anyway, because it is the fact a
-     reader most needs and the one act (3) will change. A row written before REC-120
-     carries no rule, and its tie-break was the scan's row order, so `tie_break` is
-     NULL there and `says` names why rather than inventing the rule it would have
-     had. */
-  static #pairSelection(rule) {
-    return {
-      method: "strongest-graded",
-      tie_break: typeof rule === "string" && rule ? (rule.split("/")[1] || null) : null,
-      chosen: false,
-      says: rule
-        ? "each end is the strongest-graded mention of the subject in its document; between equal "
-          + "grades the tie goes to the first reference by sort order, which says nothing about "
-          + "relevance. It is a machine selection and not the mention on point, which nobody has chosen"
-        : "each end is the strongest-graded mention of the subject in its document; this row was "
-          + "derived before the tie-break was recorded, when equal grades went to the scan's row "
-          + "order, which is not a basis. Re-deriving the subject's connections records it. It is "
-          + "a machine selection and not the mention on point, which nobody has chosen" };
-  }
-
-  #connectionView(r) {
-    const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
-    const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
-    return { a_capture_sha: r.a_capture_sha, b_capture_sha: r.b_capture_sha, entity_id: r.entity_id,
-             a_bundle_id: r.a_bundle_id, b_bundle_id: r.b_bundle_id,
-             grade: r.grade, a_grade: r.a_grade, b_grade: r.b_grade,
-             established: !!r.established, needs_confirmation: !Store.#isEstablished(r.grade),
-             asserted_by: r.asserted_by, basis: r.basis, at: r.at,
-             determining_pair: (r.a_ref || r.b_ref)
-               ? { a_ref: r.a_ref || null, a_position: aPos,
-                   b_ref: r.b_ref || null, b_position: bPos,
-                   positioned: !!(aPos && bPos),
-                   why: aPos && bPos
-                     ? "both ends record where in their document the determining reference was read"
-                     : "the determining reference is recorded on both ends; where it was read is not, "
-                     + "so a citation of a PART of either document cannot yet earn from this connection",
-                   selection: Store.#pairSelection(r.pair_rule) }
-               : null };
-  }
-
-  /* THE INVERSE OF THE QUADRATIC (REC-66). How many ENDS may be derived over before the
-     pairs they form exceed `pairCap` -- k(k-1)/2 <= pairCap solved for k, then walked to
-     the exact integer rather than trusted to `Math.sqrt`'s last bit. It is the whole
-     mechanism by which a bound on the ANSWER becomes a bound on the SCAN: the derivation
-     reads DOCUMENTS and produces PAIRS, so the only way to bound the work is to bound the
-     documents it may read, and the figure that bounds them is not free to choose. */
-  static #maxEndsForPairs(pairCap) {
-    let e = Math.max(2, Math.floor((1 + Math.sqrt(1 + 8 * Math.max(1, pairCap))) / 2));
-    while (e > 2 && (e * (e - 1)) / 2 > pairCap) e--;
-    while (((e + 1) * e) / 2 <= pairCap) e++;
-    return e;
-  }
-
-  /* op=connect: DERIVE and persist the connections among every captured document that
-     concerns one entity. Reads the entity's resolutions (FW-7) exactly as the reverse
-     index does, collapses them to the STRONGEST grade each capture resolved to the entity
-     at, and forms one connection per PAIR of distinct captures -- graded the WEAKER of the
-     two ends, established only when BOTH ends are established (A/B), asserted_by 'system'
-     (the framework inferred it). Canonical pair order (a < b) means (X,Y) and (Y,X) are
-     ONE row; a re-derivation after a resolution's grade was RAISED (FW-7) upserts in place,
-     so a connection is improvable too. A PROGRESSION INSTANCE -- an N-stage chain of real
-     documents threaded by an entity -- is slice B; this forms the two-node base case.
-
-     REC-66 / D-224 / D-227 -- THE BOUND IS ON THE DERIVATION, AND THAT IS THE WHOLE ITEM.
-     This op was D-225's class one step earlier and strictly worse than the three REC-60
-     fixed: it read the entity's resolutions with NO LIMIT and emitted every pair, so the
-     WORK was unbounded and not merely the answer. Capping the answer here would have left
-     the unbounded scan and the unbounded WRITE exactly where they were -- D-227's finding
-     on this file's own siblings, arriving one step earlier -- so the bound is applied where
-     the work happens and the answer's bound is a CONSEQUENCE of it rather than a slice.
-
-     THE ONE FIGURE A CALLER GIVES IS THE PAIR BOUND, and the document bound is DERIVED
-     from it by #maxEndsForPairs, so the two can never disagree: at the default 500 pairs
-     the scan may read 32 documents (496 pairs), at the 5000 ceiling 100 documents (4,950).
-     NEITHER FIGURE IS NEW -- 500/5000 is #MEANING_LIMIT_DEFAULT/#MEANING_LIMIT_MAX, the
-     pair REC-60 brought op=concerns, op=resolutions and op=connections to.
-
-     MEASURED, NOT CHOSEN BY FEEL (D-224's own instruction, `test/connections-growth.measure.mjs`,
-     2026-08-08): 798 bytes per connection row and a synchronous derive of 65 ms at k=100.
-     So the 5000-pair ceiling is ~4 MB and ~65 ms of write in ONE transaction on the object,
-     and the shape it refuses to do is what the same instrument measured at k=1000 -- 499,500
-     rows. A ROW BUDGET sits under the document bound as well, because one capture may carry
-     many resolution rows to one entity: the scan may return #MEANING_LIMIT_MAX rows and no
-     more, and a trailing PARTIAL capture group is dropped rather than collapsed, since a
-     group cut mid-way would take a WEAKER grade than the record holds.
-
-     WHAT A TRUNCATED DERIVATION MEANS, said here because it is a fact about the RECORD and
-     not about this answer: every connection written is TRUE, and the set is the first N
-     documents by capture_sha rather than all of them. `truncated` says so on this answer;
-     op=connections cannot see it, which is raised as D-237 rather than left implicit. */
-  deriveConnections({ entityId, assertedBy = "system", limit = null } = {}) {
-    if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)" };
-    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
-    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
-    const endsCap = Store.#maxEndsForPairs(cap);
-    const rowCap = Store.#MEANING_LIMIT_MAX;
-    /* THE SCAN ITSELF IS BOUNDED, TWICE AND FOR TWO DIFFERENT REASONS. The inner select
-       bounds it by DOCUMENTS -- the quantity the derivation is quadratic in -- and the
-       outer LIMIT bounds the ROWS those documents may return, because resolution rows per
-       capture are small in practice and bounded by nothing in the schema. `+ 1` on each is
-       how the answer learns that more existed, exactly as the meaning-layer reads do. */
-    /* FW-17 / D-161 / Bob's 5.4 — `ref` JOINS THE SCAN, and it is the whole of
-       the pair's first half. The reference the recogniser matched was always in
-       `resolutions`; this derivation simply never selected it, which is exactly
-       D-161's "the connection collapses to the strongest grade per capture and
-       discards the reference". Selecting one more column of a row the scan
-       already reads costs no extra read and no extra bound: the LIMITs, the
-       row budget and the partial-group drop below are untouched. */
-    /* REC-120 / D-161 act (2) — THE TIE-BREAK IS NAMED, which needs it to EXIST.
-       The outer ORDER BY was `capture_sha` alone, so between two mentions at the
-       same grade in one capture the pair went to whichever row SQLite returned
-       first: unspecified, unrecorded, and — FW-21's control — enough on its own to
-       move which real mention a member's citation was honoured for. `, ref` makes
-       it the first reference by sort, deterministically, and `pair_rule` below
-       writes that rule onto the row. It is NOT a relevance judgement and the row
-       says so: a deterministic tie-break is still not a basis, which is why
-       `connectionGradeForContent` answers UNDETERMINED where a tie decided it. */
-    const scan = this.#rows(
-      `SELECT capture_sha, bundle_id, grade, ref FROM resolutions
-        WHERE entity_id=? AND capture_sha IN (
-          SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
-           ORDER BY capture_sha LIMIT ?)
-        ORDER BY capture_sha, ref LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);
-    const rowsCut = scan.length > rowCap;
-    const rows = rowsCut ? scan.slice(0, rowCap) : scan;
-    if (rowsCut && rows.length) {
-      /* The last capture in a row-budgeted scan may be HALF READ, and a half-read capture
-         collapses to whatever grade happened to fit -- weaker than the record holds. Drop
-         it whole: a document left out is stated by `truncated`, a document mis-graded is
-         the record claiming something that is not so. */
-      const partial = rows[rows.length - 1].capture_sha;
-      while (rows.length && rows[rows.length - 1].capture_sha === partial) rows.pop();
-    }
-    /* Collapse to distinct captures, keeping the STRONGEST grade each resolved to the
-       entity at -- the same collapse op=concerns makes, so a connection end's grade is
-       exactly the grade that document appears at in the reverse index. */
-    const byCapture = new Map();
-    for (const r of rows) {
-      const cur = byCapture.get(r.capture_sha);
-      if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade])
-        /* FW-17: the DETERMINING reference travels with the grade it determined,
-           taken at the same comparison rather than looked up afterwards. That is
-           what makes "the pair that established this connection" true by
-           construction: whichever row wins the collapse is the row whose
-           reference is kept, so the pair and the grade cannot disagree. A later
-           lookup — "the strongest resolution's ref for this capture" — would be
-           a SECOND collapse that could tie-break differently. */
-        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade,
-                                       ref: typeof r.ref === "string" ? r.ref : null });
-    }
-    const distinct = [...byCapture.values()];
-    const truncated = rowsCut || distinct.length > endsCap;
-    const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;
-    /* FW-17 / IC-86 — THE POSITION HALF OF THE PAIR, resolved ONCE PER END and
-       never once per pair. The derivation is quadratic in the ends by nature
-       (REC-66's whole subject), so a lookup inside the pair loop would put a
-       store read on the quadratic — k(k-1)/2 reads at the 5000-pair ceiling is
-       4,950 where k is 100. Here it is k: one PRIMARY KEY hit on
-       (capture_sha, ref) per end, 100 at the ceiling, and the pair loop below
-       reads only from memory.
-       A LOOKUP THAT FINDS NOTHING IS THE NORMAL CASE AND NOT A FAILURE. Most
-       readings carry no position (IC-86's own statement: only a container that
-       itemised its text produces one), and a resolution whose reading was
-       re-promoted may name a reference the current reading no longer carries.
-       Both answer null, the pair still records its two REFERENCES, and the
-       portion-leg grade below says UNDETERMINED rather than guessing. */
-    for (const e of ends) {
-      e.pos = null;
-      if (!e.ref) continue;
-      /* D-454: a reference may be read at several places now, and the pair records ONE — the
-         FIRST read (seq 0), which is the only place any pair recorded before the re-key, so a
-         derivation over an unchanged reading writes the row it always wrote. It is a machine
-         selection among occurrences exactly as the strongest grade is among references, and
-         `connectionGradeForContent` treats the other occurrences as other mentions (C-49.4)
-         until a member chooses one. */
-      const rr = this.#one(
-        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT 1`,
-        e.capture_sha, e.ref);
-      if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
-    }
-    const at = new Date().toISOString();
-    const label = ent ? ent.label : entityId;
-    const connections = [];
-    this.ctx.storage.transactionSync(() => {
-      for (let i = 0; i < ends.length; i++) {
-        for (let j = i + 1; j < ends.length; j++) {
-          /* Canonical order: the lexicographically smaller capture sha is end A, so a pair
-             is ONE connection regardless of which end the loop reached first. */
-          let A = ends[i], B = ends[j];
-          if (A.capture_sha > B.capture_sha) { const tmp = A; A = B; B = tmp; }
-          const grade = Store.#weakerGrade(A.grade, B.grade);
-          const est = Store.#isEstablished(grade) ? 1 : 0;
-          /* FW-17 / D-161 / Bob's 5.4 — THE BASIS NAMES THE PAIR, because the
-             pair is now a fact about this row and a basis that did not mention
-             it would be the row's own account disagreeing with its columns. And
-             it says which of the two halves it HAS: the references are
-             recoverable today, the positions only where a reading could say. */
-          const pairNote = (A.ref && B.ref)
-            ? `; the connection is through the reference ${A.ref} in A and ${B.ref} in B`
-              + (A.pos && B.pos
-                   ? ` (read at ${A.pos.ref} and ${B.pos.ref})`
-                   : A.pos || B.pos
-                     ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)`
-                     : ` (neither reading says where in its document the reference was read)`)
-              /* REC-120 / D-161 act (2): the row's own account says what the pair IS,
-                 so no reader takes a grade collapse for a relevance judgement. Short
-                 on purpose: the basis is cut at 400 characters below. */
-              + `; each is its document's strongest-graded mention (ties: first reference by sort), not one chosen as on point`
-            : `; which reference established it is not recorded on this row`;
-          const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends `
-                      + `(${A.grade}, ${B.grade}) -> ${grade}${pairNote}`;
-          const row = {
-            a_capture_sha: A.capture_sha, b_capture_sha: B.capture_sha, entity_id: entityId,
-            a_bundle_id: A.bundle_id, b_bundle_id: B.bundle_id, a_grade: A.grade, b_grade: B.grade,
-            grade, established: est, asserted_by: String(assertedBy || "system"),
-            basis: basis.slice(0, 400), at,
-            a_ref: A.ref, a_pos_kind: A.pos ? A.pos.kind : null,
-            a_pos: A.pos ? readingSourceJson(A.pos) : null, a_pos_ref: A.pos ? A.pos.ref : null,
-            b_ref: B.ref, b_pos_kind: B.pos ? B.pos.kind : null,
-            b_pos: B.pos ? readingSourceJson(B.pos) : null, b_pos_ref: B.pos ? B.pos.ref : null,
-            pair_rule: Store.#PAIR_RULE };
-          this.sql.exec(
-            `INSERT INTO connections
-               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at,
-                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref,pair_rule)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-             ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
-               a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
-               a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
-               established=excluded.established, asserted_by=excluded.asserted_by,
-               basis=excluded.basis, at=excluded.at,
-               a_ref=excluded.a_ref, a_pos_kind=excluded.a_pos_kind,
-               a_pos=excluded.a_pos, a_pos_ref=excluded.a_pos_ref,
-               b_ref=excluded.b_ref, b_pos_kind=excluded.b_pos_kind,
-               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref, pair_rule=excluded.pair_rule`,
-            row.a_capture_sha, row.b_capture_sha, row.entity_id, row.a_bundle_id, row.b_bundle_id,
-            row.a_grade, row.b_grade, row.grade, row.established, row.asserted_by, row.basis, row.at,
-            row.a_ref, row.a_pos_kind, row.a_pos, row.a_pos_ref,
-            row.b_ref, row.b_pos_kind, row.b_pos, row.b_pos_ref, row.pair_rule);
-          connections.push(this.#connectionView(row));
-        }
-      }
-    });
-    /* `documents` is the number of ends the derivation ACTUALLY read, which is what the
-       pairs below were formed from; `document_limit` is the bound that produced it and
-       `resolution_rows` is what the scan returned, so a caller can tell a small subject
-       from a bounded read of a large one WITHOUT the plane doing a second unbounded count
-       to tell them. `limit` is the pair cap AFTER clamping and `truncated` is whether the
-       DERIVATION was cut -- not whether the array was sliced, because it never is. */
-    /* REC-95 — THE MEANING-LEVEL OBSERVATION, §4.3's third act: *one row per
-     * connection derivation*. AFTER the pair-writing transaction and before the
-     * answer, so the row states what the derivation ACTUALLY wrote rather than
-     * what it set out to write.
-     *
-     * THE ROW THAT MATTERS IS THE EMPTY ONE. A derivation that formed no pair
-     * wrote no `connections` row and returned an empty array, which is the exact
-     * evidence a derivation that NEVER RAN leaves — so *we have derived nothing
-     * through this subject* and *nobody has derived over this subject* were one
-     * answer. They are two now, and `op=frontier&level=meaning` is where the
-     * difference is read.
-     *
-     * IT FIRES ON BOTH DOORS. `op=connect` and the scheduled sweep
-     * (`#deriveConnectionsSweep`, which has no op and no caller identity) both
-     * reach here, both are derivations, and what differs is WHO — which is what
-     * `actor_class` carries. `entityKnown` is `!!ent` and is the same fact the
-     * answer publishes as `found`, read from the one variable so the row and the
-     * answer cannot disagree. */
-    this.#observeConnectionDerivation(entityId, {
-      count: connections.length, documents: ends.length, truncated,
-      entityKnown: !!ent, assertedBy });
-    return { ok: true, entity_id: entityId, found: !!ent,
-             entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
-             documents: ends.length, document_limit: endsCap, resolution_rows: scan.length,
-             count: connections.length, connections, limit: cap, truncated };
-  }
-
-  /* op=connections: read the persisted connections, by entity (every connection through a
-     subject) or by capture sha (every connection this document is an end of, either side).
-     established and needs_confirmation come from the WEAKER grade, so a caller can never
-     read a connection resting on a C as settled. */
-  connectionsFor({ entityId = null, captureSha = null, contentId = null, limit = null, viewer = null } = {}) {
-    /* FW-17: THE PORTION ARM, taken first because it answers a different question about
-       the same rows — not "which connections exist" but "which of them reach INTO this
-       part of this document" (Bob's 5.1). Delegated rather than inlined so the grade
-       computation stays one function with one set of refusals, and branched HERE rather
-       than in the dispatch table because that table is read positionally by the bounds
-       walk. */
-    if (typeof contentId === "string" && contentId.trim())
-      return this.connectionGradeForContent({ contentId, limit, viewer });
-    /* REC-60 / D-225: BOUNDED, and this is the read the bound was raised for. The entity arm
-       is one row per PAIR of captures concerning the subject — D-224's k(k-1)/2 — so the
-       answer grows QUADRATICALLY in the size of the record about one subject, and the subject
-       that matters most is the one that produces the largest response. It returned every row
-       and said nothing about it. `limit` is the cap AFTER clamping; `truncated` is whether it
-       bit. Both arms take the same bound: an answer whose shape depended on which key you
-       held would be a second thing to know. */
-    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
-    let scan;
-    if (entityId) {
-      scan = this.#rows(
-        `SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha LIMIT ?`, entityId, cap + 1);
-    } else if (captureSha) {
-      scan = this.#rows(
-        `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
-        captureSha, captureSha, cap + 1);
-    } else {
-      return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
-    }
-    const truncated = scan.length > cap;
-    const rows = truncated ? scan.slice(0, cap) : scan;
-    /* REC-30: a connection is between two CAPTURES through one entity, and its
-       grade is the weaker of its two ends — the record's own, not the reader's.
-       Both bundle back-references take the D-15 projection, INDEPENDENTLY: a
-       connection with one visible end and one invisible one still says what it
-       says, and names only the end it may. */
-    const keep = this.#bundleRedactor(viewer);
-    /* REC-122: a member's choice of the on-point mention on either end is published beside the
-       machine's pair, and ONLY where one exists — a connection nobody chose on answers byte for
-       byte as before. `on_point` is the member's; `determining_pair` stays the machine's. */
-    const withChoice = (r) => {
-      const ch = this.#currentPairChoices(r.a_capture_sha, r.b_capture_sha, r.entity_id);
-      return (ch.a || ch.b) ? { on_point: ch } : {};
-    };
-    /* D-241 — THE DERIVATION'S EXTENT, beside the read's. `truncated` above is whether THIS
-       PAGE was cut at `limit`; it says nothing about whether the derivation that WROTE the
-       rows was cut at its pair bound, and a cut derivation read at the ceiling came back
-       `truncated: false` over part of the set. REC-95's row per derivation already records
-       that (`partial`), so the entity arm reads the LATEST one — one hit on the
-       `observation_log_frontier` index — and `derivationStatement` in `airun.mjs` says what
-       it means. No row is never published bare: §5.1's cause decides between never derived,
-       pre-log and undetermined. Ungated for the reason the meaning frontier's entity fetch
-       gives: an entity is not gated. The capture arm spans many entities and publishes
-       nothing here; its derivation is read per entity. */
-    const derivation = entityId
-      ? (() => {
-          const obs = this.#one(
-            `SELECT at, state, detail FROM observation_log
-              WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
-              ORDER BY seq DESC LIMIT 1`, entityId);
-          if (obs) return derivationStatement(obs);
-          const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
-          return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
-        })()
-      : undefined;
-    return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
-             connections: rows.map((r) => ({
-               ...this.#connectionView(r),
-               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id), ...withChoice(r) })),
-             limit: cap, truncated, ...(derivation ? { derivation } : {}) };
-  }
-
-  /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
-   *
-   * Bob, 2026-09-14 (CONTENT-EXTENT-DESIGN-SPACE.md 5.1): a citation that points at the
-   * sentence, paragraph or section answering the question refers ONLY to that portion of
-   * the document — "just as an HTML highlight link refers to specific content in that
-   * document" — so a content-grain leg earns, on every axis, only from what is IN its
-   * portion. Until readings carried position, that made a portion leg's connection grade
-   * UNDETERMINED and stated, which is what REC-83's read says today. This is the function
-   * that makes it COMPUTABLE, and computable is not the same as computed: every branch
-   * below that cannot establish containment answers UNDETERMINED and says which kind of
-   * cannot it is.
-   *
-   * THE GRADE IS NOT A NEW SCALE AND NOTHING HERE MINTS ONE. It is framework 8.1's grade,
-   * taken off the connection row the derivation already wrote — the weaker of the two
-   * ends, established only when both ends are A or B. What this function decides is
-   * MEMBERSHIP, not value: which of this capture's connections reach into this extent.
-   * The collapse over the survivors is the STRONGEST, the same collapse op=concerns,
-   * op=connect, op=thread and earnedBasisRegistry all make, reused so a portion's grade
-   * cannot drift from the grade its document appears at in the reverse index.
-   *
-   * THREE KINDS OF "NO", AND COLLAPSING THEM WOULD BE THE DEFECT. A connection whose row
-   * predates the pair writer records no reference at all; a connection whose pair is
-   * recorded but unplaced cannot be tested; a connection whose pair was read elsewhere in
-   * the document genuinely does not reach this portion. Only the third is an answer about
-   * the member's citation. The first two are answers about the RECORD, and a member who
-   * is told "no connection" when the truth is "this record has not read the document
-   * closely enough to say" has been told something false about their own case.
-   *
-   * AND A FOURTH, REC-120 (D-161 act 1, M-51): the pair is ONE of possibly several
-   * mentions of the subject in the document, selected by grade and then by sort order,
-   * never chosen as on point. So a pair outside the part is not a definite "outside"
-   * while another mention is inside it or cannot be placed, and a pair inside it is not a
-   * definite reach when it won only a tie against a mention that is not. Both answer
-   * UNDETERMINED under C-49.4, naming the mentions (`checkConnectionMentionUnchosen`).
-   *
-   * THE DOCUMENT ARM TAKES NO POSITION TEST AT ALL, and that is doctrine rather than an
-   * optimisation. A document-extent row's portion IS the whole document (5.3 — a citation
-   * naming no part means the whole document), so every connection on that capture is
-   * inside it by definition and asking where the reference was read would answer a
-   * question nobody posed. It is also what keeps every document-grain answer in this
-   * record byte-identical to what it was before this item, which the suite pins. */
-  connectionGradeForContent({ contentId = null, limit = null, viewer = null } = {}) {
-    /* `reason` WITHOUT a `code`, matching `connectionsFor`'s own `NO_KEY` one method
-       up — and the difference from the catalogued refusals below is the DEC-49
-       distinction rather than an inconsistency. A caller who named no key has not
-       been refused an act; they have not asked a question yet, so there is nothing
-       to translate for a member. A `code` here would enter the guard's refusal
-       roster and owe a canned translation for "you did not pass a parameter".
-       Unreachable through the op (`connectionsFor` delegates only on a non-empty id)
-       and kept for a direct store caller, which the reads are. */
-    if (typeof contentId !== "string" || !contentId.trim())
-      return { ok: false, reason: "NO_CONTENT",
-               detail: "a portion's connection grade is asked about one content row, by its id (content=...)" };
-    const row = this.#one(
-      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale FROM content WHERE content_id=?`,
-      contentId.trim());
-    /* DEC-49 REGION pair-content-row-present — FW-17/C-49.3. RENAMED at integration 2026-09-14
-       (CONDUCT #11) from `is-content-row-present`: the DEC-49 guard's region matcher ends in a word
-       boundary and a hyphen satisfies it, so REC-84's `is-content-row` opener counted this region's
-       opener as a duplicate of its own (D-357). A region name may not be a prefix of another's until the
-       matcher anchors the whole name. */
-    if (!row) {
-      const r = CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_NO_CONTENT;
-      return { ok: false, reason: "CONNECTION_PAIR_NO_CONTENT", code: "CONNECTION_PAIR_NO_CONTENT",
-               check: r.check, translation: r.translation, content_id: contentId.trim(),
-               detail: "this record holds no content row with that id, so there is no portion to grade" };
-    }
-    /* END DEC-49 REGION pair-content-row-present */
-    /* `safeJson` and NOT a try/catch of this function's own: the swallowed-read
-       roster in `provenance-marker.test.mjs` is a ratchet, and the reason it can
-       be one is that this store has ONE remedy for "a column this store wrote as
-       JSON, read back". An unparseable extent lands as null and every branch
-       below treats null as COVERING NOTHING — the default-not-covering rule — so
-       the failure is published as an honest no rather than smoothed. */
-    const extent = safeJson(row.extent);
-    /* REC-60 / D-225's bound, taken on this read for the same reason: a capture concerning
-       a much-referenced subject is an end of quadratically many connections, and the read
-       that matters most is the one that returns the most. */
-    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
-    const scan = this.#rows(
-      `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
-      row.capture_sha, row.capture_sha, cap + 1);
-    const truncated = scan.length > cap;
-    const conns = truncated ? scan.slice(0, cap) : scan;
-    const keep = this.#bundleRedactor(viewer);
-    const whole = row.extent_kind === "document";
-    const reaching = [], undetermined = [], outside = [];
-    /* REC-120: EVERY resolution of this capture to one entity, with where its reading
-       placed it (null where it could not) — the mentions the pair was selected from.
-       Bounded like every meaning-layer read; a cut read is passed on as `cut` and the
-       check treats what it did not read as unplaced, never as absent. Cached per
-       entity: a capture's connections share few subjects. The alias is `rp` and not
-       `rr` because `readingname.test.mjs` counts the TERM lookup's join text to prove
-       it has one builder, and this is a different lookup (by PRIMARY KEY). */
-    const mentionCache = new Map();
-    const mentionsOf = (entityId) => {
-      if (mentionCache.has(entityId)) return mentionCache.get(entityId);
-      const rows = this.#rows(
-        /* D-454: one row per OCCURRENCE — a reference read at three places is three mentions,
-           each carrying the `occurrence` a member names to choose it. A resolution whose
-           reading carries no row for it (re-read since) is one mention with no occurrence. */
-        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
-                rp.occurrence AS occurrence
-           FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
-        row.capture_sha, entityId, Store.#MEANING_LIMIT_MAX + 1);
-      const cut = rows.length > Store.#MEANING_LIMIT_MAX;
-      const got = { cut, mentions: (cut ? rows.slice(0, Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
-        ref: m.ref, occurrence: m.occurrence ?? null, grade: m.grade,
-        position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
-      mentionCache.set(entityId, got);
-      return got;
-    };
-    for (const c of conns) {
-      /* WHICH END IS OURS. A capture may be BOTH ends only of a self-connection, which the
-         canonical pair order (a < b) makes impossible, so this is exhaustive. */
-      const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
-      const view = this.#connectionView(c);
-      const entry = { entity_id: c.entity_id, grade: c.grade, side,
-                      other_capture_sha: side === "a" ? c.b_capture_sha : c.a_capture_sha,
-                      other_bundle_id: keep(side === "a" ? c.b_bundle_id : c.a_bundle_id),
-                      determining_pair: view.determining_pair };
-      if (whole) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "
-                                                + "connection the document has is inside it" }); continue; }
-      /* REC-122 / D-161 act (3) — A MEMBER'S CHOICE SETTLES WHAT THE MACHINE'S SELECTION COULD
-         NOT. Where a member has chosen the on-point mention on THIS end, the answer is taken from
-         that mention and from nothing else: inside the part is a definite reach, outside it a
-         definite outside (the member established which mention the connection rests on, so another
-         mention elsewhere no longer unsettles it), and a chosen mention the reading could not place
-         is UNDETERMINED under C-49.2 exactly as an unplaced pair is. The containment question is
-         asked through the ONE predicate (`checkConnectionPairCovers`) with the chosen mention in the
-         pair's place, so a choice cannot be judged by a second rule.
-         THE GRADE IS THE CHOSEN MENTION'S, composed with the other end by the same weaker-of-two
-         rule the connection's own grade uses — a member choosing a weaker mention gets that mention's
-         grade, never the strongest one's. The other end's grade is ITS chosen mention's where one
-         is chosen, else the row's.
-         A CHOICE WHOSE MENTION THE DOCUMENT NO LONGER CARRIES (a re-read reading dropped it) is
-         LAPSED: said on the entry, and the answer falls back to REC-120's, never to the machine's
-         pair as if it were chosen. With no choice this block is skipped and every answer is
-         REC-120's byte for byte. */
-      const choices = this.#currentPairChoices(c.a_capture_sha, c.b_capture_sha, c.entity_id);
-      const mine = choices[side];
-      let lapsed = null;
-      if (mine) {
-        /* D-454: THE CHOICE IS OF AN OCCURRENCE. Its place is read here from the reading, never
-           from the choice row, so a re-read that no longer reads the reference AT THAT PLACE
-           lapses the choice rather than letting it slide to another read of the same string.
-           A choice made before D-454 names no occurrence: it answers while its reference has
-           exactly one, and where the document now reads it at several it is AMBIGUOUS — the
-           member chose a string when the record could show only one place for it, and which
-           place they meant is not recoverable — so it is stated and read as unchosen. */
-        const reads = this.#rows(
-          `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
-                  rp.occurrence AS occurrence
-             FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-            WHERE r.capture_sha=? AND r.entity_id=? AND r.ref=? ORDER BY rp.seq LIMIT ?`,
-          row.capture_sha, c.entity_id, mine.ref, Store.#OCCURRENCES_PER_REF + 1);
-        const ambiguous = mine.occurrence == null && reads.length > 1;
-        const m = mine.occurrence == null
-          ? (reads.length === 1 ? reads[0] : null)
-          : (reads.find((x) => (x.occurrence ?? "") === mine.occurrence) || null);
-        const occ = mine.occurrence != null ? { occurrence: mine.occurrence } : {};
-        if (ambiguous) {
-          lapsed = { ref: mine.ref, chosen_by: mine.chosen_by, at: mine.at, lapsed: true, ambiguous: true,
-                     occurrences: reads.map((x) => ({ occurrence: x.occurrence ?? null,
-                       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) })),
-                     why: `a member chose ${mine.ref} as on point before the record kept which read of a `
-                        + `reference a choice meant, and this document reads it at ${reads.length} places, `
-                        + `so the choice cannot say which and the machine's selection is read as unchosen. `
-                        + `Choosing again, naming the occurrence, settles it` };
-        } else if (!m) {
-          lapsed = { ref: mine.ref, ...occ, chosen_by: mine.chosen_by, at: mine.at, lapsed: true,
-                     why: "a member chose this mention as on point, and this document no longer carries it "
-                        + (mine.occurrence != null ? "at that place " : "")
-                        + "for this subject, so the choice cannot answer and the machine's selection is "
-                        + "read as unchosen" };
-        } else {
-          const position = readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref);
-          const theirs = choices[side === "a" ? "b" : "a"];
-          const otherSha = side === "a" ? c.b_capture_sha : c.a_capture_sha;
-          const theirGrade = (theirs && this.#one(
-            `SELECT grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
-            otherSha, c.entity_id, theirs.ref)?.grade) || (side === "a" ? c.b_grade : c.a_grade);
-          const grade = Store.#weakerGrade(m.grade, theirGrade);
-          const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
-          const chosenEntry = { ...entry, grade, on_point: onPoint };
-          const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
-          const verdict = checkConnectionPairCovers(
-            side === "a" ? { a_ref: m.ref, a_position: position } : { b_ref: m.ref, b_position: position },
-            side, row.extent_kind, extent, readingPositionInExtent);
-          if (!verdict) reaching.push({ ...chosenEntry, why: `${said}; it was read at ${position.ref}, inside ${row.ref}` });
-          else (verdict.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined)
-            .push({ ...chosenEntry, code: verdict.code, check: verdict.check, translation: verdict.translation,
-                    why: `${said}; ${verdict.detail.replace(/^the determining reference/, "that mention")}` });
-          continue;
-        }
-      }
-      if (lapsed) entry.on_point = lapsed;
-      if (!view.determining_pair) {
-        undetermined.push({ ...entry, code: "CONNECTION_PAIR_NO_PAIR",
-          why: "this connection was derived before the record kept which reference established it, so "
-             + "whether that reference falls inside this part cannot be asked. Re-deriving the "
-             + "subject's connections records the pair" });
-        continue;
-      }
-      const bad = checkConnectionPairCovers(view.determining_pair, side, row.extent_kind, extent,
-                                            readingPositionInExtent);
-      /* REC-120 / D-161 act (1) — THE PAIR IS NOT THE ONLY MENTION, so neither a
-         definite `outside` nor a definite reach may rest on it alone. FW-21 drove it
-         (M-51): page 9, where a second grade-A mention of the subject was read,
-         answered exactly as page 7, which never mentions it. Asked only when the
-         pair PLACED itself (an unplaced pair is already undetermined, C-49.2), and
-         the mentions are read once per entity, not once per connection. */
-      if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
-        const unchosen = checkConnectionMentionUnchosen({
-          pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
-          /* D-454: the pair's OWN place, so another read of its string is another mention. */
-          pairOccurrence: readingOccurrenceKey(side === "a" ? view.determining_pair.a_position
-                                                            : view.determining_pair.b_position),
-          pairGrade: side === "a" ? c.a_grade : c.b_grade, pairReached: !bad,
-          ...mentionsOf(c.entity_id), extentKind: row.extent_kind, extent,
-          covers: readingPositionInExtent, rank: (g) => Store.#GRADE_RANK[g] || 0 });
-        if (unchosen) {
-          undetermined.push({ ...entry, code: unchosen.code, check: unchosen.check,
-                              translation: unchosen.translation, why: unchosen.detail,
-                              mentions: unchosen.mentions });
-          continue;
-        }
-      }
-      if (!bad) { reaching.push({ ...entry, why: `the determining reference was read at `
-                                              + `${(side === "a" ? view.determining_pair.a_position
-                                                                : view.determining_pair.b_position).ref}, `
-                                              + `inside ${row.ref}` }); continue; }
-      (bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined)
-        .push({ ...entry, code: bad.code, check: bad.check, translation: bad.translation, why: bad.detail });
-    }
-    /* THE STRONGEST REACHING CONNECTION, and null when none reaches. `null` here is
-       UNDETERMINED and it is never the same as grade D: D is a member's testimony, an
-       absence is the record saying it cannot tell. The two must not share a rank, which is
-       #weakestOf's own recorded lesson one construct over. */
-    let grade = null;
-    for (const r2 of reaching)
-      if (grade == null || Store.#GRADE_RANK[r2.grade] > Store.#GRADE_RANK[grade]) grade = r2.grade;
-    /* REC-120: the answer's own sentence names the unchosen-mention kind when it is
-       present, and is the pre-item sentence byte for byte when it is not. */
-    const unchosenN = undetermined.filter((u) => u.code === "CONNECTION_PAIR_MENTION_UNCHOSEN").length;
-    return {
-      ok: true, content_id: row.content_id, capture_sha: row.capture_sha,
-      bundle_id: keep(row.bundle_id), extent_kind: row.extent_kind, ref: row.ref,
-      stale: !!row.stale,
-      connection_grade: grade,
-      established: grade == null ? false : Store.#isEstablished(grade),
-      needs_confirmation: grade == null ? false : !Store.#isEstablished(grade),
-      reaching, undetermined, outside,
-      counts: { connections: conns.length, reaching: reaching.length,
-                undetermined: undetermined.length, outside: outside.length },
-      limit: cap, truncated,
-      why: grade != null
-        ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the `
-          + `grade is the strongest of them (${grade}), which states how that connection was `
-          + `established and nothing about how credible either document is`
-        : conns.length === 0
-          ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from`
-          : unchosenN
-            ? `no connection is established to reach ${row.ref}: ${unchosenN} rest on a pair that is this `
-              + `document's strongest-graded mention of the subject while another mention bears on `
-              + `${row.ref}, and nobody has chosen which mention is on point`
-              + (undetermined.length > unchosenN ? `; ${undetermined.length - unchosenN} cannot be placed` : ``)
-              + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the `
-              + `answer and it is not the same as none`
-          : undetermined.length
-            ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed `
-              + `(the record does not hold where the determining reference was read) and ${outside.length} `
-              + `were established elsewhere in this document. UNDETERMINED is the answer and it is not `
-              + `the same as none — reading this document with positions is what would settle it`
-            : `all ${outside.length} of this document's connections were established by references read `
-              + `outside ${row.ref}, so none of them reaches this citation`,
-    };
-  }
-
-  /* ============ REC-122 · D-161 ACT (3) · A MEMBER CHOOSES THE ON-POINT MENTION ============
-   *
-   * Bob, 2026-09-14 (5.4, second pass): the connection pair is the ON-POINT pair, CHOSEN, and
-   * specificity is worked for. FW-17 built the strongest-graded mention instead; REC-120 made
-   * every answer that rested on that machine selection among several mentions honestly
-   * UNDETERMINED (C-49.4). This is the act that lets a member settle it: WHICH mention of the
-   * subject, on ONE end of ONE connection, is the one on point.
-   *
-   * WHAT IT IS NOT. It does not rewrite the connection's pair — that stays the machine's
-   * selection, stated as such (`determining_pair.selection`), and a re-derivation rewrites it
-   * anyway. It does not change the connection's document-grain grade or any whole-document
-   * answer: a whole document holds every mention, so nothing there rested on a choice. It
-   * does not guess: nothing machine-chosen counts, a machine credential is refused BY SHAPE on
-   * the name the control plane stamped (C-74.1, REC-86's C-50.5 twin), and a mention the
-   * document does not carry for that subject is refused BY NAME (C-74.3).
-   *
-   * THE OLD IS RETAINED (REC-86's rule): a re-choice supersedes the current row and appends a
-   * new one; the same choice twice writes nothing and says so.
-   *
-   * HOW A LIAR PASSES THIS, stated before what it checks: a choice the READ then ignores (the
-   * act records, and `connectionGradeForContent` answers REC-120's UNDETERMINED as before), or
-   * a default that picks the strongest-graded mention for everyone (REC-120's overclaim back,
-   * wearing a member's name). The suite drives the act and then the READ, and the negative
-   * control removes the read's use of the choice. */
-  /* BOUNDED BY CONSTRUCTION: the act supersedes the current row in the same transaction that
-     inserts the next, so at most ONE row per end is current and two rows cover both ends. Newest
-     first, and the first seen per end wins, so if that invariant were ever broken the LATEST
-     choice answers — never an older one by scan order. */
-  #currentPairChoices(aSha, bSha, entityId) {
-    const rows = this.#rows(
-      `SELECT side, ref, occurrence, chosen_by, at FROM connection_pair_choices
-        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side IN ('a','b')
-          AND superseded_at IS NULL ORDER BY choice_id DESC LIMIT 2`, aSha, bSha, entityId);
-    const out = { a: null, b: null };
-    for (const r of rows)
-      if (!out[r.side]) out[r.side] = { ref: r.ref, occurrence: r.occurrence ?? null, chosen_by: r.chosen_by, at: r.at };
-    return out;
-  }
-
-  /** op=connectionchoose — THE ACT. `capture` is the end the choice is about, `other` the
-   *  connection's other end, `entity` the subject joining them, `ref` the mention chosen. */
-  chooseConnectionPair(a = {}) {
-    const args = a || {};
-    const refusal = (code, detail, extra) => {
-      const row = CONNECTION_CHOICE_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-               detail, ...(extra || {}) };
-    };
-    const who = String(args.author ?? "").trim();
-    const capture = String(args.capture ?? "").trim().toLowerCase();
-    const other = String(args.other ?? "").trim().toLowerCase();
-    const entityId = String(args.entity ?? "").trim();
-    const ref = String(args.ref ?? "").trim();
-    /* D-454: WHICH read of `ref`. Optional while the reference was read at one place (every
-       REC-122 caller's shape), required once it was read at several (C-74.4). */
-    const named = args.occurrence == null ? null : String(args.occurrence).trim() || null;
-    const aSha = capture < other ? capture : other, bSha = capture < other ? other : capture;
-    const conn = (capture && other && entityId && capture !== other)
-      ? this.#one(`SELECT a_capture_sha, b_capture_sha, entity_id, a_bundle_id, b_bundle_id, a_ref, b_ref
-                     FROM connections WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=?`,
-                  aSha, bSha, entityId)
-      : null;
-    const side = capture === aSha ? "a" : "b";
-    const keep = this.#bundleRedactor(args.viewer ?? null);
-    const mention = conn && ref
-      ? this.#one(`SELECT ref, grade FROM resolutions WHERE capture_sha=? AND entity_id=? AND ref=?`,
-                  capture, entityId, ref)
-      : null;
-    /* D-454: the mention's OCCURRENCES, in reading order. The member names one by the key the
-       record lists (`occurrence`, on every mention `op=connections&content=` names) or by the
-       place's human form where exactly one occurrence carries it — correct work in the spelling
-       a person reads must pass. With none named, a reference read at ONE place is that place
-       (REC-122's shape, unchanged) and one read at several is refused, never defaulted. */
-    const reads = mention
-      ? this.#rows(`SELECT occurrence, seq, pos_kind, pos, pos_ref FROM reading_refs
-                     WHERE capture_sha=? AND ref=? ORDER BY seq LIMIT ?`,
-                   capture, mention.ref, Store.#OCCURRENCES_PER_REF + 1)
-      : [];
-    const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
-    const pick = named
-      ? (reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null))
-      : (reads.length <= 1 ? (reads[0] || null) : null);
-    /* Bounded like every list this store publishes, and SAYS when it was cut: the read asks for one more than
-       the bound, and a reference read past it answers `truncated` rather than a list that reads as complete. */
-    const occCut = reads.length > Store.#OCCURRENCES_PER_REF;
-    const listed = () => (occCut ? reads.slice(0, Store.#OCCURRENCES_PER_REF) : reads).map((x) => ({
-      occurrence: x.occurrence, position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref) }));
-    const placeName = (x) => x.pos_ref || "a place the reading did not record";
-    /* DEC-49 REGION is-connection-choice */
-    if (!who || isMachineIdentity(who))
-      return refusal("CONNECTION_CHOICE_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. It may list a document's mentions `
-              + `(op=connections&content= names them where they bear on a citation); choosing which one `
-              + `a connection rests on is a member's act.`
-            : `this act names no member, and a choice nobody made is not a choice.`);
-    /* A connection whose chosen end the chooser cannot see answers EXACTLY as one that
-       does not exist (REC-25/REC-30's leak arriving at a write): the act names a document. */
-    if (!conn || !keep(side === "a" ? conn.a_bundle_id : conn.b_bundle_id))
-      return refusal("CONNECTION_CHOICE_NO_CONNECTION",
-        `this record holds no connection between capture=${capture.slice(0, 12) || "(none)"}… and `
-        + `other=${other.slice(0, 12) || "(none)"}… through entity=${entityId || "(none)"} that you can `
-        + `see. Name the end the choice is about (capture), the other end (other) and the subject (entity).`,
-        { capture: capture || null, other: other || null, entity_id: entityId || null });
-    if (!mention)
-      return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
-        ref ? `this document does not carry '${ref.slice(0, 80)}' as a mention of ${entityId}. Its mentions `
-              + `are the references the record resolved to that subject in it.`
-            : `pass ref=: the mention, as the reading recorded it, that is on point for this connection.`,
-        { capture, entity_id: entityId, ref: ref || null });
-    if (named && !pick)
-      return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
-        `this document does not read '${mention.ref.slice(0, 80)}' at '${named.slice(0, 120)}'`
-        + (byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``)
-        + `. It reads it at: ${reads.map(placeName).join(", ") || "no place the reading recorded"}.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
-          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
-    if (!named && reads.length > 1)
-      return refusal("CONNECTION_CHOICE_OCCURRENCE_UNNAMED",
-        `this document reads '${mention.ref.slice(0, 80)}' at ${reads.length} places `
-        + `(${reads.map(placeName).join(", ")}), and each is its own mention. Pass occurrence= naming `
-        + `the one on point.`,
-        { capture, entity_id: entityId, ref: mention.ref, occurrences: listed(),
-          limit: Store.#OCCURRENCES_PER_REF, truncated: occCut });
-    /* END DEC-49 REGION is-connection-choice */
-    const cur = this.#currentPairChoices(aSha, bSha, entityId)[side];
-    /* The chosen occurrence's key, and NULL only where the reading holds no row for the mention
-       at all (a resolution outliving its reading's reference), which names no place to key. */
-    const occurrence = pick ? pick.occurrence : null;
-    const position = pick ? readingSourceFromColumns(pick.pos_kind, pick.pos, pick.pos_ref) : null;
-    const answer = (wrote, prior) => ({
-      ok: true, wrote, a_capture_sha: aSha, b_capture_sha: bSha, entity_id: entityId, side,
-      /* D-454: every place this document reads the chosen reference, so a member (and a surface) sees the
-         other occurrences beside the one chosen. */
-      occurrences: listed(), limit: Store.#OCCURRENCES_PER_REF, truncated: occCut,
-      chosen: { ref: mention.ref, occurrence, grade: mention.grade, position,
-                chosen_by: wrote ? who : cur.chosen_by, at: wrote ? at : cur.at },
-      superseded: prior,
-      machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
-      says: (wrote ? `recorded: ` : `already the choice, so nothing was written: `)
-        + `on end ${side.toUpperCase()} of this connection the on-point mention of ${entityId} is `
-        + `${mention.ref}` + (position ? ` (read at ${position.ref})` : ` (the reading did not record where)`)
-        + `, as chosen by ${wrote ? who : cur.chosen_by}. A citation of a part of this document now `
-        + `answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged` });
-    const at = new Date().toISOString();
-    /* D-454: the same choice is the same REFERENCE AT THE SAME PLACE. A choice made before D-454
-       (occurrence NULL) naming this reference is superseded by one that names its place. */
-    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer(false, null);
-    this.ctx.storage.transactionSync(() => {
-      if (cur)
-        this.sql.exec(`UPDATE connection_pair_choices SET superseded_at=?
-                        WHERE a_capture_sha=? AND b_capture_sha=? AND entity_id=? AND side=?
-                          AND superseded_at IS NULL`, at, aSha, bSha, entityId, side);
-      this.sql.exec(`INSERT INTO connection_pair_choices
-                       (a_capture_sha,b_capture_sha,entity_id,side,ref,occurrence,a_bundle_id,b_bundle_id,chosen_by,at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
-                    aSha, bSha, entityId, side, mention.ref, occurrence, conn.a_bundle_id, conn.b_bundle_id, who, at);
-    });
-    return answer(true, cur ? { ref: cur.ref, ...(cur.occurrence != null ? { occurrence: cur.occurrence } : {}),
-                                chosen_by: cur.chosen_by, at: cur.at } : null);
+  /* connections R5: an entity's derivation statement, from the observation log, until observation-log registers it. */
+  #connectionDerivationOf(entityId) {
+    const obs = this.#one(
+      `SELECT at, state, detail FROM observation_log
+        WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
+        ORDER BY seq DESC LIMIT 1`, entityId);
+    if (obs) return derivationStatement(obs);
+    const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
+    return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -22165,6 +20759,7 @@ export class Store extends DurableObject {
        the document's own entry above rather than a second computation of it. */
     if (Array.isArray(contentIds) && contentIds.length)
       out.earned.content = contentOf(this.ctx).standings(contentIds, out.earned.connection);
+    for (const [id, axis] of Object.entries(connectionsOf(this.ctx).portionAxes(contentIds, { entityId: subjectEntity }))) if (out.earned.content?.[id]?.connection?.grain === "portion") out.earned.content[id].connection = axis;
     return out;
   }
 
@@ -22262,7 +20857,7 @@ export class Store extends DurableObject {
     for (let i = 1; i < placedInOrder.length; i++) {
       const a = placedInOrder[i - 1], b = placedInOrder[i];
       const ga = repGrade.get(a.stage_key), gb = repGrade.get(b.stage_key);
-      const g = Store.#weakerGrade(ga, gb);
+      const g = weakerGrade(ga, gb);
       chain.push({ from_stage: a.stage_key, to_stage: b.stage_key, a_grade: ga, b_grade: gb, grade: g });
       if (instanceGrade === null || Store.#GRADE_RANK[g] < Store.#GRADE_RANK[instanceGrade]) instanceGrade = g;
     }
@@ -22830,7 +21425,7 @@ export class Store extends DurableObject {
       g.grade_determined = !anyUndetermined;
       g.grade = anyUndetermined
         ? null
-        : g.instances.map((i) => i.grade).reduce((a, b) => Store.#weakerGrade(a, b));
+        : g.instances.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b));
       /* REC-8: the temporal escalation on the proposal — `overdue` true when ANY of its instances
          is past its within_interval deadline, `overdue_count` how many, and `kinds` the distinct
          finding kinds this proposal aggregates (a consumer sorts/badges the overdue ones without
@@ -35141,61 +33736,6 @@ export class Store extends DurableObject {
 
 
 
-  /** Project a capture's RESOLVED links into edges the record can traverse.
-   *
-   *  This is where a link becomes a citation. An unresolved link has no canonical
-   *  target and cannot be an edge at all, because C-6.1 rightly refuses a locator
-   *  as a references[].target; resolution is the act that supplies one. So only
-   *  the `linked` partition projects, and the address rides along as the comment
-   *  string Bob ruled it to be.
-   *
-   *  The edge kind is `links_to`, never `cites`. A member may promote it, and
-   *  that promotion is a member's act recorded as one. Projecting it as `cites`
-   *  would put words in the group's mouth that the source said.
-   *
-   *  A self-edge is dropped rather than recorded: a page linking to itself, which
-   *  every paginated Legistar calendar does, is not a connection between two
-   *  documents and would show up as a bundle citing itself. */
-  projectLinks({ sourceCapture, sourceBundle = null, at = null }) {
-    const res = this.resolveLinks({ sourceCapture, at });
-    if (!res.links || !res.links.length) return { projected: 0, edges: [] };
-    let bundle = sourceBundle;
-    if (!bundle) {
-      const reg = [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture)][0];
-      bundle = reg ? reg.bundle_id : null;
-    }
-    if (!bundle) return { projected: 0, edges: [],
-      note: "this capture is not registered to a bundle, so there is no canonical source to hang an edge on" };
-    const edges = [];
-    let unregistered = 0;
-    for (const l of res.links) {
-      if (l.resolution !== "linked") continue;
-      /* The record holds BYTES of the target but no bundle claims them yet. That
-         is the normal state of anything acquired and not promoted: acquire files
-         the locator, promote writes the register row. There is no canonical id to
-         point an edge at, and inventing one would be worse than waiting, so it is
-         counted and named rather than silently dropped. */
-      if (!l.target_bundle) { unregistered++; continue; }
-      if (l.target_bundle === bundle) continue;
-      this.sql.exec(
-        `INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'links_to')
-         ON CONFLICT(bundle_id, target_id, kind) DO NOTHING`, bundle, l.target_bundle);
-      edges.push({ from: bundle, to: l.target_bundle, rel: "links_to",
-                   asserted_by: "source", address: l.address, fragment: l.fragment,
-                   verdict: l.verdict, basis: l.basis,
-                   target_capture: l.target_capture, target_retrieved: l.target_retrieved });
-    }
-    return { projected: edges.length, source_bundle: bundle, edges,
-      skipped_self: res.links.filter((l) => l.resolution === "linked" && l.target_bundle === bundle).length,
-      skipped_unregistered: unregistered,
-      unresolved: res.tally.offsite,
-      note: "only resolved links project, and only to a target some bundle has registered. "
-          + "skipped_unregistered counts targets whose BYTES the record holds while no bundle claims "
-          + "them, which is every acquired-but-unpromoted capture: those become edges when the target "
-          + "is promoted, not before. The edge is links_to and never cites, because the source "
-          + "asserted it and not the group; a member promoting it to cites is a member's act." };
-  }
-
   /* ==================================================================== *
    *  IS-6 — THE INVESTIGATIVE RUN AND ITS OBSERVATION LOG
    *
@@ -41774,6 +40314,7 @@ export class Store extends DurableObject {
         ...captureOps(captureOf(this.ctx), url, body, this.env),
         ...calibrationOps(calibrationOf(this.ctx), url, body),
         ...extractionOps(extractionOf(this.ctx), url, body, this.env),
+        ...connectionsOps(connectionsOf(this.ctx), url, body, this.env),
         promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
@@ -41810,10 +40351,6 @@ export class Store extends DurableObject {
         /* D-525: the Drive shell sweep, under the same D-15 stamp as the index. */
         driveshells: () => this.driveShells({ viewer: url.searchParams.get("viewer"),
           limit: url.searchParams.get("limit"), after: url.searchParams.get("after") || null }),
-        /* REC-25: the gated backlink read — reverse edges into a bundle,
-           filtered by the viewer's position (7.9). */
-        backlinks: () => this.backlinks({ target: url.searchParams.get("target"),
-                                          viewer: url.searchParams.get("viewer") }),
         /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
@@ -41995,43 +40532,6 @@ export class Store extends DurableObject {
            each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
            reads them by entity or by capture; progressiondefine authors an ordered stage
            set (both example progressions expressible as rows); progression reads one. */
-        /* REC-66: the pair bound reaches the derivation from EITHER door — a POST body key
-           or `&limit=` — because the two arms of this op were already both real (the UI
-           POSTs a body, a probe passes `&id=`) and a bound reachable from only one of them
-           would be a bound half the callers could not ask for. */
-        connect: () => this.deriveConnections({
-          entityId: (body && body.entityId) || url.searchParams.get("id"),
-          assertedBy: (body && body.assertedBy) || undefined,
-          limit: (body && body.limit) || url.searchParams.get("limit") }),
-        /* FW-17: A THIRD KEY, `content=`, and the BRANCH IS INSIDE THE READ rather than
-           here. `id=` and `sha256=` ask WHICH connections exist through a subject or
-           around a document; `content=` asks what a PORTION of a document may earn from
-           them (Bob's 5.1) — the same table, the same bound, so a member holding a content
-           id should not have to know the answer lives under another op.
-           IT IS NOT A TERNARY IN THIS TABLE, and that is a measurement rather than a
-           preference: `meaning-bounds.test.mjs` reads this dispatch table POSITIONALLY,
-           matching `op: () => this.method(`, and a ternary here made `op=connections`
-           vanish from the bounds walk entirely — the op stopped being judged rather than
-           being judged wrong, which is REC-70's invisible-op hazard arriving by a new
-           route. The shape of this table is load-bearing for instruments that read it. */
-        connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
-                                                 captureSha: url.searchParams.get("sha256"),
-                                                 contentId: url.searchParams.get("content"),
-                                                 limit: url.searchParams.get("limit"),
-                                                 viewer: url.searchParams.get("viewer") }),
-        /* REC-122 / IC-232: a member's choice of the on-point mention. `author` and `viewer`
-           are the control plane's stamps and never the caller's, so a machine is refused BY
-           SHAPE (C-74.1) and a connection out of sight answers as absent (C-74.2). */
-        connectionchoose: () => this.chooseConnectionPair({
-          capture: (body && body.capture) || url.searchParams.get("capture"),
-          other: (body && body.other) || url.searchParams.get("other"),
-          entity: (body && body.entity) || url.searchParams.get("entity"),
-          ref: (body && body.ref) || url.searchParams.get("ref"),
-          /* D-454: which read of `ref`, required once it was read at more than one place (C-74.4). */
-          occurrence: (body && body.occurrence) || url.searchParams.get("occurrence"),
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer"),
-        }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({ progressionKey: url.searchParams.get("key"),
                                                   version: url.searchParams.get("version") }),
@@ -42114,8 +40614,6 @@ export class Store extends DurableObject {
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
-        projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
-                                                sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
@@ -42358,30 +40856,6 @@ export class Store extends DurableObject {
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity"),
         }),
-        /* D-162 / IC-241: THE THEME. `declarer`, `placer` and `proposer` come from the
-           QUERY STRING, where the control plane stamped them, and never from the body. */
-        themedeclare: () => this.themeDeclare({
-          name: body ? body.name : null,
-          test: body ? body.test : null,
-          declarer: url.searchParams.get("declarer"),
-          administer: url.searchParams.get("administer"),
-        }),
-        themeplace: () => this.themePlace({
-          theme: (body && body.theme) || url.searchParams.get("theme"),
-          target: (body && body.target) || url.searchParams.get("target"),
-          note: body ? body.note : null,
-          placer: url.searchParams.get("placer"),
-          viewer: url.searchParams.get("viewer"),
-          administer: url.searchParams.get("administer"),
-        }),
-        themepropose: () => this.themePropose({
-          theme: (body && body.theme) || url.searchParams.get("theme"),
-          target: (body && body.target) || url.searchParams.get("target"),
-          note: body ? body.note : null,
-          proposer: url.searchParams.get("proposer"),
-          viewer: url.searchParams.get("viewer"),
-          administer: url.searchParams.get("administer"),
-        }),
         /* REC-203: the identifier-space judgement. `viewer` is the control plane's stamp; nothing else is. */
         idmatch: () => this.idMatch({ space: url.searchParams.get("space"), a: url.searchParams.get("a"),
                                       b: url.searchParams.get("b"), aCapture: url.searchParams.get("a_capture"),
@@ -42389,11 +40863,6 @@ export class Store extends DurableObject {
                                       aName: url.searchParams.get("a_name"), bName: url.searchParams.get("b_name"),
                                       referent: url.searchParams.get("referent"),
                                       viewer: url.searchParams.get("viewer") }),
-        themeread: () => this.themeRead({ id: url.searchParams.get("id"),
-                                          q: url.searchParams.get("q"),
-                                          limit: url.searchParams.get("limit"),
-                                          viewer: url.searchParams.get("viewer"),
-                                          administer: url.searchParams.get("administer") }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),
                                         limit: url.searchParams.get("limit"),
                                         viewer: url.searchParams.get("viewer"),
@@ -42708,7 +41177,6 @@ export class Store extends DurableObject {
         projectionplan: () => this.projectionPlan(),
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
-        dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the

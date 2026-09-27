@@ -528,6 +528,16 @@ export class Connections {
     return out;
   }
 
+  /** R13 composed for an internal caller with no viewer (the earned-basis registry: the write path, the gate), which
+   *  names no bundle id: each row's portion connection axis in the registry's shape, through one subject. A `document`
+   *  row is not answered here (it earns what its document earns, the caller's own entry). */
+  portionAxes(contentIds, { entityId = null } = {}) {
+    const out = {};
+    const g = this.portionGrades(contentIds, `${MACHINE_CLASS_PREFIX}daemon`, { entityId });
+    for (const [id, s] of Object.entries(g)) out[id] = portionConnectionAxis(s);
+    return out;
+  }
+
   /* The content row (content R45's read contract). */
   #contentRow(id) {
     return this.#one(
@@ -1239,6 +1249,27 @@ export class Connections {
   proposeForTheme(a) { return this.themes.propose(a); }
   withdrawFromTheme(a) { return this.themes.withdraw(a); }
   readThemes(a) { return this.themes.read(a); }
+}
+
+/** R13 as the earned-basis registry states an axis: a reaching grade is the value a portion leg may state
+ *  (`mode: value`); otherwise the axis is undetermined and says which kind of undetermined, never none. */
+export function portionConnectionAxis(s) {
+  if (s.grade != null)
+    return { determined: true, grain: "portion", mode: "value", grade: s.grade, established: s.established, why: s.why };
+  const c = s.counts || {};
+  const because = !c.connections ? "NO_CONNECTION"
+    : c.undetermined ? "CONNECTION_PORTION_UNDETERMINED" : "CONNECTION_OUTSIDE_PORTION";
+  return { determined: false, grain: "portion", grade: null, undetermined_because: because,
+           empty_level: because === "CONNECTION_PORTION_UNDETERMINED"
+             ? "where in the document the determining reference was read, or which mention is on point"
+             : because === "NO_CONNECTION" ? "connection — this document is an end of no connection through this subject"
+             : "connection — every connection of this document was established outside this portion",
+           why: s.why };
+}
+
+/** R19: the edges of `kind` a promotion's projection replaced (`refsReplaced` on its context), for a later step. */
+export function refsReplacedOf(c, kind) {
+  return (c && Array.isArray(c.refsReplaced) ? c.refsReplaced : []).filter((r) => r.kind === kind).map((r) => r.target_id);
 }
 
 /* R28: append whole reference entries to the frontmatter's `references` block, touching nothing else (the store's
