@@ -61,7 +61,7 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 
 
 **legacy-tests** (layer 11, after layer 3, K53)
-- T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), and those LEGACY-CHECKS #1's REPORT 4 names (d134, custodial-acts, aicredential, machinefences-dec49 D-PIN/D0, d470 after T4-2b, `refusal-codes.control`, the guard's floors and arm G), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
+- T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), `fleetbundles.test.mjs` arm 2a's pinned ocr-worker input list (it now includes `pdf-worker/src/ccittdecode.mjs`, K115), `ocr-worker.test.mjs`'s stale remedy text if it is the old battery's, and those LEGACY-CHECKS #1's REPORT 4 names (d134, custodial-acts, aicredential, machinefences-dec49 D-PIN/D0, d470 after T4-2b, `refusal-codes.control`, the guard's floors and arm G), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
 
 
 **Not in T4:** D-593, D-694, D-724 go with `extraction` (K49, layer 4); D-581, D-582, D-584 with `capture-requests` (K58, layer 6).
@@ -73,3 +73,7 @@ Layer 1, started 2026-09-27 01:27 UTC, concurrently:
 - `image-codecs` · IMAGE-CODECS #1 · `session_01GytnXWpaAYBtTx3b9cEHwE`
 - `pdf-pixels` · PDF-PIXELS #1 · `session_012XRqCG31gxW9i9Uyf3x6KX`
 - `pdf-worker` · PDF-WORKER #3 · `session_014eJmEBtn1ryR23AYPmxd89`
+
+## Layer 1 closed (BOB #44, 2026-09-27 ~01:58 UTC)
+
+All four jobs complete, each verified on its branch: ownership 0 failures (legacy-checks 2 files, image-codecs 8, pdf-pixels 7, pdf-worker 2); merged into `tranche/T4` without conflict. Bundles regenerated: `bio-plane` and `ocr-worker` changed, `pdf-worker` and `newgroup` unchanged; `newgroup-bundle-fresh` 1/0; `fleetbundles` fails one arm only, 2a, whose pinned ocr-worker input list lacks the new `ccittdecode.mjs` (a stale pin in the old battery, now `legacy-tests`' T4-5). On the merged tranche: image-codecs' six codec suites, pdf-pixels' four, pdf-worker's `structure`, `ocr-worker` all pass; format 0; architecture and coverage 0 failures for image-codecs (9/9), pdf-pixels (25/25), pdf-worker (17/17), ocr-worker (21/21).
