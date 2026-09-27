@@ -82,6 +82,16 @@ The one write path by which a bundle enters or changes in the record. It holds t
   never changes the promotion's answer or anything it wrote. (`scheduler` registers its `arm`, for a
   promotion that leaves a bundle monitored.)
 
+**onReopened(module, fn) → void** (N62, K89; K157)
+- **R46** A later module registers once at start (a second registration by one module is refused
+  `LISTENER_DECLARED`). After an accepted `reopen` (R21–R26) has committed, and never for a refused one,
+  every registered listener is called once, in the modules' total order, with `{target, from, at, author, viewer}`
+  (`from` the state left, `at` the act's time). A listener's answer, when it is an object, joins `reopen`'s
+  reply under the listener's module id (`reevaluation` answers `{raised}`, reevaluation R7); `null` or
+  `undefined` adds nothing. A listener that throws or rejects adds nothing and never changes the reopen's
+  answer or anything it wrote. Until `reevaluation` is extracted, `legacy-store` registers the arm that
+  fills `reevaluation` today.
+
 **forkProject({projectId, newId, title, by, viewer, visibility}) → `{ok: true, projectId, newId, title, origin, rel: "derived_from", owner, participantsCopied: 0, bundleSha, visibility}` or refusal** (N16, K68; moved unchanged from the store)
 - **R41** A named `newId` is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3) before anything is looked up, echoing no id: a fork's id is minted, as a project's creation's is (R19).
 - **R42** Sight before position: a project the `viewer` sees at existence only answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (its id and name only); one it does not see, and an id naming nothing, both answer `NO_SUCH_PROJECT`, identically. With no `viewer` the caller is internal and sight is not asked.
