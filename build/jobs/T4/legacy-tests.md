@@ -2,7 +2,7 @@
 
 **Session** LEGACY-TESTS #2, `session_019sbQinGJRZm3pZkVZqMGvj`, on `job/T4/legacy-tests` (from `tranche/T4` @ `c03f169901`, after layer 3 closed). Process: civicos-process `roles/JOB.md`, mechanics §6, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T4`.
 
-**Status** · IN PROGRESS, 2026-09-27. Baseline measured; working family by family.
+**Status** · COMPLETE, 2026-09-27 ~05:25 UTC. T4-5 applied and BOB's CHANGE (legacy-index's N12) processed; every red left is owed to a named entry or REPORTed below. One deferral (the controls in N57's sweep) and one of my own (verdict-reader with N87), each with its reason. No open question, no `NEEDS BOB`.
 
 **Contract** (no requirements file; `build/modules.json`): the old battery (`bio-plane/test/`, `civicos-ui/test/`, minus `bio-plane/test/m/<module>/`) and `civicos-ui/check-refusal-codes.mjs`, `check-semantics.mjs`. Entry: **T4-5** (`build/plan/current.md`, Layer 11): re-anchor or retire every old-battery test layer 3's extractions broke, fleetbundles arm 2a (K115), and LEGACY-CHECKS #1's REPORT 4 list, first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)). Rule, per BOB's first message: a test pinning moved source text is re-anchored on the module's interface or retired with the moved code; a fixture an intended rule now refuses is fixed; no assertion of product behaviour is weakened; a red that looks like a product defect is REPORTed.
 
@@ -85,7 +85,30 @@ Of these, d311-roster-affordances, meaning-bounds, op-claims, owed-controls, ref
 
 - **Controls whose anchors quote code T4 layer 3 moved, not re-anchored in this job** (N57, the controls sweep K84 (2) gave legacy-tests; next tranche's layer 11 carries "N57's remainder"): `capturerequests.control.mjs` arms (1), (10), (11), (13) and `d522-unattended-render`'s declared arms (they quote index.mjs's `captureRequestArm` / `if (arm.render) body.render = true;`, replaced by capture's K58 in-process arm); `provenance-chain`'s arm (b) (patches `bio-checks.mjs`; the C-18.9 guard is in `src/provenance/register-checks.mjs`); `nc-rec116.mjs`, `nc-rec63.mjs`, `nc-rec220.mjs` (patch store.mjs methods now in provenance); `mk7-attribution`'s driver (the observer line is in provenance); `d543-instant-precision`'s control (store.mjs stamp sites, 19 moved); `identity-claims.control.mjs` (the OPEN set, now `["proposedispose"]`); `framework-digest-audit`'s header control (its label changed); `d533partsaudit`'s control (arm counts may move with the new body fixture); `d334-monitor-credential`'s header ("three fire sites", now two). Why deferred: each mutates product source and must be re-anchored and run alone on a quiet tree (tens of minutes each); every suite they drive is green or recorded owed here, so no product red hides behind them. Prose control notes in civicos-ui (auth-surface (f), intent-write (c), (g), (h)) name old locations; no driver anchors on them.
 
+10. **legacy-index (N19, the image-content routing)**, arrived with the merge of `tranche/T4` @ `42d60a1d55`: `textshown` 33/1, "OVER-STRICTNESS: the text-showing page is not a Tier-3 candidate": an un-fleeted instance now names a PDF page with a readable text layer (`/text-shape.pdf`) `tier3_candidate: true`. Green at this job's baseline; it looks like a product defect in N19's predicate (a text page read as image content), so left red.
+11. **affordances** (LEGACY-INDEX #1's REPORT 2, arrived with the same merge): `affordances` 98/1, the totality guard naming `adminresign`, `hostingaccessset`, `memberpairingset`; the same gap as REPORT 7.
+12. **Generated artifact** (not made stale by me): `fleetbundles` 92/4, `bio-plane/dist/bio-plane.bundled.mjs` stale against `src/index.mjs` since legacy-index's N43/N12/N19; BOB regenerates at the close (manifest §14). Arm 2a (this job's pin) passes.
+
+## Tests and checks run
+
+- **The whole old battery on the final tree** (`b72926558f` less the last two edits, re-run where they changed): all 368 plane suites, four at a time, then every red re-run alone; all 90 `civicos-ui/test/` suites. **Plane: 13 red, civicos-ui: 2 red, every one owed:** aicredential 96/1 (N73), d311-roster-affordances 20/1 (N70, N45), d470-catalog-census 11/2 (N86), meaning-bounds 93/3 (N70, REPORT 8), owed-controls 47/1 (N88), skilldoctrine 42/1 and skillpack 47/2 (N70), monitor-assess (REPORT 5), project-sight 223/1 (REPORT 6), rung-ladder 46/2 (REPORT 7), textshown 33/1 (REPORT 10), affordances 98/1 (REPORT 11), fleetbundles 92/4 (REPORT 12, stale bundle); semantics-harvest 13/3 and surface-registry 502/1 (N70). capturerequests read red once under the parallel run and 139/0 alone. Baseline was 138 plane reds (plus 21 civicos-ui).
+- **After BOB's CHANGE:** `coord.test.mjs` and `coord.control.mjs` RETIRED (N14's rule: their subject is `tools/coord.mjs`, the old process's message board, whose ledger check imported the removed `op-claims.mjs`; 67/34 after N12); `pen-sweep` 41/0 (the retired driver leaves its named list; `nc-d355` spells its log path from the ledgered parameter, the pen walk having resolved `logs` only through the retired arm 3's binding); `walkfloor.test` 42/0 (its estate cross-file split is hygiene's floors on walkfloor's walk).
+- **DEC-49 guard** (`civicos-ui/check-refusal-codes.mjs`): 27 failures, every one listed in REPORT 9 with its owner (N87, membership's and record-core's markers, and arm C's floors that follow them).
+- **Controls run, on a quiet tree, each restore verified by hash and content:** `nc-d490` every arm AS DECLARED (48/0 baseline); `walkfloor.control` all 8 arms AS DECLARED; `walkfigure.control` baseline, newfloor, neuter, overstrict as declared (unbranded retired); `drive.control` baseline 160/0 and all seven arms red as declared (six: 105 named); `provenance-floor.control` 47 of 47 as declared; `rung-ladder.control` refuses to arm on its red baseline (REPORT 7), correctly; `refusal-codes.control` 33 arms red, each an arm that needs a green guard baseline (N87) or a green UI harness (N70), every arm's own expected failure present and every restore verified.
+- Layer tests: none named in `build/manifest.md`.
+- Checks (civicos-process, `<product>` = this checkout):
+  - `format: 69 modules, 64 requirements files; 0 failures`
+  - `architecture: 867 product files, 2170 relative imports (64 naming no tracked file, not judged); 0 failures`
+  - `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures` (no requirements file)
+  - `ownership: 173 files changed by legacy-tests between tranche/T4 and HEAD; 0 failures`
+
+Size: test runs about 1,700 (two full plane runs and a diagnostic run of 126 suites, two civicos-ui runs, about 60 single-suite and 11 control runs by me, and about 900 suite runs by the seven workers, counted from their reports, not measured), module lines 175 files, +2,550 / -2,170 (`bio-plane/test/`, `civicos-ui/test/`, `civicos-ui/check-refusal-codes.mjs`, against `c03f169901`)
+
 ## Open
+
+Nothing. (Superseded plan items, all done: K121's fixtures, provenance's and capture's moved sources, the eight unexplained reds, the guard and its control, the controls re-run, the civicos-ui baseline.)
+
+## Superseded plan (kept for the history)
 
 - K121's fixtures, provenance's and capture's moved sources, and eight unexplained reds (airuns, case-authority, d334-monitor-credential, d556partedpublish, leadslug, m025-arm-anchor-witness, monitor-assess, project-sight): six workers of this session, each edit to be reviewed here and committed by batch.
 - The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`, 48 failures at the base) and `refusal-codes.control.mjs`.
