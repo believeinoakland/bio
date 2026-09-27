@@ -73,3 +73,15 @@ Size: test runs 16, module lines 1493
 - Module tests: 41, pass 40, fail 0, todo 1 (R32). Checks: format 1 failure (above, not this job's); architecture 0; coverage 37 of 37; ownership 0 (legacy-store 17/1,412, legacy-checks 0/66). Behaviour suites on the merged tree, all green: progression-instance, progression-exception, progression-versions, overdue-successor, proposals-feed, capture-progressions, d552-instance-disposition, proposedispose, queue, queue-state, current, versions, gate-reads, connection.
 
 Size: test runs 19, module lines 1493
+
+## CHANGE 08:20 UTC · entities merged (`tranche/T5` @ `5dfd4134a8`, merged here)
+
+- `progressionsOf` now reaches entities through `entitiesOf(ctx)` (`has` R7, `readEntity` R5 read as `{found, entity}`, `strongestByCapture` R16), with the grade order and `established` from its exports. The CHANGE named `GRADE_RANK`, but the newer tranche state (entities R33, `8796d21a47`) exports `gradeRank`, so I used that. The bridge now answers only `connections`' `weakerGrade`, over `gradeRank`, until connections merges.
+- Module tests: 41, pass 40, fail 0, todo 1. Checks: format 0 failures (69 modules); architecture 0; coverage 34 of 34; ownership 0 (legacy-store 17/1,412, legacy-checks 0/66). Behaviour suites through the store and the real `entitiesOf`, all green: progression-instance, progression-exception, progression-versions, overdue-successor, proposals-feed, capture-progressions, d552-instance-disposition, proposedispose, queue, queue-state, current, versions, gate-reads, connection.
+
+Size: test runs 22, module lines 1463
+
+## CHANGEs 08:21 and 08:22 UTC · requirements reworded; `gradeRank` confirmed (K149; `tranche/T5` @ `db6d98b656`, merged here)
+
+- Both were already met: the module uses `gradeRank` and `isEstablished`. Checks after the merge: format 0 failures, architecture 0, coverage 34 of 34, ownership 0. Module tests: 40 pass, 0 fail, 1 todo.
+- `tranche/T5` holds progressions as of `899fe8731a` ("T5: merge progressions"). This branch is ahead of it only by the entities switch (`src/progressions/index.mjs`, the test fixture, this record); legacy-store and legacy-checks have no further change.

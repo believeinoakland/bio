@@ -18,18 +18,18 @@
  *   record       `recordOf(host)` unless a test passes its own: `transact`, `declarePurge`.
  *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16).
  *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
- *   entities     `has(id)`, `readEntity({entityId})`, `strongestByCapture(id)` (entities R5, R7, R16), `gradeRank`
- *                and `isEstablished` (K76 (3)). Until `entities` is merged, a bridge over the legacy tables (below).
- *   connections  `weakerGrade(a, b)`. Until `connections` is merged, the same bridge.
+ *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
+ *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34).
+ *   connections  `weakerGrade(a, b)`. Until `connections` is merged, a bridge (below).
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
  *                else the wall clock. */
 
-import { BASIS_GRADES } from "../../checks/bio-checks.mjs";
 import { recordOf, perItem } from "../record-core/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
+import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { PROGRESSION_CHECKS, refusal } from "./checks.mjs";
 
@@ -59,38 +59,9 @@ const DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 
-/** The grade order and the weaker of two grades, until `entities` (K76 (3)) and `connections` are merged: the catalogue's
- *  `BASIS_GRADES` is strongest-first, so a higher rank is a stronger grade. */
-const GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
-
-/** The bridge over the legacy entity tables that stands in for `entities` and `connections` until they are merged
- *  (their Provides: entities R5, R7, R16, K76 (3); the weaker grade). It reads `entities` and `resolutions` and writes
- *  nothing. */
-export function legacyEntityBridge(sql) {
-  const rows = (q, ...a) => [...sql.exec(q, ...a)];
-  const entities = {
-    gradeRank: GRADE_RANK,
-    isEstablished: (g) => g === "A" || g === "B",
-    has: (id) => rows(`SELECT 1 AS x FROM entities WHERE entity_id=?`, id).length > 0,
-    readEntity: ({ entityId } = {}) => {
-      const e = rows(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId)[0];
-      return e ? { ok: true, found: true, entity_id: e.entity_id, kind: e.kind, label: e.label } : { ok: true, found: false };
-    },
-    /* The strongest §8.1 grade each captured document resolved to the entity at, with its bundle: the SAME collapse
-       `op=concerns` makes (entities R16), so a placement's grade is the grade that document shows in the reverse index. */
-    strongestByCapture: (id) => {
-      const by = new Map();
-      for (const r of rows(`SELECT capture_sha, bundle_id, grade FROM resolutions WHERE entity_id=? ORDER BY capture_sha`, id)) {
-        const cur = by.get(r.capture_sha);
-        if (!cur || GRADE_RANK[r.grade] > GRADE_RANK[cur.grade])
-          by.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
-      }
-      return by;
-    },
-  };
-  const connections = { weakerGrade: (a, b) => ((GRADE_RANK[a] || 0) <= (GRADE_RANK[b] || 0) ? a : b) };
-  return { entities, connections };
-}
+/** `connections`' weaker grade, until `connections` is merged: the lower of the two in entities' `gradeRank` (its R33, strongest
+ *  highest); an unknown grade ranks lowest. */
+export const connectionsBridge = Object.freeze({ weakerGrade: (a, b) => ((gradeRank[a] || 0) <= (gradeRank[b] || 0) ? a : b) });
 
 /* R10: a definition's basis as it reads back. `stated: false` is a first version declared without one, or one declared
    before versions were kept: the record says it holds none rather than inventing one. */
@@ -159,7 +130,7 @@ export class Progressions {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
-  #rank(g) { return this.entities.gradeRank[g]; }
+  #rank(g) { return gradeRank[g]; }
 
   /** The module's tables, with the migration an earlier store's shape needs (REC-184's column). */
   migrate() { migrateProgressions(this.sql); }
@@ -393,7 +364,7 @@ export class Progressions {
                        detail: "no such progression definition (define it first, op=progressiondefine)" };
     const definitionVersion = this.definitionVersionOf(progressionKey).version;
     const e = this.entities.readEntity({ entityId });
-    const entity = e && e.found ? { entity_id: e.entity_id, kind: e.kind, label: e.label } : null;
+    const entity = e && e.found && e.entity ? { entity_id: e.entity.entity_id, kind: e.entity.kind, label: e.entity.label } : null;
     const stageDefs = this.#rows(
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
          FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, progressionKey);
@@ -478,7 +449,7 @@ export class Progressions {
     }
     return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
              definition_version: definitionVersion, label: def.label, entity,
-             grade, grade_determined: determined, established: determined && this.entities.isEstablished(grade),
+             grade, grade_determined: determined, established: determined && isEstablished(grade),
              stage_count: stageDefs.length, placed_count: placedInOrder.length,
              chain, stages, findings, finding_count: findings.length,
              discharges, discharge_count: discharges.length };
@@ -895,7 +866,7 @@ export class Progressions {
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
          WHERE capture_sha=? ORDER BY progression_key, entity_id, stage_key`, captureSha);
     const assembled = new Map();
-    const project = (f) => ({ ...f, established: f.grade_determined === true && this.entities.isEstablished(f.grade),
+    const project = (f) => ({ ...f, established: f.grade_determined === true && isEstablished(f.grade),
                               needs_confirmation: f.grade === "C" });
     const instances = [];
     for (const r of rows) {
@@ -1025,12 +996,11 @@ export function progressionsOf(host, deps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
-    const bridge = (!d.entities || !d.connections) ? legacyEntityBridge(storage.sql) : null;
     p = new Progressions({ ...d, storage, record,
                            extraction: d.extraction || extractionOf(host),
                            provenance: d.provenance || provenanceOf(host),
-                           entities: d.entities || bridge.entities,
-                           connections: d.connections || bridge.connections });
+                           entities: d.entities || entitiesOf(host, { record }),
+                           connections: d.connections || connectionsBridge });
     instances.set(host, p);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
   }

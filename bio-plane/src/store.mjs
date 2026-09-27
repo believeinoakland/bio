@@ -225,6 +225,7 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, provenanceAudit, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
          TESTIMONY_FORMAT, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
+import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
@@ -442,15 +443,7 @@ import { checkSkillVersion } from "./skillpack.mjs";
 /* REC-128: the READ shape of who DELIVERED a ratification, from the stored
    column alone — one function, so every read says the same thing about it. */
 import { delivererOf } from "./deliverer.mjs";
-/* PL-12 / D-84: the bias object's refusals and — this is the part that is not
-   housekeeping — the MALFORMEDNESS and BAR predicates themselves. DEC-54's
-   constraint 2 is that "the malformedness rule binds the machine exactly as it
-   binds a member", and the only way to make that a fact rather than a promise is
-   for `biasInhale`'s filter and `checkBiasExtension`'s refusal to be the SAME
-   regular expressions. Imported, never copied: a hand copy agrees at zero cost,
-   and this repository has measured that five times. */
-import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER,
-         BIAS_BAR_PHRASING, checkBiasExtension } from "../checks/bio-checks.mjs";
+import { biasOf, biasOps, BIAS_TABLES, aiRunWorkProducts } from "./bias/index.mjs";
 /* REC-63 / DEC-56: the route marker's four door refusals, imported for the same
    reason every other DEC-49 family is — the C-number, the wire code and the
    canned translation are ONE ROW there and this file holds no second copy. */
@@ -661,33 +654,8 @@ function actNoCitation(detail, extra = {}) {
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
 
-/* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
- * question from whether a given capture produced units and must not be folded
- * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
- * producer are the none-with-a-reason member of the content-axis vocabulary
- * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
- * PDF whose pages are scans. Both are absences and only one of them is about
- * the container.
- *
- * NAMED BY CONTAINER RATHER THAN DERIVED FROM THE UNITS, deliberately: deriving
- * it would make "this producer emitted nothing today" and "this record has no
- * way to address a passage of this kind of document" one answer, and section
- * 4.1's whole point about workbooks is that they are two. The spellings are
- * `reading.text_container`'s, which is `detectFormat`'s own format key.
- *
- * `odt` and `odp` ARE HERE and `ods` IS NOT, which is the rule rather than a
- * list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes --
- * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
- * The arm follows the SHAPE the producer returns, not the file extension. */
-const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
-/* REC-207 (BOB #32, 2026-09-23 23:42Z): the two settlements of a bias debt that a MEMBER or a RUN made,
-   as against the one the sweep derives when the lens moves back. The distinction is read on the sweep's
-   hot path and decides whether an unchanged lens delta re-raises the obligation, so it is a SET here
-   rather than a disjunction written out at the branch — a third authored act would otherwise have to be
-   remembered at the branch as well as at its own door, and the branch is the place nobody looks. */
-const SETTLED_BY_AN_ACT = new Set(["rerun", "resolved"]);
 /* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
    by single dashes, never empty, never leading or trailing dashes. Derived from
    the subject so an id is legible, but it is an IDENTIFIER and not a rendering:
@@ -743,48 +711,51 @@ export class Store extends DurableObject {
     ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !PROGRESSIONS_TABLES.some((x) => (x.name || x) === (typeof t === "string" ? t : t.name)))
       .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name))
+      .filter((t) => !BIAS_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !ENTITIES_TABLES.includes(typeof t === "string" ? t : t.name))
+      .filter((t) => !observationLogOwns(t))
       .filter((t) => !connectionsOwns(t)));   /* each extracted owner declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
-       runs before the store's projections that read it. The store registers observation-log's look on each receipt
-       (provenance R47) until that module is extracted. */
-    provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" })
-      .onReceipt("legacy-store", (e) => this.#receiptLook(e));
-    const promotion = promotionOf(ctx);
-    /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20), and legacy-store registers
-       with it (R24) the content stale mark (REC-82) and the observation log's indexed, extraction and reader-run rows until
-       content and observation-log are extracted. */
-    /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
-       legacy-store's listener, in the modules' total order. */
-    contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction.onReading("legacy-store", (e) => {
-      const container = typeof e.reading.text_container === "string" ? e.reading.text_container : null;
-      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
-      this.#observeIndexed(e.bundleId, e.captureSha, e.indexed, { author: e.author, hadText: e.reading.read_from_text === true,
-        unitArm: armed, armReason: armed ? null : container
-          ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, `
-            + "and the `sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; "
-            + "HTML has no `dom` producer)"
-          : "this record does not hold which container this capture is, so it has no unit arm to name" });
-      const ex = this.#observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
-      this.#observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
-      return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
-                                   refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
+       runs before the store's projections that read it. observation-log registers its look on each receipt (its R5,
+       provenance R47), and listens to extraction's reading notice once extraction exists (below). */
+    const observations = observationLogOf(ctx, { extraction: null,
+      provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }) });
+    /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
+       capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
+       extracted and register their own. */
+    observations.registerAuthority("sweep", (request) => {
+      const r = this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, request);
+      return r ? [r.target, r.lead_inquiry].filter(Boolean) : null;
     });
-    entitiesOf(ctx).onResolveAttempt("legacy-store", (e) => this.#observeResolutionAttempt(e.captureSha, e.bundleId,
-      { ref: e.ref }, e.matches, e.considered ? { considered: e.considered } : null, { resolvedBy: e.resolvedBy }));
+    observations.registerAuthority("run", (run, viewer) => this.aiRunLog({ run, viewer, limit: 1 }).found === true);
+    const promotion = promotionOf(ctx);
+    /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
+    /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
+     * observation-log's rows (its R6–R8), in the modules' total order (extraction R24). */
+    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
+    /* entities (K61, R13): observation-log records each resolution attempt on entities' notice (its R8). */
+    observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
-       (R19, R23); legacy-store registers observation-log's row per derivation and its statement (R3, R5) until then. */
-    connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => this.#observeConnectionDerivation(e.entityId, e));
-    connectionsOf(ctx).registerDerivationProvider("legacy-store", (id) => this.#connectionDerivationOf(id));
+       (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
+       derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
+    connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
+    connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
+    /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's
+       work products (R33) and arms the scheduler on a lens change (R23) until ai-runs and scheduler are extracted. */
+    const bias = biasOf(ctx, { env });
+    bias.registerWorkProducts("ai-run", aiRunWorkProducts({ row: (run) => this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run),
+      list: (after, limit) => this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, after, limit).map((r) => r.run),
+      read: (run, viewer) => this.aiRunRead({ run, viewer }) }));
+    bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
-      if (monitored || this.#biasDebtPending()) await this.#armScheduler();
+      if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
     });
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
@@ -1168,6 +1139,7 @@ export class Store extends DurableObject {
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
+    observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before the run log folds into them below */
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
     progressionsOf(this.ctx).migrate();   /* progressions' tables and REC-184's column (R29) */
 
@@ -3349,9 +3321,9 @@ export class Store extends DurableObject {
          since the last complete sweep (`#biasDebtPending`, one small read), so an instance whose lens has not
          changed holds no alarm for it. The lens-changing doors (`promote`, `biasadopt`) arm it. */
       { name: "bias-debt",
-        due:  (now) => this.#biasDebtPending() ? now : null,
-        wake: (now) => this.#biasDebtPending() ? now + this.#biasDebtDelayMs() : null,
-        tick: (now) => this.#biasDebtSweep(now).then((b) => ({ biasdebt: b })) },
+        due:  (now) => biasOf(this.ctx).biasDebtDue(now),
+        wake: (now) => biasOf(this.ctx).biasDebtWake(now),
+        tick: (now) => biasOf(this.ctx).biasDebtSweep(now).then((b) => ({ biasdebt: b })) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -16757,71 +16729,6 @@ export class Store extends DurableObject {
                          + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` };
         /* END DEC-49 REGION is-basis-acyclic */
       }
-
-      /* PL-12 / D-84: A MALFORMED BIAS SET NEVER LANDS, and it is refused by the
-         CATALOGUE'S OWN function rather than by a second implementation here —
-         the checkGatheringGrammar and checkInquiryBasis precedent exactly, and
-         for the same reason: two implementations of one rule is the drift this
-         repository has measured five times, and the malformedness rule is the
-         last rule in this system that should have two readings.
-         REFUSED AT THE WRITE, not only at the gate. A bias set that landed and
-         was refused later would sit in append-only history forever as a
-         statement the record holds and will not honour — and, worse, could be
-         adopted in the window before anybody ran a gate. Every finding comes
-         back with its C-number AND its canned translation (DEC-49), taken from
-         the one place they live.
-         The replay exemption is the gathering check's, for the gathering check's
-         reason: the record's own history must be holdable verbatim. */
-      /* D-526: the gate below asks the DOCUMENT's type (`promotedType`) as well as the envelope's: a UNION, D-505's
-         shape, so a bias document under another envelope meets BIAS_REFUSED as it would correctly labelled, and
-         nothing refused before is let through. */
-      /* DEC-49 REGION bias-set-refusal
-       *
-       * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
-       * terms as `basis-version-freeze` and `basis-version-resolve` above.
-       * Everything between this marker and its `END` is a DEC-49 GOVERNED SITE.
-       *
-       * WHY AN ENVELOPE REFUSAL STILL GETS A REGION, because this is the one row
-       * where the question was live and the answer should not have to be re-derived.
-       * PL-12 named `promote` deliberately and its reasoning was RIGHT — the code
-       * fires HERE rather than in `checkBiasExtension` with its ten siblings, and
-       * naming the site is what puts it inside the guard's governed set. **What was
-       * wrong was only the GRAIN.** Being an ENVELOPE is a fact about the refusal's
-       * SHAPE — it wraps per-finding codes — and says nothing whatever about its
-       * SPAN. `BIAS_REFUSED` fires at exactly one statement inside one `if`; it is
-       * not enforced across the other ~960 lines of `promote`, and claiming it was
-       * conscripted 34 unrelated refusals and turned `main`'s harness red a second
-       * time within hours of the first. **So "it is an envelope" is NOT a reason to
-       * name a whole function, and no future allocator should read it as one.**
-       *
-       * WHAT WOULD JUSTIFY THE WIDER SPELLING, stated so the exception is a real
-       * test rather than a closed door: a `where` may name a whole function when
-       * EVERY refusal that function makes is the family's business. That is true of
-       * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
-       * not true of `promote`, and it is unlikely ever to be true of any function
-       * that both validates and writes. */
-      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
-        const bf = [];
-        checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
-        const errs = bf.filter((x) => x.severity === "error");
-        if (errs.length) {
-          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
-          return { ok: false, reason: "BIAS_REFUSED",
-                   /* DEC-49, and VF-2's guard is why this line exists: the code
-                      on the ENVELOPE carries its own canned translation, not
-                      only the per-finding ones below. A surface keys on what the
-                      plane sent FIRST, and before this it was sent a bare word. */
-                   check: BIAS_CHECKS.BIAS_REFUSED.check,
-                   translation: BIAS_CHECKS.BIAS_REFUSED.translation,
-                   findings: errs.map((x) => {
-                     const hit = byNumber.get(x.check);
-                     return { check: x.check, detail: x.message,
-                              code: hit ? hit.code : null,
-                              translation: hit ? hit.row.translation : null };
-                   }) };
-        }
-      }
-      /* END DEC-49 REGION bias-set-refusal */
   }
 
   /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
@@ -17159,59 +17066,6 @@ export class Store extends DurableObject {
           }
         }
       }
-      /* REC-176: the bias-set refusal (PL-12 / D-84, `bias-set-refusal`) MOVED from here to BEFORE the first write
-         of this transaction, beside `is-promote-files`. Here it ran AFTER the manifest, history, files and bundles
-         writes, and a refusal returned inside `transactionSync` rolls nothing back, so a refused bias set LANDED
-         while the caller was told it was refused. It judges only `docFmW` and `basisMd`, computed before any write. */
-      /* PL-12 / D-84: bias_statements, projected WHOLE from the bias bundle's
-         own statements[] in this SAME transaction and by the same
-         delete-then-insert discipline as inquiry_basis above — a projection of
-         the document, never a second place to state it (D-21). The statements
-         were judged by the catalogue's checkBiasExtension before anything
-         landed, exactly as the legs were.
-
-         THE DELETE RUNS FOR EVERY TYPE and the insert only for `bias`, which is
-         the inquiry_basis line's own shape and is not symmetry for its own
-         sake: a document that CHANGES TYPE (a replay, a repair) must not leave
-         its old projection standing, and a delete guarded by the new type would
-         leave exactly that.
-
-         `ord` is the statement's position in statements[], which is what makes
-         a statement addressable the way a leg is — and an override names
-         `statement_id` rather than `ord`, because ord moves when a set is
-         re-ordered and an override that silently re-pointed would be safeguard
-         1 failing quietly. */
-      this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
-      /* D-510: the PROMOTED DOCUMENT's type, not the envelope's — a projection is a view of the bytes. */
-      if (promotedType === "bias") {
-        for (const r of Store.#biasStatementRows(bundleId, docFmW))
-          this.sql.exec(
-            `INSERT INTO bias_statements
-               (bundle_id,ord,statement_id,kind,subject,text,justification,citations,locked,nullifies)
-             VALUES (?,?,?,?,?,?,?,?,?,?)`,
-            r.bundle_id, r.ord, r.statement_id, r.kind, r.subject, r.text, r.justification,
-            r.citations, r.locked, r.nullifies);
-        /* REC-187 — BOB #31, `BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at
-           export": *"Promotion to `adopted` re-pins the adoption to the adopted bundle_sha."* The pin
-           op=biasadopt takes is the head AT THE ACT, and the act is taken while the set stands at
-           `proposed` — so the promotion to `adopted` minted a newer sha the pin never named, and the
-           manifest put a PROPOSED revision's sha beside a hash of whatever the projection held last:
-           one quantity under two names. Re-pinned HERE, in the transaction that mints the adopted
-           revision, so no read can see the adopted head with the old pin. Every adoption of this
-           bundle, instance and project alike: the revision adopted is a fact about the bundle, and
-           a scope still pinned to the proposed bytes would state a lens nobody adopted. DEC-54 (d)'s
-           source fields are copied from THE SAME BYTES, for the same reason — the pin is one revision,
-           never a sha from one and a provenance from another. The authored act (`author`, `at`) is
-           op=biasadopt's and is not rewritten: a promotion is attributed in the manifest table. */
-        if (promotedState === "adopted" && newSha) {   /* D-563: the state the row above was written with */
-          const pfm = docFmW || {};
-          const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
-          this.sql.exec(
-            `UPDATE bias_adoptions SET bundle_sha=?, source_url=?, retrieved=?, source_sha256=? WHERE bundle_id=?`,
-            newSha, str(pfm.policy_source), str(pfm.policy_retrieved),
-            str(pfm.policy_sha256) ? str(pfm.policy_sha256).toLowerCase() : null, bundleId);
-        }
-      }
       /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
          the action's own action_basis[] and correspondence[] in this SAME
          transaction and by the same delete-then-insert discipline as
@@ -17464,122 +17318,6 @@ export class Store extends DurableObject {
   }
 
 
-  /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
-   *  CONTENT-AXIS OBSERVATION AND NOT AS A COLUMN OF ITS OWN.
-   *
-   *  Section 4.3's words, and its reason is the one CLAUDE.md's sparse rule
-   *  gives: *not extracted*, *extracted but over the bound* and *extracted and
-   *  indexed* must be ONE VOCABULARY IN ONE PLACE, or a member reading an empty
-   *  answer cannot tell which absence is true. So this goes through REC-93's ONE
-   *  append site, in the same transaction as the units it describes.
-   *
-   *  `authority_kind = derive` AND THAT IS LOAD-BEARING RATHER THAN A LABEL.
-   *  `#observeExtraction` writes under `extract`; indexing is a DERIVATION over
-   *  what extraction produced, and they are two different looks at one subject.
-   *  Keeping them apart BY AUTHORITY is what lets `contentAxis` go on reading
-   *  *what extraction established* and *what the index holds* as two facts --
-   *  the invariant that method already states in its own words, and which one
-   *  shared row would have collapsed on this item's first day.
-   *
-   *  NO NEW CONDITION WORD IS COINED. `queuestate.mjs`'s vocabulary is closed
-   *  and names nothing for *over the index bound* or *no unit arm for this
-   *  container*, and widening a write's vocabulary from inside this item would
-   *  be one item's blast radius becoming another's. The fact travels in `bound`
-   *  -- the column whose whole job is *which bound stopped it* -- and in
-   *  `detail`.
-   *
-   *  THE FOUR STATES, each the honest one rather than the convenient one:
-   *
-   *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
-   *   - indexed to the bound      -> `partial`, `bound` naming the figure
-   *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
-   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
-   *     and this record simply cannot address a passage of it yet, so *we looked
-   *     and there is nothing* would be a FALSE ABSENCE at the one level the
-   *     four-level search exists to keep honest.
-   *   - no text at all            -> `LOOKED_ABSENT`, and the REASON is already
-   *     on the extraction row beside it rather than restated here.
-   *
-   *  `result_kind: "reading"` / `result_ref: <capture_sha>` is the SAME referent
-   *  `#observeExtraction`'s own rows carry, and it is that rather than
-   *  `"content"` on purpose: C-22.10 requires a `PRESENT` row to point at what
-   *  it produced, the units are fetched by `capture_sha`, and `"content"` would
-   *  invite a reader to look up a content row that was deliberately NOT minted
-   *  (section 4.5 -- searching mints nothing, and neither does indexing). */
-  #observeIndexed(bundleId, captureSha, result, { author = null, hadText = false,
-                                                  unitArm = true, armReason = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    const r = result || { written: 0, bytes: 0, truncated: 0, over_bound: 0,
-                          unaddressable: 0, offered: 0 };
-    let state, bound = null, detail;
-    if (!hadText) {
-      state = "LOOKED_ABSENT";
-      detail = "no text was extracted from this capture, so there is nothing to index. "
-             + "WHY there is no text is on this capture's extraction observation, "
-             + "not on this one";
-    } else if (!unitArm) {
-      state = "LOOKED_INDETERMINATE";
-      bound = armReason || "this container has no indexing unit arm";
-      detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
-             + "That is not an absence of text and must not be read as one";
-    } else if (r.over_bound > 0) {
-      state = "partial";
-      /* REC-111 -- THE SENTENCE NAMES THE UNIT BOUND AND THE BYTE BOUND, AND IT
-         SAYS WHICH ONE BIT WHEN IT CAN TELL. A `partial` that named only one of
-         two possible causes is a failure a reader cannot act on: *this document
-         is too big* and *this document has too many pieces* want different
-         answers from a member, and the second is the one nothing could say until
-         this item. The discriminator is the unit count itself -- if the table
-         holds exactly the unit bound, the unit bound is what stopped it, because
-         the byte bound cannot stop a promote at a round number by coincidence.
-         When both could have bitten, BOTH are named rather than one guessed. */
-      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
-      bound = (byUnits
-                ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's "
-                + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
-                + "ROWS, not only bytes, and this capture offered more pieces than a promote "
-                + "may spend its CPU window on"
-                : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)")
-            + " or the acquire answer's own budget, whichever bit first -- the last is "
-            + "the smaller in bytes and is what the promote path's inline-file limit forces";
-      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
-             + `${r.over_bound} unit(s) past the bound are NOT indexed`;
-    } else if (r.written > 0) {
-      state = "PRESENT";
-      detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
-    } else {
-      /* TEXT WAS EXTRACTED, A UNIT ARM EXISTS, AND NOT ONE UNIT CAME BACK. That
-         is neither `full` nor `partial`, and it is not the no-arm case either --
-         it is a producer that answered with an empty list. Calling it `PRESENT`
-         over zero units is the headline failure this project has measured three
-         times: a totality assertion passing over an empty corpus. */
-      state = "LOOKED_ABSENT";
-      detail = "this container has an indexing unit arm and produced no unit carrying text "
-             + "(M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record "
-             + "holds no addressable passage of it";
-    }
-    if (r.truncated > 0)
-      detail += `; ${r.truncated} unit(s) stored to the per-unit cap and flagged truncated`;
-    if (r.unaddressable > 0)
-      detail += `; ${r.unaddressable} unit(s) offered an address this record could not index `
-             +  "separately (an unnamed or duplicate extent) and are NOT indexed";
-    return this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      authority: bundleId == null ? null : String(bundleId),
-      level: "content", subjectKind: "capture", subject: captureSha,
-      state, bound,
-      resultKind: state === "PRESENT" || state === "partial" ? "reading" : null,
-      resultRef: state === "PRESENT" || state === "partial" ? captureSha : null,
-      detail,
-    });
-  }
-  /*__REC91_WRITER_END__*/
 
   /* CPDF-10 / K73 (1): a member's attestation of a capture's text, and the attestations over a capture: content's. */
   attestText(...a) { return contentOf(this.ctx).attestText(...a); }
@@ -17941,7 +17679,7 @@ export class Store extends DurableObject {
   #testimonyWithin(bid, pkg) {
     const indexed = extractionOf(this.ctx).indexUnits(bid, pkg[TESTIMONY_PATH].captureSha,
       [{ extent: { kind: "document" }, text: pkg[TESTIMONY_PATH].words, seq: 0 }], null);
-    this.#observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
+    observationLogOf(this.ctx).observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
     const m = this.mintContent({ bundleId: bid, captureSha: pkg[TESTIMONY_PATH].captureSha, extent: { kind: "document" },
                                  mintedBy: pkg[TESTIMONY_PATH].author, at: pkg[TESTIMONY_PATH].recordedAt });
     if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
@@ -17958,357 +17696,17 @@ export class Store extends DurableObject {
   transcriptionAttest(...a) { return contentOf(this.ctx).transcriptionAttest(...a); }
   transcriptionRead(...a) { return contentOf(this.ctx).transcriptionRead(...a); }
 
-  /* ====================================================================== *
-   * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5).
-   * ====================================================================== *
-   *
-   * *"I was told the contract was amended; look at the Clerk's March agenda."*
-   * The same member knowledge as an observation, BEFORE the search. Three acts:
-   *
-   *   op=lead      a member AUTHORS a lead — a row in `leads`, and NOTHING in
-   *                `observation_log`: nobody has looked yet, and NEVER_LOOKED is
-   *                never stored (OBSERVATION-LOG-DESIGN.md §3). The row-level
-   *                reading of MK-4's accepts-when ("writes its row and an
-   *                observation_log entry") would force a look nobody made into
-   *                the log, so the entry is written by the act that IS the look.
-   *   op=leadlook  FOLLOWING it: one row of `observation_log` with
-   *                `authority_kind = 'lead'`, `authority = <lead_id>`, level
-   *                `internet`, subject kind `description` and the member's words
-   *                as the subject — §4.5's row exactly, through REC-93's ONE
-   *                append site (`#observe`), which this neither duplicates nor
-   *                modifies. So every C-22 refusal applies to the look as it is:
-   *                a PRESENT that names nothing is C-22.10, not a lead rule.
-   *   op=leadread  the lead and every look recorded against it.
-   *
-   * A LEAD IS NEVER EVIDENCE, and that is held in two places on purpose: the id
-   * shape (`LEAD-…`) is not a bundle id or a content id, so no leg grammar can
-   * accept one; and C-54.1 (`leadLegFindings`) refuses one BY NAME at every leg
-   * grammar. Nothing here mints a bundle or a content row.
-   *
-   * WHY A LEAD'S LOOKS CANNOT FALL INTO THE RUN-ROLLUP RULES. `#aiRunSearchState`
-   * reads `authority_kind = 'run'` only; C-22.10's `observation` arm fires only on
-   * `result_kind = 'observation'`, which this act refuses (C-54.7 admits capture
-   * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
-   * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
-   *
-   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
-   * provisional (author plus ANY unfiltered machine credential): the author; a
-   * project's participants once the author SHARES it there (`op=leadshare`); a
-   * machine credential only within a member's minted scope; nobody else, and
-   * everybody else answered exactly as for a lead that does not exist. See
-   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
-   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
-   * reads the internet level. */
-  static #leadRefusal(code, detail, extra) {
-    const row = LEAD_CHECKS[code];
-    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-             detail, ...(extra || {}) };
-  }
-
-  /** WHICH LEAD, and may this viewer read it. The one visibility decision for
-   *  all three acts, so the act, the look and the read cannot disagree. */
-  #leadFor(id, viewer, identity = null) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const lid = typeof id === "string" ? id.trim() : "";
-    const row = lid ? this.#one(
-      `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`, lid) : null;
-    const sees = !!row && this.#leadVisibleTo(row, viewer, identity);
-    /* DEC-49 REGION is-lead-source */
-    if (!sees)
-      return refusal("LEAD_NOT_FOUND",
-        lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record`
-            : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
-    /* END DEC-49 REGION is-lead-source */
-    return { ok: true, row };
-  }
-
-  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
-   *  positive arms and nothing else:
-   *
-   *    1. the AUTHOR;
-   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
-   *       authored dated act) — joined or leaving, the two states Membership
-   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
-   *       does not reach a lead;
-   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
-   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
-   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
-   *       answers arms 1 and 2 exactly as its member would, and no further. A
-   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
-   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
-   *       null` and it reaches NOTHING here. That is the correction of MK-4's
-   *       provisional, which let an unfiltered machine read every lead.
-   *
-   *  Everyone else is answered by the caller exactly as for a lead that does not
-   *  exist. Participation is read from `project_participants` directly and NOT
-   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
-   *  every administrator read every shared lead — the ruling names participants.
-   *
-   *  REC-129 / IC-143 — THE RULE IS NOW SPELLED ONCE, IN `#leadReach`, AND THIS
-   *  METHOD ASKS IT OF ONE LEAD. The frontier's internet level has to apply the
-   *  SAME rule to a whole level at once and INSIDE the statement — it groups the
-   *  latest look per subject over the looks this viewer may read, and gating after
-   *  the grouping would let a hidden look change which row a viewer sees (an
-   *  existence signal). A second spelling of the rule in SQL beside this JS one
-   *  would be the mirror-and-drift class in the one place it would leak, so both
-   *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
-   *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
-  #leadVisibleTo(row, viewer, identity = null) {
-    const reach = this.#leadReach(viewer, identity);
-    if (!reach) return false;
-    return !!this.#one(
-      `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
-      row.lead_id, ...reach.args);
-  }
-
-  /** REC-129 — BOB #14's LEAD-VISIBILITY RULING AS ONE SQL PREDICATE over a
-   *  `leads` row aliased `l`, or `null` when this viewer reaches NO lead at all.
-   *  The two positive arms — the AUTHOR; a JOINED (or leaving) participant of a
-   *  project the author SHARED it to — and nothing else. The third arm (a
-   *  machine credential only within a member's minted scope) is satisfied by the
-   *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
-   *  member, and a `class:*` credential carries `member: null` and reaches
-   *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
-  #leadReach(viewer, identity = null) {
-    /* REC-132 / D-422: THE RULING NAMES AUTHORS AND PARTICIPANTS, SO IT ASKS WHO THE
-       CALLER IS, NEVER WHAT IT MAY SEE. The founder's session sees as an administrator
-       (the bare `admin` viewer, which carries no member and would reach NOTHING here)
-       and is the author of its own leads by position — so the member this reads is the
-       POSITIONAL identity the control plane stamps beside the viewer. Nothing about the
-       administrator arm reaches this predicate, for the founder or anybody else. */
-    const who = this.#positionalMember(viewer, identity);
-    if (who == null) return null;
-    return {
-      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
-              ON pp.project_id = s.bundle_id
-             WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
-      args: [who, who],
-    };
-  }
+  /* MK-4 / IC-135 / IC-136 / D-681 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5): observation-log's (R14–R21).
+     These delegate, so the object's RPC callers and the frontier's internet arm reach the one instance on this ctx. */
+  lead(...a) { return observationLogOf(this.ctx).lead(...a); }
+  leadShare(...a) { return observationLogOf(this.ctx).leadShare(...a); }
+  leadLook(...a) { return observationLogOf(this.ctx).leadLook(...a); }
+  leadRead(...a) { return observationLogOf(this.ctx).leadRead(...a); }
+  leadList(...a) { return observationLogOf(this.ctx).leadList(...a); }
+  #leadReach(...a) { return observationLogOf(this.ctx).leadReach(...a); }
+  #leadReferentVisible(...a) { return observationLogOf(this.ctx).referentVisible(...a); }
 
   #positionalMember(...a) { return membershipOf(this.ctx).positionalMember(...a); }
-
-  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
-   *  never rewritten. `sharer` is the control plane's stamp. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof sharer === "string" ? sharer.trim() : "";
-    const pid = typeof project === "string" ? project.trim() : "";
-    const src = this.#leadFor(lead, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    const joined = who && pid ? this.#one(
-      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
-        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
-          AND b.object_type = 'project' LIMIT 1`, pid, who) : null;
-    /* DEC-49 REGION is-lead-share */
-    if (who !== L.author)
-      return refusal("LEAD_SHARE_NOT_AUTHOR",
-        `${L.lead_id} was written by another member; only its author shares it. A machine credential `
-        + `is never the author (the author is a member id, stamped when the lead was written)`,
-        { lead: L.lead_id });
-    /* ONE ANSWER for a project that does not exist, one the author cannot see, and one they
-       have not joined — so the act is no oracle for which projects exist. */
-    if (!joined)
-      return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
-        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
-            : `pass project=<PROJ-…>: the project to share this lead to`,
-        { lead: L.lead_id, project: pid || null });
-    /* END DEC-49 REGION is-lead-share */
-    const at = stampInstant("second");
-    this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
-                  L.lead_id, pid, who, at);
-    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
-    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at,
-             already: r.at !== at, evidence: false,
-             says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
-                 + `looks against it. It is still never evidence` };
-  }
-
-  /** op=lead — THE ACT. `author` is the control plane's stamp and never the
-   *  caller's (§7: *an author field supplied by the caller rather than stamped*
-   *  is refused — here by never being read from the body at all). */
-  lead({ words = null, locator = null, author = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof author === "string" ? author.trim() : "";
-    const typed = typeof words === "string" ? words : "";
-    const where = typeof locator === "string" && locator.trim() ? locator : null;
-    const bytes = (s) => new TextEncoder().encode(s).length;
-    /* DEC-49 REGION is-lead-act */
-    if (!who || isMachineIdentity(who))
-      return refusal("LEAD_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has `
-              + `reason to believe, in their own name`
-            : `this call carries nobody. The plane stamps the author from the credential that asked`);
-    if (!typed.trim())
-      return refusal("LEAD_NO_WORDS",
-        `the lead is empty. Its words are what the member was told or suspects, as they write it`);
-    if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || (where && bytes(where) > CAPTURE_TEXT_UNIT_CAP))
-      return refusal("LEAD_TOO_LONG",
-        `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the `
-        + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
-        + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
-    /* END DEC-49 REGION is-lead-act */
-    const at = stampInstant("second");
-    /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix `BUNDLE_ID_RE` does
-       not admit, so the id reads as a record id to a person and as nothing
-       citable to every leg grammar. */
-    const leadId = `LEAD-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
-    this.sql.exec(`INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
-                  leadId, who, typed, where, at);
-    return { ok: true, lead_id: leadId, author: who, words: typed, locator: where, at,
-             evidence: false, looks: 0, state: "NEVER_LOOKED",
-             says: `${who}'s lead is recorded. It is somewhere to look and never evidence: no leg can `
-                 + `rest on it. Following it is recorded with op=leadlook, and a look that finds `
-                 + `nothing is itself a finding with this lead behind it` };
-  }
-
-  /** op=leadlook — FOLLOWING A LEAD, recorded as §4.5's row. */
-  leadLook({ lead = null, state = null, resultKind = null, resultRef = null, condition = null,
-             detail = null, looker = null, viewer = null, identity = null } = {}) {
-    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
-    const who = typeof looker === "string" ? looker.trim() : "";
-    const st = typeof state === "string" ? state.trim() : "";
-    const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
-    const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
-    const note = typeof detail === "string" && detail.trim() ? detail : null;
-    /* DEC-49 REGION is-lead-look */
-    if (!who || isMachineIdentity(who))
-      return refusal("LEAD_LOOK_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its `
-              + `own run (authority_kind run), never under a member's lead`
-            : `this call carries nobody. The plane stamps who looked from the credential that asked`);
-    const src = this.#leadFor(lead, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    if (!Store.LEAD_LOOK_OUTCOMES.includes(st))
-      return refusal("LEAD_LOOK_STATE",
-        st === "NEVER_LOOKED"
-          ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all `
-            + `(OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of `
-            + `${Store.LEAD_LOOK_OUTCOMES.join(", ")}`
-          : `'${st.slice(0, 40) || "(absent)"}' is not one of ${Store.LEAD_LOOK_OUTCOMES.join(", ")}`,
-        { lead: L.lead_id });
-    if ((rk || rr) && !(rk && rr))
-      return refusal("LEAD_LOOK_REFERENT",
-        `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without `
-        + `the other names nothing`, { lead: L.lead_id });
-    if (rk && st !== "PRESENT" && st !== "partial")
-      return refusal("LEAD_LOOK_REFERENT",
-        `a look recorded as ${st} found nothing, so it cannot point at something it found`,
-        { lead: L.lead_id });
-    if (rk && rk !== "capture" && rk !== "content")
-      return refusal("LEAD_LOOK_REFERENT",
-        `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation `
-        + `referent is a rollup's (REC-100), and a member's look is never a rollup`,
-        { lead: L.lead_id });
-    if (rk && !this.#leadReferentVisible(rk, rr, viewer))
-      return refusal("LEAD_LOOK_REFERENT",
-        `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the `
-        + `look found first, then record the look against it`, { lead: L.lead_id });
-    /* END DEC-49 REGION is-lead-look */
-    /* C-54.4, whose region is the act's (`is-lead-act`): the same rule — refused, never cut —
-       applied to the look's own words, and relayed here rather than given a second region. */
-    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
-      return refusal("LEAD_TOO_LONG",
-        `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
-        { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP });
-    const bad = this.#observe({
-      actorClass: "member", actor: who,
-      authorityKind: "lead", authority: L.lead_id,
-      level: "internet", subjectKind: "description", subject: L.words,
-      state: st, condition, resultKind: rk, resultRef: rr, detail: note,
-    });
-    if (bad) return { ...bad, lead: L.lead_id };
-    const row = this.#one(
-      `SELECT seq, at FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq DESC LIMIT 1`, L.lead_id);
-    return { ok: true, lead_id: L.lead_id, seq: row ? row.seq : null, at: row ? row.at : null,
-             level: "internet", state: st, looked_by: who, result_kind: rk, result_ref: rr,
-             evidence: false,
-             says: st === "LOOKED_ABSENT"
-               ? `recorded: ${who} followed this lead and it is not there. That absence has a name and `
-                 + `a lead behind it, which is what makes it a finding rather than silence`
-               : `recorded: ${who} followed this lead (${st}). The lead is still not evidence; `
-                 + `${rk ? `the ${rk} the look found is what a leg can cite` : "nothing it found is citable through it"}` };
-  }
-
-  /* The states a look can STORE: `NEVER_LOOKED` is never one (§3). Declared BELOW
-     its method on REC-116's finding (`bounds.test.mjs`): a class constant belongs
-     to the member it serves, and the segment walker reads it that way. NAMED
-     `_OUTCOMES` AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads
-     every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
-     observation states (D-129) — the first draft was caught there by name. */
-  static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
-
-  /** Does a look's referent name something this viewer can read? One read per
-   *  kind, gated through `#viewerSees` — never a second gate. */
-  #leadReferentVisible(kind, ref, viewer) {
-    const r = kind === "capture"
-      ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, ref)
-      : this.#one(`SELECT bundle_id FROM content WHERE content_id = ? LIMIT 1`, ref);
-    return !!r && this.#viewerSees(r.bundle_id, viewer);
-  }
-
-  /** op=leadread — the lead and its looks, bounded, the bound published. */
-  leadRead({ id = null, limit = null, viewer = null, identity = null } = {}) {
-    const src = this.#leadFor(id, viewer, identity);
-    if (!src.ok) return src;
-    const L = src.row;
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_READ_LIMIT_DEFAULT),
-                                     Store.LEAD_READ_LIMIT_MAX));
-    const rows = this.#rows(
-      `SELECT seq, at, actor, authority_kind, authority, level, subject_kind, state, condition,
-              result_kind, result_ref, detail
-         FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq LIMIT ?`, L.lead_id, cap + 1);
-    const page = rows.slice(0, cap);
-    const looks = page.map((r) => {
-      /* A referent this viewer can no longer read is NOT published; the row is. */
-      const visible = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);
-      return { seq: r.seq, at: r.at, looked_by: r.actor, authority_kind: r.authority_kind,
-               authority: r.authority, level: r.level, subject_kind: r.subject_kind, state: r.state,
-               condition: r.condition, detail: r.detail,
-               result_kind: visible ? r.result_kind : null, result_ref: visible ? r.result_ref : null,
-               coverage: observationCoverage({ state: r.state, resultRef: r.result_ref }) };
-    });
-    /* WHERE IT IS SHARED, as far as this viewer may know: the author sees every
-       share; a participant sees only the projects they are joined to, so the read
-       is no oracle for which OTHER projects a member works in. */
-    const me = this.#positionalMember(viewer, identity);
-    const sharesRaw = this.#rows(
-      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
-        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
-          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
-        ORDER BY s.at, s.bundle_id LIMIT ?`, L.lead_id, me === L.author ? 1 : 0, me ?? "", cap + 1);
-    /* BOUNDED by the read's own `limit`, and the cut is published: a lead shared to more projects than
-       the page holds says so rather than reading as shared nowhere else. */
-    const shared_to = sharesRaw.slice(0, cap);
-    const last = this.#one(
-      `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
-        ORDER BY seq DESC LIMIT 1`, L.lead_id);
-    const latest = last ? last.state : null;
-    return {
-      ok: true, lead_id: L.lead_id, author: L.author, words: L.words, locator: L.locator, at: L.at,
-      evidence: false, shared_to, shared_to_truncated: sharesRaw.length > cap,
-      limit: cap, truncated: rows.length > cap, looks,
-      /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
-         assumed: a lead and its looks are written by this plane after the log
-         existed, and only the whole-store purge deletes either — which deletes
-         BOTH — so a lead standing with no look has had nobody look. Neither the
-         pre-log cause nor the purged cause is reachable for it. */
-      state: latest || "NEVER_LOOKED",
-      says: !looks.length
-        ? `nobody has followed this lead yet. That is established rather than inferred: the lead and `
-          + `any look at it are cleared only together, by a whole-store purge`
-        : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the `
-          + `latest found ${latest}. The lead itself is never evidence`,
-    };
-  }
-  /* op=leadread's bound, BELOW its method for the reason above. `op=frontier`'s
-     200/2000 pair, and for its reason: the population is looks at ONE subject. */
-  static LEAD_READ_LIMIT_DEFAULT = 200;
-  static LEAD_READ_LIMIT_MAX = 2000;
 
   /* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut,
      published beside the answer — never a claim that no more exist. */
@@ -18902,17 +18300,6 @@ export class Store extends DurableObject {
     const r = entitiesOf(this.ctx).testify(body);
     if (r.ok && !r.kept) await this.#armConnectionDerive();
     return r;
-  }
-
-  /* connections R5: an entity's derivation statement, from the observation log, until observation-log registers it. */
-  #connectionDerivationOf(entityId) {
-    const obs = this.#one(
-      `SELECT at, state, detail FROM observation_log
-        WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
-        ORDER BY seq DESC LIMIT 1`, entityId);
-    if (obs) return derivationStatement(obs);
-    const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
-    return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
   }
 
   defineProgression(...a) { return progressionsOf(this.ctx).defineProgression(...a); }
@@ -27426,36 +26813,18 @@ export class Store extends DurableObject {
   /* ------------------------------------------------------------------ *
    * Links: what a document pointed at, and whether we hold that version.
    * The plane's own acquisition receipts and the version chain are provenance's (R13–R18, R47); the receipt's
-   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's work, registered here
-   * as provenance's receipt listener until that module is extracted (the constructor).
+   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's (R5), its receipt
+   * listener.
    * ------------------------------------------------------------------ */
   recordCapturedLocator({ authorityKind = null, authority = null, actorClass = "plane", actor = null, observe = true,
                           ...receipt } = {}) {
     const r = provenanceOf(this.ctx).recordReceipt({ ...receipt,
       context: { authorityKind, authority, actorClass, actor, observe } });
     if (!r.recorded) return r;
-    const look = (r.listeners || []).find((l) => l.module === "legacy-store");
+    const look = (r.listeners || []).find((l) => l.module === OBSERVATION_LOG_MODULE);
     return { recorded: true, address_norm: r.address_norm, via: r.via, observation: r.observation,
              observation_written: !!(look && look.answer && look.answer.written === true),
              observation_refused: look && look.outcome === "refused" ? look.answer : null };
-  }
-  /* REC-93 (OBSERVATION-LOG-DESIGN.md §4.1): the document-level look a receipt is, `subject_kind = address`, `via` in
-     `detail`, so an archive capture and a direct capture of one address are two observations of one subject. §7'S
-     EDGE-TRIGGERED RULE: `unchanged` writes NO ROW (the receipt's counter is the record of it); `new` and `changed`
-     each write one. The archive fallback and a direct acquire are DIFFERENT AUTHORITIES for the same subject; a
-     caller that named its own authority (the sweep does) keeps it, and one that writes its own look (`observe:
-     false`) gets none here. Answers what happened: `{written}`, or the refusal that stopped the append. */
-  #receiptLook({ address_norm, capture_sha, via, retrieved, observation, context }) {
-    const c = context || {};
-    if (observation === "unchanged" || c.observe === false) return { written: false };
-    const refused = this.#observe({
-      actorClass: c.actorClass || "plane", actor: c.actor ?? null,
-      authorityKind: c.authorityKind || (via === "direct" ? "acquire" : "link"), authority: c.authority ?? null,
-      level: "document", subjectKind: "address", subject: address_norm,
-      state: "PRESENT", resultKind: "capture", resultRef: capture_sha,
-      detail: `${observation} (via ${via})`,
-    }, retrieved);
-    return refused ? { ...refused, ok: false } : { written: true };
   }
   capturedLocators(...a) { return provenanceOf(this.ctx).receipts(...a); }
   versionChain(...a) { return provenanceOf(this.ctx).versionChain(...a); }
@@ -31562,20 +30931,8 @@ export class Store extends DurableObject {
 
   static #aiIso(ms) { return stampInstant("second", ms); }
 
-  /* ==================================================================== *
-   * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
-   *
-   * `OBSERVATION-LOG-DESIGN.md` §3 and §4. Everything that looks at anything
-   * writes HERE, and the design's four refusals are a fence rather than a
-   * promise precisely because there is no second door. That is not tidiness:
-   * C-22.6 (the log may never be filed into a bundle) is only enforceable if
-   * one function does the inserting, and REC-94, REC-95 and REC-96 are three
-   * more writers arriving into this same function on purpose.
-   *
-   * THE APPEND IS THE ONLY WRITE. There is no UPDATE and no DELETE anywhere in
-   * this file for `observations` except the whole-store purge — §3's first rule,
-   * "a log that can be rewritten is not evidence of anything".
-   * ==================================================================== */
+  /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
+   * file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
 
   /** WHOSE LOOK IS THIS? §4.1 rows 1 and 2, decided ONCE rather than at each of
    *  the drain's three exits.
@@ -31598,287 +30955,18 @@ export class Store extends DurableObject {
           actorClass: "plane" };
   }
 
-  /** APPEND ONE OBSERVATION. The single write site for `observations`.
-   *
-   *  Returns the refusal object on refusal and null on success, so callers can
-   *  collect refusals per entry and still write the rest — §14b.7's partial
-   *  results survive, applied to the log itself, and REC-93 keeps that property
-   *  because `op=airuntick` is built on it.
-   *
-   *  EVERY REFUSAL IS READ OUT OF THE MAP AND NONE IS TYPED HERE. `checkObservation`
-   *  in `airun.mjs` is pure and holds the whole judgement; this method's only job
-   *  is to put a judged row in. A C-number spelled at this site would be a second
-   *  copy of a rule, which is C-5's finding and the reason `checkCondition`
-   *  collapsed to one implementation in the first place. */
-  #observe({ actorClass = "plane", actor = null, authorityKind = null, authority = null,
-             level = "document", subjectKind = "unstated", subject = null,
-             state, governed = false, condition = null, bound = null,
-             resultKind = null, resultRef = null, detail = null, bundle = null } = {},
-           at = null, terminal = 0) {
-    /* The entry is handed to the pure checker in the SHAPE THE TABLE STORES —
-       snake_case, the column names — so that what was judged and what is written
-       are the same object and cannot drift into two spellings of one row. */
-    const entry = {
-      actor_class: actorClass, actor,
-      authority_kind: authorityKind, authority,
-      level, subject_kind: subjectKind, subject,
-      state, governed: governed === true, condition, bound,
-      result_kind: resultKind, result_ref: resultRef, detail, bundle,
-    };
-    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
-    if (bad) return bad;
-    const now = at || stampInstant("second");
-    /* `seq` is assigned by SQLite as the rowid, which is store-wide and
-       monotonic — §3's requirement. It is not reused, because nothing deletes a
-       row: the only DELETE is the whole-store purge, after which the table is
-       empty and a reused number can collide with nothing. */
-    this.sql.exec(
-      `INSERT INTO observation_log
-         (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-          state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      now,
-      String(entry.actor_class),
-      entry.actor == null ? null : String(entry.actor),
-      String(entry.authority_kind),
-      entry.authority == null ? null : String(entry.authority),
-      String(entry.level || "document"),
-      String(entry.subject_kind || "unstated"),
-      entry.subject == null ? null : String(entry.subject),
-      String(entry.state),
-      entry.governed === true ? 1 : 0,
-      entry.condition == null || entry.condition === "" ? null : String(entry.condition),
-      entry.bound == null || entry.bound === "" ? null : String(entry.bound),
-      terminal ? 1 : 0,
-      entry.result_kind == null || entry.result_kind === "" ? null : String(entry.result_kind),
-      entry.result_ref == null || entry.result_ref === "" ? null : String(entry.result_ref),
-      entry.detail == null ? null : String(entry.detail));
-    return null;
-  }
+  #observe(...a) { return observationLogOf(this.ctx).observe(...a); }
 
-  /** REC-100 / IC-130 — RESOLVE AN `observation` REFERENT FOR THE CHECKER, and
-   *  decide nothing. `checkObservation` in `airun.mjs` is pure and holds the
-   *  whole judgement (`observationReferentFault`); this reads the one row the
-   *  referent names plus the `seq` the new row will take, so the checker can say
-   *  which of the four faults it is. Any other `result_kind` resolves nothing
-   *  and costs no read. A referent that is not a positive integer is answered
-   *  `found: false` WITHOUT a query — it cannot name a row. */
-  #observationReferent(entry) {
-    if (!entry || entry.result_kind !== "observation") return null;
-    const ref = entry.result_ref == null ? "" : String(entry.result_ref);
-    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
-    const next_seq = (top && top.m != null ? Number(top.m) : 0) + 1;
-    if (!/^[1-9][0-9]*$/.test(ref)) return { found: false, seq: null, next_seq };
-    const row = this.#one(
-      `SELECT seq, authority_kind, authority, state FROM observation_log WHERE seq = ?`, Number(ref));
-    return row ? { found: true, seq: String(row.seq), next_seq, authority_kind: row.authority_kind,
-                   authority: row.authority, state: row.state }
-               : { found: false, seq: null, next_seq };
-  }
-
-  /** REC-94 / IC-95 — THE CONTENT-LEVEL WRITER. `OBSERVATION-LOG-DESIGN.md`
-   *  section 4.2, and section 8's row 2.
-   *
-   *  ONE ROW PER EXTRACTION ATTEMPT PER CAPTURE PER TIER, THROUGH REC-93'S ONE
-   *  APPEND SITE, WHICH THIS METHOD DOES NOT DUPLICATE AND DOES NOT MODIFY.
-   *  `#observe` is the single writer for `observation_log` and every refusal it
-   *  applies is read out of the map; this method's whole job is to turn a
-   *  persisted reading into the entries the design's table names, and even THAT
-   *  judgement is not made here — `contentObservationsFor` in `airun.mjs` is
-   *  pure and holds it, so a suite can hold the decision to this store's
-   *  behaviour without workerd. Nothing below types a C-number.
-   *
-   *  THE AUTHORITY IS THE BUNDLE, AND THE SUBJECT IS THE CAPTURE. Those are two
-   *  different facts and the design's indexes make each a read: `(level,
-   *  subject_kind, subject, seq)` answers *what has this document's text been
-   *  through*, and `(authority_kind, authority, seq)` answers *what did this
-   *  promotion extract*. The authority is never the capture, which would make
-   *  the two columns one fact written twice.
-   *
-   *  WHO LOOKED, DERIVED AND NEVER GUESSED. `contentMintState` is the record's
-   *  existing predicate for reading a principal as member / machine / the plane
-   *  and it is CONSUMED rather than copied — a second opinion about what a
-   *  machine identity looks like is the eleven-copies-of-one-predicate failure
-   *  REC-46 measured. A promotion with no author is the plane's own, which is
-   *  what `actor_class = plane` means and why `actor` is then NULL: attributing
-   *  a look to a member who did not make it is a false attribution in the one
-   *  field that says who looked.
-   *
-   *  THIS IS ALSO THE DOOR A READ-TIME RE-EXTRACTION COMES THROUGH (D-319,
-   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). CORRECTED 2026-09-18 by CPDF-19,
-   *  which built that seam: this sentence read *"does not exist on this tree"*,
-   *  true when REC-94 wrote it and false from `op=pdfstructure&ocr=1` onward — the
-   *  store's `reextract` path hands the re-read to `#writeOneReading`, which calls
-   *  THIS method, so the prediction below held with no change here. What section
-   *  5.1 requires of the WRITER is here and driven: a new
-   *  chain arriving for a capture that already has rows writes a NEW row under
-   *  `authority_kind = extract` with the member who asked as `actor`, which is
-   *  exactly what a re-promotion with a moved chain does today. `reextraction`
-   *  is therefore DERIVED from the store — has this capture been extracted
-   *  before — and not passed in by a caller, so the second row says so whether
-   *  or not the caller thought to mention it. */
-  #observeExtraction(bundleId, captureSha, reading, { author = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    /* DERIVED, NOT DECLARED: one bounded indexed read on the frontier key. A
-       capture that already has a content-level row has been extracted before, so
-       this attempt is a RE-extraction, and the log says which without anybody
-       having to remember to say it. */
-    /* REC-91 — `AND authority_kind = 'extract'`, AND THIS WAS A REAL DEFECT
-       CAUGHT BY THIS SUITE'S OWN C1b ARM rather than a precaution. The question
-       is *has this capture been EXTRACTED before*, and until REC-91 the content
-       level held one kind of row per capture, so any row WAS an extraction and
-       the unqualified read answered it correctly. REC-91 writes a second kind —
-       the index's `derive` row — in the same transaction, so on the very first
-       promotion of a document the index row was already present when this ran
-       and every FIRST extraction began reporting itself as a RE-extraction.
-       A false `re-extraction` is not cosmetic: it says the record looked at this
-       document before and is looking again, which is a claim about the history
-       of a document nobody had ever read. The narrowing is what the sentence
-       always meant. */
-    const before = this.#one(
-      `SELECT seq FROM observation_log
-        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
-          AND authority_kind = 'extract'
-        ORDER BY seq DESC LIMIT 1`, captureSha);
-    const { rows, unclassified } = contentObservationsFor(reading, captureSha, tiersEvidenced);
-    const written = [], refused = [];
-    for (const r of rows) {
-      const bad = this.#observe({
-        actorClass, actor,
-        authorityKind: "extract",
-        authority: bundleId == null ? null : String(bundleId),
-        level: "content",
-        subjectKind: "capture",
-        subject: captureSha,
-        state: r.state,
-        condition: r.condition,
-        resultKind: r.resultKind,
-        resultRef: r.resultRef,
-        detail: (before ? "re-extraction; " : "first extraction; ") + r.detail,
-      });
-      if (bad) refused.push(bad); else written.push(r.state);
-    }
-    /* A STEP KIND NOBODY CLASSIFIED IS NAMED, NEVER SCORED ZERO. If a sixth
-       chain step arrives without declaring whether it is an extraction tier, the
-       tier it contributed is invisible to every row above — so it is carried out
-       of here and stated, rather than the answer quietly being one row short.
-       WORKER.md's rule: a thing the matcher does not understand must be NAMED. */
-    return { written: written.length, states: written, refused,
-             reextraction: !!before, unclassified };
-  }
-
-  /** REC-94 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
-   *  CONTENT-LEVEL ROW, taken IN ORDER and never concluded from the first.
-   *
-   *  BOB #11's CORRECTION OF 2026-09-15 (`9954a9c`), applied at the content level.
-   *  **THE ATTRIBUTION MATTERS AND IS NOT A FORMALITY.** In this corpus `RULED by Bob`
-   *  means DOCTRINE no session may revisit; a session's own name means MECHANISM a later
-   *  session MAY revisit on evidence. `9954a9c` is the BOB #11 SESSION's commit, correcting
-   *  its own design's inference rule under Bob's standing delegation — mechanism, not
-   *  doctrine. A mechanism decision wearing doctrine's attribution becomes UNREVISABLE IN
-   *  PRACTICE: the next reader works around the rule instead of correcting it, which is the
-   *  more expensive direction. Corrected 2026-09-15 by CONDUCT #11 on BOB #11's own routing.
-   *  *A subject with no row has three possible causes and they are different
-   *  facts.* The document level's pre-log evidence is `captured_locators`; the
-   *  content level's is `readings`, which holds what a capture's extraction
-   *  produced and predates this log entirely.
-   *
-   *  (1) PRE-LOG, and it is the one cause with POSITIVE evidence rather than an
-   *      inability to exclude: a `readings` row for this capture says the text
-   *      WAS extracted and the look is recorded there. Every capture promoted
-   *      before this item's writer existed is in exactly that position, which is
-   *      why this is not a theoretical case — it is the whole existing corpus.
-   *  (2) PRE-LOG-OR-PURGED, which is an UNDETERMINED and not a finding: the
-   *      capture was registered before the earliest content-level row this log
-   *      holds, so either the writer did not exist yet or a whole-store purge
-   *      cleared the rows that described it (section 7). Those are different
-   *      facts and neither can be ruled out. A log with NO content-level rows at
-   *      all lands here too, because an empty table is equally the never-written
-   *      case and the purged one.
-   *  (3) NOBODY LOOKED — the log existed over this capture's whole lifetime and
-   *      was not purged since, AND the record holds nothing else about its text.
-   *      **This is the only cause that licenses a positive statement**, and
-   *      reaching it takes work: an absence that took no work to produce,
-   *      reported as a fact about the world, is the costs-nothing rule inverted.
-   *
-   *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
-   *  walk on the tally index; the `readings` probe is a primary-key read. */
-  /** REC-92 — THE RULE ITSELF, LIFTED OUT OF THE READ THAT FETCHES ITS INPUTS,
-   *  and it is a refactor this item was FORCED into rather than one it chose.
-   *
-   *  `#missingContentCause` below answers for ONE capture and pays two reads to
-   *  do it. §4.4's tally answers for a SET, and at `MEANING_AXIS_CAP` captures
-   *  the per-capture form is a thousand reads inside one Durable Object
-   *  invocation — so the tally reads the same three inputs in ONE joined
-   *  statement instead. That left two ways to spell the DECISION, and the
-   *  shared-vocabulary ruling says what to do with two spellings of one
-   *  decision: have one. The inputs are gathered differently; the rule is this
-   *  function and there is no second copy of it.
-   *
-   *  PURE AND STATIC, taking the three facts rather than the store, so the
-   *  suite drives every branch — including the tie on the second, which a real
-   *  corpus produces rarely and which was a real defect in the first draft of
-   *  the method below — without a corpus at all. */
+  /** REC-94 / REC-92 — WHICH OF SECTION 5.1's CAUSES EXPLAINS A MISSING CONTENT-LEVEL ROW: observation-log's rule
+   *  (its R11, `missingCause`), asked here with the content level's pre-log evidence, the `readings` table. The set-based
+   *  tally (`#contentAxisTally`) gathers the same inputs in one statement and asks the same rule. */
   static #missingCauseFrom({ hasReading = false, registeredAt = null, firstContentAt = null } = {}) {
-    if (hasReading) return "pre_log";
-    /* NO CONTENT ROW ANYWHERE: cause (1) and cause (2) are both live — an empty
-       table is equally the never-written case and the purged one — and the
-       answer says so rather than picking. */
-    if (!firstContentAt) return "purged";
-    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
-    if (!reg) return "purged";
-    /* D-500 — THE COMPARISON IS `enteredAfterFirstRow` IN `airun.mjs` AND THERE IS
-       NO SECOND COPY OF IT HERE. The reasoning is at that function and is
-       deliberately not restated: one rule with two spellings is the drift class,
-       and this method and `#missingMeaningCause` are the two spellings it had.
-       WHAT THIS REPLACED, kept rather than deleted because it is the defect and a
-       reader meeting the new rule should see what it corrected. REC-92's draft
-       compared the two sides as RAW strings, which mis-sorts inside a second
-       (`"…:15.900Z"` is LESS than `"…:15Z"` because `.` sorts below `Z`); REC-94
-       fixed that by truncating both to the second — `String(v).slice(0, 19)` —
-       and that stood until D-486 measured what it costs. Truncating compares two
-       FLOORS, so the answer turns on where a second boundary falls rather than on
-       the two instants' order, and a hidden run re-dating the watermark moved four
-       of an outsider's frontier keys on one run and not on the next (M-131). It
-       REC-94's reasoned tie is not reversed and is the reason the new rule reads
-       the way it does: the tie rests on SIMULTANEITY — the content writer runs
-       INSIDE promote's transaction — and a shared clock second was only ever the
-       proxy the stored precision allowed, so the tie is now applied over the
-       watermark's real one-second uncertainty instead. Every answer this suite
-       and the case document's `searched` section drive is unmoved; what moved is
-       that the answer no longer depends on where the second fell. */
-    /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE ANSWER IS THREE-WAY AND THIS SITE
-       MAPS IT, it does not re-decide it. The band is the one clock second before
-       the watermark's own second, where the stored precision leaves REC-94's tie
-       open; the reader states that rather than choosing a side, and the reason is
-       at the rule. A TERNARY HERE WOULD BE SILENTLY WRONG — every one of the three
-       answers is a truthy string — which is why the three arms are spelled out and
-       why arm M1b pins that no reader of this rule tests it as a boolean. */
-    const order = enteredAfterFirstRow(reg, firstContentAt);
-    if (order === WATERMARK_AFTER) return "never_looked";
-    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
-    return "purged";
+    return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: firstContentAt });
   }
 
   #missingContentCause(captureSha, registeredAt = null) {
-    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
-      return "pre_log";
-    const first = this.#one(
-      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
-    const firstAt = first && first.at ? String(first.at) : null;
-    /* REC-92: THE RULE IS `#missingCauseFrom` AND THIS METHOD IS NOW ONLY THE
-       READ THAT FETCHES ITS INPUTS. The `readings` lookup above already
-       answered `pre_log` and returned, so `hasReading` is false by the time we
-       get here; it is passed explicitly rather than relied on, because a reader
-       of this call should not have to know that the early return exists.
-       REC-94's suite drives this method unchanged and its assertions did not
-       move — the behaviour is identical for every input, which is the property
-       that makes this a refactor rather than a change. */
-    return Store.#missingCauseFrom({
-      hasReading: false, registeredAt, firstContentAt: firstAt });
+    const hasReading = !!this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha);
+    return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: observationLogOf(this.ctx).firstRowAt("content") });
   }
 
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
@@ -32062,39 +31150,8 @@ export class Store extends DurableObject {
     };
   }
 
-  /** THE FRONTIER, §5 — *the observation log and the frontier are the same table
-   *  seen from two angles.* A frontier entry is a subject together with its
-   *  CURRENT state and the observation that last set it, so the frontier at any
-   *  level is the latest row per `(level, subject_kind, subject)`.
-   *
-   *  A VIEW AND NEVER A TABLE, and that is §5's word rather than an
-   *  implementation preference: a second table holding "the current state" is a
-   *  second place to state a fact (D-21), and it would be the one place the log
-   *  could disagree with itself. `observations_frontier` is indexed exactly
-   *  `(level, subject_kind, subject, seq)` so this is an index walk.
-   *
-   *  `NEVER_LOOKED` IS NOT IN HERE, and its absence is the point: it is a
-   *  subject with NO ROW, so it cannot be a row of this view. §5 says where those
-   *  subjects come from — the `deferred` link partition at the document level —
-   *  and `#frontierNeverLooked` below supplies them from there. Reading only this
-   *  view and concluding "we have looked at everything" is the exact
-   *  false-coverage inversion the log exists to prevent. */
-  #frontierLatest(level, { limit = 200, subjectKind = null } = {}) {
-    const args = [level];
-    let where = `o.level = ?`;
-    if (subjectKind) { where += ` AND o.subject_kind = ?`; args.push(subjectKind); }
-    return this.#rows(
-      `SELECT o.level, o.subject_kind, o.subject, o.state, o.governed, o.condition,
-              o.authority_kind, o.authority, o.actor_class, o.result_kind, o.result_ref,
-              o.detail, o.at, o.seq
-         FROM observation_log o
-         WHERE ${where}
-           AND o.seq = (SELECT MAX(i.seq) FROM observation_log i
-                         WHERE i.level = o.level AND i.subject_kind = o.subject_kind
-                           AND i.subject IS o.subject)
-         ORDER BY o.seq DESC
-         LIMIT ?`, ...args, limit);
-  }
+  /** THE FRONTIER, §5 — the latest row per `(level, subject_kind, subject)`: observation-log's view (its R9). */
+  #frontierLatest(level, opts = {}) { return observationLogOf(this.ctx).latest(level, opts); }
 
   /** D-389 — THE ONE OVER-FETCH THE THREE BUNDLE ARMS SHARE, and the one place
    *  their `looked` page is gated, cut and CLAIMED. The document, content and
@@ -32156,22 +31213,8 @@ export class Store extends DurableObject {
     return { rows: gate ? raw.filter(gate) : raw, full: raw.length === limit };
   }
 
-  /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
-   *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
-   *  says HTTP obsoleted `last_verified` and that we must own it — this is where
-   *  it lives, DERIVED, rather than as a column anybody could set. */
-  #frontierVerification(level, subjectKind, subject) {
-    const present = this.#one(
-      `SELECT at, seq FROM observation_log
-        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'PRESENT'
-        ORDER BY seq DESC LIMIT 1`, level, subjectKind, subject);
-    const since = present ? this.#one(
-      `SELECT at FROM observation_log
-        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'LOOKED_INDETERMINATE'
-          AND seq > ? ORDER BY seq ASC LIMIT 1`, level, subjectKind, subject, present.seq) : null;
-    return { last_verified: present ? present.at : null,
-             unreachable_since: since ? since.at : null };
-  }
+  /** §5: `last_verified` and unreachable since, derived: observation-log's (its R10). */
+  #frontierVerification(...a) { return observationLogOf(this.ctx).verification(...a); }
 
   /** §5: the `NEVER_LOOKED` subjects at the DOCUMENT level, which are supplied by
    *  the `deferred` link partition — *a subject with `NEVER_LOOKED` state and
@@ -32199,171 +31242,9 @@ export class Store extends DurableObject {
         LIMIT ?`, limit);
   }
 
-  /** REC-103 / IC-105 — WHICH BUNDLES A DOCUMENT-LEVEL OBSERVATION NAMES, so
-   *  §6's withholding can be applied to the document arm the way REC-94 applied
-   *  it to the content arm.
-   *
-   *  THE DEFECT THIS CLOSES WAS DRIVEN, NOT INFERRED. `Store#frontier` accepted a
-   *  `viewer` and the document arm never read it, while `gate-reads.test.mjs`
-   *  classified the op GATED — a signature ADVERTISING a fence that was not
-   *  there, which is worse than an absent parameter because a reader of the
-   *  signature stops asking. Driven with `viewer=member:not-invited` against a
-   *  project that member is not a participant of, the arm handed over THE PROJECT
-   *  BUNDLE ID VERBATIM in `authority` (ratify's writer passes `bundleId`), the
-   *  capture sha of a document filed in that project in `result_ref` together
-   *  with a `result_purged` answer derived from `register`, and that same capture
-   *  sha as `from_document` on a never-looked row. **REC-94 found a leak of
-   *  exactly this shape one method over** — its per-capture read gated the
-   *  register lookup and then fell through — and left it for this row's owner
-   *  rather than widening a claim mid-wave.
-   *
-   *  ROW-WHOLE, WHICH IS THE DESIGN'S OWN WORD AND NOT A CHOICE TAKEN HERE. §6:
-   *  *"a subject discloses a project's interest, so REC-36's withholding applies
-   *  row-whole across the fence"*, and the reason it is not a column redaction is
-   *  in the op's own classification: *"a subject with its authority nulled still
-   *  names what was looked for."*
-   *
-   *  INVERTED RATHER THAN LISTED, which is the difference between a rule and a
-   *  set of spellings that goes stale the moment a tenth is written. The `default`
-   *  arm below resolves UNRESOLVED, so an authority kind added to
-   *  `OBSERVATION_AUTHORITY_KINDS` with no resolver here is WITHHELD until
-   *  somebody answers for it. `observation-log.test.mjs` drives every member of
-   *  that constant by name, so the silent direction is a red suite and never a
-   *  leak.
-   *
-   *  FAIL CLOSED ON WHAT CANNOT BE ATTRIBUTED, and both halves of that come from
-   *  landed precedent rather than from this item's preference: `#bundleGate`'s own
-   *  arm (*"a row pointing at something the store cannot show is withheld rather
-   *  than answered for"*) and `#frontierContent`'s (*"a capture the register does
-   *  not hold cannot be attributed to a bundle … it is WITHHELD rather than
-   *  shown"*). A NULL referent names no bundle and discloses nothing, so it
-   *  PASSES — that is `#bundleGate`'s other arm and it is what keeps this from
-   *  being a fence tighter than its rule.
-   *
-   *  THE ONE COST IS STATED RATHER THAN DISCOVERED. §7 says *a `result_ref` to a
-   *  PURGED capture is annotated at read time (`purged`)* — and a per-bundle purge
-   *  clears `register` (it is in `purge`'s own TABLES list), so after one the
-   *  capture is unattributable and the row is withheld from every identified
-   *  session, admins included. The annotation survives for the machine credential,
-   *  which is the operator path it was written for. Two landed rules cannot both
-   *  be satisfied for a member there; this takes the fail-closed one and raises
-   *  the collision against §7 rather than resolving it silently in the design. */
-  #observationBundles(row) {
-    const out = [];
-    let unresolved = false;
-    /* THE ONE REFERENT THIS METHOD DOES NOT RESOLVE ITSELF — see the `run` arm. */
-    let run = null;
-    const viaRegister = (sha) => {
-      const r = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
-      return r ? r.bundle_id : null;
-    };
-    /* `authority` AT THESE KINDS IS EITHER A BUNDLE OR A CAPTURE, and the reason
-       is the writer rather than a guess: ratify passes `bundleId || source_capture`
-       (`recordReuseVerdicts`), so one column carries two kinds of id and both are
-       bundle-scoped. Read the bundle first, because a bundle id and a capture sha
-       cannot collide and asking `bundles` costs one indexed probe. */
-    const bundleOrCapture = (id) =>
-      (this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, id) ? id : viaRegister(id));
-
-    /* THE BACK-REFERENCE. `result_kind = 'capture'` with a `result_ref` says THIS
-       RECORD HOLDS THIS DOCUMENT, and which documents a group holds is the line of
-       inquiry §6 fences. It is `op=contentaxis`' disclosure exactly — that op is
-       gated on this same register resolution, and the two answering differently
-       about one capture would be the mirror-and-drift class. */
-    if (row.result_kind === "capture" && row.result_ref) {
-      const b = viaRegister(row.result_ref);
-      if (b) out.push(b); else unresolved = true;
-    }
-    if (row.authority != null && row.authority !== "") {
-      const a = String(row.authority);
-      switch (row.authority_kind) {
-        /* A RUN IS GATED ON ITS CONTEXT, and handing a run id to a caller who
-           cannot see that context is `op=airuns`' disclosure by a new door —
-           that op was gated for precisely the reason that it is the run read a
-           caller can drive from an id they can already see.
-           **IT IS RETURNED FOR DELEGATION RATHER THAN RESOLVED HERE, AND THE
-           REASON IS A RATCHET THAT CAUGHT THIS METHOD BY NAME.** The first draft
-           read `SELECT context_id FROM ai_runs WHERE run = ?`, which made this a
-           THIRTEENTH reader of `ai_runs` and failed `run-conditions.test.mjs`
-           ARM W3 — and no role in that sweep's table fits a reader that projects
-           a stored column merely to describe the row, which ARM W9 then refuses.
-           `#aiRunAppend` met both arms on 2026-09-14 and the table keeps the
-           episode as a comment for the next reader tempted the same way. The
-           honest answer there was to stop reading, and it is the honest answer
-           here: `aiRunLog` ALREADY answers *may this viewer see this run* through
-           `#bundleGate("r.context_id", viewer)`, and a second implementation of
-           one gate is the mirror-and-drift class in the one place it would be
-           most dangerous. */
-        case "run": run = a; break;
-        /* THE SWEEP'S AUTHORITY IS A CAPTURE REQUEST, which is bundle-scoped in
-           TWO columns this plane already gates on elsewhere (`cr.target`, the
-           inquiry the run works under, and `cr.lead_inquiry`, PL-15/D-213's other
-           question). Both are taken, because withholding on one and not the other
-           would be a fence with a documented hole in it. */
-        case "sweep": {
-          const r = this.#one(
-            `SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, a);
-          if (r) { if (r.target) out.push(r.target); if (r.lead_inquiry) out.push(r.lead_inquiry); break; }
-          /* D-65 — THE RATIFIED-CADENCE ARM. `op=monitor`'s look names the BUNDLE whose
-             `monitoring.enabled` it runs under (`recordMonitorLook`), and a bundle is gated
-             exactly as `ratify`'s authority is. Anything that is neither stays UNRESOLVED. */
-          const b = this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, a);
-          if (b) out.push(a); else unresolved = true;
-          break;
-        }
-        case "ratify": case "link": case "acquire": case "extract": case "derive": {
-          const b = bundleOrCapture(a);
-          if (b) out.push(b); else unresolved = true;
-          break;
-        }
-        /* `objective` HAS NO WRITER ON THIS TREE, so there is nothing to resolve.
-           `lead` HAS ONE SINCE MK-4 (2026-09-18, `op=leadlook`) AND STAYS UNRESOLVED
-           ON PURPOSE: a lead names no bundle (MEMBER-KNOWLEDGE-DESIGN.md §5's field
-           list), its visibility is its AUTHOR's (`#leadFor`), and a row-whole gate
-           keyed on bundles has nothing to admit it by. Its looks are written at
-           level `internet`, which no frontier arm reads yet, so today this arm is
-           reached by no written row — and when one is, it withholds from every
-           identified session rather than inventing a bundle for a lead. */
-        case "lead": case "objective": unresolved = true; break;
-        /* THE INVERSION. Not a list of spellings: anything this method does not
-           UNDERSTAND is withheld, so a tenth `authority_kind` is refused by
-           default rather than waved through by omission. */
-        default: unresolved = true; break;
-      }
-    }
-    return { bundles: out, unresolved, run };
-  }
-
-  /** REC-103 — THE DOCUMENT ARM'S ROW PREDICATE. One compilation point, taken
-   *  from `viewerPredicate` like every other gate in this file and restating none
-   *  of it, including the two arms that are easy to get wrong by hand. */
-  #frontierDocumentVisible(viewer) {
-    const gate = viewerPredicate(viewer);
-    /* THE MACHINE CARVE-OUT, AND IT IS LOAD-BEARING HERE RATHER THAN INHERITED
-       DECORATION: `class:*` has no person behind it and therefore no participation
-       to check (D-15), and without it the fail-closed arm above would withhold
-       from the OPERATOR PATH the very rows §7's purge annotation exists to show. */
-    if (gate.scope === "member") return () => true;
-    /* AN ABSENT OR UNRECOGNISED STAMP SEES NOTHING, and it is spelled here rather
-       than left to fall out of the redactor: a row naming NO bundle at all would
-       otherwise pass a DENY viewer, because the redactor's job is ids and a row
-       with none has nothing for it to refuse. A missing control-plane stamp is an
-       outage and never a leak — `op=contentaxis`' D5c arm, at this level. */
-    if (gate.scope === "DENY") return () => false;
-    const visible = this.#bundleRedactor(viewer);
-    return (row) => {
-      const { bundles, unresolved, run } = this.#observationBundles(row);
-      if (unresolved) return false;
-      /* THE RUN REFERENT, DELEGATED TO THE READER THAT ALREADY GATES IT.
-         `aiRunLog` answers `found: false` for a run this viewer may not see AND
-         for one that does not exist — REC-30's own rule that the unknown run and
-         the unviewable one read identically — so both directions fail closed and
-         neither is spelled a second time. Bounded at one entry: nothing here
-         reads the log, only whether the run is reachable at all. */
-      if (run && this.aiRunLog({ run, viewer, limit: 1 }).found !== true) return false;
-      return bundles.every((id) => visible(id) !== null);
-    };
-  }
+  /** REC-103 / IC-105 — THE ROW-WHOLE FENCE (§6) over the document arm's rows: observation-log's (its R13), with the
+   *  `sweep` and `run` authorities answered by the resolvers the constructor registers (N39). */
+  #frontierDocumentVisible(viewer) { return observationLogOf(this.ctx).rowGate(viewer); }
 
   static FRONTIER_LIMIT_DEFAULT = 200;
   static FRONTIER_LIMIT_MAX = 2000;
@@ -32728,158 +31609,9 @@ export class Store extends DurableObject {
    * the site.
    */
 
-  /** THE READER RUN. Section 4.3's first act, written inside promote's one
-   *  transaction beside the reading it is about.
-   *
-   *  WHY IT IS HERE AND NOT SOMEWHERE TIDIER: `#writeReadings` is the only place
-   *  in this plane where a capture's reading is persisted, and the row must be
-   *  written in the SAME transaction as that reading for the reason every
-   *  projection in that method is — either the store advances with its coverage
-   *  record or neither does.
-   *
-   *  IT IS BESIDE REC-94's CONTENT-LEVEL WRITER AND IS NOT THE SAME ROW. The two
-   *  fire on the same event and answer different questions, and keeping them
-   *  apart is the whole of what §4.2 and §4.3 are for: `#observeExtraction` says
-   *  whether we got this document's TEXT, this says whether anything READ that
-   *  text for who it mentions. A document can be fully extracted and mention
-   *  nobody; a document can mention plenty and have been extracted in part. The
-   *  one field that looks like it could serve both — `found: false` — belongs to
-   *  THIS level (REC-94's arm B8 pins that it is not used at the content one).
-   *
-   *  WHO LOOKED, DERIVED AND NEVER GUESSED: `contentMintState` is the record's
-   *  existing predicate and is CONSUMED rather than copied, exactly as
-   *  `#observeExtraction` consumes it. A promotion with no author is the plane's
-   *  own, which is what `actor_class = plane` means and why `actor` is NULL —
-   *  attributing a look to a member who did not make it is a false attribution
-   *  in the one field that says who looked. */
-  #observeReaderRun(bundleId, captureSha, reading, { author = null } = {}) {
-    const mint = contentMintState(author);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(author);
-    /* `readerRegistered: null` IS A FACT ABOUT THIS BUILD, PASSED AS A VALUE AND
-       NOT ASSUMED INSIDE THE PURE FUNCTION. Section 4.3's third outcome — *no
-       reader is registered for this type*, `LOOKED_INDETERMINATE` — needs to know
-       whether the doctype that produced this reading was the REGISTRY'S FALLBACK,
-       and that fact does not reach this store: the fallback type emits
-       `{ entities: [], facts: {} }`, byte-for-byte what a registered reader that
-       found nobody emits, and the only thing persisted is `content_type`, which
-       is the doctype's KEY and a spelling the registry may rename. The property
-       (`fallback: true`) lives in `docprofile`, which this Durable Object does
-       not import — every `store.mjs` import is from `bio-plane/src` or
-       `bio-plane/checks`, measured on this tree, and adding a cross-package
-       dependency to the DO is a larger decision than this row.
-       So the seam is PINNED and the fact is not invented, which is exactly what
-       REC-94 did with `contentAxisFor`'s `unitIndex`. Delegated with the one
-       field that closes it named. */
-    const { row } = readerRunObservation(reading, captureSha, { readerRegistered: null });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      authority: bundleId == null ? null : String(bundleId),
-      level: "meaning",
-      subjectKind: "capture",
-      subject: captureSha,
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
-
-  /** THE RESOLUTION ATTEMPT. Section 4.3's second act, one row per reference the
-   *  recogniser tried.
-   *
-   *  THE SUBJECT IS THE REFERENCE AND THE AUTHORITY IS THE CAPTURE, which are
-   *  two different facts and are exactly REC-94's arrangement one level up. The
-   *  design's indexes then make each a read: `(level, subject_kind, subject,
-   *  seq)` answers *what has this name been matched to*, and `(authority_kind,
-   *  authority, seq)` answers *what did resolving this document look for*.
-   *
-   *  THE UNRESOLVED ARM IS THE POINT AND IT ALREADY EXISTED — computed by
-   *  `resolveReferences`, pushed onto an `unresolved` array, returned to the
-   *  caller and persisted NOWHERE. This is the line that makes *we tried this
-   *  name against the registry and it holds no such subject* outlive the request
-   *  that discovered it. */
-  #observeResolutionAttempt(captureSha, bundleId, rr, matches, tier, { resolvedBy = null } = {}) {
-    const mint = contentMintState(resolvedBy);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : String(resolvedBy);
-    const { row } = resolutionObservation({ ref: rr && rr.ref, matches, tier });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      /* THE CAPTURE IS THE AUTHORITY: the reason we looked for this name is that
-         a document we hold carried it. The bundle is one hop further out and is
-         reachable from the capture through `register`, so putting it here would
-         be the coarser of the two facts in the column that names the finer. */
-      authority: captureSha == null ? null : String(captureSha),
-      level: "meaning",
-      subjectKind: "reference",
-      subject: rr && rr.ref ? String(rr.ref) : null,
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
-
-  /** THE CONNECTION DERIVATION. Section 4.3's third act, one row per derivation
-   *  over one entity.
-   *
-   *  IT FIRES ON BOTH DOORS AND THAT IS DELIBERATE. `deriveConnections` is
-   *  reached from `op=connect` and from the scheduled sweep
-   *  (`#deriveConnectionsSweep`, which has no op of its own and no caller
-   *  identity). Both are derivations and both belong in the coverage record;
-   *  what differs is WHO, and that is what `actor_class` is for.
-   *
-   *  `system` IS THE RECORD'S OWN WORD FOR AN UNATTRIBUTED DERIVATION and is
-   *  CONSUMED rather than re-decided here: it is `deriveConnections`' own
-   *  parameter default and it is what `connections.asserted_by` already stores
-   *  for both the sweep and an `op=connect` that named nobody. Mapping it to
-   *  `actor_class = plane` with a NULL actor is what keeps those two columns
-   *  agreeing; running it through `contentMintState` instead would classify it
-   *  `member_marked` and file the plane's own scheduler as a member called
-   *  "system", which is a false attribution in the one field that says who
-   *  looked. */
-  #observeConnectionDerivation(entityId, { count = null, documents = null, truncated = false,
-                                           entityKnown = null, assertedBy = null } = {}) {
-    const asserted = String(assertedBy || "system");
-    const mint = asserted === "system" ? "unstated" : contentMintState(asserted);
-    const actorClass = mint === "member_marked" ? "member"
-                     : mint === "machine_marked" ? "machine" : "plane";
-    const actor = actorClass === "plane" ? null : asserted;
-    const { row } = derivationObservation({ entityId, count, documents, truncated, entityKnown });
-    if (!row) return { written: 0, refused: [], state: null };
-    const bad = this.#observe({
-      actorClass, actor,
-      authorityKind: "derive",
-      /* THE AUTHORITY IS THE ENTITY THE DERIVATION WAS ASKED FOR, and here it
-         genuinely is the subject as well — a derivation over a subject is made
-         BECAUSE of that subject and nothing else names it. That is stated rather
-         than dressed up: the two columns agree because the fact is one fact, and
-         the alternative (leaving the authority null) is refused by C-22.9 and
-         would be refused rightly, since a look with no reason behind it is not
-         recordable. */
-      authority: entityId == null ? null : String(entityId),
-      level: "meaning",
-      subjectKind: "entity",
-      subject: entityId == null ? null : String(entityId),
-      state: row.state,
-      condition: row.condition,
-      resultKind: row.resultKind,
-      resultRef: row.resultRef,
-      detail: row.detail,
-    });
-    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
-  }
+  /* THE READER RUN, THE RESOLUTION ATTEMPT AND THE CONNECTION DERIVATION (§4.3): observation-log's writers (its R8).
+   * The reader run is its listener on extraction's reading notice; the other two are called where they fire until
+   * entities and connections are extracted and it registers on their notices. */
 
   /** REC-95 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
    *  MEANING-LEVEL ROW, taken IN ORDER and never concluded from the first.
@@ -32924,30 +31656,9 @@ export class Store extends DurableObject {
     const probe = Object.prototype.hasOwnProperty.call(EVIDENCE, subjectKind)
       ? EVIDENCE[subjectKind] : null;
     if (!probe) return "purged";
-    if (probe()) return "pre_log";
-    const first = this.#one(
-      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'meaning'`);
-    const firstAt = first && first.at ? String(first.at) : null;
-    if (!firstAt) return "purged";
-    const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
-    if (!entered) return "purged";
-    /* D-500 — THE SAME ONE COMPARISON THE CONTENT ARM ASKS, `enteredAfterFirstRow`
-       IN `airun.mjs`, AND THE POINT OF THE MOVE IS THAT THIS SITE NO LONGER
-       CARRIES ITS OWN COPY. This arm INHERITED REC-94's truncation verbatim —
-       which is how a rule ends up with two spellings — and D-486 then measured
-       what the truncation costs at BOTH levels: comparing two floors makes the
-       answer turn on where a second boundary falls, so a hidden run re-dating the
-       watermark moved this level's `never_looked` and `missing_unexplained` keys
-       on one run and not on the next (M-131). The reasoning, and REC-94's tie
-       narrowed to an equality of instants, are at the function. */
-    /* D-516 — THE SAME THREE-WAY ANSWER MAPPED THE SAME WAY, and the mapping is
-       the only thing this arm spells: the band's meaning-level sentence is in
-       `MEANING_MISSING_ROW_CAUSES` beside the other three, and the set it cannot
-       narrow comes from `causesNotRuledOut` exactly as `purged`'s does. */
-    const order = enteredAfterFirstRow(entered, firstAt);
-    if (order === WATERMARK_AFTER) return "never_looked";
-    if (order === WATERMARK_WITHIN_BAND) return WATERMARK_BAND_CAUSE;
-    return "purged";
+    /* §5.1's rule is observation-log's (its R11); this level's pre-log evidence is the probe above. */
+    return missingCause({ hasArtifact: !!probe(), registeredAt: enteredAt,
+                          firstRowAt: observationLogOf(this.ctx).firstRowAt("meaning") });
   }
 
   /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
@@ -34472,7 +33183,7 @@ export class Store extends DurableObject {
        run. The block is attached only when there was a link to follow, so an ordinary close answers
        byte-for-byte what it answered before this item. */
     if (ended && ended.terminated === true) {
-      const discharge = await this.#biasDebtDischargeByRerun({ run, at: now });
+      const discharge = await biasOf(this.ctx).biasDebtRerun({ kind: "ai-run", key: run, at: now });
       if (discharge) return { ...ended, bias_debt: discharge };
     }
     return ended;
@@ -35329,187 +34040,6 @@ export class Store extends DurableObject {
              at_open: atOpenBlock, hand: handOf(recordedSha) };
   }
 
-  /** D-86 — THE BIAS-DEBT SWEEP. NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change
-   *  `[OBLIGATION]` (D-86 — DISCLOSED, never blocking)"*; framework §13: *"Bias debt says: the lens changed, so
-   *  this analysis owes a re-run"*, one mechanism with the temporal half, and what differs is what each consumer
-   *  DOES when the clock runs out — the temporal half blocks, the bias half SURFACES.
-   *
-   *  ONE COMPARISON, AND IT IS NOT HERE. Whether a run's lens moved is `aiRunRead`'s answer — `#biasForRun`, the
-   *  block `op=airun` publishes — read whole for each run under the operator-internal viewer. This method reads
-   *  `moved` and the two hashes that block names; it holds no hash and compares none. A comparison of its own
-   *  would agree with the reader today and be the thing that drifts (D-86's row: *"how a liar passes this: a
-   *  second comparison in the sweep that happens to agree today"*), so the control alters the ONE function and
-   *  the item must follow it.
-   *
-   *  THREE ANSWERS, NEVER COLLAPSED. `moved: true` raises (or restates) the run's ONE item. `moved: false` raises
-   *  nothing, and CLEARS a live item — stamped, never deleted — because an obligation claiming a lens moved while
-   *  the reader says it did not would be the record claiming more than it can support. `moved: null` does
-   *  NEITHER: undetermined is not evidence in either direction, so an item stands as it was and none is minted.
-   *
-   *  IDEMPOTENT BY ITS KEY, NOT BY CARE. `bias_debts` is keyed by the run alone, so a second tick finds the row
-   *  and, when nothing moved, writes nothing. A lens that moves AGAIN restates the same row with the new hash —
-   *  still one item per run — and one that moves back clears it.
-   *
-   *  RECIPIENTS, NAMED BY THIS PRODUCER AND EACH ONE INSIDE THE RUN'S READ GATE. The run's own principal when it is
-   *  a member, and for a run over a project that project's active owners (DEC-72 clause 5: manager is the owner
-   *  role) — each kept only if `aiRunRead` answers `found` for them, the same read that gates `op=airun`, so the
-   *  item never reaches a member who could not open the run it is about. None nameable is STATED, and the item is
-   *  then offered to every member who can read the run, the `unassigned` task's precedent (D-98, DEC-7).
-   *
-   *  BOUNDED. At most BIAS_DEBT_BATCH runs per tick, with a cursor; a sweep that spans ticks keeps the consumer
-   *  due, and a lens that moves mid-sweep restarts it from the top. The fingerprint is recorded only when a sweep
-   *  COMPLETES, so an alarm with no lens change asks nothing of any run. */
-  static BIAS_DEBT_DELAY_MS = 1000;
-  static BIAS_DEBT_BATCH = 50;
-  /* Overridable, on the connection-derive consumer's precedent: a suite pins the delay far out so the alarm it
-     drives by hand is the only one that fires, and pins the batch to 1 to PROVE a sweep spans ticks. */
-  #biasDebtDelayMs() {
-    const v = Number(this.env && this.env.BIAS_DEBT_DELAY_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Store.BIAS_DEBT_DELAY_MS;
-  }
-  #biasDebtBatch() {
-    const v = Math.floor(Number(this.env && this.env.BIAS_DEBT_BATCH));
-    return Number.isFinite(v) && v >= 1 ? Math.min(v, 500) : Store.BIAS_DEBT_BATCH;
-  }
-  static BIAS_DEBT_VIEWER = "admin";
-
-  /** Every input the lens NOW is computed from, and nothing it is not: each adoption row with its bundle's current
-   *  sha and state (`biasManifest` reads statements through exactly these). Synchronous and small, so a consumer's
-   *  `due`/`wake` can ask it. It is a TRIGGER, never a comparison of lenses — whether a run moved is still
-   *  `aiRunRead`'s answer. */
-  #biasDebtFingerprint() {
-    /* BOUNDED (`derivation-bounds.test.mjs`' census): at most BIAS_DEBT_FINGERPRINT_MAX adoptions are read, plus the
-       whole table's count. STATED LIMIT: past that many adoptions, a revision of a bundle adopted beyond the cap
-       moves no input this reads, so the sweep waits for the next change it CAN see (or the next adoption, which
-       moves the count). An instance holding a thousand adopted lenses is not one this plane has met. */
-    const cap = Store.BIAS_DEBT_FINGERPRINT_MAX;
-    const n = this.#one(`SELECT count(*) AS n FROM bias_adoptions`).n;
-    return JSON.stringify([n, ...this.#rows(
-      `SELECT a.scope_type AS t, a.scope_id AS s, a.bundle_id AS b, bd.bundle_sha AS sha, bd.current_state AS st
-         FROM bias_adoptions a LEFT JOIN bundles bd ON bd.bundle_id = a.bundle_id
-        ORDER BY a.scope_type, a.scope_id, a.bundle_id LIMIT ?`, cap)
-      .map((r) => [r.t, r.s, r.b, r.sha ?? null, r.st ?? null])]);
-  }
-  static BIAS_DEBT_FINGERPRINT_MAX = 1000;
-  static BIAS_DEBT_OWNERS_MAX = 50;
-
-  /** Due while the lens inputs differ from the last COMPLETE sweep's. An instance with no run owes no debt; one
-   *  that has never adopted a lens cannot have one move (a recorded open compares two absent hashes, and a
-   *  pre-D-85 hand against no lens reads `moved: null`), so it holds no alarm for this consumer either. */
-  #biasDebtPending() {
-    if (!this.#one(`SELECT 1 AS x FROM ai_runs LIMIT 1`)) return false;
-    const st = this.#one(`SELECT fingerprint FROM bias_debt_sweeps WHERE k = 'lens'`);
-    if (!st) return !!this.#one(`SELECT 1 AS x FROM bias_adoptions LIMIT 1`);
-    return st.fingerprint !== this.#biasDebtFingerprint();
-  }
-
-  async #biasDebtRecipients(run, session) {
-    const cands = new Set();
-    /* `principal_plane` is `member:<id>` for a session and `member:<id>/<token>` for a member's credential; any
-       other spelling (`token:<class>`) has no person behind it and names nobody. */
-    const pm = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/.exec(String(session?.principal?.plane || ""));
-    if (pm) cands.add(pm[1]);
-    if (session?.context?.type === "project")
-      /* BOUNDED, and the bound is stated rather than hidden: the first BIAS_DEBT_OWNERS_MAX owners by id. */
-      for (const r of this.#rows(
-        `SELECT pp.member_id FROM project_participants pp WHERE pp.project_id = ? AND pp.owner = 1
-          ORDER BY pp.member_id LIMIT ?`, session.context.id, Store.BIAS_DEBT_OWNERS_MAX)) cands.add(r.member_id);
-    const out = [];
-    for (const id of [...cands].sort()) {
-      if (!this.#one(`SELECT 1 AS x FROM members WHERE member_id = ? AND status = 'active'`, id)) continue;
-      const sight = await this.aiRunRead({ run, viewer: `member:${id}` });
-      if (sight && sight.found === true) out.push(id);
-    }
-    return out;
-  }
-
-  async #biasDebtSweep(nowMs) {
-    const at = Store.#aiIso(nowMs);
-    const cap = this.#biasDebtBatch();
-    const fp = this.#biasDebtFingerprint();
-    const st = this.#one(`SELECT fingerprint, target, cursor FROM bias_debt_sweeps WHERE k = 'lens'`);
-    const from = st && st.target === fp ? String(st.cursor || "") : "";
-    const rows = this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, from, cap + 1);
-    const batch = rows.slice(0, cap);
-    /* REC-207: `held` is the fifth outcome and it is NOT a kind of `unchanged`. A debt SETTLED by an
-       authored act (a re-run, a member's resolve) whose lens delta has not moved is deliberately left
-       settled — see the branch below — and a sweep that reported that as "nothing to do" would make the
-       one outcome this item added invisible to the instrument that watches the sweep. */
-    const out = { read: 0, raised: [], restated: [], cleared: [], held: [], undetermined: [], unchanged: 0,
-                  complete: rows.length <= cap, batch: cap };
-    for (const { run } of batch) {
-      const read = await this.aiRunRead({ run, viewer: Store.BIAS_DEBT_VIEWER });
-      out.read++;
-      const session = read && read.found === true ? read.session : null;
-      const bias = session ? session.bias : null;
-      const moved = bias ? bias.moved : null;
-      const prior = this.#one(`SELECT * FROM bias_debts WHERE run = ?`, run);
-      if (moved === true) {
-        /* THE TWO HASHES, AS THE READER PUBLISHED THEM — the side `moved_basis` says the comparison was against,
-           and the lens now. Read, not recomputed; a lens not in force is NULL and the item says so. */
-        const then = bias.moved_basis === "at_open"
-          ? (bias.at_open && typeof bias.at_open.statements_sha === "string" ? bias.at_open.statements_sha : null)
-          : (bias.manifest && typeof bias.manifest.statements_sha === "string" ? bias.manifest.statements_sha : null);
-        const now = bias.now && typeof bias.now.statements_sha === "string" ? bias.now.statements_sha : null;
-        const recipients = JSON.stringify(await this.#biasDebtRecipients(run, session));
-        if (!prior) {
-          this.sql.exec(
-            `INSERT INTO bias_debts (run, context_type, context_id, moved_basis, lens_then, lens_now, recipients,
-                                     raised, observed, cleared_at)
-             VALUES (?,?,?,?,?,?,?,?,?,NULL)`,
-            run, session.context.type, session.context.id, bias.moved_basis ?? null, then, now, recipients, at, at);
-          out.raised.push(run);
-        } else if (prior.cleared_at != null && SETTLED_BY_AN_ACT.has(prior.settled_kind)
-                   && prior.lens_now === now && prior.lens_then === then) {
-          /* REC-207 — SETTLED BY AN AUTHORED ACT, OVER EXACTLY THIS LENS DELTA, SO IT STAYS SETTLED.
-             D-86's rule that a cleared debt found moved again is NEW debt is UNCHANGED and is the branch
-             below; it is written for the settlement D-86 had, the lens moving BACK, where the delta
-             genuinely reappearing is a new fact about the lens. The two acts this item adds settle a
-             STATED delta — the member resolved *this* change, the re-run ran under *this* lens — so
-             re-raising the identical `lens_then`/`lens_now` pair would be asking the same member the same
-             question again, which is the nagging DEC-69 refuses. A lens that moves ONWARDS moves `now` and
-             falls through to the branch below as new debt, which is the whole of what keeps this honest.
-             The recipients are refreshed without re-opening: a settled debt is in nobody's queue, so the
-             list is a fact about the run's readers rather than about anyone's attention. */
-          if (prior.recipients !== recipients)
-            this.sql.exec(`UPDATE bias_debts SET recipients = ?, observed = ? WHERE run = ?`,
-              recipients, at, run);
-          out.held.push(run);
-        } else if (prior.cleared_at != null || prior.lens_now !== now || prior.lens_then !== then
-                   || prior.recipients !== recipients) {
-          /* A CLEARED debt that moves again is NEW debt and ages from now; a live one restated keeps its age.
-             REC-207: and `settled_kind` is cleared with `cleared_at`, because the settlement it named is a
-             fact about the debt that just ended and not about the one being raised now. The settlement ROW
-             stays where it is — `bias_debt_settlements` is append-only and this is not a write to it. */
-          this.sql.exec(
-            `UPDATE bias_debts SET moved_basis = ?, lens_then = ?, lens_now = ?, recipients = ?, observed = ?,
-                    raised = CASE WHEN cleared_at IS NULL THEN raised ELSE ? END, cleared_at = NULL,
-                    settled_kind = NULL
-              WHERE run = ?`,
-            bias.moved_basis ?? null, then, now, recipients, at, at, run);
-          out.restated.push(run);
-        } else out.unchanged++;
-      } else if (moved === false) {
-        if (prior && prior.cleared_at == null) {
-          /* REC-207: THROUGH THE ONE WRITER, so the lens moving back leaves a row saying so. It wrote a bare
-             `cleared_at` before this item, which is the silent clearing BOB #32's ruling names — and the
-             settlement that was ALREADY built is the one that most needed the record, because it is the one
-             no member is present for. The two hashes recorded are the debt's own, as it stood. */
-          this.#biasDebtSettle({ run, kind: "lens_returned", at,
-                                 lensThen: prior.lens_then, lensNow: prior.lens_now });
-          out.cleared.push(run);
-        } else out.unchanged++;
-      } else out.undetermined.push(run);
-    }
-    const last = batch.length ? batch[batch.length - 1].run : "";
-    this.sql.exec(
-      `INSERT INTO bias_debt_sweeps (k, fingerprint, target, cursor, at) VALUES ('lens', ?, ?, ?, ?)
-       ON CONFLICT(k) DO UPDATE SET fingerprint = excluded.fingerprint, target = excluded.target,
-                                    cursor = excluded.cursor, at = excluded.at`,
-      out.complete ? fp : (st ? st.fingerprint : null), fp, out.complete ? "" : last, at);
-    return out;
-  }
-
   /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
    *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
    *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
@@ -35558,261 +34088,6 @@ export class Store extends DurableObject {
   }
   static BIAS_DEBT_QUEUE_MAX = 200;
 
-  /* ==================================================================== REC-207
-   * WHAT SETTLES A BIAS-DEBT OBLIGATION — BOB #32's ruling of 2026-09-23 23:42Z
-   * (`BIO_Declared_Bias_v0_1.md`, "Bias debt, and HUNCH DEBT"):
-   *
-   *   *"Three acts settle a bias-debt obligation, and each is RECORDED; none clears it silently.
-   *   (1) The lens moves back, as built. (2) A re-run under the CURRENT lens discharges the debt of
-   *   the run it re-runs, and the obligation is closed with the discharging run's id and lens pins,
-   *   so a reader sees WHICH run settled it. A re-run under any other lens discharges nothing.
-   *   (3) A member's resolve with a REQUIRED stated reason: an authored act, attributed, dated and
-   *   append-only. It needs no re-run, because a member may judge that the lens change does not bear
-   *   on the finding. Derived informs, authored binds (DEC-24), and a member is never forced (DEC-69)."*
-   *
-   * WHAT WAS WRONG BEFORE THIS, measured on `1a7f0bcc0`: D-86 raised the obligation and NOTHING but the
-   * lens moving back took it out of the queue. `op=taskresolve` addresses rows in `tasks` and a bias debt
-   * is not a task — `#dispositionOf` pointed every OBLIGATION at that op, so the queue named a door a
-   * bias-debt item cannot go through. And the one settlement that did exist wrote a bare `cleared_at`, so
-   * a reader who came afterwards could see THAT the obligation had gone and never WHY.
-   *
-   * THE THREE ACTS GO THROUGH ONE WRITER, `#biasDebtSettle`, and that is the structural half of
-   * "each is RECORDED". A second writer is how one of the three comes to clear a debt without a row —
-   * exactly the silent clearing the ruling forbids — so there is one, and the sweep's own clear was moved
-   * onto it rather than left as the UPDATE it was.
-   *
-   * WHAT A SETTLEMENT IS NOT: a state a later sweep may overwrite. The lens moving AGAIN raises NEW debt
-   * (D-86's rule, unchanged) and writes a further settlement row when that one is settled in turn; the
-   * settled row is never edited and never deleted. So the sequence for a run IS its history.
-   * ==================================================================== */
-
-  /** The longest reason this store will hold, stated rather than hidden. A bound, not a judgement about
-   *  what a good reason looks like: DEC-69 and the ruling require a reason to be STATED, and a floor on
-   *  its length would be this plane grading a member's sentence, which is a fence tighter than its rule. */
-  static BIAS_DEBT_REASON_MAX = 4000;
-  /** The settlements `op=biasdebt` publishes for one run, and the bound is published with them. */
-  static BIAS_DEBT_SETTLEMENTS_MAX = 50;
-
-  /** THE ONE WRITER OF A SETTLEMENT. Every act that settles a bias debt — the sweep's lens-return, a
-   *  re-run's discharge, a member's resolve — appends its row HERE and stamps `bias_debts` from the same
-   *  values, so the append-only record and the debt's own state cannot disagree about which act closed it.
-   *  Synchronous, like every write on the sweep's path. */
-  #biasDebtSettle({ run, kind, at, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
-    this.sql.exec(
-      `INSERT INTO bias_debt_settlements (run, kind, at, actor, reason, by_run, lens_then, lens_now)
-       VALUES (?,?,?,?,?,?,?,?)`,
-      run, kind, at, actor, reason, byRun, lensThen, lensNow);
-    this.sql.exec(
-      `UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`,
-      at, kind, at, run);
-    return { run, kind, at, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
-  }
-
-  /** The settlements on record for one run, oldest first, BOUNDED and the bound stated. Rows only — the
-   *  gate is the caller's, because this is called from two doors that have already asked it. */
-  #biasDebtSettlements(run, limit) {
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.BIAS_DEBT_SETTLEMENTS_MAX),
-                                     Store.BIAS_DEBT_SETTLEMENTS_MAX));
-    const rows = this.#rows(
-      `SELECT seq, kind, at, actor, reason, by_run, lens_then, lens_now
-         FROM bias_debt_settlements WHERE run = ? ORDER BY seq LIMIT ?`, run, cap + 1);
-    return { settlements: rows.slice(0, cap).map((r) => ({
-               seq: r.seq, kind: r.kind, at: r.at, actor: r.actor ?? null, reason: r.reason ?? null,
-               by_run: r.by_run ?? null, lens_then: r.lens_then ?? null, lens_now: r.lens_now ?? null })),
-             limit: cap, truncated: rows.length > cap };
-  }
-
-  /** How a SETTLED debt row reads. `cleared_at` set with NO `settled_kind` is a debt cleared before this
-   *  item existed, when the lens moving back was the only act there was — and it reads UNDETERMINED rather
-   *  than being attributed to that act, because a back-filled attribution is an invented one (D-85's rule
-   *  one table over, and `CLAUDE.md` §4: undetermined is first-class and must be STATED). */
-  static #biasDebtSettledView(row) {
-    if (row.cleared_at == null) return { settled: false };
-    if (row.settled_kind == null)
-      return { settled: true, at: row.cleared_at, kind: null, kind_state: "undetermined",
-               stated: "this debt was settled before the record kept which act settled it. The only act "
-                     + "there was then is the lens moving back, and naming it here would be attributing "
-                     + "the settlement to an act nobody recorded" };
-    return { settled: true, at: row.cleared_at, kind: row.settled_kind, kind_state: "determined" };
-  }
-
-  /** op=biasdebtresolve — DISCHARGE (3): A MEMBER'S RESOLVE, WITH A REQUIRED STATED REASON.
-   *
-   *  *"It needs no re-run, because a member may judge that the lens change does not bear on the finding"*
-   *  (BOB #32). So this act does not ask for evidence and does not re-open anything; what it requires is
-   *  that the judgement be SAID, by a named member, on a date, in a row nothing later edits. DEC-24's
-   *  authored half, and DEC-69: a member is never forced to re-run.
-   *
-   *  WHY A DOOR OF ITS OWN AND NOT `op=taskresolve`. That op addresses `tasks` by id and a bias debt is
-   *  keyed by the RUN it is about; there is no task row to resolve, and manufacturing one would put a
-   *  second writer on the obligation. The row's own headline is this sentence.
-   *
-   *  WHO MAY: any member the debt's own read gate admits — `#bundleGate` over the run's context, the SAME
-   *  predicate `#obligationsBiasDebt` compiles to decide who is shown the item. Deliberately NOT narrowed
-   *  to the producer's `recipients`: that list is who the item is OFFERED to, and D-86 already states that
-   *  where it can name nobody the obligation is offered to everyone who can read the run. A fence tighter
-   *  than that would refuse a member the queue had just asked. WHO resolved it is recorded either way.
-   *
-   *  A MACHINE MAY NOT, by SHAPE and before the row is read — `taskResolve`'s MACHINE_CANNOT_RESOLVE
-   *  precedent exactly: settling an obligation is a named member's judgement, and a credential with no
-   *  person behind it cannot hold one. */
-  biasDebtResolve({ run = null, reason = null, actor = null, viewer = null, at = null } = {}) {
-    /* NAMED `refusal`, shadowing the module helper, and the name is LOAD-BEARING rather than a style:
-       `check-refusal-codes.mjs` arm C reads a family helper's call sites by that identifier, so a helper
-       called anything else makes every refusal in this method invisible to the guard and each region
-       `where` below reads as a marker that has drifted off its arm. Measured on this item's first run:
-       both regions printed `0 judged, 0 code(s) checked` and the guard failed naming them. `aiRunsInContext`
-       shadows it the same way and for the same reason. Every code inside is a STRING LITERAL at its site. */
-    const refusal = (code, detail, extra = {}) => {
-      const row = BIAS_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
-    };
-    const id = String(run ?? "").trim();
-    const who = String(actor ?? "").trim();
-    const said = typeof reason === "string" ? reason.trim() : "";
-    /* DEC-49 REGION is-bias-debt-resolve-shape — the four conditions that are about the ACT rather than
-       about the debt, asked BEFORE the record is read, so a caller who may not see the run learns nothing
-       from the order of the answers. */
-    if (!id)
-      return refusal("BIAS_DEBT_NO_RUN",
-        "a bias debt is keyed by the run it is about, so the act has to name one");
-    if (!who)
-      return refusal("BIAS_DEBT_NO_ACTOR",
-        "a resolution is recorded under the member who made it, and there is no member on this call");
-    if (isMachineStamp(who))
-      return refusal("BIAS_DEBT_MACHINE_CANNOT_RESOLVE",
-        "settling a bias debt is a judgement that the lens change does not bear on the finding, and that "
-        + "is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential "
-        + "may raise the obligation, surface it and prepare what it needs, and may not answer it");
-    if (!said)
-      return refusal("BIAS_DEBT_NO_REASON",
-        "this act settles an obligation the record raised, and the whole of what it records is the "
-        + "member's stated ground for settling it. Without the reason the row would say that somebody "
-        + "decided and not what they decided");
-    if (said.length > Store.BIAS_DEBT_REASON_MAX)
-      return refusal("BIAS_DEBT_REASON_TOO_LONG",
-        `the stated reason is ${said.length} characters and this record holds at most `
-        + `${Store.BIAS_DEBT_REASON_MAX}`, { limit: Store.BIAS_DEBT_REASON_MAX, length: said.length });
-    /* END DEC-49 REGION is-bias-debt-resolve-shape */
-    const seen = this.#bundleGate("bd.context_id", viewer);
-    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
-    /* DEC-49 REGION is-bias-debt-resolve-subject — the two conditions about the debt itself. A debt this
-       viewer may not see answers EXACTLY as one that was never raised (REC-25/REC-30: a refusal that tells
-       "not yours" apart from "does not exist" has told the caller the thing it was withholding). */
-    if (!row)
-      return refusal("BIAS_DEBT_NO_SUCH_DEBT",
-        "no open bias debt stands against this run here: it either never carried one, it has already been "
-        + "settled, or this reader cannot open the run it is about", { run: id });
-    if (row.cleared_at != null)
-      return refusal("BIAS_DEBT_ALREADY_SETTLED",
-        "this obligation has already been settled, and a settlement is appended rather than replaced",
-        { run: id, settled: Store.#biasDebtSettledView(row) });
-    /* END DEC-49 REGION is-bias-debt-resolve-subject */
-    const when = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
-    const settled = this.#biasDebtSettle({ run: id, kind: "resolved", at: when, actor: who, reason: said,
-                                           lensThen: row.lens_then, lensNow: row.lens_now });
-    return { ok: true, run: id, settled };
-  }
-
-  /** op=biasdebt — THE READ, and it is what makes "RECORDED, never cleared silently" a fact a reader can
-   *  check rather than a promise. One run's debt and every settlement on it, in order.
-   *
-   *  GATED on the run's context through `#bundleGate`, the one predicate `#obligationsBiasDebt` and
-   *  `op=airun` compile. A debt the viewer may not see answers BYTE-IDENTICALLY to a run that never
-   *  carried one — one answer, not two.
-   *
-   *  BOUNDED, and the bound is PUBLISHED: `limit` and `truncated` beside the rows. */
-  biasDebtRead({ run = null, viewer = null, limit = null } = {}) {
-    const id = String(run ?? "").trim();
-    const absent = { ok: true, run: id || null, found: false,
-                     note: "no bias debt is on record for this run: it either never carried one, or the "
-                         + "run is not one this reader can open" };
-    if (!id) return absent;
-    const seen = this.#bundleGate("bd.context_id", viewer);
-    const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
-    if (!row) return absent;
-    const s = this.#biasDebtSettlements(id, limit);
-    return {
-      ok: true, run: id, found: true,
-      open: row.cleared_at == null,
-      context: { type: row.context_type, id: row.context_id },
-      raised: row.raised, observed: row.observed,
-      moved_basis: row.moved_basis ?? null, lens_then: row.lens_then ?? null, lens_now: row.lens_now ?? null,
-      settled: Store.#biasDebtSettledView(row),
-      settlements: s.settlements, limit: s.limit, truncated: s.truncated,
-      stated: "bias debt is DISCLOSED and blocks nothing (DEC-20). Three acts settle it and each is on "
-            + "record here: the lens moving back, a re-run under the lens now in force, and a member's "
-            + "resolve with a stated reason (BOB #32, 2026-09-23)",
-    };
-  }
-
-  /** DISCHARGE (2): A RE-RUN UNDER THE CURRENT LENS, taken at the re-run's OWN CLOSE.
-   *
-   *  WHY AT THE CLOSE AND NOT AT THE OPEN, and this is the load-bearing choice in the whole discharge.
-   *  The obligation says a RE-RUN is owed. A run that was opened and never ran has not re-run anything, so
-   *  discharging at the open would settle a debt on the strength of a row EXISTING rather than of anything
-   *  having happened — *"a mechanism believed on the strength of its EXISTENCE rather than its behaviour is
-   *  the defect this project meets most"* (`kickoffs/WORKER.md`). The LINK is authored at the open
-   *  (`ai_runs.rerun_of`, the opener's own word about what this re-runs) and the DISCHARGE is taken here.
-   *
-   *  AND ONLY THROUGH THE MEMBER'S DOOR. The reaper closes a lapsed run by calling `#aiRunTerminate`
-   *  directly and never comes through `aiRunClose`, so a re-run that ran out of lease discharges nothing.
-   *  That is the honest reading and it is stated rather than left to be inferred from the call graph.
-   *
-   *  "UNDER THE CURRENT LENS" IS ONE COMPARISON AND IT IS NOT MADE HERE. `#biasForRun` — the one reader
-   *  `op=airun` publishes, and the one D-86's sweep already follows — answers what this run was FORMED
-   *  under (the manifest it was handed) and what is in force NOW for its context. This method reads those
-   *  two hashes and compares nothing else. A second comparison of its own would agree with that reader
-   *  today and be the thing that drifts, which is D-86's own recorded liar.
-   *
-   *  AND AN EQUALITY THAT COSTS NOTHING IS NOT EVIDENCE. Where either side has no hash — nothing was
-   *  handed to this run, or no lens is in force — the two absences are NOT read as agreement: the answer
-   *  is UNDETERMINED, stated, and nothing is discharged. Two empty digests agree on nothing.
-   *
-   *  THE CONTEXT IS ALREADY THE SAME ONE: `aiRunOpen` refuses a `rerun_of` naming a run in another context
-   *  (AI_RUN_RERUN_OTHER_CONTEXT), so the lens in force for this run IS the lens the debt is owed against.
-   *  Without that fence a re-run in another project would be measured against another project's lens. */
-  async #biasDebtDischargeByRerun({ run, at }) {
-    const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
-    const target = row && row.rerun_of != null && String(row.rerun_of).trim()
-      ? String(row.rerun_of).trim() : null;
-    if (!target) return null;
-    const debt = this.#one(`SELECT * FROM bias_debts WHERE run = ? AND cleared_at IS NULL`, target);
-    /* `outcome`, NOT `reason`, and the three values are lower case. Neither is style: this is a SUCCESS
-       answer stating what the discharge attempt found, and a `reason` key holding an upper-case word is
-       exactly what `check-refusal-codes.mjs`'s census reads as a
-       refusal the plane can mint — and it reads the source TEXT, so the pattern must not appear even in
-       a comment explaining it, which is why this sentence describes it in words. Measured on this item's
-       first run the three values, then spelled in upper case, entered the census as untranslated refusal
-       codes and moved its floor — codes no member can ever be refused with. A word that means "refusal"
-       to the instruments must not be used for anything else. */
-    if (!debt)
-      return { re_ran: target, discharged: false, outcome: "no_open_debt",
-               stated: "no open bias debt stands against the run this one re-ran" };
-    const bias = await this.#biasForRun(row, Store.BIAS_DEBT_VIEWER);
-    const formed = bias && bias.in_force === true && bias.manifest
-                   && typeof bias.manifest.statements_sha === "string"
-      ? bias.manifest.statements_sha : null;
-    const inForce = bias && bias.now && bias.now.in_force === true
-                    && typeof bias.now.statements_sha === "string"
-      ? bias.now.statements_sha : null;
-    if (formed == null || inForce == null)
-      return { re_ran: target, discharged: false, outcome: "lens_undetermined",
-               lens_ran_under: formed, lens_in_force: inForce,
-               stated: formed == null
-                 ? "this run was handed no lens that can be read, so whether it ran under the lens now in "
-                 + "force is undetermined and it discharges nothing"
-                 : "no lens is in force for this run's context, so whether it ran under the current one is "
-                 + "undetermined and it discharges nothing" };
-    if (formed !== inForce)
-      return { re_ran: target, discharged: false, outcome: "other_lens",
-               lens_ran_under: formed, lens_in_force: inForce,
-               stated: "this run was formed under a lens other than the one now in force, so it discharges "
-                     + "nothing (BOB #32: a re-run under any other lens discharges nothing)" };
-    const settled = this.#biasDebtSettle({ run: target, kind: "rerun", at, byRun: run,
-                                           lensThen: debt.lens_then, lensNow: formed });
-    return { re_ran: target, discharged: true, lens_ran_under: formed, lens_in_force: inForce, settled };
-  }
 
   /** op=airunspawn — THE FENCE, AS CODE.
    *
@@ -37318,662 +35593,12 @@ export class Store extends DurableObject {
     }
   }
 
-  /* ================================================================   * PL-12 / D-84 — THE BIAS OBJECT'S THREE ACTS, and DEC-54's four scopes
-   * where they are ENFORCED rather than described.
-   *
-   *   op=biasadopt    the AUTHORED, ATTRIBUTED act that puts a set in force,
-   *                   and the PIN that keeps a published case checkable after
-   *                   the source moves (DEC-54 c and d).
-   *   op=biasmanifest the EFFECTIVE SET in force for a scope, its hash, and
-   *                   what it does NOT enforce (DEC-54 b).
-   *   op=biasinhale   reading an external policy: it SPLITS bars from bias
-   *                   (DEC-54 a), it PUBLISHES the residue as prominently as
-   *                   the extraction (DEC-54 b), and it PROPOSES and never
-   *                   installs (DEC-54 c).
-   *
-   * THE THIRD ONE IS THE ONE TO READ THE SOURCE OF RATHER THAN THE COMMENT
-   * ABOUT. `biasInhale` holds NO WRITE PATH AT ALL — no `sql.exec`, no
-   * `transactionSync`, no call to `promote` — and test/bias.test.mjs asserts
-   * that off this file's own bytes, because a comment promising an absence is
-   * the kind of guard that has guarded nothing here before. A method that
-   * cannot write cannot install, whatever a later caller passes it.
-   * ==================================================================== */
-
-  /* The manifest's bound. 200 is `op=exportlog`'s and `op=versionchain`'s
-     default, and it is the right one HERE for a reason of its own: a manifest
-     is carried by every run and stamped into every published case, so the
-     common read is "what lens is in force", which a group's whole declared bias
-     fits inside many times over. The ceiling is 2000 because the one caller who
-     legitimately needs everything is a REGRADE — two lenses re-run against each
-     other — and a lens silently cut in half would produce a diff that says two
-     groups agree about statements one of them never received. */
-  static BIAS_MANIFEST_LIMIT_DEFAULT = 200;
-  static BIAS_MANIFEST_LIMIT_MAX = 2000;
-  /* The inhale's two bounds. The SENTENCE bound is on the INPUT — how much of
-     the policy was read at all — and it is published separately from the output
-     bounds, because "we extracted 40 statements" over a document we only read
-     the first half of is a different claim from "we read it all and extracted
-     40", and collapsing them is the false-coverage failure this project names
-     everywhere else. */
-  static BIAS_INHALE_SENTENCES_MAX = 500;
-  static BIAS_INHALE_LIMIT_DEFAULT = 200;
-  static BIAS_INHALE_LIMIT_MAX = 1000;
-
-  #biasRefuse(key, detail) {
-    const row = BIAS_CHECKS[key];
-    return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
-  }
-
-  /** op=biasadopt — THE AUTHORED ACT, and the PIN taken at the same instant.
-   *
-   *  DEC-54 (c): *"INHALE MEANS PROPOSE FOR ADOPTION, NEVER INSTALL. Adoption is
-   *  an authored, attributed act (DEC-46, D-90, D-82). Otherwise adopting a
-   *  policy becomes a way to LAUNDER a standard."* So `author` is required and
-   *  is stamped by the control plane from the SESSION — a machine credential
-   *  carries none and is refused BY NAME (C-26.9), the same fence
-   *  `op=publishedcase` already draws for the bias acknowledgement.
-   *
-   *  DEC-54 (d): the row PINS `bundle_sha` — the revision adopted — plus the
-   *  external policy's source, retrieval date and content hash COPIED from the
-   *  bundle's frontmatter at this instant. Copied and not re-read: *"an external
-   *  policy MOVES; a case published under it must remain checkable after it
-   *  moves."* A pin that followed the bundle would not be a pin.
-   *
-   *  THE STATE MACHINE CARRIES THE OTHER HALF AND THIS METHOD DOES NOT DUPLICATE
-   *  IT. `STATES.bias` has no `draft -> adopted` edge, so a set can only reach
-   *  `adopted` through `proposed`, through `promote`, as a member-authored
-   *  transition. This refuses a set that is in neither state (C-26.10), and the
-   *  manifest below requires BOTH this row AND its PINNED revision standing at
-   *  `adopted` before it reports a lens in force — which is the fail-closed
-   *  direction: at no point does one act alone put a lens over somebody's work.
-   *  REC-187: the pin this takes at `proposed` is MOVED by promote() to the sha
-   *  the promotion to `adopted` mints (BOB #31: the lens is the ADOPTED revision). */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null,
-              viewer = null } = {}) {
-    const who = typeof author === "string" ? author.trim() : "";
-    if (!who || who.startsWith(Store.BIAS_MACHINE_PREFIX))
-      return this.#biasRefuse("BIAS_ADOPTION_NOT_AUTHORED",
-        "op=biasadopt is signed by the member adopting the set. The plane takes the name from the "
-        + "session and never from the request, so there is no name here to record.");
-    if (!bundleId)
-      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
-        "op=biasadopt names the bias bundle being adopted: pass bundleId=<BIAS-...>.");
-    const b = this.#one(
-      `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
-    if (!b || normalizeType(b.object_type) !== "bias" || !["proposed", "adopted"].includes(b.current_state))
-      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
-        `${bundleId} is ${!b ? "not in the record" : `a ${normalizeType(b.object_type)} in state '${b.current_state}'`}. `
-        + "A bias set is written in draft, offered as proposed, and only then adopted.");
-
-    const st = String(scope) === "project" ? "project" : "instance";
-    const sid = st === "project" ? String(scopeId || "").trim() : "";
-    if (st === "project" && !sid)
-      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
-        "a project-scoped adoption names the project it is scoped to: pass scopeId=<PROJ-...>.");
-    /* REC-134: a lens put over ONE PROJECT's work is that project's managers' act —
-       `BIO_Declared_Bias_v0_1.md` §Bias bundles and adoption: *"Project managers define project
-       bias"*, and DEC-72 clause 5 rules that MANAGER IS THE EXISTING PROJECT OWNER ROLE. Nothing
-       gated it before: any member, and every administrator, could adopt a set into any project's
-       scope. The instance scope is untouched (*"Admins define instance bias"*). */
-    if (st === "project") {
-      /* REC-149: at EXISTENCE (a discoverable project, a member outside it) the positional C-70.1, asked of the
-         stamped VIEWER — sight is the viewer's question, position the identity's. */
-      const existence = this.#existenceAct(sid, viewer);
-      if (existence) return existence;
-      const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
-      if (denied) return denied;
-    }
-
-    /* DEC-54 (d)'s pin, read from the DOCUMENT rather than from the request, so
-       a caller cannot claim a provenance the bundle does not carry. Absent is
-       NULL and is the honest value for a natively authored set: there is no
-       external source to pin, and inventing one would be this plane asserting a
-       provenance nobody has. */
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-    const fm = md && typeof md.content === "string" ? (parseFrontmatter(md.content).data || {}) : {};
-    const now = at ? String(at) : stampInstant("second");
-    this.sql.exec(
-      `INSERT OR REPLACE INTO bias_adoptions
-         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      st, sid, bundleId, b.bundle_sha, who, now,
-      typeof fm.policy_source === "string" && fm.policy_source.trim() ? fm.policy_source.trim() : null,
-      typeof fm.policy_retrieved === "string" && fm.policy_retrieved.trim() ? fm.policy_retrieved.trim() : null,
-      typeof fm.policy_sha256 === "string" && fm.policy_sha256.trim() ? fm.policy_sha256.trim().toLowerCase() : null);
-
-    return { ok: true, adopted: true, bundleId,
-             scope: st, scope_id: sid, author: who, at: now,
-             /* THE PIN, echoed so the caller sees what was frozen rather than
-                what it asked for. */
-             pinned: { bundle_sha: b.bundle_sha,
-                       source_url: fm.policy_source ?? null,
-                       retrieved: fm.policy_retrieved ?? null,
-                       source_sha256: fm.policy_sha256 ?? null },
-             /* Stated rather than implied: the row exists and the lens is not
-                yet in force, because the bundle has still to stand at
-                `adopted`. An answer that said "adopted: true" and left the
-                second condition to be discovered would be the overclaim this
-                project's whole threat model is about. */
-             in_force: b.current_state === "adopted",
-             /* REC-210 — THE MARKER. Ruled by BOB #32 on 2026-09-24 and folded into
-                `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"Adopting a proposed,
-                not-yet-accepted revision is a REPLACEMENT: the adopter's lens becomes those bytes,
-                and it stays on them whatever later happens to the proposal. It is never a
-                pre-authorisation of whatever the proposal becomes. The adoption and its read SAY
-                that they pin a proposed revision."*
-
-                IT IS A FACT ABOUT THE PIN, NOT A SECOND SPELLING OF `in_force`. The two agree in
-                THIS answer because the pin is the head at this instant; they come apart at the
-                READ, in both directions. promote() re-pins an adoption taken at `proposed` to the
-                sha the promotion to `adopted` mints (REC-187), so this row stops pinning a proposed
-                revision with nobody adopting again — and a re-adoption of an ALREADY ADOPTED set on
-                a later proposal moves the pin back onto proposed bytes and LIFTS a lens that was in
-                force. `in_force: false` says no lens stands over this scope's work; the marker says
-                what was frozen instead, and that the group has not accepted it.
-
-                STATED RATHER THAN LEFT TO BE INFERRED, for the reason `in_force` itself is:
-                `pinned.bundle_sha` is 64 hex characters that no reader can tell from an adopted
-                revision's without going and fetching the bytes, so an answer without this field
-                lets a REPLACEMENT read exactly like an ordinary adoption — the record claiming more
-                than it can support, which is the defect this project ranks worst. */
-             pins_proposed: b.current_state === "proposed",
-             note: b.current_state === "adopted"
-               ? "this set is in force for that scope"
-               /* CORRECTED by REC-210, and the correction is not cosmetic: this sentence read
-                  "recorded and pinned; the set is in force once THE BUNDLE ITSELF stands at
-                  'adopted'", which was true of a first adoption and false of a re-adoption on a
-                  later proposal — that bundle already stands at `adopted`, and what governs is the
-                  state of the REVISION THIS ROW PINS. It also said nothing about the lens the act
-                  had just displaced. */
-               : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not "
-                 + "yet accepted, so it REPLACES this scope's lens with them rather than "
-                 + "pre-authorising whatever the proposal becomes; a lens is in force once the "
-                 + "revision THIS ROW PINS stands at 'adopted', which is a member-authored "
-                 + "transition through op=promote" };
-  }
-  /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
-     top of this file and already reused by the queue's own machine-author test
-     — the same discipline, for the same reason: the string that identifies a
-     machine credential must not be spelled twice, or the day it changes one of
-     the two fences quietly stops fencing. */
-  static BIAS_MACHINE_PREFIX = MACHINE_AUTHOR_PREFIX;
-
-  /* REC-187: A BIAS SET'S STATEMENTS AS ROWS, FROM ONE REVISION'S FRONTMATTER — the ONE spelling of
-     that reading. promote()'s `bias_statements` projection writes these rows for the head, and
-     op=biasmanifest reads them out of the PINNED revision's bytes; two normalisations of one list
-     would let the manifest and the projection disagree about what a statement says. '' rather than
-     NULL on a replayed malformed shape, mirroring the inquiry_basis fallback (the columns are NOT
-     NULL); an entry with no string id is skipped, as the projection always skipped it. */
-  static #biasStatementRows(bundleId, fm) {
-    const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
-    const out = [];
-    for (let i = 0; i < stmts.length; i++) {
-      const s = stmts[i];
-      if (!s || typeof s !== "object" || typeof s.id !== "string") continue; // replay of a malformed shape
-      out.push({
-        bundle_id: bundleId, ord: i, statement_id: s.id,
-        kind: typeof s.kind === "string" ? s.kind : "",
-        subject: s.subject == null ? "" : String(s.subject),
-        text: typeof s.text === "string" ? s.text : "",
-        justification: typeof s.justification === "string" ? s.justification : "",
-        citations: Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
-        locked: s.locked === true ? 1 : 0,
-        nullifies: typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null,
-      });
-    }
-    return out;
-  }
-
-  /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue.
-   *
-   *  `BIO_Declared_Bias_v0_1.md`: *"Effective bias for a piece of work = the
-   *  adopted instance statements at pinned revisions, minus project
-   *  nullifications of unlocked statements, plus project replacements and
-   *  additions. Every work product cites its BIAS MANIFEST: the list of (bias
-   *  bundle id, revision) in force plus a hash of the computed effective
-   *  statement set."* This method IS that sentence.
-   *
-   *  THE HASH IS OVER THE WHOLE SET AND NEVER OVER THE PAGE. A manifest hash
-   *  that changed with `limit` would make two runs under one identical lens
-   *  cite two different manifests, which destroys the only thing the hash is
-   *  for. `statements_sha` is therefore computed before any bound is applied,
-   *  and the answer says so.
-   *
-   *  LOCKS ARE ENFORCED HERE AND NOT ONLY REPORTED. *"A project override naming
-   *  a locked instance statement is a conformance error, full stop."* So a
-   *  nullification of a locked statement is REFUSED ITS EFFECT — the statement
-   *  stays in the set — and the attempt is published as `lock_violations[]`.
-   *  Reporting it while honouring it would be the loosening the lock exists to
-   *  prevent, arriving through the diagnostic channel.
-   *
-   *  ABSENCE IS STATED, WHICH IS THE WHOLE POINT OF THE FIELD. Where no set is
-   *  adopted this answers `in_force: false` with `stated` carrying the sentence
-   *  `INVESTIGATIVE-SESSION.md` §3 requires — *"no manifest was in force"* — and
-   *  never an empty list that a consumer could read as a lens with nothing in
-   *  it. The two are different facts and CLAUDE.md requires the difference be
-   *  stated.
-   *
-   *  GATED. A project-scoped manifest names a project bundle, so a viewer who
-   *  cannot see the project is answered exactly as they are for a project that
-   *  does not exist; the bias bundles themselves go through `#bundleGate`, the
-   *  same predicate every read in this file compiles. Nothing publishes how many
-   *  rows the gate removed, because that count is the leak (REC-36). */
-  /* D-84 — THE SAME ANSWER, SYNCHRONOUSLY, AND THERE IS ONE BODY FOR BOTH. `op=publish` stamps the
-     manifest in force into the case document it authors, and `publishCase()` is synchronous on purpose:
-     REC-126's review copy runs it inside `transactionSync` and rolls it back, and a transaction body
-     cannot await. The only await this method ever held was the hash, and `createSha256` — the digest
-     `op=publish` already takes the case document's own sha with — is the same SHA-256 over the same
-     bytes (measured equal to `crypto.subtle`'s over a non-ASCII input before this landed; the suite
-     asserts the stamped hash equals op=biasmanifest's). A second computation of the effective set for
-     the stamp would be two spellings of the one sentence this method IS.
-     CORRECTED 2026-09-23 (c17-unionfix), not exempted: D-84 first kept an `async biasManifest()` that
-     only returned `#biasManifestNow()`. That moved the capped body off the name `op=biasmanifest`
-     dispatches to, so bounds.test.mjs's walk lost the op (roster 37 -> 36 once REC-161 arrived) and
-     derivation-bounds.test.mjs's by-name pins read `#biasManifestNow`. The one body now carries the
-     public name and is synchronous; every caller awaits it and `await` of a plain value is that
-     value, so nothing about the answer moved. */
-  biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
-    const st = String(scope) === "project" ? "project" : "instance";
-    const sid = st === "project" ? String(scopeId || "").trim() : "";
-    if (st === "project" && (!sid || !this.#viewerSees(sid, viewer)))
-      return { ok: true, scope: st, scope_id: sid, in_force: false,
-               bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null,
-               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               /* A project this viewer may not see and a project that does not
-                  exist answer IDENTICALLY, by the same rule every gated read in
-                  this plane follows. */
-               stated: "no manifest was in force" };
-
-    const seen = this.#bundleGate("a.bundle_id", viewer);
-    /* IN FORCE = an adoption row whose PINNED REVISION stands at `adopted`, of a set not since
-       retired. REC-187 (BOB #31: *"the ADOPTED one"*): the revision in force is the one the pin
-       names, so the state that decides it is read from THOSE bytes — never the head's. Before, the
-       join asked the HEAD, which made two defects one: a pin taken at `proposed` was reported in
-       force the moment the head reached `adopted` (a proposed sha named as the lens), and a later
-       revision merely PROPOSED lifted the adopted lens entirely (a published case would sign "no
-       manifest was in force" over a group that had adopted one). `retired` is still asked of the
-       head, because retirement is the one act that takes a set out of force as a whole; the join
-       to `bundles` keeps that structural. */
-    const pinned = [];
-    const pinnedText = new Map();
-    const unresolved = [];
-    /* REC-210 — BOB #32, 2026-09-24: AN ADOPTION WHOSE PIN IS A PROPOSED REVISION, which this read
-       DROPPED IN SILENCE. *"Adopting a proposed, not-yet-accepted revision is a REPLACEMENT … The
-       adoption and its read SAY that they pin a proposed revision."* The silence was the defect the
-       ruling is about: a scope whose only adoption pins proposed bytes answered `in_force: false`
-       and *"no manifest was in force"* with nothing beside it, which is indistinguishable from a
-       group that never adopted anything — and for a set already in force whose adoption was moved
-       onto a later proposal, it is the record reporting an absence where a member's authored act
-       had REPLACED the lens. The sentence stays exactly as it is, because it is TRUE and
-       `INVESTIGATIVE-SESSION.md` §3 requires it verbatim; the marker is its own field beside it. */
-    const pinsProposed = [];
-    const adoptionsFor = (type, id) => {
-      const out = [];
-      const rows = this.#rows(
-        `SELECT a.*, b.current_state AS state
-           FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
-          WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state <> 'retired' AND (${seen.sql})
-          ORDER BY a.bundle_id`, type, id, ...seen.args);
-      for (const a of rows) {
-        const text = this.#memberTextAtSha(a.bundle_id, a.bundle_sha);
-        /* The pinned bytes are the live row or a history snapshot (promote() snapshots every
-           outgoing revision), so a pin this store cannot produce is not expected — but if one
-           occurs it is UNDETERMINED and said so, never dropped into "not in force". */
-        if (text === null) { unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type }); continue; }
-        const fm = parseFrontmatter(text).data || {};
-        if (fm.current_state !== "adopted") {
-          /* REC-210: RECORDED, not dropped. `pinned_state` is the pinned revision's OWN state and
-             is carried rather than assumed `proposed`: op=biasadopt refuses a set that is in
-             neither `proposed` nor `adopted` (C-26.10), so `proposed` is the only state this plane
-             can produce here — but a state it cannot produce must be NAMED if it ever appears
-             rather than silently scored as the expected one.
-
-             THE STATE IS HOISTED INTO A LOCAL BEFORE IT IS TYPE-CHECKED, and that is not style.
-             `civicos-ui/check-semantics.mjs` harvests the states this plane writes by matching the
-             field name followed by an equality and a quoted lower-case word, over the RAW file. So
-             the ordinary spelling of this guard — a `typeof` comparison of `fm`'s field against the
-             name of the string type — is read by that walk as the plane writing a state CALLED
-             after that type, and the gate goes RED naming a state nobody wrote. Measured on this
-             landing, at the cost of one gate round; and then a SECOND round, because the first
-             version of this comment EXPLAINED the trap by quoting the expression, which re-armed it
-             — the walk reads comments, and a correction that spells the token it is correcting is a
-             receipt `kickoffs/WORKER.md` already carries. Written through `pinnedState` the guard is
-             identical and the walk sees nothing. The walk's own over-match is reported as its own
-             defect rather than worked around in silence. */
-          const pinnedState = fm.current_state;
-          pinsProposed.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type,
-                              pinned_state: typeof pinnedState === "string" ? pinnedState : null,
-                              adopted_by: a.author, adopted_at: a.at });
-          continue;
-        }
-        pinned.push([a.bundle_id, fm]);
-        pinnedText.set(a.bundle_id, text);
-        out.push(a);
-      }
-      return out;
-    };
-
-    const instanceAdoptions = adoptionsFor("instance", "");
-    const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
-    const adoptions = [...instanceAdoptions, ...projectAdoptions];
-
-    /* REC-210: SPREAD INTO EVERY ANSWER BELOW THAT COULD CARRY IT, and ABSENT when the list is
-       empty — `unresolved_pins`' own shape, for its reason: a key that is always present teaches a
-       consumer nothing by being there, and BOB #32's rule is that the read of an adoption pinning a
-       proposed revision SAYS SO, while an ordinary adoption's read does not. The sentence states
-       what the list MEANS, the way `statements_sha_covers` does, so no consumer has to reconstruct
-       the doctrine from a field name. */
-    const marker = pinsProposed.length === 0 ? {} : {
-      pins_proposed: pinsProposed,
-      pins_proposed_stated:
-        "each entry is an adoption whose PINNED REVISION is one the group has offered and not "
-        + "accepted: the member's act REPLACED that scope's lens with those bytes and is not a "
-        + "pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin "
-        + "puts no lens in force until the revision it names stands at 'adopted'",
-    };
-
-    if (unresolved.length > 0)
-      return { ok: true, scope: st, scope_id: sid, in_force: null,
-               bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null, unresolved_pins: unresolved, ...marker,
-               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
-                     + "so which statements are in force cannot be computed" };
-
-    if (adoptions.length === 0)
-      return { ok: true, scope: st, scope_id: sid, in_force: false,
-               bundles: [], statements: [], residue: [], lock_violations: [],
-               statements_sha: null, ...marker,
-               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "no manifest was in force" };
-
-    /* REC-187: the statements are read out of EACH PIN'S OWN BYTES, never the `bias_statements`
-       projection, which holds the HEAD — and the head moves the moment a newer revision is
-       proposed. Hashing the projection is exactly how a proposed sha came to stand beside a later
-       revision's hash; `statements_sha` is now over the revision `revision` names, and nothing else. */
-    const pinnedFm = new Map(pinned);
-    const stmtsOf = (bundleId) => Store.#biasStatementRows(bundleId, pinnedFm.get(bundleId));
-
-    /* THE INSTANCE LAYER FIRST, keyed by statement id so a project override can
-       find what it names. */
-    const effective = new Map();
-    const level = new Map();
-    for (const a of instanceAdoptions)
-      for (const s of stmtsOf(a.bundle_id)) {
-        effective.set(s.statement_id, s);
-        level.set(s.statement_id, { bundle_id: a.bundle_id, scope: "instance", locked: s.locked === 1 });
-      }
-
-    /* THEN THE PROJECT LAYER: nullifications of UNLOCKED statements, then
-       replacements and additions. A statement that both nullifies and carries
-       its own text is a REPLACEMENT — it removes the named statement and adds
-       itself — which is the doctrine's "project replacements" and is why the
-       two arms are one loop rather than two passes. */
-    const lockViolations = [];
-    for (const a of projectAdoptions)
-      for (const s of stmtsOf(a.bundle_id)) {
-        if (s.nullifies) {
-          const target = level.get(s.nullifies);
-          if (target && target.locked) {
-            /* *"Locks bind projects only… if the project managers don't like
-               it, they can build their project in another instance."* The
-               nullification is REFUSED ITS EFFECT and reported. */
-            lockViolations.push({ project_bundle: a.bundle_id, statement_id: s.statement_id,
-                                  nullifies: s.nullifies,
-                                  instance_bundle: target.bundle_id,
-                                  detail: "a project override naming a LOCKED instance statement is a "
-                                        + "conformance error; the instance statement stands" });
-          } else if (target) {
-            effective.delete(s.nullifies);
-            level.delete(s.nullifies);
-          }
-        }
-        if (s.text && s.text.trim()) {
-          effective.set(s.statement_id, s);
-          level.set(s.statement_id, { bundle_id: a.bundle_id, scope: "project", locked: false });
-        }
-      }
-
-    /* THE ORDER IS TOTAL AND DERIVED, never insertion order: a manifest hash
-       that depended on the order rows came back in would differ between two
-       computations of one identical lens. */
-    const all = [...effective.values()]
-      .map((s) => ({
-        statement_id: s.statement_id,
-        bundle_id: s.bundle_id,
-        scope: level.get(s.statement_id)?.scope ?? "instance",
-        kind: s.kind, subject: s.subject, text: s.text,
-        justification: s.justification,
-        citations: s.citations ? JSON.parse(s.citations) : [],
-        locked: s.locked === 1,
-        nullifies: s.nullifies ?? null,
-      }))
-      /* FIELD BY FIELD, and NOT by concatenating the two with a separator. A
-         separator has to be a character that cannot occur in either field, and
-         the first attempt at this line reached for a NUL — which
-         `hygiene.test.mjs` refused on sight, correctly: a stray control byte in
-         this file makes plain `grep` treat 18,000 lines as BINARY and silently
-         match nothing, which CLAUDE.md records as a trap that has already cost
-         time. Comparing in sequence needs no separator at all. */
-      .sort((x, y) => x.bundle_id.localeCompare(y.bundle_id)
-                      || x.statement_id.localeCompare(y.statement_id));
-
-    /* THE HASH, over the WHOLE set and over the fields that CHANGE MEANING. A
-       hash over the rendered answer would move when a bound moved; a hash over
-       the ids alone would not move when a statement's text was rewritten under
-       the same id, which is the one change a manifest must notice, because it
-       is what creates bias debt. */
-    const statementsSha = createSha256().update(Store.#enc.encode(JSON.stringify(
-      all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])))).hex();
-
-    /* DEC-54 (b): THE RESIDUE TRAVELS WITH THE MANIFEST. It is read from each
-       adopted bundle's own `## What This Does Not Enforce` section — the bytes
-       a stranger holding the bundle would read — rather than recomputed, so the
-       manifest and the document say one thing. */
-    const residue = [];
-    for (const a of adoptions) {
-      /* REC-187: the PINNED revision's section, never the head's — a newer proposal's residue is not
-         the adopted lens's residue, and the manifest states one revision. */
-      const body = pinnedText.get(a.bundle_id) ?? "";
-      const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + body);
-      residue.push({ bundle_id: a.bundle_id, scope: a.scope_type,
-                     text: m ? m[1].trim() : "",
-                     stated: !!(m && m[1].trim()) });
-    }
-
-    const cap = Math.max(1, Math.min(Store.BIAS_MANIFEST_LIMIT_MAX,
-      Math.floor(Number(limit) || Store.BIAS_MANIFEST_LIMIT_DEFAULT)));
-    const from = Math.max(0, Math.floor(Number(offset) || 0));
-    const page = all.slice(from, from + cap);
-
-    return {
-      ok: true,
-      scope: st, scope_id: sid,
-      in_force: true,
-      /* THE MANIFEST PROPER: (bias bundle id, revision) in force, plus the pin
-         each adoption froze. This is what a run carries and what a published
-         case names the version of. */
-      bundles: adoptions.map((a) => ({
-        bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type,
-        adopted_by: a.author, adopted_at: a.at,
-        source_url: a.source_url ?? null, retrieved: a.retrieved ?? null,
-        source_sha256: a.source_sha256 ?? null,
-      })),
-      statements_sha: statementsSha,
-      /* Stated in the answer rather than left to be inferred: the hash covers
-         the whole set even when the page does not. */
-      statements_sha_covers: "the whole effective set, before any bound was applied",
-      /* REC-210: A LENS IN FORCE AND AN ADOPTION PINNING A PROPOSED REVISION ARE NOT EXCLUSIVE —
-         one set's pin may stand at `adopted` while another's was moved onto a later proposal, and
-         the instance and project layers can differ. So the marker travels here too, and the
-         statements above are the effective set of the pins that ARE adopted, never of these. */
-      ...marker,
-      statements: page,
-      residue,
-      lock_violations: lockViolations,
-      count: page.length, total: all.length,
-      limit: cap, offset: from,
-      truncated: from + page.length < all.length,
-    };
-  }
-
-  /** op=biasinhale — READING AN EXTERNAL POLICY. It proposes; it never installs.
-   *
-   *  DEC-54's response, in Bob's words: *"having the ability to inhale an
-   *  organization's stated policy, thus turning it into a BIO enforced policy,
-   *  is a big part of the solution"* — and the three determinations that make it
-   *  safe are enforced here rather than described:
-   *
-   *  (a) THE SPLIT. *"A newsroom policy contains BOTH: bars (AP's 'more than one
-   *      source' -> required_strength) AND scrutiny statements (AP's 'the source
-   *      is reliable, and in a position to have direct knowledge') … One
-   *      document, two constructs, and conflating them is the error to design
-   *      against."* Bars come back in `bars[]`, addressed to `required_strength`,
-   *      and NEVER as statements.
-   *
-   *  (b) THE RESIDUE IS THE MOST VALUABLE PRODUCT, not a diagnostic. *"in four
-   *      of five documented verification failures the organisation's COUNTABLE
-   *      rules were formally SATISFIED while the uncountable properties failed …
-   *      an extractor pointed at AP's policy would reliably capture 'more than
-   *      one source' and drop 'in a position to have direct knowledge' — it
-   *      would systematically encode the part that does not protect and discard
-   *      the part that does. Which inverts what the capability should output:
-   *      its most valuable product is the list of what it COULD NOT
-   *      mechanise."* So `residue[]` is a first-class field with its own count
-   *      and its own bound, and `coverage` states the split in numbers.
-   *
-   *  (c) IT PROPOSES. There is NO WRITE IN THIS METHOD — no `sql.exec`, no
-   *      transaction, no promote — and `test/bias.test.mjs` asserts that against
-   *      this file's bytes. A caller asking it to adopt is refused by C-26.8
-   *      rather than silently ignored, because a silent ignore is how a caller
-   *      comes to believe it installed.
-   *
-   *  AND IT NEVER PROPOSES kind=pattern. DEC-54: *"A pattern statement must cite
-   *  evidence in the record and cannot leave draft without it, so an extractor
-   *  can propose scrutiny and inference statements far more safely than pattern
-   *  statements."* An extractor reading somebody else's policy holds no evidence
-   *  in THIS record, so every pattern-shaped sentence goes to the residue by
-   *  construction — the machine's reach is two of the three kinds, and the third
-   *  is out of it structurally rather than by policy.
-   *
-   *  THE MALFORMEDNESS RULE BINDS THE MACHINE EXACTLY AS IT BINDS A MEMBER
-   *  (DEC-54's constraint 2). A candidate that would be refused by C-26.5 from a
-   *  member is dropped to the residue with that C-number attached, rather than
-   *  proposed and refused later — proposing it would put a verdict in front of a
-   *  member with the machine's authority behind it. */
-  biasInhale({ policy = "", source = null, retrieved = null, adopt = false,
-               limit = null } = {}) {
-    if (adopt === true || adopt === "true" || adopt === 1 || adopt === "1")
-      return this.#biasRefuse("BIAS_INHALE_CANNOT_ADOPT",
-        "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a "
-        + "member — and only after the proposed set has been written into a bias bundle and offered.");
-
-    const text = String(policy || "");
-    /* Sentences, bounded. The bound is on the INPUT and is reported separately
-       from the output bounds below: "40 statements from a policy we read half
-       of" and "40 statements from a policy we read all of" are different
-       claims. */
-    const allSentences = text
-      .split(/\n{2,}|(?<=[.;:])\s+/)
-      .map((s) => s.replace(/\s+/g, " ").trim())
-      .filter((s) => s.length > 12);
-    const readSentences = allSentences.slice(0, Store.BIAS_INHALE_SENTENCES_MAX);
-
-    /* The cues, and they are deliberately NARROW. A sentence that does not
-       clearly do one of the two mechanisable things goes to the residue, which
-       is the safe direction here and the opposite of the usual one: a
-       misclassified sentence proposed as a statement would put words in a
-       group's mouth, while one left in the residue is simply named as something
-       BIO does not check. */
-    const SCRUTINY = /\b(verify|verified|verification|corroborat\w+|cross-?check\w*|confirm\w*|reliab\w+|track record|motive|direct knowledge|first-?hand|vet\w*|scrutin\w+|authenticat\w+)\b/i;
-    const INFERENCE = /\b(does not (mean|indicate|imply|constitute)|is not (evidence|an indication|proof|confirmation)|should not be (taken|read|treated|inferred)|do not (assume|infer)|cannot be inferred|must not be (taken|read) as)\b/i;
-    const PATTERN_SHAPED = /\b(routinely|habitually|has a history of|repeatedly|consistently|typically|often)\b/i;
-
-    const bars = [], statements = [], residue = [];
-    let n = 0;
-    for (const s of readSentences) {
-      /* (a) THE SPLIT, FIRST. A bar is recognised before anything else, because
-         a sentence can look like a scrutiny statement AND set a threshold
-         ("stories require more than one source, and each source must be
-         reliable") — and DEC-54's error to design against is exactly the one
-         where such a sentence lands in the bias set and stops gating. */
-      if (BIAS_BAR_PHRASING.some((re) => re.test(s))) {
-        bars.push({ text: s, construct: "required_strength",
-                    detail: "a BAR — how strong support must be before you assert. It gates at "
-                          + "pre-flight (DEC-17); declared as bias it would refuse nothing." });
-        continue;
-      }
-      /* The malformedness rule, applied to the MACHINE's candidate before it is
-         ever offered. */
-      if (BIAS_VERDICT_WHOLESALE.test(s) || BIAS_VERDICT_SPEAKER.some((re) => re.test(s))) {
-        residue.push({ text: s, why: "this reads as a verdict on a source, and declared bias may never "
-                                   + "issue verdicts — refused for the machine exactly as for a member",
-                       check: BIAS_CHECKS.BIAS_STATEMENT_ISSUES_A_VERDICT.check });
-        continue;
-      }
-      if (INFERENCE.test(s)) {
-        statements.push({ id: `prop-${++n}`, kind: "inference", subject: null, text: s,
-                          justification: null, citations: [],
-                          proposed: true, authored: false });
-        continue;
-      }
-      if (SCRUTINY.test(s) && !PATTERN_SHAPED.test(s)) {
-        statements.push({ id: `prop-${++n}`, kind: "scrutiny", subject: null, text: s,
-                          justification: null, citations: [],
-                          proposed: true, authored: false });
-        continue;
-      }
-      residue.push({ text: s,
-                     why: PATTERN_SHAPED.test(s)
-                       ? "this is a claim about how an organisation behaves, which is a PATTERN statement "
-                       + "and must cite evidence in THIS record — evidence a reader of somebody else's "
-                       + "policy does not have. It is left for a member to make, or not."
-                       : "this states a property BIO cannot count — the uncountable half of a policy, and "
-                       + "the half that does the protecting. It is named here rather than dropped.",
-                     check: null });
-    }
-
-    const cap = Math.max(1, Math.min(Store.BIAS_INHALE_LIMIT_MAX,
-      Math.floor(Number(limit) || Store.BIAS_INHALE_LIMIT_DEFAULT)));
-
-    return {
-      ok: true,
-      /* (c) STATED FIRST AND IN THE ANSWER, not only in the documentation.
-         Three keys rather than one, because a consumer that read only
-         `installed` could still believe something changed. */
-      installed: false, adopted: false, writes: 0,
-      proposes: "a member writes these into a bias bundle, justifies each one, points each subject at "
-              + "the registry, offers the set as 'proposed', and adopts it with their name on it. "
-              + "Nothing here is in force and nothing here has been written.",
-      /* (a) THE SPLIT, as two named lists. */
-      bars: bars.slice(0, cap), bars_count: bars.length,
-      statements: statements.slice(0, cap), statements_count: statements.length,
-      /* (b) THE RESIDUE, published at the same rank as the extraction and with
-         its own count, because the ruling's finding is that this is where the
-         protection lives. */
-      residue: residue.slice(0, cap), residue_count: residue.length,
-      /* The split in numbers, so a surface cannot show the extraction and leave
-         the residue behind a fold. */
-      coverage: {
-        sentences_read: readSentences.length,
-        sentences_total: allSentences.length,
-        input_truncated: allSentences.length > readSentences.length,
-        input_limit: Store.BIAS_INHALE_SENTENCES_MAX,
-        mechanised: bars.length + statements.length,
-        not_mechanised: residue.length,
-        note: "the not-mechanised list is the more important half: the extractable rules are the "
-            + "countable ones, and in four of five documented verification failures the countable "
-            + "rules were satisfied while the uncountable properties failed (DEC-54).",
-      },
-      /* DEC-54 (d): what a member will need to PIN when they adopt. Echoed and
-         never stored, because nothing here is stored. */
-      pin: { source_url: source ? String(source) : null,
-             retrieved: retrieved ? String(retrieved) : null },
-      limit: cap,
-      truncated: bars.length > cap || statements.length > cap || residue.length > cap,
-    };
-  }
+  /* bias (K61): the three acts and the two debt reads are `bias`'s; these delegate to it for this store's callers. */
+  biasAdopt(a) { return biasOf(this.ctx).biasAdopt(a); }
+  biasManifest(a) { return biasOf(this.ctx).biasManifest(a); }
+  biasInhale(a) { return biasOf(this.ctx).biasInhale(a); }
+  biasDebtResolve(a) { return biasOf(this.ctx).biasDebtResolve(a); }
+  biasDebtRead(a) { return biasOf(this.ctx).biasDebt(a); }
 
   async fetch(req) {
     const url = new URL(req.url);
@@ -38009,8 +35634,11 @@ export class Store extends DurableObject {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
         ...captureOps(captureOf(this.ctx), url, body, this.env),
         ...calibrationOps(calibrationOf(this.ctx), url, body),
+        ...biasOps(biasOf(this.ctx), url, body),
         ...extractionOps(extractionOf(this.ctx), url, body, this.env),
         ...connectionsOps(connectionsOf(this.ctx), url, body, this.env),
+        /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
+        ...observationLogOps(observationLogOf(this.ctx), url, body),
         ...entitiesOps(entitiesOf(this.ctx), url, body),
         ...progressionOps(progressionsOf(this.ctx), url, body),
         promote: () => promotionOf(this.ctx).promote(body),
@@ -38311,48 +35939,10 @@ export class Store extends DurableObject {
           version: url.searchParams.get("version"),
           viewer: url.searchParams.get("viewer"),
         }),
-        /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the
-           control plane from the SESSION and any caller-supplied value is
-           deleted there first, exactly as `by`, `viewer` and `owner` are — it is
-           the field that decides whose name is on an authored act, so a caller
-           naming it would be a caller signing for somebody else. `viewer` on the
-           manifest read is stamped the same way. */
         airunspawn: () => this.aiRunSpawnPayload({
           run: url.searchParams.get("run"),
           half: url.searchParams.get("half"),
           viewer: url.searchParams.get("viewer"),
-        }),
-        biasmanifest: () => this.biasManifest({
-          scope: url.searchParams.get("scope"),
-          scopeId: url.searchParams.get("scopeId"),
-          limit: url.searchParams.get("limit"),
-          offset: url.searchParams.get("offset"),
-          viewer: url.searchParams.get("viewer"),
-        }),
-
-        biasadopt: async () => {
-          const r = this.biasAdopt({
-            bundleId: url.searchParams.get("bundleId"),
-            scope: url.searchParams.get("scope"),
-            scopeId: url.searchParams.get("scopeId"),
-            author: url.searchParams.get("author"),
-            identity: url.searchParams.get("identity"),   /* REC-134 */
-            viewer: url.searchParams.get("viewer"),       /* REC-149 */
-          });
-          /* D-86: an adoption is the other door a lens moves through; the promote arm's reason. */
-          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
-          return r;
-        },
-        /* The policy arrives in the BODY. A policy document in a query string
-           would be truncated by the first proxy with an opinion about URL
-           length, and a truncated policy silently produces a smaller residue —
-           the one field whose incompleteness is the failure DEC-54 (b) is about. */
-        biasinhale: () => this.biasInhale({
-          policy: (body && body.policy) || "",
-          source: (body && body.source) || null,
-          retrieved: (body && body.retrieved) || null,
-          adopt: body ? body.adopt : false,
-          limit: url.searchParams.get("limit"),
         }),
         /* PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS. `author` and
            `viewer` are stamped by the control plane and never taken from the
@@ -38451,25 +36041,6 @@ export class Store extends DurableObject {
         }),
         transcription: () => this.transcriptionRead({ id: url.searchParams.get("id"),
                                                       viewer: url.searchParams.get("viewer") }),
-        /* MK-4 / IC-136: THE LEAD. `author` and `looker` come from the QUERY STRING,
-           where the control plane stamped them, and never from the body — a body
-           field a caller can fill is a name a machine can post (§7). */
-        lead: () => this.lead({
-          words: body ? body.words : null,
-          locator: body ? body.locator : null,
-          author: url.searchParams.get("author"),
-        }),
-        leadlook: () => this.leadLook({
-          lead: (body && body.lead) || url.searchParams.get("lead"),
-          state: body ? body.state : null,
-          resultKind: body ? body.resultKind : null,
-          resultRef: body ? body.resultRef : null,
-          condition: body ? body.condition : null,
-          detail: body ? body.detail : null,
-          looker: url.searchParams.get("looker"),
-          viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity"),
-        }),
         /* MK-7: THE ATTRIBUTION ACT. WHO CHOSE comes from the QUERY STRING, where the control plane stamped
            it over anything the caller sent; nothing in the body can name the chooser. */
         attribute: () => this.attributeObservation({
@@ -38479,17 +36050,6 @@ export class Store extends DurableObject {
           level: body ? body.level : null,
           by: url.searchParams.get("by"),
         }),
-        leadshare: () => this.leadShare({
-          lead: (body && body.lead) || url.searchParams.get("lead"),
-          project: (body && body.project) || url.searchParams.get("project"),
-          sharer: url.searchParams.get("sharer"),
-          viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity"),
-        }),
-        leadread: () => this.leadRead({ id: url.searchParams.get("id"),
-                                        limit: url.searchParams.get("limit"),
-                                        viewer: url.searchParams.get("viewer"),
-                                        identity: url.searchParams.get("identity") }),
         suggest: () => this.suggestVersion({
           ...(body || {}),
           target: (body && body.target) || url.searchParams.get("target"),
@@ -38566,15 +36126,6 @@ export class Store extends DurableObject {
                                             caller: url.searchParams.get("principal") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
-        /* REC-207: the two doors BOB #32's ruling needs. `actor` rides in the BODY, stamped there by
-           index.mjs on `op=taskresolve`'s precedent, so the store sees a machine credential honestly
-           named `token:<class>` and can refuse it BY SHAPE; `viewer` is the query stamp every gated read
-           here takes, set after the body's spread so a caller's own is overwritten rather than believed. */
-        biasdebtresolve: () => this.biasDebtResolve({ ...(body || {}),
-                                                      viewer: url.searchParams.get("viewer") }),
-        biasdebt: () => this.biasDebtRead({ run: url.searchParams.get("run"),
-                                            viewer: url.searchParams.get("viewer"),
-                                            limit: url.searchParams.get("limit") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),

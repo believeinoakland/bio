@@ -162,7 +162,8 @@ export class Connections {
     return { ok: true, module };
   }
 
-  /** R5: the provider of an entity's derivation statement (`observation-log`, which reads its own log), once. */
+  /** R5: the provider of an entity's derivation statement (`observation-log`, which reads its own log), once; it is
+   *  called as `fn(entityId, {hasArtifact, enteredAt})`. */
   registerDerivationProvider(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED", detail: "a provider names the module that registers it and its function" };
@@ -446,7 +447,11 @@ export class Connections {
       return { recorded: false, cause: "NO_PROVIDER",
                says: "no module that records derivations is registered with this one, so whether this subject's "
                    + "connections were ever derived, and whether a derivation was cut at its bound, is undetermined" };
-    try { return this.#derivationProvider.fn(entityId); }
+    /* The provider is handed what only this module and entities hold: whether a connection through the entity is
+       held (the pre-log evidence) and when the entity was registered. */
+    const e = this.entities && typeof this.entities.readEntity === "function" ? this.entities.readEntity({ entityId }) : null;
+    const hasArtifact = !!this.#one(`SELECT 1 AS x FROM connections WHERE entity_id=? LIMIT 1`, entityId);
+    try { return this.#derivationProvider.fn(entityId, { hasArtifact, enteredAt: (e && e.entity && e.entity.at) || null }); }
     catch (e) {
       return { recorded: false, cause: "PROVIDER_FAILED", says: `the derivation statement could not be read: ${cut(e && e.message, 200)}` };
     }
