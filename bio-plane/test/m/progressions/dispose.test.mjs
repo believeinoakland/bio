@@ -144,3 +144,24 @@ test("R29: instances and exceptions (with their versions) clear with their bundl
   w.record.purge({});
   for (const t of names) assert.equal(w.count(t), 0, t);
 });
+
+test("R34: progression_instances' named columns and every R29 table's row count are readable in a later module's own SQL", async () => {
+  const w = seeded();
+  w.bundle("PROJ-1", "project");
+  w.resolve("ENT-1", "sp", "PROJ-1", "A");
+  w.define();
+  await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", placements: [{ stage: "need", captureSha: "sa" }, { stage: "award", captureSha: "sp" }],
+                             threadedBy: "member:alice", viewer: MEMBER });
+  const cols = w.rows(`PRAGMA table_info(progression_instances)`).map((c) => [c.name, c.type]);
+  for (const [c, t] of [["progression_key", "TEXT"], ["entity_id", "TEXT"], ["stage_key", "TEXT"], ["capture_sha", "TEXT"], ["bundle_id", "TEXT"]])
+    assert.ok(cols.some(([n, ty]) => n === c && ty === t), c);
+  // queue's sight join, as it is written: the bundles a viewer may see among an instance's placements
+  const seen = w.rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi JOIN bundles b ON b.bundle_id = pi.bundle_id
+                        WHERE pi.progression_key=? AND pi.entity_id=? AND b.object_type <> 'project' ORDER BY pi.bundle_id`, "proc", "ENT-1");
+  assert.deepEqual(seen, [{ bundle_id: "INFO-A" }]);
+  // the meaning: one row per placement of the CURRENT threading, keyed to the bundle the document is filed in
+  assert.deepEqual(w.rows(`SELECT stage_key, capture_sha, bundle_id FROM progression_instances ORDER BY stage_key`),
+    [{ stage_key: "award", capture_sha: "sp", bundle_id: "PROJ-1" }, { stage_key: "need", capture_sha: "sa", bundle_id: "INFO-A" }]);
+  for (const t of PROGRESSIONS_TABLES.map((x) => (typeof x === "string" ? x : x.name)))
+    assert.equal(typeof w.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n, "number", t);
+});
