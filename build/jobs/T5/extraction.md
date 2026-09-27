@@ -2,7 +2,7 @@
 
 **Session** EXTRACTION #1, `session_014jiwG7P66ao1PbMJXwqhSF`, on `job/T5/extraction` (from `tranche/T5` @ `1e75fac6b2`; `tranche/T5` merged again after calibration's early merge and K135–K138, last @ `0ed1857973`). Process: civicos-process `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · WORKING (the old battery's comparison running). QUESTION 1 answered (K135, K138). QUESTION 2 open: the one architecture failure waits on it.
+**Status** · COMPLETE, 2026-09-27. Every entry applied; merged early into `tranche/T5` (K139); K139 and K141 answered QUESTIONs 2 and 3; all 52 live ids named by a test (58 tests, all green); format, architecture, coverage and ownership pass. Deferred: `page_boxes` on R13/R30 (N100: `pdf-reader` states no page boxes yet); R52 answers null on every real instance until the profile key exists (N96).
 
 **Read whole:** `roles/JOB.md`, `PROCESS-MECHANICS.md`, `build/manifest.md`, `build/layers.md`, `build/requirements/extraction.md` (both parts, as amended by K138), `build/extraction/extraction.md`, `build/requirements/calibration.md` (public part), my entry T5-2 in `build/plan/current.md`, rulings K23, K31, K49, K57, K61, K64, K72, K73, K104, K126, K133–K138; `build/jobs/T4/capture.md` (the extraction pattern); record-core's, membership's, promotion's and calibration's factories; the public parts of docprofile, format-registry and jurisdictions I call; the legacy code the map names, measured again (below); the snapshot's built work: `land/worker/D-616` (a903de6d), `D-635` (d31c52bf), `D-665` (e9392ac8), `D-684` (c727e10e, 9f6112d3), `D-724` (c044cdd9, 3094f19b, 07a19650, a944481e), `REC-206` (5ff361e9, 17ed9704).
 
@@ -79,8 +79,23 @@ The legacy store keeps one-line delegations for the reads old suites call over R
 
 **QUESTION 1** (sent 2026-09-27 06:43; ANSWERED by K135, and K138 moved N48 to R52): (1) N48 is extraction's, served on `op=pdfstructure`, shapes from the profiles, text proposed above; (2) `calibrationOf(ctx)`, adopted after calibration's merge; (3) R21 as read.
 
-**QUESTION 2** (sent 2026-09-27; open). `uses` edge. R11's Drive `convert` step is `drive.mjs`'s `driveConvertStep` (its engine, its unmeasured cap and its `measured_by` sentence have one home there), and `drive.mjs` is `capture-sources`' (layer 3). `extraction`'s `uses` lacks `capture-sources`, so the architecture check fails on that one import. *Best reading:* add `capture-sources` to extraction's `uses` in `build/modules.json` (earlier in the order; BOB's under P17). The alternative, copying the step's three constants here, gives them two homes.
+**QUESTION 2** (sent 2026-09-27 07:16; ANSWERED by K139: `capture-sources` is in extraction's uses). `uses` edge. R11's Drive `convert` step is `drive.mjs`'s `driveConvertStep` (its engine, its unmeasured cap and its `measured_by` sentence have one home there), and `drive.mjs` is `capture-sources`' (layer 3). `extraction`'s `uses` lacks `capture-sources`, so the architecture check fails on that one import. *Best reading:* add `capture-sources` to extraction's `uses` in `build/modules.json` (earlier in the order; BOB's under P17). The alternative, copying the step's three constants here, gives them two homes.
+
+**QUESTION 3** (sent 2026-09-27 07:28; ANSWERED by K141): R24 with `unitsBefore` as proposed; `page_boxes` is N100.
+
+## legacy-tests (T5-12): the old battery against `tranche/T5`
+
+269 suites (every suite that drives the reading ops, the acquire, the re-read or the promote, without the source-mutating controls) run on this branch and on `tranche/T5` @ `0ed1857973`: 256 answer alike (18 of them red on both). The 13 that differ, each an intended change or a source anchor on the moved code, none a behaviour lost:
+- Source scans of the moved code: `capture-text-index` (lifts the DDL, the writer and the wire's constants out of `store.mjs`/`index.mjs`; it throws at §F), `hygiene` (purge census: `capture_text_skipped`, `capture_text_state`, `composed_readings` are declared by extraction), `airuns` (index sweep: `reading_text_source_kind`'s reader is now `extraction/index.mjs`), `meaningread` (reads `capture_text`'s key from `schema.mjs`), `rec108-cache-asof` (finds `#writeTextSource` in the store), `subresources` (re-derivation path of the newest derived table, in the store), `project-sight` (store route census: `reading` is extraction's route now), `derivation-bounds` (improved, 3 fails to 2), `textchain` §STRUCTURAL and `calibration` (the old controls' anchors).
+- The catalogue: `reextract` imports `REEXTRACT_CHECKS` from `bio-checks.mjs`; it is `src/extraction/checks.mjs` now (with that import changed the suite runs 61/2 on my branch before calibration's merge, the two being the calibration join, satisfied since).
+- Intended sentence and shape changes: `d606-perpage-ocr` (3: R5 names the pages the loop did not merge), `textchain` (1: D-614's per-page refusal reasons), `formats` (1: R52's two additive keys on the plain read; REC-206's own branch compared by stripping them by name), `ocr-member-e2e` §10 (5: D-616, a transcribed page is not sent to the engine again; `land/worker/D-616`'s last commit corrects exactly this section).
+- Not run in parallel (they rewrite source while running): the `nc-*` drivers and `*.control.mjs`. Those the map names (`nc-cpdf10`, `nc-cpdf19`, `nc-d536`, `nc-rec102`, `nc-rec111`, `nc-cap9`, `nc-cap12`, `nc-sk7`, `nc-sk8`, `drive-convert.control`, `calibration.control`, `ocr-member-e2e.control`, `producer-provenance.control`) anchor on `index.mjs`/`store.mjs` lines that moved; `drive-convert.control` measured 17/26 against 39/4 on the base.
+- `civicos-ui/check-refusal-codes.mjs` harvests `*_CHECKS` from the catalogue; C-51 is no longer there (no UI code emits it).
 
 ## Tests and checks run
 
-(filled at completion)
+- My module: `node --test bio-plane/test/m/extraction/`: read 23/0, store 17/0, pdfstructure 8/0, rules 10/0 (58 tests, 0 fail). calibration's own tests on my branch: 13/0 and 29/0.
+- Checks (civicos-process `main`): `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 14 product files, 51 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 52 of 52 live requirement ids named by a test; 0 failures`; `ownership` against `tranche/T5` before the early merge: `legacy-store: 34 line(s) added, 1558 removed; legacy-index: 9 line(s) added, 2316 removed; legacy-checks: 0 added, 69 removed; 0 failures` (after the merge only my own paths and record differ: 0 failures).
+- Layer tests: none named in the manifest. Old battery: above.
+
+Size: test runs 34, module lines 3401
