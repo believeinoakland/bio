@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #50 · session_01RNn16JdnSWYvj8Kr6VHvHT · depth 1
 
+**Jobs** · capture: CAPTURE #3 session_01L2yS2q9k4fhVDfNH5pKtLX
+
 Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mailbox-and-doorbell mechanics in force (K168, K169; civicos-process `main` @ 4ae7694). Branch `tranche/T7` starts at the commit that opened this plan. It carries T6's unrun layers 3, 4, 6, 7 and 11 (K165: 21 jobs), re-read for what T6's layers 1–2 changed (K170), and three ready entries for layer-3 modules (N90, N92, N103). Five layers, lowest first (P10): 3, 4, 6, 7, 11. The rules T6's plan states hold here: each extraction is done by its target module's job (mechanics §12.2) per its map (`build/extraction/<module>.md`) and requirements; every job writes requirement-named tests for every live id (P7), applies every carried row its requirements mark *not yet met*, and judges built work on the snapshot against its requirements (§12.5); a user builds against its provider's Provides, and BOB merges a provider early once its Provides are final (§4), sending its users a CHANGE. An `N` entry's text, as filed, is in `build/plan/next.md` (`Later layers`) or `build/plan/archive/T6.md`'s appendix; a job applies only the share this plan gives it. Bob's meter at the opening: asked.
 
 
