@@ -154,7 +154,11 @@ const STORE_BARE = decomment(STORE_SRC);
    NOT_ACTIVE, NOT_AN_OWNER and NO_OWNERS moved with their methods into `src/membership/`, so §1's walk reads
    `store.mjs` AND the modules extracted from it, EACH FILE WALKED ON ITS OWN (a method's span never runs across a
    file boundary). The refusals are still read out of the plane's source, never trusted from the debt row. */
-const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion")]
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, host-governor, capture): NO_AUTHOR's own site,
+   `provenanceChainRebuild`, moved into `src/provenance/` with layer 3 (the walk had fallen back to another method's
+   NO_AUTHOR), so the corpus widens to the three layer-3 modules the same way, each file walked on its own. */
+const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion"),
+                                    ...moduleFiles("provenance"), ...moduleFiles("capture"), ...moduleFiles("host-governor")]
   .map((f) => decomment(readFileSync(SRC(f), "utf8")))];
 const INDEX_BARE = decomment(INDEX_SRC);
 
@@ -609,9 +613,18 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
                              ["the member class", "mem-rec78"], ["the probe class", "prb-rec78"]])
     answers[name] = codeOf(await GET(`op=provenancechain&token=${tok}&bundleId=${DOC}`))
                  ?? (await GET(`op=provenancechain&token=${tok}&bundleId=${DOC}`))?.error ?? null;
-  t("  BEHAVIOURALLY: NOT ONE caller class reaches NO_AUTHOR through the op — since REC-155 the session "
-  + "reaches the op under its own member's name, and every machine class arrives already named",
-    Object.entries(answers).filter(([, v]) => v === "NO_AUTHOR"), []);
+  /* CORRECTED 2026-09-27 (T4, legacy-tests; provenance R21, REC-158), never exempted: this asserted that NO caller
+     class reaches NO_AUTHOR through the op, which was true while the store refused only a BLANK author. REC-158
+     (R21) made reconstructing a chain a named member's act, so a machine identity — every bearer class, stamped
+     `token:<class>` — is now refused NO_AUTHOR by name, on purpose; a signed-in member still passes it under her own
+     name. The blank-author half (the DO route above) is what stays unreachable through the op, and the stamp arm
+     above is what makes it so. So the pin moves to what each class now answers: the session past the fence, into
+     the ordinary report, and every machine class refused by name. */
+  t("  BEHAVIOURALLY: a signed-in member passes the fence under her own name (NO_REGISTER, the document's next "
+  + "fault), and every MACHINE class is refused NO_AUTHOR by name (REC-158, R21) — no caller reaches the store's "
+  + "blank-author case",
+    answers, { "a signed-in member": "NO_REGISTER", "the admin class": "NO_AUTHOR",
+               "the member class": "NO_AUTHOR", "the probe class": "NO_AUTHOR" });
   console.log(`  what each caller class actually answers at op=provenancechain: ${JSON.stringify(answers)}`);
 }
 

@@ -106,6 +106,7 @@ import { appScript } from "./extract.mjs";
    passing on the day the writer renamed it, which is the drift this guards. */
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED } from "../../bio-plane/src/airun.mjs";
 import { MEANING_AXIS_CAP } from "../../bio-plane/src/query.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -202,8 +203,13 @@ const HEAD = new Map();
 const promote = async (id, text, type, { document = null, registerOnly = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (document) {
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+       at the write (it stated `file`, `locator` and `retrieved`, which are kept; authority is stated UNDETERMINED, the
+       capture's method, grade and actor class and the origin are filled), and the capture it names
+       (`snapshots/packet.pdf`) held in the bundle (`bio-plane/test/register-doc.mjs`). */
+    document = registerDoc(document);
     const prov = JSON.stringify({ documents: [document] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(document));
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,

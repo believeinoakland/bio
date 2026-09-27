@@ -244,6 +244,7 @@ import { webcrypto, createHash } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 /* UI-26. This file re-runs ITSELF under the envelope guard's own probe to
    measure arm B's coverage (section 4c). The child does the driving and skips
@@ -324,15 +325,18 @@ const bundleMd = (id, type = "information", label = id) => [
 async function seedDoc(captureSha, entities, { type = "information", tok = "mem-ui13" } = {}){
   const id = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4,"0")}-ui13`;
   const md = bundleMd(id, type, id);
-  const doc = { capture:{ sha256:captureSha, encoding:"binary", bytes:10 },
-                reading:{ content_type:"meeting_calendar", reader_version:1, found:entities.length>0, at:NOW, entities } };
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const doc = registerDoc({ capture:{ sha256:captureSha, encoding:"binary", bytes:10 },
+                reading:{ content_type:"meeting_calendar", reader_version:1, found:entities.length>0, at:NOW, entities } });
   const prov = JSON.stringify({ documents:[doc] });
   const r = await post("promote", {
     ...(type === "project" ? {} : { bundleId:id }), base:null, snapKey:"20260724T010000Z_aaaa1111", author:"ui13",
     meta:{ object_type:type, title:`Doc ${id}`,
            current_state: type === "project" ? "forming" : "collected", created:NOW, last_updated:NOW },
     files:[ { path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
-            { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) } ],
+            { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) },
+            registerFile(doc) ],
     register:[],
   }, tok);
   if(r && r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
