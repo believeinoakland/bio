@@ -45,6 +45,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { OBSERVATION_STATES } from "../src/airun.mjs";
+import { registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -84,16 +85,42 @@ const mkStore = () => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],   /* T4: the replay's held Drive-era provenance capture (see `seedInto`) */
   bindings: { ADMIN_TOKEN: "adm-p", MEMBER_TOKEN: "mem-p", PROBE_TOKEN: "prb-p",
               VERSION: "test", INSTANCE_NAME: "testinstance" },
 });
+
+/* T4 (legacy-tests; provenance R22, REC-158): assessing a route (op=provenanceroute) is a NAMED MEMBER'S act, and a
+   machine identity — the member BEARER `mem-p`, stamped `token:member` — is now refused `ROUTE_MARK_NO_AUTHOR`
+   (C-34.1) before anything is read, as the requirement intends. So the act is driven as a named member, `m-riley`
+   (the author these fixtures already name), through a signed-in session on each store: two administrators first
+   (no ordinary member exists until two do), then the member, who logs in. The READ under test, op=provenanceroutes,
+   keeps the bearer it always used; the bearer's refusal at the act is asserted in section A. */
+const call = async (mf, q, body) => (await mf.dispatchFetch("http://x/api/?" + q,
+  { method: "POST", body: JSON.stringify(body ?? {}) })).json();
+const RILEY = new Map();
+const rileyOf = async (mf) => {
+  if (RILEY.has(mf)) return RILEY.get(mf);
+  const enrol = async (id, role) => {
+    const add = await call(mf, "op=memberadd&token=adm-p", { memberId: id, cover: `cover for ${id}`, role, capabilities: ["contribute"] });
+    const en = await call(mf, "op=enroll", { invite: add.result?.invite, handle: id, password: `${id}-passphrase-1` });
+    const lg = await call(mf, "op=login", { role: `member:${id}`, password: `${id}-passphrase-1` });
+    if (!en.result?.ok || !lg.result?.token) throw new Error(`enrol ${id}: ${JSON.stringify([add, en, lg]).slice(0, 400)}`);
+    return lg.result.token;
+  };
+  await enrol("ada-p", "admin"); await enrol("ben-p", "admin");
+  const tok = await enrol("m-riley", "member");
+  RILEY.set(mf, tok);
+  return tok;
+};
 
 /* EVERY CALL GOES THROUGH THE CONTROL PLANE. There is no store-level path in
    this file, deliberately — a store-level test and a passing battery are not
    evidence that a caller can reach the feature. */
 const api = (mf) => ({
   post: async (op, body, qs = "") => (await mf.dispatchFetch(
-    `http://x/api/?op=${op}&token=mem-p${qs}`, { method: "POST", body: JSON.stringify(body || {}) })).json(),
+    `http://x/api/?op=${op}&token=${op === "provenanceroute" ? await rileyOf(mf) : "mem-p"}${qs}`,
+    { method: "POST", body: JSON.stringify(body || {}) })).json(),
   get: async (op, qs = "") => (await mf.dispatchFetch(
     `http://x/api/?op=${op}&token=mem-p${qs}`)).json(),
 });
@@ -103,6 +130,12 @@ const listRow = async (id) => {
   return rows.find((r) => r && r.bundle_id === id) || null;
 };
 
+/* T4 (legacy-tests; provenance K121): THE FIXTURES ARE HISTORY — documents already at `verified` whose route nobody
+   recorded (REC-63's subject). Since the C-18 register arms run at the write, a CREATION carrying one is refused
+   (C-18.9 at the fence; C-18.1 for the snapshot the bundle does not carry, the empty locator, the absent origin and
+   capture fields). A store now holds such a register only as history, through a replay the plane verifies (D-512:
+   the admin's promotion naming a held Drive-era provenance capture listing this bundle and this bundle.md's sha256),
+   which K121 exempts. The documents are unchanged; only the way they enter the store is. */
 const seedInto = async (mf, id, docs, { state = "verified", type = "information" } = {}) => {
   const body = bundleMd(id, type, state);
   const files = [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) }];
@@ -110,12 +143,22 @@ const seedInto = async (mf, id, docs, { state = "verified", type = "information"
     const prov = JSON.stringify({ documents: docs }, null, 2);
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
-  return api(mf).post("promote", {
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: "20260719T010000Z_rec116aa",
+      record: { target: id, base: null, author: "m-riley", files: [{ name: "bundle.md", sha256: sha(body) }] } }] }), "utf8");
+  const held = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=adm-p&sha256=${sha(cap)}`,
+    { method: "PUT", body: cap })).json();
+  const r = await call(mf, "op=promote&token=adm-p", {
     bundleId: id, base: null, snapKey: "20260917T000000Z_aaaa1111", author: "m-riley",
+    replay: true, provenanceCapture: sha(cap),
     meta: { object_type: type, group: "believe-in-oakland", title: id,
             current_state: state, created: NOW, last_updated: NOW },
-    files, register: [],
+    files, register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }],
   });
+  t(`FIXTURE: ${id} is held, as the history it stands for (a verified replay)`,
+    [(held.result || held).ok, (r.result || r).ok], [true, true]);
+  return r;
 };
 
 /* =====================================================================
@@ -231,14 +274,20 @@ console.log("\n--- D. the two cheap wrong answers are pinned out ---");
 const cur = o(await listRow("INFO-2026-0101-noroute"));
 const fixedProv = JSON.stringify({ documents: [{ ...NO_ROUTE, ...DERIVABLE }] }, null, 2);
 const fixedMd = bundleMd("INFO-2026-0101-noroute", "information", "verified");
-await post("promote", {
+/* T4 (legacy-tests; provenance K121): the correcting revision is judged at the write, refused only for a C-18 error
+   the held version does not already carry. The custody it records names its snapshot by path, so the revision
+   carries that capture (`registerFile`: the blob its sha addresses); the errors the held history carries stay
+   inherited. Its landing is asserted, so the arm below cannot be measuring a refused write. */
+const fixedWrite = await post("promote", {
   bundleId: "INFO-2026-0101-noroute", base: cur.bundle_sha, snapKey: "20260917T000001Z_bbbb2222",
   author: "m-riley",
   meta: { object_type: "information", group: "believe-in-oakland", title: "INFO-2026-0101-noroute",
           current_state: "verified", created: NOW, last_updated: NOW },
   files: [{ path: "bundle.md", text: fixedMd, bytes: fixedMd.length, sha256: sha(fixedMd) },
-          { path: "data/provenance.json", text: fixedProv, bytes: fixedProv.length, sha256: sha(fixedProv) }],
+          { path: "data/provenance.json", text: fixedProv, bytes: fixedProv.length, sha256: sha(fixedProv) },
+          registerFile({ ...NO_ROUTE, ...DERIVABLE })],
 });
+t("D1: FIXTURE — the member's correcting revision lands", o(fixedWrite.result).ok, true);
 const fixed = o((await post("provenanceroute", {}, "&bundleId=INFO-2026-0101-noroute")).result);
 t("D1: THE ARM ARMED — the correcting promote really moved the register, so what follows is a "
 + "measurement and not a fixture that quietly did nothing", fixed.appended, true);
@@ -302,7 +351,10 @@ const storePost = async (path, body) => o((await (await mfStore.dispatchFetch(
    produce is not evidence. A surprising green is a finding about your arm. */
 const storeMd = bundleMd("INFO-2026-0808-storefence", "information", "verified");
 const storeProv = JSON.stringify({ documents: [{ ...NO_ROUTE }] }, null, 2);
+/* T4 (legacy-tests; provenance K121): history, as `seedInto`'s fixtures are; this store is driven directly, beneath
+   the control plane's replay verification (D-512, asserted by d512-replay-verified), so it states `replay` itself. */
 await storePost("promote", {
+  replay: true,
   bundleId: "INFO-2026-0808-storefence", base: null, snapKey: "20260917T000002Z_cccc3333",
   author: "m-riley",
   meta: { object_type: "information", group: "believe-in-oakland", title: "INFO-2026-0808-storefence",
@@ -409,6 +461,12 @@ t("A: as a READ — `mutating: false`. For 39 days the only op over this table w
 t("A: and it is in the viewer-stamp list, so the store fails closed on an absent stamp",
   /\|\|\s*op === "provenanceroutes"/.test(registry), true);
 const probe = await mf.dispatchFetch("http://x/api/?op=provenanceroutes&token=prb-p");
+/* T4 (legacy-tests; provenance R22, REC-158): the ACT this roster reads refuses a machine identity by name. */
+const bearerAct = o((await (await mf.dispatchFetch("http://x/api/?op=provenanceroute&token=mem-p&bundleId=INFO-2026-0707-unlooked",
+  { method: "POST", body: "{}" })).json()).result);
+t("A: REC-158 (R22) — the act this roster reads is a named member's: the member BEARER is refused "
++ "ROUTE_MARK_NO_AUTHOR (C-34.1) through the control plane", [bearerAct.reason, bearerAct.check],
+  ["ROUTE_MARK_NO_AUTHOR", "C-34.1"]);
 t("A: it answers 200 through the worker entry for a probe credential too — every assertion in "
 + "this file went through dispatchFetch and none touched the store directly, because op=invitelook "
 + "shipped with a ReferenceError while 1,276 assertions passed", probe.status, 200);
