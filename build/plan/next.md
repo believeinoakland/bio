@@ -80,6 +80,8 @@
 - N91 · 2026-09-27 · **affordances** (RECORD-CORE #2, K130): re-export record-core's `PER_ITEM_MAX` (R49) and pass its `PER_ITEM_ACTS` groups to `perItem`, deleting its own copy.
 - N92 · 2026-09-27 · **provenance** (K130): `provenanceAudit` registers its checks with record-core's `registerAuditCheck` (R59) and drops its wrapper.
 
+- N93 · 2026-09-27 · **legacy-index** (MEMBERSHIP #2, T5): the control plane stamps `viewer` (as for PROJECT_ACTIONS) and `administer` (as for memberlist) on `op=memberpairings`, so membership's R19 filter (N85) reaches unpublished pairings for their member and administrators; until then every caller sees only published pairings.
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
