@@ -1611,7 +1611,7 @@ function meaningAtom(arm, tok, ctx) {
        chooses everywhere else. `passage:foo>=bar` cannot be answered by an FTS5
        MATCH, and compiling it to one anyway would answer a question the member
        did not ask. */
-    if (subCmp) {
+    if (subCmp || CMP.some(([lead]) => raw.startsWith(lead))) {
       ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; `
         + `${arm}: matches text and does not order it`);
       return null;
@@ -2004,9 +2004,20 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : (sort === "relevance" ? "ASC" : "DESC") };
 
   const gate = viewerPredicate(viewer);
-  const rank = rankExpr(ctx.textAtoms);
+  /* R10, R15: relevance, snippets and the passage rows centre on the POSITIVE terms only —
+     a term under NOT is one the member asked NOT to see, so it neither orders nor matches. */
+  const positive = { text: [], passage: [] };
+  (function walk(node, negated) {
+    if (!node || typeof node !== "object") return;
+    if (node.op === "not") return walk(node.kid, !negated);
+    if (Array.isArray(node.kids)) return node.kids.forEach((k) => walk(k, negated));
+    if (negated) return;
+    if (node.op === "text") positive.text.push(node);
+    else if (node.op === "meaning" && node.cmp === "match") positive.passage.push(node.fts);
+  })(ast, false);
+  const rank = rankExpr(positive.text);
   /* D-447: the terms relevance weighs, each over the viewer's own rows (`visibleBm25`). */
-  const allTerms = rankAtomList(ctx.textAtoms);
+  const allTerms = rankAtomList(positive.text);
   const rankTerms = allTerms.length <= RANK_ATOMS_MAX ? allTerms : (rank ? [rank] : []);
   if (allTerms.length > RANK_ATOMS_MAX)
     ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
@@ -2027,8 +2038,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      that matches nothing, and it would turn "no term to centre on" into "no
      passage matches" — the false absence this whole construct exists to
      refuse. */
-  const passageMatch = ctx.passageTerms.length
-    ? [...new Set(ctx.passageTerms)].join(" OR ") : null;
+  const passageMatch = positive.passage.length
+    ? [...new Set(positive.passage)].join(" OR ") : null;
   /* ONE SPELLING OF *THIS PLAN MATCHES ON A PASSAGE TERM*, AND THE NEGATIVE
      CONTROL IS WHY IT EXISTS. `matched` on the published descriptor and the row
      builder's own `fts` are two readers of one fact, and the first draft wrote
