@@ -2,7 +2,7 @@
 
 **Session** CONTENT #1, `session_01RFEshCL4oFYL6LET9Gh1sH`, on `job/T5/content` (from `tranche/T5` @ `1e75fac6b2`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE, 2026-09-27 ~07:30 UTC. Every entry applied; Q1–Q7 answered (K134, K138) and applied. Entry T5-3: extract `content` from `legacy-store` and `legacy-checks` per `build/extraction/content.md` and `build/requirements/content.md`, with D-374, D-419, D-580, D-670, D-675, D-686, REC-204 and every requirement marked not yet met.
+**Status** · COMPLETE (re-opened by BOB's CHANGE of 07:24 UTC, extraction merged; COMPLETE again ~07:45 UTC). Every entry applied; Q1–Q7 answered (K134, K138) and applied. Entry T5-3: extract `content` from `legacy-store` and `legacy-checks` per `build/extraction/content.md` and `build/requirements/content.md`, with D-374, D-419, D-580, D-670, D-675, D-686, REC-204 and every requirement marked not yet met.
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/requirements/content.md` and `README.md`, `build/extraction/content.md`, `build/layers.md`, `build/plan/current.md`, the public parts of `text-chain`, `pdf-pixels`, `record-core`, `membership`, `provenance`, `extraction` (legacy-checks has no requirements file), rulings K3, K6, K23, K31, K49, K61, K64, K70, K73, K78, K102, K120.
 
@@ -71,7 +71,7 @@
 9. **legacy-index**: `op=contentcrop` needs its OPS/NEEDS/NON_ACTS rows to route to the store's new `contentcrop` arm (D-419); `index.mjs` imports `contentIdFor` from the catalogue.
 10. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale; the plane now bundles `pdf-pixels` (`imagecrop.mjs`, `pagepixels.mjs`, image-codecs): +132 KB measured with esbuild on this tree (5,190,421 → 5,322,669 B).
 
-11. **legacy-index** (T5-11) — **needed for `op=attesttext` to work at all**: R43 (K134) makes `attestText` check the control plane's viewer stamp, and `index.mjs` stamps `viewer` only for its listed ops, which do not include `attesttext`; until it does, every `op=attesttext` answers `NO_READING`. Add `attesttext` to the viewer-stamped ops (and route `contentcrop`, item 9). Four old suites fail on exactly this: `machine-attest`, `ocr-member-e2e`, `textchain`, `frontier-chunk`.
+11. **legacy-index** (T5-11) — **needed for `op=attesttext` to work at all**: R43 (K134) makes `attestText` check the control plane's viewer stamp, and `index.mjs` stamps `viewer` only for its listed ops, which do not include `attesttext`; until it does, every `op=attesttext` answers `NO_READING`. Add `attesttext` to the viewer-stamped ops (and route `contentcrop`, item 9). Seven old suites fail on exactly this: `machine-attest`, `ocr-member-e2e`, `textchain`, `frontier-chunk`, `content-reads`, `transcribe`, `content-machine-mint` (the last three measured after K134; every other arm of them is green).
 12. **legacy-tests**: three suites boot a copy of `bio-plane/src` in a temporary directory and do not copy `pdf-worker/src`, which the plane now imports (`observation-log`, `project-discoverable`, `reopen`: ENOENT `pdf-worker/src/imagecrop.mjs`); two read `schema.mjs`'s tables (`meaningread`: content's PRIMARY KEY; `airuns`: the index sweep).
 
 ## Tests and checks
@@ -82,3 +82,14 @@
 - No layer tests are named in `build/manifest.md`; no module that uses content is extracted yet.
 
 Size: test runs 22, module lines 2184
+
+## CHANGE 07:24 UTC · extraction merged (`tranche/T5` @ `b5b88ec2c1`, merged here)
+
+- Conflicts resolved: `schema.mjs` (each side had removed its own tables: both removals kept); `store.mjs` (the two purge filters combined; extraction's moved writer region taken, which carried my one `markStale` call; my `attesttext` arm kept, `calibrationdrift`'s arm gone with extraction).
+- `contentOf` now reaches extraction through `extractionOf(ctx)` (R30 `readingOf`, R36 `unitsOf`, R51 `capturesReadFor`, R24 `onReading`); the bridge over the legacy reading tables is gone. Two shapes absorbed: R51 answers `{capture_sha, at}` rows, R36 parsed extents (canonicalised for R31's comparison).
+- REC-82's stale mark is content's own `onReading("content", …)` listener, answering `{staled}` (extraction sums it into its answer). legacy-store's listener no longer marks content stale. legacy-store now creates content on extraction's instance *before* registering its own listener, so content's runs first (the modules' total order): `contentOf(ctx, { extraction: extractionOf(ctx, {...}) }).extraction.onReading("legacy-store", …)`.
+- **One ownership failure, for BOB's review:** `store.mjs:778`, legacy-store's listener `return { observed: … }` — the line lost its `staled` key because the count it carried now comes from content's listener, as the CHANGE asks. It neither imports nor names content, so the check cannot classify it; it is a removal of the moved value, not new behaviour.
+- R11 test extended to the R51 fallback (provenance first; an authored capture a reading carries).
+- Checks: format 0 failures; architecture 39 relative imports, 0 failures; coverage 45 of 45; ownership legacy-store 49 added / 2,294 removed, legacy-checks 0 / 34, 1 failure (above). Module tests 48/48. Old suites on the stale and notice paths green (`versionnotice`, `versiongrade`, `narrow`, `content-extent`, `content-extent-arms`, `rec121-chain-bytes`, `d420-image-page`); `content-reads`, `transcribe`, `content-machine-mint` red only on `op=attesttext` (REPORT 11).
+
+Size: test runs 26, module lines 2176
