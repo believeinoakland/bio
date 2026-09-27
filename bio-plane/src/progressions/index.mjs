@@ -20,7 +20,7 @@
  *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
  *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
  *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34).
- *   connections  `weakerGrade(a, b)`. Until `connections` is merged, a bridge (below).
+ *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
  *                else the wall clock. */
@@ -30,6 +30,7 @@ import { viewerPredicate } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
+import { weakerGrade } from "../connections/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { PROGRESSION_CHECKS, refusal } from "./checks.mjs";
 
@@ -58,10 +59,6 @@ const DISPOSE_ITEM_KEYS = [["key"], ["progressionKey", "stageKey"]];
 const DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
-
-/** `connections`' weaker grade, until `connections` is merged: the lower of the two in entities' `gradeRank` (its R33, strongest
- *  highest); an unknown grade ranks lowest. */
-export const connectionsBridge = Object.freeze({ weakerGrade: (a, b) => ((gradeRank[a] || 0) <= (gradeRank[b] || 0) ? a : b) });
 
 /* R10: a definition's basis as it reads back. `stated: false` is a first version declared without one, or one declared
    before versions were kept: the record says it holds none rather than inventing one. */
@@ -1000,7 +997,7 @@ export function progressionsOf(host, deps) {
                            extraction: d.extraction || extractionOf(host),
                            provenance: d.provenance || provenanceOf(host),
                            entities: d.entities || entitiesOf(host, { record }),
-                           connections: d.connections || connectionsBridge });
+                           connections: d.connections || { weakerGrade } });
     instances.set(host, p);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
   }

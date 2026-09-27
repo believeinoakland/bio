@@ -1,13 +1,12 @@
-/* progressions over record-core and membership (the real ones) on a real SQLite database (node:sqlite) standing in for
-   a Durable Object's storage. What it reads from `entities`, `connections`, `extraction` and `provenance` are providers
-   the test controls, in the shapes of those modules' Provides (entities R5, R7, R16; the weaker grade;
-   extraction R30; provenance `homeOf`), as `progressionsOf`'s `deps` take them. Every test drives the module at its
+/* progressions over record-core, membership and connections' `weakerGrade` (the real ones) on a real SQLite database
+   (node:sqlite) standing in for a Durable Object's storage. What it reads from `entities`, `extraction` and `provenance`
+   are providers the test controls, in the shapes of those modules' Provides (entities R5, R7, R16; extraction R30;
+   provenance `homeOf`), as `progressionsOf`'s `deps` take them. Every test drives the module at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
-import { gradeRank as RANK } from "../../../src/entities/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -32,7 +31,7 @@ export function storage() {
 }
 
 
-/** The entity registry and resolutions `entities` answers (its R5, R7, R16), and `connections`' weaker grade. */
+/** The entity registry and resolutions `entities` answers (its R5, R7, R16). */
 export function meaning() {
   const m = { entities: new Map(), resolutions: new Map() };
   m.entities_ = {
@@ -41,7 +40,6 @@ export function meaning() {
                                                          : { ok: true, found: false, entity_id: entityId, entity: null }),
     strongestByCapture: (id) => new Map(m.resolutions.get(id) || []),
   };
-  m.connections_ = { weakerGrade: (a, b) => ((RANK[a] || 0) <= (RANK[b] || 0) ? a : b) };
   return m;
 }
 
@@ -62,7 +60,7 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null } = {}) {
   const dates = { reading: {}, registered: {} };
   const extraction = { readingOf: (s) => (s in dates.reading ? { reading: { at: dates.reading[s] }, chain: null } : null) };
   const provenance = { homeOf: (s) => (s in dates.registered ? { bundleId: null, registered: dates.registered[s] } : null) };
-  const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_, connections: mean.connections_,
+  const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_,
                                    now: () => clock.now, nowMs: clock.nowMs == null ? null : () => clock.nowMs });
   p.migrate();
   const w = {
