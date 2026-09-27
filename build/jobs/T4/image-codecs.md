@@ -4,7 +4,7 @@ Session: `session_01GytnXWpaAYBtTx3b9cEHwE` (IMAGE-CODECS #1). BOB: `session_01P
 
 ## Status
 
-**COMPLETE.** T4-0a and N34 applied. Q1 is open, and I built on my stated reading (below). The low-memory wavelet is deferred, with why.
+**COMPLETE** (again, after BOB's ANSWER to Q1). T4-0a and N34 applied. `tranche/T4` @ ab6a700 is merged (K117). The low-memory wavelet is deferred, with why.
 
 ## Early merge (K115)
 
@@ -13,7 +13,7 @@ Session: `session_01GytnXWpaAYBtTx3b9cEHwE` (IMAGE-CODECS #1). BOB: `session_01P
 
 ## Questions and reports for BOB
 
-- **Q1 · open: what R1, R4 and R7 mean by a refusal's "reason".** My best reading, on which I am building:
+- **Q1 · answered (K117): my reading stands, and R1, R3, R4 and R7 are reworded to it.** I merged `tranche/T4` @ ab6a700. The tests now also check that every `DctRefusal` carries a `detail` saying why (R1), and that each codec's refusal codes are all reached and pinned (R7). My reading, as asked:
   - **R1** lists `UNSUPPORTED_JPEG_PROCESS`, `UNSUPPORTED_SAMPLES`, `TRUNCATED_IMAGE_DATA` and `DECODE_FAILED`. Those are `pdf-pixels`' `REFUSALS` reasons, not this module's. `DctRefusal` carries its own `code`: `NOT_A_JPEG`, `TRUNCATED`, `UNSUPPORTED_PROCESS`, `UNSUPPORTED_PRECISION`, `UNSUPPORTED_FRAME`, `CORRUPT_DATA`, `UNSUPPORTED_COMPONENTS`, `COMPONENT_MISMATCH`, `COLOR_TRANSFORM_CONFLICT`, `UNSUPPORTED_SAMPLING` or `UNSUPPORTED_ROTATION`, and `pdf-pixels`' `DCT_TO_REFUSAL` maps each code to one of the four. I test R1 as: every refusal is a `DctRefusal` whose code is one of these eleven, and the four named reasons are what `pdf-pixels` maps them to. **Recommendation:** reword R1 to name the codec's own codes. I have not added a `DCT_REFUSES` export, because that would change a provided service (R7 speaks of "that codec's declared refusal set", and today the DCT codec declares none).
   - **R4, R7 (JPX and JBIG2):** "a key of `JPX_REFUSES`/`JBIG2_REFUSES`" is the `feature` of an `UNSUPPORTED` refusal. The other codes (`UNSUPPORTED_SAMPLES`, `TRUNCATED`, `CORRUPT`) are classes a decode can fail in, not features, and they carry no key. I test R4 and R7 that way.
   - **R2 (CCITT)** declares no refusal set. It refuses by throwing an `Error` (mixed mode, or a row that cannot end), and `pdf-pixels` maps any throw to `DECODE_FAILED`. I keep that, so the copy stays a drop-in.
@@ -64,6 +64,7 @@ Session: `session_01GytnXWpaAYBtTx3b9cEHwE` (IMAGE-CODECS #1). BOB: `session_01P
 - `node --test pdf-worker/test/codecs/<file>`, each: ccitt 7 pass, dct 7 pass, jbig2 6 pass, jpx 7 pass, mq 6 pass, invariants 8 pass; 0 fail.
 - Layer tests: none named in `build/manifest.md`.
 - Users' suites (read only): pdf-pixels `jbig2` 179/0, `pagepixels` 173/0, `imagecrop` 54/0, `jpx` 196/1 (the expected K115 check).
-- Checks (civicos-process @ 7549c0b): `format` 0 failures (69 modules, 64 requirements files); `architecture image-codecs` 0 failures (20 product files, 20 relative imports); `coverage image-codecs` 9 of 9 live ids named, 0 failures; `ownership image-codecs tranche/T4` 12 files changed, 0 failures.
+- Checks (civicos-process @ 7549c0b), after merging `tranche/T4` @ ab6a700: `format` 0 failures (69 modules, 64 requirements files); `architecture image-codecs` 0 failures (20 product files, 20 relative imports); `coverage image-codecs` 9 of 9 live ids named, 0 failures; `ownership image-codecs tranche/T4` 8 files changed, 0 failures.
+- After the merge, each test file re-run: ccitt 7, dct 7, invariants 8, jbig2 6, jpx 7, mq 6 pass; 0 fail.
 
-Size: test runs 23, module lines 2840
+Size: test runs 30, module lines 2840
