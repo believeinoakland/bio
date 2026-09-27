@@ -97,11 +97,19 @@
 - N102 · 2026-09-27 · **text-chain** (EXTRACTION #1 REPORT 3): `mergeTier2Text` carries `image_unread` markers (extraction carries them today).
 - N103 · 2026-09-27 · **capture** (EXTRACTION #1 REPORT 4): `readingInputs` and `acquireOp`'s reading inputs are unused since extraction reads the primary itself; drop them (a second read of the primary per acquire).
 
+- N104 · 2026-09-27 · **text-chain**, **query-language** (QUERY-LANGUAGE #1 Q1, K143): text-chain states which step kinds are machine readings (`ocr`, `ai`), and query-language's `MACHINE_READ_KINDS` re-exports it instead of holding the list.
+- N105 · 2026-09-27 · **id-spaces** (ENTITIES #1 Q1, K143): remove the legacy adapter at the foot of `idspaces.mjs` and its test, retiring R26 (K35): nothing in the plane imports it after T5's entities job.
+
+- N106 · 2026-09-27 · **retrieval**, **query-language** (RETRIEVAL #1 Q1, K144): K75 (3)'s move of retrieval's projection columns and `fts_id` off `bundles` into a table of retrieval's own, done by both jobs together (query-language's compiled statements read `b.<column>` and key the text index through `b.fts_id`); record-core R37's note then goes.
+
+- N107 · 2026-09-27 · **queue** (PROGRESSIONS #1, K147): aggregate progressions' `cardinality_exceeded` finding into its proposal items with its own wording (it is not "required and absent").
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
 
 ### Layer 1
+- **id-spaces** · N105.
 - **legacy-checks** · N94; N97; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
@@ -117,7 +125,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 - **basis-versions** · T6-3 · Extract per map and requirements (K3, K91, K102, N64); no rows; N64 (its share: `projectsDrawingOn`, R37); N67 (its share: `testimonyReach` moves here, R22–R23's read for `concluded_elsewhere`).
 - **strength** · T6-4 · Extract per map and requirements (K3, K86, K102, N60); no carried rows (D-660, D-736 dropped); R5, R15 as its requirements; N60 (R26–R27, the pair `run-productions` reads); N82 (the earned registry reads provenance's `captureGrade`).
 - **contradiction** · T6-5 · Extract per map and requirements (K3, K31, K64, K102); no rows; R21 (the run gate by registration, K31).
-- **ai-runs** · T6-6 · Extract per map and requirements (K3, K31, K71, K75, K78, K80, K82, K83, K102, N39, N54); D-375; R17, R30, R36, R37, R40 as its requirements; N39 (its share); N49 (its share: re-export observation-log's vocabulary from `airun.mjs`, delete its copy); N69 (its share: delete its copy of `searchedSection`); registers the work products `bias` reads (T5-7's hand-off); N54 (DONE, K86).
+- **ai-runs** · T6-6 · deletes bias's interim work-product adapter `bias/interim.mjs` (K146); Extract per map and requirements (K3, K31, K71, K75, K78, K80, K82, K83, K102, N39, N54); D-375; R17, R30, R36, R37, R40 as its requirements; N39 (its share); N49 (its share: re-export observation-log's vocabulary from `airun.mjs`, delete its copy); N69 (its share: delete its copy of `searchedSection`); registers the work products `bias` reads (T5-7's hand-off); N54 (DONE, K86).
 - **run-productions** · T6-7 · Extract per map and requirements (K3, K31, K82, K83, K102, N54, DEC-49); D-595 (R9; K129); R13, R14 as its requirements; reads strength's R26–R27 (N60, the user's side).
 - **capture-requests** · T6-8 · Extract per map and requirements (K58, K102, K103, K109, N35, N63); D-581 (R20, R27), D-582 (R18), D-584 (R19) (T4's "Not in T4"), D-583 (R29; K129); R6, R7, R16, R21, R38–R42 as its requirements; N35; N39 (its share: fills the registrations observation-log and ai-runs offer); N63 (its share: pending count and tick interval as named services, `expired` a completion).
 - **skills** · T6-9 · Extract per map and requirements (K102); no rows; R10, R21 as its requirements; N53 (its share: its tests that read `agent-worker` and `index.mjs` move); N70 (its share: the doctrine's source, skilldoctrine and skillpack reds).

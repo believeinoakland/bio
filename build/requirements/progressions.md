@@ -57,6 +57,15 @@ Terms. A **stage** is `{stage_key, stage_no, label, after_stage, cardinality, wi
 - **R21** Refusals, in order: `NO_KEY`, `NO_STAGE`, `NOT_A_DISPOSITION`, `NO_REASON`, `BAD_REASON` (over 160 characters, or a quotation mark, backslash or line break), `NO_DECIDER` (empty stamp), `NO_SUCH_PROGRESSION`, `BAD_STAGE`, `NO_DEFINITION_VERSION` (C-33.42: absent, or not a positive integer; a boolean is no version), `DEFINITION_MOVED` (C-33.43: not the current version, earlier or never held). A refusal writes nothing.
 - **R22** Success keeps one decision per (progression, stage), replaced on re-decision, with state, reason, decider (stamped), instant and the current version; no bundle, history or manifest is written. With `items`, each item is decided on its own under the per-item weight, the decider, viewer and identity forced onto every item and a shared `definitionVersion` overridable per item.
 
+**Named interfaces** (K147: the names PROGRESSIONS #1 gave what K102's rows made observable)
+- **R8** `readInstance` (and the thread and discharge echoes) answers `threads`: every threading, oldest first, each `{version, version_recorded, threaded_by, at, placements: [{stage_key, capture_sha, bundle_id, grade}]}`, and `thread_version`, the current one's number. An instance threaded before versions were kept reads its current rows as version 1 (`version_recorded: false`) and its next thread writes them as version 1 first (D-128's pattern). Bundle ids in `threads` are withheld as R13.
+- **R14, R15** `dischargeStage` answers `exception_version`; each exception `readExceptions` lists carries `version` (the current) and `versions: [{version, bundle_id, reason, citation, declared_by, at}]`, oldest first. An exception recorded before versions were kept is written as version 1 on its next recording.
+- **R31** the finding is `{kind: "cardinality_exceeded", stage_key, stage_label, required, after_stage, definition_version, cardinality, document_count, dischargeable: false, grade, grade_determined}`, the grade the instance's (as R11's). It is published wherever findings are (R10, R12, R19, and R18's `instances[]`) but **not aggregated into `proposals[]`**: their one consumer, `queue`'s finding item, words every proposal as "the stage is required and absent", which this finding is not. Best reading: `queue` aggregates it when its job can word it (a REPORT to queue below).
+- **R33** a second registration is refused `LISTENER_DECLARED`, with its row (C-100.23), as every refusal (R27).
+
+**The read contract** (K147)
+- **R34** The tables `progression_instances` (`progression_key`, `entity_id`, `stage_key`, `capture_sha`, `bundle_id`) and the row counts of every table of R29 are a stated read contract: a later module may join them in its own SQL, and this module changes none of those names, types or meanings without a change to this requirement. Every write stays this module's.
+
 ## Private
 
 ### Uses
