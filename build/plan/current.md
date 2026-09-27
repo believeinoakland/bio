@@ -88,3 +88,7 @@ PROMOTION #2 complete at `0e4e4d790f`: ownership 0 failures (5 files; legacy mod
 PROMOTION #2 archived; its row from its archive.
 
 Layer 3, started 2026-09-27 ~02:14 UTC, concurrently:
+- `host-governor` · HOST-GOVERNOR #1 · `session_01Dx2ApePwLa24DTQGcHYdpj`
+- `provenance` · PROVENANCE #1 · `session_01U29KuhspMg4rYkaVV3DM5k`
+- `capture-sources` · CAPTURE-SOURCES #1 · `session_013dcTX498bqp3qZbH6dTpQN`
+- `capture` · CAPTURE #1 · `session_0151qXkKcpqs1Km6yrLbXgtp`
