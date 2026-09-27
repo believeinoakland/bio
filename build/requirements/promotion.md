@@ -80,8 +80,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
   one or one answered `wrote: false` (R4), every registered listener is called once, in the modules'
   total order, with `{bundleId, bundleSha, type, replay}`. A listener runs outside the transaction and writes no row of the promotion; one that throws or rejects
   never changes the promotion's answer or anything it wrote. (`scheduler` registers its `arm`, for a
-  promotion that leaves a bundle monitored.) *(not yet met: N63; the `op=promote` handler arms the
-  store's scheduler itself)*
+  promotion that leaves a bundle monitored.)
 
 **forkProject({projectId, newId, title, by, viewer, visibility}) → `{ok: true, projectId, newId, title, origin, rel: "derived_from", owner, participantsCopied: 0, bundleSha, visibility}` or refusal** (N16, K68; moved unchanged from the store)
 - **R41** A named `newId` is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3) before anything is looked up, echoing no id: a fork's id is minted, as a project's creation's is (R19).
