@@ -8039,7 +8039,7 @@ export default {
         } catch { /* a signature that throws must not fail the capture: the key stays absent */ }
       }
       if (reading && readDialect !== undefined) reading.dialect = readDialect;
-      return json({ ...withReading(acquired.answer, { reading, textUnits, textUnitsOverBound }), note: ACQUIRE_GRADE_NOTE }, 200);
+      return json(Object.assign(withReading(acquired.answer, { reading, textUnits, textUnitsOverBound }), { note: ACQUIRE_GRADE_NOTE }), 200);
     }
 
     /* Co-attestation over a capture hash.
