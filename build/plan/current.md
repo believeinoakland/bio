@@ -62,3 +62,5 @@ Layer 4, started 2026-09-27 ~06:36 UTC: CALIBRATION #1 `session_01DT2wYuh5pHNvHT
 Layer 5, started 2026-09-27 ~07:50 UTC: ENTITIES #1 `session_01FFJSjwZY11KjjofLSWARDy`, CONNECTIONS #1 `session_01WfxC8Lht5EmaF2m5vmrG2i`, PROGRESSIONS #1 `session_01MqohHm1mTdqg92oxu4112q`, BIAS #1 `session_018B4eA3jst9ZcAUibKhY5FK`, OBSERVATION-LOG #1 `session_01YZefWwyAhTE5bdBCeBJe3j`, QUERY-LANGUAGE #1 `session_012jSiJ21iiBkFYdQgY49Gbe`, RETRIEVAL #1 `session_01Fv7FCJzWqLPnaNpjhg33rD`.
 
 **Size.** Fifteen jobs. T4: 13 jobs, 703.6M tokens, half of it legacy-tests (K126).
+
+Layer 5 merges (BOB #46): progressions' final branch @ 9c5044c955 (79a9b525d9); observation-log @ 09fa325d61 (3b2dfdea3e; ownership 0 failures, legacy-store +60/−1,368, every added line read: imports, delegations, calls, comments, and N39's two authority resolvers). PROMOTION #4 re-opens promotion after bias's merge (K150).
