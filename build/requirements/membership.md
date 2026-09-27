@@ -111,6 +111,9 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R75** `rescueRefusal` answers the first of R41's caller-and-project refusals that holds, in R41's order and byte for byte as `projectOwnerRescue` answers it: `ADMIN_ONLY` unless `by` is an administrator (R64); `NO_OWNERS` when the project has no owner; `OWNERS_ARE_ACTIVE`, naming the active owners, unless every owner is inactive; otherwise `null`. It writes nothing and never throws. (Read by `affordances` for the rescue's fact, so the offer and the act cannot disagree.)
 - **R76** `positionalMember` answers who is asking, as distinct from what they may see: R43's member id for `identity` when it is a non-empty string, else for `viewer`; `null` for a machine credential and for a viewer or identity R43 admits to nothing. It writes nothing and never throws. (Read by `retrieval`, `queue`, `affordances` and `legacy-store`.)
 
+**existenceAct(projectId, viewer) → refusal or null** (N76)
+- **R77** Answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1: the project's id and name only, with its check id and translation) when `viewer`'s sight of `projectId` is existence only (R43), else `null`; `null` when no `viewer` is given. Every act of this module and of `promotion` that names a project asks it before its own no-such-project answer, so C-70.1 is minted only here. Never throws. *(not yet met: N73; `promotion` keeps its own copy)*
+
 ## Private
 
 ### Uses

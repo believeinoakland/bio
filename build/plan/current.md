@@ -16,15 +16,15 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 - N83 · R37's read contract gains the `files`, `history` and `bundles` columns provenance reads.
 
 **membership**
-- N73 · `#ownRefusal` builds R29 and R62 from `AI_CREDENTIAL_CHECKS` (C-29.11, C-29.12); mark its three DEC-49 regions; `PROJECT_SEEN_NOT_A_PARTICIPANT` minted once here (promotion then calls membership's `#existenceOnly`).
-- N76 · `existenceAct`, which promotion calls, named in Provides (BOB states it in the requirements before the job starts).
+- N73 · `#ownRefusal` builds R29 and R62 from `AI_CREDENTIAL_CHECKS` (C-29.11, C-29.12); mark its three DEC-49 regions; `PROJECT_SEEN_NOT_A_PARTICIPANT` minted once here (R77).
+- N76 · `existenceAct` in Provides (R77, K127), met and tested at the interface.
 - N85 · `memberpairings` answers each viewer only the pairings R19 lets it see (K124), tested at the interface.
 - N64 · its share: `rescueRefusal` and `positionalMember` (R75–R76) in Provides, met and tested.
 
 **promotion**
 - N56 · `fact(name, ...args)` of facts registered with it (R40); D-592 (`reopen`).
 - R58 · drop its own `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` for record-core's (a user of record-core's CHANGE).
-- N73 · its share: call membership's `#existenceOnly` instead of its copy (after membership's CHANGE).
+- N73 · its share: call membership's `existenceAct` (R77) instead of its copy (after membership's CHANGE).
 - N86 · `CATALOG_VERSION` 1.34.0 (R34); `d470` A3/A9 re-pinned after it.
 - N63 · its share: the post-commit notice beside R39's in-transaction projections, as its requirements state.
 
