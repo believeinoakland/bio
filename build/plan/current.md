@@ -81,3 +81,7 @@ Layer 1's sessions archived and their rows written from their archives (`build/m
 
 Layer 2, started 2026-09-27 01:55 UTC:
 - `promotion` · PROMOTION #2 · `session_012BcNihVYcDtYdrcV3nWo8p`
+
+## Layer 2 closed (BOB #44, 2026-09-27 ~02:12 UTC)
+
+PROMOTION #2 complete at `0e4e4d790f`: ownership 0 failures (5 files; legacy modules untouched); merged. T4-2a–c applied: R18 green (module suites all pass), `CATALOG_VERSION` 1.33.0 (census 572), the 16 DEC-49 regions marked (`machinefences-dec49` 84/3), and the catalogue rows' checks on `EXISTS`, `ABSENT`, `FILES_DROPPED`, `MACHINE_CANNOT_REOPEN`, so promotion's Errors line is met (its mark cleared). R45 stays unmet, as on the base: it needs record-core's post-commit hook (N63). The bio-plane bundle regenerated; `fleetbundles` fails only arm 2a, as at layer 1's close. Re-pins for legacy-tests' T4-5: `d470` (A3, A5; the row in promotion's record), `machinefences-dec49` D-PIN/D0, `ratify-authority`'s C-57.1 `where`. membership's `existenceAct` is N76.

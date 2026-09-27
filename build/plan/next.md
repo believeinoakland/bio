@@ -71,6 +71,8 @@
 
 - N75 · 2026-09-27 · **image-codecs** (IMAGE-CODECS #1, T4): the low-memory line-based 9/7 wavelet (strip-wise, in OpenJPEG's order, bit-exact), so pages past today's 61.3 MB working-set bound decode; and the bound measured on a deployed plane (needs a deployment).
 
+- N76 · 2026-09-27 · **membership** (PROMOTION #2, T4): `existenceAct`, which promotion calls, is named in membership's Provides.
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
