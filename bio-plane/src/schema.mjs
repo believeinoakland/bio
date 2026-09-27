@@ -207,8 +207,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WH
 -- ---- D-104: source reachability, and what may NOT count as a failure ----
 
 
--- The readings, their reference and name-term indexes, the text-source projection, the text index and the
--- reading history are extraction's tables, defined with their reasons in src/extraction/schema.mjs.
 -- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY, which IS the framework's
 -- entity axis. Built ONCE (D-83): the bias doctrine's subject registry
 -- (BIO_Declared_Bias_v0_1.md safeguard 4) and the framework's entity axis

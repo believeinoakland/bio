@@ -5762,8 +5762,8 @@ export default {
     if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent });
 
     if (op === "acquire") {
-      /* K72 (8), (11), K49: the acquisition is capture's service in the Durable Object, and the reading of what it
-         filed is extraction's (R1); this op forwards to each and answers both. */
+      /* K72 (8), (11): the acquisition is capture's service in the Durable Object; this op forwards to it and then
+         runs the reading block below over what it filed, until `extraction` takes the block (K49). */
       const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)),
         { json, storeSilent, storageAbsent, cls, member: viaSession, sessMember, storeName });
       if (acquired.response) return acquired.response;
