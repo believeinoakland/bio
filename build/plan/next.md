@@ -93,6 +93,10 @@
 
 - N100 · 2026-09-27 · **pdf-reader**, **extraction** (CONTENT #1 REPORT 4 (a), EXTRACTION #1): pdf-reader emits each page's box (D-374's producer half, `extractPdfStructure`'s `pageBoxes`, built on `land/worker/D-374`); then extraction R13/R30 carry `page_boxes` under `page_count`'s three-state rule, a re-read keeping the stored ones, so content R9 can bound a rectangle.
 
+- N101 · 2026-09-27 · **pdf-reader** (EXTRACTION #1 REPORT 2): emits `image_unread` per image (D-665's producer half) and REC-206's link anchors (page rect), which extraction R9 and R52 read.
+- N102 · 2026-09-27 · **text-chain** (EXTRACTION #1 REPORT 3): `mergeTier2Text` carries `image_unread` markers (extraction carries them today).
+- N103 · 2026-09-27 · **capture** (EXTRACTION #1 REPORT 4): `readingInputs` and `acquireOp`'s reading inputs are unused since extraction reads the primary itself; drop them (a second read of the primary per acquire).
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
