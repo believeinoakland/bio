@@ -2,7 +2,7 @@
 
 **Session** ENTITIES #1, `session_01FFJSjwZY11KjjofLSWARDy`, on `job/T5/entities` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main` @ `7549c0b6`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE, 2026-09-27 (head `c364655db2` before this record). Every entry applied; Provides final (REPORT sent for the early merge); Q1 open and not blocking. Entry T5-4: extract `entities` from `legacy-store` and `legacy-checks` per `build/extraction/entities.md` and `build/requirements/entities.md`, with N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225 and every requirement marked not yet met (R8, R19, R20, R23, R25, R32).
+**Status** · COMPLETE, 2026-09-27 (head `c364655db2` before this record). Every entry applied; Provides final (REPORT sent for the early merge); Q1 answered (K143) and applied. `tranche/T5` merged @ `5ed5b476f9` after BOB's ANSWER. Entry T5-4: extract `entities` from `legacy-store` and `legacy-checks` per `build/extraction/entities.md` and `build/requirements/entities.md`, with N4, N6 (with `id-spaces` retiring its legacy adapter, R26, K35), REC-225 and every requirement marked not yet met (R8, R19, R20, R23, R25, R32).
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS §1–§16, `build/manifest.md`, `build/layers.md`, `build/requirements/entities.md`, `build/extraction/entities.md`, `build/plan/current.md`, the public parts of `jurisdictions`, `id-spaces`, `record-core`, `membership`, `provenance`, `extraction` (legacy-checks has no requirements file), rulings K1, K3, K4, K6, K23, K31, K35, K53, K61, K64, K102, K106, K120, K134, K138, K140, K141; `build/jobs/T5/content.md` (the pattern); `bio-plane/src/idspaces.mjs`; the legacy code the map names, measured again below. No snapshot branch carries built work for N4, N6 or REC-225.
 
@@ -15,6 +15,10 @@
 ## Questions to BOB
 
 - **Q1 · N6's adapter retirement is in `id-spaces`' files, which this job may not write.** The entry says `id-spaces` retires its legacy adapter (R26, K35) with N6. The adapter is the foot of `bio-plane/src/idspaces.mjs` and its test `bio-plane/test/m/id-spaces/legacy.test.mjs`; both are `id-spaces`' paths, and no `id-spaces` job runs in T5. Best reading, which I am building: `entities` stops using the adapter (the store no longer imports `idspaces.mjs`; `op=idmatch` calls the view-first services over the active profiles' view), so after this job nothing in the plane imports the adapter; its removal, R26's retirement and the test's removal are an `id-spaces` change BOB routes (to a job, or by ruling it into this one: say so and I remove them, and the ownership check will list those two files). The old battery's `rec203-idspaces.test.mjs` also imports the adapter's names (`CMS_FLOOR`, `apnStanding`, `systemOfAddresses`); moving it to the new names is `legacy-tests`' (T5-12).
+
+## Answers from BOB
+
+- **Q1 · ANSWER** (K143, `tranche/T5` @ `5ed5b476f9`, merged here): the reading stands. `entities` stops using the adapter and does not touch `id-spaces`' files; removing the adapter and retiring id-spaces R26 is N105 (T6, layer 1); `rec203-idspaces` is in legacy-tests' T5-12. Verified after the merge: nothing in the plane imports the adapter. The only importer of `idspaces.mjs` in `bio-plane/src` is `entities/index.mjs`, which imports the view-first `spaces`, `recognise`, `parcelStanding`, `systemOf` and `judgePair`; no file names `ID_SPACES`, `CMS_FLOOR`, `apnStanding` or `systemOfAddresses`.
 
 ## Decisions made in the module (P17: recorded, not asked)
 
@@ -41,7 +45,7 @@
 
 ## Deferred
 
-- The adapter's removal and id-spaces R26's retirement (Q1: another module's files).
+- The adapter's removal and id-spaces R26's retirement: N105 (K143).
 - The old battery's source-anchored suites (below): `legacy-tests`'.
 
 ## Found in other modules (REPORT)
@@ -56,10 +60,13 @@
 8. **connections, observation-log** (this layer): register with R13 (`onResolved` for the dirty mark, `onResolveAttempt` for the attempt row) and drop `legacy-store`'s registrations; import `GRADE_RANK`, `isEstablished`, `MEANING_LIMIT_*` from here. **progressions** and the earned-basis registry: `strongestByCapture` (R16) and `has` (R7).
 9. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest are stale (the plane's sources changed).
 
+10. **BOB (process state):** after merging `tranche/T5` @ `5ed5b476f9`, the format check fails on `build/requirements/progressions.md` (ids given twice: R8, R33, R31); it fails identically on `tranche/T5` itself, so it is not this job's.
+
 ## Tests and checks
 
 - **Module:** `node --test bio-plane/test/m/entities/` on `c364655db2`: tests 32, pass 32, fail 0 (5 files: registry, resolve, reads, naming, idmatch; each live id R1–R32 named in a title).
 - **Layer tests:** none named in `build/manifest.md`.
-- **Checks** (civicos-process `main` @ `7549c0b6`): format 69 modules, 64 requirements files, 0 failures; architecture 9 product files, 21 relative imports, 0 failures; coverage 32 of 32 live ids named, 0 failures; ownership 13 files, legacy-store 27 added / 1,375 removed, legacy-checks 0 / 30, 0 failures.
+- **After the merge of `5ed5b476f9`:** module 32/32; architecture, coverage and ownership unchanged (0 failures); format 1 failure, `progressions.md`'s duplicate ids, present on `tranche/T5` (item 10).
+- **Checks** (civicos-process `main` @ `7549c0b6`, before the merge): format 69 modules, 64 requirements files, 0 failures; architecture 9 product files, 21 relative imports, 0 failures; coverage 32 of 32 live ids named, 0 failures; ownership 13 files, legacy-store 27 added / 1,375 removed, legacy-checks 0 / 30, 0 failures.
 
-Size: test runs 14, module lines 1008
+Size: test runs 15, module lines 1008
