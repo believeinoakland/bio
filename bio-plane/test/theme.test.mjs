@@ -35,6 +35,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { THEME_CHECKS, THEME_ID_RE, BUNDLE_ID_RE, themeLegFindings, basisVersionFindings,
          actionBasisFindings } from "../checks/bio-checks.mjs";
 import { ENTITY_KINDS } from "../src/affordances.mjs";
@@ -143,6 +144,7 @@ const promote = async (id, text, type, { readings = [] } = {}) => {
   if (readings.length) {
     const prov = JSON.stringify({ documents: readings });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(...readings.map((d) => registerFile(d)));   /* T4 (legacy-tests; provenance K121): each capture the documents name, held in the bundle */
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
@@ -169,10 +171,12 @@ const ocrChain = [
   { step: "pixels", extent: { kind: "pages", pages: [0, 1] } },
   { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" },
     extent: { kind: "pages", pages: [0, 1] } }];
-const readingOf = (captureSha, entity) => ({
+/* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused at
+   the write, naming the capture at the path the register below gives it (`register-doc.mjs`). */
+const readingOf = (captureSha, entity) => registerDoc({
   capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-             entities: [entity], text_source: ocrChain } });
+             entities: [entity], text_source: ocrChain } }, { file: "captures/doc.pdf" });
 
 const SHA_A = sha("d162-parks-audit"), SHA_B = sha("d162-sewer-memo");
 const DOC_A = "INFO-2026-0923-parksaudit", DOC_B = "INFO-2026-0923-sewermemo";

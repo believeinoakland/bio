@@ -26,6 +26,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { readingPositionInExtent } from "../src/textchain.mjs";
 import * as CHECKS from "../checks/bio-checks.mjs";
 const { checkConnectionMentionUnchosen, CONNECTION_PAIR_CHECKS } = CHECKS;
@@ -63,13 +64,16 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "## Summary", "", "A captured document.", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const promoteReading = async (captureSha, entities) => {
   const id = `INFO-2026-${String(7600 + (++bseq))}-r`; const md = infoMd(id);
-  const prov = JSON.stringify({ documents: [{ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
-    reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW, entities, facts: {}, text_source: [{ step: "layer" }] } }] });
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW, entities, facts: {}, text_source: [{ step: "layer" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", { bundleId: id, base: null,
     snapKey: `20260914T${String(210000 + bseq).slice(-6)}Z_${sha(String(bseq)).slice(0, 8)}`,
     meta: { object_type: "information", group: "believe-in-oakland", title: `Doc ${id}`, current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }], register: [] });
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)], register: [] });
   if (r.ok === false) throw new Error(JSON.stringify(r).slice(0, 400)); return id;
 };
 const legMd = (id, target, extent) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",

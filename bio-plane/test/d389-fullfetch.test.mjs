@@ -47,6 +47,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -95,16 +96,22 @@ const promote = async (id, type, shas) => {
   /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
      `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
   const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
-  const prov = JSON.stringify({ documents: shas.map((s) => ({
-    capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf() })) });
+  /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write; each document names the file the promotion REGISTERS for its capture, and the bundle holds it
+     (`register-doc.mjs`). */
+  const regPath = (s, i) => `data/${i}-${s.slice(0, 4)}.pdf`;
+  const docs = shas.map((s, i) => registerDoc({
+    capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf() }, { file: regPath(s, i) }));
+  const prov = JSON.stringify({ documents: docs });
   const r = await POST(`op=promote&token=${ADM}`, {
     ...(type === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260923T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", title: id,
             current_state: type === "project" ? "forming" : "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
-    register: shas.map((s, i) => ({ sha256: s, path: `data/${i}-${s.slice(0, 4)}.pdf`, encoding: "binary", bytes: 10 })) });
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            ...docs.map((d) => registerFile(d))],
+    register: shas.map((s, i) => ({ sha256: s, path: regPath(s, i), encoding: "binary", bytes: 10 })) });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
   return r;
 };

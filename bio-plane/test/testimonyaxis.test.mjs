@@ -51,6 +51,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
@@ -140,7 +141,11 @@ const promoteDoc = async (id, { docs, register = [] } = {}) => post("promote", {
   bundleId: id, base: null, snapKey: snapKey(),
   meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${id}`,
           current_state: "collected", created: NOW, last_updated: NOW },
-  files: [fileOf("bundle.md", infoMd(id)), fileOf("data/provenance.json", JSON.stringify({ documents: docs }))],
+  /* T4 (legacy-tests; provenance K121): the documents are unchanged; the capture file each names (the uploaded
+     `snapshots/upload.pdf`, the path the register already gives it) is now carried in the bundle, as C-18.1 at the
+     write requires (`register-doc.mjs`). */
+  files: [fileOf("bundle.md", infoMd(id)), fileOf("data/provenance.json", JSON.stringify({ documents: docs })),
+          ...docs.map((d) => registerFile(d))],
   register }, RUTH);
 const uploadDoc = (s) => ({
   file: "snapshots/upload.pdf", locator: "handed to a member", retrieved: NOW,

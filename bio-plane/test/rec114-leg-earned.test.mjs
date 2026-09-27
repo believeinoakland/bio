@@ -64,6 +64,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -168,6 +169,7 @@ const promote = async (id, text, type, { register = [], reading = null } = {}) =
   if (reading) {
     const prov = JSON.stringify({ documents: [reading] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(registerFile(reading));   /* T4 (legacy-tests; provenance K121): the capture the document names, held in the bundle */
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
@@ -185,10 +187,13 @@ const eOrd = await post("entitycreate",
   { kind: "ordinance", label: "Sewer Fund Transfer Ordinance", aliases: ["ordinance:24681"] });
 const ORD = eOrd.entity_id;
 const ENT = [{ ref: "ordinance:24681", kind: "ordinance", key: "24681", label: "Ordinance No. 24681" }];
-const readingOf = (s, chain) => ({
+/* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused at
+   the write, naming the capture at the path the fixture's register already gives it (`register-doc.mjs`). */
+const readingOf = (s, chain) => registerDoc({
   capture: { sha256: s, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-             entities: ENT, facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } });
+             entities: ENT, facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } },
+  { file: "snapshots/r.bin" });
 const OCR_CHAIN = [{ step: "pixels" },
   { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
 

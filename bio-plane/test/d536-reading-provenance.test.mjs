@@ -40,6 +40,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME, TIER_MEMBERS }
   from "../src/readingprov.mjs";
 
@@ -178,9 +179,13 @@ const bundleMd = (id, summary = "Member bundle.") => [
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
 let bseq = 0;
-const promoteDoc = async (doc, { id = null, base = null, summary } = {}) => {
+const promoteDoc = async (offered, { id = null, base = null, summary } = {}) => {
   const bid = id || `INFO-2026-${String(++bseq).padStart(4, "0")}-d536`;
   const md = bundleMd(bid, summary);
+  /* T4 (legacy-tests; provenance K121): C-18.1 now refuses at the write. The acquired document keeps every key it
+     states (its reading untouched, a withheld `provenance` still withheld), and the capture it names is held in the
+     bundle beside it (`register-doc.mjs`). */
+  const doc = registerDoc(offered);
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("op=promote&token=mem-d536", {
     bundleId: bid, base,
@@ -190,6 +195,7 @@ const promoteDoc = async (doc, { id = null, base = null, summary } = {}) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      registerFile(doc),
     ],
     register: [{ path: doc.file, sha256: doc.capture.sha256, bytes: doc.capture.bytes ?? 1, encoding: "binary" }],
   });

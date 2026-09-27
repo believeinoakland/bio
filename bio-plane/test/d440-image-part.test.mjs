@@ -33,6 +33,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { deflateRawSync } from "node:zlib";
 import { checkContentExtent, imagePartUndetermined, CONTENT_EXTENT_CHECKS } from "../checks/bio-checks.mjs";
 
@@ -177,8 +178,12 @@ let snapSeq = 0;
 const promote = async (id, text, type, { document = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (document) {
-    const prov = JSON.stringify({ documents: [document] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    /* T4 (legacy-tests; provenance K121): C-18.1 now refuses at the write. An acquired document keeps every key it
+       states (its `profile` included, or its absence), and the capture it names is held in the bundle
+       (`register-doc.mjs`). */
+    const doc = registerDoc(document);
+    const prov = JSON.stringify({ documents: [doc] });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc));
   }
   return post("promote", {
     bundleId: id, base: null,

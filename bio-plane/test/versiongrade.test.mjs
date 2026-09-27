@@ -38,6 +38,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { normalizeAddress } from "../src/subresources.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -144,8 +145,13 @@ const HEAD = new Map();
 const promote = async (id, text, type, docs = [], tok = "mem-r221") => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (docs.length) {
-    const prov = JSON.stringify({ documents: docs.map(docOf) });
+    /* T4 (legacy-tests; provenance K121): each document completed to C-18.1's intake shape, which is now refused at
+       the write (what it states — its file, locator, retrieval and text units — kept as it is), and the capture file
+       it names carried in the bundle (`register-doc.mjs`). */
+    const pdocs = docs.map((c) => registerDoc(docOf(c)));
+    const prov = JSON.stringify({ documents: pdocs });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(...pdocs.map((d) => registerFile(d)));
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,

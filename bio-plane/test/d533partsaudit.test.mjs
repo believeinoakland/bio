@@ -30,13 +30,18 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { registerDoc } from "./register-doc.mjs";
 
 /* The control driver (`d533partsaudit.control.mjs`) points this at an armed COPY of the sources. */
 const SRC = process.env.D533_SRC ? join(process.env.D533_SRC, "index.mjs") : fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const ADM = "adm-d533", MEM = "mem-d533";
 const MiB = 1024 * 1024;
-/* Deterministic bodies: three parts each (8 + 8 + 5 MiB), distinct per locator so no part is shared. */
-const body = (seed) => { const b = new Uint8Array(21 * MiB); for (let i = 0; i < b.length; i++) b[i] = (i * 31 + seed) % 256; return b; };
+/* Deterministic bodies: three parts each (8 + 8 + 5 MiB), distinct per locator so no part is shared.
+   T4 (legacy-tests; capture R10's streaming): capture now cuts parts at EXACTLY 8 MiB (the old wire cut wherever the
+   stream's chunks crossed the bound), and a body periodic in 256 B makes a document's first two 8 MiB parts
+   byte-identical — ONE content address, so §5's single deleted part took both and the record rightly named two.
+   Each MiB now carries its own offset, so every part of every locator is distinct, which is what this line says. */
+const body = (seed) => { const b = new Uint8Array(21 * MiB); for (let i = 0; i < b.length; i++) b[i] = (i * 31 + seed + Math.floor(i / MiB)) % 256; return b; };
 const BODIES = { "/held": body(7), "/unreadable": body(11), "/missing": body(13), "/corrupt": body(17) };
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
@@ -73,14 +78,16 @@ const mdFor = (id) => ["---", `id: ${id}`, "object_type: information", "schema: 
 const inline = (path, text) => ({ path, text, bytes: Buffer.byteLength(text), sha256: sha(text) });
 /* File an acquired document the way C-18.1 describes: the parts as blob files, the register document naming them,
    and ONE register row for the whole. `provenance` overrides the register document's text (§2's arm). */
-const file = async (id, doc, { provenance } = {}) => POST(`op=promote&token=${ADM}`, {
+/* T4 (legacy-tests; provenance K121): the promote's OWN answer is returned, not the control plane's envelope, whose
+   `ok` is true over a refused promotion — which is how §3's refused filing read "filed" and PASSED. */
+const file = async (id, doc, { provenance } = {}) => { const r = await POST(`op=promote&token=${ADM}`, {
   bundleId: id, base: null, snapKey: `20260924T000001Z_${id.slice(-8)}`,
   files: [inline("bundle.md", mdFor(id)),
           inline("data/provenance.json", provenance ?? JSON.stringify({ documents: [doc] })),
           ...doc.parts.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
   register: [{ path: doc.file, sha256: doc.capture.sha256, encoding: "binary", bytes: doc.capture.bytes }],
   meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
-          created: NOW, last_updated: NOW } });
+          created: NOW, last_updated: NOW } }); return r && "result" in r ? r.result : r; };
 const acquire = async (path) => POST(`op=acquire&token=${MEM}`, { locator: `https://www.oaklandca.gov${path}`, authority: "City Auditor" });
 
 t("the instance claims, so bundles can register captures",
@@ -123,13 +130,16 @@ console.log("\n--- §3 a part with no stored checksum is read and hashed; one to
   await bucket.put(`${STORE}/captures/${sSha}`, small);
   t("the planted part carries no stored checksum", (await bucket.head(`${STORE}/captures/${sSha}`)).checksums?.sha256, undefined);
   const whole = new Uint8Array(small.length + large.length); whole.set(small, 0); whole.set(large, small.length);
-  const doc = { file: "snapshots/planted", locator: "https://www.oaklandca.gov/planted", retrieved: NOW,
+  /* T4 (legacy-tests; provenance K121): the hand-written register document completed to C-18.1's intake shape
+     (capture method, grade, actor class and origin, which it lacked and the write now refuses); every key it states,
+     its parts included, is kept (`register-doc.mjs`). */
+  const doc = registerDoc({ file: "snapshots/planted", locator: "https://www.oaklandca.gov/planted", retrieved: NOW,
     authority_state: "undetermined", authority_basis: "suite",
     capture: { sha256: sha(whole), bytes: whole.length, encoding: "binary" },
     /* The small part's digest is spelled as a caller may spell one (`sha256:` prefix, upper case): the same
        digest, and the over-strictness arm of the control reads it as exactly that. */
     parts: [{ file: "snapshots/planted.part000", sha256: `sha256:${sSha.toUpperCase()}`, bytes: small.length },
-            { file: "snapshots/planted.part001", sha256: lSha, bytes: large.length }] };
+            { file: "snapshots/planted.part001", sha256: lSha, bytes: large.length }] });
   /* The large part is planted checksum-free too, and it is over the bound a part is read and hashed within. */
   await bucket.put(`${STORE}/captures/${lSha}`, large);
   t("filed", (await file("INFO-2026-0535-planted", doc)).ok, true);

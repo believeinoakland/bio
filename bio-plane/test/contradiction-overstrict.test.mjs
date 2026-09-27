@@ -33,6 +33,7 @@ import { fileURLToPath } from "node:url";
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for the APPEND-ONLY census (record-core R21). */
 import { moduleFiles } from "./extracted-sources.mjs";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { K1, K2, K3, K4, REQUIRED_SHAPES } from "./contradiction-corpus.mjs";
 import { measure, gate, pairId, KEYS, LABELS, THRESHOLD } from "./contradiction-gate.mjs";
 import { judgeBaseline } from "./contradiction-judge-baseline.mjs";
@@ -125,7 +126,11 @@ let snapSeq = 0;
 const HEAD = new Map();
 const mustPromote = async (id, text, type, { readings = [] } = {}) => {
   const files = [{ path: "bundle.md", text }];
-  if (readings.length) files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: readings }) });
+  /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture each one names held in the bundle (`register-doc.mjs`). */
+  const docs = readings.map((d) => registerDoc(d));
+  if (docs.length) files.push({ path: "data/provenance.json", text: JSON.stringify({ documents: docs }) },
+                              ...docs.map((d) => registerFile(d)));
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
     snapKey: `20260923T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
@@ -406,12 +411,26 @@ t("AND A DIFFERENT LABEL OVER THE SAME REFERENTS IS NOT A NEW CANDIDATE — the 
   const purgeAt = purgeSrc.indexOf("  purge({ bundleId = null } = {}) {");
   const purgeEnd = purgeSrc.indexOf("\n  }\n", purgeAt);
   const generic = hitsW(/\bDELETE\s+FROM\s+\$\{/g);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R29): the census of generic `DELETE FROM ${...}` statements
+     gained ONE arrival, BY NAME: capture's `deriveSiteChrome` (src/capture/index.mjs), which clears a host's derived
+     chrome by a loop over the LITERAL table list ["site_chrome_refs", "site_chrome", "link_chrome"]. It cannot reach
+     this table. So each generic delete is now named rather than only located: record-core's purge, or a loop whose
+     literal list of tables is read off its own line and must not name contradiction_candidates. Any other generic
+     delete, or that list gaining this table, still fails here. */
+  const genericNamed = generic.map((h) => {
+    if (h.f === "src/record-core/index.mjs" && h.i > purgeAt && h.i < purgeEnd) return "record-core purge";
+    const src = readFileSync(planeRoot + h.f, "latin1");
+    const line = src.slice(src.lastIndexOf("\n", h.i) + 1, src.indexOf("\n", h.i));
+    const list = /for \(const \w+ of \[([^\]]*)\]\)/.exec(line);
+    return list ? `${h.f} literal [${list[1].replace(/\s+/g, "")}]` : `${h.f} UNNAMED generic delete`;
+  }).sort();
   t("APPEND-ONLY: nothing updates a candidate, and only purge's two arms delete one",
     [[...files, ...extFiles].includes("src/record-core/index.mjs"), hitsW(/\bUPDATE\s+contradiction_candidates\b/gi).length,
      hitsW(/\bDELETE\s+FROM\s+contradiction_candidates\b/gi).length,
-     generic.map((h) => h.f === "src/record-core/index.mjs" && h.i > purgeAt && h.i < purgeEnd),
+     genericNamed,
      /\{ name: "contradiction_candidates", keys: \["a_bundle_id", "b_bundle_id"\] \}/.test(storeSrc)],
-    [true, 0, 0, [true], true]);
+    [true, 0, 0, ["record-core purge",
+                  'src/capture/index.mjs literal ["site_chrome_refs","site_chrome","link_chrome"]'].sort(), true]);
 }
 /* GUARDED so a disabled K2 (the `pairing` control arm) FAILS here BY NAME and the suite still reaches its foot,
    rather than a TypeError ending the module with no tally (kickoffs/WORKER.md). */
