@@ -162,7 +162,14 @@ const SRC = {
   chain:  readFileSync(new URL("../src/textchain.mjs", import.meta.url), "utf8"),
   query:  readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8"),
   self:   readFileSync(new URL("./observation-content.test.mjs", import.meta.url), "utf8"),
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R35–R44): the content frontier is retrieval's `#content`
+     in `src/retrieval/frontier.mjs`; G5, G5b, J3 and J5 read it there. */
+  frontier: readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8"),
 };
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's content arm, from its head to the meaning arm's. */
+const CONTENT_ARM = SRC.frontier.slice(SRC.frontier.indexOf("  #content(cap, viewer) {"),
+                                       SRC.frontier.indexOf("  #meaning(cap, viewer) {"));
+
 
 const TOK = "mem-rec94";
 const ADM = "adm-rec94";
@@ -936,17 +943,21 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   + "G2 and G3b go red for that reason alone. This pin is the belt beside those braces. The "
   + "residual (D-389) is CLOSED at the shared over-fetch, `#frontierPage`: a FULL raw fetch now "
   + "reads truncated for every viewer",
-    [/#frontierPage\("content", cap, \{ limit: \(cap \+ 1\) \* 2, subjectKind: "capture" \}/
-       .test(SRC.store),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R37): the arm is retrieval's `#content`; its page is
+       the shared `#page(read, cap, limit, gate)` called with the latest-row statement over content-level capture rows
+       at the SAME factor, the missing supply goes through the shared `#fetch` at that factor, and the one full-fetch
+       test is `#fetch`'s, ORed into `#page`'s claim. The same three facts, where they now live. */
+    [/level = 'content' AND o\.subject_kind = 'capture'[\s\S]{0,600}?LIMIT \?`, n\), cap, \(cap \+ 1\) \* 2, \(r\) => seen\(r\.subject\)\);/
+       .test(CONTENT_ARM),
      /* MOVED 2026-09-23 BY REC-174, NEVER EXEMPTED: the missing supply is no longer fetched bare and
         filtered after (`LIMIT ?`, (cap + 1) * 2).filter(…)`) — it goes through `#frontierFetch` at the SAME
         factor, so its FULL bit reaches the claim; and the full-fetch test moved from `#frontierPage`'s own
         line into that helper (`full: raw.length === limit`), which the page's claim ORs as `|| full`. The
         pin still names the same two facts: the factor, and the one test. */
-     /const missingFetch = this\.#frontierFetch\(\(cap \+ 1\) \* 2,[\s\S]{0,600}?LIMIT \?`, n\), \(r\) => visible\(r\.bundle_id\) !== null\)/
-       .test(SRC.store),
-     /truncated: gated\.length > cap \|\| full\b/.test(SRC.store)
-       && /full: raw\.length === limit/.test(SRC.store)],
+     /const missingFetch = this\.#fetch\(\(cap \+ 1\) \* 2,[\s\S]{0,600}?LIMIT \?`, n\), \(r\) => visible\(r\.bundle_id\)\)/
+       .test(CONTENT_ARM),
+     /truncated: gated\.length > cap \|\| full\b/.test(SRC.frontier)
+       && /full: raw\.length === limit/.test(SRC.frontier)],
     [true, true, true]);
 
   /* MOVED 2026-09-23 BY D-389: the page's disjunct is no longer spelled `page.length > cap` here — it is
@@ -959,9 +970,11 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   + "CONDUCT #11 already corrected in `#frontierMeaning` on 2026-09-15",
     /* MOVED 2026-09-23 BY REC-174: the claim gained `missingFetch.full` (the missing supply's full-fetch bit)
        between the arm's own lists and the page's. `never` and `unexplained`, never `missing`, is unchanged. */
-    [/truncated: never\.length > cap \|\| unexplained\.length > cap\s*\n\s*\|\| missingFetch\.full \|\| latest\.truncated/
-       .test(SRC.store),
-     /truncated: [^\n]*missing\.length > cap/.test(SRC.store)],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R37, R43): read in retrieval's `#content`, where the
+       claim is written on one line. */
+    [/truncated: never\.length > cap \|\| unexplained\.length > cap\s*\|\| missingFetch\.full \|\| latest\.truncated/
+       .test(CONTENT_ARM),
+     /truncated: [^\n]*missing\.length > cap/.test(CONTENT_ARM)],
     [true, false]);
 }
 
@@ -1028,9 +1041,11 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   + "`#frontierContent`'s tally now names REC-110 and D-386 and POINTS at the document arm for "
   + "the reasoning rather than restating it. An assertion that the field is ungated is only half "
   + "a pin: a session that gated it would delete the comment too, so the arm reads the SOURCE",
-    [/REC-110, 2026-09-17, D-386 CLOSED/.test(
-       SRC.store.slice(SRC.store.indexOf("#frontierContent("),
-                       SRC.store.indexOf("#frontierMeaning("))),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39): the three levels' tally is ONE method of
+       retrieval's frontier, `#tally(level, viewer)`; this arm calls it, the ruling (REC-110, D-386) is recorded at the
+       document arm beside that arm's own call, and the method's statement is the whole level grouped by state. */
+    [/const tally = this\.#tally\("content", viewer\);/.test(CONTENT_ARM)
+       && /THE TALLY IS DELIBERATELY NOT GATED \(REC-110, D-386 closed/.test(SRC.frontier),
      /* CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED. This read `/level = 'content' GROUP BY state/`,
         an ADJACENCY pin — and the adjacency is exactly what BOB #32's ruling had to break: the tally now
         interpolates `#hiddenRunTail(viewer)` between the level literal and the GROUP BY, so the two tokens
@@ -1038,7 +1053,7 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
         is why it went red on a change that strengthens the very thing J3 exists to protect. What the rule
         actually is: this site counts the WHOLE level (not the page), grouped by state. Both halves are
         pinned below as their own tokens, so a future narrowing to the page still fails here. */
-     /level = 'content'\$\{hidTail\.sql\} GROUP BY state/.test(SRC.store)],
+     /FROM observation_log WHERE level = \?\$\{tail\.sql\} GROUP BY state/.test(SRC.frontier)],
     [true, true]);
 
   /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND ITS PIN. REC-110's ruling is NOT reopened —
@@ -1053,12 +1068,15 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
   t("J5: D-486's narrowing is at this site and is the SHARED predicate, not a second spelling — this tally "
   + "calls `#hiddenRunTail`, the helper names BOB #32's ruling, and the subtraction itself is written in "
   + "exactly ONE place in the file (`#hiddenSets`), which is what keeps the five readers one rule",
-    [/const hidTail = this\.#hiddenRunTail\(viewer\);/.test(
-       SRC.store.slice(SRC.store.indexOf("#frontierContent("), SRC.store.indexOf("#frontierMeaning("))),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39, R57): this arm calls the one `#tally`, which
+       reaches the narrowing once through `retrieval.hiddenRunTail(viewer)`; the store registers its `#hiddenRunTail`
+       as that tail, and the subtraction with its ruling stays written once, in the store's `#hiddenSets`. */
+    [/const tally = this\.#tally\("content", viewer\);/.test(CONTENT_ARM)
+       && (SRC.frontier.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length === 1,
      /BOB #32, 2026-09-24 02:30Z/.test(SRC.store),
      (SRC.store.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
-     (SRC.store.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length],
-    [true, true, 1, 3]);
+     (SRC.store.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length],
+    [true, true, 1, 1]);
 }
 
 /* ===================================================================== *

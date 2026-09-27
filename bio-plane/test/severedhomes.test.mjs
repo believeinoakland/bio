@@ -90,12 +90,21 @@ import { Miniflare } from "miniflare";
    REC-171 landed; once the projects were minted, its first inquiry was refused SURFACE_NO_RUN. The
    shared fixture opens the run, as every other deploy-token inquiry suite does. */
 import { withSurfacingRun } from "./surfacing-run.mjs";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the severance rule moved into connections (CONNECTIONS #1, R22):
+   its one implementation is `edgeSevered(citingId, targetId, rel)` in `src/connections/index.mjs`, and `#citesInto`
+   became connections' `citesInto`, which calls it as `this.edgeSevered(`. store.mjs keeps `#refEdgeSevered(...a)`
+   and `#citesInto(id)` only as one-line delegates to the module, and its other callers are unchanged. The
+   structural count reads store.mjs AND every file of `src/connections/`. */
+const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/", import.meta.url)))
+  .filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(fileURLToPath(new URL(`../src/connections/${f}`, import.meta.url)), "utf8")).join("\n");
+const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC;
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -430,8 +439,13 @@ t("NOT WALKED IS NOT DELETED: `op=backlinks` still names the withdrawn project a
 /* THE STRUCTURAL ARM, and it is the one no behavioural arm can stand in for: a
    faithful inline COPY of the predicate behaves identically and is exactly the
    defect D-267 IS. So the call sites are counted off the source. */
-const defs = (STORE_SRC.match(/#refEdgeSevered\s*\(citingId/g) || []).length;
-const calls = (STORE_SRC.match(/this\.#refEdgeSevered\(/g) || []).length;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a definition is the store's old `#refEdgeSevered(citingId` or the
+   module's `edgeSevered(citingId`; a call is the store's `this.#refEdgeSevered(` (five: #restsOnLive,
+   #queueAncestorEdges, #routeTask, restingOn, reevaluations) or the module's `this.edgeSevered(` (one: citesInto,
+   formerly the store's #citesInto). The same six sites, no arrival and no departure; the store's delegate
+   `#refEdgeSevered(...a)` is neither. */
+const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\s*\(citingId/g) || []).length;
+const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered)\(/g) || []).length;
 /* CORRECTED 2026-08-10 BY D-280, AND THE OLD ASSERTION IS SAID TO BE WRONG
    RATHER THAN EXEMPTED. It read `[1, 3]`. It was RIGHT when written — three was
    every reader of the rule the day D-267 landed — and it became wrong the

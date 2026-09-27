@@ -113,6 +113,8 @@ const runArm = (name) => {
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(tree, "pdf-worker", "src"), { recursive: true });
     const r = spawnSync(process.execPath, [SUITE], { env: { ...process.env, FOUNDER_SIGHT_SRC: join(tree, "bio-plane", "src") },
                                                      encoding: "utf8", maxBuffer: 64 << 20 });
     rmSync(tree, { recursive: true, force: true });
@@ -145,6 +147,8 @@ const adminBytes = async () => {
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(tree, "pdf-worker", "src"), { recursive: true });
   });
   const { Miniflare } = await import("miniflare");
   /* CORRECTED 2026-09-18 (REC-141, IC-158): THIS tree's plane MINTS a project's id

@@ -399,8 +399,20 @@ import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
             is about what the READER says and not about what the comparison returns. */
          WATERMARK_AFTER, WATERMARK_BEFORE, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, causesNotRuledOut,
-         contentAxisFor, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
+         contentAxisFor, CONTENT_AXIS_UNDETERMINED } from "../src/observation-log/index.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log, K142): these names were `airun.mjs`'s; the live
+   append (`observe`, R2–R4), the missing-row rule (R11) and the frontier's readers now use observation-log's own
+   vocabulary (`src/observation-log/vocabulary.mjs`, re-exported by its index), and `airun.mjs` keeps a copy only until
+   ai-runs' N49 re-exports it. B16's reason (the arms are about the live path, not a parallel copy) is why the import
+   follows the live rule. */
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): the log's DDL left schema.mjs for the module's
+   own schema text, run by `observationLogOf(ctx).migrate()`; the A arms read it there. */
+import { OBSERVATION_LOG_SCHEMA } from "../src/observation-log/schema.mjs";
+import { CONDITION_KINDS as OBS_CONDITION_KINDS } from "../src/observation-log/vocabulary.mjs";
+const SRC_OBS = readFileSync(new URL("../src/observation-log/index.mjs", import.meta.url), "utf8");
+const SRC_FRONTIER = readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8");
+const SRC_RETRIEVAL = readFileSync(new URL("../src/retrieval/index.mjs", import.meta.url), "utf8");
 import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -457,24 +469,38 @@ const obsCount = async () => (await GET(`op=stats&token=${ADM}`)).observationsNo
  * ========================================================================= */
 console.log("\n--- A · the one table (§3) ---");
 
-t("A1: `observation_log` is declared in schema.mjs",
-  /CREATE TABLE IF NOT EXISTS observation_log\s*\(/.test(SRC_SCHEMA), true);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): declared in the module's schema text. */
+t("A1: `observation_log` is declared in observation-log's schema (was schema.mjs)",
+  /CREATE TABLE IF NOT EXISTS observation_log\s*\(/.test(OBSERVATION_LOG_SCHEMA), true);
 
 /* BEFORE `host_governor`, which is this file's standing rule and has struck
    three times. Asserted by POSITION and not by eye.
    RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
-t("A2: and it is declared BEFORE the host_governor block (the standing schema rule)",
-  BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS observation_log") > -1
-    && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS observation_log")
-    < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22, R23): the table left schema.mjs's literal for the
+   module's own (`OBSERVATION_LOG_SCHEMA`, not interpolated into `SCHEMA`), so the standing rule's subject — the
+   schema literal ending on the governor's block, which hygiene reads — no longer holds it. What the order protects is
+   asked where the order now lives: the assembled `SCHEMA` does not carry the log (so it cannot land after the
+   governor's block), still ends on that block, and the store runs the module's `migrate()` after the schema pass and
+   BEFORE the fold (`PRAGMA table_info(ai_run_log)`), which copies into this table. */
+{
+  const mig = SRC_STORE.indexOf("observationLogOf(this.ctx).migrate();");
+  const fold = SRC_STORE.indexOf("PRAGMA table_info(ai_run_log)");
+  const gov = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
+  t("A2: and it is created BEFORE the fold copies into it, outside schema.mjs's literal, which still ends on the "
+  + "host_governor block (the standing schema rule)",
+    [BUILT_SCHEMA.includes("CREATE TABLE IF NOT EXISTS observation_log"), gov > -1
+       && !/CREATE TABLE IF NOT EXISTS/.test(BUILT_SCHEMA.slice(gov + 10)), mig > -1 && fold > mig],
+    [false, true, true]);
+}
 
 /* The two traps that `node --check` cannot see, asserted over THIS block rather
    than over the whole file, so the assertion says something about what this item
    wrote. PL-1 cost fifteen minutes and three comments to the semicolon. */
 {
-  const i = SRC_SCHEMA.indexOf("-- REC-93 / IC-92 -- THE OBSERVATION LOG");
-  const j = SRC_SCHEMA.indexOf("CREATE INDEX IF NOT EXISTS observation_log_tally");
-  const block = SRC_SCHEMA.slice(i, j);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): the block is the module's schema text. */
+  const i = OBSERVATION_LOG_SCHEMA.indexOf("-- REC-93 / IC-92 -- THE OBSERVATION LOG");
+  const j = OBSERVATION_LOG_SCHEMA.indexOf("CREATE INDEX IF NOT EXISTS observation_log_tally");
+  const block = OBSERVATION_LOG_SCHEMA.slice(i, j);
   t("A3: the block is locatable and non-trivial", i > -1 && j > i && block.length > 500, true);
   t("A4: no backtick anywhere in it — a balanced stray pair still parses, so --check cannot see this",
     block.includes(String.fromCharCode(96)), false);
@@ -488,8 +514,9 @@ t("A2: and it is declared BEFORE the host_governor block (the standing schema ru
 for (const [name, cols] of [["observation_log_frontier", "level, subject_kind, subject, seq"],
                             ["observation_log_authority", "authority_kind, authority, seq"],
                             ["observation_log_tally", "level, state, seq"]])
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): the indexes are in the module's schema text. */
   t(`A6: index ${name} exists on exactly (${cols})`,
-    SRC_SCHEMA.includes(`CREATE INDEX IF NOT EXISTS ${name} ON observation_log(${cols})`), true);
+    OBSERVATION_LOG_SCHEMA.includes(`CREATE INDEX IF NOT EXISTS ${name} ON observation_log(${cols})`), true);
 
 /* §4.4's fold: the OLD table is gone from the schema. If the CREATE were left
    standing, an idempotent create would rebuild an empty `ai_run_log` on the next
@@ -506,15 +533,21 @@ console.log("\n--- B · one append site, and the refusals are read out of the ma
    distinguish "one writer" from "two writers that happen to agree today", and
    §4.4's whole sentence is *"two writers is not [the landing's call]"*. */
 {
-  const inserts = [...SRC_STORE.matchAll(/INSERT INTO observation_log\b/g)].length;
-  t("B1: there is EXACTLY ONE `INSERT INTO observation_log` in store.mjs outside the migration",
-    inserts, 2);   /* the append site, plus #migrate's one-time fold copy */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R2, R22): the append site moved to the module's
+     `observe` (`src/observation-log/index.mjs`); the fold's one-time copy stays in the store's #migrate. The census
+     is over both texts, each counted, so a second writer in either is caught. */
+  const inserts = [[...SRC_STORE.matchAll(/INSERT INTO observation_log\b/g)].length,
+                   [...SRC_OBS.matchAll(/INSERT INTO observation_log\b/g)].length];
+  t("B1: there is EXACTLY ONE `INSERT INTO observation_log` outside the migration (observation-log's append), "
+  + "and the store holds only the fold's",
+    inserts, [1, 1]);   /* the store: #migrate's one-time fold copy; the module: the append site */
   t("B2: and the second is the FOLD's one-time copy inside #migrate, not a second writer",
     /PRAGMA table_info\(ai_run_log\)[\s\S]{0,1200}INSERT INTO observation_log/.test(SRC_STORE), true);
   /* NO UPDATE AND NO DELETE except the whole-store purge — §3's first rule:
      "a log that can be rewritten is not evidence of anything". */
   t("B3: nothing UPDATEs the table — append-only is a property of the code, not a promise",
-    [...SRC_STORE.matchAll(/UPDATE observation_log\b/g)].length, 0);
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): the module's text is read too. */
+    [...(SRC_STORE + "\n" + SRC_OBS).matchAll(/UPDATE observation_log\b/g)].length, 0);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): the one DELETE was purge's literal
      whole-store line in store.mjs. Purge moved to `record-core`, which deletes from each DECLARED table with ONE
      generic statement; a table declared with no keys is cleared by the whole-store arm only. So the census is
@@ -641,10 +674,16 @@ t("B9: the subject kinds are §3's five plus `unstated`, which the FOLD needs, p
      the rollup ruling's check needs and a pure function cannot read for itself.
      The pin is widened to that exact third argument rather than to "anything",
      so a call that quietly dropped the resolution still fails here. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R2): the store's `#observe` is now a delegate to
+     the module's `observe`, which calls ITS checker (imported above, the one B10..B15 drive) with its condition
+     vocabulary, `CONDITION_KINDS`, written from `queuestate.mjs` (K78 (3)) and pinned equal to it here. */
   t("B16: #observe calls THIS checker with THIS live vocabulary — so B10..B15 are "
   + "about the live path and not a parallel one",
-    /#observe\([\s\S]{0,3000}?checkObservation\(entry, QUEUE_CONDITION_KINDS, this\.#observationReferent\(entry\)\)/
-      .test(SRC_STORE), true);
+    [/#observe\(\.\.\.a\) \{ return observationLogOf\(this\.ctx\)\.observe\(\.\.\.a\); \}/.test(SRC_STORE),
+     /\n  observe\(entry, at = null, terminal = 0\) \{[\s\S]{0,1500}?checkObservation\(row, CONDITION_KINDS, this\.#observationReferent\(row\)\)/
+       .test(SRC_OBS),
+     JSON.stringify(OBS_CONDITION_KINDS) === JSON.stringify(QUEUE_CONDITION_KINDS)],
+    [true, true, true]);
 
   /* B17 — INVERTED 2026-09-18 BY REC-100 (IC-130, D-366 CLOSED), and this is
      the CORRECTION rather than an exemption. It read *"OVER-STRICTNESS — a `run`
@@ -689,7 +728,10 @@ await POST(`op=airunopen&token=${TOK}`, {
 const ticked = await POST(`op=airuntick&token=${TOK}`, {
   run: RUN, at: at(5000), leaseMs: 600000, consume: { fetches: 3 },
   log: [
-    { level: "meaning", subject: "observation:fold-finding", state: "NEVER_LOOKED",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R3, K148): this was NEVER_LOOKED, which R3 now
+       refuses at the append as a look at a subject (only a run's terminal rollup may carry it). The fold's claim is
+       three LOOKS in, so the entry states a look: it looked and found nothing derived. */
+    { level: "meaning", subject: "observation:fold-finding", state: "LOOKED_ABSENT",
       detail: "nothing has been derived here, which may only mean nothing was extracted" },
     /* CORRECTED 2026-09-18 BY REC-100 (IC-130): this was a run-log PRESENT
        WITH NO REFERENT, the shape C-22.10's `run` carve-out admitted. The
@@ -715,7 +757,7 @@ t("C2: `seq` is 1,2,3 PER RUN, not the store-wide rowid — an unchanged envelop
   logAnswer.entries.map((e) => e.seq), [1, 2, 3]);
 t("C3: and the entries come back in order with their levels and states intact",
   logAnswer.entries.map((e) => [e.level, e.state]),
-  [["meaning", "NEVER_LOOKED"], ["document", "PRESENT"], ["internet", "LOOKED_INDETERMINATE"]]);
+  [["meaning", "LOOKED_ABSENT"], ["document", "PRESENT"], ["internet", "LOOKED_INDETERMINATE"]]);
 /* INDEX-SAFE ON PURPOSE. Under this item's `overstrict` control arm the run's
    entries are refused, `entries[2]` is undefined, and a bare `.governed` threw a
    TypeError — which goes through NO ASSERTION AT ALL and ended the module while
@@ -1411,11 +1453,17 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
       { state: "LOOKED_INDETERMINATE", resultRef: null },
       { state: "NEVER_LOOKED",         resultRef: null },
     ];
-    const refusesUnderSweep = matrix.map((m) => !!checkObservation(
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; observation-log R3, K148): the live checker now also refuses the
+       matrix's NEVER_LOOKED row, under C-22.1 (a look never stores NEVER_LOOKED), which is not C-22.10's rule and
+       says nothing about coverage. The arm's claim is about C-22.10, so it reads the refusals BY THAT CHECK; R3's
+       refusal of the row is asserted beside it in L2f. */
+    const refusalOf = (m) => checkObservation(
       { level: "document", subject_kind: "address", subject: "https://example.gov/x",
         state: m.state, result_ref: m.resultRef,
         actor_class: "machine", authority_kind: "sweep", authority: "SWEEP-1" },
-      QUEUE_CONDITION_KINDS));
+      QUEUE_CONDITION_KINDS);
+    const refusesUnderSweep = matrix.map((m) => refusalOf(m)?.check === "C-22.10");
+    const neverLookedRefusal = refusalOf(matrix[4]);
     const saysUndetermined = matrix.map((m) => observationCoverage(m) === "undetermined");
     /* Label CORRECTED 2026-09-18 by REC-100: it ended *"and the carve-out
        itself is UNTOUCHED"*, which REC-100 deleted. The assertion is unchanged
@@ -1426,8 +1474,10 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
       saysUndetermined, refusesUnderSweep);
     t("L2f: …and that agreement is not free — the matrix genuinely contains both answers, so "
     + "two all-false lists cannot pass it (an equality that costs nothing is not evidence)",
-      [refusesUnderSweep.filter(Boolean).length, refusesUnderSweep.filter((x) => !x).length],
-      [1, 4]);
+      [refusesUnderSweep.filter(Boolean).length, refusesUnderSweep.filter((x) => !x).length,
+       /* RE-PINNED 2026-09-27 (T5-12): R3's refusal of the NEVER_LOOKED row, by its own check. */
+       neverLookedRefusal?.code, neverLookedRefusal?.check],
+      [1, 4, "AI_LOG_STATE_UNKNOWN", "C-22.1"]);
   }
 
   /* L3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
@@ -1559,10 +1609,17 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
   + "D-386 did not name and it is half of what REC-110 fixed.** Each site names REC-110 and "
   + "D-386; the two derived arms POINT at the document arm rather than restating it, because "
   + "one rule with three spellings is the mirror-and-drift class this file refuses for gates",
-    [(SRC.match(/RULED \(a\) BY REC-110/g) || []).length,
-     (SRC.match(/REC-110, 2026-09-17, D-386 CLOSED/g) || []).length,
-     (SRC.match(/SELECT state, COUNT\(\*\) n FROM observation_log/g) || []).length],
-    [1, 2, 3]);
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39): the three frontier arms moved to
+       `src/retrieval/frontier.mjs`, where the three tally statements became ONE method, `#tally(level, viewer)`,
+       which each arm calls. The drift J3 guards against (one rule, three spellings) is now closed by construction:
+       the ruling is recorded once, at the document arm, beside its call; the tally statement is written once; and
+       the three arms reach it by that one method. */
+    [(SRC_FRONTIER.match(/THE TALLY IS DELIBERATELY NOT GATED \(REC-110, D-386 closed/g) || []).length,
+     /THE TALLY IS DELIBERATELY NOT GATED \(REC-110, D-386 closed[\s\S]{0,900}?const tally = this\.#tally\("document", viewer\);/
+       .test(SRC_FRONTIER),
+     (SRC_FRONTIER.match(/SELECT state, COUNT\(\*\) n FROM observation_log/g) || []).length,
+     ["document", "content", "meaning"].map((l) => SRC_FRONTIER.split(`this.#tally("${l}", viewer)`).length - 1)],
+    [1, true, 1, [1, 1, 1]]);
 
   /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND WHAT IT DOES TO J1's CLAIM.
    *
@@ -1604,10 +1661,16 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
   + "shared `#hiddenRunTail`, the subtraction itself is written in exactly ONE place (`#hiddenSets`), and the "
   + "ruling that licensed it is named at that place. Five readers, one rule: three spellings is the drift class "
   + "REC-110's own J3 was written against, and five would be worse",
-    [(SRC.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39, R57): the tally sites are retrieval's one
+       `#tally`, which reaches the narrowing through `retrieval.hiddenRunTail(viewer)` (once); the store registers
+       its `#hiddenRunTail` as that tail (R57, until ai-runs does, K80); the subtraction and its ruling stay written
+       once, in the store's `#hiddenSets`. */
+    [(SRC_FRONTIER.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length,
+     (SRC_FRONTIER.match(/this\.#tally\("(?:document|content|meaning)", viewer\)/g) || []).length,
+     (SRC.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length,
      (SRC.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
      /BOB #32, 2026-09-24 02:30Z/.test(SRC)],
-    [3, 1, true]);
+    [1, 3, 1, 1, true]);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1796,11 +1859,15 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
       cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
       cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
       cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
-      const ANCHOR = "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
-      const LEGACY = "    const bad = (entry.authority_kind === \"run\" && entry.state === \"PRESENT\" "
-        + "&& (entry.result_ref == null || entry.result_ref === \"\")) ? null "
-        + ": checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
-      const storePath = join(root, "bio-plane", "src", "store.mjs");
+      /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+      cpSync(join(REPO, "pdf-worker", "src"), join(root, "pdf-worker", "src"), { recursive: true });
+      /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R2): the one append site is the module's
+         `observe`, whose row is `row` and whose vocabulary is `CONDITION_KINDS`; the carve-out is restored there. */
+      const ANCHOR = "    const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));";
+      const LEGACY = "    const bad = (row.authority_kind === \"run\" && row.state === \"PRESENT\" "
+        + "&& (row.result_ref == null || row.result_ref === \"\")) ? null "
+        + ": checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));";
+      const storePath = join(root, "bio-plane", "src", "observation-log", "index.mjs");
       const src = readFileSync(storePath, "utf8");
       const occurrences = src.split(ANCHOR).length - 1;
       writeFileSync(storePath, src.replace(ANCHOR, LEGACY));
@@ -1897,12 +1964,20 @@ console.log("\n--- M · D-500: the watermark comparison is deterministic (§5.1,
 /* THE RULE IS ONE FUNCTION AND THE TWO READERS CALL IT. A structural pin off the
    source, because a behaviour arm cannot tell "one rule" from "two rules that
    agree today" — B1's reason, one construct over. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R11, retrieval R41): the two readers' calls were
+   collapsed into observation-log's ONE missing-row rule, `missingCause`, which calls the watermark rule once; the
+   content and meaning readers (retrieval's frontier, and the store's remaining callers) ask `missingCause`. So the
+   census is over the store, observation-log's index and retrieval's files: exactly one call of the rule, in the
+   module, which imports it from its vocabulary; no truncating helper anywhere; and the readers call the one rule. */
+const SRC_RULE_CORPUS = [SRC_STORE, SRC_OBS, SRC_FRONTIER, SRC_RETRIEVAL].join("\n");
 t("M1: `store.mjs` holds NO second watermark comparison — both readers call the "
 + "one exported rule, and the truncating helper they each defined is gone",
-  [[...SRC_STORE.matchAll(/enteredAfterFirstRow\(/g)].length,
-   [...SRC_STORE.matchAll(/const sec = /g)].length,
-   [...SRC_STORE.matchAll(/import \{ enteredAfterFirstRow \} from "\.\/airun\.mjs";/g)].length],
-  [2, 0, 1]);
+  [[SRC_STORE, SRC_OBS, SRC_FRONTIER, SRC_RETRIEVAL].map((x) => [...x.matchAll(/enteredAfterFirstRow\(/g)].length),
+   [...SRC_RULE_CORPUS.matchAll(/const sec = /g)].length,
+   /import \{[^}]*\benteredAfterFirstRow\b[^}]*\} from "\.\/vocabulary\.mjs";/.test(SRC_OBS),
+   /export function missingCause\([^)]*\) \{[\s\S]{0,400}?enteredAfterFirstRow\(/.test(SRC_OBS),
+   [...SRC_FRONTIER.matchAll(/this\.obs\.missingCause\(/g)].length > 0],
+  [[0, 1, 0, 0], 0, true, true, true]);
 /* D-516 — **THE TRAP THE THREE-WAY ANSWER OPENS, PINNED RATHER THAN WARNED ABOUT.**
    `enteredAfterFirstRow` still READS as a predicate and now returns one of three
    TRUTHY strings, so `enteredAfterFirstRow(a, b) ? x : y` — which is exactly what
@@ -1919,7 +1994,8 @@ t("M1: `store.mjs` holds NO second watermark comparison — both readers call th
 t("M1b: NO READER TESTS THE THREE-WAY ANSWER AS A BOOLEAN — every one of its three "
 + "answers is a truthy string, so a ternary on the call is silently wrong exactly "
 + "where this item is right",
-  [...SRC_STORE.matchAll(/(?:!\s*)?enteredAfterFirstRow\([^\n]*?\)\s*(?:\?|&&|\|\|)/g)]
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R11): over the corpus M1 reads. */
+  [...SRC_RULE_CORPUS.matchAll(/(?:!\s*)?enteredAfterFirstRow\([^\n]*?\)\s*(?:\?|&&|\|\|)/g)]
     .map((m) => m[0]),
   []);
 /* THE PIN IS ON THE HELPER AND NOT ON `slice(0, 19)`, and the reason is worth one

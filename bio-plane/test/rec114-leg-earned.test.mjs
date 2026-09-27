@@ -68,6 +68,18 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R12, R55, and its REPORT 11's `registerLegGrades`): REC-114's
+   listing resolver moved to retrieval as `#legEarnedCapture` (`src/retrieval/index.mjs`), which holds the three
+   conditions and calls the REGISTERED leg-grade resolver once per page; the store registers that resolver
+   (`retrieval.registerLegGrades("legacy-store", …)`), which asks the registry once and applies `Store.#capturedAt`.
+   The resolver as one text is the two together, each located exactly. */
+const LISTING_RESOLVER = (() => {
+  const ret = readFileSync(SRC("retrieval/index.mjs"), "utf8");
+  const method = /#legEarnedCapture\(arm, rows\) \{[\s\S]*?\n  \}/.exec(ret)?.[0] ?? "";
+  const at = STORE_SRC.indexOf('retrieval.registerLegGrades("legacy-store", (legs) => {');
+  const reg = at < 0 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n    });", at));
+  return method && reg ? `${method}\n${reg}` : "";
+})();
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -423,7 +435,7 @@ console.log("\n--- 8. SOURCE PINS — ONE ARITHMETIC, NOT TWO ---");
      re-decide what a capture letter may be. It calls the SAME function the
      strength walk calls. A second policy here would open at this surface
      exactly the divergence REC-105 closed at the walk. */
-  const m = /#legEarnedCapture\(arm, rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  const m = LISTING_RESOLVER;   /* RE-ANCHORED 2026-09-27 (T5-12): retrieval's method plus the store's registration, above */
   t("the listing's resolver EXISTS and calls `Store.#capturedAt` — REC-105's arithmetic, reused rather than restated",
     { found: m.length > 0, calls_capturedAt: /Store\.#capturedAt\(/.test(m) },
     { found: true, calls_capturedAt: true });

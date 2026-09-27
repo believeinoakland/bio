@@ -70,6 +70,7 @@
  *   as the state `string` and FAILS by name; RUN 2026-09-24, figures in `measurements/M-148.md`.
  */
 import fs from "fs";
+import { execFileSync } from "child_process";
 import vm from "vm";
 import {
   OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, STATES, HEADINGS,
@@ -445,19 +446,44 @@ for (const [t, row] of Object.entries(S.types)) {
    CODE that is not a catalogue state — that is a store writing or gating on something the catalogue never
    blessed, which is exactly what this instrument exists to catch, so refusing to call it a state must not
    become refusing to see it. */
-const store = fs.readFileSync(storePath, "utf8");
-const storeCode = stripComments(store);          // same length, same offsets; strings kept
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): THE STORE'S CODE IS NO LONGER ONE FILE. Tranches T3–T5 moved it,
+   with the state literals it writes and gates on, into `bio-plane/src/<module>/` — T5 bias took `biasAdopt`'s
+   `fm.current_state !== "adopted"` (and spelled its other reads `h.currentState === …`, which this harvest has never
+   read), so the `current_state compared` reach fell 13 -> 9 on T5's tree and `adopted` and `proposed` left "store
+   literals seen" while the store still wrote them. The harvest now reads the store file (argv[2] when given, so a
+   planted copy still stands in for it) AND every `.mjs` under a `bio-plane/src/<module>/` directory, recursively,
+   discovered as the DEC-49 guard discovers them (a `test/` or `dist/` directory is not source). A match is labelled
+   by its file (`store.mjs:N`, `bias/index.mjs:N`), so every existing `store.mjs:` line is unchanged. */
+const PLANE_SRC = new URL("../bio-plane/src/", import.meta.url).pathname;
+function moduleFiles(dir = PLANE_SRC, rel = "") {
+  const out = [];
+  for (const d of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (d.isDirectory()) { if (d.name !== "test" && d.name !== "dist") out.push(...moduleFiles(dir + d.name + "/", rel + d.name + "/")); }
+    else if (rel && d.isFile() && d.name.endsWith(".mjs")) out.push([rel + d.name, dir + d.name]);
+  }
+  return out;
+}
+/* GATED 2026-09-27 (T5-12, legacy-tests): only files in the commit at HEAD are read, so an untracked file under
+   `src/<module>/` can never pad the reach `semantics-harvest` F0 floors (hygiene's walk census names this walk). */
+const TRACKED = new Set(execFileSync("git", ["ls-files", "-z", "--", "src"], { cwd: new URL("../bio-plane/", import.meta.url).pathname,
+                                                                          encoding: "utf8" }).split("\0").filter(Boolean)
+  .map((f) => f.replace(/^src\//, "")));
+const CORPUS = [["store.mjs", storePath], ...moduleFiles().filter(([rel]) => TRACKED.has(rel))].map(([label, p]) => {
+  const raw = fs.readFileSync(p, "utf8");
+  return { label, raw, code: stripComments(raw) };   // same length, same offsets; strings kept
+});
 const CATALOGUE_STATES = new Set(Object.values(STATES).flatMap((s) => [...s.legal, ...(s.legacy || [])]));
-const lineOf = (i) => store.slice(0, i).split("\n").length;
 const unrecognised = [];                         // { at, text, why, fails }
 const harvestReach = {};
 const planeStates = new Set();
 function harvestStates(label, re) {
-  const inCode = new Set();
   let n = 0;
+  for (const { label: file, raw: store, code: storeCode } of CORPUS) {
+  const lineOf = (i) => store.slice(0, i).split("\n").length;
+  const inCode = new Set();
   for (const m of storeCode.matchAll(re)) {
     inCode.add(m.index); n++;
-    const at = "store.mjs:" + lineOf(m.index), text = m[0].replace(/\s+/g, " ");
+    const at = file + ":" + lineOf(m.index), text = m[0].replace(/\s+/g, " ");
     if (/\btypeof\s+[\w$.?[\]]*$/.test(storeCode.slice(Math.max(0, m.index - 120), m.index)))
       unrecognised.push({ at, text, fails: false,
         why: "a `typeof` guard: its right-hand side is a JavaScript type name, not a state" });
@@ -468,13 +494,15 @@ function harvestStates(label, re) {
     else planeStates.add(m[1]);
   }
   for (const m of store.matchAll(re)) if (!inCode.has(m.index))
-    unrecognised.push({ at: "store.mjs:" + lineOf(m.index), text: m[0].replace(/\s+/g, " "), fails: false,
+    unrecognised.push({ at: file + ":" + lineOf(m.index), text: m[0].replace(/\s+/g, " "), fails: false,
       why: "blanked by the lexer (a comment or a regex literal): a quote of the pattern, not code the store runs" });
+  }
   harvestReach[label] = n;
 }
 // explicit state arrays, e.g. INQUIRY_STATES = ["open", ...]
-for (const arr of storeCode.matchAll(/_STATES\s*=\s*\[([^\]]*)\]/g))
-  for (const w of arr[1].matchAll(/"([a-z_]+)"/g)) planeStates.add(w[1]);
+for (const { code: storeCode } of CORPUS)
+  for (const arr of storeCode.matchAll(/_STATES\s*=\s*\[([^\]]*)\]/g))
+    for (const w of arr[1].matchAll(/"([a-z_]+)"/g)) planeStates.add(w[1]);
 // literals the store writes or gates on
 harvestStates("current_state compared", /current_state\s*[!=]==?\s*"([a-z_]+)"/g);
 harvestStates("#setScalar current_state", /#setScalar\([^,]+,\s*"current_state",\s*"([a-z_]+)"\)/g);
@@ -486,12 +514,14 @@ harvestStates("#setScalar current_state", /#setScalar\([^,]+,\s*"current_state",
 harvestStates("to_state", /\bto_state:\s*"([a-z_]+)"/g);
 harvestStates("from_state", /\bfrom_state:\s*"([a-z_]+)"/g);
 const planeCrit = new Set();
-for (const w of storeCode.matchAll(/criticality\s*[!=]==?\s*"([a-z_]+)"/g)) planeCrit.add(w[1]);
+for (const { code: storeCode } of CORPUS)
+  for (const w of storeCode.matchAll(/criticality\s*[!=]==?\s*"([a-z_]+)"/g)) planeCrit.add(w[1]);
 /* A matcher narrowed to nothing reports 100% of nothing: the lexer eating the store would empty this set
    and read GREEN. The first harvest is floored on its own reach. */
 if (!harvestReach["current_state compared"])
   bad("the store harvest found NO `current_state` comparison in code — the lexer or the path is wrong, not the store clean");
-console.log("store harvest reach: ", Object.entries(harvestReach).map(([k, v]) => `${k} ${v}`).join(" · "));
+console.log("store harvest reach: ", Object.entries(harvestReach).map(([k, v]) => `${k} ${v}`).join(" · "),
+  `(over store.mjs and ${CORPUS.length - 1} file(s) under src/<module>/)`);
 console.log(`unrecognised matches: ${unrecognised.length} (never counted as states)`);
 for (const u of unrecognised) {
   const line = `  UNRECOGNISED MATCH ${u.at} \`${u.text}\` — ${u.why}`;

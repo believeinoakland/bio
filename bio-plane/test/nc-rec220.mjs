@@ -22,6 +22,11 @@ const PLANE = join(DIR, "..");
 const SAFE = join(PLANE, "..", ".rec220-control-pristine");
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): content (T5-3, its R11) took the capture resolver
+   (`#captureForContent`) out of `store.mjs` as `captureFor` in `src/content/index.mjs`; the `newest` arm patches it
+   there (an arm names its `file`; the others still patch the store, where the act's pin, the carry-forward and the
+   version read stayed). */
+const CONTENT = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -43,9 +48,11 @@ const ARMS = {
      the run said so (NOT AS DECLARED). "The later capture" is the one the record came to hold after the
      citation, which is B, and resolving to it is what this arm now does. */
   newest: {
-    patch: [`      return held ? held.capture_sha : null;
-    }`, `      return held ? this.#captureForContent(bundleId) : null;
-    }`],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): content's `captureFor`: a held pinned capture answers the
+       unpinned resolver's capture instead, as the store's `#captureForContent(bundleId)` did. */
+    file: CONTENT,
+    patch: [`      return held.includes(a) || read().includes(a) ? a : null;`,
+            `      return held.includes(a) || read().includes(a) ? this.captureFor(bundleId) : null;`],
     mustFail: ["PIN: the pinned bytes, projected fresh"],
     mustPass: ["the leg's own bytes name the capture it was made against", "the fixture ARMS the pin"] },
   /* The act stops writing the pin: the leg is back to naming only a bundle. */
@@ -73,20 +80,21 @@ const only = process.argv[2];
 const rows = [];
 for (const [name, arm] of Object.entries(ARMS)) {
   if (only && only !== name) continue;
-  const pristine = join(SAFE, `store.${name}.pristine.mjs`);
-  copyFileSync(STORE, pristine);
-  const before = sha(STORE);
+  const FILE = arm.file || STORE;   /* RE-ANCHORED 2026-09-27 (T5-12): the file this arm patches */
+  const pristine = join(SAFE, `${FILE.split("/").pop()}.${name}.pristine.mjs`);
+  copyFileSync(FILE, pristine);
+  const before = sha(FILE);
   let armed = "n/a";
   if (arm.patch) {
-    const src = readFileSync(STORE, "latin1");
+    const src = readFileSync(FILE, "latin1");
     const n = src.split(arm.patch[0]).length - 1;
     armed = n === 1 ? "ARMED" : `DID NOT ARM (${n} matches)`;
-    if (n === 1) writeFileSync(STORE, src.replace(arm.patch[0], arm.patch[1]), "latin1");
+    if (n === 1) writeFileSync(FILE, src.replace(arm.patch[0], arm.patch[1]), "latin1");
   }
   const r = armed.startsWith("DID NOT") ? { pass: -1, fail: -1, failing: [] } : run();
-  copyFileSync(pristine, STORE);
-  const restored = sha(STORE) === before && readFileSync(STORE).equals(readFileSync(pristine));
-  const bytes = readFileSync(STORE).length;
+  copyFileSync(pristine, FILE);
+  const restored = sha(FILE) === before && readFileSync(FILE).equals(readFileSync(pristine));
+  const bytes = readFileSync(FILE).length;
   if (!restored || bytes < MIN_BYTES) { console.error(`RESTORE FAILED for ${name} (${bytes} bytes)`); process.exit(2); }
   rmSync(pristine);
   const hit = (label) => r.failing.some((f) => f.startsWith(label));

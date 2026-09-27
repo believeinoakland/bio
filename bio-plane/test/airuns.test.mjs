@@ -120,6 +120,8 @@ const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "ut
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' sources, for the SWEEP's corpus (record-core R21). */
 import { moduleFiles, moduleSources } from "./extracted-sources.mjs";
+/* T5-12 (legacy-tests), 2026-09-27: the store's dispatch map with T5's route spreads expanded, for the "dispatched" arms. */
+import { reinlineLayer5 } from "./t5-extracted.mjs";
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -558,7 +560,14 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
    `source_reachability`, `site_assets` and the rest; provenance `register`, `captured_locators`, the route marks;
    host-governor `host_governor`), so their indexes left schema.mjs's text and their reading statements left
    store.mjs. The corpus is widened to their files on BOTH sides, as T3's was. */
-const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture"];
+/* WIDENED 2026-09-27 (T5-12, legacy-tests; T5's layers 4 and 5): nine more modules left the legacy plane with their
+   own `schema.mjs` and their own SQL (extraction took `reading_text_source` and the text index, content `content`,
+   calibration, entities, connections, progressions, bias, observation-log and retrieval theirs; extraction's REPORT
+   names `reading_text_source_kind`'s reader, now `extraction/index.mjs`), so the corpus is widened to their files on
+   BOTH sides, as T3's and T4's were. */
+const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
+                   "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
+                   "observation-log", "retrieval"];
 const EXTRACTED_SRC = moduleSources(EXTRACTED);
 const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
   .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)
@@ -693,7 +702,9 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 14, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): 14 -> 13, the ceiling tightened WITH the floor below (no row of
+     slack); the one departure, `resolutions_grade`, is named at the floor and pinned by name after the roster pin. */
+  unread.length <= 13, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
                                    `content_chain_kind`, filtered by `content:chain` through the
                                    compiler's registry, which this reader cannot see — the same
                                    declared blind spot as `content_derivation_cap`, not a gap.
@@ -732,7 +743,20 @@ t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure 
      PRINTED: `content_chain_kind` arrived (REC-104's index for the `content:chain` filter, which
      reads it through a WHERE composed from `MEANING.content.sub.chain.col`). A floor left at 13
      would carry a row of slack the next departure could hide in. */
-  unread.length >= 14, true);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): 14 -> 13, FROM THE FIGURE THIS READER PRINTED over the widened corpus
+     (T5's nine modules, above), AND THE DEPARTURE IS NAMED. Measured by running this same sweep over `d508e423cf`
+     (T5 before its layer-2 jobs, T4's six modules) and over this tree: 131 indexes, 14 unread there; 145 indexes, 13
+     unread here. ARRIVED on the roster: none (the 14 new indexes — asserted_connection_judgements_c,
+     asserted_connections_a/_b, capture_text_skipped_bundle/_capture, capture_text_state_bundle,
+     file_membership_pending_file/_item, progression_exception_versions_bundle, progression_thread_placements_bundle,
+     selections_expires/_owner, theme_placement_acts_bundle/_theme — are all READ). DEPARTED: `resolutions_grade`
+     (`resolutions(grade, bundle_id)`), because ENTITIES #1's R8 fold count, `#restingOn` in `src/entities/index.mjs`,
+     is a new statement `… FROM resolutions WHERE entity_id=? AND grade <> 'D' …`, and `grade <>` is the shape this
+     reader counts as a filter on the leading column. Said plainly, as REC-116's departure was: this reader sees a
+     statement filtering `grade`, and that is all it measures; whether SQLite would seek that statement through
+     `resolutions_grade` (its first predicate is `entity_id=?`) is NOT measured here. The other thirteen are the
+     base's own names, unchanged. */
+  unread.length >= 13, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
@@ -751,6 +775,10 @@ t("SWEEP: the roster is still pinned BY NAME as well as by count — `reading_te
 + "swapped for a blind spot under a ceiling that never moves",
   ["reading_text_source_kind"]
     .filter((n) => !unread.some((ix) => ix.index === n)), []);
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): T5's departure pinned by name, for REC-116's reason above. */
+t("SWEEP: and T5's DEPARTURE is pinned by name — `resolutions_grade` is OFF the roster because entities' "
++ "`#restingOn` (R8) filters `resolutions.grade` in a literal WHERE this reader sees",
+  unread.some((ix) => ix.index === "resolutions_grade"), false);
 t("SWEEP: and the DEPARTURE is pinned by name too — `provenance_route_marks_finding` is OFF the "
 + "roster because REC-116 gave it the reader it waited 39 days for. Pinning the departure is what "
 + "stops the floor falling for the OTHER reason: a name asserted absent cannot be quietly "
@@ -763,6 +791,7 @@ t("SWEEP: and the DEPARTURE is pinned by name too — `provenance_route_marks_fi
    its existence, so it is measured in three parts: this reader says UNREAD; a
    reader that understands a pushed fragment says READ; and the op is DISPATCHED,
    so the statement is one a caller can actually reach (D-43). */
+const STORE_DISPATCH = reinlineLayer5(SRC_STORE, { ops: true }).text;
 const pushesFragment = (col) =>
   new RegExp(`push\\(\`?[^\`)]*\\b${col}\\s*(?:=|IN|>|<|LIKE|IS)`, "i").test(SQLSRC);
 t("SWEEP: `reading_text_source_kind` is this reader's DECLARED BLIND SPOT FIRING, not a gap — "
@@ -771,7 +800,9 @@ t("SWEEP: `reading_text_source_kind` is this reader's DECLARED BLIND SPOT FIRING
 + "the op is dispatched",
   [unread.some((ix) => ix.index === "reading_text_source_kind"),
    pushesFragment("transcribed"), pushesFragment("terminal_step"),
-   SRC_STORE.includes("textprovenance:")],
+   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=textprovenance is extraction's route, spread into the
+      store's dispatch map (`...extractionOps(…)`); "dispatched" is read off the map with the spreads expanded. */
+   STORE_DISPATCH.includes("textprovenance:")],
   [true, true, true, true]);
 t("SWEEP: POLARITY on that exculpation — the fragment-aware reader does NOT find a column nobody "
 + "pushes, so the three trues above are a measurement rather than a matcher that matches anything",
@@ -804,7 +835,8 @@ t("SWEEP: THREE roster entries are this reader's blind spot firing, not gaps —
   [["content_derivation_cap", "inquiry_basis_grade_source", "content_chain_kind"]
      .filter((n) => !unread.some((ix) => ix.index === n)),
    ["extent_kind", "derivation_cap", "grade_source", "chain_kind"].filter((c) => !MEANING_FILTER_COLS.has(c)),
-   SRC_STORE.includes("meaningrows:"), SRC_STORE.includes("search:")],
+   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): both are retrieval's routes now (read as above). */
+   STORE_DISPATCH.includes("meaningrows:"), STORE_DISPATCH.includes("search:")],
   [[], [], true, true]);
 t("SWEEP: POLARITY on THAT exculpation — the registry-aware reader does NOT claim a column no arm "
 + "filters on, so the emptiness above is a measurement and not a matcher that matches anything",

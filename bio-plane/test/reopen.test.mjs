@@ -526,6 +526,8 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
        topology), so the mirror carries it too rather than the import failing. */
     cpSync(fileURLToPath(new URL("../../docprofile", import.meta.url)), join(dir, "docprofile"), { recursive: true });
     cpSync(fileURLToPath(new URL("../../jurisdictions", import.meta.url)), join(dir, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(fileURLToPath(new URL("../../pdf-worker/src", import.meta.url)), join(dir, "pdf-worker", "src"), { recursive: true });
 
     const catPath = join(dir, "bio-plane/checks/bio-checks.mjs");
     const catSrc = readFileSync(catPath, "utf8");

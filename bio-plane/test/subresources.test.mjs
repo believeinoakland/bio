@@ -1137,8 +1137,13 @@ console.log("\n--- a derived table that changes shape is rebuilt, not patched --
      on this list must have somewhere to be re-derived FROM. A row dropped with
      no rebuild path is data destroyed, and the list's own comment is the only
      thing that has ever said otherwise. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction T5-2, R49): `reading_ref_terms` is extraction's table
+     now, and extraction's own migrate carries its reshape (drop when it lacks `src`) BESIDE its re-derivation path,
+     `#backfillRefTerms` over `reading_refs rr`, in src/extraction/index.mjs; the store's legacy list still names the
+     table (above), but the rebuild path left store.mjs with the table. "The same file" is extraction's. */
+  const exSrc = readFileSync(fileURLToPath(new URL("../src/extraction/index.mjs", import.meta.url)), "utf8");
   t("the newest entry has a named re-derivation path in the same file",
-    /#backfillRefTerms\(limit\)/.test(src) && /reading_refs rr/.test(src), true);
+    /DROP TABLE reading_ref_terms/.test(exSrc) && /#backfillRefTerms\(limit\)/.test(exSrc) && /reading_refs rr/.test(exSrc), true);
   const forbidden = ["bundles", "history", "register", "members", "refs", "promotions"];
   t("and nothing holding first-party material is", named.filter((x) => forbidden.includes(x)), []);
   t("the reshape runs BEFORE the schema, or the new index hits the old table",
@@ -1258,11 +1263,37 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
 
   /* Without a registered bundle there is nothing canonical to hang an edge on,
      and saying so beats inventing one. */
-  const orphan = (await call(`/projectlinks?capture=${A_SHA}`)).result;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; connections R26, R27, D-706, D-722, K145): the projection now
+     resolves THROUGH THE VIEWER and an absent viewer fails closed (R26), and a named source bundle the viewer cannot
+     see, or the record does not hold, is refused NO_SUCH_BUNDLE (R27). These arms call the Durable Object directly,
+     where no control plane stamps a viewer, so the fixture states the one it always meant: the instance's own
+     (`admin`, unfiltered by `viewerPredicate`), as the plane's stamp for its operator would; and the named source
+     bundle is HELD, promoted below, rather than an id the record never had. What each arm asserts is unchanged. */
+  const V = "&viewer=admin";
+  const orphan = (await call(`/projectlinks?capture=${A_SHA}${V}`)).result;
   t("an unregistered capture projects nothing, and says why",
     [orphan.projected, /not registered to a bundle/.test(orphan.note || "")], [0, true]);
 
-  const proj = (await call(`/projectlinks?capture=${A_SHA}&bundle=INFO-2026-0001-a`)).result;
+  const srcMd = ["---", "id: INFO-2026-0001-a", "object_type: information", "schema: information@2",
+    'title: "A"', "current_state: collected", "prior_state: null",
+    "created: 2026-07-29T00:00:00Z", "last_updated: 2026-07-29T00:00:00Z",
+    "produced_by:", "  mode: assisted", "  capability_tier: session",
+    "group: believe-in-oakland", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+    "visuals: []", "criticality: supporting", "source_status: unchanged", "source:",
+    `  locator: ${A_URL}`, "  authority: City of Oakland", "  retrieved: 2026-07-29T00:00:00Z",
+    "monitoring:", "  enabled: false", "  frequency: none", "---", "",
+    "## Summary", "", "A.", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", "",
+  ].join("\n");
+  const heldSrc = await call("/promote", { bundleId: "INFO-2026-0001-a", base: null,
+    snapKey: "20260729T000000Z_aaaa1111", author: "subresources",
+    meta: { object_type: "information", group: "believe-in-oakland", title: "A", current_state: "collected",
+            created: "2026-07-29T00:00:00Z", last_updated: "2026-07-29T00:00:00Z" },
+    files: [{ path: "bundle.md", text: srcMd, bytes: Buffer.byteLength(srcMd), sha256: sha(srcMd) }], register: [] });
+  console.log(`    T5-12 fixture promote: ${JSON.stringify(heldSrc).slice(0, 300)}`);
+  t("FIXTURE (T5-12): the named source bundle is held — promoted, so R27 has a document to name",
+    (heldSrc && "result" in heldSrc ? heldSrc.result : heldSrc)?.ok, true);
+  const proj = (await call(`/projectlinks?capture=${A_SHA}&bundle=INFO-2026-0001-a${V}`)).result;
   /* The link RESOLVES: the record holds the target's bytes and the verdict is
      settled. It still does not project, because no bundle has registered those
      bytes, which is the state of everything acquired and not yet promoted. A
@@ -1274,12 +1305,22 @@ console.log("\n--- a resolved link becomes an edge, and says who asserted it ---
   t("but nothing projects, because no bundle has registered the target's bytes",
     proj.projected, 0);
   t("and that is counted and named, not a silent zero", proj.skipped_unregistered >= 2, true);
-  t("the note says when those become edges", /when the target is promoted, not before/.test(proj.note), true);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24–R29, K145): the note's sentence was rewritten with
+     the projection (an edge is now written into the source document's references by one promotion, R28); "when" is
+     pinned in its new words, with the sentence that now follows it. */
+  t("the note says when those become edges",
+    /those become edges when the target is promoted\. Each edge is written into the source document's references as links_to/
+      .test(proj.note), true);
   t("a page linking to ITSELF is still not an edge between two documents", proj.skipped_self, 0);
   t("and an address the record holds nothing for stays unresolved", proj.unresolved, 1);
 
   t("resolution is unchanged by projecting: it is still computed at read time",
     (await call(`/resolvelinks?capture=${A_SHA}`)).result.links.length, 4);
+  /* T5-12 (legacy-tests): the fixture's source bundle is purged again, so the suite's "intake writes nothing"
+     arm below still counts what INTAKE wrote (0), not this fixture's one promotion. */
+  const unheld = await call(`/purge?bundleId=INFO-2026-0001-a`);
+  t("FIXTURE (T5-12): and it is purged again once the projection arms have run",
+    (unheld && "result" in unheld ? unheld.result : unheld)?.ok, true);
 
   /* The catalog's contract for the new relation. */
   const { checkBundle } = await import("../checks/bio-checks.mjs");

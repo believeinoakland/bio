@@ -565,6 +565,23 @@ const CATALOG_CENSUS = {
   "1.33.0": { count: 572, digest: "86ddf728cfe6d389ec3ffb28cd31179cae70bc0f681c8f227c96eda70d95443b",
               changed: ["C-33.48"],
               source: "1513f4a898edc422ecff7efebfd2b029e38b899396981092c9d3f2061277e113" },
+  /* 1.34.0 (PROMOTION #3, T5 layer 2, 2026-09-27, N86; recorded by legacy-tests, T5-12): NO ARRIVALS; C-18.1, C-18.3,
+     C-18.4 and C-18.9 had left the catalogue file for `provenance` under 1.33.0 (572 -> 568). Count, digest and source
+     are PROMOTION #3's print of this suite when it minted the version (its record). Kept although the tranche moved on
+     to 1.35.0 before this row was pinned: ratifications were stamped 1.34.0 in between, and an entry is never
+     rewritten or dropped. */
+  "1.34.0": { count: 568, digest: "4f93c5f65a5d7444ca59f172ae598905f3c440fc9c5d0b222431335edc003f14",
+              changed: [],
+              source: "4fa025acf0d59e03324c294d5225adea40c826afaa031b1d8bb71dd6c76fff31" },
+  /* 1.35.0 (PROMOTION #4, T5 layer 5, 2026-09-27, K150; recorded by legacy-tests, T5-12): NO ARRIVALS, forty-nine
+     departures to their modules (C-42.1-.7 calibration, C-51.1-.5 extraction, C-91.1-.3 entities, C-33.26/.42/.43
+     progressions, C-54.2-.10 observation-log, C-26.1-.11 and C-26.13-.19 bias, C-23.1, C-23.2, C-33.20, C-33.32
+     retrieval: src/gate.mjs's 1.35.0 note), none changed (568 -> 519; digest as PROMOTION #4 printed it). The source
+     is this suite's print on `tranche/T5` @ 7a2cc56e1f, after CONNECTIONS #1 moved the two pair predicates (C-49.1,
+     C-49.2's code, not their rows) out of the file: PROMOTION #4's 18a61872... was measured before that merge. */
+  "1.35.0": { count: 519, digest: "e4d92a7e563ee9a0052239476766b449021eee501a6d2d7547a2e53c370c56bf",
+              changed: [],
+              source: "32b7b0bb91da53a06a4a3e5c3549cee4d3a40a61f37847edff15802be03eb89b" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -616,9 +633,12 @@ const { CATALOG_VERSION, GATE_VERSION } = await import("../src/gate.mjs");
 say(`  the stamp: ${GATE_VERSION}`);
 
 /* (A1) THE CORPUS IS NON-EMPTY AND FLOORED. A headline totality assertion over an
-   empty corpus has passed three times in this estate (kickoffs/WORKER.md). */
+   empty corpus has passed three times in this estate (kickoffs/WORKER.md).
+   RE-PINNED 2026-09-27 (T5-12, legacy-tests): the literal-site floor 50 -> 46, the measured figure. The seven that
+   left are C-26.1-C-26.7, `checkBiasExtension`'s sites, which BIAS #1 moved to `src/bias/checks.mjs` with the rows
+   (1.35.0); every other literal site of the T5 opening (53) is still here, compared by name. */
 t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
-  [count >= 400, tables.size >= 40, literal.size >= 50], [true, true, true]);
+  [count >= 400, tables.size >= 40, literal.size >= 46], [true, true, true]);
 
 /* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
    named here or it fails. */
@@ -757,9 +777,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
    hand with the constant, which is its whole rule. */
 /* UPDATED 2026-09-26 (T3, legacy-tests): 1.31.0 -> 1.32.0, promotion's move of four checks (K64).
-   UPDATED 2026-09-27 (T4, legacy-tests): 1.32.0 -> 1.33.0, promotion's T4-2b. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.33.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.33.0)", "1.33.0"]);
+   UPDATED 2026-09-27 (T4, legacy-tests): 1.32.0 -> 1.33.0, promotion's T4-2b.
+   UPDATED 2026-09-27 (T5-12, legacy-tests): 1.33.0 -> 1.35.0, promotion's N86 (1.34.0) and K150 (1.35.0). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.35.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.35.0)", "1.35.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

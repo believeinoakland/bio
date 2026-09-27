@@ -33,6 +33,16 @@ mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder): provenance (T4 layer 3) took the promote fence
+   (C-53.7–C-53.9, the liar and the hijack), `op=testify`'s act (C-53.1, C-53.2) and the canonical bytes
+   (`testimonyBytes`) out of `store.mjs` into `src/provenance/index.mjs`, and C-18.1 out of `bio-checks.mjs` into
+   `src/provenance/register-checks.mjs`; the store keeps the axis, the reach walk and `#testimonyWithin`. Those arms
+   patch the same lines where they now live. The publication arms' fences were NARROWED BY MK-7 (before T5): C-53.10
+   and C-53.12 now fence only an observation written before MK-6 (`facts.testimonyLegacy`), and the suite's
+   publication arms now pin their successors (C-92.12 ATTRIBUTION_UNSTATED at op=ratify, C-92.10 ATTRIBUTION_UNCHOSEN
+   at op=caseratify, C-58.2 D-431 in the committer); the old one-line anchors matched nothing since MK-7. */
+const PROV = join(PLANE, "src/provenance/index.mjs");
+const REGCHECKS = join(PLANE, "src/provenance/register-checks.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -65,34 +75,34 @@ const ARMS = {
     mustFail: [], mustPass: "everything", patch: () => ({ armed: true, matches: 0 }),
   },
   unearned: {
-    files: [STORE],
+    files: [PROV],
     why: "THE LIAR: the fence stops refusing a document that CLAIMS authored without the testimony path having written it — so any writer can set the flag",
     mustFail: ["THE LIAR: a promote claiming authored", "the flag in ANY truthy spelling is the claim"],
     mustPass: "the hijack, origin and dropped refusals (other arms of the same fence), and every op=testify assertion",
-    patch: () => arm([[STORE, "      if (claims && !authored)\n", "      if (false && claims && !authored)\n"]]),
+    patch: () => arm([[PROV, "      if (claims && !authored)\n", "      if (false && claims && !authored)\n"]]),
   },
   hijack: {
-    files: [STORE],
+    files: [PROV],
     why: "the fence stops refusing a register entry that re-files an authored observation's bytes under ANOTHER bundle",
     mustFail: ["a DIFFERENT bundle registering an authored observation's bytes is REFUSED"],
     mustPass: "THE LIAR (a document claim is a different arm) and every other refusal",
-    patch: () => arm([[STORE, "      if (elsewhere.has(c.sha256))\n", "      if (false && elsewhere.has(c.sha256))\n"]]),
+    patch: () => arm([[PROV, "      if (elsewhere.has(c.sha256))\n", "      if (false && elsewhere.has(c.sha256))\n"]]),
   },
   origin: {
-    files: [STORE],
+    files: [PROV],
     why: "§7's FIRST refusal removed: an authored bundle's revision may claim origin named_request or actor daemon",
     mustFail: ["now claims origin named_request is REFUSED", "and one whose actor class is now daemon"],
     mustPass: "the dropped and liar refusals; C-18.1's catalogue arm (a SEPARATE statement of the same rule, held open)",
-    patch: () => arm([[STORE, "      if (origin !== \"member\" || actor !== \"member\")\n",
+    patch: () => arm([[PROV, "      if (origin !== \"member\" || actor !== \"member\")\n",
                               "      if (false && (origin !== \"member\" || actor !== \"member\"))\n"]]),
   },
   dropped: {
-    files: [STORE],
+    files: [PROV],
     why: "an authored bundle's revision may stop saying authored — the flag removed, or the provenance document dropped",
     mustFail: ["stops saying authored is REFUSED", "drops data/provenance.json altogether"],
     mustPass: "the origin and liar refusals",
-    patch: () => arm([[STORE, "      if (d.authored !== true)\n", "      if (false && d.authored !== true)\n"],
-                      [STORE, "      if (!stated.has(s))\n", "      if (false && !stated.has(s))\n"]]),
+    patch: () => arm([[PROV, "      if (d.authored !== true)\n", "      if (false && d.authored !== true)\n"],
+                      [PROV, "      if (!stated.has(s))\n", "      if (false && !stated.has(s))\n"]]),
   },
   stamp: {
     files: [INDEX],
@@ -103,19 +113,19 @@ const ARMS = {
                               "    if (false)\n      inner.searchParams.set(\"author\","]]),
   },
   supplied: {
-    files: [STORE],
+    files: [PROV],
     why: "C-53.2 removed: a caller-supplied author in the BODY is no longer refused",
     mustFail: ["a caller-supplied author in the BODY is REFUSED BY NAME", "under a synonym too"],
     mustPass: "THE STAMP (the recorded author is still the session's, because the store reads the stamp)",
-    patch: () => arm([[STORE, "    if (claimedAuthor !== null && claimedAuthor !== undefined)\n",
+    patch: () => arm([[PROV, "    if (claimedAuthor !== null && claimedAuthor !== undefined)\n",
                               "    if (false)\n"]]),
   },
   machine: {
-    files: [STORE],
+    files: [PROV],
     why: "C-53.1 removed: a machine credential's stamp is accepted as an observer",
     mustFail: ["a MACHINE credential (the member token, the admin token) is refused BY NAME"],
     mustPass: "every session-member assertion",
-    patch: () => arm([[STORE, "    if (!who || isMachineIdentity(who))\n      return refusal(\"TESTIMONY_NOT_A_MEMBER\",",
+    patch: () => arm([[PROV, "    if (!who || isMachineIdentity(who))\n      return refusal(\"TESTIMONY_NOT_A_MEMBER\",",
                               "    if (!who)\n      return refusal(\"TESTIMONY_NOT_A_MEMBER\","]]),
   },
   axis: {
@@ -132,16 +142,18 @@ const ARMS = {
     why: "the authored capture's EXTRACTION observation is not written — so op=contentaxis explains the absence as one of section 5.1's causes, on a capture whose words ARE its text",
     mustFail: ["READER op=contentaxis"],
     mustPass: "every other reader (the index row is written by a different call and still reads PRESENT)",
-    patch: () => arm([[STORE, "            const bad = this.#observe({\n              actorClass: \"member\", actor: who, authorityKind: \"extract\",",
-                              "            const bad = false && this.#observe({\n              actorClass: \"member\", actor: who, authorityKind: \"extract\","]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the extraction row is written in `#testimonyWithin`. */
+    patch: () => arm([[STORE, "    const bad = this.#observe({ actorClass: \"member\", actor: pkg[TESTIMONY_PATH].author, authorityKind: \"extract\",",
+                              "    const bad = false && this.#observe({ actorClass: \"member\", actor: pkg[TESTIMONY_PATH].author, authorityKind: \"extract\","]]),
   },
   header: {
-    files: [STORE],
+    files: [PROV],
     why: "BOB #14's RULING UNDONE: the authored bytes are the words alone, no canonical header — so two members' identical words are one set of bytes again",
     mustFail: ["the capture IS the canonical bytes", "TWO MEMBERS, IDENTICAL WORDS, TWO TESTIMONIES"],
     mustPass: "every refusal of the fence at promote",
-    patch: () => arm([[STORE, "    return `${Store.TESTIMONY_FORMAT}\\nid: ${id}\\nobserved_at: ${observedAt}\\n\\n${words}`;",
-                              "    return `${words}`;"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): provenance's module function `testimonyBytes`. */
+    patch: () => arm([[PROV, "  return `${TESTIMONY_FORMAT}\\nid: ${id}\\nobserved_at: ${observedAt}\\n\\n${words}`;",
+                             "  return `${words}`;"]]),
   },
   pubbundle: {
     files: [INDEX],
@@ -153,24 +165,27 @@ const ARMS = {
        what it exists to prove. */
     mustFail: ["op=ratify on the OBSERVATION ITSELF"],
     mustPass: "the cited-finding and case refusals (separate arms of the fence)",
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length)\n",
-                              "      if (false && facts.testimony && facts.testimony.self.length)\n"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): MK-7's C-92.12, the fence op=ratify now holds for an
+       observation in §4.1's form (the suite's label names it); C-53.10 is left for the pre-MK-6 form. */
+    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
+                              "      if (false && facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n"]]),
   },
-  pubcited: {
-    files: [INDEX],
-    why: "(A) the fence at op=ratify for a FINDING RESTING ON an observation removed — the finding publishes",
-    mustFail: ["op=ratify on a FINDING whose basis cites the observation", "THROUGH ANOTHER FINDING"],
-    mustPass: "the observation's own refusal and the case refusal",
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.via.length)\n",
-                              "      if (false && facts.testimony && facts.testimony.via.length)\n"]]),
-  },
+  /* `pubcited` — RETIRED 2026-09-27 (T5-12, legacy-tests). Its subject, a testimony-specific refusal at op=ratify for a
+     FINDING resting on an observation (C-53.11), was narrowed BY DESIGN in MK-7 to an observation written before MK-6
+     (`facts.testimonyLegacy`); for an observation in §4.1's form (the only kind this suite writes) MK-7 lifted it and
+     D-431's general rule (C-58.2: a finding crosses only at a sha a ratified case pins) answers instead, which is what
+     the suite's two labels now pin. Re-anchored on the narrowed line it ARMED and came back GREEN, 58/0: no fixture
+     here reaches a pre-MK-6 observation, so no arm of this suite can see it; and arming C-58.2 would attack D-431's
+     rule, not this fence. Its body, verbatim, is in git history before this date. */
   pubcase: {
     files: [INDEX],
     why: "(A) the fence at op=caseratify removed — a case over a finding resting on an observation publishes",
     mustFail: ["op=caseratify on a CASE whose finding rests on the observation"],
     mustPass: "both op=ratify refusals",
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)\n",
-                              "      if (false && facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)\n"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): MK-7's C-92.10, the gate op=caseratify now holds for a case
+       reaching an observation in §4.1's form (the suite's label names it). */
+    patch: () => arm([[INDEX, "      if (unchosen.length)\n        return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\",",
+                              "      if (false)\n        return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\","]]),
   },
   pubdirect: {
     files: [STORE],
@@ -184,24 +199,27 @@ const ARMS = {
     why: "(A) THE OVER-STRICTNESS DIRECTION: the fence refuses EVERY ratification — an ordinary document and its finding stop publishing",
     mustFail: ["OVER-STRICTNESS: a finding resting on an ORDINARY document"],
     mustPass: "\"op=ratify on the OBSERVATION ITSELF\" — the refusal the fence exists for still fires",
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length)\n",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-92.12's line (pubbundle's), made to refuse everything. */
+    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
                               "      if (true)\n"]]),
   },
   c181: {
-    files: [CHECKS],
+    files: [REGCHECKS],
     why: "C-18.1's authored arm removed: the catalogue holds an authored document to the ordinary A/B/C grade rule",
     mustFail: ["THE WHOLE CATALOGUE over the bundle op=testify wrote", "an authored document carrying a capture grade is an error"],
     mustPass: "the origin half of C-18.1 (a separate statement) and every store fence",
-    patch: () => arm([[CHECKS, "      if (d.authored === true) {\n        if (cap.grade !== undefined",
-                               "      if (false) {\n        if (cap.grade !== undefined"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-18.1 is provenance's register check. */
+    patch: () => arm([[REGCHECKS, "      if (d.authored === true) {\n        if (cap.grade !== undefined",
+                                  "      if (false) {\n        if (cap.grade !== undefined"]]),
   },
   overstrict: {
-    files: [STORE],
+    files: [PROV],
     why: "THE OVER-STRICTNESS DIRECTION: the fence treats EVERY member-origin document as a claim to be authored — refusing the member-uploaded document the design says stays what it is today",
     mustFail: ["OVER-STRICTNESS: a member-UPLOADED document", "OVER-STRICTNESS: `authored: false`"],
     mustPass: "THE LIAR — the refusal the fence exists for still fires",
-    patch: () => arm([[STORE, "      if (claims && !authored)\n",
-                              "      if ((claims || (d.origin && d.origin.kind === \"member\")) && !authored)\n"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): provenance's promote fence. */
+    patch: () => arm([[PROV, "      if (claims && !authored)\n",
+                             "      if ((claims || (d.origin && d.origin.kind === \"member\")) && !authored)\n"]]),
   },
 };
 

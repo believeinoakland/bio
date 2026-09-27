@@ -198,7 +198,10 @@ import { appScript } from "./extract.mjs";
    THE EXTRACTION IS GUARDED, because one that silently yielded "" would make
    every `includes()` below trivially true — the costless equality arriving in
    the INSTRUMENT rather than in the subject (UI-30's finding). */
-const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R19, R20): `selectionResolve` — the query arm's
+   `drift.detail` sentence and the per-row `moved` formula — moved out of store.mjs into the retrieval module
+   (`src/retrieval/index.mjs`). Both are read there now; the store no longer holds either. */
+const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/retrieval/index.mjs", import.meta.url), "utf8");
 function planeQueryDriftDetail(){
   /* `selectionResolve`'s query arm: `drift.detail = "…" + "…";` — the
      concatenated string literals, joined the way the source joins them. */

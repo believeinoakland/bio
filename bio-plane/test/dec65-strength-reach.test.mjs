@@ -391,7 +391,11 @@ t("there are exactly FOUR call sites — the walk's own recursion and THREE supp
    over the schema's own text, and asserted in BOTH directions: the `connections`
    table DOES have a column of that name — a different fact about a different
    thing — so a pin that could not tell the two apart would pass vacuously here. */
-const schema = scan(SCHEMA_RAW).stripped;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the `connections` table's DDL left schema.mjs with the
+   connections module (T5 layer 4; it is declared in src/connections/schema.mjs). The schema read here is
+   schema.mjs AND that file, so the both-directions pin still finds the other table's column where it lives. */
+const CONNECTIONS_SCHEMA_RAW = readFileSync(SRC("connections/schema.mjs"), "utf8");
+const schema = scan(SCHEMA_RAW + "\n" + CONNECTIONS_SCHEMA_RAW).stripped;
 const tableBody = (name) => {
   const m = new RegExp(`CREATE TABLE IF NOT EXISTS ${name} \\(([\\s\\S]*?)\\n\\);`).exec(schema);
   return m ? m[1] : null;

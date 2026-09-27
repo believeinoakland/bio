@@ -97,6 +97,15 @@ const M = "class:member";
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the gate is minted only in membership's `viewerPredicate`, which
+   query.mjs re-exports (N46 with N37, K75); the guarded executor and the `bundles_fts_id` index are retrieval's; the
+   `resolutions` indexes are entities' schema text and `connections`' are connections'. Sections 3 and 12 read them
+   where they now live. */
+const MEMBERSHIP_SRC = readFileSync(SRC("membership/index.mjs"), "utf8");
+const RETRIEVAL_SRC = ["retrieval/index.mjs", "retrieval/schema.mjs", "retrieval/projection.mjs",
+                       "retrieval/frontier.mjs", "retrieval/levels.mjs"].map((f) => readFileSync(SRC(f), "utf8")).join("\n");
+const ENTITIES_SCHEMA_SRC = readFileSync(SRC("entities/schema.mjs"), "utf8");
+const CONNECTIONS_SCHEMA_SRC = readFileSync(SRC("connections/schema.mjs"), "utf8");
 
 /* Pull one balanced parenthesised run out of a compiled statement. The set
    compilation is what is under test and it sits inside the `hits(fid) AS (...)`
@@ -290,6 +299,16 @@ console.log("\n--- 2. every arm keys on fts_id, and the join is back through bun
     const probes = [`${arm}:*`, ...Object.keys(m.sub).map((s) => `${arm}:${s}=x`),
                     `${arm}:>=B`, `has:${arm}`];
     for (const q of probes) {
+      /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; query-language R5): a comparison on `passage:` is now DROPPED with a
+         warning naming why (it matches text and does not order it), so that probe compiles no arm at all; it is held
+         to exactly that instead of to the set shape. */
+      if (arm === "passage" && q === `${arm}:>=B`) {
+        const dropped = compile({ q, viewer: M });
+        if ((dropped.meaningArms || []).length !== 0
+            || !(dropped.warnings || []).some((w) => /^passage: /.test(w) && /does not order it/.test(w)))
+          bad.push(`${q}: not dropped with its warning`);
+        continue;
+      }
       const hits = hitsOf(compile({ q, viewer: M }));
       if (!/^SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL/.test(String(hits).trim()))
         bad.push(`${q}: ${String(hits).slice(0, 60)}`);
@@ -328,15 +347,23 @@ console.log("\n--- 3. the arm carries no gate, and there is still exactly one pl
      module must fall inside `viewerPredicate`. Counting rather than eyeballing
      is the whole point: a second compilation point added by a future arm fails
      here rather than passing on somebody's care. */
-  const fnStart = QUERY_SRC.indexOf("export function viewerPredicate(");
-  const fnEnd = QUERY_SRC.indexOf("\n}", QUERY_SRC.indexOf("scope: \"participant\"", fnStart));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N46 with N37, K75): the one function is membership's
+     `viewerPredicate`; query.mjs now mints NO gate and re-exports that function, so the count is taken in
+     membership's file and query.mjs's own count is pinned at zero beside its re-export. */
+  const fnStart = MEMBERSHIP_SRC.indexOf("export function viewerPredicate(");
+  const fnEnd = MEMBERSHIP_SRC.indexOf("\n}", MEMBERSHIP_SRC.indexOf("scope: \"participant\"", fnStart));
   const sites = [];
-  for (let i = QUERY_SRC.indexOf("${GATE_MARK}"); i !== -1; i = QUERY_SRC.indexOf("${GATE_MARK}", i + 1)) sites.push(i);
-  console.log(`  gate-mint sites found: ${sites.length}`);
+  for (let i = MEMBERSHIP_SRC.indexOf("${GATE_MARK}"); i !== -1; i = MEMBERSHIP_SRC.indexOf("${GATE_MARK}", i + 1)) sites.push(i);
+  console.log(`  gate-mint sites found: ${sites.length} (membership), ${QUERY_SRC.split("${GATE_MARK}").length - 1} (query.mjs)`);
   t("the gate is minted in exactly ONE function, at its three known branches (deny, member, participant)",
-    [sites.length, sites.every((i) => i > fnStart && i < fnEnd)], [3, true]);
+    [sites.length, sites.every((i) => i > fnStart && i < fnEnd),
+     QUERY_SRC.split("${GATE_MARK}").length - 1,
+     /import \{ viewerPredicate, GATE_MARK \} from "\.\/membership\/index\.mjs";\nexport \{ viewerPredicate, GATE_MARK \};/.test(QUERY_SRC)],
+    [3, true, 0, true]);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R3): the throw is retrieval's `runQuery`, the executor
+     every compiled statement now reaches. */
   t("and store.mjs still refuses any statement that arrives without the marker (D-15's throw)",
-    /a retrieval statement reached the store without the viewer visibility gate \(D-15\)/.test(STORE_SRC), true);
+    /a retrieval statement reached the store without the viewer visibility gate \(D-15\)/.test(STORE_SRC + RETRIEVAL_SRC), true);
 }
 {
   const bad = ARMS.filter((arm) => String(hitsOf(compile({ q: `${arm}:x`, viewer: M }))).includes(GATE_MARK));
@@ -836,7 +863,8 @@ console.log("\n--- 12. the indexes, and the one that was not added ---");
   t("the D-223 index exists, keyed so the seek is COVERING",
     /CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis\(grade_source, bundle_id\)/.test(SCHEMA_SRC), true);
   t("the flagged-set index exists on resolutions(grade, bundle_id)",
-    /CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions\(grade, bundle_id\)/.test(SCHEMA_SRC), true);
+    /* RE-ANCHORED 2026-09-27 (T5-12): `resolutions`' DDL is entities' schema text. */
+    /CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions\(grade, bundle_id\)/.test(ENTITIES_SCHEMA_SRC), true);
   /* NOT ADDED BY THIS ITEM, AND THE STORY IS WORTH THE ASSERTION. The first
      version of the probe hand-wrote the indexes on `bundles`, missed
      `bundles_fts_id` because it is created in store.mjs's MIGRATION rather than
@@ -849,14 +877,18 @@ console.log("\n--- 12. the indexes, and the one that was not added ---");
      that passes on its own explanation is not a check. */
   const creates = (src, re) => (src.match(re) || []).length;
   t("the join every statement makes is ALREADY indexed — in store.mjs's migration, not the schema text",
-    [creates(STORE_SRC, /CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles\(fts_id\)/g),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R33): the migration that creates it is retrieval's
+       `migrate()`; the store's text and retrieval's are counted together, and the schema text still holds none. */
+    [creates(STORE_SRC + RETRIEVAL_SRC, /CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles\(fts_id\)/g),
      creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON bundles\(fts_id\)/g)], [1, 0]);
   t("no index on inquiry_basis(role) — measured as a candidate at -9.1%, and the reason is recorded",
     [creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON inquiry_basis\(role/g),
      /NO INDEX ON role/.test(SCHEMA_SRC)], [0, true]);
   t("no index on connections(grade) — no arm reads it, and the reason is recorded",
-    [creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON connections\(grade/g),
-     /NO INDEX ON connections\(grade\)/.test(SCHEMA_SRC)], [0, true]);
+    /* RE-ANCHORED 2026-09-27 (T5-12): `connections`' DDL is connections' schema text and `resolutions`' is
+       entities'; the recorded reason sat beside `resolutions_grade`, so all three texts are read. */
+    [creates(SCHEMA_SRC + ENTITIES_SCHEMA_SRC + CONNECTIONS_SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON connections\(grade/g),
+     /NO INDEX ON connections\(grade\)/.test(SCHEMA_SRC + ENTITIES_SCHEMA_SRC + CONNECTIONS_SCHEMA_SRC)], [0, true]);
   /* The indexes are LIVE, not merely written: a store that booted has them. */
   const audit = rP(await get("audit", "", "adm-pl8"));
   t("the store booted and answers, so the schema (with the new indexes) applied",

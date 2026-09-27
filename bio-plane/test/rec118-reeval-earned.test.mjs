@@ -74,6 +74,18 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R12, R55, and its REPORT 11's `registerLegGrades`): REC-114's
+   listing resolver moved to retrieval as `#legEarnedCapture` (`src/retrieval/index.mjs`), which holds the three
+   conditions and calls the REGISTERED leg-grade resolver once per page; the store registers that resolver
+   (`retrieval.registerLegGrades("legacy-store", …)`), which asks the registry once and applies `Store.#capturedAt`.
+   The resolver as one text is the two together, each located exactly. */
+const LISTING_RESOLVER = (() => {
+  const ret = readFileSync(SRC("retrieval/index.mjs"), "utf8");
+  const method = /#legEarnedCapture\(arm, rows\) \{[\s\S]*?\n  \}/.exec(ret)?.[0] ?? "";
+  const at = STORE_SRC.indexOf('retrieval.registerLegGrades("legacy-store", (legs) => {');
+  const reg = at < 0 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n    });", at));
+  return method && reg ? `${method}\n${reg}` : "";
+})();
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
@@ -392,7 +404,7 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
      the silent drift REC-114 named and REC-118 built this to measure — an
      instrument that does not grow with its subject stops being one. */
   const sites = { walk: /#strengthWalk/.test(STORE_SRC),
-                  listing: /#legEarnedCapture\(arm, rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "",
+                  listing: LISTING_RESOLVER,   /* RE-ANCHORED 2026-09-27 (T5-12): retrieval's method plus the store's registration */
                   reeval: m,
                   versions: /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "" };
   const conditions = (src) => ({

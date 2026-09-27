@@ -53,8 +53,11 @@ const BASE = appScript();
 const ARMS = {
   baseline: (s) => s,
   allornone: (s) => {
-    const a = `      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }`;
-    return one(s, a, `      if(o.outcome === "applied" && outs.every(x => x.outcome === "applied")){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); }`);
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): UI-110 (ba126d29a8, before T5) added `QUEUE_HOME.delete(id)` to the
+       applied branch, so the anchor matched 0 times and the run died at this arm; the same all-or-nothing condition
+       is put on the branch as it now reads. */
+    const a = `      if(o.outcome === "applied"){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); QUEUE_HOME.delete(id); }`;
+    return one(s, a, `      if(o.outcome === "applied" && outs.every(x => x.outcome === "applied")){ QUEUE_SEL.delete(id); QUEUE_RETAINED.delete(id); QUEUE_HOME.delete(id); }`);
   },
   silentdrop: (s) => one(s, `function queueRetainedGoneHtml(){`, `function queueRetainedGoneHtml(){ return "";`),
   /* UI-94's three. */

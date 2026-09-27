@@ -52,7 +52,13 @@ const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), 
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, host-governor, capture): layer 3 extracted three more
    modules, and the INFO counter call moved with `testify` into provenance (`this.#record.allocId("INFO", …)`), so the
    corpus widens to `provenance`, `capture` and `host-governor` as well. */
-const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion", "provenance", "capture", "host-governor"].flatMap((d) =>
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; entities R4, R8): the ENT and REL counter calls moved with
+   `entitycreate` and `relationdeclare` into `src/entities/index.mjs` (`this.#record.allocId("ENT"|"REL", …)`), so the
+   corpus widens to every module T5 extracted (calibration, extraction, content, entities, connections, progressions,
+   bias, observation-log, retrieval) — a gated prefix minted from the counter in any of them is caught too. */
+const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion", "provenance", "capture", "host-governor",
+  "calibration", "extraction", "content", "entities", "connections", "progressions", "bias", "observation-log",
+  "retrieval"].flatMap((d) =>
   readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))]
   .join("\n");
 

@@ -45,7 +45,7 @@
  * `calibration_signals` into `calibrations`. An arm that must build a defect to
  * expose one says more about the shape than an arm that unplugs a fence.
  *
- * NEGATIVE CONTROL: RUN IT WITH `node test/calibration.control.mjs [arm]` — the driver is COMMITTED beside this suite, it arms each arm ALONE with every other defence held open, it DECLARES before each what MUST and MUST NOT fail, and it verifies every restore by sha256 AND by `cmp` against a UNIQUELY-NAMED per-arm pristine copy taken INSIDE THIS WORKTREE (never a shared scratchpad: PL-10's harness was overwritten mid-turn by a concurrent worker, and UI-38 met an NC harness reporting a byte-identical restore over a file it had not restored), with a byte count printed and a 1,000-byte minimum guarded. FOUR ARMS plus a BASELINE, ALL RUN 2026-09-10 against a BASELINE row of 110 pass / 0 fail / foot REACHED, and the tree measured back at 110/0 afterwards. (a) `regrade` — THE ITEM'S NC (1): make the drift handler re-grade, by INSERTING an `UPDATE reading_text_source SET derivation_cap` for every obligation it raised -> MEASURED 109/1, the ONE failure being "NO MACHINE MINTS A GRADE (DEC-4)" and the obligation arms all still green, which is the point: naming the work and doing it are separable and this suite pins the second. (b) `changelog` — THE ITEM'S NC (2): let a changelog signal alone mark a calibration current with no probe run, by INSERTING the mint a well-meaning author would write (carry the last cap forward under the announced version) -> MEASURED 108/2, both failures the "A CLAIM IS NOT A MEASUREMENT" arms, while the separate fence that refuses a signal CARRYING a fidelity stayed green. (c) `delay` — rule 4's direction: let a signal push a probe OUT. (d) `overstrict` — THE OVER-STRICTNESS ARM: refuse fields the construct does not recognise, a fence tighter than its rule -> MEASURED 109/1, exactly the over-strictness assertion, with every real refusal still refusing. **BOTH NC ARMS THE ITEM NAMES ARE ARMED BY ADDING CODE RATHER THAN REMOVING IT, and that is a finding about the design rather than a quirk of the harness: the drift handler writes nothing at all, so there is no guard to delete — a defect has to be BUILT.** **TWO ARMS CAME BACK OTHER THAN DECLARED ON THEIR FIRST RUN AND BOTH FOUND THE INSTRUMENT WRONG, NOT THE SUBJECT, and both are kept rather than smoothed.** (c) FIRST PATCHED ONLY the loop's `<` comparison and measured 110/0 — NOTHING FAILED — because rule 4 is enforced TWICE, by that comparison and again by the closing `Math.min(at, cadenceAt)`, so either guard alone makes the other unfalsifiable through the function and arming one PASSES FOR FREE. Armed TOGETHER (the textchain.test.mjs D-252 precedent) it MEASURED 106/4: the three interval arms plus, unexpectedly, "the calibration consumer fires on the alarm" — because a signal that can push a probe out pushes it past the alarm instant and the consumer stops being due, which is the defect's real downstream reach and is worth more than the three arms that were aimed at it. Its needles were ALSO mis-spelled from memory on that run ("cannot push it out" against a label reading "cannot push the interval out"), scoring the arm NOT-AS-DECLARED by the harness's own typo. (d) FIRST tightened the SHARED `present` predicate to require an object — and `probe_id` is a STRING riding that same predicate, so every valid calibration was refused, the suite DIED downstream and the driver reported `-1 pass / -1 fail / foot false`. **That -1 is the whole reason a missing tally is never reported as 0**: a harness trusting a count would have read a beautiful zero-failure run off a module that never reached its own foot. Narrowed, re-run, as declared. **AND A THIRD, FOUND BY RE-RUNNING THE COMMITTED PAIR RATHER THAN TRUSTING THE EARLIER GREEN:** arm (b) inserts an UPDATE naming a calibration column, and a LATER correction in this same item renamed that column (superseded_by -> replaced_by, forced by D-221's total version-edge sweep over the schema). The arm went on referencing the old name, the store threw, the suite DIED, and the driver reported -1/-1/foot-false — for the second time in this one item, the -1 was the only thing distinguishing a crashed arm from a clean one. **AN ARM IS SOURCE THAT GOES STALE LIKE ANY OTHER SOURCE**, and the only reason this was caught is that the whole block was re-run from the committed tree instead of the earlier run being quoted. Corrected; all four arms then as declared, baseline 110/0 before and after.
+ * NEGATIVE CONTROL: RUN IT WITH `node test/calibration.control.mjs [arm]` — the driver is COMMITTED beside this suite, it arms each arm ALONE with every other defence held open, it DECLARES before each what MUST and MUST NOT fail, and it verifies every restore by sha256 AND by `cmp` against a UNIQUELY-NAMED per-arm pristine copy taken INSIDE THIS WORKTREE (never a shared scratchpad: PL-10's harness was overwritten mid-turn by a concurrent worker, and UI-38 met an NC harness reporting a byte-identical restore over a file it had not restored), with a byte count printed and a 1,000-byte minimum guarded. FOUR ARMS plus a BASELINE, ALL RUN 2026-09-10 against a BASELINE row of 110 pass / 0 fail / foot REACHED, and the tree measured back at 110/0 afterwards. (a) `regrade` — THE ITEM'S NC (1): make the drift handler re-grade, by INSERTING an `UPDATE reading_text_source SET derivation_cap` for every obligation it raised -> MEASURED 109/1, the ONE failure being "NO MACHINE MINTS A GRADE (DEC-4)" and the obligation arms all still green, which is the point: naming the work and doing it are separable and this suite pins the second. (b) `changelog` — THE ITEM'S NC (2): let a changelog signal alone mark a calibration current with no probe run, by INSERTING the mint a well-meaning author would write (carry the last cap forward under the announced version) -> MEASURED 108/2, both failures the "A CLAIM IS NOT A MEASUREMENT" arms, while the separate fence that refuses a signal CARRYING a fidelity stayed green. (c) `delay` — rule 4's direction: let a signal push a probe OUT. (d) `overstrict` — THE OVER-STRICTNESS ARM: refuse fields the construct does not recognise, a fence tighter than its rule -> MEASURED 109/1, exactly the over-strictness assertion, with every real refusal still refusing. **BOTH NC ARMS THE ITEM NAMES ARE ARMED BY ADDING CODE RATHER THAN REMOVING IT, and that is a finding about the design rather than a quirk of the harness: the drift handler writes nothing at all, so there is no guard to delete — a defect has to be BUILT.** **TWO ARMS CAME BACK OTHER THAN DECLARED ON THEIR FIRST RUN AND BOTH FOUND THE INSTRUMENT WRONG, NOT THE SUBJECT, and both are kept rather than smoothed.** (c) FIRST PATCHED ONLY the loop's `<` comparison and measured 110/0 — NOTHING FAILED — because rule 4 is enforced TWICE, by that comparison and again by the closing `Math.min(at, cadenceAt)`, so either guard alone makes the other unfalsifiable through the function and arming one PASSES FOR FREE. Armed TOGETHER (the textchain.test.mjs D-252 precedent) it MEASURED 106/4: the three interval arms plus, unexpectedly, "the calibration consumer fires on the alarm" — because a signal that can push a probe out pushes it past the alarm instant and the consumer stops being due, which is the defect's real downstream reach and is worth more than the three arms that were aimed at it. Its needles were ALSO mis-spelled from memory on that run ("cannot push it out" against a label reading "cannot push the interval out"), scoring the arm NOT-AS-DECLARED by the harness's own typo. (d) FIRST tightened the SHARED `present` predicate to require an object — and `probe_id` is a STRING riding that same predicate, so every valid calibration was refused, the suite DIED downstream and the driver reported `-1 pass / -1 fail / foot false`. **That -1 is the whole reason a missing tally is never reported as 0**: a harness trusting a count would have read a beautiful zero-failure run off a module that never reached its own foot. Narrowed, re-run, as declared. **AND A THIRD, FOUND BY RE-RUNNING THE COMMITTED PAIR RATHER THAN TRUSTING THE EARLIER GREEN:** arm (b) inserts an UPDATE naming a calibration column, and a LATER correction in this same item renamed that column (superseded_by -> replaced_by, forced by D-221's total version-edge sweep over the schema). The arm went on referencing the old name, the store threw, the suite DIED, and the driver reported -1/-1/foot-false — for the second time in this one item, the -1 was the only thing distinguishing a crashed arm from a clean one. **AN ARM IS SOURCE THAT GOES STALE LIKE ANY OTHER SOURCE**, and the only reason this was caught is that the whole block was re-run from the committed tree instead of the earlier run being quoted. Corrected; all four arms then as declared, baseline 110/0 before and after. **RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN**: (a) and (b) now arm `src/calibration/index.mjs` (the record act and the signal act moved there); (c) gained a third site there, `#nextProbe`'s `MIN(probe_by_ms)`, which alone kept the through-op arm green (measured 111/2 with two sites). Baseline 113/0; (a) 112/1, (b) 111/2, (c) 109/4 (the same four as before), (d) 112/1; all as declared, every restore verified, 113/0 after.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -54,11 +54,16 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import {
-  checkCalibration, checkSignal, compare, drifted, driftObligations, nextProbeDue,
+  checkCalibration, checkSignal, compare, drifted, nextProbeDue,
   cadenceSentence, DRIFT, CALIBRATION_CADENCE_MS,
 } from "../src/calibration.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `driftObligations` is extraction's
+   (its R38, K136): calibration deleted its copy; it lives in src/extraction/drift.mjs. */
+import { driftObligations } from "../src/extraction/drift.mjs";
 import { calibrationsOf } from "../src/textchain.mjs";
-import { CALIBRATION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-42 left the catalogue with calibration
+   (T5-1, K136); CALIBRATION_CHECKS is src/calibration's export. */
+import { CALIBRATION_CHECKS } from "../src/calibration/index.mjs";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -105,8 +110,10 @@ t("NO PROBE INPUTS -> refused: two runs over different corpora are two measureme
   checkCalibration(cal({ probe_inputs: {} }))?.code, "CAL_NO_PROBE");
 t("NO SCORES -> refused: the letter is stored so a later reader can DISAGREE with it",
   checkCalibration(cal({ scores: null }))?.code, "CAL_NO_PROBE");
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): calibration R5 (D-668, D-587, K136): an unattributed
+   measurement has its own code, C-42.8 `CAL_UNATTRIBUTED`, no longer C-42.4's "nothing was measured". */
 t("an unattributed measurement is refused too", checkCalibration(cal({ measured_by: "" }))?.code,
-  "CAL_NO_PROBE");
+  "CAL_UNATTRIBUTED");
 t("a cap outside BASIS_GRADES is refused — a calibration invents no scale of its own",
   checkCalibration(cal({ cap: "excellent" }))?.code, "CAL_SHAPE");
 /* THE ONE THAT LOOKS LIKE A GAP AND IS NOT. */
@@ -219,8 +226,13 @@ t("the cadence sentence is composed FROM the constant and cannot drift from it",
     CALIBRATION_CADENCE_MS / 86_400_000} day(s), on this instance's own account`);
 
 console.log("\n--- DEC-49: EVERY REFUSAL CARRIES A CODE AND A CANNED TRANSLATION ---");
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): D-668 (calibration R5, R8, R14) adds three rows, so the
+   family is ten: C-42.8 `CAL_UNATTRIBUTED` (driven pure below), C-42.9 `CAL_SUBJECT_UNNAMED` and C-42.10
+   `CAL_SUBJECT_NO_PROBE` (the store's, driven through op=calibrationsubject in part 2). */
 const CODES_USED = ["CAL_SHAPE", "CAL_UNNAMED", "CAL_UNDATED", "CAL_NO_PROBE",
-                    "CAL_SIGNAL_SHAPE", "CAL_SIGNAL_CLAIMS_MEASUREMENT", "CAL_CANNOT_REGRADE"];
+                    "CAL_SIGNAL_SHAPE", "CAL_SIGNAL_CLAIMS_MEASUREMENT", "CAL_CANNOT_REGRADE",
+                    "CAL_UNATTRIBUTED", "CAL_SUBJECT_UNNAMED", "CAL_SUBJECT_NO_PROBE"];
+const STORE_DRIVEN = ["CAL_CANNOT_REGRADE", "CAL_SUBJECT_UNNAMED", "CAL_SUBJECT_NO_PROBE"];
 t("every code the construct can mint has a row", CODES_USED.filter((c) => !CALIBRATION_CHECKS[c]), []);
 t("the family is exactly those codes — no orphan rows",
   Object.keys(CALIBRATION_CHECKS).sort(), [...CODES_USED].sort());
@@ -240,6 +252,8 @@ const CHECK_ARMS = [
   ["C-42.4", () => checkCalibration(cal({ probe_id: "" }))],
   ["C-42.5", () => checkSignal({ engine: "" })],
   ["C-42.6", () => checkSignal({ engine: "pdfjs", source: "a blog", cap: "A" })],
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): D-668's C-42.8 (calibration R5). */
+  ["C-42.8", () => checkCalibration(cal({ measured_by: "" }))],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
@@ -249,6 +263,8 @@ for (const [number, drive] of CHECK_ARMS) {
 /* C-42.7 is the STORE's and is driven through the op in part 2 — named here so
    the reach arm below can see that every row was driven somewhere. */
 let sawRegradeRefusal = null;
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): so are C-42.9 and C-42.10 (D-668, calibration R8). */
+const sawSubjectRefusal = {};
 
 /* ===================================================================== *
  * PART 2 — THROUGH THE OPS. Everything above is a pure function; nothing above
@@ -331,8 +347,16 @@ t("a never-probed subject is due IMMEDIATELY — the Tier-2 pdf.js case exactly"
 t("the surface reports the DECLARED cadence, the same constant the consumer uses",
   reg.cadence_ms, CALIBRATION_CADENCE_MS);
 const regBad = await post("op=calibrationsubject&token=mem-cal", { engine: "pdfjs" });
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): calibration R8 (D-668): registering a subject measures
+   nothing, so its refusals name a subject's conditions, C-42.10 `CAL_SUBJECT_NO_PROBE` (was C-42.4's
+   measurement code) and C-42.9 `CAL_SUBJECT_UNNAMED` (was C-42.2's). */
+sawSubjectRefusal.CAL_SUBJECT_NO_PROBE = regBad;
 t("a subject with no PROBE named is refused — a promise to measure by unstated means",
-  regBad.reason, "CAL_NO_PROBE");
+  [regBad.reason, regBad.check], ["CAL_SUBJECT_NO_PROBE", "C-42.10"]);
+const regUnnamed = await post("op=calibrationsubject&token=mem-cal", { probe_id: "cpdf13-fidelity-v1" });
+sawSubjectRefusal.CAL_SUBJECT_UNNAMED = regUnnamed;
+t("a subject naming no ENGINE is refused — registering says what will be checked",
+  [regUnnamed.reason, regUnnamed.check], ["CAL_SUBJECT_UNNAMED", "C-42.9"]);
 
 console.log("\n--- THROUGH THE OP: A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM ---");
 const noProbe = await post("op=calibrate&token=mem-cal",
@@ -394,11 +418,17 @@ const boundChain = [
 ];
 t("the chain NAMES its calibration, once, deduped across the steps that share it",
   calibrationsOf(boundChain), [first.calibration_id]);
-const idxSrc = readFileSync(SRC, "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the acquire path's OCR tier left index.mjs for
+   src/extraction/pipeline.mjs (T5-2), and the live-calibration join it asks is calibration's R10
+   `liveCalibration` (src/calibration/index.mjs `#live`: `replaced_by IS NULL`, the column D-221 renamed),
+   which also fails open to null. The two anchors are read where the code now lives. */
+const idxSrc = readFileSync(fileURLToPath(new URL("../src/extraction/pipeline.mjs", import.meta.url)), "utf8");
+const calSrc = readFileSync(fileURLToPath(new URL("../src/calibration/index.mjs", import.meta.url)), "utf8");
 t("STRUCTURAL: the acquire path joins the member's engine+version to a LIVE calibration",
-  /superseded_by == null/.test(idxSrc) && /calibration: calRef/.test(idxSrc), true);
+  /replaced_by IS NULL/.test(calSrc) && /r\.version !== version\) return null/.test(calSrc)
+  && /calibration: calRef/.test(idxSrc), true);
 t("STRUCTURAL: and it fails open to NULL rather than to the nearest available number",
-  /let calRef = null;/.test(idxSrc), true);
+  /let calRef = null;/.test(idxSrc) && /catch \{ calRef = null; \}/.test(idxSrc), true);
 
 console.log("\n--- CLAUSE (d): A WORSE CALIBRATION RAISES AN OBLIGATION AND RE-GRADES NOTHING ---");
 /* THE TRANSCRIPTIONS ARE PLANTED THROUGH `op=promote`, which is the REAL path a
@@ -480,11 +510,16 @@ t("C-42.7 is carried by the refusal the store produced",
   [asked.check, typeof asked.translation === "string" && asked.translation.length > 40],
   ["C-42.7", true]);
 /* THE REACH ARM, now that every row has been driven somewhere. */
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): the store-driven rows are C-42.7, C-42.9 and C-42.10 (D-668);
+   each is asserted below to have been driven through its op, never exempted. */
 t("REACH: every row in C-42 was DRIVEN by an arm above, none skipped",
   CODES_USED.filter((c) => !CHECK_ARMS.some(([n]) => n === CALIBRATION_CHECKS[c].check)
-                        && c !== "CAL_CANNOT_REGRADE"), []);
+                        && !STORE_DRIVEN.includes(c)), []);
 t("and CAL_CANNOT_REGRADE was driven through the OP, not asserted at the store",
   sawRegradeRefusal.reason, "CAL_CANNOT_REGRADE");
+t("and the two subject codes were driven through op=calibrationsubject, not asserted at the store",
+  [sawSubjectRefusal.CAL_SUBJECT_UNNAMED?.reason, sawSubjectRefusal.CAL_SUBJECT_NO_PROBE?.reason],
+  ["CAL_SUBJECT_UNNAMED", "CAL_SUBJECT_NO_PROBE"]);
 
 console.log("\n--- CLAUSE (e): AN ANNOUNCEMENT WATCH, THROUGH THE OP ---");
 const beforeSig = await api("op=calibrations&token=mem-cal&engine=pdfjs");

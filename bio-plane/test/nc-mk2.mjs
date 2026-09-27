@@ -25,6 +25,12 @@
  *
  * The pristine copies live in `$MK2_PEN` (default /tmp/mk2-pen-<checkout hash>), a
  * directory only this item uses — not the shared scratchpad, and not the tree.
+ *
+ * RE-RUN 2026-09-27 (T5-12, legacy-tests; worktree bio-ctl1): no arm's anchor moved in T5. baseline 51/0 · cap 47/4 ·
+ * capwrite 48/3 · capread 50/1 · attest 30/15 · liar 50/1 · liarfull 22/23 · liarwrite 49/2 · notauthored 50/1 · unfrozen
+ * 48/3 (after its label needle was RE-ANCHORED to D-442's wording; 1/2 before) · overstrict 31/14 · overconn 50/1, AS
+ * DECLARED; pair2 RETIRED (51/0, D-442's format door); preitem NOT AS DECLARED (its probe's fixture no longer lands on
+ * today's plane: see the note at `preitem`). Every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync, existsSync } from "node:fs";
 import { spawnSync, execFileSync } from "node:child_process";
@@ -177,7 +183,9 @@ const ARMS = {
   unfrozen: {
     files: [STORE],
     why: "the case freezes only capture and connection — a case resting on a member's word says nothing about it",
-    mustFail: ["THE CASE RESTING ON TESTIMONY", "the member's frozen bytes carry the same three rows"],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the second label moved with D-442 (the frozen rows are stated in
+       the case document, once); the needle is the label as the suite holds it. Measured 48/3, 1/2 before the fix. */
+    mustFail: ["THE CASE RESTING ON TESTIMONY", "the case document's frozen rows for that member are the same three"],
     mustPass: "OVER-STRICTNESS: an ORDINARY case freezes exactly the two rows",
     patch: () => arm([[STORE, "      axis !== \"testimony\" || (pair[axis] && pair[axis].state !== \"unrated\"));",
                               "      axis !== \"testimony\");"]]),
@@ -188,14 +196,20 @@ const ARMS = {
      that refusal still fires. What the old predicate loses is every member with
      MORE than two rows — the three-row member, and the malformed four-row ones
      the ceremony exists to refuse. Declared now as that. */
-  pair2: {
-    files: [CHECKS],
-    why: "the case-member predicate back to `length === 2` — a member with more than two frozen rows is not a case member, and the ceremony never runs over it",
-    mustFail: ["IS a case member to the catalogue", "a row for an axis this record does not measure is refused",
-               "a second testimony row is refused"],
-    mustPass: "the frozen rows of an ordinary case",
-    patch: () => arm([[CHECKS, "  return Array.isArray(s) && s.length >= 2\n", "  return Array.isArray(s) && s.length === 2\n"]]),
-  },
+  /* RETIRED 2026-09-27 (T5-12, legacy-tests), MEASURED 51/0 (0/3 declared): the arm reverted `isCaseMemberBytes` to
+     `length === 2` to silence the ceremony over a three-row member. Since D-442 the frozen rows are stated in the CASE
+     DOCUMENT and the ceremony's door is the document's FORMAT (`caseDocumentStatesMemberBlocks`, rule 12; the suite
+     says so where the arm's labels are), so a row count no longer decides who enters it and the reverted predicate
+     gates nothing this suite drives. Its subject was replaced by design; the three labels it named are still asserted
+     by the suite. The arm, as it was:
+       pair2: {
+         files: [CHECKS],
+         why: "the case-member predicate back to `length === 2` — a member with more than two frozen rows is not a case member, and the ceremony never runs over it",
+         mustFail: ["IS a case member to the catalogue", "a row for an axis this record does not measure is refused",
+                    "a second testimony row is refused"],
+         mustPass: "the frozen rows of an ordinary case",
+         patch: () => arm([[CHECKS, "  return Array.isArray(s) && s.length >= 2\n", "  return Array.isArray(s) && s.length === 2\n"]]),
+       } */
   /* THE OVER-STRICTNESS DIRECTION — a fence tighter than its rule.
      FIRST RUN, 2026-09-18, NOT AS DECLARED AND THE ARM WAS THE DEFECT: the first
      draft applied the READ cap to the capture axis too, and stayed green (51/0),
@@ -221,6 +235,13 @@ const ARMS = {
 };
 
 /* `preitem` — THE MEASUREMENT against the pre-item source. */
+/* MEASURED 2026-09-27 (T5-12, legacy-tests), NOT AS DECLARED, and not owed to an anchor: with the archive's pathspec
+   repaired the probe runs over both trees, and on TODAY's plane its ordinary fixture does not land — `docs` [false,
+   false], three of the six inquiries not promoted (12,936 B before vs 4,578 B after) — so the comparison is over an
+   empty corpus and proves nothing, as the harness says. The probe's fixture (`mk2-pristine-probe.mjs`) predates the
+   rules T3–T5 and K121 put on a promoted document; it needs the fixtures the old battery was given (register-doc.mjs)
+   AND a base that is not 27ad8b4f, which every intended change since 2026-09-18 separates from this tree. Reported,
+   not repaired here. */
 function preitem() {
   console.log(`\n===== ARM preitem (a MEASUREMENT, not a break) =====`);
   console.log(`  WHY        an ordinary basis must answer BYTE-IDENTICALLY to the source MK-2 was built on (${BASE}), testimony keys removed`);
@@ -230,7 +251,11 @@ function preitem() {
   const root = join(SAFE, `pristine-${BASE}`);
   if (!existsSync(join(root, "bio-plane", "src", "index.mjs"))) {
     mkdirSync(root, { recursive: true });
-    const tar = execFileSync("git", ["-C", REPO, "archive", BASE, "bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions"],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `jurisdictions` did not exist at BASE, so the archive's pathspec
+       failed and the arm threw; only the paths BASE holds are taken. */
+    const paths = ["bio-plane/src", "bio-plane/checks", "docprofile", "jurisdictions"]
+      .filter((p) => spawnSync("git", ["-C", REPO, "cat-file", "-e", `${BASE}:${p}`]).status === 0);
+    const tar = execFileSync("git", ["-C", REPO, "archive", BASE, ...paths],
       { maxBuffer: 256 * 1024 * 1024 });
     execFileSync("tar", ["-x", "-C", root], { input: tar });
   }

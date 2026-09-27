@@ -65,8 +65,10 @@ import meetingAgenda from "../../docprofile/doctypes/meeting-agenda.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns,
          readingPositionInExtent, READING_POSITION_KINDS,
          READING_POSITION_UNPRODUCED } from "../src/textchain.mjs";
-import { contentIdFor, checkConnectionPairCovers,
-         CONNECTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
+import { contentIdFor, CONNECTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the pair predicate moved out of the catalogue into connections'
+   `src/connections/pair.mjs` (CONNECTIONS #1 Q1, K145); the C-49 rows stay in the catalogue. */
+import { checkConnectionPairCovers } from "../src/connections/pair.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({

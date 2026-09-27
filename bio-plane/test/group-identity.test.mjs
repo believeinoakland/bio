@@ -30,7 +30,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -225,7 +225,12 @@ try {
   /* The block's bounds are ASCII anchors: this file is read as latin1 (store.mjs holds a stray byte), so a banner
      with an em dash never matches — which the first run of this arm measured, floored at blockAt. */
   const blockAt = STORE_SRC.indexOf("static GROUP_DISPLAY_NAME_MAX");
-  const blockEnd = STORE_SRC.indexOf("/* REC-175: THE ONE COMPUTATION", blockAt);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the block's end anchor, the REC-175 banner that followed it, left
+     store.mjs with `#fileDigestOf` (now record-core's, src/record-core/index.mjs). The block's own last member,
+     `static GROUP_DOMAIN_CHECKS_MAX` (declared below its method, IC-246), is the end now: the same span, the four
+     readers the census found before (two SELECTs, two INSERTs) and no new one. And since T5 moved code into
+     src/<module>/, the census also walks every module file: a reader there would be outside the block too. */
+  const blockEnd = STORE_SRC.indexOf("\n", STORE_SRC.indexOf("static GROUP_DOMAIN_CHECKS_MAX", blockAt));
   const lines = STORE_SRC.split("\n");
   let off = 0; const inside = [], outside = [];
   for (const [i, l] of lines.entries()) {
@@ -233,6 +238,11 @@ try {
       (off > blockAt && off < blockEnd ? inside : outside).push(i + 1);
     off += l.length + 1;
   }
+  for (const d of readdirSync(SRC_DIR, { withFileTypes: true }).filter((e) => e.isDirectory()))
+    for (const f of readdirSync(join(SRC_DIR, d.name)).filter((f) => f.endsWith(".mjs")))
+      readFileSync(join(SRC_DIR, d.name, f), "latin1").split("\n").forEach((l, i) => {
+        if (/group_identity_history/.test(l) && !/^\s*(\*|\/\*|--)/.test(l)) outside.push(`${d.name}/${f}:${i + 1}`);
+      });
   console.log(`  census: ${inside.length} statement line(s) inside the block, ${outside.length} outside`);
   t("B2: every statement in store.mjs that reads the identity history sits inside the REC-164 block, so no stamp, "
     + "composer or signer reads the display name (a census of the one table that holds it)",

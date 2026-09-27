@@ -11,7 +11,10 @@
        REC-178 a writer could not send "none"; the override is what makes the writers' "or none" true. Then by name
        "the stored bytes of every file is its UTF-8 length" and the census arms. Section 1 and the over-strictness
        arms held, as declared.
-   Restored: suite 23/23 green. */
+   Restored: suite 23/23 green.
+   RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN: the subject is `src/promotion/index.mjs` (promote moved there
+   in T3; the measure is record-core's `inlineBytesOf`, REPORT 5). baseline 23/0 · textlength 16/7 (the same seven) ·
+   keepgiven 17/6, as declared (the undeclared creation failure of 2026-09-23 no longer occurs); every restore IDENTICAL. */
 /* REC-178 — A STORED SIZE IS OF THE STORED BYTES (BIO_State_Rules_Consistency_v1_5.md §8, the Mechanical
  * Verification Law; REC-175's rule one field over, at the same `promote` site).
  *

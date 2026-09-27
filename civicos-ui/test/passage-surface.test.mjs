@@ -539,8 +539,13 @@ ok("and the surface RENDERS that distinction on each panel, so a member is never
 /* RENDERED ON A HIT TOO, AND THIS IS THE HALF A PRESENCE CHECK WOULD MISS. */
 ok("the absence statement renders on a HIT as well — the line that says how much of the scope was never read",
   /f-pass-levels/.test(P_HIT) && /f-pass-axis/.test(P_HIT));
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R14, K102): the passage arm's sentence moved to retrieval
+   (`src/retrieval/levels.mjs`) and leads with the coverage; the gap it counts now includes captures whose reading the
+   log cannot rule in or out, so it says "have not been read at passage grain as far as this record can say" (the
+   retrieval record: "R14's wording"), and the full-coverage branch says every capture "can be searched at passage
+   grain". Same claim — the unread count is carried on a hit — in the plane's new words. */
 ok("...and on a hit the record's own sentence carries the unread count rather than only the matches",
-  /NOT been read at passage grain|every capture of which has been read at passage grain/.test(A_HIT.env.says),
+  /\d+ capture\(s\) in that scope have not been read at passage grain as far as this record can say|every capture of which can be searched at passage grain/.test(A_HIT.env.says),
   A_HIT.env.says);
 
 /* ALL FOUR LEVELS, ALWAYS, EACH WITH THE PLANE'S OWN SENTENCE. */

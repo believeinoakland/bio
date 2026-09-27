@@ -220,9 +220,16 @@ console.log("\n--- S · one disjunct, in the one over-fetch the three arms share
      once) and the page's disjunct now reads `gated.length > cap || full`. The old count read 0 over a disjunct that
      is present, i.e. it pinned a spelling rather than the rule; the rule — ONE full-fetch test, the page's claim
      OR-ing it, three arms taking their page from the helper — is what is counted now. */
-  const fullTest = (STORE_SRC.match(/full:\s*raw\.length\s*===/g) || []).length;
-  const disjunct = (STORE_SRC.match(/truncated:\s*gated\.length\s*>\s*cap\s*\|\|\s*full\b/g) || []).length;
-  const callers = (STORE_SRC.match(/this\.#frontierPage\("(document|content|meaning)"/g) || []).map((s) => s.match(/"(\w+)"/)[1]).sort();
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R37): the three bundle arms and the shared over-fetch
+     moved to `src/retrieval/frontier.mjs` as `#document`, `#content`, `#meaning`, `#page` (the page's claim) and
+     `#fetch` (the one full-fetch test). `#page` no longer takes the level (each arm hands it its own statement), so a
+     caller is an arm whose body takes its `latest` page from `this.#page(`. The same rule is counted. */
+  const FRONTIER_SRC = readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8");
+  const armBody = (head) => { const i = FRONTIER_SRC.indexOf(`  #${head}(cap, viewer) {`), j = FRONTIER_SRC.indexOf("\n  }\n", i);
+                              return i < 0 || j < 0 ? "" : FRONTIER_SRC.slice(i, j); };
+  const fullTest = (FRONTIER_SRC.match(/full:\s*raw\.length\s*===/g) || []).length;
+  const disjunct = (FRONTIER_SRC.match(/truncated:\s*gated\.length\s*>\s*cap\s*\|\|\s*full\b/g) || []).length;
+  const callers = ["document", "content", "meaning"].filter((l) => /const latest = this\.#page\(/.test(armBody(l))).sort();
   t("S1: THE DISJUNCT IS WRITTEN ONCE, in `#frontierPage`, and the three bundle arms each take their `looked` page "
   + "from it — a per-arm copy is the mirror-and-drift class this row was raised to avoid",
     [fullTest, disjunct, callers], [1, 1, ["content", "document", "meaning"]]);

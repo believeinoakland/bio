@@ -239,8 +239,11 @@ arm("(5) THE PURGE, BY CONSEQUENCE (D-113). Delete the per-bundle arm's `lead_in
   + "that. A member-facing FINDING then keeps standing whose home is a question nobody can read. "
   + "DECLARED: this suite's purge arm MUST fail; hygiene MUST STAY GREEN, and hygiene staying green "
   + "is the POINT of the arm rather than a side effect.",
-  [["store", `        this.sql.exec(\`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?\`, bundleId);`,
-             `        /* armed by leadslug.control.mjs arm 5 */`]],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): record-core's purge (R22) runs every declared table's purge in one
+     transaction and the store keeps this column's clear beside it as one guarded line (`if (bundleId) …`); the old
+     anchor, the clear on its own line, matched nothing. The same clause is removed. */
+  [["store", `      if (bundleId) this.sql.exec(\`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?\`, bundleId);`,
+             `      /* armed by leadslug.control.mjs arm 5 */`]],
   /* CORRECTED AFTER THIS ARM'S FIRST RUN, AND THE CORRECTION IS THE FINDING.
      It was declared as "the member's feed still carries the lead", and it came
      back GREEN: `#bundleGate` compiles an EXISTS over `bundles` for an

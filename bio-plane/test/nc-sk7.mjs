@@ -23,6 +23,9 @@
  *     guarded. `git checkout --` is never used: it restores to HEAD, not to
  *     what was there, and has twice discarded a session's own uncommitted work.
  *   - A SURPRISING GREEN IS A FINDING ABOUT THE ARM and is printed, not smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): label arms content; attest and finding the store's calls as they are. baseline 45/0 · attest 39/6 · label 41/4 ·
+ * finding 44/1 · overstrict 43/2 · uilabel 58/2 — every arm AS DECLARED, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -44,6 +47,11 @@ const SAFE = controlPen("sk7");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `attestText` and `#contentStanding` left `store.mjs` for content
+   (`src/content/index.mjs`, T5 layer 5; the standing is `#standing`, labelled by the module's `mintLabel`, R16). The
+   store keeps the `attesttext` dispatch (now also stamping `viewer`, K134) and `earnedBasisRegistry`, which asks
+   content's `standings`. Arm (c) arms content; (b) and (d) stay on the store, re-spelled to the calls as they are. */
+const CONTENT = join(PLANE, "src/content/index.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 /* The SURFACE. Outside `bio-plane/` — the first file this harness arms that is,
@@ -124,9 +132,11 @@ const ARMS = {
        the attestor read from the request BODY — which is what the world
        actually looked like, and the four machine arms then fail because the
        attestations LAND. */
+    /* RE-ANCHORED 2026-09-27 (T5-12): the pre-item code at the route as it is now — the attestor read from the BODY;
+       the viewer stamp (K134) is kept, since this arm is about the attestor and nothing else. */
     patch: () => arm(STORE,
-      `        attesttext: () => this.attestText({ ...(body || {}),\n                                            member: url.searchParams.get("attestor") }),`,
-      `        attesttext: () => this.attestText(body || {}),`),
+      `        attesttext: () => contentOf(this.ctx).attestText({ ...(body || {}), member: url.searchParams.get("attestor"),\n`,
+      `        attesttext: () => contentOf(this.ctx).attestText({ ...(body || {}),\n`),
   },
 
   /* ARM (c). THE LABEL, DROPPED FROM ONE SURFACE ONLY. `#contentStanding` feeds
@@ -136,7 +146,7 @@ const ARMS = {
      and what must fail is the TOTALITY arm, NAMING the surface. An arm that
      dropped the label everywhere would not test that. */
   label: {
-    files: [STORE],
+    files: [CONTENT],
     why: "delete the `mint:` line from `#contentStanding`, dropping the label from op=content and "
        + "from earned.content while op=contentmint and op=promote stay labelled — the row's own "
        + "declared control, a label dropped from ONE surface",
@@ -158,9 +168,9 @@ const ARMS = {
             + "location and not a count; every fence and finding assertion stays green; and the "
             + "field-set pin STAYS GREEN because it compares REC-83's own fields with the label "
             + "block removed, so it measures a REWRITE and not an absence",
-    patch: () => arm(STORE,
-      `      mint: Store.#mintLabel(r.minted_by),\n      transcription, connection,`,
-      `      transcription, connection,`),
+    patch: () => arm(CONTENT,
+      `      mint: mintLabel(r.minted_by),\n      transcription,\n`,
+      `      transcription,\n`),
   },
 
   /* ARM (d). 5.7's THIRD CLAUSE, and the arm exists because the clause is held
@@ -178,8 +188,8 @@ const ARMS = {
     mustPass: "everything else — the row is still minted, still labelled, still unattestable; this "
             + "arm moves ONE property, which is what makes the failure attributable",
     patch: () => arm(STORE,
-      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = this.#contentEarned(contentIds, out.earned.connection);`,
-      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = this.#contentEarned(\n        this.#rows(\`SELECT content_id FROM content\`).map((r) => r.content_id),\n        out.earned.connection);`),
+      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = contentOf(this.ctx).standings(contentIds, out.earned.connection);`,
+      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = contentOf(this.ctx).standings(\n        this.#rows(\`SELECT content_id FROM content\`).map((r) => r.content_id),\n        out.earned.connection);`),
   },
 
   /* ARM (e). THE OVER-STRICTNESS DIRECTION, and its HELD-OPEN half is the whole

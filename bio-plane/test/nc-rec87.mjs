@@ -18,6 +18,10 @@
  *
  * The pristine copies live in `$REC87_PEN` (default /tmp/conduct4-rec87/pen), a
  * directory only this item uses — not the shared scratchpad, and not the tree.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): every STORE arm arms content. baseline 55/0 · selfact 53/2 · selfboth 48/7 · portion 53/2 · machine 53/2 · routing
+ * 48/7 · chainless 53/2 (after its re-anchor to the grammar call; on the `ctx` line it measured 44/11) · swallow 53/2 ·
+ * stale 54/1 · pin 54/1 · overstrict 48/7 — every arm AS DECLARED, the recorded tallies, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -30,7 +34,13 @@ const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
 const SAFE = process.env.REC87_PEN || "/tmp/conduct4-rec87/pen";
 mkdirSync(SAFE, { recursive: true });
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): transcription, its attestation, the typing's read-side exclusion,
+   the routing and the stale pass left `store.mjs` for content (`src/content/index.mjs`, R21, R22, R25; T5 layer 5).
+   Every STORE arm arms there; the name STORE is kept. Anchors re-spelled where the move changed the text: the act's
+   refusal is `this.#transcribeRefusal(`, the read-side filter heads `transcriptionCovering`, the typing's grammar
+   context is one line, and the stale pass states its predicate ONCE (`where`, used by its count and its UPDATE), so
+   `stale` expects one match where the store had two. */
+const STORE = join(PLANE, "src/content/index.mjs");
 const CHAIN = join(PLANE, "src/textchain.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
@@ -58,10 +68,10 @@ function arm(patches) {
   return { armed: true, matches: patches.map((p) => p[3] ?? 1).join("+") };
 }
 
-const SELF_ACT = [STORE, "    if (who === t.transcriber)\n      return refusal(\"TRANSCRIPTION_SELF_ATTEST\",",
-                         "    if (false)\n      return refusal(\"TRANSCRIPTION_SELF_ATTEST\","];
-const SELF_READ = [STORE, "      .filter((a) => a.attestor !== tx.transcriber)", "      .filter((a) => true)"];
-const SELF_READ2 = [STORE, "                          && !(tx && a.attestor === tx.transcriber));", "                          );"];
+const SELF_ACT = [STORE, "    if (who === t.transcriber)\n      return this.#transcribeRefusal(\"TRANSCRIPTION_SELF_ATTEST\",",
+                         "    if (false)\n      return this.#transcribeRefusal(\"TRANSCRIPTION_SELF_ATTEST\","];
+const SELF_READ = [STORE, ".filter((a) => a.attestor !== tx.transcriber)", ".filter((a) => true)"];
+const SELF_READ2 = [STORE, " && !(tx && a.attestor === tx.transcriber));", ");"];
 
 const ARMS = {
   baseline: {
@@ -120,8 +130,10 @@ const ARMS = {
     why: "ask the extent grammar under the CAPTURE's chain instead of the typing's: a document no machine could read (no chain) cannot be transcribed at all — Bob's own case refused C-45.2",
     mustFail: ["THE ROUTING ARM, WHERE IT BITES"],
     mustPass: "every typing of a capture that HAS a chain",
-    patch: () => arm([[STORE, "      ? extent : null, ctx);\n    if (bad) return bad;\n    const kind = extent.kind;",
-                              "      ? extent : null, { ...ctx, chain: this.contentContextFor(sha).chain });\n    if (bad) return bad;\n    const kind = extent.kind;"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12): the grammar call alone is given the capture's chain (the typing's `ctx` also
+       feeds the mint, and the arm must not move what is minted: a first re-anchor on the `ctx` line did, 44/11). */
+    patch: () => arm([[STORE, "    const bad = checkContentExtent(isObj(extent) ? extent : null, ctx);",
+                              "    const bad = checkContentExtent(isObj(extent) ? extent : null, { ...ctx, chain: this.contentContextFor(sha).chain });"]]),
   },
   swallow: {
     files: [CHAIN],
@@ -138,7 +150,7 @@ const ARMS = {
     mustFail: ["the member's typing does NOT"],
     mustPass: "the machine row still goes stale",
     patch: () => arm([[STORE, "NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=?)",
-                              "NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=? AND 0)", 2]]),
+                              "NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=? AND 0)", 1]]),
   },
   pin: {
     files: [STORE],
@@ -154,8 +166,8 @@ const ARMS = {
     mustFail: ["op=transcriptionattest lands for a DIFFERENT member",
                "THE CEILING MOVES AS RULED"],
     mustPass: "\"REFUSED BY NAME: TRANSCRIPTION_SELF_ATTEST\" — the refusal the fence exists for still fires",
-    patch: () => arm([[STORE, "    if (who === t.transcriber)\n      return refusal(\"TRANSCRIPTION_SELF_ATTEST\",",
-                              "    if (who === t.transcriber || true)\n      return refusal(\"TRANSCRIPTION_SELF_ATTEST\","]]),
+    patch: () => arm([[STORE, "    if (who === t.transcriber)\n      return this.#transcribeRefusal(\"TRANSCRIPTION_SELF_ATTEST\",",
+                              "    if (who === t.transcriber || true)\n      return this.#transcribeRefusal(\"TRANSCRIPTION_SELF_ATTEST\","]]),
   },
 };
 

@@ -32,6 +32,12 @@
  * EQUAL the baseline's, while the sections that assert the column exists must
  * FAIL — the pre-item tree has no column, and a `preitem` run that stayed green
  * would mean the suite cannot tell the two trees apart.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): the arms break D-686's writer and content's migration; preitem RETIRED. baseline 110/0 + 43/0 and baseline2
+ * the same (digest A/A IDENTICAL) · firststep 106/4 + 39/4 · nowriter 104/6 + 38/5 · parseback 110/0 + 38/5 (now also
+ * behaviourally visible: the column is the unit's kind, not the chain's last step, so the parse disagrees on a mixed
+ * document) · nomigrate 110/0 + 30/13 · xinfo 110/0 + 38/5 (section 2b) — every arm AS DECLARED, every restore
+ * byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync, execFileSync } from "node:child_process";
@@ -60,8 +66,16 @@ const PRE_ITEM = "694f0a7fc53ca550624a308d01864a5ae18e0e28";
 const STORE = join(PLANE, "src/store.mjs");
 const QUERY = join(PLANE, "src/query.mjs");
 const SCHEMA = join(PLANE, "src/schema.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; content R14, R45; D-686, D-710): REC-104's GENERATED column is gone.
+   D-686 made `content.chain_kind` a PLAIN column written at mint by content (`src/content/index.mjs`, `unitChainKind`
+   asked of the unit's own target), and its migration is content's `migrateContent` (`src/content/schema.mjs`), which
+   rebuilds a REC-104 store and recomputes every row once. The arms that broke the generated column now break the
+   writer and the migration that replaced it; each keeps what it breaks, and each declaration names the labels as the
+   suites hold them now (content-chain-kind's section 3 by-construction arms were RETIRED with the column, T5-12). */
+const CONTENT = join(PLANE, "src/content/index.mjs");
+const CONTENT_SCHEMA_FILE = join(PLANE, "src/content/schema.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = 20000;
+const MIN_BYTES = 15000;   /* RE-ANCHORED 2026-09-27 (T5-12): content's schema file is ~18 KB */
 
 /* Each suite captured to a FILE-equivalent buffer, not a pipe — D-282. A MISSING
    tally is reported as -1 and never as 0: the suite did not reach its own FOOT. */
@@ -100,32 +114,38 @@ const ARMS = {
     patch: () => ({ armed: true, matches: 0 }),
   },
   firststep: {
-    files: [SCHEMA],
+    files: [CONTENT],
     why: "THE COLUMN MADE UNTRUE OF THE CHAIN IT DESCRIBES — the row's own arm. It is a generated "
        + "column, so it cannot be left behind by a writer; the only way to make it disagree with "
        + "`chain` is to make it describe something else. Here it reads the chain's FIRST step. "
        + "A query must then return a row whose chain no longer matches, and the suite must say so "
        + "BY NAME — the arm that proves the column is not merely faster but still TRUE",
+    /* RE-ANCHORED 2026-09-27 (T5-12): the column is written at mint, so the mint writes the chain's FIRST step. The
+       third declared failure ("the rows the store ALREADY HELD carry their last step") is not declared any more: the
+       held rows are recomputed by the migration through `unitChainKind` itself, which this arm leaves alone. */
     mustFail: ["`content:ocr` names the OCR'd document and not the text-layer one",
-               "`chain_last` agrees with the LAST STEP of the chain `op=content` reads, row for row",
-               "the rows the store ALREADY HELD carry their last step"],
+               "`chain_last` agrees with the LAST STEP of the chain `op=content` reads, row for row"],
     mustPass: "`content:layer` on the fixture — a one-step chain's first step IS its last, so an arm "
             + "that took that down too would be breaking something other than the column's meaning",
-    patch: () => arm(SCHEMA, `json_extract(chain, '$[#-1].step')) VIRTUAL`, `json_extract(chain, '$[0].step')) VIRTUAL`),
+    patch: () => arm(CONTENT, `        citedAs === "bytes" ? null : unitChainKind(chain, target));`,
+                              `        citedAs === "bytes" ? null : (Array.isArray(chain) && chain[0] ? chain[0].step : null));`),
   },
   nowriter: {
-    files: [SCHEMA],
+    files: [CONTENT],
     why: "A PLAIN COLUMN WITH NO WRITER — the implementation this item did NOT choose, and the stale "
        + "state it would reach the day a mint path forgot it. Every row reads NULL; the fixture's "
        + "chain filters must fail by name and the engine-guarantee section must fail, because a "
        + "plain column ACCEPTS the write a generated one refuses",
+    /* RE-ANCHORED 2026-09-27 (T5-12): D-686 chose the plain column, so this arm is now the stale state it names:
+       the writer gone from the mint (every minted row NULL). "an INSERT that NAMES chain_kind is refused by the engine
+       itself" is RETIRED from the declaration with the generated column (a plain column accepts that INSERT by
+       design; the suite's section 3 arm was retired with it). */
     mustFail: ["`content:ocr` names the OCR'd document and not the text-layer one",
-               "`content:layer` filters on the chain's LAST STEP",
-               "an INSERT that NAMES chain_kind is refused by the engine itself"],
+               "`content:layer` filters on the chain's LAST STEP"],
     mustPass: "`content:chain=undetermined` — it reads `chain IS NULL`, not the column, and must stay "
             + "green; that is what shows undetermined was kept on the question it always asked",
-    patch: () => arm(SCHEMA, `chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL`,
-                             `chain_kind     TEXT`),
+    patch: () => arm(CONTENT, `        citedAs === "bytes" ? null : unitChainKind(chain, target));`,
+                              `        null);`),
   },
   parseback: {
     files: [QUERY],
@@ -143,7 +163,7 @@ const ARMS = {
     patch: () => arm(QUERY, "+ `ELSE m.chain_kind END`,", "+ `ELSE json_extract(m.chain, '$[#-1].step') END`,"),
   },
   nomigrate: {
-    files: [STORE],
+    files: [CONTENT_SCHEMA_FILE],
     why: "THE MIGRATION DISABLED. A store created before this item keeps its old table; the schema's "
        + "CREATE INDEX on the column then fails inside blockConcurrencyWhile, which does not fail a "
        + "request politely — it bricks the Durable Object. The migration section must fail by name",
@@ -151,33 +171,47 @@ const ARMS = {
                "THROUGH THE OP: `content:ocr` names the legacy OCR'd document"],
     mustPass: "`content-arm.test.mjs` entire — a fresh store gets the column from CREATE TABLE and never "
             + "needs the migration, so an arm that took that suite down would be breaking the schema",
-    patch: () => arm(STORE, `if (have.length && !have.includes("chain_kind"))`, `if (false && have.length && !have.includes("chain_kind"))`),
+    /* RE-ANCHORED 2026-09-27 (T5-12): the migration is content's `migrateContent`; disabled whole for chain_kind. */
+    patch: () => arm(CONTENT_SCHEMA_FILE, `    if (!had || had.hidden) {`, `    if (false && (!had || had.hidden)) {`),
   },
   xinfo: {
-    files: [STORE],
+    files: [CONTENT_SCHEMA_FILE],
     why: "THE MIGRATION READS table_info INSTEAD OF table_xinfo — the spelling every other additive "
        + "migration in #migrate uses, and the wrong one here: a generated column is HIDDEN from "
        + "table_info, so the guard never sees the column it added and re-ALTERs on EVERY boot",
-    mustFail: ["a SECOND boot does not re-add it"],
-    mustPass: "the FIRST boot's assertions — the first migration succeeds either way, which is why this "
-            + "defect would ship green from any suite that booted once",
-    patch: () => arm(STORE, "PRAGMA table_xinfo(content)", "PRAGMA table_info(content)"),
+    /* RE-ANCHORED 2026-09-27 (T5-12): `migrateContent` reads `table_xinfo` to tell REC-104's hidden generated column
+       from D-686's plain one. Read through `table_info`, the generated column is invisible, the migration ALTERs a
+       duplicate column and the boot throws, so the store that bricks is a REC-104 store (section 2b), not a second
+       boot of a plain one (a plain column is visible to both, so "a SECOND boot does not re-add it" is not declared).
+       RE-DECLARED accordingly. */
+    mustFail: ["the reboot REPLACES the generated column with a plain one"],
+    mustPass: "section 2's pre-item store (no column at all: both PRAGMAs agree), and every fresh store",
+    patch: () => arm(CONTENT_SCHEMA_FILE, "  const info = [...sql.exec(`PRAGMA table_xinfo(content)`)];",
+                                          "  const info = [...sql.exec(`PRAGMA table_info(content)`)];"),
   },
-  preitem: {
-    files: [QUERY, SCHEMA, STORE],
-    why: "OVER-STRICTNESS: the three plane sources exactly as they stood at the commit this item was "
-       + "built on. The `content-arm.test.mjs` §11 digest must EQUAL the baseline's — the column "
-       + "changes how the question is answered and never which rows answer it",
-    mustFail: ["the `chain` sub-field reads the COLUMN"],
-    mustPass: "the section-11 answer digest, byte-identical to `baseline`'s",
-    digestMustMatch: true,
-    patch: () => {
-      for (const f of [QUERY, SCHEMA, STORE])
-        writeFileSync(f, execFileSync("git", ["show", `${PRE_ITEM}:bio-plane/src/${f.split("/").pop()}`],
-          { cwd: REPO, maxBuffer: 64 * 1024 * 1024 }));
-      return { armed: true, matches: 3 };
-    },
-  },
+  /* RETIRED 2026-09-27 (T5-12, legacy-tests): `preitem` swapped `query.mjs`, `schema.mjs` and `store.mjs` for their
+     text at ${PRE_ITEM} (the commit REC-104 was built on) and ran the same suites, the section-11 digest to match the
+     baseline's. After T5 those three files are no longer the plane's content arm: content's table, mint, reads and
+     migration are `src/content/`, record-core owns the store's boot, and the control plane imports names the pre-item
+     files do not export, so the swap cannot build a plane at all and would measure a crash, not an answer. Its subject
+     (a whole-tree comparison against the pre-item plane) has no counterpart in a modular tree. The digest itself stays
+     pinned: `content-arm.test.mjs` §11 prints it and `baseline2` holds it A/A. The arm, as it was:
+       preitem: {
+         files: [QUERY, SCHEMA, STORE],
+         why: "OVER-STRICTNESS: the three plane sources exactly as they stood at the commit this item was "
+            + "built on. The `content-arm.test.mjs` §11 digest must EQUAL the baseline's — the column "
+            + "changes how the question is answered and never which rows answer it",
+         mustFail: ["the `chain` sub-field reads the COLUMN"],
+         mustPass: "the section-11 answer digest, byte-identical to `baseline`'s",
+         digestMustMatch: true,
+         patch: () => {
+           for (const f of [QUERY, SCHEMA, STORE])
+             writeFileSync(f, execFileSync("git", ["show", `${PRE_ITEM}:bio-plane/src/${f.split("/").pop()}`],
+               { cwd: REPO, maxBuffer: 64 * 1024 * 1024 }));
+           return { armed: true, matches: 3 };
+         },
+       }, */
+
 };
 
 const want = process.argv[2];

@@ -78,6 +78,11 @@ import { compile, MEANING, meaningVocabulary, GATE_MARK,
    error and not a review finding. `nc-rec94.mjs`'s `spelling` arm enforces it
    across the tree, and this file is deliberately inside its reach. */
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `capture_text`'s DDL is extraction's (`EXTRACTION_SCHEMA`, its
+   `migrate()` creating the FTS table), and the gate is membership's `viewerPredicate`, which query.mjs re-exports
+   (K75, N37); S15, S18, S71 and S911 read them there. */
+import { EXTRACTION_SCHEMA } from "../src/extraction/schema.mjs";
+import { viewerPredicate } from "../src/query.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const IDX = SRC("index.mjs");
@@ -214,7 +219,8 @@ section("S1", "the arm on the registry, and the shape section 4.2 specifies");
   t("the identity is section 4.2's, and it IS `capture_text`'s PRIMARY KEY",
     MEANING.passage.identity, ["capture_sha", "extent_kind", "extent"]);
   t("...and that is the PRIMARY KEY the schema actually declares",
-    /PRIMARY KEY \(capture_sha, extent_kind, extent\)/.test(SCHEMA_SRC), true);
+    /* RE-ANCHORED 2026-09-27 (T5-12): the table's DDL is in extraction's schema text. */
+    /CREATE TABLE IF NOT EXISTS capture_text \([^;]*?PRIMARY KEY \(capture_sha, extent_kind, extent\)/.test(EXTRACTION_SCHEMA), true);
   t("it names NO bundle-reference column, for `content:`'s reason: `bundle_id` is the owner",
     MEANING.passage.refs, []);
   t("the FTS side is DECLARED on the descriptor rather than known by the row builder",
@@ -223,8 +229,9 @@ section("S1", "the arm on the registry, and the shape section 4.2 specifies");
      `-1` would be a claim about a table with more than one. Driven off the DDL
      in `store.mjs`, not off this file's belief about it. */
   t("...and `capture_text_fts` really does index exactly one column, so column 0 is `text`",
+    /* RE-ANCHORED 2026-09-27 (T5-12): the FTS DDL is written by extraction's `migrate()`. */
     /capture_text_fts USING fts5\(\s*\n?\s*text, content='capture_text'/.test(
-      readFileSync(SRC("store.mjs"), "utf8")), true);
+      readFileSync(SRC("extraction/index.mjs"), "utf8")), true);
   t("no bare word of the passage arm is claimed by two sub-fields",
     meaningVocabulary().passage.ambiguous, []);
   /* §4.2 gives this arm ONE question. The five row-shaped questions are
@@ -547,7 +554,10 @@ section("S7", "REC-36: the fence is LIVE, and what it cannot be staged against i
 {
   /* THE MEASUREMENT REC-90 MADE ONE CONSTRUCT OVER, RE-TAKEN HERE RATHER THAN
      INHERITED — a blocker is a claim, and this one is re-driven on this tree. */
-  const participantOnly = /b\.object_type <> 'project'/.test(QUERY_SRC);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N46/N37, K75): the gate is minted only in membership's
+     `viewerPredicate`, which query.mjs re-exports; the measurement is taken of the clause that predicate compiles for a
+     participant (the interface, not a file's text). */
+  const participantOnly = /b\.object_type <> 'project'/.test(viewerPredicate("member:MEM-1").sql);
   console.log(`  MEASURED: viewerPredicate's participant clause fences project bundles only: ${participantOnly}`);
   t("the participant clause fences `project` bundles and nothing else — so no INFORMATION "
     + "bundle's passages can be withheld by it, and an assertion that one was would pass over an empty set",
@@ -658,7 +668,10 @@ section("S9", "over-strictness: six correct spellings that MUST still work");
     + "so the index would still have no reader — and this assertion is the tripwire if that changes",
     chainPlan.statements.meaning({ mode: "count" }).sql.includes("chain_kind ="), false);
   t("...and the schema still declares exactly ONE index on `capture_text`, by bundle",
-    (SCHEMA_SRC.match(/CREATE INDEX IF NOT EXISTS capture_text_\w+/g) || []).length, 1);
+    /* RE-ANCHORED 2026-09-27 (T5-12): asked of extraction's schema text, and of the table itself (`ON capture_text(`),
+       since that text also holds the indexes of `capture_text_skipped` and `capture_text_state`, which the old prefix
+       would count. */
+    (EXTRACTION_SCHEMA.match(/CREATE INDEX IF NOT EXISTS \w+ ON capture_text\(/g) || []).length, 1);
 }
 
 /* ==================================================================== 10

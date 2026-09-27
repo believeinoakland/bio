@@ -117,6 +117,7 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations re-inlined */
+import { reinlineLayer5 } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
@@ -149,7 +150,11 @@ const t = (label, got, want) => {
    The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined too, and capture's routes (the
    dispatch map's `...captureOps(...)` spread) read as entries of the map (`reinlineLayer3(…, { ops: true })`,
    `t4-extracted.mjs`, which states each substitution); every figure and anchor below is unchanged. */
-const SRC_STORE = reinlineLayer3(inlinedStore(), { ops: true }).text;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; layers 4 and 5 of T5): nine more modules left the store behind
+   one-line delegations and spreads of their routes (`...entitiesOps(...)`, `...retrievalRoutes(...)`), and the walk
+   printed 28 against 47. The corpus is T4's with those delegations and routes re-inlined too (`reinlineLayer5`,
+   `t5-extracted.mjs`, which states each substitution). */
+const SRC_STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -225,6 +230,17 @@ const cappedMethods = (code) => {
        method. The detector is widened; neither source is reworded to suit it,
        which is REC-57's own rule for this walk. */
     if (/\bplan\.(?:[a-z][\w$]*\.)?limit\b/.test(body)) why.push("compiler-cap");
+    /* A SIXTH CAP SHAPE, added 2026-09-27 by legacy-tests (T5-12), PL-9's rule again: widen the detector, never
+       reword the source. T5's extracted modules each hold their clamp in ONE private helper (`#cap(limit)` in
+       calibration, `#clamp(limit)` in entities: one rule, one place), so a method that pages with `LIMIT ?` and
+       hands its `limit` to that helper carries its bound where the four in-method shapes cannot see it; and
+       `idMatch` publishes its named page bound (`limit: IDMATCH_ADDRESS_LIMIT`) while a helper reads at cap + 1.
+       Both are the property this walk rosters. The published form takes a `_LIMIT` name only: a `limit: X_MAX` in
+       an answer is a refusal's size bound (`cite`'s INLINE_MAX, `biasDebtResolve`'s BIAS_DEBT_REASON_MAX), measured
+       admitting them and excluded. It admits nothing the store wrote before T5 (the roster diffed by name against
+       the T5 opening, at the pin below). */
+    if ((/\bthis\.#[A-Za-z_$][\w$]*\(\s*limit\s*[,)]/.test(body) && /\bLIMIT\s+\?/.test(body))
+        || /\blimit:\s*[A-Z][A-Z0-9_]*_LIMIT\b/.test(body)) why.push("helper-cap");
     if (why.length) out.set(name, why);
   }
   return out;
@@ -250,8 +266,11 @@ for (const [op, meth] of [...OPS].sort()) console.log(`    op=${op.padEnd(20)} -
 
 /* GUARDS. A regex that silently yielded nothing makes every assertion below
    vacuous, which is the failure the whole sweep exists to prevent. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the old anchor `static SEARCH_ORPHAN_MAX = 100;` left the store with
+   retrieval (T5-10), where it is a module constant (`export const`), outside the class this walk reads; the guard
+   asks the same of another of the store's own numeric statics. */
 t("WALK GUARD: block comments are blanked, and a known CODE line SURVIVES it",
-  /static SEARCH_ORPHAN_MAX = 100;/.test(CODE), true);
+  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — the anchor cannot match this item's own comments",
   /buried in its statement/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -329,8 +348,10 @@ t("WALK GUARD: and it reaches ops through the dispatch", OPS.size >= 8, true);
 
 /* THE TWO OPS THE ITEM NAMED ARE ON THE PLANE'S OWN ROSTER — found through the
    source, never listed here. */
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): `documentsNamingEntity` is entities' `namingDocuments` (ENTITIES #1,
+   T5-4; entities R14), reached through `...entitiesOps(...)` re-inlined; the op and its cap are unchanged. */
 t("WALK: op=readingname and op=tasks, the two the item named, are on the roster the source yields",
-  [OPS.get("readingname"), OPS.get("tasks")], ["documentsNamingEntity", "taskList"]);
+  [OPS.get("readingname"), OPS.get("tasks")], ["namingDocuments", "taskList"]);
 /* AND THE ITEM'S PREMISE IS WIDENED BY THE MEASUREMENT: nine more.
    CORRECTED 2026-08-07 (REC-60 / D-225): 11 -> 14, and the old figure is SUPERSEDED rather
    than wrong — it was the true measurement on the day it was written. `op=resolutions`,
@@ -654,7 +675,18 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
   /* MOVED 46 -> 47 at the c22-batch29 union (CONDUCT #22, 2026-09-25), from THIS ARM'S OWN FAILURE OUTPUT on the merged
      tree (`want 46 / got 47`; the corpus line printed `71 carrying a cap, reaching 47 ops`), never by arithmetic: main's
      46 (D-525's driveshells) plus REC-150's projectrequests and REC-203's idmatch, less D-521b's statementack. */
-  OPS.size, 47);
+  /* MOVED 47 -> 51 on 2026-09-27 by legacy-tests (T5-12), from THIS ARM'S OWN OUTPUT on `tranche/T5` @ 7a2cc56e1f with
+     layers 4-5 re-inlined, never by adding; the roster DIFFED BY NAME against the T5 opening (64386f16eb). NO
+     DEPARTURE: every op of the opening's 47 is on it (six under the module's method name: concerns -> concerns,
+     connect -> derive, connections -> connections' `read`, readingname -> namingDocuments, resolutions ->
+     resolutionsFor, themeread -> readThemes). FOUR ARRIVALS: op=readingref (`documentsByReference`, bounded by
+     EXTRACTION #1: `limit`, `truncated`, extraction R48); op=leadlist (D-681's new op, observation-log R20, capped
+     by LEAD_LIST_LIMIT_DEFAULT/MAX); op=contentaxis (retrieval R27, D-724: `index.skipped` under
+     CAPTURE_TEXT_SKIPPED_RUNS_MAX); op=aicredentials (`aiCredentials` was capped before T5, clamp at 500, `LIMIT ?`
+     at cap + 1, `limit`/`truncated` published, and read as uncapped; its segment now runs into the store's statics
+     block, which T5's removals left beside it, so the named-cap shape sees it: the classification is right, the
+     route to it is the segmenter's known next-signature bound). */
+  OPS.size, 51);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1479,6 +1511,16 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    answered at the ceiling. Building a second corpus here would be two fixtures for
    one fact, and the second would rot first. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
+                                  /* ADDED 2026-09-27 by legacy-tests (T5-12): the four ops the T5 roster gained (the
+                                     pin's note names why each arrived). Each bound is its module's requirement now and
+                                     is driven at the module's interface in this loop's shape (a bite with `truncated`
+                                     true, the whole with it false, an over-ask answered at the ceiling):
+                                     op=readingref in `test/m/extraction/store.test.mjs` "R28 R48"; op=leadlist in
+                                     `test/m/observation-log/lead.test.mjs` "R20 R21"; op=contentaxis's skipped runs in
+                                     `test/m/retrieval/contentaxis.test.mjs` "R27 (D-724)"; op=aicredentials in
+                                     `test/m/membership/expertise-keys-ai.test.mjs` (the listing's 200/500 clamp and
+                                     `truncated` both ways). */
+                                  "readingref", "leadlist", "contentaxis", "aicredentials",
                                   /* D-525: the bite needs Drive-linked bundles with registers and the
                                      plane's retrieval records; `test/d525-driveshells.test.mjs` drives it in
                                      this file's shape — a bite of 2 over six, `truncated` TRUE with a cursor,
@@ -1968,6 +2010,13 @@ const answersByOp = new Map([
      nothing extra. */
   ["textprovenance", await GET("op=textprovenance&token=mem-r57&limit=1")],
   ["textattest", await GET(`op=textattest&token=mem-r57&sha256=${"0".repeat(64)}&limit=1`)],
+  /* ADDED 2026-09-27 by legacy-tests (T5-12): the four T5 arrivals (DRIVEN_ELSEWHERE says where each bite is
+     driven), driven HERE for CPDF-10's reason immediately above: the envelope shape, not the bite.
+     op=leadlist answers only once the control plane routes it (LEGACY-INDEX #3, T5-11: D-681's routing). */
+  ["readingref", await GET("op=readingref&token=mem-r57&ref=parcel:1&limit=1")],
+  ["leadlist", await GET("op=leadlist&token=mem-r57&limit=1")],
+  ["contentaxis", await GET(`op=contentaxis&token=mem-r57&captureSha=${"0".repeat(64)}`)],
+  ["aicredentials", await GET("op=aicredentials&token=adm-r57&limit=1")],
   /* CASE-4 / DEC-72: driven HERE, for CPDF-10's reason immediately above and in
      its exact shape. The bite/`truncated` arms need TWO REVISION FLAGS, which
      need a published, RATIFIED and then revised case — that corpus lives in

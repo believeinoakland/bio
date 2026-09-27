@@ -574,7 +574,11 @@ t("    the PORTION's connection axis is UNDETERMINED with the empty level NAMED 
   + "borrowed from the whole document",
   [cellStanding?.connection?.determined, cellStanding?.connection?.grain,
    cellStanding?.connection?.undetermined_because],
-  [false, "portion", "READING_POSITION_ABSENT"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): the registry's portion axis now answers from the portion's own
+     connections (connections R13, R54 `portionAxes`, K145 Q6, K152), no longer from the reading position alone
+     (`READING_POSITION_ABSENT`). This spreadsheet cell's document is an end of no connection, so the empty level
+     is named `NO_CONNECTION`; still undetermined at portion grain, never borrowed from the whole document. */
+  [false, "portion", "NO_CONNECTION"]);
 t("    and its transcription ceiling is UNDETERMINED AND STATED — an attestation's extent "
   + "vocabulary is document|page|region and has no cell in it, which is the ATTESTATION grammar "
   + "and is deliberately NOT what this item moved",

@@ -68,7 +68,9 @@ import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { compile, MEANING, meaningVocabulary, GATE_MARK,
          MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX } from "../src/query.mjs";
-import { MEANING_READ_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval): C-23.1 and C-23.2 left the catalogue for retrieval's
+   `MEANING_READ_CHECKS` (`src/retrieval/checks.mjs`), numbers and translations unchanged (its REPORT 1, 4). */
+import { MEANING_READ_CHECKS } from "../src/retrieval/checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -83,8 +85,19 @@ const t = (label, got, want) => {
 const M = "class:member";
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the meaning tables' DDL left schema.mjs with their modules
+   (`resolutions`: entities; `content`: content; `capture_text`: extraction). Section 2 reads the schema as the
+   plane's modules hold it: schema.mjs's text followed by those three modules' exported schema texts. */
+import { CONTENT_SCHEMA } from "../src/content/schema.mjs";
+import { ENTITIES_SCHEMA } from "../src/entities/schema.mjs";
+import { EXTRACTION_SCHEMA } from "../src/extraction/schema.mjs";
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ENTITIES_SCHEMA, CONTENT_SCHEMA, EXTRACTION_SCHEMA].join("\n");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `op=meaningrows`, its executor and its refusal rows moved to
+   retrieval (`src/retrieval/index.mjs`), and the gate is minted only in membership's `viewerPredicate`, which
+   query.mjs re-exports (N46 with N37, K75). Sections 3, 5 and 7 read them where they now live. */
+const RETRIEVAL_SRC = readFileSync(SRC("retrieval/index.mjs"), "utf8");
+const MEMBERSHIP_SRC = readFileSync(SRC("membership/index.mjs"), "utf8");
 
 /* ==================================================================== 1
  * THE SEVENTH SHAPE, AND IT IS THE SEVENTH.
@@ -194,33 +207,44 @@ console.log("\n--- 3. one compilation point, and this shape adds no fourth ---")
      inside the mechanism it guards. A check that fails on its own explanation is
      not a check, so the source is stripped of block and line comments first and
      the stripper is GUARDED IN BOTH DIRECTIONS below. */
-  const stripped = QUERY_SRC.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const strip = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const stripped = strip(QUERY_SRC);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N46 with N37): the known code line is the one function's head,
+     now in membership's file, and query.mjs's known code line is its re-export of it. */
+  const strippedGate = strip(MEMBERSHIP_SRC);
   t("STRIP GUARD: a known CODE line survives the stripper",
-    /export function viewerPredicate\(viewer\) \{/.test(stripped), true);
+    [/export function viewerPredicate\(viewer\) \{/.test(strippedGate),
+     /export \{ viewerPredicate, GATE_MARK \};/.test(stripped)], [true, true]);
   t("STRIP GUARD: and a known PROSE line does not — the count below cannot match a comment",
     /D-160's shape/.test(stripped) || /THE MEANING ARM — D-222 option A/.test(stripped), false);
-  const fnStart = stripped.indexOf("export function viewerPredicate(");
-  const fnEnd = stripped.indexOf("\n}", stripped.indexOf("scope: \"participant\"", fnStart));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N46 with N37): counted in membership's file, where the one
+     function is; query.mjs's own count is pinned at zero (it mints none now). */
+  const fnStart = strippedGate.indexOf("export function viewerPredicate(");
+  const fnEnd = strippedGate.indexOf("\n}", strippedGate.indexOf("scope: \"participant\"", fnStart));
   const sites = [];
-  for (let i = stripped.indexOf("${GATE_MARK}"); i !== -1; i = stripped.indexOf("${GATE_MARK}", i + 1)) sites.push(i);
-  console.log(`  gate-mint sites found (comments stripped): ${sites.length}`);
+  for (let i = strippedGate.indexOf("${GATE_MARK}"); i !== -1; i = strippedGate.indexOf("${GATE_MARK}", i + 1)) sites.push(i);
+  const querySites = stripped.split("${GATE_MARK}").length - 1;
+  console.log(`  gate-mint sites found (comments stripped): ${sites.length} (membership), ${querySites} (query.mjs)`);
   /* PL-8 pinned this at THREE and the number is the assertion, not the care.
      A meaning-GRAIN statement joins two more tables and interpolates the
      predicate twice, which is exactly the shape that would tempt a fourth. */
   t("the gate is STILL minted in exactly ONE function at its three branches — PL-9 added no fourth site",
-    [sites.length, sites.every((i) => i > fnStart && i < fnEnd)], [3, true]);
+    [sites.length, sites.every((i) => i > fnStart && i < fnEnd), querySites], [3, true, 0]);
+  /* RE-ANCHORED 2026-09-27 (T5-12; retrieval R3): the throw is retrieval's `runQuery`. */
   t("and store.mjs still THROWS on a statement that arrives without the marker (D-15)",
-    /a retrieval statement reached the store without the viewer visibility gate \(D-15\)/.test(STORE_SRC), true);
+    /a retrieval statement reached the store without the viewer visibility gate \(D-15\)/.test(STORE_SRC + RETRIEVAL_SRC), true);
   /* THE STORE BUILDS NO SQL FOR THIS PATH. If it did, that would be the second
      query path `query.mjs:701-705` says the design exists to prevent — reached
      by writing the statement somewhere else rather than by minting a gate. */
-  const body = STORE_SRC.slice(STORE_SRC.indexOf("  meaningRows(input = {}) {"));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R10–R15): the method is retrieval's `meaningRows` (the
+     store holds a one-line delegate), and its executor is the module's `this.runQuery(`. */
+  const body = RETRIEVAL_SRC.slice(RETRIEVAL_SRC.indexOf("  meaningRows(input = {}) {"));
   const method = body.slice(0, body.indexOf("\n  }\n"));
   t("the meaning read HAS a method body to inspect (an empty slice would pass everything below)",
     method.length > 400, true);
   t("and it assembles NO SQL of its own — every statement comes from compile(), which is what "
   + "makes this a seventh shape and not a second query path",
-    [/\bSELECT\b/.test(method), /\bFROM\b/.test(method), /compile\(/.test(method), /#runQuery\(/.test(method)],
+    [/\bSELECT\b/.test(method), /\bFROM\b/.test(method), /compile\(/.test(method), /this\.runQuery\(/.test(method)],
     [false, false, true, true]);
 }
 {
@@ -290,11 +314,14 @@ console.log("\n--- 5. the two refusals, each a C-number with a code and a canned
                             && MEANING_READ_CHECKS[k].translation.length > 40]),
     [["C-23.1", true], ["C-23.2", true]]);
   t("and each names where it fires, so the fence is findable from the catalog",
-    keys.filter((k) => !/store\.mjs meaningRows/.test(MEANING_READ_CHECKS[k].where || "")), []);
+    /* RE-PINNED 2026-09-27 (T5-12; retrieval REPORT 4): each row's `where` names `src/retrieval/index.mjs meaningRows`. */
+    keys.filter((k) => !/src\/retrieval\/index\.mjs meaningRows/.test(MEANING_READ_CHECKS[k].where || "")), []);
   /* ONE place, not two. A hand copy agrees at zero cost. */
   t("the store does not restate a translation — it reads the catalog's row",
-    [/MEANING_READ_CHECKS\[key\]/.test(STORE_SRC),
-     STORE_SRC.includes(MEANING_READ_CHECKS.MEANING_ROWS_NO_ARM.translation)],
+    /* RE-ANCHORED 2026-09-27 (T5-12; retrieval): the refusal site is retrieval's `meaningRows`; neither it nor the
+       store restates a translation. */
+    [/MEANING_READ_CHECKS\[key\]/.test(RETRIEVAL_SRC),
+     (STORE_SRC + RETRIEVAL_SRC).includes(MEANING_READ_CHECKS.MEANING_ROWS_NO_ARM.translation)],
     [true, false]);
 }
 
@@ -589,8 +616,11 @@ console.log("\n--- 8. PL-8's arms choose the SET; this returns the GRAIN ---");
     (many?.rows ?? []).length > one.length, true);
   /* There is NO second selector vocabulary: the op adds exactly one argument. */
   t("the op adds ONE argument to the query language and no new selector — `rows`, and nothing else",
-    /meaningrows: \(\) => this\.meaningRows\(\{[\s\S]*?\}\),/.exec(STORE_SRC)?.[0]
-      ?.match(/^\s+([a-z]+):/gm)?.map((s) => s.trim().replace(":", "")).sort(),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval's `retrievalRoutes`): the dispatch entry is
+       retrieval's, its arguments written two to a line, so each `key: ` inside the call's object is read. */
+    /meaningrows: \(\) => r\.meaningRows\(\{[\s\S]*?\}\),/.exec(RETRIEVAL_SRC)?.[0]
+      ?.slice("meaningrows: () => r.meaningRows({".length)
+      ?.match(/\b([a-z]+):\s/g)?.map((s) => s.trim().replace(":", "")).sort(),
     ["ids", "limit", "offset", "q", "rows", "viewer"]);
   /* And a warning raised by PL-8's parser reaches this answer, so a member who
      mistyped a sub-field is told here too rather than only through op=search. */

@@ -437,7 +437,10 @@ console.log("\n--- 6. SOURCE PINS: properties of the CODE, not of one fixture --
     Object.keys(sf.fields.capture).sort().join(),
     Object.keys(sf.fields.connection).sort().join());
 
-  const wts = /#writeTextSource\(bundleId, sha, chain\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction T5-2, R19): `#writeTextSource` moved, under the same
+     name and signature, to `src/extraction/index.mjs`; the no-re-walk pin is read there. */
+  const wts = /#writeTextSource\(bundleId, sha, chain\) \{[\s\S]*?\n  \}/
+    .exec(readFileSync(SRC("extraction/index.mjs"), "utf8"))?.[0] ?? "";
   t("`#writeTextSource` gained NO dependent re-walk — option (a) was NOT taken, and that is structural",
     { found: wts.length > 0, walks: /inquiry_basis|strengthOf|writeStrengthProjection/.test(wts) },
     { found: true, walks: false });

@@ -125,12 +125,21 @@ import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy t
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the severance rule moved into connections (CONNECTIONS #1, R22):
+   its one implementation is `edgeSevered(citingId, targetId, rel)` in `src/connections/index.mjs`, and `#citesInto`
+   became connections' `citesInto`, which calls it as `this.edgeSevered(`. store.mjs keeps `#refEdgeSevered(...a)`
+   and `#citesInto(id)` only as one-line delegates to the module, and its other callers are unchanged. The
+   structural count reads store.mjs AND every file of `src/connections/`. */
+const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/", import.meta.url)))
+  .filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(fileURLToPath(new URL(`../src/connections/${f}`, import.meta.url)), "utf8")).join("\n");
+const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC;
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
@@ -690,8 +699,11 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
 {
   /* No behavioural arm can see a faithful copy of a rule. This one can, and it
      is the reason D-267's suite carried the same arm. */
-  const defs = (STORE_SRC.match(/#refEdgeSevered\(citingId, targetId/g) || []).length;
-  const calls = (STORE_SRC.match(/this\.#refEdgeSevered\(/g) || []).length;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the definition is connections' `edgeSevered(citingId, targetId`
+     (or the store's old `#refEdgeSevered(citingId, targetId`); the callers are the store's `this.#refEdgeSevered(`
+     and connections' `this.edgeSevered(` (citesInto, formerly the store's #citesInto). */
+  const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\(citingId, targetId/g) || []).length;
+  const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered)\(/g) || []).length;
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);

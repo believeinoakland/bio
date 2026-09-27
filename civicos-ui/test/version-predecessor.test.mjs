@@ -520,24 +520,68 @@ const dispatchOps = (text) => {
   let m; while((m = re.exec(text))) if(!out.has(m[1])) out.set(m[1], m[2]);
   return out;
 };
-const BODIES = methodBodies(STORE);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5's layers 2, 4 and 5 moved the relevance-ordered reads
+   (`search`, `meaningRows`, `selectionCreate`/`selectionResolve`, `projectionClear`: every `compile()` call) into
+   `src/retrieval/index.mjs`, and many ops out of the store's own dispatch entries into each module's op map, which
+   the store's dispatch SPREADS (`...retrievalRoutes(retrievalOf(this.ctx), url, body)`, `...biasOps(biasOf(this.ctx),
+   …)`, …). The roster is therefore the store's own entries PLUS every spread module map (`name: () => v.method(`),
+   each method segmented in its OWN module's source, and a store method that is a one-line delegation
+   (`x(a) { return retrievalOf(this.ctx).x(a); }`) is followed into the module WITHOUT spending the one private hop:
+   it is the same act under the store's name, as the extraction left it (T3's `inlinedStore` rule (1)). The hop
+   rule is otherwise unchanged: own body, or one `this.` hop in the same source. At the T5 opening the roster read
+   190 ops, 9 relevance-ordered (biasinhale search meaningrows selection cite projectionclear retire release dispose). */
+const MOD_OF = new Map();      // `retrievalOf` / `retrievalRoutes` -> "retrieval"
+for(const m of STORE.matchAll(/import\s*\{([^}]*)\}\s*from\s*"\.\/([\w-]+)\/index\.mjs"/g))
+  for(const n of m[1].split(",").map(x => x.trim()).filter(Boolean)) MOD_OF.set(n, m[2]);
+const MOD_SRC = new Map();
+const modSrc = (dir) => {
+  if(!MOD_SRC.has(dir)){
+    const d = new URL(`${dir}/`, PLANE_SRC);
+    MOD_SRC.set(dir, fs.readdirSync(d).filter(f => f.endsWith(".mjs")).sort()
+      .map(f => fs.readFileSync(new URL(f, d), "utf8")).join("\n"));
+  }
+  return MOD_SRC.get(dir);
+};
+const SRC_BODIES = new Map([["store", methodBodies(STORE)]]);
+const bodiesOf = (src) => { if(!SRC_BODIES.has(src)) SRC_BODIES.set(src, methodBodies(modSrc(src))); return SRC_BODIES.get(src); };
+const BODIES = SRC_BODIES.get("store");
 const DISPATCH = dispatchOps(STORE);
+const DISPATCH_SRC = new Map([...DISPATCH.keys()].map(op => [op, "store"]));
+for(const m of STORE.matchAll(/^\s+\.\.\.([a-zA-Z]+)\(\s*([a-zA-Z]+Of)\(this\.ctx\)/gm)){
+  const dir = MOD_OF.get(m[1]); if(!dir) continue;
+  const src = modSrc(dir);
+  const at = src.search(new RegExp(`^export function ${m[1]}\\(`, "m"));
+  if(at < 0) continue;
+  const end = src.indexOf("\n}\n", at);
+  for(const e of src.slice(at, end < 0 ? src.length : end).matchAll(/^\s+([a-z][a-z0-9]*)\s*:\s*(?:async\s*)?\(\)\s*=>\s*(?:\(\{\s*\.\.\.)?[a-zA-Z]\.([a-zA-Z][a-zA-Z0-9]*)\s*\(/gm))
+    if(!DISPATCH.has(e[1])){ DISPATCH.set(e[1], e[2]); DISPATCH_SRC.set(e[1], dir); }
+}
+/* A one-line delegation's target, or null. */
+const delegateOf = (src, name) => {
+  const b = bodiesOf(src).get(name) || "";
+  const d = /^\s*(?:static\s+)?#?[a-zA-Z][a-zA-Z0-9]*\s*\([^)]*\)\s*\{\s*return\s+([a-zA-Z]+Of)\(this\.ctx\)\.([a-zA-Z][a-zA-Z0-9]*)\s*\([^;]*\);\s*\}/.exec(b);
+  return d && MOD_OF.get(d[1]) ? [MOD_OF.get(d[1]), d[2]] : null;
+};
+const resolveMethod = (src, name) => { for(let i = 0, d; i < 3 && (d = delegateOf(src, name)); i++) [src, name] = d; return [src, name]; };
 /* RELEVANCE-ORDERED = the method reaches `compile()`, in its own body or one
    private hop away. `compile()` is `query.mjs`'s, and query.mjs says in its own
    words that the default order is bm25 — asserted below rather than assumed. */
-const reachesCompile = (name, depth = 0) => {
-  const b = BODIES.get(name) || "";
+const reachesCompile = (src0, name0, depth = 0) => {
+  const [src, name] = resolveMethod(src0, name0);
+  const B = bodiesOf(src);
+  const b = B.get(name) || "";
   if(/\bcompile\s*\(/.test(b)) return true;
   if(depth >= 1) return false;
   for(const m of b.matchAll(/this\.(#?[a-zA-Z][a-zA-Z0-9]*)\s*\(/g))
-    if(m[1] !== name && BODIES.has(m[1]) && reachesCompile(m[1], depth + 1)) return true;
+    if(m[1] !== name && B.has(m[1]) && reachesCompile(src, m[1], depth + 1)) return true;
   return false;
 };
 const RANKED = new Map();
 const UNJUDGED_OPS = [];
 for(const [op, meth] of DISPATCH){
-  if(!BODIES.has(meth)){ UNJUDGED_OPS.push(op); continue; }
-  if(reachesCompile(meth)) RANKED.set(op, meth);
+  const src = DISPATCH_SRC.get(op);
+  if(!bodiesOf(src).has(meth)){ UNJUDGED_OPS.push(op); continue; }
+  if(reachesCompile(src, meth)) RANKED.set(op, meth);
 }
 /* CORRECTED 2026-09-23 BY D-447, never exempted: the second half read /bm25\(bundles_fts\)/. The plane no longer calls
    that function — it read the WHOLE index, so a hidden project could move a member's order (Membership v2 §7.9) — and

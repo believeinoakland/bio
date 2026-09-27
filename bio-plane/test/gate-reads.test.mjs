@@ -847,6 +847,17 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "answer is WITHHELD (NO_SUCH_CONTENT, byte-identical to an id that does not exist) rather than "
       + "the reference redacted, because the id is CONTENT-ADDRESSED and therefore computable by a "
       + "caller who never saw the row",
+    /* CLASSIFIED 2026-09-27 (T5-12, legacy-tests): routed by T5-11 (legacy-index), content R32. D-419's branch
+       wording said the crop resolves the row "through op=content's own store route" before a member is asked;
+       content replaced that with `cropOf` (src/content/index.mjs), which reads the row itself and cuts in-process
+       through pdf-pixels. The reason below is read off that code. */
+    contentcrop: "D-419 / content R32: the crop of the image ONE content row cites, by content_id. GATED on the row's "
+      + "own bundle exactly as op=content is, and for op=content's reason: `cropOf` asks the content module's `sees` "
+      + "(viewerPredicate over `bundles`, content R37) of the row's bundle FIRST, and a row the viewer may not see answers "
+      + "NO_SUCH_CONTENT, byte-identical to an id that does not exist, before any extent is read, any byte is fetched "
+      + "from the evidence store, or any of CROP_NOT_A_PAGE_IMAGE, CROP_NO_EVIDENCE_STORE, CROP_CAPTURE_NOT_HELD, "
+      + "CROP_NOT_DERIVABLE, CROP_CAPTURE_MISMATCH could say the row exists. It takes the fail-closed viewer stamp "
+      + "beside op=content in index.mjs. It writes nothing.",
     /* SK-8's read, classified by the item that adds it. It takes the ROW-FILTER
        shape rather than `content`'s withhold-the-whole-answer one, and the
        difference is the key: this read is scoped to a RUN or a DOCUMENT, so an
@@ -1016,6 +1027,29 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
       + "caller can no longer see is not published — the lead discloses what a member was told and where they "
       + "went looking, which is a line of inquiry.",
+    /* CLASSIFIED 2026-09-27 (T5-12, legacy-tests): routed by T5-11 (legacy-index), observation-log R20. D-681's
+       wording (land/worker/D-681), checked against src/observation-log/index.mjs `leadList`: the predicate is now
+       observation-log's `leadReach` (R19), not the store's `#leadReach`, and it admits `leaving` participants too. */
+    leadlist: "D-681 / observation-log R20: the LEADS this caller may read, each once with its own latest state. "
+      + "GATED by the one lead predicate op=leadread asks (`leadReach`, R19, inside the statement): its AUTHOR, the "
+      + "JOINED (or leaving) participants of a project the author SHARED it to, a machine credential only within a "
+      + "member's minted scope (the positional identity). It takes the fail-closed viewer stamp beside op=leadread in "
+      + "index.mjs. A caller who reaches no lead gets an empty list, never a refusal — a lead's existence is not "
+      + "disclosed outside its reach, so the answer names no lead it may not read and no count of them.",
+    /* CLASSIFIED 2026-09-27 (T5-12, legacy-tests): connections' two reads, routed by T5-11 (legacy-index, K145).
+       No branch carried wording for them; each reason is read off src/connections/index.mjs (`asserted`,
+       `fileMembership`). */
+    connectionsasserted: "connections R31, R32, R49, R33: one DOCUMENT's connections asserted apart from derivation "
+      + "(a member's, a source's link, the system's containment). GATED TWICE: the subject bundle is asked of `sees` "
+      + "(membership's inSight) first, and one the caller may not see answers NO_SUCH_BUNDLE exactly as one that does "
+      + "not exist; then every row whose OTHER end the viewer cannot see is omitted by the module's `redactor` "
+      + "(viewerPredicate) before the cut, so neither the rows nor `truncated` name a bundle in a project the caller "
+      + "was never invited to. It takes the fail-closed viewer stamp beside op=connectionchoose in index.mjs.",
+    filemembership: "connections R30, R49, R33: an AGENDA CAPTURE's item-to-file pairs, stored and pending. GATED: "
+      + "the capture's home bundle is asked of `sees` first, and a capture the caller may not see answers "
+      + "NO_SUCH_CAPTURE exactly as one the record does not hold; a stored pair is served only when the viewer sees "
+      + "BOTH its ends (`redactor`). A pending pair names only the two addresses the visible agenda itself prints, "
+      + "and no bundle. It takes the fail-closed viewer stamp beside op=connectionchoose in index.mjs.",
     idmatch: "REC-203: one identifier recognised in its space, or a PAIR judged under Framework §8.3. GATED: a "
       + "pair names two CAPTURES and reads where the record retrieved each, so it takes the fail-closed viewer "
       + "stamp in index.mjs and asks viewerPredicate of each capture's bundle INSIDE the statement; a capture the "
@@ -1239,6 +1273,17 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "participation arm cannot bite on an inquiry today (viewerPredicate filters PROJECT bundles, "
       + "Membership 7.9), so what the gate buys HERE is the fail-closed arm; if inquiries are ever "
       + "compartmented this op inherits it with no edit.",
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): MOVED HERE FROM THE UNGATED LIST, whose entry ("names no bundle")
+       is false on this tree. D-701 is in capture (src/capture/index.mjs `#captureGate`, `linksTo`, `resolveLinks`)
+       and index.mjs passes op=links the session's viewer; BOB #35 ruled (2026-09-25 09:30Z) that capture shas and
+       page addresses disclose that a bundle exists and what it holds. Wording from land/worker/D-706's copy,
+       checked against that code; op=navchanges, which that copy also classified, is not an OPS read here. */
+    links: "D-701: WHAT POINTS AT AN ADDRESS and WHAT A CAPTURE LINKS TO name capture shas, the addresses "
+      + "they were captured at, and a resolved target's bundle, so every source and every target capture passes "
+      + "`#captureGate` (the capture's `register` bundle through viewerPredicate) BEFORE `count`, `elements`, the "
+      + "tally or the bracket are computed. A hidden source capture answers exactly as one the record does not "
+      + "hold; a link whose only capture is hidden is `offsite`, the answer an uncaptured target gets. A capture "
+      + "filed in NO bundle names none and stays visible. Fails closed on an absent stamp.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -1304,7 +1349,6 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     expertiselist: "declared expertise, a member fact; names no bundle.",
     inbox: "the doorbell inbox — material submitted from OUTSIDE, filed against no bundle.",
     inboxget: "one such submission; filed against no bundle.",
-    links: "outbound links by capture sha and inbound by address; names no bundle.",
     sourcereach: "reachability of a document ADDRESS; names no bundle.",
     archivelookup: "a CDX lookup against an external archive; names no bundle.",
     pdfstructure: "the structure of a captured PDF, by sha; names no bundle.",
@@ -1384,10 +1428,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "(holders, a note, the recording administrator, the instant, and its append-only history). It opens only the "
       + "`hosting_access` table: no bundle id, no row a viewer predicate could filter, and nothing a hidden project "
       + "could leak through. It is what every member is owed to know about the other half of an ejection (4.8).",
-    memberpairings: "HOLDS NO CORPUS MATERIAL: membership R19's published cover-and-handle pairings, and ONLY those a "
-      + "member (or an administrator) chose to publish (`pairing_published=1`). It reads the `members` table alone: no "
-      + "bundle id and no row a viewer predicate could filter; the unpublished roster stays an administrator's view "
-      + "(R17) and is not in this answer.",
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): T5-11 (legacy-index) stamps op=memberpairings' viewer and
+       administer (membership R19, MEMBERSHIP #2's REPORT), so the caller's OWN unpublished pairing and, for an
+       administrator, every pairing are now in the answer; the old sentence said neither. Still no bundle. */
+    memberpairings: "HOLDS NO CORPUS MATERIAL: membership R19's cover-and-handle pairings a member (or an "
+      + "administrator) chose to publish (`pairing_published=1`), plus the caller's OWN pairing, and every pairing "
+      + "for an administrator, by the server-stamped viewer and administer. It reads the `members` table alone: no "
+      + "bundle id and no row a viewer predicate could filter.",
     /* the pre-auth surface */
     bootstrap: "PRE-AUTH: answers whether this instance has been claimed. Never reaches the store's "
       + "gated reads.",

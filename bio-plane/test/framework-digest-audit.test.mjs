@@ -33,6 +33,11 @@
  * bundle (audit tally lost C-18.3) and the fold assertion failed; restored. An
  * equality the write did not earn is exactly what the raw sweep already could not
  * produce, so a suite that still passed without the write would be testing nothing.
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder): the gate is capture's `substanceDigests`
+ * (`src/capture/acquire.mjs`, T4 layer 3), and the fold assertion's label now reads "op=audit folds the viewstate
+ * pair as a C-18.3 corroboration (the write's refusal carries the fold)". RE-RUN 2026-09-27 with `digestCertain`
+ * forced false there, restore sha256 MATCH and cmp identical: 25/0 -> 16/9, the fold assertion among the nine; as
+ * declared.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */

@@ -94,17 +94,26 @@ const ARMS = [
      shape: an anchor is a claim about the subject's TEXT, so it goes stale exactly
      when the subject is refactored — the moment an arm is most worth having. The
      same class was found in `nc-rec102.mjs` (A1 and A3) in the same sweep. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): tier 3 moved with the reading into extraction's pipeline
+     (`src/extraction/pipeline.mjs`, extraction R5–R7, R35); the call now hands the merge the member's text with the
+     kept pages (D-616). The defect is the same: the member's text taken WHOLESALE. */
   { name: "g. D-252: the merge goes back to WHOLESALE (`i2text = built.text`, the defect)",
-    file: "src/index.mjs",
-    from: `            const m = mergeTier3Text(baseText, built.text, wantPages);`,
-    to:   `            const m = { ok: true, text: built.text, filled: wantPages, refused: [], unanswered: [], wholesale: true };`,
+    file: "src/extraction/pipeline.mjs",
+    from: `            const m = mergeTier3Text(baseText, withKeptPages(built.text, kept, seed), wantPages, { kept });`,
+    to:   `            const m = { ok: true, text: built.text, filled: wantPages, appended: [], refused: [], refusedWhy: [], unanswered: [], wholesale: true };`,
     mustFail: "the D-252 merge arms — the text-layer page's own references are GONE, replaced by an OCR pass at cap C, which is the defect this item closes",
     mustNotFail: "every arm about a document with ONE provenance: the wholly-scanned document, the text-layer document, the refusal arms, the attestation arms" },
 
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `mergeTier3Text` moved to `src/extraction/pipeline.mjs`, where the
+     one test became three lines with reasons (`no_such_page`, `not_asked`, `carries_glyphs`) and a folio page may be
+     APPENDED to (D-616). The defect is the same: only a page that does not exist is refused, and any other page
+     the member answers is REPLACED (never appended to). */
   { name: "h. D-252: the per-page eligibility test (a page may be FILLED, never REPLACED)",
-    file: "src/index.mjs",
-    from: `    if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }`,
-    to:   `    if (!target) { refused.push(p.page); continue; }`,
+    file: "src/extraction/pipeline.mjs",
+    from: `    if (!wanted.has(p.page)) { refusedWhy.push({ page: p.page, reason: "not_asked" }); continue; }
+    const empty = !(typeof target.text === "string" && glyphCount(target.text) > 0);
+    if (!empty && !isFolioRouted(target)) { refusedWhy.push({ page: p.page, reason: "carries_glyphs" }); continue; }`,
+    to:   `    const empty = true;`,
     mustFail: "the OVER-REACHING MEMBER arms — a member answering for a page it was not asked about now overwrites that page's good text",
     mustNotFail: "the ordinary merge arms (the member answers only for the page it was asked about, so eligibility never has to catch anything)" },
 
@@ -117,7 +126,9 @@ const ARMS = [
 
   { name: "j. D-252: mergedChain stops SCOPING the steps it merges",
     file: "src/textchain.mjs",
-    from: `      out.push(STEP_KINDS[step.step].role === "derivation"\n        ? { ...step, extent: { kind: "pages", pages } } : { ...step });`,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): stale since text-chain T2 (D-723 added the overlapping parts'
+       `part: index` to the scope), found in this sweep; the break is the same: no step is scoped. */
+    from: `      out.push(STEP_KINDS[step.step].role === "derivation"\n        ? { ...step, extent: overlap ? { kind: "pages", pages, part: index } : { kind: "pages", pages } }\n        : { ...step });`,
     to:   `      out.push({ ...step });`,
     mustFail: "the extent arms, the chain-sentence arm, the doctrine pin and the per-page cap arms — an unscoped mixed chain reads as a sequence and answers C for the whole document",
     mustNotFail: "the merge arms about TEXT (the good page's text still survives — the chain and the text are separate guarantees, which is why they are separate arms)" },
@@ -134,8 +145,18 @@ const ARMS = [
     /* CORRECTED BY D-585 (2026-09-25), never exempted: the marker's condition gained a second line (a page that
        declares fonts and SHOWS nothing is marked too), so the one-line anchor matched zero times and this arm
        would have reported DID-NOT-ARM. The break is the same — the marker never fires. */
-    from: `  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources)\n      && (!fontDict || (await pageShowsText(doc, pageMap)) === false)) {`,
-    to:   `  if (false) {`,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests), AND THE REASON IS A MEASURED FINDING ABOUT THE SUBJECT: with this
+       one site alone the arm came back 210/0 — NOTHING FAILED. pdf-reader's D-627 (T2) added a SECOND marker that
+       selects a page for OCR: `markImageContent` marks a page that paints an image and shows at most a folio
+       `image_content_unread`, and extraction's `TIER3_REASONS` (R5) routes on it; it skips only a page already
+       carrying `no_text_layer` (K32). So with `no_text_layer` gone, the scan is marked the other way and still
+       reaches tier 3: two defences, either alone making the other unfalsifiable (calibration.control.mjs's `delay`
+       and (h) below have the same shape). Both are armed together, as ONE arm, so the break is what it always was —
+       the image-only page is not named at all. */
+    from: [`  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources)\n      && (!fontDict || (await pageShowsText(doc, pageMap)) === false)) {`,
+           `  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;\n  let added = 0;`],
+    to:   [`  if (false) {`,
+           `  if (true) return;\n  let added = 0;`],
     mustFail: "EVERY Tier-3 arm — the scan is no longer routed at all, which is the state this item found the plane in",
     mustNotFail: "the pure textchain unit arms (they import no PDF)" },
 ];
@@ -159,7 +180,12 @@ for (const arm of ARMS) {
     process.exit(3);
   }
   const src = pristine.toString("utf8");
-  const hits = src.split(arm.from).length - 1;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): an arm may carry several sites (arrays `from`/`to`, arm (f)); each
+     must match exactly once, and all are armed together as the one arm. */
+  const froms = Array.isArray(arm.from) ? arm.from : [arm.from];
+  const tos = Array.isArray(arm.to) ? arm.to : [arm.to];
+  const hitsEach = froms.map((f) => src.split(f).length - 1);
+  const hits = hitsEach.every((n) => n === 1) ? 1 : hitsEach.find((n) => n !== 1);
   console.log(`\n${arm.name}`);
   console.log(`  pristine ${arm.file}: ${pristine.length} bytes, sha256 ${pristineSha.slice(0, 12)}…`);
   console.log(`  MUST FAIL:     ${arm.mustFail}`);
@@ -171,7 +197,7 @@ for (const arm of ARMS) {
     surprises++;
     continue;
   }
-  writeFileSync(arm.file, src.replace(arm.from, arm.to));
+  writeFileSync(arm.file, froms.reduce((t, f, i) => t.replace(f, tos[i]), src));
   const armed = run();
   writeFileSync(arm.file, pristine);
   const back = readFileSync(arm.file);

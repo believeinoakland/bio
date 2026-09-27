@@ -364,7 +364,10 @@ const ROLE = {
      `rerun_of`, and two lens hashes — and the hashes come from `#biasForRun`, which is `aiRunRead`'s own
      publisher and is already counted as one. No column of the indebted run reaches anybody through here,
      so ARM W4's "exactly three publishers" stands and was re-checked rather than assumed. */
-  "#biasDebtDischargeByRerun": "AUTHORISES",
+  /* RETIRED 2026-09-27 (T5-12, legacy-tests): `#biasDebtDischargeByRerun`'s cell is REMOVED, and ARM W3b named it,
+     on `#counts`' and `purge`'s precedent. The discharge moved with the bias debt into the bias module (BIAS #1,
+     T5-7, R35–R38), which reads no row of `ai_runs`: the run row it needed for `rerun_of` is handed to it by the
+     store's interim registration in the constructor (`constructor`'s cell, below). */
   /* FL-4's two, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE
      naming both of them by name, which is the sweep behaving exactly as its own
      comment promises rather than absorbing a new reader in silence.
@@ -383,8 +386,22 @@ const ROLE = {
      `#biasDebtSweep` is SELECTS word for word: it projects the key alone (`SELECT run`) to choose which runs to
      read, and DELEGATES every fact it writes into `bias_debts` — the context, `moved`, the two hashes — to
      `aiRunRead` by calling it, which ARM W8 drives. ARM W4's three publishers are untouched. */
-  "#biasDebtPending":  "HOUSEKEEPS",
-  "#biasDebtSweep":    "SELECTS",
+  /* RETIRED 2026-09-27 (T5-12, legacy-tests): `#biasDebtPending`'s and `#biasDebtSweep`'s cells are REMOVED, and
+     ARM W3b named both. The sweep and its wake moved into the bias module (BIAS #1, T5-7, R33, R41), which reads no
+     row of `ai_runs`; the run ids it sweeps come through the same interim registration (`constructor`, below). */
+  /* ADDED 2026-09-27 (T5-12, legacy-tests) — THE READER THAT REPLACED THE THREE ABOVE, and ARM W3 did NOT name it,
+     which is a hole in W3 and is closed here: the walk found `constructor` (the store's constructor registers the
+     bias debt's AI-run work products, `bias/interim.mjs`, with two readers over `ai_runs`), but W3 looked the name
+     up with `ROLE[r]`, and `ROLE.constructor` is Object's own constructor, so a reader named `constructor` was
+     always "classified". W3 now asks own properties only (W3b's `Object.keys` already did), and the cell
+     is DECLARED.
+     AUTHORISES, the role the retired `#biasDebtDischargeByRerun` held, carried to its new site: `row(run)` reads the
+     stored row (`SELECT *`, for `rerun_of`) so the bias module can decide whether a DIFFERENT object, another run's
+     `bias_debts` row, is discharged; `list(after, limit)` projects the key alone (`SELECT run`) and every fact the
+     debt records comes through `read`, which is `aiRunRead` (the retired `#biasDebtSweep`'s delegation). No column
+     reaches a caller through the constructor itself, so ARM W4's three publishers are untouched. Deleted with
+     `bias/interim.mjs` when `ai-runs` registers its own runs (T6). */
+  constructor:         "AUTHORISES",
   /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R21, R22): `purge`'s cell is REMOVED, and ARM W3b named it,
      on `#counts`' precedent above. Purge moved to `record-core`, which deletes from every DECLARED table with one
      generic statement; the store now DECLARES `ai_runs` to it (`{ name: "ai_runs", keys: [] }`, whole-store only)
@@ -478,7 +495,9 @@ t("ARM W2: REACH, as a DELTA — the reader walk finds at least twelve methods r
   [WALK.readers.length >= 12, WALK.methods >= 300], [true, true]);
 t("ARM W3: THE CLASSIFICATION IS TOTAL over what the walk found — a thirteenth reader lands here as a "
 + "FAILURE naming itself, not as a silent addition to a sweep that has already reported",
-  WALK.readers.filter((r) => !ROLE[r]), []);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): own properties only — `ROLE[r]` answered Object.prototype's
+     `constructor` for a reader named `constructor`, so that reader was never checked (see its cell). */
+  WALK.readers.filter((r) => !Object.hasOwn(ROLE, r)), []);
 t("ARM W3b: and the classification names nothing the walk did not find, so a method deleted from the "
 + "plane cannot keep a green cell alive in this table",
   Object.keys(ROLE).filter((r) => !WALK.readers.includes(r)), []);

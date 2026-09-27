@@ -46,12 +46,21 @@ import { deflateRawSync } from "node:zlib";
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
 import { canonicalExtent, describeExtent } from "../checks/bio-checks.mjs";
 import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
+import { EXTRACTION_SCHEMA } from "../src/extraction/schema.mjs";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SCHEMA_SRC = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
 const INDEX_SRC = readFileSync(new URL("../src/index.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction T5-2, R22): the text index left the legacy files with
+   extraction. `capture_text`'s CREATE is in `src/extraction/schema.mjs` (EXTRACTION_SCHEMA, which extraction's own
+   migrate splits and runs); the FTS table, its three triggers, the writer (`#writeCaptureText`, now R22's
+   `indexUnits`) and the store's two bounds are in `src/extraction/index.mjs`; the acquire wire's budget and envelope
+   in `src/extraction/pipeline.mjs`. Every source read below is made THERE, from the product's own text as before. */
+const EXTRACTION_SCHEMA_SRC = readFileSync(new URL("../src/extraction/schema.mjs", import.meta.url), "utf8");
+const EXTRACTION_SRC = readFileSync(new URL("../src/extraction/index.mjs", import.meta.url), "utf8");
+const PIPELINE_SRC = readFileSync(new URL("../src/extraction/pipeline.mjs", import.meta.url), "utf8");
 
 /* THE VOCABULARY IS THE IMPORTED CONSTANT AND NO MEMBER IS SPELLED HERE — the
    ruling CONDUCT made on 2026-09-14, which `observation-content.test.mjs` §A
@@ -298,19 +307,22 @@ try {
  * ========================================================================= */
 console.log("\n--- A · the two tables, where they must be and shaped as the design says ---");
 
-t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block — hygiene asserts "
-+ "the literal ends on a `);`, and a table appended after it would truncate the schema",
-  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
-  SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (") > -1
-    && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")
-       < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction T5-2): `capture_text` left schema.mjs, so its place
+   BEFORE the `host_governor` block of schema.mjs's literal (the truncation hazard of a table appended after it) is
+   no longer a property of this table and that half is RETIRED with the move. What stands is that the table has ONE
+   declaration, extraction's EXTRACTION_SCHEMA, and none in schema.mjs's text or in the SCHEMA the store runs. */
+t("A1: `capture_text` is declared ONCE, in extraction's schema (EXTRACTION_SCHEMA), and not in schema.mjs",
+  [EXTRACTION_SCHEMA.split("CREATE TABLE IF NOT EXISTS capture_text (").length - 1,
+   SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text ("),
+   BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")], [1, -1, -1]);
 
 /* THE NINE COLUMNS §4.1 NAMES, AND THE KEY. Asserted against the DDL text
    rather than against a promise, because a column silently dropped from the
    CREATE would fail at the first INSERT and the failure would read as a writer
    defect rather than as a schema one. */
 {
-  const ddl = SCHEMA_SRC.slice(SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text ("));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the DDL is read from src/extraction/schema.mjs (above). */
+  const ddl = EXTRACTION_SCHEMA_SRC.slice(EXTRACTION_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text ("));
   const body = ddl.slice(0, ddl.indexOf(");"));
   const cols = ["capture_sha", "bundle_id", "extent_kind", "extent", "ref", "seq", "text",
                 "truncated", "chain_kind"];
@@ -326,13 +338,14 @@ t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block
    is the rowid alignment that lets `snippet()` read the base table, and
    `unicode61` is the settled tokenizer §6 says this design does not revisit. */
 {
-  const m = /CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5\(([\s\S]*?)\)`/.exec(STORE_SRC);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the FTS table and triggers are extraction's (its migrate). */
+  const m = /CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5\(([\s\S]*?)\)`/.exec(EXTRACTION_SRC);
   t("A4: `capture_text_fts` is FTS5 EXTERNAL CONTENT over `capture_text`, ROWID ALIGNED, unicode61 "
   + "— so `snippet()` reads the base table rather than a second copy of the text",
     m ? [/content='capture_text'/.test(m[1]), /content_rowid='rowid'/.test(m[1]),
          /tokenize='unicode61'/.test(m[1])] : null,
     [true, true, true]);
-  const trig = [...STORE_SRC.matchAll(/CREATE TRIGGER IF NOT EXISTS (capture_text_\w+) AFTER (\w+) ON capture_text/g)];
+  const trig = [...EXTRACTION_SRC.matchAll(/CREATE TRIGGER IF NOT EXISTS (capture_text_\w+) AFTER (\w+) ON capture_text/g)];
   t("A5: three maintenance triggers cover INSERT, DELETE and UPDATE — an external-content index is "
   + "not maintained by writes to its base table, and an UPDATE nobody has written yet would fail as "
   + "a WRONG ANSWER rather than as an error",
@@ -353,8 +366,10 @@ t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block
      three regexes against a region that contains none of them — and it went RED,
      which is the only reason it was found. A structural pin over the wrong
      region is the failure mode that usually goes the other way. */
-  const i0 = STORE_SRC.indexOf("  #writeCaptureText(bundleId, captureSha, units, chain) {");
-  const w = STORE_SRC.slice(i0, STORE_SRC.indexOf("  #observeIndexed(bundleId, captureSha, result,"));
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction R22): the writer is extraction's `indexUnits`; its
+     segment runs to the next class method, `readingFor` (the observation it was sliced up to is observation-log's). */
+  const i0 = EXTRACTION_SRC.indexOf("  indexUnits(bundleId, captureSha, units, chain, {");
+  const w = EXTRACTION_SRC.slice(i0, EXTRACTION_SRC.indexOf("  readingFor(captureSha, viewer = null) {", i0));
   t("A6a: the writer method was FOUND in the source — a structural pin over a failed slice would "
   + "pass over an empty string, which is the blind-by-construction shape this file refuses",
     i0 > -1 && w.length > 500, true);
@@ -678,10 +693,12 @@ console.log("\n--- G · the unit bound: bytes do not bound the unit count (REC-1
        agrees for free (WORKER.md's costs-nothing rule, measured five times). */
     return m ? Function(`"use strict";return (${m[1]})`)() : null;
   };
-  const wireBudget   = num(INDEX_SRC, "ACQUIRE_TEXT_UNITS_BUDGET");
-  const wireEnvelope = num(INDEX_SRC, "ACQUIRE_TEXT_UNIT_ENVELOPE");
-  const storeUnits   = num(STORE_SRC, "CAPTURE_TEXT_CAPTURE_UNIT_BOUND");
-  const storeBytes   = num(STORE_SRC, "CAPTURE_TEXT_CAPTURE_BOUND");
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; extraction R16, R22): the wire's two constants are in
+     pipeline.mjs, the store's two bounds in extraction's index.mjs (above); still read out of the product. */
+  const wireBudget   = num(PIPELINE_SRC, "ACQUIRE_TEXT_UNITS_BUDGET");
+  const wireEnvelope = num(PIPELINE_SRC, "ACQUIRE_TEXT_UNIT_ENVELOPE");
+  const storeUnits   = num(EXTRACTION_SRC, "CAPTURE_TEXT_CAPTURE_UNIT_BOUND");
+  const storeBytes   = num(EXTRACTION_SRC, "CAPTURE_TEXT_CAPTURE_BOUND");
   /* FLOORED BEFORE ANYTHING IS DIVIDED BY IT. A regex that stopped matching
      would give `null`, and `floor(null / 1)` is 0 — which is <= any bound and
      would pass G1 silently over a constant this suite never found. */
@@ -710,9 +727,12 @@ console.log("\n--- G · the unit bound: bytes do not bound the unit count (REC-1
   t("G3: the constants sit BESIDE each other and the loop tests them in the SAME BRANCH — a "
   + "reader asking what stops a promote finds one place, not two. §4.3's `neither hides the "
   + "other` is a placement requirement and this is the assertion that holds it",
-    [/const CAPTURE_TEXT_CAPTURE_BOUND = [^\n]+\nconst CAPTURE_TEXT_CAPTURE_UNIT_BOUND =/.test(STORE_SRC),
-     /written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND\s*\n\s*\|\| bytes \+ size > CAPTURE_TEXT_CAPTURE_BOUND/
-       .test(STORE_SRC)],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): read in extraction's index.mjs, where both constants are
+       now exported (`export const`) and the branch's two tests sit on ONE line; the pin is unchanged: the two
+       constants adjacent, and both tested in the one `if`. */
+    [/const CAPTURE_TEXT_CAPTURE_BOUND = [^\n]+\n(?:export )?const CAPTURE_TEXT_CAPTURE_UNIT_BOUND =/.test(EXTRACTION_SRC),
+     /written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND\s*\|\| bytes \+ size > CAPTURE_TEXT_CAPTURE_BOUND/
+       .test(EXTRACTION_SRC)],
     [true, true]);
 
   /* ---- THE BOUND DRIVEN THROUGH THE OP, on the route that can actually reach
@@ -913,13 +933,14 @@ console.log("\n--- F · MATCH, snippet() and integrity, on the DDL extracted fro
      with `store.mjs` for free and would go on passing after the product's DDL
      changed underneath it — the blind-by-construction assertion this repository
      has measured repeatedly. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): extracted from extraction's schema.mjs and index.mjs. */
   const tableDdl = (() => {
-    const i = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (");
-    return SCHEMA_SRC.slice(i, SCHEMA_SRC.indexOf(");", i) + 1);
+    const i = EXTRACTION_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (");
+    return EXTRACTION_SCHEMA_SRC.slice(i, EXTRACTION_SCHEMA_SRC.indexOf(");", i) + 1);
   })();
   const ftsDdl = /CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5\(([\s\S]*?)\)`/
-    .exec(STORE_SRC)[0].replace(/`$/, "");
-  const trigs = [...STORE_SRC.matchAll(/CREATE TRIGGER IF NOT EXISTS capture_text_\w+ AFTER \w+ ON capture_text BEGIN[\s\S]*?END/g)]
+    .exec(EXTRACTION_SRC)[0].replace(/`$/, "");
+  const trigs = [...EXTRACTION_SRC.matchAll(/CREATE TRIGGER IF NOT EXISTS capture_text_\w+ AFTER \w+ ON capture_text BEGIN[\s\S]*?END/g)]
     .map((m) => m[0]);
   t("F0: the DDL under test was EXTRACTED from the product's own sources, and the extraction is "
   + "non-empty — a probe over a failed regex would pass silently over nothing",

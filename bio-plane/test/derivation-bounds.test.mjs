@@ -416,8 +416,16 @@ const scans = (body) => {
   }
   return out;
 };
+/* CORRECTED 2026-09-27 (T5-12, legacy-tests), not exempted: `(?<!#)`, so a local named `rows` is not "mentioned" by every
+   `this.#rows(` call in the method. `\b` sits between `#` and `r`, so a method with a local `rows` tainted EVERY scan
+   assigned in it, bounded or not. It surfaced on extraction's `documentsByReference` (EXTRACTION #1, R48 bounded it):
+   its per-document occurrences read is assigned to `rows`, which tainted `docs`, the LIMIT-bounded published page above
+   it, so the page's loop read as a loop over an unbounded collection and the method joined the CLASS — the member D-384
+   says LEAVES (per-row work over a LIMIT-bounded, published page). MEASURED: on the T5 opening tree (64386f16eb) every
+   roster this file prints is byte-identical with and without the correction; on this tree the only movement is that
+   one method. The over-strictness fixture `NC_ROWS_LOCAL` below pins both directions. */
 const mentions = (expr, ids) =>
-  [...ids].some((id) => new RegExp(`\\b${id.replace(/\$/g, "\\$")}\\b`).test(expr));
+  [...ids].some((id) => new RegExp(`(?<!#)\\b${id.replace(/\$/g, "\\$")}\\b`).test(expr));
 
 /* THE ANALYSIS. Seeds, fixed-point taint, tainted loops, amplification. */
 const analyse = (body) => {
@@ -472,7 +480,10 @@ const analyse = (body) => {
      write, or another scan, per row. A single linear pass is not this class and must not
      be called one; that is an over-strictness arm below. */
   const nested = [...body.matchAll(/\b(?:for|while)\s*\(/g)].filter((x) => inLoop(x.index)).length;
-  const writes = [...body.matchAll(/this\.sql\.exec\(/g)].filter((x) => inLoop(x.index)).length;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a WRITE is `this.sql.exec(` in the store and `this.#sql.exec(` in the
+     modules that hold their handle privately (retrieval, entities, calibration, bias, extraction: `#sql`). The same
+     statement under the module's spelling; store.mjs has no `this.#sql`, so nothing the store's walk reads moved. */
+  const writes = [...body.matchAll(/this\.#?sql\.exec\(/g)].filter((x) => inLoop(x.index)).length;
   /* D-384, ENACTED BY M0-63 (2026-09-18, BOB #14's ruling): A SCAN PER ROW IS A SCAN IN A LOOP'S
      BODY, NEVER ONE IN ITS OWN HEADER. A scan written in `for (… of this.#rows(…))` is that loop's
      ROW SOURCE and runs exactly ONCE; crediting it as a scan per row graded where the call was
@@ -490,9 +501,12 @@ const analyse = (body) => {
            loops: loops.length, nested, writes, perRowScan, amplified: nested + writes + perRowScan };
 };
 
+/* T4 (legacy-tests): `code` may be a text (segmented here) or already-named segments (the widened corpus).
+   MOVED UP 2026-09-27 (T5-12, legacy-tests) from the truncation grader, so the CLASS walk can take the widened corpus. */
+const segsOf = (code) => (typeof code === "string" ? segments(code) : code);
 const classMembers = (code) => {
   const out = new Map();
-  for (const [name, body] of segments(code)) {
+  for (const [name, body] of segsOf(code)) {
     const a = analyse(body);
     if (!a.unbounded || !a.loops || !a.amplified) continue;
     out.set(name, a);
@@ -509,7 +523,42 @@ const dispatchedOps = (code) => {
 
 const CODE = decomment(SRC_STORE);
 const SEGMENTS = segments(CODE);
-const CLASS = classMembers(CODE);
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted in T3 layer 2): the
+   CENSUS (and only the census) is widened to the extracted modules' files, walked by the same segmenter one file
+   at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
+   store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
+   row sources, which is the direction the FLOOR exists to refuse. */
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 extracted three more
+   modules and their row sources left store.mjs with them, so the census's corpus widens to `src/host-governor/`,
+   `src/provenance/` and `src/capture/` the same way, one file at a time, `<module>/<file>:<method>`. The in-memory
+   truncation readers, SET 2 and the UNREAD roster below read this same widened corpus (`EXTRACTED`), because
+   `provenanceRoutesMarked` and `versionChain` publish their claims from provenance now. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; layers 4 and 5 of T5): nine more modules left store.mjs — calibration,
+   extraction, content, entities, connections, progressions, bias, observation-log, retrieval — and their row sources,
+   their truncation claims and nine of the CLASS's members with them (`documentsNamingEntity`, `proposalsFeed`,
+   `biasManifest`, the three `selection*` and `#sweepSelections`, `#assembleInstance`, `#overdueScan`). The corpus
+   widens to their files the same way, `<module>/<file>:<method>`, and from T5 on the CLASS walk (the ratchet, the
+   by-name rosters, the hoist partition, the admissions) reads this same corpus, as the census has since T3: a member
+   that moved is the same work, and a class read off store.mjs alone fell 26 -> 17 because the READER stopped seeing it. */
+const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
+                   "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
+                   "observation-log", "retrieval"];
+const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
+  .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
+/* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
+const moduleSegments = (xf = decomment) => MODULE_TEXTS.flatMap(([f, text]) =>
+  [...segments(xf(text))].map(([n, b]) => [`${f}:${n}`, b]));
+const MODULE_SEGMENTS = new Map(moduleSegments());
+const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
+/* T5-12: every method segment of the widened corpus by its name, for the by-name lookups below (the store's own
+   names are bare, the modules' `<module>/<file>:<method>`, so none collides). */
+const ALL_SEGMENTS = new Map(CENSUS_SEGMENTS);
+/* T5-12: the same widened corpus with one mechanical edit `xf` applied to every file's comment-stripped text, for the
+   REACH deltas below: a delta over store.mjs alone would be compared against a class and a grader that read the modules
+   too, and would pass for that reason alone. */
+const corpusWith = (xf) => [...segments(xf(CODE)), ...moduleSegments((t) => xf(decomment(t)))];
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the CLASS walk reads the widened corpus (see EXTRACTED). */
+const CLASS = classMembers(CENSUS_SEGMENTS);
 
 /* ============================ D-384 ENACTED (M0-63, 2026-09-18) — EVERY MEMBER THE HEADER CREDIT
  * HELD, DISPOSITIONED BY NAME. The ruling is BOB #14's and is not re-opened here: the class keeps
@@ -537,8 +586,17 @@ const CLASS = classMembers(CODE);
  * must still occur in the member's comment-stripped segment, and the helpers it names must still
  * reach a read within three calls. Move the call and the admission reds and must be re-examined —
  * which is the property this row exists for: no membership held by say-so. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; CONNECTIONS #1, T5-5, connections R22): `#citesInto` MOVED WHOLE into
+   connections as `citesInto` (the store keeps a one-line delegation), so the member is read where it now lives
+   (`home`, the ADMITTED name; `name` stays the D-384 population's). RE-READ, not re-pinned: the module's method is the
+   same unbounded `SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'` in its `for` header and the same
+   per-row severance read, now `this.edgeSevered(…)` — connections' `edgeSevered` (was `#refEdgeSevered`), which reads the
+   citer's `bundle.md` through record-core's `readFile` (the same `files` row, `#one`) and parses its references. The
+   four store members below that still call `this.#refEdgeSevered(…)` keep that site: the store's `#refEdgeSevered` is
+   now a delegation to `connectionsOf(this.ctx).edgeSevered`, and `readsThrough` follows it there (see it). */
 const D384_STAYS = [
-  { name: "#citesInto", site: `this.#refEdgeSevered(r.bundle_id, id, "cites")`, helpers: ["#refEdgeSevered"],
+  { name: "#citesInto", home: "connections/index:citesInto", site: `this.edgeSevered(r.bundle_id, id, "cites")`,
+    helpers: ["edgeSevered"],
     amplification: "per citing row, #refEdgeSevered reads the citer's bundle.md and parses its "
       + "frontmatter — `refs` drops the withdrawal status, so it can only be read from the document (D-267)" },
   { name: "#conditionsCaptureRequested", site: "case: this.#conditionHomes([r.target], viewer),",
@@ -582,6 +640,10 @@ const D384_STAYS = [
     amplification: "per citing project edge, #refEdgeSevered's document read, inside a `.find` — a "
       + "callback form this walk does not follow. It stops at the first live citer, so the read is paid "
       + "once per consecutively-withdrawn citer ahead of it (D-280's own note)" },
+  /* RE-READ 2026-09-27 (T5-12, legacy-tests; PROGRESSIONS #1, T5-6): `queueFeed` still calls `this.proposalsFeed(nowMs)`
+     as written; the store's `proposalsFeed` is now a delegation to progressions' `proposalsFeed` (R18), which
+     `readsThrough` follows, and which is itself ADMITTED below (`T5_STAYS`) for the per-instance `#assemble` it still
+     makes over every threaded instance. The site and the per-proposal instance loop are unchanged. */
   { name: "queueFeed", site: "for (const inst of p.instances)", helpers: ["proposalsFeed", "#queueAncestors", "#queueOptions"],
     amplification: "per proposal — proposalsFeed's output, itself derived over an unbounded scan and "
       + "in this class — one progression_instances scan per instance, and #queueAncestors and "
@@ -591,11 +653,18 @@ const D384_STAYS = [
 const D384_LEAVES = [
   { name: "#caseClaimInBytes", why: "one pass over unsigned case documents parsing each row's OWN text — "
       + "linear, no read per row. Where it IS amplified is named: #restsOnLive reaches it once per leg" },
-  { name: "#frontierContent", why: "every per-row read (#frontierVerification, the register read in "
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; RETRIEVAL #1, T5-10): the frontier's levels MOVED into retrieval's
+     Frontier reader (`src/retrieval/frontier.mjs`), `frontier` as `#document`, `#frontierContent` as `#content`,
+     `#frontierMeaning` as `#meaning`; and `danglingRefs` into connections as `dangling` (CONNECTIONS #1). `home` names
+     each where it lives, so the OUT check below reads the method and not a name nothing carries any more. The
+     reasons are unchanged: the per-row reads (now `this.obs.verification`, the register `#one`, `missingCause`) run
+     over the page `#page` fetches at the published cap; the tally is read once. `provenanceRoutesMarked` (T4's
+     move into provenance) is given its `home` the same way. */
+  { name: "#frontierContent", home: "retrieval/frontier:#content", why: "every per-row read (#frontierVerification, the register read in "
       + "`seen`, #missingContentCause) runs over a LIMIT-bounded page under the published "
       + "FRONTIER_LIMIT_MAX; its unbounded scans — the index-state read over the page's own subjects and "
       + "the tally GROUP BY — are each read ONCE. REC-94's admission states the bound itself" },
-  { name: "#frontierMeaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
+  { name: "#frontierMeaning", home: "retrieval/frontier:#meaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
       + "row over a (cap+1)*3 page and three LIMIT cap+1 scans; the only unbounded scan is the tally, "
       + "read ONCE. REC-95's admission states the bound itself" },
   /* CORRECTED 2026-09-25 (REC-191), not exempted: the plan's row source moved into
@@ -624,52 +693,81 @@ const D384_LEAVES = [
      can be trusted: before the fix this member LEFT the class for a reason the reader could not
      see, and a disposition believed on the strength of a stale explanation is the defect this list
      exists to prevent. */
-  { name: "danglingRefs", why: "its own body is one anti-join, returned — judged on that body alone "
+  { name: "danglingRefs", home: "connections/index:dangling", why: "its own body is one anti-join, returned — judged on that body alone "
       + "since D-414 closed the segmenter's generator gap (2026-09-19). Before that it was credited "
       + "with the NEXT segment's header scan, because `*eachImage` could not open a segment of its "
       + "own; that generator now opens one, is counted in the CENSUS in its own right, and this "
       + "verdict no longer depends on the reader's blind spot" },
   { name: "earnedBasisRegistry", why: "one pass folding the union scan into a Map, then one pass over "
       + "the Map — linear, no read per row. REC-88's worked example: inline and hoisted now agree" },
-  { name: "frontier", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
+  { name: "frontier", home: "retrieval/frontier:#document", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
       + "page under the published FRONTIER_LIMIT_MAX; the only unbounded scan is the tally GROUP BY, "
       + "read ONCE. REC-93's own admission: \"the scan underneath it is LIMIT-bounded\"" },
-  { name: "provenanceRoutesMarked", why: "its page is LIMIT-bounded and its census is ONE GROUP BY — "
+  { name: "provenanceRoutesMarked", home: "provenance/index:provenanceRoutesMarked", why: "its page is LIMIT-bounded and its census is ONE GROUP BY — "
       + "linear; the correlated MAX(seq) in it is work INSIDE SQL, which this walk states it cannot see, "
       + "and no row is read again in JS. REC-116's note that the census puts it in this class was the "
       + "header credit speaking" },
   { name: "publishedCaseRegistryFor", why: "one pass folding editions per case, a parse per row" },
 ];
-const ADMITTED = new Map(D384_STAYS.map((s) => [s.name, s]));
+/* T5-12, 2026-09-27: TWO MEMBERS WHOSE ROW SOURCE MOVED INTO A HELPER, admitted on D-384's terms. Progressions (T5-6)
+   moved `#overdueScan` and `proposalsFeed` and, in moving them, took their one unbounded scan — `SELECT DISTINCT
+   progression_key, entity_id FROM progression_instances` — into a shared helper `#pairs()`, which both now iterate in a
+   `for` header. The work is the same (every threaded instance, and `#assemble` — the old `#assembleInstance`, itself a
+   CLASS member by the walk — per instance), but the walk reads one method at a time and cannot see a scan inside a helper
+   (the header's first declared limitation), so both LEFT the walk's roster on the move and nothing else. They are
+   ADMITTED by name, each held by its row source call and its per-row call AS WRITTEN, exactly as the D-384 admissions
+   are (`#conditionsGovernorHolding`'s `rowSource` is the precedent), and checked by the same arm below. */
+const T5_STAYS = [
+  { name: "progressions/index:overdueScan", site: "this.#deadlines(this.#assemble(p.progression_key, p.entity_id))",
+    rowSource: { call: "for (const p of this.#pairs())", module: "progressions/index:#pairs" },
+    helpers: ["#assemble"],
+    amplification: "per threaded instance (#pairs: every DISTINCT progression_key, entity_id, unbounded), #assemble "
+      + "re-derives the instance (its stages, placements and discharges, three unbounded reads) and #deadlines walks it" },
+  { name: "progressions/index:proposalsFeed", site: "const inst = this.#assemble(p.progression_key, p.entity_id);",
+    rowSource: { call: "for (const p of this.#pairs())", module: "progressions/index:#pairs" },
+    helpers: ["#assemble"],
+    amplification: "per threaded instance, #assemble re-derives the whole instance and the findings are grouped per "
+      + "(progression, stage) — REC-6's one walk, unchanged by the move but for the scan now living in #pairs" },
+];
+const ADMITTED = new Map([...D384_STAYS, ...T5_STAYS].map((s) => [s.home || s.name, s]));
 /* THE CLASS IS THE WALK'S MEMBERS AND THE ADMITTED ONES, and the ceiling below grades the union —
    a member the walk cannot see is still a member, and it is named, not counted into a hole. */
 const CLASS_ALL = new Set([...CLASS.keys(), ...ADMITTED.keys()]);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's dispatch now SPREADS the modules' routes
+   (`...entitiesOps(entitiesOf(this.ctx), url, body),`), so `op=readingname`, `op=proposals`, `op=select` … are entries of a
+   module's routes function and no longer arrows of the store's map. Each spread in the store's dispatch is read as the
+   entries its function returns, and an entry `op: () => r.m(` is the op of the module's method `m`, named as the class
+   and the census name it (`<module>/<file>:m`, the module file whose segment is `m`). The store's own arrows are read as
+   before; an op the store's own map ALSO names keeps the store's (the spreads are read after it and never overwrite). */
+const moduleRouteOps = (code) => {
+  const out = new Map();
+  const spread = /^\s+\.\.\.([A-Za-z_$][\w$]*)\([A-Za-z_$][\w$]*Of\(this\.ctx\), url, body(?:, this\.env)?\),/gm;
+  let m; while ((m = spread.exec(code))) {
+    const at = MODULE_TEXTS.find(([, text]) => new RegExp(`^export function ${m[1]}\\(`, "m").test(text));
+    if (!at) continue;
+    const [file, text] = at, mod = file.split("/")[0];
+    const fn = new RegExp(`^export function ${m[1]}\\(([A-Za-z_$][\\w$]*)[^)]*\\) \\{[\\s\\S]*?\\n  return \\{\\n([\\s\\S]*?)\\n  \\};\\n\\}`, "m")
+      .exec(decomment(text));
+    if (!fn) continue;
+    const entry = new RegExp(`^\\s+([a-z][a-z0-9]*):\\s*(?:async\\s*)?\\(\\)\\s*=>\\s*(?:await\\s+)?${fn[1]}\\.([A-Za-z_$][\\w$]*)\\(`, "gm");
+    let e; while ((e = entry.exec(fn[2]))) {
+      const own = `${file.replace(/\.mjs$/, "")}:${e[2]}`;   /* the routes function's own file first */
+      const home = MODULE_SEGMENTS.has(own) ? own
+        : [...MODULE_SEGMENTS.keys()].find((k) => k.startsWith(`${mod}/`) && k.endsWith(`:${e[2]}`)) || own;
+      if (!out.has(e[1])) out.set(e[1], home);
+    }
+  }
+  return out;
+};
 const DISPATCHED = dispatchedOps(CODE);
-/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted in T3 layer 2): the
-   CENSUS (and only the census) is widened to the extracted modules' files, walked by the same segmenter one file
-   at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
-   store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
-   row sources, which is the direction the FLOOR exists to refuse. */
-/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 extracted three more
-   modules and their row sources left store.mjs with them, so the census's corpus widens to `src/host-governor/`,
-   `src/provenance/` and `src/capture/` the same way, one file at a time, `<module>/<file>:<method>`. The in-memory
-   truncation readers, SET 2 and the UNREAD roster below read this same widened corpus (`EXTRACTED`), because
-   `provenanceRoutesMarked` and `versionChain` publish their claims from provenance now. */
-const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture"];
-const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
-  .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
-/* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
-const moduleSegments = (xf = decomment) => MODULE_TEXTS.flatMap(([f, text]) =>
-  [...segments(xf(text))].map(([n, b]) => [`${f}:${n}`, b]));
-const MODULE_SEGMENTS = new Map(moduleSegments());
-const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
+for (const [op, meth] of moduleRouteOps(CODE)) if (!DISPATCHED.has(op)) DISPATCHED.set(op, meth);
 const SCANNING = CENSUS_SEGMENTS.filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
 const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
   .map(([op, meth]) => `${op}->${meth}`).sort();
 
 console.log("\n--- WALK: every method that DERIVES over an unbounded scan (REC-66's class) ---");
 console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${SEGMENTS.size} method segments `
-          + `(+ ${MODULE_SEGMENTS.size} in the extracted modules, census only), `   /* T3 (legacy-tests), 2026-09-26 */
+          + `(+ ${MODULE_SEGMENTS.size} in the extracted modules, walked by the census and, since T5-12, the class), `   /* T3 (legacy-tests), 2026-09-26 */
           + `${SCANNING} scanning UNBOUNDED, ${CLASS_ALL.size} in the class (${CLASS.size} by the walk + `
           + `${ADMITTED.size} admitted by name), reaching ${CLASS_OPS.length} of `
           + `${DISPATCHED.size} DISPATCHED ops`);
@@ -679,8 +777,11 @@ for (const [name, a] of CLASS)
 console.log(`  CLASS OPS: ${CLASS_OPS.join(", ")}`);
 
 /* ------------------------------------------------------------------- GUARDS. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the old anchor `static SEARCH_ORPHAN_MAX = 100;` left the store with
+   retrieval (RETRIEVAL #1, T5-10), where it is a module `export const`; the guard asks the same of another of the store's
+   own numeric statics, the one `bounds.test.mjs`'s guard re-anchored on. */
 t("WALK GUARD: comments are blanked, and a known CODE line SURVIVES it",
-  /static SEARCH_ORPHAN_MAX = 100;/.test(CODE), true);
+  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — this file's own subject is named in the source's comments",
   /the DERIVATION was unbounded, not merely the response/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -734,9 +835,16 @@ t("SUBJECT SHAPE: and the taint reached it through TWO hops — the Map it was c
 t("REC-66: `op=connect` is OFF this class roster — the derivation's scan is bounded, and this is "
 + "measured off the source by the walk that would otherwise name it",
   CLASS_OPS.filter((e) => e.startsWith("connect->")), []);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; CONNECTIONS #1, T5-5, connections R1-R2): `deriveConnections` MOVED
+   into connections as `derive` (`op=connect` reaches it through `...connectionsOps(...)`), so the three arms below read
+   its segment there. The SQL is byte-for-byte the pinned one. The pair is connections' own named constants,
+   `CONNECTIONS_LIMIT_DEFAULT` 500 / `CONNECTIONS_LIMIT_MAX` 5000 (the values of the store's `#MEANING_LIMIT_*`, which
+   entities now exports as `MEANING_LIMIT_*`; ENTITIES #1's REPORT 8 asks connections to import those), and the
+   document bound is derived by `Connections.maxEndsForPairs(cap)` — still no literal at the call site. */
+const DERIVE_SEG = ALL_SEGMENTS.get("connections/index:derive") || "";
 t("REC-66: and `deriveConnections` scans rows and has NO unbounded scan left in it — stated "
 + "positively, so the arm fails if the method is ever returned to the state this item found it in",
-  (() => { const a = analyse(SEGMENTS.get("deriveConnections") || ""); return [a.scans > 0, a.unbounded]; })(),
+  (() => { const a = analyse(DERIVE_SEG); return [a.scans > 0, a.unbounded]; })(),
   [true, 0]);
 /* D-227's PIN, one step earlier than D-227 wrote it. The published envelope cannot stand in
    for the SQL bound — CONDUCT measured an honest envelope over an unbounded scan at REC-60's
@@ -745,17 +853,17 @@ t("REC-66 / D-227: the SQL bounds themselves, pinned off `deriveConnections`' co
 + "segment — the scan is bounded by DOCUMENTS (the inner select) and by ROWS (the outer LIMIT), "
 + "and both ask for one more than they may use so the answer can tell that more existed",
   [/SELECT capture_sha FROM resolutions WHERE entity_id=\? GROUP BY capture_sha\s+ORDER BY capture_sha LIMIT \?/
-     .test(SEGMENTS.get("deriveConnections") || ""),
+     .test(DERIVE_SEG),
    /* CORRECTED 2026-09-18 by REC-120, not exempted: the outer ORDER BY gained `, ref`
       so the pair's tie-break is a named rule rather than SQLite's row order (D-161 act 2).
       The BOUND this pins is unchanged — the same LIMIT with the same `rowCap + 1`. */
    /ORDER BY capture_sha, ref LIMIT \?`, entityId, entityId, endsCap \+ 1, rowCap \+ 1\)/
-     .test(SEGMENTS.get("deriveConnections") || "")], [true, true]);
+     .test(DERIVE_SEG)], [true, true]);
 t("REC-66: the bound is the plane's OWN pair and is not a literal at the call site — the document "
 + "bound is DERIVED from the pair bound by #maxEndsForPairs, so the two can never disagree",
-  [/Store\.#MEANING_LIMIT_DEFAULT/.test(SEGMENTS.get("deriveConnections") || ""),
-   /Store\.#MEANING_LIMIT_MAX/.test(SEGMENTS.get("deriveConnections") || ""),
-   /Store\.#maxEndsForPairs\(cap\)/.test(SEGMENTS.get("deriveConnections") || "")], [true, true, true]);
+  [/\bCONNECTIONS_LIMIT_DEFAULT\b/.test(DERIVE_SEG),
+   /\bCONNECTIONS_LIMIT_MAX\b/.test(DERIVE_SEG),
+   /\bConnections\.maxEndsForPairs\(cap\)/.test(DERIVE_SEG)], [true, true, true]);
 
 /* ------------------------------------------------------------------ THE RATCHET.
    The class is REAL and this item does not pretend to have emptied it: 29 methods derive
@@ -987,9 +1095,36 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    deliberately and stated at the method: its three verdict totals are counted over EVERY affected bundle,
    because a total cut at N is the partial count the op exists to replace; only the LISTING is paged
    (CHANGED_FROM_AUDIT_LIMIT 200/1000). Admin and probe only. The figure is this arm's own output (`26 methods`). */
-const CLASS_MEASURED_2026_08_08 = 26;
+/* MOVED 26 -> 33 on 2026-09-27 by legacy-tests (T5-12), READ FROM THIS RUN'S PRINT over the widened corpus (`33 methods`)
+   and DIFFED BY NAME against the same walk run on the T5 opening tree 64386f16eb (the suite's own figure there, 26, off
+   store.mjs alone), never 26 + 7. The walk now reads EXTRACTED (see it), so the accounting is in three parts:
+   - MOVED, STILL SEEN BY THE WALK (7), the same work under the module's name: #sweepSelections, selectionCreate,
+     selectionResolve, selectionRelease -> retrieval/index:{sweepSelections, selectionCreate, selectionResolve,
+     selectionRelease} (RETRIEVAL #1); documentsNamingEntity -> entities/index:namingDocuments (ENTITIES #1);
+     #assembleInstance -> progressions/index:#assemble (PROGRESSIONS #1); biasManifest -> bias/index:biasManifest (BIAS #1).
+   - MOVED, NOW ADMITTED (3): #overdueScan -> progressions/index:overdueScan and proposalsFeed ->
+     progressions/index:proposalsFeed, whose one unbounded scan moved into the helper `#pairs()` (`T5_STAYS`); and the
+     D-384 admission #citesInto -> connections/index:citesInto (CONNECTIONS #1, `home`). 16 + 10 = 26 became 21 + 12.
+   - ARRIVALS (7), none a departure's twin:
+     * content/index:markStale — CHANGED ON PURPOSE by CONTENT #1 (content R41, K102: the graded stale notice). The
+       store's `#markContentStale` was ONE aggregate COUNT and one UPDATE, deliberately ("not a SELECT and a loop",
+       REC-66 / D-227 at the site); R41 reads every row the re-read stales (unbounded: content rows per capture) and
+       grades each and calls every `onStale` listener per row. Today no module registers one (inquiry, T6), and the
+       read runs only when one is registered. The class's shape, taken by a requirement: REPORTED (T5-12) so the bound is
+       decided before inquiry registers.
+     * SIX from T3's and T4's modules, present identically on the opening tree (the same widened walk run there puts
+       all six in the class): the CLASS walk read store.mjs alone until now, so it never saw them. record-core/index:
+       {commit (one archive INSERT per file row of the bundle, a per-bundle read), auditPass (the audit's pass: every
+       bundle id after the cursor read whole, and per bundle its images and the registered checks — the store's own
+       `auditPass`, which D-384 LEAVES, reads a page of this)} (T3); capture/index:{resolveLinks (per link row, the
+       captures at its address), recordSiteAssets (per changed asset, every reusing ref and one UPDATE each) — spelled
+       `[...this.sql.exec(…)]` in the store, which this reader never saw (T4's census note) — and #chromeDeriveCapture,
+       #judgeChrome (T4's new site-chrome derivation, capture R28-R29, D-701: per page and per host, writes per row)}.
+       ARRIVALS NAMED, not graded here; they are T3's and T4's code, reached now because the reader follows the corpus.
+   The seven dispatched arrivals and departures are in CLASS OPS below. */
+const CLASS_MEASURED_2026_08_08 = 33;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -1008,11 +1143,18 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
      and `D384_STAYS` names it. This pin reads the union, because what a caller can reach is the
      half that matters whichever instrument saw it. */
   /* c19-unionfix, 2026-09-24: `changedfromaudit->changedFromAudit` (D-256) is dispatched — the arrival above. */
-  CLASS_OPS, ["biasmanifest->biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
-              "proposals->proposalsFeed",
-              "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
-              "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
-              "selectionrelease->selectionRelease"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): the same five ops, each now an entry of its module's routes (read
+     through the store's spreads, see DISPATCHED), named where the method lives: biasmanifest (bias), proposals
+     (progressions, an ADMITTED member now), readingname (entities' `namingDocuments`), select/selection/selectionrelease
+     (retrieval). ARRIVALS: `recordsiteassets` and `resolvelinks`, capture's routes (T4) — the two capture members of the
+     class the widened walk reaches (see the ratchet's note); their spread was never read before. */
+  CLASS_OPS, ["biasmanifest->bias/index:biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
+              "proposals->progressions/index:proposalsFeed",
+              "publishedcase->publishedCase", "queue->queueFeed", "readingname->entities/index:namingDocuments",
+              "recordsiteassets->capture/index:recordSiteAssets", "reevaluations->reevaluations",
+              "resolvelinks->capture/index:resolveLinks",
+              "select->retrieval/index:selectionCreate", "selection->retrieval/index:selectionResolve",
+              "selectionrelease->retrieval/index:selectionRelease"]);
 
 
 /* ====================== M0-40 · THE SPELLING THE CLASSIFIER READS AMPLIFICATION OFF,
@@ -1092,7 +1234,7 @@ const hoistRowSources = (body) => {
 
 const HOIST = { fragile: [], stable: [], noInlineSource: [] };
 for (const name of CLASS.keys()) {
-  const h = hoistRowSources(SEGMENTS.get(name) || "");
+  const h = hoistRowSources(ALL_SEGMENTS.get(name) || "");   /* T5-12: a member may be a module's (see EXTRACTED) */
   if (!h.hoists) { HOIST.noInlineSource.push(name); continue; }
   const a = analyse(h.body);
   (a.unbounded && a.loops && a.amplified ? HOIST.stable : HOIST.fragile).push(name);
@@ -1140,7 +1282,9 @@ t("M0-63 (D-384): the header credit is GONE — REC-88's hoist moves no membersh
 /* AND NOT ONLY OVER THE CLASS: over EVERY method with an inline row source in a `for` header, the
    inline and hoisted forms classify identically. The partition above iterates `CLASS` and cannot
    see a method the credit would have ENROLLED; this arm can. */
-const HOIST_MOVES = [...SEGMENTS].filter(([, b]) => {
+/* T5-12 (legacy-tests), 2026-09-27: over the widened corpus, as the class now is; the label's "store.mjs" reads "the
+   corpus". Measured: no method moves, in the store or the modules. */
+const HOIST_MOVES = CENSUS_SEGMENTS.filter(([, b]) => {
   const h = hoistRowSources(b);
   if (!h.hoists) return false;
   const q = (a) => Boolean(a.unbounded && a.loops && a.amplified);
@@ -1148,7 +1292,7 @@ const HOIST_MOVES = [...SEGMENTS].filter(([, b]) => {
 }).map(([n]) => n);
 t("M0-63 (D-384): across ALL of store.mjs, hoisting a for-header row source to a local changes NO "
 + "method's classification — same query, same rows, same work, same verdict",
-  [HOIST_MOVES, [...SEGMENTS].filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
+  [HOIST_MOVES, CENSUS_SEGMENTS.filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
 
 const D384_NAMES = [...D384_STAYS.map((s) => s.name), ...D384_LEAVES.map((l) => l.name)];
 t("M0-63 (D-384): every member appears in EXACTLY ONE of the two by-name lists, and the lists sum to "
@@ -1162,35 +1306,63 @@ t("M0-63 (D-384): no disposition is bare — every STAYS names its amplification
    ...D384_LEAVES.map((l) => [l.name, l.why.length > 20])].filter(([, ok]) => !ok), []);
 t("M0-63 (D-384): every LEAVES member is OUT of the class, and every STAYS member is IN it — as an "
 + "ADMITTED member the walk does NOT see, which is the only ground on which one may stay",
-  [D384_LEAVES.filter((l) => CLASS_ALL.has(l.name)).map((l) => l.name),
-   D384_STAYS.filter((s) => !CLASS_ALL.has(s.name) || CLASS.has(s.name)).map((s) => s.name)],
+  /* T5-12: each read at its `home` where it moved (see the lists), and T5's two admissions with D-384's. */
+  [D384_LEAVES.filter((l) => CLASS_ALL.has(l.home || l.name)).map((l) => l.name),
+   [...D384_STAYS, ...T5_STAYS].filter((s) => !CLASS_ALL.has(s.home || s.name) || CLASS.has(s.home || s.name)).map((s) => s.name)],
   [[], []]);
 
 /* THE ADMISSION IS CHECKED, NOT TAKEN ON ITS WORD. A STAYS member must still (1) hold an unbounded
    row source and a loop over it by the walk's own reading, (2) contain the per-row call its entry
    names, exactly as written, and (3) name helpers that still reach a read within three calls. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a helper may now live in a module, and a store helper may now be a
+   one-line delegation to one (`#refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }`,
+   `proposalsFeed`). So a call is followed to where its code is: `this.x(` inside a module's method to the same file's
+   (else the same module's) `x`; `<m>Of(this.ctx).y(` to module `<m>`'s `y`; `this.record.y(` / `this.#record.y(` — the
+   record-core service a module holds — to record-core's `y`. A read is also `this.#sql.exec(` (the modules' spelling,
+   see `analyse`). Each hop counts toward the same depth of three; nothing else about the check changed. */
+const OF_MODULE = { recordOf: "record-core", membershipOf: "membership", promotionOf: "promotion", governorOf: "host-governor",
+  provenanceOf: "provenance", captureOf: "capture", calibrationOf: "calibration", extractionOf: "extraction",
+  contentOf: "content", entitiesOf: "entities", connectionsOf: "connections", progressionsOf: "progressions",
+  biasOf: "bias", observationLogOf: "observation-log", retrievalOf: "retrieval" };
+const inModule = (mod, y, file = null) => (file && ALL_SEGMENTS.has(`${file}:${y}`) ? `${file}:${y}`
+  : [...MODULE_SEGMENTS.keys()].find((k) => k.startsWith(`${mod}/`) && k.endsWith(`:${y}`)) || null);
+const calleesOf = (name, b) => {
+  const file = name.includes(":") ? name.slice(0, name.indexOf(":")) : null;
+  const out = [];
+  for (const m of b.matchAll(/this\.(#?[A-Za-z_$][\w$]*)\s*\(/g))
+    out.push(file ? inModule(file.split("/")[0], m[1], file) : m[1]);
+  for (const m of b.matchAll(/\b([A-Za-z]+Of)\(this\.ctx\)\s*\.\s*([A-Za-z_$][\w$]*)\s*\(/g))
+    if (OF_MODULE[m[1]]) out.push(inModule(OF_MODULE[m[1]], m[2]));
+  for (const m of b.matchAll(/this\.#?record\.([A-Za-z_$][\w$]*)\s*\(/g)) out.push(inModule("record-core", m[1]));
+  return out.filter(Boolean);
+};
 const readsThrough = (name, depth = 3, seen = new Set()) => {
   if (seen.has(name)) return false;
   seen.add(name);
-  const b = SEGMENTS.get(name);
+  const b = ALL_SEGMENTS.get(name);
   if (!b) return false;
-  if (/#rows\(|#one\(|this\.sql\.exec\(/.test(b)) return true;
+  if (/#rows\(|#one\(|this\.#?sql\.exec\(/.test(b)) return true;
   if (!depth) return false;
-  return [...b.matchAll(/this\.(#?[A-Za-z_$][\w$]*)\s*\(/g)].some((m) => readsThrough(m[1], depth - 1, seen));
+  return calleesOf(name, b).some((c) => readsThrough(c, depth - 1, seen));
 };
 t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a loop over it, still "
 + "makes the per-row call its entry names AS WRITTEN, and every helper it names still reaches a read. "
 + "Move the call and this reds naming the member — its admission must then be re-read, not re-pinned",
-  D384_STAYS.map((s) => {
-    const body = SEGMENTS.get(s.name) || "";
+  /* T5-12: T5's two admissions are checked by this same arm; a member is read at its `home` where it moved, and its
+     helpers relative to it (a module member's `x` is its own file's `x`). */
+  [...D384_STAYS, ...T5_STAYS].map((s) => {
+    const key = s.home || s.name;
+    const body = ALL_SEGMENTS.get(key) || "";
     const a = analyse(body);
     /* T4: a row source reached through a module's interface (`rowSource`, above) is held when the member loops
        over that call AND the module's method still scans unbounded; otherwise the walk's own reading, as before. */
     const src = s.rowSource
       ? body.includes(s.rowSource.call) && scans(MODULE_SEGMENTS.get(s.rowSource.module) || "").some((x) => !x.bounded)
       : a.unbounded > 0 && a.loops > 0;
+    const at = (h) => (key.includes(":") && !h.includes(":")
+      ? inModule(key.split("/")[0], h, key.slice(0, key.indexOf(":"))) || h : h);
     return [s.name, src, body.includes(s.site),
-            s.helpers.filter((h) => !readsThrough(h))];
+            s.helpers.filter((h) => !readsThrough(at(h)))];
   }).filter(([, src, site, dead]) => !src || !site || dead.length),
   []);
 
@@ -1210,13 +1382,21 @@ t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on 
    HAND for that reason. With the roster pinned, the instrument names it. M0-63: this is now the
    WALK's roster — 14 — and the admitted ten are pinned by `D384_STAYS`; the two together are the
    figure the ceiling grades. */
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this run's print, diffed by name against the opening tree (see the
+   ratchet's note for every name): 16 -> 21. Seven members MOVED and are read under their module names; #overdueScan and
+   proposalsFeed LEFT the walk with their scan (now `#pairs()`) and are ADMITTED in `T5_STAYS`; content/index:markStale
+   arrived (content R41); six of T3's and T4's modules' methods arrived with the widened corpus. */
 const CLASS_ROSTER_2026_09_18 = [
-  "#assembleInstance", "#flagCasesOnRevision", "#frozenPairsByCase", "#overdueScan", "#sweepSelections",
-  "biasManifest",
+  "#flagCasesOnRevision", "#frozenPairsByCase",
+  "bias/index:biasManifest",
+  "capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "capture/index:recordSiteAssets",
+  "capture/index:resolveLinks",
   /* c19-unionfix, 2026-09-24: D-256's `changedFromAudit`, the arrival the CLASS ratchet above names. */
-  "changedFromAudit", "documentsNamingEntity", "exportManifest", "proposalsFeed",
-  "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
-  "selectionResolve",
+  "changedFromAudit", "content/index:markStale", "entities/index:namingDocuments", "exportManifest",
+  "progressions/index:#assemble",
+  "publishedCase", "publishedRegistryFor", "record-core/index:auditPass", "record-core/index:commit", "reevaluations",
+  "retrieval/index:selectionCreate", "retrieval/index:selectionRelease", "retrieval/index:selectionResolve",
+  "retrieval/index:sweepSelections",
 ];
 t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
 + "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
@@ -1225,7 +1405,7 @@ t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, s
 t("M0-40: and the by-name rosters and the counted ratchet are ONE reader — a pin that could "
 + "disagree with the figure beside it would be two instruments, and this file has already paid "
 + "once for a by-name arm satisfiable by the healthy half of what it pinned (control 9b)",
-  [CLASS_ROSTER_2026_09_18.length + D384_STAYS.length, CLASS_ALL.size],
+  [CLASS_ROSTER_2026_09_18.length + D384_STAYS.length + T5_STAYS.length, CLASS_ALL.size],   /* T5-12: T5's admissions */
   [CLASS_ALL.size, CLASS_MEASURED_2026_08_08]);
 
 /* OVER-STRICTNESS FOR THE NEW ARM, and it is the half the row weighted most heavily. Nothing
@@ -1242,6 +1422,26 @@ const NC_BOUNDED_HEADER = `class Z {
   }
   end() { return 1; }
 }`;
+/* T5-12, 2026-09-27: the `mentions` correction's own fixture, both directions. A LIMIT-bounded page whose per-row read
+   is assigned to a local named `rows` is NOT the class (its loop is over the bounded page); the same method with the
+   page UNBOUNDED is. Without the correction the first is enrolled; the second is in the class either way. */
+const NC_ROWS_LOCAL = `class Z {
+  ncRowsLocal({ ref, cap } = {}) {
+    const docs = this.#rows(\`SELECT DISTINCT sha FROM refs WHERE ref=? ORDER BY sha LIMIT ?\`, ref, cap + 1);
+    const out = [];
+    for (const d of docs.slice(0, cap)) {
+      const rows = this.#rows(\`SELECT pos FROM refs WHERE ref=? AND sha=? ORDER BY seq\`, ref, d.sha);
+      out.push({ sha: d.sha, n: rows.length });
+    }
+    return { ok: true, out, truncated: docs.length > cap };
+  }
+  end() { return 1; }
+}`;
+t("T5-12 OVER-STRICTNESS (`mentions`): a per-row read assigned to a local named `rows` over a LIMIT-bounded page is NOT "
++ "the class, and the same shape over an UNBOUNDED page IS — the name of a local is not a row source",
+  [classMembers(NC_ROWS_LOCAL).has("ncRowsLocal"),
+   classMembers(NC_ROWS_LOCAL.replace(" ORDER BY sha LIMIT ?`, ref, cap + 1)", " ORDER BY sha`, ref)")).has("ncRowsLocal")],
+  [false, true]);
 t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is in no class and "
 + "therefore in no roster this block builds — the new arm can only ever NAME members, never enrol "
 + "one. A classifier that over-collects is worse here than one that under-collects",
@@ -1250,7 +1450,15 @@ t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is
 t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the amplification is "
 + "HOIST-STABLE and must not be called fragile — otherwise the roster would name every inline row "
 + "source and say nothing. These four are measured, not chosen",
-  HOIST.stable, ["documentsNamingEntity", "proposalsFeed", "publishedCase", "selectionRelease"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this run's print, diffed by name: documentsNamingEntity and
+     selectionRelease MOVED (entities/index:namingDocuments, retrieval/index:selectionRelease); proposalsFeed LEFT (its
+     inline row source became `this.#pairs()`, and it is admitted, not walked); progressions/index:#assemble ARRIVED —
+     the old `#assembleInstance` was NO INLINE ROW SOURCE, and the module reads its exceptions (`progression_exceptions`) in a `for`
+     header, a spelling of the same read; and four of the widened corpus's T3/T4 arrivals (record-core's commit and auditPass,
+     capture's #chromeDeriveCapture and #judgeChrome) carry an inline row source and body amplification. */
+  HOIST.stable, ["capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "entities/index:namingDocuments",
+                 "progressions/index:#assemble", "publishedCase", "record-core/index:auditPass",
+                 "record-core/index:commit", "retrieval/index:selectionRelease"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
  *
@@ -1510,7 +1718,53 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
        liveCaptureSessions (the unexpired capture sessions), provenance/index:{capturesOf (R12, D-580: one bundle's
        register rows), captureGrade (R24-R27: one capture's receipt routes), registeredFor (one bundle's register),
        signedReceipts (R34: one capture's signed receipts)}. ARRIVALS NAMED, not graded here. */
-const SCANNING_MEASURED_2026_09_15 = 158;
+/* UPDATED 2026-09-27 (T5-12, legacy-tests), 158 -> 190, READ FROM THE CENSUS ROSTER THIS RUN PRINTED over the corpus
+   widened by T5's nine modules (see EXTRACTED) and DIFFED BY NAME against the same census run on the T5 opening tree
+   64386f16eb (158), never 158 + 32. THIRTY-EIGHT DEPARTED from store.mjs; SEVENTY ARRIVED in the modules:
+     - 32 MOVED, one for one, the same read under the module's name: #assembleInstance -> progressions/index:#assemble,
+       #citesInto -> connections/index:citesInto, #contentStandings -> content/index:projectStandings,
+       #dispositionsByStage -> progressions/index:#decisionsByStage, #entitiesByAliasNorm -> entities/index:#entitiesByNorm,
+       #entityView -> entities/index:#entityView, #filesOf -> retrieval/index:#filesOf, #frontierContent ->
+       retrieval/frontier:#content, #frontierInternet -> retrieval/frontier:#internet, #instanceDeadlines ->
+       progressions/index:#deadlines, #progressionCurrent -> progressions/index:#current, #resolveOne ->
+       entities/index:#resolveOne, #runQuery -> retrieval/index:runQuery, #strongestResolutionsFor ->
+       entities/index:strongestByCapture, #sweepSelections -> retrieval/index:sweepSelections, backlinks ->
+       connections/index:backlinks, biasManifest -> bias/index:biasManifest, captureProgressions ->
+       progressions/index:captureProgressions, danglingRefs -> connections/index:dangling, documentsByReference ->
+       extraction/index:documentsByReference (R48 bounded its page; its per-document occurrences read is not),
+       documentsNamingEntity -> entities/index:namingDocuments, entitiesByAlias -> entities/index:entitiesByAlias,
+       projectionPlan -> retrieval/index:projectionPlan, proposalsFeed -> progressions/index:proposalsFeed,
+       readExceptions -> progressions/index:readExceptions, readProgression -> progressions/index:readProgression,
+       readingNamePlan -> entities/index:namingPlan, selectionCreate / selectionList / selectionRelease / selectionResolve ->
+       retrieval/index:{selectionCreate, selectionList, selectionRelease, selectionResolve}, threadInstance ->
+       progressions/index:threadInstance.
+     - 3 MOVED INTO A SHARED HELPER, still seen there: the tally GROUP BY that `frontier` and `#frontierMeaning` held (their
+       only unbounded scan; `#frontierContent` keeps its own index-state read) is retrieval/frontier:#tally, one helper for
+       the levels; `#overdueScan`'s pairs scan is progressions/index:#pairs, shared with proposalsFeed (which keeps its
+       dispositions read). Two arrivals for three departures.
+     - 3 GONE, each by a requirement: #calDriftFor (its supersession join is now calibration's `worseSupersessions`,
+       LIMIT-bounded by calibration R11/R6, and extraction's `driftFor` reads it — CALIBRATION #1, EXTRACTION #1; its page
+       stays graded as `extraction/index:driftFor:page`); #calNextProbe (calibration R15: one `MIN(probe_by_ms)` row, no
+       signal list); calibrationSubjects (calibration R15: `#subjects` is `LIMIT cap + 1` with `truncated`, graded below as
+       `calibration/index:#subjects:page`).
+     - 22 are the readers' own definitions, the same helpers every module has carried since T3: `#rows`/`#one` in bias,
+       calibration, content, observation-log, progressions and retrieval/index, `#rows`/`#one`/`#cols` in entities and
+       extraction, `#rows` in connections/index, connections/themes and retrieval/frontier, and retrieval/index:rowsOf (the
+       Frontier reader's `#rows`, handed through).
+     - 14 are NEW reads or reads the reader never saw, each named with its source:
+       connections/index:{asserted (R54, `op=connectionsasserted`: every asserted connection of one document, read whole and
+       filtered by sight — its `truncated` is REC-99's violation below, REPORTED), #assertedView (R54: one containment's
+       judgements), fileMembership (R30/R49: one agenda capture's stored and pending pairs), rederiveMembership (R49: the
+       pending pairs naming one capture's addresses), relinkTargetsOf (R29: the deferred links a promoted bundle's captures
+       answer), projectRefs (R19: the promoted bundle's own edges, kept as `refsReplaced`), portionGrades (the batched
+       portion grade: the connections through the given portions' captures)} — CONNECTIONS #1, K102;
+       content/index:markStale (R41, K102 — see the CLASS ratchet's note); entities/index:{#restingOn, #withdrawnNames}
+       (R8's withdrawals, per entity); extraction/index:{reextractBasis (now also one capture's whole pdf-page units, so a
+       re-read seeds tier 3 with what is transcribed — extraction R35, D-616, EXTRACTION #1), unitsOf (R36: one capture's skipped ranges;
+       its units carry the unit bound)}; progressions/index:#threads (R8: one instance's threadings); retrieval/index:migrate
+       (the store's `#migrate` spelled `[...this.sql.exec(…)]`, which this reader does not see, now `#rows`). Per-key reads
+       but for `asserted`, `portionGrades` and `markStale`. ARRIVALS NAMED, not graded here. */
+const SCANNING_MEASURED_2026_09_15 = 190;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1546,8 +1800,7 @@ const rowSourceCalls = (body, id) => {
   let m; while ((m = re.exec(body))) out.push(body.slice(m.index, closeParen(body, m.index + m[0].length - 1)));
   return out;
 };
-/* T4 (legacy-tests): `code` may be a text (segmented here) or already-named segments (the widened corpus). */
-const segsOf = (code) => (typeof code === "string" ? segments(code) : code);
+/* T4 (legacy-tests): `segsOf` (defined above `classMembers` since T5-12) takes a text or named segments. */
 const truncationVerdicts = (code) => {
   const graded = [], ungraded = [], violations = [];
   for (const [name, body] of segsOf(code)) {
@@ -1592,7 +1845,12 @@ t("TRUNCATION SOURCE: and REC-60's three reads are graded BY NAME rather than be
 + "total, AND appear in no violation — a count of twenty is satisfied by ANY twenty, and a method "
 + "that assigns its scan in two branches is satisfied by its healthy branch unless both are asked. "
 + "These three are the reads D-225 was raised for and REC-60 capped on 2026-08-07 under IC-25",
-  ["resolutionsForCapture:rows", "documentsConcerning:scan", "connectionsFor:scan"]
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the three reads MOVED — `resolutionsForCapture` is entities'
+     `resolutionsFor` and `documentsConcerning` its `concerns` (ENTITIES #1, entities R11-R12), `connectionsFor` is
+     connections' `read` (CONNECTIONS #1, R5). RE-READ at the site, not only renamed: each is the same SQL with `LIMIT ?`
+     passed `cap + 1` and `truncated` measured off it, and `read` still assigns `scan` in its TWO branches (entity, capture),
+     both LIMIT-bounded — so this arm still asks both. */
+  ["entities/index:resolutionsFor:rows", "entities/index:concerns:scan", "connections/index:read:scan"]
     .filter((x) => !TRUNCATION.graded.includes(x)
                 || TRUNCATION.violations.some((v) => v.startsWith(`${x} `))), []);
 /* A FLOOR on the grader's REACH, because a verdict of "0 violations" is exactly what a reader
@@ -1677,11 +1935,23 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      SQL `LIMIT ?` at `PROJECT_DIRECTORY_LIMIT + 1`, and this grader can attribute the figure to it. THE
      ARRIVAL IS IN THE SAME RUN, one assertion up: `TRUNCATION SOURCES` printed 36 graded where it printed 35,
      with `projectDirectory:projects` in the GRADED list and zero violations. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
-   "documentsNamingEntity:merged", "frontier:never",
-   "queueFeed:dispAll", "queueFeed:items"]);
-const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this arm's own output, diffed by name against the opening tree
+     (11 -> 13). SEVEN MOVED, the same claim under the module's name: #contentAxisTally:raw ->
+     retrieval/index:#contentAxisTally:raw; #frontierContent:never, #frontierMeaning:never, frontier:never,
+     #frontierPage:gated -> retrieval/frontier:{#content:never, #meaning:never, #document:never, #page:gated} (the
+     Frontier reader, RETRIEVAL #1); biasInhale:bars -> bias/index:biasInhale:bars; documentsNamingEntity:merged ->
+     entities/index:namingDocuments:merged. TWO ARRIVALS, each a bounded read in a spelling REC-99's `rowSourceCalls`
+     (`X = this.#rows(`) cannot attribute, and each CUT GRADED at the published cap below:
+     calibration/index:worseSupersessions:page (calibration R11: `page = one ? this.#rows(…) : this.#rows(…)`, both
+     `LIMIT ?` at `cap + 1`) and extraction/index:capturesReadFor:page (extraction R51, K138: `page` assigned `LIMIT ?` at
+     `cap + 1` inside a `try`, declared `let page = []` above it). */
+  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
+   "calibration/index:worseSupersessions:page", "entities/index:namingDocuments:merged",
+   "extraction/index:capturesReadFor:page", "queueFeed:dispAll", "queueFeed:items",
+   "retrieval/frontier:#content:never", "retrieval/frontier:#document:never", "retrieval/frontier:#meaning:never",
+   "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
+/* T5-12: the deltas below break the WIDENED corpus (`corpusWith`), since the readers they test read it. */
+const noRowSources = corpusWith((x) => x.replace(/#rows\(/g, "#norows("));
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
 + "direction that matters, since a reader that finds no row sources must not report a clean bill",
@@ -1866,7 +2136,13 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [11, true]);  /* CONDUCT #20 at c20-batch22: the union of REC-195 (+1, #lawProposalsFor:all) and D-497 (-1, projectDirectory:projects) READS 11 on this instrument's print on the merged tree. REC-195 (2026-09-24): 11 -> 12, `#lawProposalsFor:all`, MOVED FROM THE FIGURE THIS
+  [13, true]);  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): 11 -> 13, from the printed `source bound 1 graded, 12 OUT OF
+                   REACH`, the two arrivals named at REC-99's ungradeable pin above. Source-graded is UNMOVED at 1 and
+                   CHANGED HANDS, named: `frontier:never` (a cap-carrying call to `#frontierFetch`) is now
+                   retrieval/frontier:#document:never, DERIVED from `missing` (the fetch is a module helper's argument
+                   now, out of reach), and calibration/index:worseSupersessions:page is SOURCE GRADED (its declaration is
+                   the cap-carrying read itself). extraction/index:capturesReadFor:page is OUT OF REACH (ASSEMBLED: its
+                   declaration is `let page = []`). CONDUCT #20 at c20-batch22: the union of REC-195 (+1, #lawProposalsFor:all) and D-497 (-1, projectDirectory:projects) READS 11 on this instrument's print on the merged tree. REC-195 (2026-09-24): 11 -> 12, `#lawProposalsFor:all`, MOVED FROM THE FIGURE THIS
                    INSTRUMENT PRINTED on the item's tree ("source bound 1 graded, 11 OUT OF REACH") and never
                    by incrementing the number here. Source-graded is unmoved at 1; the arrival is out of reach
                    for the reason written beside its roster entry below. PRIOR: REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
@@ -1941,9 +2217,16 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      which no longer assembles anything. `projects` is now the `.map()` of a single bounded `#rows(`, so REC-99's
      inversion grades it BY NAME one block up and this walk has nothing left to report about it. Source-graded
      is UNMOVED at 1: the departure was never source-graded here, so nothing this walk could bound was lost. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
-   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from the printed roster, diffed by name (10 -> 12): the six moved claims
+     named at REC-99's ungradeable pin (retrieval's four, bias's `bars`, entities' `merged`), each with the same reason;
+     ONE MIGRATION, named: `frontier:never` was SOURCE GRADED and its successor retrieval/frontier:#document:never is
+     DERIVED from `missing` — the Frontier reader passes the cap-carrying fetch through a helper this one-method walk does
+     not follow, the loss of reach D-389's note above took for `#frontierContent:page`; and ONE ARRIVAL,
+     extraction/index:capturesReadFor:page (ASSEMBLED by its `let page = []` declaration; its read is `LIMIT ?` at `cap + 1`). */
+  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
+   "entities/index:namingDocuments:merged", "extraction/index:capturesReadFor:page", "queueFeed:dispAll",
+   "queueFeed:items", "retrieval/frontier:#content:never", "retrieval/frontier:#document:never",
+   "retrieval/frontier:#meaning:never", "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND
@@ -1978,16 +2261,17 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
 + "and each still PASSES; what changes is that the instrument now SAYS which methods its count "
 + "cannot defend, instead of a reader having to re-derive it from a debt row",
   CENSUS_BLIND,
-  ["#calDriftFor", "#frontierContent",
+  [/* T5-12 (legacy-tests), 2026-09-27: the module names are read where each moved; the list is sorted (see the end). */
+   "retrieval/frontier:#content",
    /* REC-129, 2026-09-18 — the arrival, and like `provenanceRoutesMarked` it joins the DEFENDED
       half: its page is graded by name (`#frontierInternet:page`), so the PARTITIONED arm below
       does not move. Its unbounded half is the viewer-scoped tally GROUP BY. */
-   "#frontierInternet", "#frontierMeaning",
+   "retrieval/frontier:#internet",
    /* c19-unionfix, 2026-09-24 — two arrivals, each measured on the union. `actionQuotes` (D-148) joins the
       DEFENDED half: its page is graded by name by REC-99's inversion, so PARTITIONED below does not gain it.
       `changedFromAudit` (D-256) is blind to BOTH halves — see PARTITIONED. */
-   "actionQuotes", "biasManifest", "changedFromAudit",
-   "documentsNamingEntity", "frontier",
+   "actionQuotes", "bias/index:biasManifest", "changedFromAudit",
+   "entities/index:namingDocuments",
    /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
       than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans
       unbounded, so the CENSUS COUNT cannot move if its paging LIMIT is lost —
@@ -1998,20 +2282,46 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
       assessed count; the PAGE beside it is bounded and index-served. */
    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the same method, moved with its page and its census
       GROUP BY into provenance, read off the widened corpus under its module name. No arrival, no departure. */
-   "provenance/index:provenanceRoutesMarked", "queueFeed"]);
+   "provenance/index:provenanceRoutesMarked", "queueFeed",
+   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from the printed roster, diffed by name against the opening tree
+      (11 -> 12). MOVED (4): biasManifest -> bias/index:biasManifest, documentsNamingEntity -> entities/index:namingDocuments,
+      #frontierContent -> retrieval/frontier:#content, #frontierInternet -> retrieval/frontier:#internet (still DEFENDED:
+      `retrieval/frontier:#internet:page` is graded by name). LEFT (3), each because it no longer holds an unbounded scan
+      of its own, so it left the census and with it this set: #calDriftFor (calibration R11: the join it scanned is
+      calibration's bounded `worseSupersessions`; its page stays graded as `extraction/index:driftFor:page`), and `frontier`
+      and #frontierMeaning (their one unbounded scan, the tally, is retrieval/frontier:#tally now; their claims stay graded
+      and cut-graded under #document and #meaning). ARRIVED (4), each read:
+      - connections/index:asserted (connections R54, new): its `truncated` is measured over an UNBOUNDED read — REC-99's
+        violation, which the TRUNCATION SOURCE arm above names and which is REPORTED, not legitimate; it is here because
+        it is census-blind by construction, which is the other half of the same fact.
+      - extraction/index:documentsByReference (extraction R48 gave it `limit` and `truncated`): DEFENDED, its page is graded
+        by name (`extraction/index:documentsByReference:docs`); the unbounded half is one document's occurrences.
+      - extraction/index:unitsOf (R36): the units read carries the unit bound (`LIMIT ?`), the skipped ranges of one capture
+        are unbounded, so a lost units LIMIT would not move the count. Its `truncated:` is each unit's own stored flag.
+      - extraction/index:reextractBasis: enrolled by `PUBLISHES_BOUND`'s literal reading — the `truncated=0` it matches is a
+        SQL predicate in its units read (whole pages only, D-616), not a published bound. The method does hold an
+        unbounded read (one capture's pdf-page units) and publishes nothing a lost LIMIT could hide; named as what the
+        reader reads, not as a bound. */
+   "connections/index:asserted", "extraction/index:documentsByReference", "extraction/index:reextractBasis",
+   "extraction/index:unitsOf"].sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
 + "that IS defended into a roster of methods that are not, which is the conflation this row was "
 + "written to undo",
   DOUBLY_BLIND,
-  ["#frontierContent", "#frontierMeaning", "biasManifest",
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), diffed by name (7 -> 8): #frontierContent, biasManifest and
+     documentsNamingEntity MOVED (retrieval/frontier:#content, bias/index:biasManifest, entities/index:namingDocuments);
+     `frontier` and #frontierMeaning LEFT with their tally (see SET 2 above); connections/index:asserted,
+     extraction/index:unitsOf and extraction/index:reextractBasis ARRIVED, each blind to both halves for the reason at
+     SET 2 (`asserted` is REPORTED: its claim is REC-99's violation). */
+  ["bias/index:biasManifest", "connections/index:asserted", "entities/index:namingDocuments",
+   "extraction/index:reextractBasis", "extraction/index:unitsOf", "retrieval/frontier:#content",
    /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, blind to BOTH halves and legitimately: its bound is
       an in-memory cut of the LISTING (`from + listed.length < all.length`, `biasManifest`'s OFFSET form, which
       the grader's spelling cannot read — declared in the UNREAD roster below), while its verdict totals are
       counted over every affected bundle by design. */
-   "changedFromAudit", "documentsNamingEntity",
-   "frontier", "queueFeed"]);
+   "changedFromAudit", "queueFeed"].sort());
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
    FOUND BY THIS ITEM AND NAMED RATHER THAN FIXED, because widening `TRUNC_RE` would enlarge
@@ -2101,7 +2411,10 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       is a composite of two measurements this file already made, and not an unmeasured claim. */
    "#contradictionK3: same.truncated || doc.truncated",
    "basisVersions: from + versions.length < total",
-   "biasManifest: from + page.length < all.length",
+   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): three claims MOVED, the same text under the module's name —
+      `biasManifest` (bias/index), `deriveConnections` (connections/index:derive), `search` (retrieval/index). No arrival,
+      no departure; 14 -> 18 republications (not claims; counted at the print). */
+   "bias/index:biasManifest: from + page.length < all.length",
    /* REC-198, 2026-09-23 — DECLARED HERE BECAUSE THIS SUITE SAYS A NEW ONE MUST BE, on REC-146's reasoning above
       and not reworded to vanish from every roster. `caseDraftList` (op=casedrafts, the list of a project's drafts)
       publishes `total` — a `COUNT(*)` over `case_drafts WHERE project_id=?`, the same predicate as its page — and
@@ -2114,9 +2427,9 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       be. `biasManifest`'s OFFSET form exactly: `all` is every affected bundle, measured; `listed` is the page cut
       from it at CHANGED_FROM_AUDIT_LIMIT. A comparison of two measured figures, not an unmeasured claim. */
    "changedFromAudit: from + listed.length < all.length",
-   "deriveConnections: rowsCut || distinct.length > endsCap",
+   "connections/index:derive: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",
-   "search: ids.length >= IDS_MAX",
+   "retrieval/index:search: ids.length >= IDS_MAX",
    "suggestVersion: rc ? !rc.legs_complete : false",
    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, R16): the same claim, moved with `versionChain`
       into provenance, read off the widened corpus under its module name. No arrival, no departure. */
@@ -2124,7 +2437,7 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
 
 /* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero
    violations forever, and this estate has recorded that outcome three times. */
-const noCuts = inMemoryVerdicts(CODE.replace(/\.slice\(/g, ".noslice("));
+const noCuts = inMemoryVerdicts(corpusWith((x) => x.replace(/\.slice\(/g, ".noslice(")));
 t("REACH IS A DELTA (the in-memory cut reader): over a copy of store.mjs with no `.slice(` in it, "
 + "every in-memory claim becomes a VIOLATION and none is silently scored as compliant — the "
 + "direction that matters, since a reader that finds no cuts must not report a clean bill",
@@ -2134,11 +2447,11 @@ t("REACH IS A DELTA (the in-memory cut reader): over a copy of store.mjs with no
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a
    MECHANICALLY BROKEN copy of the same source and must find FEWER. */
-const strippedScans = CODE.replace(/#rows\(/g, "#norows(");
+const strippedScans = corpusWith((x) => x.replace(/#rows\(/g, "#norows("));
 t("REACH IS A DELTA (the scan anchor): a copy of store.mjs with no `#rows(` in it yields NO class "
 + "members — every verdict here begins at a row source",
   [classMembers(strippedScans).size, CLASS.size > 0], [0, true]);
-const strippedLoops = CODE.replace(/\bfor\s*\(/g, "forx (");
+const strippedLoops = corpusWith((x) => x.replace(/\bfor\s*\(/g, "forx ("));
 t("REACH IS A DELTA (the loop anchor): a copy with the `for` keyword broken finds FEWER, because "
 + "amplification is read off loops and not off the scan alone",
   classMembers(strippedLoops).size < CLASS.size, true);

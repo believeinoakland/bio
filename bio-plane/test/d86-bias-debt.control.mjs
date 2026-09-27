@@ -105,6 +105,8 @@ const run = (name) => {
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(tree, "pdf-worker", "src"), { recursive: true });
     for (const [file, from, to, times] of arm.patches) {
       const p = join(tree, "bio-plane", "src", file);
       const s = readFileSync(p, "latin1");

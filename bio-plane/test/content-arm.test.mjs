@@ -73,14 +73,22 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { compile, MEANING, meaningVocabulary } from "../src/query.mjs";
-import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE,
+import { CONTENT_MINTED_BY_PLANE,
          MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
-import { STEP_KINDS } from "../src/textchain.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; query-language, content R1): the compiler's `kind` vocabulary is
+   content's `CONTENT_EXTENT_KINDS` (`src/content/index.mjs`, the eight and `envelope`), no longer the catalogue's
+   copy; `chain`'s is `STEP_KINDS` and `CHAIN_KIND_MIXED` (K143 (1), content R14). */
+import { CONTENT_EXTENT_KINDS } from "../src/content/index.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED } from "../src/textchain.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const IDX = SRC("index.mjs");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; content R45): the `content` table, its indexes and the REC-104/D-686
+   decision's comment moved to content's `CONTENT_SCHEMA` (`src/content/schema.mjs`); `inquiry_basis`' indexes stay
+   in schema.mjs. The schema read is both texts. */
+import { CONTENT_SCHEMA } from "../src/content/schema.mjs";
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), CONTENT_SCHEMA].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -124,8 +132,10 @@ console.log("\n--- 1. the arm, and the two vocabularies it does not own ---");
      defect. These two assertions are the whole reason the arm imports. */
   t("`kind`'s vocabulary IS `CONTENT_EXTENT_KINDS`, not a copy of it",
     MEANING.content.sub.kind.vocab, Object.keys(CONTENT_EXTENT_KINDS));
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; K143 (1), content R14, DEC-4): a unit read by more than one step
+     kind is `mixed`, which the chain filter selects too, so the vocabulary is the step kinds and that one word. */
   t("`chain`'s vocabulary IS `STEP_KINDS`, not a copy of it",
-    MEANING.content.sub.chain.vocab, Object.keys(STEP_KINDS));
+    MEANING.content.sub.chain.vocab, [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED]);
   /* `dom` is refused BY NAME until CONTENT-HTML produces a producer (C-45.4),
      and it is absent from the map — so its absence here FALLS OUT of driving the
      map rather than being a second decision that could drift from the first. */

@@ -35,7 +35,11 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-cap10");
-const INDEX = join(ROOT, "src", "index.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the Drive prepend moved out of `src/index.mjs`'s acquire
+   into extraction's pipeline (`src/extraction/pipeline.mjs`, extraction R11), keyed on `driveHopOf(doc)`
+   (`drive`) where the control plane keyed it on `driveCapture`. `omit` and `overstrict` arm it there; what
+   each breaks is unchanged. */
+const INDEX = join(ROOT, "src", "extraction", "pipeline.mjs");
 const DRIVE = join(ROOT, "src", "drive.mjs");
 const CHAIN = join(ROOT, "src", "textchain.mjs");
 const SUITE = join(DIR, "drive-convert.test.mjs");
@@ -54,7 +58,7 @@ const edit = (file, needle, replacement) => {
   writeFileSync(file, src.replace(needle, replacement));
 };
 
-const GUARD = "if (driveCapture && Array.isArray(chain)) {";
+const GUARD = "if (drive && Array.isArray(chain)) {";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — the row that makes every other row a measurement", apply: () => {} },
@@ -79,8 +83,8 @@ const ARMS = {
     label: "the step keyed on ANY capture rather than on the Drive recogniser",
     apply: () => {
       edit(INDEX, GUARD, "if (Array.isArray(chain)) {");
-      edit(INDEX, "convertedChain(driveConvertStep(driveCapture), chain)",
-                  "convertedChain(driveConvertStep(driveCapture || { format: \"odt\" }), chain)");
+      edit(INDEX, "convertedChain(driveConvertStep(drive), chain)",
+                  "convertedChain(driveConvertStep(drive || { format: \"odt\" }), chain)");
     },
   },
 };

@@ -30,6 +30,17 @@ const REAL = ["src/index.mjs", "src/store.mjs", "src/query.mjs"].map((f) => join
 const before = REAL.map(digest);
 
 const SIGHT_LINE = "if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5 moved several subjects out of `store.mjs`, and a patch's file is a
+   path under `src/`: sight and the project visibility acts to membership (`membership/index.mjs`: `inSight`,
+   `projectCreated`, `visibilitySettingRefusal`, the private `#existenceOnly`), a creation's visibility checks to
+   promotion (`promotion/index.mjs`), `op=searchindexcheck` and `op=selectionlist` to retrieval
+   (`retrieval/index.mjs`), and the frontier to retrieval (`retrieval/frontier.mjs`, whose three levels share one
+   `#tally`). The store keeps `#inSight` as a delegation, `#hiddenSets`, `#existenceRead` and D-480's walk. */
+/* The C-70.1 answer `#existenceOnly` mints is membership's PRIVATE method now; the two REC-196 liars that answered it
+   from the store's read check reach it through this one-line accessor, added by the arm itself (it changes no
+   behaviour: nothing else calls it). */
+const EXISTENCE_ONLY_ACCESSOR = ["membership/index.mjs", "  #existenceOnly(projectId) {\n",
+  "  existenceOnlyForControl(projectId) { return this.#existenceOnly(projectId); }\n  #existenceOnly(projectId) {\n"];
 /* REC-196: §11's reads, by the label each carries, so an arm can demand every one of them by name. */
 const REC196_READS = ["image", "file", "projection", "excludedby", "backlinks", "reevaluations", "inquirystrength",
   "earnedbasis", "partitionindependence", "narrowcandidates", "versionnotice", "basisversions", "versionstrength",
@@ -68,8 +79,9 @@ const ARMS = {
      store call, and the founder's session) are spared, so the founder's two arms stay green here and
      the declaration relies on the members' arms. */
   "not-found-to-everyone": {
-    patches: [["store.mjs", "  #inSight(bundleId, viewer) {\n    const g = viewerPredicate(viewer);",
-               "  #inSight(bundleId, viewer) {\n"
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the one sight predicate is membership's `inSight`. */
+    patches: [["membership/index.mjs", "  inSight(bundleId, viewer) {\n    if (!bundleId) return false;\n    const g = viewerPredicate(viewer);",
+               "  inSight(bundleId, viewer) {\n    if (!bundleId) return false;\n"
                + "    if (String(viewer ?? \"\").startsWith(\"member:\")\n"
                + "        && this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId)?.object_type === \"project\") return false;\n"
                + "    const g = viewerPredicate(viewer);"]],
@@ -107,8 +119,10 @@ const ARMS = {
      forged-viewer row was already in the first declaration's corrected form: without the stamp a
      caller's own `viewer=class:admin` reaches the store and is believed. */
   "roster-stamp-dropped": {
-    patches: [["index.mjs", "        || PROJECT_ACTIONS.includes(op)\n        || REC30_VIEWER_READS.includes(op)) {",
-               "        || REC30_VIEWER_READS.includes(op)) {"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): N85 (membership, K124) put `memberpairings` into the same
+       stamp list between the two lines; the arm still drops PROJECT_ACTIONS alone. */
+    patches: [["index.mjs", "        || PROJECT_ACTIONS.includes(op)\n        /* N85's other half",
+               "        /* N85's other half"]],
     /* §1's and §2's labels ONLY, so a SEES-NO-ROLE or JOINED arm that went red would be UNDECLARED. */
     mustFail: ["raw (status, content type, body): op=projectinvite", "UNSIGHTED: op=projectinvite",
                "raw (status, content type, body): op=projectowneradd", "UNSIGHTED: op=projectowneradd",
@@ -186,14 +200,16 @@ const ARMS = {
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
-    patches: [["store.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=searchindexcheck is retrieval's. */
+    patches: [["retrieval/index.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
                "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE 1=1 OR rowid NOT IN\n"]],
     mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
                "still a parity check over what she can see"],
   },
   /* D-464: `op=selectionlist`'s `bytes` over every selection row again — iris's selection of the hidden project moves it. */
   "selectionbytes-whole": {
-    patches: [["store.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=selectionlist is retrieval's. */
+    patches: [["retrieval/index.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
     mustFail: ["MOVE NOTHING: op=selectionlist (status"],
   },
   /* D-464: the control plane's viewer stamp on op=stats dropped. A viewer NEVER SENT is the store's direct-internal
@@ -250,12 +266,13 @@ const ARMS = {
        the interpolation moves, and M-25 exists to refuse exactly that. The third spelling neuters the HELPER's
        result instead and leaves every `${…}` in place, so the arm still drops the predicate from THIS one reader
        (and keeps its arity: the args are empty rather than absent) while quoting nothing rendered. */
-    patches: [["store.mjs", "    const hidTail = this.#hiddenRunTail(viewer);\n    const tally = {};\n"
-               + "    for (const row of this.#rows(\n"
-               + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql}",
-               "    const hidTail = { sql: \"\", args: [] };   /* D-486 CONTROL ARM: the predicate dropped from this ONE reader */\n    const tally = {};\n"
-               + "    for (const row of this.#rows(\n"
-               + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content'${hidTail.sql}"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's frontier counts every level through ONE `#tally`,
+       which carries D-486's subtraction; the content arm's call is replaced by the same count without it (a statement
+       with no interpolation, so it quotes nothing rendered), and the document and meaning arms keep theirs. */
+    patches: [["retrieval/frontier.mjs", "    const tally = this.#tally(\"content\", viewer);",
+               "    const tally = {};   /* D-486 CONTROL ARM: the predicate dropped from this ONE reader */\n"
+               + "    for (const row of this.#rows(`SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))\n"
+               + "      tally[row.state] = row.n;"]],
     mustFail: ["A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE",
                "THE TALLY — D-486's OWN SUBJECT"],
   },
@@ -270,7 +287,8 @@ const ARMS = {
      measures the ROW-WHOLE fence alone — and the arm that must catch it is the one asserting the run's
      own id never appears in vera's bytes, which is the difference between a wrong number and a leak. */
   "d486-meaning-run-ungated": {
-    patches: [["store.mjs", "      if (!runSeen(r)) return false;\n", ""]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's meaning arm. */
+    patches: [["retrieval/frontier.mjs", "      if (!runSeen(r)) return false;\n", ""]],
     mustFail: ["THE TALLY — D-486's OWN SUBJECT",
                "AND THE RESIDUE IS A RECLASSIFICATION, NEVER A DISCLOSURE OF THE RUN ITSELF"],
   },
@@ -333,9 +351,10 @@ const ARMS = {
   /* REC-196 LIAR 2: positional for a HIDDEN project too — every project the caller cannot fully see answers C-70.1.
      §11e's 24 hidden-equals-absent arms must fail by name. */
   "rec196-hidden-too": {
-    patches: [["store.mjs",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#existenceOnly` is membership's; reached by the accessor. */
+    patches: [EXISTENCE_ONLY_ACCESSOR, ["store.mjs",
       "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;\n        const existence = this.#existenceAct(id, viewer);",
-      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=?`, id)) continue;\n        const existence = this.#inSight(id, viewer) ? null : this.#existenceOnly(id);"]],
+      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=?`, id)) continue;\n        const existence = this.#inSight(id, viewer) ? null : membershipOf(this.ctx).existenceOnlyForControl(id);"]],
     mustFail: [...REC196_READS.map((n) => `11e: HIDDEN = ABSENT, raw: op=${n} naming`),
       /* EXTENDED after the first run (2026-09-25), never exempted: the arm ALSO failed ten of REC-138's own
          hidden-equals-absent READ arms earlier in the suite (projectparticipants, image, file, affordances, …) —
@@ -344,8 +363,9 @@ const ARMS = {
   },
   /* REC-196 LIAR 3: positional to EVERYBODY — the owner included. 11f and 11f+ must fail. */
   "rec196-to-everyone": {
-    patches: [["store.mjs", "        const existence = this.#existenceAct(id, viewer);\n        if (existence) return existence;",
-               "        const existence = this.#existenceOnly(id);\n        if (existence) return existence;"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#existenceOnly` is membership's; reached by the accessor. */
+    patches: [EXISTENCE_ONLY_ACCESSOR, ["store.mjs", "        const existence = this.#existenceAct(id, viewer);\n        if (existence) return existence;",
+               "        const existence = membershipOf(this.ctx).existenceOnlyForControl(id);\n        if (existence) return existence;"]],
     /* EXTENDED 2026-09-25 by REC-197, never exempted: §12's 12b and 12h+ read a DISCOVERABLE project back
        through its OWNER's `op=projectvisibility` — a read naming the project's own id, which this arm answers
        C-70.1 for everybody. A second witness to the same liar, by name. */
@@ -373,7 +393,8 @@ const ARMS = {
      to DISCOVERABLE. Every arm that SENDS a value holds; the FAIL-CLOSED arms must fail BY NAME — 12a and 12a+
      (a creation) and 12h (a fork, which reaches the same default through `promote`). Nothing else may fail. */
   "rec197-absent-discoverable": {
-    patches: [["store.mjs", "    let creationVisibility = null;\n",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a creation's visibility is promotion's (its R19). */
+    patches: [["promotion/index.mjs", "    let creationVisibility = null;\n",
                "    let creationVisibility = (typeof pkg.ownerMemberId === \"string\" && pkg.ownerMemberId) ? \"discoverable\" : null;\n"]],
     /* EXTENDED after the first run (2026-09-25), never exempted: 12g ALSO fails, because its fixture is 12a's
        project — created with the field ABSENT — and its "the setting did not move" half reads `hidden`. Under this
@@ -383,26 +404,31 @@ const ARMS = {
   },
   /* REC-197 LIAR 3: a machine may choose — the ownerless refusal disarmed. 12d and 12d+ (ADMIN and MEMBER) fail. */
   "rec197-machine-may-choose": {
-    patches: [["store.mjs", "      if (!creator && pkg.visibility === \"discoverable\")\n",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): promotion's R19. */
+    patches: [["promotion/index.mjs", "      if (!creator && pkg.visibility === \"discoverable\")\n",
                "      if (false && !creator && pkg.visibility === \"discoverable\")\n"]],
     mustFail: ["12d: a MACHINE credential", "12d+: and nothing was created"],
   },
   /* REC-197 LIAR 2: the field accepted and NOTHING recorded. The answer reads back through `#visibilityOf`, so it
      cannot echo the request: 12b, 12b+, 12c and 12h+ fail. */
   "rec197-not-recorded": {
-    patches: [["store.mjs", "      if (!cur && creationVisibility)\n        this.sql.exec(`INSERT INTO project_visibility",
-               "      if (false)\n        this.sql.exec(`INSERT INTO project_visibility"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the record is written by membership's `projectCreated` (R71),
+       which promotion calls with the creation's visibility. */
+    patches: [["membership/index.mjs", "    if (visibility !== null && visibility !== undefined)\n      this.sql.exec(`INSERT INTO project_visibility",
+               "    if (false)\n      this.sql.exec(`INSERT INTO project_visibility"]],
     mustFail: ["12b: a member's creation", "12b+: and vera's directory", "12c: visibility=hidden", "12h+: a fork with"],
   },
   /* REC-197: the field on a REVISION silently ignored. 12g fails. */
   "rec197-revision-ignored": {
-    patches: [["store.mjs", "      if (base !== null || normalizeType(meta.object_type) !== \"project\")\n        return refusal(",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): promotion's R19, which reads the promoted type once. */
+    patches: [["promotion/index.mjs", "      if (base !== null || promotedType !== \"project\")\n        return refusal(",
                "      if (false)\n        return refusal("]],
     mustFail: ["12g: visibility on a REVISION"],
   },
   /* REC-197 OVER-STRICTNESS: the vocabulary asked as a set rather than two comparisons. Nothing may fail. */
   "rec197-setting-as-set": {
-    patches: [["store.mjs", "    if (want !== \"discoverable\" && want !== \"hidden\")\n      return refusal(\"PROJECT_VISIBILITY_UNKNOWN_SETTING\",",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): membership's `visibilitySettingRefusal`. */
+    patches: [["membership/index.mjs", "    if (want !== \"discoverable\" && want !== \"hidden\")\n      return refusal(\"PROJECT_VISIBILITY_UNKNOWN_SETTING\",",
                "    if (!new Set([\"discoverable\", \"hidden\"]).has(want))\n      return refusal(\"PROJECT_VISIBILITY_UNKNOWN_SETTING\","]],
     mustFail: [],
   },
@@ -410,8 +436,10 @@ const ARMS = {
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,
      `#bundleRedactor` — correct work in a form the suite did not anticipate. Nothing may fail. */
   "sight-via-redactor": {
-    patches: [["store.mjs", "    const g = viewerPredicate(viewer);\n    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);",
-               "    return this.#bundleRedactor(viewer)(bundleId) !== null;"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `#inSight` is a delegation to membership's one
+       predicate now; the arm answers it through the store's other spelling, `#bundleRedactor`, as before. */
+    patches: [["store.mjs", "  #inSight(...a) { return membershipOf(this.ctx).inSight(...a); }",
+               "  #inSight(bundleId, viewer) { return this.#bundleRedactor(viewer)(bundleId) !== null; }"]],
     mustFail: [],
   },
 };
@@ -425,6 +453,8 @@ const run = (name) => {
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(tree, "pdf-worker", "src"), { recursive: true });
     for (const [file, from, to] of arm.patches) {
       const p = join(tree, "bio-plane", "src", file);
       const s = readFileSync(p, "utf8");

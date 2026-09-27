@@ -42,6 +42,10 @@
  * the 13,720-unit ceiling of the caller-authored route, because `INLINE_MAX`
  * refuses the file first -- the same shape as REC-91's missing 2 MiB arm, one
  * bound over. It is recorded in M-35 rather than faked here.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): the arms arm extraction's index and
+ * pipeline and observation-log's sentence. baseline 61/0 · nounitbound 57/4 · sentencebytesonly 60/1 · gtnotge 58/3 ·
+ * tighten 56/5 · pinoff 60/1 — every arm AS DECLARED, 0 undeclared failures, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -62,8 +66,13 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("rec111");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
-const INDEX = join(PLANE, "src/index.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the text index's writer and its bound left `store.mjs` for
+   extraction (`src/extraction/index.mjs` `indexUnits`, R22), the wire's envelope left `index.mjs` for extraction's
+   pipeline (`src/extraction/pipeline.mjs`, R16), and the `partial` sentence is observation-log's
+   (`src/observation-log/index.mjs`, its R6–R8). The names STORE and INDEX are kept for the arms below. */
+const STORE = join(PLANE, "src/extraction/index.mjs");
+const INDEX = join(PLANE, "src/extraction/pipeline.mjs");
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;   /* both files are hundreds of KB; a restore over a stub
                               must fail loudly rather than quietly. */
@@ -92,8 +101,7 @@ function arm(file, find, replace) {
   return { armed: true, matches: n };
 }
 
-const BRANCH = `      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND
-          || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }`;
+const BRANCH = `      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {`;
 
 const ARMS = {
   baseline: {
@@ -121,7 +129,7 @@ const ARMS = {
             + "is the finding: DECLARING a bound and ENFORCING one are two acts, and this arm is "
             + "the gap between them), `G7`, every `G8` over-strictness arm, and every A-F arm",
     patch: () => arm(STORE, BRANCH,
-      `      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }   /* ARMED */`),
+      `      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {   /* ARMED */`),
   },
 
   /* THE BOUND AND WHAT THE RECORD SAYS ABOUT IT ARE TWO DEFENCES, and a suite
@@ -130,14 +138,14 @@ const ARMS = {
      correct and only the SENTENCE regresses to naming bytes alone -- which is
      the record under-describing a refusal it really did make. */
   sentencebytesonly: {
-    files: [STORE], suite: SUBJECT,
+    files: [OBSLOG], suite: SUBJECT,
     why: "revert `#observeIndexed`'s `partial` sentence to the pre-item wording that names only "
        + "the byte bound, leaving the unit bound itself enforced",
     mustFail: ["G6: the capture reads PARTIAL and the sentence NAMES THE UNIT BOUND"],
     mustPass: "`G5` (the trimming is untouched -- the right number of units is indexed and the "
             + "record simply will not say why), `G6b` (the counts are in `detail`, not in "
             + "`bound`), `G7` and every `G8` arm",
-    patch: () => arm(STORE, "      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;",
+    patch: () => arm(OBSLOG, "      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;",
       "      const byUnits = false;   /* ARMED */"),
   },
 

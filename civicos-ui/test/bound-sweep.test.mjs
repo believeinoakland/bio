@@ -215,6 +215,10 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    both estates and a node release closing the private door goes red once instead of half. The
    import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs";
+import { inlinedStore } from "../../bio-plane/test/extracted-sources.mjs";   /* T5-12 (legacy-tests): see WALK 1's corpus */
+import { reinlineLayer3 } from "../../bio-plane/test/t4-extracted.mjs";
+import { reinlineLayer5, T5_MODULES } from "../../bio-plane/test/t5-extracted.mjs";
+import { moduleSources } from "../../bio-plane/test/extracted-sources.mjs";
 import vm from "vm";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
@@ -227,7 +231,13 @@ let n = 0, bad = 0;
 const ok = (what, cond) => { n++; if(!cond){ bad++; console.error("  NOT OK:", what); } };
 
 const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
-const STORE = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; layers 2-5 of T3-T5): this walk's subject is the store's class read as
+   a census (op -> method off the dispatch map, the method's `const cap =`), and the extractions left it reading one-line
+   delegations and spreads of module routes (`...retrievalRoutes(...)`, `...entitiesOps(...)`, …) — the capped roster
+   fell from 23 ops at the T5 opening to 9 while every op stayed capped. The corpus is the store's text with the
+   extracted modules RE-INLINED where the store delegates to them, exactly as `bio-plane/test/bounds.test.mjs` reads
+   it (T3's `inlinedStore`, T4's `reinlineLayer3`, T5's `reinlineLayer5`, each stating its substitutions). */
+const STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text;
 const QUERY = fs.readFileSync(new URL("../../bio-plane/src/query.mjs", import.meta.url), "utf8");
 
 /* ==========================================================================
@@ -278,8 +288,10 @@ const QUERY = fs.readFileSync(new URL("../../bio-plane/src/query.mjs", import.me
  *                     (its cap lives in query.mjs and is confirmed below by its
  *                     own name) and `op=audit`. Printed rather than suppressed.
  */
+/* RE-ANCHORED 2026-09-27 (T5-12): a name may carry `$`, the re-inlining helper's spelling for a module method whose
+   name another already holds (`read$connectionsOf`, t5-extracted.mjs (3)). */
 const methodBodies = (text) => {
-  const heads = []; const re = /^ {2}(?:static\s+)?([a-zA-Z#][a-zA-Z0-9]*)\s*\(/gm;
+  const heads = []; const re = /^ {2}(?:static\s+)?([a-zA-Z#][a-zA-Z0-9$]*)\s*\(/gm;
   let m; while((m = re.exec(text))) heads.push({ name: m[1], at: m.index });
   const out = new Map();
   heads.forEach((h, i) => { if(!out.has(h.name))
@@ -291,7 +303,7 @@ const methodBodies = (text) => {
    `limit:` past a window nor invent one. */
 const forwardsLimit = (text) => {
   const out = new Map();
-  const re = /^\s+([a-z][a-z0-9]*):\s*\(\)\s*=>\s*this\.([a-zA-Z][a-zA-Z0-9]*)\(\{/gm;
+  const re = /^\s+([a-z][a-z0-9]*):\s*\(\)\s*=>\s*this\.([a-zA-Z][a-zA-Z0-9$]*)\(\{/gm;
   let m; while((m = re.exec(text))){
     const [, op, meth] = m;
     let i = re.lastIndex - 1, depth = 0, start = -1;
@@ -305,19 +317,51 @@ const forwardsLimit = (text) => {
   }
   return out;
 };
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the extracted modules compute the SAME cap through ONE helper each —
+   entities' `this.#clamp(limit)`, connections' `clamp(limit, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX)`,
+   calibration's `this.#cap(limit)` — where the store spelled the expression inline. A cap that is a call of a helper
+   with `limit` is read as the helper's RETURN EXPRESSION with its parameters replaced by the call's arguments (the
+   text the store held inline), found in the same corpus; the question asked of it is unchanged. A helper this cannot
+   find leaves the statement as written, which no rule below calls unconditional. */
+const helperExpr = (text, name, args) => {
+  const esc = name.replace(/[#$]/g, "\\$&");
+  let params = null, expr = null;
+  const meth = new RegExp(`^\\s+${esc}\\s*\\(([^)]*)\\)\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, "m").exec(text);
+  const arrow = new RegExp(`const ${esc}\\s*=\\s*\\(([^)]*)\\)\\s*=>\\s*([^;]+);`).exec(text);
+  if(meth){ const r = /return\s+([^;]+);/.exec(meth[2]); if(r){ params = meth[1]; expr = r[1]; } }
+  else if(arrow){ params = arrow[1]; expr = arrow[2]; }
+  if(expr === null) return null;
+  const ps = params.split(",").map(x => x.split("=")[0].trim()).filter(Boolean);
+  ps.forEach((p, k) => { if(args[k] !== undefined) expr = expr.replace(new RegExp(`\\b${p}\\b`, "g"), args[k]); });
+  return expr;
+};
+let CAP_CORPUS = "";
 const capStatement = (body) => {
   const i = body.indexOf("const cap ="); if(i < 0) return null;
   const j = body.indexOf(";", i);
-  return j < 0 ? null : body.slice(i, j + 1).replace(/\s+/g, " ").trim();
+  if(j < 0) return null;
+  const stmt = body.slice(i, j + 1).replace(/\s+/g, " ").trim();
+  const h = /^const cap = (?:this\.)?(#?[A-Za-z_$][\w$]*)\(\s*(limit\b[^)]*)\);$/.exec(stmt);
+  if(!h) return stmt;
+  const e = helperExpr(CAP_CORPUS, h[1], h[2].split(",").map(x => x.trim()));
+  return e === null ? stmt : `const cap = ${e.replace(/\s+/g, " ").trim()};`;
 };
 /* THE ONE QUESTION: does the cap expression name a value to use when the caller
    sent nothing? */
+/* RE-ANCHORED 2026-09-27 (T5-12): calibration's helper falls to its named default INSIDE the clamp
+   (`Math.min(Number.isFinite(n) && n > 0 ? n : CALIBRATION_LIMIT_DEFAULT, CALIBRATION_LIMIT_MAX)`), a ternary to a
+   named default like the one below that ends the statement; it is read the same way wherever it stands. */
 const unconditional = (cap) =>
   /Number\(\s*limit\s*\)\s*\|\|/.test(cap)
   || /:\s*(?:Store\.)?[A-Z][A-Z0-9_]*DEFAULT\s*;$/.test(cap)
+  || /\?\s*[\w$.]+\s*:\s*(?:Store\.)?[A-Z][A-Z0-9_]*DEFAULT\s*[,)]/.test(cap)
   || /:\s*\d+\s*;$/.test(cap);
 
+/* The helpers live in the modules' own source (a free function such as connections' `clamp`, or a private method the
+   re-inlined text does not carry), so the helper lookup reads the corpus AND the T5 modules' files. */
+const T5_MODULE_SRC = Object.values(T5_MODULES).map((d) => moduleSources(d)).join("\n");
 const classifyOps = (text) => {
+  CAP_CORPUS = text + "\n" + T5_MODULE_SRC;
   const bodies = methodBodies(text);
   const uncond = new Map(), optional = new Map(), unjudged = new Map();
   for(const [op, meth] of forwardsLimit(text)){
@@ -353,7 +397,9 @@ ok("WALK 1: AND THE FIVE THE OLD EXTRACTOR COULD NOT SEE — REC-59's and REC-60
    OPS.has("concerns") && OPS.has("resolutions") && OPS.has("connections")
    && OPS.has("projection") && OPS.has("exportlog"));
 ok("WALK 1: `op=concerns` in particular, the op this item exists for, reaches the roster THROUGH THE PLANE'S SOURCE and is not named into it here",
-   OPS.get("concerns") === "documentsConcerning");
+   /* RE-ANCHORED 2026-09-27 (T5-12; entities R15): the reverse index is entities' `concerns` (was the store's
+      `documentsConcerning`), reached through the re-inlined `...entitiesOps(...)` spread. */
+   OPS.get("concerns") === "concerns");
 /* INSTRUMENT: the superseded matcher is kept, RUN, and asserted to be BLIND — so
    the correction above is a measurement and not a claim about a regex nobody
    ran. It is the only use of the old shape in this file. */
@@ -364,7 +410,7 @@ const OLD_MATCHER = (text) => {
 };
 const OLD_BLIND = [...METHODS].filter(m => !OLD_MATCHER(STORE).has(m));
 ok("WALK 1 · THE INSTRUMENT WAS THE DEFECT, MEASURED: UI-39's `limit = <digits>` matcher, run here against today's plane, MISSES capped methods that this walk finds",
-   OLD_BLIND.length >= 5 && OLD_BLIND.includes("documentsConcerning"));
+   OLD_BLIND.length >= 5 && OLD_BLIND.includes("concerns"));   /* RE-ANCHORED 2026-09-27 (T5-12): entities' name, as above */
 console.log(`     UI-39's matcher is blind to ${OLD_BLIND.length} of the ${METHODS.size} capped methods: ${OLD_BLIND.join(" ")}`);
 
 /* op=list's BARE ARM: REC-60 DECIDED to keep it, and the decision is honoured by
@@ -853,7 +899,14 @@ const CAND_ASK = U.RESOLVE_CAND_LIMIT;
    class, where a fixture that invents a value makes a dead branch render alive.
    This is not used as a fixture value; it is used to PROVE the hazard above is
    real, which is what justifies driving the arms off-ceiling. */
-const RN_CEILING = Number((/documentsNamingEntity\(\{[\s\S]{0,2000}?Math\.min\(Number\(limit\)\s*\|\|\s*\d+,\s*(\d+)\)/.exec(STORE)||[])[1]);
+/* RE-ANCHORED 2026-09-27 (T5-12; entities R19): op=readingname is entities' `namingDocuments` (was the store's
+   `documentsNamingEntity`), whose clamp names its constants (`Math.min(Number(limit) || NAMING_LIMIT_DEFAULT,
+   NAMING_LIMIT_MAX)`); the method is the one WALK 1 found for the op, and a named ceiling is read off the module's own
+   `const NAMING_LIMIT_MAX = <n>`. A digit ceiling, as before, is read as written. */
+const RN_METHOD = OPS.get("readingname") || "namingDocuments";
+const RN_CEIL_TOKEN = (new RegExp(`${RN_METHOD.replace(/[$]/g, "\\$")}\\(\\{[\\s\\S]{0,2000}?Math\\.min\\(Number\\(limit\\)\\s*\\|\\|\\s*[\\w.]+,\\s*([\\w.]+)\\)`).exec(STORE)||[])[1] || "";
+const RN_CEILING = Number(/^\d+$/.test(RN_CEIL_TOKEN) ? RN_CEIL_TOKEN
+  : (new RegExp(`const ${RN_CEIL_TOKEN.split(".").pop()}\\s*=\\s*(\\d+)\\s*;`).exec(T5_MODULE_SRC + "\n" + STORE)||[])[1]);
 ok("ARM B · INSTRUMENT: the plane's own ceiling for this op is read out of store.mjs, not typed here",
    Number.isFinite(RN_CEILING) && RN_CEILING > 0);
 ok("ARM B · THE HAZARD IS REAL, MEASURED: what this screen asks for and what the plane clamps to are the SAME NUMBER, so an arm driven at the real ceiling would pass over a hand-typed figure — which is why every arm below is driven off it",

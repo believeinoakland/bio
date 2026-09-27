@@ -62,21 +62,31 @@ const ARMS = {
      names exactly the right transcription, and still names both caps. That is
      the point of the arm: re-grading and naming-the-work are separable, and the
      suite must be pinning the second rather than merely the first. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the record act moved out of `store.mjs`
+     (`#calDriftFor` gone) into `src/calibration/index.mjs` `calibrationRecord`, where the obligations
+     are now the LISTENERS' answer (calibration R12; extraction's `obligationsFor`, R40). The defect is
+     inserted right after the listeners have answered, over the same obligations and the same cap, so it
+     still re-grades exactly the transcriptions the handler named. */
   regrade: {
-    file: "src/store.mjs",
-    find: `      const obligations = d.raises_obligation
-        ? this.#calDriftFor(prev.calibration_id) : [];`,
-    repl: `      const obligations = d.raises_obligation
-        ? this.#calDriftFor(prev.calibration_id) : [];
+    file: "src/calibration/index.mjs",
+    find: `          if (cut && r.truncated === true) truncated = true;
+        }
+      }`,
+    repl: `          if (cut && r.truncated === true) truncated = true;
+        }
+      }
       /* NEGATIVE CONTROL ARM (a) — THE DEFECT, INSERTED. */
       if (d.raises_obligation)
-        for (const o of obligations)
-          this.sql.exec(\`UPDATE reading_text_source SET derivation_cap=? WHERE capture_sha=?\`,
-                        cal.cap, o.capture_sha);`,
+        for (const o of (obligations || []))
+          this.#sql.exec(\`UPDATE reading_text_source SET derivation_cap=? WHERE capture_sha=?\`,
+                         cal.cap, o.capture_sha);`,
     mustFail: ["NO MACHINE MINTS A GRADE (DEC-4)"],
     mustPass: ["op=calibrationdrift names EXACTLY", "IT RAISES A RE-EVALUATION OBLIGATION"],
   },
 
+  /* RETIRED 2026-09-27 (T5-12, legacy-tests): a first `changelog:` entry stood here, a garbled paste
+     (arm (b)'s find with arm (a)'s tail and needles). It was a duplicate object key, so JavaScript
+     discarded it for the entry below and it never ran; removed so the one arm (b) is the one read. */
   /* (b) THE ITEM'S NEGATIVE CONTROL (2). Let a CHANGELOG SIGNAL ALONE mark a
      calibration current, with no probe run. Armed by adding the path a
      well-meaning author would add: the vendor announced a release, so record
@@ -85,8 +95,12 @@ const ARMS = {
      MUST FAIL: the three "A CLAIM IS NOT A MEASUREMENT" assertions.
      MUST NOT FAIL: the refusal of a signal that CARRIES a cap, which is a
      different fence entirely and must still be standing. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `calibrationSignalRecord` moved to
+     `src/calibration/index.mjs`; the anchor's text is unchanged there. The inserted mint is re-spelled
+     in the module's own names (`#live`, `#mintId`, `#sql` for the store's `#calibrationCurrent`,
+     `#mintCalibrationId`, `sql`); what it writes is the same. */
   changelog: {
-    file: "src/store.mjs",
+    file: "src/calibration/index.mjs",
     find: `    const subject = this.#one(
       \`SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
          FROM calibration_subjects WHERE engine=?\`, sig.engine);`,
@@ -96,44 +110,10 @@ const ARMS = {
     /* NEGATIVE CONTROL ARM (b) — THE DEFECT, INSERTED: an announcement mints a
        "current" calibration with no probe behind it, carrying the last cap. */
     {
-      const live = this.#calibrationCurrent(sig.engine);
+      const live = this.#live(sig.engine);
       if (live) {
-        const nid = this.#mintCalibrationId();
-        this.sql.exec(
-          \`INSERT INTO calibrations
-             (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by,note)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?)\`,
-          nid, sig.engine, live.version, observed, now, live.cap,
-          "announcement", "{}", "{}", sig.source, "from a changelog");
-        this.sql.exec(\`UPDATE reading_text_source SET derivation_cap=? WHERE capture_sha=?\`,
-                        cal.cap, o.capture_sha);`,
-    mustFail: ["NO MACHINE MINTS A GRADE (DEC-4)"],
-    mustPass: ["op=calibrationdrift names EXACTLY", "IT RAISES A RE-EVALUATION OBLIGATION"],
-  },
-
-  /* (b) THE ITEM'S NEGATIVE CONTROL (2). Let a CHANGELOG SIGNAL ALONE mark a
-     calibration current, with no probe run. Armed by adding the path a
-     well-meaning author would add: the vendor announced a release, so record
-     that the engine now stands at that version and carry the last cap forward.
-     It is wrong because the cap is a MEASUREMENT and nothing measured this one.
-     MUST FAIL: the three "A CLAIM IS NOT A MEASUREMENT" assertions.
-     MUST NOT FAIL: the refusal of a signal that CARRIES a cap, which is a
-     different fence entirely and must still be standing. */
-  changelog: {
-    file: "src/store.mjs",
-    find: `    const subject = this.#one(
-      \`SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
-         FROM calibration_subjects WHERE engine=?\`, sig.engine);`,
-    repl: `    const subject = this.#one(
-      \`SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
-         FROM calibration_subjects WHERE engine=?\`, sig.engine);
-    /* NEGATIVE CONTROL ARM (b) — THE DEFECT, INSERTED: an announcement mints a
-       "current" calibration with no probe behind it, carrying the last cap. */
-    {
-      const live = this.#calibrationCurrent(sig.engine);
-      if (live) {
-        const nid = this.#mintCalibrationId();
-        this.sql.exec(
+        const nid = this.#mintId();
+        this.#sql.exec(
           \`INSERT INTO calibrations
              (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by,note)
            VALUES (?,?,?,?,?,?,?,?,?,?,?)\`,
@@ -146,7 +126,7 @@ const ARMS = {
            the suite DIED, and the driver reported -1 pass / -1 fail / foot
            false rather than a confident zero. An arm that crashes its subject
            measures nothing, and the only reason that was visible is the -1. */
-        this.sql.exec(\`UPDATE calibrations SET replaced_by=?, drift=? WHERE calibration_id=?\`,
+        this.#sql.exec(\`UPDATE calibrations SET replaced_by=?, drift=? WHERE calibration_id=?\`,
                       nid, "same", live.calibration_id);
       }
     }`,
@@ -188,6 +168,23 @@ const ARMS = {
        1/2 — an arm scored NOT-AS-DECLARED by its own harness's typo rather than
        by anything about the subject. Recorded because it is the same class as
        an arm that never armed: the instrument was wrong, not the code. */
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): THE THROUGH-OP HALF GAINED A THIRD SITE IN T5, measured:
+       with the two sites above alone the arm came back 111/2, the pure arms failing and the through-op arm
+       "cannot push the interval out" GREEN. `src/calibration/index.mjs` `#nextProbe` (calibration R6/R7, moved
+       from the store's `#calNextProbe`) now hands `nextProbeDue` only `MIN(probe_by_ms)` of the unconsumed
+       signals, where the store handed it every signal; the minimum taken in SQL is rule 4 enforced a third
+       time, so a later signal never reaches the function. Site 3 hands it every signal again, in arrival
+       order, which is the store's shape: the arm breaks the same rule through the op as it always did. */
+    patches3: [
+      ["src/calibration/index.mjs",
+       `      \`SELECT MIN(probe_by_ms) AS by FROM calibration_signals
+        WHERE engine=? AND consumed_at IS NULL\`, subject.engine);
+    const signals = s && Number.isFinite(s.by) ? [{ probe_by: s.by }] : [];`,
+       `      \`SELECT MIN(probe_by_ms) AS by FROM calibration_signals
+        WHERE engine=? AND consumed_at IS NULL\`, subject.engine);
+    const signals = this.#rows(\`SELECT probe_by_ms FROM calibration_signals WHERE engine=? AND consumed_at IS NULL
+        ORDER BY rowid\`, subject.engine).map((r) => ({ probe_by: r.probe_by_ms }));   /* NC ARM (c) — DEFECT, SITE 3 */`],
+    ],
     mustFail: ["A SIGNAL ASKING LATER CANNOT PUSH IT OUT",
                "a signal asking for a LATER probe cannot push the interval out"],
     mustPass: ["a signal asking EARLIER pulls it in", "IT SHORTENED the interval"],
@@ -235,9 +232,8 @@ const ARMS = {
 /* ------------------------------------------------------------------ *
  * The runner
  * ------------------------------------------------------------------ */
-function snapshot(arm) {
+function snapshot(arm, rel = ARMS[arm].file) {
   mkdirSync(PRISTINE, { recursive: true });
-  const rel = ARMS[arm].file;
   const buf = readFileSync(abs(rel));
   /* UNIQUELY NAMED PER ARM. A shared pristine copy is how a restore comes to
      verify against something another arm wrote. */
@@ -323,6 +319,23 @@ for (const name of names) {
     src = src.replace(find, repl);
   }
   writeFileSync(abs(arm.file), src);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `patches3` are [file, find, repl] sites in a SECOND file,
+     armed with the rest as one arm (see `delay`); each file is snapshotted, matched once and restored alike. */
+  const snaps3 = [];
+  for (const [file, find, repl] of (arm.patches3 || [])) {
+    const s3 = snapshot(name, file);
+    snaps3.push(s3);
+    const cur = readFileSync(abs(file), "utf8");
+    const hits = cur.split(find).length - 1;
+    console.log(`    patch anchor (${file}) matched ${hits} time(s)`);
+    if (hits !== 1) {
+      console.log(`    FATAL: an arm that did not arm (or armed twice) proves nothing — ABORTING`);
+      for (const x of snaps3) restore(x);
+      restore(snap);
+      process.exit(2);
+    }
+    writeFileSync(abs(file), cur.replace(find, repl));
+  }
   const r = runSuite(name);
   console.log(`    MEASURED ${r.pass} pass / ${r.fail} fail · foot ${r.foot} · ${r.path}`);
   const fails = failedLabels(r.text);
@@ -336,6 +349,7 @@ for (const name of names) {
                                + `, must-pass broken ${brokeMustPass.length})`));
   if (!asDeclared) surprises++;
   restore(snap);
+  for (const x of snaps3) restore(x);
 }
 
 console.log("\n-- RESTORED BASELINE (the arms left nothing behind) --");

@@ -58,6 +58,7 @@
  * CPDF-16 measured that NEITHER local model passes the noise control, so no
  * agreement figure may be read as accuracy at all. This suite quotes none.**
  *
+ * NEGATIVE CONTROL: RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN on a baseline of 79/0 (legacy-index's stamps merged): arm (2) now arms `ocr-worker/src/member.mjs` (the floor's read moved there, ocr-worker T2-12) and arm (3) `bio-plane/src/extraction/pipeline.mjs` (tier 3 moved with extraction). (1) 43/36 · (2) 78/1, the section-9 floor arm alone · (3) 69/10, the chain-shape arms · (4) 72/7, the Pillow digest by name, CCITT and ink arms spared; 4 of 4 as declared, every restore sha256 AND cmp identical, the rebuilt artifact the committed one, tree re-green at 79/0.
  * NEGATIVE CONTROL: RE-RUN 2026-09-25 by D-320 against a baseline of 77 pass / 0 fail with a FOURTH arm — a NO-OP DCT decoder (right dimensions, no picture) -> 70/7: section 11's DCT page stops reaching tier 3, the Pillow-digest arm fails BY NAME, and every CCITT and ink-page arm is spared; arms (1)-(3) on the new baseline 42/35, 76/1, 67/10, all as declared; 4 of 4, every restore sha256 AND cmp identical. The original run follows.
  * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-member-e2e.control.mjs`. THREE ARMS — the three the QUEUE ROW names — each armed ALONE on the REAL path (real plane, real binding, real engine, real scanned page), each rebuilding the member's committed artifact, each declared before arming, each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with byte counts printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 63 pass / 0 fail / exit 0 / foot reached. (1) STRIP THE `text_source` MARKER — the member stops naming what performed the derivation, so the plane has nothing to compose a chain from -> **35/28**: the chain arms, the PROJECTION, the INDEX and the EXPORT distinguishability arms all red, and the MUST-NOT held (the text-layer document's own arms never touch the member and stayed green); (2) DROP THE CONFIDENCE FLOOR — the member stops reporting the floor its instance is configured with, so a region the engine could barely read reaches the record as a best guess -> **62/1**, the section-9 floor arm, and only it; (3) COLLAPSE THE CHAIN TO ONE LABEL — the wire records a single `ocr` step with no `pixels` before it (deliberately NOT a literal string: `checkChain` refuses that outright and the arm would then prove the type check rather than the rule) -> **55/8**, every arm asserting the chain names EACH step, in the acquire path AND in the export, **while the index and the terminal-step projection stayed GREEN as declared — they read only the LAST step and structurally cannot see this collapse, which is worth knowing about what those two surfaces can and cannot tell you**. 3 arms run, 0 not as declared, every restore byte-identical, tree re-green at 63/0. Arm (3) mutates `bio-plane/src/index.mjs`, which this item does not own; it is copied aside and restored under verification, on `nc-cpdf10.mjs`'s precedent. The fleet gates' own arms are declared in `fleetbundles.test.mjs`, and the member's six in `ocr-worker/test/ocr-worker.test.mjs`.
  */
@@ -565,6 +566,21 @@ console.log("\n--- 10 · THE READ-TIME RE-READ, on the REAL engine (CPDF-19 / D-
      cannot is that the lifted seam reaches a REAL member and composes the chain from
      its REAL answer; the refusals, the stale mark and the observation are driven
      there against a stub, deliberately, and are not repeated here. */
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R35, D-616), never exempted, and taken from D-616's own
+     correction of this section (`land/worker/D-616` @ 849c1a091b, which extraction's T5-2 built). This section
+     re-read the capture section 4 filed and expected the engine to transcribe its page AGAIN. That capture's reading
+     already holds the page's transcription (the acquire read it at tier 3 and its text units were filed), and R35 is
+     that a re-read seeds tier 3 with the pages the stored reading transcribed and asks only for the rest. The old
+     assertion was right about the seam reaching the real member and wrong about WHEN it should. So the first arm
+     pins the rule on the real path, and the real-engine arms below are driven where a re-read SHOULD reach the
+     engine: the same capture filed under a reading whose text the record does not hold (no text units), where the
+     page is asked again exactly as before. */
+  const again = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
+  t("D-616: a capture whose page the record already holds transcribed is NOT sent to the engine again",
+    [again.reextraction?.performed, /already transcribed/.test(again.reextraction?.why || "")], [false, true]);
+  const { text_units: _held, ...noText } = real;
+  t("the same capture is filed under a reading whose text the record does not hold",
+    (await promoteDoc(noText)).promoted, true);
   const re = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
   t("the read op now REACHES TIER 3 when asked", [re.ok, re.tier], [true, 3]);
   t("it was performed and written", [re.reextraction?.performed, re.reextraction?.written], [true, true]);

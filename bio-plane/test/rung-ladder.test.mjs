@@ -237,9 +237,11 @@ function methodBody(src, name) {
   return null;
 }
 
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; progressions R27): progressions answers its refusals through its own
+   DEC-49 helper `refusal("CODE", …)` (src/progressions/checks.mjs), the same class of refusal as `refuse("CODE"`. */
 const jre = new RegExp(
   `reason:\\s*"(${JUSTIFICATION_REFUSALS.join("|")})"`
-  + `|refuse\\("(${JUSTIFICATION_REFUSALS.join("|")})"`, "g");
+  + `|refus(?:e|al)\\("(${JUSTIFICATION_REFUSALS.join("|")})"`, "g");
 
 /* THE VERSION FAMILY IS HELD OUT OF THE TEXTUAL SCAN DELIBERATELY, and this is
    the sharpest thing in the file. All six version acts route through ONE
@@ -297,6 +299,24 @@ function demandsInBody(body, src, depth = 0) {
     }
   return false;
 }
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5's layers 2, 4 and 5 moved more acts out of the store; the store's
+   dispatch map spreads each module's op map (`...entitiesOps(entitiesOf(this.ctx), …)`, `...progressionOps(…)`, …),
+   so `op=relationdeclare` is entities' `declareRelation` and `op=discharge` progressions' `dischargeStage`. An op the
+   store's map does not name is looked up in those maps too, exactly as in `membershipOps` above, and read in the
+   module's own source (one hop into its private helpers, as for the store). */
+const T5_OP_MAPS = [["entities", "entitiesOps"], ["progressions", "progressionOps"], ["connections", "connectionsOps"],
+  ["bias", "biasOps"], ["calibration", "calibrationOps"], ["extraction", "extractionOps"],
+  ["observation-log", "observationLogOps"]];
+const T5_ROUTES = new Map();
+for (const [mod, fn] of T5_OP_MAPS) {
+  const src = moduleSources(mod);
+  const map = methodBody(src.replace(new RegExp(`^export function ${fn}`, "m"), `  ${fn}`), fn) ?? "";
+  for (const x of map.matchAll(/^\s{4}([a-z][a-z0-9]*)\s*:\s*(?:async\s*)?\(\)\s*=>\s*(?:\(\{\s*\.\.\.)?[a-z]\.([A-Za-z0-9_]+)\s*\(/gm))
+    if (!T5_ROUTES.has(x[1])) T5_ROUTES.set(x[1], { method: x[2], src });
+}
+t("the T5 modules' op maps were read — relationdeclare and discharge route to entities and progressions",
+  [T5_ROUTES.get("relationdeclare")?.method, T5_ROUTES.get("discharge")?.method],
+  ["declareRelation", "dischargeStage"]);
 const demandsAccount = new Set();
 const bodiesRead = [];
 for (const op of MUTATING) {
@@ -305,9 +325,10 @@ for (const op of MUTATING) {
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): an op the store's dispatch map no longer
      names is looked up in `membershipOps`, the map membership contributes to it, and read in membership's source. */
   const viaMembership = !r.method ? MEMBERSHIP_ROUTES.get(r.doPath) : null;
-  if (!r.method && !viaMembership) continue;
-  const src = viaMembership ? MODULE_SRC.membershipOf : storeSrc;
-  const body = methodBody(src, viaMembership ?? r.method);
+  const viaT5 = !r.method && !viaMembership ? T5_ROUTES.get(r.doPath) : null;   /* RE-ANCHORED 2026-09-27 (T5-12) */
+  if (!r.method && !viaMembership && !viaT5) continue;
+  const src = viaMembership ? MODULE_SRC.membershipOf : viaT5 ? viaT5.src : storeSrc;
+  const body = methodBody(src, viaMembership ?? viaT5?.method ?? r.method);
   if (body == null) continue;
   bodiesRead.push(op);
   if (demandsInBody(body, src)) demandsAccount.add(op);

@@ -29,6 +29,10 @@
  * the variable the INSERT was handed it would stay green with the column
  * dropped, which is the blind-by-construction shape this repository has
  * measured repeatedly. It is READ BACK out of the table for exactly that reason.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): rowid, crossdoc and inquirypart arm content. baseline 53/0 · grammar 41/12 · unlanded 50/3 · rowid 51/2 · crossdoc 52/1 ·
+ * inquirypart 51/2 · vwriter 48/5 · overstrict -1/-1 (the suite dies on the fixtures the arm refuses, as declared) —
+ * every arm AS DECLARED, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -51,6 +55,10 @@ mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#contentRowFor` and `#contentLegRefusals` left `store.mjs` for
+   content (`src/content/index.mjs` `#rowFor` and its leg refusals, T5 layer 5), their text unchanged; arms rowid,
+   crossdoc and inquirypart arm them there. The version-leg writer (vwriter) stays in the store. */
+const CONTENT = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
 
@@ -128,28 +136,28 @@ const ARMS = {
       "  'sheet-cell':  { landed: false, human: 'a cell of a spreadsheet' },"),
   },
   rowid: {
-    files: [STORE],
+    files: [CONTENT],
     why: "neuter `#contentRowFor`'s unknown-row arm, so a content id naming nothing resolves",
     mustFail: ["A CONTENT ID WHOSE ROW DOES NOT EXIST IS REFUSED BY NAME",
                "A VERSION LEG WHOSE content_id NAMES NO ROW IS REFUSED BY NAME"],
     mustPass: "the cross-document arm, which is a different fact about the same named row",
-    patch: () => arm(STORE, "    if (!row)\n      return { ok: false, check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.check,",
+    patch: () => arm(CONTENT, "    if (!row)\n      return { ok: false, check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.check,",
       "    if (false)\n      return { ok: false, check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.check,"),
   },
   crossdoc: {
-    files: [STORE],
+    files: [CONTENT],
     why: "neuter `#contentRowFor`'s same-document arm, so a leg may name a part of ANOTHER document",
     mustFail: ["A ROW OF ANOTHER DOCUMENT IS REFUSED BY NAME"],
     mustPass: "the unknown-row arm, and every extent arm — this breaks one fact and no other",
-    patch: () => arm(STORE, "    if (row.bundle_id !== targetId)", "    if (false)"),
+    patch: () => arm(CONTENT, "    if (row.bundle_id !== targetId)", "    if (false)"),
   },
   inquirypart: {
-    files: [STORE],
+    files: [CONTENT],
     why: "neuter the inquiry arm in `#contentLegRefusals`, so a leg may name a PART of a question",
     mustFail: ["a pdf-page extent on an INQUIRY leg is refused",
                "and naming a part of an inquiry BY ID meets the same refusal"],
     mustPass: "the whole-inquiry leg, which is legal and must stay legal — an inquiry leg is not a broken leg",
-    patch: () => arm(STORE, '        if (e0.kind !== "document" || named)', "        if (false)"),
+    patch: () => arm(CONTENT, '        if (e0.kind !== "document" || named)', "        if (false)"),
   },
   vwriter: {
     files: [STORE],

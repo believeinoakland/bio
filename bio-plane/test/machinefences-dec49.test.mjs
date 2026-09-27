@@ -389,7 +389,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.17", "BAD_ROLE"],
     ["C-33.18", "ROLE_NOT_APPLICABLE"],
     ["C-33.19", "SEVERED_EDGE"],
-    ["C-33.20", "NO_SUCH_SELECTION"],
+    /* C-33.20: moved to PINNED_MOVED below (T5-12) */
     ["C-33.21", "CAS_STALE"],
     /* REC-176 (State Rules §2.4, 2026-09-23): op=promote refuses a snap key the bundle already holds, where the write
        REPLACED the recorded promotion. C-67 minted by mintid. D-PIN-B failed on it when it landed — the arm doing its job. */
@@ -398,7 +398,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.23", "BASIS_CYCLE"],
     ["C-33.24", "FILES_DROPPED"],
     ["C-33.25", "NO_ALIAS"],
-    ["C-33.26", "UNKNOWN_AFTER"],
+    /* C-33.26: moved to PINNED_MOVED below (T5-12) */
     ["C-33.27", "KIND_NOT_PERSONAL"],
     ["C-33.28", "LAST_OWNER"],
     ["C-33.29", "AI_RUN_CAPABILITY_UNAVAILABLE"],
@@ -413,7 +413,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        block above says it exists to stop. */
     ["C-33.30", "AI_RUN_NO_CONTEXT"],
     ["C-33.31", "AI_RUN_ALREADY_OPEN"],
-    ["C-33.32", "SET_MOVED"],
+    /* C-33.32: moved to PINNED_MOVED below (T5-12) */
     /* REC-117, 2026-09-17. `op=conclude` refuses a caller who states a falsifier
        AND asks to record that none was stated — two contradictory claims about
        one finding, which the plane will not choose between. Pinned here in BOTH
@@ -452,8 +452,8 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        request and DEC-49 gives one code one sentence — the act names no version the record can read,
        and the act names one that is not the version standing. D-PIN-B failed naming exactly these two
        when they landed, which is this pair of arms doing its job. */
-    ["C-33.42", "NO_DEFINITION_VERSION"],
-    ["C-33.43", "DEFINITION_MOVED"],
+    /* C-33.42: moved to PINNED_MOVED below (T5-12) */
+    /* C-33.43: moved to PINNED_MOVED below (T5-12) */
     /* REC-205, 2026-09-24: `op=proposedispose` refuses a CONDITION or an OBLIGATION BY ITS CLASS, naming
        the act that does reach it (`op=queuemute`, `op=taskresolve`), where it used to answer
        NO_SUCH_PROGRESSION and tell a member to define a progression — true of the key it read and useless
@@ -482,6 +482,29 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        region is `#promote > is-promote-absent` (PROMOTION #2, T4-2c). */
     ["C-33.49", "ABSENT"],
   ];
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R31 and progressions R28, K6): five act-shape rows LEFT the
+     catalogue with their ids, codes and translations unchanged — C-33.20 NO_SUCH_SELECTION and C-33.32 SET_MOVED to
+     retrieval's `SELECTION_CHECKS` (src/retrieval/checks.mjs), C-33.26 UNKNOWN_AFTER, C-33.42 NO_DEFINITION_VERSION
+     and C-33.43 DEFINITION_MOVED to progressions' `PROGRESSION_CHECKS` (src/progressions/checks.mjs). They are
+     pinned HERE, where they now live, as literals for `coverage.mjs`, and each is resolved below against the span its
+     own `where` claims exactly as the catalogue's rows are. D-PIN-B still fails if any of them comes back into the
+     catalogue's two families unannounced. */
+  const MODULE_TABLES = {
+    "retrieval SELECTION_CHECKS": (await import("../src/retrieval/checks.mjs")).SELECTION_CHECKS,
+    "progressions PROGRESSION_CHECKS": (await import("../src/progressions/checks.mjs")).PROGRESSION_CHECKS,
+  };
+  const PINNED_MOVED = [
+    ["C-33.20", "NO_SUCH_SELECTION", "retrieval SELECTION_CHECKS"],
+    ["C-33.32", "SET_MOVED", "retrieval SELECTION_CHECKS"],
+    ["C-33.26", "UNKNOWN_AFTER", "progressions PROGRESSION_CHECKS"],
+    ["C-33.42", "NO_DEFINITION_VERSION", "progressions PROGRESSION_CHECKS"],
+    ["C-33.43", "DEFINITION_MOVED", "progressions PROGRESSION_CHECKS"],
+  ];
+  t("ARM D-PIN-M: each of the five moved rows is in its module's table under the SAME C-number and code, with a "
+    + "translation — the catalogue's number did not change owner silently",
+    PINNED_MOVED.filter(([n, c, tbl]) => !(MODULE_TABLES[tbl]?.[c]?.check === n
+      && typeof MODULE_TABLES[tbl][c].translation === "string" && MODULE_TABLES[tbl][c].translation.trim()))
+      .map(([n, c]) => `${n}=${c}`), []);
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
 
@@ -544,6 +567,18 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
         [span !== null, span !== null && span.includes(`"${code}"`)], [true, true]);
     }
   }
+  /* RE-PINNED 2026-09-27 (T5-12): the five moved rows, each resolved where it now lives (see PINNED_MOVED). */
+  let movedSeen = 0;
+  for (const [n, code, tbl] of PINNED_MOVED) {
+    const row = MODULE_TABLES[tbl]?.[code];
+    if (!row) continue;
+    movedSeen++;
+    const span = spanFor(row.where);
+    t(`ARM D/${n}: ${code} is minted inside the span its \`where\` claims, in ${tbl} `
+      + `(${String(row.where).split(",")[0]})`,
+      [span !== null, span !== null && span.includes(`"${code}"`)], [true, true]);
+  }
+  t("ARM D0-M: all five moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 5);
   console.log(`  corpus: ${rowsSeen} rows across ${FAMILIES.length} families, each resolved against `
             + `the plane's source and each naming its own C-number`);
   /* THE CORPUS FLOOR. Without it a families list that stopped resolving would
@@ -618,7 +653,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* MOVED 68 -> 69 on 2026-09-27 (T4, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 69 rows across
        2 families", "got 69") on `tranche/T4` @ c03f169901: C-33.49 ABSENT (LEGACY-CHECKS #1, N36), the one arrival in
        these two families; C-33.48 renamed in place. */
-    rowsSeen, 69);
+    /* MOVED 69 -> 64 on 2026-09-27 (T5-12, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 64
+       rows across 2 families", "got 64") on the T5 tranche tip, never 69 - 5: FIVE departures and no arrival, each
+       named — C-33.20 NO_SUCH_SELECTION and C-33.32 SET_MOVED (to retrieval, R31), C-33.26 UNKNOWN_AFTER, C-33.42
+       NO_DEFINITION_VERSION and C-33.43 DEFINITION_MOVED (to progressions, R28). The five are resolved above where
+       they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
+    rowsSeen, 64);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

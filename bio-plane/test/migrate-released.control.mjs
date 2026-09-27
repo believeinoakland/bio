@@ -49,12 +49,17 @@ const edit = (file, needle, replacement) => {
 /* The FIRST pass is the call that closes the list and precedes the chain_kind
    block; the SECOND is the one under its own REC-143 comment. Each needle names
    exactly one of the two. */
-const FIRST_PASS = "    addColumns();\n\n    /* REC-104: `content.chain_kind`";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): REC-104's `content.chain_kind` block left `#migrate` with content
+   (`contentOf(this.ctx).migrate()`, content R39), so the first pass is now the call that precedes the schema loop. */
+const FIRST_PASS = "    addColumns();\n\n\n    for (const s of bare.split";
 const SECOND_PASS = "    /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */\n    addColumns();";
 /* D-436's first-boot witness (DIST #4, 2026-09-22): the ONE line that decides whether this boot is the
    store's birth, and so whether INSTANCE_NAME is recorded as its producing group. */
 const GROUP_RECORD = "    if (firstBoot) this.#recordGroupAtFirstBoot();";
-const FIRST_BOOT = "    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5): the witness is record-core's now, asked
+   before any module migrates (`recordOf(this.ctx).isFirstBoot()`, the same `PRAGMA table_info(bundles)` read); the
+   store's line that takes it is the one decision the arms force, and it is its only reader. */
+const FIRST_BOOT = "    const firstBoot = recordOf(this.ctx).isFirstBoot();";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes arms-working from arms-broken",
@@ -63,7 +68,7 @@ const ARMS = {
   alterafter: { files: [STORE],
     label: "(B) THIS EXACT BUG: the pre-schema pass removed, so the additive list runs only AFTER the "
          + "schema, as it did in 0.59.0-0.63.0",
-    apply: () => edit(STORE, FIRST_PASS, "\n    /* REC-104: `content.chain_kind`") },
+    apply: () => edit(STORE, FIRST_PASS, "\n\n    for (const s of bare.split") },
 
   nosecondpass: { files: [STORE],
     label: "(C) the post-schema pass removed: a table the schema creates this boot never gets its "
@@ -79,7 +84,7 @@ const ARMS = {
       + "\"inquiry_basis_version_legs.content_id\", \"reading_text_source.calibrations\"].includes(tb + \".\" + col))) {\n"
       + "      const h = [...this.sql.exec(`PRAGMA table_info(${tb})`)].map((r) => r.name);\n"
       + "      if (h.length && !h.includes(col)) this.sql.exec(`ALTER TABLE ${tb} ADD COLUMN ${col} ${d}`);\n"
-      + "    }\n\n    /* REC-104: `content.chain_kind`") },
+      + "    }\n\n\n    for (const s of bare.split") },
 
   firstbootalways: { files: [STORE],
     label: "(E) D-436's DECISION (b) broken: the first-boot witness forced TRUE, so a store a released plane "
@@ -221,3 +226,11 @@ console.log(`\npen removed: ${PEN}`);
    0.76.0 row, was HELD and never landed), each as predicted, every restore sha256 MATCH: baseline 522/0 · alterafter
    444/78 · nosecondpass 468/54 · percolumn 522/0 · firstbootalways 486/36 · firstbootnever 521/1 · groupwipe 508/14.
    alterafter SEQUENCE: … 402/78 → 423/78 (0.77.0's held cut) → 444/78. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1, legacy-tests head + legacy-index): the
+   first pass and the first-boot witness re-anchored above (content took REC-104's block out of `#migrate`; record-core
+   took the witness, REPORT 5). Preflight 6 anchors live; every restore sha256 MATCH / content IDENTICAL:
+   baseline 543/0 · alterafter 465/78 (engine: no such column: content_id) · nosecondpass 487/56 (engine: no such
+   column: inquiry_capture_strength — the first post-schema index a fresh store meets is now that one) · percolumn
+   543/0 · firstbootalways 507/36 (the 36 D-436 assertions) · firstbootnever 542/1 (the positive arm) · groupwipe
+   527/16. Each moves from the last recorded figures by one RELEASES row's arithmetic (the 0.78.0 row: +21 pass;
+   nosecondpass and groupwipe +2 fail each); declared failures only, as before. */

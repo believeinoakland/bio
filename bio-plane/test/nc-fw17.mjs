@@ -50,6 +50,12 @@ const SAFE = controlPen("fw17");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections (T5) took the pair writer, the connection view's position
+   read and the portion grade's whole-document short-circuit out of `store.mjs` into `src/connections/index.mjs`, and
+   extraction (T5) took the `reading_refs` projection's writer into `src/extraction/index.mjs`. Each arm patches the
+   same line where it now lives. */
+const CONNECTIONS = join(PLANE, "src/connections/index.mjs");
+const EXTRACTION = join(PLANE, "src/extraction/index.mjs");
 const CHAIN = join(PLANE, "src/textchain.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are large; a restore over a stub must fail loudly.
@@ -93,7 +99,7 @@ const ARMS = {
      green while the grade assertion fails. A "closing" that only ever ran
      because a pair happened to be present is not a closing. */
   nopair: {
-    files: [STORE],
+    files: [CONNECTIONS],
     why: "stop writing the determining pair, so every connection row is pair-less — the UNDETERMINED path must then be REACHED, not skipped",
     mustFail: ["THE ITEM: a citation of page 2",
                "the A-B connection records the determining reference on BOTH ends"],
@@ -111,10 +117,10 @@ const ARMS = {
        coin flip. Both ends are nulled now, which is what "stop writing the pair"
        was always supposed to mean. */
     patch: () => {
-      const a = arm(STORE,
+      const a = arm(CONNECTIONS,   /* RE-ANCHORED 2026-09-27 (T5-12): connections' pair writer */
         "            a_ref: A.ref, a_pos_kind: A.pos ? A.pos.kind : null,",
         "            a_ref: null, a_pos_kind: A.pos ? A.pos.kind : null,");
-      const b = arm(STORE,
+      const b = arm(CONNECTIONS,
         "            b_ref: B.ref, b_pos_kind: B.pos ? B.pos.kind : null,",
         "            b_ref: null, b_pos_kind: B.pos ? B.pos.kind : null,");
       return { armed: a.armed && b.armed, matches: Math.min(a.matches, b.matches) };
@@ -144,7 +150,7 @@ const ARMS = {
      must NOT stop the row being written — that is the honest-absence half and it
      is the half a member depends on. Every positioned answer must go. */
   nullhonest: {
-    files: [STORE],
+    files: [EXTRACTION],
     why: "drop the position columns from the reading_refs projection — the reading must still WRITE (the nullable is honest) while nothing can be placed",
     /* CORRECTED 2026-09-14, and the correction is a FINDING about the SUBJECT
        that the arm surfaced. The first draft declared "the positioned reading
@@ -165,9 +171,11 @@ const ARMS = {
                "the reverse index answers for all three documents, placed and unplaced alike",
                "OVER-STRICTNESS: the whole-document citation earns from every connection its document has"],
     mustPass: "the reading blob, and the row itself — a reading without position is a reading, not a gap",
-    patch: () => arm(STORE,
-      "          pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null);",
-      "          null, null, null);"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): extraction's projection writer, which now also writes the
+       occurrence key and its sequence after the three position columns. */
+    patch: () => arm(EXTRACTION,
+      "            pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null, occ, wrote.size);",
+      "            null, null, null, occ, wrote.size);"),
   },
 
   /* (e) THE OVER-STRICTNESS DIRECTION. Making a whole-document citation pass the
@@ -186,7 +194,7 @@ const ARMS = {
      cannot break. Both are armed now, which is what it takes to actually put a
      whole-document citation through a position test. */
   overstrict: {
-    files: [STORE, CHAIN],
+    files: [CONNECTIONS, CHAIN],
     why: "THE OVER-STRICTNESS DIRECTION — make a whole-document citation pass the position test it has no business taking, which needs BOTH the store's short-circuit and the checker's own document arm removed",
     mustFail: ["OVER-STRICTNESS: the whole-document citation earns from every connection its document has",
                "a document extent contains every position"],
@@ -195,7 +203,7 @@ const ARMS = {
                "NEGATIVE CONTROL (1), driven: a pair the reading cannot place"],
     mustPass: "every portion answer — the arm must break correct work and nothing else",
     patch: () => {
-      const a = arm(STORE,
+      const a = arm(CONNECTIONS,   /* RE-ANCHORED 2026-09-27 (T5-12): connections' portion grade */
         `      if (whole) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "`,
         `      if (false) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "`);
       const b = arm(CHAIN,
@@ -209,7 +217,7 @@ const ARMS = {
      checker intact. If the grade assertion still passed, it would be measuring
      the checker rather than the writer — and the whole item is the writer. */
   armsarm: {
-    files: [STORE],
+    files: [CONNECTIONS],
     why: "THE ARM'S OWN ARM — disable only the POSITION half of the pair writer, leaving the checker intact. The grade assertion must fail BY NAME, which is what proves it measures the writer",
     mustFail: ["THE ITEM: a citation of page 2",
                "the A-B connection records the determining reference on BOTH ends",
@@ -217,7 +225,8 @@ const ARMS = {
     mustStay: ["OVER-STRICTNESS: the whole-document citation earns from every connection its document has",
                "same page: inside. different page: outside."],
     mustPass: "the containment checker's own assertions, which do not depend on the writer at all",
-    patch: () => arm(STORE,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections' pair writer reads the position there. */
+    patch: () => arm(CONNECTIONS,
       "      if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);",
       "      if (rr) e.pos = null;"),
   },

@@ -281,8 +281,12 @@ try {
     ["proposedispose", "per-item", "items", 100], ["resolve", "per-item", "items", 100],
     ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
   const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5, T5-1): the per-item mechanism left the store
+     for record-core's `perItem` (src/record-core/index.mjs); the store's `#perItem` is now its caller, passing the
+     act's published groups. The two STRUCTURAL pins read the mechanism where it lives and the call where it is. */
+  const core = readFileSync(fileURLToPath(new URL("../src/record-core/index.mjs", import.meta.url)), "utf8");
   t("STRUCTURAL: a throwing item is caught and retained under C-75.4 (not driven — see header)",
-    /catch \(e\) \{\s*\/\* DEC-49 REGION is-per-item-failed \*\/\s*r = refusal\("SET_ITEM_FAILED"/.test(store), true);
+    /catch \(e\) \{\s*\/\* DEC-49 REGION is-per-item-failed \*\/\s*r = refusal\("SET_ITEM_FAILED"/.test(core), true);
 
   /* ================================================================ 9
    * REC-205 · A PROJECT-SCOPED FINDING JOINS THE SELECTION, AND EACH ITEM IS RESOLVED AGAINST ITS
@@ -537,9 +541,13 @@ try {
     [pd9?.item_keys, pd9?.shared_keys],
     [[["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
      ["to", "reason", "kind", "definitionVersion"]]);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5): the lookup of the published array stays in the
+     store's `#perItem`, which hands its `item_keys`/`shared_keys` to record-core's `perItem` and nothing else; the
+     narrowing and the item's body (`items` removed, `delete b.items` for the old `items: undefined`) are
+     record-core's. */
   t("STRUCTURAL: `#perItem` narrows the shared body by that published array and by nothing else",
-    [/const published = PER_ITEM_ACTS\.find\(\(a\) => a\.id === act\) \|\| null;/.test(store),
-     /try \{ r = one\(\{ \.\.\.sharedFor\(it\), \.\.\.it, \.\.\.stamped, items: undefined \}\); \}/.test(store)],
+    [/const a = PER_ITEM_ACTS\.find\(\(x\) => x\.id === act\);\s*return perItem\(act, body, stamped, one, \{ itemKeys: a && a\.item_keys, sharedKeys: a && a\.shared_keys \}\);/.test(store),
+     /const b = \{ \.\.\.sharedFor\(it\), \.\.\.it, \.\.\.stamped \};\s*delete b\.items;[^\n]*\n\s*r = one\(b\);/.test(core)],
     [true, true]);
 } finally {
   await mf.dispose();

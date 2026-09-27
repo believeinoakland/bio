@@ -26,37 +26,54 @@ const PEN = controlPen("rec103");
 const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log (T5, its R13) took the row fence out of
+   `store.mjs` (`#observationBundles` and the frontier's compiled gate) into `src/observation-log/index.mjs`:
+   `#rowBundles` (which bundles a row names), `rowVisible` (one row; retrieval's frontier asks it) and `rowGate`
+   (compiled once; the store's `#frontierDocumentVisible` asks it). The member and DENY scope lines now exist once in
+   EACH of the two, so an arm on them patches both, which is what patching the one gate did. The run referent's
+   delegated gate is the resolver the store registers (`registerAuthority("run", …)`, N39). Each arm is now a list of
+   [anchor, replacement] pairs in one file, every anchor guarded exactly-once. */
+const OBSLOG = fileURLToPath(new URL("../src/observation-log/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./observation-log.test.mjs", import.meta.url));
-const MIN_BYTES = 500000;
+const MIN_BYTES = { [STORE]: 500000, [OBSLOG]: 50000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-/* Each arm: [name, file, anchor, replacement, declared]. */
+const MEMBER_ONE = ["    if (gate.scope === \"member\") return true;\n    if (gate.scope === \"DENY\" || !row",
+                    "    if (gate.scope === \"DENY\" || !row"];
+const MEMBER_GATE = ["    if (gate.scope === \"member\") return () => true;\n    if (gate.scope === \"DENY\") return () => false;",
+                     "    if (gate.scope === \"DENY\") return () => false;"];
+
+/* Each arm: [file, [[anchor, replacement], …], declared]. */
 const ARMS = {
-  fence: [STORE,
-    "    if (gate.scope === \"member\") return () => true;\n    /* AN ABSENT OR UNRECOGNISED STAMP SEES NOTHING",
-    "    if (true) return () => true;\n    /* AN ABSENT OR UNRECOGNISED STAMP SEES NOTHING",
+  fence: [OBSLOG, [
+    [MEMBER_ONE[0], "    if (true) return true;\n    if (gate.scope === \"DENY\" || !row"],
+    [MEMBER_GATE[0], "    if (true) return () => true;\n    if (gate.scope === \"DENY\") return () => false;"]],
     "MUST FAIL I1 I2 I3 I8 (the leak returns); MUST NOT FAIL I4 I4b (over-strictness)"],
-  authority: [STORE,
-    "    if (row.authority != null && row.authority !== \"\") {",
-    "    if (false && row.authority != null && row.authority !== \"\") {",
+  authority: [OBSLOG, [
+    ["    if (row.authority != null && row.authority !== \"\") {",
+     "    if (false && row.authority != null && row.authority !== \"\") {"]],
     "MUST FAIL I1 I8 (the AUTHORITY half alone); MUST NOT FAIL I2 I3 I4 I4b "
     + "(the result_ref half still fires) — REC-94's fall-through shape"],
-  overstrict: [STORE,
-    "  #observationBundles(row) {\n    const out = [];\n    let unresolved = false;",
-    "  #observationBundles(row) {\n    const out = [];\n    let unresolved = true;",
+  overstrict: [OBSLOG, [
+    ["  #rowBundles(row, viewer) {\n    const out = [];\n    let unresolved = false, answer = null;",
+     "  #rowBundles(row, viewer) {\n    const out = [];\n    let unresolved = true, answer = null;"]],
     "MUST FAIL I4 I4b I8b (the open bundle's rows vanish); MUST NOT FAIL I1 I2 I3 (still withheld)"],
-  machine: [STORE,
-    "    if (gate.scope === \"member\") return () => true;",
-    "    if (gate.scope === \"member\" && false) return () => true;",
+  machine: [OBSLOG, [
+    ["    if (gate.scope === \"member\") return true;",
+     "    if (gate.scope === \"member\" && false) return true;"],
+    ["    if (gate.scope === \"member\") return () => true;",
+     "    if (gate.scope === \"member\" && false) return () => true;"]],
     "MUST FAIL I0 I1 I2 I3 I4b I7 (the machine credential loses rows)"],
-  run: [STORE,
-    "      if (run && this.aiRunLog({ run, viewer, limit: 1 }).found !== true) return false;",
-    "      if (false && run && this.aiRunLog({ run, viewer, limit: 1 }).found !== true) return false;",
+  run: [STORE, [
+    ["    observations.registerAuthority(\"run\", (run, viewer) => this.aiRunLog({ run, viewer, limit: 1 }).found === true);",
+     "    observations.registerAuthority(\"run\", (run, viewer) => true || this.aiRunLog({ run, viewer, limit: 1 }).found === true);"]],
     "MUST FAIL I9b (the delegated run gate); MUST NOT FAIL I9 I4 I4b — the referent this resolver "
     + "DELEGATES rather than resolves is the one most in need of an arm"],
-  deny: [STORE,
-    "    if (gate.scope === \"DENY\") return () => false;",
-    "    if (gate.scope === \"DENY\" && false) return () => false;",
+  deny: [OBSLOG, [
+    ["    if (gate.scope === \"DENY\" || !row || typeof row !== \"object\") return false;",
+     "    if ((gate.scope === \"DENY\" && false) || !row || typeof row !== \"object\") return false;"],
+    ["    if (gate.scope === \"DENY\") return () => false;\n    const memo",
+     "    if (gate.scope === \"DENY\" && false) return () => false;\n    const memo"]],
     "DECLARED MUST FAIL I5 — see the run's own note if it does not"],
 };
 
@@ -77,22 +94,26 @@ const report = (label, r) => {
 
 const want = process.argv[2] || "all";
 console.log(`REC-103 negative control · ${new Date().toISOString()}`);
-console.log(`store.mjs ${statSync(STORE).size} bytes · sha ${sha(STORE).slice(0, 16)}`);
+console.log(`store.mjs ${statSync(STORE).size} bytes · sha ${sha(STORE).slice(0, 16)} · observation-log/index.mjs ${statSync(OBSLOG).size} bytes · sha ${sha(OBSLOG).slice(0, 16)}`);
 
 report("BASELINE", run());
 
-for (const [name, [file, anchor, repl, declared]] of Object.entries(ARMS)) {
+for (const [name, [file, edits, declared]] of Object.entries(ARMS)) {
   if (want !== "all" && want !== name) continue;
   const pristine = penPath(file, `pristine-rec103-${name}`);
   copyFileSync(file, pristine);
   const before = readFileSync(file, "utf8");
   const beforeSha = sha(file);
-  if (statSync(pristine).size < MIN_BYTES)
+  if (statSync(pristine).size < MIN_BYTES[file])
     throw new Error(`REFUSED: pristine copy for ${name} is ${statSync(pristine).size} bytes, under the floor`);
-  const n = before.split(anchor).length - 1;
-  if (n !== 1) throw new Error(`REFUSED: arm ${name}'s anchor occurs ${n} times, not once — an arm that `
-    + `patches zero sites or two is a finding about the arm`);
-  writeFileSync(file, before.replace(anchor, repl));
+  let after = before;
+  for (const [anchor, repl] of edits) {
+    const n = after.split(anchor).length - 1;
+    if (n !== 1) throw new Error(`REFUSED: arm ${name}'s anchor occurs ${n} times, not once — an arm that `
+      + `patches zero sites or two is a finding about the arm`);
+    after = after.replace(anchor, repl);
+  }
+  writeFileSync(file, after);
   if (sha(file) === beforeSha) throw new Error(`REFUSED: arm ${name} changed no bytes`);
   console.log(`\n  ARM ${name} — ${declared}`);
   report(name, run());

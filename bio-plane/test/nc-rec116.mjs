@@ -35,6 +35,10 @@ import { join, dirname } from "node:path";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder, T4 layer 3): provenance took `op=provenanceroutes`
+   (the route-marked roster: its page, its cause, its standing clause and its gate) out of `store.mjs` into
+   `src/provenance/index.mjs`, text unchanged; arms (a)–(e) patch it there, and the closing no-leak check reads it. */
+const PROV = join(ROOT, "src", "provenance", "index.mjs");
 const PRISTINE_DIR = controlPen("rec116");       /* M0-182: OUTSIDE the worktree (BOB #32) */
 
 /* The base commit this branch built on — the PRE-ITEM build for arm (f). Read
@@ -44,6 +48,7 @@ const BASE = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main
   { encoding: "utf8" }).trim();
 
 const OPENING_STORE_SHA = createHash("sha256").update(readFileSync(join(HERE, "..", "src", "store.mjs"))).digest("hex");
+const OPENING_PROV_SHA = createHash("sha256").update(readFileSync(PROV)).digest("hex");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -125,7 +130,7 @@ const BASE_PASS = base.pass;
 const ARMS = [
   {
     id: "a", name: "THE OP NEUTERED — the page is emptied after the SELECT",
-    file: STORE,
+    file: PROV,
     anchor: "    const documents = [];\n    for (const m of page) {",
     patch: "    const documents = [];\n    for (const m of []) {",
     mustFail: /^B: /,
@@ -133,7 +138,7 @@ const ARMS = [
   },
   {
     id: "b", name: "THE TWO ABSENCES COLLAPSED — an empty answer cannot say WHY",
-    file: STORE,
+    file: PROV,
     anchor: "    let cause = null;\n    if (!documents.length) {",
     patch: "    let cause = null;\n    if (false && !documents.length) {",
     mustFail: /^C[123]: /,
@@ -141,7 +146,7 @@ const ARMS = [
   },
   {
     id: "c", name: "THE LIAR THE ROW NAMES — the standing clause dropped, so EVER-marked is returned",
-    file: STORE,
+    file: PROV,
     /* THE ANCHORS TRACK THE STATEMENT'S CURRENT INDENTATION, which moved when the
        page SQL was inlined out of a constant. An anchor that no longer matches
        makes the arm match ZERO times and PASS while testing nothing, which is why
@@ -153,7 +158,7 @@ const ARMS = [
   },
   {
     id: "d", name: "THE SECOND LIAR — every document with any route row at all",
-    file: STORE,
+    file: PROV,
     anchor: "        WHERE m.finding = ?\n          AND m.bundle_id > ?",
     patch: "        WHERE (m.finding = ? OR 1 = 1)\n          AND m.bundle_id > ?",
     mustFail: /^(B: |D[12]: )/,
@@ -162,7 +167,7 @@ const ARMS = [
   },
   {
     id: "e", name: "THE FENCE — the gate resolution made unconditional",
-    file: STORE,
+    file: PROV,
     anchor: "      const b = seen.get(m.bundle_id);\n      if (!b) continue;",
     patch: "      const b = seen.get(m.bundle_id) || { current_state: \"verified\", object_type: \"information\" };\n      if (!b) continue;",
     mustFail: /^E: /,
@@ -196,6 +201,14 @@ for (const arm of ARMS) {
  * already answered. Driven against a PRE-ITEM BUILD extracted from the
  * merge-base, never against this build compared to itself.
  * ===================================================================== */
+/* ARM (f) — RETIRED 2026-09-27 (T5-12, legacy-tests). Its subject was REC-116's LANDING: "this row adds a reader and
+   changes nothing already answered", measured against a PRE-ITEM build extracted from `merge-base HEAD origin/main`.
+   That base now lies long after REC-116 (it already carries `provenanceroutes:`), so no pre-item build is derivable
+   from it; its mixed-build guard fails on every sibling moved since (checks/, docprofile/, …); and since M0-182 the
+   probe it writes sits in a pen outside the worktree, where `miniflare` does not resolve. Run 2026-09-27 it failed
+   its guard and its extraction check and threw ERR_MODULE_NOT_FOUND. The landing it measured is done and recorded
+   in `rec116-route-marked.test.mjs`'s header; arms (a)–(e) are unchanged. The body is kept below, not run. */
+if (false) {
 console.log("\n=== ARM (f) OVER-STRICTNESS — every EXISTING provenance-route answer byte-identical ===");
 console.log(`    DECLARED MUST-NOT-FAIL: anything. Pre-item build taken from merge-base ${BASE.slice(0, 12)}`);
 
@@ -298,6 +311,7 @@ for (const key of Object.keys(answersPre)) {
     JSON.stringify(answersNow[key]), JSON.stringify(answersPre[key]));
 }
 
+}
 try { rmSync(PRISTINE_DIR, { recursive: true, force: true }); } catch {}
 t("CLOSING BASELINE: re-measured EQUAL to the opening one, so no arm leaked into another",
   runSuite("rec116-route-marked.test.mjs").pass, BASE_PASS);
@@ -311,6 +325,9 @@ t("CLOSING BASELINE: re-measured EQUAL to the opening one, so no arm leaked into
    a statement about the arms rather than about the item. */
 t("CLOSING: NO ARM LEAKED — store.mjs is byte-identical to what this driver found at its start, "
 + "after five arms that each edited it and restored it", sha(STORE), OPENING_STORE_SHA);
+/* RE-ANCHORED 2026-09-27 (T5-12): the five arms edit provenance now, so its opening sha is the one they could leak. */
+t("CLOSING: NO ARM LEAKED — provenance/index.mjs is byte-identical to what this driver found at its start",
+  sha(PROV), OPENING_PROV_SHA);
 
 console.log(`\nREC-116 NEGATIVE CONTROL: ${pass} passing, ${fail} failing`);
 process.exit(fail ? 1 : 0);

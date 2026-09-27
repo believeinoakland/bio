@@ -42,6 +42,11 @@ const F = {
   store: ROOT + "src/store.mjs",
   index: ROOT + "src/index.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder, T4 layer 3): capture's K58 replaced the control
+     plane's `captureRequestArm` with an IN-PROCESS arm in `src/capture/acquire.mjs` — `#fireCaptureRequest` hands it
+     the draining row's own address, purpose, agent and render flag, and from outside `via: "capture-request"` is
+     refused C-28.13 whatever the caller. Arms (1) and (10) patch that file. */
+  acquire: ROOT + "src/capture/acquire.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -119,7 +124,12 @@ arm("(1) THE SPINE — THE AI DOES NOT CAPTURE, IT REQUESTS. Neuter the `drainin
   + "for it. That is DEC-47's structural gate gone: the fetch the AI wanted would be performed at the "
   + "AI's timing, by the AI's call, and the daemon would be a formality. Three callers, three classes, "
   + "one shape — which is why the gate is a shape and not a class list.",
-  [["index", `  if (!d || d.draining !== true) {`, `  if (false) {`]],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the gate is now the C-28.13 refusal at the top of capture's
+     `acquire` for any caller outside the drain (K58). With it neutered an outside caller holding a request id falls
+     through to the ordinary acquire and is answered by some other rule, never CAPTURE_NOT_DRAINING by name; the fetch
+     "at the AI's timing" the arm once demonstrated is no longer reachable at all (the row's locator is handed only
+     to the in-process arm), so this arm now measures the named refusal and not that harm. */
+  [["acquire", `  if (!captureRequest && body.via === "capture-request") {`, `  if (false) {`]],
   ["a member session's credential holding a real request id is refused",
    "an OPERATOR's credential holding a real request id is refused",
    "the DAEMON's own credential, outside a drain tick",
@@ -213,8 +223,10 @@ arm("(7a) THE PURGE (D-113), MEASURED AGAINST `hygiene.test.mjs` — THE INSTRUM
   + "failure is SILENT: a whole-store purge reports scope ALL and leaves rows, so the caller believes "
   + "the store is empty. Here the leftover is worse than usual — an outbound queue of addresses this "
   + "instance is about to go and fetch, which is a leftover visible from OUTSIDE the instance.",
-  [["store", `        this.sql.exec(\`DELETE FROM capture_requests\`);\n`, ``],
-   ["store", `        this.sql.exec(\`DELETE FROM capture_requests WHERE target=?\`, bundleId);\n`, ``]],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): record-core's purge (R21–R24) clears every DECLARED table; the
+     store declares `capture_requests` (keyed by `target`) in its `declarePurge("legacy-store", …)`. Removing the
+     declaration removes BOTH deletes, as the two edits did. */
+  [["store", `      { name: "capture_requests", keys: ["target"] },\n`, ``]],
   ["tables covered by purge or a stated exemption"],
   [],
   "hygiene.test.mjs");
@@ -231,8 +243,13 @@ arm("(7a) THE PURGE (D-113), MEASURED AGAINST `hygiene.test.mjs` — THE INSTRUM
 arm("(7b) THE WHOLE-STORE ARM ALONE, against this item's own suite — the half hygiene cannot see. "
   + "Remove only the whole-store DELETE and a purge that reports scope ALL leaves the outbound queue "
   + "standing.",
-  [["store", `        this.sql.exec(\`DELETE FROM capture_requests\`);\n`, ``]],
-  ["purge deletes capture_requests in BOTH arms",
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the whole-store half alone is the declaration's `whole` clause
+     (record-core R22: the whole-store form clears only where it holds); `0` keeps the per-bundle key. */
+  [["store", `      { name: "capture_requests", keys: ["target"] },\n`,
+             `      { name: "capture_requests", keys: ["target"], whole: "0" },\n`]],
+  [/* "purge deletes capture_requests in BOTH arms" — RETIRED 2026-09-27 (T5-12, legacy-tests): the suite RETIRED
+      that source-reading assertion on 2026-09-26 (T3, record-core R21/R22: purge moved to record-core's declarations),
+      and section 8 measures both halves; the two below are what fails, by name. */
    "a WHOLE-STORE purge reports scope ALL and takes the rest",
    "nothing survives it"],
   ["a PER-BUNDLE purge takes the requests asked under THAT question and names the scope"]);
@@ -264,7 +281,9 @@ arm("(10) THE CARRY — THE ROW'S FLAG NEVER REACHES op=acquire. Drop the one li
   + "the request says render, the capture is the served frame, and NOTHING in the record says the "
   + "render was not performed. It is the false-coverage hazard C-83 exists to prevent, reached through "
   + "a consumer rather than through the op.",
-  [["index", `        if (arm.render) body.render = true;`, `        if (false) body.render = true;`]],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the carry is capture's in-process arm (K58). */
+  [["acquire", `    if (captureRequest.render === true) body.render = true; else delete body.render;`,
+               `    if (false) body.render = true; else delete body.render;`]],
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
    "and the render request was never captured",
    "NOTHING LEFT THIS INSTANCE FOR IT",

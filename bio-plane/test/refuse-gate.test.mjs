@@ -70,6 +70,13 @@ const t = (label, got, want) => {
 };
 
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R19, R20): `selectionResolve` — the per-row formula, the
+   refuse gate and the predicate `Store.#answerChanged` — moved to `src/retrieval/index.mjs`, where the predicate is
+   the module's exported `answerChanged` (store.mjs imports it for cite's record statement). The sweep's walks read the
+   selection code where it now lives: walks A and the anchor over store.mjs AND the retrieval module, walk B and the
+   formula over the module, walk C (the refuse-weight acts, still the store's) over store.mjs. */
+const RETRIEVAL_SRC = readFileSync(SRC("retrieval/index.mjs"), "utf8");
+const CORPUS_SRC = STORE_SRC + "\n" + RETRIEVAL_SRC;
 
 const mf = new Miniflare({
   modules: true, script: STORE_SRC,
@@ -459,12 +466,12 @@ const codeLines = (src) => {
 const bareMovedReads = (src) => codeLines(src)
   .filter(({ line }) => /\bsel\.moved\b/.test(line))
   .filter(({ line }) => !/moved:\s*sel\.moved\b/.test(line))
-  .filter(({ line }) => !/#answerChanged\([^)]*sel\.moved\s*\)/.test(line))
+  .filter(({ line }) => !/(?:#|\b)answerChanged\([^)]*sel\.moved\s*\)/.test(line))
   .map(({ n }) => `store.mjs:${n}`);
 
 /* WALK B — the refuse gate itself must ask the answer-changed question. */
 const gateAsksAnswerChanged = (src) =>
-  /const stopped = Store\.#answerChanged\(drift, moved\) && weight === "refuse";/.test(src);
+  /const stopped = answerChanged\(drift, moved\) && weight === "refuse";/.test(src);
 
 /* WALK C — the gate is only one function, so it protects a refuse-weight act
    only if that act RETURNS on it. Every in-store caller that hard-codes
@@ -490,18 +497,19 @@ const refuseCallers = (src) => {
    would report every walk below as clean. This requires it to be LOOKING at the
    three lines the sweep is about, and to have correctly discarded the prose that
    merely mentions them. */
-const seen = codeLines(STORE_SRC);
+const seen = codeLines(CORPUS_SRC);
 t("the walk sees the gate, the formula and the record statement as CODE",
-  ["const stopped = Store.#answerChanged(drift, moved)", "const moved = drift.revised.length",
-   "const setMovedNote = Store.#answerChanged(sel.drift, sel.moved)"]
+  ["const stopped = answerChanged(drift, moved)", "const moved = drift.revised.length",
+   "const setMovedNote = answerChanged(sel.drift, sel.moved)",
+   "export const answerChanged = (drift, moved) => moved || drift?.digestChanged === true;"]
     .filter((frag) => !seen.some(({ line }) => line.includes(frag))), []);
 t("and discards a comment that merely NAMES `sel.moved` in prose",
   seen.some(({ line }) => /It read `sel\.moved`/.test(line)), false);
 
-const bareNow = bareMovedReads(STORE_SRC);
+const bareNow = bareMovedReads(CORPUS_SRC);
 t("NO decision and NO record statement in the plane branches on a bare `sel.moved`",
   bareNow, []);
-t("the refuse gate asks the answer-changed question", gateAsksAnswerChanged(STORE_SRC), true);
+t("the refuse gate asks the answer-changed question", gateAsksAnswerChanged(RETRIEVAL_SRC), true);
 
 const callers = refuseCallers(STORE_SRC);
 t("the refuse-weight callers the one gate protects are found, and named",
@@ -516,7 +524,7 @@ t("and every one of them RETURNS on the gate rather than reading past it",
    other side; it is asserted HERE too because the wrong fix (folding the digest
    into the formula) is one character away from the right one and would be
    invisible to every behavioural assertion on the enumerated arm. */
-const MOVED_FORMULA = (/const moved = ([^;]+);/.exec(STORE_SRC) || [, ""])[1];
+const MOVED_FORMULA = (/const moved = ([^;]+);/.exec(RETRIEVAL_SRC) || [, ""])[1];
 t("the published `moved` is still composed of the three per-row figures",
   /revised/.test(MOVED_FORMULA) && /removed/.test(MOVED_FORMULA) && /added/.test(MOVED_FORMULA), true);
 t("and `digestChanged` is STILL NOT a term in it — the fix is at the gate, not in the formula",
@@ -526,24 +534,26 @@ t("and `digestChanged` is STILL NOT a term in it — the fix is at the gate, not
 
 /* A stripper that matches nothing reports a delta of zero and looks like a
    guard doing its job. REC-54 hit this exactly, and its stripper now throws. */
-const strip = (label, from, to) => {
-  if (!STORE_SRC.includes(from))
+/* RE-ANCHORED 2026-09-27 (T5-12): the stripper takes the source it strips (default store.mjs); the gate's is the
+   retrieval module's. It still THROWS on a text that no longer exists. */
+const strip = (label, from, to, src = STORE_SRC) => {
+  if (!src.includes(from))
     throw new Error(`REACH ARM "${label}" MATCHED NOTHING: the stripper is describing a file that no `
                   + `longer exists, so any delta it reports is meaningless. Re-derive it against store.mjs.`);
-  return STORE_SRC.replace(from, to);
+  return src.replace(from, to);
 };
 
 const strippedGate = strip("the gate",
-  'const stopped = Store.#answerChanged(drift, moved) && weight === "refuse";',
-  'const stopped = moved && weight === "refuse";');
+  'const stopped = answerChanged(drift, moved) && weight === "refuse";',
+  'const stopped = moved && weight === "refuse";', RETRIEVAL_SRC);
 t("REACH (i), as a delta: strip the gate's own predicate and walk B stops passing",
-  [gateAsksAnswerChanged(STORE_SRC), gateAsksAnswerChanged(strippedGate)], [true, false]);
+  [gateAsksAnswerChanged(RETRIEVAL_SRC), gateAsksAnswerChanged(strippedGate)], [true, false]);
 
 const strippedNote = strip("cite's Session Log clause",
-  "const setMovedNote = Store.#answerChanged(sel.drift, sel.moved)",
+  "const setMovedNote = answerChanged(sel.drift, sel.moved)",
   "const setMovedNote = sel.moved");
 t("REACH (ii), as a delta: put the record statement back on `sel.moved` and walk A names it",
-  [bareMovedReads(STORE_SRC).length, bareMovedReads(strippedNote).length > 0], [0, true]);
+  [bareMovedReads(CORPUS_SRC).length, bareMovedReads(strippedNote).length > 0], [0, true]);
 
 const strippedGuard = strip("a refuse-weight caller's return",
   `const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });

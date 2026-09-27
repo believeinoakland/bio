@@ -100,6 +100,10 @@
  * when the subject is refactored — the moment an arm is most worth having.**
  *
  * A SURPRISING GREEN IS A FINDING ABOUT THE ARM. Recorded, never smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): the wire is extraction's pipeline now.
+ * BASELINE 49/0; A1 46/3, A2 46/3, A4 37/12, A5 46/3, A7 48/1, A8 47/2, A9 47/2 failed BY NAME at their targets and
+ * strayed nowhere; A3, A6, A10 49/0. 11/11 agreed; every restore sha MATCH, cmp identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -120,7 +124,10 @@ const PEN = controlPen("rec102");
    sha256 AND by `cmp` against a uniquely-named per-arm pristine copy, with the
    byte count printed and floored. */
 const SUBJECTS = {
-  wire:  { path: join(HERE, "..", "src", "index.mjs"), floor: 200_000, label: "src/index.mjs" },
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the wire (tier 2's escalation, tier 3's partition, `needsTier2`,
+     `tier3Note`) moved out of `src/index.mjs` into extraction's pipeline (`src/extraction/pipeline.mjs`, extraction
+     R4–R10). A1, A3, A5, A6, A7, A8 and A10 keep their anchors' text there; A2 and A9 are re-spelled below. */
+  wire:  { path: join(HERE, "..", "src", "extraction", "pipeline.mjs"), floor: 40_000, label: "src/extraction/pipeline.mjs" },
   suite: { path: SUITE,                               floor:  10_000, label: "test/tier3-layer-parts.test.mjs" },
 };
 
@@ -265,11 +272,13 @@ arm({
 /* ── A2 · THE CARRY DROPPED at the tier-2 site ────────────────────────────── */
 arm({
   name: "A2", declared: "FAIL", mustName: D372, mustNotName: OVERSTRICT,
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the carry is the acquire path's `tier2PerPage = t2.perPage`, from
+     `tier2Escalate`'s answer (R4). */
   edits: [[
-`                          tier2PerPage = m.perPageTier;`,
-`                          /* NC A2: THE CARRY DROPPED. The merge still computes the
-                             partition; nothing carries it to the tier-3 site. */
-                          void m.perPageTier;`,
+`            i2text = t2.text; tier2PerPage = t2.perPage; tier2note = t2.note;`,
+`            /* NC A2: THE CARRY DROPPED. The merge still computes the
+               partition; nothing carries it to the tier-3 site. */
+            i2text = t2.text; void t2.perPage; tier2note = t2.note;`,
   ]],
 });
 
@@ -368,9 +377,11 @@ arm({
 arm({
   name: "A9", declared: "FAIL", mustName: D607_MIXED,
   mustNotName: new RegExp(`${D372.source}|${OVERSTRICT.source}|${D514_LAYER.source}|${D514_ROUTE.source}|${D607_NONE.source}`),
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the caller now passes the layer pages that were not appended to
+     (D-635); the break is the same, none passed. */
   edits: [[
-`ocrNote = tier3Note(m, built.note, layerPages);`,
-`ocrNote = tier3Note(m, built.note);   /* NC A9: the kept pages not passed */`,
+`tier3Note(m, built.note, layerPages.filter((p) => !appendedTo.includes(p)))`,
+`tier3Note(m, built.note) /* NC A9: the kept pages not passed */`,
   ]],
 });
 

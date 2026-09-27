@@ -86,6 +86,12 @@
  *       arm B's: selftest stops saying `false`, fleet-posture reads
  *       `admin-fallback`, and `brokenCount` drops to 0. A, C, D: 0, as declared.
  *
+ * RE-RUN 2026-09-27 (T5-12, legacy-tests; N57's remainder), `bash test/d334-monitor-credential.control.sh` (no zsh
+ * here; the script is bash-compatible), every restore sha256 match and cmp IDENTICAL, 41/0 after each: (1) 31/10,
+ * the RUNS arms and the structural pins, B and C green; (2) 38/3, arm C's; (3) 40/1, selftest's `false` alone: the
+ * fleet-posture and `brokenCount` halves of arm B were RETIRED with `tools/fleet-posture.mjs` (T3, N14), so it is the
+ * one arm-B assertion left. AS DECLARED.
+ *
  * AND ONE ARM CAME BACK WRONG, RECORDED RATHER THAN SMOOTHED. Arm 1's first
  * firing left the assertion "no failure mentions a refusal or an unauthenticated
  * answer" GREEN over a fully broken subject: it was a hand-spelled
@@ -95,7 +101,7 @@
  * assertions now ask `ADMISSION_CHECKS` which codes exist instead of guessing,
  * and arm 1 re-run against the corrected suite went from 8 failures to 10.
  */
-/* NEGATIVE CONTROL: in src/store.mjs make `#monitorToken()` presence-only again (`return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;`, sync, with the three fire sites un-awaited) -> the denylisted daemon credential is selected and refused on every tick, `fired` is [] and `failed` carries the refusal; this suite FAILS the RUNS arms while the NAMED arms stay green — which is the whole shape. See the run figures in the report below. */
+/* NEGATIVE CONTROL: in src/store.mjs make `#monitorToken()` presence-only again (`return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;`, sync, with the three fire sites un-awaited — TWO since capture's K58, 2026-09-27: the capture-request fire spends no credential) -> the denylisted daemon credential is selected and refused on every tick, `fired` is [] and `failed` carries the refusal; this suite FAILS the RUNS arms while the NAMED arms stay green — which is the whole shape. See the run figures in the report below. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";

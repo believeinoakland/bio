@@ -26,6 +26,9 @@ import { controlPen } from "./pen.mjs";
 const P = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const STORE = P("../src/store.mjs");
 const AFF = P("../src/affordances.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections (T5) took `op=backlinks`' read out of `store.mjs` into
+   `src/connections/index.mjs`; arm (f) patches it there. The other arms' anchors did not move. */
+const CONNECTIONS = P("../src/connections/index.mjs");
 const SUITE = P("./citeproject-inquiry.test.mjs");
 const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 
@@ -86,12 +89,12 @@ const ARMS = [
             + "no member can be offered.",
     from: `    types: ["information", "inquiry", "project"],`,
     to: `    types: ["information", "project"],`, all: true },
-  { id: "f-readback", file: STORE,
+  { id: "f-readback", file: CONNECTIONS,
     declared: "make `op=backlinks` report every edge as `confirmed`. THE READ-BACK ARM: the "
             + "withdrawal is asserted RECORDED through a different op from the one that wrote it, "
             + "so blinding that op must fail those arms and only those.",
-    from: `                 status: status ?? "confirmed", note });`,
-    to: `                 status: "confirmed", note });` },
+    from: `                 rel: r.rel, status: status ?? "confirmed", note });`,
+    to: `                 rel: r.rel, status: "confirmed", note });` },
 ];
 
 const runSuite = () => {

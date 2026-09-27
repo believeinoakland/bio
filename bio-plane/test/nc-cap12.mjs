@@ -33,7 +33,11 @@
  * (the figure is there and the store ignores it). A single arm would have
  * collapsed two different failures into one. `zero` and `notion` arm the two
  * ways this item could have written a FALSE fact rather than an absent one, and
- * `overstrict` arms the direction that refuses CORRECT work.
+ * `overstrict` arms the direction that refuses CORRECT work. *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): writer in extraction's pipeline, reader
+ * in content. baseline 57/0 · dropsheets 45/12 (sheet assertions only) · droppara 54/3 · dropslides 45/12 (slide
+ * assertions only) · zero 56/1 · notion 54/3 · reader 45/12 (the refusals only) · overstrict 54/3 · overstrict2 53/4 —
+ * every arm AS DECLARED, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -54,8 +58,12 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("cap12");
 mkdirSync(SAFE, { recursive: true });
 
-const INDEX = join(PLANE, "src/index.mjs");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the writer (the reading's `container_extent`) moved from `index.mjs`'s
+   acquire to extraction's pipeline (`src/extraction/pipeline.mjs` `containerExtentOf`, R13), dedented to its new
+   depth; the reader (`#containerExtentForCapture`) from `store.mjs` to content (`src/content/index.mjs`), its text
+   unchanged. The names INDEX and STORE are kept; each arm breaks what it always did. */
+const INDEX = join(PLANE, "src/extraction/pipeline.mjs");
+const STORE = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
 
@@ -121,11 +129,11 @@ const ARMS = {
        nobody is running, and it fails SILENTLY in the direction that looks like
        success: green suite, green battery, nothing tested. */
     patch: () => arm(INDEX,
-      `                    sheets: sh ? sh.map((s) => ({
-                      name: s && typeof s.name === "string" ? s.name : null,
-                      rows: int(s && s.rows), cols: int(s && s.cols),
-                      usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,`,
-      `                    sheets: null,`),
+      `        sheets: sh ? sh.map((s) => ({
+          name: s && typeof s.name === "string" ? s.name : null,
+          rows: int(s && s.rows), cols: int(s && s.cols),
+          usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,`,
+      `        sheets: null,`),
   },
   droppara: {
     files: [INDEX],
@@ -135,8 +143,8 @@ const ARMS = {
                "a paragraph past the count is REFUSED BY NAME, 0-based bound stated"],
     mustPass: "every sheet and slide assertion",
     patch: () => arm(INDEX,
-      "                    paragraphs: pa ? pa.length : null,",
-      "                    paragraphs: null,"),
+      "        paragraphs: pa ? pa.length : null,",
+      "        paragraphs: null,"),
   },
   dropslides: {
     files: [INDEX],
@@ -157,8 +165,9 @@ const ARMS = {
                "and the RECORD NOW HOLDS THE PRODUCER'S OWN FIGURE"],
     mustPass: "every sheet and paragraph assertion",
     patch: () => arm(INDEX,
-      "                    slides: sl ? slideExtents(sl) : null,",
-      "                    slides: null,"),
+      /* RE-ANCHORED 2026-09-27 (T5-12): the line also carries the deck length's slides now (`sl || deckLen`). */
+      "        slides: sl || deckLen ? slideExtents(sl || []) : null,",
+      "        slides: null,"),
   },
   zero: {
     files: [INDEX],
@@ -166,8 +175,8 @@ const ARMS = {
     mustFail: ["a workbook whose entry itemised NO sheets records NULL and never 0"],
     mustPass: "every arm over a container the entry DID itemise — the arm must break only the empty case",
     patch: () => arm(INDEX,
-      `                const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);`,
-      `                const held = (k) => (has(k) ? i2text[k] : null);`),
+      `    const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);`,
+      `    const held = (k) => (has(k) ? i2text[k] : null);`),
   },
   notion: {
     files: [INDEX],
@@ -183,8 +192,8 @@ const ARMS = {
        for: the three original levels declared regardless of what the entry
        itemised. */
     patch: () => arm(INDEX,
-      `                    levels: [...["sheets", "paragraphs", "slides"].filter(has),`,
-      `                    levels: [...["sheets", "paragraphs", "slides"],`),
+      `        levels: [...["sheets", "paragraphs", "slides"].filter(has),`,
+      `        levels: [...["sheets", "paragraphs", "slides"],`),
   },
   reader: {
     files: [STORE],
