@@ -46,8 +46,8 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 
 ## Layer 11
 
-- **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
-- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record; peritem's two STRUCTURAL arms, migrate-released.control's first-boot anchors, check-refusal-codes, instance-group.control, rec178-bytes.control and queue-peritem.control after record-core moved their anchors: RECORD-CORE #2's REPORT 5); N46 with N37; N57's remainder.
+- **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); `op=calibrate` joins the ops the control plane stamps `identity` on (D-587's rule: session member, machine `class:<cls>`, AI its principal; calibration R5 refuses it unattributed until then, K136); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
+- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record; peritem's two STRUCTURAL arms, migrate-released.control's first-boot anchors, check-refusal-codes, instance-group.control, rec178-bytes.control and queue-peritem.control after record-core moved their anchors: RECORD-CORE #2's REPORT 5; calibration, bounds (roster 47→46), derivation-bounds, rec155-session-routes, reextract, check-refusal-codes and d470's C-42 reads: CALIBRATION #1's REPORT 1); N46 with N37; N57's remainder.
 
 ## Jobs
 

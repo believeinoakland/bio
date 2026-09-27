@@ -93,7 +93,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 - **legacy-checks** · N94; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
-- **promotion** · N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
+- **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
 
 ### Layer 3
 - **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read, their requirement written by BOB before T6 opens.

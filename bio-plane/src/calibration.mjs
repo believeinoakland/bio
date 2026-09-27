@@ -102,7 +102,10 @@
  * idle instance's cost for this feature is exactly zero.
  */
 
-import { CALIBRATION_CHECKS, BASIS_GRADES } from "../checks/bio-checks.mjs";
+/* The module's own refusal rows (C-42, moved from the catalogue at T5-1) and the grade
+   vocabulary, which stays the catalogue's. */
+import { BASIS_GRADES } from "../checks/bio-checks.mjs";
+import { CALIBRATION_CHECKS } from "./calibration/checks.mjs";
 
 /* ------------------------------------------------------------------ *
  * The declared constants
@@ -209,9 +212,12 @@ export function checkCalibration(cal) {
         + `all say an engine changed, and none of them says what it now scores. The record stores the `
         + `probe, its inputs and its scores precisely so a later reader can disagree with the letter`);
   }
+  /* D-668 / D-587 (R5): its own code. A calibration whose probe, inputs and scores are all present
+     WAS measured, and C-42.4's "Nothing here was actually measured" was false of it (DEC-49, D-484).
+     At the store's door `measured_by` is the control plane's stamp of the caller, never the body's. */
   if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
-    return refusal("CAL_NO_PROBE",
-      `a calibration names what ran the probe. An unattributed measurement is one nobody can re-run`);
+    return refusal("CAL_UNATTRIBUTED",
+      `a calibration names who ran the probe. An unattributed measurement is one nobody can ask to be re-run`);
   /* END DEC-49 REGION is-calibration-shape */
   return null;
 }
@@ -368,6 +374,11 @@ export function checkSignal(sig) {
 
 /* ------------------------------------------------------------------ *
  * Rule 3 — the obligation, DERIVED
+ *
+ * `driftObligations` is `extraction`'s (its R38, K73 (7)), not this module's:
+ * it names transcriptions, which this module never does (R13). It stays here,
+ * unchanged, only until extraction holds its own copy and the store's drift
+ * join no longer imports it from this file (build/jobs/T5/calibration.md, Q1).
  * ------------------------------------------------------------------ */
 
 /** THE ASYMMETRIC DRIFT HANDLER'S ANSWER: which transcriptions rest on a
