@@ -3663,7 +3663,7 @@ export class Store extends DurableObject {
          SCHEDULER.md quotes by name rather than re-typing.
 
          AND IT SELF-TERMINATES ON AN INSTANCE THAT HAS REGISTERED NOTHING.
-         `calibrationWake` returns null on its first line when
+         `#calibrationWake` returns null on its first line when
          `calibration_subjects` is empty, so an instance with no calibratable
          engine holds NO ALARM AT ALL and this feature costs it exactly zero.
          That is the property REC-1 prized and the one the Free tier the
