@@ -1,4 +1,4 @@
-/* cropImage: R27–R34 of build/requirements/pdf-worker.md, and R39 for its
+/* cropImage: R27–R34 of build/requirements/pdf-pixels.md, and R39 for its
  * refusals. Expected samples are known by construction and every PNG is read
  * back with node's own zlib, never the subject's encoder. */
 import "../../bio-plane/test/sandbox.mjs";

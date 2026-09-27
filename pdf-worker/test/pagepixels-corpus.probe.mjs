@@ -209,7 +209,7 @@ async function census(docs) {
     try { doc = await loadPdf(d.bytes); } catch { doc = null; }
     if (!doc) { rows.push({ id: d.id, pages: 0, unreadable: true }); continue; }
     const enc = doc.isEncrypted();
-    const pages = (doc._pageOrder || []).length;
+    const pages = doc.pageCount;
     const per = [];
     for (let p = 0; p < pages; p++) {
       const a = await analyzePage(doc, p);
@@ -282,7 +282,7 @@ async function verifyRendering(docs, py) {
   for (const d of docs) {
     const doc = await loadPdf(d.bytes);
     if (!doc) continue;
-    const pages = (doc._pageOrder || []).length;
+    const pages = doc.pageCount;
     for (let p = 0; p < pages; p++) {
       const a = await analyzePage(doc, p);
       if (!a || a.hasTextOps || a.imageCount !== 1 || a.hasVectorOps) continue;

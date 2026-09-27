@@ -1,5 +1,5 @@
-/* renderPageToPixels and the shared decode rules: R13–R26, R39 and R40 of
- * build/requirements/pdf-worker.md.
+/* renderPageToPixels and the shared decode rules: R13–R26, R39, R40 and R41 of
+ * build/requirements/pdf-pixels.md.
  *
  * INDEPENDENT EXPECTATIONS (R40). The CCITT digests come from Pillow (libtiff's
  * G4) through pypdf 6.14.2 / Pillow 11.3.0, run 2026-08-08; the DCT digests and
@@ -16,11 +16,12 @@
  * /Rotate 270) of another page of the same document. */
 import "../../bio-plane/test/sandbox.mjs";
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { renderPageToPixels, loadPdf, analyzePage, REFUSALS } from "../src/pagepixels.mjs";
-import { decodeBaselineJpeg, DctRefusal } from "../src/dctdecode.mjs";
+import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
+import { CROP_REFUSALS } from "../src/imagecrop.mjs";
+import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
@@ -48,10 +49,11 @@ const DCT_SCAN = F("fixtures/scan-dct-page.pdf");
 const VARIANTS = JSON.parse(Buffer.from(F("fixtures/dct-variants.json")).toString("utf8")).variants;
 const jpeg = (name) => new Uint8Array(Buffer.from(VARIANTS.find((v) => v.name === name).jpeg_b64, "base64"));
 
-/* The raw CCITT stream of the scan, for pages that re-wrap it. */
+/* The raw CCITT stream of the scan, for pages that re-wrap it, read through
+   pdf-reader's own services. */
 const CCITT = await (async () => {
-  const doc = await loadPdf(SCAN);
-  return doc.streamRawBytes((await analyzePage(doc, 0))._images[0].obj);
+  const doc = await openPdf(SCAN);
+  return doc.streamRawBytes(imagePlacementSource((await pdfPageImages(doc, 0)).images[0]).stream);
 })();
 
 /* A page painting one image named /Im at the full page box. */
@@ -347,23 +349,28 @@ console.log("\n--- R21: the page's own /Rotate, inherited, never the caller's --
     ["decoded-dct", true, 47, 63, VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256]);
 }
 
-console.log("\n--- R22, R40: DCT, the decoder against Pillow ---");
+console.log("\n--- R22, R40: DCT, every variant through the renderer against Pillow ---");
 {
   const ok = VARIANTS.filter((v) => v.expect === "ok"), no = VARIANTS.filter((v) => v.expect !== "ok");
   t("R22 (the variant corpus: 12 decodable, 4 refused)", [ok.length, no.length], [12, 4]);
+  /* Each variant is the one image of a page whose /Rotate is the variant's turn;
+     a variant's width and height are Pillow's, after that turn. */
+  const variantPage = (v, cs) => {
+    const [w, h] = v.rotate === 90 || v.rotate === 270 ? [v.height, v.width] : [v.width ?? 63, v.height ?? 47];
+    return imagePage(image(w, h, `/ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode`, jpeg(v.name)),
+      { w, h, pageExtra: `/Rotate ${v.rotate}` });
+  };
   for (const v of ok) {
-    let r = null, err = null;
-    try { r = decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64")), { rotate: v.rotate }); } catch (e) { err = e.code || e.message; }
-    t(`R22 R40 ${v.name}: pixels match Pillow's`, r ? [hex(r.samples), r.width, r.height, r.comps] : `THREW ${err}`,
-      [v.pillow_sha256, v.width, v.height, v.mode === "L" ? 1 : 3]);
+    const r = await render(variantPage(v, v.mode === "L" ? "/DeviceGray" : "/DeviceRGB"), 0, { decodeDct: true });
+    const png = r.ok ? readPng(r.bytes) : {};
+    t(`R22 R40 ${v.name}: decoded-dct, Pillow's pixels`, [r.ok ? r.route : r.reason, r.width, r.height, r.upright, r.pixels_sha256, png.colorType],
+      ["decoded-dct", v.width, v.height, true, v.pillow_sha256, v.mode === "L" ? 0 : 2]);
   }
-  const wantCode = { "refuse-progressive": ["UNSUPPORTED_PROCESS", "progressive-huffman"],
-    "refuse-arithmetic": ["UNSUPPORTED_PROCESS", "extended-sequential-arithmetic"],
-    "refuse-cmyk": ["UNSUPPORTED_COMPONENTS", undefined], "refuse-truncated": ["TRUNCATED", undefined] };
+  const want = { "refuse-progressive": ["UNSUPPORTED_JPEG_PROCESS", "/DeviceRGB"], "refuse-arithmetic": ["UNSUPPORTED_JPEG_PROCESS", "/DeviceRGB"],
+    "refuse-cmyk": ["UNSUPPORTED_SAMPLES", "/DeviceCMYK"], "refuse-truncated": ["TRUNCATED_IMAGE_DATA", "/DeviceRGB"] };
   for (const v of no) {
-    let got = "DECODED";
-    try { decodeBaselineJpeg(new Uint8Array(Buffer.from(v.jpeg_b64, "base64"))); } catch (e) { got = e instanceof DctRefusal ? [e.code, e.detail.process] : `THREW ${e.message}`; }
-    t(`R22 ${v.name}: the decoder refuses by name`, got, wantCode[v.name]);
+    const r = await render(variantPage(v, want[v.name][1]), 0, { decodeDct: true });
+    t(`R22 ${v.name}: refused ${want[v.name][0]}, no bytes`, fields(r, "ok", "reason", "bytes"), [false, want[v.name][0], undefined]);
   }
 }
 
@@ -378,9 +385,9 @@ console.log("\n--- R22: DCT through the renderer ---");
   t("R22 dct detail", [r.dct?.process, r.dct?.sampling, r.dct?.restart, r.dct?.stream_bytes], ["baseline", "2x2,1x1,1x1", 1656, 261747]);
   const png = readPng(r.bytes);
   t("R22 R26 an 8-bit RGB PNG whose samples are the pixels_sha256", [png.bitDepth, png.colorType, hex(png.samples)], [8, 2, DCT_UPRIGHT_SHA]);
-  const doc = await loadPdf(DCT_SCAN);
-  const u = decodeBaselineJpeg(doc.streamRawBytes((await analyzePage(doc, 0))._images[0].obj), { rotate: 0 });
-  t("R22 R40 un-rotated, Pillow's picture too", hex(u.samples), DCT_UNROTATED_SHA);
+  const u = await render(imagePage(image(3300, 2550, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", pass.bytes), { w: 792, h: 612 }), 0, { decodeDct: true });
+  t("R22 R40 the same stream on an unrotated page: Pillow's unrotated picture", [u.route, u.width, u.height, u.pixels_sha256],
+    ["decoded-dct", 3300, 2550, DCT_UNROTATED_SHA]);
 
   const up = await render(imagePage(image(63, 47, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-444")), { w: 63, h: 47 }), 0);
   t("R22 pass-through at /Rotate 0 is upright", [up.route, up.upright], ["passthrough-dct", true]);
@@ -456,6 +463,24 @@ export default { async fetch(req) {
       t("R40 workerd: the DCT page decoded, Pillow's pixels", [jd.ok, jd.route, jd.pixels_sha256], [true, "decoded-dct", DCT_UPRIGHT_SHA]);
     } finally { await mf.dispose(); }
   }
+}
+
+console.log("\n--- R41: no place named ---");
+{
+  /* The same list pdf-worker's R38 test uses. Comments are removed from the code
+     first: only a comment may cite where a measurement was taken (layers.md, rule 6). */
+  const PLACES = /\b(Oakland|Alameda|California|Berkeley|Legistar)\b/i;
+  const texts = [...Object.values(REFUSALS), ...Object.values(CROP_REFUSALS)];
+  t("R41 no refusal text names a place", texts.filter((s) => PLACES.test(s)), []);
+  const told = answers.map((r) => JSON.stringify({ ...r, bytes: undefined })).filter((s) => PLACES.test(s));
+  t(`R41 no answer given in this file names a place (${answers.length} answers)`, told, []);
+  const src = (f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8");
+  const code = (f) => src(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  const MINE = ["imagecrop.mjs", "pagepixels-worker.mjs", "pagepixels.mjs"];
+  t("R41 (the module's files are all there)", MINE.every((f) => readdirSync(fileURLToPath(new URL("../src", import.meta.url))).includes(f)), true);
+  t("R41 no place is named in the module's code", MINE.filter((f) => PLACES.test(code(f))), []);
+  /* The control: the same reading does see a place where one is written. */
+  t("R41 (the check sees a place in code)", PLACES.test(code("pagepixels.mjs") + "const x = 'Berkeley';"), true);
 }
 
 console.log("\n--- R39: every refusal is declared, in its own words ---");
