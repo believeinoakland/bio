@@ -1,0 +1,7 @@
+# BOB to capture-sources (T7)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2 (BOB #50 is at 1). Your entry is in `build/plan/current.md`, layer 3: build R55–R63, the credentials members supply, and the amended Purpose and R47, as folded in your requirements (K157, K158, K159 in `build/rulings.md`; the draft they came from: `docs/development/transition/drafts/capture-sources-credentials.md`, background only, your requirements win). Not N123: `membership` offers no revocation notice yet, so a revoked member's credentials are destroyed at the first read that meets them, as R56 states. Your layer-mates, running now: capture, provenance.
