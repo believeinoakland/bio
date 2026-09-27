@@ -96,8 +96,6 @@ probe("BIAS_ILLEGAL_TRANSITION", async () => {
   assert.equal(a.ok, true, JSON.stringify(a));
   return promote(id, bias(id, "proposed", STATEMENT), { base: a.bundleSha });
 });
-probe("BIAS_REFUSED", () => promote("BIAS-2026-0115-o", bias("BIAS-2026-0115-o", "draft",
-  STATEMENT.map((l) => l.replace("ENT-2026-0007", "the city attorney")))));
 probe("GOVERNING_LAWS_REWRITTEN", () => promote("ACTN-2026-0116-p", action("ACTN-2026-0116-p",
   ["governing_laws:", "  - level: state", '    citation: "A statute"'])));
 probe("RISK_TIER_REWRITTEN", async () => {
@@ -135,10 +133,6 @@ const RELAYED = [
              '    state: "suggested"', "    derived_from: null", "    hidden: false", '    author: "ruth"', `    at: "${NOW}"`])]),
            inquiry("INQ-2026-0131-v", [...refs([]), ...versions(['  - name: "v1"', '    description: "d"', '    relationship: "alternative"',
              '    state: "nonsense"', '    derived_from: "v9"', "    hidden: maybe", '    author: "ruth"', `    at: "${NOW}"`, '    kind: "odd"'])])] },
-  { site: /checkBiasExtension, run at op=promote and at the gate/, envelope: "BIAS_REFUSED",
-    fn: (fm, text) => { const f = []; C.checkBiasExtension({ fm, files: new Map([["bundle.md", text]]) }, f); return f; },
-    docs: [bias("BIAS-2026-0132-w", "draft", STATEMENT.map((l) => l.replace("scrutiny", "standard"))),
-           bias("BIAS-2026-0133-x", "draft", STATEMENT.map((l) => l.replace(/justification: .*/, 'justification: ""')))] },
 ];
 
 test("R18: every refusal the catalogue sites at the promote write is enforced there — each row is met by name", async () => {
@@ -149,7 +143,8 @@ test("R18: every refusal the catalogue sites at the promote write is enforced th
       if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)
           && !/src\/index\.mjs/.test(row.where)) rows.push({ family, code, ...row });
   }
-  assert.ok(rows.length >= 40, `the catalogue's rows sited at the promote write: ${rows.length}`);
+  /* 38 since K150: bias's C-26.1–C-26.7 and C-26.11 moved to `src/bias/` (layer 5), which promotion cannot import. */
+  assert.ok(rows.length >= 38, `the catalogue's rows sited at the promote write: ${rows.length}`);
   for (const row of rows) {
     const relay = RELAYED.find((r) => r.site.test(row.where));
     if (relay) continue;                       // shown whole by the relay test below
@@ -176,4 +171,18 @@ test("R18: a catalogue function the write runs is relayed whole: the write's fin
     }
     assert.ok(arms.size >= 2, `${relay.envelope}: more than one arm relayed (${[...arms]})`);
   }
+});
+
+test("R17: through the whole write path, an unreadable revision gets the readability refusal before any registered fence reads the document (D-741)", async () => {
+  const id = "ACTN-2026-0140-y";
+  const a = await promote(id, action(id, ["risk_tier: 3"]));
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const rev = (files) => call("/promote", { bundleId: id, base: a.bundleSha, snapKey: `k${++seq}`, author: "member:ruth",
+    files, meta: { object_type: "action" } });
+  assert.equal((await rev([])).reason, "NO_BUNDLE_MD");
+  assert.equal((await rev([{ path: "n.txt", text: "x" }])).reason, "NO_BUNDLE_MD");
+  const blob = await rev([{ path: "bundle.md", blobSha: "a".repeat(64), bytes: 3 }]);
+  assert.deepEqual([blob.reason, blob.why], ["BUNDLE_MD_UNREADABLE", "blob"]);
+  const nofm = await rev([{ path: "bundle.md", text: "no front matter here" }]);
+  assert.deepEqual([nofm.reason, nofm.why], ["BUNDLE_MD_UNREADABLE", "front_matter"]);
 });
