@@ -67,6 +67,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { deflateSync } from "node:zlib";
 import { describeChain } from "../src/textchain.mjs";
 import { EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
@@ -290,6 +291,10 @@ const promoteDoc = async (doc) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      /* T4 (legacy-tests; provenance K121): the acquired document names its capture (`snapshots/<name>`), and
+         C-18.1, now refused at the write, asks that the bundle hold it: the capture carried beside the register
+         (`register-doc.mjs`; the document itself is op=acquire's own and is not reshaped). */
+      registerFile(doc),
     ],
     register: [],
   }) });

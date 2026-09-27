@@ -46,6 +46,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { STATES, ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";
 import { OBSERVATION_STATES } from "../src/airun.mjs";
+import { registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -95,14 +96,45 @@ const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],   /* T4: the replay's held Drive-era provenance capture (see `seed`) */
   bindings: { ADMIN_TOKEN: "adm-p", MEMBER_TOKEN: "mem-p", PROBE_TOKEN: "prb-p",
               VERSION: "test", INSTANCE_NAME: "testinstance" },
 }));
+/* T4 (legacy-tests; provenance R21–R22, REC-158): assessing a route (op=provenanceroute) and reconstructing a chain
+   (op=provenancechain) are a NAMED MEMBER'S acts, and a machine identity — the member BEARER `mem-p`, stamped
+   `token:member` — is now refused by name before anything is read (`ROUTE_MARK_NO_AUTHOR`, C-34.1; `NO_AUTHOR`), as
+   the requirement intends. So those two acts are driven as a named member, `m-riley` (the author these fixtures
+   already name), through a signed-in session: two administrators first (no ordinary member exists until two do),
+   then the member, who logs in. Every other read and write here keeps the bearer it used; §F asserts the bearer's
+   refusal through the control plane, so the fence is proved, not only stepped round. */
+const call = async (q, body) => (await mf.dispatchFetch("http://x/api/?" + q,
+  { method: "POST", body: JSON.stringify(body ?? {}) })).json();
+const enrol = async (id, role) => {
+  const add = await call("op=memberadd&token=adm-p", { memberId: id, cover: `cover for ${id}`, role, capabilities: ["contribute"] });
+  if (!add.result?.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
+  const en = await call("op=enroll", { invite: add.result.invite, handle: id, password: `${id}-passphrase-1` });
+  if (!en.result?.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
+  const lg = await call("op=login", { role: `member:${id}`, password: `${id}-passphrase-1` });
+  if (!lg.result?.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
+  return lg.result.token;
+};
+await enrol("ada-p", "admin"); await enrol("ben-p", "admin");
+const RILEY = await enrol("m-riley", "member");
+const MEMBER_ACTS = new Set(["provenanceroute", "provenancechain"]);
 const post = async (op, body, qs = "") => (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=mem-p${qs}`, { method: "POST", body: JSON.stringify(body || {}) })).json();
+  `http://x/api/?op=${op}&token=${MEMBER_ACTS.has(op) ? RILEY : "mem-p"}${qs}`,
+  { method: "POST", body: JSON.stringify(body || {}) })).json();
 const get = async (op, qs = "") => (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=mem-p${qs}`)).json();
 
+/* T4 (legacy-tests; provenance K121): THE INFORMATION FIXTURES ARE HISTORY. They stand for documents already at
+   `verified` whose route nobody recorded (D-204's, REC-54's live ten), and since the C-18 register arms run at the
+   write a CREATION carrying one is refused (C-18.9 at the fence; C-18.1 for the snapshot the bundle does not carry,
+   the empty locator and the absent origin and capture fields). A store now holds such a register only as history,
+   through a replay the plane verifies (D-512: the admin's promotion naming a held Drive-era provenance capture listing
+   this bundle and this bundle.md's sha256), which K121 exempts. The documents are unchanged; only the way they enter
+   the store is. A bundle carrying no register (an inquiry; §I's no-register document) is promoted as before. */
+let replaySeq = 0;
 const seed = async (id, docs, { state = "verified", type = "information" } = {}) => {
   const body = bundleMd(id, type, state);
   const files = [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) }];
@@ -110,12 +142,24 @@ const seed = async (id, docs, { state = "verified", type = "information" } = {})
     const prov = JSON.stringify({ documents: docs }, null, 2);
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
-  return post("promote", {
+  const pkg = {
     bundleId: id, base: null, snapKey: "20260808T000000Z_aaaa1111", author: "m-riley",
     meta: { object_type: type, group: "believe-in-oakland", title: id,
             current_state: state, created: NOW, last_updated: NOW },
     files, register: [],
-  });
+  };
+  if (docs === null || type !== "information") return post("promote", pkg);
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: `20260719T01000${++replaySeq % 10}Z_rec63aaa`,
+      record: { target: id, base: null, author: "m-riley", files: [{ name: "bundle.md", sha256: sha(body) }] } }] }), "utf8");
+  const held = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=adm-p&sha256=${sha(cap)}`,
+    { method: "PUT", body: cap })).json();
+  const r = await call("op=promote&token=adm-p", { ...pkg, replay: true, provenanceCapture: sha(cap),
+    register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }] });
+  t(`FIXTURE: ${id} is held, as the history it stands for (a verified replay)`,
+    [(held.result || held).ok, (r.result || r).ok], [true, true]);
+  return r;
 };
 const listRow = async (id) => {
   const rows = arr((await get("list")).result);
@@ -342,9 +386,14 @@ console.log("\n--- F. the four door refusals, each with its C-number and canned 
   t("or claiming nobody looked at something there was nothing to look for",
     routeOf(inqRow).finding, null);
 
-  /* C-34.1 cannot be reached through the control plane — index.mjs stamps the
-     author on every call, which is the point of that stamp. It is asserted at
-     the layer where it fires (VERIFICATION.md 3a). */
+  /* CORRECTED 2026-09-27 (T4, legacy-tests; provenance R22, REC-158), never exempted: this read "C-34.1 cannot be
+     reached through the control plane — index.mjs stamps the author on every call". It can now, as REC-158
+     intends: the stamp names a machine credential `token:member`, and a machine identity is refused by name. That
+     is asserted first, through the plane; the no-principal case below stays asserted at the store. */
+  const bearer = o((await (await mf.dispatchFetch("http://x/api/?op=provenanceroute&token=mem-p&bundleId=INFO-2026-0103-derivable",
+    { method: "POST", body: "{}" })).json()).result);
+  t("REC-158 (R22): the member BEARER, a machine identity, is refused by name through the control plane",
+    [bearer.reason, bearer.check], ["ROUTE_MARK_NO_AUTHOR", "C-34.1"]);
   const mfStore = withSurfacingRun(new Miniflare({
     modules: true, script: readFileSync(STORE_SRC, "utf8"),
     modulesRoot: "/", scriptPath: STORE_SRC,
@@ -357,8 +406,12 @@ console.log("\n--- F. the four door refusals, each with its C-number and canned 
   t("naming C-34.1 on the wire", noAuthor.check, "C-34.1");
   t("and the same check the family holds", noAuthor.check, rows.ROUTE_MARK_NO_AUTHOR.check);
   t("with its translation", noAuthor.translation, rows.ROUTE_MARK_NO_AUTHOR.translation);
-  t("and it says plainly that it is NOT a machine fence, so nobody reads one that is not there",
-    /deliberately not a machine one/.test(String(noAuthor.detail)), true);
+  /* CORRECTED 2026-09-27 (T4, legacy-tests; provenance R22, REC-158), never exempted: this asserted the refusal said
+     it was "deliberately not a machine one", which was true until REC-158 made it one on purpose. The sentence is
+     gone with the rule it described; what each refusal says now is asserted instead — the no-principal case that a
+     named act needs a name, the machine case (the bearer above) that a credential's class is nobody's name. */
+  t("and each refusal says which it is: no principal names nobody, and a machine credential is nobody's name",
+    [/is a named act/.test(String(noAuthor.detail)), /is a machine credential/.test(String(bearer.detail))], [true, true]);
   await mfStore.dispose();
 
   /* Every row is reachable and every row is translated — asserted over the
@@ -391,14 +444,19 @@ console.log("\n--- G. a route later shown APPENDS; the marker that stood is not 
   const prov = JSON.stringify({ documents: [{ ...NO_ROUTE, ...DERIVABLE }] }, null, 2);
   const md = bundleMd("INFO-2026-0101-noroute", "information", "verified");
   const cur = await listRow("INFO-2026-0101-noroute");
-  await post("promote", {
+  /* T4 (legacy-tests; provenance K121): the revision is judged at the write, refused only for a C-18 error the held
+     version does not already carry. The custody it records names its snapshot by path, so the revision carries that
+     capture (`registerFile`: the blob its sha addresses); the errors the held history already carries stay inherited. */
+  const rev = await post("promote", {
     bundleId: "INFO-2026-0101-noroute", base: o(cur).bundle_sha, snapKey: "20260808T000001Z_bbbb2222",
     author: "m-riley",
     meta: { object_type: "information", group: "believe-in-oakland", title: "INFO-2026-0101-noroute",
             current_state: "verified", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile({ ...NO_ROUTE, ...DERIVABLE })],
   });
+  t("FIXTURE: the member's correcting revision lands", o(rev.result).ok, true);
   const shown = o((await post("provenanceroute", {}, "&bundleId=INFO-2026-0101-noroute")).result);
   t("the new assessment finds the route showable", routeOf(shown).finding, "PRESENT");
   t("it APPENDED rather than edited", shown.appended, true);
@@ -651,8 +709,13 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
     found.length <= CEILING, true);
 
   /* THE REACH, AS A DELTA. A planted swallow at a real site must be found. */
-  const planted = real.replace("const documents = [];",
-    "let __x = null; try { __x = JSON.parse('{'); } catch { __x = null; }\n    const documents = [];");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the plant's anchor, `const documents = [];`, moved
+     out of store.mjs with the route-mark and chain services into provenance, so the plant is made at a statement the
+     store still holds exactly once (the store's receipt hand-off to provenance); the planted swallow is unchanged. */
+  const PLANT_AT = "    const r = provenanceOf(this.ctx).recordReceipt({ ...receipt,";
+  t("the plant's anchor occurs exactly once in store.mjs", real.split(PLANT_AT).length - 1, 1);
+  const planted = real.replace(PLANT_AT,
+    "    let __x = null; try { __x = JSON.parse('{'); } catch { __x = null; }\n" + PLANT_AT);
   t("the planted swallow really changed the source", planted !== real, true);
   t("and the sweep FINDS it — its reach is a delta, never an absolute",
     silentCatches(planted).length - found.length, 1);

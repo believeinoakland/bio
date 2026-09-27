@@ -44,6 +44,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { moduleSources } from "./extracted-sources.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -240,7 +241,23 @@ console.log("\n--- 4. no hand-spelled whole-second stamp is left in store.mjs or
      35 `.split`), less the acknowledgement's, which moved to milliseconds, are 60 "second" calls; the review
      copy's five acts are 5 "millisecond" calls; index.mjs's five `.split` sites are 5 "second" calls. A
      ratchet, so a landing that goes back to spelling a stamp by hand fails here. */
-  t("and the helper is what stamps them: its named calls are at or above D-543's printed figure", calls >= 70, true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 moved 19 of the
+     store's named `stampInstant` calls (75 before, 56 now) out of `store.mjs` with the code that makes them, into
+     `src/capture/` and `src/provenance/`, which cannot import the legacy store's helper and each stamp through ONE
+     helper of their own that names the precision: capture's `stampSecond(…)` and provenance's `secondOf(…)` (both
+     whole-second). So the corpus widens to the three extracted modules (host-governor stamps milliseconds unnamed,
+     as the ~150 sites below do): a module's named-helper call counts as a call, and the ONLY hand spelling a module
+     may hold is that helper's own one-line definition. The figure 70 is unchanged. */
+  const mods = codeOf(moduleSources(["capture", "provenance", "host-governor"], "latin1"));
+  const modCalls = (mods.match(/(?<![\w$])(?:stampSecond|secondOf)\(/g) || []).length;
+  const modHand = mods.split("\n").filter((l) => (l.match(HAND) || []).length
+    && !/^\s*const (?:stampSecond|secondOf) = \(/.test(l));
+  console.log(`  extracted modules (capture, provenance, host-governor): ${mods.length} code chars; `
+    + `named whole-second helper calls ${modCalls}; hand-spelled sites outside a helper's definition ${modHand.length}`);
+  t("the extracted modules spell a whole-second stamp by hand NOWHERE but their one named helper's definition",
+    [mods.length > 100_000, modHand], [true, []]);
+  t("and the helper is what stamps them: its named calls are at or above D-543's printed figure (T4: with the modules' named helpers)",
+    calls + modCalls >= 70, true);
 }
 
 /* WHAT THIS SUITE CANNOT SEE, NAMED RATHER THAN SCORED ZERO:

@@ -69,6 +69,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { compile, MEANING, meaningVocabulary, GATE_MARK,
          MEANING_AXIS_CAP } from "../src/query.mjs";
 /* THE VOCABULARY IS THE IMPORTED CONSTANT AND NO MEMBER OF IT IS SPELLED IN
@@ -141,9 +142,14 @@ const HEAD = new Map();
 const promote = async (id, { document = null, registerOnly = null } = {}) => {
   const text = infoMd(id);
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
+  /* T4 (legacy-tests; provenance K121): the document completed to C-18.1's intake shape, which is now refused at
+     the write (its file, locator and retrieval kept as stated; the authority stated UNDETERMINED and the capture's
+     method, grade and actor class filled), and the capture it names held in the bundle (`register-doc.mjs`). */
+  if (document) document = registerDoc(document);
   if (document) {
     const prov = JSON.stringify({ documents: [document] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(registerFile(document));
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,

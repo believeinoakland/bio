@@ -70,6 +70,8 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { VERSION_CHAIN_CHECKS } from "../checks/bio-checks.mjs";
 import { normalizeAddress } from "../src/subresources.mjs";
+import { PROVENANCE_SCHEMA } from "../src/provenance/schema.mjs";
+import { reinlineLayer3 } from "./t4-extracted.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -82,7 +84,19 @@ const t = (label, got, want) => {
 };
 
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (3)): the `register` and `captured_locators` DDL
+   moved into provenance's `PROVENANCE_SCHEMA`, which `schema.mjs` interpolates into `SCHEMA` as `${PROVENANCE_SCHEMA}`.
+   The schema read here is the schema AS THE PLANE ASSEMBLES IT: schema.mjs with that interpolation made, the SQL
+   text itself and nothing else. */
+const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8").replace("${PROVENANCE_SCHEMA}", () => PROVENANCE_SCHEMA);
+if (!SCHEMA_SRC.includes("CREATE TABLE IF NOT EXISTS captured_locators"))
+  throw new Error("REFUSED: the assembled schema carries no captured_locators table; the interpolation above did not happen");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, R13, R16): `versionChain` and the one writer of
+   `captured_locators` moved into `src/provenance/index.mjs` (the writer as `recordReceipt`, R13, which the store's
+   `recordCapturedLocator` now calls). The store's code read below is the store with its pure layer-3 delegations
+   re-inlined (`reinlineLayer3`, `t4-extracted.mjs`) and provenance's module text beside it, so every method this
+   suite reads is read where it lives; provenance's `schema.mjs` is not added here (its DDL is in SCHEMA_SRC above). */
+const STORE_CORPUS = reinlineLayer3(STORE_SRC).text + "\n" + readFileSync(SRC("provenance/index.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 
 /* Blank block comments before any structural read. bounds.test.mjs' own reader,
@@ -105,7 +119,7 @@ const decomment = (text) => text.split("\n").map(((state) => (L) => {
   return out;
 })({ block: false })).join("\n");
 
-const STORE_CODE = decomment(STORE_SRC);
+const STORE_CODE = decomment(STORE_CORPUS);
 /* The schema is SQL inside a template literal, so its prose is `--` comments and
    `decomment` above cannot see them. Stripped too, and for the same reason —
    MEASURED, not anticipated: the first run of this suite failed its own
@@ -279,9 +293,18 @@ console.log("\n--- 2. STRUCTURAL: no edge, no relation, no supersedes column, no
     /INSERT[^;]*?INTO captured_locators\b|UPDATE captured_locators\b|DELETE FROM captured_locators\b/.test(body))
     .map(([n]) => n);
   console.log(`  writers of captured_locators: ${writerSegments.join(", ") || "NONE"}`);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance R13): the one writer moved with its INSERT, unchanged, into
+     provenance as `recordReceipt`; the store's `recordCapturedLocator` keeps its name and calls it, writing nothing
+     itself. So the one method that writes the table is `recordReceipt`, and the store's method is asserted to write
+     nothing and to reach it. */
   t("NO NEW WRITE: exactly one method in the whole store writes captured_locators, and it is the one that "
-  + "always did — `purge` reaches it through its own table list, which is not a version edge",
-    writerSegments.filter((n) => n !== "purge" && n !== "#purgeTables"), ["recordCapturedLocator"]);
+  + "always did (moved into provenance as `recordReceipt`, R13) — `purge` reaches it through its own table list, "
+  + "which is not a version edge",
+    writerSegments.filter((n) => n !== "purge" && n !== "#purgeTables"), ["recordReceipt"]);
+  t("NO NEW WRITE: and the store's `recordCapturedLocator` writes nothing itself — it hands the receipt to "
+  + "provenance's `recordReceipt`",
+    [/\b(INSERT|UPDATE|DELETE)\b/.test(SEGMENTS.get("recordCapturedLocator") || ""),
+     /provenanceOf\(this\.ctx\)\.recordReceipt\(/.test(SEGMENTS.get("recordCapturedLocator") || "")], [false, true]);
   t("NO NEW WRITE: and the version chain method writes NOTHING — it is SELECT only",
     /\b(INSERT|UPDATE|DELETE)\b/.test(SEGMENTS.get("versionChain") || ""), false);
   t("NO NEW WRITE (GUARD): the writer reader can SEE a write when one is there",
@@ -290,7 +313,7 @@ console.log("\n--- 2. STRUCTURAL: no edge, no relation, no supersedes column, no
   /* (e) THE WRITE PATH ITSELF IS BYTE-UNCHANGED IN THE PART THAT MATTERS: the
      INSERT still names the same eight columns and the same conflict clause, so
      "no new column" is true at the write as well as in the schema. */
-  const wr = SEGMENTS.get("recordCapturedLocator") || "";
+  const wr = SEGMENTS.get("recordReceipt") || "";   /* T4: the writer, where it now lives (R13) */
   t("THE WRITE PATH IS UNTOUCHED: the same eight-column INSERT, the same ON CONFLICT key, the same "
   + "widen-the-interval update",
     [/INSERT INTO captured_locators \(address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations\)/.test(wr),
@@ -333,8 +356,12 @@ console.log("\n--- 3. the seek: address EQUALITY, date order, and no text index 
   t("ONE VERSION IS ONE capture_sha: the rows are grouped on it, so a document seen twice through two "
   + "routes (D-96's `via` in the key) is one version and not two",
     /GROUP BY cl\.capture_sha/.test(chain), true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the store's private `#bundleGate` moved with the
+     chain as provenance's module function `bundleGate`, the same predicate compiled over membership's
+     `viewerPredicate` (its R43); asked of the spelling the chain now calls, and of what that function compiles. */
   t("the answer is GATED at the register's bundle, through the plane's one gate function",
-    /#bundleGate\("r\.bundle_id", viewer\)/.test(chain), true);
+    [/\bbundleGate\("r\.bundle_id", viewer\)/.test(chain),
+     /function bundleGate\(col, viewer\) \{[\s\S]{0,400}?viewerPredicate\(viewer\)/.test(STORE_CODE)], [true, true]);
   t("SEEK GUARD: these anchors are read over comment-stripped source, so this suite's own prose cannot "
   + "satisfy them",
     /Bob ruled/.test(STORE_CODE), false);

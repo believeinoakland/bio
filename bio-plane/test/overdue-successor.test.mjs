@@ -31,6 +31,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const script = readFileSync(IDX, "utf8");
@@ -84,8 +85,13 @@ let bseq = 0;
 const promoteReading = async (post, captureSha, entities, at) => {
   const id = `INFO-2027-${String(++bseq).padStart(4, "0")}-r8`;
   const md = bundleMd(id);
-  const doc = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
-                reading: { content_type: "procurement", reader_version: 1, found: entities.length > 0, at, entities } };
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+     refused at the write, and the capture it names held in the bundle (`register-doc.mjs`). The reading's own
+     `at` is kept as stated (null stays null); the register document's `retrieved` is the acquisition instant, a
+     different fact, and the promotion still carries NO register row. */
+  const doc = registerDoc({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+                reading: { content_type: "procurement", reader_version: 1, found: entities.length > 0, at, entities } },
+                { at: AWARD_AT });
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", {
     bundleId: id, base: null, snapKey: "20270101T010000Z_aaaa1111", author: "r8",
@@ -94,6 +100,7 @@ const promoteReading = async (post, captureSha, entities, at) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      registerFile(doc),
     ],
     register: [],
   });

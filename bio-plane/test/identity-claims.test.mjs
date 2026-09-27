@@ -66,7 +66,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { sweep, wideClaims } from "../scripts/identity-claims.mjs";
+import { sweep, wideClaims, methodBodies } from "../scripts/identity-claims.mjs";
+import { moduleSources } from "./extracted-sources.mjs";
 /* M0-18 — ONE mechanism, imported. The reason this suite needed it is at the
    wide-ledger walk in block 3. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
@@ -86,7 +87,23 @@ const t = (label, got, want) => {
 const val = (o, k) => (o && typeof o === "object" && k in o) ? o[k] : null;
 
 const INDEX_SRC = readFileSync(SRC("src/index.mjs"), "utf8");
-const STORE_SRC = readFileSync(SRC("src/store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the store's `testify`, the chain and route-mark
+   services and the register/receipt reads moved to `src/provenance/`, and the store keeps a ONE-LINE delegation for
+   each (`x(...a) { return provenanceOf(this.ctx).y(...a); }`). The sweep reads a method's fence off the store's own
+   method body (one helper level), so over the delegation it would see no fence. The store's text is judged with each
+   such PURE delegation replaced by the provenance method it calls, under the store's name — the text the method had
+   before it moved, and nothing else changed (every other method is the store's own). */
+const STORE_RAW = readFileSync(SRC("src/store.mjs"), "utf8");
+const PROV_METHODS = methodBodies(moduleSources(["provenance"]));
+const PROV_DELEGATION = /^ {2}(#?[A-Za-z_$][\w$]*)\([^)]*\) \{ return provenanceOf\(this\.ctx\)\.([A-Za-z_$][\w$]*)\([^;]*\); \}$/;
+const REINLINED = [];
+const STORE_SRC = STORE_RAW.split("\n").map((l) => {
+  const m = PROV_DELEGATION.exec(l);
+  if (!m || !PROV_METHODS.has(m[2])) return l;
+  REINLINED.push(`${m[1]} <- provenance.${m[2]}`);
+  return PROV_METHODS.get(m[2]).replace(/^( {2}(?:static\s+|async\s+)*)#?[A-Za-z_$][\w$]*/, `$1${m[1]}`);
+}).join("\n");
+console.log(`  T4: ${REINLINED.length} provenance delegations re-inlined for the sweep: ${REINLINED.join(", ")}`);
 
 let MF;
 const mf = new Miniflare({
@@ -195,9 +212,19 @@ t("(d) and each names the code that actually fires, so a code that stops firing 
    assertion fails when a third arrives AND when one of these is resolved. */
 t("(e) the KNOWN-OPEN set, pinned by name: DEC-52's reasoning raises these and answers neither",
   setOf("OPEN"), ["author@src/index.mjs", "decidedBy@src/index.mjs"]);
-t("(e) the open sites are exactly op=provenancechain and op=proposedispose",
+/* CORRECTED 2026-09-27 (T4, legacy-tests; provenance R21–R22, REC-158), never exempted: REC-158 ANSWERED the
+   provenancechain half of this pair. Reconstructing a chain, and marking a route, are now a named member's acts: a
+   machine identity is refused by name before anything is read (`NO_AUTHOR`, `ROUTE_MARK_NO_AUTHOR`, C-34.1), and
+   the sweep, reading the method where it now lives (the re-inlining above), finds that fence. So op=provenancechain
+   DEPARTS the open ops and op=proposedispose stays; the `author` site stays OPEN for the other unfenced writes it
+   stamps. The departure is asserted as a fence found, not only as an absence. provenance-chain.test.mjs drives the
+   refusal through the plane. */
+t("(e) the open sites are exactly op=proposedispose (op=provenancechain departed: REC-158 fenced it)",
   sites.filter((s) => s.verdict === "OPEN").flatMap((s) => s.unfencedOps).filter((o) => o === "provenancechain" || o === "proposedispose").sort(),
-  ["proposedispose", "provenancechain"]);
+  ["proposedispose"]);
+t("(e) and op=provenancechain and op=provenanceroute now CARRY a machine fence (R21, R22), read off provenance's methods",
+  [val(S.enforcement.get("provenancechain"), "fenced"), val(S.enforcement.get("provenanceroute"), "fenced")],
+  [true, true]);
 
 /* THE OVER-STRICTNESS ARM, BUILT IN RATHER THAN BOLTED ON. `op=taskforward` /
    `op=taskresolve` describe their verbs as "MEMBER actions performed by a PERSON" — a

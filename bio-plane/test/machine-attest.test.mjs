@@ -53,6 +53,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -153,6 +154,11 @@ const NOT_AN_ATTESTATION = {
   calibrationsignal: "the matcher's `sign` inside `signal`: an announcement that may only SHORTEN the interval to an "
                    + "engine's next probe, never a statement about the record",
   signerlist: "a READ of the registered signing keys",
+  /* NAMED 2026-09-27 (T4, legacy-tests): arrived in the OPS table with T4's legacy-index routing of membership's
+     ops (N43); read off `src/membership/index.mjs`'s `adminResign`, not assumed. */
+  adminresign: "the matcher's `sign` inside `resign`: an administrator giving up their OWN administrative role "
+             + "(membership 4.2, refused while two or fewer administrators remain) — a roster act about oneself, "
+             + "never a statement about the record, and reached from a member's own session",
   verify: "the public READ-and-verify surface, credential-free (classes: null)",
 };
 const found = [...new Set([...byName, ...byRung, ...byStamp])].sort();
@@ -361,18 +367,22 @@ const SHA_T = sha("rec123-title-deed");
 const DOC = "INFO-2026-9123-deed";
 {
   const text = infoMd(DOC);
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+     refused at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({
     capture: { sha256: SHA_T, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW, entities: [],
                text_source: [{ step: "pixels", extent: { kind: "pages", pages: [0, 1, 2] } },
                              { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" },
-                               extent: { kind: "pages", pages: [0, 1, 2] } }] } }] });
+                               extent: { kind: "pages", pages: [0, 1, 2] } }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const r = await POST(`op=promote&token=${RUTH}`, {
     bundleId: DOC, base: null, snapKey: `20260918T499999Z_${sha(DOC).slice(0, 8)}`,
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }] });
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(doc)] });
   if (r && r.ok === false) throw new Error(`promote ${DOC}: ${JSON.stringify(r).slice(0, 900)}`);
 }
 const attBody = { captureSha: SHA_T, at: NOW, extent: { kind: "page", page: 1 }, note: "checked page 2" };

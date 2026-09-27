@@ -411,7 +411,10 @@ let st = readFileSync(storePath, "utf8");
 const E1 = "this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,\n      h,";
 /* EDIT 2 — the pre-§4.1 form: an observation written by `mk7legacy` names its member in its own files, as every
    observation did before MK-6. */
-const E2 = "const observer = Store.observerRef(id);";
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): `testify` moved, with this statement, into
+   `src/provenance/index.mjs`, where the reference is the module's own `observerRef` (the store keeps
+   `Store.observerRef` as an alias); EDIT 2 is made THERE, its anchor spelled as that file writes it, the edit the same. */
+const E2 = "const observer = observerRef(id);";
 /* EDIT 3 — a FUTURE op that changes a member's cover (none exists in this build): re-affirming `mk7nohandle` as active
    through op=memberset also moves their cover. It is the one lever that can make a prepared statement drift (C-92.11). */
 const E3 = "this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);";
@@ -420,14 +423,17 @@ const E3 = "this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? W
    `store.mjs` as before, and each anchor is still asserted to occur exactly once in the file it edits. */
 const memPath = join(SB, "bio-plane", "src", "membership", "index.mjs");
 let ms = readFileSync(memPath, "utf8");
-const counts = [ms.split(E1).length - 1, st.split(E2).length - 1, ms.split(E3).length - 1];
+const provPath = join(SB, "bio-plane", "src", "provenance", "index.mjs");
+let ps = readFileSync(provPath, "utf8");
+const counts = [ms.split(E1).length - 1, ps.split(E2).length - 1, ms.split(E3).length - 1];
 ms = ms.replace(E1, E1.replace("h,", "h === \"zz-nohandle\" ? null : h,"))
         .replace(E3, E3 + "\n    if (memberId === \"mk7nohandle\") this.sql.exec(`UPDATE members SET cover='the renamed volunteer' WHERE member_id=?`, memberId);");
-st = st.replace(E2, "const observer = who === \"mk7legacy\" ? who : Store.observerRef(id);");
+ps = ps.replace(E2, "const observer = who === \"mk7legacy\" ? who : observerRef(id);");
 writeFileSync(storePath, st);
 writeFileSync(memPath, ms);
+writeFileSync(provPath, ps);
 t("each legacy-state edit's anchor occurs EXACTLY ONCE in the real store.mjs (EDITS 1 and 3 in membership's index.mjs, "
-+ "extracted from it), and neither touches the subject",
++ "EDIT 2 in provenance's index.mjs, extracted from it), and neither touches the subject",
   [counts, st.includes("attributeObservation({"), [E1, E2, E3].some((e) => e.includes("attribute"))], [[1, 1, 1], true, false]);
 const mf2 = boot(join(SB, "bio-plane", "src", "index.mjs")); mfs.push(mf2);
 const L = driver(mf2, "legacy");

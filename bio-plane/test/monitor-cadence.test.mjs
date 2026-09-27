@@ -110,6 +110,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
+import { GOVERNOR } from "../src/host-governor/index.mjs";
 import { MONITOR_FREQ } from "../checks/bio-checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -201,8 +203,13 @@ const md = (id, n, frequency) => [
 /* op=monitor compares against the register: the baseline is whatever
    provenance.json says was captured FROM this locator. Without one the tick
    honestly records "no captured baseline", which is not the clause under test. */
+/* T4 (legacy-tests; provenance K121): the monitored document completed to C-18.1's intake shape (its locator and
+   capture kept as stated), which is now refused at the write, and the capture it names held in the bundle
+   (`register-doc.mjs`). */
+const baselineDoc = (n) => registerDoc({ locator: LOCATOR(n), capture: { sha256: sha(V1) } },
+                                       { at: "2026-07-24T00:00:00Z" });
 const provenance = (n) => JSON.stringify({
-  documents: [{ locator: LOCATOR(n), capture: { sha256: sha(V1) } }],
+  documents: [baselineDoc(n)],
 }, null, 2);
 
 const pkg = (id, n, frequency) => {
@@ -213,7 +220,8 @@ const pkg = (id, n, frequency) => {
             title: `Monitored source ${n}`, current_state: "collected",
             created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
     files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(baselineDoc(n))],
     register: [] };
 };
 
@@ -553,7 +561,10 @@ const pkg = (id, n, frequency) => {
        fetch the tick will make. A later wake only adds tokens, so load can only
        lengthen that wait, never change the verdict. */
     const ARCHIVE_HOST = "web.archive.org";
-    const BURST = Number(/burstTokens:\s*(\d+)/.exec(STORE_SRC)[1]);
+    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor R2/R5, T4-1): the burst was read off store.mjs's
+       text (`burstTokens: 3`); the governor and its chosen constants moved to `src/host-governor/index.mjs`, which
+       exports them as GOVERNOR, so the burst is now asked of the module's interface. */
+    const BURST = Number(GOVERNOR.burstTokens);
     const GRANTS = 3;                          // A's lookup, A's replay, B's lookup
     const bucket = async () => {
       const h = (await obj.governorState({ host: ARCHIVE_HOST })).hosts[0];

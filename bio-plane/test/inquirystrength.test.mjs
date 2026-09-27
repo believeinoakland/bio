@@ -52,6 +52,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -520,14 +521,20 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
      refused EXISTS, which is the record refusing to lose its own history. */
   const HEAD = new Map();
   const provPromote = async (tok, id, text, chain) => {
-    const prov = JSON.stringify({ documents: [{
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+       refused at the write, naming the capture the promotion's own register entry holds (`snapshots/doc.bin`),
+       and that capture carried in the bundle's files (`register-doc.mjs`). */
+    const doc = registerDoc({
       capture: { sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 },
       reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-                 entities: [], facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } }] });
+                 entities: [], facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } },
+      { file: "snapshots/doc.bin" });
+    const prov = JSON.stringify({ documents: [doc] });
     const r = await POST(`op=promote&token=${tok}`, {
       bundleId: id, base: HEAD.get(id) ?? null, snapKey: `${id}-${sha(String(chain)).slice(0, 8)}`, author: "suite",
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-              { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+              { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+              registerFile(doc)],
       register: [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }],
       meta: { object_type: "information", group: "believe-in-oakland",
               current_state: "collected", created: NOW, last_updated: LATER } });
