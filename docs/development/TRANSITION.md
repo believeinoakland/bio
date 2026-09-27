@@ -117,7 +117,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-09-27 · T6 · BOB #48 · session_01E4YZNiY3MRoRn59Wr5NnLW · depth 1 (parent ROOT #1): took over ~14:27 UTC from BOB #47's handoff (e794b5eaa2).
 - 2026-09-27 · T6 · OPENED by BOB #48 (~14:35 UTC): `tranche/T6` from `main`; 25 jobs over layers 1, 2, 3, 4, 6, 7, 11; layer 1 (id-spaces, legacy-checks) first.
 - 2026-09-27 · T6 · BOB #48: layers 1–2 run and merged (ID-SPACES #2, LEGACY-CHECKS #2, RECORD-CORE #3, PROMOTION #5; 67.6M tokens); T6 CLOSED after layer 2 (K165) and `main` fast-forwarded to bfaf7e6287; layers 3+ (21 jobs) moved to `next.md`; process findings F1–F5; product work stops for the K164 revision (Bob), under way on civicos-process `revision/K164` (suite, design merged; model and harness by workers) · rulings K160–K166, entries N124–N128
-- 2026-09-27 · K164 · BOB #49 · session_01H7SnX45uHbDZ5fjH6mBHcN · depth 1 (parent ROOT #1): took over ~16:44 UTC from BOB #48's handoff (6e8dab2edf).
+- 2026-09-27 · K164 · BOB #49 · session_01H7SnX45uHbDZ5fjH6mBHcN · depth 1 (parent ROOT #1): took over ~16:44 UTC from BOB #48's handoff (6e8dab2edf). BOB #48 archived once idle (the refused deletion of ROOT's last routine into it was moot: it fired and retired at 16:44); its `BOB-final` row under T6 (81.2M cache reads).
 
 ## 5. Challenges identified
 
