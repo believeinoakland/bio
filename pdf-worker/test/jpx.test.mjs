@@ -158,6 +158,23 @@ console.log("\n--- R25, R39: what the decoder refuses, by name, and what is cut 
       t(`R25 ${what}: ${want[code]}`, fields(r, "ok", "reason", "jpx", "bytes"), [false, want[code], code, undefined]);
     }
   }
+  /* The memory bound (N34, K116): a bare codestream whose SIZ declares one tile of
+     5000x5000, patched into a small fixture. The codec refuses it from the SIZ
+     alone, before any allocation; its working set is 4 bytes a sample per component. */
+  for (const [comps, label] of [[1, "grey"], [3, "colour"]]) {
+    const base = V.find((v) => v.expect === "ok" && v.container === "j2k" && v.name.endsWith(comps === 1 ? "-grey" : "-rgb"));
+    const d = Uint8Array.from(bytesOf(base));
+    const siz = d.findIndex((b, i) => b === 0xff && d[i + 1] === 0x51);
+    const dv = new DataView(d.buffer);
+    t(`R25 (a ${label} codestream with ${comps} components to patch)`, [siz > 0, dv.getUint16(siz + 38)], [true, comps]);
+    for (const off of [6, 10, 22, 26]) dv.setUint32(siz + off, 5000);   // Xsiz, Ysiz, XTsiz, YTsiz
+    for (const off of [14, 18, 30, 34]) dv.setUint32(siz + off, 0);      // the offsets
+    const r = await render(jpxPage(d, 5000, 5000), 0);
+    if (r.feature) named.add(r.feature);
+    t(`R25 a ${label} image past the memory bound: IMAGE_TOO_LARGE with the codec's figures, no bytes`,
+      fields(r, "ok", "reason", "filter", "feature", "working_set_bytes", "bound_bytes", "width", "height", "components", "bytes"),
+      [false, "IMAGE_TOO_LARGE", "JPXDecode", "an image past the memory bound", 5000 * 5000 * 4 * comps, 61_300_000, 5000, 5000, comps, undefined]);
+  }
   t("R25 every refusal JPX_REFUSES declares was driven", [...named].sort(), Object.keys(JPX_REFUSES).sort());
 }
 
