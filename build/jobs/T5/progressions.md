@@ -2,7 +2,7 @@
 
 **Session** PROGRESSIONS #1, `session_01MqohHm1mTdqg92oxu4112q`, on `job/T5/progressions` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE (~08:17 UTC); Q1–Q3 open with BOB, none blocking. Entry T5-6: extract `progressions` from `legacy-store` and `legacy-checks` per `build/extraction/progressions.md` and `build/requirements/progressions.md`, with every requirement marked not yet met (R8, R14, R19, R27, R31, R33; R32 deferred by K102).
+**Status** · COMPLETE (~08:57 UTC); Q1–Q3 answered (K147, K149); entities and connections reached through their own modules, no bridge left. Entry T5-6: extract `progressions` from `legacy-store` and `legacy-checks` per `build/extraction/progressions.md` and `build/requirements/progressions.md`, with every requirement marked not yet met (R8, R14, R19, R27, R31, R33; R32 deferred by K102).
 
 **Read whole:** `roles/JOB.md`; PROCESS-MECHANICS §12–§16; `build/manifest.md`; `build/requirements/progressions.md` and `README.md`; `build/extraction/progressions.md`; `build/layers.md`; `build/plan/current.md`; `build/modules.json`; the public parts of `entities` and `connections`, and of `record-core`, `membership`, `extraction`, `provenance` the services used (`transact`, `declarePurge`, `perItem` R49–R55, `viewerPredicate` R43, `readingOf` R30, `homeOf`); rulings K3, K4, K6, K23, K31, K57, K61, K64, K76, K78, K90, K96, K102, K107; the legacy code moved (`store.mjs` the definition, instance, exception, overdue, feed and dispose regions, the dispatch arms, the migration, the overdue consumer; `schema.mjs` the seven tables; `bio-checks.mjs` C-33.26, C-33.42, C-33.43); CONTENT #1's record as the pattern.
 
@@ -85,3 +85,10 @@ Size: test runs 22, module lines 1463
 
 - Both were already met: the module uses `gradeRank` and `isEstablished`. Checks after the merge: format 0 failures, architecture 0, coverage 34 of 34, ownership 0. Module tests: 40 pass, 0 fail, 1 todo.
 - `tranche/T5` holds progressions as of `899fe8731a` ("T5: merge progressions"). This branch is ahead of it only by the entities switch (`src/progressions/index.mjs`, the test fixture, this record); legacy-store and legacy-checks have no further change.
+
+## CHANGE 08:54 UTC · connections merged (`tranche/T5` @ `b9271bfcbb`, merged here)
+
+- The bridge is gone. `weakerGrade` is connections' module-level export (its R50), imported by the module; `deps.connections` still lets a test pass its own. The module's tests now use connections' real `weakerGrade`.
+- Module tests: 41, pass 40, fail 0, todo 1 (R32). Checks: format 0 failures (69 modules); architecture 0 (25 relative imports); coverage 34 of 34; ownership 0 (2 files changed since the tranche, both the module's; legacy-store 0/0, legacy-checks 0/0). Behaviour suites through the store, all green: progression-instance, progression-exception, progression-versions, overdue-successor, proposals-feed, capture-progressions, d552-instance-disposition, proposedispose, queue, queue-state, current, versions, gate-reads, connection.
+
+Size: test runs 24, module lines 1460
