@@ -24,8 +24,8 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R7** `adminRemove({memberId, by, reason})`: the founder is refused `ROOT_OF_TRUST`, naming the hosting account as the remedy; `NO_SUCH_MEMBER`; `TARGET_NOT_AN_ADMIN`; `TARGET_CANNOT_VOTE` when `by` is the target; `NOT_AN_ADMIN`; `NO_REASON`; `IMPOSSIBLE_AT_TWO` when `adminMath(administrators).possible` is false; `ALREADY_VOTED`; `VOTES_SHORT` (with `have`, `need`, `deciders`) until the target is excluded and a majority of all administrators has voted.
 - **R8** A carried removal sets the target `revoked` (`status_by` = the completing voter), ends every session of theirs and revokes every key registered to them, in one act; the answer names the deciders and reasons and states that rotating the root of trust and reviewing hosting access is the other half of an ejection. Votes and reasons stay recorded.
 - **R9** `memberCaps({memberId, capabilities, by})`: `NOT_AN_ADMIN` asked first; `NO_SUCH_MEMBER`; `BAD_CAPABILITY` for a non-array or an unknown word (naming them and the vocabulary); `NOT_A_CAPABILITY_GRANT` for a set containing `administer` or a target who is an administrator. Otherwise replaces the set exactly and names `by`.
-- **R10** An administrator (not the founder) may resign while more than two administrators exist, becoming an ordinary member; at two it is refused. *(not yet met: new, §4.5 unbuilt)*
-- **R11** When the second administrator is added, the group is asked to record who holds hosting access, and the record keeps the answer. *(not yet met: new, §4.8 unbuilt)*
+- **R10** An administrator (not the founder) may resign while more than two administrators exist, becoming an ordinary member; at two it is refused.
+- **R11** When the second administrator is added, the group is asked to record who holds hosting access, and the record keeps the answer.
 
 **Invitations, enrolment and the roster**
 - **R12** `memberAdd({memberId, cover, role, capabilities, expertise, by})` is refused `NOT_AN_ADMIN` when `by` names a member who is not an administrator (a machine credential is accepted and recorded as itself). Then, in order: `BAD_MEMBER_ID` (not 2–41 of `a-z0-9-`, starting alphanumeric); `MEMBER_ID_RESERVED` for `admin`; `NO_COVER`; `EXISTS`; `EXPERTISE_IS_NOT_ASSIGNED` for any `expertise`; `ADMINS_FIRST` for an ordinary member while fewer than two administrators exist.
@@ -34,8 +34,8 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R15** `inviteLook({invite})` returns `{cover, role, capabilities, expertise}` for a live invitation and never the member id. A spent invitation and one that never existed answer the identical `NO_SUCH_INVITATION`.
 - **R16** `enroll({invite, handle, password})`: `NO_SUCH_INVITATION` as R15; `NO_HANDLE`; `BAD_HANDLE` (R12's pattern); `HANDLE_TAKEN` (exact comparison); `PASSWORD_TOO_SHORT` under 12. Success sets the handle and password, makes the member `active` with `status_by` = the member, and spends the invitation. Cover, role and capabilities are never taken from this call.
 - **R17** `memberList({administer})` lists every member with handle, role, status, `status_by`, `invited_by` (each `not recorded` when never stamped), capabilities and expertise as R24 answers it. `cover` is present only when the control plane stamped `administer: true`; otherwise the key is absent.
-- **R18** Each row of an administrator's roster lists the projects that member participates in. *(not yet met: new, §7.8)*
-- **R19** Whether a member's cover-and-handle pairing is published is a per-member setting either the member or an administrator may change. *(not yet met: new, §3 unbuilt)*
+- **R18** Each row of an administrator's roster lists the projects that member participates in.
+- **R19** Whether a member's cover-and-handle pairing is published is a per-member setting either the member or an administrator may change.
 - **R20** `memberSet({memberId, status, by})`: `NOT_AN_ADMIN` as R12; `BAD_STATUS` unless `active` or `revoked`; `NO_SUCH_MEMBER`; `ADMIN_REQUIRES_VOTE` for revoking an administrator. Revocation ends the member's sessions and revokes their keys in the same act. Reactivating a revoked administrator restores an ordinary member (`demoted: true`). `status_by` = `by`.
 
 **Declared and confirmed expertise**
@@ -51,26 +51,26 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 
 **AI credentials**
 - **R28** `aiCredentialMint({who, tokenId, secretSha, principalKind, principalMember, taskScope, writes, note, confinedTo})`: `AI_CREDENTIAL_MINT_NOT_A_MEMBER` when `who` is absent or a machine; `AI_CREDENTIAL_PRINCIPAL_UNSTATED` unless `principalKind` is `organisation` or `member`; `AI_CREDENTIAL_IDENTITY_TAKEN` for an empty or used `tokenId`. Records the credential with `minted_by` = `who`; never stores a secret, only its hash.
-- **R62** An organisation-scoped credential (`principalKind: organisation`) is minted only by an active administrator (the founder included); anyone else is refused `AI_CREDENTIAL_ORG_NOT_ADMIN`. *(not yet met: Bob, 2026-09-26)*
-- **R29** A member-scoped credential's principal is `who` itself; naming another member is refused. *(not yet met: new — the principal is taken from `principalMember`)*
+- **R62** An organisation-scoped credential (`principalKind: organisation`) is minted only by an active administrator (the founder included); anyone else is refused `AI_CREDENTIAL_ORG_NOT_ADMIN`.
+- **R29** A member-scoped credential's principal is `who` itself; naming another member is refused.
 - **R30** `aiCredentialRevoke({who, tokenId})`: refuses a machine or absent `who` and an unknown id; revoking twice answers `already: true`. `aiCredentialLook({secretSha})` and `aiCredentials({limit})` never return the secret; the list is capped (default 200, at most 500) with a measured `truncated`.
 
 **Project participation**
 - **R31** `projectClaimOwner({projectId, memberId})` makes the member the project's sole initial owner, joined: `NO_SUCH_PROJECT`, `NOT_A_PROJECT`, `OWNED` when an owner exists.
 - **R32** `projectInvite({projectId, handle, by, viewer})`: `NOT_THE_OWNER`; `NO_SUCH_HANDLE`; `NOT_ACTIVE`; `ALREADY_A_PARTICIPANT`. Records the member `invited` with `invited_by` = `by`.
-- **R33** In the same act, an open request to join from that member (R49) is closed `granted`, by `by`. *(not yet met: REC-226)*
+- **R33** In the same act, an open request to join from that member (R49) is closed `granted`, by `by`.
 - **R34** `projectJoin({projectId, by, viewer})`: `NOT_INVITED` for a non-participant; otherwise the participant is `joined` (idempotent; it withdraws a request to leave).
-- **R35** `projectLeave({projectId, by, comment, viewer})`: `NOT_A_PARTICIPANT`; `NOT_JOINED`; records `leaving` with the comment (at most 280 characters) and removes nobody. An owner is refused `LAST_COMMITTED_OWNER` when no other owner is committed (an owner not `leaving`). *(not yet met: REC-224 — today it counts every owner and answers `LAST_OWNER_CANNOT_LEAVE`)*
+- **R35** `projectLeave({projectId, by, comment, viewer})`: `NOT_A_PARTICIPANT`; `NOT_JOINED`; records `leaving` with the comment (at most 280 characters) and removes nobody. An owner is refused `LAST_COMMITTED_OWNER` when no other owner is committed (an owner not `leaving`).
 - **R36** `projectRemove({projectId, handle, by, comment, viewer})`: `NOT_THE_OWNER` (administrators included); `NO_SUCH_HANDLE`; `NOT_A_PARTICIPANT`; `OWNER` for an owner (R40 first). Removes the participant whether or not they asked to leave.
-- **R63** Every removal a project owner makes stays recorded with who removed whom, when and the owner's reason (`comment`), and every participant of the project can read it. *(not yet met: Bob, 2026-09-26)*
+- **R63** Every removal a project owner makes stays recorded with who removed whom, when and the owner's reason (`comment`), and every participant of the project can read it.
 - **R37** `projectParticipants({projectId, by})` gives a participant or an administrator every participant's handle, state, owner flag and comment; anyone else is answered `NO_SUCH_PROJECT`.
 
 **Project ownership**
 - **R38** `ownerMath(n)`: n ≤ 1 impossible (the floor is one owner); n = 2 needs both, the target voting (`targetMayVote: true`); n ≥ 3 is `adminMath`'s majority with the target counted and not voting. `projectOwnerArithmetic({projectId, viewer})` gives the table for 1..9 and the live row, which reads as `ownerMath(0)` for a project the viewer cannot see.
-- **R39** `projectOwnerAdd({projectId, handle, by, viewer})`: `NOT_THE_OWNER`; `NO_SUCH_HANDLE`; `NOT_ACTIVE`; `NOT_A_PARTICIPANT` unless the target has joined *(not yet met: new — today an invited target is accepted and marked joined)*; `ALREADY_AN_OWNER`. The sole owner adds a second alone; beyond that every owner's vote is required (`CONSENSUS_REQUIRED` with `have`, `awaiting`).
-- **R40** `projectOwnerRemove({projectId, handle, by, reason, viewer})`: `NOT_THE_OWNER`; `NO_SUCH_HANDLE`; `NOT_AN_OWNER`; `NO_REASON`; `LAST_OWNER` at the floor; `TARGET_CANNOT_VOTE` when n ≥ 3 and `by` is the target; `ALREADY_VOTED`; `VOTES_SHORT`. Refused, naming them, when it would leave only `leaving` owners *(not yet met: REC-224)*. Once carried the target loses ownership and stays a participant.
+- **R39** `projectOwnerAdd({projectId, handle, by, viewer})`: `NOT_THE_OWNER`; `NO_SUCH_HANDLE`; `NOT_ACTIVE`; `NOT_A_PARTICIPANT` unless the target has joined; `ALREADY_AN_OWNER`. The sole owner adds a second alone; beyond that every owner's vote is required (`CONSENSUS_REQUIRED` with `have`, `awaiting`).
+- **R40** `projectOwnerRemove({projectId, handle, by, reason, viewer})`: `NOT_THE_OWNER`; `NO_SUCH_HANDLE`; `NOT_AN_OWNER`; `NO_REASON`; `LAST_OWNER` at the floor; `TARGET_CANNOT_VOTE` when n ≥ 3 and `by` is the target; `ALREADY_VOTED`; `VOTES_SHORT`. Refused, naming them, when it would leave only `leaving` owners. Once carried the target loses ownership and stays a participant.
 - **R41** `projectOwnerRescue({projectId, handle, by, reason, viewer})`: `ADMIN_ONLY`; `NO_OWNERS` (a project created without an owner); `OWNERS_ARE_ACTIVE`, naming them, unless every owner is inactive; `NO_REASON`; `NO_SUCH_HANDLE`; `NOT_ACTIVE`. Adds the named member as a joined owner and keeps every existing owner's row.
-- **R42** Every ownership decision (addition, removal, rescue) stays recorded with the deciders and the reason, and every participant of the project can read it. *(not yet met: new — carried votes are deleted and nothing reads them)*
+- **R42** Every ownership decision (addition, removal, rescue) stays recorded with the deciders and the reason, and every participant of the project can read it.
 
 **Sight and visibility**
 - **R43** `viewerPredicate(viewer)` is the one rule of what a viewer may see: a machine credential or the founder's viewer sees every bundle; a `member:<id>` viewer sees every bundle that is not a project, and a project only as a participant (any state) or as an active administrator; any other viewer sees nothing. It also returns the viewer's member id (null for a machine).
@@ -100,7 +100,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R68** `memberFacts(memberId)` answers `{cover, handle, role, status}` or `null`; never a credential, key or expertise.
 - **R69** `activeParticipants(projectId)` lists the member ids of participants `joined` (not `leaving`, not invited) whose member is `active`.
 - **R70** `attestingKeys()` answers the signer keys that attest, the one predicate R27 states, for every reader that splices it today (`signerList`, the gate's facts, a case's document facts).
-- **R71** `projectCreated({projectId, ownerId, visibility, by})` is what `promotion` calls when a promotion creates a project: it makes `ownerId` the sole initial owner (R31), records the creation visibility (R45's settings), and reindexes the project's sight, in the caller's transaction. *(not yet met: K57 — `promote()` writes these rows itself)*
+- **R71** `projectCreated({projectId, ownerId, visibility, by})` is what `promotion` calls when a promotion creates a project: it makes `ownerId` the sole initial owner (R31), records the creation visibility (R45's settings), and reindexes the project's sight, in the caller's transaction.
 - **R72** `bootstrapState(tokenFp)` answers `{claimed, rearmed, consumedAt}`: `claimed` once the bootstrap credential is spent, unless `tokenFp` differs from the one recorded at the claim (`rearmed`, R1); `consumedAt` is the instant the instance was claimed, `null` when re-armed. It names nobody and returns no secret.
 - **R73** `setPassword({role, password})` stores a salted, derived hash for `role`, replacing any earlier one, and never the password. Who may call it is the control plane's rule (the `setpassword` op).
 
@@ -112,7 +112,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R76** `positionalMember` answers who is asking, as distinct from what they may see: R43's member id for `identity` when it is a non-empty string, else for `viewer`; `null` for a machine credential and for a viewer or identity R43 admits to nothing. It writes nothing and never throws. (Read by `retrieval`, `queue`, `affordances` and `legacy-store`.)
 
 **existenceAct(projectId, viewer) → refusal or null** (N76)
-- **R77** Answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1: the project's id and name only, with its check id and translation) when `viewer`'s sight of `projectId` is existence only (R43), else `null`; `null` when no `viewer` is given. Every act of this module and of `promotion` that names a project asks it before its own no-such-project answer, so C-70.1 is minted only here. Never throws. *(not yet met: N73; `promotion` keeps its own copy)*
+- **R77** Answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1: the project's id and name only, with its check id and translation) when `viewer`'s sight of `projectId` is existence only (R43), else `null`; `null` when no `viewer` is given. Every act of this module and of `promotion` that names a project asks it before its own no-such-project answer, so C-70.1 is minted only here. Never throws.
 
 ## Private
 

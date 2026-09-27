@@ -69,6 +69,9 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **R40** A fact this module needs from a later module (the citation index behind `CITED`, R16; case
   membership, R24) is read through `registerFact`. A fact with no registered provider refuses the act
   that needs it with `FACT_UNAVAILABLE`, naming the fact; it is never read as false.
+  `fact(name, ...args)` reads a registered fact for a later module (N56): `{ok: true, fact, value}`, else
+  `{ok: false, reason: "FACT_UNAVAILABLE", fact, detail}` with no provider, or `FACT_FAILED` when the provider
+  throws; it never throws and writes nothing.
 - Errors: never throws.
 
 **onCommitted(module, fn) → void** (the post-commit notice beside R39's in-transaction projections, K90 (6))

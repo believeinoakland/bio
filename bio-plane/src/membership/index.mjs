@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R73). Extracted from the legacy store (T3-2); the legacy
+ * Requirements: build/requirements/membership.md (R1–R77). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
  *
@@ -106,12 +106,6 @@ export class Membership {
 
   /* ===== Services later modules read (K57, R64–R73), and the canon rules N18 built (R10, R11, R18, R19) ===== */
 
-  /* A refusal of this module's own that the legacy check catalogue has no row for yet (R29, R62): it carries the
-     requirement id as its check, and the words as its translation. */
-  #ownRefusal(code, requirement, detail, extra = {}) {
-    return { ok: false, reason: code, code, check: `membership.${requirement}`, translation: detail, detail, ...extra };
-  }
-
   /* R64: the founder (`admin`, once the instance is claimed) and every active member with role `admin`. */
   isAdministrator(memberId) {
     if (memberId === Membership.ROOT_ADMIN) return this.#claimed();
@@ -178,10 +172,13 @@ export class Membership {
       return { ok: false, reason: "NOT_AN_ADMIN", by,
                detail: "resigning administrator status is an active administrator's own act. Nothing was written." };
     const admins = this.activeAdmins();
+    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.10 */
+    /* DEC-49 REGION is-admin-resign-floor */
     if (admins.length <= 2)
-      return { ok: false, reason: "RESIGN_AT_TWO", administrators: admins.length,
-               detail: "administrative access is shared among at least two people (4.2), so an administrator may "
-                     + "resign only while more than two exist. Nothing was written." };
+      return refusal("RESIGN_AT_TWO",
+        "administrative access is shared among at least two people (4.2), so an administrator may "
+      + "resign only while more than two exist. Nothing was written.", { administrators: admins.length });
+    /* END DEC-49 REGION is-admin-resign-floor */
     const now = new Date().toISOString();
     this.sql.exec(`UPDATE members SET role='member', status_by=?, updated=? WHERE member_id=?`, by, now, by);
     return { ok: true, memberId: by, role: "member", administrators: admins.length - 1,
@@ -202,7 +199,10 @@ export class Membership {
       return { ok: false, reason: "NOT_AN_ADMIN", by,
                detail: "the record of who holds hosting access is kept by the administrators (4.8). Nothing was written." };
     const h = String(holders ?? "").trim().slice(0, 500);
-    if (!h) return { ok: false, reason: "NO_HOLDERS", detail: "name who holds hosting access. Nothing was written." };
+    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
+    /* DEC-49 REGION is-hosting-access-holders */
+    if (!h) return refusal("NO_HOLDERS", "name who holds hosting access. Nothing was written.");
+    /* END DEC-49 REGION is-hosting-access-holders */
     const at = new Date().toISOString();
     const n = note === null || note === undefined || String(note).trim() === "" ? null : String(note).slice(0, 280);
     this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at);
@@ -221,20 +221,33 @@ export class Membership {
   memberPairingSet({ memberId, published, by = null } = {}) {
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.12 */
+    /* DEC-49 REGION is-pairing-yours */
     if (by !== memberId && !this.isAdministrator(by))
-      return { ok: false, reason: "PAIRING_NOT_YOURS", by,
-               detail: "whether a pairing is published is the member's own decision or an administrator's (section 3). "
-                     + "Nothing was written." };
+      return refusal("PAIRING_NOT_YOURS",
+        "whether a pairing is published is the member's own decision or an administrator's (section 3). "
+      + "Nothing was written.", { by });
+    /* END DEC-49 REGION is-pairing-yours */
     const want = published === true || published === 1 || published === "1" || published === "true";
     this.sql.exec(`UPDATE members SET pairing_published=?, updated=? WHERE member_id=?`,
       want ? 1 : 0, new Date().toISOString(), memberId);
     return { ok: true, memberId, published: want, by };
   }
 
-  /* R19: the pairings their members (or an administrator) chose to publish, and no other. */
-  memberPairings() {
+  /* R19 (N85, K124): what each viewer may see of the pairings. A published pairing reaches every caller; one its
+     member has not published reaches only that member and the administrators. `viewer` is the control plane's viewer
+     stamp and `administer` its administer stamp (memberList's, D-157): an administrator is one the stamp says
+     administers, the founder's viewer once the instance is claimed, or a viewer naming an active administrator.
+     Fails closed: with neither stamp a caller is shown the published pairings alone. */
+  memberPairings({ viewer = null, administer = null } = {}) {
+    const self = this.positionalMember(viewer);
+    const admin = administer === true || administer === "1"
+      || (viewer === Membership.ROOT_ADMIN && this.isAdministrator(Membership.ROOT_ADMIN))
+      || (self !== null && this.isAdministrator(self));
     return { ok: true, pairings: this.#rows(
-      `SELECT handle, cover FROM members WHERE pairing_published=1 AND handle IS NOT NULL ORDER BY handle`) };
+      `SELECT handle, cover, pairing_published FROM members
+        WHERE handle IS NOT NULL AND (pairing_published=1 OR ? OR member_id=?) ORDER BY handle`,
+      admin ? 1 : 0, self).map((r) => ({ handle: r.handle, cover: r.cover, published: r.pairing_published === 1 })) };
   }
 
   /* R18 (section 7.8): the projects a member participates in, for an administrator's roster. */
@@ -2737,19 +2750,19 @@ export class Membership {
        attributable, and an act must SAY WHICH. The principal composed here is
        also the VIEWER the gate stamps, so an unstated principal is a credential
        with no answer to "what may it see" either. */
-    /* R29: a member-scoped credential acts for the member who minted it, and for nobody else. Naming another
+    /* R29 (C-29.11): a member-scoped credential acts for the member who minted it, and for nobody else. Naming another
        member as its principal would let one member hand an agent another's sight and attribution. */
     const minter = String(who).trim();
     if (kind === "member" && principalMember !== null && principalMember !== undefined
         && String(principalMember).trim() !== "" && String(principalMember).trim() !== minter)
-      return this.#ownRefusal("AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER", "R29",
+      return refusal("AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
         `a member-scoped credential acts for the member who mints it, and '${String(principalMember).slice(0, 60)}' `
         + `is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing `
         + `was written.`, { principalMember: String(principalMember).slice(0, 60) });
-    /* R62 (Bob, 2026-09-26): an ORGANISATION-scoped credential acts for the whole group, so only an active
+    /* R62 (Bob, 2026-09-26; C-29.12): an ORGANISATION-scoped credential acts for the whole group, so only an active
        administrator (the founder included) mints one. */
     if (kind === "organisation" && !this.isAdministrator(minter))
-      return this.#ownRefusal("AI_CREDENTIAL_ORG_NOT_ADMIN", "R62",
+      return refusal("AI_CREDENTIAL_ORG_NOT_ADMIN",
         `an organisation-wide AI credential acts for the whole group, so it is minted by an administrator, and `
         + `'${minter.slice(0, 60)}' is not an active one. A member-scoped credential is open to every member. `
         + `Nothing was written.`, { who: minter });
@@ -3058,6 +3071,8 @@ export function membershipOps(m, url, body, env) {
         hostingaccessset: () => m.hostingAccessSet({ ...(body || {}), by: url.searchParams.get("by") }),
         hostingaccess: () => m.hostingAccess(),
         memberpairingset: () => m.memberPairingSet({ ...(body || {}), by: url.searchParams.get("by") }),
-        memberpairings: () => m.memberPairings()
+        /* N85 (K124): the viewer and administer stamps decide what each caller sees; absent, the published alone. */
+        memberpairings: () => m.memberPairings({ viewer: url.searchParams.get("viewer"),
+          administer: url.searchParams.get("administer") })
   };
 }

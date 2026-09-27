@@ -4,13 +4,10 @@
 
 ## Later layers
 
-- N12 · 2026-09-26 · **legacy-index**: `bio-plane/scripts/deploy.mjs` and `resolve-version.mjs` read JSONC through `tools/jsonc.mjs`, which is not product: the reader they need comes into the product (its own small helper, or inside `legacy-index`). `bio-plane/scripts/op-claims.mjs` serves the old process's claims ledger and is removed. Found by the architecture check, 2026-09-26.
 - N13 · 2026-09-26 · **affordances**, **queue**: `store.mjs` imports `affordances.mjs` and `queuestate.mjs`, both later in the order. What the store needs from them moves to the module that owns it, earlier in the order, when each is extracted. Found by the architecture check.
 - N16 · 2026-09-26 · **promotion**, **publication**: `forkProject` and project name uniqueness (C-77, with canon §7.1's NFC normalisation) move from the store to `promotion`; `exportManifest`, `exportLog` and `export_log` move to `publication` (K31). BOB writes their requirements before each module's first job. *(T3 carries its share for record-core, promotion or legacy-tests.)*
-- N19 · 2026-09-26 · **legacy-index**: `needsTier3` and `tier3Pages` route a page marked `image_content_unread` (pdf-reader R26) to OCR as they route `no_text_layer`, and `needsTier2` counts it as a scan marker. Built work: `index.mjs` at `land/worker/D-627` @ 056d3092 (14 lines). Reported by PDF-READER #1.
 - N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1. *(T5 carries extraction's share; legacy-index passes the view.)*
 - N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
-- N25 · 2026-09-26 · **legacy-index**, **host-governor**: `governedFetch` and the ops `governorstate` and `governorconfig` move from `index.mjs` into `host-governor` (K47), the fetch and user agent passed in by the caller.
 - N26 · 2026-09-26 · **office-readers**: `.docx` `mc:AlternateContent` fallbacks are read twice; the fix renumbers ¶ references in stored readings, so it lands with a migration of those references. Deferred by OFFICE-READERS #1.
 - N27 · 2026-09-26 · **odf-reader**, **office-readers**: the `.ods` half of D-415 (named ranges and tables as `sheet-range` units, as `.xlsx` has by R9/K36); built work on the snapshot (`odf.mjs`); `office-readers` names `rangeUnitFor` and `a1Corner` in its Provides for it. Reported by OFFICE-READERS #1.
 - N28 · 2026-09-26 · **legacy-store** (at the extraction of its reader): a page's kind reads `chainKindFor` (text-chain R81), not `terminalStep(chain) || "layer"`. Reported by TEXT-CHAIN #1. *(T5 carries extraction's share.)*
@@ -33,7 +30,6 @@
 - N39 · 2026-09-26 · **observation-log**, **ai-runs** (K71): each stops reading `capture_requests` directly and offers a registration `capture-requests` fills (the K31 pattern), at their extractions. *(T5 carries observation-log's share.)*
 - N41 · 2026-09-26 · DONE (K74) · **calibration**, **extraction** (K73): BOB splits `build/requirements/extraction.md` into `calibration.md` and `extraction.md` and adds `calibration` to `modules.json` (layer 4, before `extraction`), before Bob approves either.
 - N42 · 2026-09-26 · **text-chain**, **pdf-reader**, **legacy-checks**, **retrieval** (K73): rows routed to extraction touch these first: D-697 and D-635 (text-chain), D-665 (pdf-reader), D-685 (legacy-checks), and D-672 (retrieval), on which D-684, D-685 and D-724 are stacked; each gets an entry against its own module in the tranche before extraction's. *(T5 carries extraction applies D-635, D-665, D-697, D-685 as its R8, R9 (K126); retrieval D-672.)*
-- N43 · 2026-09-26 · **legacy-index**: `index.mjs`'s op table routes membership's five new ops (`adminresign`, `hostingaccessset`, `hostingaccess`, `memberpairingset`, `memberpairings`; N18) with their classes; until then they are unreachable from outside. Reported by MEMBERSHIP #1.
 - N44 · 2026-09-26 · **legacy-checks**: catalogue rows for membership's new refusal codes (R10, R29, R62 and the others its record lists), so each carries a catalogue check id and translation instead of `membership.Rn`. Reported by MEMBERSHIP #1.
 - N45 · 2026-09-26 · **affordances**: `projectleave` is offered where membership's REC-224 now refuses it (`d311-roster-affordances`). Reported by MEMBERSHIP #1.
 - N46 · 2026-09-26 · **legacy-tests** (with N37): `meaningread` and `meaningquery` pin the gate's mint sites in `query.mjs`'s text; re-anchor them when `query.mjs` re-exports membership's `viewerPredicate` (K75). *(T5 carries legacy-tests.)*
@@ -66,7 +62,7 @@
 
 - N77 · 2026-09-27 · **jurisdictions** (CAPTURE-SOURCES #1 Q1, K119): a profile key `locale` (`{value, basis}`, one BCP 47 tag, validated), combined like `practice`'s keys, so capture-sources R54 reads the render locale from the profiles; the first profile states its locale.
 
-- N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`.
+- N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`. *(DONE by BOB #45: M-186; CLIENT-RENDERED.md.)*
 
 - N79 · 2026-09-27 · **subresources** (CAPTURE #1, T4): `captureSubresources`' links carry each link's containment in a chrome region, so capture R28 files it on live captures (D-340's `furnitureLinks`, built on the snapshot).
 - N80 · 2026-09-27 · **affordances**, **capture** (CAPTURE #1, T4): `acquireGradeNote` (acquire's `ACQUIRE_GRADE_NOTE`) moves out of `affordances.mjs` to `capture` or `legacy-checks`, so capture composes its own answer; until then the op handler adds it.
@@ -80,3 +76,46 @@
 
 - N89 · 2026-09-27 · **legacy-store** (LEGACY-TESTS #2 REPORT 6): classify `archivelookup` in `PROJECT_NAMING_READS` or `_NOT` (project-sight).
 - N90 · 2026-09-27 · **capture** (LEGACY-TESTS #2 REPORT 8): bound its six unbounded routes (meaning-bounds ceiling 45 → 51, not moved).
+
+- N91 · 2026-09-27 · **affordances** (RECORD-CORE #2, K130): re-export record-core's `PER_ITEM_MAX` (R49) and pass its `PER_ITEM_ACTS` groups to `perItem`, deleting its own copy.
+- N92 · 2026-09-27 · **provenance** (K130): `provenanceAudit` registers its checks with record-core's `registerAuditCheck` (R59) and drops its wrapper.
+
+- N93 · 2026-09-27 · **legacy-index** (MEMBERSHIP #2, T5): the control plane stamps `viewer` (as for PROJECT_ACTIONS) and `administer` (as for memberlist) on `op=memberpairings`, so membership's R19 filter (N85) reaches unpublished pairings for their member and administrators; until then every caller sees only published pairings.
+
+## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
+
+Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
+
+### Layer 1
+- **legacy-checks** · catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
+
+### Layer 2
+- **promotion** · N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
+
+### Layer 3
+- **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read, their requirement written by BOB before T6 opens.
+
+### Layer 6 (order: `inquiry`, `citation`, `basis-versions`, `strength`, `contradiction`, `ai-runs`, `run-productions`, `capture-requests`, `skills`, `agent-worker`)
+
+- **inquiry** · T6-1 · Extract per map and requirements (K3, K64, K83, K102, N55, N56); REC-202, D-572, D-592 (R19; T5's promotion applies its `reopen` side), MK-5 (R31); R22, R26, R39 as its requirements; N67 (its share: R38's C-2.8 stops calling `checkPublishedExtension`).
+- **citation** · T6-2 · Extract per map and requirements (K3, K64, K83, K102, N55); no rows; N55 (DONE, K85).
+- **basis-versions** · T6-3 · Extract per map and requirements (K3, K91, K102, N64); no rows; N64 (its share: `projectsDrawingOn`, R37); N67 (its share: `testimonyReach` moves here, R22–R23's read for `concluded_elsewhere`).
+- **strength** · T6-4 · Extract per map and requirements (K3, K86, K102, N60); no carried rows (D-660, D-736 dropped); R5, R15 as its requirements; N60 (R26–R27, the pair `run-productions` reads); N82 (the earned registry reads provenance's `captureGrade`).
+- **contradiction** · T6-5 · Extract per map and requirements (K3, K31, K64, K102); no rows; R21 (the run gate by registration, K31).
+- **ai-runs** · T6-6 · Extract per map and requirements (K3, K31, K71, K75, K78, K80, K82, K83, K102, N39, N54); D-375; R17, R30, R36, R37, R40 as its requirements; N39 (its share); N49 (its share: re-export observation-log's vocabulary from `airun.mjs`, delete its copy); N69 (its share: delete its copy of `searchedSection`); registers the work products `bias` reads (T5-7's hand-off); N54 (DONE, K86).
+- **run-productions** · T6-7 · Extract per map and requirements (K3, K31, K82, K83, K102, N54, DEC-49); D-595 (R9; K129); R13, R14 as its requirements; reads strength's R26–R27 (N60, the user's side).
+- **capture-requests** · T6-8 · Extract per map and requirements (K58, K102, K103, K109, N35, N63); D-581 (R20, R27), D-582 (R18), D-584 (R19) (T4's "Not in T4"), D-583 (R29; K129); R6, R7, R16, R21, R38–R42 as its requirements; N35; N39 (its share: fills the registrations observation-log and ai-runs offer); N63 (its share: pending count and tick interval as named services, `expired` a completion).
+- **skills** · T6-9 · Extract per map and requirements (K102); no rows; R10, R21 as its requirements; N53 (its share: its tests that read `agent-worker` and `index.mjs` move); N70 (its share: the doctrine's source, skilldoctrine and skillpack reds).
+- **agent-worker** · T6-10 · Build per requirements (K102; no map, it sits at its paths); D-611 (R40); R41, R47, R48 as its requirements; N53 (its share).
+
+### Layer 7 (order: `intent`, `reevaluation`)
+
+- **intent** · T6-11 · Extract per map and requirements (K102); no rows, no next.md entries; R2–R18, R26 new (R19–R25 bind the new code; R22 met when C-2.9's check moves).
+- **reevaluation** · T6-12 · Extract per map and requirements (K102); REC-222 (R14; REC-209 superseded), REC-223 (R15); R8, R9, R16, R17 as its requirements; its `raise` from `reopen` reads promotion's `onReopened` (N62, T6's layer 2).
+
+### Layer 11
+
+- **legacy-index** · T6-13 · the routes of the ops layers 6–7 move (N43's pattern); N70 (its share: `scripts/pensweep.mjs`'s `git check-ignore` under symlinked `node_modules`; N68's `op-claims` if T4's removal (N12) left any); N21 only if T5-11 leaves it open; N66 (its share) not here: its arms move with `capture` and `instance-setup`.
+- **legacy-tests** · T6-14 · re-anchor or retire what layers 6–7 break; N31 (its share: `fleetbundles` arm (j) with N14, and its listed reds); N53 (its share: the old skills tests released as they move); N68 (its share); N70 (its share: `owed-controls` after T5's N88); N46, N57 only if T5-12 leaves them open.
+
+**Size.** Seventeen jobs (layers 1–3: 3; layer 6: 10; layer 7: 2; layer 11: 2). T4: 13 jobs, 703.6M tokens.

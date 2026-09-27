@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
+import { AI_CREDENTIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 
 test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", async () => {
   const w = await world().group("ann", "bob");
@@ -132,6 +133,8 @@ test("R62 an organisation-scoped credential is minted only by an active administ
   const org = { secretSha: SHA("b"), principalKind: "organisation" };
   const r = w.m.aiCredentialMint({ ...org, tokenId: "o1", who: "ann" });
   assert.deepEqual([r.ok, r.reason], [false, "AI_CREDENTIAL_ORG_NOT_ADMIN"]);
+  assert.deepEqual([r.code, r.check, r.translation, r.who],   // N73: C-29.12, the catalogue's row
+    ["AI_CREDENTIAL_ORG_NOT_ADMIN", "C-29.12", AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_ORG_NOT_ADMIN.translation, "ann"]);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM ai_credentials`).n, 0);
   assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o2", who: "admin" }).credential.principal, "class:ai");
   assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o3", who: "second" }).ok, true);
@@ -145,6 +148,10 @@ test("R29 a member-scoped credential's principal is its minter; naming another m
   const w = await world().group("ann", "bob");
   const r = w.m.aiCredentialMint({ tokenId: "t", secretSha: SHA("d"), principalKind: "member", principalMember: "bob", who: "ann" });
   assert.deepEqual([r.ok, r.reason], [false, "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER"]);
+  assert.deepEqual([r.code, r.check, r.translation, r.principalMember],   // N73: C-29.11, the catalogue's row
+    ["AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER", "C-29.11",
+     AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER.translation, "bob"]);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM ai_credentials`).n, 0);
   const same = w.m.aiCredentialMint({ tokenId: "t", secretSha: SHA("d"), principalKind: "member", principalMember: "ann", who: "ann" });
   assert.equal(same.credential.principal, "member:ann");
   const none = w.m.aiCredentialMint({ tokenId: "u", secretSha: SHA("e"), principalKind: "member", who: "bob" });
