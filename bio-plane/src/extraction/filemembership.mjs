@@ -1,4 +1,4 @@
-/* N48 (K135, REC-206; extraction R51): AN AGENDA ITEM'S MEMBERSHIP IN A FILE, DERIVED FROM CONTAINMENT.
+/* N48 (K135, K138, REC-206; extraction R52, proposed): AN AGENDA ITEM'S MEMBERSHIP IN A FILE, DERIVED FROM CONTAINMENT.
  *
  * BOB #32's ruling of 2026-09-23 23:30Z (`BIO_Content_Framework_v0_10.md` §16, "Positional text"): membership is
  * DERIVED from containment, labelled machine work and graded inferred, never presented as the publisher's link.
@@ -61,7 +61,7 @@ const end = (l) => ({
 });
 const partsOf = (u) => { try { const x = new URL(u); return { host: x.hostname.toLowerCase(), pq: `${x.pathname}${x.search}` }; } catch { return null; } };
 
-/** R51: the item-to-file membership of a structure's links under the view's link shapes. Answers
+/** R52: the item-to-file membership of a structure's links under the view's link shapes. Answers
  *  `{membership, why}`: the membership, or null with the reason nothing applies. */
 export function deriveMembership(structure, view) {
   const links = (structure && Array.isArray(structure.links)) ? structure.links : [];
@@ -126,7 +126,7 @@ export function deriveMembership(structure, view) {
   };
 }
 
-/** R51: the label check: null when the membership and every pair in it carry the label, else the name of the first
+/** R52: the label check: null when the membership and every pair in it carry the label, else the name of the first
  *  property that does not. */
 export function checkMembershipLabel(m) {
   if (m == null) return null;
@@ -144,7 +144,7 @@ export function checkMembershipLabel(m) {
   return null;
 }
 
-/** R51: what `op=pdfstructure` serves beside `links[]`: the membership, or null with `membershipWhy`. */
+/** R52: what `op=pdfstructure` serves beside `links[]`: the membership, or null with `membershipWhy`. */
 export function membershipBeside(structure, view) {
   const d = deriveMembership(structure, view);
   const bad = checkMembershipLabel(d.membership);

@@ -682,6 +682,22 @@ export class Extraction {
                         skipped } : {}) };
   }
 
+  /** R51 (K138): the capture digests the bundle's stored readings carry, each with the instant it was read (the
+   *  reading's `at`, the retrieval it is a reading of), earliest first, ties on the digest; an undated reading
+   *  last. A list, empty for none, bounded as R48 (`limit`, `truncated` on the list). Read-only; never throws. */
+  capturesReadFor(bundleId, { limit = null } = {}) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || TEXT_SOURCE_LIMIT_DEFAULT), TEXT_SOURCE_LIMIT_MAX));
+    let page = [];
+    try {
+      page = typeof bundleId === "string" && bundleId
+        ? this.#rows(`SELECT capture_sha, at FROM readings WHERE bundle_id=? ORDER BY at IS NULL, at, capture_sha LIMIT ?`,
+                     bundleId, cap + 1)
+        : [];
+    } catch { page = []; }
+    return Object.assign(page.slice(0, cap).map((r) => ({ capture_sha: r.capture_sha, at: r.at ?? null })),
+                         { limit: cap, truncated: page.length > cap });
+  }
+
   /* REC-36 / REC-40 (R37): the bounded backfill of the name terms for stored references that have none. */
   #backfillRefTerms(limit) {
     limit = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
@@ -900,7 +916,7 @@ export class Extraction {
         };
       }
     }
-    /* R51 (N48, K135): the item-to-file membership derived from containment, beside `links[]` and never inside it,
+    /* R52 (N48, K135, K138): the item-to-file membership derived from containment, beside `links[]` and never inside it,
        under the link shapes the active profiles state; null with its reason when none applies. */
     Object.assign(structure, membershipBeside(structure, this.view()));
     /* D-536: the served text's provenance, by the one rule a reading's is composed by. */
@@ -957,14 +973,15 @@ export class Extraction {
                  + `rises only by an authored act` };
   }
 
-  /** R40: `calibration.onCalibration`'s listener. `worse`: R39's obligations for the superseded calibration alone,
-   *  unfiltered by viewer, `truncated` carried; otherwise an empty list. Writes nothing. */
+  /** R40: `calibration.onCalibration`'s listener, answering `{obligations, truncated}` (K137, calibration R12).
+   *  `worse`: R39's obligations for the superseded calibration alone, unfiltered by viewer, with `truncated`;
+   *  otherwise an empty list. Writes nothing. */
   obligationsFor(e) {
     const verdict = e && e.drift && typeof e.drift === "object" ? e.drift.verdict ?? e.drift.drift : e && e.drift;
     const worse = verdict === "worse" || (e && e.drift && e.drift.raises_obligation === true);
-    if (!worse || !e.supersedes) return Object.assign([], { truncated: false });
+    if (!worse || !e.supersedes) return { obligations: [], truncated: false };
     const out = this.driftFor(e.supersedes);
-    return Object.assign([...out], { truncated: !!out.truncated });
+    return { obligations: [...out], truncated: !!out.truncated };
   }
 }
 

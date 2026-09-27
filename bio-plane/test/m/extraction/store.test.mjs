@@ -336,3 +336,21 @@ test("R44 R46: nothing here raises a grade or resolves a reference: a written re
   const tables = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((t) => t.name);
   assert.ok(!tables.some((t) => /grade/.test(t)));
 });
+
+test("R51 R48: capturesReadFor answers the captures the bundle's stored readings carry, each with the instant read, earliest first, empty for none, bounded, never throwing", async () => {
+  const w = fresh();
+  bundle(w.s, "B-1"); bundle(w.s, "B-2");
+  w.x.writeReading({ bundleId: "B-1", captureSha: S2, reading: await reading([], { at: "2026-09-02T00:00:00Z" }) });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: await reading([], { at: "2026-09-03T00:00:00Z" }) });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S3, reading: await reading([], { at: undefined }) });
+  const all = w.x.capturesReadFor("B-1");
+  assert.deepEqual([...all], [{ capture_sha: S2, at: "2026-09-02T00:00:00Z" }, { capture_sha: S1, at: "2026-09-03T00:00:00Z" }, { capture_sha: S3, at: null }]);
+  assert.deepEqual([all.limit, all.truncated], [200, false]);
+  assert.deepEqual([...w.x.capturesReadFor("B-2")], []);
+  assert.deepEqual([...w.x.capturesReadFor(null)], []);
+  const cut = w.x.capturesReadFor("B-1", { limit: 2 });
+  assert.deepEqual([cut.length, cut.truncated], [2, true]);
+  w.s.sql.exec(`DROP TABLE reading_history`);
+  w.s.db.exec(`ALTER TABLE readings RENAME TO readings_gone`);
+  assert.deepEqual([...w.x.capturesReadFor("B-1")], [], "a store that cannot be read answers empty, never a throw");
+});

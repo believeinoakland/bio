@@ -184,7 +184,7 @@ test("R9: a page tier 2 wins keeps a still-true image_unread marker; a page OCR 
   assert.ok(!p1.undetermined.some((u) => u.reason === "image_unread" || u.reason === "no_text_layer"), "discharged where OCR filled");
 });
 
-test("R51: an agenda item's membership in a file is derived from containment under the link shapes the active profiles state, labelled machine work graded C, beside links[] and never inside them; none stated, null with the reason", async () => {
+test("R52: an agenda item's membership in a file is derived from containment under the link shapes the active profiles state, labelled machine work graded C, beside links[] and never inside them; none stated, null with the reason", async () => {
   const { deriveMembership, membershipBeside, checkMembershipLabel, MEMBERSHIP_LABEL } = await import("../../../src/extraction/filemembership.mjs");
   const view = { systems: [{ origin: "t.clerk", hosts: ["records.t.example"],
     links: { item: { re: "^/item\\?id=\\d+", flags: "i" }, file: { re: "^/file\\?id=\\w+", flags: "i" } } }] };

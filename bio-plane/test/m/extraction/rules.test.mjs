@@ -92,12 +92,12 @@ test("R40: registered with calibration.onCalibration, the listener returns R39's
     w.x.writeReading({ bundleId: "PROJ-1", captureSha: s, reading: { entities: [], at: "a",
       text_source: [{ step: "pixels", cap: "B", measured_by: "m", calibration: id }, { step: "ocr", engine: "tess", version: "5", cap: "B", measured_by: "m", calibration: id }] } });
   const [echo] = c.fire({ calibration_id: "CAL-2", engine: "tess", version: "5", supersedes: "CAL-1", drift: { verdict: "worse", raises_obligation: true, regrades: false } });
-  assert.deepEqual(echo.map((o) => o.capture_sha), ["1".repeat(64)], "the superseded calibration alone, a hidden project's row included");
+  assert.deepEqual(echo.obligations.map((o) => o.capture_sha), ["1".repeat(64)], "the superseded calibration alone, a hidden project's row included");
   assert.equal(echo.truncated, false);
   const drift = w.x.calibrationDrift({ viewer: "class:admin" }).obligations.filter((o) => o.superseded_calibration === "CAL-1");
-  assert.deepEqual(echo.map((o) => ({ ...o })), drift);
+  assert.deepEqual(echo.obligations, drift);
   const [same] = c.fire({ supersedes: "CAL-1", drift: { verdict: "same", raises_obligation: false } });
-  assert.deepEqual([...same], []);
+  assert.deepEqual(same, { obligations: [], truncated: false });
 });
 
 test("R40 R39: with calibration itself, op=calibrate's echo of a worse measurement is exactly op=calibrationdrift's rows for the superseded calibration, and nothing is re-graded", async () => {
@@ -116,6 +116,7 @@ test("R40 R39: with calibration itself, op=calibrate's echo of a worse measureme
   assert.equal(worse.obligations_raised, 1);
   assert.deepEqual(worse.obligations, w.x.calibrationDrift({ viewer: "class:admin" }).obligations);
   assert.equal(worse.regraded, 0);
+  assert.equal(worse.obligations_truncated, false, "R40's truncated reaches op=calibrate's answer (K137)");
   const better = w.cal.calibrationRecord(probe({ at: "2026-09-20T00:00:00Z", cap: "A" }), { principal: "member:m1" });
   assert.deepEqual(better.obligations, []);
 });
