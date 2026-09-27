@@ -70,6 +70,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { deflateRawSync } from "node:zlib";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -470,8 +471,12 @@ const HEAD = new Map();
 const promote = async (id, text, type, { reading = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
-    const prov = JSON.stringify({ documents: [reading] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    /* T4 (legacy-tests; provenance K121): C-18.1 now refuses at the write. A synthetic reading carrier is completed
+       to op=acquire's intake shape, an acquired document keeps every key it states, and either way the capture the
+       document names is held in the bundle (`register-doc.mjs`). */
+    const doc = registerDoc(reading);
+    const prov = JSON.stringify({ documents: [doc] });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc));
   }
   return post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,

@@ -351,20 +351,31 @@ t("the static walk found real sites and did not go blind — the figures above a
 console.log("\n--- 2c. the two blind spots: refusals built without `json()`, and codes arriving by spread ---");
 const INDEX_BARE = decomment(INDEX_SRC);
 const lineOf = (src, at) => src.slice(0, at).split("\n").length;
+/* WIDENED 2026-09-27 (T4, legacy-tests; capture T4-4): layer 3 of T4 moved the control plane's handlers for op=knock
+   (`knockOp`, src/capture/doorbell.mjs), op=links, op=capture, op=archivelookup and op=acquire (src/capture/ops.mjs,
+   over the service in src/capture/acquire.mjs) into the capture module. They answer through the control plane's own
+   `json()`, handed to them by index.mjs, so both walks below read the capture module's files beside index.mjs, each
+   under its own name (a site outside index.mjs is printed `Lcapture/<file>:<n>`). */
+const CONTROL_PLANE = [["", INDEX_SRC, INDEX_BARE],
+  ...moduleFiles("capture").map((f) => {
+    const src = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
+    return [`${f}:`, src, decomment(src)];
+  })];
 
 /* (B) every `new Response(` construction in the control plane, classified. */
 const RESP = [];
-for (const m of INDEX_BARE.matchAll(/new Response\(/g)) {
-  const tail = INDEX_BARE.slice(m.index, m.index + 320);
+for (const [file, SRC_TEXT, BARE] of CONTROL_PLANE)
+for (const m of BARE.matchAll(/new Response\(/g)) {
+  const tail = BARE.slice(m.index, m.index + 320);
   /* `json()`'s OWN construction is the one that decorates; it is the door, not a
      way around it, and is named rather than filtered silently. */
   const isJsonItself = /dec49Attach/.test(tail);
   const carriesRefusal = /\bok\s*:\s*false\b/.test(tail) || /\berror\s*:/.test(tail);
-  RESP.push({ line: lineOf(INDEX_BARE, m.index), isJsonItself, carriesRefusal,
-              head: INDEX_SRC.split("\n")[lineOf(INDEX_BARE, m.index) - 1].trim().slice(0, 96) });
+  RESP.push({ line: `${file}${lineOf(BARE, m.index)}`, isJsonItself, carriesRefusal,
+              head: SRC_TEXT.split("\n")[lineOf(BARE, m.index) - 1].trim().slice(0, 96) });
 }
 const RESP_OUT = RESP.filter((r) => !r.isJsonItself);
-console.log(`    (B) ${RESP.length} \`new Response(\` construction(s) in index.mjs — ${RESP.length - RESP_OUT.length} `
+console.log(`    (B) ${RESP.length} \`new Response(\` construction(s) in index.mjs and src/capture/ — ${RESP.length - RESP_OUT.length} `
           + `is json()'s own, ${RESP_OUT.length} leave by another door:`);
 for (const r of RESP_OUT) console.log(`        L${r.line}  ${r.carriesRefusal ? "REFUSAL CARRIER" : "not a refusal"}  ${r.head}`);
 t("the `new Response` walk found a real corpus and did not go blind — floored BEFORE the emptiness "
@@ -379,26 +390,27 @@ t("NO refusal leaves the control plane by a door other than `json()` — pinned 
    literal code of its own. Three-way, because a thing the matcher does not
    understand must be NAMED and never silently scored zero. */
 const FWD = [], FWD_UNDET = [];
-for (const m of INDEX_BARE.matchAll(/json\(\{/g)) {
+for (const [file, SRC_TEXT, BARE] of CONTROL_PLANE)
+for (const m of BARE.matchAll(/json\(\{/g)) {
   let i = m.index + 5, depth = 0, end = -1;
-  for (; i < INDEX_BARE.length; i++) {
-    const c = INDEX_BARE[i];
+  for (; i < BARE.length; i++) {
+    const c = BARE[i];
     if (c === "{") depth++;
     else if (c === "}") { depth--; if (depth === 0) { end = i; break; } }
   }
   if (end < 0) continue;
-  const body = INDEX_BARE.slice(m.index + 5, end + 1);
+  const body = BARE.slice(m.index + 5, end + 1);
   /* a spread of a VALUE. `...helper(…)` is a row minted at this site with a
      literal code inside it and is NOT a forward. */
   const names = [...body.matchAll(/\.\.\.\s*([A-Za-z_$][\w$.]*)(\s*\()?/g)].filter((x) => !x[2]).map((x) => x[1]);
   if (!names.length) continue;
   if (/\b(?:reason|code)\s*:\s*"/.test(body)) continue;     /* visible to the static walks already */
-  const after = INDEX_BARE.slice(end + 1, end + 40);
+  const after = BARE.slice(end + 1, end + 40);
   const st = /^\s*\}?\s*,\s*(\d{3})\s*\)/.exec(after) || /^\s*,\s*(\d{3})\s*\)/.exec(after);
   const statusVar = !st && /^\s*,\s*[A-Za-z_$]/.test(after);
-  const site = { line: lineOf(INDEX_BARE, m.index), names: names.join(", "),
+  const site = { line: `${file}${lineOf(BARE, m.index)}`, names: names.join(", "),
                  status: st ? Number(st[1]) : null,
-                 head: INDEX_SRC.split("\n")[lineOf(INDEX_BARE, m.index) - 1].trim().slice(0, 96) };
+                 head: SRC_TEXT.split("\n")[lineOf(BARE, m.index) - 1].trim().slice(0, 96) };
   const saysRefused = /\bok\s*:\s*false\b/.test(body) || names.some((n) => /\.(error|refusal)$/.test(n));
   if (saysRefused || (site.status !== null && site.status >= 400)) FWD.push(site);
   else if (statusVar && !/\bok\s*:\s*true\b/.test(body)) FWD_UNDET.push(site);
@@ -423,7 +435,15 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
   /* CORRECTED by D-549, LOOKED AT as this assertion asks: `storeAbsent` is op=publishedbytes forwarding
      publishedStoreAbsent's answer, the ONE governed site of the published-store complaint (C-68.5), whose code,
      check and canned translation are minted inside its DEC-49 region and graded in publishedcase.test.mjs. */
-  ["arm.refusal", "built", "c", "confinement.error", "declared.error", "facts", "r", "rec.result",
+  /* CORRECTED 2026-09-27 (T4, legacy-tests; capture T4-4), LOOKED AT as this assertion asks, by name:
+     `rec.result` DEPARTED and `rec` ARRIVED — the same forward: op=knock's rate refusal (RATE_IP / RATE_GLOBAL, and
+     any other store refusal), which moved with the handler into `knockOp` (src/capture/doorbell.mjs, R53) and now
+     reads the store's answer as `rec = out.result` before spreading it. `arm.refusal` DEPARTED with no successor
+     forward: `captureRequestArm` was removed from index.mjs, and CAPTURE_NOT_DRAINING is now MINTED with its literal
+     code, check and translation inside the service's DEC-49 region is-capture-request-arm
+     (src/capture/acquire.mjs), answered through acquireOp's `json()` — visible to the static walks, no longer a
+     forward. */
+  ["built", "c", "confinement.error", "declared.error", "facts", "r", "rec",
    "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3

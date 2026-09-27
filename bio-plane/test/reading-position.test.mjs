@@ -59,6 +59,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import meetingAgenda from "../../docprofile/doctypes/meeting-agenda.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns,
@@ -297,9 +298,11 @@ const CHAIN = [{ step: "layer" }];
 const promoteReading = async (captureSha, entities) => {
   const id = `INFO-2026-${String(7300 + (++bseq))}-f17`;
   const md = infoMd(id);
-  const doc = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
                 reading: { content_type: "meeting_agenda", reader_version: 1, found: entities.length > 0,
-                           at: NOW, entities, facts: {}, text_source: CHAIN } };
+                           at: NOW, entities, facts: {}, text_source: CHAIN } });
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", {
     bundleId: id, base: null,
@@ -307,7 +310,8 @@ const promoteReading = async (captureSha, entities) => {
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(doc)],
     register: [] });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
   return id;

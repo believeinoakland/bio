@@ -136,6 +136,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -227,13 +228,19 @@ const doc = async (type, tok, key, label, ref = null) => {
   const minted = type === "project";
   const md = bundleMd(minted ? null : tag, type, tag);
   const capture = sha(`r36-${key}`);
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, naming the capture at the path the register below already gives it, and that capture held in the
+     bundle (`register-doc.mjs`). */
+  const pdoc = registerDoc({
     capture: { sha256: capture, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: ref || `legislation:${key}`, kind: "legislation", key, label }] } }] });
+               entities: [{ ref: ref || `legislation:${key}`, kind: "legislation", key, label }] } },
+    { file: "captures/doc.pdf" });
+  const prov = JSON.stringify({ documents: [pdoc] });
   const files = [
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+    registerFile(pdoc),
   ];
   const r = await post("promote", {
     ...(minted ? {} : { bundleId: tag }), base: null, snapKey: `${tag}-new`, author: "r36", files,
@@ -598,6 +605,10 @@ t("and the read does not spell its own grouping: the ONE builder is what both ca
   && /readingNamePlan\(terms[\s\S]{0,600}Store\.#refTermsSql/.test(STORE_SRC), true);
 
 console.log("\n--- fail-closed: no viewer stamp reaches the store = no candidates, never all of them ---");
+const DIRECT_DOC = registerDoc({ capture: { sha256: sha("direct"), encoding: "binary", bytes: 10 },
+  reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
+    entities: [{ ref: "legislation:26-0912", kind: "legislation", key: "26-0912",
+                 label: "Coliseum Payment Allocation" }] } });
 await dcall("/promote", {
   bundleId: "INFO-2026-0099-direct", base: null, snapKey: "direct-1", author: "r36",
   meta: { object_type: "information", group: "believe-in-oakland",
@@ -605,11 +616,12 @@ await dcall("/promote", {
   /* REC-175 (2026-09-23): CORRECTED, not exempted. This fixture sent a digest that is NOT the SHA-256 of the text beside it (sha("x") and sha("y"): digests of OTHER strings), and the old op=promote stored it as given — a false digest in the fixture's own record. promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so the file sends no digest and the plane computes it from the bytes; nothing this suite asserts reads the old value. */
   files: [{ path: "bundle.md", text: bundleMd("INFO-2026-0099-direct", "information"),
             bytes: 1 },
+          /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+             refused at the write (this promote's answer is not read, so a refusal here would empty the store the
+             fail-closed arm below measures), and the capture it names held in the bundle (`register-doc.mjs`). */
           { path: "data/provenance.json", bytes: 1,
-            text: JSON.stringify({ documents: [{ capture: { sha256: sha("direct"), encoding: "binary", bytes: 10 },
-              reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
-                entities: [{ ref: "legislation:26-0912", kind: "legislation", key: "26-0912",
-                             label: "Coliseum Payment Allocation" }] } }] }) }],
+            text: JSON.stringify({ documents: [DIRECT_DOC] }) },
+          registerFile(DIRECT_DOC)],
   register: [],
 });
 const e2 = await dcall("/entitycreate", { kind: "contract", label: "Coliseum Payment Allocation" });
@@ -705,13 +717,19 @@ const bcall = async (p, body) => (await (await bmf.dispatchFetch("http://x" + p,
   const id = "INFO-2026-0777-rec77";
   const md = bundleMd(id, "information");
   const capture = sha("rec77-legistar-1425405");
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, naming the capture at the register's own path, and that capture held in the bundle
+     (`register-doc.mjs`). */
+  const pdoc = registerDoc({
     capture: { sha256: capture, encoding: "binary", bytes: 10 },
-    reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW, entities: ENTS } }] });
+    reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW, entities: ENTS } },
+    { file: "captures/doc.pdf" });
+  const prov = JSON.stringify({ documents: [pdoc] });
   const r = await bcall("/promote", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "rec77",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(pdoc)],
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });

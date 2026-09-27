@@ -76,8 +76,9 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 /* M0-18 — ONE mechanism, imported. The reason is at the estate walk's floor. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { join as joinPath } from "node:path";
-import { checkBundle, CHECK_RETIREMENTS } from "../checks/bio-checks.mjs";
+import { checkBundle, CHECK_RETIREMENTS, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { recordChecks } from "../src/promotion/index.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -154,13 +155,21 @@ const fmInsert = (md, ...lines) => {
 
 /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; K64): C-4.2, C-17.2, C-18.8 and C-20.1 left the catalogue for
    `promotion`, whose gate runs `recordChecks` after `checkBundle`; the findings of a bundle are both, as the gate
-   takes them. */
+   takes them.
+   RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): the C-18 register arms (C-18.1 @2, C-18.3,
+   C-18.4, C-18.9, release authority) left the catalogue for provenance's `registerChecks`, which the gate runs over
+   the same image after the catalogue (`withRegisterChecks`) and the audit after the pass (`provenanceAudit`). The
+   findings of a bundle are now all three; the register arms are asked of `registerChecks` over the same files and
+   front matter, every finding (a warning included, as C-18.4 is). */
 async function findingsFor(type, files, extra = {}) {
   const { findings } = await checkBundle({
     folderName: idFor(type), files, sha256: shaHex, sha512: sha512Hex,
     resolveTarget: (x) => x === idFor(type), nowMs: NOWMS, ...extra,
   });
-  return [...findings, ...await recordChecks({ folderName: idFor(type), files, sha256: shaHex, ...extra })];
+  const md = files.get("bundle.md");
+  const fm = typeof md === "string" ? parseFrontmatter(md).data : null;
+  return [...findings, ...await recordChecks({ folderName: idFor(type), files, sha256: shaHex, ...extra }),
+          ...registerChecks({ files, fm })];
 }
 const has = (fs, id) => fs.some((f) => f.check === id);
 

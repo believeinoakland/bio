@@ -45,8 +45,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
 import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE } from "../src/odf.mjs";
+import { registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -239,27 +241,74 @@ const bundleMd = (id, locator, monitored) => [
   "## Session Log", "", "### Session 1", "", "Captured.", "", "## Review Notes", "",
 ].join("\n");
 let seq = 0;
-const promote = async (docs, locator, monitored = false, blobs = []) => {
+/* T4 (legacy-tests; provenance K121): since the C-18 register arms run AT THE WRITE, a creation whose register names
+   a capture `file` the bundle does not carry is refused (C-18.1). The acquired documents name their captures as
+   `snapshots/<sha>`, so `held: true` carries each capture's blob beside data/provenance.json (`registerFile`, the
+   capture's own path, sha and size; nothing in the document is changed). The answer keeps the refusal, so an arm that
+   builds a register C-18 refuses ON PURPOSE (§3's and §4's folds) can read what the write said. */
+const promote = async (docs, locator, monitored = false, blobs = [], { held = false } = {}) => {
   const id = `INFO-2026-${String(9350 + ++seq)}-d351`;
   const md = bundleMd(id, locator, monitored);
   const prov = JSON.stringify({ documents: docs });
+  const named = new Set(blobs.map((b) => b.file.path));
+  const carried = held ? docs.filter((d) => d && d.capture).map((d) => registerFile(d))
+    .filter((f, i, a) => !named.has(f.path) && a.findIndex((g) => g.path === f.path) === i) : [];
   const r = await P("promote", {
     bundleId: id, base: null, snapKey: `20260924T000000Z_d351${String(seq).padStart(4, "0")}`, author: "suite",
     meta: { object_type: "information", group: "believe-in-oakland", title: `D-351 ${id}`,
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, ...blobs.map((b) => b.file)],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            ...blobs.map((b) => b.file), ...carried],
     register: blobs.map((b) => b.reg),
   });
-  return { id, promoted: r.ok !== false && (r.result ? r.result.ok !== false : true) };
+  return { id, md, prov, promoted: r.ok !== false && (r.result ? r.result.ok !== false : true),
+           answer: r.result || r };
 };
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.3 left the catalogue with the other C-18
+   register arms for provenance's `registerChecks`, which the gate runs after the catalogue (`withRegisterChecks`) and
+   the audit after the pass (`provenanceAudit`). A bundle's findings are both, as the gate takes them; without the
+   second half every "does NOT fold" arm below would pass over a catalogue that no longer holds the fold. */
 const checksOf = async (id) => {
-  const img = (await G(`op=image&id=${encodeURIComponent(id)}`)).result;
+  const img = (await G(`op=image&id=${encodeURIComponent(id)}`)).result || {};
   const files = new Map(), el = new Set();
   for (const [p, v] of Object.entries(img)) { if (typeof v === "string") files.set(p, v); else el.add(p); }
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: el,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-  return findings;
+  const md = files.get("bundle.md");
+  return [...findings, ...registerChecks({ files, elided: el, fm: typeof md === "string" ? parseFrontmatter(md).data : null })];
+};
+/* The write-time refusal's C-18.3 findings (K121: a creation is refused on every error finding). */
+const refusedFold = (x) => (x.answer && x.answer.reason === "PROVENANCE_REGISTER_REFUSED" && Array.isArray(x.answer.findings)
+  ? x.answer.findings.filter((f) => f.check === "C-18.3") : []);
+/* HISTORY, HELD VERBATIM: a register C-18.3 refuses can no longer be WRITTEN by a creation (K121), so a store holds
+   one only as history, through a replay the plane verifies (D-512: the admin's promotion naming a held Drive-era
+   provenance capture that lists this bundle and this bundle.md's sha256), which the write-time arms exempt. That is
+   the bundle the audit arm below reads, so "the audit still reports every finding" is asked of what a store can hold. */
+const ADMIN_POST = async (op, b, body) => {
+  const r = await mf.dispatchFetch(`http://x/api/?op=${op}&token=adm-351&store=scratch`, { method: b, body });
+  const txt = await r.text();
+  try { return JSON.parse(txt); } catch { return { ok: false, status: r.status, unparsed: txt.slice(0, 200) }; }
+};
+const replayHeld = async (docs, locator) => {
+  const id = `INFO-2026-${String(9350 + ++seq)}-d351`;
+  const md = bundleMd(id, locator, false);
+  const prov = JSON.stringify({ documents: docs });
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: "20260901T010000Z_d3510001",
+      record: { target: id, base: null, author: "ruth", files: [{ name: "bundle.md", sha256: sha(md) }] } }] }), "utf8");
+  const put = await ADMIN_POST(`capture&sha256=${sha(cap)}`, "PUT", cap);
+  const r = await ADMIN_POST("promote", "POST", JSON.stringify({
+    bundleId: id, base: null, snapKey: `20260924T000000Z_d351${String(seq).padStart(4, "0")}`, author: "drive-migration",
+    replay: true, provenanceCapture: sha(cap),
+    meta: { object_type: "information", group: "believe-in-oakland", title: `D-351 ${id}`,
+            current_state: "collected", created: NOW, last_updated: NOW },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+    register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }],
+  }));
+  return { id, held: (put.result || put).ok === true, promoted: (r.result || r).ok === true, answer: r.result || r };
 };
 
 /* ====================================================================== 0 */
@@ -315,15 +364,27 @@ t("A CHANGED CELL MOVES THE EVIDENTIARY DIGEST", dg(Cx).evidentiary !== dg(S[0])
 /* ====================================================================== 3 */
 console.log("\n--- 3. C-18.3 folds the three exports; it does not fold a changed document ---");
 {
-  const three = await promote(S, A.sheet);
-  t("the three-export bundle promoted", three.promoted, true);
-  const f3 = await checksOf(three.id);
-  const fold = f3.filter((x) => x.check === "C-18.3");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance K121): the fold is an ERROR finding (C-18.3), and C-18's
+     arms now run at the write, where a creation is refused on every error finding. So the three-export register is
+     REFUSED `PROVENANCE_REGISTER_REFUSED` and nothing is written; the fold is read from the refusal's own findings
+     (the same `registerChecks` the gate and the audit run). Each capture's blob is carried (`held`), so the fold is
+     the ONLY thing the write refuses. The audit arm reads a held replay of the same register (see `replayHeld`). */
+  const three = await promote(S, A.sheet, false, [], { held: true });
+  const threeErrs = (three.answer && three.answer.findings) || [];
+  t("the three-export bundle is REFUSED at the write, for the fold and for nothing else (K121)",
+    [three.promoted, three.answer && three.answer.reason, [...new Set(threeErrs.map((x) => x.check))]],
+    [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.3"]]);
+  t("and nothing was written", (await G(`op=image&id=${encodeURIComponent(three.id)}`)).result ?? null, null);
+  const fold = refusedFold(three);
   t("C-18.3 FOLDS the three exports into one corroboration", fold.length, 1);
-  t("by the NORMALISED arm (the raw arm cannot see them)", /share the evidentiary digest/.test(fold[0] ? fold[0].message : ""), true);
-  const two = await promote([S[0], Cx], A.sheet);
+  t("by the NORMALISED arm (the raw arm cannot see them)", /share the evidentiary digest/.test(fold[0] ? fold[0].detail : ""), true);
+  const two = await promote([S[0], Cx], A.sheet, false, [], { held: true });
   t("the changed-document bundle promoted", two.promoted, true);
   t("C-18.3 does NOT fold a changed cell", (await checksOf(two.id)).some((x) => x.check === "C-18.3"), false);
+  const hist = await replayHeld(S, A.sheet);
+  t("the same three-export register, held as a verified replay (history, exempt at the write), lands",
+    [hist.held, hist.promoted], [true, true]);
+  t("and the gate's register arms fold it there too", (await checksOf(hist.id)).filter((x) => x.check === "C-18.3").length, 1);
   const storeAudit = (await G("op=audit&limit=1000")).result;
   t("and op=audit's store-wide tally carries it, through the op", (storeAudit.tally["C-18.3"] || 0) >= 1, true);
 }
@@ -349,8 +410,10 @@ console.log("\n--- 4. what is NOT claimed, and says why ---");
     [D.filter((d) => HEX64.test(dg(d).evidentiary || "")).length, new Set(D.map((d) => dg(d).evidentiary)).size], [2, 1]);
   t(".odt: the basis names the normalisation and its measurement",
     /xml:id/.test(dg(D[0]).basis || "") && /M-167/.test(dg(D[0]).basis || ""), true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance K121): the fold is an error at the write now, so the two
+     .odt captures' register is refused and the fold is read from the refusal (see §3). */
   t(".odt: C-18.3 therefore folds them",
-    (await checksOf((await promote(D, A.doc)).id)).some((x) => x.check === "C-18.3"), true);
+    refusedFold(await promote(D, A.doc, false, [], { held: true })).length > 0, true);
 }
 
 /* ====================================================================== 5 */

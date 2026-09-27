@@ -38,6 +38,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { csvEntry } from "../src/csv.mjs";
 import { readingDialect } from "../src/formats.mjs";
 
@@ -127,7 +128,11 @@ const mustPromote = async (id, reading) => {
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            /* T4 (legacy-tests; provenance K121): op=acquire's own document is promoted unchanged; the capture file
+               it names (`snapshots/<name>`) is now carried beside it, as C-18.1 at the write requires
+               (`register-doc.mjs`). */
+            registerFile(reading)],
     register: [] });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
   return r;

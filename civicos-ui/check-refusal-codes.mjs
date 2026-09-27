@@ -143,6 +143,34 @@ import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, t
    arm G keeps the sweep's own stripper, so the two same-named bindings cannot both be `stripComments`. */
 import { stripComments as stripCommentsMultiSite, multiSiteCensus } from "../bio-plane/test/multisite-census.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; T3 layer 2 and T4 layer 3 extractions — record-core, membership,
+   promotion, host-governor, provenance, capture): THE PLANE'S SOURCE IS NO LONGER ONE FLAT DIRECTORY. Tranches T3
+   and T4 moved code out of `src/store.mjs` and `src/index.mjs` into `src/<module>/` — WITH its refusal literals and
+   its DEC-49 markers — and every walk here that DISCOVERS the plane's sources read `readdirSync(src)` filtered to
+   `.mjs`, which returns the module DIRECTORIES as names that never end in `.mjs`. So the census, the provenance
+   report, the orphan-marker walk, arm F's per-code sites (and so its partition and its floor) and arm G's
+   multi-site walk all went blind to every code minted in an extracted module — the census read 715 against a
+   floor of 780, which LEGACY-CHECKS #1 recorded as "already red at the base" (its REPORT 4). That is this guard's
+   own flaw, not the plane's: the codes are still minted, in the same request path, one directory down. Every
+   discovering walk now reads `bio-plane/src/*.mjs` AND every `.mjs` under a `bio-plane/src/<module>/` directory,
+   recursively; a `test/` or `dist/` directory is not source and is not read. The walk is discovered, never
+   listed, for the reason every walk here is: a seventh module extracted next tranche is read the day it lands.
+   Paths are relative to `src/` with `/` separators (`capture/index.mjs`), the spelling a `where` uses after `src/`. */
+const NOT_SOURCE_DIRS = new Set(["test", "dist"]);
+function moduleSourceFiles(dir = PLANE_SRC, rel = "") {
+  const out = [];
+  for (const d of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (d.isDirectory()) {
+      if (NOT_SOURCE_DIRS.has(d.name)) continue;
+      out.push(...moduleSourceFiles(path.join(dir, d.name), rel ? `${rel}/${d.name}` : d.name));
+    } else if (rel && d.isFile() && d.name.endsWith(".mjs")) out.push(`${rel}/${d.name}`);
+  }
+  return out;
+}
+/* Every plane source file a discovering walk reads: the top-level files first, in the order the walks always
+   read them, then the extracted modules' files. */
+const planeSourceFiles = () =>
+  [...fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs")), ...moduleSourceFiles()];
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
 const TESTDIR = path.join(HERE, "test");
@@ -1858,7 +1886,7 @@ async function loadSuiteHelpers(suites) {
 let FAMILY_CODES = new Set();
 
 function planeCensus() {
-  const files = fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"));
+  const files = planeSourceFiles();   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): + src/<module>/ — see `planeSourceFiles` */
   const yields = {}, union = new Set(), unionRepro = new Set();
   for (const name of Object.keys(MATCHERS)) yields[name] = new Set();
   const off = [];
@@ -2393,7 +2421,7 @@ function armB(rows, census, surfaceTables, helpers) {
   reportProvenance({
     prov: PROV,
     items: [
-      ...fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"))
+      ...planeSourceFiles()   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the census's own corpus, modules included */
         .map(f => ({ path: repoPath(REPO, path.join(PLANE_SRC, f)), what: `src/${f}`,
           counted: "matched for refusal codes, and counted into the census floor" })),
       ...suites.map(s => ({ path: repoPath(REPO, path.join(TESTDIR, s)), what: `test/${s}`,
@@ -2900,7 +2928,10 @@ function nestedRegionsIn(src, fnBody, site, claimedRegions) {
    catalog — the two places a `where` can name. Read from the directory rather
    than listed, so a new source file cannot hide an orphan marker. */
 function markerFiles() {
-  const out = fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs")).map(f => path.join("src", f));
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): a `where` now names `src/<module>/…` files too (T4 legacy-checks
+     re-pointed 60 rows there), so a marker in a module is one a `where` can claim and an unclaimed one is an
+     orphan like any other. Read with `planeSourceFiles`, which the census reads. */
+  const out = planeSourceFiles().map(f => `src/${f}`);
   out.push(path.join("checks", "bio-checks.mjs"));
   return out;
 }
@@ -3238,6 +3269,13 @@ function armD() {
    would otherwise fall into a partition claiming its codes are member-facing,
    which is the direction that overclaims. */
 const REQUEST_PATH = new Set(["index.mjs", "store.mjs"]);
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests): a file under `src/<module>/` is REQUEST PATH too. Every extracted
+   module (record-core, membership, promotion, host-governor, provenance, capture) is code that was IN `store.mjs`
+   or `index.mjs` and moved out by T3/T4 with its callers unchanged — it answers the same ops it answered before.
+   Reading it as a SUBSYSTEM would put member-facing refusals in F3 ("does it cross the wire?"), the partition
+   whose disposition is a question, which is the direction this partition's header calls overclaiming the other
+   way. A new top-level `src/*.mjs` file still joins F3 by default, as before. */
+const isRequestPath = f => REQUEST_PATH.has(f) || f.includes("/");
 
 /* REC-78, 2026-08-08, MEASURED BY DRIVING and recorded in MEASUREMENTS.md. Not
    derivable from source text, so declared here with its receipt and printed as
@@ -3256,7 +3294,7 @@ function armF(census, translated, reach) {
   const sites = new Map();          // code -> [{file, line, text}]
   const constants = new Map();      // IDENT -> ["CODE", …]  (a string constant, or a lookup table)
   const byIdent = new Map();        // IDENT -> [{file, line}]  (`reason: IDENT` sites)
-  for (const f of fs.readdirSync(PLANE_SRC).filter(x => x.endsWith(".mjs"))) {
+  for (const f of planeSourceFiles()) {   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the census's corpus, modules included */
     const src = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
     for (const m of src.matchAll(/\bconst\s+([A-Z][A-Z0-9_]{2,})\s*=\s*"([A-Z][A-Z0-9_]{2,})"/g))
       constants.set(m[1], [m[2]]);
@@ -3319,7 +3357,7 @@ function armF(census, translated, reach) {
     const files = new Set(at.map(s => s.file));
     if (DECLARED_UNREACHABLE.has(c))                     put("F1 UNREACHABLE — needs a DECISION, not a sentence", c);
     else if (isConstructed(c))                           put("F2 CONSTRUCTED — not a code; the real ones are invisible", c);
-    else if (at.length && ![...files].some(f => REQUEST_PATH.has(f)))
+    else if (at.length && ![...files].some(isRequestPath))
                                                          put("F3 SUBSYSTEM — needs a DETERMINATION: does it cross the wire?", c);
     else if (at.length >= 2)                             put("F4 MULTI-SITE — needs a STRUCTURAL change, not a sentence", c);
     else if (reach.has(c))                               put("F5 IN REACH, one site — needs a SENTENCE, now", c);
@@ -3540,9 +3578,18 @@ const MULTI_SITE_CANDIDATES = new Set([
 /* The plane files arm G walks, named once so the guard's fixture suite can point it at its own tree. */
 const MULTI_SITE_FILES = ["store.mjs", "index.mjs"];
 
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests): + every `.mjs` under `src/<module>/` (see `planeSourceFiles`). The
+   walk read store.mjs and index.mjs because every mint site of a DEC-49 code was in one of the two; T3/T4 moved
+   the membership, promotion, record-core, host-governor, provenance and capture code — and its mint sites — into
+   `src/<module>/`, so a code minted once there and once in store.mjs read as ONE site (ABSENT: promotion's
+   `refusal("ABSENT"…)` was invisible beside store.mjs's and index.mjs's), and a code whose two sites both moved
+   read as NONE. D-550's reason for leaving the other top-level files out (affordances.mjs PUBLISHES codes as data)
+   is untouched: the modules are the two request-path files' own code, one directory down, and they are read with
+   the same stripper and the same guards on it. The fixture suite's own tree has no module directory, so its
+   `MULTI_SITE_FILES` rewrite still names the whole corpus it reads. */
 function armG(catalogModule) {
   const files = {};
-  for (const f of MULTI_SITE_FILES) {
+  for (const f of [...MULTI_SITE_FILES, ...moduleSourceFiles()]) {
     const raw = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
     const t = stripCommentsMultiSite(raw);
     /* The stripper is guarded both ways, as the sweep guards it: one that ate the file reports zero
@@ -3557,7 +3604,7 @@ function armG(catalogModule) {
   }
   const { codes, multi } = multiSiteCensus(catalogModule, files);
   const open = [...multi.keys()].filter(c => !MULTI_SITE_CLOSED.has(c)).sort();
-  MEASURE("multiSiteCodes", open.length, "DEC-49 codes at 2+ literal sites in store/index, less the declared "
+  MEASURE("multiSiteCodes", open.length, "DEC-49 codes at 2+ literal sites in store/index and src/<module>/, less the declared "
     + "closures (the `arm G:` line)");
   /* THE EMPTY-CORPUS DEFENCE. Zero CANDIDATES is not the alarm — it is the finished state this arm drives
      toward, and a conformant fixture legitimately reads it (arm F's floor learned the same thing). The alarm is
@@ -3591,9 +3638,10 @@ function armG(catalogModule) {
     FAIL(`arm G: ${open.length} DEC-49 codes are minted at more than one site, ceiling ${CEILING.multiSiteCodes}; `
        + `it may only ever move DOWN. The new one(s) are named above.`);
   NOTE(`arm G: ONE CODE, ONE MINT SITE — ${multi.size} of ${codes.size} DEC-49 codes at 2+ literal sites in `
-     + `comment-stripped store.mjs/index.mjs; ${multi.size - open.length} DECLARED closure(s) `
+     + `comment-stripped store.mjs/index.mjs and the ${Object.keys(files).length - MULTI_SITE_FILES.length} file(s) under `
+     + `src/<module>/; ${multi.size - open.length} DECLARED closure(s) `
      + `(${[...MULTI_SITE_CLOSED.keys()].join(", ")}); ${open.length} candidate(s) against ceiling `
-     + `${CEILING.multiSiteCodes} (may only fall). CANNOT SEE: a code in a variable, a site outside store/index, `
+     + `${CEILING.multiSiteCodes} (may only fall). CANNOT SEE: a code in a variable, a site outside store/index/src/<module>/, `
      + `and whether two sites are one condition (a candidate is not a verdict).`);
 }
 

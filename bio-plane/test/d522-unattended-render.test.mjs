@@ -58,6 +58,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { RENDER_CAPTURE_CHECKS, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 import { RENDERED_METHOD, renderReserveMs } from "../src/render.mjs";
+/* T4 (legacy-tests; capture R20): the co-attestation services, from their one definition. */
+import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -224,8 +226,18 @@ const WANT_RENDERED = sha(Buffer.from(renderedHtml(new URL(RENDER_PAGE).pathname
   t("the DAEMON's drain captured it — not held, not refused",
     [!!cap, (d.held || []).some((h) => h.request === ID_RENDER), (d.refused || []).some((r) => r.request === ID_RENDER)],
     [true, false, false]);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20, K60): this counted EVERY outbound request as the source's.
+     Since capture R20 every capture also asks provenance's `attest` for a trusted timestamp (each authority in
+     TSA_ENDPOINTS until one answers; this fixture's network answers the shell, so all are asked) and a co-archive of
+     the locator (ARCHIVE_SAVE_BASE + the address), and those go out too. So the pin now counts what went to the
+     SOURCE's host, still exactly once, and states the rest by name: nothing else left the instance. */
+  const out = SEEN.slice(seen0);
   t("the source was asked ONCE for its served document and the renderer was asked ONCE for the page",
-    [SEEN.length - seen0, RENDER_CALLS - calls0], [1, 1]);
+    [out.filter((u) => new URL(u).host === HOST).length, RENDER_CALLS - calls0], [1, 1]);
+  t("and everything else that left the instance is capture R20's co-attestation: the timestamp authorities and one "
+  + "co-archive of this page, nothing more",
+    out.filter((u) => new URL(u).host !== HOST),
+    [...TSA_ENDPOINTS.map((e) => new URL(e).href), ARCHIVE_SAVE_BASE + RENDER_PAGE]);
   renderedSha = cap ? cap.sha : null;
   const want = WANT_RENDERED;
   t("THE ACCEPTS-WHEN: the capture the drain recorded is the RENDERED document, never the served shell "

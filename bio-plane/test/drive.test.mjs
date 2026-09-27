@@ -660,7 +660,11 @@ console.log("\n--- 5. the record a Drive capture leaves is one C-18.9 can read -
      would have been shown the export address instead of the document. The
      assertion reads the plane's own source at the site, which is the only way to
      see a value that never reaches a caller. */
-  const indexSrc = readFileSync(SRC, "utf8");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4, R14): the enqueue moved out of `op=acquire`'s handler in
+     src/index.mjs into the capture module's acquisition act, src/capture/acquire.mjs, where it now calls the module's
+     `taskEnqueue` (R15). The event queue's reader R45 (`taskEvents`) has no route or store delegation a suite can
+     reach, so the pin stays structural and reads the file the site now lives in; the same expression is asked. */
+  const indexSrc = readFileSync(fileURLToPath(new URL("../src/capture/acquire.mjs", import.meta.url)), "utf8");
   const ENQ = /subject:\s*driveCapture \? documentAddress : locator,\s*locator,/;
   t("the inbox event's SUBJECT is the DOCUMENT address for a Drive capture and the "
     + "locator for every other -- one expression, so no existing capture changes by a byte",

@@ -61,6 +61,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(IDX, "utf8");
@@ -253,8 +254,12 @@ const md = [
   "## Provenance Notes", "", "## Session Log", "",
   "### Session 1", "", "Entry 1.", "", "## Review Notes", "",
 ].join("\n");
+/* T4 (legacy-tests; provenance K121): the monitored document completed to C-18.1's intake shape (its locator and
+   capture kept as stated), which is now refused at the write, and the capture it names held in the bundle
+   (`register-doc.mjs`). */
+const MONITORED_DOC = registerDoc({ locator: LOCATOR, capture: { sha256: sha(V1) } }, { at: "2026-07-24T00:00:00Z" });
 const provenance = JSON.stringify({
-  documents: [{ locator: LOCATOR, capture: { sha256: sha(V1) } }],
+  documents: [MONITORED_DOC],
 }, null, 2);
 const PKG = {
   bundleId: MONITORED, base: null, snapKey: "20260724T010000Z_monitord",
@@ -263,7 +268,8 @@ const PKG = {
           title: "The monitored report", current_state: "collected",
           created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T01:00:00Z" },
   files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-          { path: "data/provenance.json", text: provenance, bytes: provenance.length, sha256: sha(provenance) }],
+          { path: "data/provenance.json", text: provenance, bytes: provenance.length, sha256: sha(provenance) },
+          registerFile(MONITORED_DOC)],
   register: [],
 };
 
