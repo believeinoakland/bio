@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, md, T0, infoMd } from "./fixture.mjs";
-import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES }
+import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES, retrievalRoutes }
   from "../../../src/retrieval/index.mjs";
 import { textOf, FTS_COLUMNS } from "../../../src/query.mjs";
 
@@ -163,13 +163,15 @@ test("R5: projection with an id answers the row or null (absent or hidden alike)
   assert.deepEqual([live.bundles.map((b) => b.bundle_id), live.total], [["INFO-1", "INFO-3"], 2]);
 });
 
-test("R5: the single-bundle answer carries the registered decorations, in order, and a decoration that throws adds nothing", async () => {
+test("R5, R56: the single-bundle answer carries the registered decorations, in the modules' order, and a decoration that throws adds nothing; a second registration is DECORATION_DECLARED, a malformed one DECORATION_MALFORMED", async () => {
   const w = world();
   w.doc("INFO-1");
   assert.equal(w.retrieval.registerProjectionDecoration("actions", (row) => ({ action: { of: row.bundle_id } })).ok, true);
   w.retrieval.registerProjectionDecoration("ai-runs", async () => ({ surfaced_in: { recorded: false } }));
   w.retrieval.registerProjectionDecoration("broken", () => { throw new Error("x"); });
   assert.equal(w.retrieval.registerProjectionDecoration("actions", () => ({})).reason, "DECORATION_DECLARED");
+  assert.equal(w.retrieval.registerProjectionDecoration("inquiry", null).reason, "DECORATION_MALFORMED");
+  assert.equal(w.retrieval.registerProjectionDecoration("", () => ({})).reason, "DECORATION_MALFORMED");
   const one = await w.retrieval.projection({ bundleId: "INFO-1", viewer: V("vera") });
   assert.deepEqual([one.bundle_id, one.action, one.surfaced_in], ["INFO-1", { of: "INFO-1" }, { recorded: false }]);
   assert.equal(w.retrieval.projection({ viewer: V("vera") }).bundles[0].action, undefined, "never on the list arms");
@@ -225,4 +227,53 @@ test("R33: an older store's text index (no bundle key) is rebuilt in place at st
   const after = ftsRow(w, "INFO-1");
   assert.deepEqual({ ...after }, { ...before });
   assert.equal(w.retrieval.search({ q: "kept", viewer: V("ann") }).total, 1);
+});
+
+test("R5, R56: decorations run in the modules' total order, whatever order they registered in", async () => {
+  const w = world();
+  w.doc("INFO-1");
+  /* The fixture's instance was made without an order; a fresh one over the same storage takes the order given. */
+  const { Retrieval } = await import("../../../src/retrieval/index.mjs");
+  const r = new Retrieval({ storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion,
+    extraction: w.extraction, observation: w.observation, order: ["actions", "inquiry", "ai-runs"] });
+  r.registerProjectionDecoration("ai-runs", () => ({ who: "ai-runs" }));
+  r.registerProjectionDecoration("actions", () => ({ who: "actions", first: true }));
+  const one = r.projection({ bundleId: "INFO-1", viewer: V("vera") });
+  assert.equal(one.who, "ai-runs", "the later module's key is applied last");
+  assert.equal(one.first, true);
+});
+
+test("R58: migrate() creates the projection columns, their indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 for the router", async () => {
+  const w = world();
+  w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "hello water" }] });
+  const cols = w.rows(`PRAGMA table_info(bundles)`).map((c) => c.name);
+  for (const c of [...PROJECTION_COLS, "fts_id"]) assert.ok(cols.includes(c), c);
+  assert.ok(w.rows(`PRAGMA table_info(bundles_fts)`).some((c) => c.name === "bundle_id"));
+  assert.ok(w.rows(`SELECT name FROM sqlite_master WHERE type='index'`).some((r) => r.name === "bundles_source_status"));
+  for (const t of ["selections", "selection_items"]) assert.equal(w.rows(`PRAGMA table_info(${t})`).length > 0, true, t);
+  const before = JSON.stringify(w.rows(`SELECT sql FROM sqlite_master ORDER BY name`));
+  assert.deepEqual(w.retrieval.migrate(), { reprojected: 0, reindexed: 0, limit: 500, remaining: 0 });
+  assert.equal(JSON.stringify(w.rows(`SELECT sql FROM sqlite_master ORDER BY name`)), before, "idempotent");
+  /* The routes: each op answers what the service answers, with the stamps from the query. */
+  const url = (op, q = "") => new URL(`http://x/${op}?${q}`);
+  const routes = (u, body) => retrievalRoutes(w.retrieval, u, body);
+  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["contentaxis", "frontier", "meaningrows", "projection", "projectionclear",
+    "projectionplan", "reproject", "search", "searchfields", "searchindexcheck", "select", "selection", "selectionlist", "selectionrelease"]);
+  assert.equal(routes(url("search", "q=water&viewer=member:vera")).search().total, 1);
+  assert.equal(routes(url("search", "q=water")).search().total, 0, "no viewer stamp, nothing");
+  assert.equal(routes(url("projection", "id=INFO-1&viewer=member:vera")).projection().source_status, "live");
+  assert.equal(routes(url("meaningrows", "rows=leg&viewer=member:vera")).meaningrows().ok, true);
+  assert.deepEqual(routes(url("searchfields")).searchfields(), w.retrieval.searchFields());
+  assert.equal(routes(url("searchindexcheck", `viewer=${MACHINE}`)).searchindexcheck().ok, true);
+  assert.equal(routes(url("frontier", "level=content&viewer=member:vera&limit=3")).frontier().limit, 3);
+  assert.equal(routes(url("contentaxis", "viewer=member:vera")).contentaxis().found, false);
+  const sel = await routes(url("select", "owner=o&viewer=member:vera"), { ids: ["INFO-1"] }).select();
+  assert.deepEqual([sel.kind, sel.n], ["enumerated", 1]);
+  const res = routes(url("selection", `handle=${sel.handle}&owner=o&viewer=member:vera&weight=refuse`)).selection();
+  assert.deepEqual([res.ok, res.weight], [true, "refuse"]);
+  assert.equal(routes(url("selectionlist", "owner=o&viewer=member:vera")).selectionlist().selections.length, 1);
+  assert.equal(routes(url("selectionrelease", "owner=o")).selectionrelease().released, 1);
+  assert.equal(routes(url("projectionclear"), { bundleId: "INFO-1" }).projectionclear().scope, "INFO-1");
+  assert.equal(routes(url("reproject"), { limit: 3 }).reproject().reprojected, 1);
+  assert.deepEqual(Object.keys(routes(url("projectionplan")).projectionplan()), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
 });

@@ -215,7 +215,7 @@ test("R38, R29: the gate is row-whole at each level — a document row naming a 
   assert.ok(am.looked.some((r) => r.subject === "ENT-9") && am.looked.some((r) => r.subject === "a name"));
 });
 
-test("R39: tally counts rows per state over the whole level, never the page, names nothing, and is not narrowed by the gate at document, content and meaning — but leaves out a run's rows in a project the viewer cannot see (the registered tail); at the internet level it counts only the looks the viewer may read", () => {
+test("R39, R57: tally counts rows per state over the whole level, never the page, names nothing, and is not narrowed by the gate at document, content and meaning — but leaves out a run's rows in a project the viewer cannot see (the registered tail); at the internet level it counts only the looks the viewer may read", () => {
   const w = world();
   const hid = w.cap("hid", "h");
   const proj = w.project("Hidden", "ann", { captures: [hid] });
@@ -235,6 +235,16 @@ test("R39: tally counts rows per state over the whole level, never the page, nam
   assert.deepEqual(w.retrieval.frontier({ level: "content", viewer: V("ann") }).tally, { PRESENT: 1, partial: 1, LOOKED_ABSENT: 1 });
   assert.deepEqual(w.retrieval.frontier({ level: "content", viewer: V("vera") }).tally, { PRESENT: 1, partial: 1 });
   for (const level of ["document", "meaning"]) assert.deepEqual(w.retrieval.frontier({ level, viewer: V("vera") }).tally, {}, level);
+  /* R57: one registration; malformed refused; a tail that throws or answers none fails closed. */
+  assert.equal(w.retrieval.registerHiddenRunTail("other", () => ({ sql: "", args: [] })).reason, "TAIL_DECLARED");
+  assert.equal(w.retrieval.registerHiddenRunTail("x", 5).reason, "TAIL_MALFORMED");
+  for (const bad of [() => { throw new Error("no"); }, () => null, () => ({ args: [] })]) {
+    const w2 = world();
+    w2.observe({ level: "content", subject_kind: "unstated", subject: "q", authority_kind: "run", state: "LOOKED_ABSENT", authority: "RUN-H" });
+    w2.retrieval.registerHiddenRunTail("ai-runs", bad);
+    assert.deepEqual(w2.retrieval.frontier({ level: "content", viewer: V("ann") }).tally, {}, "fail closed");
+    assert.deepEqual(w2.retrieval.frontier({ level: "content", viewer: MACHINE }).tally, { LOOKED_ABSENT: 1 });
+  }
 });
 
 function leads(w) {
