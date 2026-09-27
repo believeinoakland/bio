@@ -112,3 +112,5 @@ Process findings recorded for the next revision (P3: recorded, not patched): (1)
 Layer 11, started 2026-09-27 03:20 UTC, concurrently:
 - `legacy-index` · LEGACY-INDEX #1 · `session_01WqPRmYSbsF2qV78iQdWxhc`
 - `legacy-tests` · LEGACY-TESTS #2 · `session_019sbQinGJRZm3pZkVZqMGvj`
+
+LEGACY-INDEX #1 complete at `2f6ecb9b`, merged: ownership 0; N43, N12, N19 applied; N21 deferred (its setting is instance-setup's, N10). Its readings confirmed (K124). For legacy-tests (forwarded): the suites N12's removal of `op-claims` breaks. affordances is N84; the pairing read is N85.
