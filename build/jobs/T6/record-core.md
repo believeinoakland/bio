@@ -32,6 +32,6 @@
 - `format`: 69 modules, 64 requirements files; 0 failures.
 - `architecture record-core`: 4 product files, 6 relative imports; 0 failures.
 - `coverage record-core`: 59 of 59 live requirement ids named by a test; 0 failures.
-- `ownership record-core tranche/T6`: see the commit (run after committing).
+- `ownership record-core tranche/T6`: 3 files changed; legacy-store: 0 line(s) added, 0 removed; 0 failures.
 
 Size: test runs 14, module lines 996
