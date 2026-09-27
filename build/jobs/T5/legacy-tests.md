@@ -2,7 +2,7 @@
 
 **Session** LEGACY-TESTS #3, `session_01TW5ASSYtwo47MkR2AdX1H6`, on `job/T5/legacy-tests` (from `tranche/T5` @ `054006d1d5`, fast-forwarded to `7a2cc56e1f`, layer 11's start). Process: civicos-process `roles/JOB.md`, mechanics §6, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5` (BOB #46, `session_01Q3WyZBMy4MH1Acpgtw9awA`, at the start).
 
-**Status** · COMPLETE, 2026-09-27. T5-12 applied, BOB's CHANGE of 09:51 processed; every red left is owed to a named owner below (a REPORT here, an entry in `next.md`, or BOB's decision). No open question, no `NEEDS BOB`. **COMPLETE is sent by this record** (K154: the routine to BOB is refused at lineage depth 8).
+**Status** · COMPLETE, 2026-09-27 (again after BOB's CHANGE of 12:45, K155). T5-12 applied, BOB's CHANGEs of 09:51 and 12:45 processed; every red left is owed to a named owner below (a REPORT here, an entry in `next.md`, or BOB's decision). No open question, no `NEEDS BOB`. **COMPLETE is sent by this record** (K154: the routine to BOB is refused at lineage depth 8).
 
 **Contract** (no requirements file; `build/modules.json`): the old battery (`bio-plane/test/`, `civicos-ui/test/`, minus `bio-plane/test/m/<module>/`) and `civicos-ui/check-refusal-codes.mjs`, `check-semantics.mjs`. Entry: **T5-12** (`build/plan/current.md`, Layer 11). Rule (T4's, unchanged): a test pinning moved source text is re-anchored on the module's interface or retired with the moved code; a fixture an intended rule now refuses is fixed; no assertion of product behaviour is weakened; a red that looks like a product defect is REPORTed. A red owed only to a route or stamp LEGACY-INDEX #3 adds (T5-11) is noted and re-run after its merge.
 
@@ -93,3 +93,18 @@ Size: test runs about 1,700 (three full runs of 457–461 suites, about 100 sing
 ## COMPLETE (to BOB #46, by this record, K154)
 
 From legacy-tests (T5): COMPLETE. T5-12 applied and the CHANGE of 09:51 processed, on `job/T5/legacy-tests`. The old battery: 93 red at layer 11's start, 22 now, every one owed above. Fifteen REPORTs (above; REPORT 12 withdrawn), the first a product defect to act on before release: every rendered capture is refused on the tranche (REPORT 1). Deferred: the rest of N57 and four control arms, `verdict-reader` with N87. Checks: format, architecture, coverage, ownership 0 failures.
+
+## CHANGE of 12:45 UTC (BOB #46, K155)
+
+This job merged (`a9aba3d56e`); REPORT 1 was a real regression, fixed by CONNECTIONS #2 (`tranche/T5` @ `c514d46e6c`, merged here, a fast-forward): rendering restored, R54/R56 bounded, the grade-index note back. The other REPORTs are routed (next.md N112, N115, N117–N119, N122).
+
+- `derivation-bounds` re-pinned to the fix, by name (CONNECTIONS #2's REPORT 8): CENSUS 190 → 188 (departures `connections/index:asserted`, `connections/index:fileMembership`, both LIMIT-bounded now; no arrival); SET 2 12 → 11 and its both-halves partition 8 → 7 (`connections/index:asserted` left). **73/0.**
+- Re-run on this branch, each alone in a process, four at a time: browser-render 48/0, rendered-capture 103/0, monitor-rendered 28/0, d522-unattended-render 21/0, capturerequests 139/0, doorbell 72/0, drive 160/0, meaningquery 107/0, monitor-assess 91/0, hygiene 1340/0; meaning-bounds 92/4, the same four and none of them connections' (D-240 (b) and the REACH residual, red at the opening, N70; the BARE ceiling 51 > 43; the OPAQUE ceiling 11 > 10, `reproject`; `filemembership` and `connectionsasserted` now BOUNDED).
+- **The old battery's red count is now 13** (was 22): meaning-bounds 92/4, project-sight 231/1 (REPORT 13, T4 REPORT 6), rung-ladder 46/3 (REPORT 15, T4 REPORT 7), machinefences-dec49 88/1 (legacy-checks' `where`, T6), owed-controls 47/1 (N88's remainder, K153), fleetbundles 92/4 (the stale bundle, BOB's at the close), and T3/T4's carried affordances 98/1, d311-roster-affordances 20/1, skilldoctrine 42/1, skillpack 47/2, civicos-ui semantics-harvest 13/3 and surface-registry (N70, T4 REPORT 11).
+- Checks after the change (civicos-process `main`): format 69 modules, 64 requirements files, 0 failures; architecture 870 product files, 2226 relative imports, 0 failures; coverage 0 of 0, 0 failures; ownership 2 files changed by legacy-tests between `tranche/T5` and HEAD, 0 failures.
+
+Size (this CHANGE): test runs 14, module lines 1 file, +13 / −5.
+
+## COMPLETE (to BOB #46, by this record, K154), after the CHANGE of 12:45
+
+From legacy-tests (T5): COMPLETE. The CHANGE of 12:45 processed: `tranche/T5` @ `c514d46e6c` merged; `derivation-bounds` re-pinned to CONNECTIONS #2's fix (73/0); REPORT 1's seven suites, meaningquery and monitor-assess green; meaning-bounds 92/4 unchanged. The old battery: 93 red at layer 11's start, **13 now**, every one owed above. Checks: format, architecture, coverage, ownership 0 failures.
