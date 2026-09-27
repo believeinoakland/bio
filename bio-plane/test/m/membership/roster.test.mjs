@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, V } from "./fixture.mjs";
+import { MACHINE_CLASS_PREFIX, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 
 test("R12 memberAdd: NOT_AN_ADMIN for a non-administrator member, a machine credential accepted; refusals in order", async () => {
   const w = await world().group("ann");
@@ -127,12 +128,46 @@ test("R19 publishing a pairing is the member's or an administrator's per-member 
   const w = await world().group("ann", "bob");
   assert.deepEqual(w.m.memberPairings().pairings, []);
   assert.equal(w.m.memberPairingSet({ memberId: "nobody", published: true, by: "admin" }).reason, "NO_SUCH_MEMBER");
-  assert.equal(w.m.memberPairingSet({ memberId: "ann", published: true, by: "bob" }).reason, "PAIRING_NOT_YOURS");
+  const notYours = w.m.memberPairingSet({ memberId: "ann", published: true, by: "bob" });
+  assert.deepEqual([notYours.ok, notYours.reason, notYours.code, notYours.check, notYours.translation, notYours.by],
+    [false, "PAIRING_NOT_YOURS", "PAIRING_NOT_YOURS", "C-96.12", CUSTODIAL_CHECKS.PAIRING_NOT_YOURS.translation, "bob"]);
   assert.equal(w.m.memberPairingSet({ memberId: "ann", published: true, by: "ann" }).ok, true);
   assert.equal(w.ops("by=second", { memberId: "bob", published: true }).memberpairingset().ok, true);
-  assert.deepEqual(w.ops().memberpairings().pairings, [{ handle: "ann", cover: "cover of ann" }, { handle: "bob", cover: "cover of bob" }]);
+  assert.deepEqual(w.ops().memberpairings().pairings, [{ handle: "ann", cover: "cover of ann", published: true },
+                                                      { handle: "bob", cover: "cover of bob", published: true }]);
   assert.equal(w.m.memberList({}).members.find((r) => r.member_id === "ann").pairing_published, true);
   w.m.memberPairingSet({ memberId: "bob", published: false, by: "bob" });
   assert.deepEqual(w.m.memberPairings().pairings.map((p) => p.handle), ["ann"]);
   for (const r of w.m.memberList({}).members) assert.ok(!("cover" in r), "R17 still holds for the roster");
+});
+
+test("R19 memberPairings answers each viewer only what R19 lets it see: an unpublished pairing reaches its member and the administrators (N85, K124)", async () => {
+  const w = await world().group("ann", "bob", "cal");
+  w.m.memberPairingSet({ memberId: "ann", published: true, by: "ann" });
+  await w.m.memberAdd({ memberId: "dee", cover: "cover of dee", by: "admin" });   // invited, never enrolled: no handle
+  const handles = (a) => a.pairings.map((p) => p.handle);
+  const all = ["ann", "bob", "cal", "second"];
+  // published pairings reach every caller, and with no stamp only those (fails closed)
+  assert.deepEqual(handles(w.m.memberPairings()), ["ann"]);
+  for (const v of [null, "", "junk", "member:", `${MACHINE_CLASS_PREFIX}member`, `${MACHINE_CLASS_PREFIX}ai`, V("nobody")])
+    assert.deepEqual(handles(w.m.memberPairings({ viewer: v })), ["ann"], JSON.stringify(v));
+  // a member sees the published ones and their own
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("bob") })), ["ann", "bob"]);
+  assert.deepEqual(w.m.memberPairings({ viewer: V("bob") }).pairings.find((p) => p.handle === "bob"),
+    { handle: "bob", cover: "cover of bob", published: false });
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("ann") })), ["ann"]);
+  // an administrator sees every enrolled member's pairing, by the administer stamp or as a viewer
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("cal"), administer: "1" })), all);
+  assert.deepEqual(handles(w.m.memberPairings({ administer: true })), all);
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("second") })), all, "an active administrator");
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: "admin" })), all, "the founder");
+  for (const no of ["0", "true", "", false, 1]) assert.deepEqual(handles(w.m.memberPairings({ viewer: V("cal"), administer: no })),
+    ["ann", "cal"], `administer ${JSON.stringify(no)} is not the stamp`);
+  // an administrator no longer active is an ordinary viewer; a revoked member still sees their own
+  w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("second") })), ["ann", "second"]);
+  // the op passes the stamps through
+  assert.deepEqual(handles(w.ops(`viewer=${encodeURIComponent(V("bob"))}`).memberpairings()), ["ann", "bob"]);
+  assert.deepEqual(handles(w.ops("administer=1").memberpairings()), all);
+  assert.deepEqual(handles(w.ops("", { administer: "1", viewer: "admin" }).memberpairings()), ["ann"], "a body is never a stamp");
 });

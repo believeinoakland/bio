@@ -80,16 +80,20 @@ test("R35 projectLeave: records leaving with a comment, removes nobody; the last
 
 test("R36 R63 projectRemove: refusals; removes whether or not they asked; every removal kept and readable", async () => {
   const w = await projectWorld();
+  w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });   // a participant who stays
+  w.m.projectJoin({ projectId: "PROJ-P", by: "dee", viewer: V("dee") });
+  await w.enrol("eve");                                                                     // outside the project
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "second", viewer: V("second") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }).reason, "NO_SUCH_HANDLE");
-  assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") }).reason, "NOT_A_PARTICIPANT");
+  assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "eve", by: "ann", viewer: V("ann") }).reason, "NOT_A_PARTICIPANT");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "ann", by: "ann", viewer: V("ann") }).reason, "OWNER");
   const r = w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", comment: "did not show up", viewer: V("ann") });
   assert.deepEqual([r.ok, r.removed, r.comment], [true, true, "did not show up"]);
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "cal", by: "ann", viewer: V("ann") }).ok, true, "an invited one too");
   assert.equal(w.m.participation("PROJ-P", "bob"), null);
-  for (const reader of ["ann", "second"]) {
+  assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "eve" }).reason, "NO_SUCH_PROJECT", "not a participant");
+  for (const reader of ["ann", "dee", "second"]) {   // an owner, every participant, an administrator
     const rm = w.m.projectParticipants({ projectId: "PROJ-P", by: reader }).removals;
     assert.deepEqual(rm.map((x) => [x.handle, x.removedBy, x.reason]), [["bob", "ann", "did not show up"], ["cal", "ann", null]]);
     for (const x of rm) assert.match(x.at, /^\d{4}-/);
