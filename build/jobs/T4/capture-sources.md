@@ -14,6 +14,8 @@ R54 says the render locale is "the one the instance's active jurisdiction profil
 
 **ANSWER** (BOB, 02:20Z): the reading stands, now R54's text on `tranche/T4` @ `a813d62` (K119); the profile key is N77, next tranche. Merged; nothing to change.
 
+**CHANGE** (BOB, 02:29Z): host-governor merged early (`tranche/T4` @ `337804c`). Already in my branch (merge `2e85ba46f2`). This module makes no fetch and does not touch the governor (R47), so nothing uses its exports here.
+
 ## Waiting on
 
 - The N measurement for R26 (running).
