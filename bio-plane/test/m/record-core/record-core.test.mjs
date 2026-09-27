@@ -971,8 +971,8 @@ test("R59 R18: a registered audit check runs over every page bundle beside the c
   const known = new Set(ids);
   const base = await rc.auditPass({ limit: 10 });
   const got = [];
-  assert.deepEqual(rc.registerAuditCheck("later", async (input) => {
-    got.push(input);
+  assert.deepEqual(rc.registerAuditCheck("later", async (input, ctx) => {
+    got.push({ ...input, ctx });
     return input.bundleId === ids[1] ? [{ check: "L-1", code: "LATE", severity: "error", message: "late finding" },
                                         { check: "L-2", severity: "warning", message: "only a warning" }] : [];
   }), { ok: true, module: "later" });
@@ -983,8 +983,9 @@ test("R59 R18: a registered audit check runs over every page bundle beside the c
   assert.deepEqual(got.slice(-5).map((g) => g.bundleId), ids, "every page bundle, in order");
   const g = got.at(-1);
   assert.ok(g.files instanceof Map && g.elidedPaths instanceof Set && typeof g.sha256 === "function" && typeof g.sha512 === "function");
-  assert.equal(g.image["bundle.md"], rc.readImage(ids[4])["bundle.md"]);
-  assert.equal(g.marker, "ctx", "R45's context reaches the registered check");
+  assert.deepEqual(g.raw, rc.readImage(ids[4]));
+  assert.deepEqual([...g.files.keys()].sort(), Object.keys(g.raw).filter((k) => typeof g.raw[k] === "string").sort());
+  assert.deepEqual(g.ctx, { earnedRegistry: null, marker: "ctx" }, "R45's context reaches the registered check as its second argument");
   assert.equal(g.resolveTarget(ids[0]), true); assert.equal(g.resolveTarget("INFO-2099-0000-x"), false);
   const catOf = async (id) => (await expected(rc, id, known)).length;
   const bErr = await catOf(ids[1]), cErr = await catOf(ids[2]);
@@ -1018,4 +1019,5 @@ test("R59 R18: a registered audit check runs over every page bundle beside the c
   got.length = 0;
   await rc.auditPass({ visible: (id) => id === ids[3] });
   assert.deepEqual(got.map((x) => x.bundleId), [ids[3]]);
+  assert.deepEqual(got[0].ctx, {}, "no context given: an empty one");
 });
