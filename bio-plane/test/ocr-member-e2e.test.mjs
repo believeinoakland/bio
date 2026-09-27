@@ -565,6 +565,21 @@ console.log("\n--- 10 · THE READ-TIME RE-READ, on the REAL engine (CPDF-19 / D-
      cannot is that the lifted seam reaches a REAL member and composes the chain from
      its REAL answer; the refusals, the stale mark and the observation are driven
      there against a stub, deliberately, and are not repeated here. */
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R35, D-616), never exempted, and taken from D-616's own
+     correction of this section (`land/worker/D-616` @ 849c1a091b, which extraction's T5-2 built). This section
+     re-read the capture section 4 filed and expected the engine to transcribe its page AGAIN. That capture's reading
+     already holds the page's transcription (the acquire read it at tier 3 and its text units were filed), and R35 is
+     that a re-read seeds tier 3 with the pages the stored reading transcribed and asks only for the rest. The old
+     assertion was right about the seam reaching the real member and wrong about WHEN it should. So the first arm
+     pins the rule on the real path, and the real-engine arms below are driven where a re-read SHOULD reach the
+     engine: the same capture filed under a reading whose text the record does not hold (no text units), where the
+     page is asked again exactly as before. */
+  const again = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
+  t("D-616: a capture whose page the record already holds transcribed is NOT sent to the engine again",
+    [again.reextraction?.performed, /already transcribed/.test(again.reextraction?.why || "")], [false, true]);
+  const { text_units: _held, ...noText } = real;
+  t("the same capture is filed under a reading whose text the record does not hold",
+    (await promoteDoc(noText)).promoted, true);
   const re = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
   t("the read op now REACHES TIER 3 when asked", [re.ok, re.tier], [true, 3]);
   t("it was performed and written", [re.reextraction?.performed, re.reextraction?.written], [true, true]);

@@ -150,7 +150,10 @@ try {
       Array.from({ length: 23 }, (_, i) => i + 1));
     t("24 invocations in all — the budget, not the page count", log.length, 24);
     t("24 pages transcribed, 6 stay unread", [filledOf(rd), unreadOf(rd)], [24, 6]);
-    t("the basis says the tail was NOT ASKED, from which page, and whose limit", /6 of them \(from page 24\) were not asked for in this request.*32 Worker invocations per request — their claim/.test(rd.basis || ""), true);
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5, "the note says which"): the loop's note now NAMES
+       the pages it did not merge, numbered from 1 (`describePages`): the tail of 0-based pages 24..29 is "pages 25-30",
+       where the old sentence gave only its first page, 0-based ("from page 24"). */
+    t("the basis says the tail was NOT ASKED, from which page, and whose limit", /6 of them \(pages 25-30\) were not asked for in this request.*32 Worker invocations per request — their claim/.test(rd.basis || ""), true);
     t("and the capture stays a tier-3 candidate", rd.tier3_candidate, true);
   }
   {
@@ -166,7 +169,9 @@ try {
     t("a binding call that THROWS does not fail the acquire", [r.ok, !!r.document], [true, true]);
     t("the pages before it are kept (0,1,2) and the rest stay unread", [filledOf(rd), unreadOf(rd)], [3, 3]);
     t("the loop stopped at the throw", log.length, 4);
-    t("the basis names the page whose call failed", /the call for page 3 failed, so 3 page\(s\) from it on were not transcribed/.test(rd.basis || ""), true);
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5): the call for 0-based page 3 is "page 4", numbered from
+       1, and the pages from it on are now named ("pages 4-6"). */
+    t("the basis names the page whose call failed", /the call for page 4 failed, so 3 page\(s\) from it on \(pages 4-6\) were not transcribed/.test(rd.basis || ""), true);
   }
   {
     const { rd, log } = await stubRun("refuse", "/scan6.pdf");
@@ -177,7 +182,8 @@ try {
   {
     const { rd, doc } = await stubRun("version", "/scan6.pdf");
     t("a page answered by a different engine build is not merged", [filledOf(rd), unreadOf(rd)], [5, 1]);
-    t("and the basis says why", /1 page\(s\) were answered under a different engine build/.test(rd.basis || ""), true);
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R5): the page is now named (0-based 4 = "page 5"). */
+    t("and the basis says why", /1 page\(s\) \(page 5\) were answered under a different engine build/.test(rd.basis || ""), true);
     t("the chain names the ONE build the merged pages came from",
       (Array.isArray(doc?.text_source) ? doc.text_source : rd.text_source || []).filter((s) => s.step === "ocr").map((s) => s.version), ["0.11.0"]);
   }

@@ -190,8 +190,15 @@ const viaOp = await j(`/api/pdfstructure?token=mem-fmt&sha256=${sha}`);
    and SHA-256 of the text it answers with (framework Part II §16, "Reading provenance") — which is the
    op's own statement about its text and no part of the registry entry's output. So the byte-for-byte
    comparison is made with that ONE key removed by name, and its presence is asserted beside it. */
-const { provenance: viaProv, ...viaOpSans } = viaOp;
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests; extraction R52, K139): the op also serves R52's two additive keys,
+   `membership` and `membershipWhy` (REC-206's containment membership, beside `links[]` and never inside them), which
+   R31 is worded to allow and which are the op's own derivation, no part of the registry entry's output. They are
+   removed BY NAME, as REC-206's own branch compared, and their presence (with no system stating link shapes, null and
+   its reason) is asserted beside it. */
+const { provenance: viaProv, membership: viaMembership, membershipWhy: viaMembershipWhy, ...viaOpSans } = viaOp;
 t("D-536: the op states the provenance of the text it serves", viaProv && viaProv.scheme, "reading-provenance/1");
+t("R52: the op serves membership beside links[] — null here, with its reason (no profile states the link shapes)",
+  [viaMembership, viaMembershipWhy], [null, "no_active_profile_states_item_and_file_link_shapes"]);
 t("the op's output is the registry entry's output plus the tier stamp, byte for byte",
   viaOpSans, { ...direct, tier: 1 });
 t("the deferred link survives the registry hop", viaOp.links[0].target.url, LINK_URL);
