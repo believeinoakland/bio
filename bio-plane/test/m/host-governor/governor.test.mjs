@@ -194,6 +194,14 @@ test("R9: 429, 403 and 503 escalate the cool-off with consecutive refusals up to
   }
   // the status may arrive as text
   assert.equal(world().g.governorReport({ host: "t", status: "429" }).cooloff_ms, 60_000);
+  // the cool-off ends at the later of the one standing and R9's figure (K122): a shorter refusal leaves a longer one
+  const k = world();
+  const long = k.g.governorReport({ host: "k", status: 429, retry_after_ms: 3_600_000 });
+  k.step(1_000);
+  assert.deepEqual(k.g.governorReport({ host: "k", status: 403 }),
+    { recorded: true, refusals: 2, cooloff_until: long.cooloff_until, cooloff_ms: long.cooloff_until - (T0 + 1_000) });
+  assert.equal(k.row("k").last_refusal_status, 403);
+  assert.equal(k.row("k").last_refusal_at, T0 + 1_000);
 });
 
 test("R10: any other status (404, 500, 0 for no response) changes nothing and is answered as ignored", () => {

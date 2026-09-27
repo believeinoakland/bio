@@ -4,7 +4,7 @@
 
 ## Status
 
-COMPLETE (2026-09-27). Q1 is answered on my reading unless BOB rules otherwise; nothing waits on it.
+COMPLETE (2026-09-27), again after BOB's ANSWER to Q1: `tranche/T4` @ `97bc628` merged (K122: R9 now reads as built); R9's test gained the standing-cool-off case; tests and checks re-run below.
 
 ## Question to BOB (sent 2026-09-27)
 
@@ -21,7 +21,7 @@ COMPLETE (2026-09-27). Q1 is answered on my reading unless BOB rules otherwise; 
 
 ## Flaws fixed in the module (beyond the entries)
 
-- R21: a later, shorter refusal shortened a standing cool-off (Q1).
+- R21: a later, shorter refusal shortened a standing cool-off (Q1; answered by K122, R9 reworded).
 - R10: an ignored status created a row for a host never seen; it now changes nothing.
 - R5: a clock that stepped back refilled negatively; the elapsed time is floored at 0.
 - R16: `Retry-After` of a negative number gave a negative wait, and an unreadable one gave 0; now never below 0, and `null` when unreadable.
@@ -47,4 +47,4 @@ Nothing.
 - `node checks/coverage.mjs … host-governor`: 25 of 25 live requirement ids named by a test; 0 failures.
 - `node checks/ownership.mjs … host-governor tranche/T4`: 9 files changed; legacy-store 13 lines added, 163 removed; legacy-index 6 added, 82 removed; 0 failures. Every added legacy line is a delegation, an import from `./host-governor/`, or a call to it.
 
-Size: test runs 42, module lines 360
+Size: test runs 43, module lines 360
