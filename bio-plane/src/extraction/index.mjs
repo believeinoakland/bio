@@ -248,7 +248,8 @@ export class Extraction {
   }
 
   /** R24: a later module registers once; its function runs after each write, in the same transaction, in the
-   *  modules' total order (the host registers them in that order), and a throw fails the whole write. */
+   *  modules' total order (the host registers them in that order), with `unitsBefore` (the capture's indexed units
+   *  before the write, null when never indexed), and a throw fails the whole write. */
   onReading(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
@@ -343,6 +344,13 @@ export class Extraction {
     return this.core.transact(() => {
       const before = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
       const chainBefore = before ? (safeJson(before.reading) || {}).text_source ?? null : null;
+      /* R24 (content REPORT 4): the capture's indexed units as they stood before this write, so a listener can
+         weigh the old text against the new; null when the capture was never indexed. */
+      const unitsBefore = this.#one(`SELECT 1 AS x FROM capture_text_state WHERE capture_sha=?`, sha)
+        ? this.#rows(`SELECT extent, ref, text, truncated, seq FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT ?`,
+                     sha, CAPTURE_TEXT_CAPTURE_UNIT_BOUND)
+            .map((u) => ({ extent: safeJson(u.extent), ref: u.ref, text: u.text, truncated: !!u.truncated, seq: u.seq }))
+        : null;
       const entities = Array.isArray(reading.entities) ? reading.entities : [];
       const kept = this.#keepReading(bundleId, sha, reading);
       const own = composed === true || (composed == null && this.#composedHere(reading));
@@ -397,7 +405,7 @@ export class Extraction {
       const chainAfter = Array.isArray(reading.text_source) ? reading.text_source : null;
       const listeners = {};
       for (const l of this.#listeners)
-        listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, indexed, author });
+        listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, unitsBefore, indexed, author });
       return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed" };
     });
   }

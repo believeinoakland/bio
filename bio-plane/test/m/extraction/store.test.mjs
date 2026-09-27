@@ -86,7 +86,14 @@ test("R24: a later module registers once (a second is LISTENER_DECLARED); listen
   assert.deepEqual(e.chainBefore, layer(1));
   assert.deepEqual(e.chainAfter, ocrChain());
   assert.ok(e.indexed && "written" in e.indexed);
-  assert.deepEqual(seen[1][1], ["author", "bundleId", "captureSha", "chainAfter", "chainBefore", "indexed", "reading"]);
+  assert.deepEqual(seen[1][1], ["author", "bundleId", "captureSha", "chainAfter", "chainBefore", "indexed", "reading", "unitsBefore"]);
+  assert.deepEqual(seen[0][1].unitsBefore, null, "never indexed before the first write");
+  assert.deepEqual(e.unitsBefore, [], "indexed, with no unit, before the second");
+  const u = [{ extent: { kind: "pdf-page", page: 0, rect: null }, text: "old words", seq: 0 }];
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: r, textUnits: u });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: r, textUnits: [{ ...u[0], text: "new words" }] });
+  const last = seen[seen.length - 2][1];
+  assert.deepEqual(last.unitsBefore.map((x) => [x.text, x.seq, x.truncated, x.extent.page]), [["old words", 0, false, 0]]);
   assert.deepEqual(out.listeners, { content: { staled: 2 }, "observation-log": { observed: 1 } });
 });
 
