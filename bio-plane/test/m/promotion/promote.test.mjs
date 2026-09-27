@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
-import { INLINE_MAX } from "../../../src/promotion/index.mjs";
+import { INLINE_MAX, PROMOTION_CHECKS } from "../../../src/promotion/index.mjs";
 import { STATES, vocabFor, normalizeType, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as C from "../../../checks/bio-checks.mjs";
 
@@ -415,4 +415,37 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
     assert.deepEqual([r.code, r.check, r.translation], [r.reason, row.check, row.translation], r.reason);
   }
   assert.ok(seen.size >= 8, `answers carrying a catalogue row: ${[...seen]}`);
+});
+
+test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
+  const rows = Object.entries(PROMOTION_CHECKS);
+  assert.equal(rows.length, 12);
+  const checks = new Set();
+  for (const [code, row] of rows) {
+    assert.match(code, /^[A-Z_]+$/);
+    assert.match(row.check, /^C-\d+\.\d+$/, code);
+    assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
+    assert.match(row.where, /^src\/promotion\/index\.mjs #promote > is-[a-z-]+$/, code);
+    checks.add(row.check);
+  }
+  assert.equal(checks.size, rows.length, "one check id per row");
+  /* Each row's code is the one promote answers when its condition is met. */
+  const { p, head } = held();
+  const got = {
+    PROMOTE_SNAP_KEY_UNSTATED: p.promote({ ...create("INFO-2026-0009", infoDoc("INFO-2026-0009")), snapKey: " " }),
+    PROMOTED_FILE_PATH_UNSTATED: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0009"), { files: [{ text: "x" }] })),
+    PROMOTED_FILE_CONTENT_UNSTATED: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0009"), { files: [{ path: "bundle.md" }] })),
+    PROMOTED_FILE_BYTES_UNSTATED: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0009"), { files: [{ path: "bundle.md", text: infoDoc("INFO-2026-0009") }, { path: "b", blobSha: "a".repeat(64) }] })),
+    BUNDLE_MD_UNREADABLE: p.promote(revise(ID, head.bundleSha, "no front matter")),
+    PROMOTED_TYPE_UNSTATED: p.promote(create("INFO-2026-0009", doc({ id: "INFO-2026-0009", current_state: "collected", created: T0, last_updated: T0 }))),
+    PROMOTED_FIELD_UNSTATED: p.promote(create("INFO-2026-0009", doc({ id: "INFO-2026-0009", object_type: "information" }))),
+    REVISION_REDATES_CREATION: p.promote(revise(ID, head.bundleSha, infoDoc(ID, { created: T1 }))),
+    REVISION_REGROUPS_BUNDLE: p.promote(revise(ID, head.bundleSha, infoDoc(ID, { group: "another-group" }))),
+    BUNDLE_ID_DISAGREES: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0010"))),
+    ENVELOPE_DATES_DISAGREE: p.promote(create("INFO-2026-0009", infoDoc("INFO-2026-0009"), { meta: { last_updated: T1 } })),
+    STATE_MOVE_UNDECLARED: p.promote(revise(ID, head.bundleSha, infoDoc(ID, { current_state: "nonsense" }))),
+  };
+  assert.deepEqual(Object.keys(got).sort(), rows.map(([c]) => c).sort());
+  for (const [code, r] of Object.entries(got))
+    assert.deepEqual([r.reason, r.code, r.check, r.translation], [code, code, PROMOTION_CHECKS[code].check, PROMOTION_CHECKS[code].translation], code);
 });

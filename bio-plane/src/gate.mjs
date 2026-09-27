@@ -211,7 +211,15 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    ratification is judged by C-26.1–C-26.7 again once that lands. MINOR, rule 17 moving the stamp for removed
    checks, 1.34.0's precedent. Census 568 -> 519, sha256 e4d92a7e…, behaviour source 18a61872…: the d470 suite's own
    print on this tree, whose re-pin (A3) is legacy-tests' (T5-12). */
-export const CATALOG_VERSION = "1.35.0";
+/* 1.36.0 (PROMOTION #5, T6 layer 2, 2026-09-27; LEGACY-CHECKS #2's REPORT 7, K163): THIRTY-ONE ARRIVALS, NO DEPARTURES,
+   NONE CHANGED. LEGACY-CHECKS #2 (T6 layer 1) added C-22.17 AI_LOG_NEVER_LOOKED_STORED, C-28.17 CAPTURE_FETCH_FAILED,
+   C-28.18 CAPTURE_REQUEST_NOT_RETRYABLE, C-81.11–C-81.14 (the theme withdrawal, carried word for word from connections),
+   the new families REGISTRATION_CHECKS C-102.1–C-102.5, PROVENANCE_ACT_CHECKS C-103.1–C-103.7 and
+   EXTRACT_PROPOSE_CHECKS C-104.1–C-104.12. It moved 71 `where`s, which name where a refusal is minted and change no
+   check's condition, code or translation. MINOR, rule 17 moving the stamp for arrivals. Census 519 -> 550, sha256
+   d35d735c…, behaviour source 66baec44…: the d470 suite's own print on this tree, whose re-pin (A3, A9) is
+   legacy-tests' (T6-14). */
+export const CATALOG_VERSION = "1.36.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
