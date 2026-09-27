@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
+import { calibrationOf, CALIBRATION_SCHEMA } from "../../../src/calibration/index.mjs";
 import { registerFormat, unregisterFormat, getFormat } from "../../../src/formats.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
@@ -81,6 +82,11 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
   core.migrate();
   const membership = membershipOf(ctx, { record: core });
   membership.migrate();
+  /* `cal: "module"` is calibration itself (calibrationOf over this storage), its tables created. */
+  if (cal === "module") {
+    for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
+    cal = calibrationOf(ctx, { record: core });
+  }
   const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env });
   x.migrate();
   return { s, ctx, x, core, membership, evidence, cal, prom, env,

@@ -183,3 +183,36 @@ test("R9: a page tier 2 wins keeps a still-true image_unread marker; a page OCR 
   assert.ok(p0.undetermined.some((u) => u.reason === "image_unread"), "kept on the page tier 2 won");
   assert.ok(!p1.undetermined.some((u) => u.reason === "image_unread" || u.reason === "no_text_layer"), "discharged where OCR filled");
 });
+
+test("R51: an agenda item's membership in a file is derived from containment under the link shapes the active profiles state, labelled machine work graded C, beside links[] and never inside them; none stated, null with the reason", async () => {
+  const { deriveMembership, membershipBeside, checkMembershipLabel, MEMBERSHIP_LABEL } = await import("../../../src/extraction/filemembership.mjs");
+  const view = { systems: [{ origin: "t.clerk", hosts: ["records.t.example"],
+    links: { item: { re: "^/item\\?id=\\d+", flags: "i" }, file: { re: "^/file\\?id=\\w+", flags: "i" } } }] };
+  const L = (url, page, y) => ({ partition: "deferred", target: { url }, source: page == null ? null : { page, rect: [10, y - 10, 100, y] } });
+  const structure = { links: [
+    L("https://records.t.example/file?id=f0", 0, 790),     // above the first item
+    L("https://records.t.example/item?id=1", 0, 700),
+    L("https://records.t.example/file?id=a", 0, 650),
+    L("https://records.t.example/file?id=b", 0, 100),
+    L("https://records.t.example/item?id=2", 1, 500),
+    L("https://records.t.example/file?id=c", 1, 400),
+    L("https://records.t.example/file?id=nr", null, 0),     // no page rect
+    L("https://elsewhere.example/item?id=3", 1, 300),        // another host: not this system's
+  ] };
+  const before = JSON.stringify(structure.links);
+  const { membership: m } = deriveMembership(structure, view);
+  assert.deepEqual(m.items.map((g) => [g.item.url.split("=")[1], g.files.map((f) => f.url.split("=")[1])]), [["1", ["a", "b"]], ["2", ["c"]]]);
+  assert.deepEqual(m.unplaced.map((u) => u.why).sort(), ["above_the_first_item", "no_page_rect"]);
+  assert.deepEqual(m.counts, { items: 2, placed: 3, unplaced: 2 });
+  for (const [k, v] of Object.entries(MEMBERSHIP_LABEL)) { assert.equal(m[k], v); for (const g of m.items) assert.equal(g[k], v); }
+  assert.equal(m.items[0].item.anchor.why, "no_anchor_carried");
+  assert.equal(JSON.stringify(structure.links), before, "links[] is untouched");
+  assert.equal(checkMembershipLabel({ ...m, grade: "B" }), "membership.grade");
+  assert.deepEqual(membershipBeside({ ...structure }, { systems: [] }), { membership: null, membershipWhy: "no_active_profile_states_item_and_file_link_shapes" });
+  assert.equal(membershipBeside({ links: [L("https://records.t.example/file?id=a", 0, 1)] }, view).membershipWhy, "no_item_links_of_a_stated_shape");
+  /* through the op: no held profile states link shapes, so the read answers null with the reason and writes nothing */
+  const { w, d } = await held(i2([{ page: 0, text: "x" }]));
+  const r = await withEntry(pdf(i2([{ page: 0, text: "x" }])), () => w.x.pdfStructure({ sha: d }));
+  assert.equal(r.body.membership, null);
+  assert.equal(r.body.membershipWhy, "no_active_profile_states_item_and_file_link_shapes");
+});

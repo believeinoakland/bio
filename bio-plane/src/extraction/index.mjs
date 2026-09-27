@@ -6,6 +6,7 @@
    sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { calibrationOf } from "../calibration/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { getFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
@@ -17,6 +18,7 @@ import { compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../read
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow } from "./checks.mjs";
 import { driftObligations } from "./drift.mjs";
+import { membershipBeside } from "./filemembership.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
 
@@ -94,14 +96,15 @@ const instances = new WeakMap();
 
 /** K61: the one Extraction for this object's storage. `opts` is read on the first call only: `env` (the object's
  *  bindings: PDF_WORKER, OCR_WORKER, VERSION), `record` (`recordOf(ctx)`), `membership` (`membershipOf(ctx)`),
- *  `calibration` (calibration's services R10–R12 as its Provides state them), `promotion` (whose `registerStep`
+ *  `calibration` (`calibrationOf(ctx)`: its R10–R12), `promotion` (whose `registerStep`
  *  this module's projection joins, R20). A test may pass its own. */
 export function extractionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let x = instances.get(storage);
   if (!x) {
     const record = opts.record ?? recordOf(ctx);
-    x = new Extraction(storage, { ...opts, record, membership: opts.membership ?? membershipOf(ctx, { record }) });
+    x = new Extraction(storage, { ...opts, record, membership: opts.membership ?? membershipOf(ctx, { record }),
+                                  calibration: opts.calibration ?? calibrationOf(ctx, { record }) });
     instances.set(storage, x);
   }
   return x;
@@ -897,6 +900,9 @@ export class Extraction {
         };
       }
     }
+    /* R51 (N48, K135): the item-to-file membership derived from containment, beside `links[]` and never inside it,
+       under the link shapes the active profiles state; null with its reason when none applies. */
+    Object.assign(structure, membershipBeside(structure, this.view()));
     /* D-536: the served text's provenance, by the one rule a reading's is composed by. */
     structure.provenance = await readingProvenance({ text: structure.text || null, chain: structureChain,
       tier: Number.isInteger(structure.tier) ? structure.tier : null, container: "pdf", planeVersion: e.VERSION || null });
@@ -905,9 +911,10 @@ export class Extraction {
 
   /* ---- drift obligations (R38–R40) ---- */
 
-  /* R39's derivation: calibration's worse supersessions (its R11) against the text-source rows naming a
-     calibration, read at most TEXT_SOURCE_LIMIT_MAX with `truncated`. `supersededId` narrows it (R40). */
-  #driftFor(supersededId = null) {
+  /** R39's derivation, unfiltered by viewer: calibration's worse supersessions (its R11) against the text-source rows
+   *  naming a calibration, read at most TEXT_SOURCE_LIMIT_MAX with `truncated`. `supersededId` narrows it (R40). The
+   *  legacy store's content-axis frontier reads it whole, and gates its own rows. */
+  driftFor(supersededId = null) {
     const c = this.calibration;
     if (!c || typeof c.worseSupersessions !== "function")
       return Object.assign([], { unavailable: true, limit: TEXT_SOURCE_LIMIT_MAX, truncated: false });
@@ -935,7 +942,7 @@ export class Extraction {
    *  whole; `regraded: 0`. */
   calibrationDrift({ engine = null, viewer = null } = {}) {
     const visible = this.#redactor(viewer);
-    const raw = this.#driftFor(null);
+    const raw = this.driftFor(null);
     const all = raw.filter((o) => (engine ? o.engine === engine : true)).filter((o) => visible(o.bundle_id) !== null);
     return { ok: true, ...(engine ? { engine } : {}), obligations: all, count: all.length,
              limit: raw.limit, truncated: !!raw.truncated, regraded: 0,
@@ -956,7 +963,7 @@ export class Extraction {
     const verdict = e && e.drift && typeof e.drift === "object" ? e.drift.verdict ?? e.drift.drift : e && e.drift;
     const worse = verdict === "worse" || (e && e.drift && e.drift.raises_obligation === true);
     if (!worse || !e.supersedes) return Object.assign([], { truncated: false });
-    const out = this.#driftFor(e.supersedes);
+    const out = this.driftFor(e.supersedes);
     return Object.assign([...out], { truncated: !!out.truncated });
   }
 }
@@ -974,6 +981,8 @@ export function extractionOps(x, url, body, env) {
     readingtermsclear: () => x.readingTermsClear(body || {}),
     readinghistoryclear: () => x.readingHistoryClear(body || {}),
     reindexnames: () => x.reindexNames(body || {}),
+    /* R39: a read; the viewer is the control plane's stamp (its rows name the bundles a capture is filed in). */
+    calibrationdrift: () => x.calibrationDrift({ engine: q("engine"), viewer: q("viewer") }),
     /* R1 (K72 (8)): the acquire op's reading, over the document capture filed. */
     extractread: () => x.read(body && body.document, { storeName: q("store") || "bio", env }),
     /* R31–R35: the control plane's stamps in the query. */

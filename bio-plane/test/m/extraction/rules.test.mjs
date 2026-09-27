@@ -100,6 +100,26 @@ test("R40: registered with calibration.onCalibration, the listener returns R39's
   assert.deepEqual([...same], []);
 });
 
+test("R40 R39: with calibration itself, op=calibrate's echo of a worse measurement is exactly op=calibrationdrift's rows for the superseded calibration, and nothing is re-graded", async () => {
+  const w = fresh({ cal: "module" });
+  bundle(w.s, "B-1");
+  const probe = (over) => ({ engine: "tess", version: "5", at: "2026-09-01T00:00:00Z", cap: "B", probe_id: "P-1",
+                             probe_inputs: { corpus: "c" }, scores: { cer: 0.02 }, ...over });
+  const first = w.cal.calibrationRecord(probe(), { principal: "member:m1" });
+  assert.equal(first.ok, true);
+  assert.deepEqual(first.obligations, []);
+  const id = first.calibration_id;
+  w.x.writeReading({ bundleId: "B-1", captureSha: "1".repeat(64), reading: { entities: [], at: "a",
+    text_source: [{ step: "pixels", cap: "B", measured_by: "m", calibration: id }, { step: "ocr", engine: "tess", version: "5", cap: "B", measured_by: "m", calibration: id }] } });
+  const worse = w.cal.calibrationRecord(probe({ at: "2026-09-10T00:00:00Z", cap: "C" }), { principal: "member:m1" });
+  assert.equal(worse.drift.raises_obligation, true);
+  assert.equal(worse.obligations_raised, 1);
+  assert.deepEqual(worse.obligations, w.x.calibrationDrift({ viewer: "class:admin" }).obligations);
+  assert.equal(worse.regraded, 0);
+  const better = w.cal.calibrationRecord(probe({ at: "2026-09-20T00:00:00Z", cap: "A" }), { principal: "member:m1" });
+  assert.deepEqual(better.obligations, []);
+});
+
 test("R41: the EXTRACT role's vocabulary: its run mode, the functions something emits, and the refusals of an unknown function and a missing version", () => {
   assert.equal(EXTRACT_RUN_MODE, "extract");
   assert.deepEqual(Object.keys(EXTRACT_FUNCTIONS), ["propose-reading"]);
