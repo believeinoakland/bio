@@ -137,6 +137,9 @@ class Promotion {
   #record; #membership; #now; #order;
   #steps = [];            // {module, check, project, seq}
   #facts = new Map();     // name -> {module, fn}
+  #listeners = [];        // {module, fn, seq}: R45's post-commit notice
+  #notices = new Map();   // accepted promotions awaiting their notice, by bundle and snap key
+  #delivering = false;
 
   constructor({ record, membership, now, order } = {}) {
     this.#record = record;
@@ -154,9 +157,69 @@ class Promotion {
       return { ok: false, reason: "STEP_DECLARED", module, detail: `${module} has already registered its step` };
     this.#steps.push({ module, check: typeof check === "function" ? check : null,
                        project: typeof project === "function" ? project : null, seq: this.#steps.length });
-    const rank = (m) => { const i = this.#order.indexOf(m); return i === -1 ? Infinity : i; };
-    this.#steps.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    this.#steps.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
+  }
+
+  /* A module's place in the total order; unknown modules run last, in the order they registered. */
+  #rank(m) { const i = this.#order.indexOf(m); return i === -1 ? Infinity : i; }
+
+  /* R45: a later module's listener, called once after each accepted promotion has committed. */
+  onCommitted(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
+    if (this.#listeners.some((l) => l.module === module))
+      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    this.#listeners.push({ module, fn, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /* R45: `promote` may run inside a caller's transaction, which record-core joins (its R32), so the commit it waits for
+     may be the caller's. record-core's transaction is synchronous, so by the time a microtask runs the outermost one has
+     committed or rolled back. The notice is delivered then, and only when the promotion's own manifest entry (its snap
+     key, base and bundle.md digest) is held: a promotion rolled back with its caller's transaction is never announced. */
+  #announce(n) {
+    if (!this.#listeners.length) return;
+    this.#notices.set(`${n.bundleId}\u0000${String(n.snapKey)}`, n);
+    if (this.#delivering) return;
+    this.#delivering = true;
+    queueMicrotask(() => this.#deliver());
+  }
+
+  #deliver() {
+    this.#delivering = false;
+    const due = [...this.#notices.values()];
+    this.#notices.clear();
+    for (const n of due) {
+      let held = false;
+      try {
+        const e = this.#record.manifestEntry(n.bundleId, n.snapKey);
+        const md = e && Array.isArray(e.files) ? e.files.find((f) => f && f.name === "bundle.md") : null;
+        held = !!md && String(e.base) === String(n.base) && md.sha256 === n.bundleSha;
+      } catch { held = false; }
+      if (!held) continue;
+      for (const l of this.#listeners) {
+        try {
+          const r = l.fn({ bundleId: n.bundleId, bundleSha: n.bundleSha, type: n.type, replay: n.replay });
+          if (r && typeof r.then === "function") r.then(null, () => {});
+        } catch { /* a listener's failure never changes the promotion or another listener's notice */ }
+      }
+    }
+  }
+
+  /* N56 (R40): a fact registered with this module, for a later module that reads it. Unprovided, it answers
+     FACT_UNAVAILABLE and never a value, so it is never read as false; a provider that throws answers FACT_FAILED. */
+  fact(name, ...args) {
+    const held = typeof name === "string" ? this.#facts.get(name) : undefined;
+    if (!held)
+      return { ok: false, reason: "FACT_UNAVAILABLE", fact: typeof name === "string" ? name : null,
+               detail: `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.` };
+    try { return { ok: true, fact: name, value: held.fn(...args) }; }
+    catch (e) {
+      return { ok: false, reason: "FACT_FAILED", fact: name,
+               detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` };
+    }
   }
 
   registerFact(name, module, fn) {
@@ -676,6 +739,9 @@ class Promotion {
           says: "neither the document nor the request stated these, so this revision keeps the values the record "
               + "already held for it" } } : {}) };
       for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
+      /* R45: announced once the transaction this promotion committed in has committed. */
+      this.#announce({ bundleId, bundleSha: committed.bundleSha, type: promotedType, replay, snapKey,
+                       base: head ? base : EMPTY_STRING_SHA });
       return answer;
     });
   }

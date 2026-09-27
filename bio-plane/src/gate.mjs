@@ -194,7 +194,13 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    its translation rewritten for both of membership's sites. MINOR, rule 17 moving the stamp for arrivals and a changed
    check. Census 566 -> 572, sha256 86ddf728…, behaviour source 1513f4a8…: the d470 suite's own print on this tree, whose
    re-pin is legacy-tests' (T4-5). */
-export const CATALOG_VERSION = "1.33.0";
+/* 1.34.0 (PROMOTION #3, T5 layer 2, 2026-09-27; entry N86): NO ARRIVALS, FOUR DEPARTURES FROM THE CATALOGUE, NONE CHANGED
+   BY THIS STEP. PROVENANCE #1 (T4 layer 3) moved C-18.1, C-18.3, C-18.4 and C-18.9 out of `bio-checks.mjs` into
+   `provenance` after 1.33.0 was minted, so two catalogues answered to 1.33.0. A ratification is still judged by them:
+   the plane runs them over the same image after this gate (`provenance.withRegisterChecks`, K72 (4)). MINOR, rule 17 moving the stamp for
+   removed checks. Census 572 -> 568, sha256 4f93c5f6…, behaviour source 4fa025ac…: the d470 suite's own print on this
+   tree, whose re-pin (A3, A9) is legacy-tests' (T5-12). */
+export const CATALOG_VERSION = "1.34.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
