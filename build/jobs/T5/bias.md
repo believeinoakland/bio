@@ -92,3 +92,7 @@ Size: test runs 30, module lines 1694
 - format 0 failures; architecture 10 files, 25 imports, 0 failures; coverage 41/41; ownership legacy-store 23 added, 1,412 removed, legacy-checks 0 added, 480 removed, 0 failures.
 
 Size: test runs 32, module lines 1694
+
+## ANSWER K150 (BOB #46, 08:26 UTC)
+
+- REPORTs 1–2 decided: the rows stay moved; promotion's two failing R18 arms and `CATALOG_VERSION` 1.35.0 are PROMOTION #4's, started once this branch is merged. Known, not this job's. BOB #45's CHANGE of 08:26 (merge, `entitiesOf(ctx).has` for R25) was already met at e4e61d4e6b, which contains `tranche/T5` @ 9132702d02 (progressions 79a9b525d9 included); the COMPLETE sent at 08:28 stands.
