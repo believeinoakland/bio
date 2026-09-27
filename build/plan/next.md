@@ -118,7 +118,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 
 ### Layer 1
 - **id-spaces** · N105.
-- **legacy-checks** · N94; the two comments at `VERSION_CHAIN_CHECKS`' and `AI_RUNS_CONTEXT_CHECKS`' headers stop pointing at `MEANING_READ_CHECKS` "above" (RETRIEVAL #1 REPORT 4); N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
+- **legacy-checks** · N94; the stale `where`s connections' move leaves and rows C-81.11–C-81.14 (connections R43, K152; CONNECTIONS #1's record); the two comments at `VERSION_CHAIN_CHECKS`' and `AI_RUNS_CONTEXT_CHECKS`' headers stop pointing at `MEANING_READ_CHECKS` "above" (RETRIEVAL #1 REPORT 4); N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
 - **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 and C-91.1–.3 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
