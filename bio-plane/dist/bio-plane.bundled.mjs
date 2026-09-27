@@ -66,6 +66,7 @@ __export(bio_checks_exports, {
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
+  EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   FILENAME_RE: () => FILENAME_RE,
   FORBIDDEN_ALIASES: () => FORBIDDEN_ALIASES,
   GOVERNING_LAWS_MAX: () => GOVERNING_LAWS_MAX,
@@ -107,11 +108,13 @@ __export(bio_checks_exports, {
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
+  PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
+  REGISTRATION_CHECKS: () => REGISTRATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
@@ -4084,6 +4087,18 @@ var AI_RUN_CHECKS = {
     check: "C-22.16",
     where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from store.mjs aiRunOpen",
     translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
+  },
+  /* N118 (LEGACY-TESTS #3 REPORT 10; observation-log R3, K148; T6, legacy-checks) — C-22.1 WAS MINTED FOR A SECOND
+  CONDITION. observation-log's `checkObservation` refuses a look that states NEVER_LOOKED (R3: NEVER_LOOKED is the
+  absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
+  C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
+  one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
+  reworded to cover both. observation-log mints it at its next job (N118's observation-log share); until then the
+  region below is unmarked and C-22.1 is still what that site answers. */
+  AI_LOG_NEVER_LOOKED_STORED: {
+    check: "C-22.17",
+    where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
+    translation: "That observation says nobody looked, and an observation is the record of a look. Never having looked is what the record says of a subject with no observation at all, so it is not written as one. A look that happened records what it found: nothing, something, part of it, or that it could not tell."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -4971,6 +4986,71 @@ var SUGGEST_CHECKS = {
     translation: "This reading says it is a kind of suggestion nobody recognises. The kinds are a closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside the set is a claim with nothing behind it."
   }
 };
+var EXTRACT_PROPOSE_CHECKS = {
+  NO_PROPOSER: {
+    check: "C-104.1",
+    where: "src/store.mjs extractPropose > is-extract-run",
+    translation: "This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot attribute. Nothing was proposed and no passage was marked citable."
+  },
+  NO_RUN: {
+    check: "C-104.2",
+    where: "src/store.mjs extractPropose > is-extract-run",
+    translation: "A machine proposes readings only as part of an investigation a member opened, and this named none. Nothing was proposed."
+  },
+  NO_SUCH_RUN: {
+    check: "C-104.3",
+    where: "src/store.mjs extractPropose > is-extract-run",
+    translation: "No investigation you can see is open under that name, so nothing was proposed. A member opens an investigation; the assistant may suggest one, and may not start it."
+  },
+  RUN_NOT_RUNNING: {
+    check: "C-104.4",
+    where: "src/store.mjs extractPropose > is-extract-door",
+    translation: "The investigation this names has ended, and an ended investigation takes no new proposals: its work is read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed."
+  },
+  NOT_AN_EXTRACT_RUN: {
+    check: "C-104.5",
+    where: "src/store.mjs extractPropose > is-extract-door",
+    translation: "This investigation was not opened to read documents for what they name, so it cannot propose readings. What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed."
+  },
+  NO_MINTS_BOUND: {
+    check: "C-104.6",
+    where: "src/store.mjs extractPropose > is-extract-door",
+    translation: "This investigation was opened with no limit on how many passages it may mark citable, and without a limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed."
+  },
+  MINTS_BOUND_REACHED: {
+    check: "C-104.7",
+    where: "src/store.mjs extractPropose > is-extract-door",
+    translation: "This investigation has already marked as many passages citable as it was allowed to, so it proposes nothing more and ends. Nothing was proposed."
+  },
+  NO_PROPOSALS: {
+    check: "C-104.8",
+    where: "src/store.mjs extractPropose > is-extract-door",
+    translation: "This named no readings to propose. A look that found nothing is recorded in the investigation's log of what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed."
+  },
+  NOT_A_DOCUMENT: {
+    check: "C-104.9",
+    where: "src/store.mjs extractPropose > is-extract-document",
+    translation: "That is not a captured document. A question, a project or an action has no pages or text of its own, so there is nothing in it to read or to point into. Nothing was changed."
+  },
+  NO_BYTES_HELD: {
+    check: "C-104.10",
+    where: "src/store.mjs extractPropose > is-extract-document",
+    translation: "The record holds no captured copy of that document, so there is no text in it to read or to point into. That is a fact about what has been captured, never about what the document says. Nothing was changed."
+  },
+  MINTS_BOUND_WOULD_EXCEED: {
+    check: "C-104.11",
+    where: "src/store.mjs extractPropose > is-extract-whole-batch",
+    translation: "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation."
+  },
+  /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
+     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
+     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
+  EXTRACT_NO_SCOPE: {
+    check: "C-104.12",
+    where: "src/store.mjs extractProposals > is-extract-scope",
+    translation: "This list of proposed readings names neither an investigation nor a document, so nothing was listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean."
+  }
+};
 var BIAS_CHECKS = {
   /* D-468 — THE MACHINE IS ENFORCED AT THE WRITE PATH, AND IT WAS NOT.
      `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" gives bias sets
@@ -5122,7 +5202,7 @@ var CAPTURE_REQUEST_CHECKS = {
        hold for a credential class that does not exist yet (PL-11). */
   CAPTURE_NOT_DRAINING: {
     check: "C-28.13",
-    where: "src/index.mjs captureRequestArm > is-capture-request-arm",
+    where: "src/capture/acquire.mjs acquire > is-capture-request-arm",
     translation: "Only this instance's own background worker fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
   },
   /* PL-15 / D-213 — THE LEAD'S TWO DOOR REFUSALS, ADDED TO THIS FAMILY RATHER
@@ -5171,6 +5251,30 @@ var CAPTURE_REQUEST_CHECKS = {
     check: "C-28.16",
     where: "src/store.mjs captureRequest > is-capture-request",
     translation: "This asked for the page as a visitor would see it in a form this instance does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued."
+  },
+  /* D-584 (capture-requests R19; T6, legacy-checks) — THE DRAIN'S OWN HOLD WHEN A FETCH DOES NOT LAND.
+     Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
+     not do) holds the row `requested` under this code, appends a LOOKED_INDETERMINATE look that is NOT
+     governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
+     `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
+     this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
+     region `captureRequestDrain` does not mark yet: the drain's other outcomes are other families' codes
+     read from rows, and a whole-function `where` would conscript them; marking it is capture-requests'. */
+  CAPTURE_FETCH_FAILED: {
+    check: "C-28.17",
+    where: "src/store.mjs captureRequestDrain > is-capture-fetch-failed",
+    translation: "This instance tried to fetch the document and the fetch did not land, so nothing was captured. That says nothing about the document or the site beyond this one attempt, and it is recorded as a look that could not tell. The request is still queued and is tried again on a later round, until it expires."
+  },
+  /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
+     (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
+     (R40) and its target is one the caller can see; every other request is refused by this code and nothing
+     is written. The code is minted nowhere yet: capture-requests builds R42 in T6 (T6-8), in its own module,
+     and the `where` names that site, as a region on this family's REC-71 rule (a region its job marks). The sentence claims
+     nothing about which state the request is in, because an invisible target answers alike. */
+  CAPTURE_REQUEST_NOT_RETRYABLE: {
+    check: "C-28.18",
+    where: "src/capture-requests/index.mjs captureRequestRetry > is-capture-request-retry",
+    translation: "This request cannot be asked again. Only a request the source itself turned away, under a question you can see, goes back into the queue; a request that is still waiting, was captured, has expired, or was refused for any other reason does not. Nothing was changed."
   }
 };
 var AI_CREDENTIAL_CHECKS = {
@@ -5887,7 +5991,7 @@ var ACT_SHAPE_CHECKS = {
   },
   NO_ALIAS: {
     check: "C-33.25",
-    where: "src/store.mjs addEntityAlias > is-alias-named",
+    where: "src/entities/index.mjs addAlias > is-alias-named",
     translation: "Another name for something needs to actually be a name. This one is empty once the spacing and punctuation are taken off, so there would be nothing for anybody to search on later."
   },
   KIND_NOT_PERSONAL: {
@@ -6096,12 +6200,12 @@ var ROUTE_MARK_CHECKS = {
      would be this item ruling on DEC-52's ground (REC-65) as a side effect. */
   ROUTE_MARK_NO_AUTHOR: {
     check: "C-34.1",
-    where: "src/store.mjs provenanceRouteAssess > is-route-mark",
+    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
     translation: "Recording that a document's route cannot be shown is an act the record has to be able to attribute, and nothing here said who is making it. Sign in and try again."
   },
   ROUTE_MARK_NO_BUNDLE: {
     check: "C-34.2",
-    where: "src/store.mjs provenanceRouteAssess > is-route-mark",
+    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
     translation: "This did not say which document to look at, so nothing was assessed."
   },
   /* Absent and invisible answer IDENTICALLY, which is REC-25's posture rather
@@ -6109,7 +6213,7 @@ var ROUTE_MARK_CHECKS = {
      exactly as one that does not exist, or the refusal becomes a read. */
   ROUTE_MARK_NO_SUCH_BUNDLE: {
     check: "C-34.3",
-    where: "src/store.mjs provenanceRouteAssess > is-route-mark",
+    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
     translation: "The record holds no document by that name, so there was nothing to assess."
   },
   /* A ROUTE IS A FACT ABOUT A CAPTURED DOCUMENT. A question, a project or an
@@ -6119,7 +6223,7 @@ var ROUTE_MARK_CHECKS = {
      over-strictness failure this item's third control arm exists to catch. */
   ROUTE_MARK_NOT_A_DOCUMENT: {
     check: "C-34.4",
-    where: "src/store.mjs provenanceRouteAssess > is-route-mark",
+    where: "src/provenance/index.mjs provenanceRouteAssess > is-route-mark",
     translation: "Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt."
   }
 };
@@ -6400,14 +6504,14 @@ var RENDER_CAPTURE_CHECKS = {
      content, which is the outcome this family exists to prevent. */
   RENDER_FLAG_MALFORMED: {
     check: "C-83.1",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
   },
   /* A render combined with an arm whose bytes are not a live page: an archive
      replay, a Drive export, or the continuation of a capture already filed. */
   RENDER_ARM_CONFLICT: {
     check: "C-83.2",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "A rendered capture runs the live page in a browser, and this request combined that with a way of capturing that does not load a live page (an archived copy, a Drive export, or the continuation of an earlier capture). Ask for one or the other. Nothing was fetched."
   },
   /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a
@@ -6421,7 +6525,7 @@ var RENDER_CAPTURE_CHECKS = {
      exists is how the next reader is told the wrong thing by the record. */
   RENDER_NO_RENDERER: {
     check: "C-83.3",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
   },
   /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by
@@ -6434,7 +6538,7 @@ var RENDER_CAPTURE_CHECKS = {
      minute off. The sentence says which, without naming a mechanism. */
   RENDER_DEFERRED: {
     check: "C-83.4",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
   },
   /* The render loads the page again, which is a second document load to the
@@ -6442,7 +6546,7 @@ var RENDER_CAPTURE_CHECKS = {
      "through the host governor"). Refused by name when the host is cooling off. */
   RENDER_HOST_COOLING_OFF: {
     check: "C-83.5",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
   },
   /* The shell is not an HTML page small enough to render (a PDF, an office
@@ -6450,7 +6554,7 @@ var RENDER_CAPTURE_CHECKS = {
      browser adds; capture it without `render`. */
   RENDER_NOT_A_PAGE: {
     check: "C-83.6",
-    where: "src/index.mjs fetch > is-render-result",
+    where: "src/capture/acquire.mjs acquire > is-render-result",
     translation: "The address served something that is not a web page a browser can render, such as a PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. Capture it the ordinary way."
   },
   /* The renderer did not produce a rendered document. The shell's bytes are
@@ -6458,7 +6562,7 @@ var RENDER_CAPTURE_CHECKS = {
      no document names them. */
   RENDER_FAILED: {
     check: "C-83.7",
-    where: "src/index.mjs fetch > is-render-result",
+    where: "src/capture/acquire.mjs acquire > is-render-result",
     translation: "The page was fetched but the renderer did not produce the page as a visitor would see it, so nothing was filed: the page's empty frame is never filed as its content. The reason the renderer gave is beside this message."
   },
   /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a cap from the
@@ -6468,7 +6572,7 @@ var RENDER_CAPTURE_CHECKS = {
      used. The unattended drain holds the row under this code and asks again next tick. */
   RENDER_AT_CAPACITY: {
     check: "C-83.8",
-    where: "src/index.mjs fetch > is-render-admit",
+    where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
   }
 };
@@ -6561,40 +6665,78 @@ var PUBLISHED_READ_CHECKS = {
 var KNOCK_CHECKS = {
   RATE_IP: {
     check: "C-85.1",
-    where: "src/store.mjs knock > is-knock-rate",
+    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
     translation: "This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive."
   },
   RATE_GLOBAL: {
     check: "C-85.2",
-    where: "src/store.mjs knock > is-knock-rate",
+    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
     translation: "This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. If it keeps happening, the group's members can be told the doorbell is saturated."
   },
   /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
-     `where` names a module-scope helper in the CONTROL plane and the region
-     inside it, because that is where each refusal is enforced; the two oversize
+     `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
+     the region inside it, because that is where each refusal is enforced; the two oversize
      rows are two conditions and deliberately not one row with a widened
      sentence. */
   KNOCK_ENVELOPE_TOO_LARGE: {
     check: "C-85.3",
-    where: "src/index.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
+    where: "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
     translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this instance will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read."
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: "C-85.4",
-    where: "src/index.mjs knockPayloadTooLarge > is-knock-payload-too-large",
+    where: "src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large",
     translation: "This group's inbox read your material and cannot keep it, because it is larger than this instance stores. That is a fact about how this group has set its instance up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them."
   },
   KNOCK_EMPTY: {
     check: "C-85.5",
-    where: "src/index.mjs knockEmpty > is-knock-empty",
+    where: "src/capture/doorbell.mjs knockEmpty > is-knock-empty",
     translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again."
   }
 };
 var ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: "C-89.1",
-    where: "src/index.mjs fetch > is-attest-parts",
+    where: "src/provenance/index.mjs attest > is-attest-parts",
     translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
+  }
+};
+var PROVENANCE_ACT_CHECKS = {
+  /* R1: the C-18 register rules at the write. The findings carry each rule's own C-18 id; this row is the act's. */
+  PROVENANCE_REGISTER_REFUSED: {
+    check: "C-103.1",
+    where: "src/provenance/index.mjs #registerArms",
+    translation: "This document's account of where it came from breaks rules that the version it revises did not break, so nothing was written. Each broken rule is listed beside this message. Correct the account and save the document again."
+  },
+  ORIGIN_NOT_A_MEMBER: {
+    check: "C-103.2",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
+    translation: "Saying which system a document came from is a statement a named member makes and is named beside, and this came from an automated credential or from nobody. Sign in and make it yourself. Nothing was recorded."
+  },
+  NO_BUNDLE: {
+    check: "C-103.3",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-act",
+    translation: "This did not say which document it is about, so nothing was done."
+  },
+  ORIGIN_NOT_A_DOCUMENT: {
+    check: "C-103.4",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
+    translation: "Only a captured document came from a system, and this is not one: a question, a project or an action was written in the record. Nothing was recorded."
+  },
+  ORIGIN_NO_SYSTEM: {
+    check: "C-103.5",
+    where: "src/provenance/index.mjs declareOrigin > is-origin-statement",
+    translation: "This did not name the system the document came from, or named it at more than 200 characters. Name it briefly and try again. Nothing was recorded."
+  },
+  RECEIPT_MALFORMED: {
+    check: "C-103.6",
+    where: "src/provenance/index.mjs signReceipt",
+    translation: "A receipt names the captured document's fingerprint, the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed."
+  },
+  RECEIPT_NO_KEY: {
+    check: "C-103.7",
+    where: "src/provenance/index.mjs signReceipt",
+    translation: "This instance holds no key to sign its receipts with, so this receipt was not signed, and nothing claims that it was. Whoever runs the instance can add one."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -6607,14 +6749,14 @@ var DRIVE_CAPTURE_CHECKS = {
      invent. */
   DRIVE_HOP_FACT_SUPPLIED: {
     check: "C-48.1",
-    where: "src/index.mjs fetch > is-drive-capture",
+    where: "src/capture/acquire.mjs acquire > is-drive-capture",
     translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts this instance establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
   },
   /* A FOLDER. There is nothing to export and no single set of bytes a capture
      could honestly hold, so the honest answer is the shape's name and the reason. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: {
     check: "C-48.2",
-    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
+    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",
     translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
   },
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
@@ -6623,7 +6765,7 @@ var DRIVE_CAPTURE_CHECKS = {
      first-class and must be STATED. */
   DRIVE_KIND_UNDETERMINED: {
     check: "C-48.3",
-    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
+    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
   },
   /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
@@ -6631,7 +6773,7 @@ var DRIVE_CAPTURE_CHECKS = {
      document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: {
     check: "C-48.4",
-    where: "src/index.mjs fetch > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
+    where: "src/capture/acquire.mjs acquire > is-drive-capture, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",
     translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
   },
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
@@ -6642,7 +6784,7 @@ var DRIVE_CAPTURE_CHECKS = {
      support, which CLAUDE.md ranks worse than a missing feature. */
   DRIVE_EXPORT_IS_THE_SHELL: {
     check: "C-48.5",
-    where: "src/index.mjs fetch > is-drive-export",
+    where: "src/capture/acquire.mjs acquire > is-drive-export",
     translation: "Google answered the export address with a web page rather than a document \u2014 which is what it does when a file is not shared with anyone who has the link. That page is the application, not the document, and it is not filed as one. Check that the file is shared."
   },
   /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
@@ -6655,7 +6797,7 @@ var DRIVE_CAPTURE_CHECKS = {
      bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
   DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
     check: "C-48.7",
-    where: "src/index.mjs fetch > is-drive-bytes",
+    where: "src/capture/acquire.mjs acquire > is-drive-bytes",
     translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
   },
   /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
@@ -6692,7 +6834,7 @@ var DRIVE_CAPTURE_CHECKS = {
   },
   DRIVE_EXPORT_UNREACHABLE: {
     check: "C-48.6",
-    where: "src/index.mjs fetch > is-drive-export",
+    where: "src/capture/acquire.mjs acquire > is-drive-export",
     translation: "The OpenDocument export of that Drive document could not be fetched, so nothing was captured. The application page at the same address is NOT captured instead: a record holding the app in place of the document would look like evidence and be none."
   }
 };
@@ -7213,15 +7355,16 @@ var CONTENT_EXTENT_CHECKS = {
      describing it. The two refusals below are the two ways that name can be
      wrong, and both are facts only the store can establish — hence a store
      `where` and a REGION, on VERSION_FROZEN's and VERSION_LEG_UNRESOLVED's own
-     precedent a few thousand lines up. */
+     precedent a few thousand lines up. The region moved with content's
+     extraction (T5) to `#rowFor` in `src/content/index.mjs` (re-pointed T6, N97). */
   CONTENT_ROW_UNKNOWN: {
     check: "C-45.5",
-    where: "src/store.mjs #contentRowFor > is-content-row",
+    where: "src/content/index.mjs #rowFor > is-content-row",
     translation: "This citation names a specific part of a document, and this record holds no such part. That is not a typo the record can fix for you: the part is named by a code taken over the document, the passage and how its text was produced, so a code nothing answers to points at nothing at all. Cite the part by describing it \u2014 the page, the cell, the paragraph \u2014 and the record will find or create the entry for it."
   },
   CONTENT_ROW_NOT_THIS_TARGET: {
     check: "C-45.6",
-    where: "src/store.mjs #contentRowFor > is-content-row",
+    where: "src/content/index.mjs #rowFor > is-content-row",
     translation: 'This citation rests on one document and names a part of a different one. A reference that says "this document, that passage" is two claims that do not meet, and a reader following it would be shown material the citation never meant.'
   },
   /* REC-97 / IC-90 — THE FOUR WAYS THE ACT THAT WRITES A LEG CAN BE HANDED AN
@@ -7549,47 +7692,47 @@ var NARROW_CHECKS = {
 var TRANSCRIBE_CHECKS = {
   TRANSCRIBE_NOT_A_MEMBER: {
     check: "C-52.1",
-    where: "src/store.mjs transcribe > is-transcribe-act",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
     translation: "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself."
   },
   TRANSCRIBE_NO_DOCUMENT: {
     check: "C-52.2",
-    where: "src/store.mjs transcribe > is-transcribe-act",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
     translation: "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first."
   },
   TRANSCRIBE_NO_BYTES: {
     check: "C-52.3",
-    where: "src/store.mjs transcribe > is-transcribe-act",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
     translation: "This record holds no copy of that document, so there is no page to transcribe. A transcription is tied to the exact copy it was typed from, so the copy has to be captured first."
   },
   TRANSCRIBE_NO_PORTION: {
     check: "C-52.4",
-    where: "src/store.mjs transcribe > is-transcribe-act",
+    where: "src/content/index.mjs transcribe > is-transcribe-act",
     translation: "That request does not say which part of the document you transcribed. Select the page or the region you read \u2014 a transcription with no stated part would be read as covering the whole document, which is a claim you did not make."
   },
   TRANSCRIBE_PORTION_UNREADABLE: {
     check: "C-52.5",
-    where: "src/store.mjs transcribe > is-transcribe-portion",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
     translation: "The part you selected is one this record cannot yet check a transcription against \u2014 a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than as text. A second member could not attest a transcription of it, so it is refused rather than left unable ever to be checked. Select a page or a region of a page."
   },
   TRANSCRIBE_NO_TEXT: {
     check: "C-52.6",
-    where: "src/store.mjs transcribe > is-transcribe-portion",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
     translation: "The transcription is empty. Type what the selected part of the page says; nothing is filled in for you."
   },
   TRANSCRIBE_TEXT_TOO_LONG: {
     check: "C-52.7",
-    where: "src/store.mjs transcribe > is-transcribe-portion",
+    where: "src/content/index.mjs transcribe > is-transcribe-portion",
     translation: "The transcription is longer than one passage this record stores. Select a smaller part of the page and transcribe it on its own; the parts can each be checked and cited."
   },
   TRANSCRIPTION_NOT_FOUND: {
     check: "C-52.8",
-    where: "src/store.mjs #transcriptionOf > is-transcription-source",
+    where: "src/content/index.mjs #transcriptionOf > is-transcription-source",
     translation: "That request does not name a transcription this record holds and you can read. A transcription is named by the content id its own transcribe act returned."
   },
   TRANSCRIPTION_SELF_ATTEST: {
     check: "C-52.9",
-    where: "src/store.mjs transcriptionAttest > is-transcription-attest",
+    where: "src/content/index.mjs transcriptionAttest > is-transcription-attest",
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
@@ -7663,27 +7806,27 @@ var ATTRIBUTION_CHECKS = {
 var TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: "C-53.1",
-    where: "src/store.mjs testify > is-testify-act",
+    where: "src/provenance/index.mjs testify > is-testify-act",
     translation: "A firsthand observation is a person saying what they saw, in their own name, and it stands on that person's trust. The credential that asked is an automated one, and it has no eyes to have seen anything with. Sign in and record it yourself."
   },
   TESTIMONY_AUTHOR_SUPPLIED: {
     check: "C-53.2",
-    where: "src/store.mjs testify > is-testify-act",
+    where: "src/provenance/index.mjs testify > is-testify-act",
     translation: "That request names who the author is. The record takes the author of an observation from the account that is signed in, never from the request \u2014 a request that names its own author could sign as somebody else. Send the observation without an author and it is recorded as yours."
   },
   TESTIMONY_NO_WORDS: {
     check: "C-53.3",
-    where: "src/store.mjs testify > is-testify-words",
+    where: "src/provenance/index.mjs testify > is-testify-words",
     translation: "The observation is empty. Write what you saw, in your own words; nothing is filled in for you."
   },
   TESTIMONY_WORDS_TOO_LONG: {
     check: "C-53.4",
-    where: "src/store.mjs testify > is-testify-words",
+    where: "src/provenance/index.mjs testify > is-testify-words",
     translation: "The observation is longer than one passage this record stores. Record it as more than one observation; each is kept exactly as written and each can be cited."
   },
   TESTIMONY_OBSERVED_AT_INVALID: {
     check: "C-53.5",
-    where: "src/store.mjs testify > is-testify-words",
+    where: "src/provenance/index.mjs testify > is-testify-words",
     translation: "An observation needs the date you saw it, as a calendar date (for example 2026-09-10) or a date and time, and not a date later than now. The record keeps that date apart from the moment you wrote it down, because they are two different facts."
   },
   /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
@@ -7696,22 +7839,22 @@ var TESTIMONY_CHECKS = {
      them would re-file their register row under the observation. */
   TESTIMONY_WORDS_REGISTERED: {
     check: "C-53.6",
-    where: "src/store.mjs testify > is-testify-bytes",
+    where: "src/provenance/index.mjs testify > is-testify-bytes",
     translation: "The record already holds, under another document, the exact bytes this observation would be stored as \u2014 which can only happen if somebody registered them in advance. Nothing was recorded. Try again: the next attempt is stored under a new identifier and new bytes."
   },
   TESTIMONY_ORIGIN_NOT_MEMBER: {
     check: "C-53.7",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
     translation: "This document is a member's own observation, and this revision of its record claims it came from somewhere else \u2014 a fetch, a sweep, or a machine. That would let a member's word pass for a captured publication. An observation's origin is the member who made it, and that cannot be revised."
   },
   TESTIMONY_AUTHORED_UNEARNED: {
     check: "C-53.8",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
     translation: "This document claims to be a member's own firsthand observation, but it did not come through the act that records one. Only that act can mark a document as an observation, because only that act takes the author from the signed-in account. Record the observation through it, or remove the claim."
   },
   TESTIMONY_AUTHORED_DROPPED: {
     check: "C-53.9",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
     translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
   },
   /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
@@ -7753,7 +7896,7 @@ var TESTIMONY_CHECKS = {
      The holding bundle is named only to a caller who may see it (D-15). */
   CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
     check: "C-53.13",
-    where: "src/store.mjs #testimonyFence > is-register-home",
+    where: "src/provenance/index.mjs #testimonyFence > is-register-home",
     translation: "The record already holds this document, under another bundle. A document has one home in the record \u2014 the first bundle that registered it \u2014 and registering it again here would move it away from there. Nothing was written. Cite the bundle that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds."
   }
 };
@@ -8237,10 +8380,13 @@ var VERSION_NOTICE_CHECKS = {
     where: "src/store.mjs versionNotice > is-version-notice-subject",
     translation: "There is no question by that id that you can read here. A question you may not see answers exactly as one that does not exist, so nothing about it was checked."
   },
-  /* The passage named is not a content row this caller may read. */
+  /* The passage named is not a content row this caller may read. Its `where` names content's `passageNotice`
+     (content R29–R31, T5; N97, T6): the passage arm is content's. The store's `versionNotice` still answers the
+     same condition inside `is-version-notice-subject`, one sentence true at both, until legacy-store's passage arm
+     delegates to content (reported by T6's legacy-checks job). */
   VERSION_NOTICE_NO_CONTENT: {
     check: "C-80.3",
-    where: "src/store.mjs versionNotice > is-version-notice-subject",
+    where: "src/content/index.mjs passageNotice > is-passage-notice",
     translation: "There is no cited passage by that id that you can read here. A passage id exists once somebody has cited that part of a document; one in a project you were not invited to answers exactly as one that does not exist."
   }
 };
@@ -8437,48 +8583,73 @@ var THEME_CHECKS = {
   },
   THEME_NOT_A_MEMBER: {
     check: "C-81.2",
-    where: "src/store.mjs themeDeclare > is-theme-declare",
+    where: "src/connections/themes.mjs declare > is-theme-declare",
     translation: "A theme is declared by a person, in their own name, and every reading of it shows whose lens it is. The credential that asked is an automated one, which has nobody behind it to hold the idea. Sign in and declare it yourself."
   },
   THEME_NO_TEST: {
     check: "C-81.3",
-    where: "src/store.mjs themeDeclare > is-theme-declare",
+    where: "src/connections/themes.mjs declare > is-theme-declare",
     translation: "A theme needs its TEST: one sentence a document or a passage either passes or fails, so any member can check a placement against it. Without one the theme is a label anything could wear, and it cannot be declared."
   },
   THEME_NO_NAME: {
     check: "C-81.4",
-    where: "src/store.mjs themeDeclare > is-theme-declare",
+    where: "src/connections/themes.mjs declare > is-theme-declare",
     translation: 'A theme needs its idea in a few words \u2014 what you are calling it, such as "deferred maintenance" \u2014 as well as its test. Nothing was declared.'
   },
   THEME_TOO_LONG: {
     check: "C-81.5",
-    where: "src/store.mjs themeDeclare > is-theme-declare",
+    where: "src/connections/themes.mjs declare > is-theme-declare",
     translation: "The theme's name or its test is longer than the record stores in one passage. It was refused rather than cut, so nothing you wrote is silently lost. Shorten it and declare it again."
   },
   THEME_NOT_FOUND: {
     check: "C-81.6",
-    where: "src/store.mjs #themeFor > is-theme-source",
+    where: "src/connections/themes.mjs #themeFor > is-theme-source",
     translation: "No theme is recorded under that id. Use the id the declaration returned, or list the themes to find it."
   },
   THEME_PLACEMENT_NOT_A_MEMBER: {
     check: "C-81.7",
-    where: "src/store.mjs themePlace > is-theme-place",
+    where: "src/connections/themes.mjs place > is-theme-place",
     translation: "Placing a document in a theme is a member's judgement that it passes the theme's test, recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch until a member confirms it. Sign in to place it, or propose it instead."
   },
   THEME_TARGET_NOT_FOUND: {
     check: "C-81.8",
-    where: "src/store.mjs #themeTarget > is-theme-target",
+    where: "src/connections/themes.mjs #targetFor > is-theme-target",
     translation: "Nothing you can see in the record answers to that document or passage id, so it cannot be placed in a theme. Name a document by its id, or a passage by the content id it was minted under."
   },
   THEME_REASON_TOO_LONG: {
     check: "C-81.9",
-    where: "src/store.mjs #themeTarget > is-theme-target",
+    where: "src/connections/themes.mjs #targetFor > is-theme-target",
     translation: "The note on this placement is longer than the record stores in one passage. It was refused rather than cut. Shorten it and try again."
   },
   THEME_NO_PROPOSER: {
     check: "C-81.10",
-    where: "src/store.mjs themePropose > is-theme-propose",
+    where: "src/connections/themes.mjs propose > is-theme-propose",
     translation: "A proposal must say who proposed it, and this one arrived carrying nobody. The record stamps the proposer from the credential that asked; nothing was written."
+  },
+  /* connections R43, R62 (K152; T6, legacy-checks): TAKING A PLACEMENT BACK, OR TURNING A PROPOSAL DOWN
+  (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four and held them in `src/connections/themes.mjs`
+  (`THEME_WITHDRAW_CHECKS`), in this family's shape, until the catalogue carried them; they are carried here
+  word for word, so connections' next job re-exports them from here and deletes its copy. The order at the
+  act: the actor (C-81.11), then C-81.6, C-81.8 and C-81.9, then no reason, nothing standing, not the placer. */
+  THEME_WITHDRAW_NOT_A_MEMBER: {
+    check: "C-81.11",
+    where: "src/connections/themes.mjs withdraw > is-theme-withdraw",
+    translation: "Taking a document or a passage out of a theme, or turning down a proposal, is a member's own judgement, done in their name. A machine may propose a placement; it cannot take one back."
+  },
+  THEME_WITHDRAW_NO_REASON: {
+    check: "C-81.12",
+    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
+    translation: "Say why. A placement taken back or a proposal turned down keeps its reason beside it, so the next reader of the theme can see what was judged and on what ground."
+  },
+  THEME_WITHDRAW_NOTHING_STANDING: {
+    check: "C-81.13",
+    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
+    translation: "Nothing stands in this theme at that document or passage: it was never placed or proposed there, or it has already been taken back. There is nothing to withdraw."
+  },
+  THEME_WITHDRAW_NOT_THE_PLACER: {
+    check: "C-81.14",
+    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
+    translation: "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it."
   }
 };
 function themeLegFindings(label, leg, findings) {
@@ -8801,28 +8972,55 @@ var TASK_ACTOR_CHECKS = {
 var PER_ITEM_CHECKS = {
   SET_NO_ITEMS: {
     check: "C-75.1",
-    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    where: "src/record-core/index.mjs perItem > is-per-item-set-shape",
     translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
   },
   SET_TOO_LARGE: {
     check: "C-75.2",
-    where: "src/store.mjs #perItem > is-per-item-set-shape",
+    where: "src/record-core/index.mjs perItem > is-per-item-set-shape",
     translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
   },
   SET_ITEM_MALFORMED: {
     check: "C-75.3",
-    where: "src/store.mjs #perItem > is-per-item-malformed",
+    where: "src/record-core/index.mjs perItem > is-per-item-malformed",
     translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
   },
   SET_ITEM_FAILED: {
     check: "C-75.4",
-    where: "src/store.mjs #perItem > is-per-item-failed",
+    where: "src/record-core/index.mjs perItem > is-per-item-failed",
     translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
   },
   SET_ITEMS_RETAINED: {
     check: "C-75.5",
-    where: "src/store.mjs #perItem > is-per-item-retained",
+    where: "src/record-core/index.mjs perItem > is-per-item-retained",
     translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
+  }
+};
+var REGISTRATION_CHECKS = {
+  AUDIT_CHECK_DECLARED: {
+    check: "C-102.1",
+    where: "src/record-core/index.mjs registerAuditCheck",
+    translation: "A part of this instance tried to register its audit check a second time. Each part registers once, when it starts, so the second was refused and the first still runs. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  AUDIT_CHECK_MALFORMED: {
+    check: "C-102.2",
+    where: "src/record-core/index.mjs registerAuditCheck",
+    translation: "A part of this instance tried to register an audit check without naming itself or without a check to run, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  AUDIT_CHECK_FAILED: {
+    check: "C-102.3",
+    where: "src/record-core/index.mjs auditPass",
+    translation: "One of the checks the audit runs over this document stopped with an error instead of answering, so the document is counted as having an error rather than as clean. The error is in the check and says nothing yet about the document. The audit changes nothing in the record."
+  },
+  FACT_UNAVAILABLE: {
+    check: "C-102.4",
+    where: "src/promotion/index.mjs fact",
+    translation: "No part of this instance answers that question yet, so there is no answer here, which is not the same as the answer being no. Nothing was written."
+  },
+  FACT_FAILED: {
+    check: "C-102.5",
+    where: "src/promotion/index.mjs fact",
+    translation: "The part of this instance that answers that question stopped with an error instead of answering, so there is no answer here, which is not the same as the answer being no. Nothing was written."
   }
 };
 var CONNECTION_PAIR_CHECKS = {
@@ -8834,7 +9032,7 @@ var CONNECTION_PAIR_CHECKS = {
      document, which is Bob's 5.1 ruling inverted. */
   CONNECTION_PAIR_OUTSIDE_EXTENT: {
     check: "C-49.1",
-    where: "checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering",
+    where: "src/connections/pair.mjs checkConnectionPairCovers > is-connection-pair-covering",
     translation: "This connection was established by a reference somewhere else in the document, not in the part you cited. A citation that points at a passage stands on what is IN that passage, so it cannot borrow a link the record found elsewhere in the same file. Cite the part where the reference actually appears, or cite the document as a whole and say so."
   },
   /* THE UNPLACEABLE PAIR. The connection has its two references and neither
@@ -8845,7 +9043,7 @@ var CONNECTION_PAIR_CHECKS = {
      and never assumed for the connection as a whole. */
   CONNECTION_PAIR_UNPLACED: {
     check: "C-49.2",
-    where: "checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering",
+    where: "src/connections/pair.mjs checkConnectionPairCovers > is-connection-pair-covering",
     translation: "The record knows which reference links these two documents but not where in either document it was read, so it cannot say whether that reference falls inside the part you cited. This is stated rather than assumed either way: the connection is real and its reach into your citation is undetermined until the document is read with positions."
   },
   /* THE ABSENT ROW. Asked to grade a portion the record does not hold. Refused
@@ -8862,7 +9060,7 @@ var CONNECTION_PAIR_CHECKS = {
        made this row appear to govern it — so the guard asked for either a
        translation for "you passed no parameter" or a narrower span. The span is
        the honest answer. */
-    where: "src/store.mjs connectionGradeForContent > pair-content-row-present",
+    where: "src/connections/index.mjs portionGrade > pair-content-row-present",
     translation: "This record holds no passage with that address, so there is no part of a document whose connections could be weighed. A content address is minted when a citation first points at a passage \u2014 if you expected one here, the citation that would have made it has not been written yet."
   },
   /* REC-120 / D-161 act (1) / M-51 — THE UNCHOSEN MENTION. The pair is the
@@ -8882,24 +9080,24 @@ var CONNECTION_PAIR_CHECKS = {
      grade decided that pair, and grade is a stated basis. */
   CONNECTION_PAIR_MENTION_UNCHOSEN: {
     check: "C-49.4",
-    where: "checks/bio-checks.mjs checkConnectionMentionUnchosen > is-mention-unchosen",
+    where: "src/connections/pair.mjs checkConnectionMentionUnchosen > is-mention-unchosen",
     translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; a member may also choose which mention is the on-point one for this connection, and the answer then follows that choice."
   }
 };
 var CONNECTION_CHOICE_CHECKS = {
   CONNECTION_CHOICE_NOT_A_MEMBER: {
     check: "C-74.1",
-    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    where: "src/connections/index.mjs choose > is-connection-choice",
     translation: "Choosing which mention of a subject is the one on point for a connection is a member's own act, done in their name. A machine may point out the mentions a document holds, but deciding which one a connection rests on is a judgment a person signs for."
   },
   CONNECTION_CHOICE_NO_CONNECTION: {
     check: "C-74.2",
-    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    where: "src/connections/index.mjs choose > is-connection-choice",
     translation: "That request does not name a connection this record holds and you can see. A connection is named by the two documents it joins and the subject that joins them, and it exists once the record has derived it \u2014 choose after it appears among the document's connections."
   },
   CONNECTION_CHOICE_NOT_A_MENTION: {
     check: "C-74.3",
-    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    where: "src/connections/index.mjs choose > is-connection-choice",
     translation: "The mention named is not one this document carries for that subject. The choice is among the places the record actually read the subject in this document, by the reference as the reading recorded it; a mention the record never read cannot be the one a connection rests on."
   },
   /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
@@ -8908,7 +9106,7 @@ var CONNECTION_CHOICE_CHECKS = {
      member's name. The refusal lists the occurrences so the member can name one. */
   CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
     check: "C-74.4",
-    where: "src/store.mjs chooseConnectionPair > is-connection-choice",
+    where: "src/connections/index.mjs choose > is-connection-choice",
     translation: "That reference was read at more than one place in this document, and each place is its own mention. Say which one is on point \u2014 by the occurrence the record lists for it, or by the place as the record names it \u2014 and the choice will rest on that place alone."
   }
 };
@@ -52467,7 +52665,6 @@ function kindPrefix(view, value) {
   return { kind: null, rest: value };
 }
 function recognise(v, space, value) {
-  if (typeof v === "string" && arguments.length === 2) return legacyRecognise(v, space);
   const { view } = viewOf(v);
   if (!SPACE_NAMES.includes(space)) return null;
   if (typeof value !== "string" && typeof value !== "number") return null;
@@ -52646,7 +52843,6 @@ function throughCrosswalk(view, space, ra, rb) {
   return { sources: walks.map((c) => c.source), partners: [...partners] };
 }
 function judgePair(v, space, a, b, reading = null) {
-  if (typeof v === "string" && typeof space !== "string") return legacyJudgePair(v, space, a, b);
   const ra = isObj6(a) ? a.rec : null, rb = isObj6(b) ? b.rec : null;
   if (!isObj6(ra) || !isObj6(rb)) throw new TypeError("judgePair: a.rec and b.rec must both be recognised values (recognise() first)");
   if (!SPACE_NAMES.includes(space) || ra.space !== space || rb.space !== space)
@@ -52699,28 +52895,6 @@ function judgePair(v, space, a, b, reading = null) {
     `one value${via}, two independent systems (${sa.origin}, ${sb.origin}), and the referent agrees on the caller's reading \u2014 a reading this module did not make and cannot check`,
     { referent: { by: "the caller's reading", agrees: true } }
   );
-}
-var OLD_TO_NEW = Object.freeze({ cms: "enactment", project: "project", fund: "fund", apn: "parcel" });
-var NEW_TO_OLD = Object.freeze(Object.fromEntries(Object.entries(OLD_TO_NEW).map(([o, n]) => [n, o])));
-var LEGACY_VIEW2 = (() => {
-  let ids = [];
-  try {
-    ids = list().filter((p) => p && p.test !== true).map((p) => p.id);
-  } catch {
-    ids = [];
-  }
-  const c = combine(ids);
-  return c && c.ok ? { ...c.view, conflicts: Array.isArray(c.conflicts) ? c.conflicts : [] } : { conflicts: [] };
-})();
-var outRec = (r) => r ? { ...r, space: NEW_TO_OLD[r.space] } : r;
-var inEnd = (e) => isObj6(e) && isObj6(e.rec) && has2(OLD_TO_NEW, e.rec.space) ? { ...e, rec: { ...e.rec, space: OLD_TO_NEW[e.rec.space] } } : e;
-var ID_SPACES = Object.freeze(Object.fromEntries(spaces(LEGACY_VIEW2).map((s) => [NEW_TO_OLD[s.space], Object.freeze({ label: s.label, forms: Object.freeze(s.forms), referent: s.referent })])));
-var CMS_FLOOR = Object.freeze(Object.fromEntries(kindsOf(LEGACY_VIEW2).filter((k) => typeof k.kind === "string" && isObj6(k.floor) && Number.isFinite(k.floor.first)).map((k) => [k.kind, k.floor.first])));
-function legacyRecognise(space, raw) {
-  return has2(OLD_TO_NEW, space) ? outRec(recognise(LEGACY_VIEW2, OLD_TO_NEW[space], raw)) : null;
-}
-function legacyJudgePair(space, a, b, reading = null) {
-  return judgePair(LEGACY_VIEW2, has2(OLD_TO_NEW, space) ? OLD_TO_NEW[space] : space, inEnd(a), inEnd(b), reading);
 }
 
 // src/entities/schema.mjs
