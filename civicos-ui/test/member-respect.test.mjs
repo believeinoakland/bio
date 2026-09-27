@@ -854,7 +854,15 @@ for(const [host, s] of Object.entries(SETS)){
     /* UI-68: `op=reviewrevoke` withdraws ONE grant, named by id. */
     { op: "reviewrevoke",   sig: /#reviewRevoke\(who, \{\s*grant = null\s*\}/ },
   ];
-  ok(/\n  async resolveReferences\(\{[^}]*\bitems \} = \{\}\) \{\s*(?:\/\*[\s\S]*?\*\/\s*)?if \(items !== undefined\) \{\s*const set = this\.#perItem\("resolve", [^;]*\(b\) => this\.#resolveOne\(b\)\);/.test(store),
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; entities R11, C-75): `op=resolve` is entities' service now. The store's
+     `resolveReferences(body)` hands the WHOLE body to `entitiesOf(this.ctx).resolve(body)` (and only arms the derive
+     sweep after it), and entities' `resolve` opens with the same set branch: `if (items !== undefined) return
+     perItem("resolve", …, (b) => this.#resolveOne(b), …)` — record-core's per-item weight (`perItem`, the store's
+     `#perItem` before the extraction) over the SAME one-document act the single form runs. Both halves are read. */
+  const entitiesSrc = fs.readFileSync(new URL("../../bio-plane/src/entities/index.mjs", import.meta.url).pathname, "utf8");
+  ok(/\n  async resolveReferences\(body = \{\}\) \{\s*const r = entitiesOf\(this\.ctx\)\.resolve\(body\);/.test(store)
+     && /\n  resolve\(\{[^}]*\bitems \} = \{\}\) \{\s*(?:\/\*[\s\S]*?\*\/\s*)?if \(items !== undefined\)\s*return perItem\("resolve", [^;]*\(b\) => this\.#resolveOne\(b\)/.test(entitiesSrc)
+     && /\n  #resolveOne\(\{/.test(entitiesSrc),
      "ARM 4d: `op=resolve` (`resolveReferences`) no longer opens with the set branch into the per-item weight (`#perItem`) over the SAME one-document act the single form runs (`#resolveOne`) — the bulk path in `resolveCandPaint` would be sending a selection the plane cannot take. Re-measure the act.");
   for(const [op, method] of [["proposedispose","proposeDispose"], ["taskresolve","taskResolve"], ["taskforward","taskForward"]])
     ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(store),

@@ -935,7 +935,7 @@ t("while its answer for the page it WAS asked about was still merged",
    one sentence for every page the member was not asked about. Pinned as the whole clause, naming the page (numbered
    from 1) and the reason, so the record still says the answer was dropped and now says why for that page. */
 t("and the record says the answer was dropped rather than silently ignoring it",
-  ((over.reading.basis ?? "").match(/[^;]*were not merged:[^;]*/)?.[0] ?? "").trim(),
+  ((over.reading.basis ?? "").match(/[^;]*were not merged:[^;—]*/)?.[0] ?? "").trim(),
   "1 page(s) the OCR member returned were not merged: page 1 (the OCR member was not asked for it)");
 t("the chain still partitions the document truthfully", steps(over.reading), ["layer", "pixels", "ocr"]);
 

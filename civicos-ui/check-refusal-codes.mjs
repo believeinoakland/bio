@@ -1948,6 +1948,7 @@ async function dec49Families() {
     .sort((a, b) => DEFINES_A_FAMILY.test(fs.readFileSync(b, "utf8")) - DEFINES_A_FAMILY.test(fs.readFileSync(a, "utf8")))];
   const byName = new Map();                  // name -> { table, objs:Set }
   const rowHome = new Map();                 // row object -> "FAM.CODE"
+  const viewObjs = new Set();                // view objects already named
   for (const abs of sources) {
     let mod;
     try { mod = await import("file://" + abs); }
@@ -1964,6 +1965,8 @@ async function dec49Families() {
       const entries = Object.entries(v);
       const own = entries.filter(([, row]) => !(row && typeof row === "object" && rowHome.has(row)));
       if (!fam && entries.length && own.length === 0) {         // a view: every row is another family's, by reference
+        if (viewObjs.has(v)) continue;                          // the same view, re-exported
+        viewObjs.add(v);
         const of = [...new Set(entries.map(([, row]) => rowHome.get(row).split(".")[0]))];
         FAMILY_VIEWS.push(`${k} (${rel}) -> ${entries.length} row(s) of ${of.join(", ")} by reference`);
         continue;

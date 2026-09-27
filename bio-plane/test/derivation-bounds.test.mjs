@@ -553,6 +553,10 @@ const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
 /* T5-12: every method segment of the widened corpus by its name, for the by-name lookups below (the store's own
    names are bare, the modules' `<module>/<file>:<method>`, so none collides). */
 const ALL_SEGMENTS = new Map(CENSUS_SEGMENTS);
+/* T5-12: the same widened corpus with one mechanical edit `xf` applied to every file's comment-stripped text, for the
+   REACH deltas below: a delta over store.mjs alone would be compared against a class and a grader that read the modules
+   too, and would pass for that reason alone. */
+const corpusWith = (xf) => [...segments(xf(CODE)), ...moduleSegments((t) => xf(decomment(t)))];
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the CLASS walk reads the widened corpus (see EXTRACTED). */
 const CLASS = classMembers(CENSUS_SEGMENTS);
 
@@ -763,7 +767,7 @@ const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
 
 console.log("\n--- WALK: every method that DERIVES over an unbounded scan (REC-66's class) ---");
 console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${SEGMENTS.size} method segments `
-          + `(+ ${MODULE_SEGMENTS.size} in the extracted modules, census only), `   /* T3 (legacy-tests), 2026-09-26 */
+          + `(+ ${MODULE_SEGMENTS.size} in the extracted modules, walked by the census and, since T5-12, the class), `   /* T3 (legacy-tests), 2026-09-26 */
           + `${SCANNING} scanning UNBOUNDED, ${CLASS_ALL.size} in the class (${CLASS.size} by the walk + `
           + `${ADMITTED.size} admitted by name), reaching ${CLASS_OPS.length} of `
           + `${DISPATCHED.size} DISPATCHED ops`);
@@ -1278,7 +1282,9 @@ t("M0-63 (D-384): the header credit is GONE — REC-88's hoist moves no membersh
 /* AND NOT ONLY OVER THE CLASS: over EVERY method with an inline row source in a `for` header, the
    inline and hoisted forms classify identically. The partition above iterates `CLASS` and cannot
    see a method the credit would have ENROLLED; this arm can. */
-const HOIST_MOVES = [...SEGMENTS].filter(([, b]) => {
+/* T5-12 (legacy-tests), 2026-09-27: over the widened corpus, as the class now is; the label's "store.mjs" reads "the
+   corpus". Measured: no method moves, in the store or the modules. */
+const HOIST_MOVES = CENSUS_SEGMENTS.filter(([, b]) => {
   const h = hoistRowSources(b);
   if (!h.hoists) return false;
   const q = (a) => Boolean(a.unbounded && a.loops && a.amplified);
@@ -1286,7 +1292,7 @@ const HOIST_MOVES = [...SEGMENTS].filter(([, b]) => {
 }).map(([n]) => n);
 t("M0-63 (D-384): across ALL of store.mjs, hoisting a for-header row source to a local changes NO "
 + "method's classification — same query, same rows, same work, same verdict",
-  [HOIST_MOVES, [...SEGMENTS].filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
+  [HOIST_MOVES, CENSUS_SEGMENTS.filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
 
 const D384_NAMES = [...D384_STAYS.map((s) => s.name), ...D384_LEAVES.map((l) => l.name)];
 t("M0-63 (D-384): every member appears in EXACTLY ONE of the two by-name lists, and the lists sum to "
@@ -1944,7 +1950,8 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
    "extraction/index:capturesReadFor:page", "queueFeed:dispAll", "queueFeed:items",
    "retrieval/frontier:#content:never", "retrieval/frontier:#document:never", "retrieval/frontier:#meaning:never",
    "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
-const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
+/* T5-12: the deltas below break the WIDENED corpus (`corpusWith`), since the readers they test read it. */
+const noRowSources = corpusWith((x) => x.replace(/#rows\(/g, "#norows("));
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
 + "direction that matters, since a reader that finds no row sources must not report a clean bill",
@@ -2430,7 +2437,7 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
 
 /* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero
    violations forever, and this estate has recorded that outcome three times. */
-const noCuts = inMemoryVerdicts(CODE.replace(/\.slice\(/g, ".noslice("));
+const noCuts = inMemoryVerdicts(corpusWith((x) => x.replace(/\.slice\(/g, ".noslice(")));
 t("REACH IS A DELTA (the in-memory cut reader): over a copy of store.mjs with no `.slice(` in it, "
 + "every in-memory claim becomes a VIOLATION and none is silently scored as compliant — the "
 + "direction that matters, since a reader that finds no cuts must not report a clean bill",
@@ -2440,11 +2447,11 @@ t("REACH IS A DELTA (the in-memory cut reader): over a copy of store.mjs with no
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a
    MECHANICALLY BROKEN copy of the same source and must find FEWER. */
-const strippedScans = CODE.replace(/#rows\(/g, "#norows(");
+const strippedScans = corpusWith((x) => x.replace(/#rows\(/g, "#norows("));
 t("REACH IS A DELTA (the scan anchor): a copy of store.mjs with no `#rows(` in it yields NO class "
 + "members — every verdict here begins at a row source",
   [classMembers(strippedScans).size, CLASS.size > 0], [0, true]);
-const strippedLoops = CODE.replace(/\bfor\s*\(/g, "forx (");
+const strippedLoops = corpusWith((x) => x.replace(/\bfor\s*\(/g, "forx ("));
 t("REACH IS A DELTA (the loop anchor): a copy with the `for` keyword broken finds FEWER, because "
 + "amplification is read off loops and not off the scan alone",
   classMembers(strippedLoops).size < CLASS.size, true);
