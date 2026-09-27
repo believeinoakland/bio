@@ -2,7 +2,7 @@
 
 **Session** QUERY-LANGUAGE #1, `session_012jSiJ21iiBkFYdQgY49Gbe`, on `job/T5/query-language` (from `tranche/T5`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE (Q1 open; built on its best reading). Entry T5-9: N37 (`viewerPredicate`, `GATE_MARK` re-exported from membership); `content:ocr` reads `mixed` as containing machine-read text (content R14, DEC-4); `CONTENT_EXTENT_KINDS` from content with `envelope` (CONTENT #1 REPORT 6); every requirement marked not yet met (R9, R24).
+**Status** · COMPLETE (Q1 answered by K143 as built; K144's CHANGE merged). Entry T5-9: N37 (`viewerPredicate`, `GATE_MARK` re-exported from membership); `content:ocr` reads `mixed` as containing machine-read text (content R14, DEC-4); `CONTENT_EXTENT_KINDS` from content with `envelope` (CONTENT #1 REPORT 6); every requirement marked not yet met (R9, R24).
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md §3, §6, §12–§16, `build/manifest.md`, `build/requirements/query-language.md`, `build/layers.md` (layer 5 and the legacy modules), `build/plan/current.md`, the public parts of `membership`, `content`, `text-chain` (legacy-checks has no requirements file), `bio-plane/src/query.mjs` 1–2665, `content/extent.mjs`'s kinds and `unitChainKind`, D-686/D-710/D-723 in the old queue, and `land/worker/D-710`'s `query.mjs` change (kept: `mixed` is a word of `content:chain`). The module has no extraction map (its requirements: nothing of it sits in a legacy file).
 
@@ -56,3 +56,11 @@ Final for `retrieval`: the plan's shape and every statement are unchanged except
 - `node checks/ownership.mjs … query-language tranche/T5` — 0 failures.
 
 Size: test runs 9, module lines 2636
+
+## ANSWER K143 and CHANGE K144 (08:05 UTC; `tranche/T5` @ 9e8dc29840 merged here)
+
+- K143: Q1 adopted as built (`ocr`, `ai`; `MACHINE_READ_KINDS`); text-chain stating the list is N104, later. No code change.
+- K144: the projection columns and `fts_id` stay on `bundles` in T5; the statements already read `b.<column>` of `bundles b`. No code change.
+- Module tests 24/24. Checks: format 0 failures; architecture 0 failures; coverage 24 of 24; ownership 0 failures.
+
+Size: test runs 10, module lines 2636
