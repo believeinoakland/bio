@@ -1,13 +1,13 @@
 /* progressions over record-core and membership (the real ones) on a real SQLite database (node:sqlite) standing in for
    a Durable Object's storage. What it reads from `entities`, `connections`, `extraction` and `provenance` are providers
-   the test controls, in the shapes of those modules' Provides (entities R5, R7, R16 and K76 (3); the weaker grade;
+   the test controls, in the shapes of those modules' Provides (entities R5, R7, R16; the weaker grade;
    extraction R30; provenance `homeOf`), as `progressionsOf`'s `deps` take them. Every test drives the module at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
-import { BASIS_GRADES } from "../../../checks/bio-checks.mjs";
+import { gradeRank as RANK } from "../../../src/entities/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -31,16 +31,14 @@ export function storage() {
   };
 }
 
-const RANK = Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i]));
 
-/** The entity registry and resolutions `entities` would provide, and `connections`' weaker grade. */
+/** The entity registry and resolutions `entities` answers (its R5, R7, R16), and `connections`' weaker grade. */
 export function meaning() {
   const m = { entities: new Map(), resolutions: new Map() };
   m.entities_ = {
-    gradeRank: RANK,
-    isEstablished: (g) => g === "A" || g === "B",
     has: (id) => m.entities.has(id),
-    readEntity: ({ entityId }) => (m.entities.has(entityId) ? { ok: true, found: true, ...m.entities.get(entityId) } : { ok: true, found: false }),
+    readEntity: ({ entityId }) => (m.entities.has(entityId) ? { ok: true, found: true, entity: { ...m.entities.get(entityId), aliases: [], relations: [] } }
+                                                         : { ok: true, found: false, entity_id: entityId, entity: null }),
     strongestByCapture: (id) => new Map(m.resolutions.get(id) || []),
   };
   m.connections_ = { weakerGrade: (a, b) => ((RANK[a] || 0) <= (RANK[b] || 0) ? a : b) };
