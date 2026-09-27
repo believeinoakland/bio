@@ -80,15 +80,16 @@ Size: test runs 72, module lines 2037
 ## Entries applied (K150)
 
 - **R18** · the write-path suite drops the bias relay (the `checkBiasExtension` arm of `RELAYED`, C-26.1–C-26.7) and the `BIAS_REFUSED` probe (C-26.11): both rows left the catalogue for `src/bias/` (layer 5), which promotion cannot import. The floor moves 40 → **38**, counted against the catalogue as it stands: 46 rows sited at the promote write at 1.34.0's commit, 38 now; the eight gone are exactly C-26.1–C-26.7 and C-26.11. C-26.12 (`BIAS_ILLEGAL_TRANSITION`, R15) stays and is still probed.
-- **R34** · `CATALOG_VERSION` 1.34.0 → **1.35.0** (MINOR), with its note in `src/gate.mjs`. Derived from `bio-plane/checks/bio-checks.mjs`'s diff between `3ec9dbc533` (the commit that set 1.34.0) and `a31fe1aabd`: 830 lines, all removals; both catalogues loaded and every row's `check` id compared. **45 departures, no arrivals, no row changed:**
+- **R34** · `CATALOG_VERSION` 1.34.0 → **1.35.0** (MINOR), with its note in `src/gate.mjs`. Derived from `bio-plane/checks/bio-checks.mjs`'s diff between `3ec9dbc533` (the commit that set 1.34.0) and `a31fe1aabd`: 830 lines, all removals; both catalogues loaded and every row's `check` id compared. **49 departures, no arrivals, no row changed** (45 at `a31fe1aabd`; four more after BOB's CHANGE, measured again at `508920f1c1`):
   - CALIBRATION #1 (`94547e7dd7`): C-42.1–C-42.7 (`CALIBRATION_CHECKS`)
   - EXTRACTION #1 (`5637083691`): C-51.1–C-51.5 (`REEXTRACT_CHECKS`)
   - ENTITIES #1 (`7105bd5dbb`): C-91.1–C-91.3 (`IDSPACE_CHECKS`)
   - PROGRESSIONS #1 (`e72e3563bb`): C-33.26 `UNKNOWN_AFTER`, C-33.42 `NO_DEFINITION_VERSION`, C-33.43 `DEFINITION_MOVED`
   - OBSERVATION-LOG #1 (`6d44967ab5`, K142): C-54.2–C-54.10 (`LEAD_CHECKS`)
   - BIAS #1 (`4a0220de10`, K146, K150): C-26.1–C-26.11, C-26.13–C-26.19, with `checkBiasExtension` and `BIAS_BAR_PHRASING`, `BIAS_STATEMENT_KINDS`, `BIAS_VERDICT_SPEAKER`, `BIAS_VERDICT_WHOLESALE`
+  - RETRIEVAL #1 (`64e6242334`, RETRIEVAL #1 REPORT 3): C-23.1 `MEANING_ROWS_NO_ARM`, C-23.2 `MEANING_ROWS_UNKNOWN_ARM` (`MEANING_READ_CHECKS`), C-33.20 `NO_SUCH_SELECTION`, C-33.32 `SET_MOVED`
   - CONTENT #1 (`108ba93457`) moved the helpers `imagePageUndetermined`, `legContentId`, `mintUndetermined`, which carry no check id.
-  The d470 suite's own print on this tree: **count 523** (568 − 45, agreeing with the row diff), **sha256 `ac5d8ad6244d6c279bdfb55fa29d7440765d8d6d1faa9a2f0916b160eafb9fba`**, **source `38f86aa4da5e1cf63c89693773ceb3aaeca28b1086e911cfda471123da566883`**. `GATE_VERSION` is `plane-gate/1.0 (bio-checks 1.35.0)`.
+  The d470 suite's own print on this tree: **count 519** (568 − 49, agreeing with the row diff), **sha256 `e4d92a7e563ee9a0052239476766b449021eee501a6d2d7547a2e53c370c56bf`**, **source `18a618723fe7fce4936badcd595fb1158fd8dc6bb01e456656ffeb244fd823b1`** (on `508920f1c1` merged; superseding 523 / `ac5d8ad6…` / `38f86aa4…` measured at `a31fe1aabd`). `GATE_VERSION` is `plane-gate/1.0 (bio-checks 1.35.0)`.
 
 ## Improvements made in the module
 
@@ -122,7 +123,7 @@ None is unmet.
 
 ## Found in other modules (REPORT)
 
-1. **legacy-tests (T5-12), d470-catalog-census:** 10 pass, 3 fail here (A1, A3, A5), as expected. Re-pin: `"1.35.0": { count: 523, digest: "ac5d8ad6244d6c279bdfb55fa29d7440765d8d6d1faa9a2f0916b160eafb9fba", changed: [], source: "38f86aa4da5e1cf63c89693773ceb3aaeca28b1086e911cfda471123da566883" }`, and A5's literal (still `1.33.0`) → `1.35.0`. It supersedes PROMOTION #3's 1.34.0 row, which was never pinned; whether both rows are kept is legacy-tests'.
+1. **legacy-tests (T5-12), d470-catalog-census:** 10 pass, 3 fail here (A1, A3, A5), as expected. Re-pin: `"1.35.0": { count: 519, digest: "e4d92a7e563ee9a0052239476766b449021eee501a6d2d7547a2e53c370c56bf", changed: [], source: "18a618723fe7fce4936badcd595fb1158fd8dc6bb01e456656ffeb244fd823b1" }` (after the retrieval CHANGE; re-read at layer close if connections moves rows), and A5's literal (still `1.33.0`) → `1.35.0`. It supersedes PROMOTION #3's 1.34.0 row, which was never pinned; whether both rows are kept is legacy-tests'.
 2. **legacy-index (T5-11), the ratification gate without bias's checks:** `checkBundle` no longer runs `checkBiasExtension`, and nothing outside `src/bias/` calls `withBiasChecks` yet (`src/index.mjs` wraps `runGate` with provenance's `withRegisterChecks` only). Until T5-11 lands K146's wrap, `op=ratify` does not judge C-26.1–C-26.7.
 3. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` embeds `src/gate.mjs` (now 1.35.0). For the layer close (manifest §14).
 
@@ -135,7 +136,7 @@ None is unmet.
 - `node checks/coverage.mjs /home/user/bio promotion`: `coverage: 1 modules, 45 of 45 live requirement ids named by a test; 0 failures`
 - `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 3 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 0 line(s) added, 0 removed; 0 failures`
 
-Size: test runs 12, module lines 2048
+Size: test runs 12, module lines 2048 (superseded below)
 
 ## Message to BOB not delivered (for BOB's backstop check, mechanics §5, §13)
 
