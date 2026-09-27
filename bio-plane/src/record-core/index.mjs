@@ -699,20 +699,28 @@ export class RecordCore {
   }
 
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
-   *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). `known`, what a
-   *  reference resolves against, is the WHOLE corpus and never leaves this method: filtering it would
-   *  manufacture dangling-reference findings out of a viewer's position (REC-30). What is gated is what
-   *  leaves: the page holds only bundles `visible(id)` admits. `context(id)` adds the caller's further
-   *  checkBundle options for a bundle (the earned and published registries later modules build).
-   *  Blob-backed files are declared elided: existence assertions see them, byte checks skip them. */
+   *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). What a reference
+   *  resolves against is the WHOLE corpus, asked of `bundles` by its key one reference at a time, and never
+   *  leaves this method: filtering it would manufacture dangling-reference findings out of a viewer's
+   *  position (REC-30). What is gated is what leaves: the page holds only bundles `visible(id)` admits.
+   *  N117: every read here carries an SQL `LIMIT` — the cursor read takes the ids after `after` a page's
+   *  worth at a time and stops once the page is full, and no read loads the corpus's ids whole.
+   *  `context(id)` adds the caller's further checkBundle options for a bundle (the earned and published
+   *  registries later modules build). Blob-backed files are declared elided: existence assertions see them,
+   *  byte checks skip them. */
   async auditPass({ after = "", limit = 200, visible = null, context = null } = {}) {
     const cap = RecordCore.#bound(limit);
-    const known = new Set(this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id));
     const page = [];
-    for (const r of this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id`, String(after ?? ""))) {
-      if (typeof visible === "function" && !visible(r.bundle_id)) continue;
-      page.push(r.bundle_id);
-      if (page.length >= cap) break;
+    let scan = String(after ?? "");
+    for (;;) {
+      const batch = this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`, scan, cap);
+      for (const r of batch) {
+        if (typeof visible === "function" && !visible(r.bundle_id)) continue;
+        page.push(r.bundle_id);
+        if (page.length >= cap) break;
+      }
+      if (page.length >= cap || batch.length < cap) break;
+      scan = batch[batch.length - 1].bundle_id;
     }
     const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
     const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
@@ -727,7 +735,7 @@ export class RecordCore {
         if (typeof v === "string") files.set(path, v); else elided.add(path);
       }
       const extra = typeof context === "function" ? (context(id) || {}) : {};
-      const resolveTarget = (t) => known.has(t);
+      const resolveTarget = (t) => typeof t === "string" && !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=? LIMIT 1`, t);
       const { findings } = await checkBundle({
         folderName: id, files, elidedPaths: elided, sha256, sha512, resolveTarget, ...extra,
       });
