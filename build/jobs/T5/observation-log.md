@@ -46,3 +46,27 @@
 
 - The C-22 rows leave `AI_RUN_CHECKS` with ai-runs' N49 (K142).
 - The internet frontier's `vocabulary` (R21's other half) is written where the frontier is: retrieval (T5-10, D-682 is in its entry too).
+
+## Found in other modules (REPORT)
+
+1. **legacy-tests** (T5-12): old suites this change moves, measured against `tranche/T5` @ `a3750eb937` (before entities' merge, so the source-walker counts may carry entities' share too):
+   - `observation-log.test.mjs`: A1–A3, A6 (the three tables and indexes now in `src/observation-log/schema.mjs`), B1, B16, K6a (the append site and its checker now in `src/observation-log/index.mjs`, `store.mjs` holds a delegate) are source anchors; C1–C4 are R3 (K148): the fixture's run ticks a `NEVER_LOOKED` entry, which is refused, so the fold writes two entries, not three. Give the fixture a state that is a look.
+   - `airun.test.mjs` ARM K2, K3, K3b, K7: the same R3 fixture entry (line 454); C1–C3 (the empty run's terminal `NEVER_LOOKED`) pass under K148's exception.
+   - `lead.test.mjs`: imports `LEAD_CHECKS` from the catalogue for C-54.2–C-54.10, now `src/observation-log/checks.mjs` (the catalogue keeps C-54.1); the suite throws at the first missing row.
+   - `observation-meaning.test.mjs` A6: reads the three meaning writers in `store.mjs`, now in the module.
+   - `derivation-bounds.test.mjs` (+10), `meaning-bounds.test.mjs` (+4), `bounds.test.mjs` (+1, the capped-op roster: `op=leadread` and `op=leadlist` caps moved to the module): walkers over `store.mjs` segments that lost the lead, the writers and the fence.
+   - Not run here, by the map (§4): `nc-rec93/94/95/103/110/129/63`, `nc-mk1`, `nc-mk4`, `leadslug.control`, `casesearched.control`, `d241`, `project-sight.control`, `civicos-ui/check-refusal-codes.mjs` and `check-semantics.mjs` (C-54 rows, `LEAD_LOOK_OUTCOMES` now in `src/observation-log/vocabulary.mjs`).
+2. **legacy-index** (T5-11): D-681's routing for `op=leadlist` (OPS `leadlist`, NEEDS null, IDENTITY_READS, the viewer-stamped ops beside `leadread`) is not in `index.mjs`; the store answers `leadlist` once the control plane routes it. `affordances.mjs` wants D-681's NON_ACTS row for `leadlist`.
+3. **retrieval** (T5-10): the internet frontier's `vocabulary` (R21's other half, D-682) is `LEAD_VOCABULARY` from this module. The frontier arms reach this module through the store's delegates today (`#frontierLatest` → `latest`, `#frontierVerification` → `verification`, `#frontierDocumentVisible` → `rowGate`, `#leadReach`, `#leadReferentVisible` → `referentVisible`, and `missingCause` / `firstRowAt` for §5.1); `#missingMeaningCause`'s evidence probes stay with the caller (K80's reading: R11's rule is here, the probes read other modules' tables).
+4. **connections** (T5-5): R5's provider is `derivationStatementFor(entityId, {enteredAt, hasArtifact})`; its derivation notice (R3) is registered by `attachMeaning({connections})` at its merge (the store still calls `observeConnectionDerivation` where `deriveConnections` fires).
+5. **ai-runs** (T6), N49: re-export `vocabulary.mjs` from `airun.mjs` and delete the copy; move the seven C-22 rows out of `AI_RUN_CHECKS` into this module's `checks.mjs`; register the `run` resolver (`registerAuthority("run", …)`). **capture-requests** (T6): register the `sweep` resolver; legacy-store answers both until then. **queue**: re-export `CONDITION_KINDS` from `queuestate.mjs`.
+6. **agent-worker** (T6, K148): `stepLog`'s control-flow entries default to `NEVER_LOOKED`, refused C-22.1 at the append.
+7. **progressions**: `format.mjs` failed on `build/requirements/progressions.md` (ids given twice: R8, R33, R31) at `tranche/T5` @ `4405b936fe`; clean at `0eb6910b32`.
+8. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale (the plane now bundles `src/observation-log/`).
+
+## Tests and checks
+
+- **Module:** `node --test bio-plane/test/m/observation-log/` @ `1f4289a719`: tests 42, pass 42, fail 0 (6 files: vocabulary, append, writers, reads, fence, lead). `bio-plane/test/m/entities/` after the merge: 34 pass, 0 fail. No layer tests (manifest).
+- **Checks** (civicos-process `main`): format 69 modules, 64 requirements files, 0 failures; architecture 11 product files, 34 relative imports, 0 failures; coverage 29 of 29 live ids named; ownership 15 files, legacy-store 60 added / 1,368 removed, legacy-checks 0 / 64, 0 failures (every added line listed by the check: the import, the purge filter, the creation with the N39 resolvers, `listenTo`, `attachMeaning`, `migrate`, the delegates, and the rewired calls).
+
+Size: test runs 24, module lines 2770
