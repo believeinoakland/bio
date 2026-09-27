@@ -135,3 +135,5 @@ Repair jobs started 2026-09-27 05:25 UTC:
 - `legacy-index` · LEGACY-INDEX #2 · `session_01587zDEWW3E6JZJLW7E3kK9`
 
 CAPTURE #2 complete at `2fad4a015f`, merged early (`c769c73`): `driveRow` exported with an interface test over every C-48 code; capture 46/46. Ownership: one failure, its record `capture-2.md` outside the expected name, which K125 chose; accepted.
+
+LEGACY-INDEX #2 complete at `034f6879bf`, merged: T4-7 applied (`monitor-assess` 91/0, was crashing; `drive` 160/0); T4-8 verified, no change (N19 routes only unread-image and no-text-layer pages, 14/0 through the plane; `textshown`'s fixture is an image-content page by pdf-reader R26, sent to legacy-tests). Ownership: only the record-name failure K125 accepted.
