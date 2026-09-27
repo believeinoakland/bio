@@ -181,6 +181,9 @@ CREATE TABLE IF NOT EXISTS links (
   partition      TEXT NOT NULL,
   origin         TEXT,
   chrome         INTEGER NOT NULL DEFAULT 0,
+  -- D-340: WHY the link reads as contained in a chrome region (the region it sat in, e.g. <nav> or
+  -- role=navigation). NULL on a link that is not, and on one filed before the column existed.
+  chrome_basis   TEXT,
   captured_at    TEXT NOT NULL,
   first_seen     TEXT NOT NULL,
   PRIMARY KEY (source_capture, link_ref, citation_norm)

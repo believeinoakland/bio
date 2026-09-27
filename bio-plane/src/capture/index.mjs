@@ -12,6 +12,7 @@
  * module registers a listener (R44, R55; `on`). */
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { KNOCK } from "./doorbell.mjs";
+import { acquire, archiveLookup } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
@@ -135,6 +136,17 @@ export class Capture {
     }
     return out;
   }
+
+  /** Hands `payload` to the listeners of `event` (the acquisition act calls it for R55's measurement). */
+  emit(event, payload) { return this.#emit(event, payload); }
+
+  /* ---- the acquisition act (acquire.mjs) ---- */
+
+  /** R1–R20: answers `{status, body}`. */
+  acquire(body, opts) { return acquire(this, body, opts); }
+
+  /** R3 */
+  archiveLookup(args) { return archiveLookup(this, args); }
 
   #emitSync(event, payload) {
     const out = [];
@@ -1125,5 +1137,9 @@ export function captureOps(c, url, body, env) {
     inboxlist: () => c.inboxList(q("status") || null),
     inboxget: () => c.inboxGet(q("id")),
     inboxresolve: () => c.inboxResolve(body || {}),
+    /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
+    acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
+                                          storeName: q("store") || "bio" }),
+    archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
   };
 }
