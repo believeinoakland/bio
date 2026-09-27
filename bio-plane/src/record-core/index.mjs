@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R38).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R59).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -9,7 +9,7 @@
    the tables other modules declared to it (R21), and `seedMintLedger` reads the live rows its
    caller names. Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the reasoning the
    legacy comments carried is kept beside the code it explains. */
-import { checkBundle, PROJECT_ID_CHECKS } from "../../checks/bio-checks.mjs";
+import { checkBundle, createSha256, PROJECT_ID_CHECKS, PER_ITEM_CHECKS } from "../../checks/bio-checks.mjs";
 
 export { RECORD_SCHEMA } from "./schema.mjs";
 
@@ -17,6 +17,184 @@ const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const REFUSED = Symbol("record-core-refusal");
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
+
+/* ---- the instant (R47, R48): module-level functions ---- */
+
+/* D-543 — THE STAMPING HELPER, AND IT NAMES ITS PRECISION AT EVERY CALL. The record spells an instant
+   two ways: `…:00Z` (whole seconds — the convention `ISO_TS_RE` holds a document's own bytes to, about
+   twenty gate checks) and `…:00.123Z` (milliseconds, `toISOString()`'s own spelling, which a row
+   stamped for ordering keeps). Neither is wrong; what was wrong is that the precision was carried by a
+   regex or a `split` at each site, in two spellings nobody named, so a site's precision could be learned
+   only by reading it. `stampInstant("second" | "millisecond", when)` says it; any other word throws.
+   `observation_log.at` stays whole-second by BOB #33's ruling (D-516), and it is a "second" call here
+   like any other, not an exception to the helper.
+   AND TWO SPELLINGS MUST NEVER BE COMPARED AS STRINGS: `Z` sorts above `.`, so `…:00Z` ranks AFTER
+   `…:00.123Z` though it names the earlier instant (read as `.000`). `instantOrder` compares INSTANTS —
+   negative, zero or positive like a comparator, and NaN when either side is not an instant, so a
+   `> 0` / `< 0` test is false for an unreadable stamp rather than ranking it as zero. Where a
+   comparison crosses act kinds, it goes through this. */
+export function stampInstant(precision, when = Date.now()) {
+  if (precision !== "millisecond" && precision !== "second")
+    throw new Error(`stampInstant: precision is "second" or "millisecond", never ${JSON.stringify(precision)}`);
+  const iso = new Date(when).toISOString();
+  return precision === "millisecond" ? iso : iso.replace(/\.\d+Z$/, "Z");
+}
+export function instantOrder(a, b) {
+  const x = typeof a === "string" && a ? Date.parse(a) : NaN, y = typeof b === "string" && b ? Date.parse(b) : NaN;
+  return x - y;
+}
+
+/* ---- a file's digest and size (R58): module-level functions ---- */
+
+/** R57's creation marker: the SHA-256 of the empty string, the base a creation's manifest entry records, as the
+ *  check catalogue recognises it. */
+export const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+/* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promotion` before any write and by
+   `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
+   about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
+   of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
+   A blob-backed file's digest is its content address, `blobSha`, lower-cased. Null for neither. */
+export function fileDigestOf(f) {
+  if (f && typeof f.text === "string") return createSha256().update(te.encode(f.text)).hex();
+  if (f && typeof f.blobSha === "string" && f.blobSha) return f.blobSha.toLowerCase();
+  return null;
+}
+/* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
+   `files.content` column stores — read by `promotion` (the stored figure and its inline bound) and by `digestCensus`
+   (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
+export function inlineBytesOf(f) {
+  return f && typeof f.text === "string" ? te.encode(f.text).length : null;
+}
+
+/* R56, R57: a census's listing bound — an integer 0..500, 50 when absent, empty or not an integer. */
+function censusCap(limit) {
+  const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
+  return Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+}
+/* REC-176: THE FILE LIST A MANIFEST ROW RECORDS. An unparsable or non-array value is an EMPTY list. */
+function manifestFiles(filesJson) {
+  let arr;
+  try { arr = filesJson == null ? null : JSON.parse(filesJson); } catch { arr = null; }
+  return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
+}
+
+/* ---- the set form of an act (R49–R52, R55, C-75): module-level ---- */
+
+/** R49: the most items one set may carry. */
+export const PER_ITEM_MAX = 100;
+
+/* D-126 — THE PER-ITEM WEIGHT — "each item independently succeeds or is RETAINED WITH A REASON"
+ * (NOTIFICATIONS.md §Applying a handler to a selection; Bob: *"If that action didn't work for one or
+ * more, they'd stay in the list so that the user can take a different action."*).
+ *
+ * ONE HELPER FOR EVERY SET ACT. An act that takes a SET when its body carries `items` hands each item to
+ * the SAME function its single form calls (`one`), so an item is accepted and refused by exactly the
+ * rules one key would be, and its reason is that act's own refusal, verbatim. This helper words only
+ * what belongs to the SET (C-75).
+ *
+ * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
+ *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
+ *     the loop.
+ *   - SILENT SKIPPING. Every item the caller sent has exactly one outcome in `items[]`, at its own
+ *     `index`, `applied` or `retained`, and `applied + retained === count` by construction.
+ *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
+ *     C-75.5's summary refusal WITH `items[]` beside it.
+ *
+ * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` (the actor, the decider) is spread LAST, so an item
+ * that names its own actor is overwritten exactly as a single-key body is. The rest of the body is SHARED
+ * — a common `reason`, `to` or disposition — and an item may override it for itself.
+ *
+ * REC-205 — A SHARED IDENTITY OF ONE SHAPE MUST NOT REACH AN ITEM OF ANOTHER (R51). An act with several
+ * identity shapes decides WHICH ACT IT IS by what the caller sent, and in a set that is the shared body
+ * plus the item: a project named once for a selection made every OTHER item project-scoped too
+ * (measured at 1a7f0bcc0). So an item that NAMES a key of one or more of `itemKeys`' groups keeps the
+ * shared values of THOSE groups' keys and of `sharedKeys`, and the other groups' identity keys are dropped
+ * for that item alone; an item naming no identity is unchanged. The groups are the act's published ones
+ * (`affordances`' `PER_ITEM_ACTS`), passed by its caller: this module knows no act.
+ *
+ * ITEMS ARE NOT IN ONE TRANSACTION, deliberately: independence is the weight. */
+export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys = null } = {}) {
+  const refusal = (code, detail, extra) => {
+    const row = PER_ITEM_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+  };
+  const { items, ...shared } = body && typeof body === "object" ? body : {};
+  const count = Array.isArray(items) ? items.length : 0;
+  /* DEC-49 REGION is-per-item-set-shape */
+  if (!Array.isArray(items) || items.length === 0)
+    return refusal("SET_NO_ITEMS",
+      `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or `
+      + `send one item's fields without \`items\` for the single act. Nothing was done.`,
+      { op: act, weight: "per-item", count: 0 });
+  if (items.length > PER_ITEM_MAX)
+    return refusal("SET_TOO_LARGE",
+      `op=${act} acts on at most ${PER_ITEM_MAX} items at once and this set holds ${items.length}. `
+      + `Refused WHOLE, before any item was tried, so no item moved.`,
+      { op: act, weight: "per-item", count: items.length, max: PER_ITEM_MAX });
+  /* END DEC-49 REGION is-per-item-set-shape */
+  const echo = (it) => {
+    const o = {};
+    for (const [k, v] of Object.entries(it)) {
+      if (typeof v === "string") o[k] = v.slice(0, 400);
+      else if (typeof v === "number" || typeof v === "boolean" || v === null) o[k] = v;
+    }
+    return o;
+  };
+  /* An identity key is one some group names and `sharedKeys` does not, so a key an act declares shareable is
+     never taken from an item that relies on it. NAMED is read as the acts read an identity: a trimmed,
+     non-empty string, so `project: ""` names nothing. */
+  const groups = Array.isArray(itemKeys) ? itemKeys.filter(Array.isArray) : [];
+  const shareable = new Set(Array.isArray(sharedKeys) ? sharedKeys : []);
+  const identity = new Set(groups.flat().filter((k) => !shareable.has(k)));
+  const namesIt = (o, k) => typeof o[k] === "string" && o[k].trim() !== "";
+  const sharedFor = (it) => {
+    const named = [...identity].filter((k) => namesIt(it, k));
+    if (named.length === 0) return shared;
+    const reach = new Set();
+    for (const g of groups) if (g.some((k) => named.includes(k))) for (const k of g) reach.add(k);
+    const narrowed = { ...shared };
+    for (const k of identity) if (!reach.has(k)) delete narrowed[k];
+    return narrowed;
+  };
+  const outcomes = [];
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    /* DEC-49 REGION is-per-item-malformed */
+    if (!it || typeof it !== "object" || Array.isArray(it)) {
+      outcomes.push({ ...refusal("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was `
+        + `left as it was and the other items were still tried.`), index: i, outcome: "retained", asked: null });
+      continue;
+    }
+    /* END DEC-49 REGION is-per-item-malformed */
+    let r;
+    try {
+      const b = { ...sharedFor(it), ...it, ...stamped };
+      delete b.items;               /* an item cannot smuggle a nested set back into the act */
+      r = one(b);
+    } catch (e) {
+      /* DEC-49 REGION is-per-item-failed */
+      r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
+        + String((e && e.message) || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+      /* END DEC-49 REGION is-per-item-failed */
+    }
+    const res = r && typeof r === "object" ? r : { ok: false };
+    outcomes.push({ ...res, index: i, outcome: res.ok === true ? "applied" : "retained", asked: echo(it) });
+  }
+  const applied = outcomes.filter((o) => o.outcome === "applied").length;
+  const retained = outcomes.length - applied;
+  const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
+  if (retained === 0)
+    return { ok: true, ...head, detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
+  /* DEC-49 REGION is-per-item-retained */
+  return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
+           check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
+           translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
+           detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in `
+             + `items[] carries its own act's reason. The applied items stand — this is not a rollback.`,
+           ...head };
+  /* END DEC-49 REGION is-per-item-retained */
+}
 
 const instances = new WeakMap();
 
@@ -48,11 +226,18 @@ export class RecordCore {
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
   static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
 
-  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix;
+  #storage; #sql; #depth = 0; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  #auditChecks = [];      // R59: {module, check}, in registration order
 
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
+    /* R54, D-436: THE STORE'S FIRST BOOT, witnessed here, when the instance is made — before the store's schema
+       pass or `migrate` creates or alters a table — since storage that has never held the record's schema has no
+       `bundles` table. Asked through `PRAGMA table_info`, the form every boot already runs, never a catalogue read
+       that could throw inside blockConcurrencyWhile (which bricks the Durable Object). */
+    try { this.#firstBoot = [...this.#sql.exec(`PRAGMA table_info(bundles)`)].length === 0; }
+    catch { this.#firstBoot = false; }
     this.#evidence = evidence && typeof evidence.get === "function" ? evidence : null;
     this.#evidencePrefix = evidencePrefix;
     this.declarePurge("record-core", RecordCore.OWN_TABLES, { exempt: RecordCore.EXEMPT_TABLES });
@@ -60,6 +245,10 @@ export class RecordCore {
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /** R54: true throughout the boot at which the store had never held the record's schema, decided once, when
+   *  this instance was made; false at every later boot. `instance-setup` reads it. */
+  isFirstBoot() { return this.#firstBoot === true; }
 
   /** Additive columns this module's tables gained after a store was first written. Called by the
    *  store after its schema pass; idempotent. */
@@ -115,6 +304,7 @@ export class RecordCore {
   allocIdOp(prefix, year) {
     const scope = `${prefix}-${year}`;
     const gated = RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
+    /* DEC-49 REGION is-allocid-prefix-gated */
     if (gated) {
       const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
       return { ok: false, reason: "ALLOCID_PREFIX_GATED", code: "ALLOCID_PREFIX_GATED", check: row.check,
@@ -122,6 +312,7 @@ export class RecordCore {
                detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid `
                      + `allocates only a prefix whose objects every caller may see. Nothing was allocated.` };
     }
+    /* END DEC-49 REGION is-allocid-prefix-gated */
     return this.allocId(prefix, year);
   }
 
@@ -318,6 +509,128 @@ export class RecordCore {
     return { ids, cursor: ids.length ? ids[ids.length - 1] : null };
   }
 
+  /** R53: each held bundle, in id order after `after`, with at least one manifest entry whose author begins with
+   *  `authorPrefix`, as `{bundleId, latest, firstOther}`. Entries are ordered by `created` and then by write order
+   *  (rowid): `created` is the caller's stated time, and two entries stamped alike are ordered by the record, never
+   *  by the snap key's lexical order, which is not a clock. `firstOther` is the earliest entry whose author is
+   *  non-empty and does not begin with the prefix. What a viewer may see of the list is its caller's to decide. */
+  manifestByAuthor({ authorPrefix = "", after = "", limit = 200 } = {}) {
+    try {
+      const cap = RecordCore.#bound(limit);
+      const pre = String(authorPrefix ?? "");
+      const begins = `(author IS NOT NULL AND substr(author, 1, length(?)) = ?)`;
+      const ids = this.#rows(
+        `SELECT b.bundle_id FROM bundles b
+          WHERE b.bundle_id > ? AND EXISTS (SELECT 1 FROM manifest m WHERE m.bundle_id = b.bundle_id AND ${begins.replaceAll("author", "m.author")})
+          ORDER BY b.bundle_id LIMIT ?`, String(after ?? ""), pre, pre, cap).map((r) => r.bundle_id);
+      const entry = (r) => r ? { snapKey: r.snap_key, kind: r.kind, base: r.base ?? null, author: r.author ?? null,
+                                 created: r.created, writer: r.writer ?? null, operation: r.operation ?? null } : null;
+      const cols = `snap_key, kind, base, author, created, writer, operation`;
+      const bundles = ids.map((id) => ({
+        bundleId: id,
+        latest: entry(this.#one(`SELECT ${cols} FROM manifest WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`, id)),
+        firstOther: entry(this.#one(`SELECT ${cols} FROM manifest WHERE bundle_id=? AND author IS NOT NULL AND author <> ''
+                                       AND NOT ${begins} ORDER BY created, rowid LIMIT 1`, id, pre, pre)),
+      }));
+      return { bundles, cursor: ids.length ? ids[ids.length - 1] : null };
+    } catch {
+      return { bundles: [], cursor: null };
+    }
+  }
+
+  /* ---- the censuses (R56, R57): read-only audits of this module's own tables ---- */
+
+  /** R56, REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own
+   *  stored content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that
+   *  is the point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read,
+   *  and which of the two (bytes or digest) is wrong is not decidable from here. A row is recomputed by the one
+   *  `fileDigestOf` (R58); `bytes` is judged beside it for live inline rows only, by the one `inlineBytesOf`, as a
+   *  SEPARATE figure (history holds no size). Bounded by `limit` rows listed per table; the counts are always whole. */
+  digestCensus({ limit } = {}) {
+    const cap = censusCap(limit);
+    const walk = (table) => {
+      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
+      try {
+        for (const r of this.#sql.exec(table === "files"
+            ? `SELECT bundle_id, NULL AS snap_key, path, content, blob_sha, bytes, sha256 FROM files`
+            : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
+          out.rows++;
+          const inline = r.content !== null && r.content !== undefined;
+          if (inline) out.inline++; else out.blob++;
+          const computed = fileDigestOf(inline ? { text: r.content } : { blobSha: r.blob_sha });
+          const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
+          const bBad = inline && table === "files" && Number(r.bytes) !== inlineBytesOf({ text: r.content });
+          if (dBad) out.digest_disagrees++;
+          if (bBad) out.bytes_disagree++;
+          if ((dBad || bBad) && out.listed.length < cap)
+            out.listed.push({ bundle_id: r.bundle_id, ...(table === "history" ? { snap_key: r.snap_key } : {}), path: r.path,
+                              stored: r.sha256, computed, ...(bBad ? { bytes_stored: r.bytes } : {}),
+                              digest: dBad ? "disagrees" : "agrees" });
+        }
+      } catch { /* R56 never throws: a table it cannot read is counted as far as it was read */ }
+      return out;
+    };
+    return { ok: true, files: walk("files"), history: walk("history"), rewritten: 0,
+             note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, "
+                 + "so its bytes are not judged." };
+  }
+
+  /** R57, REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ENTRIES — read-only; a bundle short of entries is REPORTED,
+   *  never repaired: an entry an overwrite destroyed is not recoverable, and inventing it back would be the record
+   *  claiming more than it holds. WHAT MAKES IT MEASURABLE: `commit` (R33) is the one writer of `manifest`, one entry
+   *  per promotion, and steps `row_version` by one and nothing else does, so `row_version - COUNT(manifest)` is the
+   *  number of promotions whose entry is gone. WHAT IT CANNOT DECIDE, stated per bundle rather than rounded: a bundle
+   *  with NO creation entry (base = EMPTY_STRING_SHA) may have lost it to an overwrite OR predate the creation entry
+   *  being written at all, so one promotion of such a bundle's deficit is `undetermined`, the rest `overwritten`.
+   *  Which KEY collided is recorded nowhere and is not guessed; an entry whose base is none of the bundle's own
+   *  entries' `bundle.md` digest (`unanchored`) is listed as the trace an overwrite leaves in the chain. Entries of
+   *  a bundle id not held are counted apart. Bounded by `limit` bundles listed; the counts are always whole. */
+  snapKeyCensus({ limit } = {}) {
+    const cap = censusCap(limit);
+    const out = { ok: true, bundles: 0, manifest_rows: 0, promotions: 0, overwritten: 0, undetermined: 0,
+                  bundles_with_deficit: 0, excess: 0, orphan_manifest_bundles: 0, listed: [], rewritten: 0 };
+    try {
+      const rowsBy = new Map();
+      for (const r of this.#sql.exec(`SELECT bundle_id, snap_key, base, files_json FROM manifest`)) {
+        if (!rowsBy.has(r.bundle_id)) rowsBy.set(r.bundle_id, []);
+        rowsBy.get(r.bundle_id).push(r);
+      }
+      const seen = new Set();
+      for (const b of this.#sql.exec(`SELECT bundle_id, row_version FROM bundles`)) {
+        out.bundles++;
+        seen.add(b.bundle_id);
+        const rows = rowsBy.get(b.bundle_id) || [];
+        const promotions = Number(b.row_version) || 0;
+        out.manifest_rows += rows.length;
+        out.promotions += promotions;
+        const deficit = promotions - rows.length;
+        if (deficit < 0) out.excess += -deficit;
+        const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
+        const outputs = new Set(rows.map((r) => {
+          const md = manifestFiles(r.files_json).find((f) => f.name === "bundle.md");
+          return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
+        }).filter(Boolean));
+        const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA
+          && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
+        if (deficit <= 0 && !unanchored.length) continue;
+        const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
+        const overwritten = deficit > 0 ? deficit - undetermined : 0;
+        out.overwritten += overwritten;
+        out.undetermined += undetermined;
+        if (deficit > 0) out.bundles_with_deficit++;
+        if (out.listed.length < cap)
+          out.listed.push({ bundle_id: b.bundle_id, promotions, manifest_rows: rows.length, overwritten, undetermined,
+                            creation_row: hasCreation, unanchored });
+      }
+      for (const [id, rows] of rowsBy) if (!seen.has(id)) { out.orphan_manifest_bundles++; out.manifest_rows += rows.length; }
+    } catch { /* R57 never throws */ }
+    out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated "
+      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation "
+      + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
+      + "recorded and is not guessed.";
+    return out;
+  }
+
   /* ---- the write path (R33) ---- */
 
   /** R33: the one write into this module's tables, called inside `transact` by `promotion`, which alone
@@ -368,7 +681,19 @@ export class RecordCore {
     });
   }
 
-  /* ---- the audit sweep (R18–R20) ---- */
+  /* ---- the audit sweep (R18–R20, R45, R59) ---- */
+
+  /** R59 (N51, the K31 pattern): a later module registers, once at start, an audit check that `auditPass` runs
+   *  over every bundle of a page beside the catalogue, so a check that left the catalogue for its module is not
+   *  lost to the audit, and the bundle is judged once, whole. */
+  registerAuditCheck(module, check) {
+    if (typeof module !== "string" || !module || typeof check !== "function")
+      return { ok: false, reason: "AUDIT_CHECK_MALFORMED", detail: "an audit check names its module and is a function" };
+    if (this.#auditChecks.some((c) => c.module === module))
+      return { ok: false, reason: "AUDIT_CHECK_DECLARED", module, detail: `${module} has already registered its audit check` };
+    this.#auditChecks.push({ module, check });
+    return { ok: true, module };
+  }
 
   /** R18–R20: the check catalogue over a bounded page of bundles in id order after `after`, run WHERE
    *  THE DATA IS (one network round trip per image was ~97% of an outside pass's cost). `known`, what a
@@ -398,11 +723,23 @@ export class RecordCore {
       for (const [path, v] of Object.entries(img)) {
         if (typeof v === "string") files.set(path, v); else elided.add(path);
       }
+      const extra = typeof context === "function" ? (context(id) || {}) : {};
+      const resolveTarget = (t) => known.has(t);
       const { findings } = await checkBundle({
-        folderName: id, files, elidedPaths: elided,
-        sha256, sha512, resolveTarget: (t) => known.has(t),
-        ...(typeof context === "function" ? (context(id) || {}) : {}),
+        folderName: id, files, elidedPaths: elided, sha256, sha512, resolveTarget, ...extra,
       });
+      /* R59: every registered check over the same image, in registration order. A check that throws is an error
+         finding of its own, never a clean bundle. */
+      for (const { module, check } of this.#auditChecks) {
+        let more;
+        try { more = await check({ ...extra, bundleId: id, folderName: id, image: img, files, elidedPaths: elided,
+                                   sha256, sha512, resolveTarget }); }
+        catch (e) {
+          more = [{ check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
+                    message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}` }];
+        }
+        if (Array.isArray(more)) findings.push(...more.filter((f) => f && typeof f === "object"));
+      }
       const errs = findings.filter((f) => f.severity === "error");
       if (!errs.length) { clean++; continue; }
       withErrors++;
