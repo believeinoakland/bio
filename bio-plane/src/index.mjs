@@ -173,7 +173,7 @@ import { Store, stampInstant } from "./store.mjs";
 import { attest, attestStatus, partsHeld, registerAuditReport, withRegisterChecks } from "./provenance/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
-import { userAgent, profilesAsText, substanceDigests, ODF_DIGEST_MAX } from "./capture/acquire.mjs";
+import { userAgent, profilesAsText, substanceDigests, ODF_DIGEST_MAX, driveRow } from "./capture/acquire.mjs";
 import { linksOp, captureObjectOp, archiveLookupOp, acquireOp, withReading } from "./capture/ops.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";

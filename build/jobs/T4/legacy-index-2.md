@@ -4,7 +4,7 @@
 
 ## Status
 
-WAITING on BOB: the ANSWER to QUESTION 1 (T4-8), and the CHANGE that `capture` exports `driveRow` (T4-7). Nothing else open.
+COMPLETE (2026-09-27 ~05:40Z). T4-7 applied after BOB's CHANGE (`tranche/T4` @ `c769c73`, merged here at `ce03ffded3`). T4-8: no code change, on my reading in QUESTION 1; its ANSWER is open, and I stay available for a `CHANGE`.
 
 ## QUESTION 1 (T4-8): the routing already holds the rule; the red arm is the test's fixture
 
@@ -14,16 +14,37 @@ WAITING on BOB: the ANSWER to QUESTION 1 (T4-8), and the CHANGE that `capture` e
 
 **Proof, through the whole plane** (a scratch Miniflare driver, not committed: no path of mine holds tests; its text is below): seven one-page PDFs, each first checked to carry the R14/R26 mark it is built for, then acquired on an un-fleeted instance. `no_text_layer` (a scan) and `image_content_unread` (1 glyph, and 4 glyphs, over a full-page image) are `tier3_candidate: true`; `image_content_undetermined` (5 glyphs at share 1; 1 glyph at share 0.0625), 22 glyphs over a full-page image, and a text page with no image carry no `tier3_candidate`. **14 pass, 0 fail.**
 
-## T4-7 (waiting on the CHANGE)
+## T4-7 (applied)
 
 `op=monitor`'s Drive tick calls `driveRow` at five sites (the folder, file and unknown-shape refusals, and C-48.8/C-48.9's shell arms); `index.mjs` no longer defines it and `capture/acquire.mjs` holds it privately. Both tick codes (`DRIVE_TICK_EXPORT_IS_THE_SHELL`, `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) have `DRIVE_CAPTURE_CHECKS` rows, so capture's reader serves them unchanged. Once `capture` exports it, the change here is one name added to the existing `import { … } from "./capture/acquire.mjs"`. `monitor-assess` (legacy-tests' suite) ticks every Drive arm through the plane: the folder, file and unknown-shape refusals (C-48.2–C-48.4) and both shell arms (C-48.8, C-48.9, with the record unmoved), so it is the end-to-end test.
 
 **Pre-measured, not committed:** with `export` added to capture's `driveRow` in the working tree only (capture's file, restored after) and the import added here: `monitor-assess` 91 pass, 0 fail (base on this branch: 8 fail, then `ReferenceError: driveRow is not defined`, no foot); `drive` green.
 
+**Applied:** `index.mjs` imports `driveRow` from `./capture/acquire.mjs` (one name added to the existing import; one line changed). The five Drive-tick sites are unchanged and now reach capture's reader.
+
+## Deferred
+
+Nothing.
+
+## Found in other modules (REPORT)
+
+1. **legacy-tests** (`bio-plane/test/textshown.test.mjs`): QUESTION 1's fixture; the arm stays red (33/1) until its text-shape page is a text page by R26, or BOB rules otherwise.
+2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` (the plane's source); BOB regenerates at the close.
+
 ## Tests and checks
 
-- `textshown.test.mjs` on this branch at the start: 33/1 (the arm above).
-- The T4-8 driver: 14/0.
+On this branch after merging `tranche/T4` @ `ce03ffded3`:
+- `monitor-assess` (end to end, every Drive arm of the tick): **91 pass, 0 fail** (before: 8 fail, then `ReferenceError: driveRow is not defined`, no foot).
+- `drive`: 160 pass, 0 fail. `capture`'s own tests (`test/m/capture/`, the module whose service I now use): 46 pass, 0 fail.
+- `textshown`: 33/1, the arm of QUESTION 1 (unchanged; not this module's file).
+- The T4-8 driver (scratch, below): 14 pass, 0 fail.
+- No layer tests (manifest).
+- `format: 69 modules, 64 requirements files; 0 failures`
+- `architecture: 29 product files, 50 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures`
+- `ownership: 1 files changed by legacy-index between tranche/T4 and HEAD; 1 failure` — the failure is this record's name (`legacy-index-2.md`, K125's naming), accepted by BOB in the CHANGE.
+
+Size: test runs 11, module lines 11,256 (`index.mjs`)
 
 <details><summary>The T4-8 driver (scratch)</summary>
 
