@@ -51,3 +51,6 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 - legacy-tests (layer 11): LEGACY-CHECKS #2 REPORT 10 (the guard's ratchets and arm G, the old-battery re-pins); N124.
 - promotion's own share is done (PROMOTION #5); its REPORTs: (1) rows owed by legacy-checks (N128); (3) legacy-tests: the d470 1.36.0 re-pin and the guard ratchets in its record; (4) reevaluation replaces the store's registration under its name with its own `onReopened` listener, and reconciles R7's `{raised}` with the store's `{source, since, raised}` reply.
 - record-core's REPORT R3 for legacy-tests: `meaning-bounds`, `bounds` red identically on the base (N70).
+
+**Forwarded to later jobs in T7** (P9):
+- capture-requests (layer 6): CAPTURE-SOURCES #2 COMPLETE (J2, its record on `job/T7/capture-sources`): pass `key: env.CAPTURE_CREDENTIALS_KEY` on the first `credentialsOf` call; pass the row's `principal_plane`, `target` and `host` to R56; the ops, the redirect rule and provenance marking are the caller's (capture-sources' Suggestions).
