@@ -109,9 +109,6 @@ import { readDriveAddress, driveHop, callerSuppliedHopFacts,
    them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
 import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs,
          ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
-import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
-         TSA_CONTENT_TYPE, TSA_ACCEPT,
-         ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE, archiveLocatorFrom } from "./tsa.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
 import { RENDER_DEFAULTS, RENDERED_METHOD, RENDER_TICK_UNDETERMINED, completenessReading, keepRenderBodies, renderAllowanceMs,
@@ -315,6 +312,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
 import { Store, stampInstant } from "./store.mjs";
+import { attest, attestStatus, partsHeld, registerAuditReport, withRegisterChecks } from "./provenance/index.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -4544,37 +4542,7 @@ class StoreSilent extends Error {
    read the identical object rather than two copies of the key drifting apart. */
 const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 
-/* D-533: ARE THESE PARTS, AS THE RECORD NAMES THEM, HELD — each present under its own content address and its
-   digest verified? `op=registeraudit` asks it of a capture held only in parts (Intake Doctrine section 8, BOB #33's
-   ruling of 2026-09-24 21:17Z). A part is VERIFIED when R2 reports the SHA-256 it checked at the put (both
-   writers, `op=acquire` and `op=capture`, pass it) and that digest is the one the record names, and the stored
-   size is the record's. An object carrying no such checksum is read and hashed when it is no larger than one
-   acquire part; a larger one is left UNVERIFIED and said so, never passed. Three lists, each naming the part:
-   `missing`, `disagree` (size or digest), `unverified`.
-   SEAM: D-530 heads the same parted captures for `op=attest`; if it factors a shared "held, whole or in parts"
-   helper, the two are ONE rule and belong in one place (REC-35: identical copies diverge silently).
-   D-556 (BOB #34, 2026-09-25 00:00Z): THREE READERS, ONE RULE. The ratify gate asks it of a whole-hash register row
-   held in parts before admitting it, and publication asks it again of the PUBLISHED bucket after copying the parts
-   across, so `keyOf` names the bucket's key for a part's hash rather than this function assuming the working one. */
-const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, keyOf, parts) {
-  const missing = [], disagree = [], unverified = [];
-  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  for (const p of parts) {
-    const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(keyOf(p.sha256));
-    if (!h) { missing.push(name); continue; }
-    if (h.size !== p.bytes) { disagree.push({ ...name, stored_bytes: h.size }); continue; }
-    let digest = h.checksums?.sha256 ? hex(h.checksums.sha256) : null;
-    if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(keyOf(p.sha256));
-      if (o) digest = hex(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
-    }
-    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
-    else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
-  }
-  return { missing, disagree, unverified };
-}
+/* D-533: `partsHeld`, the one rule for a capture held in parts, is provenance's (R7; imported above). */
 
 /* REC-173 (INVESTIGATIVE-SESSION.md §11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): IS THIS
    CREATION A MIGRATION REPLAY? — and since D-512 (BOB #33's step (2)) IS THIS PROMOTION, of ANY type and ANY revision,
@@ -7254,55 +7222,10 @@ export default {
          worst possible place to be one line away from a false clean bill. */
       const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
       if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
-      const r = aOut.result;
-      const canProbe = typeof env.CAPTURES?.head === "function";
-      const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
-      for (const { named_parts: named, ...row } of r.unresolved) {
-        if (row.class === "orphan") { unbacked.push({ ...row, why: "the bundle itself is absent" }); continue; }
-        if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
-        const h = await env.CAPTURES.head(`${storeName}/captures/${row.capture_sha}`);
-        if (h) {
-          if (typeof row.bytes === "number" && h.size !== row.bytes)
-            mismatched.push({ ...row, registered: row.bytes, stored: h.size });
-          else captured.push(row);
-          continue;
-        }
-        /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): A CAPTURE HELD IN PARTS HAS NO
-           WHOLE KEY. `op=acquire` stores a multi-part document only as its parts, so the head above misses for
-           every one of them and this audit called held bytes missing and the record unsound. The ruling: such
-           a row is SOUND when every part the record names is present and each part's digest is verified
-           ("held in parts, all present"); a missing part is NAMED; and a row resolving neither way is
-           UNDETERMINED, counted outside `sound`, never inside it. */
-        if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
-        if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
-        const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
-        const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
-        if (v.missing.length)
-          unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
-                                     + `are not in the working bucket`, missing_parts: v.missing });
-        else if (v.disagree.length || (typeof row.bytes === "number" && sum !== row.bytes))
-          mismatched.push({ ...row, registered: row.bytes, stored: sum,
-                            ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}) });
-        else if (v.unverified.length)
-          undetermined.push({ ...row, why: `every part the record names is present, but the digest of `
-                                         + `${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
-        else heldInParts.push(row);
-      }
-      return json({ ok: true, result: {
-        total: r.total, live: r.live, superseded: r.superseded, historical: r.historical,
-        captured: captured.length, held_in_parts: heldInParts.length,
-        mismatched: mismatched.length, unbacked: unbacked.length, undetermined: undetermined.length,
-        sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,
-        detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which "
-              + "is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. "
-              + "held_in_parts is the same for a document the store keeps only in parts: every part the "
-              + "record names is in the working bucket and each part's digest is verified (the reassembled "
-              + "whole's digest is C-18.6's check, not re-read here). "
-              + "unbacked is the only broken state, and names any missing part; mismatched means the register "
-              + "and the stored object disagree about size, or a part about its digest. undetermined rows "
-              + "resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
-        sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40),
-      }, store: storeName, tokenClass: cls }, 200);
+      /* R8, R9: provenance's report, each unresolved row probed in the working bucket (D-533's parts included). */
+      return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function"
+        ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) }
+        : null), store: storeName, tokenClass: cls }, 200);
     }
 
     /* selftest reports deployment health as JSON, so "did the deploy work" is a
@@ -10170,135 +10093,20 @@ export default {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
         return storageAbsent(op, "this instance has no evidence storage configured");
+      // R31–R33: provenance's `attest`, over the working bucket by digest, the network, and the store's register and
+      // receipts (D-476's `registerholds`, which answers whether a receipt or the register names the hash).
       const body = await req.json().catch(() => null);
-      const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
-      if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
-      /* D-530: A MISS ON THE WHOLE-HASH KEY IS NOT ABSENCE. A document over one part
-         is stored ONLY as its parts, each under its own hash, and never under the
-         whole's (D-469, D-476), so this head misses for every such capture - and the
-         setup surface attests the whole hash straight after acquiring it. The
-         refusal it gave, "nothing in this store has that hash; capture the document
-         before attesting it", was false for bytes the record holds and sent a member
-         to capture them again. So a miss asks the store the whole-document question
-         (Intake Doctrine section 8, D-476's `registerholds`), and three answers are
-         kept apart:
-           - the plane's own ACQUISITION RECEIPT names the hash: the plane hashed
-             these bytes as they arrived and keeps them in parts, and no caller can
-             write that row. The hash is attested, and the answer says how it is held.
-           - only the REGISTER names it: a row `op=promote` wrote from what its caller
-             named, without reading R2 (D-45). A timestamp is not rested on that
-             alone, and the bytes are not called absent either: CAPTURE_HELD_IN_PARTS.
-           - neither, or the store did not answer: NO_SUCH_CAPTURE, saying what was
-             asked rather than that nothing anywhere holds the bytes. */
-      let held = null;
-      if (!(await env.CAPTURES.head(`${storeName}/captures/${sha}`))) {
-        const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
-        const holds = hOut.answered ? hOut.result : null;
-        if (holds && holds.acquired === true) {
-          held = { form: "parts", on: "acquisition_receipt",
-                   detail: "no object is stored under this hash, because the document was captured in parts "
-                         + "and only its parts are stored, each under its own hash. This plane hashed the "
-                         + "whole document as it arrived and recorded that receipt, which is what this "
-                         + "attestation rests on." };
-        } else {
-          /* DEC-49 REGION is-attest-parts */
-          if (holds && holds.registered === true)
-            return json({ ok: false, reason: "CAPTURE_HELD_IN_PARTS", sha256: sha,
-              detail: "the record's register names these bytes, but no object is stored under this hash and "
-                    + "this plane holds no receipt of having acquired them, which is the shape of a document "
-                    + "kept only in parts. A register row is written from what the promoting caller named, so "
-                    + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." }, 409);
-          /* END DEC-49 REGION is-attest-parts */
-          return json({ ok: false, reason: "NO_SUCH_CAPTURE",
-                        detail: holds
-                          ? "no object is stored under that hash, the register holds no row for it under a "
-                            + "bundle that exists, and this plane holds no receipt of having acquired it"
-                          : "no object is stored under that hash, and the store could not be asked whether "
-                            + "its register or an acquisition receipt names it, so this is not a finding that "
-                            + "the record lacks the bytes" }, 404);
-        }
-      }
-
-      const attempts = [];
-      let token = null, tokenSha = null, service = null;
-      for (const endpoint of TSA_ENDPOINTS) {
-        const attempted = stampInstant("second");
-        try {
-          const { der } = timestampRequest(sha);
-          const res = await fetch(endpoint, {
-            method: "POST", body: der,
-            headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT },
-          });
-          if (!res.ok) {
-            attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
-            continue;
-          }
-          const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
-          if (!parsed.ok) {
-            attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
-            continue;
-          }
-          const digest = await crypto.subtle.digest("SHA-256", parsed.token);
-          tokenSha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
-          await env.CAPTURES.put(`${storeName}/captures/${tokenSha}`, parsed.token, { sha256: digest });
-          token = parsed.token; service = endpoint;
-          attempts.push({ service: endpoint, attempted, ok: true, kind: "rfc3161",
-                          token_sha256: tokenSha, token_bytes: parsed.token.length });
-          break;
-        } catch (e) {
-          attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
-        }
-      }
-
-      /* The opt-in second path. Off unless the caller asks, because asking a
-         public archive to fetch a URL publishes the fact of interest, and that
-         is a tactical judgement rather than a default. */
-      let archive = null;
-      if (body.archive === true) {
-        const attempted = stampInstant("second");
-        const locator = typeof body.locator === "string" ? body.locator : "";
-        if (!isPublicHttpsLocator(locator)) {
-          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                          note: "no public https locator to archive" });
-        } else {
-          try {
-            const res = await fetch(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
-            const archived = archiveLocatorFrom(res, locator);
-            if (res.ok && archived) {
-              archive = { service: ARCHIVE_SERVICE, locator: archived };
-              attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: true,
-                              kind: "co-archive", archived_locator: archived });
-            } else {
-              attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                              note: res.ok ? "archived but returned no locator" : `http ${res.status}` });
-            }
-          } catch (e) {
-            attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                            note: String(e && e.message || e).slice(0, 120) });
-          }
-        }
-      }
-
-      return json({
-        ok: !!token,
-        attempts,
-        ...(archive ? { archive } : {}),
-        ...(token ? {
-          attestation: {
-            file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
-            kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
-            over: sha,
-          },
-          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
-          ...(held ? { held } : {}),
-        } : {
-          reason: "NO_ATTESTATION",
-          note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
-        }),
-        store: storeName, tokenClass: cls,
-      }, token ? 200 : 502);
+      const attested = await attest(body || {}, {
+        head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
+        put: (sha, bytes) => env.CAPTURES.put(captureKey(storeName, sha), bytes, { sha256: sha }),
+        fetch: (...a) => fetch(...a),
+        holds: async (sha) => {
+          const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+          return hOut.answered ? hOut.result : null;
+        },
+      });
+      return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
     }
 
     /* Monitoring: has the source changed under us?
@@ -11347,7 +11155,8 @@ export default {
       /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
          keyed by the whole hash. Publication copies exactly these, part by part. */
       const partedRows = new Map();
-      const gate = await runGate({
+      /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)). */
+      const gate = withRegisterChecks(image, await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
         /* REC-14: the two facts the catalog cannot read out of the bundle --
@@ -11393,7 +11202,7 @@ export default {
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
         },
-      });
+      }));
       if (!gate.ok)
         return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                       findings: gate.findings, store: storeName, tokenClass: cls }, 409);
