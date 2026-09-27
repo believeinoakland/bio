@@ -5,7 +5,11 @@
    is promoted, by the system through the machine viewer, so the project's own promotion already writes the
    INFO -> PROJ edge before anyone calls the op. Its op=linkproject arms need legacy-index's stamps (`viewer` and the
    positional `identity`, D-706's and D-722's index halves, T5-11); until then the op fails closed. The controls
-   below were run on the branch's store.mjs; their anchors now live in `src/connections/index.mjs`. */
+   below were run on the branch's store.mjs; their anchors now live in `src/connections/index.mjs`.
+   RE-PINNED 2026-09-27 (T5-12, legacy-tests), after T5-11 (LEGACY-INDEX #3) added the stamps: 27 pass, 5 fail -> 33
+   pass, 0 fail (one arm added: the R24 fold, pinned by name). The five were connections R24 (the answer names each target BUNDLE once: `projectLinks` folds a second link
+   into a bundle already named), not the stamps; each re-pin is marked at its site. The fixture needed no change for
+   R29 beyond the two arms already re-pinned above. */
 /* D-706 — op=linkproject ANSWERS THROUGH THE VIEWER (the DISCLOSURE half).
  *
  * D-701's worker found it while closing op=links and op=navchanges: `Store#projectLinks` resolved ANY capture's links
@@ -226,14 +230,34 @@ console.log("\n--- op=linkproject on a SHARED capture: the answer is the viewer'
   t("nothing of the hidden project is in the outsider's answer", leaks(out), []);
   /* /mixed.html has a hidden capture (M1, PROJ) and a visible one (M2, OPEN2): resolved through the viewer, the
      bracket is taken over M2 alone, so the edge WRITTEN is the visible one the answer names. */
-  t("the outsider's edges name only a bundle they can see, the mixed address's among them (the VISIBLE edge)",
-    [shape(out).to, (out.edges || []).some((e) => e.target_capture === M2)], [[OPEN2, OPEN2], true]);
-  t("and no count moves with a row they cannot see: /secret.html reads as uncaptured (unresolved)",
-    [out.projected, out.skipped_self, out.skipped_unregistered, out.unresolved], [2, 0, 1, 2]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24): an edge is the source's ONE `links_to` edge to a
+     target BUNDLE (R24, written into references[] by R28), so the answer names each target bundle once: /open.html
+     and /mixed.html both resolve into OPEN2 for dave and make ONE edge ([OPEN2, OPEN2] before). Which of the two
+     links stands for the edge is the resolution's row order, which no requirement fixes, so the VISIBLE-edge half is
+     asked of op=links for the same viewer (dave's /mixed.html resolves to M2, never M1) and the edge's capture of
+     OPEN2's two, not of the order. */
   const links = await api(`op=links&token=${dave}&capture=${S1}`);
+  const daveMixed = (links.links || []).find((l) => l.address === U("/mixed.html")) || {};
+  t("the outsider's edges name only a bundle they can see, each ONCE (R24), and /mixed.html resolves to the VISIBLE capture",
+    [shape(out).to, [SO, M2].includes((out.edges || [])[0]?.target_capture), daveMixed.target_capture],
+    [[OPEN2], true, M2]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24): `projected` 2 -> 1, the one OPEN2 edge above; the
+     other three counts are unchanged, so /secret.html still reads as uncaptured for dave (R26). */
+  t("and no count moves with a row they cannot see: /secret.html reads as uncaptured (unresolved)",
+    [out.projected, out.skipped_self, out.skipped_unregistered, out.unresolved], [1, 0, 1, 2]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24): op=links counts LINKS, the answer counts EDGES, and
+     R24 folds the links into one target bundle into one edge; a folded link is counted in none of `projected`,
+     `skipped_self`, `skipped_unregistered`. So the identity gains that term, read off op=links' own rows for the same
+     viewer (linked links into a bundle other than the source's, beyond the first per bundle), and the term is pinned
+     by name: exactly one, /open.html and /mixed.html into OPEN2. The bundles op=links resolves to are the edges'. */
+  const into = (links.links || []).filter((l) => l.resolution === "linked" && l.target_bundle
+    && l.target_bundle !== out.source_bundle).map((l) => l.target_bundle);
+  const folded = into.length - new Set(into).size;
+  t("R24: exactly one of dave's linked links is folded into an edge already named (OPEN2's second), and op=links' bundles are the edges'",
+    [folded, [...new Set(into)].sort()], [1, shape(out).to]);
   t("op=links' tally equals linkproject's counts for the same viewer (the tally residue is closed)",
     [links.tally?.linked, links.tally?.offsite],
-    [out.projected + out.skipped_self + out.skipped_unregistered, out.unresolved]);
+    [out.projected + out.skipped_self + out.skipped_unregistered + folded, out.unresolved]);
   t("the outsider's source bundle is the open one", out.source_bundle, INFO);
 
   /* (C): bundle= naming a bundle the caller cannot see is an id naming nothing. */
@@ -259,13 +283,20 @@ console.log("\n--- op=linkproject on a SHARED capture: the answer is the viewer'
   t("(2) and the refused acts wrote nothing", await projRefs(), before);
 
   const machine = await lp("mem-d706", S1);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24): the hidden project is named ONCE though /secret.html
+     and /mixed.html (M1) both resolve into it: projected 3 -> 2, `to` [OPEN2, PROJ, PROJ] -> [OPEN2, PROJ]. The
+     hidden edge is still there for the machine, which is what this control is for. */
   t("the machine credential sees the hidden edges (the control: the rows are really there)",
-    shape(machine), { projected: 3, skipped_self: 0, skipped_unregistered: 1, unresolved: 1, to: [OPEN2, PROJ, PROJ].sort() });
+    shape(machine), { projected: 2, skipped_self: 0, skipped_unregistered: 1, unresolved: 1, to: [OPEN2, PROJ].sort() });
   const owner = await lp(carol, S1);
   t("the project's owner sees what the machine sees", shape(owner), shape(machine));
   t("a member who sees both ends (and the machine) still writes the hidden target's edge", await intoProject(), [INFO]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R24): the ONE edge into PROJ stands for /secret.html (SX)
+     and /mixed.html (M1) together, and which link represents it is the resolution's row order, which no requirement
+     fixes (measured: M1). The claim is unchanged: the owner is answered a capture filed in the hidden project. */
+  const ownerProj = (owner.edges || []).filter((e) => e.to === PROJ);
   t("and the owner's answer names the hidden capture it resolved to",
-    (owner.edges || []).some((e) => e.target_capture === SX), true);
+    [ownerProj.length, [SX, M1].includes(ownerProj[0]?.target_capture)], [1, true]);
 }
 
 /* ------------------------------------------------ a hidden source capture */
