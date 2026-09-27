@@ -102,7 +102,9 @@ and every other module that stores anything, write through and read from.
 **transact(fn) → fn's result**
 - **R32** Runs `fn` as one transaction over the whole store: when `fn` throws or returns a refusal
   (`ok:false`), every row written inside it, in any module's tables, is rolled back, and no id allocated
-  inside it is spent. Nested calls join the outer transaction.
+  inside it is spent. This holds for a nested call too: it joins the outer transaction, and a
+  nested call that throws or refuses rolls back its own writes and ids (a savepoint), while the outer
+  call decides the rest. *(not yet met: PROMOTION #3's REPORT 1, K133)*
 - Errors: rethrows what `fn` throws, after the rollback.
 
 **commit({bundleId, type, title, project, snapKey, kind, base, author, writer, operation, files, state, priorState, group, created, lastUpdated, criticality, at}) → `{bundleSha, rowVersion}`**
