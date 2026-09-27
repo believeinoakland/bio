@@ -255,3 +255,24 @@ test("R59 through the real record-core: a purge clears the project's rows and ne
   for (const t of MEMBERSHIP_PROJECT_TABLES) assert.equal(count(t), 0, t);
   assert.deepEqual(["members", "credentials", "member_expertise"].map((t) => count(t)), [2, 3, 1], "identity survives");
 });
+
+test("R76 positionalMember: who is asking, identity before viewer, R43's member id; null for a machine or an unadmitted one", async () => {
+  const w = await world().group("ann");
+  const pm = (v, i) => w.m.positionalMember(v, i);
+  assert.equal(pm(V("ann")), "ann");
+  assert.equal(pm(V("ann"), null), "ann");
+  assert.equal(pm(V("ann"), ""), "ann", "an empty identity is not asked");
+  assert.equal(pm("admin", "member:admin"), "admin", "the founder's session: its identity names it");
+  assert.equal(pm(V("ann"), V("bob")), "bob", "identity wins over viewer");
+  assert.equal(pm(V("ann"), `${MACHINE_CLASS_PREFIX}ai`), null, "a machine identity names nobody, whatever the viewer");
+  assert.equal(pm("admin"), null, "the founder's bare viewer is the operator's sight, not a position");
+  for (const cls of ["admin", "member", "probe", "daemon", "ai"]) assert.equal(pm(`${MACHINE_CLASS_PREFIX}${cls}`), null, cls);
+  for (const v of [null, undefined, "", "junk", "member:", "member:a b", 7, {}, []]) {
+    assert.equal(pm(v), null, JSON.stringify(v));
+    assert.equal(pm(null, v), null, `identity ${JSON.stringify(v)}`);
+  }
+  assert.equal(pm(V("never-enrolled")), "never-enrolled", "R43's parse, not a roster lookup");
+  const before = JSON.stringify(w.rows(`SELECT * FROM members`));
+  for (const x of [V("ann"), "junk", null]) pm(x, x);
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM members`)), before, "writes nothing");
+});

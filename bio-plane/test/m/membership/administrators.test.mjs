@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
+import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 
 /* founder + second + third (a proposed third needs both to endorse) */
 async function threeAdmins() {
@@ -97,6 +98,7 @@ test("R10 an administrator (not the founder) resigns while more than two exist; 
   assert.equal(w.m.isAdministrator("third"), false);
   const two = w.m.adminResign({ by: "second" });
   assert.deepEqual([two.reason, two.administrators], ["RESIGN_AT_TWO", 2]);
+  assert.deepEqual([two.code, two.check, two.translation], ["RESIGN_AT_TWO", "C-96.10", CUSTODIAL_CHECKS.RESIGN_AT_TWO.translation]);
   assert.equal(w.m.isAdministrator("second"), true);
   assert.equal(w.ops("by=second").adminresign().reason, "RESIGN_AT_TWO");
 });
@@ -111,7 +113,10 @@ test("R11 adding the second administrator asks who holds hosting access; the rec
   const ann = await w.m.memberAdd({ memberId: "ann", cover: "ca", by: "admin" });
   assert.equal(ann.hostingAccess, undefined, "asked at the second administrator, not at every addition");
   assert.equal(w.m.hostingAccessSet({ holders: "x", by: "ann" }).reason, "NOT_AN_ADMIN");
-  assert.equal(w.m.hostingAccessSet({ holders: " ", by: "admin" }).reason, "NO_HOLDERS");
+  const none = w.m.hostingAccessSet({ holders: " ", by: "admin" });
+  assert.deepEqual([none.ok, none.reason, none.code, none.check, none.translation],
+    [false, "NO_HOLDERS", "NO_HOLDERS", "C-96.11", CUSTODIAL_CHECKS.NO_HOLDERS.translation]);
+  assert.equal(w.m.hostingAccess().recorded, false, "nothing written");
   const s = w.m.hostingAccessSet({ holders: "admin and second", note: "both have the login", by: "second" });
   assert.equal(s.ok, true);
   w.ops("by=admin", { holders: "admin only" }).hostingaccessset();

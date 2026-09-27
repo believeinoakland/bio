@@ -164,3 +164,43 @@ test("R60 an administrator's sight is never a position: the only project act an 
   }
   assert.equal(w.m.participation("PROJ-P", "second"), null);
 });
+
+/* Every table's rows, to show a read wrote nothing. */
+const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
+  .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
+
+test("R75 rescueRefusal answers R41's caller-and-project refusals in order, byte for byte as the act; writes nothing, never throws", async () => {
+  const w = await owned();
+  w.project("PROJ-M");                                            // no owner: a machine-created project
+  add(w, "bob", "ann");                                           // PROJ-P owned by ann and bob
+  /* a viewer at FULL, so the act reaches its caller-and-project refusals (sight is asked before them, R61) */
+  const act = (projectId, by) => w.m.projectOwnerRescue({ projectId, handle: "cal", by, reason: "stranded", viewer: "admin" });
+  const both = (projectId, by) => {
+    const before = snapshot(w);
+    const r = w.m.rescueRefusal(projectId, by);
+    assert.equal(snapshot(w), before, "rescueRefusal writes nothing");
+    if (r) assert.deepEqual(act(projectId, by), r, `${projectId} ${by}: the act answers the same`);
+    return r;
+  };
+  // ADMIN_ONLY first, whatever the project: an ordinary member, an owner, a revoked administrator, nobody
+  for (const by of ["cal", "ann", null, undefined, "", "class:admin"])
+    assert.equal(both("PROJ-P", by)?.reason, "ADMIN_ONLY", JSON.stringify(by));
+  assert.equal(w.m.rescueRefusal("PROJ-M", "cal").reason, "ADMIN_ONLY", "asked before NO_OWNERS");
+  // NO_OWNERS, for the founder and an administrator
+  for (const by of ["admin", "second"]) assert.equal(both("PROJ-M", by).reason, "NO_OWNERS");
+  assert.equal(w.m.rescueRefusal("PROJ-NEVER", "admin").reason, "NO_OWNERS", "no such project has no owner");
+  // OWNERS_ARE_ACTIVE naming the active owners, while any is active
+  assert.deepEqual(both("PROJ-P", "second").active, ["ann", "bob"]);
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  const one = both("PROJ-P", "admin");
+  assert.deepEqual([one.reason, one.active], ["OWNERS_ARE_ACTIVE", ["bob"]]);
+  // every owner inactive: null, and the act proceeds
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  assert.equal(both("PROJ-P", "second"), null);
+  assert.equal(act("PROJ-P", "second").ok, true);
+  // a revoked administrator is no administrator
+  w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
+  assert.equal(w.m.rescueRefusal("PROJ-M", "second").reason, "ADMIN_ONLY");
+  for (const [p, by] of [[null, null], [undefined, "admin"], [{}, []], [42, 7], ["PROJ-P", {}]])
+    assert.doesNotThrow(() => w.m.rescueRefusal(p, by), JSON.stringify([p, by]));
+});
