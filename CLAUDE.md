@@ -3,7 +3,7 @@
 **The development process changed on 2026-09-25.** It is defined in the separate repository `believeinoakland/civicos-process`; attach it to your session and read your role's instructions there before anything else. The old process (lanes, kickoffs, `coord` ledgers, QUEUE, the gate and push guard, `tools/`) is retired: do not follow it, and do not start or message its lanes. Its instructions are archived at `docs/archive/CLAUDE-2026-09-26-old-process.md` for reference only.
 
 **Start here:**
-1. Attach `believeinoakland/civicos-process` and read `roles/BOB.md` (the architecture session) or `roles/JOB.md` (a module job), whole.
+1. Attach `believeinoakland/civicos-process` and read `roles/BOB.md` (the architecture session), `roles/JOB.md` (a module job) or `roles/ROOT.md` (the session that starts every BOB), whole.
 2. Read `build/manifest.md` in this repository: where the build state, requirements and tests live.
 3. BOB also reads the latest handoff (`docs/development/TRANSITION.md` §6 until the first tranche closes).
 

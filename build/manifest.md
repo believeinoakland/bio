@@ -44,5 +44,6 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 
 ## Starting a session
 
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Its session: *not yet started*.
 - **BOB:** read `roles/BOB.md` in the process repository, then this file, then the latest handoff (TRANSITION.md §6 until the first tranche closes).
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.
