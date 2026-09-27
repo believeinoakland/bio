@@ -683,8 +683,10 @@ export class RecordCore {
 
   /* ---- the audit sweep (R18–R20, R45, R59) ---- */
 
-  /** R59 (N51, the K31 pattern): a later module registers, once at start, an audit check that `auditPass` runs
-   *  over every bundle of a page beside the catalogue, so a check that left the catalogue for its module is not
+  /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
+   *  runs over every bundle of a page beside the catalogue, called `check(image, context)`: `image` is what
+   *  `checkBundle` gets (`bundleId`/`folderName`, `files`, `elidedPaths`, `sha256`, `sha512`, R19's `resolveTarget`)
+   *  and `raw`, the bundle's `readImage`; `context` is R45's for the bundle (`{}` when the caller gives none), so a check that left the catalogue for its module is not
    *  lost to the audit, and the bundle is judged once, whole. */
   registerAuditCheck(module, check) {
     if (typeof module !== "string" || !module || typeof check !== "function")
@@ -732,8 +734,8 @@ export class RecordCore {
          finding of its own, never a clean bundle. */
       for (const { module, check } of this.#auditChecks) {
         let more;
-        try { more = await check({ ...extra, bundleId: id, folderName: id, image: img, files, elidedPaths: elided,
-                                   sha256, sha512, resolveTarget }); }
+        try { more = await check({ bundleId: id, folderName: id, raw: img, files, elidedPaths: elided, sha256, sha512,
+                                   resolveTarget }, extra); }
         catch (e) {
           more = [{ check: module, code: "AUDIT_CHECK_FAILED", severity: "error",
                     message: `${module}'s audit check threw on ${id}: ${String((e && e.message) || e).slice(0, 200)}` }];

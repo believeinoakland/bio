@@ -30,3 +30,7 @@ At the commit that carries this line, every service `membership` and `promotion`
 - **N74** · `/* DEC-49 REGION is-allocid-prefix-gated */` around `allocIdOp`'s refusal; C-59.5's `where` (`src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated`) now resolves.
 - **N83** · R37's widened read contract as read in Q2, tested at the interface (column names, types, keys and meaning, and a join from another module's table).
 - **Requirements marked not yet met:** R16 and R26 were met in T3 (the requirements file still flags them, BOB's to clear); R37, R47–R58 met here; R38's remaining part is its callers' (K49: provenance and capture reach the evidence binding directly), not this module's.
+
+## Answers
+
+**Q1–Q3 answered** by BOB (ANSWER, K130; `tranche/T5` @ 06098f939b, merged). Built as stated. R59 as K130 words it calls `check(image, context)`, two arguments, where my early-merged commit (174eadf64c) passed one object: brought in line at 1a7fa3efa5 (REPORT sent, so promotion's CHANGE builds on the two-argument form).
