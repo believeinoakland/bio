@@ -54026,6 +54026,12 @@ CREATE INDEX IF NOT EXISTS connections_a ON connections(a_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_b ON connections(b_capture_sha);
 CREATE INDEX IF NOT EXISTS connections_a_bundle ON connections(a_bundle_id);
 CREATE INDEX IF NOT EXISTS connections_b_bundle ON connections(b_bundle_id);
+-- NO INDEX ON connections(grade), stated rather than left: D-222 named it beside
+-- resolutions_grade, and no arm of the meaning compiler reads it -- concerns joins
+-- resolutions, the base relation a connection is DERIVED from (both ends of every
+-- connection have a resolution row for the shared entity). An index nothing queries is
+-- write cost on D-224's k(k-1)/2 curve for no read at all. It is earned when an arm
+-- reads it.
 -- REC-122 / D-161 act (3) / IC-232, 2026-09-23: A MEMBER'S CHOICE OF THE ON-POINT
 -- MENTION on one end of a connection (Bob's 5.4 second pass: specificity is worked
 -- for, not merely permitted). The connection's own pair stays the machine's
@@ -56046,26 +56052,35 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       } : {}
     };
   }
-  /** R31, R32, R49 (`op=connectionsasserted`): a document's connections asserted apart from derivation — a member's,
-   *  a source's, the system's containment — each row whose other end the viewer cannot see omitted (R33). */
+  /** R31, R32, R49, R54 (`op=connectionsasserted`): a document's connections asserted apart from derivation — a
+   *  member's, a source's, the system's containment — each row whose other end the viewer cannot see omitted (R33).
+   *  Sight is asked in the SQL, so the read is bounded at `cap + 1` and `truncated` counts only visible rows. */
   asserted({ bundleId = null, viewer = null, limit = null } = {}) {
     const id = str(bundleId);
     if (!id || !this.record.bundleInfo(id) || !this.sees(id, viewer))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: id || null };
     const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
     const keep = this.redactor(viewer);
-    const rows = this.#rows(`SELECT * FROM asserted_connections WHERE a_bundle_id=? OR b_bundle_id=?
-                              ORDER BY kind, connection_id`, id, id).filter((r) => keep(r.a_bundle_id === id ? r.b_bundle_id : r.a_bundle_id));
+    const seen = this.#bundleGate("x.other_end", viewer);
+    const rows = this.#rows(
+      `SELECT x.* FROM (SELECT ac.*, CASE WHEN ac.a_bundle_id = ? THEN ac.b_bundle_id ELSE ac.a_bundle_id END AS other_end
+                          FROM asserted_connections ac WHERE ac.a_bundle_id = ? OR ac.b_bundle_id = ?) x
+        WHERE (${seen.sql}) ORDER BY x.kind, x.connection_id LIMIT ?`,
+      id,
+      id,
+      id,
+      ...seen.args,
+      cap + 1
+    );
     const shown = rows.slice(0, cap).map((r) => this.#assertedView(r, keep));
-    const of = (k) => shown.filter((r) => r.kind === k);
     return {
       ok: true,
       bundle_id: id,
       limit: cap,
       truncated: rows.length > cap,
-      member: of("member"),
-      source: of("link"),
-      containment: of("containment"),
+      member: shown.filter((r) => r.kind === "member"),
+      source: shown.filter((r) => r.kind === "link"),
+      containment: shown.filter((r) => r.kind === "containment"),
       says: "connections asserted by a member, by a source's own link and by the system's positional inference, each labelled with who asserts it and kept apart from the connections derived from resolutions"
     };
   }
@@ -56201,16 +56216,32 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     );
     return n;
   }
-  /** R30, R49 (`op=filemembership`): an agenda capture's stored pairs (with their judgements) and its pending ones, each
-   *  labelled machine work, inferred, never the publisher's link. */
-  fileMembership({ captureSha = null, viewer = null } = {}) {
+  /** R30, R49, R56 (`op=filemembership`): an agenda capture's stored pairs (with their judgements) and its pending ones,
+   *  each labelled machine work, inferred, never the publisher's link. Each list is read at most `limit` (as R54's),
+   *  bounded in the SQL at `cap + 1` with sight asked there too, and says whether it was cut. */
+  fileMembership({ captureSha = null, viewer = null, limit = null } = {}) {
     const sha = str(captureSha).toLowerCase();
     const home = sha ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha) : null;
     if (!home || !this.sees(home.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CAPTURE", capture_sha: sha || null };
+    const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
     const keep = this.redactor(viewer);
-    const stored = this.#rows(`SELECT * FROM asserted_connections WHERE kind='containment' AND origin=? ORDER BY connection_id`, sha).filter((r) => keep(r.a_bundle_id) && keep(r.b_bundle_id)).map((r) => ({ ...this.#assertedView(r, keep), stored: true }));
-    const pending = this.#rows(`SELECT * FROM file_membership_pending WHERE agenda_capture=? ORDER BY item_norm, file_norm`, sha).map((p) => ({
+    const ga = this.#bundleGate("ac.a_bundle_id", viewer), gb = this.#bundleGate("ac.b_bundle_id", viewer);
+    const storedRows = this.#rows(
+      `SELECT ac.* FROM asserted_connections ac WHERE ac.kind = 'containment' AND ac.origin = ?
+          AND (${ga.sql}) AND (${gb.sql}) ORDER BY ac.connection_id LIMIT ?`,
+      sha,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const pendingRows = this.#rows(
+      `SELECT * FROM file_membership_pending WHERE agenda_capture = ? ORDER BY item_norm, file_norm LIMIT ?`,
+      sha,
+      cap + 1
+    );
+    const stored = storedRows.slice(0, cap).map((r) => ({ ...this.#assertedView(r, keep), stored: true }));
+    const pending = pendingRows.slice(0, cap).map((p) => ({
       ...MEMBERSHIP_LABEL,
       stored: false,
       item_address: p.item_address,
@@ -56223,6 +56254,10 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
       ...MEMBERSHIP_LABEL,
       stored,
       pending,
+      limit: cap,
+      truncated: storedRows.length > cap || pendingRows.length > cap,
+      stored_truncated: storedRows.length > cap,
+      pending_truncated: pendingRows.length > cap,
       says: "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is the plane's inference, to be confirmed, never the publisher's own link"
     };
   }
@@ -56353,9 +56388,10 @@ function connectionsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
-    const content = d.content || contentOf(host);
-    const extraction = d.extraction || extractionOf(host);
-    const capture = d.capture || captureOf(host);
+    const env = d.env ?? null;
+    const extraction = d.extraction || extractionOf(host, { record, membership, promotion, env });
+    const content = d.content || contentOf(host, { record, membership, extraction });
+    const capture = d.capture || captureOf(host, { record, env });
     const entities = d.entities || entitiesOf(host, { record, membership });
     k = new Connections({
       ...d,
@@ -56427,7 +56463,7 @@ function connectionsOps(k, url, body, env) {
     }),
     connectionsasserted: () => k.asserted({ bundleId: q("bundle"), viewer: q("viewer"), limit: q("limit") }),
     filemembershipstore: () => k.storeFileMembership({ captureSha: q("sha256"), viewer: q("viewer"), env }),
-    filemembership: () => k.fileMembership({ captureSha: q("sha256"), viewer: q("viewer") }),
+    filemembership: () => k.fileMembership({ captureSha: q("sha256"), viewer: q("viewer"), limit: q("limit") }),
     filemembershipjudge: () => k.judgeFileMembership({
       id: b && b.id || q("id"),
       verdict: b && b.verdict || q("verdict"),
@@ -61033,6 +61069,11 @@ function checkBiasImage(image) {
   if (md === null) return [];
   const fm = parseFrontmatter(md).data;
   return fm && typeof fm === "object" ? checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", md]])) : [];
+}
+function withBiasChecks(image, gate) {
+  const errs = checkBiasImage(image).filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
+  if (!errs.length || !gate || typeof gate !== "object") return gate;
+  return { ...gate, ok: false, findings: [...Array.isArray(gate.findings) ? gate.findings : [], ...errs] };
 }
 var BIAS_CHECKS2 = {
   /* Statement anatomy, the shape half: an id that an override can name, a kind
@@ -95889,6 +95930,12 @@ var OPS = {
        passage exists in a project they were never invited to by guessing its
        address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
   content: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-419 (T5-11, content R32): THE CROP OF A CITED PDF IMAGE, `content`'s `cropOf`, cut in the store through
+     `pdf-pixels`. A READ on op=content's class cut and for its reason: the crop is what a viewer SHOWS for an image
+     citation, which a view-only member weighing a case needs as a contributor does. It writes nothing. `viewer` is
+     stamped below, and the store answers a row the caller may not see exactly as one that does not exist
+     (NO_SUCH_CONTENT). NEEDS null, op=content's shape. */
+  contentcrop: { classes: ["admin", "member", "probe"], mutating: false },
   /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
        *"The assistant may mark passages as citable on its own, every such row
        labelled as machine work, never attested by it, and part of a finding only
@@ -95953,6 +96000,18 @@ var OPS = {
      (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
      `token:<class>` is refused BY SHAPE and the probe with it. */
   connectionchoose: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T5-11 (K145, connections R53–R57): connections' ops for the connections derivation does not make.
+     `connectionassert` is a MEMBER's assertion of a connection between two documents (R31, R53), and
+     `filemembershipjudge` a member's confirmation or rejection of a stored containment (R57): `connectionchoose`'s
+     class cut and reasoning, the store refusing a machine BY SHAPE on the `author` the control plane stamps below.
+     `filemembershipstore` stores an agenda capture's item-to-file containments as SYSTEM-asserted connections (R49,
+     R55); it asserts nothing of the caller's, so it takes the same cut and any credential that reaches it may run
+     it. The two reads (R54, R56) are open to every class that may read. All five take the viewer stamp below. */
+  connectionassert: { classes: ["admin", "member", "probe"], mutating: true },
+  connectionsasserted: { classes: ["admin", "member", "probe"], mutating: false },
+  filemembershipstore: { classes: ["admin", "member", "probe"], mutating: true },
+  filemembership: { classes: ["admin", "member", "probe"], mutating: false },
+  filemembershipjudge: { classes: ["admin", "member", "probe"], mutating: true },
   /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
      `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
      its assertions are worth comparing. It writes nothing, judges nothing and mints
@@ -96413,6 +96472,8 @@ var OPS = {
      own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
   attribute: { classes: ["admin", "member"], mutating: true },
   leadread: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-681 (T5-11, observation-log R20): the leads THIS viewer may read, each once — `leadread`'s class cut and fence. */
+  leadlist: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
      and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
@@ -96425,6 +96486,9 @@ var OPS = {
   themeplace: { classes: ["admin", "member"], mutating: true },
   themepropose: { classes: ["admin", "member", "probe"], mutating: true },
   themeread: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T5-11 (connections R43): WITHDRAWING a membership or REJECTING a hunch is a person's act in their own name, with a
+     reason, so it takes `themeplace`'s class cut; the store refuses a machine actor by name (C-81.11). */
+  themewithdraw: { classes: ["admin", "member"], mutating: true },
   /* REC-203: the identifier-space judgement (Framework §8.3). A READ: it writes nothing, and a pair's two
      captures are gated by the viewer stamp, `themeread`'s posture. */
   idmatch: { classes: ["admin", "member", "probe"], mutating: false },
@@ -96475,6 +96539,11 @@ var OPS = {
   entitycreate: { classes: ["admin", "member", "probe"], mutating: true },
   entityalias: { classes: ["admin", "member", "probe"], mutating: true },
   relationdeclare: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T5-11 (entities R8, K106): the registry CORRECTED without being erased — an alias or a relation withdrawn with a
+     reason, kept and shown as withdrawn. A registry write on the three writes' class cut, stamped below with the
+     withdrawing member as they are with the declaring one. */
+  aliaswithdraw: { classes: ["admin", "member", "probe"], mutating: true },
+  relationwithdraw: { classes: ["admin", "member", "probe"], mutating: true },
   entity: { classes: ["admin", "member", "probe"], mutating: false },
   entitybyalias: { classes: ["admin", "member", "probe"], mutating: false },
   relation: { classes: ["admin", "member", "probe"], mutating: false },
@@ -96807,6 +96876,8 @@ var REGISTRY_ACTIONS = [
   "entitycreate",
   "entityalias",
   "relationdeclare",
+  "aliaswithdraw",
+  "relationwithdraw",
   "entity",
   "entitybyalias",
   "relation"
@@ -96849,7 +96920,8 @@ var POSITIONAL_ACTS = [
   "proposedispose",
   "biasadopt",
   "conclude",
-  "withdrawconclusion"
+  "withdrawconclusion",
+  "linkproject"
 ];
 var BIAS_ACTIONS = ["biasadopt"];
 var BIAS_DEBT_ACTIONS = ["biasdebtresolve"];
@@ -96914,6 +96986,10 @@ var SESSION_OPS = {
     /* REC-122: choosing a connection's on-point mention — a member's
        act, reached by a signed-in member. */
     "connectionchoose",
+    /* T5-11 (K145): connections' three writes, `connectionchoose`'s route. */
+    "connectionassert",
+    "filemembershipstore",
+    "filemembershipjudge",
     /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
        TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
        DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
@@ -96993,6 +97069,8 @@ var SESSION_OPS = {
     "themedeclare",
     "themeplace",
     "themepropose",
+    /* T5-11 (connections R43): withdrawing from a theme, `themeplace`'s route and reason. */
+    "themewithdraw",
     /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
        proposer is stamped from the credential that asked, and the session route is the one
        that produces a member's own name for a member's proposal. */
@@ -97060,6 +97138,9 @@ var SESSION_OPS = {
     "narrow",
     "narrowcandidates",
     "connectionchoose",
+    "connectionassert",
+    "filemembershipstore",
+    "filemembershipjudge",
     "contradictionpairs",
     "actionquotes",
     "versionnotice",
@@ -97078,6 +97159,7 @@ var SESSION_OPS = {
     "themedeclare",
     "themeplace",
     "themepropose",
+    "themewithdraw",
     /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
        proposer is stamped from the credential that asked, and the session route is the one
        that produces a member's own name for a member's proposal. */
@@ -97167,6 +97249,11 @@ var NEEDS = {
      reasoning — it is a member's judgment written into the working record, and nothing it
      writes is the group putting its name on anything. */
   connectionchoose: "contribute",
+  /* T5-11 (K145): asserting a connection, storing an agenda's containments and judging one each write the working
+     record's connections, `connectionchoose`'s capability and reason. */
+  connectionassert: "contribute",
+  filemembershipstore: "contribute",
+  filemembershipjudge: "contribute",
   /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
      `op=transcription`'s reasoning: asking which of the record's own assertions are
      worth comparing is READING the record. It writes nothing into the working corpus
@@ -97211,7 +97298,11 @@ var NEEDS = {
   themedeclare: "contribute",
   themeplace: "contribute",
   themepropose: "contribute",
+  /* T5-11 (connections R43): withdrawing from a theme writes the lens layer too, `themeplace`'s capability. */
+  themewithdraw: "contribute",
   leadread: null,
+  /* D-681: the lead list takes no capability, `leadread`'s posture; the store answers each viewer its own reach. */
+  leadlist: null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread: null,
   /* REC-203: the identifier judgement takes no capability; it reads, and its captures are gated by the viewer. */
@@ -97343,6 +97434,9 @@ var NEEDS = {
   entitycreate: "contribute",
   entityalias: "contribute",
   relationdeclare: "contribute",
+  /* T5-11 (entities R8): correcting the registry is the same corpus-shaping surface as building it. */
+  aliaswithdraw: "contribute",
+  relationwithdraw: "contribute",
   /* FW-7: RESOLVING a reference to an entity, and TESTIFYING a grade-D connection,
      both write into the record what documents concern which subjects — a corpus-shaping
      act on the same surface as building the registry, so `contribute`: a view-only
@@ -97560,6 +97654,9 @@ var NEEDS = {
      rather than absent so REC-19's totality guard SEES it, and named in
      NON_ACTS with its reason. */
   content: null,
+  /* D-419 (T5-11): NO CAPABILITY, on op=content's reasoning exactly — showing the picture a citation names is reading
+     the record. Present rather than absent so REC-19's totality guard SEES it. */
+  contentcrop: null,
   /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
      documents NAME a subject is reading the record; the write that acts on the
      answer is op=resolve, which carries its own gate and is where the capability
@@ -99367,7 +99464,9 @@ var index_default = {
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
       const bundle = url.searchParams.get("bundle");
-      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+      const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}&identity=${encodeURIComponent(linkIdentity)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
@@ -100254,7 +100353,7 @@ var index_default = {
       if (!listOut.answered) return storeSilent("ratify/list");
       const known = new Set((listOut.result || []).map((b) => b.bundle_id));
       const partedRows = /* @__PURE__ */ new Map();
-      const gate = withRegisterChecks(image, await runGate({
+      const gate = withBiasChecks(image, withRegisterChecks(image, await runGate({
         bundleId: body2.bundleId,
         image,
         knownIds: known,
@@ -100293,7 +100392,7 @@ var index_default = {
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
         }
-      }));
+      })));
       if (!gate.ok)
         return json({
           ok: false,
@@ -100633,7 +100732,7 @@ var index_default = {
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
     const REC30_VIEWER_READS = [
       "dangling",
       "tasks",
@@ -100677,7 +100776,7 @@ var index_default = {
          names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
       "projectrequests"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -100697,7 +100796,12 @@ var index_default = {
         "administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
       );
-    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread")
+    if (op === "memberpairings")
+      inner.searchParams.set(
+        "administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
+      );
+    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw")
       inner.searchParams.set(
         "administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0"
@@ -100724,6 +100828,8 @@ var index_default = {
       inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themeplace")
       inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "themewithdraw")
+      inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themepropose")
       inner.searchParams.set(
         "proposer",
@@ -100748,7 +100854,14 @@ var index_default = {
       inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "connectionchoose" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "connectionassert" || op === "filemembershipjudge")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "calibrate")
       inner.searchParams.set(
         "identity",
         viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -100889,6 +101002,14 @@ var index_default = {
       try {
         const b = JSON.parse(passBody);
         b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch {
+      }
+    }
+    if ((op === "aliaswithdraw" || op === "relationwithdraw") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
