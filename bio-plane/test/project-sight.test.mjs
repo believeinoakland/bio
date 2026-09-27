@@ -968,6 +968,22 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     t("11g00: membership's routes were read (the map it contributes is not empty)",
       ["projectparticipants", "projectvisibility", "projectrequests"].every((r) => routes[r] !== undefined), true);
   }
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): the store's map now also spreads `captureOps(...)`, the
+     routes the capture module answers (`sourcereach`, `inboxget`, `inboxlist`, `linksto`, `reusedparts` among them),
+     declared in `src/capture/index.mjs` one indent level in and reading their parameters through a local
+     `q("<name>")` (= `url.searchParams.get("<name>")`). They are store routes still, and are read from there into the
+     same table, `q("…")` read as the `searchParams.get("…")` it is (a store route of the same name wins). */
+  { const clines = src("capture/index.mjs").split("\n");
+    const cat = clines.findIndex((l) => /^export function captureOps\(/.test(l));
+    let ccur = null;
+    for (let i = cat + 1; cat >= 0 && i < clines.length && !/^  \};/.test(clines[i]); i++) {
+      const m = clines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { ccur = m[1] in routes ? null : m[1]; if (ccur) routes[ccur] = ""; }
+      if (ccur) routes[ccur] += clines[i].replace(/\bq\("/g, 'searchParams.get("');
+    }
+    t("11g000: capture's routes were read (the map it contributes is not empty)",
+      ["sourcereach", "inboxget", "linksto"].every((r) => routes[r] !== undefined), true);
+  }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");

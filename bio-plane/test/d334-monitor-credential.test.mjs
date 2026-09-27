@@ -459,10 +459,22 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
     /async #monitorToken\(\)[\s\S]{0,700}?await liveToken\(env\.ADMIN_TOKEN\)/.test(STORE_SRC), true);
   t("the SYNC arming predicate stays presence-only, so REC-1's scheduler seam is unchanged",
     /#monitorConfigured\(\) \{[\s\S]{0,200}?this\.#monitorTokenBound\(\)/.test(STORE_SRC), true);
+  /* MOVED 3 -> 2, 2026-09-27 (T4, legacy-tests; capture T4-4, K58), to the figure this tree prints, and the site that
+     DEPARTED is named: `#fireCaptureRequest`, the capture-request drain's fire. It no longer spends a credential at
+     all: it no longer loops back through `SELF` to `op=acquire` under a selected token, it calls capture's trusted
+     in-process arm (`captureOf(this.ctx).acquire(…, { captureRequest })`) with the draining row's own facts, so
+     there is no token to select and none to refuse. The two sites that remain (the archive fallback and the
+     monitor's re-check) still await the selection and still state the refusal; the departure is pinned below. */
   t("and every fire site AWAITS the selection — an un-awaited Promise is a truthy token",
-    (STORE_SRC.match(/const token = await this\.#monitorToken\(\);/g) || []).length, 3);
+    (STORE_SRC.match(/const token = await this\.#monitorToken\(\);/g) || []).length, 2);
   t("with the no-live-credential refusal stated once and reused, never spelled three ways",
-    (STORE_SRC.match(/Store\.MONITOR_NO_LIVE_CREDENTIAL/g) || []).length, 3);
+    (STORE_SRC.match(/Store\.MONITOR_NO_LIVE_CREDENTIAL/g) || []).length, 2);
+  {
+    const at = STORE_SRC.indexOf("async #fireCaptureRequest(q) {");
+    const fire = at < 0 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n  }\n", at));
+    t("the DEPARTED site is the capture-request fire, which selects no credential: it calls capture's in-process arm",
+      [fire.length > 200, /#monitorToken\(/.test(fire), /captureOf\(this\.ctx\)\.acquire\(/.test(fire)], [true, false, true]);
+  }
 }
 
 console.log(`\nd334-monitor-credential: ${pass} passed, ${fail} failed`);

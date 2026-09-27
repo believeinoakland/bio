@@ -72,6 +72,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, classOfKind } from "../src/queuestate.mjs";
 import { CAPTURE_REQUEST_CHECKS, QUEUE_MINT_CHECKS } from "../checks/bio-checks.mjs";
+/* T4 (legacy-tests; capture R20): the co-attestation services, from their one definition. */
+import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -395,7 +397,15 @@ let LEAD_REQ = null;
 
   const d = await drain();
   t("the drain captured it", [d.captured.length, d.refused.length], [1, 0]);
-  t("and exactly one request left the instance", SEEN.length, 1);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20, K60): this counted EVERY outbound request as the fetch.
+     Since capture R20 every capture also asks provenance's `attest` for a trusted timestamp (each authority in
+     TSA_ENDPOINTS; this fixture answers PDF bytes, so all are asked) and a co-archive of the address
+     (ARCHIVE_SAVE_BASE + the address), and those leave too. So the pin counts what reached the SOURCE's host,
+     still exactly one, and states the rest by name. */
+  t("and exactly one request reached the source", SEEN.filter((x) => new URL(x.url).host === HOST).length, 1);
+  t("and everything else that left is capture R20's co-attestation of that capture, nothing more",
+    SEEN.filter((x) => new URL(x.url).host !== HOST).map((x) => x.url),
+    [...TSA_ENDPOINTS.map((e) => new URL(e).href), ARCHIVE_SAVE_BASE + VENDOR]);
 
   const q = await queueOf(CAROL);
   /* ASKED SEPARATELY FROM "is the lead there", because the two failures are

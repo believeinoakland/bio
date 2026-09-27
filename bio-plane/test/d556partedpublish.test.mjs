@@ -43,7 +43,11 @@ const t = (label, got, want) => {
 };
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const MiB = 1024 * 1024;
-const body = (n, seed) => { const b = new Uint8Array(n); for (let i = 0; i < b.length; i++) b[i] = (i * 37 + seed) % 256; return b; };
+/* T4 (legacy-tests; capture R9): since CAPTURE #1 cut parts at exactly 8 MiB (they fell where the stream's chunks
+   fell before), a byte pattern of period 256 made part000 and part001 of a 17 MiB body the SAME bytes under the SAME
+   digest, so the record named three parts over two objects and publication verified two. The pattern's period is now
+   251, which divides no 8 MiB boundary, so every part is its own bytes, as this suite's three-part claims assume. */
+const body = (n, seed) => { const b = new Uint8Array(n); for (let i = 0; i < b.length; i++) b[i] = (i * 37 + seed) % 251; return b; };
 const BODIES = { "/filed.bin": body(17 * MiB, 11), "/whole.bin": body(17 * MiB + 5, 29) };
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {

@@ -45,8 +45,12 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-drive");               /* inside this worktree, rule 1 */
-const INDEX = join(ROOT, "src", "index.mjs");
 const DRIVE = join(ROOT, "src", "drive.mjs");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): op=acquire's Drive capture (the export-failure refusal,
+   `is-drive-export` and `is-drive-bytes`) moved out of src/index.mjs into the capture module's acquisition act,
+   src/capture/acquire.mjs, two indent levels shallower. Arms (1), (4a) and (4b) now edit that file, quoting the same
+   lines as they stand there (each asserted exactly once by `edit`). Not re-run by LEGACY-TESTS #2 (it edits src/). */
+const ACQUIRE = join(ROOT, "src", "capture", "acquire.mjs");
 const SUITE = join(DIR, "drive.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -80,12 +84,12 @@ const ARMS = {
      refuses too — but "does it refuse BY NAME, so an operator learns that a
      Drive export was unreachable rather than that some address 404'd". */
   one: {
-    files: [INDEX],
+    files: [ACQUIRE],
     label: "(1) THE EXPORT FETCH FAILING loses its name — disarm the Drive-specific refusal so a 404 "
          + "or 403 at the export address falls through to the generic SOURCE_REFUSED. MUST GO RED: "
          + "the failure must be NAMED, and an unnamed refusal is the silent-skip defect wearing a "
          + "different hat",
-    apply: () => edit(INDEX, "      if (driveCapture && !res.ok) {", "      if (false && !res.ok) {"),
+    apply: () => edit(ACQUIRE, "  if (driveCapture && !res.ok) {", "  if (false && !res.ok) {"),
   },
 
   /* (2) D-112. The fence's own value is in question here, not the plane's
@@ -127,28 +131,28 @@ const ARMS = {
      arm catches the same shell one refusal later, under a DIFFERENT code — which
      is the measurement that justifies C-48.7 existing at all. */
   fourA: {
-    files: [INDEX],
+    files: [ACQUIRE],
     label: "(4a) THE SHELL AT THE EXPORT ADDRESS, declared-type arm — disarm the `text/html` check in "
          + "`is-drive-export`. MUST GO RED on the arm that names the declared content type. What it "
          + "must NOT do is let the shell be filed: the bytes arm is the second line and this arm "
          + "measures whether there really is one",
-    apply: () => edit(INDEX,
-      "        if (ect === \"text/html\" || ect === \"application/xhtml+xml\") {",
-      "        if (false) {"),
+    apply: () => edit(ACQUIRE,
+      "    if (ect === \"text/html\" || ect === \"application/xhtml+xml\") {",
+      "    if (false) {"),
   },
 
   /* (4b) THE SHELL ON THE BYTES. This is the arm whose failure mode is the
      record holding Google's application in place of a city document — the exact
      outcome the item exists to prevent, measured rather than asserted. */
   fourB: {
-    files: [INDEX],
+    files: [ACQUIRE],
     label: "(4b) THE SHELL AT THE EXPORT ADDRESS, bytes arm — disarm the bytes-first check in "
          + "`is-drive-bytes`, so a shell served under a LYING content type is not recognised. MUST GO "
          + "RED, and the failure must show the shell being FILED AS THE DOCUMENT. That is the defect "
          + "this whole item exists to prevent and this arm is the only place it is ever seen",
-    apply: () => edit(INDEX,
-      "      if (driveCapture && driveHeadBytes > 0) {",
-      "      if (false && driveHeadBytes > 0) {"),
+    apply: () => edit(ACQUIRE,
+      "  if (driveCapture && driveHeadBytes > 0) {",
+      "  if (false && driveHeadBytes > 0) {"),
   },
 
   /* (5) THE FOLDER. Not "does it refuse" but "is the absence NAMED" — a folder
