@@ -1,4 +1,4 @@
-/* pdf-worker's HTTP surface: R1–R12 and R35–R38 of build/requirements/pdf-worker.md.
+/* pdf-worker's HTTP surface: R1–R12, R35–R38 and R41 of build/requirements/pdf-worker.md.
  *
  * The subject is the COMMITTED BUNDLE (`dist/pdf-worker.bundled.mjs`), the file
  * that deploys. It is driven two ways: under miniflare (workerd, the runtime it
@@ -6,12 +6,10 @@
  * recording `env` where the question is what the Worker touches (R1, R37). */
 import "../../bio-plane/test/sandbox.mjs";
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
-import { REFUSALS } from "../src/pagepixels.mjs";
-import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { makePdf, content, hex, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
@@ -41,6 +39,9 @@ const DOC = makePdf([
 const SHA = hex(DOC);
 const NOT_PDF = new TextEncoder().encode("this is not a pdf at all");
 const NOT_PDF_SHA = hex(NOT_PDF);
+/* A PDF header over a catalog with no page tree: tier 1 reads it, pdf.js throws. */
+const BROKEN = new TextEncoder().encode("%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
+const BROKEN_SHA = hex(BROKEN);
 
 const newMf = (bindings = {}) => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: BUNDLE, script: readFileSync(BUNDLE, "utf8"),
@@ -231,10 +232,8 @@ console.log("\n--- R8: over the envelope ---");
 
 console.log("\n--- R10: the tier-2 pass throws ---");
 {
-  const BROKEN = new TextEncoder().encode("%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
-  const sha = hex(BROKEN);
-  await bucket.put(`bio/captures/${sha}`, BROKEN);
-  const [st, out] = await answer(await post(mf, { capture_sha: sha, store: "bio" }));
+  await bucket.put(`bio/captures/${BROKEN_SHA}`, BROKEN);
+  const [st, out] = await answer(await post(mf, { capture_sha: BROKEN_SHA, store: "bio" }));
   const base = JSON.parse(JSON.stringify(await extractPdfStructure(BROKEN)));
   t("R10 200, tier 1", [st, out.ok, out.tier], [200, true, 1]);
   t("R10 the tier2_extraction_error text", out.text, {
@@ -311,20 +310,102 @@ console.log("\n--- R37: never writes ---");
 console.log("\n--- R38: no place named ---");
 {
   const PLACES = /\b(Oakland|Alameda|California|Berkeley|Legistar)\b/i;
-  const texts = [...Object.values(REFUSALS), ...Object.values(CROP_REFUSALS)];
-  const { env } = spyEnv({});
-  for (const body of [{ capture_sha: SHA }, { capture_sha: "x", store: "bio" }, { capture_sha: SHA, store: "zz" }, { capture_sha: SHA, store: "bio" }]) {
-    texts.push(await (await nodeCall(env, body)).text());
-  }
+  /* Every answer this member can give: each refusal, the 422, the tier-1 and
+     tier-2 answers, the version and the unknown route. */
+  const { env } = spyEnv({ [`bio/captures/${SHA}`]: DOC, [`bio/captures/${NOT_PDF_SHA}`]: NOT_PDF,
+                           [`bio/captures/${BROKEN_SHA}`]: BROKEN });
+  const texts = [];
+  for (const body of [
+    { capture_sha: SHA }, { capture_sha: "x", store: "bio" }, { capture_sha: SHA, store: "zz" },
+    { capture_sha: "a".repeat(64), store: "bio" }, { capture_sha: NOT_PDF_SHA, store: "bio" },
+    { capture_sha: BROKEN_SHA, store: "bio" }, { capture_sha: SHA, store: "bio" },
+  ]) texts.push(await (await nodeCall(env, body)).text());
+  const { env: small } = spyEnv({ [`bio/captures/${SHA}`]: DOC }, { MAX_PDF_BYTES: "1" });
+  texts.push(await (await nodeCall(small, { capture_sha: SHA, store: "bio" })).text());
   texts.push(await (await worker.fetch(new Request("http://pdf-worker/structure", { method: "POST" }), {})).text());
+  texts.push(await (await nodeCall(env, null, { path: "version", method: "GET" })).text());
   texts.push(await (await nodeCall(env, null, { path: "zz", method: "GET" })).text());
   t("R38 no refusal text names a place", texts.filter((s) => PLACES.test(s)), []);
-  /* The code itself, comments removed: only a comment may cite where a
-     measurement was taken (layers.md, rule 6). */
-  const code = (f) => readFileSync(here(`../src/${f}`), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-  const files = readdirSync(here("../src")).filter((f) => f.endsWith(".mjs")).sort();
-  t("R38 (every source file is read: the decoders included)", ["jbig2decode.mjs", "jpxdecode.mjs", "mq.mjs"].every((f) => files.includes(f)), true);
-  t("R38 no place is named in the module's code", files.filter((f) => PLACES.test(code(f))), []);
+  /* This module's code, `src/index.mjs`, comments removed: only a comment may
+     cite where a measurement was taken (layers.md, rule 6). The other files in
+     `src/` belong to image-codecs and pdf-pixels, which hold their own R38. */
+  const code = readFileSync(here("../src/index.mjs"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  t("R38 no place is named in the module's code", PLACES.test(code), false);
+}
+
+console.log("\n--- R41: pure per call ---");
+{
+  const objects = { [`bio/captures/${SHA}`]: DOC, [`bio/captures/${NOT_PDF_SHA}`]: NOT_PDF,
+                    [`bio/captures/${BROKEN_SHA}`]: BROKEN };
+  /* One call of each kind the member answers, each with its own options. */
+  const CALLS = [
+    ["tier 2", { capture_sha: SHA, store: "bio" }],
+    ["tier 2, upper-case sha", { capture_sha: SHA.toUpperCase(), store: "bio" }],
+    ["not a PDF (422)", { capture_sha: NOT_PDF_SHA, store: "bio" }],
+    ["tier-2 failure", { capture_sha: BROKEN_SHA, store: "bio" }],
+    ["over the envelope", { capture_sha: SHA, store: "bio" }, { MAX_PDF_BYTES: String(DOC.length - 1) }],
+    ["not found", { capture_sha: "a".repeat(64), store: "scratch" }],
+    ["bad sha", { capture_sha: "x", store: "bio" }],
+    ["bad store", { capture_sha: SHA }],
+    ["unknown namespace", { capture_sha: SHA, store: "biosmoke" }],
+    ["version", null, { VERSION: "4.5.6" }, { path: "version", method: "GET" }],
+    ["unknown route", null, {}, { path: "zz", method: "GET" }],
+  ];
+  const one = async ([, body, extra = {}, how]) => {
+    const res = await nodeCall(spyEnv(objects, extra).env, body, how);
+    return [res.status, await res.text()];
+  };
+  const runAll = async (order) => {
+    const out = {};
+    for (const c of order) out[c[0]] = await one(c);
+    return Object.fromEntries(Object.entries(out).sort(([a], [b]) => (a < b ? -1 : 1)));
+  };
+  const first = await runAll(CALLS);
+  t("R41 (each call answers as R2–R12 say, so every kind of answer is covered)",
+    Object.fromEntries(Object.entries(first).map(([l, [st]]) => [l, st])),
+    { "bad sha": 400, "bad store": 400, "not a PDF (422)": 422, "not found": 404, "over the envelope": 200,
+      "tier 2": 200, "tier 2, upper-case sha": 200, "tier-2 failure": 200, "unknown namespace": 400,
+      "unknown route": 404, "version": 200 });
+  t("R41 the same calls again, in reverse order: every answer byte-identical",
+    await runAll([...CALLS].reverse()), first);
+  const again = [];
+  for (const c of CALLS) again.push([c[0], ...(await one(c))], [c[0], ...(await one(c))]);
+  t("R41 each call made twice in a row answers the same both times",
+    again.filter((_, i) => i % 2 === 0).map(([l, s, b]) => [l, s, b]), again.filter((_, i) => i % 2 === 1).map(([l, s, b]) => [l, s, b]));
+
+  /* No clock and no randomness: the same calls under a clock ten years on and
+     random sources that return other values answer exactly as before. */
+  const RealDate = Date, realRandom = Math.random, realNow = performance.now.bind(performance);
+  const realGRV = crypto.getRandomValues.bind(crypto), realUUID = crypto.randomUUID?.bind(crypto);
+  const SKEW = 10 * 365.25 * 864e5;
+  let touched = false;
+  const mark = () => { touched = true; };
+  globalThis.Date = class extends RealDate {
+    constructor(...a) { if (!a.length) mark(); super(...(a.length ? a : [RealDate.now() + SKEW])); }
+    static now() { mark(); return RealDate.now() + SKEW; }
+  };
+  Math.random = () => { mark(); return 0.999; };
+  performance.now = () => { mark(); return realNow() + SKEW; };
+  crypto.getRandomValues = (a) => { mark(); return a.fill(0xab); };
+  if (realUUID) crypto.randomUUID = () => { mark(); return "00000000-0000-4000-8000-000000000000"; };
+  let skewed;
+  try { skewed = await runAll(CALLS); }
+  finally {
+    globalThis.Date = RealDate; Math.random = realRandom; performance.now = realNow;
+    crypto.getRandomValues = realGRV; if (realUUID) crypto.randomUUID = realUUID;
+  }
+  t("R41 under another clock and other random values, every answer is the same", skewed, first);
+  console.log(`  (a clock or random source was ${touched ? "read, and changed nothing" : "never read"})`);
+
+  /* The runtime it serves in answers the same bytes as node, and the same on a
+     second call to the same isolate. */
+  for (const [label, body] of [["tier 2", { capture_sha: SHA, store: "bio" }],
+                               ["tier-2 failure", { capture_sha: BROKEN_SHA, store: "bio" }]]) {
+    const a = await (await post(mf, body)).text();
+    const b = await (await post(mf, body)).text();
+    t(`R41 ${label} under workerd: the same answer twice, and the same as node's`, [a, b], [first[label][1], first[label][1]]);
+  }
 }
 
 await mf.dispose();
