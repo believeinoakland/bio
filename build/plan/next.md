@@ -85,6 +85,8 @@
 - N94 · 2026-09-27 · **legacy-checks** (RECORD-CORE #2 REPORT 4, PROMOTION #3): C-75's five `where`s now name `src/record-core/index.mjs` `perItem` (`is-per-item-*`); catalogue rows for record-core R59's `AUDIT_CHECK_DECLARED`, `AUDIT_CHECK_MALFORMED`, `AUDIT_CHECK_FAILED` and promotion's `FACT_FAILED`.
 - N95 · 2026-09-27 · **queue** (RECORD-CORE #2 REPORT 6): its unattended-capture producer reads record-core's `manifestByAuthor` (R53) instead of `manifest` in its own SQL, at its extraction.
 
+- N96 · 2026-09-27 · **jurisdictions** (EXTRACTION #1 REPORT 1, K139): the profile gains `systems[].links` `{item, file}` patterns, and the first profile's agenda system states REC-206's measured gateway shapes, so extraction R52 derives item-to-file membership on a real instance; a new profile key, so it goes to Bob with N61 and N65.
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
