@@ -43137,8 +43137,8 @@ export class Store extends DurableObject {
            and for the same reason. An absent stamp reaches `checkAttestation`
            as an absent member and is refused there (*unattributed is not
            attested*), so a route that skipped the stamp fails closed. */
-        attesttext: () => this.attestText({ ...(body || {}),
-                                            member: url.searchParams.get("attestor") }),
+        attesttext: () => contentOf(this.ctx).attestText({ ...(body || {}), member: url.searchParams.get("attestor"),
+                                                           viewer: url.searchParams.get("viewer") }),
         /* CPDF-13 / D-253: `calibrationdrift` is a READ, and takes the viewer
            stamp for REC-30's reason exactly — its rows NAME the bundles a capture
            is filed in. The other four calibration ops are `calibrationOps`'. */

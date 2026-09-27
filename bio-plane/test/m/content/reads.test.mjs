@@ -39,8 +39,8 @@ test("R18: the plane's own store parameter is accepted", () => {
 test("R19: the answer carries the row, its label, says, the transcription axis, the attestations that bear on it, the document's capture axis and no connection", () => {
   const { w, a, mint } = setup();
   const id = mint({ kind: "pdf-page", page: 1 });
-  w.content.attestText({ captureSha: a.sha, member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z" });
-  w.content.attestText({ captureSha: a.sha, member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-03T00:00:00Z" });
+  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z" });
+  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-03T00:00:00Z" });
   const r = w.content.contentRead({ id, viewer: V("bo"), extras: ["id", "viewer"] });
   assert.equal(r.ok, true);
   for (const k of ["content_id", "capture_sha", "bundle_id", "extent_kind", "extent", "ref", "chain", "derivation_cap",
@@ -88,7 +88,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   assert.match(s[para].transcription.why, /cannot yet evaluate/);
   assert.deepEqual([s[page].transcription.ceiling, s[page].transcription.determinant], ["C", "derivation"]);
   /* a page attestation raises the page and not the whole document */
-  w.content.attestText({ captureSha: a.sha, member: V("cy"), extent: { kind: "page", page: 1 } });
+  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 } });
   const s2 = w.content.standings([page, doc]);
   assert.equal(s2[page].transcription.determinant, "attestation");
   assert.equal(s2[doc].transcription.determinant, "derivation");
@@ -103,7 +103,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   assert.equal(w.content.standings([doc])[doc].transcription.determinant, "derivation");
   /* an attestation made against another chain does not raise a row */
   w.read(a.sha, { chain: LAYER, pageCount: 3 });
-  w.content.attestText({ captureSha: a.sha, member: V("xx"), extent: { kind: "document" } });
+  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("xx"), extent: { kind: "document" } });
   assert.equal(w.content.standings([doc])[doc].transcription.determinant, "derivation");
 });
 

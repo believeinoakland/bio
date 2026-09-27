@@ -157,7 +157,7 @@ test("R16: every read of a row carries its mint label, member, plane, machine or
   const rows = [{ content_id: m.content_id }]; w.content.projectStandings(rows);
   assert.deepEqual(rows[0].mint, mintLabel("class:ai"));
   /* never attested by a machine: the capture's attestation refuses a machine credential */
-  const t = w.content.attestText({ captureSha: a.sha, member: "class:ai", extent: { kind: "document" } });
+  const t = w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: "class:ai", extent: { kind: "document" } });
   assert.equal(t.code, "TEXT_ATTEST_MACHINE");
 });
 
@@ -194,7 +194,7 @@ test("R36: a machine credential may mark a passage citable, labelled, and never 
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 2 });
   assert.equal(w.content.contentMint({ bundleId: DOC, mintedBy: "class:ai", viewer: "class:ai" }).mint.machine_work, true);
-  assert.equal(w.content.attestText({ captureSha: a.sha, member: "class:member", extent: { kind: "document" } }).code, "TEXT_ATTEST_MACHINE");
+  assert.equal(w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: "class:member", extent: { kind: "document" } }).code, "TEXT_ATTEST_MACHINE");
   assert.equal(w.content.transcribe({ bundleId: DOC, extent: { kind: "document" }, text: "x", transcriber: "class:ai", viewer: "class:ai" }).code,
     "TRANSCRIBE_NOT_A_MEMBER");
   const t = w.content.transcribe({ bundleId: DOC, extent: { kind: "document" }, text: "x", transcriber: V("bo"), viewer: V("bo") });
@@ -214,7 +214,7 @@ test("R39: the four tables carry bundle_id and are declared to record-core's pur
   for (const [id, s] of [[DOC, a.sha], ["INFO-2026-0002-b", b.sha]]) {
     const t = w.content.transcribe({ bundleId: id, extent: { kind: "pdf-page", page: 0 }, text: "words", transcriber: V("bo"), viewer: V("bo") });
     w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("cy"), viewer: V("cy") });
-    w.content.attestText({ captureSha: s, member: V("cy"), extent: { kind: "page", page: 0 } });
+    w.content.attestText({ captureSha: s, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 0 } });
   }
   const report = w.record.purge({ bundleId: DOC });
   for (const t of CONTENT_TABLES) assert.equal(report.removed ? report.removed[t] >= 1 : true, true, t);

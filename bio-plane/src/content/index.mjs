@@ -355,7 +355,9 @@ export class Content {
       return { ok: false, reason: "NO_READING",
                detail: `nothing in this store has been read at that capture hash, so there is no text to attest to. `
                      + `Attesting is about what a document SAYS, and this record does not yet hold what this one says` };
-    if (pkg.viewer !== undefined && bundleId && !this.sees(bundleId, pkg.viewer))
+    /* The viewer is the control plane's stamp and it is asked (K134): a capture filed in a bundle the viewer may not
+       see answers exactly as one never read; an absent stamp sees nothing. */
+    if (!bundleId || !this.sees(bundleId, pkg.viewer))
       return { ok: false, reason: "NO_READING",
                detail: `nothing in this store has been read at that capture hash, so there is no text to attest to. `
                      + `Attesting is about what a document SAYS, and this record does not yet hold what this one says` };
