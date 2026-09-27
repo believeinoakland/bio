@@ -6,7 +6,7 @@ Seven layers, lowest first (P10): 1, 2, 3, 4, 6, 7, 11. Each extraction is done 
 
 **Jobs** · Layer 1 started ~14:30 UTC: ID-SPACES #2 `session_01DAomLCBqmFvF1k6WfbWamt`, LEGACY-CHECKS #2 `session_01FUNffcNqviJLVTLYAn267C` (depth 2). ID-SPACES #2 COMPLETE ~14:39 (7c80ffe5df).
 
-**Process findings in T6** (P3: recorded, not patched while the tranche runs; Bob, 2026-09-27: development stops after T6 until the process is fixed and certified by a fuller test suite):
+**Process findings in T6** (P3: recorded, not patched while the tranche runs; K164: development stops after T6 until the process is fixed and certified by a suite that proves it works):
 - F1 · A new job reads idle, with no turn and no context, for its first minute or two although its creation prompt does start it; nothing in the mechanics says how BOB confirms a start, and BOB #48 re-sent both jobs' first message (K160, replaced by K161). The job then saw a second START from BOB #48.
 - F2 · A job that ends its turn waiting on BOB's ANSWER reads `need_input` / `BLOCKED` with a `needs_action`, which Bob's app shows as waiting on him, and which mechanics §5 tells BOB to relay to Bob as an approval (ID-SPACES #2, 14:35).
 - F3 · A one-time routine lands 40–60 s after the minute it names; a job pushes its record before its routine, so BOB answers from the record and the job's own message arrives after the answer (ordering as §13 allows, but every exchange is doubled).
