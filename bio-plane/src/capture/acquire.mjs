@@ -32,8 +32,9 @@ export async function sha256Hex(v) {
 }
 
 /* The row readers of the refusal families capture's arms answer with (C-48 the Drive arm, C-83 the render arm). The
-   code is a STRING LITERAL at each site so the DEC-49 guard can compare it; a code with no sentence throws. */
-const driveRow = (code) => {
+   code is a STRING LITERAL at each site so the DEC-49 guard can compare it; a code with no sentence throws. `driveRow`
+   is exported (T4-6) because `op=monitor`'s Drive tick answers C-48.8 and C-48.9 from the same catalogue family. */
+export const driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
