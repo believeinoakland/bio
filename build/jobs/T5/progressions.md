@@ -64,3 +64,12 @@ Sent together as one QUESTION. None blocks the job: each is built on the best re
 - No layer tests are named in `build/manifest.md`; no extracted module uses progressions yet.
 
 Size: test runs 16, module lines 1493
+
+## ANSWER 08:15 UTC · Q1–Q3 (K147; `tranche/T5` @ `4405b936fe`, merged here @ `41f0a7b83b`)
+
+- Merge conflicts, all in `store.mjs` and all neighbouring one-liners from entities' early merge: the purge filters (both kept), the migrate calls and the ops spreads (entities first, then progressions, the modules' order). The legacy-store diff is unchanged: 17 added, 1,412 removed.
+- Q1, Q2 folded by BOB. R34 is tested (the columns with their types and meaning, queue's sight join as written, every R29 table counted). Q3: the bridge stays until BOB's CHANGE for entities and connections (entities is on the tranche now, and already exports `isEstablished`).
+- **REPORT (BOB, the requirements file):** `node checks/format.mjs` fails on `build/requirements/progressions.md`: "ids given twice: R8 R33 R31". The "Named interfaces" block repeats `**R8**`, `**R31**` and `**R33**` as ids; writing them plain (e.g. "R8 names:") would clear it. The file is BOB's, so I left it. It was 0 failures before the fold.
+- Module tests: 41, pass 40, fail 0, todo 1 (R32). Checks: format 1 failure (above, not this job's); architecture 0; coverage 37 of 37; ownership 0 (legacy-store 17/1,412, legacy-checks 0/66). Behaviour suites on the merged tree, all green: progression-instance, progression-exception, progression-versions, overdue-successor, proposals-feed, capture-progressions, d552-instance-disposition, proposedispose, queue, queue-state, current, versions, gate-reads, connection.
+
+Size: test runs 19, module lines 1493
