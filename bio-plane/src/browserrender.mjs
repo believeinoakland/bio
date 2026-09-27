@@ -95,8 +95,29 @@ const IDLE_QUIET_MS = 500;
    that holds a request open (an event stream, a long poll) never goes network-idle, so
    without this every render of it ends on its timeout (M-151: 16 of 16 on the corpus's
    founding client-rendered source).
-   OFF (null) until N is measured: the measurement is in progress in this job. */
-const LONG_LIVED_AFTER_MS = null;
+   MEASURED 2026-09-27 02:15–02:47Z by CAPTURE-SOURCES #1 (T4), extending M-151 with its own
+   instrument: headless Chromium Chrome/141.0.7390.37 (/opt/pw-browsers/chromium) over CDP by
+   puppeteer-core@23, through the container's egress proxy (trust pinned to its CA by SPKI), a
+   fresh incognito context per run, viewport 1280x800, 60 s of observation after Page.navigate,
+   every request's start and end recorded; 8 runs of each of oaklandca.opengov.com/transparency,
+   oaklandca.opengov.com/, data.oaklandca.gov/ and (server-rendered control)
+   oakland.legistar.com/Calendar.aspx. Harness sha256 118fad49…, rows f727eab5…, analysis 60f366cd….
+   - Requests that ENDED on the client-rendered sources: n = 1,597, median 301 ms, p99 1,148 ms,
+     MAX 1,968 ms.
+   - Requests that NEVER ended in 60 s: only on the two opengov addresses, 4 in every run (32 of 32
+     per address): a LaunchDarkly event stream (clientstream.launchdarkly.com), two
+     platform.twitter.com widget frames and a www.facebook.com plugin frame, each started 2.0 s or
+     more after navigation. The social frames may be held open by this egress path rather than by
+     the site; either way they are what the wait would stall on.
+   THE RULE, as M-151's: N = twice the tail of the lifetimes of requests that ended, rounded UP to
+   the next whole second: 2 x 1,968 = 3,936 ms, so N = 4 s. Replayed over the 32 recorded runs with
+   the 15 s wait: WITHOUT the rule both opengov addresses end on the timeout in 16 of 16 runs; WITH
+   N = 4 s they settle by this rule in 16 of 16, at 8.4-10.0 s from navigation, naming 4 long-lived
+   requests each; data.oaklandca.gov and legistar end on networkidle in 16 of 16 either way, at the
+   same instants. NOT MEASURED: Cloudflare's browser and network, other client-rendered sources, a
+   slow day; a request that legitimately runs longer than N while bringing data would be excluded,
+   and the record then says "settled", never "complete". */
+const LONG_LIVED_AFTER_MS = 4000;
 /* D-520: the least of the render's bound kept for serialising the document after the wait. */
 const SERIALISE_MS = 1000;
 
