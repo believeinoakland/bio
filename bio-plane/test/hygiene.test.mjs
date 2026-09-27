@@ -2466,6 +2466,21 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        re-inline their code where the store now delegates to them (`reinlineLayer3`), for the source censuses that walk
        the store's class; it prints nothing and floors on nothing. Its callers' floors are theirs to guard. */
     "bio-plane/test/t4-extracted.mjs",            // src/<module>/ of T4 layer 3's modules, re-inlined; floors on nothing
+    /* ADDED 2026-09-27 (T5-12, legacy-tests): the ratchet caught all five on this job's first run of this suite (the T5
+       opening, 64386f16eb, printed 47 and named none of them). NAMED AND NOT GUARDED, each on a reason already on this
+       list: `t5-extracted.mjs` is `t4-extracted.mjs`'s reasoning for T5's nine modules (it re-inlines their code where
+       the store delegates, for the source censuses that walk the store's class; prints nothing, floors on nothing);
+       `bias.test.mjs` reads `src/bias/` as the corpus of its source arms on the moved methods (presence pins by
+       pattern; its one printed size is context, read by no assertion); `d280-strengthbar.test.mjs` and
+       `severedhomes.test.mjs` read `src/connections/` beside the store for the severance rule's census, asserted
+       EXACTLY (one definition, a named count of callers), so a phantom file can only turn it red; and
+       `group-identity.test.mjs` walks every `src/<module>/` for readers of `group_identity_history` outside the
+       REC-164 block, asserted EMPTY (a ceiling at zero, `mint-ledger.test.mjs`'s reasoning). */
+    "bio-plane/test/t5-extracted.mjs",            // src/<module>/ of T5's nine modules, re-inlined; floors on nothing
+    "bio-plane/test/bias.test.mjs",               // src/bias/, the corpus of its source arms; presence pins, no floor
+    "bio-plane/test/d280-strengthbar.test.mjs",   // src/connections/, the severance rule's census; asserted exact
+    "bio-plane/test/severedhomes.test.mjs",       // src/connections/, the severance rule's census; asserted exact
+    "bio-plane/test/group-identity.test.mjs",     // every src/<module>/, readers outside the block; a ceiling at zero
     /* ADDED 2026-09-27 (T4, legacy-tests): the ratchet caught it on its first run. NAMED AND NOT GUARDED: the DEC-49
        one-code-two-conditions SWEEP (not a suite; the battery never runs it) now lists `src/<module>/` so its printed
        candidate list reads the extracted modules as `check-refusal-codes.mjs` arm G does. It PRINTS candidates for a
@@ -2593,7 +2608,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 47)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 52)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2619,7 +2634,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        legacy-index N12), and one arrival, `bio-plane/test/t4-extracted.mjs` (named above).
        MOVED 46 -> 47 the same day, from the figure PRINTED (`47 walking file(s)`): the DEC-49 sweep
        `dec49-onecode-twoconditions.sweep.mjs` now lists `src/<module>/` (named above). */
-    census.length >= 47, true);
+    /* MOVED 47 -> 52 on 2026-09-27 (T5-12, legacy-tests), from the figure this suite PRINTED on `job/T5/legacy-tests`
+       (`52 walking file(s)`) against the T5 opening's 47 (64386f16eb), diffed by name: no departure, five arrivals,
+       `t5-extracted.mjs`, `bias.test.mjs`, `d280-strengthbar.test.mjs`, `severedhomes.test.mjs` and
+       `group-identity.test.mjs`, each now listing `src/<module>/` for code T5 moved there (named above). */
+    census.length >= 52, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
