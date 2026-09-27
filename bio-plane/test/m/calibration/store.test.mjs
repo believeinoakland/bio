@@ -370,11 +370,12 @@ test("R11: a supersession whose successor cannot be read is left out", () => {
 
 /* ------------------------------------------------------------------ R12 */
 
-test("R12: with no listener registered, obligations and obligations_raised are null and why says so", () => {
+test("R12: with no listener registered, obligations, obligations_raised and obligations_truncated are null and why says so", () => {
   const { c, clock } = fresh();
   rec(c, { cap: "A" }); clock.t += DAY;
   const r = rec(c, { cap: "D", at: "2026-09-02" });
   assert.equal(r.obligations, null); assert.equal(r.obligations_raised, null);
+  assert.equal(r.obligations_truncated, null);
   assert.match(r.why, /No module derives obligations/);
 });
 
@@ -389,11 +390,29 @@ test("R12: every listener runs after each record, in the modules' total order, a
   assert.deepEqual(seen.map((x) => x[0]), ["extraction", "legacy-store", "unlisted"]);
   assert.deepEqual(seen[0][1], { calibration_id: "CAL-1", engine: "pdfjs", version: "4.0", supersedes: null, drift: a.drift });
   assert.deepEqual(a.obligations, [{ from: "legacy" }]); assert.equal(a.obligations_raised, 1);
+  assert.equal(a.obligations_truncated, false);
   seen.length = 0; clock.t += DAY;
   const b = rec(c, { cap: "C", at: "2026-09-02" });
   assert.equal(seen[0][1].supersedes, "CAL-1"); assert.equal(seen[0][1].drift.verdict, "worse");
   assert.deepEqual(b.obligations, [{ id: 1 }, { id: 2 }, { from: "legacy" }]);
   assert.equal(b.obligations_raised, 3);
+  assert.equal(b.obligations_truncated, false);
+});
+
+test("R12: a listener that cut its list short answers {obligations, truncated}, and obligations_truncated says so", () => {
+  const { c, clock } = fresh({ order: ["extraction", "content", "legacy-store"] });
+  const answers = { extraction: null, content: null, "legacy-store": null };
+  for (const m of Object.keys(answers)) c.onCalibration(m, () => answers[m]);
+  const run = (a) => { Object.assign(answers, a); clock.t += DAY; return rec(c, { at: new Date(clock.t).toISOString() }); };
+  let r = run({ extraction: { obligations: [{ id: 1 }, { id: 2 }], truncated: true }, content: [{ id: 3 }],
+                "legacy-store": { obligations: [{ id: 4 }], truncated: false } });
+  assert.deepEqual(r.obligations, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }], "concatenated in the modules' order");
+  assert.equal(r.obligations_raised, 4); assert.equal(r.obligations_truncated, true);
+  r = run({ extraction: { obligations: [] }, content: [], "legacy-store": { obligations: [{ id: 9 }], truncated: true } });
+  assert.deepEqual(r.obligations, [{ id: 9 }]); assert.equal(r.obligations_truncated, true, "any listener's cut is carried");
+  r = run({ extraction: { obligations: [{ id: 1 }], truncated: false }, content: null, "legacy-store": [] });
+  assert.equal(r.obligations_truncated, false, "no listener cut its list");
+  assert.equal(r.obligations_raised, 1);
 });
 
 test("R12: a module registers once (LISTENER_DECLARED); a malformed registration is refused", () => {
@@ -407,7 +426,8 @@ test("R12: a module registers once (LISTENER_DECLARED); a malformed registration
 });
 
 test("R12 R4: a listener that throws, or answers anything but a list, fails the whole record", () => {
-  for (const bad of [() => { throw new Error("boom"); }, () => ({ not: "a list" }), () => Promise.resolve([])]) {
+  for (const bad of [() => { throw new Error("boom"); }, () => ({ not: "a list" }), () => Promise.resolve([]),
+                     () => ({ obligations: "x", truncated: true }), () => ({ obligations: [], truncated: "yes" }), () => 7]) {
     const { s, c, clock } = fresh();
     c.calibrationSignalRecord({ engine: "pdfjs", source: "notes" });
     rec(c, { cap: "A" });

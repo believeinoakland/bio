@@ -121,7 +121,7 @@ class Calibration {
   /* ---------------------------------------------------------------- R12: the listeners */
 
   /** R12: a later module registers once; after each calibration `calibrationRecord` records, every listener runs in
-   *  the same transaction, in the modules' order, and returns a list of obligations. */
+   *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`. */
   onCalibration(module, fn) {
     if (!nonEmpty(module) || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED",
@@ -200,17 +200,22 @@ class Calibration {
       const d = drifted(verdict);
       const supersedes = prev ? prev.calibration_id : null;
       /* R12: THE OBLIGATIONS ARE THE LISTENERS', computed for the answer and written nowhere here. With no
-         listener, null and not zero: an absent derivation is not a derivation that found none. A listener that
-         throws, or answers anything but a list, fails the whole record — this transaction rolls back. */
-      let obligations = null;
+         listener, null and not zero: an absent derivation is not a derivation that found none. A listener answers a
+         list, or `{obligations, truncated}` when it cut its list short (K137), so a short list is never read as the
+         whole blast radius. One that throws, or answers anything else, fails the whole record — this transaction
+         rolls back. */
+      let obligations = null, truncated = null;
       if (this.#listeners.length) {
-        obligations = [];
+        obligations = []; truncated = false;
         for (const l of this.#listeners) {
           const r = l.fn({ calibration_id: id, engine: cal.engine, version: cal.version, supersedes, drift: d });
           if (r == null) continue;
-          if (!Array.isArray(r))
+          const cut = r && typeof r === "object" && !Array.isArray(r) && Array.isArray(r.obligations)
+                   && (r.truncated === undefined || typeof r.truncated === "boolean");
+          if (!Array.isArray(r) && !cut)
             throw new TypeError(`calibration listener ${l.module} answered something other than a list of obligations`);
-          obligations.push(...r);
+          obligations.push(...(cut ? r.obligations : r));
+          if (cut && r.truncated === true) truncated = true;
         }
       }
       return { ok: true, calibration_id: id, engine: cal.engine, version: cal.version,
@@ -218,6 +223,7 @@ class Calibration {
                supersedes, drift: d,
                obligations_raised: obligations ? obligations.length : null,
                obligations,
+               obligations_truncated: truncated,
                regraded: 0,
                why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} ${cal.version} on `
                   + `${cal.at}: fidelity ${cal.cap ?? "undetermined"}. ${d.why}`
