@@ -70,3 +70,5 @@ Bias @ f4ae8957b6 merged (a31fe1aabd; ownership 0 failures, legacy-store +23/−
 Retrieval @ 3ec3dbba3d merged (fe215d89aa; ownership 0 failures, legacy-store +60/−2,867, every added line read), and @ dcdabbbd25 after K151 (R55–R58 named, coverage 58/58); its twelve not-yet-met marks cleared on its listed tests.
 Promotion @ ac497111d4 (PROMOTION #4) merged: R18's arms, `CATALOG_VERSION` 1.35.0 for all 49 rows that left the catalogue since 1.34.0 (census 519), every not-yet-met mark verified met and cleared; T6's separate bump dropped. All module tests 1,224/1,227, 0 fail.
 Connections @ 5375f878a6 merged (ownership 0 failures, legacy-store +20/−1,774, every added line read; architecture 0, coverage 57/57); R51 worded to its call `fn(entityId, {hasArtifact, enteredAt})`. All module tests 1,280/1,283, 0 fail. Every layer-5 job is COMPLETE and merged.
+
+Layer 11, started 2026-09-27 ~09:02 UTC (BOB #46) from `tranche/T5` @ 054006d1d5: LEGACY-INDEX #3 `session_01R1fW8dH921CoT7ggxG5wrw`, LEGACY-TESTS #3 `session_01TW5ASSYtwo47MkR2AdX1H6`.
