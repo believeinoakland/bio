@@ -301,21 +301,30 @@ t("the `document` row earns the DOCUMENT's connection grade — its portion IS t
    eb2.earned.content[DOC_ROW].connection.grade], [true, "document", "A"]);
 t("and it is the SAME entry the document-grain answer carries, not a second computation",
   eb2.earned.content[DOC_ROW].connection.grade, eb2.earned.connection[DOC].grade);
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests; connections R13, R54 `portionAxes`, K145 Q6, K152): the registry's
+   portion axis now answers from the portion's OWN connections (connections' `portionConnectionAxis`), no longer from
+   the reading position alone (`READING_POSITION_ABSENT`, FW-17's empty level). This document is an end of no
+   connection (one document, one subject: its A is the document's own resolution of the subject, not a connection
+   between two documents), so the axis is UNDETERMINED with the empty level named `NO_CONNECTION`, and the portion's
+   sentence is about the portion (it names the row's own `ref`). Still undetermined at portion grain, still never
+   borrowed from the whole document (no grade, no `document_grade`), which is Bob's 5.1 and what these arms are for;
+   connections REPORT 2 names the same move in content-extent-arms. */
 t("THE PORTION ROW IS UNDETERMINED — it does not borrow the document's A (Bob, 2026-09-14)",
   [eb2.earned.content[PAGE_ROW].connection.determined,
    eb2.earned.content[PAGE_ROW].connection.grain,
    eb2.earned.content[PAGE_ROW].connection.grade,
    eb2.earned.content[PAGE_ROW].connection.undetermined_because],
-  [false, "portion", null, "READING_POSITION_ABSENT"]);
+  [false, "portion", null, "NO_CONNECTION"]);
 /* CLAUDE.md's sparse-is-normal rule as an OBLIGATION: saying which level is
    empty is first-class, not a diagnostic detail. */
-t("and the LEVEL THAT IS EMPTY is named — readings record THAT, never WHERE (I2, FW-17)",
-  [/position within the reading/.test(eb2.earned.content[PAGE_ROW].connection.empty_level),
-   /FW-17/.test(eb2.earned.content[PAGE_ROW].connection.empty_level)], [true, true]);
+t("and the LEVEL THAT IS EMPTY is named — here the CONNECTION level: this document is an end of none",
+  [/^connection — /.test(eb2.earned.content[PAGE_ROW].connection.empty_level),
+   /end of no connection through this subject/.test(eb2.earned.content[PAGE_ROW].connection.empty_level)], [true, true]);
 t("the portion's own sentence says it refers only to its portion, and points at where the "
 + "DOCUMENT's answer lives rather than repeating it",
-  [/refers only to that portion/.test(eb2.earned.content[PAGE_ROW].connection.why),
-   /never borrowed from the whole document/.test(eb2.earned.content[PAGE_ROW].connection.why),
+  [String(eb2.earned.content[PAGE_ROW].connection.why).includes(
+     `nothing for ${eb2.earned.content[PAGE_ROW].ref} to earn from`),
+   /end of no connection/.test(eb2.earned.content[PAGE_ROW].connection.why),
    Object.prototype.hasOwnProperty.call(eb2.earned.content[PAGE_ROW].connection, "document_grade")],
   [true, true, false]);
 /* THE STRUCTURAL FORM OF THE SAME CLAIM, which is what an arm can break: no
