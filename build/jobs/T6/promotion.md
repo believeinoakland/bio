@@ -49,7 +49,7 @@ None.
   - Red on both, each with the same count of failing lines: `affordances`, `airun`, `d311-roster-affordances`, `project-sight`, `rung-ladder`, `skillpack` and `d470-catalog-census`.
   - `reopen`, `reevaluation`, `rec118-reeval-earned`, `case-opened`, `ratify`, `conclude` and the UI's `reopened-finding` all pass.
 - **DEC-49 guard:** REPORT 3.
-- Checks (civicos-process `main` @ `5d77655`), before the final merge of `tranche/T6` (which touched only `build/`):
+- Checks (civicos-process `main` @ `5d77655`), re-run after the final merge of `tranche/T6` (which touched only `build/`; ownership now counts 7 files, this record included, 0 failures):
   - `format: 69 modules, 64 requirements files; 0 failures`
   - `architecture: 16 product files, 49 relative imports (0 naming no tracked file, not judged); 0 failures`
   - `coverage: 1 modules, 46 of 46 live requirement ids named by a test; 0 failures`
