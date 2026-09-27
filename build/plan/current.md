@@ -58,3 +58,9 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 **Not in T4:** D-593, D-694, D-724 go with `extraction` (K49, layer 4); D-581, D-582, D-584 with `capture-requests` (K58, layer 6).
 
 ## Job sessions
+
+Layer 1, started 2026-09-27 01:27 UTC, concurrently:
+- `legacy-checks` · LEGACY-CHECKS #1 · `session_01LyPKBsWNrm3uhcjWAvUmhN`
+- `image-codecs` · IMAGE-CODECS #1 · `session_01GytnXWpaAYBtTx3b9cEHwE`
+- `pdf-pixels` · PDF-PIXELS #1 · `session_012XRqCG31gxW9i9Uyf3x6KX`
+- `pdf-worker` · PDF-WORKER #3 · `session_014eJmEBtn1ryR23AYPmxd89`
