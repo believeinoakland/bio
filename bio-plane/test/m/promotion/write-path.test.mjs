@@ -59,6 +59,7 @@ const INFO1 = "INFO-2026-0101-a";
 const held = await promote(INFO1, info(INFO1));
 assert.equal(held.ok, true, JSON.stringify(held));
 probe("CAS_STALE", () => promote(INFO1, info(INFO1), { base: "0".repeat(64) }));
+probe("ABSENT", () => promote("INFO-2026-0121-u", info("INFO-2026-0121-u"), { base: "0".repeat(64) }));
 probe("SNAP_KEY_TAKEN", async () => {
   const a = await promote("INFO-2026-0102-b", info("INFO-2026-0102-b"));
   return call("/promote", { bundleId: "INFO-2026-0102-b", base: a.bundleSha, snapKey: `k${seq}`, author: "member:ruth",

@@ -16,7 +16,8 @@
 import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS, createSha256,
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
-         PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
+         PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
+         CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { checkBundle } from "../../checks/bio-checks.mjs";
@@ -55,9 +56,18 @@ const sameInstant = (a, b) => {
 const cut = (v, n) => String(v).slice(0, n);
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-/* A refusal carrying a catalogue (or promotion) row: its reason, code, check id and translation. */
-const rowRefusal = (row, code, detail, extra) =>
-  ({ ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) });
+/* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
+   by one row in the whole catalogue (DEC-49's one code, one row), so the first family naming it is its row. */
+const ROW_FAMILIES = [ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
+                      PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
+                      CUSTODIAL_CHECKS, PROMOTION_CHECKS];
+const rowOf = (code) => ROW_FAMILIES.find((t) => Object.prototype.hasOwnProperty.call(t, code))[code];
+/* A refusal carrying its row: its reason, code, check id and translation ("Errors"). Called with the code as a literal
+   at each site, so the DEC-49 guard reads which code a marked region mints. */
+const refusal = (code, detail, extra) => {
+  const row = rowOf(code);
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+};
 
 /* An inline file's digest (its UTF-8 text) or a blob's content address; null for neither. */
 function fileDigestOf(f) {
@@ -119,7 +129,6 @@ function stampGroup(files, slug) {
   });
 }
 
-const ABSENT = () => ({ ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" });
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
   detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
         + "holds for deactivated projects too, because their names are still cited." });
@@ -236,20 +245,23 @@ class Promotion {
       && (promotedType === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
     let projectMd = null;
     if (creatingProject) {
-      const r = (code, detail) => rowRefusal(PROJECT_ID_CHECKS[code], code, detail);
+      /* DEC-49 REGION is-project-id-supplied */
       if (idSupplied)
-        return r("PROJECT_ID_SUPPLIED",
+        return refusal("PROJECT_ID_SUPPLIED",
           "a new project's id is minted by the plane and returned; send the creation with no bundleId. "
           + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
+      /* END DEC-49 REGION is-project-id-supplied */
       projectMd = sentMd;
+      /* DEC-49 REGION is-project-id-bytes */
       if (!sentFm)
-        return r("PROJECT_DOCUMENT_UNREADABLE",
+        return refusal("PROJECT_DOCUMENT_UNREADABLE",
           "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
           + "because the plane writes the minted id into it. Nothing was created.");
       if (has(sentFm, "id"))
-        return r("PROJECT_ID_IN_BYTES",
+        return refusal("PROJECT_ID_IN_BYTES",
           "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; "
           + "remove the line and send it again. Nothing was created.");
+      /* END DEC-49 REGION is-project-id-bytes */
     }
     /* R7 */
     if ((!idSupplied && !creatingProject) || !Array.isArray(files) || !envelope)
@@ -259,23 +271,23 @@ class Promotion {
 
     /* R11: what the request must name, each refused by name before anything is read or written. */
     if (!((typeof snapKey === "string" && snapKey.trim() !== "") || (typeof snapKey === "number" && Number.isFinite(snapKey))))
-      return rowRefusal(PROMOTION_CHECKS.PROMOTE_SNAP_KEY_UNSTATED, "PROMOTE_SNAP_KEY_UNSTATED",
+      return refusal("PROMOTE_SNAP_KEY_UNSTATED",
         "this request names no snapKey (a non-blank string), so the revision has no name in the history. Nothing was written.");
     const pathless = files.map((f, i) => (isObj(f) && typeof f.path === "string" && f.path.trim() !== "" ? -1 : i))
                           .filter((i) => i >= 0);
     if (pathless.length)
-      return rowRefusal(PROMOTION_CHECKS.PROMOTED_FILE_PATH_UNSTATED, "PROMOTED_FILE_PATH_UNSTATED",
+      return refusal("PROMOTED_FILE_PATH_UNSTATED",
         `files entr${pathless.length > 1 ? "ies" : "y"} ${pathless.join(", ")} (counting from 0) name no path `
         + "(a non-blank string), or are not file objects. Nothing was written.", { entries: pathless });
     const blobHeld = (f) => typeof f.text !== "string" && typeof f.blobSha === "string" && f.blobSha !== "";
     const empty = files.filter((f) => typeof f.text !== "string" && !blobHeld(f)).map((f) => f.path);
     if (empty.length)
-      return rowRefusal(PROMOTION_CHECKS.PROMOTED_FILE_CONTENT_UNSTATED, "PROMOTED_FILE_CONTENT_UNSTATED",
+      return refusal("PROMOTED_FILE_CONTENT_UNSTATED",
         `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. `
         + "Nothing was written.", { paths: empty });
     const sizeless = files.filter((f) => blobHeld(f) && !(Number.isInteger(f.bytes) && f.bytes >= 0)).map((f) => f.path);
     if (sizeless.length)
-      return rowRefusal(PROMOTION_CHECKS.PROMOTED_FILE_BYTES_UNSTATED, "PROMOTED_FILE_BYTES_UNSTATED",
+      return refusal("PROMOTED_FILE_BYTES_UNSTATED",
         `${sizeless.join(", ")}: held as a blob and stating no size (bytes, a whole number from 0). Nothing was written.`,
         { paths: sizeless });
 
@@ -283,7 +295,7 @@ class Promotion {
     if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
     if (base !== null) {
       if (typeof sentMd.text !== "string" || !sentFm)
-        return rowRefusal(PROMOTION_CHECKS.BUNDLE_MD_UNREADABLE, "BUNDLE_MD_UNREADABLE",
+        return refusal("BUNDLE_MD_UNREADABLE",
           typeof sentMd.text !== "string"
             ? "this revision's bundle.md is held as a blob, so no rule about the revision can read it. Nothing was written."
             : "this revision's bundle.md has no readable front matter block, so no rule about the revision can read it. "
@@ -294,30 +306,35 @@ class Promotion {
     /* R19: `visibility` only on a project's creation, `discoverable` only with an owner. */
     let creationVisibility = null;
     if (pkg.visibility !== undefined && pkg.visibility !== null) {
-      const r = (code, detail) => rowRefusal(PROJECT_CREATION_VISIBILITY_CHECKS[code], code, detail);
+      /* DEC-49 REGION is-project-creation-visibility */
       if (base !== null || promotedType !== "project")
-        return r("PROJECT_VISIBILITY_NOT_A_CREATION",
+        return refusal("PROJECT_VISIBILITY_NOT_A_CREATION",
           "visibility is chosen when a project is created or forked, and this is not a project's creation. An "
           + "existing project's setting is its owners' act, op=projectvisibilityset. Nothing was written.");
+      /* END DEC-49 REGION is-project-creation-visibility */
       const unknown = membership.visibilitySettingRefusal(pkg.visibility);
       if (unknown) return unknown;
       const creator = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
+      /* DEC-49 REGION is-project-creation-ownerless */
       if (!creator && pkg.visibility === "discoverable")
-        return r("PROJECT_VISIBILITY_NO_OWNER",
+        return refusal("PROJECT_VISIBILITY_NO_OWNER",
           "whether a project can be found is its OWNERS' choice, and a project created by a machine credential has "
           + "no owner to choose it, so it is created hidden. Send the creation without visibility (or with "
           + "visibility=hidden). Nothing was created.");
+      /* END DEC-49 REGION is-project-creation-ownerless */
       creationVisibility = creator ? pkg.visibility : null;
     }
 
     /* R5: every stored digest and size is of the stored bytes. */
     const digested = digestFiles(files);
+    /* DEC-49 REGION is-promote-digest */
     if (digested.disagree.length)
-      return rowRefusal(ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH, "FILE_DIGEST_MISMATCH",
+      return refusal("FILE_DIGEST_MISMATCH",
         "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ")
         + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). "
         + "The record stores a digest only of what it holds. Nothing was written.",
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree });
+    /* END DEC-49 REGION is-promote-digest */
     files = digested.files.map((f) => {
       const n = inlineBytesOf(f);
       return n === null || f.bytes === n ? f : { ...f, bytes: n };
@@ -335,7 +352,7 @@ class Promotion {
         const stated = [said, envelope.group].find((x) => typeof x === "string" && x.trim() !== "");
         createdGroup = stated ? stated.trim() : recorded;
         if (!createdGroup)
-          return rowRefusal(INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED, "GROUP_UNDETERMINED",
+          return refusal("GROUP_UNDETERMINED",
             "this store records no producing group, and this creation names none — neither a group: line in its "
             + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.",
             { act: "promote" });
@@ -373,12 +390,17 @@ class Promotion {
         if (head.lastUpdated === undefined) head.lastUpdated = textStated(heldFm.last_updated) ?? undefined;
       }
 
-      /* R20: a revision the stamped actor may not see is answered as one of a bundle not held. */
-      if (head && base !== null && pkg.actorIdentity != null) {
-        const sight = String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase();
-        if (sight === "EXISTENCE") return this.#existenceOnly(bundleId);
-        if (sight !== "FULL") return ABSENT();
+      /* R1, R20: a revision of a bundle not held, and one the stamped actor may not see, get the one answer ABSENT,
+         before any other answer that reads the head. A caller who sees the project at existence only is told so. */
+      /* DEC-49 REGION is-promote-absent */
+      if (base !== null) {
+        const sight = head && pkg.actorIdentity != null
+          ? String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase() : "FULL";
+        if (head && sight === "EXISTENCE") return this.#existenceOnly(bundleId);
+        if (!head || sight !== "FULL")
+          return refusal("ABSENT", "update attempted against a bundle that does not exist");
       }
+      /* END DEC-49 REGION is-promote-absent */
 
       /* R4: a re-send of the promotion the record holds under this snap key is answered and writes nothing. */
       const held = record.manifestEntry(bundleId, snapKey);
@@ -393,9 +415,7 @@ class Promotion {
                  detail: "the record already holds this promotion under this snap key, byte for byte; nothing was written" };
       }
       /* R1 */
-      if (head && base === null)
-        return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
-      if (!head && base !== null) return ABSENT();
+      if (head && base === null) return refusal("EXISTS", "creation attempted against an existing bundle");
 
       /* R11: a revision carries forward what it states nowhere, and says so; a creation stating none is refused. */
       if (head && (promotedTitle === undefined || promotedTitle === null || promotedTitle === "") && head.title)
@@ -403,7 +423,7 @@ class Promotion {
       let typeCarried = null;
       if (head && promotedType === undefined) { promotedType = normalizeType(head.type); typeCarried = promotedType; }
       if (!head && promotedType === undefined)
-        return rowRefusal(PROMOTION_CHECKS.PROMOTED_TYPE_UNSTATED, "PROMOTED_TYPE_UNSTATED",
+        return refusal("PROMOTED_TYPE_UNSTATED",
           `neither the document being promoted nor this request's meta states an object_type, and `
           + `${cut(bundleId, 80)} is new, so the record holds nothing that says what kind of thing it is. State the `
           + `type in the document. Nothing was written.`);
@@ -416,7 +436,7 @@ class Promotion {
         const unstated = [["current_state", promotedState], ["created", promotedCreated],
                           ["last_updated", promotedLastUpdated]].filter(([, v]) => v === undefined).map(([k]) => k);
         if (unstated.length)
-          return rowRefusal(PROMOTION_CHECKS.PROMOTED_FIELD_UNSTATED, "PROMOTED_FIELD_UNSTATED",
+          return refusal("PROMOTED_FIELD_UNSTATED",
             `neither the document being promoted nor this request's meta states ${unstated.join(", ")}, and `
             + `${cut(bundleId, 80)} is new, so the record holds nothing to carry. State `
             + `${unstated.length > 1 ? "them" : "it"} in the document. Nothing was written.`, { fields: unstated });
@@ -449,20 +469,24 @@ class Promotion {
       }
 
       /* R1: the compare-and-swap. A stale base is never merged and never taken as the new value. */
+      /* DEC-49 REGION is-promote-cas */
       if (head && head.bundleSha !== base)
-        return rowRefusal(ACT_SHAPE_CHECKS.CAS_STALE, "CAS_STALE",
+        return refusal("CAS_STALE",
           "the base this revision names is not the bundle's current version: someone else changed it since it was read. "
           + "Nothing was written.", { expected: head.bundleSha, got: base });
+      /* END DEC-49 REGION is-promote-cas */
 
       /* R10: a revision never retypes its bundle. */
+      /* DEC-49 REGION is-promote-retypes-bundle */
       if (head && typeCarried === null && promotedType !== normalizeType(head.type) && !replay)
-        return rowRefusal(PROMOTED_TYPE_CHECKS.REVISION_RETYPES_BUNDLE, "REVISION_RETYPES_BUNDLE",
+        return refusal("REVISION_RETYPES_BUNDLE",
           `${cut(bundleId, 80)} is '${normalizeType(head.type)}' and this revision says '${cut(promotedType, 40)}'. A `
           + `revision changes what a document says, never what kind of thing it is. Nothing was written.`,
           { head_type: normalizeType(head.type), revision_type: promotedType });
+      /* END DEC-49 REGION is-promote-retypes-bundle */
       /* R12: a revision never redates its creation. */
       if (head && head.created !== undefined && !has(carriedFields, "created") && !sameInstant(promotedCreated, head.created) && !replay)
-        return rowRefusal(PROMOTION_CHECKS.REVISION_REDATES_CREATION, "REVISION_REDATES_CREATION",
+        return refusal("REVISION_REDATES_CREATION",
           `${cut(bundleId, 80)} was created '${cut(head.created, 40)}' and this revision says `
           + `'${cut(promotedCreated, 40)}'. A revision changes what a document says, never when it was made. Send it `
           + `again with the document's created as the record holds it, or with none. Nothing was written.`,
@@ -471,7 +495,7 @@ class Promotion {
       const revisionGroup = sentFm && sentFm.group !== undefined && sentFm.group !== null
         && String(sentFm.group).trim() !== "" ? String(sentFm.group).trim() : null;
       if (head && revisionGroup !== null && revisionGroup !== String(head.groupId).trim() && !replay)
-        return rowRefusal(PROMOTION_CHECKS.REVISION_REGROUPS_BUNDLE, "REVISION_REGROUPS_BUNDLE",
+        return refusal("REVISION_REGROUPS_BUNDLE",
           `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says `
           + `'${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again `
           + `with the group the record holds, or with none. Nothing was written.`,
@@ -481,7 +505,7 @@ class Promotion {
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj(finalFm0) ? finalFm0 : null;
       if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
-        return rowRefusal(PROMOTION_CHECKS.BUNDLE_ID_DISAGREES, "BUNDLE_ID_DISAGREES",
+        return refusal("BUNDLE_ID_DISAGREES",
           `the document states id '${cut(finalFm.id, 80)}' and it is being filed under '${cut(bundleId, 80)}'. A `
           + `document is filed under the id it states. Nothing was written.`,
           { document_id: cut(finalFm.id, 80), bundle_id: bundleId });
@@ -505,20 +529,24 @@ class Promotion {
 
       /* R9, R12: an envelope stating a value the document contradicts is refused by name. Replay is exempt. */
       if (!replay) {
+        /* DEC-49 REGION is-promoted-type-disagrees */
         if (documentType !== null && envelopeType !== null && documentType !== envelopeType)
-          return rowRefusal(PROMOTED_TYPE_CHECKS.ENVELOPE_TYPE_DISAGREES, "ENVELOPE_TYPE_DISAGREES",
+          return refusal("ENVELOPE_TYPE_DISAGREES",
             `the document being promoted says object_type '${cut(sentFm.object_type, 40)}' and this request's meta says `
             + `'${cut(envelope.object_type, 40)}'. The record goes by the document. Send it again with the meta naming `
             + `the type the document names, or change the document first. Nothing was written.`,
             { document_type: documentType, envelope_type: envelopeType });
+        /* END DEC-49 REGION is-promoted-type-disagrees */
+        /* DEC-49 REGION is-promoted-title-disagrees */
         if (envelopeTitle !== null && (documentTitle !== null || documentQuestionTitle !== null)
             && !(documentTitle !== null && sameText(envelopeTitle, documentTitle))
             && !(documentQuestionTitle !== null && sameText(envelopeTitle, documentQuestionTitle)))
-          return rowRefusal(PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES, "ENVELOPE_TITLE_DISAGREES",
+          return refusal("ENVELOPE_TITLE_DISAGREES",
             `the document being promoted is titled '${cut(documentTitle ?? documentQuestionTitle, 80)}' and this `
             + `request's meta says '${cut(envelopeTitle, 80)}'. The record goes by the document. Send it again with the `
             + `meta naming the document's title, or with no title in the meta. Nothing was written.`,
             { document_title: cut(documentTitle ?? documentQuestionTitle, 200), envelope_title: cut(envelopeTitle, 200) });
+        /* END DEC-49 REGION is-promoted-title-disagrees */
         let stateContradiction = null;
         if (envelopeState !== null && documentState !== null && !sameText(envelopeState, documentState))
           stateContradiction = ["current_state", documentState, envelopeState];
@@ -528,13 +556,15 @@ class Promotion {
           if (d === null && e === null) continue;
           if (d === null || e === null || !sameText(d, e)) { stateContradiction = [k, d, e]; break; }
         }
+        /* DEC-49 REGION is-promoted-state-disagrees */
         if (stateContradiction) {
           const [field, said, asked] = stateContradiction;
-          return rowRefusal(PROMOTED_TYPE_CHECKS.ENVELOPE_STATE_DISAGREES, "ENVELOPE_STATE_DISAGREES",
+          return refusal("ENVELOPE_STATE_DISAGREES",
             `the document being promoted says ${field} '${said === null ? "null" : cut(said, 40)}' and this request's `
             + `meta says '${asked === null ? "null" : cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
             { field, document_value: said === null ? null : cut(said, 80), envelope_value: asked === null ? null : cut(asked, 80) });
         }
+        /* END DEC-49 REGION is-promoted-state-disagrees */
         const dateContradiction = envelopeCreated !== null && documentCreated !== null
             && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated]
           : envelopeLastUpdated !== null && documentLastUpdated !== null
@@ -542,7 +572,7 @@ class Promotion {
           : null;
         if (dateContradiction) {
           const [field, said, asked] = dateContradiction;
-          return rowRefusal(PROMOTION_CHECKS.ENVELOPE_DATES_DISAGREE, "ENVELOPE_DATES_DISAGREE",
+          return refusal("ENVELOPE_DATES_DISAGREE",
             `the document being promoted says ${field} '${cut(said, 40)}' and this request's meta says `
             + `'${cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
             { field, document_value: cut(said, 80), envelope_value: cut(asked, 80) });
@@ -558,12 +588,16 @@ class Promotion {
           const edges = vocabFor(STATES, mt).edges || {};
           const legalFrom = Object.prototype.hasOwnProperty.call(edges, head.currentState) ? edges[head.currentState] : [];
           if (legalFrom.includes(promotedState)) continue;
-          const bias = mt === "bias";
-          const row = bias ? BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION : PROMOTION_CHECKS.STATE_MOVE_UNDECLARED;
-          return rowRefusal(row, bias ? "BIAS_ILLEGAL_TRANSITION" : "STATE_MOVE_UNDECLARED",
-            `${cut(bundleId, 80)} stands at '${head.currentState}' and this promotion names '${cut(promotedState, 40)}'. `
-            + `A ${mt} at '${head.currentState}' moves to ${legalFrom.length ? legalFrom.join(" or ") : "no other state"}, `
-            + `and a revision that leaves it where it stands is always allowed. The table is the catalogue's. Nothing was written.`,
+          const detail = `${cut(bundleId, 80)} stands at '${head.currentState}' and this promotion names `
+            + `'${cut(promotedState, 40)}'. A ${mt} at '${head.currentState}' moves to `
+            + `${legalFrom.length ? legalFrom.join(" or ") : "no other state"}, and a revision that leaves it where it `
+            + `stands is always allowed. The table is the catalogue's. Nothing was written.`;
+          /* DEC-49 REGION bias-state-edge */
+          if (mt === "bias")
+            return refusal("BIAS_ILLEGAL_TRANSITION", detail,
+              { from: head.currentState, to: promotedState, object_type: mt, legal_from: legalFrom });
+          /* END DEC-49 REGION bias-state-edge */
+          return refusal("STATE_MOVE_UNDECLARED", detail,
             { from: head.currentState, to: promotedState, object_type: mt, legal_from: legalFrom });
         }
       }
@@ -573,18 +607,22 @@ class Promotion {
         const now = new Set(files.map((f) => f.path));
         const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
         const dropped = record.livePaths(bundleId).filter((p) => !now.has(p) && !declared.has(p));
+        /* DEC-49 REGION is-promote-files */
         if (dropped.length)
-          return { ok: false, reason: "FILES_DROPPED", paths: dropped.sort(),
-                   detail: "this promotion would remove files the previous revision had. Carry them forward, or name "
-                         + "them in drop[] to delete them on purpose." };
+          return refusal("FILES_DROPPED",
+            "this promotion would remove files the previous revision had. Carry them forward, or name them in drop[] to "
+            + "delete them on purpose.", { paths: dropped.sort() });
+        /* END DEC-49 REGION is-promote-files */
       }
       if (!finalMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
       /* R4: a different promotion under a held snap key. */
+      /* DEC-49 REGION is-promote-snapkey */
       if (held)
-        return rowRefusal(ACT_SHAPE_CHECKS.SNAP_KEY_TAKEN, "SNAP_KEY_TAKEN",
+        return refusal("SNAP_KEY_TAKEN",
           `${bundleId} already holds a promotion under snap key ${String(snapKey)}, and this one is not it (a different `
           + `base, file, writer or author). The record does not rewrite a history entry; send this promotion under a `
           + `new snap key. Nothing was written.`, { snapKey: String(snapKey) });
+      /* END DEC-49 REGION is-promote-snapkey */
 
       /* R39: the later modules' checks, in the modules' order. */
       Object.assign(ctx, { bundleId, files, head, creation: !head, promotedType, promotedTitle, promotedState,
@@ -660,7 +698,7 @@ class Promotion {
   /* R20 (membership R44): the one answer an act gives a caller who sees a project at EXISTENCE: its id and name. */
   #existenceOnly(projectId) {
     const info = this.#record.bundleInfo(projectId);
-    return rowRefusal(PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT, "PROJECT_SEEN_NOT_A_PARTICIPANT",
+    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
       "this project is discoverable and you are not one of its participants. Its existence and name are all it shows "
       + "you; asking to join is the one act open to you.", { project: projectId, name: info ? info.title ?? null : null });
   }
@@ -678,9 +716,11 @@ class Promotion {
   #fork({ projectId, newId, title, by, viewer = null, visibility = null }) {
     const record = this.#record, membership = this.#membership;
     /* The fork's id is minted, as a new project's is; a named one is refused first, echoing nothing. */
+    /* DEC-49 REGION is-project-fork-id-supplied */
     if (newId !== undefined && newId !== null && newId !== "")
-      return rowRefusal(PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED, "PROJECT_FORK_ID_SUPPLIED",
+      return refusal("PROJECT_FORK_ID_SUPPLIED",
         "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked.");
+    /* END DEC-49 REGION is-project-fork-id-supplied */
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
     const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
@@ -753,11 +793,13 @@ class Promotion {
     const record = this.#record, membership = this.#membership;
     const who = String(author ?? "").trim();
     /* R21 */
+    /* DEC-49 REGION is-machine-reopen */
     if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_REOPEN",
-               detail: "reopening is a named member's judgement that a question the group set down has to be worked "
-                     + "again. A machine credential may surface a question and pursue one, and may not overturn the "
-                     + "group's own disposition. Sign in as a member." };
+      return refusal("MACHINE_CANNOT_REOPEN",
+        "reopening is a named member's judgement that a question the group set down has to be worked again. A "
+        + "machine credential may surface a question and pursue one, and may not overturn the group's own "
+        + "disposition. Sign in as a member.");
+    /* END DEC-49 REGION is-machine-reopen */
     /* R22 */
     const why = String(reason ?? "").trim();
     if (!why)
