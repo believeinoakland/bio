@@ -1063,6 +1063,18 @@ const OPS = {
   adminendorse: { classes: ["admin", "member", "probe"],           mutating: true  },
   adminremove:  { classes: ["admin", "member", "probe"],           mutating: true  },
   adminarith:   { classes: ["admin", "member", "probe"],           mutating: false },
+  /* N43 (T4): membership's three rules built in T3 (N18) — an administrator's resignation (R10), the record of who
+     holds hosting access (R11) and a member's published cover-and-handle pairing (R19). They were routed in the
+     store and absent HERE, so every caller got "unknown op": this file's own standing lesson 5 again. The three
+     acts are `ROSTER_SELF_ACTIONS` below: both session sets and a server-stamped `by`, and the ROSTER decides
+     (the store refuses a `by` that may not act, by name). `member` in `classes` for `memberadd`'s reason — an
+     enrolled administrator's session is a `member` kind — and `machineClasses` keeps the MEMBER_TOKEN bearer and
+     an `ai` credential out as REC-159 does. The two reads serve the record as membership answers it. */
+  adminresign:      { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
+  hostingaccessset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
+  hostingaccess:    { classes: ["admin", "member", "probe"],           mutating: false },
+  memberpairingset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true  },
+  memberpairings:   { classes: ["admin", "member", "probe"],           mutating: false },
   /* D-9: why a register row is unreferenced. A read that classifies every row
      against what the store actually holds, so the 20 unexplained rows on the
      live instance stop being a plausible story and become a measured one.
@@ -1732,6 +1744,15 @@ const IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
    `machineClasses` instead — `admin` and `probe`, the classes it held before — which keeps the
    MEMBER_TOKEN bearer and an `ai` credential out exactly as they were. */
 const CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
+/* N43 (T4) — membership's R10, R11 and R19, each a named person's own act on the roster: an administrator resigning
+   (never the founder, whom the store answers ROOT_OF_TRUST), an administrator recording who holds hosting access,
+   and a member (or an administrator) choosing whether a pairing is published. REC-159's three halves: REACH in both
+   `SESSION_OPS` sets, THE STAMP (`by` set by the server, read by the store from the query after the body), and THE
+   ROSTER (the store refuses NOT_AN_ADMIN or PAIRING_NOT_YOURS). A SET OF ITS OWN rather than more names in
+   `GOVERNANCE_ACTIONS` or `CUSTODIAL_ACTIONS`: the first carries the operator fence, whose C-32.17 sentence names
+   the §4.7 votes and would be false here (D-270's class), and the second's `by` condition is pinned as one
+   expression by the old battery. A bearer stamps `class:<cls>`, which is on no roster, so the store refuses it. */
+const ROSTER_SELF_ACTIONS = ["adminresign", "hostingaccessset", "memberpairingset"];
 /* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
    that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
    the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
@@ -2001,6 +2022,8 @@ const SESSION_OPS = {
                       above — the roster decides them, asked by the store against the
                       stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
                    ...CUSTODIAL_ACTIONS,
+                   /* N43: membership's R10, R11 and R19 acts, in BOTH sets for D-136's reason above. */
+                   ...ROSTER_SELF_ACTIONS,
                    /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
                       of them is the founder's act, and an enrolled administrator is a
                       `member` kind. */
@@ -2093,6 +2116,7 @@ const SESSION_OPS = {
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
+                   ...ROSTER_SELF_ACTIONS,
                    ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
                    "aicredentialmint", "aicredentialrevoke",
@@ -2487,6 +2511,11 @@ const NEEDS = {
   groupdomainset:   null,
   signeradd:        null,
   signerset:        null,
+  /* N43: NO WORKING CAPABILITY, on D-136's reasoning above — what bounds each is who the session IS, asked of the
+     roster by the store against the stamped `by` (membership R10, R11, R19). */
+  adminresign:      null,
+  hostingaccessset: null,
+  memberpairingset: null,
   /* PL-11 / IS-5 / D-199: NO WORKING CAPABILITY, and NO FIFTH CAPABILITY TOKEN
      IS MINTED — CAPABILITIES.md §4's rule, which every act since REC-13 has
      followed. Creating or withdrawing an agent credential is instance-level
@@ -4238,7 +4267,10 @@ function needsTier2(text) {
      genuinely helps with the second kind. So the test is "is EVERY marker a
      scan marker", never "is ANY marker a scan marker". */
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
-  if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
+  /* D-627 / N19: pdf-reader's image-content markers (R26) are scan markers too. Tier 2 reads no
+     image, and a marker is not an undecoded character. */
+  if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer"
+      || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
 
@@ -4351,10 +4383,14 @@ function layerChainFor(i2text, { tier, container }) {
  * means "this document is a Tier-3 candidate" is never "this document is a
  * scan". Per-page routing is CPDF-12's to make real, because it needs a
  * producer that works a page at a time. */
+/* D-627 / N19 (BOB #35, 2026-09-25 05:50Z): a page an image fills while its text is a folio is
+   `image_content_unread` (pdf-reader R26, thresholds in M-178), and it is routed exactly as a no-text
+   page is. `image_content_undetermined` is NOT routed: routing it would force it to the image side. */
+const TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
 function needsTier3(text) {
   const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
-  return marks.some((m) => m && m.reason === "no_text_layer");
+  return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
 
 /* D-252 — WHICH PAGES WANT OCR, WHICH IS THE QUESTION `needsTier3` DOES NOT ASK.
@@ -4384,7 +4420,7 @@ function tier3Pages(text) {
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
-    if (!m || m.reason !== "no_text_layer") continue;
+    if (!m || !TIER3_REASONS.includes(m.reason)) continue;
     if (!Number.isInteger(m.page) || m.page < 0) continue;
     if (!pages.includes(m.page)) pages.push(m.page);
   }
@@ -4408,9 +4444,10 @@ function tier3Pages(text) {
  *
  * TWO CONDITIONS, AND A PAGE IS FILLED ONLY IF BOTH HOLD:
  *
- *   1. THE PAGE WAS SELECTED. It carries the `no_text_layer` marker — the
- *      structural signal, read from the marker vocabulary rather than from a
- *      character count, exactly as the routing predicate reads it.
+ *   1. THE PAGE WAS SELECTED. It carries the `no_text_layer` marker (or, since
+ *      D-627, `image_content_unread`: `TIER3_REASONS`) — the structural signal,
+ *      read from the marker vocabulary rather than from a character count,
+ *      exactly as the routing predicate reads it.
  *   2. THE PAGE HAS NOTHING TO LOSE. Its base text is empty.
  *
  * The second is not redundant and it is the one that makes the guarantee
@@ -10488,6 +10525,11 @@ export default {
        that condition is pinned as one expression by adminvote.test and anchored by adminvote.control, and it sits at
        its pin's bound. */
     if (op === "projectrequests")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* N43: membership's R10, R11 and R19 acts take the server's `by` by the same expression, in a statement of their
+       own for the reason just given; the store's relays read it from the query after the body, so a caller's `by`
+       names nobody. */
+    if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's
        parameters were copied, so a caller's `by` is overwritten rather than honoured, and the store asks the roster

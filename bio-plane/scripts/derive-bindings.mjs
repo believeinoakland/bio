@@ -5,7 +5,7 @@
  * WHY THIS FILE EXISTS APART FROM deploy.mjs: deploy.mjs is a top-level script
  * that acts on import, so nothing can test its derivation without deploying.
  * This module is pure — config in, bindings out — and the battery drives it
- * (`test/deploybindings.test.mjs`). Same reasoning as tools/jsonc.mjs's "one
+ * (`test/deploybindings.test.mjs`). Same reasoning as ./jsonc.mjs's "one
  * copy": the logic a deploy uses is the logic the suite proves.
  *
  * WHAT IT DELIBERATELY DOES NOT EMIT, so the deploy's contract is unchanged
