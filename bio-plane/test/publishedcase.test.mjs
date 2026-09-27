@@ -76,6 +76,7 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { INSTALLATION_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5; D-561: C-98 — read from the rows, never a hand copy */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 /* D-431: the loose branch's bundle is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
 import { restOnARatifiedCase } from "./ratified-evidence.mjs";
 
@@ -809,8 +810,10 @@ console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the pub
     [/nameOnly && !this\.#one\(/.test(edges), /FROM published_bundles WHERE bundle_id=\?/.test(edges)],
     [true, true]);
 
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
   t("published_edges is declared BEFORE the host_governor block (the standing trap)",
-    schema.indexOf("CREATE TABLE IF NOT EXISTS published_edges") < schema.indexOf("CREATE TABLE IF NOT EXISTS host_governor"),
+    BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges") > -1
+      && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges") < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"),
     true);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "and it is cleared in BOTH arms of op=purge ..."
      counted `DELETE FROM published_edges` lines in store.mjs's purge; purge moved to record-core, where each module

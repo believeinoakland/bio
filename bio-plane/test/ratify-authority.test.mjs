@@ -381,8 +381,10 @@ console.log("\n--- 6. the catalogue rows ---");
   const row = CHECKS.RATIFY_SCOPE_CHECKS && CHECKS.RATIFY_SCOPE_CHECKS[PROJECT_BUNDLE];
   t("RATIFY_PROJECT_BUNDLE is catalogued with a C-number and a region in op=ratify",
     [!!row, row && /^C-\d+\.1$/.test(row.check), row && row.where], [true, true, "src/index.mjs fetch > is-ratify-project-bundle"]);
+  /* RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1): the helper moved with membership (T3), and the row's
+     `where` now names the file it lives in, `src/membership/index.mjs caseAuthority`. */
   t("C-57.1's region moved into the ONE helper both ratify paths call",
-    CHECKS.CASE_AUTHORITY_CHECKS[NOT_OWNER_SIGNER].where, "src/store.mjs #caseAuthority > is-case-signer-owner");
+    CHECKS.CASE_AUTHORITY_CHECKS[NOT_OWNER_SIGNER].where, "src/membership/index.mjs caseAuthority > is-case-signer-owner");
 }
 
 /* ================ 7. OUTSIDE A CASE — REFUSED (D-431), CORRECTED FROM "AS MEASURED" */

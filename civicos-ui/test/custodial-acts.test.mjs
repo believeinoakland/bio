@@ -407,11 +407,13 @@ const renders = (r, code, row) => {
      && /invited by not recorded/.test(A.U.memberInviterHtml({ invited_by: null }))
      && A.U.memberInviterHtml({ status: "active" }) === "");
 }
-/* The rows are real and distinct: an arm that matched an empty or shared sentence would prove nothing. */
+/* The rows are real and distinct: an arm that matched an empty or shared sentence would prove nothing.
+   RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): 9 -> 12, membership's RESIGN_AT_TWO (C-96.10),
+   NO_HOLDERS (C-96.11) and PAIRING_NOT_YOURS (C-96.12) joined the family. */
 {
   const rows = Object.entries(CUSTODIAL_CHECKS);
   ok(`C-96 carries ${rows.length} rows, each with a check, a where and a distinct translation`,
-     rows.length === 9 && rows.every(([, r]) => /^C-96\.\d+$/.test(r.check) && r.where && r.translation.length > 40)
+     rows.length === 12 && rows.every(([, r]) => /^C-96\.\d+$/.test(r.check) && r.where && r.translation.length > 40)
      && new Set(rows.map(([, r]) => r.translation)).size === rows.length);
 }
 

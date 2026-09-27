@@ -171,6 +171,7 @@ import { createHash } from "node:crypto";
 import { OBJECT_TYPES, HEADINGS, STATES, BUNDLE_ID_RE, BIAS_STATEMENT_KINDS,
          BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING,
          normalizeType, checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const SRC = (f) => join(ROOT, "src", f);
@@ -595,9 +596,10 @@ const INHALE = bodyOf(STORE, "biasInhale({");
  * ===================================================================== */
 console.log("\n--- 6. the two new tables: placed, and in BOTH purge arms (D-113) ---");
 {
-  const iStat = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS bias_statements");
-  const iAdopt = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS bias_adoptions");
-  const iGov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
+  const iStat = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS bias_statements");
+  const iAdopt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS bias_adoptions");
+  const iGov = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("both tables exist and BOTH sit before the host_governor block, which hygiene.test.mjs requires",
     [iStat > 0, iAdopt > iStat, iGov > iAdopt], [true, true, true]);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "ARM P1: both are in purge's TABLES list ..."

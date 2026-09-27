@@ -69,6 +69,7 @@ import { CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES,
             `is-render-admit`) rather than against a number typed into this file —
             a hand copy agrees with its author for free. */
          RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -267,10 +268,12 @@ const drive = (r) => { const c = codeOf(r); if (c && c in CAPTURE_REQUEST_CHECKS
 console.log("\n--- 1. the table's shape, its position, and its place in purge (D-113) ---");
 {
   const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
-  const gov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("the table exists in schema.mjs", tbl > -1, true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
+  const tblBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
+  const govBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("and it is declared BEFORE the host_governor block (CLAUDE.md's trap: hygiene asserts the "
-  + "literal ends on a `);`)", tbl > -1 && gov > -1 && tbl < gov, true);
+  + "literal ends on a `);`)", tblBuilt > -1 && govBuilt > -1 && tblBuilt < govBuilt, true);
   const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
   t("it carries BOTH principals as NOT NULL columns — an act that can name one is refused at the "
   + "write rather than half-recorded (DEC-27(b))",

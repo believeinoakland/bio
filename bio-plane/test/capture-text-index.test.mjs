@@ -45,6 +45,7 @@ import { createHash } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
 import { canonicalExtent, describeExtent } from "../checks/bio-checks.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -294,9 +295,10 @@ console.log("\n--- A · the two tables, where they must be and shaped as the des
 
 t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block — hygiene asserts "
 + "the literal ends on a `);`, and a table appended after it would truncate the schema",
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
   SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (") > -1
-    && SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")
-       < SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
+    && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")
+       < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
 
 /* THE NINE COLUMNS §4.1 NAMES, AND THE KEY. Asserted against the DDL text
    rather than against a promise, because a column silently dropped from the
