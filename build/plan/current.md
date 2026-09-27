@@ -51,7 +51,7 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 
 ## Jobs
 
-Layer 2 CLOSED 2026-09-27 ~06:40 UTC: record-core, membership, promotion merged (ownership 0 failures each; the legacy-store lines each added read by BOB), bundles regenerated (fleetbundles 96/0).
+Layer 2 CLOSED 2026-09-27 ~06:40 UTC (sessions archived, rows in `build/metrics/T5.csv`): record-core, membership, promotion merged (ownership 0 failures each; the legacy-store lines each added read by BOB), bundles regenerated (fleetbundles 96/0).
 
 Layer 2, started 2026-09-27 ~05:44 UTC: RECORD-CORE #2 `session_014SH9wUytqUzw3oKoJhPj7C`, MEMBERSHIP #2 `session_01WvJLh3JQvPkdtZptfwXdqf`, PROMOTION #3 `session_01CBqvRerSWp68oj6TfvGgfi`.
 
