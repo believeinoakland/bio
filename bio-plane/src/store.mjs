@@ -854,8 +854,11 @@ export class Store extends DurableObject {
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* calibration (K61): declares its tables exempt from purge (R16); legacy-store derives each record's obligations
        (calibration R12) until extraction, which owns the drift join, registers its own. */
-    calibrationOf(ctx).onCalibration("legacy-store", ({ supersedes, drift }) =>
-      drift.raises_obligation ? this.#calDriftFor(supersedes) : []);
+    calibrationOf(ctx).onCalibration("legacy-store", ({ supersedes, drift }) => {
+      if (!drift.raises_obligation) return [];
+      const obligations = this.#calDriftFor(supersedes);
+      return { obligations, truncated: !!obligations.truncated };
+    });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
