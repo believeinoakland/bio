@@ -7290,87 +7290,94 @@ export const SUGGEST_CHECKS = {
       + 'closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside '
       + 'the set is a claim with nothing behind it.',
   },
-  /* ---- run-productions' OTHER PRODUCTION, the extract run's proposed readings (op=extractpropose,
-     op=extractproposals; SK-8). run-productions R13 (DEC-49, T6, legacy-checks): every refusal of its R10 and
-     R12 carries a catalogue check and translation, and none had a row. They are THIS family's because the
-     family is run-productions' (K82, N54), and a new family is a floor in the guard.
-     THE `where`s NAME REGIONS NOT YET MARKED, on this family's REC-71 rule, and marking them is
-     run-productions' (it moves this code in T6-7): `is-extract-run` (NO_PROPOSER, NO_RUN, NO_SUCH_RUN, before
-     `runPrincipalGate` is relayed), `is-extract-door` (RUN_NOT_RUNNING through NO_PROPOSALS, after that relay),
-     `is-extract-document` (NOT_A_DOCUMENT and NO_BYTES_HELD: after NO_TARGET and NO_SUCH_BUNDLE, which have
-     no row, below, and before the chain step's relayed refusal) and `is-extract-whole-batch` (after each
-     reference's relayed check). The relayed refusals (AI_RUN_NOT_PRINCIPAL, the text chain's, extraction's per-reference rows)
-     carry their own rows and stay outside every region here.
-     TWO CODES ARE MINTED AT ONE OTHER SITE FOR THE SAME CONDITION: NOT_A_DOCUMENT and NO_BYTES_HELD, which
-     content's mint door (`src/content/index.mjs`) asks in the same words, and its `null_case`. Each sentence
-     is written true at both (T4's `ABSENT` precedent: one code, one row, true wherever it is minted).
-     THREE ARE NOT HERE, by ACT_SHAPE_CHECKS' REC-64 rule below: NO_TARGET (minted at 15 sites) and
-     NO_SUCH_BUNDLE (26) are multi-site codes a single `where` cannot claim, and NO_SCOPE is minted for two
-     different conditions (this read's scope, and a published case's authored scope). They wait on BOB's
-     answer to LEGACY-CHECKS #2's QUESTION (T6): codes of run-productions' own, or rows once a `where` can
-     name a set of spans. ---- */
+};
+
+/* ===========================================================================
+ * C-104 — THE EXTRACT RUN'S PROPOSED READINGS (op=extractpropose, op=extractproposals; SK-8).
+ * run-productions R13 (DEC-49; T6, legacy-checks): every refusal of its R10 and R12 carries a catalogue check and
+ * translation, and none had a row. run-productions' other production, `op=suggest`, is SUGGEST_CHECKS (C-27);
+ * these are not added there because that family is the suggest endpoint's own registry, which its suite drives
+ * whole, and the extract endpoint is a different door with its own conditions.
+ *
+ * THE `where`s NAME REGIONS NOT YET MARKED, on C-27's REC-71 rule, and marking them is run-productions' (it moves
+ * this code in T6-7): `is-extract-run` (NO_PROPOSER, NO_RUN, NO_SUCH_RUN, before `runPrincipalGate` is relayed),
+ * `is-extract-door` (RUN_NOT_RUNNING through NO_PROPOSALS, after that relay), `is-extract-document`
+ * (NOT_A_DOCUMENT and NO_BYTES_HELD: after NO_TARGET and NO_SUCH_BUNDLE, which have no row, below, and before the
+ * chain step's relayed refusal) and `is-extract-whole-batch` (after each reference's relayed check). The relayed
+ * refusals (AI_RUN_NOT_PRINCIPAL, the text chain's, extraction's per-reference rows) carry their own rows and stay
+ * outside every region here.
+ *
+ * TWO CODES ARE MINTED AT ONE OTHER SITE FOR THE SAME CONDITION: NOT_A_DOCUMENT and NO_BYTES_HELD, which content's
+ * mint door (`src/content/index.mjs`) asks in the same words, and its `null_case`. Each sentence is written true at
+ * both (T4's `ABSENT` precedent: one code, one row, true wherever it is minted).
+ * THREE ARE NOT HERE, by ACT_SHAPE_CHECKS' REC-64 rule: NO_TARGET (minted at 15 sites) and NO_SUCH_BUNDLE (26) are
+ * multi-site codes a single `where` cannot claim, and NO_SCOPE is minted for two different conditions (this read's
+ * scope, and a published case's authored scope). They wait on BOB's answer to LEGACY-CHECKS #2's QUESTION (T6):
+ * codes of run-productions' own, or rows once a `where` can name a set of spans.
+ * =========================================================================== */
+export const EXTRACT_PROPOSE_CHECKS = {
   NO_PROPOSER: {
-    check: 'C-27.20',
+    check: 'C-104.1',
     where: 'src/store.mjs extractPropose > is-extract-run',
     translation: 'This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot '
       + 'attribute. Nothing was proposed and no passage was marked citable.',
   },
   NO_RUN: {
-    check: 'C-27.21',
+    check: 'C-104.2',
     where: 'src/store.mjs extractPropose > is-extract-run',
     translation: 'A machine proposes readings only as part of an investigation a member opened, and this named none. '
       + 'Nothing was proposed.',
   },
   NO_SUCH_RUN: {
-    check: 'C-27.22',
+    check: 'C-104.3',
     where: 'src/store.mjs extractPropose > is-extract-run',
     translation: 'No investigation you can see is open under that name, so nothing was proposed. A member opens an '
       + 'investigation; the assistant may suggest one, and may not start it.',
   },
   RUN_NOT_RUNNING: {
-    check: 'C-27.23',
+    check: 'C-104.4',
     where: 'src/store.mjs extractPropose > is-extract-door',
     translation: 'The investigation this names has ended, and an ended investigation takes no new proposals: its work is '
       + 'read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed.',
   },
   NOT_AN_EXTRACT_RUN: {
-    check: 'C-27.24',
+    check: 'C-104.5',
     where: 'src/store.mjs extractPropose > is-extract-door',
     translation: 'This investigation was not opened to read documents for what they name, so it cannot propose readings. '
       + 'What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed.',
   },
   NO_MINTS_BOUND: {
-    check: 'C-27.25',
+    check: 'C-104.6',
     where: 'src/store.mjs extractPropose > is-extract-door',
     translation: 'This investigation was opened with no limit on how many passages it may mark citable, and without a '
       + 'limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed.',
   },
   MINTS_BOUND_REACHED: {
-    check: 'C-27.26',
+    check: 'C-104.7',
     where: 'src/store.mjs extractPropose > is-extract-door',
     translation: 'This investigation has already marked as many passages citable as it was allowed to, so it proposes '
       + 'nothing more and ends. Nothing was proposed.',
   },
   NO_PROPOSALS: {
-    check: 'C-27.27',
+    check: 'C-104.8',
     where: 'src/store.mjs extractPropose > is-extract-door',
     translation: 'This named no readings to propose. A look that found nothing is recorded in the investigation\'s log of '
       + 'what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed.',
   },
   NOT_A_DOCUMENT: {
-    check: 'C-27.28',
+    check: 'C-104.9',
     where: 'src/store.mjs extractPropose > is-extract-document',
     translation: 'That is not a captured document. A question, a project or an action has no pages or text of its own, '
       + 'so there is nothing in it to read or to point into. Nothing was changed.',
   },
   NO_BYTES_HELD: {
-    check: 'C-27.29',
+    check: 'C-104.10',
     where: 'src/store.mjs extractPropose > is-extract-document',
     translation: 'The record holds no captured copy of that document, so there is no text in it to read or to point '
       + 'into. That is a fact about what has been captured, never about what the document says. Nothing was changed.',
   },
   MINTS_BOUND_WOULD_EXCEED: {
-    check: 'C-27.30',
+    check: 'C-104.11',
     where: 'src/store.mjs extractPropose > is-extract-whole-batch',
     translation: 'This batch would mark more passages citable than the investigation has left of its limit, so the whole '
       + 'batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes '
@@ -7720,11 +7727,11 @@ export const CAPTURE_REQUEST_CHECKS = {
      (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
      (R40) and its target is one the caller can see; every other request is refused by this code and nothing
      is written. The code is minted nowhere yet: capture-requests builds R42 in T6 (T6-8), in its own module,
-     and the `where` names that site, whole, since this is the function's only refusal. The sentence claims
+     and the `where` names that site, as a region on this family's REC-71 rule (a region its job marks). The sentence claims
      nothing about which state the request is in, because an invisible target answers alike. */
   CAPTURE_REQUEST_NOT_RETRYABLE: {
     check: 'C-28.18',
-    where: 'src/capture-requests/index.mjs captureRequestRetry',
+    where: 'src/capture-requests/index.mjs captureRequestRetry > is-capture-request-retry',
     translation: 'This request cannot be asked again. Only a request the source itself turned away, under a '
       + 'question you can see, goes back into the queue; a request that is still waiting, was captured, has '
       + 'expired, or was refused for any other reason does not. Nothing was changed.',
