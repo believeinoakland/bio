@@ -40,6 +40,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { VERSION_NOTICE_CHECKS } from "../checks/bio-checks.mjs";
 import { normalizeAddress } from "../src/subresources.mjs";
@@ -147,8 +148,17 @@ const mustPromote = async (id, text, type, { captures = [], tok = "mem-d394" } =
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   const read = captures.filter((c) => c.pages);
   if (read.length) {
-    const prov = JSON.stringify({ documents: read.map((c) => readingOf(c.sha, c.pages)) });
+    /* T4 (legacy-tests; provenance K121): an INFORMATION bundle's reading carriers completed to C-18.1's intake
+       shape, which is now refused at the write, each naming its capture at the path the register below gives it,
+       and those captures carried in the bundle's files (`register-doc.mjs`). A project's register is not an intake
+       register and C-18 does not run on it, so it is sent as it was. */
+    const intake = type === "information";
+    const docs = read.map((c) => intake
+      ? registerDoc(readingOf(c.sha, c.pages), { file: `documents/${c.sha.slice(0, 8)}.pdf` })
+      : readingOf(c.sha, c.pages));
+    const prov = JSON.stringify({ documents: docs });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    if (intake) files.push(...docs.map((d) => registerFile(d)));
   }
   const r = await post("promote", {
     ...(id === null ? {} : { bundleId: id }), base: id === null ? null : (HEAD.get(id) ?? null),

@@ -63,6 +63,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({
@@ -127,11 +128,18 @@ const mk = async (id, type, tok, refs = "", capture = null, label = id) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   const register = [];
   if (capture) {
-    const prov = JSON.stringify({ documents: [{
+    const carrier = {
       capture: { sha256: capture.sha, encoding: "binary", bytes: 10 },
       reading: { content_type: "meeting_calendar", reader_version: 1, found: true,
-                 at: "2026-07-01T00:00:00Z", entities: capture.entities } }] });
+                 at: "2026-07-01T00:00:00Z", entities: capture.entities } };
+    /* T4 (legacy-tests; provenance K121): an INFORMATION bundle's reading carrier completed to C-18.1's intake
+       shape, which is now refused at the write, naming the capture its own register entry holds
+       (`captures/doc.pdf`), and that capture carried in the bundle's files (`register-doc.mjs`). A project's
+       register is not an intake register and C-18 does not run on it, so it is sent as it was. */
+    const doc = type === "information" ? registerDoc(carrier, { file: "captures/doc.pdf" }) : carrier;
+    const prov = JSON.stringify({ documents: [doc] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    if (type === "information") files.push(registerFile(doc));
     register.push({ sha256: capture.sha, path: "captures/doc.pdf", encoding: "binary", bytes: 10 });
   }
   const r = await POST(`op=promote&token=${tok}`, {
@@ -1369,6 +1377,17 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "beside it: what agents are running here, under whose name, and what they may touch is "
       + "exactly the sort of thing a member should not have to ask an administrator for, and D-199 (2) "
       + "put the scope on the record so it could be READ. It publishes no value and no hash.",
+    /* CLASSIFIED 2026-09-27 (T4, legacy-tests): membership's two reads arrived through T4's legacy-index routing
+       (N43) unclassified, and this sweep reads the whole OPS table. Each reason is read off
+       `src/membership/index.mjs`, not assumed; the membership module's owner should confirm the posture. */
+    hostingaccess: "HOLDS NO CORPUS MATERIAL: membership R11's record of who holds access to the hosting account "
+      + "(holders, a note, the recording administrator, the instant, and its append-only history). It opens only the "
+      + "`hosting_access` table: no bundle id, no row a viewer predicate could filter, and nothing a hidden project "
+      + "could leak through. It is what every member is owed to know about the other half of an ejection (4.8).",
+    memberpairings: "HOLDS NO CORPUS MATERIAL: membership R19's published cover-and-handle pairings, and ONLY those a "
+      + "member (or an administrator) chose to publish (`pairing_published=1`). It reads the `members` table alone: no "
+      + "bundle id and no row a viewer predicate could filter; the unpublished roster stays an administrator's view "
+      + "(R17) and is not in this answer.",
     /* the pre-auth surface */
     bootstrap: "PRE-AUTH: answers whether this instance has been claimed. Never reaches the store's "
       + "gated reads.",

@@ -179,12 +179,14 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      reaches FIVE cross-tree sources; the list as written would have let that
      fifth one go unhashed-by-assertion. CORRECTED AGAIN by D-622 (T3, entry
      N33): the renderer's JBIG2 and JPX decoders and their shared MQ coder are
-     three more, EIGHT in all. */
+     three more, EIGHT in all. CORRECTED AGAIN by T4 (K115, entry T4-5): the
+     renderer's CCITT fax decoder, `pdf-worker/src/ccittdecode.mjs`, is a
+     ninth. */
   const ocr = manifests.get("ocr-worker");
   t("ocr-worker's build reaches into the RENDERER's tree and the PLANE's, and the manifest hashes all of them",
     (ocr?.inputs || []).map((i) => i.path).filter((p) => p.startsWith("../")).sort(),
     ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs",
-     "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs",
+     "../pdf-worker/src/ccittdecode.mjs", "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs",
      "../pdf-worker/src/mq.mjs", "../pdf-worker/src/pagepixels.mjs"]);
   t("and it vendors NOTHING — its engine is a committed upload part, not an npm install, so its byte arm can never skip",
     (ocr?.vendoredInputs || []).length, 0);

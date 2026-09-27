@@ -76,6 +76,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { compile, MEANING, meaningVocabulary, ambiguousBareWords,
          GATE_MARK, FIELDS, SORTABLE } from "../src/query.mjs";
 /* The vocabularies are asserted against the CATALOG the compiler imports them
@@ -690,15 +691,18 @@ console.log("\n--- 10. the resolutions arms: the FLAGGED SET the record could no
   const ent2 = rP(await post("entitycreate", { kind: "office", label: "Bureau of Sanitation" }));
   if (!ent1?.entity_id) console.log("    ENT1 REFUSED: " + JSON.stringify(ent1).slice(0, 400));
   t("two subjects are registered", [!!ent1?.entity_id, !!ent2?.entity_id], [true, true]);
-  const prov = JSON.stringify({ documents: [{ capture: { sha256: CAP }, reading: {
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+     refused at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: CAP }, reading: {
     content_type: "generic", reader_version: 1, found: true, at: NOW, entities: [
       { ref: "vendor:77", kind: "vendor", key: "77", label: "Cascade Waterworks" },
       { ref: "office:sanitation", kind: "office", key: "sanitation", label: "Bureau of Sanitation" },
-    ] } }] });
+    ] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const DOC_R = "INFO-2026-0900-resolved";
   const md = infoMd(DOC_R, "A document naming two subjects.");
   const ok = await promote(DOC_R, md, "information",
-    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }]);
+    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)]);
   t("the document promoted with its reading", ok?.ok, true);
   const res = rP(await post("resolve", { captureSha: CAP, resolvedBy: "pl8" }));
   const grades = (res?.resolved ?? []).flatMap((r) => (r.matches ?? [r]).map((m) => m.grade)).filter(Boolean).sort();

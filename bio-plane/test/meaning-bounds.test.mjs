@@ -196,6 +196,8 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
+import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations and routes re-inlined */
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 /* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
@@ -217,7 +219,15 @@ const t = (label, got, want) => {
    it reading one-line delegations and a spread of `membershipOps(...)`. The corpus is the store's text with the
    extracted methods RE-INLINED where the store delegates to them (`inlinedStore`, `extracted-sources.mjs`, which
    states each substitution); every figure and name below is unchanged. */
-const SRC_STORE = inlinedStore();
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 moved more of the
+   store's methods out behind one-line delegations (`inboxList`, `reusedParts`, `reuseVerdicts`, `versionChain`,
+   `provenanceRoutesMarked`, `registerAudit`, `testify`, the governor's reads …) and capture's routes into a spread of
+   `captureOps(...)`, so the walk fell to reading delegations: the BARE roster read 42 (inboxlist, reusedparts and
+   reuseverdicts gone while still bare), the BOUNDED roster lost provenanceroutes and versionchain, and the dispatch
+   denominator lost capture's routes. The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined
+   too and capture's routes read as entries of the map (`reinlineLayer3(…, { ops: true })`, `t4-extracted.mjs`, which
+   states each substitution); every figure and name below is diffed against the T4 base's print, not re-pinned. */
+const SRC_STORE = reinlineLayer3(inlinedStore(), { ops: true }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -1267,6 +1277,17 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
 + "BOUNDED roster (43 -> 42 there). 43 here is what THIS WALK PRINTED on the merged tree — it is not 44 - 1 and "
 + "not 42 + 2, and an unchanged figure is NOT an unchanged roster: both reasons are recorded above and neither "
 + "was rounded off. Fails here",
+  /* T4 (legacy-tests), 2026-09-27 — NOT MOVED, AND THE REASON IS STATED RATHER THAN ABSORBED. This ceiling was
+     already RED at T3's close (45 of 43: T3's REPORT 3, membership's `hostingaccess`, `memberpairings` and
+     `projectowneradd`'s `deciders`), and moving it is BOB's decision, not this job's. With layer 3 re-inlined
+     (above) the walk PRINTS 51 on this tree, diffed BY NAME against the same walk on the T4 base 0446ab092b (45):
+     NO DEPARTURE, SIX ARRIVALS, all capture's (src/capture/), each a Durable Object path of `captureOps` and not an
+     OPS-table op: `linksto`, `resolvelinks`, `recordlinkverdict`, `recordsiteassets`, `sitechrome` — the same reads
+     the store held, now written `this.#rows(…)` with no LIMIT where the store wrote `[...this.sql.exec(…)]`, which
+     this reader never saw as a row source (they sat in UNJUDGED) — and `chromeof`, capture's new chrome read
+     (R28-R29, D-701), one host's rows.
+     REPORTED to capture (via the job's report): each publishes a collection off an unbounded row source with no
+     bound published. */
   BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
@@ -1387,7 +1408,13 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
            "projectfork->forkProject", "projectionplan->projectionPlan",
            "projectowneradd->projectOwnerAdd",
            "registeraudit->registerAudit", "select->selectionCreate",
-           "selectionrelease->selectionRelease", "taskdrain->taskDrain",
+           "selectionrelease->selectionRelease",
+           /* T4 (legacy-tests), 2026-09-27 — AN ARRIVAL, NAMED: `siteAssets` moved to capture and its scan is now
+              written `this.#rows(…)`, which this reader sees (the store's `[...this.sql.exec(…)]` it did not), so the
+              op lands here — DISPATCHED, scanning rows, no verdict — rather than in NO_COLLECTION. The same read as
+              before; the reader sees it now. (This pin was already red at T3's close for T3's REPORT 3–4.) */
+           "siteassets->siteAssets",
+           "taskdrain->taskDrain",
            /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
               path, and it arrives the same way PL-15's did: it was on the BARE
               roster on the strength of a `String(threadedBy).slice(0, 200)` the
@@ -1534,13 +1561,17 @@ for (let i = 1; i <= 4; i++) {
   const id = `INFO-2026-000${i}-r60`;
   const md = bundleMd(id);
   const capture = sha(`r60-${i}`);
-  const prov = JSON.stringify({ documents: [{
-    capture: { sha256: capture, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): this document was a reading carrier (capture + reading only), which C-18.1
+     now refuses at the write; `registerDoc` completes it into op=acquire's intake shape, the capture held at the
+     path this fixture already registers it under (`captures/doc.pdf`), and the bundle carries that capture's blob. */
+  const doc = { capture: { sha256: capture, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: `legislation:26-090${i}`, kind: "legislation", key: `26-090${i}`, label: LABEL }] } }] });
+               entities: [{ ref: `legislation:26-090${i}`, kind: "legislation", key: `26-090${i}`, label: LABEL }] } };
+  const prov = JSON.stringify({ documents: [registerDoc(doc, { file: "captures/doc.pdf" })] });
   const files = [
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+    registerFile(doc, { file: "captures/doc.pdf" }),
   ];
   const r = await POST("op=promote&token=mem-r60", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r60", files,

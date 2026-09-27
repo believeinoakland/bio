@@ -367,9 +367,13 @@ console.log("\n--- 6. the catalogue rows ---");
 /* CORRECTED 2026-09-18 by REC-140: the region MOVED into `#caseAuthority`, the one helper
    `ratifyCaseDocument` and `op=ratify`'s pinned-finding path both call (D-429). The old
    `where` named the function the rule used to live in, and would now point at no region. */
-t("C-57.1 is catalogued with its region: CASE_SIGNER_NOT_AN_OWNER in #caseAuthority > is-case-signer-owner",
+/* RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, 35de4094ec "every stale where re-pointed"): the helper
+   moved with membership in T3 (`caseAuthority` in src/membership/index.mjs, the region is-case-signer-owner inside
+   it), and T4's legacy-checks job re-pointed the row's `where` to the file it lives in — ratify-authority's pin of the
+   same row was moved the same way. */
+t("C-57.1 is catalogued with its region: CASE_SIGNER_NOT_AN_OWNER in caseAuthority > is-case-signer-owner",
   [CASE_AUTHORITY_CHECKS.CASE_SIGNER_NOT_AN_OWNER.check, CASE_AUTHORITY_CHECKS.CASE_SIGNER_NOT_AN_OWNER.where],
-  ["C-57.1", "src/store.mjs #caseAuthority > is-case-signer-owner"]);
+  ["C-57.1", "src/membership/index.mjs caseAuthority > is-case-signer-owner"]);
 
 /* ================= 7. op=ratify OF A PROJECT BUNDLE — CLOSED BY REC-140 (D-429) */
 console.log("\n--- 7. op=ratify of a PROJECT BUNDLE, driven against the same rule (the brief's third question) ---");

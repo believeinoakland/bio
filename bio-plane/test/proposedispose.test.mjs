@@ -45,6 +45,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -100,9 +101,11 @@ const bundleMd = (id) => [
 const promoteReading = async (captureSha, entities) => {
   const id = `INFO-2026-${String(++bseq).padStart(4, "0")}-rec7`;
   const md = bundleMd(id);
-  const doc = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
                 reading: { content_type: "meeting_calendar", reader_version: 1, found: entities.length > 0,
-                           at: NOW, entities } };
+                           at: NOW, entities } });
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", {
     bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "rec7",
@@ -111,6 +114,7 @@ const promoteReading = async (captureSha, entities) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      registerFile(doc),
     ],
     register: [],
   });
@@ -629,15 +633,18 @@ export default worker;
              { key: "award", label: "award", after: "application", cardinality: "1", required: "always" }] });
   const e = await call("entitycreate", { kind: "fund", label: "Grant L", aliases: ["fund:L"] });
   const lAward = sha("rec184-L-award");
-  const lDoc = { capture: { sha256: lAward, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): this promotion runs on the CURRENT plane before the column is dropped, so
+     its reading carrier is completed to C-18.1's intake shape and its capture held in the bundle, as above. */
+  const lDoc = registerDoc({ capture: { sha256: lAward, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: "fund:L", kind: "fund", key: "L", label: "Grant L" }] } };
+               entities: [{ ref: "fund:L", kind: "fund", key: "L", label: "Grant L" }] } });
   const lMd = bundleMd("INFO-2026-0901-rec184"), lProv = JSON.stringify({ documents: [lDoc] });
   await call("promote", { bundleId: "INFO-2026-0901-rec184", base: null, snapKey: "20260924T010000Z_bbbb2222", author: "rec184",
     meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
             created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: lMd, bytes: lMd.length, sha256: sha(lMd) },
-            { path: "data/provenance.json", text: lProv, bytes: lProv.length, sha256: sha(lProv) }], register: [] });
+            { path: "data/provenance.json", text: lProv, bytes: lProv.length, sha256: sha(lProv) },
+            registerFile(lDoc)], register: [] });
   await call("resolve", { captureSha: lAward });
   await call("thread", { progressionKey: "grant", entityId: e.entity_id, placements: [{ stage: "award", captureSha: lAward }] });
   await new Promise((r) => setTimeout(r, 5));   /* the decision's instant is strictly after the declaration's */

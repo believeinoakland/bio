@@ -41,11 +41,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { checkBundle, STATES } from "../checks/bio-checks.mjs";
+import { checkBundle, STATES, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const CHECKS_SRC = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.9 (`checkAuthorityPublishable`) and the
+   release-authority arm (`checkReleaseAuthority`) left the catalogue for provenance's register arms, unchanged in what
+   they find; the gate runs them after the catalogue (`withRegisterChecks`) and the audit after the pass
+   (`provenanceAudit`). Every catalogue reading below reads them where they now live. */
+const REGISTER_CHECKS_SRC = fileURLToPath(new URL("../src/provenance/register-checks.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -119,14 +125,17 @@ const NO_EVIDENCE = {
 
 const bundleMd = (id, state) => `---\nid: ${id}\nobject_type: information\ncurrent_state: ${state}\n---\n\n# ${id}\n`;
 
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): a "catalog" here is the pair the gate runs, the
+   catalogue's `checkBundle` and provenance's `registerChecks`; `mod` may carry a weakened copy of either. */
 const runCatalog = async (mod, { id = "INFO-2026-0009-fence", state = "verified", docs }) => {
   const files = new Map([
     ["bundle.md", bundleMd(id, state)],
     ["data/provenance.json", JSON.stringify({ documents: docs })],
   ]);
-  const { findings } = await mod.checkBundle({ folderName: id, files,
+  const { findings } = await (mod.checkBundle || checkBundle)({ folderName: id, files,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-  return findings.filter((x) => x.check === "C-18.9");
+  const moved = (mod.registerChecks || registerChecks)({ files, fm: parseFrontmatter(files.get("bundle.md")).data });
+  return [...findings, ...moved].filter((x) => x.check === "C-18.9");
 };
 
 /* =====================================================================
@@ -134,7 +143,7 @@ const runCatalog = async (mod, { id = "INFO-2026-0009-fence", state = "verified"
    ===================================================================== */
 console.log("\n--- C-18.9 distinguishes NO CHAIN RECORDED from A CHAIN RECORDED AND EMPTY ---");
 {
-  const real = { checkBundle };
+  const real = { checkBundle, registerChecks };
   const absent = await runCatalog(real, { docs: [{ ...LIVE_SHAPED }] });
   const empty = await runCatalog(real, { docs: [{ ...LIVE_SHAPED, provenance_chain: [] }] });
   const notArray = await runCatalog(real, { docs: [{ ...LIVE_SHAPED, provenance_chain: null }] });
@@ -180,7 +189,7 @@ console.log("\n--- C-18.9 distinguishes NO CHAIN RECORDED from A CHAIN RECORDED 
    ===================================================================== */
 console.log("\n--- a document legitimately BELOW verified with no chain reads CLEAN ---");
 {
-  const real = { checkBundle };
+  const real = { checkBundle, registerChecks };
   t("collected with no chain draws nothing",
     (await runCatalog(real, { state: "collected", docs: [{ ...LIVE_SHAPED }] })).length, 0);
   t("collected with an EMPTY chain draws nothing either",
@@ -213,10 +222,17 @@ function weakenC189(src) {
   return out;
 }
 
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the guard is stripped from a copy of the REAL source it
+   now lives in, `src/provenance/register-checks.mjs`; the copy's one relative import (the catalogue's constants) is
+   pointed back at the real catalogue, so only the stripped guard differs. The weakened pair is the real catalogue
+   with the weakened register arms. */
 const dir = mkdtempSync(join(tmpdir(), "rec54-"));
-const weakPath = join(dir, "weak-checks.mjs");
-writeFileSync(weakPath, weakenC189(readFileSync(CHECKS_SRC, "utf8")));
-const weak = await import(pathToFileURL(weakPath).href);
+const weakPath = join(dir, "weak-register-checks.mjs");
+const weakSrc = weakenC189(readFileSync(REGISTER_CHECKS_SRC, "utf8"))
+  .replace(/from "\.\.\/\.\.\/checks\/bio-checks\.mjs"/, `from ${JSON.stringify(pathToFileURL(CHECKS_SRC).href)}`);
+if (!weakSrc.includes(pathToFileURL(CHECKS_SRC).href)) throw new Error("weak copy: the catalogue import was not re-pointed");
+writeFileSync(weakPath, weakSrc);
+const weak = { checkBundle, registerChecks: (await import(pathToFileURL(weakPath).href)).registerChecks };
 
 /* The corpus the walk sweeps: shaped like the live ten, plus documents that
    must NOT be counted, so the walk is measured on a mixed corpus rather than
@@ -241,7 +257,7 @@ async function walkForC189(mod) {
 }
 
 {
-  const realHits = await walkForC189({ checkBundle });
+  const realHits = await walkForC189({ checkBundle, registerChecks });
   const weakHits = await walkForC189(weak);
   const delta = realHits.length - weakHits.length;
 
@@ -271,7 +287,10 @@ async function walkForC189(mod) {
    somebody fixes or adds one, which is what makes it worth holding. */
 console.log("\n--- HELD OPEN: repair advice that names a transition the machine refuses ---");
 {
-  const catalogSrc = readFileSync(CHECKS_SRC, "utf8");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the catalogue a finding's repair advice is read from
+     is now the catalogue plus the register arms that left it; C-18.9's own function is sliced from where it lives. */
+  const catalogSrc = readFileSync(CHECKS_SRC, "utf8") + "\n" + readFileSync(REGISTER_CHECKS_SRC, "utf8");
+  const regSrc = readFileSync(REGISTER_CHECKS_SRC, "utf8");
   const advisesCollected = [...catalogSrc.matchAll(/return the bundle to collected|set current_state to collected/g)].length;
 
   t("the information machine has no verified -> collected edge",
@@ -281,9 +300,11 @@ console.log("\n--- HELD OPEN: repair advice that names a transition the machine 
   /* The RELATION: C-18.9 no longer advises it, and the catalog still does
      elsewhere. Both halves are the finding. */
   t("C-18.9's own repair no longer advises the impossible transition",
-    /return the bundle to collected/.test(
-      catalogSrc.slice(catalogSrc.indexOf("function checkAuthorityPublishable"),
-                       catalogSrc.indexOf("function checkReleaseAuthority"))), false);
+    [regSrc.indexOf("function checkAuthorityPublishable") > 0
+       && regSrc.indexOf("function checkReleaseAuthority") > regSrc.indexOf("function checkAuthorityPublishable"),
+     /return the bundle to collected/.test(
+      regSrc.slice(regSrc.indexOf("function checkAuthorityPublishable"),
+                   regSrc.indexOf("function checkReleaseAuthority")))], [true, false]);
   t("and the question stays OPEN elsewhere in the catalog, recorded rather than ruled",
     advisesCollected > 0, true);
 }
@@ -297,27 +318,64 @@ const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],   /* T4: the replay's held Drive-era provenance capture (see `seed`) */
   bindings: { ADMIN_TOKEN: "adm-p", MEMBER_TOKEN: "mem-p", PROBE_TOKEN: "prb-p",
               VERSION: "test", INSTANCE_NAME: "testinstance" },
 });
+/* T4 (legacy-tests; provenance R21, REC-158): reconstructing a chain is a NAMED MEMBER'S act, and a machine identity
+   (the member BEARER `mem-p`, `token:member`) is now refused `NO_AUTHOR` before anything is read, as the requirement
+   intends. So the op is driven as a named member, `m-riley` (the author this suite's fixtures already name), through a
+   signed-in session: two administrators are enrolled first (no ordinary member exists until two do), then the member,
+   who logs in. The bearer's refusal is asserted below, so the fence is proved, not only stepped round. */
+const call = async (q, body) => (await mf.dispatchFetch("http://x/api/?" + q,
+  { method: "POST", body: JSON.stringify(body ?? {}) })).json();
+const enrol = async (id, role) => {
+  const add = await call("op=memberadd&token=adm-p", { memberId: id, cover: `cover for ${id}`, role, capabilities: ["contribute"] });
+  if (!add.result?.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
+  const en = await call("op=enroll", { invite: add.result.invite, handle: id, password: `${id}-passphrase-1` });
+  if (!en.result?.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
+  const lg = await call("op=login", { role: `member:${id}`, password: `${id}-passphrase-1` });
+  if (!lg.result?.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
+  return lg.result.token;
+};
+await enrol("ada-p", "admin"); await enrol("ben-p", "admin");
+const RILEY = await enrol("m-riley", "member");
 const post = async (op, body, qs = "") => (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=mem-p${qs}`, { method: "POST", body: JSON.stringify(body || {}) })).json();
+  `http://x/api/?op=${op}&token=${RILEY}${qs}`, { method: "POST", body: JSON.stringify(body || {}) })).json();
 const get = async (op, qs = "") => (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=mem-p${qs}`)).json();
 
+/* T4 (legacy-tests; provenance K121): THESE FIXTURES ARE HISTORY. They stand for the ten live bundles D-200 found
+   already at `verified` with no chain (and one with no route at all), copied from the live record. Since the C-18
+   register arms run at the write, a CREATION carrying them is refused (C-18.9 at the fence; C-18.1 for the snapshot
+   and token files the bundle does not carry, and for NO_EVIDENCE's missing locator and capture fields), so a store
+   now holds such a register only as history, through a replay the plane verifies (D-512: the admin's promotion naming
+   a held Drive-era provenance capture listing this bundle and this bundle.md's sha256), which K121 exempts. The
+   documents are unchanged; only the way they enter the store is, and op=provenancechain's revision is judged as any
+   revision is (refused only for an error the held version does not already carry). */
 const seed = async (id, docs, state = "verified") => {
   const body = bundleMd(id, state);
   const prov = JSON.stringify({ documents: docs }, null, 2);
-  return post("promote", {
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: "20260719T010000Z_rec54001",
+      record: { target: id, base: null, author: "m-riley", files: [{ name: "bundle.md", sha256: sha(body) }] } }] }), "utf8");
+  const held = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=adm-p&sha256=${sha(cap)}`,
+    { method: "PUT", body: cap })).json();
+  const r = await (await mf.dispatchFetch("http://x/api/?op=promote&token=adm-p", { method: "POST", body: JSON.stringify({
     bundleId: id, base: null, snapKey: "20260805T000000Z_aaaa1111", author: "m-riley",
+    replay: true, provenanceCapture: sha(cap),
     meta: { object_type: "information", group: "believe-in-oakland", title: id,
             current_state: state, created: NOW, last_updated: NOW },
     files: [
       { path: "bundle.md", text: body, bytes: body.length, sha256: sha(body) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
     ],
-    register: [],
-  });
+    register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }],
+  }) })).json();
+  const ok = ((held.result || held).ok === true) && ((r.result || r).ok === true);
+  t(`FIXTURE: ${id} is held, as the history it stands for (a verified replay)`, ok, true);
+  return r;
 };
 const registerOf = async (id) => {
   const img = (await get("image", `&id=${encodeURIComponent(id)}`)).result;
@@ -328,6 +386,10 @@ const registerOf = async (id) => {
   /* ---- the fetched arm, on the shape the live ten actually carry ---- */
   await seed("INFO-2026-0011-fetched", [{ ...LIVE_SHAPED }]);
 
+  const bearer = await (await mf.dispatchFetch("http://x/api/?op=provenancechain&token=mem-p&bundleId=INFO-2026-0011-fetched",
+    { method: "POST", body: "{}" })).json();
+  t("R21 (REC-158): the member BEARER, a machine identity, is refused by name before anything is read",
+    (bearer.result || {}).reason, "NO_AUTHOR");
   const report = await post("provenancechain", {}, "&bundleId=INFO-2026-0011-fetched");
   t("a report is produced without writing anything", (report.result||{}).applied, false);
   t("and it says the chain is reconstructible", at(report.result.documents,0).outcome, "reconstructed");
@@ -363,7 +425,7 @@ const registerOf = async (id) => {
     ((at(hops,0).reconstructed || {}).from || []).includes("locator") && ((at(hops,0).reconstructed || {}).from || []).includes("retrieved"), true);
 
   /* And the bundle is now clean for C-18.9 where it was not before. */
-  const found = await runCatalog({ checkBundle }, { id: "INFO-2026-0011-fetched", docs: reg.documents });
+  const found = await runCatalog({ checkBundle, registerChecks }, { id: "INFO-2026-0011-fetched", docs: reg.documents });
   t("C-18.9 is satisfied afterwards", found.length, 0);
 }
 
@@ -468,7 +530,13 @@ const scall = async (p, body) => (await (await mfStore.dispatchFetch("http://x" 
       + `  authority: "Example"\n  retrieved: "2026-07-01"\nmonitoring:\n  enabled: false\n`
       + `  frequency: none\n  last_checked: null\n---\n\n## Summary\n\nX.\n`;
     const prov = JSON.stringify({ documents: docs }, null, 2);
-    await scall("/promote", {
+    /* T4 (legacy-tests; provenance K121): the C-18 register arms run at the write now, and C-18.1 refuses a register
+       naming a file the bundle does not carry. LIVE_SHAPED names its capture and its RFC3161 token by path, so the
+       bundle carries both at those paths (beside the `snapshots/doc.pdf` it always carried); the documents are
+       unchanged. What is asserted below is still the release's entry gate. */
+    const named = [...new Set(docs.flatMap((d) => [d.file, d.timestamp && d.timestamp.token_file]).filter(Boolean))]
+      .filter((p) => p !== "snapshots/doc.pdf").map((p) => ({ path: p, text: "bytes", bytes: 5, sha256: sha("bytes") }));
+    const r = await scall("/promote", {
       bundleId: id, base: null, snapKey: "20260805T000000Z_bbbb2222", author: "m-riley",
       meta: { object_type: "information", group: "believe-in-oakland", title: `T ${id}`,
               current_state: "collected", created: NOW, last_updated: NOW },
@@ -477,9 +545,11 @@ const scall = async (p, body) => (await (await mfStore.dispatchFetch("http://x" 
         { path: "data/dataset.json", text: DATASET, bytes: DATASET.length, sha256: sha(DATASET) },
         { path: "snapshots/doc.pdf", text: "bytes", bytes: 5, sha256: sha("bytes") },
         { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+        ...named,
       ],
       register: [],
     });
+    t(`FIXTURE: ${id} is created at collected`, (r || {}).ok, true);
     return id;
   };
 

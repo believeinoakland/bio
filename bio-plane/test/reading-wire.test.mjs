@@ -46,6 +46,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { deflateRawSync } from "node:zlib";
 import { readText, flattenText } from "../../docprofile/registry.mjs";
 
@@ -249,6 +250,9 @@ const promoteDoc = async (doc) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      /* T4 (legacy-tests; provenance K121): op=acquire's own document is promoted unchanged; the capture file it
+         names (`snapshots/<name>`) is now carried beside it, as C-18.1 at the write requires (`register-doc.mjs`). */
+      registerFile(doc),
     ],
     register: [],
   }) })).json();

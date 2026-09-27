@@ -30,7 +30,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
+import { registerFile } from "./register-doc.mjs";
 import { ODT_CONTENT_TYPE, ODP_CONTENT_TYPE, odtNormalisedContentXml } from "../src/odf.mjs";
 import { readDriveAddress } from "../src/drive.mjs";
 
@@ -189,7 +191,11 @@ const bundleMd = (id, locator, monitored) => [
   "## Session Log", "", "### Session 1", "", "Captured.", "", "## Review Notes", "",
 ].join("\n");
 let seq = 0;
-const promote = async (docs, locator, monitored = false) => {
+/* T4 (legacy-tests; provenance K121): since the C-18 register arms run AT THE WRITE, a creation whose register names
+   a capture `file` the bundle does not carry is refused (C-18.1). `held: true` carries each acquired capture's blob
+   beside data/provenance.json (`registerFile`: the capture's own path, sha and size; the document is unchanged), as
+   the monitored arm already did. The answer keeps the refusal, so §3's fold, which C-18 refuses ON PURPOSE, reads it. */
+const promote = async (docs, locator, monitored = false, { held = false } = {}) => {
   const id = `INFO-2026-${String(9470 + ++seq)}-d473`;
   const md = bundleMd(id, locator, monitored);
   const prov = JSON.stringify({ documents: docs });
@@ -200,21 +206,30 @@ const promote = async (docs, locator, monitored = false) => {
     files.push({ path: d.file, blobSha: d.capture.sha256, sha256: d.capture.sha256, bytes: d.capture.bytes });
     register.push({ sha256: d.capture.sha256, path: d.file, encoding: "binary", bytes: d.capture.bytes });
   }
+  else if (held) for (const d of docs) {
+    const f = registerFile(d);
+    if (!files.some((g) => g.path === f.path)) files.push(f);
+  }
   const r = await P("promote", {
     bundleId: id, base: null, snapKey: `20260925T000000Z_d473${String(seq).padStart(4, "0")}`, author: "suite",
     meta: { object_type: "information", group: "believe-in-oakland", title: `D-473 ${id}`,
             current_state: "collected", created: NOW, last_updated: NOW },
     files, register,
   });
-  return { id, promoted: r.ok !== false && (r.result ? r.result.ok !== false : true) };
+  return { id, promoted: r.ok !== false && (r.result ? r.result.ok !== false : true), answer: r.result || r };
 };
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.3 left the catalogue with the other C-18
+   register arms for provenance's `registerChecks`, which the gate runs after the catalogue (`withRegisterChecks`) and
+   the audit after the pass (`provenanceAudit`). A bundle's findings are both, as the gate takes them; without the
+   second half "does NOT fold" would pass over a catalogue that no longer holds the fold. */
 const checksOf = async (id) => {
-  const img = (await G(`op=image&id=${encodeURIComponent(id)}`)).result;
+  const img = (await G(`op=image&id=${encodeURIComponent(id)}`)).result || {};
   const files = new Map(), el = new Set();
   for (const [p, v] of Object.entries(img)) { if (typeof v === "string") files.set(p, v); else el.add(p); }
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: el,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-  return findings;
+  const md = files.get("bundle.md");
+  return [...findings, ...registerChecks({ files, elided: el, fm: typeof md === "string" ? parseFrontmatter(md).data : null })];
 };
 
 /* ====================================================================== 0 */
@@ -262,12 +277,22 @@ t("A LIST THAT CONTINUES A DIFFERENT LIST MOVES THE DIGEST — the relationship 
 /* ====================================================================== 3 */
 console.log("\n--- 3. C-18.3 folds the two exports; it does not fold a changed Doc ---");
 {
-  const two = await promote(D, docLink(DOC_ID));
-  t("the two-export bundle promoted", two.promoted, true);
-  const fold = (await checksOf(two.id)).filter((x) => x.check === "C-18.3");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance K121): the fold is an ERROR finding (C-18.3), and C-18's
+     arms now run at the write, where a creation is refused on every error finding. So the two-export register is
+     REFUSED `PROVENANCE_REGISTER_REFUSED` and nothing is written; the fold is read from the refusal's own findings
+     (the same `registerChecks` the gate and the audit run). Both blobs are carried, so the fold is the only thing
+     the write refuses. */
+  const two = await promote(D, docLink(DOC_ID), false, { held: true });
+  const twoErrs = (two.answer && two.answer.findings) || [];
+  t("the two-export bundle is REFUSED at the write, for the fold and for nothing else (K121)",
+    [two.promoted, two.answer && two.answer.reason, [...new Set(twoErrs.map((x) => x.check))]],
+    [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.3"]]);
+  t("and nothing was written", (await G(`op=image&id=${encodeURIComponent(two.id)}`)).result ?? null, null);
+  const fold = twoErrs.filter((x) => x.check === "C-18.3");
   t("C-18.3 FOLDS the two .odt exports into one corroboration", fold.length, 1);
-  t("by the NORMALISED arm", /share the evidentiary digest/.test(fold[0] ? fold[0].message : ""), true);
-  const ch = await promote([D[0], Cx], docLink(DOC_ID));
+  t("by the NORMALISED arm", /share the evidentiary digest/.test(fold[0] ? fold[0].detail : ""), true);
+  const ch = await promote([D[0], Cx], docLink(DOC_ID), false, { held: true });
+  t("the changed-Doc bundle promoted", ch.promoted, true);
   t("C-18.3 does NOT fold a changed Doc", (await checksOf(ch.id)).some((x) => x.check === "C-18.3"), false);
 }
 

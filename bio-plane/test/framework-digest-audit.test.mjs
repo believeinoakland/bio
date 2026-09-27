@@ -40,7 +40,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
+import { registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -133,10 +135,15 @@ const bundleMd = (id) => [
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
 const sha512Hex = async (b) => new Uint8Array(await webcrypto.subtle.digest("SHA-512", b));
+/* T4 (legacy-tests; provenance K121): since the C-18 register arms run AT THE WRITE, a creation whose register names
+   a capture `file` the bundle does not carry is refused (C-18.1). Each acquired capture's blob is carried beside
+   data/provenance.json (`registerFile`: the capture's own path, sha and size; the documents are unchanged), so what
+   the write judges is the register this suite means. The answer keeps a refusal, for the folds C-18 refuses. */
 const promoteWith = async (docs) => {
   const id = `INFO-2026-${String(++bseq).padStart(4, "0")}-digest`;
   const md = bundleMd(id);
   const prov = JSON.stringify({ documents: docs });
+  const blobs = docs.map((d) => registerFile(d)).filter((f, i, a) => a.findIndex((g) => g.path === f.path) === i);
   const r = await (await mf.dispatchFetch("http://x/api/?op=promote&token=mem-fd", { method: "POST", body: JSON.stringify({
     bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "fd",
     meta: { object_type: "information", group: "believe-in-oakland", title: `Digest ${id}`,
@@ -144,22 +151,64 @@ const promoteWith = async (docs) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      ...blobs,
     ],
     register: [],
   }) })).json();
-  return { id, promoted: r.ok !== false };
+  const answer = r.result || r;
+  return { id, promoted: r.ok !== false && answer.ok !== false, answer };
 };
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.3 left the catalogue with the other C-18
+   register arms for provenance's `registerChecks`; op=audit runs them after the pass (`provenanceAudit`) and the gate
+   after the catalogue (`withRegisterChecks`). So "the bundle's findings the way op=audit produces them" is both. */
 const auditChecksFor = async (id) => {
-  const img = (await get(`op=image&id=${encodeURIComponent(id)}`)).result;
+  const img = (await get(`op=image&id=${encodeURIComponent(id)}`)).result || {};
   const files = new Map(), elided = new Set();
   for (const [p, v] of Object.entries(img)) { if (typeof v === "string") files.set(p, v); else elided.add(p); }
   const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided,
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-  return findings.map((f) => f.check);
+  const bm = files.get("bundle.md");
+  return [...findings, ...registerChecks({ files, elided, fm: typeof bm === "string" ? parseFrontmatter(bm).data : null })]
+    .map((f) => f.check);
 };
 const auditBundleFor = async (docs) => {
-  const { id, promoted } = await promoteWith(docs);
-  return { id, promoted, checks: await auditChecksFor(id) };
+  const { id, promoted, answer } = await promoteWith(docs);
+  return { id, promoted, answer, checks: await auditChecksFor(id) };
+};
+/* The write-time refusal's checks (K121: a creation is refused on every error finding, nothing written). */
+const refusedFor = (x) => (x.answer && x.answer.reason === "PROVENANCE_REGISTER_REFUSED" && Array.isArray(x.answer.findings)
+  ? [...new Set(x.answer.findings.map((f) => f.check))] : null);
+/* HISTORY, HELD VERBATIM: a register C-18.3 refuses can no longer be WRITTEN by a creation (K121), so a store holds
+   one only as history, through a replay the plane verifies (D-512: the admin's promotion naming a held Drive-era
+   provenance capture that lists this bundle and this bundle.md's sha256), which the write-time arms exempt. That is
+   what op=audit's store-wide arm below reads, so "the audit still reports every finding" is asked of what a store
+   can hold. */
+const ADMIN = async (qs, method, body) => {
+  const r = await mf.dispatchFetch(`http://x/api/?token=adm-fd&${qs}`, { method, body });
+  const txt = await r.text();
+  try { const j = JSON.parse(txt); return j.result || j; } catch { return { ok: false, status: r.status }; }
+};
+const replayHeld = async (docs) => {
+  const id = `INFO-2026-${String(++bseq).padStart(4, "0")}-digest`;
+  const md = bundleMd(id);
+  const prov = JSON.stringify({ documents: docs });
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: "20260701T010000Z_fd000001",
+      record: { target: id, base: null, author: "ruth", files: [{ name: "bundle.md", sha256: sha(md) }] } }] }), "utf8");
+  const held = await ADMIN(`op=capture&sha256=${sha(cap)}`, "PUT", cap);
+  const r = await ADMIN("op=promote", "POST", JSON.stringify({
+    bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "drive-migration",
+    replay: true, provenanceCapture: sha(cap),
+    meta: { object_type: "information", group: "believe-in-oakland", title: `Digest ${id}`,
+            current_state: "collected", created: NOW, last_updated: NOW },
+    files: [
+      { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+      { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+    ],
+    register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }],
+  }));
+  return { id, held: held.ok === true, promoted: r.ok === true, checks: await auditChecksFor(id) };
 };
 
 console.log("\n--- op=acquire computes and stores the normalisation digests ---");
@@ -195,29 +244,42 @@ console.log("\n--- op=audit's duplicate sweep now catches the viewstate duplicat
 /* The register documents are the acquire documents themselves — what op=promote
    really persists into data/provenance.json — so their evidentiary digests are
    the ones the plane computed above, never fabricated. */
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance K121): C-18.3 is an ERROR finding, and C-18's arms now run at
+   the write, where a creation is refused on every error finding. So a register the fold finds is REFUSED
+   `PROVENANCE_REGISTER_REFUSED`, nothing written, and the fold is read from the refusal (the same `registerChecks`
+   op=audit runs); a register it does not find lands, and is judged as op=audit judges it. The op=audit arms at the
+   foot read the viewstate pair held as a verified replay (history), the one way a store can now hold it. */
 const viewstatePair = await auditBundleFor([A, B]);
-t("the viewstate-pair bundle promoted", viewstatePair.promoted, true);
-t("op=audit folds the viewstate pair as a C-18.3 corroboration", viewstatePair.checks.includes("C-18.3"), true);
+t("the viewstate-pair bundle is REFUSED at the write, for the fold and for nothing else (K121)",
+  [viewstatePair.promoted, viewstatePair.answer.reason, refusedFor(viewstatePair)],
+  [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.3"]]);
+t("op=audit folds the viewstate pair as a C-18.3 corroboration (the write's refusal carries the fold)",
+  (refusedFor(viewstatePair) || []).includes("C-18.3"), true);
 
 const differentDocs = await auditBundleFor([A, C]);
+t("two genuinely different documents land", differentDocs.promoted, true);
 t("two genuinely different documents are NOT folded", differentDocs.checks.includes("C-18.3"), false);
 
 const twoUndetermined = await auditBundleFor([P1, P2]);
+t("two undetermined (PDF) documents land", twoUndetermined.promoted, true);
 t("two undetermined (PDF) documents are NOT folded — absents are never equal", twoUndetermined.checks.includes("C-18.3"), false);
 
 /* And the raw arm is untouched: two register documents with the SAME capture sha
    still fold, exactly as before FW-4. */
 const sameRaw = await auditBundleFor([A, A]);
-t("the raw arm still folds two identical-byte captures (C-18.3 unchanged)", sameRaw.checks.includes("C-18.3"), true);
+t("the raw arm still folds two identical-byte captures (C-18.3 unchanged)", (refusedFor(sameRaw) || []).includes("C-18.3"), true);
 
 console.log("\n--- and it reaches the check THROUGH op=audit, not only through checkBundle ---");
 /* The per-bundle assertions above use checkBundle directly (op=audit's offender
    sample is capped at five errors, which the C-18.1 register-shape noise fills).
    This one drives the whole op end-to-end: after the viewstate pair is in the
    store, op=audit's store-wide tally must carry C-18.3. */
+const heldPair = await replayHeld([A, B]);
+t("the viewstate pair, held as a verified replay (history, exempt at the write), lands", [heldPair.held, heldPair.promoted], [true, true]);
+t("and the register arms fold it there", heldPair.checks.includes("C-18.3"), true);
 const storeAudit = (await get("op=audit&limit=1000")).result;
 t("op=audit's tally carries C-18.3 across the store", (storeAudit.tally["C-18.3"] || 0) >= 1, true);
-t("and the viewstate-pair bundle is named among the offenders", storeAudit.offenders.some((o) => o.bundleId === viewstatePair.id), true);
+t("and the viewstate-pair bundle is named among the offenders", storeAudit.offenders.some((o) => o.bundleId === heldPair.id), true);
 
 await mf.dispose();
 console.log(`\nframework-digest-audit: ${pass} pass, ${fail} fail`);

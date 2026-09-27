@@ -30,6 +30,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({
@@ -176,11 +177,45 @@ console.log("\n--- 2. a later capture on the SAME bundle, dated earlier by its o
    from the provenance bytes) in one column, so a later capture of an older-dated document sorts FIRST.
    First drafted as a RE-REGISTRATION of A instead; that did NOT move the resolver (measured, the arm
    below failed for it), so the hypothesis was dropped rather than kept. */
-await promote(DOC, infoMd(DOC, 2), "information", [], {
-  capture: { sha256: B, encoding: "binary", bytes: 10 },
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance R12, D-580, K49): D-580 FIXED the mixed column this arm
+   relied on. The resolver now orders a bundle's captures by when THIS INSTANCE HELD them — `capturesOf`: the
+   earlier of the capture's `registered` and its first acquisition receipt, instants on the plane's own clock
+   only — and a reading's own `at` is no longer compared with a registration instant. So an older-dated READING no
+   longer moves the resolver (it did, for the wrong reason). The arm is re-armed by the ordering that now stands: the
+   revision REGISTERS B (it only carried B's reading before, which the fixed resolver does not read), and the
+   plane's own receipt shows it first retrieved B before it registered A — a capture held EARLIER, filed LATER —
+   so the resolver's earliest-first answer genuinely moves to B. The arming assertion below still guards it.
+   T4 (legacy-tests; provenance K121): B's document was a reading carrier (capture + reading), which C-18.1 now
+   refuses at the write; `registerDoc` completes it into op=acquire's intake shape and the bundle carries B's blob. */
+const B_DOC = { capture: { sha256: B, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: "2020-01-01T00:00:00Z",
-             entities: [], facts: {} } });
+             entities: [], facts: {} } };
+{
+  const img2 = await get("image", `id=${DOC}`);
+  const carried = Object.entries(img2 || {}).filter(([p, v]) => p !== "bundle.md" && !p.startsWith("_history/") && v && typeof v === "object")
+    .map(([p, v]) => ({ path: p, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes }));
+  const text = infoMd(DOC, 2), prov = JSON.stringify({ documents: [registerDoc(B_DOC)] });
+  const r = await post("promote", {
+    bundleId: DOC, base: live[DOC] ?? null,
+    snapKey: `20260925T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
+            created: docDate(text, "created") ?? NOW, last_updated: docDate(text, "last_updated") ?? LATER },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(B_DOC), ...carried],
+    register: [reg(B, registerFile(B_DOC).path)] });
+  if (r.ok === false) throw new Error(`promote ${DOC} r2: ${JSON.stringify(r).slice(0, 700)}`);
+  live[DOC] = r.bundleSha ?? r.sha ?? live[DOC];
+}
 await refreshLive(DOC);
+{
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const rec = rP(await (await ns.get(ns.idFromName("bio")).fetch("http://x/recordcapturedlocator", { method: "POST",
+    body: JSON.stringify({ address: "https://fixture.invalid/rec220-doc", addressNorm: "https://fixture.invalid/rec220-doc",
+                           captureSha: B, retrieved: "2020-01-01T00:00:00Z" }) })).json());
+  ok_("the plane's own receipt records B first retrieved before A was registered (R12's `held_at`)",
+    rec && rec.recorded === true, JSON.stringify(rec));
+}
 /* THE RESOLVER'S ANSWER HAS MOVED: a leg naming only the bundle, projected FRESH now, rests on B. */
 const Q4 = "INQ-2026-9220-freshunpinned";
 await promote(Q4, inquiryMd(Q4, [DOC]), "inquiry"); await refreshLive(Q4);

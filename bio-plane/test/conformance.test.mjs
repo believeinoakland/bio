@@ -26,7 +26,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle, withProducingGroup } from "../checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
 
 /* D-436 (IC-172): the setup page no longer names a producing group — the plane writes it into every creation from the
    store's one recorded value — so the page's bytes are judged below AS THE PLANE HOLDS THEM, through the catalogue's
@@ -417,11 +418,18 @@ console.log("\n--- C-18.9: what a capture must establish before it may be publis
     origin: { kind: "named_request" },
   }] });
   const md = (state) => `---\nid: INFO-2026-0009-fence\nobject_type: information\ncurrent_state: ${state}\n---\n\n# Fence\n`;
-  const run = async (state, o) => {
-    const files = new Map([["bundle.md", md(state)], ["data/provenance.json", prov(o)]]);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.9 left the catalogue with the other
+     C-18 register arms for provenance's `registerChecks`, which the gate runs after the catalogue
+     (`withRegisterChecks`) and the audit after the pass (`provenanceAudit`). The fence is asked of both, as the gate
+     takes them; the assertions below are unchanged. */
+  const judged = async (files) => {
     const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,
       sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-    return findings.filter((x) => x.check === "C-18.9");
+    return [...findings, ...registerChecks({ files, fm: parseFrontmatter(files.get("bundle.md")).data })];
+  };
+  const run = async (state, o) => {
+    const files = new Map([["bundle.md", md(state)], ["data/provenance.json", prov(o)]]);
+    return (await judged(files)).filter((x) => x.check === "C-18.9");
   };
   t("undetermined in the working corpus draws nothing", (await run("collected", {})).length, 0);
   t("undetermined content authority NO LONGER blocks publication, when it is stated",
@@ -455,9 +463,7 @@ console.log("\n--- C-18.9: what a capture must establish before it may be publis
             provenance_chain: HOP,
             capture: { method: "test", grade: "B", actor_class: "daemon", sha256: "0".repeat(64) },
             origin: { kind: "named_request" } }] })]]);
-          const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,
-            sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
-          return findings.filter((x) => x.check === "C-18.9").length; })())
+          return (await judged(files)).filter((x) => x.check === "C-18.9").length; })())
       : -1, 1);
 }
 

@@ -401,6 +401,7 @@ import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, causesNotRuledOut,
          contentAxisFor, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -460,10 +461,12 @@ t("A1: `observation_log` is declared in schema.mjs",
   /CREATE TABLE IF NOT EXISTS observation_log\s*\(/.test(SRC_SCHEMA), true);
 
 /* BEFORE `host_governor`, which is this file's standing rule and has struck
-   three times. Asserted by POSITION and not by eye. */
+   three times. Asserted by POSITION and not by eye.
+   RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
 t("A2: and it is declared BEFORE the host_governor block (the standing schema rule)",
-  SRC_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS observation_log")
-    < SRC_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
+  BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS observation_log") > -1
+    && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS observation_log")
+    < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
 
 /* The two traps that `node --check` cannot see, asserted over THIS block rather
    than over the whole file, so the assertion says something about what this item

@@ -308,6 +308,16 @@ const ORG = await mint({ tokenId: "org-agent", principalKind: "organisation", pr
   + "rebinding would re-attribute work already done", codeOf(dup), "AI_CREDENTIAL_IDENTITY_TAKEN");
   t("with its C-number", dup.check, "C-29.3");
 
+  /* ADDED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): membership's R29 and R62 refusals joined the family
+     as C-29.11 and C-29.12, so section 10's floor (every allocated code DRIVEN out of the plane) asks for them here,
+     through the op, as for every other row. */
+  const forAnother = await mint({ tokenId: "for-another", principalKind: "member", principalMember: "anna" });
+  t("R29: a member-scoped credential naming ANOTHER member as its principal is refused by name — a member cannot "
+  + "authorise an agent in another member's name", codeOf(forAnother), "AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER");
+  const orgByMember = await mint({ tokenId: "org-by-a-member", principalKind: "organisation", principalMember: null }, ANNA);
+  t("R62: an ORGANISATION-scoped credential minted by a member who is not an administrator is refused by name",
+    codeOf(orgByMember), "AI_CREDENTIAL_ORG_NOT_ADMIN");
+
   /* THE VALUE IS NOWHERE. Three arms, because "we do not log it" is a promise
      and "nothing here has ever held it" is a property. */
   const list = await GET(`op=aicredentials&token=${RUTH}`);

@@ -116,11 +116,13 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
+import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations re-inlined */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
 import { createHash } from "node:crypto";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 /* M0-18 — ONE mechanism, imported, never a copy of the rule. Why the module
    exists and what it cannot see is in its own header; why THIS suite needed it
    is at the REC-59 corpus walk below. */
@@ -141,7 +143,13 @@ const t = (label, got, want) => {
    `op=projectrequests` fell off the roster while still capped and still driven. The corpus is the store's text with
    the extracted methods RE-INLINED where the store delegates to them (`inlinedStore`, `extracted-sources.mjs`, which
    states each substitution); every figure and anchor below is unchanged. */
-const SRC_STORE = inlinedStore();
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 moved more of the store's
+   methods out behind one-line delegations — among them `versionChain` and `provenanceRoutesMarked` (provenance), both
+   capped reads on this roster, which fell off it while still capped and still driven (the walk printed 45 against 47).
+   The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined too, and capture's routes (the
+   dispatch map's `...captureOps(...)` spread) read as entries of the map (`reinlineLayer3(…, { ops: true })`,
+   `t4-extracted.mjs`, which states each substitution); every figure and anchor below is unchanged. */
+const SRC_STORE = reinlineLayer3(inlinedStore(), { ops: true }).text;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -719,13 +727,17 @@ for (let i = 1; i <= 3; i++) {
   const id = `INFO-2026-000${i}-r57`;
   const md = bundleMd(id);
   const capture = sha(`r57-${i}`);
-  const prov = JSON.stringify({ documents: [{
-    capture: { sha256: capture, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): this document was a reading carrier (capture + reading only), which C-18.1
+     now refuses at the write; `registerDoc` completes it into op=acquire's intake shape, the capture held at the
+     path this fixture already registers it under (`captures/doc.pdf`), and the bundle carries that capture's blob. */
+  const doc = { capture: { sha256: capture, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: `legislation:26-090${i}`, kind: "legislation", key: `26-090${i}`, label: LABEL }] } }] });
+               entities: [{ ref: `legislation:26-090${i}`, kind: "legislation", key: `26-090${i}`, label: LABEL }] } };
+  const prov = JSON.stringify({ documents: [registerDoc(doc, { file: "captures/doc.pdf" })] });
   const files = [
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+    registerFile(doc, { file: "captures/doc.pdf" }),
   ];
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57", files,

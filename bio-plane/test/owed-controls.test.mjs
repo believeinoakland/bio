@@ -185,7 +185,11 @@ const fleetLine = realOut.match(/^FLEET .*?(\d+)\/(\d+) SUITES declaring a negat
 t("A10 the fleet's controls are reported per SUITE", fleetLine != null, true);
 if (fleetLine) {
   const [, declaring, total, arms] = fleetLine;
-  t("A10b every fleet suite declares", declaring === total, true);
+  /* RETIRED 2026-09-27 (T4, legacy-tests; K100 (1), N70): "A10b every fleet suite declares" asked every fleet suite
+     for the old `NEGATIVE CONTROL:` declaration. The fleet members' jobs (pdf-worker T1, D-622, ocr-worker T2) rewrote
+     their suites as requirement-named tests, which the process's coverage check governs, not this declaration rule
+     (K100 (1)); the rule retires for them here. The ratio is still read, printed and reported (A10, A10c). */
+  console.log(`  fleet suites declaring a negative control: ${declaring}/${total} (reported; K100)`);
   t("A10c the fleet states arms rather than a bare yes/no", +arms > 0, true);
 }
 /* THE IS SUITE BY NAME. Owed control 7's owner is a FLEET suite, and it is the

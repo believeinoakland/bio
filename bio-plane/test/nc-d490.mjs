@@ -37,9 +37,11 @@ const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const ARMS = {
   /* D-529: the driver never asks the browser for a body. MUST FAIL: A8h (nothing verifies),
      A8i (the reason is no longer the browser's words), B7. MUST NOT FAIL: anything else. */
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; CAPTURE-SOURCES #1's REPORT): the call gained `until: overall` (CONDUCT
+     #22), so the old text matched nothing and the arm could not arm. The same edit on today's line. */
   nobodies: { file: "src/browserrender.mjs",
-    from: `    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now });`,
-    to:   `    if (false) await collectBodies(conn, sessionId, [...requests.values()], { now });`,
+    from: `    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now, until: overall });`,
+    to:   `    if (false) await collectBodies(conn, sessionId, [...requests.values()], { now, until: overall });`,
     must: ["A8h", "A8i", "B7"] },
   /* THE ROW'S CONTROL (QUEUE.md D-490): take the driver back out, so a BROWSER
      binding is once more a binding with nothing behind it. Every arm that needs a

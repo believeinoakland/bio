@@ -66,6 +66,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { QUEUE_CONDITION_KINDS, classOfKind, suppressedBy,
          serializeMutedKinds, parseMutedKinds } from "../src/queuestate.mjs";
 
@@ -240,14 +241,18 @@ const AWARD_DOC = "INFO-2026-0400-award-resolution";
 const awardSha = sha("rec21-award");
 {
   const md = infoMd(AWARD_DOC);
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({
     capture: { sha256: awardSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-               entities: [{ ref: "contract:C-A", kind: "contract", key: "C-A", label: "Gap Contract A" }] } }] });
+               entities: [{ ref: "contract:C-A", kind: "contract", key: "C-A", label: "Gap Contract A" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const r = await POST(`op=promote&token=${MACHINE}`, {
     bundleId: AWARD_DOC, base: null, snapKey: `${AWARD_DOC}-new`, author: "rec21-suite",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(doc)],
     register: [],
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW } });

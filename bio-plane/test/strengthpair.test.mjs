@@ -74,6 +74,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES,
          VERSION_STRENGTH_INERT_SOURCES, VERSION_STATES, VERSION_MACHINE,
          BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
@@ -220,6 +221,7 @@ const promote = async (id, text, type, { base = null, register = [], reading = n
   if (reading) {
     const prov = JSON.stringify({ documents: [reading] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(registerFile(reading));   /* T4 (legacy-tests; provenance K121): the capture the document names, held in the bundle */
   }
   return POST(`op=promote&token=${RUTH}`, {
     ...(id === null ? {} : { bundleId: id }), base,
@@ -259,10 +261,12 @@ const DOC_BARE = "INFO-2026-3000-nothing-earned";
 const DOC_HUNCH = "INFO-2026-3000-hunch-target";
 const SHA = Object.fromEntries([DOC_A1, DOC_A2, DOC_C1, DOC_HUNCH].map((d) => [d, sha(`capture-of-${d}`)]));
 
-const readingOf = (captureSha, entities) => ({
+/* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused at
+   the write, naming the capture at the path the fixture's register already gives it (`register-doc.mjs`). */
+const readingOf = (captureSha, entities) => registerDoc({
   capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: entities.length > 0,
-             at: NOW, entities } });
+             at: NOW, entities } }, { file: "snapshots/d.bin" });
 const byKey = { ref: "ordinance:13579", kind: "ordinance", key: "13579", label: "Ordinance No. 13579" };
 /* A NAME correspondence and nothing more: kind and label match, the key does
    not. It can only ever reach C — an equality that costs nothing to produce is

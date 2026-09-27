@@ -45,6 +45,8 @@ import { createHash } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED } from "../src/airun.mjs";
 import { canonicalExtent, describeExtent } from "../checks/bio-checks.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -256,12 +258,16 @@ const infoMd = (id) => ["---",
 
 let snapSeq = 0;
 const HEAD = new Map();
-const promote = async (id, { document = null } = {}) => {
+const promote = async (id, { document: offered = null } = {}) => {
   const text = infoMd(id);
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
+  /* T4 (legacy-tests; provenance K121): C-18.1 now refuses at the write. An acquired document keeps every key it
+     states and an authored one is completed to op=acquire's intake shape; either way the capture the document names
+     is held in the bundle (`register-doc.mjs`), and the register row below names that same file. */
+  const document = offered ? registerDoc(offered) : null;
   if (document) {
     const prov = JSON.stringify({ documents: [document] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(document));
   }
   /* THE CAPTURE IS REGISTERED, because `op=contentaxis` looks the capture up in
      the REGISTER first — "this record does not hold that capture" and "this
@@ -294,9 +300,10 @@ console.log("\n--- A · the two tables, where they must be and shaped as the des
 
 t("A1: `capture_text` is declared in schema.mjs BEFORE the `host_governor` block — hygiene asserts "
 + "the literal ends on a `);`, and a table appended after it would truncate the schema",
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
   SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (") > -1
-    && SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")
-       < SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
+    && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_text (")
+       < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"), true);
 
 /* THE NINE COLUMNS §4.1 NAMES, AND THE KEY. Asserted against the DDL text
    rather than against a promise, because a column silently dropped from the

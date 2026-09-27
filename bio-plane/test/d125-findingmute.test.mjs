@@ -39,6 +39,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { itemClassOf, mutedAsItem, MUTE_REFUSAL_DETAIL } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -160,12 +161,15 @@ const ent = await POST(`op=entitycreate&token=${MACHINE}`,
 const AWARD_DOC = "INFO-2026-0125-award";
 const awardSha = sha("d125-award");
 {
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({
     capture: { sha256: awardSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "procurement", reader_version: 1, found: true, at: AWARD_AT,
-               entities: [{ ref: "contract:CQ", kind: "contract", key: "CQ", label: "Contract Q" }] } }] });
+               entities: [{ ref: "contract:CQ", kind: "contract", key: "CQ", label: "Contract Q" }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   await promote(AWARD_DOC, infoMd(AWARD_DOC), "information", "collected", [],
-    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }]);
+    [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)]);
 }
 await POST(`op=resolve&token=${MACHINE}`, { captureSha: awardSha });
 const thr = await POST(`op=thread&token=${MACHINE}`, {

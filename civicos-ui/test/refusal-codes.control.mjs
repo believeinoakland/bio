@@ -301,7 +301,11 @@ arm("(e)", [{
   to: `  'M2 reason:<expr>':  src => {
     const out = new Set(); if (out) return out;`,
 }], guard, r => ({
-  ok: r.exit === 1 && /the plane census is \d+ refusal codes, floor is/.test(r.out)
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the census FAIL has read "…is N refusal codes THAT ARE IN THE COMMIT
+     AT HEAD (M over the working tree), floor is F" since D-257, so the old `codes, floor is` could never match and
+     this arm could not pass on any tree. Anchored on the sentence's two ends; the claim (the CENSUS floor fires) is
+     unchanged. */
+  ok: r.exit === 1 && /the plane census is \d+ refusal codes[^\n]*, floor is/.test(r.out)
       && /M2 reason:<expr>\s+0 codes/.test(r.out),
   what: "the guard exits 1 on the CENSUS FLOOR with M2 printed at 0 codes",
 }));
@@ -340,6 +344,14 @@ arm("(f)", [
 const FREEZE_ANCHOR = `        for (const v of offered) {
           const prior = this.#one(`;
 const REGION_MARK = `/* DEC-49 REGION basis-version-freeze`;
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; promotion K31, legacy-checks' re-pointing): `promote` moved out of
+   `store.mjs` into `src/promotion/` (T3), and the checks it ran — these two regions and `bias-set-refusal` among them
+   — stayed in `store.mjs` as legacy-store's registered promotion step, `#promoteChecks` (K31). The markers moved with
+   the code, and T4 legacy-checks re-pointed the three rows to `src/store.mjs #promoteChecks > <region>, reached from
+   op=promote`. So the FUNCTION these arms name is `#promoteChecks` now; every anchor below is today's text, and
+   each arm asks what it always asked. The two whole-function counts ((r2), (r6)) are re-measured, because the
+   function they conscript is no longer `promote`: see each. */
+const PROMOTE_FN = "#promoteChecks";
 
 console.log("\n(r1) THE TEETH INSIDE THE NARROWED REGION — REC-71's whole point: narrowing must not blind the guard");
 arm("(r1)", [{
@@ -349,18 +361,18 @@ arm("(r1)", [{
 ${FREEZE_ANCHOR}`,
 }], guard, r => ({
   ok: r.exit === 1
-      && /src\/store\.mjs:\d+ \(in promote > basis-version-freeze\) returns a CODELESS REFUSAL/.test(r.out),
-  what: "the guard exits 1 naming src/store.mjs, the LINE, promote AND the region",
+      && /src\/store\.mjs:\d+ \(in #promoteChecks > basis-version-freeze\) returns a CODELESS REFUSAL/.test(r.out),
+  what: `the guard exits 1 naming src/store.mjs, the LINE, ${PROMOTE_FN} AND the region`,
 }));
 
 console.log("\n(r2) THE FIX IS THE FIX — put the WHOLE-FUNCTION `where` back and the 32 conscripted refusals RETURN");
 arm("(r2)", [
   { file: F.catalog,
-    from: `    where: 'src/store.mjs promote > basis-version-freeze, NOT reachable from a pure document check',`,
-    to: `    where: 'src/store.mjs promote (the basis-version freeze arm), NOT reachable from a pure document check',` },
+    from: `    where: 'src/store.mjs #promoteChecks > basis-version-freeze, reached from op=promote, NOT reachable from a pure document check',`,
+    to: `    where: 'src/store.mjs #promoteChecks (the basis-version freeze arm), reached from op=promote, NOT reachable from a pure document check',` },
   { file: F.catalog,
-    from: `    where: 'src/store.mjs promote > basis-version-resolve, NOT reachable from a pure document check',`,
-    to: `    where: 'src/store.mjs promote (the basis-version resolve arm), NOT reachable from a pure document check',` },
+    from: `    where: 'src/store.mjs #promoteChecks > basis-version-resolve, reached from op=promote, NOT reachable from a pure document check',`,
+    to: `    where: 'src/store.mjs #promoteChecks (the basis-version resolve arm), reached from op=promote, NOT reachable from a pure document check',` },
 ], guard, r => {
   /* PIN CORRECTED 2026-08-08, NOT EXEMPTED, and the correction is itself the
      evidence the arm is live. It read 32 — the number `main`'s red harness
@@ -371,11 +383,18 @@ arm("(r2)", [
      whole-function `where` claims is not fixed at the time it is written, it
      grows with the function.** The count is now family-specific so this arm and
      (r6) cannot borrow each other's failures. */
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; promotion K31): 33 -> 18, and the arm's claim is unchanged. The
+     function the whole-function `where` now names is `#promoteChecks` (see PROMOTE_FN), not `promote`: T3 moved the
+     write to `src/promotion/`, and D-589 takes every CLAIMED region out of a whole-function span, so what the widened
+     `where` conscripts is the refusals of `#promoteChecks` that lie outside every claimed region. MEASURED on an
+     isolated copy of this tree (never the shared one), 2026-09-27: 18 — SUPERSESSION_REFUSED 3, NO_SIBLING_DISCLOSURE
+     3, RESPONDS_TO_REFUSED 2, CORRESPONDENCE_REFUSED 2, BASIS_VERSION_REFUSED 2, BASIS_REFUSED 2, ACTION_BASIS_REFUSED
+     2, SUBJECT_REFUSED 1, GATHERING_REFUSED 1; with the region `where`s, none. */
   const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BASIS_VERSION_CHECKS/g) || []).length;
   return {
-    ok: r.exit === 1 && n === 33,
-    what: `the guard exits 1 with EXACTLY 33 refusals conscripted into BASIS_VERSION_CHECKS again `
-        + `(measured ${n}) — 32 on the PL-1-only tree plus PL-12's BIAS_REFUSED, so the narrowing is `
+    ok: r.exit === 1 && n === 18,
+    what: `the guard exits 1 with EXACTLY 18 refusals conscripted into BASIS_VERSION_CHECKS again `
+        + `(measured ${n}) — every refusal of ${PROMOTE_FN} outside a claimed region, so the narrowing is `
         + `shown to be what removed them`,
   };
 });
@@ -417,28 +436,34 @@ arm("(r4)", [{
 console.log("\n(r5) THE TEETH INSIDE THE **BIAS** REGION — each newly narrowed region owes its own arm");
 arm("(r5)", [{
   file: F.store,
-  from: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {`,
-  to: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the arm's `if` is D-526's union (the document's type OR the
+     envelope's), and the region is in `#promoteChecks` (see PROMOTE_FN). */
+  from: `      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {`,
+  to: `      if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {
         if (pkg.__rec71_bias_control__) return { ok: false, detail: "a refusal nobody gave a code" };`,
 }], guard, r => ({
   ok: r.exit === 1
-      && /src\/store\.mjs:\d+ \(in promote > bias-set-refusal\) returns a CODELESS REFUSAL/.test(r.out),
-  what: "the guard exits 1 naming src/store.mjs, the LINE, promote AND the bias-set-refusal region",
+      && /src\/store\.mjs:\d+ \(in #promoteChecks > bias-set-refusal\) returns a CODELESS REFUSAL/.test(r.out),
+  what: `the guard exits 1 naming src/store.mjs, the LINE, ${PROMOTE_FN} AND the bias-set-refusal region`,
 }));
 
 console.log("\n(r6) THE FIX IS THE FIX, SECOND FAMILY — restore BIAS_REFUSED's whole-function `where`");
 arm("(r6)", [{
   file: F.catalog,
-  from: `    where: 'src/store.mjs promote > bias-set-refusal, reached from op=promote',`,
-  to: `    where: 'src/store.mjs promote, reached from op=promote',`,
+  from: `    where: 'src/store.mjs #promoteChecks > bias-set-refusal, reached from op=promote',`,
+  to: `    where: 'src/store.mjs #promoteChecks, reached from op=promote',`,
 }], guard, r => {
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; promotion K31): 36 -> 18, the arm's claim unchanged. `#promoteChecks`
+     is the function now (see PROMOTE_FN), and since D-589 a whole-function span no longer re-judges the regions
+     other rows claim — so "36 and not 34" (the two basis-version refusals conscripted as well) no longer holds: those
+     regions are still claimed here and are judged once, by their own rows. MEASURED on an isolated copy of this tree,
+     2026-09-27: 18, the same eighteen refusals (r2) names; with the region `where`, none. */
   const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BIAS_CHECKS/g) || []).length;
   return {
-    ok: r.exit === 1 && n === 36,
-    what: `the guard exits 1 with EXACTLY 36 refusals conscripted into BIAS_CHECKS again (measured `
-        + `${n}) — the number CONDUCT measured on the merged tree, so the narrowing is shown to be `
-        + `what removed them. Note 36 and not 34: a whole-function \`where\` also conscripts the two `
-        + `refusals the OTHER family's regions correctly govern`,
+    ok: r.exit === 1 && n === 18,
+    what: `the guard exits 1 with EXACTLY 18 refusals conscripted into BIAS_CHECKS again (measured `
+        + `${n}) — every refusal of ${PROMOTE_FN} outside a claimed region, so the narrowing is shown to be `
+        + `what removed them`,
   };
 });
 

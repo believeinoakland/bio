@@ -40,6 +40,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { derivationObservation, derivationDocumentsFrom, derivationStatement } from "../src/airun.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -86,14 +87,19 @@ try {
     const id = `INFO-2026-${String(i).padStart(4, "0")}-d241`;
     const md = bundleMd(id);
     const capture = sha(`d241-${i}`);
-    const prov = JSON.stringify({ documents: [{
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+       refused at the write; the document names the file the promotion REGISTERS for its capture, and the bundle
+       holds it (`register-doc.mjs`). */
+    const doc = registerDoc({
       capture: { sha256: capture, encoding: "binary", bytes: 10 },
       reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
                  entities: [{ ref: `legislation:41-${String(i).padStart(4, "0")}`, kind: "legislation",
-                              key: String(i), label }] } }] });
+                              key: String(i), label }] } }, { file: "captures/doc.pdf" });
+    const prov = JSON.stringify({ documents: [doc] });
     const files = [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      registerFile(doc),
     ];
     const r = await POST(`op=promote&token=${TOK}`, {
       bundleId: id, base: null, snapKey: `${id}-new`, author: "d241", files,

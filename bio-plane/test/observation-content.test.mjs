@@ -145,6 +145,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
          contentAxisFor, contentObservationsFor,
          OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
@@ -449,9 +450,16 @@ const promote = async (id, { type = "information", reading = null, captureSha = 
   const text = doc(id, `Bundle ${id}`, type);
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
-    const prov = JSON.stringify({ documents: [{ capture: { sha256: captureSha, encoding: "binary",
-                                                           bytes: 10 }, reading }] });
+    /* T4 (legacy-tests; provenance K121): an INFORMATION bundle's reading carrier completed to C-18.1's intake
+       shape, which is now refused at the write, naming the capture its own register entry holds, and that capture
+       carried in the bundle's files (`register-doc.mjs`). A project's register is not an intake register and C-18
+       does not run on it, so it is sent as it was. */
+    const carrier = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 }, reading };
+    const intake = type === "information";
+    const pdoc = intake ? registerDoc(carrier, { file: register[0]?.path }) : carrier;
+    const prov = JSON.stringify({ documents: [pdoc] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    if (intake) files.push(registerFile(pdoc));
   }
   /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and
      a project creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1); a project creation sends no

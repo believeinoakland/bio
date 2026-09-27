@@ -99,6 +99,8 @@ import { fileURLToPath } from "node:url";
 import { verdictOf, readerDrift } from "./verdict-reader.mjs";
 /* D-561: C-69.2 and C-98, read from the rows, never a hand copy. */
 import { DISPATCH_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
+/* T4 (legacy-tests): held-open (iii) moved with the governor's Worker side into host-governor (R17). */
+import { governedFetch, governorOverStub } from "../src/host-governor/index.mjs";
 
 const SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const RAW = readFileSync(SRC_PATH, "utf8");
@@ -299,12 +301,17 @@ function detectB(src) {
    would have caught it.
    The classification is a RELATION assertion: this suite asserts the SET, and
    asserts that none of them sits inside a `json({ ok: true` — it rules on
-   nothing else about them. */
-const UNCONVERTED = [
-  "sourcereach", "governoradmit",
-  "loadcapturesession", "capturelimit", "siteassets", "governorstate",
-  "recordcapturelimit", "savecapturesession", "recordruntime", "recordsiteassets",
-];
+   nothing else about them.
+
+   RE-ANCHORED 2026-09-27 (T4, legacy-tests): THE LIST IS NOW EMPTY, and every path left index.mjs with the code
+   that read it, none by conversion. `governoradmit` and `governorstate` went with host-governor (T4-1, N25): the
+   Worker reaches the governor through `governorOverStub`, and its fail-open is host-governor's R17, asked at that
+   module's interface in HELD OPEN (iii) below. The other eight (`sourcereach`, `loadcapturesession`,
+   `capturelimit`, `siteassets`, `recordcapturelimit`, `savecapturesession`, `recordruntime`, `recordsiteassets`)
+   went with capture (T4-4): the acquisition is a service inside the Durable Object (K72 (11)), so it calls the store
+   in process and opens no envelope. The detector still asserts the set EXACTLY, so a raw read that joins index.mjs
+   fails it (REACH (C) below). */
+const UNCONVERTED = [];
 /* Bracket-match the argument list of every call to `name(`, and return the
    spans. Used for both `doAnswer(` and `.fetch(`. */
 function callSpans(src, pattern) {
@@ -664,10 +671,21 @@ ok(`REACH (C), AS A DELTA — a NEW unconverted Durable Object read appears in t
      + "undetermined rather than refusing: the ratification genuinely landed. POLARITY INVERTED "
      + "2026-08-05 (REC-53) for the same reason as (i)",
      reusedSite);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor T4-1, N25): the admission check and its written decision
+     left index.mjs for `src/host-governor/index.mjs` (`governedFetch`, `governorOverStub`), where the decision is
+     R17. Asked there, of the behaviour rather than the sentence: a governor whose stub throws, and one whose store
+     answers no envelope, each leave the fetch made, ungoverned. */
+  const fetched = [];
+  const fakeFetch = async (u) => { fetched.push(u); return { status: 200, headers: { get: () => null } }; };
+  const throwing = governorOverStub({ fetch: async () => { throw new Error("the store is down"); } });
+  const silent = governorOverStub({ fetch: async () => ({ json: async () => ({ ok: false, error: "stack" }) }) });
+  const viaThrowing = await governedFetch("https://example.org/a", { fetch: fakeFetch, governor: throwing, sleep: async () => {} });
+  const viaSilent = await governedFetch("https://example.org/b", { fetch: fakeFetch, governor: silent, sleep: async () => {} });
   ok("HELD OPEN (iii), UNCHANGED: the governor's admission check fails OPEN by an explicit written "
-     + "decision (\"ungoverned is better than unfetched\"), which is a ruling already made and not "
-     + "this class",
-     /ungoverned is better than unfetched/.test(RAW) && /const g = \(a && a\.result\) \|\| null;/.test(SRC));
+     + "decision (\"ungoverned is better than unfetched\", host-governor R17), which is a ruling already made "
+     + "and not this class",
+     !!viaThrowing.res && !!viaSilent.res && !viaThrowing.refusedByGovernor && !viaSilent.refusedByGovernor
+     && JSON.stringify(fetched) === JSON.stringify(["https://example.org/a", "https://example.org/b"]));
 }
 
 /* ---- DETECTOR D: THE PUBLISH/RATIFY BLOCK, WHOLE (REC-53) ----------------
@@ -766,9 +784,13 @@ function rawInRatify(src) {
   /* And the bound is load-bearing in the other direction: a raw read OUTSIDE the
      block must NOT make detector D fire, or "the block is clean" would be a
      claim about the file. `op=acquire`'s raw reads are the standing proof. */
-  ok("REACH (D), THE BOUND — the ten raw reads that remain OUTSIDE this block do not make detector D "
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the ten raw reads outside the block that were the standing proof
+     left index.mjs with host-governor and capture (DETECTOR C's note), so the proof is PLANTED: detector C's own
+     planted raw read, outside the ratify region, is seen by C and does not make D fire. */
+  ok("REACH (D), THE BOUND — a raw read OUTSIDE this block does not make detector D "
      + "fire, so a clean block is a claim about the BLOCK and not about the file",
-     unconverted.length >= 10 && (raw || []).length === 0);
+     doFetchSites(cPlantAdd).some((x) => !x.viaDoAnswer && x.path === "newthing")
+     && (rawInRatify(cPlantAdd) || []).length === 0 && (raw || []).length === 0);
 
   /* ---- DETECTOR D2: OPENED IS NOT THE SAME AS CHECKED ------------------
      ADDED 2026-08-05 (REC-53) BECAUSE ITS OWN NEGATIVE CONTROL EXPOSED THE

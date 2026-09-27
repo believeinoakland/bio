@@ -46,6 +46,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { contentIdFor } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -154,8 +155,12 @@ let snapSeq = 0;
 const promote = async (id, text, type, { base = null, register = [], reading = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
-    const prov = JSON.stringify({ documents: [reading] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+       at the write; where the promotion REGISTERS the capture the document names that same file, and the bundle holds
+       it (`register-doc.mjs`). */
+    const doc = registerDoc(reading, register.length ? { file: register[0].path } : {});
+    const prov = JSON.stringify({ documents: [doc] });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc));
   }
   return post("promote", {
     bundleId: id, base,

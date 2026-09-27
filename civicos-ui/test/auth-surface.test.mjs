@@ -469,8 +469,16 @@ const MANIFEST = {
    would make every `includes()` in this file trivially true, which is the same
    costless equality wearing different clothes. */
 const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; membership, T3 layer 2): `login()`, its three refusal arms and the
+   `LOGIN_REFUSAL_DETAIL` constant moved out of `store.mjs` into `src/membership/index.mjs` (the store keeps only
+   `static LOGIN_REFUSAL_DETAIL = Membership.LOGIN_REFUSAL_DETAIL;`, an alias carrying no sentence, and the
+   dispatcher's wrapper arm moved INTO `login()` as its active-member arm, K57). So the constant and the arms are
+   read out of the module that holds them, and each arm's `detail` is paired with `Membership.LOGIN_REFUSAL_DETAIL`,
+   the name the arms now spell. What is asked is unchanged: one code, one whole sentence, read from the plane, and
+   every refusal arm pairs the two. `publishedManifest()` stayed in `store.mjs` and is still read there (4b). */
+const LOGIN_SRC = fs.readFileSync(new URL("../../bio-plane/src/membership/index.mjs", import.meta.url), "utf8");
 function planeLoginRefusal(){
-  const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(STORE_SRC);
+  const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(LOGIN_SRC);
   if(!block) return null;
   const out = {};
   /* One entry per `KEY:` at the constant's own indentation; a value is the
@@ -504,9 +512,9 @@ ok("and the sentence extracted is a whole sentence rather than an empty read",
    before `login()` is ever reached. An arm that answered the code bare would
    send this gate back to rendering a machine code with nothing to say. */
 {
-  const codes = [...STORE_SRC.matchAll(new RegExp(`reason: "${REFUSAL_CODE}"`, "g"))].length;
-  const paired = [...STORE_SRC.matchAll(
-    new RegExp(`reason: "${REFUSAL_CODE}",\\s*detail: Store\\.LOGIN_REFUSAL_DETAIL\\.${REFUSAL_CODE}`, "g"))].length;
+  const codes = [...LOGIN_SRC.matchAll(new RegExp(`reason: "${REFUSAL_CODE}"`, "g"))].length;
+  const paired = [...LOGIN_SRC.matchAll(
+    new RegExp(`reason: "${REFUSAL_CODE}",\\s*detail: Membership\\.LOGIN_REFUSAL_DETAIL\\.${REFUSAL_CODE}`, "g"))].length;
   ok("the plane refuses a sign-in in more than one place, so the pairing is worth asserting", codes >= 2);
   ok("EVERY arm that answers the refusal code answers the sentence with it — none is left bare",
      codes > 0 && paired === codes);

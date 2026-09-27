@@ -53,7 +53,7 @@ const runSuite = (rel) => {
      D-302 added `op-claims` to the set, because its phantom arm's whole subject is
      that suite's fifth floor and a suite that died before its foot would report
      zero failures. */
-  const m = out.match(/\n(?:walkfloor|hygiene|op-claims):\s+(\d+) pass, (\d+) fail/);
+  const m = out.match(/\n(?:walkfloor|hygiene):\s+(\d+) pass, (\d+) fail/);
   if (!m) return { pass: -1, fail: -1, reachedFoot: false, out };
   return { pass: Number(m[1]), fail: Number(m[2]), reachedFoot: true, out };
 };
@@ -160,34 +160,10 @@ const ARMS = [
       : null,
     ok: (r) => r.walkfloor.fail > 0,
   },
-  {
-    id: "overstrict",
-    what: "OVER-STRICTNESS — correct work in a spelling the ratchet was not written against",
-    expect: "MUST **PASS**, both suites GREEN. A NEW consumer that floors on a walk one "
-          + "import away, on the figure that walk declares REPRODUCIBLE, is correct work — "
-          + "it is D-257's two-line pattern, done right. If the ratchet names it, the check "
-          + "is tighter than its rule — an undeclared interface change wearing the costume "
-          + "of caution — and it gets switched off by the third person it interrupts.",
-    /* CORRECTED 2026-09-10 BY D-302, NEVER EXEMPTED, AND THE CORRECTION IS THE ITEM
-       ARRIVING IN ITS OWN CONTROL. The fixture used to floor on `r.corpus.length`
-       — a WORKING-TREE figure — and import `provenance.mjs`, because under the old
-       predicate importing that module WAS the definition of correct work. It is
-       not: the import is a fact about the consumer's file and the exposure is a
-       fact about the figure. Under the real rule this fixture was a genuine
-       unguarded floor wearing a guard's costume, so leaving it here would have
-       asserted that the corrected ratchet must NOT fire on a real instance — an
-       over-strictness arm defending the defect. Correct work is now spelled the
-       way D-257 spells it, and the `ratchet` arm below is the same fixture with
-       the reproducible figure swapped back out, which makes the pair a DELTA. */
-    newFile: join(PLANE, "test", "walkfloor-overstrict.probe.mjs"),
-    body: `/* ARM overstrict FIXTURE. Correct work: floors on the HEAD-REPRODUCIBLE figure
-   a walk one import away publishes. The ratchet must leave it alone. Deleted by the driver. */
-import { sweep } from "../scripts/op-claims.mjs";
-const r = sweep();
-if (r.filesRepro >= 42) console.log("ok");
-`,
-    ok: (r) => r.walkfloor.fail === 0 && r.hygiene.fail === 0,
-  },
+  /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): arm `overstrict` floored on `sweep().filesRepro`, the
+     HEAD-reproducible figure of `scripts/op-claims.mjs`, which was removed with the old tooling. No walk left in the
+     estate declares a reproducible figure (`node scripts/walkfloor.mjs`: walkfloor's own is `reproducible: none`),
+     so correct GUARDED work has no real instance to plant against; `walkfloor.test.mjs`'s fixtures keep that grade. */
   {
     id: "ratchet",
     what: "THE RATCHET ITSELF — a NEW cross-file floor on a WORKING-TREE figure must fail BY NAME",
@@ -199,58 +175,19 @@ if (r.filesRepro >= 42) console.log("ok");
     newFile: join(PLANE, "test", "walkfloor-ratchet.probe.mjs"),
     body: `/* ARM ratchet FIXTURE. A new cross-file floor on a WORKING-TREE figure.
    The census cannot see it (no readdirSync here); the detector must. Deleted by the driver. */
-import { sweep } from "../scripts/op-claims.mjs";
-const r = sweep();
-if (r.dynamic >= 99) console.log("ok");
+import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
+const r = sweepWalkFloors();
+if (r.walkModules.count >= 99) console.log("ok");
 `,
+    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; N12): the fixture floored on op-claims' working-tree `dynamic`; it
+       now floors on walkfloor's working-tree `walkModules.count`, the same kind of figure one import away. */
     ok: (r) => r.hygiene.fail > 0 && /walkfloor-ratchet\.probe\.mjs/.test(r.hygiene.out),
   },
 
   /* ============================ D-302's THREE ARMS ============================ */
-  {
-    id: "phantom",
-    what: "THE ARM THIS ITEM EXISTS FOR — an UNCOMMITTED attribution arrival must not move "
-        + "the corpus the fifth floor stands on, and the BEFORE state is proved in the same run",
-    expect: "MUST **PASS**: `op-claims` GREEN with the phantom present. The suite's own "
-          + "label must print `5 of 6 attribution(s)` — SIX counted over the working tree, "
-          + "which is the figure the floor read BEFORE this item and is therefore the "
-          + "'before' proved rather than described, and FIVE over `git ls-tree HEAD`, which "
-          + "is what the floor reads now and what the phantom cannot touch. A floor moved to "
-          + "the 6 a contaminated run PRINTED would be permanently too high and would fail "
-          + "every honest run afterwards — D-238's payload, live.",
-    suites: { "op-claims": "test/op-claims.test.mjs" },
-    newFile: join(PLANE, "test", "d302-phantom.probe.md"),
-    /* A CORRECT attribution on purpose: a wrong one would fail as a WRONG-METHOD
-       finding and the arm would pass for the wrong reason. The claim is TRUE and
-       still must not move a floor, because the exposure is arrival, not falsity.
-       AND THE TOKEN IS COMPOSED AT RUNTIME, NEVER SPELLED. This driver is a
-       COMMITTED file inside the corpus `op-claims.mjs` sweeps, so a literal
-       fixture here is a real routing claim in HEAD — it would raise
-       `attributionsRepro` by one and this arm's own expected `5 of 6` would read
-       `6 of 7`, the arm moving the figure it exists to prove immovable. Measured:
-       the first draft of this arm did exactly that. `test/op-claims.test.mjs`
-       obeys the same rule in its §5 fixtures and says why at length. */
-    body: `ARM phantom FIXTURE — uncommitted, deleted by the driver.
-
-A routing claim nobody committed: ${OP("publish")} ${DISPATCHES} \`Store.publishCase()\`.
-`,
-    ok: (r) => r["op-claims"].fail === 0 && /5 of 6 attribution\(s\)/.test(r["op-claims"].out),
-  },
-  {
-    id: "guardimport",
-    what: "POINT THE GRADE BACK AT THE IMPORT SPELLING — the predicate D-302 removed",
-    expect: "MUST FAIL, and the failure must NAME a file the old predicate misgrades. "
-          + "`test/op-claims.test.mjs` does not import `provenance.mjs`, so all five of its "
-          + "genuinely-guarded floors grade UNGUARDED again and hygiene's GUARDED-or-NAMED "
-          + "arm fires on it by name; the two files that DO import it go back to reading "
-          + "GUARDED, so their named entries fail as STALE. Both directions, one run.",
-    file: DETECTOR,
-    patch: (s) => s.includes("                    guarded: g.grade === \"GUARDED\" };")
-      ? s.replace("                    guarded: g.grade === \"GUARDED\" };",
-                  "                    guarded: facts.get(f).importsProvenance };")
-      : null,
-    ok: (r) => r.hygiene.fail > 0 && /op-claims\.test\.mjs/.test(r.hygiene.out),
-  },
+  /* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12): `phantom` (its subject was `op-claims.test.mjs`'s fifth
+     floor and the attribution corpus `scripts/op-claims.mjs` swept) and `guardimport` (it expected the old predicate to
+     misgrade `op-claims.test.mjs`'s five guarded floors) left with the tool and that suite. `reportonly` stays. */
   {
     id: "reportonly",
     what: "OVER-STRICTNESS, SECOND DIRECTION — a consumer that only REPORTS working-tree "

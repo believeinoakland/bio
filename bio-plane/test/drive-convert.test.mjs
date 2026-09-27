@@ -38,6 +38,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { deflateRawSync } from "node:zlib";
 import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE } from "../src/odf.mjs";
 import { derivationCap, captureBound, describeChain } from "../src/textchain.mjs";
@@ -276,7 +277,12 @@ const promote = async (id, reading) => {
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            /* T4 (legacy-tests; provenance K121): the acquired document names its capture
+               (`snapshots/export-format-<fmt>`), and C-18.1, now refused at the write, asks that the bundle hold it:
+               the capture carried beside the register (`register-doc.mjs`; the document itself is op=acquire's own
+               and is not reshaped). */
+            registerFile(reading)],
     register: [] });
 };
 

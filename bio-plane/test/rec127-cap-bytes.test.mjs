@@ -30,6 +30,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -92,10 +93,14 @@ let snapSeq = 0;
 const promoteDoc = async (id, { chain, pageCount }) => {
   const capSha = sha(`rec127-${id}-bytes`);
   const text = infoMd(id);
-  const reading = { capture: { sha256: capSha, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, naming the capture at the path the register below gives it, and that capture held in the bundle
+     (`register-doc.mjs`). */
+  const reading = registerDoc({ capture: { sha256: capSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW,
                entities: [], facts: {}, page_count: pageCount,
-               ...(chain === undefined ? {} : { text_source: chain }) } };
+               ...(chain === undefined ? {} : { text_source: chain }) } },
+    { file: `snapshots/${id}.bin` });
   const prov = JSON.stringify({ documents: [reading] });
   const r = await post("promote", {
     bundleId: id, base: null,
@@ -103,7 +108,8 @@ const promoteDoc = async (id, { chain, pageCount }) => {
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(reading)],
     register: [{ path: `snapshots/${id}.bin`, sha256: capSha, encoding: "binary", bytes: 10 }] });
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
 };

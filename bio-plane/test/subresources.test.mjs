@@ -37,6 +37,10 @@ import {
 import { isPublicHttpsLocator } from "../checks/bio-checks.mjs";
 import { recordChecks } from "../src/promotion/index.mjs";
 import { cpuProbe, makeMeter } from "../src/cpu.mjs";
+/* T4 (legacy-tests; capture T4-4, provenance T4-2): the reshape lists the two modules took with them. */
+import { CAPTURE_RESHAPE } from "../src/capture/schema.mjs";
+import { PROVENANCE_TABLES } from "../src/provenance/index.mjs";
+import { moduleSources } from "./extracted-sources.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (b) => createHash("sha256").update(Buffer.from(b)).digest("hex");
@@ -897,6 +901,7 @@ console.log("\n--- and the whole thing through op=acquire, which is where it bro
 
   const first = res.document.capture.sha256;
   let ticks = 1, session = res.snapshot.continuation.session;
+  const pageAsksBefore = SEEN_UA.filter(([p]) => p === "/big.html").length;
   while (session && ticks < 25) {
     res = await acquire({ locator: "https://www.oaklandca.gov/big.html", authority: "City",
                           subresources: true, continue: session });
@@ -906,8 +911,15 @@ console.log("\n--- and the whole thing through op=acquire, which is where it bro
   }
   t("it completes across ticks through the op", res.snapshot.complete, true);
   t("taking more than one", ticks > 1, true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R11, K49): this read `res.document.capture.sha256` off the
+     last tick's answer. Since capture R11 a continuation files no new document (the first tick answered it) and
+     answers `continued`, naming the session's primary by its digest, which it reads back from the store and never
+     fetches; so the SAME claim is asked of `continued.primary.sha256`, and the "never re-fetched" half is now
+     measured too, on what the source saw. */
   t("the primary capture is the SAME bytes throughout: it is complete from tick one "
-    + "and is never re-fetched", res.document.capture.sha256, first);
+    + "and is never re-fetched", res.continued && res.continued.primary && res.continued.primary.sha256, first);
+  t("and a continuation files no document of its own, and the source was not asked for the page again",
+    ["document" in res, SEEN_UA.filter(([p]) => p === "/big.html").length - pageAsksBefore], [false, 0]);
   t("nothing is left outstanding", res.snapshot.outstanding, 0);
   t("and no session is left behind once it finished", session, null);
 
@@ -1090,8 +1102,21 @@ console.log("\n--- an element reference is part of the citation, not a comment o
 console.log("\n--- a derived table that changes shape is rebuilt, not patched ---");
 {
   const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-  const m = /for \(const \[table, needed\] of \[([\s\S]*?)\]\) \{/.exec(src);
-  const named = [...(m ? m[1] : "").matchAll(/\["([a-z_]+)"/g)].map((x) => x[1]);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, capture T4-4): the reshape list is no longer one
+     literal in store.mjs. Provenance took `captured_locators`' reshape (D-96's `via`) into its own migration
+     (src/provenance/schema.mjs) and the store's loop now filters PROVENANCE_TABLES out of its list (`].filter(...)`,
+     which the old `]) {` anchor ran past into the whole file); capture took `links`' reshape into its own
+     `CAPTURE_RESHAPE` (src/capture/schema.mjs, run by `captureOf(ctx).migrate()`). So the list asked of is the union
+     of every module's: the store's literal as the store RUNS it (PROVENANCE_TABLES filtered out), capture's
+     exported list, and the table provenance's migration drops. The same value is pinned. */
+  const m = /for \(const \[table, needed\] of \[([\s\S]*?\])\]/.exec(src);
+  const storeList = [...(m ? m[1] : "").matchAll(/\["([a-z_]+)"/g)].map((x) => x[1])
+    .filter((x) => !PROVENANCE_TABLES.includes(x));
+  const provenanceDrops = [...moduleSources(["provenance"]).matchAll(/DROP TABLE ([a-z_]+)/g)].map((x) => x[1]);
+  const named = [...new Set([...storeList, ...CAPTURE_RESHAPE.map(([tb]) => tb), ...provenanceDrops])]
+    .sort((x, y) => ["links", "captured_locators", "reading_ref_terms"].indexOf(x)
+                  - ["links", "captured_locators", "reading_ref_terms"].indexOf(y));
+  console.log(`    reshape lists: store ${JSON.stringify(storeList)} · capture ${JSON.stringify(CAPTURE_RESHAPE.map(([tb]) => tb))} · provenance ${JSON.stringify(provenanceDrops)}`);
   /* CORRECTED 2026-08-05 (REC-40), never exempted: this listed TWO, and
      `reading_ref_terms` joined them when `src` became part of its key — a term
      satisfied by one word of a document's title and one of its reference string
@@ -1140,7 +1165,20 @@ console.log("\n--- what a capture COSTS is measured, not assumed ---");
     Object.keys(c.segments).some((k) => /fetch|network|r2/i.test(k)), false);
   t("hashing and parsing are, since those are the compute",
     Object.keys(c.segments).some((k) => k.startsWith("hash_")), true);
-  t("and the measurement reached the store", !!full.snapshot.compute_recorded, true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R55, K98, K99): `snapshot.compute_recorded` is gone. The
+     capture module writes no runtime observation itself; it hands the measurement `{metric: "capture_work_bytes",
+     value: work_bytes}` to its `compute` listeners, and the legacy store's listener records it as a runtime
+     observation. So "it reached the store" is read where it lands: op=runtimeobservations names the metric, and
+     its peak is at least this capture's own work. */
+  t("the answer no longer claims a recording it did not make (R55)", "compute_recorded" in full.snapshot, false);
+  {
+    const nsR = await mf.getDurableObjectNamespace("STORE");
+    const stR = nsR.get(nsR.idFromName("bio"));
+    const obsR = (await (await stR.fetch("http://x/runtimeobservations")).json()).result;
+    const cw = ((obsR && obsR.metrics) || []).find((x) => x.metric === "capture_work_bytes");
+    t("and the measurement reached the store, through the compute listener",
+      [!!cw, !!cw && cw.peak_ms >= c.work_bytes], [true, true]);
+  }
 
   const ns5 = await mf.getDurableObjectNamespace("STORE");
   const st5 = ns5.get(ns5.idFromName("bio"));
@@ -1476,9 +1514,13 @@ console.log("\n--- the plane identifies itself legibly to the source ---");
   t("it does not impersonate a browser", /Mozilla|Chrome|Safari|Gecko/.test(ua), false);
   /* One place, not three. What this replaces was two different bare tokens
      across three call sites, none of which agreed with each other. */
-  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  /* WIDENED 2026-09-27 (T4, legacy-tests; capture T4-4): `userAgent` and op=acquire's outbound fetches moved into
+     src/capture/acquire.mjs, where the environment is the service's `cap.env`; the census reads index.mjs and the
+     capture module's files together, and accepts the one function called over either receiver. */
+  const src = [readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8"),
+               moduleSources(["capture"])].join("\n");
   t("every outbound fetch takes its agent from the one function",
-    (src.match(/"user-agent":\s*userAgent\(env,/g) || []).length === (src.match(/"user-agent":/g) || []).length
+    (src.match(/"user-agent":\s*userAgent\((?:cap\.)?env,/g) || []).length === (src.match(/"user-agent":/g) || []).length
       && (src.match(/"user-agent":/g) || []).length > 0, true);
   t("and no bare token survives", /"user-agent":\s*"bio-/.test(src), false);
 }

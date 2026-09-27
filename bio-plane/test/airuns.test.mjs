@@ -553,7 +553,12 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
    dynamically composed fragment. So the statement purge composes is composed HERE from the same declarations and
    read like any other, rather than letting `connections(a_bundle_id)`, `connections(b_bundle_id)` and
    `published_edges(to_bundle)` arrive on the roster as gaps they are not. */
-const EXTRACTED = ["record-core", "membership", "promotion"];
+/* WIDENED 2026-09-27 (T4, legacy-tests; host-governor, provenance, capture — T4's layer 3): three more modules left
+   the legacy plane with their own `schema.mjs` and their own SQL (capture took `links`, `task_queue`,
+   `source_reachability`, `site_assets` and the rest; provenance `register`, `captured_locators`, the route marks;
+   host-governor `host_governor`), so their indexes left schema.mjs's text and their reading statements left
+   store.mjs. The corpus is widened to their files on BOTH sides, as T3's was. */
+const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture"];
 const EXTRACTED_SRC = moduleSources(EXTRACTED);
 const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
   .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)

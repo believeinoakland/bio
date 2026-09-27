@@ -318,11 +318,12 @@ console.log("\n--- 1. the ledger at the source: beside seq, read only as a point
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R1, R40): `seq` and `minted_ids` moved with record-core's
      tables into `src/record-core/schema.mjs`, which schema.mjs interpolates (`${RECORD_SCHEMA}`). The rule is asked
      where they now are: beside each other in record-core's literal, and that literal placed in schema.mjs BEFORE the
-     `host_governor` block. */
+     `host_governor` block. RE-ANCHORED AGAIN 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): that block is
+     now host-governor's literal, interpolated last as `${HOST_GOVERNOR_SCHEMA}`, so it is found by that name. */
   const iSeq = RECORD_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS seq (");
   const iLedger = RECORD_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS minted_ids (");
   const iRecord = SCHEMA_SRC.indexOf("${RECORD_SCHEMA}");
-  const iGov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor (");
+  const iGov = SCHEMA_SRC.indexOf("${HOST_GOVERNOR_SCHEMA}");
   t("S1: `minted_ids` is declared in record-core's schema BESIDE `seq` (no table between them), and that schema sits "
     + "in schema.mjs BEFORE the `host_governor` block (the standing schema rule)",
     [iSeq > -1, iLedger > iSeq, iRecord > -1 && iGov > iRecord,

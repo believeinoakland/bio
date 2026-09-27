@@ -78,6 +78,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -188,8 +189,12 @@ async function d443() {
   const promote = async (id, type, text, readings = []) => {
     const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
     if (readings.length) {
-      const prov = JSON.stringify({ documents: readings });
+      /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now
+         refused at the write, and each capture it names held in the bundle (`register-doc.mjs`). */
+      const docs = readings.map((d) => registerDoc(d, { at: W }));
+      const prov = JSON.stringify({ documents: docs });
       files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+      for (const d of docs) files.push(registerFile(d));
     }
     return POST(`op=promote&token=${RUTH}`, { bundleId: id, base: null,
       snapKey: `20260923T${String(400000 + (++seq)).slice(-6)}Z_${sha(`d443-${seq}`).slice(0, 8)}`,
@@ -495,8 +500,12 @@ try {
   const reading = { content_type: "meeting_calendar", reader_version: 1, read_from_text: true,
                     found: false, entities: [], facts: {}, at: NOW, text_container: "pdf",
                     text_source: whole1, text_tier: 1 };
-  const prov = JSON.stringify({ documents: shas.map((s) => ({
-    capture: { sha256: s, encoding: "binary", bytes: 10 }, reading })) });
+  /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now
+     refused at the write, naming the capture its own register entry holds (`data/<sha12>.pdf`), and that capture
+     carried in the bundle's files (`register-doc.mjs`). */
+  const docs = shas.map((s) => registerDoc({ capture: { sha256: s, encoding: "binary", bytes: 10 }, reading },
+                                           { at: NOW, file: `data/${s.slice(0, 12)}.pdf` }));
+  const prov = JSON.stringify({ documents: docs });
   const text = "---\nobject_type: information\ngroup: believe-in-oakland\ntitle: D-390 fixture\n"
              + "current_state: collected\n---\n\n# D-390 fixture\n";
   const r = await POST(`op=promote&token=${ADM}`, {
@@ -504,7 +513,8 @@ try {
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            ...docs.map((d) => registerFile(d))],
     register: shas.map((s) => ({ sha256: s, path: `data/${s.slice(0, 12)}.pdf`, encoding: "binary", bytes: 10 })) });
   if (!r || r.ok === false) throw new Error(`promote: ${JSON.stringify(r).slice(0, 600)}`);
 

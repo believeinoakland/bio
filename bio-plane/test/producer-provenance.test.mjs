@@ -42,6 +42,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 import { PRODUCER_DETERMINATIONS, OCR_PRODUCER_MARKERS, classifyProducer }
   from "../src/pdfstructure.mjs";
 
@@ -383,10 +384,18 @@ console.log("\n--- THE CONSUMER IMPACT, MEASURED THROUGH THE OP RATHER THAN ARGU
       files: [
         { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
         { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+        /* T4 (legacy-tests; provenance K121): the acquired document names its capture (`snapshots/<name>`), and
+           C-18.1, now refused at the write, asks that the bundle hold it: the capture carried beside the register
+           (`register-doc.mjs`; the document itself is op=acquire's own and is not reshaped). */
+        registerFile(doc),
       ],
       register: [],
     }) })).json();
-    return r.ok !== false;
+    /* CORRECTED 2026-09-27 (T4, legacy-tests): this read the control plane's ENVELOPE (`{ ok: true, result }`), so
+       a promotion the store REFUSED (`result.ok === false`, PROVENANCE_REGISTER_REFUSED) still read as promoted and
+       the two "promoted" arms passed over a refusal. It now reads the store's answer. */
+    const res = r && typeof r === "object" && "result" in r ? r.result : r;
+    return !!res && res.ok !== false;
   };
   const provenance = async (step) => (await (await mf.dispatchFetch(
     `http://x/api/?op=textprovenance&token=mem-d251&step=${step}&limit=50`)).json()).result;

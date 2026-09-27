@@ -474,7 +474,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* REC-186, 2026-09-25 (BOB #31's ruling): op=projectleave refuses a project's ONLY owner. C-33.48, not
        .44, because REC-205/REC-207's unmerged branches hold .44-.46. D-PIN-B failed naming exactly this
        row when it landed — the arm doing its job. */
-    ["C-33.48", "LAST_OWNER_CANNOT_LEAVE"],
+    /* RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): C-33.48 is the same check (the leave floor,
+       `is-leave-owner-floor`) under the code its site now mints, LAST_COMMITTED_OWNER (membership R35, R40);
+       LAST_OWNER_CANNOT_LEAVE is minted nowhere since REC-224. */
+    ["C-33.48", "LAST_COMMITTED_OWNER"],
+    /* N36 (LEGACY-CHECKS #1, T4): promotion's ABSENT, R1's third answer, beside CAS_STALE in ACT_SHAPE_CHECKS; its
+       region is `#promote > is-promote-absent` (PROMOTION #2, T4-2c). */
+    ["C-33.49", "ABSENT"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -609,7 +615,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* CONDUCT #22 at the c22-batch29 union: 67 -> 68, RE-READ from this suite's print on the merged tree ("corpus: 68
        rows across 2 families", "got 68"), never 67 + 1: REC-186's C-33.48 LAST_OWNER_CANNOT_LEAVE, renumbered off
        REC-207's C-33.47 at c22-rec186-renumber, the batch's one arrival in these two families. */
-    rowsSeen, 68);
+    /* MOVED 68 -> 69 on 2026-09-27 (T4, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 69 rows across
+       2 families", "got 69") on `tranche/T4` @ c03f169901: C-33.49 ABSENT (LEGACY-CHECKS #1, N36), the one arrival in
+       these two families; C-33.48 renamed in place. */
+    rowsSeen, 69);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

@@ -61,6 +61,9 @@ const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  /* T4 (legacy-tests; provenance K121): the capture store, so the fixtures below can be seeded as the verified
+     replay they now must be (the held Drive-era provenance capture lives there). */
+  r2Buckets: ["CAPTURES"],
   bindings: { ADMIN_TOKEN: "t-admin-155", MEMBER_TOKEN: "t-member-155", PROBE_TOKEN: "t-probe-155",
               VERSION: "test", INSTANCE_NAME: "rec155" },
 });
@@ -134,16 +137,32 @@ const DERIVABLE = {
   capture: { method: "daemon-fetch", grade: "B", actor_class: "daemon", sha256: "a".repeat(64) },
 };
 const NO_ROUTE = { file: "snapshots/rec155-mystery.pdf", locator: "", capture: { grade: "C" } };
+/* T4 (legacy-tests; provenance K121): THESE FIXTURES ARE HISTORY. A `verified` register with no chain (DERIVABLE)
+   and one with no route at all (NO_ROUTE) are exactly the documents op=provenancechain and op=provenanceroute exist
+   to act on, and since the C-18 register arms run at the write a CREATION carrying them is refused (C-18.9 for the
+   absent chain; C-18.1 for the snapshot the bundle does not carry, the absent origin, and NO_ROUTE's missing locator,
+   authority and capture fields). A store now holds such a register only as history, through the replay the plane
+   verifies (D-512: the admin's promotion naming a held Drive-era provenance capture that lists this bundle and this
+   bundle.md's sha256), which K121 exempts — provenance-chain.test.mjs's precedent. Completing the documents instead
+   would change the very chain and route the two ops are asked about. The documents are unchanged; only the door
+   they enter by is (the admin deploy token, where it was the member's: seeding is not this suite's subject). */
 const seed = async (id, docs) => {
   const md = bundleMd(id);
   const prov = JSON.stringify({ documents: docs }, null, 2);
-  return call("op=promote&token=t-member-155", {
+  const cap = Buffer.from(JSON.stringify({ bundleId: id, migrated: NOW, source: "google-drive/CivicOS",
+    indexEntry: null, manifest: null, refusals: [], notes: [],
+    promotions: [{ key: "20260925T000000Z_aaaa1551",
+      record: { target: id, base: null, author: "m-seed", files: [{ name: "bundle.md", sha256: sha(md) }] } }] }), "utf8");
+  await (await mf.dispatchFetch(`http://x/api/?op=capture&token=t-admin-155&sha256=${sha(cap)}`,
+    { method: "PUT", body: cap })).json();
+  return call("op=promote&token=t-admin-155", {
     bundleId: id, base: null, snapKey: "20260925T000000Z_aaaa1551", author: "m-seed",
+    replay: true, provenanceCapture: sha(cap),
     meta: { object_type: "information", group: "rec155", title: id, current_state: "verified",
             created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
-    register: [],
+    register: [{ path: "migration/drive-provenance.json", sha256: sha(cap), bytes: cap.length, encoding: "utf8" }],
   });
 };
 const KEYS = Object.keys(SESSIONS);

@@ -89,7 +89,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, STATES, normalizeType } from "../checks/bio-checks.mjs";
+import { checkBundle, STATES, normalizeType, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
 import { deriveActs } from "../src/affordances.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
@@ -111,7 +112,12 @@ const t = (label, got, want) => {
    `finding(severity, message, repairs)` with its check fixed at C-18.8, read here as that `f` call. */
 const PROMOTION_CHECK_SRC = readFileSync(SRC("promotion/history.mjs"), "utf8") + "\n"
   + readFileSync(SRC("promotion/release.mjs"), "utf8").replace(/(^|[^A-Za-z0-9_$.])finding\(/g, '$1f("C-18.8", ');
-const CHECKS_SRC = readFileSync(CHECKS, "utf8") + "\n" + PROMOTION_CHECK_SRC;
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): the C-18 register arms (C-18.1 @1/@2 with the
+   release-authority and sweep-fence arms, C-18.3, C-18.4, C-18.9) left the catalogue for provenance's
+   `register-checks.mjs` with their repair strings, emitting through the same `f(check, severity, message, repairs,
+   code)`; the catalogue's repairs are now those three files. */
+const REGISTER_CHECK_SRC = readFileSync(SRC("provenance/register-checks.mjs"), "utf8");
+const CHECKS_SRC = readFileSync(CHECKS, "utf8") + "\n" + PROMOTION_CHECK_SRC + "\n" + REGISTER_CHECK_SRC;
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 
 /* =====================================================================
@@ -416,9 +422,12 @@ const bundleMd = (id, extra = "") =>
   + `state_history:\n  - timestamp: "2026-07-20T00:00:00Z"\n    from_state: collected\n    to_state: verified\n`
   + `    blurb: "b"\n    author: "class:daemon"\n${extra}---\n\n# ${id}\n`;
 
-const runChecks = async (files) => (await checkBundle({
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the findings an operator receives for these bundles are
+   the catalogue's and provenance's register arms (C-18.1, C-18.9), as the gate (`withRegisterChecks`) and the audit
+   (`provenanceAudit`) run them. */
+const runChecks = async (files) => [...(await checkBundle({
   folderName: "INFO-2026-0099-x", files, sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true,
-})).findings;
+})).findings, ...registerChecks({ files, fm: parseFrontmatter(files.get("bundle.md")).data })];
 
 {
   const files = new Map([
@@ -557,7 +566,14 @@ const scall = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
       + `current_state: verified\nprior_state: null\ncreated: "${NOW}"\nlast_updated: "${NOW}"\n`
       + `state_history: []\ngroup: believe-in-oakland\nreferences: []\n---\n\n## Summary\n\nX.\n`;
     const prov = JSON.stringify({ documents: [provDoc(chain)] }, null, 2);
-    await scall("/promote", {
+    /* T4 (legacy-tests; provenance K121): these three stand for HISTORY — D-200's bundles already at `verified` with
+       no usable chain — and the C-18 register arms now refuse such a register at a CREATION (C-18.9 at the fence,
+       C-18.1 for the absent snapshot and the unknown origin kind). A store holds one only as a replay, which K121
+       exempts at the write; this suite drives the Store directly, beneath the control plane's replay verification
+       (D-512, asserted by d512-replay-verified), so it states `replay` itself. What is asserted is unchanged: the
+       audit's tally over what the store holds. */
+    const r = await scall("/promote", {
+      replay: true,
       bundleId: id, base: null, snapKey: "20260805T000000Z_aaaa1111", author: "m-riley",
       meta: { object_type: "information", group: "believe-in-oakland", title: "T",
               current_state: "verified", created: NOW, last_updated: NOW },
@@ -567,6 +583,7 @@ const scall = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
       ],
       register: [],
     });
+    t(`FIXTURE: ${id} is held (a replay, as the history it stands for)`, (r || {}).ok, true);
   };
   await mk("INFO-2026-0031-absent", undefined);
   await mk("INFO-2026-0032-empty", []);

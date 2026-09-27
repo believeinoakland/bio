@@ -363,17 +363,17 @@ const REACH_OVER_THE_WORKING_TREE =
 t("the estate corpus is non-trivial — a sweep over nothing reports its verdict triumphantly",
   [est.corpus.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 200,
    est.walkModules.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 8], [true, true]);
-t("the REAL op-claims split is found across the module boundary, and it is the FIVE floors "
-+ "the census could never name (the brief predicted four)",
-  (() => { const s = trackedSites.filter((x) => x.file === "bio-plane/test/op-claims.test.mjs");
-    return [s.length, s.every((x) => x.from.includes("bio-plane/scripts/op-claims.mjs"))]; })(),
-  [5, true]);
-t("and `op-claims.test.mjs` contains NO walk of its own — which is exactly why the "
-+ "file-granularity census never enumerated it",
-  moduleFacts(await import("node:fs").then((fs) => fs.readFileSync(join(DIR, "op-claims.test.mjs"), "utf8"))).walks, 0);
-t("the `LEDGER.length >= 20` floor in that same suite is NOT reported — the benign shape "
-+ "that a file-granularity detector would cry wolf on",
-  est.sites.some((s) => /LEDGER/.test(s.expr)), false);
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the estate's real cross-file split was
+   `op-claims.test.mjs`'s five floors on `scripts/op-claims.mjs`'s walk; both were removed with the old tooling. The
+   split that remains in the estate is `hygiene.test.mjs`'s own floors on THIS module's walk, one import away, and the
+   arm asks for it: found, every site rooted in `walkfloor.mjs`, every one in the commit. The census-blindness arm
+   ("contains NO walk of its own") and the `LEDGER.length >= 20` benign arm had no other real instance and are RETIRED
+   with op-claims; `hygiene.test.mjs` asks the same detector for its own sites, and this suite's F- and B-fixtures
+   keep both shapes. */
+t("the REAL cross-file split is found across the module boundary: hygiene.test.mjs floors on walkfloor.mjs's walk",
+  (() => { const s = trackedSites.filter((x) => x.file === "bio-plane/test/hygiene.test.mjs");
+    return [s.length >= 3, s.every((x) => x.from.includes("bio-plane/scripts/walkfloor.mjs"))]; })(),
+  [true, true]);
 
 /* PROVENANCE, DRIVEN RATHER THAN IMPORTED: a fixture in a sandbox is in no commit,
    and the detector must SAY so rather than counting it silently. */

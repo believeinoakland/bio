@@ -49,6 +49,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -95,12 +96,20 @@ const boot = async () => {
     /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
        `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
     const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
-    const docs = shas.filter((s) => s in readings).map((s) => ({
-      capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf(readings[s]) }));
+    const regPath = (s) => `data/${shas.indexOf(s)}-${s.slice(0, 4)}.pdf`;
+    /* T4 (legacy-tests; provenance K121): an INFORMATION bundle's reading carriers completed to C-18.1's intake
+       shape, which is now refused at the write, each naming its capture at the path the register below gives it, and
+       those captures carried in the bundle's files (`register-doc.mjs`). A project's register is not an intake
+       register and C-18 does not run on it, so it is sent as it was. */
+    const intake = type === "information";
+    const docs = shas.filter((s) => s in readings).map((s) => {
+      const d = { capture: { sha256: s, encoding: "binary", bytes: 10 }, reading: readingOf(readings[s]) };
+      return intake ? registerDoc(d, { file: regPath(s) }) : d; });
     const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
     if (docs.length) {
       const prov = JSON.stringify({ documents: docs });
       files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+      if (intake) files.push(...docs.map((d) => registerFile(d)));
     }
     const r = await POST(`op=promote&token=${ADM}`, {
       ...(type === "project" ? {} : { bundleId: id }), base: null,
@@ -108,7 +117,7 @@ const boot = async () => {
       meta: { object_type: type, group: "believe-in-oakland", title: id,
               current_state: type === "project" ? "forming" : "collected", created: NOW, last_updated: NOW },
       files,
-      register: shas.map((s, i) => ({ sha256: s, path: `data/${i}-${s.slice(0, 4)}.pdf`, encoding: "binary", bytes: 10 })) });
+      register: shas.map((s) => ({ sha256: s, path: regPath(s), encoding: "binary", bytes: 10 })) });
     if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
     return r;
   };

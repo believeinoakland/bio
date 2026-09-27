@@ -35,6 +35,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { join } from "node:path";
 
 /* The control driver points this at an armed COPY of the sources. */
@@ -151,15 +152,20 @@ console.log("\n--- FIXTURE: one project citing one question, two loose questions
   for (const id of [QP, Q, QX]) qs.push((await POST(`op=promote&${RUTH}`, bundle(id, "inquiry")))?.ok);
   /* A D-252 scoped chain, so the capture has a text source an `ai` step can extend (extractrun's fixture). */
   const SHA_DOC = sha("rec165-the-document-the-assistant-read");
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, naming the capture at the path the register below gives it, and that capture held in the bundle
+     (`register-doc.mjs`). */
+  const pdoc = registerDoc({
     capture: { sha256: SHA_DOC, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
                entities: [], facts: {},
                text_source: [{ step: "pixels", extent: { kind: "pages", pages: [0, 1] } },
                              { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C",
-                               confidence: { basis: "none" }, extent: { kind: "pages", pages: [0, 1] } }] } }] });
+                               confidence: { basis: "none" }, extent: { kind: "pages", pages: [0, 1] } }] } },
+    { file: "snapshots/d.bin" });
+  const prov = JSON.stringify({ documents: [pdoc] });
   const d = await POST(`op=promote&${RUTH}`, bundle(DOC, "information", {
-    files: [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+    files: [{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(pdoc)],
     register: [{ path: "snapshots/d.bin", sha256: SHA_DOC, encoding: "binary", bytes: 10 }] }));
   t("FIXTURE: the project, three questions and the document are promoted",
     [p?.ok, !!P, qs, d?.ok], [true, true, [true, true, true], true]);

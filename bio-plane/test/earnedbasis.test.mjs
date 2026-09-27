@@ -91,6 +91,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { checkBundle, EARNED_CAPTURE_CEILING,
          UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
 
@@ -181,8 +182,13 @@ const promote = async (id, text, type, { base = null, register = [], reading = n
                                          replay = false } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
-    const prov = JSON.stringify({ documents: [reading] });
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now
+       refused at the write, naming the capture the promotion's own register entry holds, and that capture carried
+       in the bundle's files (`register-doc.mjs`). */
+    const doc = registerDoc(reading, { file: register[0]?.path });
+    const prov = JSON.stringify({ documents: [doc] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(registerFile(doc));
   }
   return post("promote", {
     bundleId: id, base, replay,

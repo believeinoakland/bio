@@ -32,7 +32,7 @@
  *     and they are printed separately as the population this class is measured
  *     AGAINST, because they are where the correct construct already lives.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as CATALOG from "../checks/bio-checks.mjs";
 import { stripComments, dec49Codes, literalSites } from "./multisite-census.mjs";
@@ -48,6 +48,18 @@ const strip = stripComments;
 
 const FILES = { "src/store.mjs": strip(src("../src/store.mjs")),
                 "src/index.mjs": strip(src("../src/index.mjs")) };
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests): the extracted modules (`src/<module>/`, T3 layers 2 and T4 layer 3)
+   mint DEC-49 codes the store and the control plane once minted, so the walk reads every `.mjs` under them too, as
+   `check-refusal-codes.mjs` arm G now does (its `moduleSourceFiles`); otherwise this figure and arm G's disagree. */
+const walkMjs = (dir) => readdirSync(fileURLToPath(new URL(dir, import.meta.url))).sort().flatMap((n) => {
+  if (n === "test" || n === "dist" || n.startsWith(".")) return [];
+  const rel = `${dir}${n}`;
+  if (statSync(fileURLToPath(new URL(rel, import.meta.url))).isDirectory()) return walkMjs(`${rel}/`);
+  return n.endsWith(".mjs") ? [rel] : [];
+});
+const MODULE_DIRS = readdirSync(fileURLToPath(new URL("../src/", import.meta.url))).sort()
+  .filter((n) => statSync(fileURLToPath(new URL(`../src/${n}`, import.meta.url))).isDirectory());
+for (const d of MODULE_DIRS) for (const rel of walkMjs(`../src/${d}/`)) FILES[rel.slice(3)] = strip(src(rel));
 /* THE STRIPPER IS GUARDED BOTH WAYS, and by CONTENT rather than by a ratio —
    these two sources are more comment than code (measured: store.mjs and
    index.mjs each strip to roughly a third), so a ratio floor would either be
@@ -59,7 +71,7 @@ for (const [f, t] of Object.entries(FILES)) {
   const raw = src("../" + f);
   console.log(`stripper: ${f} ${raw.length} -> ${t.length} bytes`);
   if (t.length >= raw.length) { console.log(`FATAL: stripper matched nothing in ${f}`); process.exit(2); }
-  if (t.length < 1000)        { console.log(`FATAL: stripper ate ${f}`); process.exit(2); }
+  if (t.length < 1000 && (f === "src/store.mjs" || f === "src/index.mjs")) { console.log(`FATAL: stripper ate ${f}`); process.exit(2); }
 }
 if (FILES["src/store.mjs"].includes("THE SIXTH STATE MACHINE'S SIX MEMBER OPS")) {
   console.log("FATAL: stripper left a block comment behind"); process.exit(2); }
@@ -103,7 +115,7 @@ for (const [code, { fam }] of [...codes].sort()) {
   }
 }
 console.log(`\nMULTI-SITE CANDIDATES: ${multi}`);
-console.log(`CODES WITH NO LITERAL SITE IN store/index: ${zero}`
+console.log(`CODES WITH NO LITERAL SITE IN store/index or src/<module>/: ${zero}`
           + ` — NAMED, never silently scored zero: ${unreachable.join(", ") || "(none)"}`);
 console.log(`\nTHE CORRECT CONSTRUCT, for comparison — the older non-DEC-49 shape already splits`
           + ` absent from malformed:\n  reason:"NO_REASON" sites  = `

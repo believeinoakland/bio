@@ -52,6 +52,10 @@ import { acquireGradeNote, ACQUIRE_GRADE_NOTE, ATTEST_FENCE } from "../src/affor
    the record's own ranking rather than a second statement of it. */
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
          BASIS_GRADES } from "../checks/bio-checks.mjs";
+/* T4 (legacy-tests; capture R18): the archive arm's letter is provenance's one definition. */
+import { ARCHIVE_CAPTURE_GRADE } from "../src/provenance/index.mjs";
+/* T4 (legacy-tests; capture R20): the services co-attestation asks, from their one definition. */
+import { TSA_ENDPOINTS, ARCHIVE_SERVICE } from "../src/tsa.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -171,11 +175,22 @@ t("and the letter it claims is the one the gate ENFORCES, not a copy that agrees
  * does not, and the record would claim an archive-sourced capture is worth as
  * much as a direct one. That failure is the measurement this item leaves behind
  * in place of a constant it must not write. */
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4, R18 (D-698)): the stamp moved out of `op=acquire`'s
+   handler in src/index.mjs into the capture module's acquisition act, src/capture/acquire.mjs (`acquire`, the
+   document's `capture.grade`), so the reader now reads THAT file (64 KB, so its reach floor is 50,000 characters,
+   not index.mjs's 100,000). And the archive arm is no longer a typed letter: capture R18 made the rule
+   provenance's, "EARNED_CAPTURE_CEILING for a direct fetch, ARCHIVE_CAPTURE_GRADE for the archive arm, each read
+   from its one definition" — the ruling this block said naming the letter would be, now MADE (R18, R25 of
+   provenance). So the "still a TYPED letter" pin is RETIRED with the typed letter, and in its place the archive
+   arm is pinned as provenance's `ARCHIVE_CAPTURE_GRADE`, imported from src/provenance/index.mjs. The RULED ordering
+   (an archive-sourced capture ranks strictly BELOW the enforced ceiling) is KEPT, over the value that constant
+   actually has. */
 {
-  const indexSrc = readFileSync(SRC, "utf8");
+  const ACQ = fileURLToPath(new URL("../src/capture/acquire.mjs", import.meta.url));
+  const acqSrc = readFileSync(ACQ, "utf8");
   /* Both arms of the stamp, read as WRITTEN: an identifier or a quoted letter. */
   const STAMP = /grade:\s*via === "archive\.org"\s*\?\s*("?[A-Za-z_$][\w$]*"?)\s*:\s*("?[A-Za-z_$][\w$]*"?)\s*,/;
-  const m = STAMP.exec(indexSrc);
+  const m = STAMP.exec(acqSrc);
 
   /* ITS OWN REACH FIRST. An extraction that silently matched nothing would make
      every assertion below vacuous — the zero-cost-equality failure arriving in
@@ -183,22 +198,23 @@ t("and the letter it claims is the one the gate ENFORCES, not a copy that agrees
      reader is shown to fire on a planted control AND on the real source, and the
      source is shown to be the whole file rather than an empty read. */
   const PLANT = 'grade: via === "archive.org" ? "Z" : "Y",';
-  t("the stamp reader fires on a planted control and finds the real site in src/index.mjs",
-    [indexSrc.length > 100000, STAMP.test(PLANT), m !== null], [true, true, true]);
+  t("the stamp reader fires on a planted control and finds the real site in src/capture/acquire.mjs",
+    [acqSrc.length > 50000, STAMP.test(PLANT), m !== null], [true, true, true]);
 
   const archiveArm = m ? m[1] : "", directArm = m ? m[2] : "";
   t("the DIRECT-FETCH arm interpolates the enforced ceiling and spells no letter of its own",
     [directArm, /^"[A-Z]"$/.test(directArm)], ["EARNED_CAPTURE_CEILING", false]);
-  t("and index.mjs takes that symbol from the module where the refusal is computed",
-    /import \{[\s\S]*?\bEARNED_CAPTURE_CEILING\b[\s\S]*?\} from "\.\.\/checks\/bio-checks\.mjs"/.test(indexSrc),
+  t("and the acquisition act takes that symbol from the module where the refusal is computed",
+    /import \{[\s\S]*?\bEARNED_CAPTURE_CEILING\b[\s\S]*?\} from "\.\.\/\.\.\/checks\/bio-checks\.mjs"/.test(acqSrc),
     true);
 
-  const archiveLetter = archiveArm.replace(/"/g, "");
-  t("the ARCHIVE-SOURCED arm is still a TYPED letter, which is OPEN BY DECISION and not by oversight — naming it is a ruling",
-    /^"[A-Z]"$/.test(archiveArm), true);
-  t(`and the typed archive letter ${JSON.stringify(archiveLetter)} still ranks strictly BELOW the enforced ceiling ${JSON.stringify(EARNED_CAPTURE_CEILING)} — grade tracks directness (RULED)`,
-    [BASIS_GRADES.includes(archiveLetter),
-     BASIS_GRADES.indexOf(archiveLetter) > BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING)],
+  t("the ARCHIVE-SOURCED arm names provenance's ARCHIVE_CAPTURE_GRADE and spells no letter of its own (capture R18)",
+    [archiveArm, /^"[A-Z]"$/.test(archiveArm)], ["ARCHIVE_CAPTURE_GRADE", false]);
+  t("and takes it from provenance, its one definition",
+    /import \{[^}]*\bARCHIVE_CAPTURE_GRADE\b[^}]*\} from "\.\.\/provenance\/index\.mjs"/.test(acqSrc), true);
+  t(`and the archive letter ${JSON.stringify(ARCHIVE_CAPTURE_GRADE)} still ranks strictly BELOW the enforced ceiling ${JSON.stringify(EARNED_CAPTURE_CEILING)} — grade tracks directness (RULED)`,
+    [BASIS_GRADES.includes(ARCHIVE_CAPTURE_GRADE),
+     BASIS_GRADES.indexOf(ARCHIVE_CAPTURE_GRADE) > BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING)],
     [true, true]);
 }
 /* REC-50's NEGATIVE CONTROL ARMS (run 2026-08-04, rec50-agent), each broken
@@ -399,7 +415,17 @@ for (const k of ["file", "locator", "authority", "retrieved", "capture", "origin
 for (const k of ["method", "grade", "actor_class", "sha256", "encoding"])
   t(`capture carries ${k}`, k in a.document.capture, true);
 t("origin is a named request by default", a.document.origin.kind, "named_request");
-t("attestation attempts start empty and honest, not absent", a.document.attestation_attempts, []);
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20, K60): the pin read `[]`, what acquire recorded while
+   co-attestation was a separate opt-in act ("not yet met: Intake §3 — acquire records `[]`"). R20 is now met:
+   every capture asks provenance's `attest` for a trusted timestamp AND a co-archive, and records every attempt in
+   C-18.1's shape `{service, attempted, ok}`. This suite's scripted network answers every unscripted address 500,
+   so each authority in TSA_ENDPOINTS and the co-archive are asked, each fails, and each failure is RECORDED as an
+   attempt, never hidden and never a failed capture (the acquisition above succeeded). Still honest, not absent. */
+t("attestation attempts are recorded honestly, not absent: every timestamp authority and the co-archive asked",
+  (a.document.attestation_attempts || []).map((x) => x.service), [...TSA_ENDPOINTS, ARCHIVE_SERVICE]);
+t("and each is an attempt in C-18.1's shape, its failure stated with a reason, never an ok it did not earn",
+  (a.document.attestation_attempts || []).map((x) => [x.attempted, x.ok, typeof x.note === "string" && x.note.length > 0]),
+  [...TSA_ENDPOINTS, ARCHIVE_SERVICE].map(() => [true, false, true]));
 t("a sweep origin records what deemed it",
   (await acquire({ ...GOOD, matchedSweep: "sweep-2026-07" })).document.origin.matched_sweep, "sweep-2026-07");
 

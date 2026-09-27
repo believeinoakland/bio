@@ -127,13 +127,17 @@ try {
       [bearer.invited_by, (list2.find((m) => m.member_id === "bea") || {}).invited_by], ["class:admin", "class:admin"]);
   }
 
-  /* The rows themselves: nine, each named here, each distinct. A suite naming a check the catalogue does
-     not hold, or a catalogue row this suite never names, both read below. */
-  const named = ["C-96.1", "C-96.2", "C-96.3", "C-96.4", "C-96.5", "C-96.6", "C-96.7", "C-96.8", "C-96.9"];
-  t("C-96: the family holds exactly the nine checks this suite names",
+  /* The rows themselves: twelve, each named here, each distinct. A suite naming a check the catalogue does
+     not hold, or a catalogue row this suite never names, both read below.
+     RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1, N44): C-96.10 RESIGN_AT_TWO, C-96.11 NO_HOLDERS and
+     C-96.12 PAIRING_NOT_YOURS, membership's R10, R11 and R19, joined the family; their refusals are driven by
+     membership's own suite (`test/m/membership/`), not by this one. */
+  const named = ["C-96.1", "C-96.10", "C-96.11", "C-96.12", "C-96.2", "C-96.3", "C-96.4", "C-96.5", "C-96.6", "C-96.7",
+                 "C-96.8", "C-96.9"];
+  t("C-96: the family holds exactly the twelve checks this suite names",
     Object.values(CUSTODIAL_CHECKS).map((r) => r.check).sort(), named);
-  t("C-96: nine distinct translations",
-    new Set(Object.values(CUSTODIAL_CHECKS).map((r) => r.translation)).size, 9);
+  t("C-96: twelve distinct translations",
+    new Set(Object.values(CUSTODIAL_CHECKS).map((r) => r.translation)).size, 12);
 
   console.log(`\nd134-custodial-refusals: ${pass} pass, ${fail} fail`);
   exitCode = fail ? 1 : 0;

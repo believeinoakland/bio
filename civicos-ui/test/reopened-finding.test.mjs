@@ -60,6 +60,7 @@ import { webcrypto, createHash } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -196,14 +197,17 @@ async function placed(progressionKey, stage, entityRef, entityKind, entityLabel,
   const e = await post("entitycreate", { kind:entityKind, label:entityLabel, aliases:[entityRef] }, IRIS);
   const cap = sha(`ui109-${progressionKey}-${stage}`);
   const id = `INFO-2026-000${seq}-ui109`, md = bundleMd(id);
-  const prov = JSON.stringify({ documents: [{ capture:{ sha256:cap, encoding:"binary", bytes:10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const doc = registerDoc({ capture:{ sha256:cap, encoding:"binary", bytes:10 },
     reading:{ content_type:"meeting_calendar", reader_version:1, found:true, at:NOW,
-              entities:[{ ref:entityRef, kind:entityKind, key:entityRef.split(":")[1], label:entityLabel }] } }] });
+              entities:[{ ref:entityRef, kind:entityKind, key:entityRef.split(":")[1], label:entityLabel }] } });
+  const prov = JSON.stringify({ documents: [doc] });
   const pr = await post("promote", { bundleId:id, base:null, snapKey:`20260925T01000${seq}Z_dddd444${seq}`, author:"ui109",
     meta:{ object_type:"information", group:"believe-in-oakland", title:`Doc ${id}`,
            current_state:"collected", created:NOW, last_updated:NOW },
     files:[{ path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
-           { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) }], register:[] }, IRIS);
+           { path:"data/provenance.json", text:prov, bytes:prov.length, sha256:sha(prov) }, registerFile(doc)], register:[] }, IRIS);
   await post("resolve", { captureSha:cap }, IRIS);
   const th = await post("thread", { progressionKey, entityId:e.entity_id, placements:[{ stage, captureSha:cap }] }, IRIS);
   return pr && pr.ok !== false && th && th.ok !== false;

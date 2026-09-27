@@ -65,6 +65,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { compile, MEANING, meaningVocabulary, GATE_MARK,
          MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX } from "../src/query.mjs";
 import { MEANING_READ_CHECKS } from "../checks/bio-checks.mjs";
@@ -465,15 +466,22 @@ t("EVERY fixture inquiry promoted (a corpus that silently shrank would make ever
 const CAP_I = sha("pl9-capture-info"), CAP_P = sha("pl9-capture-project");
 const ent = rP(await post("entitycreate", { kind: "contract", label: "Cascade Waterworks Contract", aliases: ["vendor:77"] }));
 t("a subject is registered (the resolutions arms below rest on it)", !!ent?.entity_id, true);
-const readingFile = (capSha) => {
-  const prov = JSON.stringify({ documents: [{ capture: { sha256: capSha, encoding: "binary", bytes: 10 },
+/* T4 (legacy-tests; provenance K121): for the INFORMATION bundle (`intake`), the reading carrier is completed to
+   C-18.1's intake shape, which is now refused at the write, naming the capture its register entry holds
+   (`captures/doc.pdf`), and that capture carried in the bundle's files (`register-doc.mjs`). The project's register
+   is not an intake register and C-18 does not run on it, so it is sent as it was. */
+const readingFile = (capSha, intake = false) => {
+  const carrier = { capture: { sha256: capSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "generic", reader_version: 1, found: true, at: NOW, entities: [
-      { ref: "vendor:77", kind: "vendor", key: "77", label: "Cascade Waterworks" }] } }] });
-  return [[{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+      { ref: "vendor:77", kind: "vendor", key: "77", label: "Cascade Waterworks" }] } };
+  const doc = intake ? registerDoc(carrier, { file: "captures/doc.pdf" }) : carrier;
+  const prov = JSON.stringify({ documents: [doc] });
+  return [[{ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+           ...(intake ? [registerFile(doc)] : [])],
           [{ sha256: capSha, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }]];
 };
 {
-  const [files, reg] = readingFile(CAP_I);
+  const [files, reg] = readingFile(CAP_I, true);
   t("the shared document promoted with its reading",
     (await promote(DOC_R, infoMd(DOC_R, "A document naming the vendor."), "information", files, reg))?.ok, true);
 }

@@ -49,7 +49,10 @@ const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "utf8");
    and REC-141's PROJ mint into `promotion`. §1's source pins read the minter and the list in record-core and the mint
    sites over the store's corpus as it stood before the extraction: store.mjs AND the extracted modules' files. */
 const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
-const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion"].flatMap((d) =>
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, host-governor, capture): layer 3 extracted three more
+   modules, and the INFO counter call moved with `testify` into provenance (`this.#record.allocId("INFO", …)`), so the
+   corpus widens to `provenance`, `capture` and `host-governor` as well. */
+const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion", "provenance", "capture", "host-governor"].flatMap((d) =>
   readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))]
   .join("\n");
 

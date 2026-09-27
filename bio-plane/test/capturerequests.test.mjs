@@ -69,11 +69,16 @@ import { CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES,
             `is-render-admit`) rather than against a number typed into this file —
             a hand copy agrees with its author for free. */
          RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
+import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
+/* T4 (legacy-tests; capture R20, K60): the co-attestation services every capture now asks, from their one definition. */
+import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): `userAgent`, the control plane's agent composer, moved
+   out of src/index.mjs into the capture module's src/capture/acquire.mjs; section 9a reads it there. */
+const ACQUIRE_SRC = readFileSync(SRC("capture/acquire.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 
 let pass = 0, fail = 0;
@@ -105,6 +110,13 @@ const BODY = new Uint8Array(4096).map((_, i) => (i * 31 + 7) % 256);
    against the row the drain judged — the "checked one thing, sent another" gap
    is only closed by looking at what arrived. */
 const SEEN = [];
+/* T4 (legacy-tests; capture R20, K60): since capture R20 every capture ALSO asks provenance's `attest` for a trusted
+   timestamp (each authority in TSA_ENDPOINTS, until one answers — this fixture answers PDF bytes, so all are asked)
+   and a co-archive of the locator (ARCHIVE_SAVE_BASE + the address), through the host governor under the instance's
+   own `attest` agent (R36). Those requests go to the timestamp authorities and the archive, never to the SOURCE, so
+   the arms that measure what the SOURCE saw read `sourceSeen`, and section 3b states the attestation requests by name. */
+const isAttestation = (u) => TSA_ENDPOINTS.some((e) => new URL(u).href === new URL(e).href) || u.startsWith(ARCHIVE_SAVE_BASE);
+const sourceSeen = (from = 0) => SEEN.slice(from).filter((s) => !isAttestation(s.url));
 let RENDER_CALLS = 0;   /* D-491: see the RENDERER binding below */
 let MF;
 const mf = new Miniflare({
@@ -267,10 +279,12 @@ const drive = (r) => { const c = codeOf(r); if (c && c in CAPTURE_REQUEST_CHECKS
 console.log("\n--- 1. the table's shape, its position, and its place in purge (D-113) ---");
 {
   const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
-  const gov = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("the table exists in schema.mjs", tbl > -1, true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
+  const tblBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
+  const govBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("and it is declared BEFORE the host_governor block (CLAUDE.md's trap: hygiene asserts the "
-  + "literal ends on a `);`)", tbl > -1 && gov > -1 && tbl < gov, true);
+  + "literal ends on a `);`)", tblBuilt > -1 && govBuilt > -1 && tblBuilt < govBuilt, true);
   const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
   t("it carries BOTH principals as NOT NULL columns — an act that can name one is refused at the "
   + "write rather than half-recorded (DEC-27(b))",
@@ -414,8 +428,15 @@ t("the drain is configured (a SELF binding and a daemon credential reached the D
 + "asserted directly, because an inert tick would make every arm below pass by doing nothing",
   D1.configured, true);
 t("it captured the requested document", D1.captured.map((c) => c.address), [PEC]);
-t("exactly one request left this instance, and it went to the address the row named",
-  SEEN.map((s) => s.url), [PEC]);
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20): this read `SEEN` whole; the capture's co-attestation
+   requests now leave too (see `isAttestation`). The source still sees exactly one request, and the rest are named. */
+t("exactly one request reached the source, and it went to the address the row named",
+  sourceSeen().map((s) => s.url), [PEC]);
+t("and every other request that left is capture R20's co-attestation of that capture: the timestamp authorities and "
++ "one co-archive of the address, each under the instance's own `attest` agent — never the source's, never a browser's",
+  SEEN.filter((s) => isAttestation(s.url)).map((s) => [s.url, s.agent]),
+  [...TSA_ENDPOINTS.map((e) => new URL(e).href), ARCHIVE_SAVE_BASE + PEC]
+    .map((u) => [u, civicosUserAgent("0.60.0", "biosmoke-pl4", "attest")]));
 {
   const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
   const row = rows.requests.find((r) => r.request === REQ1.request);
@@ -524,8 +545,14 @@ console.log("\n--- 4c. CONDUCT 1b: BOB-3's member-browser agent is PERMITTED, an
   t("OVER-STRICTNESS ARM: with the member's own agent RECORDED on the question, the fetch is MADE — "
   + "BOB-3 permits it and a fence that refused it would be a defect in the fence",
     d2.captured.map((c) => c.request), [ok.request]);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20): read over what reached the SOURCE (`sourceSeen`); the
+     capture's co-attestation requests go to the timestamp authorities and the archive under the instance's own
+     `attest` agent, and the member's agent is delegated to the source's fetch only. */
   t("and the agent that left is the member's own, verbatim, not a composed one",
-    SEEN.slice(before).map((s) => s.agent), [MEMBER_UA]);
+    sourceSeen(before).map((s) => s.agent), [MEMBER_UA]);
+  t("and the member's agent was delegated to NOTHING but the source: the co-attestation requests carry the "
+  + "instance's own agent", SEEN.slice(before).filter((s) => isAttestation(s.url)).map((s) => s.agent === MEMBER_UA)
+    .filter(Boolean), []);
 }
 
 console.log("\n--- 4d. CONDUCT 3: rate, and a held request is STILL QUEUED ---");
@@ -703,7 +730,8 @@ console.log("\n--- 7b. OVER-STRICTNESS: `acquire` is a truthful purpose too ---"
   t("a run re-fetching a source a member already named uses the existing purpose token and captures",
     d.captured.map((c) => c.request), [r.request]);
   t("and the agent it sent says `acquire`, not `investigate`",
-    SEEN.slice(before).map((s) => s.agent.includes("acquire")), [true]);
+    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20): over what reached the SOURCE, as in 4c. */
+    sourceSeen(before).map((s) => s.agent.includes("acquire")), [true]);
 }
 
 /* ====================================================================== 7c
@@ -1099,8 +1127,10 @@ console.log("\n--- 9a. the vocabularies are CLOSED, and the plane reads them rat
   t("the store IMPORTS both rather than re-typing them: a hand-typed vocabulary agrees with its "
   + "author at zero cost",
     /CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible/.test(STORE_SRC), true);
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): the composer moved with `op=acquire` into
+     src/capture/acquire.mjs (`userAgent`), where the same question is asked: it returns the catalog's composer. */
   t("and the control plane composes its agent through the catalog's ONE composer",
-    /return civicosUserAgent\(version, instance, purpose\)/.test(INDEX_SRC), true);
+    /export function userAgent\([^)]*\) \{[^}]*?\n  return civicosUserAgent\(/.test(ACQUIRE_SRC), true);
 }
 
 } catch (e) {

@@ -96,6 +96,7 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
@@ -888,15 +889,19 @@ const beforeShaA = await shaOf(A);
   const RCAP = "b".repeat(63) + "2";
   const RDOC = "INFO-2026-4000-filed";
   const rmd = infoMd(RDOC);
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const rdoc = registerDoc({
     capture: { sha256: RCAP, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
                entities: [{ ref: "contract:PL13", kind: "contract", key: "PL13",
-                            label: "PL-13 fixture contract" }] } }] });
+                            label: "PL-13 fixture contract" }] } });
+  const prov = JSON.stringify({ documents: [rdoc] });
   await POST(`op=promote&token=${RUTH}`, {
     bundleId: RDOC, base: null, snapKey: `${RDOC}-1-${sha("r").slice(0, 6)}`,
     files: [{ path: "bundle.md", text: rmd, bytes: rmd.length, sha256: sha(rmd) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            registerFile(rdoc)],
     register: [],
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: LATER } });

@@ -136,6 +136,7 @@ import { createHash } from "node:crypto";
 /* D-508: the doorbell's own DEC-49 family, read here so the arms below can ask whether the
    plane served the CATALOGUE's sentence rather than a second copy of it. */
 import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
+import { KNOCK } from "../src/capture/doorbell.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_TEXT = readFileSync(SRC, "utf8");
 
@@ -317,9 +318,10 @@ console.log("\n--- rate limits bound the damage ---");
    fails here, by name, instead of passing over a pin that means nothing. The
    per-source LIMIT is deliberately NOT read that way and stays the literal 12
    below: a limit taken from the subject is a limit the subject can widen. */
-const winLit = /windowMs:\s*([0-9*\s]+?),/.exec(SRC_TEXT);
-t("the pin uses the plane's own knock window",
-  winLit ? winLit[1].split("*").map(Number).reduce((a, b) => a * b, 1) : null, KNOCK_WINDOW_MS);
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): `KNOCK` moved out of index.mjs into capture's doorbell
+   (`src/capture/doorbell.mjs`, capture R47–R53), which exports it; the window is read off that export, the plane's own
+   value, rather than out of the text of a file that no longer holds it. */
+t("the pin uses the plane's own knock window", KNOCK.windowMs, KNOCK_WINDOW_MS);
 
 /* D-487's EDGE GUARD. It is one flag because the negative control has to be
    able to take it away DETERMINISTICALLY: with the guard the whole flood runs

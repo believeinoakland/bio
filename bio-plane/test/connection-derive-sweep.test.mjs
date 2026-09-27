@@ -36,6 +36,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const script = readFileSync(IDX, "utf8");
@@ -81,9 +82,11 @@ let bseq = 0;
 const promoteReading = async (post, captureSha, entities) => {
   const id = `INFO-2026-${String(++bseq).padStart(4, "0")}-r5`;
   const md = bundleMd(id);
-  const doc = { capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({ capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
                 reading: { content_type: "meeting_calendar", reader_version: 1, found: entities.length > 0,
-                           at: NOW, entities } };
+                           at: NOW, entities } });
   const prov = JSON.stringify({ documents: [doc] });
   const r = await post("promote", {
     bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "r5",
@@ -92,6 +95,7 @@ const promoteReading = async (post, captureSha, entities) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      registerFile(doc),
     ],
     register: [],
   });

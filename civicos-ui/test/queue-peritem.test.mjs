@@ -81,6 +81,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -161,12 +162,15 @@ const RDOC = "INFO-2026-0126-voted";
     "produced_by:", "  mode: agent", "  capability_tier: high", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "---", "", "## Summary", "", "A vote.", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-  const prov = JSON.stringify({ documents: [{ capture: { sha256: RCAP, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`bio-plane/test/register-doc.mjs`). */
+  const rdoc = registerDoc({ capture: { sha256: RCAP, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: AT,
-               entities: [{ ref: "contract:D126", kind: "contract", key: "D126", label: "D-126 contract" }] } }] });
+               entities: [{ ref: "contract:D126", kind: "contract", key: "D126", label: "D-126 contract" }] } });
+  const prov = JSON.stringify({ documents: [rdoc] });
   const r = rP(await POST(`op=promote&token=${MONA}`, { bundleId: RDOC, base: null, snapKey: "d126-rdoc",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }], register: [],
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(rdoc)], register: [],
     meta: { object_type: "information", group: "believe-in-oakland", title: "Vote record",
             current_state: "collected", created: AT, last_updated: AT } }));
   if (r.ok === false) throw new Error(`promote ${RDOC}: ${JSON.stringify(r).slice(0, 500)}`);

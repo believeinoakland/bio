@@ -314,6 +314,7 @@ import { fileURLToPath } from "node:url";
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for the CENSUS's corpus. */
 import { moduleFiles } from "./extracted-sources.mjs";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -338,7 +339,14 @@ const decomment = (text) => text.split("\n").map(((state) => (L) => {
       if (e < 0) { i = L.length; } else { state.block = false; i = e + 2; }
       continue;
     }
-    const b = L.indexOf("/*", i), s = L.indexOf("//", i);
+    /* T4 (legacy-tests), 2026-09-27: a `//` directly after `:` is a URL's `https://`, not a comment — the guard
+       `bounds.test.mjs`'s consumer walk carries for the same reason. Without it, `src/capture/`'s
+       `deriveSiteChrome` passes `https://${h}/` as a SQL argument and the rest of its line (`cap + 1)`) was blanked,
+       so the truncation grader read a correct `LIMIT ?` bound as "not the published cap". The guard is the
+       reader's; nothing in the plane was reworded to suit it. */
+    const b = L.indexOf("/*", i);
+    let s = L.indexOf("//", i);
+    while (s > 0 && L[s - 1] === ":") s = L.indexOf("//", s + 2);
     if (b >= 0 && (s < 0 || b < s)) { out += L.slice(i, b); state.block = true; i = b + 2; continue; }
     if (s >= 0 && (b < 0 || s < b)) { out += L.slice(i, s); i = L.length; continue; }
     out += L.slice(i); i = L.length;
@@ -542,7 +550,14 @@ const D384_STAYS = [
     helpers: ["#conditionHomes", "#queueOptions"],
     amplification: "per machine-authored bundle, three #one reads of manifest and bundles, then the "
       + "same #conditionHomes ancestor walk and #queueOptions" },
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor R14): the member's ROW SOURCE — the unbounded
+     `SELECT * FROM host_governor WHERE cooloff_until > ?` its loop iterates — moved into host-governor as
+     `governorHolding` (R14), which the member now calls in its `for` header. The member itself is unchanged: the
+     same loop over every held host, the same per-row call. So its admission is checked through the module's
+     interface: the loop must iterate that call (`rowSource.call`), and the module method must still hold an
+     unbounded scan (read off `src/host-governor/`'s own segment). Every other admission is read as before. */
   { name: "#conditionsGovernorHolding", site: "const subj = this.#conditionBundlesForHost(r.host, viewer);",
+    rowSource: { call: "for (const r of governorOf(this.ctx).governorHolding(", module: "host-governor/index:governorHolding" },
     helpers: ["#conditionBundlesForHost", "#conditionHomes", "#queueOptions"],
     amplification: "per host in cool-off, a captured_locators x register scan for the host's bundles, "
       + "then #conditionHomes' ancestor walk and #queueOptions over up to QUEUE_OPTION_SUBJECTS_MAX of them" },
@@ -635,9 +650,18 @@ const DISPATCHED = dispatchedOps(CODE);
    at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
    store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
    row sources, which is the direction the FLOOR exists to refuse. */
-const MODULE_SEGMENTS = new Map(["record-core", "membership", "promotion"].flatMap(moduleFiles).flatMap((f) =>
-  [...segments(decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))]
-    .map(([n, b]) => [`${f.replace(/\.mjs$/, "")}:${n}`, b])));
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 extracted three more
+   modules and their row sources left store.mjs with them, so the census's corpus widens to `src/host-governor/`,
+   `src/provenance/` and `src/capture/` the same way, one file at a time, `<module>/<file>:<method>`. The in-memory
+   truncation readers, SET 2 and the UNREAD roster below read this same widened corpus (`EXTRACTED`), because
+   `provenanceRoutesMarked` and `versionChain` publish their claims from provenance now. */
+const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture"];
+const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
+  .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
+/* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
+const moduleSegments = (xf = decomment) => MODULE_TEXTS.flatMap(([f, text]) =>
+  [...segments(xf(text))].map(([n, b]) => [`${f}:${n}`, b]));
+const MODULE_SEGMENTS = new Map(moduleSegments());
 const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
 const SCANNING = CENSUS_SEGMENTS.filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
 const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
@@ -1160,7 +1184,12 @@ t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a
   D384_STAYS.map((s) => {
     const body = SEGMENTS.get(s.name) || "";
     const a = analyse(body);
-    return [s.name, a.unbounded > 0 && a.loops > 0, body.includes(s.site),
+    /* T4: a row source reached through a module's interface (`rowSource`, above) is held when the member loops
+       over that call AND the module's method still scans unbounded; otherwise the walk's own reading, as before. */
+    const src = s.rowSource
+      ? body.includes(s.rowSource.call) && scans(MODULE_SEGMENTS.get(s.rowSource.module) || "").some((x) => !x.bounded)
+      : a.unbounded > 0 && a.loops > 0;
+    return [s.name, src, body.includes(s.site),
             s.helpers.filter((h) => !readsThrough(h))];
   }).filter(([, src, site, dead]) => !src || !site || dead.length),
   []);
@@ -1461,7 +1490,27 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
        of one project's or one member's rows — and hostingAccess (R19, the whole hosting-access history) and
        memberPairings (R11, every member with a published pairing), which read a whole table with no bound. Those two
        are ARRIVALS NAMED, not graded here. */
-const SCANNING_MEASURED_2026_09_15 = 135;
+/* UPDATED 2026-09-27 (T4, legacy-tests), 135 -> 158, READ FROM THE CENSUS ROSTER THIS RUN PRINTED over the corpus
+   widened again (store.mjs + `src/{record-core,membership,promotion,host-governor,provenance,capture}/`, see
+   EXTRACTED) and DIFFED BY NAME against the same census run over `tranche/T4`'s base 0446ab092b (135, T3's widened
+   corpus), never 135 + 23. Layer 3 took SEVEN methods' row sources out of store.mjs: DEPARTED `#conditionsGovernorHolding
+   capturedLocators inboxList provenanceRoutesMarked registerAudit reuseVerdicts reusedParts`. THE MODULES' 30 ARRIVALS,
+   each accounted for:
+     - 7 ARE THE DEPARTURES, MOVED: host-governor/index:governorHolding (the held-host scan #conditionsGovernorHolding
+       now calls, R14), provenance/index:{receipts (was capturedLocators), provenanceRoutesMarked, registerRows (was
+       registerAudit)}, capture/index:{inboxList, reuseVerdicts, reusedParts}.
+     - 7 are the readers' own definitions, `#rows`/`#one`/`#row`/`#cols` in capture, host-governor and provenance — the
+       same helpers store.mjs's roster and T3's modules have always carried for their own.
+     - 7 are row sources that ALREADY existed in store.mjs spelled `[...this.sql.exec(…)]`, which this reader does not
+       see, and are now spelled `this.#rows(…)` in the module: host-governor/index:governorState (every host, or one),
+       capture/index:{linksTo, resolveLinks, recordLinkVerdict, siteAssets, recordSiteAssets, siteChrome} — a gain in
+       what the reader SEES, not new reads.
+     - 9 are the modules' NEW behaviours in layer 3, each a per-key read: capture/index:{chromeOf, #judgeChrome,
+       #chromeDeriveCapture, #chromePagesOf} (one host's or one capture's chrome rows, capture's R28-R29, D-701) and
+       liveCaptureSessions (the unexpired capture sessions), provenance/index:{capturesOf (R12, D-580: one bundle's
+       register rows), captureGrade (R24-R27: one capture's receipt routes), registeredFor (one bundle's register),
+       signedReceipts (R34: one capture's signed receipts)}. ARRIVALS NAMED, not graded here. */
+const SCANNING_MEASURED_2026_09_15 = 158;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1497,9 +1546,11 @@ const rowSourceCalls = (body, id) => {
   let m; while ((m = re.exec(body))) out.push(body.slice(m.index, closeParen(body, m.index + m[0].length - 1)));
   return out;
 };
+/* T4 (legacy-tests): `code` may be a text (segmented here) or already-named segments (the widened corpus). */
+const segsOf = (code) => (typeof code === "string" ? segments(code) : code);
 const truncationVerdicts = (code) => {
   const graded = [], ungraded = [], violations = [];
-  for (const [name, body] of segments(code)) {
+  for (const [name, body] of segsOf(code)) {
     let m; TRUNC_RE.lastIndex = 0;
     while ((m = TRUNC_RE.exec(body))) {
       const [, src, capId] = m;
@@ -1518,7 +1569,7 @@ const truncationVerdicts = (code) => {
   }
   return { graded, ungraded, violations };
 };
-const TRUNCATION = truncationVerdicts(CODE);
+const TRUNCATION = truncationVerdicts(CENSUS_SEGMENTS);   /* T4 (legacy-tests): over the widened corpus */
 console.log(`  TRUNCATION SOURCES: ${TRUNCATION.graded.length} graded, `
           + `${TRUNCATION.ungraded.length} ungradeable (named below), ${TRUNCATION.violations.length} in violation`);
 console.log(`    GRADED: ${TRUNCATION.graded.join(", ")}`);
@@ -1758,7 +1809,7 @@ const sourceOrigin = (body, src) => {
    in its scope, which is why the row-source test below is REC-99's `rowSourceCalls`, reused. */
 const inMemoryVerdicts = (code) => {
   const cut = { graded: [], violations: [] }, source = { graded: [], outOfReach: [] };
-  for (const [name, body] of segments(code)) {
+  for (const [name, body] of segsOf(code)) {
     let m; TRUNC_RE.lastIndex = 0;
     while ((m = TRUNC_RE.exec(body))) {
       const [, src, capId] = m;
@@ -1782,7 +1833,7 @@ const inMemoryVerdicts = (code) => {
   }
   return { cut, source };
 };
-const INMEM = inMemoryVerdicts(CODE);
+const INMEM = inMemoryVerdicts(CENSUS_SEGMENTS);   /* T4 (legacy-tests): over the widened corpus */
 console.log(`  IN-MEMORY TRUNCATION (M0-38 · D-369): ${INMEM.cut.graded.length} cut-graded, `
           + `${INMEM.cut.violations.length} in violation; source bound ${INMEM.source.graded.length} graded, `
           + `${INMEM.source.outOfReach.length} OUT OF REACH`);
@@ -1915,7 +1966,7 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
    a frontier bounded to its caller over a log that is not) — and a grading that refuses correct
    work is worse than the gap it closed. Nothing here fails them; it NAMES them. */
 const PUBLISHES_BOUND = (body) => /\btruncated\b\s*[:=]/.test(body);
-const CENSUS_BLIND = [...SEGMENTS]
+const CENSUS_BLIND = CENSUS_SEGMENTS   /* T4 (legacy-tests): over the widened corpus */
   .filter(([n, b]) => PUBLISHES_BOUND(b) && SCANNING_NAMES.includes(n)).map(([n]) => n).sort();
 const DOUBLY_BLIND = CENSUS_BLIND.filter((n) => !TRUNCATION.graded.some((g) => g.startsWith(`${n}:`)));
 console.log(`  CENSUS-BLIND (${CENSUS_BLIND.length} methods publish a bound AND already scan `
@@ -1945,7 +1996,9 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
       unbounded half is the census GROUP BY, kept unbounded deliberately so a
       third finding arriving in the marks table cannot go missing from the
       assessed count; the PAGE beside it is bounded and index-served. */
-   "provenanceRoutesMarked", "queueFeed"]);
+   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the same method, moved with its page and its census
+      GROUP BY into provenance, read off the widened corpus under its module name. No arrival, no departure. */
+   "provenance/index:provenanceRoutesMarked", "queueFeed"]);
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
@@ -2003,7 +2056,8 @@ const blankTemplates = (text) => {
    instrument rather than the subject, again. */
 const CLAIM_RE = /\btruncated\b\s*(?<![=!<>])[:=](?![=])\s*([^,;\n]*)/g;
 const UNREAD_FORMS = []; let republished = 0;
-for (const [name, body] of segments(blankTemplates(CODE))) {
+for (const [name, body] of [...segments(blankTemplates(CODE)),
+                             ...moduleSegments((t) => blankTemplates(decomment(t)))]) {   /* T4: widened corpus */
   CLAIM_RE.lastIndex = 0; let m;
   while ((m = CLAIM_RE.exec(body))) {
     const rhs = m[1].replace(/[\s})\]]+$/, "").trim();
@@ -2064,7 +2118,9 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    "extractProposals: listed.length >= n",
    "search: ids.length >= IDS_MAX",
    "suggestVersion: rc ? !rc.legs_complete : false",
-   "versionChain: from + versions.length < total"]);
+   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, R16): the same claim, moved with `versionChain`
+      into provenance, read off the widened corpus under its module name. No arrival, no departure. */
+   "provenance/index:versionChain: from + versions.length < total"].sort());
 
 /* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero
    violations forever, and this estate has recorded that outcome three times. */
@@ -2143,14 +2199,18 @@ const promote = async (i, label) => {
   const id = `INFO-2026-${String(i).padStart(4, "0")}-r66`;
   const md = bundleMd(id);
   const capture = sha(`r66-${i}`);
-  const prov = JSON.stringify({ documents: [{
-    capture: { sha256: capture, encoding: "binary", bytes: 10 },
+  /* T4 (legacy-tests; provenance K121): this document was a reading carrier (capture + reading only), which C-18.1
+     now refuses at the write; `registerDoc` completes it into op=acquire's intake shape, the capture held at the
+     path this fixture already registers it under (`captures/doc.pdf`), and the bundle carries that capture's blob. */
+  const doc = { capture: { sha256: capture, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
                entities: [{ ref: `legislation:26-${String(i).padStart(4, "0")}`, kind: "legislation",
-                            key: String(i), label }] } }] });
+                            key: String(i), label }] } };
+  const prov = JSON.stringify({ documents: [registerDoc(doc, { file: "captures/doc.pdf" })] });
   const files = [
     { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+    registerFile(doc, { file: "captures/doc.pdf" }),
   ];
   const r = await POST("op=promote&token=mem-r66", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r66", files,

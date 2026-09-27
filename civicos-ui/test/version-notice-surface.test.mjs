@@ -38,6 +38,7 @@ import { pathToFileURL } from "url";
 import { appScript } from "./extract.mjs";
 import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import { VERSION_NOTICE_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -126,8 +127,13 @@ const mustPromote = async (id, text, type, { captures = [] } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   const read = captures.filter((c) => c.pages);
   if (read.length) {
-    const prov = JSON.stringify({ documents: read.map((c) => readingOf(c.sha, c.pages)) });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now
+       refused at the write, naming its capture at the path the register below gives it, and those captures carried
+       in the bundle's files (`bio-plane/test/register-doc.mjs`), as versionnotice.test.mjs's own fixture now does. */
+    const docs = read.map((c) => registerDoc(readingOf(c.sha, c.pages), { file: `documents/${c.sha.slice(0, 8)}.pdf` }));
+    const prov = JSON.stringify({ documents: docs });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+               ...docs.map((d) => registerFile(d)));
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,

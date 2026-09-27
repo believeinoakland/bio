@@ -557,6 +557,14 @@ const CATALOG_CENSUS = {
   "1.32.0": { count: 566, digest: "2bd1637d11ad4d0ab1643a5961aab700a02f8efdd68504c12d7d180353578c13",
               changed: ["C-4.2", "C-17.2", "C-18.8", "C-20.1"],
               source: "e6ee5523495cb692894222ab98a36e8adc8d11451076bc576f58b1c89dfbd8ff" },
+  /* 1.33.0 (PROMOTION #2, T4-2b, 2026-09-27; recorded by legacy-tests, T4-5): six arrivals from LEGACY-CHECKS #1 (N44,
+     N36): C-29.11, C-29.12, C-96.10, C-96.11, C-96.12, C-33.49; C-33.48 changed its code to LAST_COMMITTED_OWNER.
+     Count, digest and source are PROMOTION #2's print of this suite on `job/T4/promotion` when it minted the version.
+     PROVENANCE #1 (T4-2) then moved C-18.1, C-18.3, C-18.4 and C-18.9 out of the catalogue file (572 -> 568) with the
+     version unmoved, so A3 names the census that has no version of its own (legacy-tests' T4 REPORT). */
+  "1.33.0": { count: 572, digest: "86ddf728cfe6d389ec3ffb28cd31179cae70bc0f681c8f227c96eda70d95443b",
+              changed: ["C-33.48"],
+              source: "1513f4a898edc422ecff7efebfd2b029e38b899396981092c9d3f2061277e113" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -748,9 +756,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 /* CORRECTED at the c22-batch29 union (CONDUCT #22), never exempted: 1.30.0 -> 1.31.0, the union's one number for
    every branch below (the catalogue under the stamp moved 502 -> 569 by this suite's print); the literal moves by
    hand with the constant, which is its whole rule. */
-/* UPDATED 2026-09-26 (T3, legacy-tests): 1.31.0 -> 1.32.0, promotion's move of four checks (K64). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.32.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.32.0)", "1.32.0"]);
+/* UPDATED 2026-09-26 (T3, legacy-tests): 1.31.0 -> 1.32.0, promotion's move of four checks (K64).
+   UPDATED 2026-09-27 (T4, legacy-tests): 1.32.0 -> 1.33.0, promotion's T4-2b. */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.33.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.33.0)", "1.33.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

@@ -46,6 +46,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerFile } from "./register-doc.mjs";
 
 /* ---- the ONE knob the negative control flips. false in the committed suite. When true,
    document A's capture_sha is diverged at the resolve+thread consumption points ONLY, so a
@@ -149,6 +150,10 @@ const promoteDoc = async (doc) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+      /* T4 (legacy-tests; provenance K121): the acquired document names its capture (`snapshots/<name>`), and
+         C-18.1, now refused at the write, asks that the bundle hold it: the capture carried beside the register
+         (`register-doc.mjs`; the document itself is op=acquire's own and is not reshaped). */
+      registerFile(doc),
     ],
     register: [],
   });

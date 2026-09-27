@@ -46,7 +46,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
-import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE } from "../checks/bio-checks.mjs";
+import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { registerChecks } from "../src/provenance/index.mjs";
+import { registerFile } from "./register-doc.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
@@ -129,11 +131,16 @@ const promoteDoc = async (id, { base = null, docs, register = [], extra = {}, bu
                                  files = null, tok = RUTH } = {}) => {
   const text = bundleMd ?? infoMd(id);
   const prov = JSON.stringify({ documents: docs });
+  /* T4 (legacy-tests; provenance K121): the C-18 register arms run at the write now, and C-18.1 refuses a register
+     naming a capture `file` the bundle does not carry. `uploadDoc` names `snapshots/upload.pdf`, so the bundle
+     carries it: the blob its capture sha addresses (`registerFile`; the document is unchanged). */
+  const held = (docs || []).filter((d) => d && d.capture && typeof d.file === "string").map((d) => registerFile(d))
+    .filter((f, i, a) => a.findIndex((g) => g.path === f.path) === i);
   return post("promote", {
     bundleId: id, base, snapKey: snapKey(),
     meta: { object_type: "information", group: "believe-in-oakland",
             current_state: "collected", created: NOW, last_updated: NOW },
-    files: files ?? [fileOf("bundle.md", text), fileOf("data/provenance.json", prov)],
+    files: files ?? [fileOf("bundle.md", text), fileOf("data/provenance.json", prov), ...held],
     register, ...extra }, tok);
 };
 const uploadDoc = (s, extra = {}) => ({
@@ -428,10 +435,14 @@ t(`CONTRAST: the same ${EARNED_CAPTURE_CEILING} leg on the member-UPLOADED docum
 const c181 = async (doc) => {
   const files = new Map(Object.entries(head0 || {}));
   files.set("data/provenance.json", JSON.stringify({ documents: [doc] }));
-  const { findings } = await checkBundle({ folderName: OBS, files,
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.1's arms left the catalogue for
+     provenance's `registerChecks`, which the gate runs after the catalogue (`withRegisterChecks`); "the whole
+     catalogue" is both, as the gate takes them. */
+  const { findings: cat } = await checkBundle({ folderName: OBS, files,
     sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),
     sha512: async (b) => new Uint8Array(await (await import("node:crypto")).webcrypto.subtle.digest("SHA-512", b)),
     resolveTarget: () => true });
+  const findings = [...cat, ...registerChecks({ files, fm: parseFrontmatter(files.get("bundle.md")).data })];
   return { c181: findings.filter((x) => x && x.check === "C-18.1").map((x) => x.message),
            errors: findings.filter((x) => x && x.severity === "error").map((x) => `${x.check}: ${x.message}`) };
 };

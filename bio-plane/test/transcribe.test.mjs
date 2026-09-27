@@ -31,6 +31,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 import { TRANSCRIBE_CHECKS, TEXT_CHAIN_CHECKS, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 import { checkChain, derivationCap, captureBound, describeChain, STEP_KINDS, isTranscribed,
          tiersEvidenced } from "../src/textchain.mjs";
@@ -133,6 +134,7 @@ const mustPromote = async (id, text, type, { readings = [] } = {}) => {
   if (readings.length) {
     const prov = JSON.stringify({ documents: readings });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(...readings.map((d) => registerFile(d)));   /* T4 (legacy-tests; provenance K121): each capture the documents name, held in the bundle */
   }
   const r = await post("promote", {
     bundleId: id, base: HEAD.get(id) ?? null,
@@ -148,7 +150,9 @@ const ocrChain = (version) => [
   { step: "pixels", extent: { kind: "pages", pages: [0, 1, 2] } },
   { step: "ocr", engine: "tesseract", version, cap: "C", confidence: { basis: "none" },
     extent: { kind: "pages", pages: [0, 1, 2] } }];
-const readingOf = (captureSha, version) => ({
+/* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused at
+   the write (`register-doc.mjs`). The same completion is applied to DOC_N's chainless reading below. */
+const readingOf = (captureSha, version) => registerDoc({
   capture: { sha256: captureSha, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW,
              entities: [], text_source: ocrChain(version) } });
@@ -249,9 +253,9 @@ t("THE ROUTING ARM: ruth's capture attestation over page 2 COVERS this region an
    raise the member's typing. */
 const SHA_N = sha("rec87-no-chain");
 const DOC_N = "INFO-2026-8700-nochain";
-await mustPromote(DOC_N, infoMd(DOC_N), "information", { readings: [{
+await mustPromote(DOC_N, infoMd(DOC_N), "information", { readings: [registerDoc({
   capture: { sha256: SHA_N, encoding: "binary", bytes: 10 },
-  reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW, entities: [] } }] });
+  reading: { content_type: "meeting_calendar", reader_version: 1, found: false, at: NOW, entities: [] } })] });
 const atN = await post("attesttext", { captureSha: SHA_N, at: NOW, extent: { kind: "document" } }, SAM);
 const txN = await post("transcribe", { bundleId: DOC_N, extent: { kind: "pdf-page", page: 0 }, text: TYPED, at: NOW }, RUTH);
 if (!(txN && txN.ok)) console.log(`  note  the no-chain typing was refused: ${JSON.stringify(txN).slice(0, 400)}`);

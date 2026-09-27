@@ -50,6 +50,7 @@ import { pathToFileURL } from "url";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
 import { CONTENT_EXTENT_KINDS, CONTENT_MINT_STATES } from "../../bio-plane/checks/bio-checks.mjs";
+import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -159,8 +160,12 @@ const HEAD = new Map();
 const promote = async (id, text, type, { base = null, register = [], reading = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
-    const prov = JSON.stringify({ documents: [reading] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+       at the write; where the promotion REGISTERS the capture the document names that same file, and the bundle holds
+       it (`bio-plane/test/register-doc.mjs`). */
+    const doc = registerDoc(reading, register.length ? { file: register[0].path } : {});
+    const prov = JSON.stringify({ documents: [doc] });
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc));
   }
   return post("promote", {
     bundleId: id, base,
