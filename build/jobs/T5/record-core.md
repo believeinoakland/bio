@@ -16,6 +16,10 @@
 
 **Q3 (N64's share, for BOB to route).** R49 says `affordances` re-exports `PER_ITEM_MAX` unchanged; `affordances.mjs` is `affordances`' (layer 11, not in this job's `from`), so it keeps its own `PER_ITEM_MAX = 100` until its job. Reading: I define `PER_ITEM_MAX` and `perItem` here, `perItem` takes the identity groups as its argument (R51), and `legacy-store` calls it with `affordances`' `PER_ITEM_ACTS`. `affordances`' re-export is a REPORT, not mine.
 
+## Provides final (for BOB's early merge, mechanics §4)
+
+At the commit that carries this line, every service `membership` and `promotion` take from this module is final: the module-level `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` (R58, R57's creation marker), `stampInstant`/`instantOrder` (R47–R48), `PER_ITEM_MAX`/`perItem` (R49–R52), and the instance's `isFirstBoot` (R54), `manifestByAuthor` (R53), `digestCensus`/`snapKeyCensus` (R56–R57) and `registerAuditCheck` (R59 as read in Q1). A user imports the module-level ones from `../record-core/index.mjs`. Module suite 46/46; every `test/m/*` suite green on this branch.
+
 ## Entries applied
 
 (in progress)
