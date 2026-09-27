@@ -2,7 +2,7 @@
 
 **Session** OBSERVATION-LOG #1, `session_01YZefWwyAhTE5bdBCeBJe3j`, on `job/T5/observation-log` (from `tranche/T5` @ `a3750eb937`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · IN PROGRESS. Entry T5-8: extract `observation-log` from `legacy-store` and `legacy-checks` per `build/extraction/observation-log.md` and `build/requirements/observation-log.md` (mechanics §12.2), with D-681, D-682, N39 (its share) and every requirement marked not yet met (R3, R13, R20, R21). The legacy store's `onReading("legacy-store", …)` rows move to observation-log's own listener (`extractionOf(ctx).onReading`, extraction R24).
+**Status** · COMPLETE (Q1–Q4 answered, K142, K148, and applied; `tranche/T5` @ `0eb6910b32` merged). Entry T5-8: extract `observation-log` from `legacy-store` and `legacy-checks` per `build/extraction/observation-log.md` and `build/requirements/observation-log.md` (mechanics §12.2), with D-681, D-682, N39 (its share) and every requirement marked not yet met (R3, R13, R20, R21). The legacy store's `onReading("legacy-store", …)` rows move to observation-log's own listener (`extractionOf(ctx).onReading`, extraction R24).
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/requirements/observation-log.md` and `README.md`, `build/extraction/observation-log.md`, `build/layers.md` (layer 5's contract), `build/plan/current.md` (T5-8), the public parts of `record-core`, `membership`, `provenance`, `extraction`, `content`, `entities`, `connections` (legacy-checks has no requirements file), rulings K3, K4, K6, K23, K31, K49, K61, K64, K71, K75, K76, K78, K80, K102; the moved code in `airun.mjs` (106–1404, 1931–2139), `store.mjs`, `schema.mjs`, `bio-checks.mjs`; the carried branches `land/worker/D-681` @ `ae80ca25` and `land/worker/D-682` @ `1d635376`.
 
@@ -16,9 +16,33 @@
 
 ## Answers from BOB
 
-- **Q1–Q3 · ANSWER** (K142, `tranche/T5` @ `c9b4ebe600`, merged here): all three readings adopted. `text-chain` is in the uses; Q2 as stated; Q3: R29's text below, for BOB to fold in.
+- **Q1–Q3 · ANSWER** (K142, `tranche/T5` @ `c9b4ebe600`, merged here): all three readings adopted. `text-chain` is in the uses; Q2 as stated; Q3: R29's text below, folded in by BOB.
+- **Q4 · ANSWER** (K148, `tranche/T5` @ `0eb6910b32`, merged here): R3 reworded as built, a run's terminal entry its one exception; agent-worker's control-flow entries stop sending `NEVER_LOOKED` in T6.
+- **CHANGE** (entities merged @ `4405b936fe`): observation-log registers its own `onResolveAttempt` listener; legacy-store's registration is gone (done at the merge).
 
 ## Proposed requirements (K142; for BOB to fold into `build/requirements/observation-log.md`)
 
 **The log's read contract**
 - **R29** The table `observation_log` and its columns `seq` (the key, store-wide, only increasing, R4), `at` (whole-second UTC), `actor_class`, `actor`, `authority_kind`, `authority`, `level`, `subject_kind`, `subject`, `state`, `governed` (0 or 1), `condition`, `bound`, `terminal` (0 or 1), `result_kind`, `result_ref` and `detail`, each with R1's vocabulary where it has one; the table `leads` and its columns `lead_id` (the key), `author`, `words`, `locator`, `at`; and the table `lead_shares` and its columns `lead_id`, `bundle_id` (the project), `sharer`, `at`, are a stated read contract: a later module may join them in its own SQL, on the terms of record-core R37 and content R45, and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's (R2, R14, R16, R22).
+
+## Decisions made in the module (P17: recorded, not asked)
+
+- **The vocabulary is written here, not moved (K78 (3)).** `vocabulary.mjs` holds `airun.mjs` 106–1403 and 1931–2138 (less `checkBound`, C-22.5, which stays with ai-runs) with their reasons, and `CONDITION_KINDS` from `queuestate.mjs`; neither file is mine, so both keep their copies until ai-runs (N49) and queue re-export. D-682's `OBSERVATION_STATE_WORDS`, `LEAD_LOOK_OUTCOMES` and `LEAD_VOCABULARY` are here.
+- **`observe` reads the entry in the table's shape and the legacy callers' camelCase**, so the drain, the run log, the monitor and ratification (later modules) call it unchanged through the store's `#observe` delegate.
+- **Creation order.** `observationLogOf(ctx, {extraction: null, provenance})` is created where provenance is, and `listenTo(extraction)` registers on the reading notice once extraction exists (after content's stale mark, the modules' order). `OBSERVATION_LOG_MODULE` is the name it registers under; `recordCapturedLocator` finds its receipt outcome by it.
+- **R13's resolvers (N39).** `registerAuthority(kind, resolve)` for `sweep` and `run` only; `resolve(authority, viewer)` answers bundle ids, a yes or no, or null (fall back to a bundle of that id). legacy-store registers both until capture-requests and ai-runs are extracted (the `capture_requests` read and `aiRunLog`), so the frontier's document arm answers as before. `rowGate(viewer)` is R13 compiled once for a page.
+- **R11 is `missingCause`, pure; `missingCauseAt(level, …)` reads the level's watermark.** The pre-log probes (`readings`, `resolutions`, `connections`) read other modules' tables and stay with their callers (the frontier arms, retrieval's), which now ask this rule; `#missingCauseFrom`, `#missingContentCause` and `#missingMeaningCause` in the store delegate to it.
+- **connections' R5 provider.** `derivationStatementFor(entityId, {enteredAt, hasArtifact})` answers the derivation statement; connections registers or calls it at its merge (its read still sits in the store today). `attachMeaning({entities, connections})` registers the resolution and derivation writers on their notices; entities' is registered now, connections' at its merge (`onDerived`, its R3).
+- **R16 fixed.** A same-second repeat share answered `already: false` in the store (it compared instants); it now answers `already: true` whenever the share exists.
+- **The lead's reach inside one statement.** `#leadFor` reads the lead through `leadReach` in the same query, so absent and unreachable are one read and one answer.
+
+## Entries applied (T5-8)
+
+- **Extraction** per map and requirements: `bio-plane/src/observation-log/` (`index.mjs` the service, `observationLogOf(ctx)` and `observationLogOps`; `vocabulary.mjs`; `checks.mjs` C-54.2–C-54.10 and the C-22 rows by reference; `schema.mjs` the three tables). Removed from `store.mjs`: the append site and referent, the content, index, reader-run, resolution and derivation writers, the receipt's look, the frontier view, verification, the fence (`#observationBundles`), the lead's acts and reads, their dispatch, the onReading/onReceipt/onResolveAttempt registrations, `CAPTURE_TEXT_UNIT_CONTAINERS`; from `schema.mjs` `observation_log`, `leads`, `lead_shares`; from `bio-checks.mjs` C-54.2–C-54.10. legacy-store delegates (60 added lines, all listed by the ownership check below: the import, the purge filter, the creation and N39 resolvers, `listenTo`, `attachMeaning`, `migrate`, delegating one-liners, and the rewired calls).
+- **R3** (K148), **R13** (N39), **R20** (D-681, `leadList`, `op=leadlist` in the store's dispatch), **R21** (D-682, `vocabulary` on `leadRead` and `leadList`; the internet frontier's half is retrieval's, which holds the frontier, from `LEAD_VOCABULARY`), **R29** (K142): met at the interface and tested.
+- **Built work judged (§12.5):** D-681's `leadList` taken whole (store half); its `index.mjs` routing (OPS, NEEDS, IDENTITY_READS, the viewer-stamped ops) and `affordances.mjs` NON_ACTS row are other modules' (reported). D-682's `OBSERVATION_STATE_WORDS` and `LEAD_VOCABULARY` taken; its `app.html` surface change and suites are other modules'.
+
+## Deferred
+
+- The C-22 rows leave `AI_RUN_CHECKS` with ai-runs' N49 (K142).
+- The internet frontier's `vocabulary` (R21's other half) is written where the frontier is: retrieval (T5-10, D-682 is in its entry too).
