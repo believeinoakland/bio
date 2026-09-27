@@ -7,12 +7,16 @@
  * statement — and runs none that lacks the viewer's gate (R28). It mints nothing: a hit is an address (R32).
  *
  * K61: `retrievalOf(ctx, deps)` answers the one instance per Durable Object; it reaches record-core, membership,
- * promotion and extraction through their factories on the same `ctx`. `deps.observation` is observation-log's services
- * and vocabulary (its R1, R9–R13, R18–R21), injected until that module is merged (the job record's decision). */
+ * promotion, extraction and observation-log through their factories on the same `ctx`; observation-log's services and
+ * vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a test may replace. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
 import { extractionOf, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../extraction/index.mjs";
+import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
+         MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
+         INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
+         contentAxisFor, observationCoverage, causesNotRuledOut, missingCause } from "../observation-log/index.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
 import { normalizeType } from "../../checks/bio-checks.mjs";
@@ -1013,11 +1017,41 @@ export class Retrieval {
   frontier(args = {}) { return this.frontierReader.read(args); }
 }
 
+/** observation-log's services and vocabulary as this module reads them (its R1, R9–R13, R18, R19, R21): the one
+ *  place the two modules meet, so a test may hand its own. The missing-row probes (the pre-log artifact of a capture,
+ *  a reference, an entity) read the tables their owners state: extraction's `readings`, entities' `resolutions`,
+ *  connections' `connections`. */
+export function observationOf(o, sql) {
+  const one = (q, ...a) => { const r = [...sql.exec(q, ...a)]; return r.length ? r[0] : null; };
+  const PROBE = { capture: `SELECT 1 x FROM readings WHERE capture_sha = ?`,
+                  reference: `SELECT 1 x FROM resolutions WHERE ref = ? LIMIT 1`,
+                  entity: `SELECT 1 x FROM connections WHERE entity_id = ? LIMIT 1` };
+  return {
+    vocabulary: { OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED, MISSING_ROW_CAUSES,
+                  MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
+                  INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY },
+    contentAxisFor, observationCoverage, causesNotRuledOut, missingCause,
+    /* §5.1 at the meaning level (K80): an unrecognised subject kind takes the weakest cause, never the strongest. */
+    missingMeaningCause(kind, subject, entered) {
+      if (!Object.prototype.hasOwnProperty.call(PROBE, kind)) return "purged";
+      let held = false;
+      try { held = !!one(PROBE[kind], subject); } catch { held = false; }
+      return o.missingCauseAt("meaning", { hasArtifact: held, registeredAt: entered });
+    },
+    firstRowAt: (level) => o.firstRowAt(level),
+    latest: (level, opts) => o.latest(level, opts),
+    verification: (level, kind, subject) => o.verification(level, kind, subject),
+    rowVisible: (row, viewer) => o.rowVisible(row, viewer),
+    leadReach: (viewer, identity) => o.leadReach(viewer, identity),
+    leadReferentVisible: (kind, ref, viewer) => o.referentVisible(kind, ref, viewer),
+  };
+}
+
 const instances = new WeakMap();
 
 /** K61: the one Retrieval for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the first
  *  call only: `record`, `membership`, `promotion`, `extraction` (each defaulting to its factory on `host`),
- *  `observation` (observation-log's services, required until it is merged), `now` (milliseconds; the clock the
+ *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
  *  and `order` (the modules' total order, for the order listeners and decorations run in). At creation it declares its
  *  tables to purge (R33) and joins every promotion (R1). */
@@ -1029,7 +1063,9 @@ export function retrievalOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host);
     const extraction = d.extraction || extractionOf(host);
-    r = new Retrieval({ ...d, storage: d.storage || (host.storage ?? host), record, membership, promotion, extraction });
+    const storage = d.storage || (host.storage ?? host);
+    const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
+    r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation });
     instances.set(host, r);
     const answer = record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
