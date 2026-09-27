@@ -4,7 +4,7 @@
 
 ## Status
 
-COMPLETE (2026-09-27 ~05:40Z). T4-7 applied after BOB's CHANGE (`tranche/T4` @ `c769c73`, merged here at `ce03ffded3`). T4-8: no code change, on my reading in QUESTION 1; its ANSWER is open, and I stay available for a `CHANGE`.
+COMPLETE (2026-09-27 ~05:40Z). T4-7 applied after BOB's CHANGE (`tranche/T4` @ `c769c73`, merged here at `ce03ffded3`). T4-8: verified, no change (BOB's ANSWER to QUESTION 1, 05:33Z: the reading stands; the fixture fix went to legacy-tests). I stay available for a `CHANGE`.
 
 ## QUESTION 1 (T4-8): the routing already holds the rule; the red arm is the test's fixture
 
@@ -28,7 +28,7 @@ Nothing.
 
 ## Found in other modules (REPORT)
 
-1. **legacy-tests** (`bio-plane/test/textshown.test.mjs`): QUESTION 1's fixture; the arm stays red (33/1) until its text-shape page is a text page by R26, or BOB rules otherwise.
+1. **legacy-tests** (`bio-plane/test/textshown.test.mjs`): QUESTION 1's fixture; the arm stays red (33/1) until its text-shape page is a text page by R26 (sent to legacy-tests by BOB).
 2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` (the plane's source); BOB regenerates at the close.
 
 ## Tests and checks
