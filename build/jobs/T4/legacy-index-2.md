@@ -16,7 +16,9 @@ WAITING on BOB: the ANSWER to QUESTION 1 (T4-8), and the CHANGE that `capture` e
 
 ## T4-7 (waiting on the CHANGE)
 
-`op=monitor`'s Drive tick calls `driveRow` at five sites (the folder, file and unknown-shape refusals, and C-48.8/C-48.9's shell arms); `index.mjs` no longer defines it and `capture/acquire.mjs` holds it privately. Both tick codes (`DRIVE_TICK_EXPORT_IS_THE_SHELL`, `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) have `DRIVE_CAPTURE_CHECKS` rows, so capture's reader serves them unchanged. Once `capture` exports it, the change here is one name added to the existing `import { … } from "./capture/acquire.mjs"`; tested end to end through `monitor-assess` and a driver ticking each Drive arm.
+`op=monitor`'s Drive tick calls `driveRow` at five sites (the folder, file and unknown-shape refusals, and C-48.8/C-48.9's shell arms); `index.mjs` no longer defines it and `capture/acquire.mjs` holds it privately. Both tick codes (`DRIVE_TICK_EXPORT_IS_THE_SHELL`, `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) have `DRIVE_CAPTURE_CHECKS` rows, so capture's reader serves them unchanged. Once `capture` exports it, the change here is one name added to the existing `import { … } from "./capture/acquire.mjs"`. `monitor-assess` (legacy-tests' suite) ticks every Drive arm through the plane: the folder, file and unknown-shape refusals (C-48.2–C-48.4) and both shell arms (C-48.8, C-48.9, with the record unmoved), so it is the end-to-end test.
+
+**Pre-measured, not committed:** with `export` added to capture's `driveRow` in the working tree only (capture's file, restored after) and the import added here: `monitor-assess` 91 pass, 0 fail (base on this branch: 8 fail, then `ReferenceError: driveRow is not defined`, no foot); `drive` green.
 
 ## Tests and checks
 
