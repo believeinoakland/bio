@@ -104,7 +104,13 @@
 
 - N107 · 2026-09-27 · **queue** (PROGRESSIONS #1, K147): aggregate progressions' `cardinality_exceeded` finding into its proposal items with its own wording (it is not "required and absent").
 
-- N108 · 2026-09-27 · **extraction** (ENTITIES #1 REPORT 6): state `readings`, `reading_refs`, `reading_ref_terms` as a read contract (entities and connections join them) and the term fold in Provides.
+- N108 · 2026-09-27 · **extraction** (ENTITIES #1 REPORT 6): state `readings`, `reading_refs`, `reading_ref_terms` as a read contract (entities and connections join them) and the term fold in Provides; `capture_text_skipped` joins it (retrieval's frontier and `contentAxis` read it: RETRIEVAL #1 REPORT 6), and D-672 is whole once extraction's unit writer names sheets (retrieval R25 is met over `sheet-range` units).
+- N109 · 2026-09-27 · **capture** (RETRIEVAL #1 REPORT 7): state a read contract on `links` (`source_capture`, `address_norm`, `partition`, `first_seen`), which retrieval's frontier R40 reads.
+- N110 · 2026-09-27 · **entities** (RETRIEVAL #1 REPORT 8): the read contract extends to `entities(entity_id, at)`, which retrieval's frontier R46 reads.
+- N111 · 2026-09-27 · **provenance** (RETRIEVAL #1 REPORT 9): R48's contract names `register.registered` and `captured_locators.address_norm`, which retrieval reads (§5.1's cause, R41).
+- N112 · 2026-09-27 · **legacy-store**, **queue** (RETRIEVAL #1 REPORTs 10, 12; BIAS #1 REPORT 5): `#counts` (`op=stats`) counts retrieval's and bias's tables by name, and `#obligationsBiasDebt` reads bias's; the thin delegates `#frontierLatest`, `#frontierVerification`, `#frontierDocumentVisible` have no caller. Removed or rewired by the job that next extracts from legacy-store (queue's, for the two reads).
+- N114 · 2026-09-27 · **affordances** (OBSERVATION-LOG #1 REPORT 2): D-681's NON_ACTS row for `op=leadlist`. **queue**: re-export `CONDITION_KINDS` from `queuestate.mjs` (its REPORT 5).
+- N113 · 2026-09-27 · **observation-log** (RETRIEVAL #1 REPORT 12): state `DOCUMENT_EVIDENCE_IS_ONE_SIDED` in its vocabulary, beside content's, meaning's and the internet's, so retrieval R41 can publish the document level's sidedness (today `evidence_one_sided: true`, all three causes live). A requirement change: for Bob with the next observation-log entry.
 
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
@@ -112,7 +118,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 
 ### Layer 1
 - **id-spaces** · N105.
-- **legacy-checks** · N94; N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
+- **legacy-checks** · N94; the stale `where`s connections' move leaves and rows C-81.11–C-81.14 (connections R43, K152; CONNECTIONS #1's record); the two comments at `VERSION_CHAIN_CHECKS`' and `AI_RUNS_CONTEXT_CHECKS`' headers stop pointing at `MEANING_READ_CHECKS` "above" (RETRIEVAL #1 REPORT 4); N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
 - **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 and C-91.1–.3 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
@@ -131,7 +137,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 - **run-productions** · T6-7 · Extract per map and requirements (K3, K31, K82, K83, K102, N54, DEC-49); D-595 (R9; K129); R13, R14 as its requirements; reads strength's R26–R27 (N60, the user's side).
 - **capture-requests** · T6-8 · Extract per map and requirements (K58, K102, K103, K109, N35, N63); D-581 (R20, R27), D-582 (R18), D-584 (R19) (T4's "Not in T4"), D-583 (R29; K129); R6, R7, R16, R21, R38–R42 as its requirements; N35; N39 (its share: fills the registrations observation-log and ai-runs offer); N63 (its share: pending count and tick interval as named services, `expired` a completion).
 - **skills** · T6-9 · Extract per map and requirements (K102); no rows; R10, R21 as its requirements; N53 (its share: its tests that read `agent-worker` and `index.mjs` move); N70 (its share: the doctrine's source, skilldoctrine and skillpack reds).
-- **agent-worker** · T6-10 · its `stepLog` control-flow entries sent via `op=airuntick` carry a state that is a look, or none, never `NEVER_LOOKED` (observation-log R3, K148); Build per requirements (K102; no map, it sits at its paths); D-611 (R40); R41, R47, R48 as its requirements; N53 (its share).
+- **agent-worker** · T6-10 · `agent-worker/test/plane-meaning.mjs` imports `MEANING_READ_CHECKS` from `bio-plane/src/retrieval/checks.mjs`, no longer the catalogue (RETRIEVAL #1 REPORT 2); its `stepLog` control-flow entries sent via `op=airuntick` carry a state that is a look, or none, never `NEVER_LOOKED` (observation-log R3, K148); Build per requirements (K102; no map, it sits at its paths); D-611 (R40); R41, R47, R48 as its requirements; N53 (its share).
 
 ### Layer 7 (order: `intent`, `reevaluation`)
 

@@ -8,7 +8,7 @@ import { membershipBeside } from "../../../src/extraction/filemembership.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
-test("R31: a member asserts a connection between two held documents with a basis — asserted_by member, grade D, apart from derived rows", () => {
+test("R31, R53, R54: a member asserts a connection between two held documents with a basis — asserted_by member, grade D, apart from derived rows", () => {
   const w = world();
   w.member("alice"); w.member("bob");
   w.doc(A, ["a"]); w.doc(B, ["b"]);
@@ -60,7 +60,7 @@ function hold(w, id, address) {
   return c;
 }
 
-test("R30: the membership is served with its label, beside the links; a file above the first item or with no place is unplaced, never assigned", async () => {
+test("R30, R55, R56: the membership is served with its label, beside the links; a file above the first item or with no place is unplaced, never assigned", async () => {
   const w = world();
   const ag = agenda(w);
   const r = await w.k.storeFileMembership({ captureSha: ag, viewer: MACHINE });
@@ -86,7 +86,7 @@ test("R30: the membership is served with its label, beside the links; a file abo
   assert.equal(w.k.fileMembership({ captureSha: ag, viewer: null }).reason, "NO_SUCH_CAPTURE");
 });
 
-test("R49: stored as a system connection graded C once both documents are held; re-derived when either is re-read; confirm and reject kept with who, when, why", async () => {
+test("R49, R55, R56, R57: stored as a system connection graded C once both documents are held; re-derived when either is re-read; confirm and reject kept with who, when, why", async () => {
   const w = world();
   w.member("alice"); w.member("bob");
   const ag = agenda(w);

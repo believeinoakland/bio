@@ -308,3 +308,34 @@ test("R33: the connection (the evidence) stays visible; a hidden end's bundle id
   const m = w.k.read({ entityId: E, viewer: MACHINE }).connections[0];
   assert.equal(m[`${hid}_bundle_id`], B); assert.equal(m.on_point[hid].chosen_by, "alice");
 });
+
+test("R51: one module registers the derivation provider, called with the entity and {hasArtifact, enteredAt}; a second is PROVIDER_DECLARED; none is NO_PROVIDER, a throw PROVIDER_FAILED", () => {
+  const w = world();
+  pair(w);
+  assert.equal(w.k.read({ entityId: E, viewer: V("x") }).derivation.cause, "NO_PROVIDER");
+  const calls = [];
+  assert.equal(w.k.registerDerivationProvider("observation-log", (id, o) => { calls.push([id, o]); throw new Error("boom"); }).ok, true);
+  assert.equal(w.k.registerDerivationProvider("another", () => ({})).reason, "PROVIDER_DECLARED");
+  const d = w.k.read({ entityId: E, viewer: V("x") }).derivation;
+  assert.equal(d.recorded, false); assert.equal(d.cause, "PROVIDER_FAILED");
+  assert.equal(calls[0][0], E); assert.equal(calls[0][1].hasArtifact, true); assert.equal(calls[0][1].enteredAt, w.clock.now);
+  w.k.derivationStatement("ENT-2026-0404");
+  assert.deepEqual(calls[1], ["ENT-2026-0404", { hasArtifact: false, enteredAt: null }]);
+});
+
+test("R52: portionAxes — a reaching grade as a value, otherwise undetermined and which kind, never none; narrowed to one subject; names no bundle id", () => {
+  const w = world();
+  const { a, b } = pair(w, { pagesA: [2] });
+  const inside = w.mint(A, a, { kind: "pdf-page", page: 2 });
+  const out = w.mint(A, a, { kind: "pdf-page", page: 5 });
+  const unp = w.mint(B, b, { kind: "pdf-page", page: 0 });
+  const ax = w.k.portionAxes([inside, out, unp], { entityId: E });
+  assert.deepEqual({ ...ax[inside], why: 0 }, { determined: true, grain: "portion", mode: "value", grade: "A", established: true, why: 0 });
+  assert.equal(ax[out].determined, false); assert.equal(ax[out].grade, null);
+  assert.equal(ax[out].undetermined_because, "CONNECTION_OUTSIDE_PORTION");
+  assert.equal(ax[unp].undetermined_because, "CONNECTION_PORTION_UNDETERMINED");
+  for (const id of [out, unp]) { assert.ok(ax[id].empty_level); assert.ok(ax[id].why); assert.equal(ax[id].grain, "portion"); }
+  const other = w.k.portionAxes([inside], { entityId: "ENT-2026-0404" });
+  assert.equal(other[inside].undetermined_because, "NO_CONNECTION");
+  assert.equal(JSON.stringify(ax).includes(A) || JSON.stringify(ax).includes(B), false, "no bundle id is named");
+});

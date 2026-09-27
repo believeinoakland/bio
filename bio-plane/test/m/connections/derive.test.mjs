@@ -219,3 +219,11 @@ test("R36: purge clears connections and choices keyed to either end, refs and pl
   for (const t2 of ["connections", "refs", "connection_dirty", "themes", "theme_placements", "connection_pair_choices", "asserted_connections"])
     assert.equal(w.count(t2), 0, t2);
 });
+
+test("R50: weakerGrade answers the weaker of two grades by gradeRank; equal grades the first; an unknown grade ranks lowest; never throws", () => {
+  assert.equal(weakerGrade("A", "B"), "B"); assert.equal(weakerGrade("C", "A"), "C");
+  assert.equal(weakerGrade("B", "B"), "B"); assert.equal(weakerGrade("D", "C"), "D");
+  assert.equal(weakerGrade("A", "Z"), "Z", "an unknown grade ranks below every one");
+  assert.equal(weakerGrade(null, "D"), null);
+  assert.doesNotThrow(() => weakerGrade(undefined, {}));
+});

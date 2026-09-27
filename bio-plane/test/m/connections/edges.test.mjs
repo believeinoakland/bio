@@ -208,7 +208,7 @@ test("R29: when a target is promoted, the resolved links that point at it become
   assert.match(w.record.readFile(A, "bundle.md").text, /target: INFO-2026-0003-c/);
 });
 
-test("R32: a source's own link between two held documents is an A connection, asserted by the source, apart from derived rows; undetermined timing labelled", () => {
+test("R32, R54: a source's own link between two held documents is an A connection, asserted by the source, apart from derived rows; undetermined timing labelled", () => {
   const w = world();
   const { s } = linked(w);
   w.k.projectLinks({ sourceCapture: s, viewer: MACHINE });
