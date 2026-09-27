@@ -1,0 +1,51 @@
+# Plan: tranche T7
+
+**Status** · OPEN · BOB #50 · session_01RNn16JdnSWYvj8Kr6VHvHT · depth 1
+
+Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mailbox-and-doorbell mechanics in force (K168, K169; civicos-process `main` @ 4ae7694). Branch `tranche/T7` starts at the commit that opened this plan. It carries T6's unrun layers 3, 4, 6, 7 and 11 (K165: 21 jobs), re-read for what T6's layers 1–2 changed (K170), and three ready entries for layer-3 modules (N90, N92, N103). Five layers, lowest first (P10): 3, 4, 6, 7, 11. The rules T6's plan states hold here: each extraction is done by its target module's job (mechanics §12.2) per its map (`build/extraction/<module>.md`) and requirements; every job writes requirement-named tests for every live id (P7), applies every carried row its requirements mark *not yet met*, and judges built work on the snapshot against its requirements (§12.5); a user builds against its provider's Provides, and BOB merges a provider early once its Provides are final (§4), sending its users a CHANGE. An `N` entry's text, as filed, is in `build/plan/next.md` (`Later layers`) or `build/plan/archive/T6.md`'s appendix; a job applies only the share this plan gives it. Bob's meter at the opening: asked.
+
+
+
+### Layer 3
+- **capture** · N103 (drop the unused `readingInputs` and `acquireOp`'s reading inputs); N90 (bound its six unbounded routes; meaning-bounds' ceiling moves back); N122 (`captureOf` adopts a later caller's `env` or governor, or refuses loudly; tested at the interface); N109 (the read contract on `links`: the job proposes its Provides text in a QUESTION, BOB folds it, as K152).
+- **provenance** · N92 (`provenanceAudit` registers with record-core's `registerAuditCheck`, R59, and drops its wrapper); N111 (R48's contract names `register.registered` and `captured_locators.address_norm`; proposed and folded as N109).
+- **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read (R55–R63), as folded (K157–K159; Bob answered its Opens, K158); not N123 (membership offers no revocation notice yet).
+
+### Layer 4 (K157: content's N117 precedes inquiry's `onStale`)
+- **content** · N117 (its share: bound `markStale`, R41: one read and one update per re-read, never a notice per row inside promotion's transaction, as the store's REC-66/D-227 did); N119 (R32 states the crop's wire encoding, `bytes_base64`, D-419; the module or the route encodes it).
+- **extraction** · N108 (`readings`, `reading_refs`, `reading_ref_terms` and `capture_text_skipped` stated as a read contract with the term fold; the unit writer names sheets, so D-672 is whole; proposed and folded as N109).
+
+### Layer 6 (order: `inquiry`, `citation`, `basis-versions`, `strength`, `contradiction`, `ai-runs`, `run-productions`, `capture-requests`, `skills`, `agent-worker`)
+
+- **inquiry** · T6-1 · Extract per map and requirements (K3, K64, K83, K102, N55, N56); REC-202, D-572, D-592 (R19; T5's promotion applies its `reopen` side), MK-5 (R31); R22, R26, R39 as its requirements; N67 (its share: R38's C-2.8 stops calling `checkPublishedExtension`); N112 (its share: remove legacy-store's thin delegates `#frontierLatest`, `#frontierVerification`, `#frontierDocumentVisible`, which have no caller).
+- **citation** · T6-2 · Extract per map and requirements (K3, K64, K83, K102, N55); no rows; N55 (DONE, K85).
+- **basis-versions** · T6-3 · Extract per map and requirements (K3, K91, K102, N64); no rows; N64 (its share: `projectsDrawingOn`, R37); N67 (its share: `testimonyReach` moves here, R22–R23's read for `concluded_elsewhere`).
+- **strength** · T6-4 · Extract per map and requirements (K3, K86, K102, N60); no carried rows (D-660, D-736 dropped); R5, R15 as its requirements; N60 (R26–R27, the pair `run-productions` reads); N82 (the earned registry reads provenance's `captureGrade`).
+- **contradiction** · T6-5 · Extract per map and requirements (K3, K31, K64, K102); no rows; R21 (the run gate by registration, K31).
+- **ai-runs** · T6-6 · deletes bias's interim work-product adapter `bias/interim.mjs` (K146); Extract per map and requirements (K3, K31, K71, K75, K78, K80, K82, K83, K102, N39, N54); D-375; R17, R30, R36, R37, R40 as its requirements; N39 (its share); N49 (its share: re-export observation-log's vocabulary from `airun.mjs`, delete its copy); N69 (its share: delete its copy of `searchedSection`); registers the work products `bias` reads (T5-7's hand-off); N54 (DONE, K86).
+- **run-productions** · T6-7 · Extract per map and requirements (K3, K31, K82, K83, K102, N54, DEC-49); D-595 (R9; K129); R13, R14 as its requirements; reads strength's R26–R27 (N60, the user's side).
+- **capture-requests** · T6-8 · Extract per map and requirements (K58, K102, K103, K109, N35, N63); D-581 (R20, R27), D-582 (R18), D-584 (R19) (T4's "Not in T4"), D-583 (R29; K129); R6, R7, R16, R21, R38–R42 as its requirements; N35; N39 (its share: fills the registrations observation-log and ai-runs offer); N63 (its share: pending count and tick interval as named services, `expired` a completion).
+- **skills** · T6-9 · Extract per map and requirements (K102); no rows; R10, R21 as its requirements; N53 (its share: its tests that read `agent-worker` and `index.mjs` move); N70 (its share: the doctrine's source, skilldoctrine and skillpack reds).
+- **agent-worker** · T6-10 · `agent-worker/test/plane-meaning.mjs` imports `MEANING_READ_CHECKS` from `bio-plane/src/retrieval/checks.mjs`, no longer the catalogue (RETRIEVAL #1 REPORT 2); its `stepLog` control-flow entries sent via `op=airuntick` carry a state that is a look, or none, never `NEVER_LOOKED` (observation-log R3, K148); Build per requirements (K102; no map, it sits at its paths); D-611 (R40); R41, R47, R48 as its requirements; N53 (its share).
+
+### Layer 7 (order: `intent`, `reevaluation`)
+
+- **intent** · T6-11 · Extract per map and requirements (K102); no rows, no next.md entries; R2–R18, R26 new (R19–R25 bind the new code; R22 met when C-2.9's check moves).
+- **reevaluation** · T6-12 · Extract per map and requirements (K102); REC-222 (R14; REC-209 superseded), REC-223 (R15); R8, R9, R16, R17 as its requirements; its `raise` from `reopen` reads promotion's `onReopened` (N62, T6's layer 2).
+
+### Layer 11
+
+- **legacy-index** · T6-13 · K153's `bio-plane/scripts/coverage.mjs` edit (`--strict` stops gating on op reach through the plane and on check naming; the condition becomes `if (STRICT && (uncontrolled.length`), refused to LEGACY-INDEX #3 by its permission check and not approved by Bob before T5 closed: it needs his approval in the session that makes it (§16); the routes of the ops layers 6–7 move (N43's pattern); N70 (its share: `scripts/pensweep.mjs`'s `git check-ignore` under symlinked `node_modules`; N68's `op-claims` if T4's removal (N12) left any); not N21 (T5 routed its remainder as N116, layer 10); N66 (its share) not here: its arms move with `capture` and `instance-setup`.
+- **queue** · N107 (progressions' `cardinality_exceeded` finding aggregated into its proposal items in its own wording); N112 (its share: `#counts` (`op=stats`) and `#obligationsBiasDebt` read retrieval's and bias's tables through their modules, not by name; the unused `enteredAfterFirstRow` import; `pdfstructure` into `PROJECT_NAMING_READS_NOT`); N114 (its share: re-export `CONDITION_KINDS` from `queuestate.mjs`).
+- **affordances** · N84; N114 (its share: D-681's NON_ACTS row for `op=leadlist`); N115 (a published act or a NON_ACTS row for each op it names, and each new mutating op's rung or stated absence; the `rung-ladder` FORWARD arm's exact count).
+- **legacy-tests** · T6-14 · re-anchor or retire what layers 6–7 break; N31 (its share: `fleetbundles` arm (j) with N14, and its listed reds); N53 (its share: the old skills tests released as they move); N68 (its share); N70 (its share: `owed-controls` after T5's N88); the rest of N57's control sweep and four control arms (T5's outcome); N46 if its suites still pin `query.mjs`'s text.
+
+**Forwarded to these jobs at their start** (P9; each is in its reporter's record on the T6 job branches, merged to `main`):
+- promotion (layer 2): LEGACY-CHECKS #2 REPORTs 6 (`FACT_MALFORMED`, `STEP_DECLARED` rows owed), 7 (`CATALOG_VERSION` after 30 rows added and 71 `where`s moved; d470 A3/A9).
+- provenance (layer 3): LEGACY-CHECKS #2 REPORT 4 (mark `is-origin-act`, `is-origin-statement`; the `is-testify-bytes` refusal).
+- content (layer 4): LEGACY-CHECKS #2 REPORT 8 (the store's `versionNotice` passage arm delegates to content's `passageNotice`).
+- run-productions (layer 6): LEGACY-CHECKS #2 REPORT 2; K163 (R12 `EXTRACT_NO_SCOPE`, R13).
+- capture-requests (layer 6): LEGACY-CHECKS #2 REPORT 3 (`is-capture-fetch-failed`; `captureRequestRetry > is-capture-request-retry` mints C-28.18).
+- legacy-tests (layer 11): LEGACY-CHECKS #2 REPORT 10 (the guard's ratchets and arm G, the old-battery re-pins); N124.
+- promotion's own share is done (PROMOTION #5); its REPORTs: (1) rows owed by legacy-checks (N128); (3) legacy-tests: the d470 1.36.0 re-pin and the guard ratchets in its record; (4) reevaluation replaces the store's registration under its name with its own `onReopened` listener, and reconciles R7's `{raised}` with the store's `{source, since, raised}` reply.
+- record-core's REPORT R3 for legacy-tests: `meaning-bounds`, `bounds` red identically on the base (N70).
