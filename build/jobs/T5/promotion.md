@@ -66,3 +66,73 @@ ADDED bio-plane/src/store.mjs:45682  promote: () => promotionOf(this.ctx).promot
 ```
 
 Size: test runs 72, module lines 2037
+
+# PROMOTION #4
+
+**Session** PROMOTION #4, `session_01W2PTadnDKxA16EUS4CW7Bz`, on `job/T5/promotion` (re-cut from `tranche/T5` @ `a31fe1aabd`, bias merged). Re-opened by K150 (P10's service-change exception). Process: civicos-process @ `7549c0b`, `roles/JOB.md`. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5` (BOB #46, `session_01Q3WyZBMy4MH1Acpgtw9awA`).
+
+**Status** · COMPLETE, 2026-09-27. K150 applied; available until layer 5 closes for any further row a layer-5 job moves (it joins 1.35.0 by CHANGE).
+
+**Read whole:** `roles/JOB.md`, `build/manifest.md`, `build/requirements/promotion.md`, K142, K146, K150, this record, `write-path.test.mjs`, `promote.test.mjs`, `src/gate.mjs`'s version notes; the old-plan rows the requirements' header carries (D-546, D-578, D-615, D-628, D-673, D-692, D-695, D-700, D-707, D-717, D-718, D-726, D-738, D-741).
+
+**Baseline** on `a31fe1aabd`: `node --test test/m/promotion/`: tests 55, pass 54, fail 1 (R18's floor: "the catalogue's rows sited at the promote write: 38").
+
+## Entries applied (K150)
+
+- **R18** · the write-path suite drops the bias relay (the `checkBiasExtension` arm of `RELAYED`, C-26.1–C-26.7) and the `BIAS_REFUSED` probe (C-26.11): both rows left the catalogue for `src/bias/` (layer 5), which promotion cannot import. The floor moves 40 → **38**, counted against the catalogue as it stands: 46 rows sited at the promote write at 1.34.0's commit, 38 now; the eight gone are exactly C-26.1–C-26.7 and C-26.11. C-26.12 (`BIAS_ILLEGAL_TRANSITION`, R15) stays and is still probed.
+- **R34** · `CATALOG_VERSION` 1.34.0 → **1.35.0** (MINOR), with its note in `src/gate.mjs`. Derived from `bio-plane/checks/bio-checks.mjs`'s diff between `3ec9dbc533` (the commit that set 1.34.0) and `a31fe1aabd`: 830 lines, all removals; both catalogues loaded and every row's `check` id compared. **45 departures, no arrivals, no row changed:**
+  - CALIBRATION #1 (`94547e7dd7`): C-42.1–C-42.7 (`CALIBRATION_CHECKS`)
+  - EXTRACTION #1 (`5637083691`): C-51.1–C-51.5 (`REEXTRACT_CHECKS`)
+  - ENTITIES #1 (`7105bd5dbb`): C-91.1–C-91.3 (`IDSPACE_CHECKS`)
+  - PROGRESSIONS #1 (`e72e3563bb`): C-33.26 `UNKNOWN_AFTER`, C-33.42 `NO_DEFINITION_VERSION`, C-33.43 `DEFINITION_MOVED`
+  - OBSERVATION-LOG #1 (`6d44967ab5`, K142): C-54.2–C-54.10 (`LEAD_CHECKS`)
+  - BIAS #1 (`4a0220de10`, K146, K150): C-26.1–C-26.11, C-26.13–C-26.19, with `checkBiasExtension` and `BIAS_BAR_PHRASING`, `BIAS_STATEMENT_KINDS`, `BIAS_VERDICT_SPEAKER`, `BIAS_VERDICT_WHOLESALE`
+  - CONTENT #1 (`108ba93457`) moved the helpers `imagePageUndetermined`, `legContentId`, `mintUndetermined`, which carry no check id.
+  The d470 suite's own print on this tree: **count 523** (568 − 45, agreeing with the row diff), **sha256 `ac5d8ad6244d6c279bdfb55fa29d7440765d8d6d1faa9a2f0916b160eafb9fba`**, **source `38f86aa4da5e1cf63c89693773ceb3aaeca28b1086e911cfda471123da566883`**. `GATE_VERSION` is `plane-gate/1.0 (bio-checks 1.35.0)`.
+
+## Improvements made in the module
+
+- **R15's test covered five types by a hand list.** It now iterates every type a record can hold, read from the catalogue's `STATES` through `normalizeType`: focus and problem are inquiries there, so the five are the whole set today, and a new type joins without an edit.
+- **R17's test covered three types by a hand list** (with `void type` in two arms). It now runs every `STATES` type; and a new write-path test drives an action revision that sends nothing readable through the store with legacy-store's registered fences present (D-741's repro shape: no files, no `bundle.md`, a blob-held `bundle.md`, no front matter) and gets the readability refusal each time, never a registered fence's.
+
+## The *not yet met* marks (for BOB to clear)
+
+Each checked against a test at the interface, on this tree, all green:
+
+| mark | carried rows | met? | the test |
+| --- | --- | --- | --- |
+| R11 | D-578, D-628, D-707 | met | `promote.test.mjs` "R11: missing fields are refused by name or carried forward and said so…" (typeless revision carried; `PROMOTED_TYPE_UNSTATED`, `PROMOTED_FIELD_UNSTATED`; snap key, path, content and bytes each by name) |
+| R12 | D-615, D-692 | met | "R12: created and last_updated come from the document…" (`ENVELOPE_DATES_DISAGREE` C-86.7, `REVISION_REDATES_CREATION` C-86.9) |
+| R13 | D-726, C-64.1 | met | "R13: a creation takes the recorded producing group…" (`REVISION_REGROUPS_BUNDLE` C-86.14, `GROUP_UNDETERMINED` C-64.1, replay keeps its group) |
+| R14 | D-738 | met | "R14: a non-replay promotion whose document's id differs…" (C-1.1 at the door, creation and revision) |
+| R15 | D-546 | met | "R15: a state move along an undeclared edge is refused…" (every from→to pair of every type, now read from the catalogue) |
+| R17 | D-741 | met | "R17: readability is judged first…" (every type) and write-path "R17: through the whole write path…" (new, D-741's shape) |
+| R18 | D-695, D-717 | met as worded | write-path "R18: every refusal the catalogue sites…" (38 rows, each by name) and the relay test. R18 itself says D-695 (C-2.10) and D-717 (five action arms) arrive with `actions`' extraction through R39 (K64): not promotion's to build, so the carried-row list may drop them from the mark |
+| R30 | D-700, D-718 | met | `history.test.mjs` "R30: C-20.1 walks write order…", "R30: C-17.2 classifies…", "R30, R32: the audit runs the moved checks too" |
+| R31 | N8, K10 | met | `release.test.mjs` the three R31 tests |
+| R32 | D-673 | met | `history.test.mjs` "R32: an undeclared edge in the document's own state_history…" |
+| R45 | N63 | met | `registry.test.mjs` the three R45 tests |
+| R1–R20 "Errors" line | D-578, D-628, D-707 | met | `promote.test.mjs` "R20: every refusal names a reason, carrying its catalogue row…; NO_BODY; never throws for any JSON package", with R11's test for the three rows' raw-stack cases |
+
+None is unmet.
+
+## Deferred
+
+- Nothing of this module's own.
+
+## Found in other modules (REPORT)
+
+1. **legacy-tests (T5-12), d470-catalog-census:** 10 pass, 3 fail here (A1, A3, A5), as expected. Re-pin: `"1.35.0": { count: 523, digest: "ac5d8ad6244d6c279bdfb55fa29d7440765d8d6d1faa9a2f0916b160eafb9fba", changed: [], source: "38f86aa4da5e1cf63c89693773ceb3aaeca28b1086e911cfda471123da566883" }`, and A5's literal (still `1.33.0`) → `1.35.0`. It supersedes PROMOTION #3's 1.34.0 row, which was never pinned; whether both rows are kept is legacy-tests'.
+2. **legacy-index (T5-11), the ratification gate without bias's checks:** `checkBundle` no longer runs `checkBiasExtension`, and nothing outside `src/bias/` calls `withBiasChecks` yet (`src/index.mjs` wraps `runGate` with provenance's `withRegisterChecks` only). Until T5-11 lands K146's wrap, `op=ratify` does not judge C-26.1–C-26.7.
+3. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` embeds `src/gate.mjs` (now 1.35.0). For the layer close (manifest §14).
+
+## Tests and checks run (on `a31fe1aabd` + this job)
+
+- My module: `node --test bio-plane/test/m/promotion/`: `tests 56, pass 56, fail 0` (baseline 54/1; one new: R17 through the write path).
+- Layer tests: none named in `build/manifest.md`. No service's answer changed beyond the version string; users and providers run anyway: record-core 46/0, membership 77/0, provenance 54/0, bias 45/0. No other suite names `1.34.0`.
+- `node checks/format.mjs /home/user/bio`: `format: 69 modules, 64 requirements files; 0 failures`
+- `node checks/architecture.mjs /home/user/bio promotion`: `architecture: 16 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `node checks/coverage.mjs /home/user/bio promotion`: `coverage: 1 modules, 45 of 45 live requirement ids named by a test; 0 failures`
+- `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 3 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 0 line(s) added, 0 removed; 0 failures`
+
+Size: test runs 12, module lines 2048
