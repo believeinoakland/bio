@@ -1447,8 +1447,8 @@ t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the a
   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this run's print, diffed by name: documentsNamingEntity and
      selectionRelease MOVED (entities/index:namingDocuments, retrieval/index:selectionRelease); proposalsFeed LEFT (its
      inline row source became `this.#pairs()`, and it is admitted, not walked); progressions/index:#assemble ARRIVED —
-     the old `#assembleInstance` was NO INLINE ROW SOURCE, and the module writes its placements read in the `for` header,
-     a spelling of the same work; and four of the widened corpus's T3/T4 arrivals (record-core's commit and auditPass,
+     the old `#assembleInstance` was NO INLINE ROW SOURCE, and the module reads its exceptions (`progression_exceptions`) in a `for`
+     header, a spelling of the same read; and four of the widened corpus's T3/T4 arrivals (record-core's commit and auditPass,
      capture's #chromeDeriveCapture and #judgeChrome) carry an inline row source and body amplification. */
   HOIST.stable, ["capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "entities/index:namingDocuments",
                  "progressions/index:#assemble", "publishedCase", "record-core/index:auditPass",
