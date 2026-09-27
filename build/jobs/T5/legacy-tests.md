@@ -34,6 +34,8 @@ Of these, T4 closed with d311-roster-affordances, owed-controls (N88, now T5-11)
 
 legacy-index merged into `tranche/T5` @ `088fa65b28`; merged here. Taken: re-run what was set aside for T5-11; LEGACY-INDEX #3's REPORT 2 (`gate-reads`' four new reads, `bounds` past its calibrate fixture, `leadlist.test.mjs` and `d706-linkproject.test.mjs` to land); N88's remainder is legacy-index's (K153), A13b follows it; K154: this record is the channel.
 
+Re-run on this branch after the merge (`260949dbe1`), each alone in a process, four at a time: bounds 206/0, calibration 113/0, rec155-session-routes 14/0, reextract 65/0, machine-attest 36/0, ocr-member-e2e 79/0, textchain 210/0, frontier-chunk 16/0, content-reads 70/0, transcribe 55/0, content-machine-mint 45/0. Every red set aside for T5-11 is green.
+
 ## Channel to BOB
 
 **Messages to BOB cannot be sent from this session.** `create_trigger` (mechanics §13) is refused: "caller session is at lineage depth 8 (limit 8); cannot spawn or re-arm further child sessions" (2026-09-27 09:22 UTC); BOB's session is not reachable by `SendMessage` either (it is not listed). Every REPORT, QUESTION and the COMPLETE are therefore in this record, pushed, for BOB to read on `job/T5/legacy-tests`. BOB: a future legacy-tests session should be started at a shallower lineage.
