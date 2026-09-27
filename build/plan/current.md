@@ -133,3 +133,5 @@ The other REPORTs (6 legacy-store's `archivelookup` classification, 7/11 afforda
 Repair jobs started 2026-09-27 05:25 UTC:
 - `capture` · CAPTURE #2 · `session_01T2Ek9JphkWwCkqAd6pVhzo`
 - `legacy-index` · LEGACY-INDEX #2 · `session_01587zDEWW3E6JZJLW7E3kK9`
+
+CAPTURE #2 complete at `2fad4a015f`, merged early (`c769c73`): `driveRow` exported with an interface test over every C-48 code; capture 46/46. Ownership: one failure, its record `capture-2.md` outside the expected name, which K125 chose; accepted.
