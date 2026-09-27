@@ -2590,13 +2590,18 @@ if (owedProblems.length)
     + `\n  in one step — and a row deleted to make this section tidy is how a debt gets discharged by`
     + `\n  arithmetic. Move the pins only in the turn that PLACES and RUNS the arm.`);
 
+/* N88 (T5-11; K100 (1), N14): FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR are REPORTED above and no longer GATE
+   `--strict`. They are the old declaration and floor rules K100 (1) retired for requirement-named suites and N14's
+   tooling: a module's own suites are held to its requirement ids (coverage in the process repository), and the fleet
+   members' suites with them, so a floor that can only fall by an edit to an old suite's prose is a figure, not a
+   gate. `owed-controls` A13b reads this as "reported, not gated". */
 if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
     || catalogWentBlind
-    || registerBelowFloor.length || newlyUnclassified.length
+    || newlyUnclassified.length
     || fleetUnreached.length
-    || fleetSuitesUndeclared.length || fleetSuitesUnclassified.length
+    || fleetSuitesUnclassified.length
     || owedProblems.length
-    || unaccountedWorkers.length || fleetBelowFloor.length || fleetSurfaceless.length || fleetMutating.length)) {
+    || unaccountedWorkers.length || fleetSurfaceless.length || fleetMutating.length)) {
   console.error("STRICT: coverage floor not met.");
   process.exit(1);
 }
