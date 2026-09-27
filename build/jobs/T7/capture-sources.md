@@ -12,3 +12,28 @@ Six points on building R55–R63; I am building on these readings now, and only 
 4. **The key.** The instance's key is a Worker secret, `CAPTURE_CREDENTIALS_KEY`, passed by the caller as `credentialsOf(ctx, {key})`. Any non-empty string works, and the AES-256-GCM key is derived from it by HKDF-SHA-256. There is a fresh 12-byte IV per row, and the associated data is the row's id, scope and project (Suggestions). Absent or empty, it is `NO_KEY` (R55, R56). No op is added in this job: the ops are the control plane's, and capture-requests is the first caller (layer 6).
 5. **Async.** WebCrypto is async, so `credentialSupply`, `credentialsForFetch` and `credentialWithdraw` answer Promises that never reject. `credentialList` is synchronous.
 6. **Viewer and `by` (R58, R63).** A viewer is membership's viewer string. `member:<id>` is that member, and the founder's `admin` is the administrator `admin`. Any other string, a machine class included, sees nothing. `by` is a member id. A revoked `member` credential (K159) is withdrawn with `withdrawn_by: "(revocation)"`, a string no member id can be, and `withdrawn_at` is the read that met it.
+
+## J2 · COMPLETE
+
+**Entries applied.** The layer-3 entry, the K103/K109 credentials (R55–R63), as folded (K157–K159) and with J1's six readings adopted (K174). The amended Purpose and R47 are met: the module's one store is the credentials table, declared to record-core's purge as `capture-sources`' own. New file `bio-plane/src/capture-sources/credentials.mjs`:
+- `credentialsOf(ctx, {key})`: one instance per storage, over `recordOf` and `membershipOf`.
+- `credentialSupply`, `credentialsForFetch` and `credentialWithdraw` answer Promises and never reject. `credentialList` is synchronous.
+- Table `capture_credentials`, purge-declared as `{keys: ["project"], whole: "scope='project'"}`, so `member` and `group` rows are never cleared.
+- Encryption: AES-256-GCM with an HKDF-SHA-256 key from `CAPTURE_CREDENTIALS_KEY`, a fresh IV per row, and the id, scope and project as associated data.
+- `CAPTURE_CREDENTIAL_CHECKS`, C-105.1–C-105.9.
+- Revocation (K159): each read sweeps the rows it meets. A `member` credential whose supplier is no longer active is withdrawn at that read, with `withdrawn_by: "(revocation)"`, and its ciphertext is destroyed.
+- No refusal echoes a caller's value, so a secret given in the wrong field is never shown back. No op, per B2.
+
+**Deferred.** None. N123, the immediate revocation notice, waits on membership as planned.
+
+**Other modules.** None found flawed. For capture-requests (layer 6), when it wires R41–R42: it passes `key: env.CAPTURE_CREDENTIALS_KEY` on the first `credentialsOf` call. It passes the row's `principal_plane`, `target` and `host` to R56. The obligations in the requirements' Suggestions (the ops, the redirect rule, provenance marking) are the callers'. No generated artifact is made stale: nothing in a bundled member imports these files.
+
+**Tests.** `node --test bio-plane/test/m/capture-sources/`: tests 69, pass 68, fail 0, todo 1. The todo is R37, not yet met and unscheduled (K48). The new suite `credentials.test.mjs` has 15 tests over the real record-core and membership (node:sqlite). It covers every R55 refusal in order, the scopes, hosts and ordering of R56, R57, and the viewers of R58. It covers a raw scan of every table for known secrets (R59), a sweep of every answer shape (R60), `readImage` and the bundle tables (R61), and a ciphertext moved to another scope failing to decrypt (R62). It covers R63's permission matrix, revocation at each of the three reads, and purge. There are no layer tests (manifest).
+
+**Checks** (civicos-process `checks/`):
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture`: 10 product files, 17 relative imports; 0 failures.
+- `coverage`: 63 of 63 live ids named by a test; 0 failures.
+- `ownership` vs `tranche/T7`: 3 files changed; 0 failures.
+
+Size (session_01KeNRofea8FepQThMPbuAiL): test runs 5, module lines 2153
