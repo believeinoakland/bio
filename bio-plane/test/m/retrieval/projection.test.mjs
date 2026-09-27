@@ -1,0 +1,228 @@
+/* retrieval: the projection and the text index (R1–R5, R30, R33, R53), at the module's interface. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { world, V, MACHINE, md, T0, infoMd } from "./fixture.mjs";
+import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES }
+  from "../../../src/retrieval/index.mjs";
+import { textOf, FTS_COLUMNS } from "../../../src/query.mjs";
+
+const ftsRow = (w, id) => {
+  const b = w.row(`SELECT fts_id FROM bundles WHERE bundle_id=?`, id);
+  return b && b.fts_id != null ? w.row(`SELECT rowid, ${FTS_COLUMNS.join(", ")}, bundle_id FROM bundles_fts WHERE rowid=?`, b.fts_id) : null;
+};
+const projRow = (w, id) => w.row(`SELECT ${PROJECTION_COLS.join(", ")} FROM bundles WHERE bundle_id=?`, id);
+
+test("R1: after a promotion the projection equals projectionOf(bundle.md) and the index row equals textOf(files), in the same transaction; a revision replaces the bundle's own row under the key allocated once", () => {
+  const w = world();
+  const files = [{ path: "notes.md", text: "water rates rose in the flats" }];
+  w.doc("INFO-1", { source_status: "live", source: { locator: "https://example.org/a", authority: "the city" } }, { files });
+  const md1 = w.row(`SELECT content FROM files WHERE bundle_id='INFO-1' AND path='bundle.md'`).content;
+  assert.deepEqual(projRow(w, "INFO-1"), projectionOf(md1, w.clock.now));
+  const t1 = textOf("INFO-1", [{ path: "bundle.md", text: md1 }, ...files]);
+  const r1 = ftsRow(w, "INFO-1");
+  for (const c of FTS_COLUMNS) assert.equal(r1[c], t1[c], c);
+  assert.equal(r1.bundle_id, "INFO-1");
+  const key = r1.rowid;
+  /* A revision: new text, same key; exactly one index row for the bundle. */
+  w.doc("INFO-1", { source_status: "withdrawn" }, { files: [{ path: "notes.md", text: "sewer bonds instead" }] });
+  const r2 = ftsRow(w, "INFO-1");
+  assert.equal(r2.rowid, key);
+  assert.match(r2.body, /sewer bonds/);
+  assert.doesNotMatch(r2.body, /water rates/);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles_fts WHERE bundle_id='INFO-1'`).n, 1);
+  assert.equal(projRow(w, "INFO-1").source_status, "withdrawn");
+  /* The same transaction: a promotion refused after the projection ran leaves neither changed (R30's first half). */
+  w.promotion.registerStep("later-refuser", { project: () => { throw new Error("refuse after the projection"); } });
+  const before = [projRow(w, "INFO-1"), ftsRow(w, "INFO-1")];
+  const head = w.row(`SELECT bundle_sha FROM bundles WHERE bundle_id='INFO-1'`).bundle_sha;
+  const refused = (() => { try { return w.promotion.promote({ bundleId: "INFO-1", base: head, snapKey: "kx", author: V("ann"),
+    files: [{ path: "bundle.md", text: infoMd("INFO-1", { source_status: "gone" }) }, { path: "notes.md", text: "zebra" }],
+    meta: { object_type: "information" } }); } catch (e) { return { threw: e.message }; } })();
+  assert.notEqual(refused.ok, true);
+  assert.deepEqual([projRow(w, "INFO-1"), ftsRow(w, "INFO-1")], before);
+});
+
+test("R2: projectionOf is pure — each column from the frontmatter, the re-evaluation record or legacy boolean, fm_json, and every column null (never a guess) when the frontmatter does not parse", () => {
+  const text = md({ id: "INFO-9", object_type: "information", schema: "information@2", title: "t", current_state: "collected",
+    source_status: "live", content_hash: "abc", annotations_open: 3,
+    produced_by: { mode: "manual", capability_tier: "t2" },
+    source: { locator: "https://example.org/x", authority: "the board", retrieved: "2026-09-01" },
+    monitoring: { enabled: true, frequency: "weekly", last_checked: "2026-09-20" },
+    reeval_pending: { flag: true, since: "2026-09-02", source: "INFO-8" } });
+  const p = projectionOf(text, 0);
+  assert.deepEqual(projectionOf(text, 0), p, "pure: the same bytes answer the same projection");
+  assert.deepEqual({ ...p, fm_json: undefined }, {
+    schema_id: "information@2", produced_mode: "manual", capability_tier: "t2", source_locator: "https://example.org/x",
+    source_authority: "the board", source_retrieved: "2026-09-01", source_status: "live", content_hash: "abc",
+    monitor_enabled: 1, monitor_frequency: "weekly", monitor_last_checked: "2026-09-20", annotations_open: 3,
+    reeval_flag: 1, reeval_since: "2026-09-02", reeval_source: "INFO-8",
+    action_kind: null, action_risk_tier: null, action_counterparty_state: null, action_resolution: null,
+    action_clock_next: null, action_clock_overdue: null, fm_json: undefined });
+  assert.equal(JSON.parse(p.fm_json).schema, "information@2");
+  /* The legacy boolean form of the re-evaluation flag. */
+  const legacy = projectionOf(md({ id: "INFO-9", object_type: "information", reeval_pending: false }), 0);
+  assert.deepEqual([legacy.reeval_flag, legacy.reeval_since, legacy.reeval_source], [0, null, null]);
+  /* Frontmatter the catalogue's parser cannot read (no fence, a fence never closed) and a non-string: every column null. */
+  for (const bad of ["no frontmatter at all", "---\ntitle: never closed\n", null, 42]) {
+    const q = projectionOf(bad, 0);
+    assert.deepEqual(Object.keys(q), [...PROJECTION_COLS]);
+    assert.ok(Object.values(q).every((v) => v === null), JSON.stringify(bad));
+  }
+});
+
+test("R53: the six action columns are what the registered actionFacts answers, only for a bundle whose type normalises to action; a second registration is refused FACTS_DECLARED; with none registered the six are null", () => {
+  const w = world();
+  const action = md({ id: "ACTN-1", object_type: "action", title: "a request", action_kind: "records_request" });
+  const six = ["action_kind", "action_risk_tier", "action_counterparty_state", "action_resolution", "action_clock_next", "action_clock_overdue"];
+  /* Nothing registered: null. */
+  assert.ok(six.every((c) => w.retrieval.projectionOf(action, 0)[c] === null));
+  const asked = [];
+  const r = w.retrieval.registerActionFacts("actions", (bundleMd, nowMs) => {
+    asked.push(nowMs);
+    return { kind: "records_request", risk_tier: 2, counterparty_state: "awaiting", resolution: "open",
+             clock_next: "2026-10-01", clock_overdue: nowMs > Date.parse("2026-10-02") };
+  });
+  assert.equal(r.ok, true);
+  assert.equal(w.retrieval.registerActionFacts("other", () => ({})).reason, "FACTS_DECLARED");
+  const early = w.retrieval.projectionOf(action, Date.parse("2026-09-01"));
+  assert.deepEqual(six.map((c) => early[c]), ["records_request", 2, "awaiting", "open", "2026-10-01", 0]);
+  assert.equal(w.retrieval.projectionOf(action, Date.parse("2026-10-09")).action_clock_overdue, 1);
+  /* A legacy spelling that normalises to action is asked too; any other type is not. */
+  asked.length = 0;
+  w.retrieval.projectionOf(md({ id: "INFO-1", object_type: "information" }), 0);
+  assert.equal(asked.length, 0);
+  /* A provider that throws leaves the six null rather than failing the promotion. */
+  const w2 = world();
+  w2.retrieval.registerActionFacts("actions", () => { throw new Error("boom"); });
+  assert.ok(six.every((c) => w2.retrieval.projectionOf(action, 0)[c] === null));
+  /* The promotion writes what the provider answers at the module's clock. */
+  w.doc("ACTN-2026-0001", { object_type: "action", title: "an action", action_kind: "records_request" });
+  assert.equal(projRow(w, "ACTN-2026-0001").action_kind, "records_request");
+});
+
+test("R3: reproject re-derives rows lacking a projection or an index, at most `limit` (500 by default, clamped 1–5,000) per call, and answers {reprojected, reindexed, limit, remaining}; the module's start runs it at 500", () => {
+  const w = world();
+  for (let i = 1; i <= 5; i++) w.doc(`INFO-${i}`, {}, { files: [{ path: "n.md", text: `word${i}` }] });
+  w.retrieval.projectionClear({});
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NULL AND fts_id IS NULL`).n, 5);
+  assert.deepEqual(w.retrieval.reproject({ limit: 2 }), { reprojected: 2, reindexed: 2, limit: 2, remaining: 3 });
+  assert.equal(w.retrieval.reproject({ limit: 0 }).limit, 500);
+  assert.equal(w.retrieval.reproject({ limit: 99999 }).limit, 5000);
+  assert.equal(w.retrieval.reproject({ limit: "x" }).limit, 500);
+  assert.equal(w.retrieval.reproject({ limit: -3 }).limit, 1);
+  assert.deepEqual(w.retrieval.reproject({}), { reprojected: 0, reindexed: 0, limit: 500, remaining: 0 });
+  for (let i = 1; i <= 5; i++) {
+    const md1 = w.row(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, `INFO-${i}`).content;
+    assert.deepEqual(projRow(w, `INFO-${i}`), projectionOf(md1, w.clock.now));
+    assert.match(ftsRow(w, `INFO-${i}`).body, new RegExp(`word${i}`));
+  }
+  /* The start: migrate() runs the bounded pass at 500. */
+  w.retrieval.projectionClear({ bundleId: "INFO-3" });
+  assert.deepEqual(w.retrieval.migrate(), { reprojected: 1, reindexed: 1, limit: 500, remaining: 0 });
+});
+
+test("R4: projectionPlan shows the filtered columns' indexes are used; projectionClear nulls a projection and by default its index row, one bundle or all", () => {
+  const w = world();
+  w.doc("INFO-1"); w.doc("INFO-2");
+  const plan = w.retrieval.projectionPlan();
+  assert.deepEqual(Object.keys(plan), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
+  for (const [c, rows] of Object.entries(plan)) assert.ok(rows.some((d) => d.includes(`bundles_${c}`)), `${c}: ${rows}`);
+  assert.deepEqual(w.retrieval.projectionClear({ bundleId: "INFO-1", text: false }), { ok: true, scope: "INFO-1", text: false });
+  assert.equal(projRow(w, "INFO-1").fm_json, null);
+  assert.ok(ftsRow(w, "INFO-1"), "text: false keeps the index row");
+  w.retrieval.projectionClear({ bundleId: "INFO-1" });
+  assert.equal(ftsRow(w, "INFO-1"), null);
+  assert.notEqual(projRow(w, "INFO-2").fm_json, null);
+  assert.deepEqual(w.retrieval.projectionClear({}), { ok: true, scope: "ALL", text: true });
+  assert.equal(w.count("bundles_fts"), 0);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NOT NULL OR fts_id IS NOT NULL`).n, 0);
+});
+
+test("R5: projection with an id answers the row or null (absent or hidden alike); without, {bundles, limit, cursor, total} in id order, limit clamped (200, at most 5,000), total counted through the gate, jsonPath/jsonEquals filtering", () => {
+  const w = world();
+  for (let i = 1; i <= 4; i++) w.doc(`INFO-${i}`, { source_status: i % 2 ? "live" : "gone" });
+  const proj = w.project("Hidden Fund", "ann");
+  const one = w.retrieval.projection({ bundleId: "INFO-2", viewer: V("vera") });
+  assert.equal(one.bundle_id, "INFO-2");
+  assert.equal(one.source_status, "gone");
+  for (const c of PROJECTION_COLS) assert.ok(Object.prototype.hasOwnProperty.call(one, c), c);
+  assert.equal(w.retrieval.projection({ bundleId: proj, viewer: V("vera") }), null, "hidden");
+  assert.equal(w.retrieval.projection({ bundleId: "NO-SUCH", viewer: V("vera") }), null, "absent");
+  assert.equal(w.retrieval.projection({ bundleId: "INFO-1", viewer: null }), null, "no viewer sees nothing");
+  assert.equal(w.retrieval.projection({ bundleId: proj, viewer: V("ann") }).bundle_id, proj);
+  const all = w.retrieval.projection({ viewer: V("vera") });
+  assert.deepEqual(all.bundles.map((b) => b.bundle_id), ["INFO-1", "INFO-2", "INFO-3", "INFO-4"]);
+  assert.deepEqual([all.limit, all.cursor, all.total], [PROJECTION_LIMIT_DEFAULT, null, 4]);
+  assert.equal(w.retrieval.projection({ viewer: V("ann") }).total, 5);
+  const page = w.retrieval.projection({ viewer: V("ann"), limit: 2 });
+  assert.deepEqual([page.bundles.length, page.limit, page.cursor, page.total], [2, 2, "INFO-2", 5]);
+  const next = w.retrieval.projection({ viewer: V("ann"), limit: 2, after: page.cursor });
+  assert.deepEqual(next.bundles.map((b) => b.bundle_id), ["INFO-3", "INFO-4"]);
+  assert.equal(w.retrieval.projection({ viewer: V("ann"), limit: 999999 }).limit, PROJECTION_LIMIT_MAX);
+  const live = w.retrieval.projection({ viewer: V("vera"), jsonPath: "$.source_status", jsonEquals: "live" });
+  assert.deepEqual([live.bundles.map((b) => b.bundle_id), live.total], [["INFO-1", "INFO-3"], 2]);
+});
+
+test("R5: the single-bundle answer carries the registered decorations, in order, and a decoration that throws adds nothing", async () => {
+  const w = world();
+  w.doc("INFO-1");
+  assert.equal(w.retrieval.registerProjectionDecoration("actions", (row) => ({ action: { of: row.bundle_id } })).ok, true);
+  w.retrieval.registerProjectionDecoration("ai-runs", async () => ({ surfaced_in: { recorded: false } }));
+  w.retrieval.registerProjectionDecoration("broken", () => { throw new Error("x"); });
+  assert.equal(w.retrieval.registerProjectionDecoration("actions", () => ({})).reason, "DECORATION_DECLARED");
+  const one = await w.retrieval.projection({ bundleId: "INFO-1", viewer: V("vera") });
+  assert.deepEqual([one.bundle_id, one.action, one.surfaced_in], ["INFO-1", { of: "INFO-1" }, { recorded: false }]);
+  assert.equal(w.retrieval.projection({ viewer: V("vera") }).bundles[0].action, undefined, "never on the list arms");
+});
+
+test("R30: the projection and the index are derived: both are rebuilt from the stored files alone after being cleared", () => {
+  const w = world();
+  w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "a.md", text: "alpha" }, { path: "b.txt", text: "beta" }] });
+  const before = [projRow(w, "INFO-1"), ftsRow(w, "INFO-1")];
+  w.retrieval.projectionClear({ bundleId: "INFO-1" });
+  w.retrieval.reproject({});
+  const after = [projRow(w, "INFO-1"), ftsRow(w, "INFO-1")];
+  assert.deepEqual({ ...after[0] }, { ...before[0] });
+  for (const c of [...FTS_COLUMNS, "bundle_id"]) assert.equal(after[1][c], before[1][c], c);
+  assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).ok, true);
+});
+
+test("R33: selections, selection_items and bundles_fts are declared to record-core's purge; a bundle's purge removes its index row, and the whole-store purge clears all three", () => {
+  const w = world();
+  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundles_fts", "selection_items", "selections"]);
+  /* Declared: a second declaration of any of them is refused as another module's. */
+  for (const t of RETRIEVAL_TABLES) {
+    const r = w.record.declarePurge("someone-else", [t]);
+    assert.deepEqual([r.reason, r.declaredBy], ["TABLE_DECLARED", "retrieval"], t);
+  }
+  w.doc("INFO-1", {}, { files: [{ path: "n.md", text: "one" }] });
+  w.doc("INFO-2", {}, { files: [{ path: "n.md", text: "two" }] });
+  return w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-1", "INFO-2"] }).then((sel) => {
+    const one = w.record.purge({ bundleId: "INFO-1" });
+    assert.equal(one.removed.bundles_fts, 1);
+    assert.equal(ftsRow(w, "INFO-2") !== null, true);
+    assert.equal(w.row(`SELECT COUNT(*) n FROM bundles_fts WHERE bundle_id='INFO-1'`).n, 0);
+    /* The selection survives a bundle's purge, so the next resolve names the purged item (R19). */
+    const r = w.retrieval.selectionResolve({ handle: sel.handle, owner: "o", viewer: V("ann") });
+    assert.deepEqual(r.drift.purged, ["INFO-1"]);
+    assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).orphans.length, 0, "no orphan left behind");
+    const all = w.record.purge({});
+    assert.deepEqual([all.removed.selections, all.removed.selection_items, all.removed.bundles_fts], [1, 2, 1]);
+    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0]);
+  });
+});
+
+test("R33: an older store's text index (no bundle key) is rebuilt in place at start: every row keeps its key and text, and gains its bundle", () => {
+  const w = world();
+  w.doc("INFO-1", {}, { files: [{ path: "n.md", text: "kept text" }] });
+  const before = ftsRow(w, "INFO-1");
+  /* The old shape: the five columns only. */
+  w.st.db.exec(`DROP TABLE bundles_fts`);
+  w.st.db.exec(`CREATE VIRTUAL TABLE bundles_fts USING fts5(${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
+  w.st.sql.exec(`INSERT INTO bundles_fts (rowid, ${FTS_COLUMNS.join(", ")}) VALUES (?, ${FTS_COLUMNS.map(() => "?").join(", ")})`,
+    before.rowid, ...FTS_COLUMNS.map((c) => before[c]));
+  w.retrieval.migrate();
+  const after = ftsRow(w, "INFO-1");
+  assert.deepEqual({ ...after }, { ...before });
+  assert.equal(w.retrieval.search({ q: "kept", viewer: V("ann") }).total, 1);
+});
