@@ -1,0 +1,11 @@
+# T4 · provenance — job record
+
+**Session** PROVENANCE #1, `session_01U29KuhspMg4rYkaVV3DM5k`, on `job/T4/provenance` (from `tranche/T4` @ `0446ab092b`). Process: civicos-process @ `7549c0b`, `roles/JOB.md`, mechanics §6, §12.2, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T4`.
+
+**Status** · IN PROGRESS, 2026-09-27. Extracting (T4-2). One QUESTION open (Q1, below); carrying on under my best reading.
+
+**Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/layers.md`, `build/requirements/provenance.md` (both parts), the public parts of `record-core`, `membership`, `promotion`, `signatures`, my entries in `build/plan/current.md`, `build/extraction/provenance.md`, rulings K3, K23, K31, K47, K49, K57, K59, K61, K62, K64, K66, K67, K69, K72, `src/promotion/index.mjs`, and the legacy code the map moves (store, index, schema, bio-checks), with the snapshot's D-177, D-693, D-709 branches.
+
+## Questions
+
+- **Q1 (sent 2026-09-27) · How strictly do the C-18 arms refuse at the write (R42–R46, K72 (4))?** Today they run only at the gate and in the audit; registered with `promotion.registerStep` they refuse promotions. Read literally, every revision of an information bundle whose register already fails an arm is refused, including the corrections that would repair it: D-200's verified bundles with no chain could not even take `op=provenancechain`'s own promotion if any other C-18.1 arm fails on their old documents, and a monitor tick on them would be refused. **My best reading, which I am building:** the registered check refuses (a) every error finding of a creation, and (b) for a revision, every error finding the held version's register does not already carry (a promotion may not add a violation, and is never refused for one it inherited, so correction moves forward); a replay is exempt, as the gathering grammar's check is; C-18.4 (warn) never refuses. So that nothing is lost, the same arms also keep running wherever `checkBundle` ran them: at the gate (legacy-index calls provenance's gate wrapper after `runGate`) and in the audit (legacy-store's audit wrapper, K64's pattern). C-18.6 stays in the catalogue, run by the gate (K72 (4)); R45 is tested through it.
