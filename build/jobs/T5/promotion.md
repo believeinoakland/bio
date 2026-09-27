@@ -2,7 +2,7 @@
 
 **Session** PROMOTION #3, `session_01CBqvRerSWp68oj6TfvGgfi`, on `job/T5/promotion` (from `tranche/T5`, merged up to `e717124b06`). Process: civicos-process @ `7549c0b`, `roles/JOB.md`, mechanics §6, §12.2, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · WORKING, 2026-09-27. Two questions to BOB (below), carried on the stated readings. **Waiting on:** record-core's CHANGE (for R58) and membership's CHANGE (for N73's share, R77); both are applied after everything else.
+**Status** · WAITING, 2026-09-27. Every entry that does not depend on a provider is applied (N86, N56, N63's share; D-592 answered by Q2). **Waiting on:** record-core's CHANGE (for R58) and membership's CHANGE (for N73's share, R77), and BOB's ANSWER to Q1–Q2. Not yet COMPLETE.
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/requirements/promotion.md`, the public parts of `record-core`, `membership` and `signatures` (legacy-checks has no requirements file), `build/layers.md`, my entries in `build/plan/current.md` (and N56, N63, N86 in full in `next.md` history), K83, K90, K96, K126–K128, the T3 and T4 promotion records, every file under `bio-plane/src/promotion/`, `bio-plane/src/gate.mjs` and every test under `bio-plane/test/m/promotion/`. D-592's row (old-plan index) and its source (`app.html` UI-109 note on the snapshot branch).
 
@@ -17,3 +17,41 @@
 
 - **R45 without a record-core hook.** `promote` is often called inside a caller's transaction, which record-core joins (R32), so `promote` cannot tell when the real commit happens. Record-core's `transact` is synchronous (`transactionSync`), so the outermost transaction has either committed or rolled back before any microtask runs. Promotion therefore queues an accepted promotion's notice and delivers it in a microtask, first confirming that the promotion's own manifest entry (its snap key, base and `bundle.md` digest) is held: a rolled-back promotion has none, so it is never announced. No record-core service is needed.
 - **The arm moves to a listener (R45's Suggestion).** The store's `promote` route armed the scheduler itself after `op=promote` (a monitored bundle; bias debt pending). It becomes `legacy-store`'s registered listener on `onCommitted`, so every committed promotion arms it, not only those through that one route.
+
+## Entries applied
+
+- **N86** · `CATALOG_VERSION` 1.33.0 → **1.34.0** (MINOR, `src/gate.mjs`, with its note): four departures (C-18.1, C-18.3, C-18.4, C-18.9, moved to `provenance` by PROVENANCE #1 after 1.33.0 was minted), no arrivals. The plane still judges a ratification by them: the store wraps the gate with `provenance.withRegisterChecks`. The d470 suite's own print on this tree: **count 568, sha256 `4f93c5f65a5d7444ca59f172ae598905f3c440fc9c5d0b222431335edc003f14`, source `4fa025acf0d59e03324c294d5225adea40c826afaa031b1d8bb71dd6c76fff31`**. `GATE_VERSION` is `plane-gate/1.0 (bio-checks 1.34.0)`.
+- **N56** · `fact(name, ...args)` on Q1's reading: `{ok: true, fact, value}`, or `FACT_UNAVAILABLE` (no value key, so an unprovided fact is never read as false), or `FACT_FAILED` for a provider that throws. Tested under R40.
+- **N56 · D-592** · nothing to build in promotion (Q2): `reopen` already records and answers who reopened (R25).
+- **N63 (promotion's share) · R45** · `onCommitted(module, fn)`: registered once per module (`LISTENER_DECLARED`), sorted in the modules' total order; each accepted, written promotion (never a refusal, never `wrote: false`) is announced once, after the transaction it committed in has committed, with `{bundleId, bundleSha, type, replay}`; a listener that throws or rejects is contained. Mechanism in "Decisions" above. `legacy-store`'s arm (REC-26's monitored bundle, D-86's bias debt) moved from the `promote` route into its registered listener; the route now only delegates. So every committed promotion arms it (reopen, fork and internal writes included), where before only `op=promote` did: arming only schedules, and the scheduler reconciles.
+- **The *not yet met* marks** on R11–R15, R17 and R30–R32 in the requirements' header and body are stale: all were met and tested in T3 (PROMOTION #1), and every one is green here. R45 is met now. For BOB to clear.
+
+## Waiting on
+
+- **R58** (record-core's CHANGE): drop `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` in `src/promotion/index.mjs`, and the second `EMPTY_STRING_SHA` in `src/promotion/history.mjs`, for record-core's.
+- **N73's share** (membership's CHANGE): `#existenceOnly` replaced by `membership.existenceAct` (R77) in `promote` and `forkProject`.
+
+## Found in other modules (REPORT)
+
+1. **record-core, R32 (nested transactions):** `transact` at depth > 0 runs `fn` and returns its answer, so a refusal returned by an inner call is not rolled back until (unless) the outer call also refuses. R32 says a refusal rolls back every row written inside `fn`. For promotion this matters where a refusal follows a write: a project creation mints its id (`mintOpaqueId`, R7) before `NAME_TAKEN` and the later checks, and a registered projection may refuse after `commit`. Called inside a caller's transaction that then commits, those rows stay (promotion R2 not met in that case). A savepoint per nested call (the test double does this) would meet it.
+2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` embeds `src/gate.mjs`, `src/promotion/index.mjs` and `src/store.mjs` (still 1.33.0). For the layer close (manifest §14).
+3. **legacy-tests** (T5-12): `d470-catalog-census` A3 and A9 (11 pass, 2 fail here, as on the base): the row to add is `"1.34.0": { count: 568, digest: "4f93c5f6…3f14", changed: [], source: "4fa025ac…ff31" }` (full figures above), and A5's literal `1.33.0` → `1.34.0`.
+
+## Tests and checks run (so far)
+
+- My module: `node --test bio-plane/test/m/promotion/`: `tests 54, pass 54, fail 0` (baseline 50/50; four new: R40's `fact`, three R45).
+- Layer tests: none named in `build/manifest.md`. `onCommitted` and `fact` are additions; no existing service's answer changed, and none of promotion's users has extracted tests that call them.
+- Old-battery suites that drive `promote` or the arm, green on this branch (and those that touch the arm, green on the base too): d86-bias-debt, monitor-cadence, monitor-assess, monitor-address, scheduler, bias, rec207-bias-debt-settle, projection, airun, drive, run-conditions, ratify, rec176-snapkey, rec175-digest, d484-refusal-translation, machine-attest, fence-e2e, refusal-wire, d168-retired-cite, rec173-migration-replay, rec-183-reinstate-retired, store.
+- `node checks/format.mjs /home/user/bio`: `format: 69 modules, 64 requirements files; 0 failures`
+- `node checks/architecture.mjs /home/user/bio promotion`: `architecture: 16 product files, 45 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `node checks/coverage.mjs /home/user/bio promotion`: `coverage: 1 modules, 45 of 45 live requirement ids named by a test; 0 failures`
+- `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 5 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 6 line(s) added, 21 removed; 0 failures`. The added lines, for BOB:
+
+```
+ADDED bio-plane/src/store.mjs:887  /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
+ADDED bio-plane/src/store.mjs:888  promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
+ADDED bio-plane/src/store.mjs:889  const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
+ADDED bio-plane/src/store.mjs:890  if (monitored || this.#biasDebtPending()) await this.#armScheduler();
+ADDED bio-plane/src/store.mjs:891  });
+ADDED bio-plane/src/store.mjs:45682  promote: () => promotionOf(this.ctx).promote(body),
+```
