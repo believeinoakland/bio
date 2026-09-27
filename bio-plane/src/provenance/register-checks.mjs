@@ -8,7 +8,7 @@
  * They run in three places, so the move loses none of them: at every promotion, as this module's registered check
  * (`index.mjs`); at the gate, after `runGate` (`withRegisterChecks`); and in the audit (`provenanceAudit`). */
 
-import { isMachineIdentity, ACTOR_CLASSES } from "../../checks/bio-checks.mjs";
+import { isMachineIdentity, ACTOR_CLASSES, BASIS_GRADES, TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
 
 /* The catalogue's finding shape (bio-checks' `f`): check id, severity, message, and optionally repairs and a code. */
 function f(check, severity, message, repairs, code) {
@@ -30,7 +30,8 @@ function hasFile_(ctx, path) {
   return ctx.files.has(path) || (ctx.elided && ctx.elided.has(path));
 }
 
-const CAPTURE_GRADES = ['A', 'B', 'C'];
+/* The letters a capture may declare: the basis grades but testimony's, which no capture carries (MK-2). */
+const CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
 const ORIGIN_KINDS = ['named_request', 'sweep', 'member'];
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
