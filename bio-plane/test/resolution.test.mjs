@@ -289,9 +289,13 @@ console.log("\n--- D-219: a grade-D row written BEFORE the corrected wording kee
     cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(root, "pdf-worker", "src"), { recursive: true });
     const OLD_LINE = 'const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;';
     const METHOD_LINE = /const method = `testimony -- [^`]*`;/g;
-    const storePath = join(root, "bio-plane", "src", "store.mjs");
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the one method line moved with testimony into entities
+       (ENTITIES #1, T5-4), so the pre-D-219 build is made by putting the old literal back THERE. */
+    const storePath = join(root, "bio-plane", "src", "entities", "index.mjs");
     const src = readFileSync(storePath, "latin1");
     const sites = (src.match(METHOD_LINE) || []).length;
     writeFileSync(storePath, src.replace(METHOD_LINE, OLD_LINE), "latin1");

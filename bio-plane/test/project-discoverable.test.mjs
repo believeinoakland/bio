@@ -162,6 +162,8 @@ let P, Q, IRIS, VERA, OLGA, RUTH, FOUNDER;
   cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
   cpSync(join(REPO, "jurisdictions"), join(tree, "jurisdictions"), { recursive: true });
+  /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+  cpSync(join(REPO, "pdf-worker", "src"), join(tree, "pdf-worker", "src"), { recursive: true });
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R59, the extraction of membership's tables): the act log's
      and the sight index's DDL moved from the legacy `schema.mjs` into `src/membership/schema.mjs`, which
      membership's `migrate()` runs; the predecessor strips them THERE. */

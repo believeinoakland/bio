@@ -117,6 +117,8 @@ const cutTree = (fromSrc, patches, label) => {
   cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
   cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
   cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
+  /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+  cpSync(join(REPO, "pdf-worker", "src"), join(root, "pdf-worker", "src"), { recursive: true });
   const counts = patches.map(([[file, from], to]) => {
     const path = join(root, "bio-plane", "src", file);
     const s = readFileSync(path, "utf8");

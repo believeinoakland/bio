@@ -401,6 +401,8 @@ cpSync(fileURLToPath(new URL("../src", import.meta.url)), join(SB, "bio-plane", 
 cpSync(fileURLToPath(new URL("../checks", import.meta.url)), join(SB, "bio-plane", "checks"), { recursive: true });
 cpSync(fileURLToPath(new URL("../../docprofile", import.meta.url)), join(SB, "docprofile"), { recursive: true });
 cpSync(fileURLToPath(new URL("../../jurisdictions", import.meta.url)), join(SB, "jurisdictions"), { recursive: true });
+/* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+cpSync(fileURLToPath(new URL("../../pdf-worker/src", import.meta.url)), join(SB, "pdf-worker", "src"), { recursive: true });
 const storePath = join(SB, "bio-plane", "src", "store.mjs");
 let st = readFileSync(storePath, "utf8");
 /* EDIT 1 — a member enrolled before handles existed: enrolling with the handle `zz-nohandle` leaves it NULL. */

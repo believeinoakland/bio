@@ -320,6 +320,8 @@ console.log("\n--- 6. a member enrolled as `admin` BEFORE the reservation is REP
     cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
     cpSync(join(REPO, "jurisdictions"), join(root, "jurisdictions"), { recursive: true });
+    /* the plane imports pdf-pixels' crop from beside it (content R32, T5): the mirror carries it (T5-12). */
+    cpSync(join(REPO, "pdf-worker", "src"), join(root, "pdf-worker", "src"), { recursive: true });
     /* The legacy build: this tree's own store with the reservation neutered at its ONE
        site — the build a real instance ran before C-55 — over a PERSISTED store. */
     /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): `memberAdd` and its reservation moved
