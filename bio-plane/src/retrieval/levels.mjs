@@ -66,8 +66,8 @@ export function meaningLevels(level, documents, withRows, total,
     + `as a census)` : "";
   const coverage = cov
     ? `of the ${axis.captures_counted} capture(s) counted in scope, ${cov.searchable} can be searched at passage grain `
-    + `(${cov.full} fully indexed, ${cov.part} partly); ${cov.none} hold nothing indexable; ${cov.never} nobody has `
-    + `read; ${cov.unreadUndet} have no extraction this record can account for — read before the log carried the `
+    + `(${cov.full} fully indexed, ${cov.part} partly); ${cov.none} hold nothing indexable; ${cov.never} never `
+    + `extracted — nobody has read them; ${cov.unreadUndet} have no extraction this record can account for — read before the log carried the `
     + `content level, or purged — so it cannot say that nobody read them; and ${cov.indexUndet} were read but their `
     + `index state is undetermined${over}`
     : null;
@@ -138,16 +138,16 @@ export function meaningLevels(level, documents, withRows, total,
     if (total > 0)
       return lead + `${total} passage(s) matched over ${documents} document(s) in scope`
            + (cov.gap > 0
-             ? `, and ${cov.gap} capture(s) in that scope cannot be searched at passage grain — so this is what `
-             + `the searched part of the record says, not all of it`
+             ? `, and ${cov.gap} capture(s) in that scope have not been read at passage grain as far as this record `
+             + `can say — so this is what the searched part of the record says, not all of it`
              : `, over a scope every capture of which can be searched at passage grain`);
     if (cov.searchable === 0)
       return lead + `Nothing matched, and NOTHING IN SCOPE WAS SEARCHABLE. This says nothing whatever about what `
            + `those documents contain. The next move is to read them, not to conclude they are silent`;
     return lead + `Nothing matched over ${cov.searchable} searchable capture(s) in scope`
          + (cov.gap > 0
-           ? `, but ${cov.gap} further capture(s) in scope cannot be searched at passage grain, so this absence `
-           + `covers only the part of the record that has been read`
+           ? `, but ${cov.gap} further capture(s) in scope have not been read at passage grain as far as this `
+           + `record can say, so this absence covers only the part of the record that has been read`
            : `, and every capture in scope can be searched at passage grain — this absence is about the `
            + `documents and not about our coverage of them`);
   };
