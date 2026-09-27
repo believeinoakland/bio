@@ -1,6 +1,6 @@
 # Plan: tranche T5
 
-**Status** · OPEN. Opened by BOB #45, 2026-09-27 ~06:15 UTC (PROCESS-MECHANICS §5), from the plan BOB #43 prepared (P18) and BOB #44's handoff; every module's requirements approved by Bob (layer 2 on 2026-09-26, layers 4 and 5 by K102). One tranche, not split by layer (K126). Branch `tranche/T5` starts at the commit that opened this plan. Bob's meter at the opening: not given (asked). BOB's session: `session_01XMEw4Evvi4UHjyRFmaUvvr`
+**Status** · OPEN. Opened by BOB #45, 2026-09-27 ~05:40 UTC (PROCESS-MECHANICS §5), from the plan BOB #43 prepared (P18) and BOB #44's handoff; every module's requirements approved by Bob (layer 2 on 2026-09-26, layers 4 and 5 by K102). One tranche, not split by layer (K126). Branch `tranche/T5` starts at the commit that opened this plan. Bob's meter at the opening: not given (asked). BOB's session: `session_01XMEw4Evvi4UHjyRFmaUvvr`
 
 Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), layer 4, layer 5, layer 11. Each extraction is done by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements. Every job writes requirement-named tests for every live id at its interface (P7), applies every carried row its requirements mark *not yet met*, and judges built work on the snapshot against its requirements (§12.5). A layer's jobs run concurrently; a user builds against its provider's Provides, and BOB merges a provider early once its Provides are final (mechanics §4), sending its users a CHANGE.
 
@@ -48,5 +48,9 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 
 - **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
 - **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break; N46 with N37; N57's remainder.
+
+## Jobs
+
+Layer 2, started 2026-09-27 ~05:44 UTC: RECORD-CORE #2 `session_014SH9wUytqUzw3oKoJhPj7C`, MEMBERSHIP #2 `session_01WvJLh3JQvPkdtZptfwXdqf`, PROMOTION #3 `session_01CBqvRerSWp68oj6TfvGgfi`.
 
 **Size.** Fifteen jobs. T4: 13 jobs, 703.6M tokens, half of it legacy-tests (K126).
