@@ -59,6 +59,7 @@ import {
 } from "../src/calibration.mjs";
 import { calibrationsOf } from "../src/textchain.mjs";
 import { CALIBRATION_CHECKS } from "../checks/bio-checks.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -296,12 +297,15 @@ const sha256 = (v) => createHash("sha256").update(v).digest("hex");
 let snapSeq = 0;
 const promoteReading = async (id, captureSha, chain) => {
   const md = bundleMd(id);
-  const prov = JSON.stringify({ documents: [{
+  /* T4 (legacy-tests; provenance K121): the reading carrier completed to C-18.1's intake shape, which is now refused
+     at the write, and the capture it names held in the bundle (`register-doc.mjs`). */
+  const doc = registerDoc({
     capture: { sha256: captureSha, bytes: 1024, retrieved: NOW },
     reading: { content_type: "agenda", reader_version: 1, read_from_text: true,
                found: false, entities: [], facts: {}, at: NOW,
                text_source: chain, text_tier: 3, text_container: "pdf",
-               basis: "planted by test/calibration.test.mjs" } }] });
+               basis: "planted by test/calibration.test.mjs" } });
+  const prov = JSON.stringify({ documents: [doc] });
   const r = await post(`op=promote&token=mem-cal`, {
     bundleId: id, base: null,
     snapKey: `20260901T0100${String(++snapSeq).padStart(2, "0")}Z_aaaa1111`, author: "cpdf13",
@@ -310,6 +314,7 @@ const promoteReading = async (id, captureSha, chain) => {
     files: [
       { path: "bundle.md", text: md, bytes: md.length, sha256: sha256(md) },
       { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha256(prov) },
+      registerFile(doc),
     ],
     register: [],
   });

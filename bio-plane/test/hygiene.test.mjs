@@ -83,6 +83,9 @@ import { viewerPredicate } from "../src/query.mjs";
    modules' own purge declarations at their interface. */
 import { RecordCore } from "../src/record-core/index.mjs";
 import { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "../src/membership/index.mjs";
+/* T4 (legacy-tests): capture's and provenance's purge declarations, read at their interfaces (the census below). */
+import { CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "../src/capture/schema.mjs";
+import { provenanceOf } from "../src/provenance/index.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -663,7 +666,13 @@ console.log("\n--- the version sources agree (D-106) ---");
    only ever show that one particular forged request was ignored. */
 console.log("\n--- no caller-supplied provenance (D-112) ---");
 {
-  const idx = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "index.mjs"), "utf8");
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4, K72 (11)): the acquisition, `archiveSelect` and the
+     document's address moved out of index.mjs into capture (`src/capture/`), whose op handler reads the request. The
+     property is of what the code may read, so it is asked of the control plane AND every file of capture. */
+  const srcDir = fileURLToPath(new URL("../src", import.meta.url));
+  const idx = [readFileSync(join(srcDir, "index.mjs"), "utf8"),
+               ...readdirSync(join(srcDir, "capture")).filter((n) => n.endsWith(".mjs")).sort()
+                 .map((n) => readFileSync(join(srcDir, "capture", n), "utf8"))].join("\n");
   const reads = (re) => (idx.match(re) || []).length;
   t("nothing reads a documentAddress off the request body",
     reads(/body\??\.\s*documentAddress/g), 0);
@@ -772,8 +781,20 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     .replace(/keys:\s*\[[^\]]*\]/g, "").replace(/whole:\s*"[^"]*"/g, "") : "";
   const fromLegacy = [...legacyDecl.matchAll(/"(\w+)"/g)].map((m) => m[1]);
   t("legacy-store's purge declaration is locatable in store.mjs and names tables", fromLegacy.length >= 10, true);
-  const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES];
-  const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES];
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4, provenance T4-2): both modules declare their tables to
+     record-core themselves. Capture's lists are its exported CAPTURE_PURGED_TABLES / CAPTURE_EXEMPT_TABLES, the ones
+     its `migrate()` passes to `declarePurge`; provenance declares inside `provenanceOf`, so its declaration is read by
+     calling `provenanceOf` over a record that only records what it is told (no store, no SQL). */
+  const provDecl = { tables: [], exempt: [] };
+  provenanceOf({ storage: { sql: null } }, {
+    record: { declarePurge: (m, tables = [], { exempt = [] } = {}) => {
+      provDecl.tables.push(...tables.map((x) => (typeof x === "string" ? x : x.name))); provDecl.exempt.push(...exempt);
+      return { ok: true }; } },
+    membership: {}, promotion: { registerStep: () => ({ ok: true }) } });
+  t("provenance's purge declaration is read at its interface and names tables", provDecl.tables.length >= 3, true);
+  const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables];
+  const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
+                        ...provDecl.exempt];
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
   const purged = new Set([...fromLegacy, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
@@ -1532,11 +1553,26 @@ console.log("\n--- one machine-identity predicate, and every asking site reads i
      where it lives. Everything else is a READER, and there may be exactly one
      region of readers: the predicate's own body. */
   const VOCABS = ["NON_MEMBER_AUTHORS", "ACTOR_CLASSES"];
+  /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): `ACTOR_CLASSES`' second reader, C-18.1's
+     DECLARED-FIELD check (D2b below), moved with the C-18 arms out of the catalogue into provenance's
+     `register-checks.mjs`, which imports the vocabulary from the catalogue rather than copying it. That file is the
+     one named outsider, for that one vocabulary, and only as that one reader: its import and the one field check
+     (its test and its finding's list of the allowed values), three occurrences exactly, so a second read there fails
+     here by name as a third reader in the catalogue did. */
+  const SECOND_READER = "src/provenance/register-checks.mjs";
   const outsiders = [];
+  let secondReaderText = "";
   for (const f of files) {
     if (f === "checks/bio-checks.mjs") continue;
     const text = uncomment(raw.get(f));
-    for (const v of VOCABS) if (new RegExp(`\\b${v}\\b`).test(text)) outsiders.push(`${f} reads ${v}`);
+    if (f === SECOND_READER) secondReaderText = text;
+    for (const v of VOCABS) {
+      if (!new RegExp(`\\b${v}\\b`).test(text)) continue;
+      if (f === SECOND_READER && v === "ACTOR_CLASSES"
+          && (text.match(/\bACTOR_CLASSES\b/g) || []).length === 3
+          && /import \{[^}]*\bACTOR_CLASSES\b[^}]*\} from "\.\.\/\.\.\/checks\/bio-checks\.mjs"/.test(text)) continue;
+      outsiders.push(`${f} reads ${v}`);
+    }
   }
   t(`(D2a) no module outside the catalog reads an identity vocabulary directly (found: ${JSON.stringify(outsiders)})`,
     outsiders, []);
@@ -1568,12 +1604,14 @@ console.log("\n--- one machine-identity predicate, and every asking site reads i
      declared `actor_class: daemon` on every sweep-origin capture in the record.
      So the count is pinned EXACTLY, with the second reader named: a THIRD
      reader fails here by name, and the second one cannot rot away either. */
-  t(`(D2b) inside the catalog each identity vocabulary is DECLARED once and READ once by the predicate — ACTOR_CLASSES' second reader is C-18.1's DECLARED-FIELD check and is a different question, named here so a THIRD reader fails (${JSON.stringify(catReaders)})`,
+  /* RE-PINNED 2026-09-27 (T4, legacy-tests): 4 -> 2 in the catalogue, the second reader now being provenance's
+     (D2a's note); it is asked where it lives. */
+  t(`(D2b) inside the catalog each identity vocabulary is DECLARED once and READ once by the predicate — ACTOR_CLASSES' second reader is C-18.1's DECLARED-FIELD check, now in ${SECOND_READER}, and is a different question, named here so a THIRD reader fails (${JSON.stringify(catReaders)})`,
     catReaders, ["NON_MEMBER_AUTHORS: 2 total, 1 declaration, 1 in the predicate",
-                 "ACTOR_CLASSES: 4 total, 1 declaration, 1 in the predicate"]);
+                 "ACTOR_CLASSES: 2 total, 1 declaration, 1 in the predicate"]);
   t("and that second reader is still asking the DECLARED-FIELD question, not an identity one",
-    [/actor_class '\$\{cap\.actor_class\}' is not one of/.test(cat),
-     /!ACTOR_CLASSES\.includes\(cap\.actor_class\)/.test(cat)], [true, true]);
+    [/actor_class '\$\{cap\.actor_class\}' is not one of/.test(secondReaderText),
+     /!ACTOR_CLASSES\.includes\(cap\.actor_class\)/.test(secondReaderText)], [true, true]);
 
   /* THE ANSWER SET, AND IT IS THE "EVERY EXISTING MACHINE REFUSAL UNCHANGED"
      HALF OF THIS ITEM — asserted rather than assumed. Every value the three old
