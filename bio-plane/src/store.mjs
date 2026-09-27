@@ -224,6 +224,7 @@ import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { recordOf } from "./record-core/index.mjs";
+import { captureOf, captureOps } from "./capture/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -532,9 +533,6 @@ import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
    family is — the C-number, the wire code and the canned translation are ONE ROW in the catalogue
    and this file holds no second copy of the sentence. */
 import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
-/* D-508 / C-85: the doorbell's rate refusals — the one door open to the public, and the one
-   refusal surface whose reader is guaranteed not to be a member. */
-import { KNOCK_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS, CUSTODIAL_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
@@ -685,11 +683,6 @@ function actNoCitation(detail, extra = {}) {
 const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2MiB
 
-/* ---- D-98 task inbox helpers, module scope because they are pure ----
-   The F5 bound lives HERE, at the producer boundary, so a subject is inert
-   before it is stored rather than after it is read. Anything a member sees on
-   a task passed through boundedSubject on its way in. */
-const TASK_KINDS = ["authority-undetermined"];
 
 /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.3 -- THE TWO BOUNDS ON THE
  * CONTENT-GRAIN TEXT INDEX. **Both are SET FROM A MEASUREMENT and neither is a
@@ -801,10 +794,6 @@ const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
  * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
  * The arm follows the SHAPE the producer returns, not the file extension. */
 const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
-/* D-104. Closed on purpose: the value of the reachability table is that it tells
-   kinds of not-getting-the-bytes apart, and a free string would let a caller
-   collapse that distinction by accident. */
-const SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 /* D-543 — THE STAMPING HELPER, AND IT NAMES ITS PRECISION AT EVERY CALL. The record spells an instant
    two ways: `…:00Z` (whole seconds — the convention `ISO_TS_RE` holds a document's own bytes to, about
@@ -836,11 +825,6 @@ export function instantOrder(a, b) {
    rather than a disjunction written out at the branch — a third authored act would otherwise have to be
    remembered at the branch as well as at its own door, and the branch is the place nobody looks. */
 const SETTLED_BY_AN_ACT = new Set(["rerun", "resolved"]);
-/* Single line, length-capped, control characters stripped. Newlines go first
-   because a multi-line subject is how a plausible-looking instruction gets
-   room to look like a message rather than a label. */
-const boundedSubject = (v) =>
-  String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 /* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
    by single dashes, never empty, never leading or trailing dashes. Derived from
    the subject so an id is legible, but it is an IDENTIFIER and not a rendering:
@@ -887,9 +871,9 @@ export class Store extends DurableObject {
       { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
       { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
       { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
-      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
-      { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
-      { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
+      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
+      { name: "captured_locators", keys: [] },
+      { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
       { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
       { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
@@ -901,6 +885,13 @@ export class Store extends DurableObject {
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
+    /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
+       runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
+    const capture = captureOf(ctx, { env });
+    capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
+    capture.on("source-outcome", "legacy-store", async (o) => (o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null));
+    capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
+    capture.on("compute", "legacy-store", (m) => this.recordRuntimeObservation({ metric: m.metric, ms: m.value, detail: m.detail }));
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
 
@@ -940,7 +931,7 @@ export class Store extends DurableObject {
      * one. Like the two above it is derived -- re-derivable from reading_refs,
      * which persists every string it projects, and holding nothing a member
      * wrote. The backfill below repopulates it with no document re-read. */
-    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"],
+    for (const [table, needed] of [["captured_locators", "via"],
                                    ["reading_ref_terms", "src"]]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
@@ -1322,15 +1313,6 @@ export class Store extends DurableObject {
          and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
          states the kind UNDETERMINED rather than guessing it. */
       ["readings", "capture_format", "TEXT"],
-      /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): WHICH capture's fetch served a reused
-         part. ALTER rather than the derived-table DROP above, though both tables are derived: neither column is in
-         the key, so an old row is not wrong, and dropping `site_asset_refs` would erase the reused=1 rows that
-         ratification's re-fetch (CAP-4) and post-hoc detection read. NULLABLE AND NEVER BACK-FILLED: a fetch or
-         reuse recorded before this column existed named no capture, and the only value a backfill could reach for
-         is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
-         costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
-      ["site_assets", "last_fetched_by", "TEXT"],
-      ["site_asset_refs", "reused_from", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
          disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
          column existed recorded no version, and the one value a backfill could reach for is the
@@ -1350,11 +1332,6 @@ export class Store extends DurableObject {
          every old row rather than a gap: no act could name a draft before this column existed, so a document
          authored earlier was bound to none. */
       ["case_documents", "draft_id", "TEXT"],
-      /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
-         DEFAULT because it is a running total and not an attribution: a store written before this
-         column existed had no renders in flight at the moment it gained the column, so 0 is the
-         MEASURED truth for every old row rather than a value a backfill reached for. */
-      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
       /* REC-207 (BOB #32, 2026-09-23 23:42Z): THE RUN THIS RUN RE-RUNS, as its opener AUTHORED it. A link
          nothing derives: DEC-24's authored-binds side, because "is this a re-run of that" is a judgement
          about what was asked, and a plane inferring it from a context and a clock would be guessing. NULLABLE
@@ -1411,6 +1388,7 @@ export class Store extends DurableObject {
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
     membershipOf(this.ctx).migrate();   /* membership's tables (R57–R59), after the schema pass: nothing in the schema text names them */
+    captureOf(this.ctx).migrate();      /* capture's tables, likewise */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
        between the store's birth and the record of whose store it is. */
@@ -35903,115 +35881,33 @@ export class Store extends DurableObject {
     return reg;
   }
 
-  /* 7b: the knock. Rate accounting and the row land in one transaction, so
-     an attacker cannot slip past the caps on a race. The worst case is by
-     construction a full inbox. */
-  knock({ knockId, sha256, bytes, content, inR2, note, contact,
-          ipBucket, ipPrevBucket, globalBucket, globalPrevBucket, elapsedFrac,
-          perIpLimit, globalLimit } = {}) {
-    return this.ctx.storage.transactionSync(() => {
-      const cnt = (b) => (b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0);
-      /* D-496: a TWO-BUCKET WEIGHTED SLIDING WINDOW, because the fixed bucket
-         published a bound it did not hold. Counting into a bucket NAMED for
-         `floor(now/W)` and comparing that count alone means the count restarts
-         at the edge: a caller who sends the limit just before the edge and the
-         limit again just after it gets TWICE the published number inside a
-         span shorter than one window, and the limiter is behaving exactly as
-         written while the record's claim is false. BOB #32 ruled it (2026-09-24
-         04:28Z): a published limit is a BOUND, so the code holds it or the text
-         stops claiming it.
-
-         The estimate weights the PREVIOUS bucket by how much of it is still
-         inside the trailing window — `est = prev x (1 - elapsed/W) + cur` —
-         and refuses at `est >= limit`. It is the standard approximation and it
-         is APPROXIMATE IN BOTH DIRECTIONS: it assumes the previous bucket's
-         knocks were spread evenly through it, so a caller who front-loaded a
-         bucket is charged for knocks that have already aged out, and one who
-         back-loaded it is charged for fewer than it really holds. That is why
-         the published sentence in `index.mjs` says "estimated by a sliding
-         window" rather than stating a bound it cannot hold to the knock — a
-         record that claims more than it can support is the defect this row
-         exists to remove, and swapping one overstatement for another would be
-         the same defect wearing the opposite sign.
-
-         No schema change: the two buckets are the two rows already written, the
-         previous one kept alive by the prune below. */
-      const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
-      const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-      /* D-508 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10) — THE ONE
-         HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH, on `acknowledgeStatement`'s
-         precedent (IC-246) and REC-79's shape before it: the row is read from the
-         catalogue at the moment of the refusal, so this file holds no member-facing
-         word, and THE CODE STAYS A STRING LITERAL AT ITS SITE below — which is
-         DEC-49's rule and the reason a helper may stand here at all, because the
-         guard COMPARES that literal against the row and reads past a code held in a
-         variable (one reached a member as `translation: undefined` that way).
-         It THROWS on a missing row for `actNoBasis`'s reason: a throw is a 500 in a
-         test, which is loud, where a missing sentence is silent and reaches a
-         person — and at this door that person is a stranger with no account and no
-         other way to find out what happened. */
-      const refusal = (code, extra) => {
-        const row = KNOCK_CHECKS[code];
-        if (!row || typeof row.translation !== "string" || !row.translation)
-          throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
-        return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...(extra || {}) };
-      };
-      /* DEC-49 REGION is-knock-rate — D-508 / C-85.1, C-85.2. The SMALLEST SPAN in
-         which either rate refusal is enforced: the two estimates and their two
-         returns, and nothing else in this method. Before D-508 both returns were
-         BARE STORE REASONS (`{ ok: false, reason: "RATE_IP" }`), so the one door
-         open to the public answered a stranger with a token and no sentence.
-         `index.mjs` adds the instance's published bound (`stated`) on top of what
-         these return — that is the NUMBER, and it is never the translation. */
-      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal("RATE_IP");
-      if (est(globalBucket, globalPrevBucket) >= globalLimit) return refusal("RATE_GLOBAL");
-      /* END DEC-49 REGION is-knock-rate */
-      for (const b of [ipBucket, globalBucket])
-        this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
-                       ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
-      /* Prune buckets from past windows; bucket names embed their window. D-496:
-         the prune keeps win AND win-1, because the previous bucket is now read
-         rather than merely stale. Deleting it would silently restore the fixed
-         bucket at the edge, which is the defect, so this line is part of the
-         subject and not housekeeping. */
-      const win = globalBucket.split(":").pop();
-      const prevWin = String(Number(win) - 1);
-      this.sql.exec(`DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
-                    win, prevWin);
-      this.sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
-         VALUES (?,?,?,?,?,?,?,?,'new')`,
-        knockId, sha256, bytes, content ?? null, inR2 ? 1 : 0,
-        (note || "").slice(0, 2000), (contact || "").slice(0, 300), new Date().toISOString());
-      return { ok: true, knockId, sha256, bytes };
-    });
-  }
-
-  inboxList(status) {
-    return { inbox: this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
-       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
-      ...(status ? [status] : [])) };
-  }
-
-  inboxGet(knockId) {
-    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
-    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
-  }
-
-  inboxResolve({ knockId, status, by } = {}) {
-    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const r = this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId);
-    if (!r) return { ok: false, reason: "NOT_FOUND" };
-    this.sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
-      status, new Date().toISOString(), by ?? null, knockId);
-    return { ok: true, knockId, status };
-  }
-
-  static async #sha256(v) {
-    const b = await crypto.subtle.digest("SHA-256", Store.#enc.encode(v));
-    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  }
+  /* capture (T4-4): the doorbell, the render allowance, links and the host's chrome, capture sessions, site assets,
+     reuse verdicts, the platform's ceiling, the event queue and source reachability are capture's (src/capture/).
+     The public methods stay as one-line delegations so every caller answers as before. */
+  knock(...a) { return captureOf(this.ctx).knock(...a); }
+  inboxList(...a) { return captureOf(this.ctx).inboxList(...a); }
+  inboxGet(...a) { return captureOf(this.ctx).inboxGet(...a); }
+  inboxResolve(...a) { return captureOf(this.ctx).inboxResolve(...a); }
+  renderAdmit(...a) { return captureOf(this.ctx).renderAdmit(...a); }
+  renderSpend(...a) { return captureOf(this.ctx).renderSpend(...a); }
+  recordLinks(...a) { return captureOf(this.ctx).recordLinks(...a); }
+  linksTo(...a) { return captureOf(this.ctx).linksTo(...a); }
+  resolveLinks(...a) { return captureOf(this.ctx).resolveLinks(...a); }
+  recordLinkVerdict(...a) { return captureOf(this.ctx).recordLinkVerdict(...a); }
+  saveCaptureSession(...a) { return captureOf(this.ctx).saveCaptureSession(...a); }
+  loadCaptureSession(...a) { return captureOf(this.ctx).loadCaptureSession(...a); }
+  dropCaptureSession(...a) { return captureOf(this.ctx).dropCaptureSession(...a); }
+  siteAssets(...a) { return captureOf(this.ctx).siteAssets(...a); }
+  recordSiteAssets(...a) { return captureOf(this.ctx).recordSiteAssets(...a); }
+  reusedParts(...a) { return captureOf(this.ctx).reusedParts(...a); }
+  recordReuseVerdicts(...a) { return captureOf(this.ctx).recordReuseVerdicts(...a); }
+  reuseVerdicts(...a) { return captureOf(this.ctx).reuseVerdicts(...a); }
+  siteChrome(...a) { return captureOf(this.ctx).siteChrome(...a); }
+  captureLimit(...a) { return captureOf(this.ctx).captureLimit(...a); }
+  recordCaptureLimit(...a) { return captureOf(this.ctx).recordCaptureLimit(...a); }
+  taskEnqueue(...a) { return captureOf(this.ctx).taskEnqueue(...a); }
+  recordSourceOutcome(...a) { return captureOf(this.ctx).recordSourceOutcome(...a); }
+  sourceReachability(...a) { return captureOf(this.ctx).sourceReachability(...a); }
 
   /* ------------------------------------------------------------------ *
    * Measured runtime cost
@@ -36036,170 +35932,6 @@ export class Store extends DurableObject {
       ...(isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]));
     return { metric, peak_ms: isPeak ? ms : cur.peak_ms, last_ms: ms,
              samples: cur.samples + 1, new_peak: isPeak };
-  }
-
-  /* ------------------------------------------------------------------
-   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
-   * ------------------------------------------------------------------ */
-
-  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
-   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
-   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
-   *  serialises, so one row per UTC day is globally correct for the instance.
-   *  Admission is decided on what has been SPENT PLUS WHAT IS RESERVED, because a render's
-   *  cost is only known after it ran and the renders in flight have not reported theirs.
-   *
-   *  THE BOUND THIS NOW HOLDS (D-492, 2026-09-24), stated as the thing a reader may rely on:
-   *
-   *      at every moment, spent_ms + reserved_ms <= allowance
-   *
-   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and
-   *  its reservation is the MAXIMUM the asked environment permits it to cost (`renderReserveMs`:
-   *  the navigation timeout plus the wait timeout). So the allowance is not overrun by renders
-   *  in flight, however many there are, and the first factor of the old bound no longer has to
-   *  be bounded by anything.
-   *
-   *  THE TWO RESIDUES, NAMED RATHER THAN ROUNDED OFF, because neither is closed by this:
-   *  (1) the reservation binds only a renderer that HONOURS what it was asked. A renderer that
-   *      spends longer than its own navigation and wait timeouts reports that longer time and
-   *      `renderSpend` adds it, so `spent_ms` can pass the allowance by exactly the excess the
-   *      renderer took beyond what it was asked for. The plane cannot check this: the elapsed
-   *      time is the RENDERER'S CLAIM, as `render.mjs` says of everything else it reports.
-   *  (2) the allowance is an ACCOUNT, not a throttle. Nothing here caps CONCURRENCY, and
-   *      nothing here is a platform meter (`RENDER_DAILY_ALLOWANCE_MS` is this instance's own
-   *      fence). A day's renders are bounded in total browser time, not in how many run at once.
-   *
-   *  WHAT WAS CORRECTED, kept because the error is the shape this project meets most — a bound
-   *  believed on the strength of a sentence. This said the allowance "can therefore be overrun
-   *  by at most one render". That was FALSE: admission is serialised in the DO, but the render
-   *  RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op (`renderspend` ->
-   *  `renderSpend`; the two are distinct rows of the dispatch table), so every render IN FLIGHT
-   *  AT ONCE was admitted against the same `spent_ms` and the overrun was
-   *  (renders in flight) x (one render's maximum time), whose first factor nothing bounded.
-   *  CONDUCT #20 diagnosed it at integration and corrected the prose alone; the reservation
-   *  below is the fix, and the docstring above is now a claim about behaviour rather than a
-   *  claim about intent.
-   *
-   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
-   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
-   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
-   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
-   *  1,104 bytes: the JSDoc block you are reading is PRESENT in the emitted bundle, verbatim.
-   *
-   *  THE DISCRIMINATOR FIRST PROPOSED HERE — "the bundler strips block comments and PRESERVES
-   *  JSDoc" — IS ITSELF REFUTED, and by a wider sample taken at c20-batch14 rather than by
-   *  argument. Counted over the emitted bundle: of 25 plain block comments sampled from
-   *  `index.mjs`, TWELVE are PRESENT (every one inspected sits inside the OPS table), and
-   *  `render.mjs`'s own JSDoc block is ABSENT. So the FORM does not decide it; position and
-   *  file do, by a rule nothing here has established. What is safe to say, and all that
-   *  `WORKER.md` step 0 now says, is that a comment-only change MAY move the bundle and the
-   *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
-   *  first reading of this measurement generalised from three greps, which is the same error,
-   *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
-    const now = at || stampInstant("second");
-    const day = now.slice(0, 10);
-    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
-    /* CEILED, never floored: a reservation rounded DOWN is a reservation short of the cost it
-       stands for, which is the direction that overruns. */
-    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
-    /* D-520 — THE CONCURRENCY CAP, decided BEFORE the allowance and taking nothing from it.
-       Residue (2) above was that the allowance is an ACCOUNT and nothing capped how many
-       renders run at once; this is the throttle. A render over the cap is `waiting`, a THIRD
-       state and not a deferral: the day's allowance may have plenty of room, and a member
-       told "deferred" would read the allowance as spent. Nothing is reserved and nothing is
-       counted against the day for it, so the caller can ask again as soon as a slot frees —
-       the unattended drain does exactly that, holding the row under C-83.8 and asking again
-       on its next tick (BOB #33: over the cap a render WAITS, never dropped).
-
-       SLOTS EXPIRE, and the expiry is the reservation: a render admitted at T with reservation
-       R holds its slot until it reports or until T + R, the most time the asked environment
-       permits it. Without the expiry a render that never reports (a Worker that died) would
-       hold a slot for ever, and `cap` of them would stop every render on the instance. WHAT
-       THE EXPIRY CANNOT SEE: a renderer that overruns its asked bounds is still running when
-       its slot is reclaimed, so for that overrun one more render than the cap can be in the
-       browser — residue (1)'s shape, the renderer's time being its own claim.
-
-       A caller that names no cap is ADMITTED WITHOUT ONE, which is the one place this does
-       not fail closed, and on purpose: the reservation above already fails closed, and the
-       cap is a throttle whose absence costs throughput, never the record. The one caller
-       (`src/index.mjs`) passes `renderConcurrencyCap(env)`. */
-    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
-    const nowMs = Date.parse(now);
-    if (capN !== null) {
-      if (Number.isFinite(nowMs)) this.sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
-      const running = [...this.sql.exec(`SELECT COUNT(*) AS n FROM render_slots`)][0].n;
-      if (running >= capN)
-        return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
-                 why: `${running} renders are running and this instance runs at most ${capN} at once` };
-    }
-    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    const spent = cur ? cur.spent_ms : 0;
-    const reserved = cur ? (cur.reserved_ms || 0) : 0;
-    const defer = (why) => {
-      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
-      return { state: "deferred", day, spent_ms: spent, reserved_ms: reserved, reserve_ms: reserve,
-               allowance_ms: allowance, deferred: (cur ? cur.deferred : 0) + 1,
-               renders: cur ? cur.renders : 0, why };
-    };
-    /* A CALLER THAT OFFERS NO RESERVATION IS DEFERRED, NOT ADMITTED. Defaulting the reservation
-       to zero and admitting anyway would restore D-492's defect silently for any future caller
-       that forgot the argument, and a fence that a caller can switch off by omission is the
-       "mechanism believed on the strength of its existence" this repo keeps paying for. There is
-       one caller (`src/index.mjs`, the render arm of op=acquire) and it passes `renderReserveMs()`. */
-    if (!(reserve > 0))
-      return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
-    if (spent + reserved + reserve > allowance)
-      return defer(null);
-    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
-    /* D-520: the slot, taken in the SAME serialised step as the reservation, so no second
-       admission can read the count between the check above and this write. */
-    const slot = crypto.randomUUID();
-    this.sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
-                  slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
-    return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
-             allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
-             slot, cap: capN };
-  }
-
-  /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
-   *  for it. An unreported time adds nothing and says so: the allowance is then under-counted,
-   *  never guessed.
-   *
-   *  AN UNREPORTED RENDER STAYS CHARGED (D-492), and that is the whole safety of the
-   *  reservation rather than an edge case. A render that reported no elapsed time may have
-   *  burned any amount of browser time up to its reservation — a renderer that threw, a Worker
-   *  that died, a fetch that never came back — and the plane has no figure for it. Releasing
-   *  the reservation on that path would hand the allowance back for time that may well have
-   *  been spent, so the reservation is KEPT for the rest of the UTC day. The allowance is then
-   *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
-   *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
-   *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
-  renderSpend({ ms, releaseMs = 0, slot = null, at = null }) {
-    /* D-520: THE SLOT IS GIVEN BACK ON EVERY PATH, including the unreported one. The slot
-       counts renders RUNNING, and a render that has come back to this op — with a time or
-       without one — is not running; the day's reservation is a different question and keeps
-       D-492's answer below. */
-    if (typeof slot === "string" && slot) this.sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-    const now = at || stampInstant("second");
-    const day = now.slice(0, 10);
-    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
-    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    if (n === null)
-      return { day, spent_ms: cur ? cur.spent_ms : 0, reserved_ms: cur ? (cur.reserved_ms || 0) : 0, released_ms: 0,
-               why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day" };
-    /* Clamped at zero: a double release, or a release naming more than was reserved, must never
-       make the day's committed time read NEGATIVE, which would admit renders the allowance
-       cannot pay for. */
-    const held = cur ? (cur.reserved_ms || 0) : 0;
-    const released = Math.min(held, rel);
-    if (cur) this.sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
-                           n, held - released, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
   }
 
   runtimeObservations() {
@@ -40986,162 +40718,6 @@ export class Store extends DurableObject {
 
 
 
-  /** File the links a captured document made. Replaces this capture's rows
-   *  rather than appending, because a capture's own links are a property of its
-   *  bytes and do not change; a second filing is a re-run, not new information. */
-  recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
-    if (!sourceCapture) return { recorded: 0 };
-    const now = stampInstant("second");
-    this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
-    let n = 0;
-    for (const l of links) {
-      /* address_norm is required; citation_norm falls back to it for a link that
-         names no element. A link with neither is not a link. */
-      if (!l || !l.address_norm) continue;
-      this.sql.exec(
-        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           citation_norm, fragment, partition, origin, chrome, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
-        sourceBundle, sourceCapture, String(l.ref || l.address), l.address || l.address_norm,
-        l.address_norm, l.citation_norm || l.address_norm, l.fragment || null,
-        l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
-        capturedAt || now, now);
-      n++;
-    }
-    return { recorded: n, source_capture: sourceCapture };
-  }
-
-  /** Everything that points AT an address. The reverse index, which is the
-   *  whole reason this is address-keyed. */
-  linksTo({ address_norm }) {
-    /* Matched on the RESOURCE key, so asking what points at a report finds the
-       citations of its sections too, each still naming the element it cited. */
-    const rows = [...this.sql.exec(
-      `SELECT source_capture, source_bundle, link_ref, partition, fragment, citation_norm, captured_at
-       FROM links WHERE address_norm = ?`, address_norm)];
-    return { address_norm, count: rows.length, sources: rows,
-      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))] };
-  }
-
-  /** Resolve a capture's links against the store, with a contemporaneity
-   *  verdict for each that resolves.
-   *
-   *  The verdict answers one question: is the capture the store holds of the
-   *  target the version the source was pointing at on the day the source was
-   *  captured? Three values, because that question is usually unanswerable and a
-   *  binary scheme would sort every unanswerable case into one bucket or the
-   *  other, either asserting connections nobody established or discarding real
-   *  ones wholesale.
-   *
-   *  The strongest evidence available here is two captures of the target
-   *  BRACKETING the source's retrieval whose bytes hash equal: identical bytes
-   *  across the interval settles it outright and needs no timestamp anyone has
-   *  to trust. Everything weaker is named rather than leaned on. */
-  resolveLinks({ sourceCapture, at = null }) {
-    const rows = [...this.sql.exec(`SELECT * FROM links WHERE source_capture = ?`, sourceCapture)];
-    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
-    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
-    const out = [];
-    const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
-    const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
-
-    for (const r of rows) {
-      if (r.partition !== "deferred") {
-        tally[r.partition] = (tally[r.partition] || 0) + 1;
-        out.push({ ...r, resolution: r.partition, verdict: null });
-        continue;
-      }
-      /* D-96: the bracket arms read DIRECT observations only. An archive row
-         for the same address is a different observation stream: comparing
-         archive bytes against live bytes as one stream reports a change that is
-         a provenance difference. Cross-source agreement is stronger evidence
-         and gets its own treatment when the provenance chain grades it; until
-         then it must not leak into the identity bracket. */
-      const caps = [...this.sql.exec(
-        `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
-         WHERE address_norm = ? AND via = 'direct' ORDER BY first_retrieved`, r.address_norm)];
-      if (!caps.length) {
-        tally.offsite++;
-        out.push({ ...r, resolution: "offsite", verdict: null,
-          basis: "the record holds no capture of this address" });
-        continue;
-      }
-      tally.linked++;
-      /* The strongest case first: one set of bytes observed on BOTH sides of
-         this document's retrieval. Identical bytes across the interval settle
-         it, and nothing here depends on a date the source supplied. */
-      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T
-                                       && c.observations > 1) || null;
-      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
-      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
-      let verdict, basis, detail = null, pick = null;
-      /* D-57: A SELF-REFERENCE, AND ONE CAPTURE ON BOTH SIDES, ARE NOT A CHANGE.
-         A page that links to itself (every paginated Legistar calendar does)
-         finds its OWN capture among the target's, retrieved at exactly T, so it
-         is both the last capture at-or-before T and the first at-or-after it.
-         The two-sided arm below then told a member the target CHANGED between
-         two captures and printed one hash twice — a sentence about the source
-         the record cannot support. The same happens to any target with ONE
-         capture made at the source's retrieval instant. Both are stated for
-         what they are; the VERDICT is untouched (a fourth basis, never a fourth
-         verdict), and the link stays listed and counted. */
-      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
-      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
-
-      if (bracket && bracket.capture_sha === sourceCapture) {
-        verdict = "contemporaneous"; pick = bracket;
-        basis = "this link points at the document itself: the capture the record holds of its target is "
-              + "this very capture, and those same bytes were seen served on both sides of its retrieval";
-        detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times `
-               + `between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
-      } else if (bracket) {
-        verdict = "contemporaneous"; pick = bracket;
-        basis = "the same bytes were seen served on both sides of this document's retrieval and "
-              + "hash equal, so the target did not change across the interval";
-        detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
-      } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
-        verdict = "undetermined"; pick = selfCap;
-        basis = "this link points at the document itself: the capture the record holds of its target is "
-              + "this very capture, observed once, so no second observation says whether the target "
-              + "was ever served as anything else";
-        detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
-      } else if (oneCapture) {
-        verdict = "undetermined"; pick = before;
-        basis = "the record holds one capture of the target made at this document's retrieval instant and "
-              + "observed once; one observation is not a second version, and it does not establish that "
-              + "the target was unchanged on either side";
-        detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
-      } else if (before && after) {
-        verdict = "undetermined"; pick = before;
-        basis = "the target changed somewhere between the captures bracketing this document's "
-              + "retrieval, so which version it pointed at is not established";
-        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, `
-               + `${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
-      } else if (!before && after) {
-        verdict = "superseded"; pick = after;
-        basis = "every capture of the target postdates this document's retrieval, so the record "
-              + "holds a later version than the one pointed at";
-      } else {
-        verdict = "undetermined"; pick = before;
-        basis = "the record's captures of the target all predate this document's retrieval, and "
-              + "nothing establishes that it was unchanged in between";
-      }
-      verdicts[verdict]++;
-      const reg = pick ? [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha)][0] : null;
-      out.push({ ...r, resolution: "linked", verdict, basis, detail,
-                 target_capture: pick ? pick.capture_sha : null,
-                 target_bundle: reg ? reg.bundle_id : null,
-                 target_retrieved: pick ? pick.first_retrieved : null,
-                 target_last_seen: pick ? pick.last_retrieved : null,
-                 target_captures: caps.length });
-    }
-    return { sourceCapture, resolved: out.length, at: rows[0].captured_at, tally, verdicts, links: out,
-      note: "undetermined is the resting state and the expected common case, not a failure: it means "
-          + "nothing established which version the source pointed at, which is different from the "
-          + "record holding nothing and different again from holding a later version" };
-  }
-
   /** Project a capture's RESOLVED links into edges the record can traverse.
    *
    *  This is where a link becomes a citation. An unresolved link has no canonical
@@ -41195,63 +40771,6 @@ export class Store extends DurableObject {
           + "them, which is every acquired-but-unpromoted capture: those become edges when the target "
           + "is promoted, not before. The edge is links_to and never cites, because the source "
           + "asserted it and not the group; a member promoting it to cites is a member's act." };
-  }
-
-  /** Append a verdict. Never an update: a verdict that changed is a fact about
-   *  the record, and the current answer is simply the newest row. */
-  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
-    const now = at || stampInstant("second");
-    this.sql.exec(
-      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
-      sourceCapture, addressNorm, verdict, basis, targetBundle, targetCapture, now, detail);
-    const all = [...this.sql.exec(
-      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
-      sourceCapture, addressNorm)];
-    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
-  }
-
-  /* ------------------------------------------------------------------ *
-   * Capture sessions: a capture that needs another tick
-   * ------------------------------------------------------------------ */
-
-  /** Park what is left of a capture. Expired rows are pruned on the way past,
-   *  which is cheap and means an abandoned session cannot accumulate: a caller
-   *  that walks away costs one row until its hour is up. */
-  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null }) {
-    const now = at ? new Date(at) : new Date();
-    const iso = (d) => stampInstant("second", d);
-    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
-    if (!session || !state) return { session: null, saved: false };
-    const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
-    const body = JSON.stringify(state);
-    if (cur) {
-      this.sql.exec(`UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
-        iso(now), iso(new Date(now.getTime() + ttlMs)), body, session);
-      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
-    }
-    this.sql.exec(`INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      session, locator, primarySha, primaryFile, base, iso(now), iso(now), iso(new Date(now.getTime() + ttlMs)), body);
-    return { session, saved: true, ticks: 1, bytes: body.length };
-  }
-
-  loadCaptureSession({ session, at = null }) {
-    const now = at ? new Date(at) : new Date();
-    const iso = stampInstant("second", now);
-    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso);
-    const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
-    if (!r) return { session, found: false,
-      note: "no such capture session: it either never existed, was already finished, or expired" };
-    let state = null;
-    try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
-    return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
-             primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
-  }
-
-  dropCaptureSession({ session }) {
-    this.sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
-    return { session, dropped: true };
   }
 
   /* ==================================================================== *
@@ -45911,164 +45430,6 @@ export class Store extends DurableObject {
                            coverage_undetermined: OBSERVATION_COVERAGE_UNDETERMINED } };
   }
 
-  /* ------------------------------------------------------------------ *
-   * What a host has served
-   * ------------------------------------------------------------------ */
-
-  /** Look up assets this host has served before, by normalised address.
-   *
-   *  `documents` counts distinct PAGES, and a page is the primary's DOCUMENT
-   *  ADDRESS: `captured_locators.address_norm` for `capture_sha = primary_sha`
-   *  (CAP-13, `CAPTURE-SCALING.md` §Job one, reuse condition 3). Until CAP-13 it
-   *  counted distinct primary SHAS, and a primary sha is the content hash of the
-   *  page's bytes, so one page whose bytes changed between two captures read as
-   *  two documents and met the two-document reuse floor on its own. The document
-   *  address is the identity the record already keys a document on (D-96: an
-   *  archive capture and a direct one land on the same locator row), and D-58
-   *  writes it for every capture.
-   *
-   *  A primary with NO locator row (a capture from before D-58, or one whose
-   *  locator write failed inside its swallowing try) cannot say which page it
-   *  was. It is counted apart, as `documents_undetermined` (distinct primary
-   *  shas), and never guessed into `documents`: it may be a page already counted
-   *  or a new one, and the record cannot say which (CLAUDE.md §2). */
-  siteAssets({ host, addresses = [] }) {
-    if (!host) return { host: null, assets: {} };
-    const out = {};
-    const want = addresses.length ? new Set(addresses) : null;
-    const counts = new Map();
-    for (const c of this.sql.exec(
-      `SELECT r.address_norm AS address_norm,
-              COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`, host))
-      counts.set(c.address_norm, c);
-    for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
-      if (want && !want.has(r.address_norm)) continue;
-      const c = counts.get(r.address_norm);
-      out[r.address_norm] = { ...r, documents: (c && c.pages) || 0,
-                              documents_undetermined: (c && c.unlocated) || 0 };
-    }
-    return { host, assets: out, count: Object.keys(out).length };
-  }
-
-  /** File what a capture saw of a host.
-   *
-   *  The change case is the one that matters. When an address comes back with a
-   *  different sha than the record holds, that is a dated fact about the site,
-   *  AND it retrospectively puts every document that reused the old bytes into
-   *  question. Both are recorded: stable_since moves, changes increments, and
-   *  the affected documents are returned so the caller can act rather than
-   *  having to go looking. */
-  recordSiteAssets({ host, primarySha, observations = [], at = null }) {
-    if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || stampInstant("second");
-    let added = 0, changedCount = 0;
-    const changed = [];
-    /* CAP-14: the capture a REUSED observation names as its source is the one the
-       capture itself read (`site_assets.last_fetched_by` at lookup, carried on the
-       observation as `reused_from`), never re-read here: a fetch between that
-       lookup and this write would move site_assets, and the manifest already says
-       what the capture read. Only a capture-sha shape is kept; anything else, and
-       an absent value, is NULL -- UNDETERMINED, never guessed. */
-    const fromObs = (o) => (typeof o.reused_from === "string" && /^[0-9a-f]{64}$/.test(o.reused_from)) ? o.reused_from : null;
-    for (const o of observations) {
-      if (!o || !o.address_norm || !o.sha256) continue;
-      const cur = [...this.sql.exec(
-        `SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm)][0] || null;
-      if (!cur) {
-        this.sql.exec(
-          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
-             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-          host, o.address_norm, o.address || o.address_norm, o.sha256, o.content_type || null,
-          o.bytes || 0, o.kind || null, now, now, now, now, o.reused ? fromObs(o) : primarySha);
-        added++;
-      } else if (!o.reused && cur.sha256 !== o.sha256) {
-        /* It changed. Everything that reused the OLD bytes is now unverified,
-           and those documents are named rather than left to be discovered. */
-        const affected = [...this.sql.exec(
-          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
-          host, o.address_norm)];
-        this.sql.exec(
-          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
-             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
-          o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, primarySha, now, host, o.address_norm);
-        changedCount++;
-        changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
-                       reused_by: affected.map((a) => a.primary_sha) });
-        /* CAP-4 item 6a: POST-HOC reuse verification, unconditional and free. A
-           later direct capture just fetched different bytes than what earlier
-           captures REUSED from the record, so each of those captures now holds a
-           reused part the source has since changed. That verdict is APPENDED and
-           dated here (never overwritten, the same discipline link_verdicts
-           follows) at zero request cost -- no fetch is made at any point; this is
-           detection over what is already stored. INSERT OR IGNORE because the key
-           carries the second, so two changes to one asset within the same second
-           for one capture fold into the earlier row rather than throwing. */
-        for (const a of affected)
-          this.sql.exec(
-            `INSERT OR IGNORE INTO reuse_verdicts
-               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
-            a.primary_sha, host, o.address_norm, cur.sha256, o.sha256,
-            `a later direct capture of this host fetched different bytes for this address; `
-              + `this earlier capture reused the old ones, which are now unverified against the source`,
-            now);
-      } else if (!o.reused) {
-        this.sql.exec(
-          `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
-          now, now, primarySha, host, o.address_norm);
-      } else {
-        /* A reuse confirms nothing about the source, so last_fetched must not
-           move: it names the last time these bytes were actually seen served.
-           Nor does last_fetched_by (CAP-14): it names the capture whose fetch
-           that was, and a reuse fetched nothing. */
-        this.sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`,
-          now, host, o.address_norm);
-      }
-      this.sql.exec(
-        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
-           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
-        host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256, o.reused ? fromObs(o) : null);
-    }
-    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
-  }
-
-  /** CAP-4: the reused subresource PARTS of a bundle, so ratification can
-   *  re-fetch each one. A part is reused when a capture in this bundle drew an
-   *  asset from the record rather than requesting it, which is exactly a
-   *  `site_asset_refs` row with `reused = 1` whose `primary_sha` is one of the
-   *  bundle's registered captures. The register is the trust root and keys on
-   *  capture_sha, so the join to it is what scopes the reused parts to THIS
-   *  bundle. `reused_sha` is the bytes the capture actually reused (the ref row's
-   *  own sha, not necessarily what `site_assets` holds NOW -- the source may have
-   *  changed since), and `address` comes along from `site_assets` because a
-   *  re-fetch needs the real address, not the normalised key. */
-  reusedParts(bundleId) {
-    if (!bundleId) return { bundleId: null, parts: [] };
-    /* CAP-14: `reused_from` is the capture whose fetch served the reused bytes,
-       read from the REUSING capture's own ref row -- never from `site_assets`,
-       whose `last_fetched_by` a later fetch moves. NULL is a reuse recorded
-       before the column existed (or whose lookup named no fetch), and it is
-       stated as `reused_from_state: "undetermined"`, never inferred. */
-    const parts = this.#rows(
-      `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
-              ar.sha256 AS reused_sha, ar.reused_from AS reused_from,
-              sa.address AS address, sa.content_type AS content_type
-       FROM site_asset_refs ar
-       JOIN register r ON r.capture_sha = ar.primary_sha
-       LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
-       WHERE r.bundle_id = ? AND ar.reused = 1
-       ORDER BY ar.host, ar.address_norm`, bundleId)
-      .map((p) => ({ ...p, reused_from_state: p.reused_from ? "recorded" : "undetermined" }));
-    return { bundleId, parts, count: parts.length };
-  }
-
   /** D-65 — THE MONITOR'S LOOK, written to the log as `OBSERVATION-LOG-DESIGN.md` §4.1's
    *  second row states it: *"the same vocabulary, `authority_kind = sweep`, `authority` = the
    *  named request or ratified sweep"*. An `op=monitor` tick has no capture request; the
@@ -46211,215 +45572,6 @@ export class Store extends DurableObject {
       known && typeof c.type === "string" ? c.type : null,
       known && c.confidence != null ? String(c.confidence) : null,
       known ? c.contract : null, why, at);
-  }
-
-  /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
-   *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
-   *  and a fresh set of dated rows, so the history of what the source said each
-   *  time it was checked is readable. The control plane owns all outbound R2 and
-   *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
-   *  hands the store the verdicts to commit; the store invents none of them. */
-  recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || stampInstant("second");
-    let recorded = 0;
-    const refusals = [];
-    for (const v of verdicts) {
-      if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
-      this.sql.exec(
-        `INSERT OR IGNORE INTO reuse_verdicts
-           (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-         VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
-        v.source_capture, bundleId, v.host || "", v.address_norm, v.verdict,
-        v.reused_sha || "", v.observed_sha ?? null, v.basis || "", now);
-      recorded++;
-      /* REC-93 — RATIFY'S DOCUMENT-LEVEL OBSERVATION, `OBSERVATION-LOG-DESIGN.md`
-         §4.1 row 3, which maps this method's existing verdict vocabulary onto the
-         log's and MINTS NO NEW WORDS:
-             confirmed   -> PRESENT, detail `unchanged`
-             changed     -> PRESENT, detail `changed`
-             unreachable -> LOOKED_INDETERMINATE
-             not_attempted -> NO ROW AT ALL.
-         **The last one is the interesting one and it is the design's own
-         reasoning rather than an optimisation:** *"a look not taken is
-         NEVER_LOOKED, and the budget that stopped it is recorded on the
-         ratification, where it already is."* NEVER_LOOKED is the absence of a
-         row, so writing one here would be recording a look that did not happen —
-         the record claiming more than it can support, in the table built to stop
-         exactly that. Anything outside this mapping also writes nothing rather
-         than being coerced into the nearest word. */
-      const mapped =
-        v.verdict === "confirmed"   ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null }
-      : v.verdict === "changed"     ? { state: "PRESENT", detail: "changed",
-                                        ref: v.observed_sha || v.reused_sha || null }
-      : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null }
-      : null;
-      if (mapped)
-        refusals.push(this.#observe({
-          actorClass: "plane",
-          authorityKind: "ratify", authority: bundleId || v.source_capture,
-          level: "document", subjectKind: "address", subject: v.address_norm,
-          state: mapped.state,
-          resultKind: mapped.ref ? "capture" : null, resultRef: mapped.ref,
-          detail: mapped.detail,
-        }, now));
-    }
-    return { ok: true, bundleId, recorded, at: now,
-             /* Refusals are COLLECTED and reported, never thrown: §14b.7's
-                partial-results rule applied to the log, the same property
-                `op=airuntick` depends on. A null entry is a row that landed. */
-             observation_refusals: refusals.filter(Boolean) };
-  }
-
-  /** CAP-4: read the reuse verdicts, newest first. By bundle (ratify verdicts) or
-   *  by source_capture (which also surfaces the free posthoc verdicts that carry
-   *  no bundle). The current answer for a part is its newest row; the older rows
-   *  are the trail of what the source said each time it was checked. */
-  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
-    if (bundleId)
-      return { bundleId, verdicts: this.#rows(
-        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
-         FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`, bundleId) };
-    if (sourceCapture)
-      return { sourceCapture, verdicts: this.#rows(
-        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
-         FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`, sourceCapture) };
-    return { verdicts: [] };
-  }
-
-  /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
-   *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
-   *  the caller, so both numbers are returned and nothing is decided here.
-   *
-   *  CAP-13: a document is a PAGE (the primary's `captured_locators.address_norm`),
-   *  exactly as in `siteAssets`, so a page captured often no longer makes its own
-   *  assets read as the site's chrome. Primaries with no page on record are
-   *  reported apart as `documents_undetermined` and enter neither the numerator
-   *  nor the denominator: the share and the verdict rest on determined pages. */
-  siteChrome({ host, threshold = 0.6 }) {
-    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
-    const d = [...this.sql.exec(
-      `SELECT COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ?`, host)][0];
-    const documents = (d && d.pages) || 0;
-    const undetermined = (d && d.unlocated) || 0;
-    const assets = [];
-    for (const r of this.sql.exec(
-      `SELECT r.address_norm AS address_norm,
-              COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`, host)) {
-      const share = documents ? r.pages / documents : 0;
-      assets.push({ address_norm: r.address_norm, documents: r.pages,
-                    documents_undetermined: r.unlocated || 0, share,
-                    chrome: documents >= 3 && share >= threshold });
-    }
-    assets.sort((a, b) => b.share - a.share);
-    return { host, documents, documents_undetermined: undetermined, threshold, assets,
-             note: (documents < 3
-               ? "fewer than three documents captured from this host: recurrence says nothing yet"
-               : "chrome here means the address recurs across at least this share of the host's captured documents")
-               + (undetermined
-                 ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, `
-                   + "so which document each was is undetermined and none is counted"
-                 : "") };
-  }
-
-  /* ------------------------------------------------------------------ *
-   * Observed runtime limits
-   * ------------------------------------------------------------------ */
-
-  /** What we last saw this runtime allow, and whether it is time to look again.
-   *  `probeDue` is the part that matters: an instance that only ever learns a
-   *  ceiling downward would run a paid account at free-tier caps forever, so
-   *  after enough confirmations it deliberately goes back to running without
-   *  one and lets itself be refused. */
-  captureLimit(runtime) {
-    const r = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
-    const PROBE_EVERY = 25;
-    return r ? { ...r, probeDue: r.since_probe >= PROBE_EVERY, probeEvery: PROBE_EVERY }
-             : { runtime, observed: null, probeDue: true, probeEvery: PROBE_EVERY };
-  }
-
-  /** Record an observation. Called with `observed: null` for a run that was
-   *  never refused, which is NOT evidence about where the ceiling is and only
-   *  advances the counter toward the next probe. */
-  recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
-    const now = at || stampInstant("second");
-    const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
-    if (observed == null) {
-      if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
-      return { runtime, observed: cur ? cur.observed : null, recorded: false,
-               note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is" };
-    }
-    if (!cur) {
-      this.sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe)
-                     VALUES (?, ?, ?, ?, 1, 0)`, runtime, observed, now, now);
-      return { runtime, observed, recorded: true, moved: false, samples: 1 };
-    }
-    if (cur.observed === observed) {
-      this.sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
-      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
-    }
-    /* It moved. Keep the old value and the date, because "the ceiling is 51"
-       and "the ceiling was 51 until Tuesday and is now 1000" are different
-       facts and only the second one is worth acting on. */
-    this.sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
-                   WHERE runtime = ?`, now, observed, now, runtime);
-    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
-  }
-
-  /* ---- D-98: the task inbox ----
-   *
-   * Bob RULED that an undetermined-authority capture creates a task
-   * AUTOMATICALLY AT CAPTURE, through a PRODUCER/CONSUMER QUEUE, and the queue
-   * is the safety property rather than a transport detail.
-   *
-   * The split, stated once here because it is the whole point: the capture path
-   * may only ENQUEUE. It cannot write a task, cannot name an assignee, cannot
-   * set a status, cannot forge a history entry. Everything a member would READ
-   * off a task is bounded at the enqueue boundary; everything a member would
-   * ACT on is decided by the consumer, which is the sole writer. So the blast
-   * radius of a leaked daemon credential stops at `task_queue`, where the worst
-   * it can do is queue noise that dedups against itself.
-   *
-   * That is also why the grammar runs at the WRITE and not only at the gate.
-   * The transport for these tasks MIGHT ONE DAY BE EMAIL, which renders in a
-   * client we do not control, so a malformed task must never land at all rather
-   * than be caught later at ratification.
-   */
-
-  /** PRODUCER. Called from the capture path. Bounds what it accepts, records
-   *  no decision, and is idempotent on (kind, capture_sha) so a re-capture loop
-   *  cannot flood the queue. */
-  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
-    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
-    if (typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha))
-      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
-    /* F5 bound applied HERE, at the boundary, not later. A subject that reaches
-       the queue is already inert: single line, length-capped, and it will be
-       rendered as quoted data by anything that shows it. */
-    const text = boundedSubject(subject) || "a capture whose authority could not be determined";
-    const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
-    const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
-    if (existing) {
-      /* Still in the queue, so the consumer still owes it a drain: (re-)arm the
-         alarm rather than assume the earlier enqueue's arming survived. */
-      const armedAt = await this.#armDrain();
-      return { ok: true, queued: false, deduped: true, kind, captureSha, armedAt };
-    }
-    this.sql.exec(
-      `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
-      kind, captureSha, text, loc, now);
-    /* D-109: the enqueue arms the drain. This is the ONLY coupling the producer
-       has to the consumer, and it is a schedule, not a write. */
-    const armedAt = await this.#armDrain();
-    return { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
 
   /** The RULED routing order, resolved at write time by the consumer.
@@ -46971,62 +46123,6 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-per-item-retained */
   }
 
-  /* ---- D-104: source reachability ----
-   *
-   * The archive fallback fires after THREE CONSECUTIVE FAILURES OR FOURTEEN
-   * DAYS (RULED, AUTHORITY-AND-TRUST.md). This is the counter it will read, and
-   * the whole reason it exists before the fallback does is so the exclusion
-   * below is designed in rather than discovered afterwards.
-   *
-   * A GOVERNED REFUSAL IS NOT A FAILURE. When the per-host governor holds a
-   * request, the source was never asked, so nothing was learned about it. If a
-   * governed refusal counted, sustained self-throttling would trip the fallback:
-   * we would fetch from the Internet Archive because WE paced ourselves, which
-   * is backwards, and it would load somebody else's infrastructure to solve a
-   * problem we created. Bob, 2026-07-31: the governor keeps traffic low enough
-   * that being banned is not a concern, which is exactly why its refusals will
-   * be COMMON and must never be mistaken for the source being unreachable.
-   *
-   * The same shape of mistake the 2026-07-31 CDX measurement found in a
-   * different mechanism: an empty-body digest matching another empty-body digest
-   * looks like "unchanged" and means nothing. Equality that costs nothing to
-   * produce is not evidence.
-   */
-
-  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Bob framed
-     three-or-fourteen as a suggestion for finding an auditable alternative path
-     and left the metric to this thread, 2026-07-31.
-     *
-     * The third constant is the thread's own judgement and the reason it exists
-     * is worth stating. With a single failure able to age into eligibility, a
-     * document that failed once and was then never retried becomes eligible
-     * after a fortnight, which reads OUR MONITORING NEGLECT as the source being
-     * unreachable. That is D-104's mistake one level up: an outcome that cost
-     * nothing to produce (not asking again) turning into evidence about someone
-     * else. So the age arm requires corroboration too. Two failures a fortnight
-     * apart is a source that has actually been unreachable; one failure and
-     * silence is a gap in our own attention. */
-  static FALLBACK_CONSECUTIVE_FAILURES = 3;
-  static FALLBACK_STALE_DAYS = 14;
-  static FALLBACK_MIN_FAILURES_FOR_AGE = 2;
-
-  /* Overridable PER INSTANCE at deploy time, never at runtime, exactly as
-     GOVERNOR_APPETITE_PER_MIN is. A test instance can be told to fail fast so
-     the fallback can be exercised without waiting a fortnight; a runtime op
-     would be a fence anyone holding a credential could lower, which is not a
-     fence. Bad values fall back to the constants rather than being obeyed. */
-  #thresholds() {
-    const pick = (v, dflt, min) => {
-      const n = Number(v);
-      return Number.isFinite(n) && n >= min ? n : dflt;
-    };
-    return {
-      failures: pick(this.env.FALLBACK_CONSECUTIVE_FAILURES, Store.FALLBACK_CONSECUTIVE_FAILURES, 1),
-      days: pick(this.env.FALLBACK_STALE_DAYS, Store.FALLBACK_STALE_DAYS, 0),
-      minForAge: pick(this.env.FALLBACK_MIN_FAILURES_FOR_AGE, Store.FALLBACK_MIN_FAILURES_FOR_AGE, 1),
-    };
-  }
-
   /* ===========================================================   *  CAP-3: the archive-fallback MONITORING consumer.
    *
    *  The decision half and the capture half of the archive fallback both work
@@ -47150,7 +46246,7 @@ export class Store extends DurableObject {
      attention for the ordinary path to retry, D-104 one level up (the age arm's
      own reasoning in `sourceReachability`), never evidence the source is gone. */
   #monitorFloor() {
-    const TH = this.#thresholds();
+    const TH = captureOf(this.ctx).reachabilityThresholds();
     return Math.max(1, Math.min(TH.failures, TH.minForAge));
   }
   /* Pending monitoring work keeps the one alarm armed; none lets it
@@ -47697,126 +46793,6 @@ export class Store extends DurableObject {
     } catch (e) {
       return { ok: false, reason: String(e && e.message || e) };
     }
-  }
-
-  /** Record the outcome of one attempt on one document address.
-   *
-   *  `outcome` is deliberately a closed set, because the entire value of this
-   *  table is that it distinguishes kinds of not-getting-the-bytes, and a free
-   *  string would let a caller collapse the distinction by accident.
-   *    success         the source served us the document
-   *    source_refused  the ORIGIN answered 4xx/5xx: evidence about the source
-   *    fetch_failed    the network failed reaching it: also evidence
-   *    governed        OUR governor declined to ask: evidence about US
-   */
-  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
-    if (typeof addressNorm !== "string" || addressNorm === "")
-      return { ok: false, reason: "NO_ADDRESS" };
-    if (!SOURCE_OUTCOMES.includes(outcome))
-      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
-    const st = Number.isInteger(status) ? status : null;
-    this.sql.exec(
-      `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
-       ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
-
-    if (outcome === "governed") {
-      /* Counted, and counted SEPARATELY. consecutive_failures is untouched, and
-         so is first_failure_since: a document we chose not to ask about has not
-         started being unreachable. last_outcome records it so an operator can
-         see that the silence is ours. */
-      this.sql.exec(
-        `UPDATE source_reachability
-            SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
-          WHERE address_norm = ?`, outcome, now, addressNorm);
-      return { ok: true, counted: false, ...this.sourceReachability({ addressNorm, now }) };
-    }
-
-    if (outcome === "success") {
-      this.sql.exec(
-        `UPDATE source_reachability
-            SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
-                last_success = ?, last_outcome = ?, last_status = ?, updated_at = ?
-          WHERE address_norm = ?`, now, outcome, st, now, addressNorm);
-      return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
-    }
-
-    /* A real failure, produced by the source or by the network reaching it. */
-    this.sql.exec(
-      `UPDATE source_reachability
-          SET attempts = attempts + 1, failures_total = failures_total + 1,
-              consecutive_failures = consecutive_failures + 1,
-              first_failure_since = COALESCE(first_failure_since, ?),
-              last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ?
-        WHERE address_norm = ?`, now, now, outcome, st, now, addressNorm);
-    /* CAP-3. A counted failure is the archive-monitor consumer's producer: it may
-       have just pushed this document to the fallback threshold, so arm the one DO
-       alarm the way taskEnqueue arms the drain (SCHEDULER.md: "arm it from
-       whatever producer creates its work"). Arming only ever SCHEDULES, never
-       writes work, so the producer/consumer split holds. Gated on the consumer
-       being configured so an instance that has not wired monitoring neither arms
-       nor holds an alarm — governed and success never reach here, so the D-104
-       exclusion is preserved structurally rather than re-checked. */
-    if (this.#monitorConfigured()) await this.#armScheduler();
-    return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
-  }
-
-  /** The reachability of one document address, and whether the RULED fallback
-   *  threshold is met. Returns the verdict AND the two facts it is computed
-   *  from, so a caller never has to re-derive it and a reader can see why. */
-  sourceReachability({ addressNorm = null, now = null } = {}) {
-    const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
-    if (!row) {
-      return { address_norm: addressNorm, known: false, consecutive_failures: 0,
-               governed_refusals: 0, fallback_eligible: false,
-               basis: "no attempt on this address has ever been recorded" };
-    }
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
-    const TH = this.#thresholds();
-    const byCount = row.consecutive_failures >= TH.failures;
-    /* Staleness runs from the FIRST failure in the current run, not from the
-       last success: a document that has been failing for fourteen days is the
-       case the ruling names, and a document nobody has asked about in fourteen
-       days has not failed at all. */
-    const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
-    const staleDays = since === null ? 0 : (Date.parse(at) - since) / 86400000;
-    /* The age arm means THE CURRENT FAILING RUN HAS LASTED fourteen days, not
-       "we last succeeded fourteen days ago". A document nobody has asked about
-       in a fortnight has not failed; a document that has been failing since a
-       fortnight ago has. One failure is enough to start that clock, because the
-       clock is measuring how long the record has been without the document, and
-       a single unretried failure that old is itself a monitoring problem the
-       fallback is entitled to route around. */
-    const byAge = row.consecutive_failures >= TH.minForAge && staleDays >= TH.days;
-    return {
-      address_norm: row.address_norm,
-      known: true,
-      consecutive_failures: row.consecutive_failures,
-      attempts: row.attempts,
-      failures_total: row.failures_total,
-      /* Reported beside the verdict on purpose. A number excluded from a
-         decision must stay visible or the exclusion cannot be audited. */
-      governed_refusals: row.governed_refusals,
-      last_success: row.last_success || null,
-      last_failure: row.last_failure || null,
-      last_outcome: row.last_outcome || null,
-      last_status: row.last_status === null ? null : row.last_status,
-      first_failure_since: row.first_failure_since || null,
-      failing_days: since === null ? 0 : Math.floor(staleDays),
-      fallback_eligible: byCount || byAge,
-      /* Reported so a verdict can be audited against the thresholds actually in
-         force, which on a test instance are not the shipped constants. */
-      thresholds: TH,
-      basis: byCount
-        ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}`
-        : byAge
-          ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures`
-          : row.governed_refusals > 0 && row.consecutive_failures === 0
-            ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed`
-            : row.consecutive_failures === 1 && staleDays >= TH.days
-              ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it`
-              : "not eligible: the threshold is not met",
-    };
   }
 
   /* ================================================================   * PL-12 / D-84 — THE BIAS OBJECT'S THREE ACTS, and DEC-54's four scopes
@@ -48508,6 +47484,7 @@ export class Store extends DurableObject {
     try {
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
+        ...captureOps(captureOf(this.ctx), url, body, this.env),
         /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
            wrapper is the producer-side ARM for the monitor-cadence consumer, in
            the shape SCHEDULER.md prescribes ("arm it from whatever producer
@@ -48568,9 +47545,6 @@ export class Store extends DurableObject {
            filtered by the viewer's position (7.9). */
         backlinks: () => this.backlinks({ target: url.searchParams.get("target"),
                                           viewer: url.searchParams.get("viewer") }),
-        capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
-        siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
-        recordsiteassets: () => this.recordSiteAssets(body || {}),
         /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
@@ -48672,13 +47646,9 @@ export class Store extends DurableObject {
                                                         bundleId: url.searchParams.get("bundle"),
                                                         limit: url.searchParams.get("limit"),
                                                         viewer: url.searchParams.get("viewer") }),
-        reusedparts: () => this.reusedParts(url.searchParams.get("id")),
-        recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         /* D-65: the monitor's look. The actor is the control plane's stamp, from the query string. */
         monitorlook: () => this.recordMonitorLook({ ...(body || {}),
           actorClass: url.searchParams.get("actorClass"), actor: url.searchParams.get("actor") }),
-        reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
-                                                  sourceCapture: url.searchParams.get("capture") }),
         /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
            sha, and the reverse index by raw entity reference. */
         /* REC-30: `viewer` is stamped by the control plane, never read from a
@@ -48921,15 +47891,9 @@ export class Store extends DurableObject {
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         /* D-64: the daily render allowance. `renderadmit` takes a render or records
            a DEFERRAL; `renderspend` adds the browser time a render reported. */
-        renderadmit: () => this.renderAdmit(body || {}),
-        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
-        recordlinks: () => this.recordLinks(body || {}),
-        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
-        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
-        recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
@@ -49249,13 +48213,6 @@ export class Store extends DurableObject {
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
            member actions. */
-        recordsourceoutcome: () => this.recordSourceOutcome(body || {}),
-        /* `now` is readable so a suite can pin the instant. A verdict with a
-           time arm that can only be evaluated against the wall clock is a
-           verdict no test can assert without being about the day it runs. */
-        sourcereach: () => this.sourceReachability({ addressNorm: url.searchParams.get("address"),
-                                                     now: url.searchParams.get("now") }),
-        taskenqueue: () => this.taskEnqueue(body || {}),
         taskdrain: () => this.taskDrain(body || {}),
         tasks: () => this.taskList({ assignee: url.searchParams.get("assignee"),
                                      status: url.searchParams.get("status"),
@@ -49335,12 +48292,6 @@ export class Store extends DurableObject {
                                              contextId: url.searchParams.get("contextId"),
                                              viewer: url.searchParams.get("viewer"),
                                              limit: url.searchParams.get("limit") }),
-        savecapturesession: () => this.saveCaptureSession(body || {}),
-        loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
-        dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
-        sitechrome: () => this.siteChrome({ host: url.searchParams.get("host"),
-                                            threshold: Number(url.searchParams.get("threshold")) || 0.6 }),
-        recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
@@ -49794,10 +48745,6 @@ export class Store extends DurableObject {
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
-        knock: () => this.knock(body || {}),
-        inboxlist: () => this.inboxList(url.searchParams.get("status") || null),
-        inboxget: () => this.inboxGet(url.searchParams.get("id")),
-        inboxresolve: () => this.inboxResolve(body || {}),
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") }),
       };
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });

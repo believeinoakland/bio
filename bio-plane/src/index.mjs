@@ -67,9 +67,6 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          isCaseMemberBytes,
          /* D-442: which shape a case document is (BIO_Publication_v0_1.md §3 rule 12). */
          caseDocumentStatesMemberBlocks,
-         /* D-513: the doorbell's own family, read AS A VALUE by the three governed
-            helpers below — the rows that give an anonymous knocker a sentence. */
-         KNOCK_CHECKS,
          /* D-561 / C-98: the public door's own family, read AS A VALUE by the
             governed helpers of op=publishedbytes and op=publishedcase. */
          PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
@@ -315,6 +312,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
 import { Store, stampInstant } from "./store.mjs";
+import { knockOp } from "./capture/doorbell.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -2847,101 +2845,6 @@ const decorateAct = (a) => ({
   rung_absence: RUNG_ABSENT[a.id]?.ground ?? null,
   prompt: a.prompt ?? null,
 });
-
-const KNOCK = {
-
-  windowMs: 10 * 60 * 1000,
-  perIp: 12,          // knocks per source per window
-  global: 300,        // knocks per instance per window; bounds hostile R2 writes
-  maxBytes: 8 * 1024 * 1024,   // with R2: enough for a captured PDF
-  maxInline: 64 * 1024,        // without R2: inline into the DO, small only
-};
-/* D-496: THE SENTENCE THE INSTANCE PUBLISHES ABOUT ITS OWN DOORBELL, BUILT FROM
-   THE LIMITS IT PUBLISHES so the words and the numbers cannot drift apart — the
-   drift is the whole defect BOB #32 ruled on (2026-09-24 04:28Z: a published
-   limit is a BOUND). It says "estimated by a sliding window" because the two-
-   bucket estimate in `Store.knock` IS approximate, and a record that states the
-   bound without stating how it is reached claims more than it can support. */
-KNOCK.statedPerIp =
-  `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
-KNOCK.statedGlobal =
-  `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
-
-/* D-513 / DEC-49 (`BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 10) — THE THREE
-   REFUSALS THE DOORBELL MAKES BEFORE THE STORE IS EVER CALLED, each behind ONE
-   governed helper on D-484's shape (`actNoBasis`, `actNoCitation`) and on D-508's
-   at this same door.
- *
- * WHY THREE CODES WHERE THERE WERE TWO TOKENS. The oversize refusal was minted
- * at TWO sites here and they are TWO CONDITIONS, not one. The first refuses a
- * REQUEST BODY this door will not read at all: the bytes on the wire are past
- * the ceiling before anything is decoded, so nobody has looked at the material
- * and nothing about it has been judged. The second refuses a DECODED PAYLOAD
- * larger than THIS INSTANCE can hold, which on an instance with no evidence
- * storage is a far smaller number and has a different remedy — configure the
- * storage, or send less. A DEC-49 row holds ONE `where` naming the smallest span
- * in which its refusal is enforced, and its canned translation can be true of
- * ONE condition; one code over both would be the record telling a knocker
- * something untrue about their own material, which is the class
- * `dec49-onecode-twoconditions.sweep.mjs` exists to find.
- *
- * WHY THE WIRE TOKENS MOVE, and it is the one part of this that is not additive
- * (IC-286, PROPOSED). The old tokens are minted all over this plane — a captured
- * subresource, a container, an enumerated selection — so a row under either name
- * would have claimed every one of those sites as well. The oversize token is
- * worse than unclaimed: the DEC-49 guard already reads it as TRANSLATED, because
- * `app.html` words it for a capture PART, so a sentence about a document too
- * large to keep was standing in the census as the doorbell's answer to a stranger
- * who will never load that page. Each condition therefore takes a code of its own.
- *
- * THE CODE IS A STRING LITERAL AT ITS SITE, which is DEC-49's rule and what lets
- * the guard's arm C compare it against the row (a code held in a variable is one
- * the arm reads past, and one shipped an undefined translation to a member that
- * way). Each helper THROWS on a missing row for `Store.knock`'s reason: a throw
- * is a 500 in a test, which is loud, where a missing sentence is silent and
- * reaches a person — and at this door that person is a stranger with no account
- * and no other way to find out what happened. */
-
-function knockEnvelopeTooLarge() {
-  /* DEC-49 REGION is-knock-envelope-too-large — D-513 / C-85.3. The ONE site at
-     which this door refuses to READ a request at all. */
-  const row = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a "
-                  + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return { ok: false, reason: "KNOCK_ENVELOPE_TOO_LARGE", code: "KNOCK_ENVELOPE_TOO_LARGE",
-           check: row.check, translation: row.translation, maxBytes: KNOCK.maxBytes };
-  /* END DEC-49 REGION is-knock-envelope-too-large */
-}
-
-function knockPayloadTooLarge(cap, r2) {
-  /* DEC-49 REGION is-knock-payload-too-large — D-513 / C-85.4. The ONE site at
-     which this door refuses material it has read and this instance cannot hold.
-     `detail` stays the SITE's own sentence and is carried only when there is no
-     evidence storage, exactly as it was before this item: the canned translation
-     is the knocker's answer in every instance, the detail is this instance's. */
-  const row = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a "
-                  + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return { ok: false, reason: "KNOCK_PAYLOAD_TOO_LARGE", code: "KNOCK_PAYLOAD_TOO_LARGE",
-           check: row.check, translation: row.translation, maxBytes: cap,
-           detail: r2 ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" };
-  /* END DEC-49 REGION is-knock-payload-too-large */
-}
-
-function knockEmpty() {
-  /* DEC-49 REGION is-knock-empty — D-513 / C-85.5. The ONE site at which this
-     door refuses a knock that decoded to nothing: the body parsed, it named a
-     content field, and the field held zero bytes. */
-  const row = KNOCK_CHECKS.KNOCK_EMPTY;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation "
-                  + "(DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY",
-           check: row.check, translation: row.translation };
-  /* END DEC-49 REGION is-knock-empty */
-}
 
 const SCRATCH = "scratch";
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -6746,86 +6649,7 @@ export default {
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
          probe is confined to scratch. Nothing is read back out except by a
          signed-in member. */
-      if (op === "knock") {
-        if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
-        const raw = await req.arrayBuffer();
-        /* D-513: routed through the ONE governed site, so the refusal carries the
-           code, the check and the canned translation a stranger can read. */
-        if (raw.byteLength > KNOCK.maxBytes + 4096)
-          return json(knockEnvelopeTooLarge(), 413);
-        let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
-        if (!body || (typeof body.contentB64 !== "string" && typeof body.contentText !== "string"))
-          return json({ ok: false, ...requiredArgument("knock", "contentB64 or contentText",
-            "a JSON body with contentB64=<base64> or contentText=<text>",
-            "knock requires contentB64 or contentText, plus optional note and contact") }, 400);
-        let bytes;
-        try {
-          bytes = body.contentB64 !== undefined
-            ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0))
-            : new TextEncoder().encode(body.contentText);
-        } catch { return json({ ok: false, ...requiredArgument("knock", "contentB64", "<base64>",
-                    "contentB64 is not valid base64") }, 400); }
-        /* D-513: routed through the ONE governed site (see `knockEnvelopeTooLarge`). */
-        if (bytes.length === 0) return json(knockEmpty(), 400);
-        const r2 = typeof env.CAPTURES?.put === "function";
-        const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
-        /* D-513: routed through the ONE governed site (see `knockEnvelopeTooLarge`).
-           A DIFFERENT code from the envelope refusal above, because it is a
-           different condition with a different remedy. */
-        if (bytes.length > cap)
-          return json(knockPayloadTooLarge(cap, r2), 413);
-        const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
-          .map((x) => x.toString(16).padStart(2, "0")).join("");
-        const nowMs = Date.now();
-        const win = Math.floor(nowMs / KNOCK.windowMs);
-        /* D-496: how far into the current bucket we are, which is the weight the
-           store gives the PREVIOUS bucket. Read once, beside `win`, so the two
-           cannot describe different instants. */
-        const elapsedFrac = (nowMs - win * KNOCK.windowMs) / KNOCK.windowMs;
-        const ipHash = (await fingerprint(req.headers.get("cf-connecting-ip") || "unknown")) || "unknown";
-        const knockId = `KNOCK-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await doAnswer(stub.fetch(new Request("http://do/knock", {
-          method: "POST", body: JSON.stringify({
-            knockId, sha256: sha, bytes: bytes.length,
-            content: r2 ? null : new TextDecoder().decode(bytes),
-            inR2: r2, note: body.note, contact: body.contact,
-            ipBucket: `ip:${ipHash}:${win}`, ipPrevBucket: `ip:${ipHash}:${win - 1}`,
-            globalBucket: `all:${win}`, globalPrevBucket: `all:${win - 1}`,
-            elapsedFrac,
-            perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
-          }) })));
-        /* REC-52: `if (!rec.result?.ok) return json({ ok:false, ...rec.result }, 429)`
-           sent a store silence back as a bare `{ok:false}` at HTTP 429 — the
-           TOO-MANY-REQUESTS status, which is itself a substantive claim: it
-           tells an anonymous member of the public that they knocked too often,
-           when in fact nobody counted. The rate refusal the store really sends
-           is unchanged and still arrives whole. */
-        if (!rec.answered) return storeSilent("knock");
-        if (!rec.result?.ok) {
-          /* D-496: the bound is PUBLISHED at the one moment a caller is actually
-             held to it. Before this the 429 carried a bare `RATE_IP` and the
-             limit was stated to nobody — the record held a number the caller
-             could only infer by hitting it. The sentence names the window and
-             says the count is an estimate, so it does not claim more than the
-             two-bucket window in `Store.knock` can support. */
-          /* D-508: and the refusal itself now carries its DEC-49 code, check and canned
-             translation, minted in `Store.knock`'s `is-knock-rate` region from
-             `KNOCK_CHECKS` (C-85.1, C-85.2) — so the spread below carries them out
-             unchanged. THE TWO ARE DIFFERENT THINGS AND ARE NOT FOLDED TOGETHER:
-             `stated` is THIS instance's published NUMBER, composed here from the limits
-             it runs and moving when they move; the translation is the member-facing
-             SENTENCE, the same in every instance and naming no figure. The comparison
-             below READS a code the plane sent, which is what DEC-49 licenses a surface
-             to do; it is not a second mint, and the mint stays the one region. */
-          const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp
-                       : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
-          return json({ ok: false, ...rec.result, ...(stated ? { stated } : {}) }, 429);
-        }
-        if (r2) await env.CAPTURES.put(`bio/inbox/${sha}`, bytes,
-          { sha256: await crypto.subtle.digest("SHA-256", bytes) });
-        return json({ ok: true, knockId, sha256: sha, bytes: bytes.length,
-                      received: "Your material is in the group's inbox awaiting member review." }, 200);
-      }
+      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent });
       /* REC-52: the same spread as section 7a's. A store silence used to leave
          a `{ok:true}` carrying the service name, the version and the bootstrap
          flag and NOTHING the store knows — an instance answering "here is what
