@@ -27,6 +27,8 @@
   - `node checks/format.mjs`: `format: 69 modules, 64 requirements files; 0 failures`
   - `node checks/architecture.mjs … pdf-worker`: `architecture: 13 product files, 8 relative imports (0 naming no tracked file, not judged); 0 failures` (2 failures before)
   - `node checks/coverage.mjs … pdf-worker`: `coverage: 1 modules, 17 of 17 live requirement ids named by a test; 0 failures` (R41 missing before)
-  - `node checks/ownership.mjs … pdf-worker tranche/T4`: see the line below, run after the commit.
+  - `node checks/ownership.mjs … pdf-worker tranche/T4`: `ownership: 2 files changed by pdf-worker between tranche/T4 and HEAD; 0 failures`
 
 Size: test runs 3, module lines 223
+
+**COMPLETE** · 2026-09-27. Sent to BOB as `COMPLETE`. Waiting on: BOB's answer to the two REPORT items, and the layer close.
