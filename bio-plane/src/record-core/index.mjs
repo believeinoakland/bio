@@ -262,9 +262,10 @@ export class RecordCore {
 
   /** Runs `fn` as one transaction over the whole store. A throw, or a returned refusal (`ok:false`),
    *  rolls back every row written inside it, in any module's tables; a refusal is then returned, a
-   *  throw rethrown. A call made inside another joins it, so the outermost act decides. */
+   *  throw rethrown. A call made inside another joins it as a savepoint (a Durable Object's
+   *  `transactionSync` nests so, measured in Miniflare): a nested call that throws or refuses rolls back
+   *  its own writes and ids and nothing else, and the outer call decides the rest (R32, K133). */
   transact(fn) {
-    if (this.#depth > 0) return fn();
     let result;
     this.#depth++;
     try {

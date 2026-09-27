@@ -290,7 +290,7 @@ test("R33 R29: commit archives what it replaces, writes live files and the row, 
   assert.equal(hist0(), h); assert.equal(man0(), m);
 });
 
-test("R32: transact rolls back every row in any module's tables on a throw or a refusal, and nested calls join the outer", () => {
+test("R32: transact rolls back every row in any module's tables on a throw or a refusal, and a nested call rolls back only its own", () => {
   const { s, rc } = fresh();
   s.db.exec(`CREATE TABLE other_module (k TEXT)`);
   const snap = () => dump(s);
@@ -302,10 +302,26 @@ test("R32: transact rolls back every row in any module's tables on a throw or a 
   // nested: the inner call joins, so the outer's throw takes the inner's rows too
   assert.throws(() => rc.transact(() => { rc.transact(() => { s.sql.exec(`INSERT INTO other_module VALUES ('in')`); return { ok: true }; }); throw new Error("outer"); }));
   assert.deepEqual(snap(), before);
-  // and an inner refusal inside an outer success is the outer's to decide: the outer committed
-  const v = rc.transact(() => { rc.transact(() => { s.sql.exec(`INSERT INTO other_module VALUES ('in2')`); return { ok: false }; }); return { ok: true, v: 1 }; });
+  // K133: an inner refusal or throw inside an outer commit rolls back the inner's own rows and ids, and only them
+  const v = rc.transact(() => {
+    s.sql.exec(`INSERT INTO other_module VALUES ('out1')`);
+    const inner = rc.transact(() => {
+      s.sql.exec(`INSERT INTO other_module VALUES ('in2')`); rc.allocId("INQ", "2026");
+      draws([77], () => rc.mintOpaqueId("CASE", "2026", "", () => false)); put(rc, "INFO-2026-0009-i", "K1");
+      return { ok: false, reason: "INNER" };
+    });
+    assert.deepEqual(inner, { ok: false, reason: "INNER" });
+    assert.throws(() => rc.transact(() => { s.sql.exec(`INSERT INTO other_module VALUES ('in3')`); rc.allocId("INQ", "2026"); throw new Error("inner"); }));
+    rc.transact(() => { s.sql.exec(`INSERT INTO other_module VALUES ('in4')`); return { ok: true }; });
+    s.sql.exec(`INSERT INTO other_module VALUES ('out2')`);
+    return { ok: true, v: 1 };
+  });
   assert.deepEqual(v, { ok: true, v: 1 });
-  assert.deepEqual(rows(s, `SELECT k FROM other_module`).map((x) => x.k), ["in2"]);
+  assert.deepEqual(rows(s, `SELECT k FROM other_module ORDER BY rowid`).map((x) => x.k), ["out1", "in4", "out2"],
+                   "the refused and thrown inner calls left no row; the outer's and the committed inner's stand");
+  assert.equal(rc.bundleInfo("INFO-2026-0009-i"), null, "the refused inner commit left no bundle");
+  assert.equal(rc.allocId("INQ", "2026").id, "INQ-2026-0001", "no id allocated in a refused or thrown inner call was spent");
+  assert.equal(draws([77], () => rc.mintOpaqueId("CASE", "2026", "", () => false)), "CASE-2026-0077", "nor any id minted in one");
   assert.equal(rc.transact(() => 5), 5, "fn's result is returned");
 });
 
