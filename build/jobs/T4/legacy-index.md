@@ -37,8 +37,8 @@ No `tests` path (legacy). Measured on this branch, against a worktree of `origin
 - Modules that use the service: `membership`'s own tests (`bio-plane/test/m/membership/*.test.mjs`, 8 files): all pass.
 - No layer tests (manifest).
 - `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
-- `node checks/architecture.mjs … legacy-index`: see the commit's run below.
+- `node checks/architecture.mjs … legacy-index`: 29 product files, 50 relative imports (0 naming no tracked file); 0 failures (the `scripts/` imports of `tools/` are gone).
 - `node checks/coverage.mjs … legacy-index`: 0 of 0 live requirement ids; 0 failures.
-- `node checks/ownership.mjs … legacy-index tranche/T4`: see below.
+- `node checks/ownership.mjs … legacy-index tranche/T4`: 9 files changed by legacy-index; 0 failures.
 
-Size: test runs 31, module lines 11,257 (`index.mjs`) + 38 (`scripts/jsonc.mjs`)
+Size: test runs 31, module lines 11,256 (`index.mjs`) + 42 (`scripts/jsonc.mjs`)
