@@ -127,3 +127,72 @@ test("R49, R55, R56, R57: stored as a system connection graded C once both docum
   assert.equal(w.k.asserted({ bundleId: "INFO-2026-0011-item1", viewer: V("alice") }).containment.length, 1);
   assert.ok(sha);
 });
+
+/* The rows a read of `table` took out of storage, per call: a bound in the SQL is what keeps this at `cap + 1`. */
+function spyReads(w, table) {
+  const exec = w.st.sql.exec, reads = [];
+  w.st.sql.exec = (q, ...a) => { const r = exec(q, ...a); if (new RegExp(`FROM ${table}\\b`).test(q)) reads.push(r.length); return r; };
+  return { reads, stop: () => { w.st.sql.exec = exec; } };
+}
+
+test("R54, R33: asserted reads at most limit + 1 rows, sight asked in the read, so truncated counts only visible rows; the default 200, the maximum 2,000", () => {
+  const w = world();
+  w.member("alice"); w.member("bob");
+  w.doc(A, ["a"]);
+  const others = [1, 2, 3, 4, 5, 6, 7].map((i) => `INFO-2026-01${String(i).padStart(2, "0")}-o`);
+  for (const o of others) {
+    w.doc(o, [`bytes ${o}`]);
+    assert.equal(w.k.assert({ a: A, b: o, basis: `basis ${o}`, member: "alice", viewer: V("alice") }).wrote, true);
+  }
+  /* Four of the seven other ends hidden from bob; alice's rows to them stay in storage. */
+  for (const o of others.slice(0, 4)) w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, o);
+  const spy = spyReads(w, "asserted_connections");
+  const three = w.k.asserted({ bundleId: A, viewer: V("bob"), limit: 3 });
+  assert.deepEqual(three.member.map((r) => r.b_bundle_id), others.slice(4));
+  assert.equal(three.truncated, false, "three visible rows at a limit of three: nothing withheld, so nothing cut");
+  const two = w.k.asserted({ bundleId: A, viewer: V("bob"), limit: 2 });
+  assert.deepEqual(two.member.map((r) => r.b_bundle_id), others.slice(4, 6));
+  assert.equal(two.truncated, true); assert.equal(two.limit, 2);
+  const one = w.k.asserted({ bundleId: A, viewer: MACHINE, limit: 1 });
+  assert.equal(one.member.length, 1); assert.equal(one.truncated, true);
+  spy.stop();
+  assert.ok(spy.reads.length >= 3 && spy.reads.every((n) => n <= 4), `rows read per call: ${spy.reads}`);
+  const all = w.k.asserted({ bundleId: A, viewer: MACHINE });
+  assert.equal(all.limit, 200); assert.equal(all.member.length, 7); assert.equal(all.truncated, false);
+  assert.equal(w.k.asserted({ bundleId: A, viewer: MACHINE, limit: 99999 }).limit, 2000);
+});
+
+test("R56, R33: fileMembership reads each list at most limit + 1 rows, sight asked in the read, and says which list was cut", async () => {
+  const w = world();
+  w.member("alice"); w.member("bob");
+  const [ag] = w.doc("INFO-2026-0010-agenda", ["the agenda"]);
+  const links = [];
+  for (let i = 1; i <= 5; i++)
+    links.push(at(`https://agendas.example.org/item/${i}`, 0, 1000 - 150 * i),
+               at(`https://agendas.example.org/file/${i}`, 0, 950 - 150 * i));
+  const structure = { ok: true, links };
+  w.structures[ag] = { ...structure, ...membershipBeside(structure, VIEW) };
+  /* Pairs 1-3 held (stored), 4-5 not (pending); file 1's document hidden from bob. */
+  for (let i = 1; i <= 3; i++) {
+    hold(w, `INFO-2026-002${i}-item`, `https://agendas.example.org/item/${i}`);
+    hold(w, `INFO-2026-003${i}-file`, `https://agendas.example.org/file/${i}`);
+  }
+  const r = await w.k.storeFileMembership({ captureSha: ag, viewer: MACHINE });
+  assert.equal(r.stored, 3); assert.equal(r.pending, 2);
+  w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, "INFO-2026-0031-file");
+  const spyS = spyReads(w, "asserted_connections"), spyP = spyReads(w, "file_membership_pending");
+  const two = w.k.fileMembership({ captureSha: ag, viewer: V("bob"), limit: 2 });
+  assert.deepEqual(two.stored.map((s) => s.b_bundle_id), ["INFO-2026-0032-file", "INFO-2026-0033-file"]);
+  assert.equal(two.stored_truncated, false, "two visible stored pairs at a limit of two");
+  assert.equal(two.pending.length, 2); assert.equal(two.pending_truncated, false); assert.equal(two.truncated, false);
+  const one = w.k.fileMembership({ captureSha: ag, viewer: V("bob"), limit: 1 });
+  assert.equal(one.stored.length, 1); assert.equal(one.pending.length, 1); assert.equal(one.limit, 1);
+  assert.equal(one.stored_truncated, true); assert.equal(one.pending_truncated, true); assert.equal(one.truncated, true);
+  for (const p of one.pending) { assert.equal(p.stored, false); assert.equal(p.derived, "containment"); }
+  spyP.stop(); spyS.stop();
+  assert.ok(spyS.reads.length && spyS.reads.every((n) => n <= 3), `stored rows read per call: ${spyS.reads}`);
+  assert.ok(spyP.reads.length && spyP.reads.every((n) => n <= 3), `pending rows read per call: ${spyP.reads}`);
+  const all = w.k.fileMembership({ captureSha: ag, viewer: MACHINE });
+  assert.equal(all.limit, 200); assert.equal(all.stored.length, 3); assert.equal(all.pending.length, 2); assert.equal(all.truncated, false);
+  assert.equal(w.k.fileMembership({ captureSha: ag, viewer: MACHINE, limit: 99999 }).limit, 2000);
+});
