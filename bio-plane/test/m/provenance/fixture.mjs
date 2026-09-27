@@ -58,7 +58,7 @@ export function evidence(objects = {}, { checksum = true } = {}) {
 /** A record: the four modules on one storage, the producing group registered as promotion's fact (as legacy-store
  *  does until instance-setup's extraction, K69), and a clock the test controls. */
 export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", signingKey = null,
-                        instanceName = "test-instance" } = {}) {
+                        instanceName = "test-instance", order = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -73,7 +73,8 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   promotion.registerFact("producingGroup", "legacy-store", () => facts.group);
   promotion.registerFact("citedBy", "legacy-store", () => []);
   promotion.registerFact("caseMember", "legacy-store", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now, signingKey, instanceName });
+  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now, signingKey, instanceName,
+                                    ...(order ? { order } : {}) });
   prov.migrate();
   const w = {
     st, host, record, membership, promotion, prov, clock, facts,
