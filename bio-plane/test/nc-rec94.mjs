@@ -61,6 +61,16 @@ mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
 const AIRUN = join(PLANE, "src/airun.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log (T5) took the content-level writer out of
+   `store.mjs #observeExtraction` into its `observeExtraction` (R6, called from `onReadingNotice`), and the live
+   rules (`contentObservationsFor`, `contentAxisFor`, the page-count test) into `vocabulary.mjs`; `airun.mjs` keeps an
+   uncalled copy until ai-runs' N49, and `observation-content.test.mjs`' pure B arms still import that copy. So an
+   arm on a pure rule now patches BOTH copies: the copy the B arms drive and the copy the store's writer runs, which
+   is what the one copy was before the move. The per-capture read and its fence went to retrieval
+   (`src/retrieval/index.mjs contentAxis`, R23). */
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
+const OBSVOCAB = join(PLANE, "src/observation-log/vocabulary.mjs");
+const RETRIEVAL = join(PLANE, "src/retrieval/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;   /* store.mjs is over a megabyte and airun.mjs tens of KB;
                               a restore over a stub must fail loudly rather than quietly. */
@@ -105,6 +115,14 @@ function arm(file, find, replace) {
   writeFileSync(file, src.replace(find, replace));
   return { armed: true, matches: n };
 }
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): one rule, two copies (above). Armed only if EVERY copy matched
+   exactly once; a copy that did not match is reported by its count and nothing is written. */
+function armAll(files, find, replace) {
+  const counts = files.map((f) => readFileSync(f, "utf8").split(find).length - 1);
+  if (counts.some((n) => n !== 1)) return { armed: false, matches: counts.join("+") };
+  for (const f of files) arm(f, find, replace);
+  return { armed: true, matches: counts.join("+") };
+}
 
 const ARMS = {
   baseline: {
@@ -120,13 +138,17 @@ const ARMS = {
      budget on work already done, and — worse — it makes "we have never read any
      of these" the answer for a corpus that was read. */
   writer: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "remove the promote-time content-level writer, so an extraction that really happened "
        + "leaves no row and every capture reads as never-extracted",
     mustFail: ["C1: promoting a document with a reading writes a content-level observation",
                "C2: the `tier3_candidate` document is `partial` IN THE STORE",
                "C3: the unreadable document is LOOKED_INDETERMINATE",
-               "D1: a capture whose text WAS extracted answers UNDETERMINED"],
+               /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): REC-91 (d917cc359d, before T5) re-labelled D1
+                  ("…over a container this record cannot name a unit arm for, answers the NONE member on the index
+                  axis"), so the old fragment matched nothing while D1 went red; the fragment is now the label's
+                  unchanged head. */
+               "D1: a capture whose text WAS extracted"],
     /* THE OVER-STRICTNESS PAIR, IN THE ORTHOGONAL DIRECTION, and it is the
        queue row's own clause: *a document-level observation from REC-93 is
        untouched*. This arm removes THIS item's writer and must leave REC-93's
@@ -138,9 +160,11 @@ const ARMS = {
     mustPass: "section A and section B (pure — they do not touch the store), `C4` (no reading "
             + "still writes no row), `E1` (the level is still BUILT), and every document-level "
             + "arm in `observation-log.test.mjs`, which this arm does not touch",
-    patch: () => arm(STORE,
-      "      this.#observeExtraction(bundleId, sha, reading, { author });",
-      "      /* ARMED */"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the promote's reading notice calls observation-log's
+       `observeExtraction` (R6); the call is removed as the store's was. */
+    patch: () => arm(OBSLOG,
+      "    const ex = this.observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });",
+      "    const ex = {}; /* ARMED */"),
   },
 
   /* THE FALSE-COVERAGE DIRECTION, AND IT IS THE DANGEROUS ONE. A reading whose
@@ -150,7 +174,7 @@ const ARMS = {
      this one fails toward saying more, which is the direction CLAUDE.md names as
      worse than a missing feature. */
   shortfall: {
-    files: [AIRUN],
+    files: [AIRUN, OBSVOCAB],
     why: "make a reading with unread pages report PRESENT rather than partial — a document we got "
        + "half of reading as a document we got",
     mustFail: ["B6: THE FALSE-COVERAGE DIRECTION",
@@ -160,7 +184,8 @@ const ARMS = {
                "F1: the re-extraction's LATEST row is PRESENT"],
     mustPass: "every arm about a document that really was read whole, and every refusal — this "
             + "arm makes the record claim MORE, and nothing it touches makes it claim less",
-    patch: () => arm(AIRUN,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): both copies (B6 drives airun's, C2/E2/E4/F1 the writer's). */
+    patch: () => armAll([AIRUN, OBSVOCAB],
       "  const shortfall = reading.tier3_candidate === true;",
       "  const shortfall = false;"),
   },
@@ -172,14 +197,15 @@ const ARMS = {
      and it is a separate arm because a single fix for one would not have caught
      the other. */
   pagecount: {
-    files: [AIRUN],
+    files: [AIRUN, OBSVOCAB],
     why: "let a SCOPED chain claim the whole document when this record holds no page count — a "
        + "coverage claim off a page set nobody counted",
     mustFail: ["B11: and with NO page count it stays `partial` and SAYS WHY"],
     mustPass: "`B9` (a KNOWN page set the chain really covers still reads PRESENT) and `B10` (a "
             + "known LARGER page set still reads partial) — this arm must touch only the "
             + "undetermined case, and if either of those moves it is a different arm than declared",
-    patch: () => arm(AIRUN,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): both copies of the rule. */
+    patch: () => armAll([AIRUN, OBSVOCAB],
       "  if (!Number.isInteger(n) || n <= 0) return false;",
       "  if (!Number.isInteger(n) || n <= 0) return true;"),
   },
@@ -201,10 +227,12 @@ const ARMS = {
     mustPass: "everything else, including `A2b`'s reach row — this arm changes no behaviour at "
             + "all, which is exactly the point: the defect it plants is one no behavioural arm "
             + "anywhere could see, and that is why the mechanism has to be structural",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `contentAxis` is now a one-line delegation to
+       retrieval; the literal is still planted in `store.mjs`, which A2's walk still reads. */
     patch: () => arm(STORE,
-      "  contentAxis({ captureSha = null, viewer = null } = {}) {",
+      "  contentAxis(a) { return retrievalOf(this.ctx).contentAxis(a); }",
       `  /* ARMED: ${Object.keys(CONTENT_AXIS_STATES)[1]} */\n`
-      + "  contentAxis({ captureSha = null, viewer = null } = {}) {"),
+      + "  contentAxis(a) { return retrievalOf(this.ctx).contentAxis(a); }"),
   },
 
   /* BOB'S RULING OF 2026-09-15, AND THE ONLY ARM HERE THAT EXISTS BECAUSE THIS
@@ -219,16 +247,20 @@ const ARMS = {
      review: the defect is a missing QUESTION rather than a wrong answer, and
      nothing about the code looks wrong with it applied. */
   cause: {
-    files: [AIRUN],
+    files: [AIRUN, OBSVOCAB],
     why: "let a missing content-level row read as never-extracted whatever its cause — collapsing "
        + "design section 5.1's three causes into the one that makes a claim",
     mustFail: ["B12: §5.1's ORDER",
                "B12b: AND AN ABSENT OR UNRECOGNISED CAUSE IS TREATED AS THE WEAKEST"],
     mustPass: "every arm about a capture that HAS an observation — this arm can only change what "
             + "an ABSENCE is read as, and if a present row moves then the arm took something else",
-    patch: () => arm(AIRUN,
-      '    if (cause === "never_looked")',
-      '    if (cause !== "__never__")'),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): both copies of `contentAxisFor`'s cause test. The one-line
+       anchor already matched TWICE in `airun.mjs` on `tranche/T4` (it is a substring of `causesNotRuledOut`'s
+       indented `if (cause === "never_looked") {`), so this arm did not arm before T5 either; the anchor now
+       carries the line above it, which is `contentAxisFor`'s alone. */
+    patch: () => armAll([AIRUN, OBSVOCAB],
+      '      ? missingCause : "purged";\n    if (cause === "never_looked")',
+      '      ? missingCause : "purged";\n    if (cause !== "__never__")'),
   },
 
   /* THE FENCE. §6: *a subject discloses a project's interest, so REC-36's
@@ -243,7 +275,7 @@ const ARMS = {
      only the flag would have passed. Fixed in the same turn by returning before
      the log is read at all. */
   fence: {
-    files: [STORE],
+    files: [RETRIEVAL],
     why: "neuter the viewer gate on the per-capture read, so a capture inside a project the "
        + "caller was never invited to answers about itself",
     mustFail: ["D5: THE FENCE",
@@ -251,8 +283,10 @@ const ARMS = {
                "D5c: the gate FAILS CLOSED on an absent stamp"],
     mustPass: "every other arm, so this arm takes the fence and nothing else — a control that "
             + "moves two things cannot say which one the suite saw",
-    patch: () => arm(STORE,
-      "    const held = owner && this.#bundleRedactor(viewer)(owner.bundle_id) !== null ? owner : null;",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the gate is retrieval's `contentAxis` (R23), through its
+       sight predicate. */
+    patch: () => arm(RETRIEVAL,
+      "    const held = owner && this.sight(viewer)(owner.bundle_id) ? owner : null;",
       "    const held = owner;"),
   },
 };

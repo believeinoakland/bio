@@ -52,6 +52,13 @@ mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
 const AIRUN = join(PLANE, "src/airun.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log (T5) took the document-level writer out of
+   `store.mjs recordCapturedLocator` into its receipt listener `receiptLook` (R5, registered on provenance's
+   `onReceipt`), and the append's refusals (C-22.6, C-22.9) out of `airun.mjs checkObservation` into
+   `vocabulary.mjs checkObservation`, the one the live append (`observe`) and the suite now call; `airun.mjs`
+   keeps an uncalled copy until ai-runs' N49. The arms patch the live code; what each breaks is unchanged. */
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
+const OBSVOCAB = join(PLANE, "src/observation-log/vocabulary.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;   /* store.mjs is over a megabyte and airun.mjs tens of KB;
                               a restore over a stub must fail loudly rather than quietly. */
@@ -92,7 +99,7 @@ const ARMS = {
      nobody looked at — which is FALSE and, worse, reads as an invitation to go
      and look at something already held. */
   writer: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "remove the document-level writer in `recordCapturedLocator`, so a look that really "
        + "happened leaves no row and the frontier says never-looked about a document we hold",
     /* RE-CUT ON THIS ARM'S FIRST RUN, AND THE RE-CUT IS THE ITEM'S BEST FINDING.
@@ -132,14 +139,16 @@ const ARMS = {
        Without the harness's match-count guard that would have read as "the arm
        passes now", which is precisely how an arm stops arming silently. An arm
        that did not arm is a finding, never a retry. */
-    patch: () => arm(STORE,
-      "    let observed = null, wrote = false;\n    if (detail !== \"unchanged\") {",
-      "    let observed = null, wrote = false;\n    if (false) {"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the writer is `receiptLook` (observation-log R5); its
+       write is suppressed for every look, as `if (false)` suppressed it in the store. */
+    patch: () => arm(OBSLOG,
+      "    if (observation === \"unchanged\" || c.observe === false) return { written: false };",
+      "    if (true) return { written: false };"),
   },
 
   /* §9 arm 1's second half: "drop the back-reference and the append is refused". */
   referent: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "drop the back-reference from the acquire writer, so PRESENT no longer names what it found",
     /* RE-CUT ON ITS FIRST RUN TOO, and the finding here is about what this arm
        can and cannot DISTINGUISH. Declared three; three of the four that fired
@@ -160,22 +169,24 @@ const ARMS = {
     mustPass: "C-22.10's own refusal arm (B11), which must STILL fire — the refusal is what turns "
             + "this arm from a missing field into a refused append, and an arm that also took the "
             + "refusal down would have proved nothing",
-    patch: () => arm(STORE,
-      "        state: \"PRESENT\", resultKind: \"capture\", resultRef: captureSha,",
-      "        state: \"PRESENT\", resultKind: \"capture\", resultRef: null,"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the same line in `receiptLook` (observation-log R5). */
+    patch: () => arm(OBSLOG,
+      "      state: \"PRESENT\", resultKind: \"capture\", resultRef: capture_sha,",
+      "      state: \"PRESENT\", resultKind: \"capture\", resultRef: null,"),
   },
 
   /* §9 arm 4: "a row with no `authority_kind` is refused; a member's op=search
      writes nothing". This arm takes the refusal down — and the SECOND declared
      failure is the interesting one, because it is where the DOCTRINE lives. */
   authority: {
-    files: [AIRUN],
+    files: [OBSVOCAB],
     why: "neuter C-22.9, so a look with no authority behind it is recordable — RFC 2308's rule "
        + "inverted, and §4.6's provisional left with nothing enforcing it",
     mustFail: ["a row with NO authority_kind is REFUSED BY NAME (C-22.9)"],
     mustPass: "every other refusal, the fold, the edge rule and the frontier — this arm must "
             + "break the authority rule and nothing else",
-    patch: () => arm(AIRUN,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the live C-22.9 is `vocabulary.mjs checkObservation`. */
+    patch: () => arm(OBSVOCAB,
       "  if (!Object.prototype.hasOwnProperty.call(OBSERVATION_AUTHORITY_KINDS, authorityKind))",
       "  if (false)"),
   },
@@ -183,14 +194,15 @@ const ARMS = {
   /* The C-22.6 half, and it is the fence this whole table's separation rests on:
      the observation log may never be filed into a published document. */
   bundle: {
-    files: [AIRUN],
+    files: [OBSVOCAB],
     why: "neuter C-22.6 at the append, so an entry naming a bundle is admitted and the log "
        + "becomes filable into `bundle.md` — which is written only on success, so the failure "
        + "path would be published or lost",
     mustFail: ["an entry naming a BUNDLE is refused at the append (C-22.6)"],
     mustPass: "every other refusal and the whole fold — the separation is ONE rule and this "
             + "arm must take exactly it",
-    patch: () => arm(AIRUN,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the live C-22.6 is `vocabulary.mjs checkObservation`. */
+    patch: () => arm(OBSVOCAB,
       "  if (e.bundle != null && String(e.bundle) !== \"\")",
       "  if (false)"),
   },
@@ -199,7 +211,7 @@ const ARMS = {
      and increments N counters; change one asset and it writes one row." M-14
      measured what that rule buys: 2,859x over the real census corpus. */
   edge: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "make the edge-triggered rule write a row on an UNCHANGED revisit — the WARC revisit "
        + "economy done wrong, and 43,283 rows a day over the city census instead of 15",
     mustFail: ["5 UNCHANGED revisits write ZERO rows",
@@ -209,9 +221,11 @@ const ARMS = {
     /* RE-ANCHORED alongside the `writer` arm above and for the same reason —
        both patched the line the `observation_written` fix rewrote, and both
        reported `matched 0x` on the run after it. */
-    patch: () => arm(STORE,
-      "    if (detail !== \"unchanged\") {\n      observed = this.#observe({",
-      "    if (true) {\n      observed = this.#observe({"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the edge rule is `receiptLook`'s `unchanged` guard
+       (observation-log R5); dropping that half writes a row on every unchanged revisit, as `if (true)` did. */
+    patch: () => arm(OBSLOG,
+      "    if (observation === \"unchanged\" || c.observe === false) return { written: false };",
+      "    if (c.observe === false) return { written: false };"),
   },
 
   /* THE OVER-STRICTNESS DIRECTION, and it is the arm that must STAY GREEN.

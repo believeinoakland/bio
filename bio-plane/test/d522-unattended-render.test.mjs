@@ -15,6 +15,13 @@
        `if (true) body.render = true;`
        -> 19 pass, 1 FAIL: exactly the plain-request arm (D). The renderer is still not reached for it, because the
        upgraded ask is DEFERRED by the spent allowance — a render nobody asked for would have spent a member's day.
+   RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder): capture's K58 replaced the control plane's
+   `captureRequestArm`, so arms (1) and (3) now edit `src/capture/acquire.mjs`'s in-process arm:
+   `if (captureRequest.render === true) body.render = true; else delete body.render;` with `if (false)` / `if (true)`;
+   arm (2) is unchanged. RE-RUN 2026-09-27, each ALONE, restores sha256 MATCH and cmp identical, on a scratch tree
+   carrying ONLY legacy-tests' REPORT 1 fix (`captureOf(host, { env: d.env ?? null })` in `connectionsOf`), without
+   which this suite reads 9/12 and no arm can be measured: baseline 21/0; (1) 12/9, (2) 10/11, (3) 20/1 (arm D alone);
+   baseline 21/0. ALL THREE AS DECLARED (one assertion more than the first run's figures).
  * =========================================================================
  * D-522 — AN UNATTENDED RENDER THAT SUCCEEDS, DRIVEN THROUGH THE DRAIN.
  *

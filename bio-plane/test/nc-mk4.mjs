@@ -33,6 +33,13 @@ mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log (T5, its R14–R21) took the lead out of `store.mjs`:
+   the act (`lead`), the share (`leadShare`), the look's referent fences (`leadLook`, `referentVisible`) and the ONE
+   lead-visibility predicate (`leadReach`, BOB #14's ruling as SQL over the positional member; the legacy store's
+   per-row `#leadVisible` with its `gate.member` tests is gone into it) now live in
+   `src/observation-log/index.mjs`. The store arms patch the same rules there. C-54.1 (`leadLegFindings`) did not
+   move. */
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -104,16 +111,17 @@ const ARMS = {
                               "    if (op === \"lead\" && false)\n      inner.searchParams.set(\"author\","]]),
   },
   logatauthor: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "authoring WRITES A LOOK (the literal reading of the accepts-when): an observation at op=lead "
        + "claims a look nobody made",
     mustFail: ["NOTHING is written to the log"],
     mustPass: "the look arms' own row counts (they are deltas taken after authoring)",
-    patch: () => arm([[STORE, "                  leadId, who, typed, where, at);\n",
-                              "                  leadId, who, typed, where, at);\n    this.#observe({ actorClass: \"member\", actor: who, authorityKind: \"lead\", authority: leadId, level: \"internet\", subjectKind: \"description\", subject: typed, state: \"LOOKED_INDETERMINATE\" });\n"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log's `lead`, through its one append site. */
+    patch: () => arm([[OBSLOG, "                  leadId, who, typed, where, at);\n",
+                               "                  leadId, who, typed, where, at);\n    this.observe({ actorClass: \"member\", actor: who, authorityKind: \"lead\", authority: leadId, level: \"internet\", subjectKind: \"description\", subject: typed, state: \"LOOKED_INDETERMINATE\" });\n"]]),
   },
   rollup: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "admit an `observation` referent on a member's look at BOTH lead fences (the kind check AND the "
        + "visibility resolution) — the rollup arm of C-22.10 becomes reachable through a lead and answers "
        + "under the LOG's code instead. CORRECTED 2026-09-18 after its first run came back GREEN: the kind "
@@ -122,22 +130,27 @@ const ARMS = {
        + "about the arm; protected twice, stated",
     mustFail: ["an OBSERVATION referent — a rollup's — is refused for a member's look (C-54.7)"],
     mustPass: "every other look arm",
-    patch: () => arm([[STORE, "    if (rk && rk !== \"capture\" && rk !== \"content\")",
-                              "    if (rk && rk !== \"capture\" && rk !== \"content\" && rk !== \"observation\")"],
-                      [STORE, "    if (rk && !this.#leadReferentVisible(rk, rr, viewer))",
-                              "    if (rk && rk !== \"observation\" && !this.#leadReferentVisible(rk, rr, viewer))"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log's `leadLook`; the visibility helper is
+       `referentVisible`. */
+    patch: () => arm([[OBSLOG, "    if (rk && rk !== \"capture\" && rk !== \"content\")",
+                               "    if (rk && rk !== \"capture\" && rk !== \"content\" && rk !== \"observation\")"],
+                      [OBSLOG, "    if (rk && !this.referentVisible(rk, rr, viewer))",
+                               "    if (rk && rk !== \"observation\" && !this.referentVisible(rk, rr, viewer))"]]),
   },
   /* ===== BOB #14's VISIBILITY RULING (2026-09-18), added when MK-4 was corrected to it ===== */
   machinewide: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "THE RULING'S CONTROL: widen the machine read back to UNFILTERED — MK-4's first provisional. A "
        + "machine credential nobody minted for the lead (the member token, an organisation-scoped ai key) "
        + "then reads it",
     mustFail: ["NO EXISTENCE LEAK: the member TOKEN", "NO EXISTENCE LEAK: an ORGANISATION-scoped ai key",
                "AFTER the share, the member TOKEN"],
     mustPass: "the member-scoped arms — ruth's own key still reads, sam's still does not",
-    patch: () => arm([[STORE, "    if (gate.scope === \"DENY\" || gate.member == null) return false;",
-                              "    if (gate.scope === \"DENY\") return false;\n    if (gate.member == null) return true;"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `leadReach` answers null (no lead at all) for a caller with no
+       positional member, which is every machine credential; the arm makes that caller reach every lead instead
+       (the predicate still binds its two arguments). */
+    patch: () => arm([[OBSLOG, "    if (who == null) return null;\n    return {\n      sql: `(l.author = ?",
+                               "    if (who == null) return { sql: \"(1=1 OR ? IS NULL OR ? IS NULL)\", args: [null, null] };\n    return {\n      sql: `(l.author = ?"]]),
   },
   aiscope: {
     files: [INDEX],
@@ -146,40 +159,48 @@ const ARMS = {
     mustFail: ["OVER-STRICTNESS: ruth's member-scoped ai key reads ruth's lead",
                "and sam's member-scoped ai key reaches it too"],
     mustPass: "every refused-viewer arm — refusing more cannot leak",
-    patch: () => arm([[INDEX, "        : cls === \"ai\" ? aiCred.principal\n        : `${MACHINE_CLASS_PREFIX}${cls}`);",
-                              "        : cls === \"ai\" ? \"class:ai\"\n        : `${MACHINE_CLASS_PREFIX}${cls}`);"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the two-line anchor matched 3 times on `tranche/T4` (4 now),
+       so this arm has not armed since REC-132 added the identity stamp. The lead reads ask the POSITIONAL member
+       (`leadReach` over the `identity` stamp, REC-132), so the arm now takes the minted principal off BOTH stamps
+       an ai key carries on those reads: the viewer and the identity. */
+    patch: () => arm([[INDEX, "      inner.searchParams.set(\"viewer\",\n        viaSession ? sessViewer\n        : cls === \"ai\" ? aiCred.principal\n",
+                              "      inner.searchParams.set(\"viewer\",\n        viaSession ? sessViewer\n        : cls === \"ai\" ? \"class:ai\"\n"],
+                      [INDEX, "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity\n        : cls === \"ai\" ? aiCred.principal\n",
+                              "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity\n        : cls === \"ai\" ? \"class:ai\"\n"]]),
   },
   noshare: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "the share reaches nobody: a joined participant of the project it was shared to cannot read it",
     mustFail: ["AFTER the share, sam (joined to P1) reads the lead"],
     mustPass: "every refusal arm",
-    patch: () => arm([[STORE, "    if (gate.member === row.author) return true;\n    return !!this.#one(",
-                              "    if (gate.member === row.author) return true;\n    return false && !!this.#one("]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the share half of `leadReach`'s predicate. */
+    patch: () => arm([[OBSLOG, "      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp",
+                               "      sql: `(l.author = ? OR 0=1 AND EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp"]]),
   },
   sharewide: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "the share reaches EVERY participant state, `invited` included — skeleton-only visibility "
        + "widened into a member's words",
     mustFail: ["AFTER the share, vera (invited, not joined) still answers EXACTLY"],
     mustPass: "otto, the tokens and the org key — they hold no position at all",
-    patch: () => arm([[STORE, "        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,",
-                              "        WHERE s.lead_id = ? AND pp.member_id = ? LIMIT 1`,"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the participant-state test in `leadReach`'s share half. */
+    patch: () => arm([[OBSLOG, "             WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,",
+                               "             WHERE s.lead_id = l.lead_id AND pp.member_id = ?))`,"]]),
   },
   shareauthor: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "a non-author who can READ a shared lead may re-share it",
     mustFail: ["only its author does (C-54.10)"],
     mustPass: "the author's own share",
-    patch: () => arm([[STORE, "    if (who !== L.author)\n      return refusal(\"LEAD_SHARE_NOT_AUTHOR\",",
+    patch: () => arm([[OBSLOG, "    if (who !== L.author)\n      return refusal(\"LEAD_SHARE_NOT_AUTHOR\",",
                               "    if (false)\n      return refusal(\"LEAD_SHARE_NOT_AUTHOR\","]]),
   },
   sharepart: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "the author may share to a project she has not joined — or to one that does not exist",
     mustFail: ["ruth cannot share to a project she has not joined (C-54.9)"],
     mustPass: "the share to P1",
-    patch: () => arm([[STORE, "    if (!joined)\n      return refusal(\"LEAD_SHARE_NOT_A_PARTICIPANT\",",
+    patch: () => arm([[OBSLOG, "    if (!joined)\n      return refusal(\"LEAD_SHARE_NOT_A_PARTICIPANT\",",
                               "    if (false)\n      return refusal(\"LEAD_SHARE_NOT_A_PARTICIPANT\","]]),
   },
   overstrict: {

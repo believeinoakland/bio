@@ -35,6 +35,12 @@ const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections (T5, its R40–R44) took the theme acts and reading out of
+   `store.mjs` into `src/connections/themes.mjs` (declare's fences 1 and 2, place's fence 3, propose's hunch row, the
+   gated reading, the handle-or-pairing helper); the arms patch the same lines there. The control plane's
+   `administer` stamp for the theme ops gained `themewithdraw` (connections R62). */
+const THEMES = join(PLANE, "src/connections/themes.mjs");
+const ENTITIES = join(PLANE, "src/entities/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -85,29 +91,35 @@ const ARMS = {
                                "    if (false) {\n      findings.push(refusal(\"THEME_NOT_EVIDENCE\","]]),
   },
   liar: {
-    files: [AFF],
+    files: [AFF, ENTITIES],
     why: "THE LIAR THE ROW NAMES: a theme as an ELEVENTH ENTITY KIND — a named, citable thing the "
        + "registry will create",
     mustFail: ["`theme` is NOT in ENTITY_KINDS", "the subject registry REFUSES a theme as an entity kind"],
     mustPass: "the leg refusals — they do not consult the registry",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): entities (T5, its R7) holds the registry's own closed kind
+       list, which `affordances.mjs` still copies until N13 re-exports it; the liar adds the kind to BOTH, as it
+       added it to the one list before. Its first run here, on `affordances.mjs` alone, left the registry arm GREEN
+       (67/1): the registry no longer reads affordances' list. */
     patch: () => arm([[AFF, "\"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\",\n];",
-                            "\"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\", \"theme\",\n];"]]),
+                            "\"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\", \"theme\",\n];"],
+                      [ENTITIES, "  \"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\"]);",
+                                 "  \"person\", \"body\", \"ordinance\", \"parcel\", \"contract\", \"fund\", \"theme\"]);"]]),
   },
   notest: {
-    files: [STORE],
+    files: [THEMES],
     why: "fence 2 dropped: a theme may be declared without its TEST",
     mustFail: ["A DECLARATION WITHOUT A TEST IS REFUSED", "a test of whitespace is no test",
                "none of the refused declarations wrote a theme"],
     mustPass: "the name, length and machine refusals",
-    patch: () => arm([[STORE, "    if (!criterion.trim())\n      return refusal(\"THEME_NO_TEST\",",
+    patch: () => arm([[THEMES, "    if (!criterion.trim())\n      return refusal(\"THEME_NO_TEST\",",
                               "    if (false)\n      return refusal(\"THEME_NO_TEST\","]]),
   },
   machinedeclare: {
-    files: [STORE],
+    files: [THEMES],
     why: "fence 1 dropped: a machine credential may declare a theme",
     mustFail: ["the MEMBER token is a machine credential", "and the ADMIN token is a machine credential too"],
     mustPass: "the member's own declaration",
-    patch: () => arm([[STORE, "    if (!who || isMachineIdentity(who))\n      return refusal(\"THEME_NOT_A_MEMBER\",",
+    patch: () => arm([[THEMES, "    if (!who || isMachineIdentity(who))\n      return refusal(\"THEME_NOT_A_MEMBER\",",
                               "    if (!who)\n      return refusal(\"THEME_NOT_A_MEMBER\","]]),
   },
   stamp: {
@@ -120,29 +132,29 @@ const ARMS = {
                               "    if (op === \"themedeclare\" && false)\n      inner.searchParams.set(\"declarer\","]]),
   },
   machineplace: {
-    files: [STORE],
+    files: [THEMES],
     why: "fence 3 dropped at the ACT: a machine credential may place, so its judgement becomes membership",
     mustFail: ["a MACHINE credential cannot PLACE"],
     mustPass: "the proposal arms",
-    patch: () => arm([[STORE, "    if (!who || isMachineIdentity(who))\n      return refusal(\"THEME_PLACEMENT_NOT_A_MEMBER\",",
+    patch: () => arm([[THEMES, "    if (!who || isMachineIdentity(who))\n      return refusal(\"THEME_PLACEMENT_NOT_A_MEMBER\",",
                               "    if (!who)\n      return refusal(\"THEME_PLACEMENT_NOT_A_MEMBER\","]]),
   },
   hunchcounts: {
-    files: [STORE],
+    files: [THEMES],
     why: "fence 3 dropped at the ROW: a proposal is written as MEMBERSHIP (state member, grade D) — the "
        + "hunch that counts",
     mustFail: ["READS AS A HUNCH", "on the reading the hunch is listed APART"],
     mustPass: "the member placements",
-    patch: () => arm([[STORE, "         VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,",
-                              "         VALUES (?, ?, ?, ?, 'member', 'D', ?, ?, ?)`,"]]),
+    patch: () => arm([[THEMES, "         VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,",
+                               "         VALUES (?, ?, ?, ?, 'member', 'D', ?, ?, ?)`,"]]),
   },
   ungated: {
-    files: [STORE],
+    files: [THEMES],
     why: "the reading is no longer gated per placement: a document the reader cannot see is listed",
     mustFail: ["otto — no position in that project — reads the theme WITHOUT it",
                "and nothing on otto's reading mentions it"],
     mustPass: "the placement refusal — the act's gate is a different site (`#themeTarget`)",
-    patch: () => arm([[STORE, "        WHERE p.theme_id = ? AND p.state = ? AND (${g.sql}) ORDER BY p.target LIMIT ?`,\n      T.theme_id, state, ...g.args, cap + 1);",
+    patch: () => arm([[THEMES, "        WHERE p.theme_id = ? AND p.state = ? AND (${g.sql}) ORDER BY p.target LIMIT ?`,\n      T.theme_id, state, ...g.args, cap + 1);",
                               "        WHERE p.theme_id = ? AND p.state = ? ORDER BY p.target LIMIT ?`,\n      T.theme_id, state, cap + 1);"]]),
   },
   overstrict: {
@@ -165,13 +177,13 @@ const ARMS = {
   },
   /* BOB #32 (2026-09-24), added by c19-unionfix: WHO A READER IS SHOWN. */
   handleid: {
-    files: [STORE],
+    files: [THEMES],
     why: "THE DISCLOSURE ARM: the member id is restored to a reader who does not administer — the first "
        + "cut's shape, which BOB #32 ruled out (Membership v2 §3; MK-6's precedent)",
     mustFail: ["A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER",
                "op=themeread (as otto, a member) shows WHOSE lens it is"],
     mustPass: "the administrator's arm, the impostor arm's cover half, every fence arm",
-    patch: () => arm([[STORE, "    if (!pairs) return { [`${prefix}_handle`]: handle };",
+    patch: () => arm([[THEMES, "    if (!pairs) return { [`${prefix}_handle`]: handle };",
                               "    if (!pairs) return { [prefix]: stamp || null, [`${prefix}_handle`]: handle };"]]),
   },
   adminunstamped: {
@@ -181,7 +193,8 @@ const ARMS = {
     mustFail: ["AN ADMINISTRATOR'S READ CARRIES THE MEMBER ID AND THE COVER",
                "op=themeread (as sam, an administrator) shows ruth by member id"],
     mustPass: "A MEMBER'S READ CARRIES NO MEMBER ID AND NO COVER",
-    patch: () => arm([[INDEX, "    if (op === \"themedeclare\" || op === \"themeplace\" || op === \"themepropose\" || op === \"themeread\")\n      inner.searchParams.set(\"administer\",",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the list gained `themewithdraw` on its own line. */
+    patch: () => arm([[INDEX, "    if (op === \"themedeclare\" || op === \"themeplace\" || op === \"themepropose\" || op === \"themeread\"\n        || op === \"themewithdraw\")\n      inner.searchParams.set(\"administer\",",
                               "    if (false)\n      inner.searchParams.set(\"administer\","]]),
   },
 };

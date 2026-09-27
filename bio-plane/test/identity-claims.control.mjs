@@ -107,9 +107,12 @@ arm("5-strip-the-machine-principal", "src/index.mjs",
      four. Reported rather than smoothed: the instrument was stricter than its author
      predicted, which is the direction to be surprised in but is still a surprise. */
   "block 2 FAILS: declared_by empty on the registry and progression acts (block 1 ALSO moves — see the note)",
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5-11 (legacy-index; entities R8, R4, R28) put the `withdrawnBy`
+     stamp between the FW-6 stamp and `/* FW-7`, so the anchor now ends on that block's opening words; the FW-6 stamp
+     it strips is the same line. */
   (src) => src.replace(
-    '        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* FW-7',
-    '        b.declaredBy = viaSession ? sessMember : "";\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* FW-7'),
+    '        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* T5-11 (entities R8, R4, R28): WHO WITHDREW',
+    '        b.declaredBy = viaSession ? sessMember : "";\n        passBody = JSON.stringify(b);\n      } catch { /* the DO will refuse the malformed body with its own words */ }\n    }\n    /* T5-11 (entities R8, R4, R28): WHO WITHDREW'),
   (out) => ({ tally: tally(out), namedPrincipal: named(out, "names the machine principal"), failed: failed(out) }));
 
 /* ------------------------------------------------------------------- runner */

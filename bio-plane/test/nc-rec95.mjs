@@ -62,6 +62,14 @@ mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
 const AIRUN = join(PLANE, "src/airun.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log (T5, its R8) took the three meaning-level writers
+   (`#observeReaderRun`, `#observeResolutionAttempt`, `#observeConnectionDerivation`) and the append (`#observe`) out
+   of `store.mjs` into `src/observation-log/index.mjs`; the meaning frontier's missing-row cause went to retrieval
+   (`src/retrieval/index.mjs observationOf().missingMeaningCause`, its R50), while `store.mjs #missingMeaningCause`
+   survives for the store's own supply read and G5 still pins its line. Each writer arm now suppresses the writer's
+   row at the writer itself (whoever registered it), which is what removing its one call site did. */
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
+const RETRIEVAL = join(PLANE, "src/retrieval/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;   /* store.mjs is over two megabytes and airun.mjs tens of KB;
                               a restore over a stub must fail loudly rather than quietly. */
@@ -98,6 +106,14 @@ function arm(file, find, replace) {
   writeFileSync(file, src.replace(find, replace));
   return { armed: true, matches: n };
 }
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): an arm whose one rule now has two sites. Armed only if EVERY
+   (file, find) matched exactly once; otherwise nothing is written and the counts are reported. */
+function armEach(edits) {
+  const counts = edits.map(([f, find]) => readFileSync(f, "utf8").split(find).length - 1);
+  if (counts.some((n) => n !== 1)) return { armed: false, matches: counts.join("+") };
+  for (const [f, find, replace] of edits) arm(f, find, replace);
+  return { armed: true, matches: counts.join("+") };
+}
 
 const ARMS = {
   baseline: {
@@ -113,7 +129,7 @@ const ARMS = {
      makes *we have never read any of these for who they mention* the answer for
      a corpus that was read. */
   reader: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "remove the promote-time reader-run writer, so a reader run that really happened leaves "
        + "no row and every capture reads as never-read at the meaning level",
     mustFail: ["C1: promoting a document whose reading found entities writes ONE meaning-level",
@@ -132,9 +148,10 @@ const ARMS = {
             + "read still leaves no row), sections D and E (the other two acts, which this arm "
             + "does not touch), and every arm in `observation-content.test.mjs` and "
             + "`observation-log.test.mjs`",
-    patch: () => arm(STORE,
-      "      this.#observeReaderRun(bundleId, sha, reading, { author });",
-      "      /* ARMED */"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log's `observeReaderRun` (R8) judges no row. */
+    patch: () => arm(OBSLOG,
+      "    const { row } = readerRunObservation(reading, captureSha, { readerRegistered });",
+      "    const { row } = false && readerRunObservation(reading, captureSha, { readerRegistered });"),
   },
 
   /* THE SECOND ACT. Removing this writer restores the exact state the op has
@@ -142,7 +159,7 @@ const ARMS = {
      to the caller, and persisted nowhere — so *we tried this name against the
      registry and it holds no such subject* dies with the request again. */
   resolution: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "remove the resolution-attempt writer, so every name the recogniser tried — and every "
        + "name it matched NOTHING for — leaves no trace that anything looked",
     mustFail: ["D1: EVERY reference the recogniser tried now has a meaning-level row",
@@ -153,15 +170,17 @@ const ARMS = {
                "G1: THE ACCEPTS-WHEN"],
     mustPass: "sections C and E — the other two acts. If either moves, the three writers are not "
             + "three, and one of them is doing another's work",
-    patch: () => arm(STORE,
-      "        this.#observeResolutionAttempt(rr.capture_sha, rr.bundle_id, rr, matches,",
-      "        false && this.#observeResolutionAttempt(rr.capture_sha, rr.bundle_id, rr, matches,"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log's `observeResolutionAttempt` (R8, on
+       entities' `onResolveAttempt`) judges no row. */
+    patch: () => arm(OBSLOG,
+      "    const { row } = resolutionObservation({ ref: refText, matches,",
+      "    const { row } = false && resolutionObservation({ ref: refText, matches,"),
   },
 
   /* THE THIRD ACT, AND THE DESIGN'S §9 ROW FOR THIS ITEM. A derivation that
      produced nothing and a derivation nobody ran become one answer again. */
   derivation: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "remove the connection-derivation writer, so a derivation that RAN over a subject leaves "
        + "the same evidence as one that never ran — an empty set",
     /* CORRECTED AFTER THE FIRST RUN. THE ARM WAS RIGHT AND THE DECLARATION WAS
@@ -187,9 +206,11 @@ const ARMS = {
             + "the other two writers still satisfy — no single-writer arm can take it), and `G4` "
             + "— an entity nothing has derived over is a subject with no row whether or not this "
             + "writer exists, so an arm that moved either way would prove nothing about which",
-    patch: () => arm(STORE,
-      "    this.#observeConnectionDerivation(entityId, {",
-      "    false && this.#observeConnectionDerivation(entityId, {"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): observation-log's `observeConnectionDerivation` (R8, on
+       connections' `onDerived`) judges no row. */
+    patch: () => arm(OBSLOG,
+      "    const { row } = derivationObservation({ entityId, count, documents, truncated, entityKnown });",
+      "    const { row } = false && derivationObservation({ entityId, count, documents, truncated, entityKnown });"),
   },
 
   /* **THE ARM THIS ITEM IS ABOUT, AND THE ONLY ONE HERE THAT IS INVISIBLE TO
@@ -204,7 +225,7 @@ const ARMS = {
      the defect it models is one condition and not three, and because arming
      three places at once is three arms wearing one name. */
   empty: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "make a meaning-level look that found NOTHING write no row at all — so `we looked and "
        + "there is nothing` collapses back into `nobody has looked`, which is the silence this "
        + "whole item was written to end",
@@ -219,10 +240,12 @@ const ARMS = {
     mustPass: "every arm about a look that FOUND something — `C1`, `D3`, `E2` — and that is "
             + "exactly the point: this defect is invisible to all of them, which is why it needs "
             + "an arm of its own rather than trusting the successful path to reveal it",
-    patch: () => arm(STORE,
-      "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));",
-      "    if (entry.level === \"meaning\" && entry.state === \"LOOKED_ABSENT\") return null;\n"
-      + "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the append's door is observation-log's `observe` (R2–R4),
+       which judges the entry in the table's shape (`row`). */
+    patch: () => arm(OBSLOG,
+      "    const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));",
+      "    if (row.level === \"meaning\" && row.state === \"LOOKED_ABSENT\") return null;\n"
+      + "    const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));"),
   },
 
   /* §5.1's ORDER AT THIS LEVEL. REC-94 shipped exactly this collapse at the
@@ -234,7 +257,7 @@ const ARMS = {
      entity whose pre-log look found nothing — a set the record genuinely cannot
      distinguish, presented as a positive finding. */
   cause: {
-    files: [STORE],
+    files: [STORE, RETRIEVAL],
     why: "let a missing meaning-level row read as nobody-looked whatever its cause — collapsing "
        + "design section 5.1's three causes into the one that makes a claim",
     /* CORRECTED AFTER THE FIRST RUN, AND THIS ARM EARNED ITS KEEP BEFORE IT EVER
@@ -260,9 +283,13 @@ const ARMS = {
             + "else. `G2a` must also stay green: a subject that really is nobody-looked reads "
             + "nobody-looked under the collapse too, which is precisely why it cannot be the "
             + "fixture the rule is tested on",
-    patch: () => arm(STORE,
-      "    if (!probe) return \"purged\";",
-      "    if (!probe) return \"never_looked\";\n    return \"never_looked\";"),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the frontier's classifier is retrieval's
+       `missingMeaningCause` (G2 drives it); G5 pins the store's copy's line, so the arm collapses both. */
+    patch: () => armEach([
+      [STORE, "    if (!probe) return \"purged\";",
+              "    if (!probe) return \"never_looked\";\n    return \"never_looked\";"],
+      [RETRIEVAL, "      if (!Object.prototype.hasOwnProperty.call(PROBE, kind)) return \"purged\";",
+                  "      return \"never_looked\";"]]),
   },
 };
 

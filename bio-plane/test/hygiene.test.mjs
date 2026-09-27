@@ -85,7 +85,7 @@ import { RecordCore } from "../src/record-core/index.mjs";
 import { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "../src/membership/index.mjs";
 /* T4 (legacy-tests): capture's and provenance's purge declarations, read at their interfaces (the census below). */
 import { CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "../src/capture/schema.mjs";
-import { provenanceOf } from "../src/provenance/index.mjs";
+import { provenanceOf, PROVENANCE_TABLES } from "../src/provenance/index.mjs";
 /* T5 (legacy-tests, T5-12): layers 4-5's modules' purge declarations, read at their interfaces (the census below). */
 import { EXTRACTION_TABLES, EXTRACTION_WHOLE_ONLY } from "../src/extraction/index.mjs";
 import { ENTITIES_TABLES } from "../src/entities/index.mjs";
@@ -95,7 +95,14 @@ import { PROGRESSIONS_TABLES } from "../src/progressions/schema.mjs";
 import { OBSERVATION_LOG_TABLES } from "../src/observation-log/schema.mjs";
 import { RETRIEVAL_PURGE } from "../src/retrieval/schema.mjs";
 import { CALIBRATION_TABLES } from "../src/calibration/schema.mjs";
-import { biasOf } from "../src/bias/index.mjs";
+import { biasOf, BIAS_TABLES } from "../src/bias/index.mjs";
+/* T5-12: the owners' claims legacy-store's run-time filter reads (store.mjs's purge list), imported from where the store
+   imports them, so the census below subtracts exactly what the store subtracts. */
+import { captureOwns } from "../src/capture/index.mjs";
+import { extractionOwns } from "../src/extraction/index.mjs";
+import { observationLogOwns } from "../src/observation-log/index.mjs";
+import { connectionsOwns } from "../src/connections/index.mjs";
+import { RETRIEVAL_TABLES } from "../src/retrieval/index.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -835,7 +842,16 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      …), so its text still names tables it no longer declares. One of them is now EXEMPT: bias declares
      `bias_debt_sweeps` exempt (bias R30), which the text read counted as purged. legacy-store's share is therefore
      what its text names less what a module declares, purged or exempt, which is the store's own filter. */
-  const legacyOwn = fromLegacy.filter((n) => !fromModules.includes(n) && !moduleExempt.includes(n));
+  /* CORRECTED 2026-09-27 (T5-12, legacy-tests), found by `nc-pl12.mjs` arm 4: subtracting what the modules DECLARE
+     let a table an owner CLAIMS but stopped declaring stay counted as purged through the store's text (bias dropping
+     `bias_statements` from its `declarePurge` left this suite green). legacy-store's share is its text less exactly
+     what its run-time filter drops: each owner's claim (`captureOwns`, `extractionOwns`, PROVENANCE_TABLES,
+     PROGRESSIONS_TABLES, CONTENT_TABLES, BIAS_TABLES, ENTITIES_TABLES, RETRIEVAL_TABLES, `observationLogOwns`,
+     `connectionsOwns`), so a claimed table is covered only by its owner's own declaration. */
+  const storeDrops = (n) => captureOwns(n) || extractionOwns(n) || PROVENANCE_TABLES.includes(n)
+    || PROGRESSIONS_TABLES.some((x) => named(x) === n) || CONTENT_TABLES.includes(n) || BIAS_TABLES.includes(n)
+    || ENTITIES_TABLES.includes(n) || RETRIEVAL_TABLES.includes(n) || observationLogOwns(n) || connectionsOwns(n);
+  const legacyOwn = fromLegacy.filter((n) => !storeDrops(n) && !fromModules.includes(n) && !moduleExempt.includes(n));
   const purged = new Set([...legacyOwn, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
   for (const name of moduleExempt) {
@@ -2481,6 +2497,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "bio-plane/test/d280-strengthbar.test.mjs",   // src/connections/, the severance rule's census; asserted exact
     "bio-plane/test/severedhomes.test.mjs",       // src/connections/, the severance rule's census; asserted exact
     "bio-plane/test/group-identity.test.mjs",     // every src/<module>/, readers outside the block; a ceiling at zero
+    /* ADDED 2026-09-27 (T5-12, legacy-tests): the ratchet caught it after the DEC-49 guard's family widened
+       `check-semantics.mjs`'s store harvest to every `src/<module>/` (T5's bias move had dropped its reach 13 -> 9).
+       NAMED, and GATED at the walk itself: it reads only files in the commit at HEAD (`git ls-files`), so the one floor
+       over it (`semantics-harvest` F0's reach, 10) cannot be padded by a phantom module. */
+    "civicos-ui/check-semantics.mjs",             // every tracked src/<module>/ file; reach floored in semantics-harvest F0
     /* ADDED 2026-09-27 (T4, legacy-tests): the ratchet caught it on its first run. NAMED AND NOT GUARDED: the DEC-49
        one-code-two-conditions SWEEP (not a suite; the battery never runs it) now lists `src/<module>/` so its printed
        candidate list reads the extracted modules as `check-refusal-codes.mjs` arm G does. It PRINTS candidates for a

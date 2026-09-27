@@ -83,6 +83,10 @@ const arm = ({ n, what, file, from, to, marker, all = false, suites, expect }) =
 };
 
 const named = (r, re) => r.fails.some((f) => re.test(f));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): bias (T5) took `checkBiasExtension`'s C-26 rows and the verdict-speaker
+   predicate out of `bio-checks.mjs` into `src/bias/checks.mjs`, and inhale, the bias-set refusal's envelope and the
+   bias tables' purge declaration (to record-core, its R29) out of `store.mjs` into `src/bias/index.mjs`. Arms 2a–2g,
+   3, 4, 6 and 7 patch those files; 1 and 5 did not move. */
 
 const ARMS = [
   { n: 1, what: "THE FENCE — a manifest reaches a SEARCH sub-session's spawn payload",
@@ -96,7 +100,7 @@ const ARMS = [
   ...["C-26.1", "C-26.2", "C-26.3", "C-26.4", "C-26.5", "C-26.6", "C-26.7"].map((c, i) => ({
     n: `2${String.fromCharCode(97 + i)}`,
     what: `A MALFORMED BIAS BUNDLE — ${c}'s arm removed from checkBiasExtension, alone`,
-    file: "checks/bio-checks.mjs",
+    file: "src/bias/checks.mjs",   /* RE-ANCHORED 2026-09-27 (T5-12) */
     /* One arm at a time. Each C-number's FIRST push inside checkBiasExtension is
        neutered by sending it to a throwaway array; every other arm keeps firing,
        which is what makes the arm's own failure attributable. */
@@ -109,20 +113,23 @@ const ARMS = [
   })),
 
   { n: 3, what: "INHALE INSTALLS RATHER THAN PROPOSES (DEC-54 c, the quietest of the four)",
-    file: "src/store.mjs",
-    from: "    const cap = Math.max(1, Math.min(Store.BIAS_INHALE_LIMIT_MAX,",
-    to: "    this.sql.exec(`INSERT INTO bias_adoptions (scope_type,scope_id,bundle_id,bundle_sha,author,at)"
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): bias's `inhale`, whose SQL handle is `#sql`. */
+    file: "src/bias/index.mjs",
+    from: "    const cap = Math.max(1, Math.min(BIAS_INHALE_LIMIT_MAX,",
+    to: "    this.#sql.exec(`INSERT INTO bias_adoptions (scope_type,scope_id,bundle_id,bundle_sha,author,at)"
       + " VALUES ('instance','','BIAS-INSTALLED','x','machine','2026-01-01T00:00:00Z')`);\n"
-      + "    const cap = Math.max(1, Math.min(Store.BIAS_INHALE_LIMIT_MAX,",
+      + "    const cap = Math.max(1, Math.min(BIAS_INHALE_LIMIT_MAX,",
     marker: "BIAS-INSTALLED",
     suites: ["bias"],
     expect: (r) => r.bias.fail > 0 && named(r.bias, /ARM I5|ARM I6/) },
 
   { n: 4, what: "A NEW TABLE ABSENT FROM purge (D-113)",
-    file: "src/store.mjs",
-    from: `"action_basis", "correspondence", "bias_statements", "bias_adoptions"`,
-    to: `"action_basis", "correspondence", "bias_adoptions"`,
-    marker: `"correspondence", "bias_adoptions"`,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): bias declares its own tables to record-core's purge (R29);
+       the arm drops `bias_statements` from that declaration, as it dropped it from the store's list. */
+    file: "src/bias/index.mjs",
+    from: `    record.declarePurge("bias", [\n      "bias_statements",\n`,
+    to: `    record.declarePurge("bias", [\n`,
+    marker: `record.declarePurge("bias", [\n      { name: "bias_adoptions"`,
     suites: ["hygiene", "bias"],
     expect: (r) => r.hygiene.fail > 0 && r.bias.fail > 0 },
 
@@ -138,15 +145,17 @@ const ARMS = [
      path's ENVELOPE code carried no canned translation while its findings all
      did — so the fix gets a control, like everything else here. */
   { n: 7, what: "THE ENVELOPE'S TRANSLATION REMOVED — DEC-49's failure in the shape VF-2 actually found",
-    file: "src/store.mjs",
-    from: "                   check: BIAS_CHECKS.BIAS_REFUSED.check,",
-    to: "                   check: undefined,",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): bias's envelope is `#refuse("BIAS_REFUSED", …)` spread into the
+       answer; the arm overrides its `check` there, as it removed it before. */
+    file: "src/bias/index.mjs",
+    from: "    return { ...refusal,\n             findings: errs.map(",
+    to: "    return { ...refusal, check: undefined,\n             findings: errs.map(",
     marker: "check: undefined,",
     suites: ["bias"],
     expect: (r) => r.bias.fail > 0 && named(r.bias, /ENVELOPE carries a translation/) },
 
   { n: 6, what: "OVER-STRICTNESS — the malformedness predicate widened to catch strong language",
-    file: "checks/bio-checks.mjs",
+    file: "src/bias/checks.mjs",   /* RE-ANCHORED 2026-09-27 (T5-12) */
     from: "const BIAS_VERDICT_SPEAKER = [",
     to: "const BIAS_VERDICT_SPEAKER = [\n  /\\b(reliable|track record|motive|discretion)\\b/i,",
     marker: "reliable|track record|motive|discretion",

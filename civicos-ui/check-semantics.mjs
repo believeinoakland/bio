@@ -70,6 +70,7 @@
  *   as the state `string` and FAILS by name; RUN 2026-09-24, figures in `measurements/M-148.md`.
  */
 import fs from "fs";
+import { execFileSync } from "child_process";
 import vm from "vm";
 import {
   OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, STATES, HEADINGS,
@@ -462,7 +463,12 @@ function moduleFiles(dir = PLANE_SRC, rel = "") {
   }
   return out;
 }
-const CORPUS = [["store.mjs", storePath], ...moduleFiles()].map(([label, p]) => {
+/* GATED 2026-09-27 (T5-12, legacy-tests): only files in the commit at HEAD are read, so an untracked file under
+   `src/<module>/` can never pad the reach `semantics-harvest` F0 floors (hygiene's walk census names this walk). */
+const TRACKED = new Set(execFileSync("git", ["ls-files", "-z", "--", "src"], { cwd: new URL("../bio-plane/", import.meta.url).pathname,
+                                                                          encoding: "utf8" }).split("\0").filter(Boolean)
+  .map((f) => f.replace(/^src\//, "")));
+const CORPUS = [["store.mjs", storePath], ...moduleFiles().filter(([rel]) => TRACKED.has(rel))].map(([label, p]) => {
   const raw = fs.readFileSync(p, "utf8");
   return { label, raw, code: stripComments(raw) };   // same length, same offsets; strings kept
 });

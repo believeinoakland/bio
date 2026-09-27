@@ -41,34 +41,30 @@ const PEN = controlPen("rec110");
 const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval (T5, its R35–R44) took the frontier out of `store.mjs`
+   into `src/retrieval/frontier.mjs`. The three levels' tally is ONE method there, `#tally(level, viewer)` (the
+   statement with D-486's `hiddenRunTail` subtraction, unchanged), and the document arm calls it on one line; the
+   ruling (REC-110, D-386) is recorded once, at the document arm's call, and the content arm's J3 pins that record. */
+const FRONTIER = fileURLToPath(new URL("../src/retrieval/frontier.mjs", import.meta.url));
 const SUITES = [
   ["log",     fileURLToPath(new URL("./observation-log.test.mjs", import.meta.url)),     /observation-log: (-?\d+) pass, (-?\d+) fail/],
   ["content", fileURLToPath(new URL("./observation-content.test.mjs", import.meta.url)), /observation-content: (-?\d+) pass, (-?\d+) fail/],
   ["meaning", fileURLToPath(new URL("./observation-meaning.test.mjs", import.meta.url)), /observation-meaning: (-?\d+) pass, (-?\d+) fail/],
 ];
-const MIN_BYTES = 500000;
+const MIN_BYTES = 30000;   /* RE-ANCHORED 2026-09-27 (T5-12): frontier.mjs is ~37 KB, not the store's 2 MB. */
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* The document arm's tally, verbatim — the anchor for three of the four arms.
- * CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED. It read the pre-D-486 three lines; BOB #32's ruling adds
- * `#hiddenRunTail(viewer)` to the statement and its bindings to the call, so the old anchor matched ZERO times
- * and every arm resting on it would have "passed" WITHOUT ARMING — which this file's own rule calls a finding,
- * not a pass. THE ARMS THEMSELVES ARE UNCHANGED IN MEANING: each still gates, narrows, unsays or perturbs the
- * DOCUMENT arm's tally, and (a), (b) and (d) keep D-486's subtraction in place while they do it, so they
- * measure REC-110's ruling and not D-486's. `armed()` below is what would have caught a stale anchor; it is
- * cheaper to keep the anchor true. */
-const DOC_TALLY =
-  "    const tally = {};\n"
-+ "    for (const row of this.#rows(\n"
-+ "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,\n"
-+ "      ...hidTail.args))\n"
-+ "      tally[row.state] = row.n;";
-
+ * CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED (the pre-D-486 three lines matched zero times).
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the document arm's one-line call of retrieval's `#tally`. The arms
+ * are unchanged in meaning: each still gates, narrows, unsays or perturbs the DOCUMENT arm's tally, and (a) and (d)
+ * keep D-486's subtraction (inside `#tally`) in place while they do it. */
+const DOC_TALLY = "    const tally = this.#tally(\"document\", viewer);";
 /* Each arm: [file, anchor, replacement, declared]. */
 const ARMS = {
   /* (a) GATE IT — option (b)'s first spelling, in the crudest honest form: a
      caller who is not the machine credential gets a tally over nothing. */
-  gate: [STORE, DOC_TALLY,
+  gate: [FRONTIER, DOC_TALLY,
     DOC_TALLY
     + "\n    if (viewerPredicate(viewer).scope !== \"member\")\n"
     + "      for (const k of Object.keys(tally)) delete tally[k];",
@@ -79,11 +75,14 @@ const ARMS = {
      It counts an UNGATED but BOUND-CUT list, so every viewer still agrees and J1
      stays green over a real change of meaning. This is the silent value change
      inside an unchanged envelope that IC-118's rule names. */
-  bound: [STORE, DOC_TALLY,
+  bound: [FRONTIER, DOC_TALLY,
     /* D-486: the bound-cut list is still UNGATED across readers (that is what makes this arm J2's and not
-       J1's), so `hidTail` is simply not consulted here — the arm replaces the whole statement. */
-    "    const tally = {};\n"
-    + "    for (const r of this.#frontierLatest(\"document\", { limit: cap, subjectKind: \"address\" }))\n"
+       J1's), so `hidTail` is simply not consulted here — the arm replaces the whole statement.
+       RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the ungated latest-per-subject list is observation-log's
+       `latest` (its R9), which the document arm reads through `this.obs`; the call line log J3 pins is kept and
+       its answer replaced, so the arm moves the tally's meaning and not the pinned text. */
+    DOC_TALLY + "\n    for (const k of Object.keys(tally)) delete tally[k];\n"
+    + "    for (const r of this.obs.latest(\"document\", { limit: cap, subjectKind: \"address\" }))\n"
     + "      tally[r.state] = (tally[r.state] || 0) + 1;",
     "MUST FAIL log J2 (the tally follows the BOUND). **MUST NOT FAIL log J1** — it is ungated, so "
     + "every viewer still agrees. THE ARM THAT PROVES J2 CARRIES VALUE J1 CANNOT"],
@@ -91,9 +90,10 @@ const ARMS = {
   /* (c) UNSAY IT — the decision deleted from a site while the behaviour stays
      correct. The row's requirement is that the next reader meets the DECISION,
      so a pin that only watched behaviour would pass over exactly this. */
-  unsay: [STORE, "REC-110, 2026-09-17, D-386 CLOSED. **THE WHOLE REASONING IS AT THE\n"
-    + "       DOCUMENT ARM'S TALLY IN `frontier` AND IS DELIBERATELY NOT RESTATED HERE:**",
-    "the posture here is not written down.",
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the record is now ONE comment, at the document arm's call; content
+     J3 reads it there (its CONTENT_ARM carries only the call), so unsaying it is deleting that ruling's head. */
+  unsay: [FRONTIER, "    /* THE TALLY IS DELIBERATELY NOT GATED (REC-110, D-386 closed; narrowed by D-486",
+    "    /* the posture here is not written down (narrowed by D-486",
     "MUST FAIL content J3 (the site stops carrying the ruling). MUST NOT FAIL any J1/J2 anywhere "
     + "— behaviour is untouched, which is the point: this arm is about the RECORD, not the code"],
 
@@ -102,12 +102,11 @@ const ARMS = {
      stay GREEN. The pin asserts INVARIANCE ACROSS READER AND BOUND, never a
      particular number, and a pin that reddened here would be tighter than its
      rule and would block correct work later. */
-  overstrict: [STORE, DOC_TALLY,
-    "    const tally = {};\n"
-    + "    for (const row of this.#rows(\n"
-    + "      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document'${hidTail.sql} GROUP BY state`,\n"
-    + "      ...hidTail.args))\n"
-    + "      tally[row.state] = row.n + 1000;",
+  overstrict: [FRONTIER, DOC_TALLY,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the same +1000 over `#tally`'s answer, added AFTER the call so
+       the call line log J3 pins stays as written (its first spelling replaced the line, and J3 went red over a
+       change of values alone: a finding about that spelling, not about the pin). */
+    DOC_TALLY + "\n    for (const k of Object.keys(tally)) tally[k] += 1000;",
     "MUST NOT FAIL ANYTHING. The values move; the invariance does not. A red here means the pin "
     + "is tighter than its rule"],
 };
@@ -138,7 +137,7 @@ const report = (label) => {
 
 const want = process.argv[2] || "all";
 console.log(`REC-110 negative control · ${new Date().toISOString()}`);
-console.log(`store.mjs ${statSync(STORE).size} bytes · sha ${sha(STORE).slice(0, 16)}`);
+console.log(`retrieval/frontier.mjs ${statSync(FRONTIER).size} bytes · sha ${sha(FRONTIER).slice(0, 16)}`);
 
 console.log("\nOPENING BASELINE");
 report("BASELINE");

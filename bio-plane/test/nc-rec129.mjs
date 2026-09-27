@@ -34,6 +34,12 @@ const SAFE = process.env.REC129_PEN || controlPen("rec129");
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval (T5, its R47–R49) took the internet frontier out of
+   `store.mjs` into `src/retrieval/frontier.mjs #internet`, and observation-log (its R19) took the one
+   lead-visibility predicate `#leadReach` into `src/observation-log/index.mjs leadReach`. The seven frontier arms patch
+   those lines as they now read; each still breaks what it broke. The stats arms' anchors did not move. */
+const FRONTIER = join(PLANE, "src/retrieval/frontier.mjs");
+const OBSLOG = join(PLANE, "src/observation-log/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -63,69 +69,76 @@ const ARMS = {
     mustFail: [], mustPass: "everything", patch: () => ({ armed: true, matches: 0 }),
   },
   nofence: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "THE ROW'S CONTROL: the visibility filter removed from the frontier's internet arm — every lead's "
        + "looks and every unfollowed lead reach every member, the shared predicate left intact elsewhere",
     mustFail: ["C1: sam's WHOLE internet frontier", "C1: vera's WHOLE internet frontier",
                "C1: otto's WHOLE internet frontier", "C3: ruth's WHOLE frontier is byte-identical"],
     mustPass: "the no_member arms (a credential with no member still reaches nothing)",
-    patch: () => arm([[STORE, "    const reach = this.#leadReach(viewer, identity);\n    const notRead = [", /* RE-ANCHORED 2026-09-18 by REC-132: #leadReach gained the positional identity */
-      "    const reach0 = this.#leadReach(viewer, identity);\n    const reach = reach0 && { sql: \"(1=1 OR ? IS NULL OR ? IS NULL)\", args: reach0.args };\n    const notRead = ["]]),
+    patch: () => arm([[FRONTIER, "    const reach = who == null ? null : this.obs.leadReach(viewer, identity);\n    const notRead = [", /* RE-ANCHORED 2026-09-18 by REC-132: #leadReach gained the positional identity; RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet */
+      "    const reach0 = who == null ? null : this.obs.leadReach(viewer, identity);\n    const reach = reach0 && { sql: \"(1=1 OR ? IS NULL OR ? IS NULL)\", args: reach0.args };\n    const notRead = ["]]),
   },
   grouplate: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "the fence applied AFTER the latest-per-subject grouping instead of before it: a hidden look under "
        + "a lead with the same words becomes the subject's latest row and displaces what the viewer sees",
     mustFail: ["C3: ruth's WHOLE frontier is byte-identical"],
     mustPass: "every arm whose subject no hidden lead shares",
-    patch: () => arm([[STORE, "        WHERE v.seq = (SELECT MAX(w.seq) FROM v w\n                        WHERE w.subject_kind",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet, the same statement. */
+    patch: () => arm([[FRONTIER, "        WHERE v.seq = (SELECT MAX(w.seq) FROM v w\n                        WHERE w.subject_kind",
       "        WHERE v.seq = (SELECT MAX(w.seq) FROM observation_log w\n                        WHERE w.level = 'internet' AND w.subject_kind"]]),
   },
   tallywide: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "the tally counted over the WHOLE level (REC-110's ruling for the other three levels applied here) — "
        + "a lead outside the viewer's reach then moves a count",
     mustFail: ["C1: sam's WHOLE internet frontier", "C3: ruth's WHOLE frontier is byte-identical",
                "C4: sam sees ONLY his own look"],
     mustPass: "every list and every cause",
-    patch: () => arm([[STORE, "      `${V} SELECT state, COUNT(*) AS n FROM v GROUP BY state`, ...reach.args))",
-      "      `${V} SELECT state, COUNT(*) AS n FROM observation_log WHERE level = 'internet' GROUP BY state`, ...reach.args))"]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet; the CTE is `${W}` there and the statement
+       sits on the `for` line. The CTE is kept, so the fence's arguments are still consumed. */
+    patch: () => arm([[FRONTIER, "this.#rows(`${W} SELECT state, COUNT(*) AS n FROM v GROUP BY state`, ...reach.args))",
+      "this.#rows(`${W} SELECT state, COUNT(*) AS n FROM observation_log WHERE level = 'internet' GROUP BY state`, ...reach.args))"]]),
   },
   neverwide: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "the never-followed list taken without the fence: every unfollowed lead in the instance is listed "
        + "to every member — the lead's words and id to people it was never shared with",
     mustFail: ["C1: sam's WHOLE internet frontier", "C1: vera's WHOLE internet frontier"],
     mustPass: "the looked rows (still fenced)",
-    patch: () => arm([[STORE, "      `SELECT l.lead_id AS lead, l.words AS subject, l.at AS at FROM leads l\n        WHERE ${reach.sql}",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet, the same statement. */
+    patch: () => arm([[FRONTIER, "      `SELECT l.lead_id AS lead, l.words AS subject, l.at AS at FROM leads l\n        WHERE ${reach.sql}",
       "      `SELECT l.lead_id AS lead, l.words AS subject, l.at AS at FROM leads l\n        WHERE (1=1 OR ? IS NULL OR ? IS NULL)"]]),
   },
   nocause: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "THE LIAR: an empty answer with no cause — a frontier that says nothing reads exactly like one "
        + "that looked and found nothing",
     mustFail: ["A1: the internet level is BUILT", "A3: the member TOKEN carries no member",
                "B1: two leads, neither followed"],
     mustPass: "every non-empty answer",
-    patch: () => arm([[STORE, "    const empty = (cause) => ({ level: \"internet\", partition: \"description\", cause,",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet, the same line. */
+    patch: () => arm([[FRONTIER, "    const empty = (cause) => ({ level: \"internet\", partition: \"description\", cause,",
       "    const empty = (cause) => null && ({ level: \"internet\", partition: \"description\", cause,"]]),
   },
   refleak: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "a look's referent published whether or not the reader can read it: a capture sha from a project "
        + "the reader never joined, through a lead that was shared to them",
     mustFail: ["E1: ruth sees the referent"],
     mustPass: "every arm without a hidden referent",
-    patch: () => arm([[STORE, "      const refSeen = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's #internet asks observation-log's helper. */
+    patch: () => arm([[FRONTIER, "      const refSeen = !r.result_kind || this.obs.leadReferentVisible(r.result_kind, r.result_ref, viewer);",
       "      const refSeen = true;"]]),
   },
   overstrict: {
-    files: [STORE],
+    files: [OBSLOG],
     why: "THE OVER-STRICTNESS DIRECTION: the share arm dropped from the ONE lead-visibility predicate — "
        + "a joined participant of the project a lead was shared to no longer finds it",
     mustFail: ["D1: OVER-STRICTNESS"],
     mustPass: "every refused-viewer arm — refusing more cannot leak",
-    patch: () => arm([[STORE, "      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the predicate is observation-log's `leadReach` (R19). */
+    patch: () => arm([[OBSLOG, "      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp",
       "      sql: `(l.author = ? OR 0=1 AND EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp"]]),
   },
 };

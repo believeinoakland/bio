@@ -26,13 +26,17 @@ const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 
 const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; N57's remainder, T4 layer 3): provenance took the parts audit
+   (`op=auditcaptures`' held-in-parts reading, D-533) and the record's digest reader out of `index.mjs` and
+   `store.mjs` into `src/provenance/index.mjs`; every arm patches that file, its text unchanged (the `sound:` line
+   now sits at the module's indentation). A patch's file is a path under `src/`. */
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
 
   /* THE ROW'S CONTROL (its accepts-when): head the WHOLE KEY ONLY. A parted row whose whole key misses goes straight
      to unbacked, as it did before this row, whatever the record names. */
   wholeonly: {
-    patches: [["index.mjs", `if (named?.state !== "named") { unbacked.push(`, `if (true) { unbacked.push(`]],
+    patches: [["provenance/index.mjs", `if (named?.state !== "named") { unbacked.push(`, `if (true) { unbacked.push(`]],
     mustFail: ["THE ROW: a parted capture whose every named part", "and is NOT called unbacked",
                "and the record reads SOUND", "with nothing sampled",
                "counted OUTSIDE sound", "and never as unbacked", "and the held row beside it is still held in parts",
@@ -45,7 +49,7 @@ const ARMS = {
 
   /* A PART'S DIGEST NOT VERIFIED: presence and size alone pass a part. §4's corrupted part is then "held". */
   nodigest: {
-    patches: [["index.mjs", "else if (digest !== p.sha256) disagree.push(", "else if (false) disagree.push("]],
+    patches: [["provenance/index.mjs", "else if (digest !== p.sha256) disagree.push(", "else if (false) disagree.push("]],
     mustFail: ["the row is MISMATCHED", "naming the part whose bytes disagree", "with the digest the bytes actually have",
                "and the record no longer reads sound", "the row is UNBACKED (the only one",
                "and the fully held rows are still held in parts"],
@@ -53,22 +57,22 @@ const ARMS = {
 
   /* A MISSING PART IGNORED: an absent part is skipped rather than named. §5's row then reads held. */
   nopresence: {
-    patches: [["index.mjs", "if (!h) { missing.push(name); continue; }", "if (!h) continue;"]],
+    patches: [["provenance/index.mjs", "if (!h) { missing.push(name); continue; }", "if (!h) continue;"]],
     mustFail: ["the row is UNBACKED (the only one", "naming the missing part", "and saying how many of how many",
                "and the fully held rows are still held in parts"],
   },
 
   /* UNDETERMINED COUNTED INSIDE SOUND — what the ruling forbids. Only the two outside-sound pins may fail. */
   insidesound: {
-    patches: [["index.mjs", "sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,\n        detail: \"captured means",
-               "sound: unbacked.length === 0 && mismatched.length === 0 && undetermined.length === 0, probed: canProbe,\n        detail: \"captured means"]],
+    patches: [["provenance/index.mjs", "sound: unbacked.length === 0 && mismatched.length === 0, probed: canProbe,\n    detail: \"captured means",
+               "sound: unbacked.length === 0 && mismatched.length === 0 && undetermined.length === 0, probed: canProbe,\n    detail: \"captured means"]],
     mustFail: ["counted OUTSIDE sound", "and sound still speaks only for the determined rows"],
   },
 
   /* OVER-STRICTNESS: the digest the record names read only in the one spelling acquire writes. §3's `sha256:`-prefixed,
      upper-case spelling of the same digest then reads as no digest, and the row is refused an answer it earns. */
   strictspelling: {
-    patches: [["store.mjs", `const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;\n    const doc =`,
+    patches: [["provenance/index.mjs", `const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;\n    const doc =`,
                `const bare = (v) => typeof v === "string" ? v : null;\n    const doc =`]],
     mustFail: ["naming the one part it could not verify", "with the checksum present both parts verify",
                "and only §2's row is undetermined",

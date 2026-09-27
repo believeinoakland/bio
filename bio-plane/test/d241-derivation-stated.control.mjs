@@ -1,7 +1,7 @@
 /* d241-derivation-stated.control.mjs — the NEGATIVE CONTROL for `test/d241-derivation-stated.test.mjs` (D-241,
  * CONTENT-SEARCH-DESIGN.md §4.3).
  *
- * Deliberately NOT a `.test.mjs`: it EDITS the real `src/store.mjs` while it runs, and the battery must not discover
+ * Deliberately NOT a `.test.mjs`: it EDITS real sources (since T5: observation-log's and connections' index.mjs) while it runs, and the battery must not discover
  * it. Run from `bio-plane/`: `node test/d241-derivation-stated.control.mjs [arm|all]`. Each arm: the anchor asserted
  * to occur EXACTLY ONCE (or the arm reports it did not arm), the file copied aside to a uniquely named per-arm
  * pristine copy, patched, the suite run with its output captured to a FILE (D-282), and the file restored by `cp`
@@ -18,43 +18,52 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
-const STORE = join(PLANE, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's derivation statement left `store.mjs`. observation-log
+   (T5, its R8) reads the latest meaning-level row per entity and states §5.1's cause when there is none
+   (`derivationStatementFor`), and connections (T5, its R5) calls it through its registered provider from
+   `connectionsFor`, where the READ's own page bit `truncated` is in scope. Each arm now names the file it patches; what
+   it breaks is unchanged. */
+const OBSLOG = join(PLANE, "src", "observation-log", "index.mjs");
+const CONNECTIONS = join(PLANE, "src", "connections", "index.mjs");
 const SUITE = join(PLANE, "test", "d241-derivation-stated.test.mjs");
-const FLOOR = 1_000_000;
+const FLOOR = { [OBSLOG]: 50_000, [CONNECTIONS]: 80_000 };
 const digest = (buf) => createHash("sha256").update(buf).digest("hex");
 
-const READ = "const obs = this.#one(";
-const PAGE_BIT = "if (obs) return derivationStatement(obs);";
-const NO_ROW = 'return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));';
-const LATEST = "`SELECT at, state, detail FROM observation_log\n              WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?\n              ORDER BY seq DESC LIMIT 1`";
+const READ = "    const row = entityId == null ? null : this.#one(";
+const PAGE_BIT = "    const derivation = entityId ? this.derivationStatement(entityId) : undefined;";
+const NO_ROW = '    return derivationStatement(null, this.missingCauseAt("meaning", { hasArtifact, registeredAt: enteredAt }));';
+const LATEST = "`SELECT at, state, detail FROM observation_log\n        WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?\n        ORDER BY seq DESC LIMIT 1`";
 
 const ARMS = {
-  baseline: { patches: [], mustFail: [] },
+  baseline: { file: OBSLOG, patches: [], mustFail: [] },
   /* THE ROW'S CONTROL: the observation read removed. */
-  noread: { patches: [[READ, "const obs = null && this.#one("]],
+  noread: { file: OBSLOG, patches: [[READ, "    const row = entityId == null ? null : null && this.#one("]],
             mustFail: ["A2", "A3", "A4", "A5", "A6", "A7"] },
-  /* LIAR 1: the derivation's extent taken from the READ's own page bit. */
-  readbit: { patches: [[PAGE_BIT, 'if (obs) return { ...derivationStatement(obs), cut: truncated, '
-                                 + 'state: truncated ? "partial" : "PRESENT" };']],
+  /* LIAR 1: the derivation's extent taken from the READ's own page bit (where a row was read). */
+  readbit: { file: CONNECTIONS,
+             patches: [[PAGE_BIT, "    const derivation0 = entityId ? this.derivationStatement(entityId) : undefined;\n"
+                                + "    const derivation = derivation0 && derivation0.derived === \"derived\" ? { ...derivation0, "
+                                + "cut: truncated, state: truncated ? \"partial\" : \"PRESENT\" } : derivation0;"]],
              mustFail: ["A2", "A3", "A5", "A7"] },
   /* LIAR 2: no row read as a complete, uncut derivation. */
-  complete: { patches: [[NO_ROW, 'return { state: "PRESENT", cut: false, at: null, documents: null, '
-                               + 'derived: "derived", says: "complete" };']],
+  complete: { file: OBSLOG, patches: [[NO_ROW, '    return { state: "PRESENT", cut: false, at: null, documents: null, '
+                                            + 'derived: "derived", says: "complete" };']],
               mustFail: ["A1", "A8"] },
   /* OVER-STRICTNESS: the same read in a spelling the suite did not anticipate. */
-  overstrict: { patches: [[LATEST, "`SELECT at, state, detail FROM observation_log WHERE seq = (SELECT MAX(seq) "
-                               + "FROM observation_log WHERE level = 'meaning' AND subject_kind = 'entity' "
-                               + "AND subject = ?)`"]],
+  overstrict: { file: OBSLOG, patches: [[LATEST, "`SELECT at, state, detail FROM observation_log WHERE seq = (SELECT MAX(seq) "
+                                             + "FROM observation_log WHERE level = 'meaning' AND subject_kind = 'entity' "
+                                             + "AND subject = ?)`"]],
                 mustFail: [] },
 };
 
 const work = mkdtempSync(join(tmpdir(), "d241-control-"));
 const run = (name) => {
   const arm = ARMS[name];
-  const pristine = join(work, `store.${name}.pristine.mjs`);
+  const STORE = arm.file;   /* RE-ANCHORED 2026-09-27 (T5-12): the file this arm patches (the name kept for the body below) */
+  const pristine = join(work, `${STORE.split("/").pop()}.${name}.pristine.mjs`);
   copyFileSync(STORE, pristine);
   const orig = readFileSync(pristine);
-  if (orig.length < FLOOR) throw new Error(`pristine copy is ${orig.length} B, under the ${FLOOR} B floor`);
+  if (orig.length < FLOOR[STORE]) throw new Error(`pristine copy is ${orig.length} B, under the ${FLOOR[STORE]} B floor`);
   let src = orig.toString("latin1");
   for (const [from, to] of arm.patches) {
     const n = src.split(from).length - 1;

@@ -36,12 +36,17 @@ const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const STORE = HERE + "../src/store.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): provenance (T4 layer 3, N57's remainder) took the route mark's writer
+   (`provenanceAssess`'s finding and its edge-triggered append) and `routeFinding` out of `store.mjs` into
+   `src/provenance/index.mjs`; the store keeps `#withRoute`, which publishes the mark on op=list, calling provenance's
+   `routeFinding`. Arms (a)–(c) patch provenance, (d) the store's call, (e) the suite; each breaks what it broke. */
+const PROV = HERE + "../src/provenance/index.mjs";
 const SUITE = HERE + "provenance-marker.test.mjs";
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = [
   {
-    id: "a", file: STORE,
+    id: "a", file: PROV,   /* RE-ANCHORED 2026-09-27 (T5-12): provenance's append, the same lines */
     title: "THE MARKER REMOVED — the act records nothing",
     from: "    if (!same) {\n      const seq =",
     to:   "    if (false) {\n      const seq =",
@@ -52,21 +57,23 @@ const ARMS = [
                + "arm is expected to be broad) — declared broad rather than pretended narrow",
   },
   {
-    id: "b", file: STORE,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): provenance's module function `routeFinding`, whose sentences
+       are its `FINDING_MEANS`. */
+    id: "b", file: PROV,
     title: "THE TWO ABSENCES COLLAPSED — nobody-looked answers as looked-and-fine",
-    from: `    if (!mark)
-      return { applies: true, assessed: false, marked: false,
-               finding: "NEVER_LOOKED", means: OBSERVATION_STATES.NEVER_LOOKED,`,
-    to:   `    if (!mark)
-      return { applies: true, assessed: true, marked: false,
-               finding: "PRESENT", means: OBSERVATION_STATES.PRESENT,`,
+    from: `  if (!mark)
+    return { applies: true, assessed: false, marked: false,
+             finding: "NEVER_LOOKED", means: FINDING_MEANS.NEVER_LOOKED,`,
+    to:   `  if (!mark)
+    return { applies: true, assessed: true, marked: false,
+             finding: "PRESENT", means: FINDING_MEANS.PRESENT,`,
     mustFail: "THE ARM THIS ITEM TURNS ON — every assertion that tells the two absences apart in "
             + "section C, and the NEVER_LOOKED arms in section A",
     mustNotFail: "section E (no retraction edge) and section F (the four DEC-49 codes), which are "
                + "about a different property entirely",
   },
   {
-    id: "c", file: STORE,
+    id: "c", file: PROV,   /* RE-ANCHORED 2026-09-27 (T5-12): provenance's finding, the same lines */
     title: "OVER-STRICTNESS — mark unconditionally, so a showable route is doubted too",
     from: `    const finding = (registerState !== "readable" || undetermined > 0)
       ? "LOOKED_INDETERMINATE" : "PRESENT";`,
@@ -79,7 +86,8 @@ const ARMS = [
   {
     id: "d", file: STORE,
     title: "THE PUBLICATION REMOVED — the marker is stored and no read publishes it (REC-74's defect)",
-    from: "    const out = { ...r, route: Store.routeFinding(r.object_type, mark) };",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#withRoute` now calls provenance's `routeFinding`. */
+    from: "    const out = { ...r, route: routeFinding(r.object_type, mark) };",
     to:   "    const out = { ...r };",
     mustFail: "every op=list arm, in sections A, B, C, D, G and H. The store still HOLDS the marker: "
             + "the point of the arm is that the record has gone silent for anybody who was not there",

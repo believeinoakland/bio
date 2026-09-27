@@ -17,8 +17,12 @@ import { controlPen } from "./pen.mjs";
 
 const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections (T5, its R22) took `#citesInto` WHOLE as `citesInto`
+   (the store keeps a one-line delegation) and its per-row read is `this.edgeSevered(…)` there; derivation-bounds
+   reads the admission where it now lives. Arm (4) patches connections; the pristine set carries it. */
+const CONNECTIONS = new URL("../src/connections/index.mjs", import.meta.url).pathname;
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const BYTES_FLOOR = { [STORE]: 1_000_000, [SUITE]: 40_000 };
+const BYTES_FLOOR = { [STORE]: 1_000_000, [SUITE]: 40_000, [CONNECTIONS]: 50_000 };
 
 const run = () => {
   let out;
@@ -53,8 +57,8 @@ const ARMS = [
     parts: [["  const perRowScan = sc.filter((s) => inBody(s.from)).length;", "  const perRowScan = 0;"]],
     what: "OVER-CORRECTION — every per-row scan dropped, not only the header's",
     declared: "RED: the body and inner-header fixtures and `ncPerRow` fail by name, and the walk falls below 14" },
-  { n: 4, file: STORE,
-    parts: [["      (this.#refEdgeSevered(r.bundle_id, id, \"cites\") ? severed : confirmed).push(r.bundle_id);",
+  { n: 4, file: CONNECTIONS,
+    parts: [["      (this.edgeSevered(r.bundle_id, id, \"cites\") ? severed : confirmed).push(r.bundle_id);",
              "      (false ? severed : confirmed).push(r.bundle_id);"]],
     what: "AN ADMISSION'S AMPLIFICATION REMOVED — `#citesInto` stops reading the citer per row",
     declared: "RED naming `#citesInto` on the admission check: a STAYS member is not held by its old say-so" },
@@ -72,7 +76,7 @@ const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 console.log("=== M0-63 / D-384 · NEGATIVE CONTROLS ===");
 const pristine = {};
-for (const f of [STORE, SUITE]) {
+for (const f of [STORE, SUITE, CONNECTIONS]) {
   pristine[f] = penPath(f, "nc-m063.pristine");
   copyFileSync(f, pristine[f]);
   console.log(`  pristine ${f.split("/").pop()}: ${statSync(f).size} bytes, ${sha(f).slice(0, 12)}`);
@@ -105,13 +109,13 @@ for (const arm of ARMS) {
 
 console.log("");
 const closing = report("CLOSING", run());
-for (const f of [STORE, SUITE]) {
+for (const f of [STORE, SUITE, CONNECTIONS]) {
   const equal = sha(f) === sha(pristine[f]);
   console.log(`  ${f.split("/").pop()} equals its OPENING pristine copy: ${equal ? "YES" : "NO"}`);
   if (!equal) throw new Error(`${f} was left moved`);
   rmSync(pristine[f]);
 }
-const leftovers = [STORE, SUITE].flatMap((f) => [penPath(f, "nc-m063.pristine"), ...ARMS.map((a) => penPath(f, `nc-m063.arm${a.n}`))])
+const leftovers = [STORE, SUITE, CONNECTIONS].flatMap((f) => [penPath(f, "nc-m063.pristine"), ...ARMS.map((a) => penPath(f, `nc-m063.arm${a.n}`))])
   .filter((p) => existsSync(p));
 console.log(`  copies left behind: ${leftovers.length}`);
 const key = (r) => JSON.stringify([r.pass, r.fail, r.classAll, r.walk]);
