@@ -36,6 +36,8 @@ test("R42: sight before position — existence answers PROJECT_SEEN_NOT_A_PARTIC
   membership.discoverable.add(id);
   const ex = p.forkProject({ projectId: id, title: "Other", by: "dee", viewer: "member:dee" });
   assert.deepEqual([ex.reason, ex.project, ex.name], ["PROJECT_SEEN_NOT_A_PARTICIPANT", id, "Sewer Fund"]);
+  /* C-70.1 is minted once, by membership (R77): the answer is membership's own, byte for byte. */
+  assert.deepEqual(ex, membership.existenceAct(id, "member:dee"));
   /* Position is not asked of a caller who cannot see: dee is no participant, and is not told so. */
   assert.notEqual(ex.reason, "NOT_A_PARTICIPANT");
   /* An internal caller (no viewer) is not asked sight. */

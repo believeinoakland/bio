@@ -127,3 +127,126 @@ test("R38: a rule held at the door and in the catalogue is the catalogue's one f
   assert.deepEqual(back.legal_from, vocabFor(STATES, "bias").edges.adopted);
   void h; void record;
 });
+
+test("R40: fact(name, ...args) reads a registered fact for a later module; unprovided it is FACT_UNAVAILABLE, never a value; a throwing provider is FACT_FAILED", () => {
+  const { p } = makePromotion({ caseMember: new Set(["INQ-2026-0001"]) });
+  assert.deepEqual(p.fact("caseMember", "INQ-2026-0001"), { ok: true, fact: "caseMember", value: true });
+  /* A false value is a value, and is told apart from an unprovided fact. */
+  assert.deepEqual(p.fact("caseMember", "INQ-2026-0002"), { ok: true, fact: "caseMember", value: false });
+  assert.deepEqual(p.fact("citedBy", ID), { ok: true, fact: "citedBy", value: [] });
+  for (const name of ["nobodyProvides", "", null, undefined, 7]) {
+    const r = p.fact(name);
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, "FACT_UNAVAILABLE");
+    assert.equal("value" in r, false);
+    assert.equal(r.fact, typeof name === "string" ? name : null);
+  }
+  p.registerFact("fragile", "legacy-store", () => { throw new Error("down"); });
+  const f = p.fact("fragile");
+  assert.deepEqual([f.ok, f.reason, f.fact, "value" in f], [false, "FACT_FAILED", "fragile", false]);
+  assert.match(f.detail, /down/);
+  /* The arguments reach the provider as given. */
+  p.registerFact("echo", "later", (...a) => a);
+  assert.deepEqual(p.fact("echo", 1, "two", null).value, [1, "two", null]);
+});
+
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+test("R45: onCommitted — after an accepted promotion commits, every listener is called once, in the modules' total order, with {bundleId, bundleSha, type, replay}; a second registration is LISTENER_DECLARED", async () => {
+  const { makeRecord, makeMembership } = await import("./fixtures.mjs");
+  const { promotionOf } = await import("../../../src/promotion/index.mjs");
+  const record = makeRecord();
+  const p = promotionOf({}, { record, membership: makeMembership(), order: ["scheduler", "legacy-store"] });
+  p.registerFact("producingGroup", "legacy-store", () => "g");
+  const seen = [];
+  for (const m of ["legacy-store", "scheduler"])
+    assert.equal(p.onCommitted(m, (n) => { seen.push([m, n, record.head(n.bundleId)?.bundleSha]); }).ok, true);
+  assert.equal(p.onCommitted("scheduler", () => {}).reason, "LISTENER_DECLARED");
+  assert.equal(p.onCommitted("", () => {}).ok, false);
+  const a = p.promote(create(ID, infoDoc(ID, { group: "g" })));
+  assert.equal(a.ok, true);
+  assert.deepEqual(seen, [], "never inside the promotion's own call");
+  await tick();
+  const n = { bundleId: ID, bundleSha: a.bundleSha, type: "information", replay: false };
+  assert.deepEqual(seen, [["scheduler", n, a.bundleSha], ["legacy-store", n, a.bundleSha]]);
+  const b = p.promote({ ...revise(ID, a.bundleSha, infoDoc(ID, { group: "g", title: "Again" })), replay: true });
+  await tick();
+  assert.deepEqual(seen.slice(2).map(([m, x]) => [m, x]), [["scheduler", { bundleId: ID, bundleSha: b.bundleSha, type: "information", replay: true }],
+                                                          ["legacy-store", { bundleId: ID, bundleSha: b.bundleSha, type: "information", replay: true }]]);
+  /* Never for a refused promotion, nor for one answered wrote: false. */
+  const before = seen.length;
+  assert.equal(p.promote(revise(ID, "0".repeat(64), infoDoc(ID, { group: "g" }), { snapKey: "k3" })).reason, "CAS_STALE");
+  const again = p.promote({ ...revise(ID, a.bundleSha, infoDoc(ID, { group: "g", title: "Again" })), replay: true });
+  assert.deepEqual([again.ok, again.wrote], [true, false]);
+  const stepRefused = makePromotion();
+  let called = 0;
+  stepRefused.p.onCommitted("x", () => { called++; });
+  stepRefused.p.registerStep("later", { project: () => ({ ok: false, reason: "LATER_SAYS_NO" }) });
+  assert.equal(stepRefused.p.promote(create(ID, infoDoc(ID))).reason, "LATER_SAYS_NO");
+  await tick();
+  assert.equal(seen.length, before);
+  assert.equal(called, 0);
+});
+
+test("R45: inside a caller's transaction the notice waits for that transaction's commit, and a promotion rolled back with it is never announced", async () => {
+  const { p, record } = makePromotion();
+  const got = [];
+  p.onCommitted("later", (n) => { got.push([n.bundleId, record.head(n.bundleId)?.bundleSha ?? null]); });
+  /* The caller's transaction commits: the notice comes after, and the record then holds what it names. */
+  let inner;
+  const outer = record.transact(() => {
+    inner = p.promote(create(ID, infoDoc(ID)));
+    record.db.prepare("INSERT INTO side VALUES ('caller','v')").run();
+    return { ok: true };
+  });
+  assert.deepEqual([outer.ok, inner.ok], [true, true]);
+  assert.deepEqual(got, []);
+  await tick();
+  assert.deepEqual(got, [[ID, inner.bundleSha]]);
+  /* The caller's transaction rolls back after promote answered ok: nothing is announced. */
+  const other = "INFO-2026-0002";
+  const rolled = record.transact(() => {
+    const r = p.promote(create(other, infoDoc(other)));
+    assert.equal(r.ok, true);
+    return { ok: false, reason: "CALLER_CHANGED_ITS_MIND" };
+  });
+  assert.equal(rolled.reason, "CALLER_CHANGED_ITS_MIND");
+  assert.equal(record.head(other), null);
+  await tick();
+  assert.deepEqual(got, [[ID, inner.bundleSha]]);
+  /* Several promotions in one caller's transaction: one notice each, in commit order. */
+  const ids = ["INFO-2026-0003", "INFO-2026-0004"];
+  record.transact(() => { for (const id of ids) p.promote(create(id, infoDoc(id))); return { ok: true }; });
+  await tick();
+  assert.deepEqual(got.slice(1).map(([id]) => id), ids);
+});
+
+test("R45: a listener runs outside the transaction and writes no row of the promotion; one that throws or rejects changes neither the answer, what was written, nor another listener's notice", async () => {
+  const { p, record } = makePromotion();
+  const order = [];
+  p.onCommitted("a-throws", () => { order.push("a"); throw new Error("boom"); });
+  p.onCommitted("b-rejects", async () => { order.push("b"); throw new Error("later boom"); });
+  p.onCommitted("c-writes", (n) => {
+    order.push("c");
+    /* Outside the promotion's transaction: a write here is its own, and a refusal of it touches nothing promoted. */
+    const r = record.transact(() => { record.db.prepare("INSERT INTO side VALUES ('listener', ?)").run(n.bundleId); return { ok: false, reason: "NO" }; });
+    assert.equal(r.reason, "NO");
+  });
+  const a = p.promote(create(ID, infoDoc(ID)));
+  const answer = JSON.stringify(a), after = record.dump();
+  await tick(); await tick();
+  assert.deepEqual(order, ["a", "b", "c"]);
+  assert.equal(JSON.stringify(a), answer);
+  assert.equal(record.dump(), after);
+  assert.equal(record.head(ID).bundleSha, a.bundleSha);
+  /* The acts that promote through promote are announced too: reopen and fork. */
+  const inq = "INQ-2026-0001";
+  const seen = [];
+  p.onCommitted("d-counts", (n) => seen.push(n.bundleId));
+  const d = p.promote({ ...create(inq, doc({ id: inq, object_type: "inquiry", title: "Q", current_state: "deferred", created: T0,
+    last_updated: T0, state_history: "[]" })), replay: true });
+  assert.equal(d.ok, true);
+  assert.equal(p.reopen({ target: inq, reason: "why", viewer: "member:a", author: "member:a" }).ok, true);
+  await tick();
+  assert.deepEqual(seen, [inq, inq]);
+});

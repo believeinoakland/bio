@@ -859,6 +859,11 @@ export class Store extends DurableObject {
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
+    /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
+    promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
+      const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
+      if (monitored || this.#biasDebtPending()) await this.#armScheduler();
+    });
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
@@ -45396,27 +45401,7 @@ export class Store extends DurableObject {
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
         ...captureOps(captureOf(this.ctx), url, body, this.env),
-        /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
-           wrapper is the producer-side ARM for the monitor-cadence consumer, in
-           the shape SCHEDULER.md prescribes ("arm it from whatever producer
-           creates its work"). A document that newly asks to be monitored is that
-           work, and without an arm here an IDLE instance holds no alarm and would
-           never wake to check it: the self-terminating property has to be paid
-           for by the producer. Gated on the consumer being configured and on the
-           promoted bundle actually being monitored, so nothing else pays. Arming
-           only ever SCHEDULES; it writes no work. */
-        promote: async () => {
-          const r = this.promote(body);
-          if (r && r.ok && r.bundleId && this.#monitorConfigured()) {
-            const row = this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, r.bundleId);
-            if (row && row.monitor_enabled === 1) await this.#armScheduler();
-          }
-          /* D-86: a promote can move a lens (a bias bundle revised, or stepping into or out of `adopted`), and
-             an idle instance holds no alarm to notice it — so the producer pays for the wake, gated on the sweep
-             actually having something to read. */
-          if (r && r.ok && this.#biasDebtPending()) await this.#armScheduler();
-          return r;
-        },
+        promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */

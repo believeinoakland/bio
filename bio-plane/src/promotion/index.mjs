@@ -13,14 +13,13 @@
  *   order       the modules' total order (ids), which registered steps run in; unknown modules run last.
  */
 
-import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS, createSha256,
+import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
-import { recordOf } from "../record-core/index.mjs";
+import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
-import { checkBundle } from "../../checks/bio-checks.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
@@ -29,8 +28,6 @@ export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 
-/** The empty-string SHA-256: the base a creation's manifest entry records (R3). */
-export const EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 /** The instance's inline bound (R6): a file held as text is at most 1 MiB of UTF-8. */
 export const INLINE_MAX = 1024 * 1024;
 /** The dispositions an inquiry is reopened from (R24). */
@@ -42,8 +39,6 @@ export const RETIRE_CITED_DETAIL = "these are still cited by live edges. Retirin
 /** The edge-reason bound a reopening's reason is held to (R22). */
 export const EDGE_REASON_MAX = 160;
 
-const te = new TextEncoder();
-const hexOf = (text) => createSha256().update(te.encode(text)).hex();
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const has = (o, k) => isObj(o) && Object.prototype.hasOwnProperty.call(o, k);
 const textStated = (v) => (typeof v === "string" && v.trim() !== "" ? v : null);
@@ -69,17 +64,8 @@ const refusal = (code, detail, extra) => {
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 };
 
-/* An inline file's digest (its UTF-8 text) or a blob's content address; null for neither. */
-function fileDigestOf(f) {
-  if (f && typeof f.text === "string") return hexOf(f.text);
-  if (f && typeof f.blobSha === "string" && f.blobSha) return f.blobSha.toLowerCase();
-  return null;
-}
-/* An inline file's size, the UTF-8 byte length of its text; null for a blob. */
-function inlineBytesOf(f) {
-  return f && typeof f.text === "string" ? te.encode(f.text).length : null;
-}
-/* R5: every stored digest is of the stored bytes; a supplied digest that differs is named. */
+/* R5: every stored digest is of the stored bytes; a supplied digest that differs is named. A file's digest and size
+   are record-core's one computation (its R58: `fileDigestOf`, `inlineBytesOf`), so this door and its census agree. */
 function digestFiles(files) {
   const disagree = [];
   const out = files.map((f) => {
@@ -125,7 +111,7 @@ function stampGroup(files, slug) {
     if (!f || f.path !== "bundle.md" || typeof f.text !== "string") return f;
     const text = withProducingGroup(f.text, slug);
     if (text === f.text) return f;
-    return { ...f, text, bytes: te.encode(text).length, sha256: hexOf(text) };
+    return { ...f, text, bytes: inlineBytesOf({ text }), sha256: fileDigestOf({ text }) };
   });
 }
 
@@ -137,6 +123,9 @@ class Promotion {
   #record; #membership; #now; #order;
   #steps = [];            // {module, check, project, seq}
   #facts = new Map();     // name -> {module, fn}
+  #listeners = [];        // {module, fn, seq}: R45's post-commit notice
+  #notices = new Map();   // accepted promotions awaiting their notice, by bundle and snap key
+  #delivering = false;
 
   constructor({ record, membership, now, order } = {}) {
     this.#record = record;
@@ -154,9 +143,69 @@ class Promotion {
       return { ok: false, reason: "STEP_DECLARED", module, detail: `${module} has already registered its step` };
     this.#steps.push({ module, check: typeof check === "function" ? check : null,
                        project: typeof project === "function" ? project : null, seq: this.#steps.length });
-    const rank = (m) => { const i = this.#order.indexOf(m); return i === -1 ? Infinity : i; };
-    this.#steps.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    this.#steps.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
+  }
+
+  /* A module's place in the total order; unknown modules run last, in the order they registered. */
+  #rank(m) { const i = this.#order.indexOf(m); return i === -1 ? Infinity : i; }
+
+  /* R45: a later module's listener, called once after each accepted promotion has committed. */
+  onCommitted(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
+    if (this.#listeners.some((l) => l.module === module))
+      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    this.#listeners.push({ module, fn, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /* R45: `promote` may run inside a caller's transaction, which record-core joins (its R32), so the commit it waits for
+     may be the caller's. record-core's transaction is synchronous, so by the time a microtask runs the outermost one has
+     committed or rolled back. The notice is delivered then, and only when the promotion's own manifest entry (its snap
+     key, base and bundle.md digest) is held: a promotion rolled back with its caller's transaction is never announced. */
+  #announce(n) {
+    if (!this.#listeners.length) return;
+    this.#notices.set(`${n.bundleId}\u0000${String(n.snapKey)}`, n);
+    if (this.#delivering) return;
+    this.#delivering = true;
+    queueMicrotask(() => this.#deliver());
+  }
+
+  #deliver() {
+    this.#delivering = false;
+    const due = [...this.#notices.values()];
+    this.#notices.clear();
+    for (const n of due) {
+      let held = false;
+      try {
+        const e = this.#record.manifestEntry(n.bundleId, n.snapKey);
+        const md = e && Array.isArray(e.files) ? e.files.find((f) => f && f.name === "bundle.md") : null;
+        held = !!md && String(e.base) === String(n.base) && md.sha256 === n.bundleSha;
+      } catch { held = false; }
+      if (!held) continue;
+      for (const l of this.#listeners) {
+        try {
+          const r = l.fn({ bundleId: n.bundleId, bundleSha: n.bundleSha, type: n.type, replay: n.replay });
+          if (r && typeof r.then === "function") r.then(null, () => {});
+        } catch { /* a listener's failure never changes the promotion or another listener's notice */ }
+      }
+    }
+  }
+
+  /* N56 (R40): a fact registered with this module, for a later module that reads it. Unprovided, it answers
+     FACT_UNAVAILABLE and never a value, so it is never read as false; a provider that throws answers FACT_FAILED. */
+  fact(name, ...args) {
+    const held = typeof name === "string" ? this.#facts.get(name) : undefined;
+    if (!held)
+      return { ok: false, reason: "FACT_UNAVAILABLE", fact: typeof name === "string" ? name : null,
+               detail: `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.` };
+    try { return { ok: true, fact: name, value: held.fn(...args) }; }
+    catch (e) {
+      return { ok: false, reason: "FACT_FAILED", fact: name,
+               detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` };
+    }
   }
 
   registerFact(name, module, fn) {
@@ -375,7 +424,7 @@ class Promotion {
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");
-        const written = { ...files.find((f) => f.path === "bundle.md"), text, bytes: te.encode(text).length, sha256: hexOf(text) };
+        const written = { ...files.find((f) => f.path === "bundle.md"), text, bytes: inlineBytesOf({ text }), sha256: fileDigestOf({ text }) };
         files = files.map((f) => (f.path === "bundle.md" ? written : f));
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
@@ -396,7 +445,8 @@ class Promotion {
       if (base !== null) {
         const sight = head && pkg.actorIdentity != null
           ? String(membership.sight(bundleId, pkg.actorViewer ?? "")).toUpperCase() : "FULL";
-        if (head && sight === "EXISTENCE") return this.#existenceOnly(bundleId);
+        const seen = head && sight === "EXISTENCE" ? membership.existenceAct(bundleId, pkg.actorViewer ?? "") : null;
+        if (seen) return seen;
         if (!head || sight !== "FULL")
           return refusal("ABSENT", "update attempted against a bundle that does not exist");
       }
@@ -676,6 +726,9 @@ class Promotion {
           says: "neither the document nor the request stated these, so this revision keeps the values the record "
               + "already held for it" } } : {}) };
       for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
+      /* R45: announced once the transaction this promotion committed in has committed. */
+      this.#announce({ bundleId, bundleSha: committed.bundleSha, type: promotedType, replay, snapKey,
+                       base: head ? base : EMPTY_STRING_SHA });
       return answer;
     });
   }
@@ -693,14 +746,6 @@ class Promotion {
       if (page.ids.length < 200 || !page.cursor) return false;
       after = page.cursor;
     }
-  }
-
-  /* R20 (membership R44): the one answer an act gives a caller who sees a project at EXISTENCE: its id and name. */
-  #existenceOnly(projectId) {
-    const info = this.#record.bundleInfo(projectId);
-    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
-      "this project is discoverable and you are not one of its participants. Its existence and name are all it shows "
-      + "you; asking to join is the one act open to you.", { project: projectId, name: info ? info.title ?? null : null });
   }
 
   /* ---------------------------------------------------------------- forkProject (N16, §7.12) */
@@ -724,7 +769,8 @@ class Promotion {
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */
     const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
-    if (head && sight === "EXISTENCE") return this.#existenceOnly(projectId);
+    const seen = head && sight === "EXISTENCE" ? membership.existenceAct(projectId, viewer) : null;
+    if (seen) return seen;
     if (!head || sight !== "FULL")
       return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
                detail: "no project answers to that id here. A project you cannot see is answered exactly as one that "
@@ -885,44 +931,19 @@ export function promotionOf(host, deps) {
     const record = (deps && deps.record) || recordOf(host);
     p = new Promotion({ ...(deps || {}), record, membership: (deps && deps.membership) || membershipOf(host, { record }) });
     instances.set(host, p);
+    /* record-core R59: the moved checks join the audit, with the caller's release registry from its context. */
+    record.registerAuditCheck("promotion", ({ folderName, files, sha256 }, context) =>
+      recordChecks({ folderName, files, releaseRegistry: (context && context.releaseRegistry) || null, sha256 }));
   }
   return p;
 }
 
-/** K64: record-core's audit pass (R18–R20) with the checks this module took from the catalogue (C-4.2, C-17.2,
- *  C-18.8, C-20.1) run over the same page, so the audit loses none of them. A bundle the moved checks find in error
- *  is re-judged whole, so `clean`, `withErrors`, the tallies and `offenders` count it once, as the catalogue's pass
- *  would have. Takes and answers `auditPass`'s own shape. */
+/** K64, record-core R59 (K130): record-core's audit pass (R18–R20), which runs the checks this module took from the
+ *  catalogue (C-4.2, C-17.2, C-18.8, C-20.1) over the same image beside it, registered when this module is reached, so
+ *  the audit loses none of them and judges each bundle once, whole. Takes and answers `auditPass`'s own shape. */
 export async function recordAudit(host, opts = {}) {
-  const record = recordOf(host);
-  const pass = await record.auditPass(opts);
-  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
-  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
-  const tallyDetail = { ...(pass.tallyDetail || {}) };
-  const out = { ...pass, tally: { ...pass.tally }, offenders: [...pass.offenders] };
-  for (const id of pass.page || []) {
-    const img = record.readImage(id) || {};
-    const files = new Map(), elided = new Set();
-    for (const [path, v] of Object.entries(img)) (typeof v === "string" ? files.set(path, v) : elided.add(path));
-    const moved = (await recordChecks({ folderName: id, files, sha256 })).filter((f) => f.severity === "error");
-    if (!moved.length) continue;
-    const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided, sha256, sha512,
-      resolveTarget: (t) => !!record.bundleInfo(t),
-      ...(typeof opts.context === "function" ? (opts.context(id) || {}) : {}) });
-    const before = findings.filter((f) => f.severity === "error");
-    if (!before.length) { out.clean--; out.withErrors++; }
-    for (const e of moved) {
-      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
-      if (e.code) { const k = `${e.check}/${e.code}`; tallyDetail[k] = (tallyDetail[k] || 0) + 1; }
-    }
-    const errors = [...before, ...moved].slice(0, 5).map((e) => ({ check: e.check, detail: e.message }));
-    const at = out.offenders.findIndex((o) => o.bundleId === id);
-    if (at >= 0) out.offenders[at] = { bundleId: id, errors };
-    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors });
-  }
-  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
-  return out;
+  promotionOf(host);
+  return recordOf(host).auditPass(opts);
 }
 
 /** What a registered step receives (R39): the promotion's context, as the promotion built it. */
