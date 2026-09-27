@@ -101,7 +101,9 @@ This job merged (`a9aba3d56e`); REPORT 1 was a real regression, fixed by CONNECT
 - `derivation-bounds` re-pinned to the fix, by name (CONNECTIONS #2's REPORT 8): CENSUS 190 → 188 (departures `connections/index:asserted`, `connections/index:fileMembership`, both LIMIT-bounded now; no arrival); SET 2 12 → 11 and its both-halves partition 8 → 7 (`connections/index:asserted` left). **73/0.**
 - Re-run on this branch, each alone in a process, four at a time: browser-render 48/0, rendered-capture 103/0, monitor-rendered 28/0, d522-unattended-render 21/0, capturerequests 139/0, doorbell 72/0, drive 160/0, meaningquery 107/0, monitor-assess 91/0, hygiene 1340/0; meaning-bounds 92/4, the same four and none of them connections' (D-240 (b) and the REACH residual, red at the opening, N70; the BARE ceiling 51 > 43; the OPAQUE ceiling 11 > 10, `reproject`; `filemembership` and `connectionsasserted` now BOUNDED).
 - **The old battery's red count is now 13** (was 22): meaning-bounds 92/4, project-sight 231/1 (REPORT 13, T4 REPORT 6), rung-ladder 46/3 (REPORT 15, T4 REPORT 7), machinefences-dec49 88/1 (legacy-checks' `where`, T6), owed-controls 47/1 (N88's remainder, K153), fleetbundles 92/4 (the stale bundle, BOB's at the close), and T3/T4's carried affordances 98/1, d311-roster-affordances 20/1, skilldoctrine 42/1, skillpack 47/2, civicos-ui semantics-harvest 13/3 and surface-registry (N70, T4 REPORT 11).
-- Checks after the change: below.
+- Checks after the change (civicos-process `main`): format 69 modules, 64 requirements files, 0 failures; architecture 870 product files, 2226 relative imports, 0 failures; coverage 0 of 0, 0 failures; ownership 2 files changed by legacy-tests between `tranche/T5` and HEAD, 0 failures.
+
+Size (this CHANGE): test runs 14, module lines 1 file, +13 / −5.
 
 ## COMPLETE (to BOB #46, by this record, K154), after the CHANGE of 12:45
 
