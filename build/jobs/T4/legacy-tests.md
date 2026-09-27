@@ -20,8 +20,35 @@ Of these, d311-roster-affordances, meaning-bounds, op-claims, owed-controls, ref
 
 ## Families
 
-(none yet)
+**Family 1 · pins the layer-1–3 jobs moved** (commit `ccfb42f04a`, by me):
+- `fleetbundles` arm 2a: ocr-worker's cross-tree inputs gain `pdf-worker/src/ccittdecode.mjs` (K115): 96/0.
+- The schema-order rule (host-governor, K72 (3)): `observation-log` A2, `publishedcase`, `bias`, `capturerequests`, `capture-text-index` A1 ask the position in schema.mjs's exported `SCHEMA` (the schema the store runs, where the governor's block is still last); `mint-ledger` S1 finds the block as `${HOST_GOVERNOR_SCHEMA}`.
+- `d470-catalog-census`: the 1.33.0 row as PROMOTION #2 measured it when it minted the version (572, `86ddf728…`, source `1513f4a8…`), A5 reads 1.33.0. **A3 and A9 stay red, correctly: REPORT 1.**
+- `machinefences-dec49`: D-PIN C-33.48 `LAST_COMMITTED_OWNER`, C-33.49 `ABSENT`; D0 68 → 69 from its print: 87/0.
+- `d134-custodial-refusals` (16/0) and `civicos-ui/test/custodial-acts` (49/49): C-96 holds twelve rows (N44). `ratify-authority` (52/0): C-57.1's `where` names `src/membership/index.mjs caseAuthority`.
+- `aicredential`: C-29.11 and C-29.12 are now DRIVEN through `op=aicredentialmint` (R29: a principal other than the minter; R62: an organisation key minted by a non-administrator), so section 10's floor holds. 96/1: **the one red is REPORT 2**, a real membership defect.
+
+**Family 2 · source anchors, by me** (commit after `ccfb42f04a`):
+- `plane-envelope` (64/0): DETECTOR C's unconverted set is now EMPTY: `governoradmit`/`governorstate` left index.mjs with host-governor, the other eight with capture (the acquisition runs inside the Durable Object, K72 (11)); HELD OPEN (iii) is asked of host-governor's interface (`governedFetch` over a `governorOverStub` whose stub throws, and one whose store answers no envelope: the fetch is made, R17); REACH (D)'s bound is proved by detector C's planted raw read outside the ratify block.
+- `doorbell` (72/0): the window is `KNOCK.windowMs` imported from `src/capture/doorbell.mjs`.
+- `hygiene` (1326/0): the purge census reads capture's `CAPTURE_PURGED_TABLES`/`CAPTURE_EXEMPT_TABLES` and provenance's declaration captured by calling `provenanceOf` over a recording record; D2a/D2b name provenance's `register-checks.mjs` as `ACTOR_CLASSES`' one second reader (C-18.1's declared-field check, moved there), counted exactly; D-112's source check reads index.mjs and every file of `src/capture/`.
+- `test/nc-d490.mjs`: the `nobodies` arm's anchor on today's line (`{ now, until: overall }`, CAPTURE-SOURCES #1's REPORT). Control not yet re-run (it mutates source; run on a quiet tree).
+- `owed-controls` (47/1): A10b "every fleet suite declares" RETIRED (K100 (1), N70); A13b stays red: REPORT 4.
+
+**Family 3 · K121's fixtures** (the helper `test/register-doc.mjs`, by me): `registerDoc(doc)` completes a reading carrier into op=acquire's own intake shape (the capture held as a blob `snapshots/<name>` addressed by its sha256, a locator and retrieval instant, the authority stated undetermined with its basis, the method, the direct letter `EARNED_CAPTURE_CEILING`, the `session` actor class, a `named_request` origin; `{chain: true}` adds acquire's one first-party hop for bundles at `verified`), filling only keys the fixture does not state; `registerFile(doc)` is the bundle's blob entry for it. First use: `calibration` 110/0. A diagnostic run (a log line in provenance's refusal, in my working tree only, reverted and verified by `git status`) found **97 suites** reaching `PROVENANCE_REGISTER_REFUSED`. The rest go by batches (below).
+
+**Not the old battery:** `ocr-worker/test/ocr-worker.test.mjs` is ocr-worker's own suite (`tests: ocr-worker/test/`), so its remedy text is not this job's.
+
+## Found in other modules (REPORT)
+
+1. **promotion (`src/gate.mjs`, R34 `CATALOG_VERSION`)**: PROVENANCE #1 moved C-18.1, C-18.3, C-18.4 and C-18.9 out of the catalogue file after PROMOTION #2 minted 1.33.0 (census 572), and the version did not move: the catalogue now holds 568 checks, digest `4f93c5f65a5d7444ca59f172ae598905f3c440fc9c5d0b222431335edc003f14`, source `4fa025acf0d59e03324c294d5225adea40c826afaa031b1d8bb71dd6c76fff31`. By 1.32.0's precedent (K64: a move out of the catalogue moves the version) `CATALOG_VERSION` goes to 1.34.0; then `d470` records `"1.34.0": { count: 568, digest: "4f93c5f6…", changed: [], source: "4fa025ac…" }` (legacy-tests). Until then A3 and A9 are red and say so.
+2. **membership (`#ownRefusal`, R29, R62)**: LEGACY-CHECKS #1's REPORT 1 (a), now measured through the plane: `AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER` and `AI_CREDENTIAL_ORG_NOT_ADMIN` reach the wire with `check: "membership.R29"` / `"membership.R62"` instead of their rows' C-29.11 / C-29.12 (and their own sentence, not the canned translation), because `dec49Decorate` does not override a `check` already present. `aicredential` section 10 fails on it by name.
+3. **legacy-checks (`bio-checks.mjs`)**: rows whose `where` names `src/store.mjs` / `src/index.mjs` for code layer 3 moved with its DEC-49 markers into `src/capture/` (is-drive-export, is-drive-bytes, is-knock-rate, is-render-admit, is-render-result, the three `knock*` functions) and `src/provenance/` (is-route-mark, is-testify-act, is-testify-words, is-testify-bytes, `#testimonyFence`). The guard `check-refusal-codes.mjs` fails on each. (Details and the full list with the guard's family, below when that batch closes.)
+4. **legacy-index (`scripts/coverage.mjs`)**: `--strict` exits 1 on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR (331/359): the old declaration and floor rules K100 (1) retires for requirement-named suites and N14's tooling. `owed-controls` A13b ("reported, not gated") stays red until the script stops gating on them.
 
 ## Open
 
-- Everything in T4-5.
+- K121's fixtures, provenance's and capture's moved sources, and eight unexplained reds (airuns, case-authority, d334-monitor-credential, d556partedpublish, leadslug, m025-arm-anchor-witness, monitor-assess, project-sight): six workers of this session, each edit to be reviewed here and committed by batch.
+- The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`, 48 failures at the base) and `refusal-codes.control.mjs`.
+- Controls to re-run on a quiet tree: `nc-d490`, `refusal-codes.control`, and any whose anchors the batches move.
+- `civicos-ui/test/` baseline (running).
