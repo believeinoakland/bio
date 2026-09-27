@@ -293,7 +293,11 @@ await asTable(OLD_CONTENT);
 const before = await xinfo();
 t("ARMED: the store booted on the pre-item schema has a content table WITHOUT chain_kind",
   [before.includes("content_id"), before.includes("chain_kind")], [true, false]);
-for (const [id, doc, chain] of [["c-ocr", DOC_OCR, chainOf("pixels", "ocr")],
+/* RE-ANCHORED 2026-09-27 (T5-12; content R14): the OCR row's chain was the bare steps `pixels`, `ocr`, which REC-104's
+   JSON expression read regardless; the kind is now text-chain's answer, which states a malformed chain (an `ocr`
+   step with no engine, version or confidence) undetermined. The fixture states what it always meant, an OCR'd chain,
+   in the chain grammar's shape (section 1b's `OCR`). */
+for (const [id, doc, chain] of [["c-ocr", DOC_OCR, JSON.stringify(OCR)],
                                 ["c-layer", DOC_LAYER, chainOf("layer")],
                                 ["c-bare", DOC_BARE, null]]) {
   const w = await raw(INS, id, "sha-" + id, doc, "document", '{"kind":"document"}', "the whole document", chain,

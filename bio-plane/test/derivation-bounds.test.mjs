@@ -1839,7 +1839,12 @@ t("TRUNCATION SOURCE: and REC-60's three reads are graded BY NAME rather than be
 + "total, AND appear in no violation — a count of twenty is satisfied by ANY twenty, and a method "
 + "that assigns its scan in two branches is satisfied by its healthy branch unless both are asked. "
 + "These three are the reads D-225 was raised for and REC-60 capped on 2026-08-07 under IC-25",
-  ["resolutionsForCapture:rows", "documentsConcerning:scan", "connectionsFor:scan"]
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the three reads MOVED — `resolutionsForCapture` is entities'
+     `resolutionsFor` and `documentsConcerning` its `concerns` (ENTITIES #1, entities R11-R12), `connectionsFor` is
+     connections' `read` (CONNECTIONS #1, R5). RE-READ at the site, not only renamed: each is the same SQL with `LIMIT ?`
+     passed `cap + 1` and `truncated` measured off it, and `read` still assigns `scan` in its TWO branches (entity, capture),
+     both LIMIT-bounded — so this arm still asks both. */
+  ["entities/index:resolutionsFor:rows", "entities/index:concerns:scan", "connections/index:read:scan"]
     .filter((x) => !TRUNCATION.graded.includes(x)
                 || TRUNCATION.violations.some((v) => v.startsWith(`${x} `))), []);
 /* A FLOOR on the grader's REACH, because a verdict of "0 violations" is exactly what a reader
@@ -1924,10 +1929,21 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      SQL `LIMIT ?` at `PROJECT_DIRECTORY_LIMIT + 1`, and this grader can attribute the figure to it. THE
      ARRIVAL IS IN THE SAME RUN, one assertion up: `TRUNCATION SOURCES` printed 36 graded where it printed 35,
      with `projectDirectory:projects` in the GRADED list and zero violations. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
-   "documentsNamingEntity:merged", "frontier:never",
-   "queueFeed:dispAll", "queueFeed:items"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this arm's own output, diffed by name against the opening tree
+     (11 -> 13). SEVEN MOVED, the same claim under the module's name: #contentAxisTally:raw ->
+     retrieval/index:#contentAxisTally:raw; #frontierContent:never, #frontierMeaning:never, frontier:never,
+     #frontierPage:gated -> retrieval/frontier:{#content:never, #meaning:never, #document:never, #page:gated} (the
+     Frontier reader, RETRIEVAL #1); biasInhale:bars -> bias/index:biasInhale:bars; documentsNamingEntity:merged ->
+     entities/index:namingDocuments:merged. TWO ARRIVALS, each a bounded read in a spelling REC-99's `rowSourceCalls`
+     (`X = this.#rows(`) cannot attribute, and each CUT GRADED at the published cap below:
+     calibration/index:worseSupersessions:page (calibration R11: `page = one ? this.#rows(…) : this.#rows(…)`, both
+     `LIMIT ?` at `cap + 1`) and extraction/index:capturesReadFor:page (extraction R51, K138: `page` assigned `LIMIT ?` at
+     `cap + 1` inside a `try`, declared `let page = []` above it). */
+  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
+   "calibration/index:worseSupersessions:page", "entities/index:namingDocuments:merged",
+   "extraction/index:capturesReadFor:page", "queueFeed:dispAll", "queueFeed:items",
+   "retrieval/frontier:#content:never", "retrieval/frontier:#document:never", "retrieval/frontier:#meaning:never",
+   "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
@@ -2113,7 +2129,13 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [11, true]);  /* CONDUCT #20 at c20-batch22: the union of REC-195 (+1, #lawProposalsFor:all) and D-497 (-1, projectDirectory:projects) READS 11 on this instrument's print on the merged tree. REC-195 (2026-09-24): 11 -> 12, `#lawProposalsFor:all`, MOVED FROM THE FIGURE THIS
+  [13, true]);  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): 11 -> 13, from the printed `source bound 1 graded, 12 OUT OF
+                   REACH`, the two arrivals named at REC-99's ungradeable pin above. Source-graded is UNMOVED at 1 and
+                   CHANGED HANDS, named: `frontier:never` (a cap-carrying call to `#frontierFetch`) is now
+                   retrieval/frontier:#document:never, DERIVED from `missing` (the fetch is a module helper's argument
+                   now, out of reach), and calibration/index:worseSupersessions:page is SOURCE GRADED (its declaration is
+                   the cap-carrying read itself). extraction/index:capturesReadFor:page is OUT OF REACH (ASSEMBLED: its
+                   declaration is `let page = []`). CONDUCT #20 at c20-batch22: the union of REC-195 (+1, #lawProposalsFor:all) and D-497 (-1, projectDirectory:projects) READS 11 on this instrument's print on the merged tree. REC-195 (2026-09-24): 11 -> 12, `#lawProposalsFor:all`, MOVED FROM THE FIGURE THIS
                    INSTRUMENT PRINTED on the item's tree ("source bound 1 graded, 11 OUT OF REACH") and never
                    by incrementing the number here. Source-graded is unmoved at 1; the arrival is out of reach
                    for the reason written beside its roster entry below. PRIOR: REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
@@ -2188,9 +2210,16 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      which no longer assembles anything. `projects` is now the `.map()` of a single bounded `#rows(`, so REC-99's
      inversion grades it BY NAME one block up and this walk has nothing left to report about it. Source-graded
      is UNMOVED at 1: the departure was never source-graded here, so nothing this walk could bound was lost. */
-  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:never",
-   "#frontierMeaning:never", "#frontierPage:gated", "#lawProposalsFor:all", "biasInhale:bars",
-   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from the printed roster, diffed by name (10 -> 12): the six moved claims
+     named at REC-99's ungradeable pin (retrieval's five, bias's `bars`, entities' `merged`), each with the same reason;
+     ONE MIGRATION, named: `frontier:never` was SOURCE GRADED and its successor retrieval/frontier:#document:never is
+     DERIVED from `missing` — the Frontier reader passes the cap-carrying fetch through a helper this one-method walk does
+     not follow, the loss of reach D-389's note above took for `#frontierContent:page`; and ONE ARRIVAL,
+     extraction/index:capturesReadFor:page (ASSEMBLED by its `let page = []` declaration; its read is `LIMIT ?` at `cap + 1`). */
+  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
+   "entities/index:namingDocuments:merged", "extraction/index:capturesReadFor:page", "queueFeed:dispAll",
+   "queueFeed:items", "retrieval/frontier:#content:never", "retrieval/frontier:#document:never",
+   "retrieval/frontier:#meaning:never", "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND

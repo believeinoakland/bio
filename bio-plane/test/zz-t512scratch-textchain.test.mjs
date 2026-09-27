@@ -243,7 +243,7 @@ const mixedAnswer = (pages = [ocrPage(1, SCAN_TEXT)]) => ({
 let ASKED = null;
 
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8").replace('const REC30_VIEWER_READS = ["dangling",', 'const REC30_VIEWER_READS = ["calibrate", "attesttext", "dangling",').replace('const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];', 'const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier", "calibrate"];'),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
@@ -275,7 +275,7 @@ const mf = new Miniflare({
    answered badly" and a test that reached both through one switch could not tell
    the reader which it had proved. */
 const mfBare = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8").replace('const REC30_VIEWER_READS = ["dangling",', 'const REC30_VIEWER_READS = ["calibrate", "attesttext", "dangling",').replace('const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];', 'const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier", "calibrate"];'),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
