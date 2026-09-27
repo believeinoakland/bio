@@ -75,6 +75,8 @@
 
 - N77 · 2026-09-27 · **jurisdictions** (CAPTURE-SOURCES #1 Q1, K119): a profile key `locale` (`{value, basis}`, one BCP 47 tag, validated), combined like `practice`'s keys, so capture-sources R54 reads the render locale from the profiles; the first profile states its locale.
 
+- N78 · 2026-09-27 · **docs** (CAPTURE-SOURCES #1, T4; BOB's): file R26's measurement (N = 4 s, 32 runs, M-151's instrument; stated whole in `browserrender.mjs`'s comment) as an M-entry, and fold D-570 into `CLIENT-RENDERED.md`.
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
