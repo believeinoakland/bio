@@ -39417,7 +39417,7 @@ var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/
 async function sha256Hex7(v) {
   return hex3(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
 }
-var driveRow2 = (code) => {
+var driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
@@ -39705,7 +39705,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       return answer(400, {
         ok: false,
         reason: "DRIVE_HOP_FACT_SUPPLIED",
-        ...driveRow2("DRIVE_HOP_FACT_SUPPLIED"),
+        ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
         op,
         supplied,
         detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
@@ -39716,7 +39716,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         return answer(422, {
           ok: false,
           reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
-          ...driveRow2("DRIVE_FOLDER_NOT_A_DOCUMENT"),
+          ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
           op,
           drive: { host: drive.host, shape: drive.shape, harvestable: false },
           locator: drive.address,
@@ -39726,7 +39726,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         return answer(422, {
           ok: false,
           reason: "DRIVE_KIND_UNDETERMINED",
-          ...driveRow2("DRIVE_KIND_UNDETERMINED"),
+          ...driveRow("DRIVE_KIND_UNDETERMINED"),
           op,
           drive: { host: drive.host, shape: drive.shape, harvestable: false, ...drive.fileId ? { file_id: drive.fileId } : {} },
           locator: drive.address,
@@ -39736,7 +39736,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         return answer(422, {
           ok: false,
           reason: "DRIVE_SHAPE_UNRECOGNISED",
-          ...driveRow2("DRIVE_SHAPE_UNRECOGNISED"),
+          ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
           op,
           drive: { host: drive.host, shape: drive.shape, harvestable: false },
           locator: drive.address,
@@ -39892,7 +39892,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     return answer(502, {
       ok: false,
       reason: "DRIVE_EXPORT_UNREACHABLE",
-      ...driveRow2("DRIVE_EXPORT_UNREACHABLE"),
+      ...driveRow("DRIVE_EXPORT_UNREACHABLE"),
       op,
       status: res.status,
       locator: driveCapture.address,
@@ -39912,7 +39912,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       return answer(502, {
         ok: false,
         reason: "DRIVE_EXPORT_IS_THE_SHELL",
-        ...driveRow2("DRIVE_EXPORT_IS_THE_SHELL"),
+        ...driveRow("DRIVE_EXPORT_IS_THE_SHELL"),
         op,
         status: res.status,
         locator: driveCapture.address,
@@ -39992,7 +39992,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       return answer(502, {
         ok: false,
         reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL",
-        ...driveRow2("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
+        ...driveRow("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
         op,
         status: res.status,
         locator: driveCapture.address,
@@ -90132,6 +90132,18 @@ var OPS = {
   adminendorse: { classes: ["admin", "member", "probe"], mutating: true },
   adminremove: { classes: ["admin", "member", "probe"], mutating: true },
   adminarith: { classes: ["admin", "member", "probe"], mutating: false },
+  /* N43 (T4): membership's three rules built in T3 (N18) — an administrator's resignation (R10), the record of who
+     holds hosting access (R11) and a member's published cover-and-handle pairing (R19). They were routed in the
+     store and absent HERE, so every caller got "unknown op": this file's own standing lesson 5 again. The three
+     acts are `ROSTER_SELF_ACTIONS` below: both session sets and a server-stamped `by`, and the ROSTER decides
+     (the store refuses a `by` that may not act, by name). `member` in `classes` for `memberadd`'s reason — an
+     enrolled administrator's session is a `member` kind — and `machineClasses` keeps the MEMBER_TOKEN bearer and
+     an `ai` credential out as REC-159 does. The two reads serve the record as membership answers it. */
+  adminresign: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
+  hostingaccessset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
+  hostingaccess: { classes: ["admin", "member", "probe"], mutating: false },
+  memberpairingset: { classes: ["admin", "member", "probe"], machineClasses: ["admin", "probe"], mutating: true },
+  memberpairings: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-9: why a register row is unreferenced. A read that classifies every row
      against what the store actually holds, so the 20 unexplained rows on the
      live instance stop being a plausible story and become a measured one.
@@ -90628,6 +90640,7 @@ var PROJECT_ACTIONS = [
 var GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 var IDENTITY_ACTIONS = ["groupnameset", "groupdomainset"];
 var CUSTODIAL_ACTIONS = ["memberadd", "memberset", "signeradd", "signerset"];
+var ROSTER_SELF_ACTIONS = ["adminresign", "hostingaccessset", "memberpairingset"];
 var PROVENANCE_JUDGEMENT_ACTIONS = ["provenancechain", "provenanceroute"];
 var CALIBRATION_WRITE_ACTIONS = ["calibrate", "calibrationsubject", "calibrationsignal"];
 var EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
@@ -90784,6 +90797,8 @@ var SESSION_OPS = {
        above — the roster decides them, asked by the store against the
        stamped `by`, and an ordinary member is told NOT_AN_ADMIN. */
     ...CUSTODIAL_ACTIONS,
+    /* N43: membership's R10, R11 and R19 acts, in BOTH sets for D-136's reason above. */
+    ...ROSTER_SELF_ACTIONS,
     /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
        of them is the founder's act, and an enrolled administrator is a
        `member` kind. */
@@ -90935,6 +90950,7 @@ var SESSION_OPS = {
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
+    ...ROSTER_SELF_ACTIONS,
     ...PROVENANCE_JUDGEMENT_ACTIONS,
     ...CALIBRATION_WRITE_ACTIONS,
     "governorstate",
@@ -91313,6 +91329,11 @@ var NEEDS = {
   groupdomainset: null,
   signeradd: null,
   signerset: null,
+  /* N43: NO WORKING CAPABILITY, on D-136's reasoning above — what bounds each is who the session IS, asked of the
+     roster by the store against the stamped `by` (membership R10, R11, R19). */
+  adminresign: null,
+  hostingaccessset: null,
+  memberpairingset: null,
   /* PL-11 / IS-5 / D-199: NO WORKING CAPABILITY, and NO FIFTH CAPABILITY TOKEN
      IS MINTED — CAPABILITIES.md §4's rule, which every act since REC-13 has
      followed. Creating or withdrawing an agent credential is instance-level
@@ -92180,7 +92201,7 @@ function needsTier2(text) {
   const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
-  if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
+  if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
 var LAYER_FIDELITY_CAP = null;
@@ -92209,17 +92230,18 @@ function layerChainFor(i2text, { tier, container }) {
   });
   return Array.isArray(ext) ? ext : base;
 }
+var TIER3_REASONS = Object.freeze(["no_text_layer", "image_content_unread"]);
 function needsTier3(text) {
   const marks = text && Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return false;
-  return marks.some((m) => m && m.reason === "no_text_layer");
+  return marks.some((m) => m && TIER3_REASONS.includes(m.reason));
 }
 function tier3Pages(text) {
   const marks = text && Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.some((m) => m && m.reason === "encrypted")) return [];
   const pages = [];
   for (const m of marks) {
-    if (!m || m.reason !== "no_text_layer") continue;
+    if (!m || !TIER3_REASONS.includes(m.reason)) continue;
     if (!Number.isInteger(m.page) || m.page < 0) continue;
     if (!pages.includes(m.page)) pages.push(m.page);
   }
@@ -95556,6 +95578,8 @@ var index_default = {
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || CUSTODIAL_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "projectrequests")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (IDENTITY_ACTIONS.includes(op)) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
