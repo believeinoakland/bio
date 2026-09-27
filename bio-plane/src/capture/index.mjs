@@ -1122,6 +1122,12 @@ export class Capture {
   }
 }
 
+/** Whether a purge declaration names one of this module's tables (record-core R21: each owner declares its own). */
+export function captureOwns(t) {
+  const name = typeof t === "string" ? t : t && t.name;
+  return CAPTURE_PURGED_TABLES.includes(name) || CAPTURE_EXEMPT_TABLES.includes(name);
+}
+
 /* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
    them in). `url` carries the control plane's stamps; `body` the parsed body. */
 export function captureOps(c, url, body, env) {

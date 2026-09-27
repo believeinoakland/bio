@@ -225,7 +225,7 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { recordOf } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
-import { captureOf, captureOps } from "./capture/index.mjs";
+import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
 /* D-440: the FORMAT registry's own answer to "does this format walk parts",
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
@@ -872,13 +872,13 @@ export class Store extends DurableObject {
       { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
       { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
       { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
-      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
-      { name: "captured_locators", keys: [] },
-      { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
+      { name: "case_drafts", keys: [] }, { name: "tasks", keys: [] }, { name: "task_queue", keys: [] }, { name: "source_reachability", keys: [] }, { name: "monitor_tick_epoch", keys: [] }, { name: "monitor_address_type", keys: [] },
+      { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
+      { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
       { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
       { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "ai_run_bounds", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] }, { name: "ai_runs", keys: [] },
-    ]);
+    ].filter((t) => !captureOwns(t)));   /* capture declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     const promotion = promotionOf(ctx);
@@ -932,7 +932,7 @@ export class Store extends DurableObject {
      * one. Like the two above it is derived -- re-derivable from reading_refs,
      * which persists every string it projects, and holding nothing a member
      * wrote. The backfill below repopulates it with no document re-read. */
-    for (const [table, needed] of [["captured_locators", "via"],
+    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"],
                                    ["reading_ref_terms", "src"]]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       /* Dropped BEFORE the schema runs, so the CREATE TABLE and CREATE INDEX
