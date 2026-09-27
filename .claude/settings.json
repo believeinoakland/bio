@@ -5,7 +5,11 @@
       "Read",
       "Grep",
       "Glob",
-      "Bash"
+      "Bash",
+      "Bash(rm .git/hooks/*)",
+      "Bash(rm -f .git/hooks/*)",
+      "Edit(//home/user/civicos-process/**)",
+      "Write(//home/user/civicos-process/**)"
     ],
     "deny": [
       "Bash(git push --force:*)",
