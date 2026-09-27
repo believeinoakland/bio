@@ -103,7 +103,7 @@ and every other module that stores anything, write through and read from.
   (`ok:false`), every row written inside it, in any module's tables, is rolled back, and no id allocated
   inside it is spent. This holds for a nested call too: it joins the outer transaction, and a
   nested call that throws or refuses rolls back its own writes and ids (a savepoint), while the outer
-  call decides the rest. *(not yet met: PROMOTION #3's REPORT 1, K133)*
+  call decides the rest.
 - Errors: rethrows what `fn` throws, after the rollback.
 
 **commit({bundleId, type, title, project, snapKey, kind, base, author, writer, operation, files, state, priorState, group, created, lastUpdated, criticality, at}) → `{bundleSha, rowVersion}`**
