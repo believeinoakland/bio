@@ -81,4 +81,4 @@
 - **Old battery, before and after, on the same machine:** the 24 content suites of map §4 and 83 more that drive content, attestation, notice or cite ops. Against `tranche/T5` @ `0ed1857973`: every suite green there is green here except the 15 named in REPORTs 1, 11 and 12 (6 source-anchored or importing moved names, 4 awaiting legacy-index's viewer stamp, 3 temp-copy harnesses, 2 schema readers); none fails on content's own behaviour. `derivation-bounds`, `fleetbundles` and `reextract` fail on `tranche/T5` itself; `project-sight` failed on the base before this job.
 - No layer tests are named in `build/manifest.md`; no module that uses content is extracted yet.
 
-Size: test runs 22, module lines 2203
+Size: test runs 22, module lines 2184
