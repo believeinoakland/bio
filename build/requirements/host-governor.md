@@ -13,7 +13,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 **governorAdmit({host}) → `{admitted: true, wait_ms, appetite_per_min}` or `{admitted: false, reason, retry_in_ms, …}`**
 - **R1** With no `host` (absent or empty), returns `{admitted: false, reason: "no host named"}` and writes nothing.
 - **R2** On first contact with a host, creates its state with a full burst of `burstTokens` (3) tokens, no cool-off and no refusals, before deciding.
-- **R3** The host's appetite (grants per minute) is, in order: the host's configured appetite (R11); else the instance binding `GOVERNOR_APPETITE_PER_MIN` when it is a positive finite number; else the default, 12. A binding that is absent, empty, non-numeric, zero or negative falls back to the default and is never obeyed. *(not yet met: K47 — a negative binding value is truthy and is obeyed, which makes the bucket's refill and gap negative)*
+- **R3** The host's appetite (grants per minute) is, in order: the host's configured appetite (R11); else the instance binding `GOVERNOR_APPETITE_PER_MIN` when it is a positive finite number; else the default, 12. A binding that is absent, empty, non-numeric, zero or negative falls back to the default and is never obeyed.
 - **R4** While the host's cool-off lies in the future, refuses with `{admitted: false, reason: "cooling_off", retry_in_ms: cooloff_until − now, refusals, last_refusal_status}`, whatever the token balance and whatever appetite is configured; spends no token and adds one to `refused_total`.
 - **R5** Otherwise tokens refill continuously at the appetite per minute from the last refill, capped at `burstTokens`. With fewer than 1 token, refuses with `{admitted: false, reason: "appetite", retry_in_ms}`, `retry_in_ms` = ceil((1 − tokens) / appetite × 60,000), records the refilled balance, and adds one to `refused_total`.
 - **R6** Otherwise admits: spends one token, adds one to `granted`, and returns `wait_ms` = max(0, round(gap − time since the previous grant)), where gap = (60,000 / appetite) × j and j is drawn uniformly from [0.6, 1.5) on each grant (a jittered gap, never a fixed one). The grant is recorded as taking place at now + `wait_ms`, so the next grant is spaced from when this fetch goes out.
@@ -28,7 +28,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 
 **governorConfig({host, appetite_per_min}) → `{configured, host, appetite_per_min}` or refusal**
 - **R11** With no `host`, returns `{configured: false}`; no global appetite can be set. With a host, creates its state if absent and sets its appetite to `appetite_per_min`, or, when it is `null` or omitted, clears it so R3's instance precedence applies again; returns `{configured: true, host, appetite_per_min}` (`null` when cleared).
-- **R12** A value that is present and not a positive finite number is refused with `BAD_APPETITE` and nothing is written. *(not yet met: K47 — `governorConfig` stores it, and a 0 clears; only the `governorconfig` op refuses it today, `index.mjs`)*
+- **R12** A value that is present and not a positive finite number is refused with `BAD_APPETITE` and nothing is written.
 - Errors: never throws.
 
 **governorState({host}) → `{hosts: [row…]}`**
