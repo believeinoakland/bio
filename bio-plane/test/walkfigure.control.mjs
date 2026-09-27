@@ -229,30 +229,15 @@ if (WALK_PRIMITIVES.length >= 3) console.log("the primitive list is populated");
 };
 
 /* ----------------------------------------------------------------- unbranded */
-ARMS.unbranded = () => {
-  console.log("\n(5) unbranded — `sweepWalkFloors()` stops classifying its boundary and returns a bare");
-  console.log("    object, which is the pre-D-265 state of the world.");
-  console.log("    DECLARED: hygiene's TOTALITY arm FAILS naming walkfloor.mjs · sweepWalkFloors(),");
-  console.log("    and it must fail on `declared: false` rather than on a missing key —");
-  console.log("    a brand removed must not look like a brand that is merely incomplete.");
-  const snap = snapshot(["walkfloor"], "unbranded");
-  const src = readFileSync(FILES.walkfloor, "utf8");
-  const armed = src.replace("  return walkResult({\n    about: \"walkfloor sweepWalkFloors()",
-    "  if (true) return { corpus: files.map((f) => relative(repo, f)), walkModules, sites, ceilings, unknowns,\n"
-    + "    provenance: prov.inHead === null ? \"UNVERIFIED\" : \"VERIFIED\" };\n"
-    + "  return walkResult({\n    about: \"walkfloor sweepWalkFloors()");
-  if (armed === src) { console.error("    ABORT: the unbranded patch matched ZERO times — an arm that did not arm is a finding"); process.exit(2); }
-  writeFileSync(FILES.walkfloor, armed);
-  const hyg = runSuite("hygiene");
-  const totality = (hyg.text.match(/FAIL\s+bio-plane\/scripts\/walkfloor\.mjs · sweepWalkFloors\(\)[^\n]*(\n[^\n]*){0,2}/) || ["(no totality failure)"])[0];
-  console.log(`    ACTUAL: hygiene ${hyg.pass}/${hyg.fail}`);
-  console.log(`    ACTUAL totality arm: ${String(totality).trim().slice(0, 300)}`);
-  const bad = restore(snap, "unbranded");
-  return { hyg, totality, bad };
-};
+/* RETIRED 2026-09-27 (T4, legacy-tests; legacy-index N12). Arm (5) unbranded `op-claims.mjs · sweep()` so that
+   hygiene's walk-export TOTALITY arm, and only it, failed on `declared: false`. With op-claims removed the one branded
+   walk left is walkfloor's `sweepWalkFloors()`, and hygiene's own cross-file detector reads that walk's branded
+   figures (`wf.corpus.count.overWorkingTree(...)`), so unbranding it crashes hygiene before its foot (measured
+   2026-09-27: hygiene -1/-1) instead of failing the one arm. No walk remains whose unbranding isolates the totality
+   question; `walkfigure.test.mjs` asks `declarationOf` of a bare object directly. */
 
 const which = process.argv[2] || "all";
-const order = which === "all" ? ["baseline", "newfloor", "neuter", "overstrict", "unbranded"] : [which];
+const order = which === "all" ? ["baseline", "newfloor", "neuter", "overstrict"] : [which];
 for (const a of order) {
   if (!ARMS[a]) { console.error(`unknown arm: ${a}`); process.exit(2); }
   ARMS[a]();

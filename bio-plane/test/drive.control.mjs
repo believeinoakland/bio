@@ -181,12 +181,15 @@ const ARMS = {
          + "everything), so the fixture's Drive address takes the ordinary path and the APPLICATION "
          + "SHELL is captured as the document. MUST GO RED ACROSS EVERY BLOCK AND BY NAME. A green "
          + "here would mean this suite has been measuring an inert handler all along",
+    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture-sources R39): the recogniser's first line no longer tests
+       `https:` by a case-sensitive regex (an `HTTPS://` Drive link read as not Drive); the same neutering, on today's
+       first line. */
     apply: () => edit(DRIVE,
       "export function readDriveAddress(address) {\n"
-    + "  if (typeof address !== \"string\" || !/^https:\\/\\//.test(address)) return null;",
+    + "  if (typeof address !== \"string\") return null;",
       "export function readDriveAddress(address) {\n"
     + "  if (true) return null;\n"
-    + "  if (typeof address !== \"string\" || !/^https:\\/\\//.test(address)) return null;"),
+    + "  if (typeof address !== \"string\") return null;"),
   },
 };
 
