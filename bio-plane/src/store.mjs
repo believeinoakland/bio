@@ -772,8 +772,6 @@ export class Store extends DurableObject {
       return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
                                    refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
     });
-    /* entities (K61, R13): legacy-store registers the observation log's resolution attempt (REC-95) until
-       observation-log is extracted; connections registers its own dirty mark (its R17). */
     entitiesOf(ctx).onResolveAttempt("legacy-store", (e) => this.#observeResolutionAttempt(e.captureSha, e.bundleId,
       { ref: e.ref }, e.matches, e.considered ? { considered: e.considered } : null, { resolvedBy: e.resolvedBy }));
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
