@@ -70,11 +70,12 @@ export const JPX_REFUSES = Object.freeze({
  * into. 61.3 MB is the largest working set measured to complete in the OCR
  * member's isolate (CPDF-15: a 61.3 MB frame completed there beside the OCR
  * engine, a 75.7 MB one was killed `exceededMemory`). Measured in node on
- * 2026-09-27 (heap plus external memory, sampled every 2 ms from outside the
- * decoding thread), the decoder's live peak is the working set plus 11-18 MB
- * of its own (the code-blocks, tag trees and input): 1700x2200 colour (44.9 MB)
- * peaks at 57 MB above the idle isolate, 2550x3300 grey (33.7 MB) at 46 MB;
- * a single-tile 2550x3300 colour page (101 MB) at 119 MB is refused. */
+ * 2026-09-27 (`test/codecs/jpx-memory.probe.mjs`: heap plus external memory,
+ * sampled every 2 ms from outside the decoding thread), the decoder's live peak
+ * is the working set plus 12-14 MB of its own (code-blocks, tag trees, input):
+ * 1700x2200 colour (44.9 MB) peaks 57 MB above the idle isolate, 2550x3300 grey
+ * (33.7 MB) 45 MB, the same colour page in 1024-sample tiles (37.8 MB) 50 MB;
+ * as one tile (101 MB) it peaked at 119 MB, and is now refused. */
 const MEMORY_BOUND = 61_300_000;
 
 /** What decoding this codestream must hold at once, from its SIZ alone. */
