@@ -4,7 +4,7 @@
 
 ## Later layers
 
-- N13 · 2026-09-26 · **affordances**, **queue**: `store.mjs` imports `affordances.mjs` and `queuestate.mjs`, both later in the order. What the store needs from them moves to the module that owns it, earlier in the order, when each is extracted. Found by the architecture check.
+- N13 · 2026-09-26 · **affordances**, **queue** (affordances re-exports `ENTITY_KINDS`, `RELATION_KINDS` from entities; the store no longer imports them from it: ENTITIES #1): `store.mjs` imports `affordances.mjs` and `queuestate.mjs`, both later in the order. What the store needs from them moves to the module that owns it, earlier in the order, when each is extracted. Found by the architecture check.
 - N16 · 2026-09-26 · **promotion**, **publication**: `forkProject` and project name uniqueness (C-77, with canon §7.1's NFC normalisation) move from the store to `promotion`; `exportManifest`, `exportLog` and `export_log` move to `publication` (K31). BOB writes their requirements before each module's first job. *(T3 carries its share for record-core, promotion or legacy-tests.)*
 - N21 · 2026-09-26 · **legacy-index**: pass `ctx.view` (`jurisdictions.combine` of the instance's active profiles) to `docprofile`'s `doctypeFor`, `assess` and `readText`; `docprofile` then drops its no-view fallback (R6, K39). Reported by DOCPROFILE #1. *(T5 carries extraction's share; legacy-index passes the view.)*
 - N22 · 2026-09-26 · **test-support**: under a non-root user a read-only subdirectory a test leaves makes the sweep's `rmSync` fail (EACCES) and the sandbox leaks (R2); make the tree writable and retry, tested where the job can run as a non-root user. Deferred by TEST-SUPPORT #1: its container runs as root.
@@ -104,16 +104,18 @@
 
 - N107 · 2026-09-27 · **queue** (PROGRESSIONS #1, K147): aggregate progressions' `cardinality_exceeded` finding into its proposal items with its own wording (it is not "required and absent").
 
+- N108 · 2026-09-27 · **extraction** (ENTITIES #1 REPORT 6): state `readings`, `reading_refs`, `reading_ref_terms` as a read contract (entities and connections join them) and the term fold in Provides.
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
 
 ### Layer 1
 - **id-spaces** · N105.
-- **legacy-checks** · N94; N97; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
+- **legacy-checks** · N94; N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
-- **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
+- **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 and C-91.1–.3 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
 
 ### Layer 3
 - **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read, their requirement written by BOB before T6 opens.
