@@ -274,6 +274,7 @@ import { readingProvenance } from "./readingprov.mjs";
 import { Store, stampInstant } from "./store.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
+import { linksOp, captureObjectOp, archiveLookupOp } from "./capture/ops.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -7297,61 +7298,11 @@ export default {
       if (g) return g.silent ? storeSilent(op) : json(g.body, g.status);
     }
 
-    if (op === "links") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const capture = url.searchParams.get("capture");
-      const address = url.searchParams.get("address");
-      if (address) {
-        /* REC-52: "what points at this address" answered `{ok:true}` with no
-           rows on a store silence, which a reader cannot tell from "nothing
-           points at it" — an absence at one level reported as an absence at the
-           next, which CLAUDE.md names as its own rule. */
-        const r = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`));
-        if (!r.answered) return storeSilent("links");
-        return json({ ok: true, ...r.result });
-      }
-      if (!/^[0-9a-f]{64}$/.test(capture || ""))
-        return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
-          detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it" }, 400);
-      /* REC-52: same again for a document's outbound links. */
-      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
-      if (!r.answered) return storeSilent("links");
-      return json({ ok: true, ...r.result });
-    }
+    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)),
+      { json, storeSilent, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
 
-    if (op === "capture") {
-      if (typeof env.CAPTURES?.get !== "function")
-        return storageAbsent(op, "R2 is not configured on this instance");
-      const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-      if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, ...requiredArgument("capture", "sha256", "<64 lowercase hex>",
-          "capture requires sha256=<64 lowercase hex>") }, 400);
-      const key = captureKey(storeName, sha);
-      if (req.method === "PUT" || req.method === "POST") {
-        const body = new Uint8Array(await req.arrayBuffer());
-        const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", body))]
-          .map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (digest !== sha)
-          return json({ ok: false, reason: "INTEGRITY", detail: "body hash does not match the sha256 parameter",
-                        expected: sha, got: digest, store: storeName, tokenClass: cls }, 400);
-        const existing = await env.CAPTURES.head(key);
-        if (existing)
-          return json({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
-        await env.CAPTURES.put(key, body, { sha256: await crypto.subtle.digest("SHA-256", body) });
-        return json({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
-      }
-      const wantRange = req.headers.get("range");
-      const obj = await env.CAPTURES.get(key, wantRange ? { range: req.headers } : undefined);
-      const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
-      if (!obj)
-        return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
-      return new Response(obj.body, {
-        status: wantRange ? 206 : 200,
-        headers: { "content-type": "application/octet-stream",
-                   "access-control-allow-origin": "*", "x-capture-sha256": sha,
-                   ...(dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}) },
-      });
-    }
+    if (op === "capture") return captureObjectOp(req, url, env,
+      { json, storageAbsent, requiredArgument, key: (s) => captureKey(storeName, s), storeName, cls });
 
     /* D-91 delegation (CONTENT-PDF → CAPTURE): read a captured PDF's outbound-
        link structure. This is a READ layered on op=capture — it takes the same
@@ -7703,31 +7654,7 @@ export default {
      * discovered by probing for the wall. Bob, 2026-07-31: there is no need to
      * push traffic to the breaking point; there is plenty of time.
      */
-    if (op === "archivelookup") {
-      const body = req.method === "POST" ? await req.json().catch(() => null) : null;
-      const address = body?.address || url.searchParams.get("address");
-      if (typeof address !== "string" || !isPublicHttpsLocator(address))
-        return json({ ok: false, reason: "BAD_ADDRESS",
-                      detail: "the document address must be https on a public host" }, 400);
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const sel = await archiveSelect(env, st, address);
-      if (!sel.ok) return json(sel.payload, sel.status);
-      return json({
-        ok: true, address,
-        eligible_because: sel.reach.basis,
-        chosen: sel.chosen,
-        /* Every row the index offered and why it was not used. A fallback that
-           says only "nothing suitable" when the index holds forty redirects is
-           unauditable. */
-        rejected: sel.rejected,
-        usable_count: sel.usable_count,
-        retrieval_locator: sel.replay,
-        provenance_hop: sel.hop,
-        capture_with: { op: "acquire", via: "archive.org", address },
-        note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, "
-            + "because the hop that reaches the record must be built by the same call that fetched the CDX record",
-      });
-    }
+    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent });
 
     if (op === "acquire") {
       if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);

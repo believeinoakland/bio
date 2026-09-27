@@ -16,11 +16,10 @@ import { identify, doctypeFor, profileRecord, digests, CONFIDENCE } from "../../
 import { combine } from "../../../jurisdictions/index.mjs";
 import { readDriveAddress, driveHop, callerSuppliedHopFacts } from "../drive.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "../cdx.mjs";
-import * as render from "../render.mjs";
+import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs, renderConcurrencyCap,
+         renderReserveMs, renderBlock, renderedAuthority, rendererFor, renderLocaleFor } from "../render.mjs";
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 
-const { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs,
-        renderConcurrencyCap, renderReserveMs, renderBlock, renderedAuthority, rendererFor } = render;
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -111,9 +110,9 @@ export function profileView(core) {
               : { view: undefined, ids, basis: `the active profiles did not combine (${(c.errors || []).map((e) => e.code).join(", ")})` };
 }
 
-/* The locale a render asks for (R41): capture-sources' `renderLocaleFor` over R17's view, the default only as its
-   own fallback. */
-const renderLocale = (view) => (typeof render.renderLocaleFor === "function" ? render.renderLocaleFor(view) : RENDER_DEFAULTS.locale);
+/* The locale a render asks for (R41): capture-sources' `renderLocaleFor` over R17's view (K119), the default only as
+   its own fallback. */
+const renderLocale = (view) => renderLocaleFor(view);
 
 /* R7, R36: every outbound fetch through the host governor (host-governor R15–R17), under the agent this module
    composes. The governor is reached in process (K72 (2)). */
@@ -439,16 +438,27 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
      own write). */
   const partHeldBefore = [];
   let total = 0, held = [], heldBytes = 0, oversize = false;
-  const flush = async () => {
-    if (!heldBytes) return;
-    const buf = new Uint8Array(heldBytes);
-    let at = 0; for (const c of held) { buf.set(c, at); at += c.length; }
-    held = []; heldBytes = 0;
+  /* R9: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
+  const part = async (buf) => {
     const psha = hex(await crypto.subtle.digest("SHA-256", buf));
     const heldBefore = !!(await ev.head(psha));
     if (!heldBefore) await ev.put(psha, buf);
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
+  };
+  const flush = async (all = true) => {
+    while (heldBytes >= PART || (all && heldBytes > 0)) {
+      const n = Math.min(PART, heldBytes);
+      const buf = new Uint8Array(n);
+      let at = 0;
+      while (at < n) {
+        const c = held[0], take = Math.min(c.length, n - at);
+        buf.set(c.subarray(0, take), at); at += take;
+        if (take === c.length) held.shift(); else held[0] = c.subarray(take);
+      }
+      heldBytes -= n;
+      await part(buf);
+    }
   };
   /* CAP-8: the first KiB of a DRIVE export, kept so the shell can be recognised from the BYTES. */
   const driveHead = driveCapture ? new Uint8Array(1024) : null;
@@ -467,7 +477,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       driveHeadBytes += take;
     }
     held.push(value); heldBytes += value.length;
-    if (heldBytes >= PART) await flush();
+    if (heldBytes >= PART) await flush(false);
   }
   /* DEC-49 REGION is-drive-bytes — C-48.7: Google said it was a document and it was a web page. Detection is
      bytes-first and certain; a non-HTML export of another flavour is FILED with the disagreement on the hop. */

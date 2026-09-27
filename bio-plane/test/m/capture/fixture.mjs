@@ -114,8 +114,7 @@ export function network(routes) {
     const r = typeof routes === "function" ? routes(url, init) : routes[url];
     if (r instanceof Error) throw r;
     if (!r) return new Response("not found", { status: 404 });
-    const res = typeof r === "function" ? r(url, init) : r;
-    return res.clone ? res.clone() : res;
+    return typeof r === "function" ? r(url, init) : r.clone();
   };
   return { seen, restore() { globalThis.fetch = orig; } };
 }
