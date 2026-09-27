@@ -198,7 +198,7 @@ test("R56: narrowest scope, then the newest; none admitted, no key, or no decryp
 test("R57: withdrawal ends a credential for fetches, destroys its ciphertext, keeps its entry; twice is already", async () => {
   const w = await world();
   const a = (await w.supply({ scope: "group", by: "dee" })).credential;
-  const r = w.c.credentialWithdraw({ credential: a.credential, by: "dee" });
+  const r = await w.c.credentialWithdraw({ credential: a.credential, by: "dee" });
   assert.equal(r.ok, true);
   assert.equal(r.already, false);
   assert.deepEqual([r.withdrawn.credential, r.withdrawn.withdrawn_by, typeof r.withdrawn.withdrawn_at], [a.credential, "dee", "string"]);
@@ -208,19 +208,19 @@ test("R57: withdrawal ends a credential for fetches, destroys its ciphertext, ke
   const listed = w.c.credentialList({ viewer: "member:dee" }).find((e) => e.credential === a.credential);
   assert.deepEqual([listed.withdrawn_by, listed.withdrawn_at], ["dee", r.withdrawn.withdrawn_at]);
   const before = JSON.stringify(w.raw());
-  const again = w.c.credentialWithdraw({ credential: a.credential, by: "dee" });
+  const again = await w.c.credentialWithdraw({ credential: a.credential, by: "dee" });
   assert.deepEqual([again.ok, again.already, again.withdrawn.withdrawn_at], [true, true, r.withdrawn.withdrawn_at]);
   assert.equal(JSON.stringify(w.raw()), before);
   /* Unknown, and one `by` may not see: the same answer. */
   const mine = (await w.supply({ scope: "member", by: "ann" })).credential;
-  const unknown = w.c.credentialWithdraw({ credential: "CRED-nothere", by: "bob" });
-  const unseen = w.c.credentialWithdraw({ credential: mine.credential, by: "bob" });
+  const unknown = await w.c.credentialWithdraw({ credential: "CRED-nothere", by: "bob" });
+  const unseen = await w.c.credentialWithdraw({ credential: mine.credential, by: "bob" });
   assert.equal(unknown.code, "CAPTURE_CREDENTIAL_NO_SUCH");
   assert.deepEqual(unseen, unknown);
-  for (const v of [undefined, null, {}, { credential: 5, by: "ann" }]) assert.equal(w.c.credentialWithdraw(v).code, "CAPTURE_CREDENTIAL_NO_SUCH");
+  for (const v of [undefined, null, {}, { credential: 5, by: "ann" }]) assert.equal((await w.c.credentialWithdraw(v)).code, "CAPTURE_CREDENTIAL_NO_SUCH");
   /* Seen but not permitted. */
   const g = (await w.supply({ scope: "group", by: "ann" })).credential;
-  assert.equal(w.c.credentialWithdraw({ credential: g.credential, by: "bob" }).code, "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal((await w.c.credentialWithdraw({ credential: g.credential, by: "bob" })).code, "CAPTURE_CREDENTIAL_NOT_PERMITTED");
   /* No expiry of its own: a credential supplied long ago is still answered. */
   const old = await world({ clock: () => Date.parse("2020-01-01T00:00:00Z") });
   await old.supply({ scope: "group", by: "dee" });
@@ -281,10 +281,10 @@ test("R60: no answer of the module shows a secret back, save R56's, even a secre
     answers.push(await w.supply(over));
   answers.push(await (await world({ key: null })).supply({}));
   answers.push(w.c.credentialList({ viewer: "admin" }), w.c.credentialList({ viewer: "member:ann" }));
-  answers.push(w.c.credentialWithdraw({ credential: SECRET, by: "ann" }));
-  answers.push(w.c.credentialWithdraw({ credential: answers[0].credential.credential, by: "bob" }));
-  answers.push(w.c.credentialWithdraw({ credential: answers[2].credential.credential, by: "bob" }));
-  answers.push(w.c.credentialWithdraw({ credential: answers[0].credential.credential, by: "ann" }));
+  answers.push(await w.c.credentialWithdraw({ credential: SECRET, by: "ann" }));
+  answers.push(await w.c.credentialWithdraw({ credential: answers[0].credential.credential, by: "bob" }));
+  answers.push(await w.c.credentialWithdraw({ credential: answers[2].credential.credential, by: "bob" }));
+  answers.push(await w.c.credentialWithdraw({ credential: answers[0].credential.credential, by: "ann" }));
   answers.push(await w.c.credentialsForFetch({ host: "other.example", principalPlane: "member:ann", target: "Q0" }));
   answers.push(await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:ann", target: "Q0" }));
   noLeak(answers.slice(0, -1), SECRET, "every answer but R56's");
@@ -319,7 +319,7 @@ test("R62: host, scope and project are fixed at supply; the ciphertext is bound 
   const before = fixed();
   w.c.credentialList({ viewer: "admin" });
   await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:bob", target: "Q1" });
-  w.c.credentialWithdraw({ credential: g.credential, by: "bob" });
+  await w.c.credentialWithdraw({ credential: g.credential, by: "bob" });
   assert.deepEqual(fixed(), before);
   /* Moving a row to another scope (as a changed row would be) does not make it usable there: it will not decrypt. */
   w.db.prepare(`UPDATE ${CREDENTIALS_TABLE} SET scope='group', project=NULL WHERE credential_id=?`).run(p.credential);
@@ -344,23 +344,23 @@ test("R63: who may supply and withdraw at each scope", async () => {
   assert.equal((await w.supply({ scope: "group", by: "cy" })).ok, true);
   /* The supplier is always `by`. */
   assert.ok(w.raw().every((r) => ["cy", "ann", "bob"].includes(r.supplied_by)));
-  const W = (credential, by) => codeOf(w.c.credentialWithdraw({ credential, by })) || "ok";
+  const W = async (credential, by) => codeOf(await w.c.credentialWithdraw({ credential, by })) || "ok";
   const fresh = async (o) => (await w.supply(o)).credential.credential;
   /* member: its supplier or an administrator; never another member. */
-  assert.equal(W(await fresh({ scope: "member", by: "bob" }), "bob"), "ok");
-  assert.equal(W(await fresh({ scope: "member", by: "bob" }), "second"), "ok");
-  assert.equal(W(await fresh({ scope: "member", by: "bob" }), "admin"), "ok");
-  assert.equal(W(await fresh({ scope: "member", by: "bob" }), "ann"), "CAPTURE_CREDENTIAL_NO_SUCH");
+  assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "bob"), "ok");
+  assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "second"), "ok");
+  assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "admin"), "ok");
+  assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "ann"), "CAPTURE_CREDENTIAL_NO_SUCH");
   /* project: its supplier or any owner of the project; not another editor, not an administrator. */
-  assert.equal(W(await fresh({ scope: "project", project: "P1", by: "bob" }), "bob"), "ok");
-  assert.equal(W(await fresh({ scope: "project", project: "P1", by: "bob" }), "ann"), "ok");
-  assert.equal(W(await fresh({ scope: "project", project: "P1", by: "ann" }), "bob"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
-  assert.equal(W(await fresh({ scope: "project", project: "P1", by: "bob" }), "second"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
-  assert.equal(W(await fresh({ scope: "project", project: "P1", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NO_SUCH");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "bob"), "ok");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "ann"), "ok");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "ann" }), "bob"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "second"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NO_SUCH");
   /* group: its supplier or any administrator. */
-  assert.equal(W(await fresh({ scope: "group", by: "bob" }), "bob"), "ok");
-  assert.equal(W(await fresh({ scope: "group", by: "bob" }), "second"), "ok");
-  assert.equal(W(await fresh({ scope: "group", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "group", by: "bob" }), "bob"), "ok");
+  assert.equal(await W(await fresh({ scope: "group", by: "bob" }), "second"), "ok");
+  assert.equal(await W(await fresh({ scope: "group", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
 });
 
 test("R63: a revocation withdraws the member's own credentials at the first read that meets them, and keeps project and group ones", async () => {
@@ -374,7 +374,7 @@ test("R63: a revocation withdraws the member's own credentials at the first read
       const a = await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:bob", target: "Q1" });
       assert.equal(a.credentials[0].credential, prj.credential, firstRead);   /* never the member's own */
     } else if (firstRead === "list") w.c.credentialList({ viewer: "admin" });
-    else assert.equal(w.c.credentialWithdraw({ credential: own.credential, by: "admin" }).already, true);
+    else assert.equal((await w.c.credentialWithdraw({ credential: own.credential, by: "admin" })).already, true);
     const row = w.raw().find((r) => r.credential_id === own.credential);
     assert.deepEqual([row.ciphertext, row.iv, row.withdrawn_by, typeof row.withdrawn_at], [null, null, REVOCATION, "string"], firstRead);
     const kept = w.raw().filter((r) => r.credential_id !== own.credential);

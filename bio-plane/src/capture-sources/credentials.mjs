@@ -312,7 +312,7 @@ export class CaptureCredentials {
 
   /** Withdraws a credential: R56 never answers it again, its ciphertext is destroyed now, and its secretless
    *  entry stays with `withdrawn_at` and `withdrawn_by`. */
-  credentialWithdraw(args) {
+  async credentialWithdraw(args) {
     const { credential, by } = args && typeof args === "object" ? args : {};
     try {
       const found = typeof credential === "string" && credential !== ""
