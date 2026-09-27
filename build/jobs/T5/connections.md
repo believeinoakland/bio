@@ -2,7 +2,7 @@
 
 **Session** CONNECTIONS #1, `session_01WfxC8Lht5EmaF2m5vmrG2i`, on `job/T5/connections` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §3, §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE again, 2026-09-27 ~08:42 UTC, after merging `tranche/T5` @ `e6250e8268` (observation-log, bias; BOB #46's CHANGE of 08:30): QUESTION 1 answered (K145, K147, K149); Q8 retired by the merge; Q7 and the proposed Provides text (R50–R62) open; an ANSWER that changes a reading re-opens the job. Provides are final for an early merge (R1–R49 as approved; the new services of Q5 await their ids). Entry T5-5: extract `connections` (themes included, K79) from `legacy-store` and `legacy-checks` per `build/extraction/connections.md` and `build/requirements/connections.md`, with D-575, D-625, D-706, D-722, REC-206 (its derivation is extraction's R52, K135, K139), the portion connection axis on `op=earnedbasis` (CONTENT #1 REPORT 8), and every requirement marked not yet met. Every entry applied; all 49 live ids named by a test (52 tests, all green); format, coverage and ownership pass except the two findings put to BOB in QUESTION 2.
+**Status** · COMPLETE again, 2026-09-27 ~08:55 UTC, after K152 (Q7 answered, R50–R57 folded) and merging `tranche/T5` @ `84cfbd8db3`. Nothing open. Q8 superseded (R5's provider is observation-log's `derivationStatementFor`).
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md §1–§16, `build/manifest.md`, `build/layers.md`, `build/requirements/connections.md`, `build/extraction/connections.md`, `build/plan/current.md`, the public parts of `record-core`, `membership`, `promotion`, `provenance`, `capture`, `extraction`, `content`, `entities` (legacy-checks has no requirements file; `text-chain`'s reading-source functions as the code states them), rulings K3, K6, K23, K31, K61, K64, K72, K73, K76–K79, K102, K120, K134–K141; `build/jobs/T5/content.md` (the pattern); the legacy code the map names, measured again at `f05090bcad` (below); the built work: `land/worker/D-575` (9894d7bc, 617fd5ef), `D-625` (80aa1f03, a42ba046), `D-706` (6dd3e530), `D-722` (9c7a6662, 46ed027d).
 
@@ -106,3 +106,14 @@ Size: test runs 27, module lines 2218
 - Old battery against `tranche/T5` @ `e6250e8268`: 21 fail there; here the same 21 plus the same six of REPORT 2.
 
 Size: test runs 30, module lines 2223
+
+## ANSWER + CHANGE 08:42 UTC · K152 (`tranche/T5` @ `84cfbd8db3`, merged here)
+
+- Q7: `subresources` is in the uses; R50–R57 folded (weakerGrade, registerDerivationProvider, portionAxes, assert, asserted, storeFileMembership, fileMembership, judgeFileMembership) with sentences on R1, R19, R32, R43, R44, R49. Q8 superseded: legacy-store's provider already calls `observationLogOf(ctx).derivationStatementFor(id, o)` through imported names, `o` = `{hasArtifact, enteredAt}` supplied by connections, so no copy of logic is kept.
+- One wording note for the fold (no ruling needed): R51 says `fn(entityId) → statement`; the provider is called `fn(entityId, {hasArtifact, enteredAt})`, the inputs `derivationStatementFor` takes (OBSERVATION-LOG #1 REPORT 4), and R51's test asserts them.
+- Merge conflicts in `store.mjs`: the purge filters (retrieval's, observation-log's, mine) all kept; retrieval's registrations and mine both kept; the dispatch arms both sides removed dropped.
+- Tests renamed and extended to the new ids: R50 (unknown grade ranks lowest), R51 (failing provider, its arguments), R52 (the three undetermined kinds, the value shape, one subject), R53–R57 on the existing arms. Module 56/56. `test/m/` whole: 1,280 tests, 1,275 pass, 3 todo, 2 fail: promotion's `write-path` R18 arms (`C.checkBiasExtension is not a function`), failing identically on `tranche/T5` @ `84cfbd8db3` (bias moved it; not this module's).
+- Checks: format 0 failures; architecture 0 failures; coverage 57 of 57; ownership legacy-store 20 added / 1,774 removed, legacy-checks 0 / 112, 0 failures.
+- Old battery against `tranche/T5` @ `84cfbd8db3`: 22 fail there; here the same 22 plus the six of REPORT 2.
+
+Size: test runs 34, module lines 2223
