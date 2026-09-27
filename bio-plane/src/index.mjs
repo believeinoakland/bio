@@ -149,6 +149,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
 import { cpuProbe } from "./cpu.mjs";
 import { Store, stampInstant } from "./store.mjs";
 import { attest, attestStatus, partsHeld, registerAuditReport, withRegisterChecks } from "./provenance/index.mjs";
+import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
 import { userAgent, profilesAsText, substanceDigests, ODF_DIGEST_MAX, driveRow } from "./capture/acquire.mjs";
@@ -577,6 +578,12 @@ const OPS = {
      passage exists in a project they were never invited to by guessing its
      address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
   content:     { classes: ["admin", "member", "probe"],          mutating: false },
+  /* D-419 (T5-11, content R32): THE CROP OF A CITED PDF IMAGE, `content`'s `cropOf`, cut in the store through
+     `pdf-pixels`. A READ on op=content's class cut and for its reason: the crop is what a viewer SHOWS for an image
+     citation, which a view-only member weighing a case needs as a contributor does. It writes nothing. `viewer` is
+     stamped below, and the store answers a row the caller may not see exactly as one that does not exist
+     (NO_SUCH_CONTENT). NEEDS null, op=content's shape. */
+  contentcrop: { classes: ["admin", "member", "probe"],          mutating: false },
   /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
      *"The assistant may mark passages as citable on its own, every such row
      labelled as machine work, never attested by it, and part of a finding only
@@ -641,6 +648,18 @@ const OPS = {
      (`CONNECTION_CHOICE_NOT_A_MEMBER`, C-74.1), so a machine arriving honestly named
      `token:<class>` is refused BY SHAPE and the probe with it. */
   connectionchoose: { classes: ["admin", "member", "probe"],     mutating: true  },
+  /* T5-11 (K145, connections R53–R57): connections' ops for the connections derivation does not make.
+     `connectionassert` is a MEMBER's assertion of a connection between two documents (R31, R53), and
+     `filemembershipjudge` a member's confirmation or rejection of a stored containment (R57): `connectionchoose`'s
+     class cut and reasoning, the store refusing a machine BY SHAPE on the `author` the control plane stamps below.
+     `filemembershipstore` stores an agenda capture's item-to-file containments as SYSTEM-asserted connections (R49,
+     R55); it asserts nothing of the caller's, so it takes the same cut and any credential that reaches it may run
+     it. The two reads (R54, R56) are open to every class that may read. All five take the viewer stamp below. */
+  connectionassert:    { classes: ["admin", "member", "probe"],  mutating: true  },
+  connectionsasserted: { classes: ["admin", "member", "probe"],  mutating: false },
+  filemembershipstore: { classes: ["admin", "member", "probe"],  mutating: true  },
+  filemembership:      { classes: ["admin", "member", "probe"],  mutating: false },
+  filemembershipjudge: { classes: ["admin", "member", "probe"],  mutating: true  },
   /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
      `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
      its assertions are worth comparing. It writes nothing, judges nothing and mints
@@ -1102,6 +1121,8 @@ const OPS = {
      own name — `testify`'s class cut and reason; the store refuses a machine stamp BY NAME (C-92.1). */
   attribute:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
+  /* D-681 (T5-11, observation-log R20): the leads THIS viewer may read, each once — `leadread`'s class cut and fence. */
+  leadlist:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* D-162 / IC-241 — THE THEME (BIO_Content_Framework_v0_10.md §8.4, Bob's ruling of 2026-09-21).
      DECLARING a theme and PLACING a document in one are a PERSON's acts in their own name — a lens
      and a judgement against its test — so both take `lead`'s class cut: `mutating: true` keeps a
@@ -1114,6 +1135,9 @@ const OPS = {
   themeplace:          { classes: ["admin", "member"],             mutating: true  },
   themepropose:        { classes: ["admin", "member", "probe"],    mutating: true  },
   themeread:           { classes: ["admin", "member", "probe"],    mutating: false },
+  /* T5-11 (connections R43): WITHDRAWING a membership or REJECTING a hunch is a person's act in their own name, with a
+     reason, so it takes `themeplace`'s class cut; the store refuses a machine actor by name (C-81.11). */
+  themewithdraw:       { classes: ["admin", "member"],             mutating: true  },
   /* REC-203: the identifier-space judgement (Framework §8.3). A READ: it writes nothing, and a pair's two
      captures are gated by the viewer stamp, `themeread`'s posture. */
   idmatch:             { classes: ["admin", "member", "probe"],    mutating: false },
@@ -1164,6 +1188,11 @@ const OPS = {
   entitycreate: { classes: ["admin", "member", "probe"],           mutating: true  },
   entityalias:  { classes: ["admin", "member", "probe"],           mutating: true  },
   relationdeclare:{ classes: ["admin", "member", "probe"],         mutating: true  },
+  /* T5-11 (entities R8, K106): the registry CORRECTED without being erased — an alias or a relation withdrawn with a
+     reason, kept and shown as withdrawn. A registry write on the three writes' class cut, stamped below with the
+     withdrawing member as they are with the declaring one. */
+  aliaswithdraw:  { classes: ["admin", "member", "probe"],         mutating: true  },
+  relationwithdraw:{ classes: ["admin", "member", "probe"],        mutating: true  },
   entity:       { classes: ["admin", "member", "probe"],           mutating: false },
   entitybyalias:{ classes: ["admin", "member", "probe"],           mutating: false },
   relation:     { classes: ["admin", "member", "probe"],           mutating: false },
@@ -1699,7 +1728,9 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
    one — the code was the right half and this sentence was the wrong one. A machine's entry
    carries `class:<cls>` where a member's carries their id, so who built what stays legible.
    The reasoning is at the FW-6 stamp site and deliberately not copied here. */
-const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
+/* T5-11 (entities R8): the two withdrawals join the set, stamped with the withdrawing member as the three writes are
+   with the declaring one. */
+const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare", "aliaswithdraw", "relationwithdraw",
                           "entity", "entitybyalias", "relation"];
 /* D-98, the TASK construct's two member verbs. Forwarding and resolving a task
    are MEMBER actions performed by a PERSON through their session — the construct
@@ -1783,8 +1814,11 @@ const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest", "
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
 /* REC-136 adds `withdrawconclusion`: it writes the project's own conclusion record, so it is conclude's position. */
+/* D-722 (T5-11, connections R27) adds `linkproject`: edges it hangs on a PROJECT's source bundle are that project's,
+   so it is cite's position. Its handler stamps the identity itself (it returns above the stamp site); listed here so the
+   set of positional acts is read in one place. */
 const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
-                         "withdrawconclusion"];
+                         "withdrawconclusion", "linkproject"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -1897,6 +1931,8 @@ const SESSION_OPS = {
                    /* REC-122: choosing a connection's on-point mention — a member's
                       act, reached by a signed-in member. */
                    "connectionchoose",
+                   /* T5-11 (K145): connections' three writes, `connectionchoose`'s route. */
+                   "connectionassert", "filemembershipstore", "filemembershipjudge",
                    /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
                       TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
                       DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
@@ -1970,6 +2006,8 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* T5-11 (connections R43): withdrawing from a theme, `themeplace`'s route and reason. */
+                   "themewithdraw",
                    /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
@@ -2006,6 +2044,7 @@ const SESSION_OPS = {
                    "extractproposals",
                    "narrow", "narrowcandidates",
                    "connectionchoose",
+                   "connectionassert", "filemembershipstore", "filemembershipjudge",
                    "contradictionpairs",
                    "actionquotes",
                    "versionnotice",
@@ -2019,6 +2058,7 @@ const SESSION_OPS = {
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   "themewithdraw",
                    /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
@@ -2106,6 +2146,11 @@ const NEEDS = {
      reasoning — it is a member's judgment written into the working record, and nothing it
      writes is the group putting its name on anything. */
   connectionchoose: "contribute",
+  /* T5-11 (K145): asserting a connection, storing an agenda's containments and judging one each write the working
+     record's connections, `connectionchoose`'s capability and reason. */
+  connectionassert:    "contribute",
+  filemembershipstore: "contribute",
+  filemembershipjudge: "contribute",
   /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
      `op=transcription`'s reasoning: asking which of the record's own assertions are
      worth comparing is READING the record. It writes nothing into the working corpus
@@ -2150,7 +2195,11 @@ const NEEDS = {
   themedeclare:        "contribute",
   themeplace:          "contribute",
   themepropose:        "contribute",
+  /* T5-11 (connections R43): withdrawing from a theme writes the lens layer too, `themeplace`'s capability. */
+  themewithdraw:       "contribute",
   leadread:            null,
+  /* D-681: the lead list takes no capability, `leadread`'s posture; the store answers each viewer its own reach. */
+  leadlist:            null,
   /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
   themeread:           null,
   /* REC-203: the identifier judgement takes no capability; it reads, and its captures are gated by the viewer. */
@@ -2282,6 +2331,9 @@ const NEEDS = {
   entitycreate:     "contribute",
   entityalias:      "contribute",
   relationdeclare:  "contribute",
+  /* T5-11 (entities R8): correcting the registry is the same corpus-shaping surface as building it. */
+  aliaswithdraw:    "contribute",
+  relationwithdraw: "contribute",
   /* FW-7: RESOLVING a reference to an entity, and TESTIFYING a grade-D connection,
      both write into the record what documents concern which subjects — a corpus-shaping
      act on the same surface as building the registry, so `contribute`: a view-only
@@ -2500,6 +2552,9 @@ const NEEDS = {
      rather than absent so REC-19's totality guard SEES it, and named in
      NON_ACTS with its reason. */
   content:          null,
+  /* D-419 (T5-11): NO CAPABILITY, on op=content's reasoning exactly — showing the picture a citation names is reading
+     the record. Present rather than absent so REC-19's totality guard SEES it. */
+  contentcrop:      null,
   /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
      documents NAME a subject is reading the record; the write that acts on the
      answer is op=resolve, which carries its own gate and is where the capability
@@ -5707,8 +5762,17 @@ export default {
          as a successful projection carrying no counts. A write reported as
          done when nothing was written is the worst member of this class after
          the public reads, because the caller stops asking. */
+      /* D-706 (T5-11, connections R26): the answer names capture shas and the target's bundle, so the store reads
+         the source and every target through the D-15 viewer, decided here by the SERVER exactly as the stamp block
+         below decides it (a member-scoped agent key stamps its principal), and fails CLOSED on an absent one.
+         D-722 (connections R27): where the source bundle is a PROJECT the store asks REC-134's JOINED test, as `cite`
+         does, of the POSITIONAL identity. This handler builds its own store request and returns above that block,
+         so it stamps both here, by the same expressions. */
+      const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
       const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
-        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+        + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`
+        + `&identity=${encodeURIComponent(linkIdentity)}`));
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
@@ -6852,8 +6916,9 @@ export default {
       /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
          keyed by the whole hash. Publication copies exactly these, part by part. */
       const partedRows = new Map();
-      /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)). */
-      const gate = withRegisterChecks(image, await runGate({
+      /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)), and
+         bias's C-26.1–C-26.7 over it too (bias R9, K146): the catalogue no longer runs them. */
+      const gate = withBiasChecks(image, withRegisterChecks(image, await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
         /* REC-14: the two facts the catalog cannot read out of the bundle --
@@ -6899,7 +6964,7 @@ export default {
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...(inParts ? { heldInParts: true } : {}) };
         },
-      }));
+      })));
       if (!gate.ok)
         return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                       findings: gate.findings, store: storeName, tokenClass: cls }, 409);
@@ -7433,7 +7498,8 @@ export default {
     /* REC-132 / D-422: the ops whose store method reads the POSITIONAL `identity` stamp
        (`#positionalMember`). `affordances` and `queue` build their own inner requests
        above and stamp it there. A new reader of `identity` joins this list. */
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
+    /* D-681 (T5-11): `leadlist` joins, `leadread`'s reach asked of the same positional stamp. */
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -7500,6 +7566,9 @@ export default {
            in a project they were never invited to. The store fails closed on an
            absent stamp and answers an invisible row EXACTLY as an absent one. */
         || op === "content"
+        /* D-419 (T5-11): the crop resolves ONE content row by id, so it takes op=content's stamp for op=content's
+           reason, and the store answers an invisible row exactly as an absent one (NO_SUCH_CONTENT). */
+        || op === "contentcrop"
         /* REC-54: its subject is a bundle and it reads that bundle's register
            before it rewrites it, so a document the caller may not see refuses
            NO_SUCH_BUNDLE identically to an absent one. The store fails closed on
@@ -7649,6 +7718,11 @@ export default {
            chosen on), so a document the caller was never invited to must answer exactly
            as a connection that does not exist (C-74.2). Fails closed on an absent stamp. */
         || op === "connectionchoose"
+        /* T5-11 (K145, connections R53–R57): each names a document or a capture — the two ends asserted, a
+           document's asserted connections, an agenda capture, a stored containment's two ends — so a document the
+           caller was never invited to answers exactly as one that does not exist. Fails closed on an absent stamp. */
+        || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore"
+        || op === "filemembership" || op === "filemembershipjudge"
         /* REC-146: THE PAIRING READ names no single object and is gated for a wider
            reason than the two above — it ENUMERATES, across every question and every
            cited document, and section 6 of its design requires it to pair only what
@@ -7670,16 +7744,21 @@ export default {
            exist — `contentmint`'s and `content`'s reason. Fails closed on an
            absent stamp. */
         || op === "transcribe" || op === "transcriptionattest" || op === "transcription"
+        /* T5-11 (content R43, K134): attesting a capture's text names the bundle the capture is filed in, so the
+           store asks the viewer before it records anything and answers a capture filed where the caller cannot see
+           exactly as one this record has not read (NO_READING); it fails closed on an absent stamp. The attestor
+           is stamped below, by its own rule. */
+        || op === "attesttext"
         /* MK-4: the look and the read name a LEAD, readable by its author only,
            and the look names what it found (a capture or a content row), which is
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
-        || op === "leadlook" || op === "leadread" || op === "leadshare"
+        || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist"
         /* D-162: a THEME's placement acts and its read NAME A DOCUMENT (or a passage
            of one), so a document the caller was never invited to must answer exactly
            as one that does not exist — `contentmint`'s reason. Fails closed on an
            absent stamp. */
-        || op === "themeplace" || op === "themepropose" || op === "themeread"
+        || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw"
         /* REC-203: a PAIR judgement names two CAPTURES and reads where the record retrieved each, so a
            document the caller was never invited to must answer exactly as one the record does not hold
            (C-91.3) — `contentmint`'s reason. Fails closed on an absent stamp. */
@@ -7706,6 +7785,10 @@ export default {
            `#projectAuthority`'s absent-identity precedent — so this stamp is load-bearing, and the
            `roster-stamp-dropped` control arm measures what removing it discloses. */
         || PROJECT_ACTIONS.includes(op)
+        /* N85's other half (membership R19, K124): which pairings a caller may see is asked of its viewer — a
+           member sees its own unpublished pairing — beside the administer stamp below. Without either the store
+           answers the published pairings alone (fails closed). */
+        || op === "memberpairings"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -7802,11 +7885,17 @@ export default {
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
+    /* N85's other half (membership R19): an administrator sees every pairing, published or not — memberlist's stamp,
+       by memberlist's expression. */
+    if (op === "memberpairings")
+      inner.searchParams.set("administer",
+        (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
     /* BOB #32 (2026-09-24), D-162's theme readings: THE SAME STAMP, on the same rule and for the same
        reason. Every theme act and read names a declarer, a placer or a proposer; a reader who does not
        administer is shown the HANDLE alone, and the member id and cover go to administrators only
        (Membership v2 §3; MK-6's precedent). The store fails closed on an absent stamp. */
-    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread")
+    if (op === "themedeclare" || op === "themeplace" || op === "themepropose" || op === "themeread"
+        || op === "themewithdraw")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
     /* REC-21. WHOSE attention this is, stamped by the server and never taken
@@ -7921,6 +8010,10 @@ export default {
       inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themeplace")
       inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T5-11 (connections R43): WHO WITHDREW OR REJECTED, stamped on `themeplace`'s rule; the store compares it with
+       the placer (or the administer stamp) and refuses a machine stamp BY NAME (C-81.11). */
+    if (op === "themewithdraw")
+      inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* D-162: WHO PROPOSED A PLACEMENT. Any credential may propose (the result is a hunch, graded C,
        never membership), so the only obligation here is NAMING: a session stamps its signed-in id, a
        machine stamps `class:<cls>`, and the `ai` class stamps its tokenId beside its class —
@@ -8090,6 +8183,12 @@ export default {
            honoured, so the store refuses a machine BY SHAPE (C-50.5). */
         || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* T5-11 (K145, connections R53, R57): the member who asserts a connection, and the member who confirms or rejects
+       a stored containment, stamped on `connectionchoose`'s rule by its expression and in a statement of its own so
+       the span pinned above is not lengthened. A caller's `author` is overwritten; a machine arrives honestly named
+       and the store refuses it BY SHAPE (CONNECTION_ASSERT_NOT_A_MEMBER, FILE_MEMBERSHIP_NOT_A_MEMBER). */
+    if (op === "connectionassert" || op === "filemembershipjudge")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership v2 §7, BOB #15): the acts that change
        a project and took the VISIBILITY gate as their only barrier (or none) now ask the actor's
        OWN POSITION in that project, and the store reads that position from THIS stamp — the
@@ -8101,6 +8200,14 @@ export default {
        `identity` was DELETED for every op above, so nothing here can be named by a caller.
        A new act on a project joins POSITIONAL_ACTS; the suite's arms read it through the ops. */
     if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set("identity",
+        viaSession ? sessIdentity
+        : cls === "ai" ? aiCred.principal
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* D-587 (T5-11, calibration R5, K136): WHO MEASURED is the control plane's stamp and never the body's — a session
+       its member, a machine credential `class:<cls>`, an `ai` credential its principal — by the identity stamp's own
+       expression. The store records it as `measured_by` and refuses an empty one CAL_UNATTRIBUTED (C-42.8). */
+    if (op === "calibrate")
       inner.searchParams.set("identity",
         viaSession ? sessIdentity
         : cls === "ai" ? aiCred.principal
@@ -8647,6 +8754,19 @@ export default {
       try {
         const b = JSON.parse(passBody);
         b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* T5-11 (entities R8, R4, R28): WHO WITHDREW an alias or a relation, stamped on the FW-6 rule above and overwriting
+       any `withdrawnBy` the caller put in the body, so a correction is never attributed to someone who did not make it.
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may correct the registry it may build, and the record names it (class:<cls>).
+
+       The FW-6 block above carries the ruling in full; nothing refuses a machine here BY DESIGN. */
+    if ((op === "aliaswithdraw" || op === "relationwithdraw") && passBody) {
+      try {
+        const b = JSON.parse(passBody);
+        b.withdrawnBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
