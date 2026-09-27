@@ -152,6 +152,8 @@ Replaced at each handoff; the progress log (§4) is the history.
 2. **Open T7** from `build/plan/next.md` (T6's unrun layers 3, 4, 6, 7, 11: 21 jobs), re-reading each carried entry for what layers 1–2 of T6 changed (its appendix is in `build/plan/archive/T6.md`). **Run layer 3 first** (capture, provenance, capture-sources: capture-sources' R55–R63 wait on Bob's open questions, K157; if still open, run it without that entry and carry it). Watch this first layer under the new mechanics closely: `mail check` at each backstop; any rough edge in the tool or the roles is a P3 fix before layer 4.
 3. Then layers 4, 6, 7, 11 as the plan orders them.
 
+**Prepared in parallel (P18).** A worker of BOB #49 is reviewing the layer-9 extraction maps on branch `prep/layer9-maps` and proposing resolutions to their open questions in `build/extraction/draft/REVIEW.md` there. Adopt what is yours as rulings while T7's layers run; bring anything marked FOR BOB to Bob.
+
 **Loose ends.** BETA #1 of the stopped D10 run (`session_018M7RfsM7dh1SaEfKBPj471`) is unarchived: the permission check refused BOB #49 archiving a grandchild; it is idle and costs nothing; archive it if you can, else leave it. The D8–D11 stand-ins are archived. The certification harness (`checks/cert/`, `dryrun/cert/`, branches `cert/R1`, `cert/R2`) is kept as evidence and is no longer a requirement.
 
 **What BOB #49 learned.** Fix the architecture, not the symptom: every T6 communication failure came from treating the routine as the message. The platform's session status says nothing reliable; git does. Sessions that hand-write protocol get it wrong; give them a tool.
