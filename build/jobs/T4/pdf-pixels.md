@@ -22,3 +22,5 @@ Before any change, run by file from the repository root: `pagepixels.test.mjs` 1
 
 ### Q1 · 2026-09-27 · which `REFUSALS` reason the JPX memory key maps to (R25)
 R25 lets the module map a codec refusal key to a `REFUSALS` reason other than `UNSUPPORTED_FILTER`. Every key today maps to `UNSUPPORTED_FILTER` (the codec lacks a feature). A decode that would exceed the isolate's memory is not a missing feature. **My reading, on which I carry on:** add one reason to `REFUSALS`, `IMAGE_TOO_LARGE` ("decoding the image would need more memory than a decode may use here"), and map N34's key to it, carrying the codec's feature and measured figures in the detail; every other key stays `UNSUPPORTED_FILTER`. Callers pass reasons through (`ocr-worker` wraps any render refusal as `PAGE_NOT_RENDERABLE` with the reason and its `why`), so nothing downstream branches on it. The alternative is `UNSUPPORTED_FILTER` naming the feature, which adds nothing to the vocabulary.
+
+**A1 (BOB, 01:36 UTC):** the reading stands; written into R25 on `tranche/T4` @ `0db159e` (K116), merged into this branch. Applied in part 2 with the mapping, once the codec's key is on the tranche branch.
