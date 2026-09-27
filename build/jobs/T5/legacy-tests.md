@@ -2,7 +2,7 @@
 
 **Session** LEGACY-TESTS #3, `session_01TW5ASSYtwo47MkR2AdX1H6`, on `job/T5/legacy-tests` (from `tranche/T5` @ `054006d1d5`, fast-forwarded to `7a2cc56e1f`, layer 11's start). Process: civicos-process `roles/JOB.md`, mechanics §6, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5` (BOB #46, `session_01Q3WyZBMy4MH1Acpgtw9awA`, at the start).
 
-**Status** · IN PROGRESS. Baseline taken; six workers of this session on the families below, every diff to be read here before it is committed.
+**Status** · COMPLETE, 2026-09-27. T5-12 applied, BOB's CHANGE of 09:51 processed; every red left is owed to a named owner below (a REPORT here, an entry in `next.md`, or BOB's decision). No open question, no `NEEDS BOB`. **COMPLETE is sent by this record** (K154: the routine to BOB is refused at lineage depth 8).
 
 **Contract** (no requirements file; `build/modules.json`): the old battery (`bio-plane/test/`, `civicos-ui/test/`, minus `bio-plane/test/m/<module>/`) and `civicos-ui/check-refusal-codes.mjs`, `check-semantics.mjs`. Entry: **T5-12** (`build/plan/current.md`, Layer 11). Rule (T4's, unchanged): a test pinning moved source text is re-anchored on the module's interface or retired with the moved code; a fixture an intended rule now refuses is fixed; no assertion of product behaviour is weakened; a red that looks like a product defect is REPORTed. A red owed only to a route or stamp LEGACY-INDEX #3 adds (T5-11) is noted and re-run after its merge.
 
@@ -67,3 +67,29 @@ Re-run on this branch after the merge (`260949dbe1`), each alone in a process, f
 12. ~~reextract routes~~ **WITHDRAWN: not a defect.** `reextract` is 65/0 with legacy-index's routes merged (scratch); the re-read runs through the control plane and extraction's `extractread`. The observation was: at the T5 opening the store dispatched `reextract` and `reextractbasis` (store.mjs L45850–45852); on the tip neither the store nor `extractionOps` names them, while `extraction.reextractBasis` exists. Being checked against the `reextract` suite.
 13. **legacy-store (`Store.PROJECT_NAMING_READS`):** `pdfstructure` is now a store route (extraction's `extractionOps`) reading `sha256` and is in neither `PROJECT_NAMING_READS` nor `…_NOT`; `project-sight` 11g names it beside `archivelookup` (T4 REPORT 6). Suggested: `` pdfstructure: "`sha256` is a CAPTURE's digest" `` in `…_NOT`, beside `reading`.
 14. **content (R32, `cropOf` / `op=contentcrop`):** `cropOf` hands back pdf-pixels' `bytes` as a `Uint8Array` and nothing encodes it on the way out, so through the plane the image arrives as a JSON object keyed by index (`{"0":137,"1":80,…}`); D-419's member answered `bytes_base64`. R32 should say the wire encoding (base64) and the module or the route encode it. `d419-content-crop` reads the bytes in any of the three shapes and says so, so it neither pins nor hides it.
+15. **affordances (rung-ladder, the same gap as T4 REPORT 7):** T5-11 routed six new mutating ops with no rung and no stated absence: `aliaswithdraw`, `relationwithdraw`, `connectionassert`, `filemembershipjudge`, `filemembershipstore`, `themewithdraw` (beside T4's `adminresign`, `hostingaccessset`, `memberpairingset`); FORWARD and the EXACT count (121 of 130) fail by name. And `aliaswithdraw`, `relationwithdraw` refuse without an authored reason (entities R8: `NO_REASON`), so NO UNDER-CLAIM wants them at `reasoned` or above.
+
+## Tests and checks run
+
+- **The whole old battery on the final tree** (`10aea6ec01`, this job's head after the CHANGE merge and both control lists): 371 plane suites and 90 civicos-ui suites, each `node test/<name>.test.mjs` in its own process, four at a time. **22 red, every one owed** (baseline: 93):
+  - REPORT 1 (connections creates capture without `env`), each green with that one line on a scratch tree: browser-render 28/20, capturerequests 122/17, d522-unattended-render 9/12, doorbell 71/1, drive 159/1 (hop 0 reads `instance unnamed (CivicOS/0.0.0)`: no env), monitor-rendered, rendered-capture.
+  - REPORT 2: meaningquery 106/1. REPORT 6: derivation-bounds 72/1. REPORTs 4–5 and BOB's ceilings: meaning-bounds 92/4 (two red at the T5 opening, T3's N70; the BARE and OPAQUE ceilings, not moved). REPORT 13 and T4 REPORT 6: project-sight 231/1. REPORT 15 and T4 REPORT 7: rung-ladder 46/3.
+  - legacy-checks' stale catalogue `where` (T6 entry): machinefences-dec49 88/1.
+  - N88's remainder (K153, legacy-index's): owed-controls 47/1 (A13b).
+  - Carried from T3/T4 (N70, T4 REPORT 11): affordances 98/1, d311-roster-affordances 20/1, skilldoctrine 42/1, skillpack 47/2, civicos-ui semantics-harvest 13/3, surface-registry (ARM L0).
+  - Generated artifact (manifest §14; T5-11 changed `index.mjs`): fleetbundles 92/4, the stale plane bundle BOB regenerates at the layer close.
+  - monitor-assess read 90/1 in this parallel run ("a GONE shell address still reads removed": null) and 91/0 three times alone (twice on this branch, once in a control worktree); not diagnosed further, recorded as measured.
+- **The DEC-49 guard** (`civicos-ui/check-refusal-codes.mjs`): 103 failures, none the guard's own, each with its owner (family F). `check-semantics.mjs`: T3's one red.
+- **Controls:** families I and J (57 drivers and declared-arm sets, each as declared or recorded above); `m025-arm-anchor-witness` 26/0.
+- Layer tests: none named in `build/manifest.md`.
+- Checks (civicos-process `main`, `<product>` = this checkout):
+  - `format: 69 modules, 64 requirements files; 0 failures`
+  - `architecture: 870 product files, 2226 relative imports (64 naming no tracked file, not judged); 0 failures`
+  - `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures` (no requirements file)
+  - `ownership: 168 files changed by legacy-tests between tranche/T5 and HEAD; 0 failures`
+
+Size: test runs about 1,700 (three full runs of 457–461 suites, about 100 single-suite runs by me, about 700 suite and control runs by the eleven workers, estimated from their reports, not measured), module lines 167 files, +4,913 / −1,125 (`bio-plane/test/`, `civicos-ui/test/`, `civicos-ui/check-refusal-codes.mjs`, `check-semantics.mjs`, against `tranche/T5`)
+
+## COMPLETE (to BOB #46, by this record, K154)
+
+From legacy-tests (T5): COMPLETE. T5-12 applied and the CHANGE of 09:51 processed, on `job/T5/legacy-tests`. The old battery: 93 red at layer 11's start, 22 now, every one owed above. Fifteen REPORTs (above; REPORT 12 withdrawn), the first a product defect to act on before release: every rendered capture is refused on the tranche (REPORT 1). Deferred: the rest of N57 and four control arms, `verdict-reader` with N87. Checks: format, architecture, coverage, ownership 0 failures.
