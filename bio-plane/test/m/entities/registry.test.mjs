@@ -37,7 +37,9 @@ test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIA
   const a = e.createEntity({ kind: "office", label: "City Clerk" }).entity_id;
   const b = e.createEntity({ kind: "person", label: "Pat Doe" }).entity_id;
   assert.equal(e.addAlias({ alias: "x" }).reason, "NO_ENTITY");
-  assert.equal(e.addAlias({ entityId: a, alias: " \t " }).reason, "NO_ALIAS", "a name that folds to nothing");
+  const na = e.addAlias({ entityId: a, alias: " \t " });
+  assert.deepEqual([na.reason, na.code, na.check], ["NO_ALIAS", "NO_ALIAS", "C-33.25"], "a name that folds to nothing: the catalogue's row");
+  assert.ok(na.translation);
   assert.equal(e.addAlias({ entityId: "ENT-2026-9999", alias: "x" }).reason, "NO_SUCH_ENTITY");
   const dup = e.addAlias({ entityId: a, alias: "  CITY clerk " });
   assert.equal(dup.reason, "ALREADY_ALIASED");
@@ -150,6 +152,7 @@ test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_A
   assert.equal(e.withdrawAlias({ entityId: a, alias: "Clerk" }).reason, "NO_REASON");
   assert.equal(e.withdrawAlias({ entityId: a, alias: "Nope", reason: "r" }).reason, "NO_SUCH_ALIAS");
   assert.equal(e.withdrawAlias({ entityId: "ENT-2026-0404", alias: "Clerk", reason: "r" }).reason, "NO_SUCH_ALIAS");
+  assert.equal(e.withdrawAlias({ entityId: a, alias: "  ", reason: "r" }).reason, "NO_SUCH_ALIAS");
   const w = e.withdrawAlias({ entityId: a, alias: " clerk ", reason: "a different office", withdrawnBy: "member:ann" });
   assert.equal(w.ok, true);
   assert.equal(w.withdrawn.by, "member:ann");

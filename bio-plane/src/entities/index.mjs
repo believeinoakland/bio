@@ -56,8 +56,8 @@ const LISTENER_DECLARED = "LISTENER_DECLARED";
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
 const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 
-/* D-484: the ONE governed site for an act that rests on nothing (C-33.40) or names no source (C-33.41), the
-   catalogue's act-shape rows, never a second sentence. */
+/* D-484: the governed site for an act that rests on nothing (C-33.40), names no source (C-33.41) or names no alias
+   (C-33.25): the catalogue's act-shape rows, never a second sentence. */
 function actShape(code, detail, extra = {}) {
   const row = ACT_SHAPE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -241,7 +241,7 @@ export class Entities {
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
     /* DEC-49 REGION is-alias-named — REC-64/C-33.25. */
     const norm = normAlias(alias);
-    if (!norm) return { ok: false, reason: "NO_ALIAS", detail: "an alias needs a name" };
+    if (!norm) return actShape("NO_ALIAS", "an alias needs a name");
     /* END DEC-49 REGION is-alias-named */
     if (!this.has(entityId)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
@@ -329,13 +329,13 @@ export class Entities {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is withdrawn from an entity named by its id" };
     const norm = normAlias(alias);
-    if (!norm) return { ok: false, reason: "NO_ALIAS", detail: "name the alias to withdraw" };
     const why = typeof reason === "string" ? reason.trim().slice(0, WITHDRAW_REASON_MAX) : "";
     if (!why) return { ok: false, reason: "NO_REASON",
       detail: "a withdrawal says why the name was wrong; it is kept beside the name for as long as the record lasts" };
-    const a = this.#one(`SELECT alias, withdrawn_by, withdrawn_at, withdrawn_reason FROM entity_aliases
-                          WHERE entity_id=? AND alias_norm=?`, entityId, norm);
-    if (!a) return { ok: false, reason: "NO_SUCH_ALIAS", entity_id: entityId, alias: String(alias),
+    /* A name that folds to nothing is held by no entity, so it answers as an absent one. */
+    const a = norm ? this.#one(`SELECT alias, withdrawn_by, withdrawn_at, withdrawn_reason FROM entity_aliases
+                                 WHERE entity_id=? AND alias_norm=?`, entityId, norm) : null;
+    if (!a) return { ok: false, reason: "NO_SUCH_ALIAS", entity_id: entityId, alias: alias == null ? null : String(alias),
       detail: "this entity holds no such name, so there is nothing to withdraw" };
     if (a.withdrawn_at)
       return { ok: true, already: true, entity_id: entityId, alias: a.alias,
@@ -369,7 +369,7 @@ export class Entities {
 
   /* How many of the entity's recogniser resolutions rest on this fold (R8). */
   #restingOn(entityId, norm) {
-    return this.#rows(`SELECT basis FROM resolutions WHERE entity_id=? AND grade IN ('A','B','C') AND basis IS NOT NULL`, entityId)
+    return this.#rows(`SELECT basis FROM resolutions WHERE entity_id=? AND grade <> 'D' AND basis IS NOT NULL`, entityId)
       .filter((r) => normAlias(r.basis) === norm).length;
   }
 
@@ -555,7 +555,7 @@ export class Entities {
   }
   /* R8: a machine resolution whose matched string is a withdrawn name of its entity rests on a withdrawn name. */
   static #restsOn(withdrawn, r) {
-    if (!["A", "B", "C"].includes(r.grade) || r.basis == null) return null;
+    if (r.grade === "D" || r.basis == null) return null;   /* testimony matched no name */
     const w = withdrawn.get(r.entity_id);
     const hit = w && w.get(normAlias(r.basis));
     return hit ? { alias: hit.alias, withdrawn_at: hit.withdrawn_at } : null;
