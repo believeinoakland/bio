@@ -72,3 +72,4 @@ Promotion @ ac497111d4 (PROMOTION #4) merged: R18's arms, `CATALOG_VERSION` 1.35
 Connections @ 5375f878a6 merged (ownership 0 failures, legacy-store +20/−1,774, every added line read; architecture 0, coverage 57/57); R51 worded to its call `fn(entityId, {hasArtifact, enteredAt})`. All module tests 1,280/1,283, 0 fail. Every layer-5 job is COMPLETE and merged.
 
 Layer 11, started 2026-09-27 ~09:02 UTC (BOB #46) from `tranche/T5` @ 054006d1d5: LEGACY-INDEX #3 `session_01R1fW8dH921CoT7ggxG5wrw`, LEGACY-TESTS #3 `session_01TW5ASSYtwo47MkR2AdX1H6`.
+Legacy-index @ 9433346287 merged early (3db2b9754e; ownership 0 failures; readings confirmed, K153); its COMPLETE reached BOB only through its record (K154). LEGACY-TESTS #3 told to take its REPORT 2.
