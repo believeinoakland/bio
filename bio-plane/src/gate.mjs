@@ -200,7 +200,18 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    the plane runs them over the same image after this gate (`provenance.withRegisterChecks`, K72 (4)). MINOR, rule 17 moving the stamp for
    removed checks. Census 572 -> 568, sha256 4f93c5f6…, behaviour source 4fa025ac…: the d470 suite's own print on this
    tree, whose re-pin (A3, A9) is legacy-tests' (T5-12). */
-export const CATALOG_VERSION = "1.34.0";
+/* 1.35.0 (PROMOTION #4, T5 layer 5, 2026-09-27; K150): NO ARRIVALS, FORTY-FIVE DEPARTURES FROM THE CATALOGUE, NONE
+   CHANGED BY THIS STEP. After 1.34.0 was minted, layer 4 and layer 5 jobs moved these rows out of `bio-checks.mjs` into
+   their own modules (the file's diff 3ec9dbc533..a31fe1aabd, pure removals): CALIBRATION #1 C-42.1–C-42.7 (K136);
+   EXTRACTION #1 C-51.1–C-51.5 (K135); ENTITIES #1 C-91.1–C-91.3; PROGRESSIONS #1 C-33.26, C-33.42, C-33.43 (K147);
+   OBSERVATION-LOG #1 C-54.2–C-54.10 (K142); BIAS #1 C-26.1–C-26.11 and C-26.13–C-26.19 with `checkBiasExtension`
+   (K146, K150; C-26.12 stays). CONTENT #1 also moved the helpers `imagePageUndetermined`, `legContentId` and
+   `mintUndetermined`, which carry no check id. `checkBundle` no longer runs `checkBiasExtension`: the plane is to wrap
+   this gate with bias's `withBiasChecks` as with provenance's `withRegisterChecks` (legacy-index, T5-11, K146), so a
+   ratification is judged by C-26.1–C-26.7 again once that lands. MINOR, rule 17 moving the stamp for removed
+   checks, 1.34.0's precedent. Census 568 -> 523, sha256 ac5d8ad6…, behaviour source 38f86aa4…: the d470 suite's own
+   print on this tree, whose re-pin (A3) is legacy-tests' (T5-12). */
+export const CATALOG_VERSION = "1.35.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.

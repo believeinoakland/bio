@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
-import { STATES, vocabFor, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { STATES, vocabFor, normalizeType, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as C from "../../../checks/bio-checks.mjs";
 
 const ID = "INFO-2026-0001";
@@ -245,13 +245,17 @@ test("R14: a non-replay promotion whose document's id differs from its bundle is
 });
 
 test("R15: a state move along an undeclared edge is refused (BIAS_ILLEGAL_TRANSITION for bias, else STATE_MOVE_UNDECLARED); every declared edge passes; replay is not exempt", () => {
-  for (const type of ["information", "inquiry", "project", "bias", "action"]) {
+  /* Every type a record can hold: the table's legacy names (focus, problem) are inquiries (normalizeType). */
+  const types = [...new Set(Object.keys(STATES).map(normalizeType))];
+  assert.ok(types.length >= 5, `the declared types: ${types}`);
+  for (const type of types) {
     const edges = vocabFor(STATES, type).edges;
     const states = Object.keys(edges);
     for (const from of states) for (const to of states) {
       if (from === to) continue;
       const env = makePromotion();
       const prefix = { information: "INFO", inquiry: "INQ", project: "PROJ", bias: "BIAS", action: "ACTN" }[type];
+      assert.ok(prefix, `an id prefix for ${type}`);
       const proj = type === "project";
       const d = (s, id) => doc({ id, object_type: type, title: "Same name", current_state: s, created: T0, last_updated: T0, group: "test-group" });
       const a = proj ? env.p.promote({ ...create(undefined, d(from)), replay: true, ownerMemberId: "ann" })
@@ -288,9 +292,8 @@ test("R16: a move into retired while a live edge cites the item is CITED, naming
 });
 
 test("R17: readability is judged first: no bundle.md, a blob-held one or no front matter gets the same refusal whatever the type", () => {
-  for (const type of ["information", "project", "bias"]) {
+  for (const type of Object.keys(STATES)) {
     const { p, head } = held();
-    void type;
     assert.equal(p.promote(revise(ID, head.bundleSha, "", { files: [] })).reason, "NO_BUNDLE_MD");
     assert.equal(p.promote(revise(ID, head.bundleSha, "", { files: [{ path: "n.txt", text: "x" }] })).reason, "NO_BUNDLE_MD");
     const blob = p.promote(revise(ID, head.bundleSha, "", { files: [{ path: "bundle.md", blobSha: "a".repeat(64), bytes: 3 }],
