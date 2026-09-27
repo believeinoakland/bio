@@ -27,7 +27,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - **R10** A `pdf-page` or region rectangle states its coordinate space; an image-pixel rectangle (an OCR anchor) is converted to default user space or refused, never read as user space. *(not yet met: D-670)*
 
 **captureFor(bundleId, authored?) → capture sha or null** The capture a citation of a document addresses.
-- **R11** A non-empty `authored` capture held for the bundle wins; one not held answers null, never replaced by another. Otherwise the bundle's first-held capture by `provenance.capturesOf`, never the newest; none answers null. *(not yet met: D-580, K49 — orders `register.registered` against `readings.at`)*
+- **R11** A non-empty `authored` capture held for the bundle wins; one not held answers null, never replaced by another. Otherwise the bundle's first-held capture by `provenance.capturesOf`, never the newest; when provenance holds none, the first-held of the captures the bundle's readings carry (`extraction.capturesReadFor`, K138); none answers null. *(not yet met: D-580, K49 — orders `register.registered` against `readings.at`)*
 
 **mint({bundleId, captureSha, extent, mintedBy, at, context?}) → `{ok, content_id, minted, undetermined?}` or refusal**
 - **R12** Refuses as R7 against the capture's context. Otherwise the row is written with R3's id, `ref`, the capture's chain (null for `bytes`), `derivation_cap` (`text-chain.derivationCap` over the extent's page and rectangle, the whole chain otherwise; null is undetermined, stated), the `page_count` held at mint, `minted_by`, `at` and `cited_as`.
@@ -70,6 +70,20 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 **The envelope**
 - **R33** An office document's envelope items (tracked-change authors, comments, core properties, speaker notes) are citable as content through an `envelope` extent. *(not yet met: REC-204; K102)*
 
+**Moved from the store by K73 (1), K134** (text attestations and a capture's context)
+
+**contentContextFor(captureSha) → `{chain, pageCount, pageBoxes, container}`** A capture's context, from ONE read of `extraction.readingOf`. Never throws.
+- **R42** `chain` is the reading's chain or null. `pageCount` is the reading's stored page count when a positive integer; else the highest page a scoped derivation step of the chain or a text attestation over the capture names, plus one; else null (undetermined, never a refusal). `pageBoxes` is the reading's page boxes as stored, or null. `container` holds `sheets`, `paragraphs`, `slides` (each null when not held), `tables` and `images` (an empty list a measured zero), `container_name`, `page_images_why` (the sentence stated beside an image by page admitted without the painted-image list, null when that list is held), `held`, `empty_level` naming every level the container itemises and the reading does not hold (null when none), `why`, and `office`: true when the format registry's entry for the capture's format (the profile's, else the reading's `text_container`) walks parts, false when a registered format does not, null (with `kind_why` saying why) when the format is not held or not registered; an office container extent with levels and no format is true.
+
+**attestText({captureSha, member, at?, extent, note?, viewer}) → `{ok, capture_sha, attestor, at, extent, chain_at_attestation, why}` or refusal** (`op=attesttext`; `member` and `viewer` are the control plane's stamps, never the body's)
+- **R43** Refuses whatever `text-chain.checkAttestation({member, at, extent})` refuses (C-35.10 a machine or empty member, C-35.11 the extent), asked first; then `NO_READING` for a capture this record has not read, answered identically for one filed in a bundle the viewer may not see or with no viewer. Otherwise records the attestation with the capture's chain as it stands (`chain_at_attestation`), the bundle the capture is filed in, the extent as its kind, page and rectangle, `at` (the module's clock when absent) and the note; one per (capture, attestor, extent), a repeat replacing it. The answer's `why` names the extent it covers.
+
+**attestationsFor(captureSha, target?, viewer, limit?) → `{ok, capture_sha, count, limit, truncated, chain, chain_says, attestations, ceiling}` or refusal** (`op=textattest`)
+- **R44** No digest is `NO_SHA`. At most `limit` attestations (default 200, clamped to 1..5,000; `truncated` measured by reading one more), ordered by instant then attestor, each `{bundle_id, attestor, at, extent, note, stale, chain_at_attestation}`: `stale` exactly when the chain at attestation and the capture's current chain are both recorded and differ (a null on either side is never stale), and `bundle_id` null for a viewer who may not see it. `ceiling` is `text-chain.gradeCeiling(chain, target, the attestations not stale)`.
+
+**The `content` read contract** (K134 (4))
+- **R45** The table `content` and its columns `content_id` (the key), `capture_sha`, `bundle_id`, `extent_kind`, `extent` (the canonical extent, R2), `ref`, `stale` (0 or 1, one way, R22), `minted_by`, `cited_as` and `chain_kind` (R14) are a stated read contract: a later module may join them in its own SQL, and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's.
+
 ## Private
 
 ### Uses
@@ -81,7 +95,8 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - `record-core`: `recordOf(ctx)`, `transact`, `bundleInfo` (a target's type), `declarePurge`.
 - `membership`: `membershipOf(ctx)`, `viewerPredicate` (R37).
 - `provenance`: `capturesOf` (R11), `versionChain` and the captured locators (R29).
-- `extraction`: `readingOf` (its R30), under this module's `contentContextFor`; `unitsOf` (its R36), for the text units and index state of a capture (R31); and `onReading` (R22). `attestText`, `attestationsFor`, `text_attestations` and `contentContextFor` are this module's (K73 (1), K134).
+- `promotion`: `promote`, and the projection registration testify's content mint uses (map §2; K138).
+- `extraction`: `readingOf` (its R30), `capturesReadFor` (its R51, for R11), under this module's `contentContextFor`; `unitsOf` (its R36), for the text units and index state of a capture (R31); and `onReading` (R22). `attestText`, `attestationsFor`, `text_attestations` and `contentContextFor` are this module's (K73 (1), K134).
 - `capture`, `id-spaces`: nothing in this module's share calls them (map §5).
 
 ### Invariants

@@ -61,6 +61,7 @@ Terms. **I2 text** is the text shape format entries and the two members return (
 
 **The text index and the name terms**
 - **R36** `unitsOf(captureSha)` → the capture's indexed units in `seq` order (extent, reference, text, `truncated`), at most 4,096, and the index's own state from its last write: `whole` (every offered unit written), `partial` (with the over-bound, skipped and unaddressable counts, R22), `none` (nothing was offered), or null (never indexed). The four are never read alike. `content` reads it (its R35). *(not yet met: the state is read from `observation-log`'s rows, `#indexStateOf`, which a layer-4 module cannot use)*
+- **R51** `capturesReadFor(bundleId)` → the capture digests the bundle's stored readings carry, each with the instant it was first read, in that order; an empty list for none. Read-only, bounded as R48, never throws (K138: content R11's fallback for a document with no register row). *(not yet met: K138)*
 - **R37** `reindexNames({limit})` writes the name terms (R19) for up to `limit` stored references that have none, and answers how many it wrote and how many remain; the instance runs it once at start with 500. `readingTermsClear` and `readingHistoryClear` are test seams no op reaches.
 
 **Drift obligations** (the measurements are `calibration`'s)

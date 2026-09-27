@@ -30,6 +30,20 @@ At the commit that carries this line, every service `extraction` takes from this
 - **R16 (K23):** the three tables declared to purge as exempt on first reaching the module; the store reaches it in its constructor.
 - **Flaws fixed in moving:** the module's clock is its own (`deps.now`), never the body's `nowMs`, so a caller can no longer set a calibration's `at_ms` or a subject's `last_probe_ms` to push its next probe out; two signals for one engine in one millisecond are two rows (was `INSERT OR REPLACE`, where a later signal could replace an earlier one and push its probe out); the next probe reads only the earliest unconsumed signal (one row); the subjects list and the tick's list are bounded with `subjects_truncated`/`truncated` (R15); `calibrations` orders equal instants by the id's number, not its text; `null` arguments to the reads answer rather than throw.
 
+## CHANGE K137 (re-opened 07:05 UTC; `tranche/T5` @ d027f1aaf9 merged)
+
+- **R12 as reworded:** a listener answers a list or `{obligations, truncated}`; R4's answer gains `obligations_truncated` (true when any listener said `truncated`, else false; null with the others when none is registered). A listener's answer of any other shape (including `obligations` not a list, or `truncated` not a boolean) fails the whole record, as a throw does.
+- **legacy-store's interim listener** now answers `{obligations, truncated}` from `#calDriftFor`'s own `truncated`, so `op=calibrate`'s echo carries the cut (my REPORT 3). Ownership against the tranche: legacy-store 3 added, 4 removed.
+
+```
+ADDED bio-plane/src/store.mjs:855  /* calibration (K61, R16, R12): legacy-store derives each record's obligations until extraction registers its own. */
+ADDED bio-plane/src/store.mjs:856  calibrationOf(ctx).onCalibration("legacy-store", ({ supersedes, drift }) => !drift.raises_obligation ? []
+ADDED bio-plane/src/store.mjs:857  : ((obligations) => ({ obligations, truncated: !!obligations.truncated }))(this.#calDriftFor(supersedes)));
+```
+
+- Tests: `node --test bio-plane/test/m/calibration/` 42/42 (R12 gains the truncation arm and five more malformed answers); `node --test bio-plane/test/m/` 874, 873 pass, 1 todo not mine; the old calibration suite through the Worker with a scratch `identity` stamp (reverted) 107/110, unchanged (D-668's three arms). format, architecture, coverage 17/17, ownership: 0 failures.
+- REPORTs 1, 2 and 4 routed by BOB (T5-12, T6, the layer close); nothing new found.
+
 ## Deferred
 
 - Deleting `driftObligations` from `calibration.mjs`: at BOB's CHANGE once extraction holds its own copy (K136).
@@ -77,4 +91,4 @@ ADDED bio-plane/src/store.mjs:45171  stamp for REC-30's reason exactly — its r
 ADDED bio-plane/src/store.mjs:45172  is filed in. The other four calibration ops are `calibrationOps`'. */
 ```
 
-Size: test runs 64, module lines 1124
+Size: test runs 70, module lines 1130
