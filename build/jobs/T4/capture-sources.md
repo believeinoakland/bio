@@ -72,6 +72,6 @@ M-151's instrument, run by this job 2026-09-27 02:15–02:47Z. Headless Chromium
   - format: 69 modules, 64 requirements files; 0 failures
   - architecture: 8 product files, 11 relative imports; 0 failures
   - coverage: 54 of 54 live requirement ids named by a test; 0 failures
-  - ownership: see the commit's run below
+  - ownership: 2 files changed by capture-sources between tranche/T4 and HEAD; 0 failures
 
 Size: test runs 24, module lines 1799
