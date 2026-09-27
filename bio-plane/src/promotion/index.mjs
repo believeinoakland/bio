@@ -115,6 +115,10 @@ function stampGroup(files, slug) {
   });
 }
 
+/* R40: a fact no module provides, answered in one place (DEC-49: one code, one site). It is never a value, so it is
+   never read as false; `detail` says what the caller was doing when it found the fact missing. */
+const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", fact, detail });
+
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
   detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
         + "holds for deactivated projects too, because their names are still cited." });
@@ -124,6 +128,7 @@ class Promotion {
   #steps = [];            // {module, check, project, seq}
   #facts = new Map();     // name -> {module, fn}
   #listeners = [];        // {module, fn, seq}: R45's post-commit notice
+  #reopenListeners = [];  // {module, fn, seq}: R46's notice of an accepted reopening
   #notices = new Map();   // accepted promotions awaiting their notice, by bundle and snap key
   #delivering = false;
 
@@ -150,16 +155,22 @@ class Promotion {
   /* A module's place in the total order; unknown modules run last, in the order they registered. */
   #rank(m) { const i = this.#order.indexOf(m); return i === -1 ? Infinity : i; }
 
-  /* R45: a later module's listener, called once after each accepted promotion has committed. */
-  onCommitted(module, fn) {
+  /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
+  #listen(list, module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
+    if (list.some((l) => l.module === module))
       return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    list.push({ module, fn, seq: list.length });
+    list.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
   }
+
+  /* R45: a later module's listener, called once after each accepted promotion has committed. */
+  onCommitted(module, fn) { return this.#listen(this.#listeners, module, fn); }
+
+  /* R46 (N62, K157): a later module's listener, called once after each accepted reopening; its answer joins the reply. */
+  onReopened(module, fn) { return this.#listen(this.#reopenListeners, module, fn); }
 
   /* R45: `promote` may run inside a caller's transaction, which record-core joins (its R32), so the commit it waits for
      may be the caller's. record-core's transaction is synchronous, so by the time a microtask runs the outermost one has
@@ -199,8 +210,8 @@ class Promotion {
   fact(name, ...args) {
     const held = typeof name === "string" ? this.#facts.get(name) : undefined;
     if (!held)
-      return { ok: false, reason: "FACT_UNAVAILABLE", fact: typeof name === "string" ? name : null,
-               detail: `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.` };
+      return factUnavailable(typeof name === "string" ? name : null,
+                             `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`);
     try { return { ok: true, fact: name, value: held.fn(...args) }; }
     catch (e) {
       return { ok: false, reason: "FACT_FAILED", fact: name,
@@ -221,9 +232,8 @@ class Promotion {
   /* A fact's value, or FACT_UNAVAILABLE naming it: never read as false (R40). */
   #fact(name, ...args) {
     const held = this.#facts.get(name);
-    if (!held) return { unavailable: { ok: false, reason: "FACT_UNAVAILABLE", fact: name,
-                                       detail: `no module provides the fact '${name}' this act needs, so the act is `
-                                             + `refused rather than answered as if it were false. Nothing was written.` } };
+    if (!held) return { unavailable: factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act `
+                                                           + `is refused rather than answered as if it were false. Nothing was written.`) };
     return { value: held.fn(...args) };
   }
 
@@ -319,6 +329,7 @@ class Promotion {
       return { ok: false, reason: "MALFORMED", detail: "bundleId is a string" };
 
     /* R11: what the request must name, each refused by name before anything is read or written. */
+    /* DEC-49 REGION is-promote-request-named */
     if (!((typeof snapKey === "string" && snapKey.trim() !== "") || (typeof snapKey === "number" && Number.isFinite(snapKey))))
       return refusal("PROMOTE_SNAP_KEY_UNSTATED",
         "this request names no snapKey (a non-blank string), so the revision has no name in the history. Nothing was written.");
@@ -339,9 +350,11 @@ class Promotion {
       return refusal("PROMOTED_FILE_BYTES_UNSTATED",
         `${sizeless.join(", ")}: held as a blob and stating no size (bytes, a whole number from 0). Nothing was written.`,
         { paths: sizeless });
+    /* END DEC-49 REGION is-promote-request-named */
 
     /* R7, R17: readability is judged before any fence that reads the document's content. */
     if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
+    /* DEC-49 REGION is-promote-readable */
     if (base !== null) {
       if (typeof sentMd.text !== "string" || !sentFm)
         return refusal("BUNDLE_MD_UNREADABLE",
@@ -351,6 +364,7 @@ class Promotion {
               + "Nothing was written.",
           { why: typeof sentMd.text !== "string" ? "blob" : "front_matter" });
     }
+    /* END DEC-49 REGION is-promote-readable */
 
     /* R19: `visibility` only on a project's creation, `discoverable` only with an owner. */
     let creationVisibility = null;
@@ -472,17 +486,20 @@ class Promotion {
         promotedTitle = head.title;
       let typeCarried = null;
       if (head && promotedType === undefined) { promotedType = normalizeType(head.type); typeCarried = promotedType; }
+      /* DEC-49 REGION is-promoted-type-unstated */
       if (!head && promotedType === undefined)
         return refusal("PROMOTED_TYPE_UNSTATED",
           `neither the document being promoted nor this request's meta states an object_type, and `
           + `${cut(bundleId, 80)} is new, so the record holds nothing that says what kind of thing it is. State the `
           + `type in the document. Nothing was written.`);
+      /* END DEC-49 REGION is-promoted-type-unstated */
       const carriedFields = {};
       if (head) {
         if (promotedState === undefined) promotedState = carriedFields.current_state = head.currentState;
         if (promotedCreated === undefined) promotedCreated = carriedFields.created = head.created;
         if (promotedLastUpdated === undefined) promotedLastUpdated = carriedFields.last_updated = head.lastUpdated;
       } else {
+        /* DEC-49 REGION is-promoted-field-unstated */
         const unstated = [["current_state", promotedState], ["created", promotedCreated],
                           ["last_updated", promotedLastUpdated]].filter(([, v]) => v === undefined).map(([k]) => k);
         if (unstated.length)
@@ -490,6 +507,7 @@ class Promotion {
             `neither the document being promoted nor this request's meta states ${unstated.join(", ")}, and `
             + `${cut(bundleId, 80)} is new, so the record holds nothing to carry. State `
             + `${unstated.length > 1 ? "them" : "it"} in the document. Nothing was written.`, { fields: unstated });
+        /* END DEC-49 REGION is-promoted-field-unstated */
       }
 
       /* R19: a project's title is unique across the instance, deactivated projects included. */
@@ -535,13 +553,16 @@ class Promotion {
           { head_type: normalizeType(head.type), revision_type: promotedType });
       /* END DEC-49 REGION is-promote-retypes-bundle */
       /* R12: a revision never redates its creation. */
+      /* DEC-49 REGION is-revision-redates-creation */
       if (head && head.created !== undefined && !has(carriedFields, "created") && !sameInstant(promotedCreated, head.created) && !replay)
         return refusal("REVISION_REDATES_CREATION",
           `${cut(bundleId, 80)} was created '${cut(head.created, 40)}' and this revision says `
           + `'${cut(promotedCreated, 40)}'. A revision changes what a document says, never when it was made. Send it `
           + `again with the document's created as the record holds it, or with none. Nothing was written.`,
           { head_created: cut(head.created, 80), revision_created: cut(promotedCreated, 80) });
+      /* END DEC-49 REGION is-revision-redates-creation */
       /* R13: a revision never regroups its bundle. */
+      /* DEC-49 REGION is-revision-regroups-bundle */
       const revisionGroup = sentFm && sentFm.group !== undefined && sentFm.group !== null
         && String(sentFm.group).trim() !== "" ? String(sentFm.group).trim() : null;
       if (head && revisionGroup !== null && revisionGroup !== String(head.groupId).trim() && !replay)
@@ -550,15 +571,18 @@ class Promotion {
           + `'${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again `
           + `with the group the record holds, or with none. Nothing was written.`,
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) });
+      /* END DEC-49 REGION is-revision-regroups-bundle */
       /* R14: a document's id is the bundle it is filed under. */
       const finalMd = files.find((f) => f.path === "bundle.md");
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj(finalFm0) ? finalFm0 : null;
+      /* DEC-49 REGION is-promote-bundle-id */
       if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
         return refusal("BUNDLE_ID_DISAGREES",
           `the document states id '${cut(finalFm.id, 80)}' and it is being filed under '${cut(bundleId, 80)}'. A `
           + `document is filed under the id it states. Nothing was written.`,
           { document_id: cut(finalFm.id, 80), bundle_id: bundleId });
+      /* END DEC-49 REGION is-promote-bundle-id */
 
       /* R16: a move into `retired` asks retire's own question. */
       if (promotedState === "retired" && (!head || head.currentState !== "retired")
@@ -615,6 +639,7 @@ class Promotion {
             { field, document_value: said === null ? null : cut(said, 80), envelope_value: asked === null ? null : cut(asked, 80) });
         }
         /* END DEC-49 REGION is-promoted-state-disagrees */
+        /* DEC-49 REGION is-promoted-dates-disagree */
         const dateContradiction = envelopeCreated !== null && documentCreated !== null
             && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated]
           : envelopeLastUpdated !== null && documentLastUpdated !== null
@@ -627,6 +652,7 @@ class Promotion {
             + `'${cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
             { field, document_value: cut(said, 80), envelope_value: cut(asked, 80) });
         }
+        /* END DEC-49 REGION is-promoted-dates-disagree */
       }
 
       /* R15: a move of current_state goes along an edge the type's declared table carries. A creation is not a move;
@@ -647,8 +673,10 @@ class Promotion {
             return refusal("BIAS_ILLEGAL_TRANSITION", detail,
               { from: head.currentState, to: promotedState, object_type: mt, legal_from: legalFrom });
           /* END DEC-49 REGION bias-state-edge */
+          /* DEC-49 REGION is-state-move-undeclared */
           return refusal("STATE_MOVE_UNDECLARED", detail,
             { from: head.currentState, to: promotedState, object_type: mt, legal_from: legalFrom });
+          /* END DEC-49 REGION is-state-move-undeclared */
         }
       }
 
@@ -827,6 +855,65 @@ class Promotion {
 
   /* ---------------------------------------------------------------- reopen */
 
+  /* (Moved from `store.mjs` with the act it explains, T6; the rules are R21–R26, and R46's listeners follow them.)
+   *
+   * REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
+   * open, on op=conclude's shape and for op=conclude's reasons.
+   *
+   * WHY IT EXISTS. `deferred -> open` and `dismissed -> open` have been legal
+   * edges in the catalog's table since REC-10, and NO op wrote them: op=dispose
+   * only ever targets the disposition set. REC-13 made that a real hole rather
+   * than an untidiness — a deferred inquiry cannot be concluded (it is picked
+   * back up first, which is what the edge is for), so a question the group set
+   * down was unrecoverable except by hand-editing the document. An act the
+   * table permits and no caller can perform is the state machine lying.
+   *
+   * CONCLUDE'S PROPERTIES, CARRIED OVER, and each for its own reason:
+   * 1. A NAMED MEMBER reopens. The author stamp arrives from the session and a
+   *    machine credential's is `token:<class>`, refused BY SHAPE
+   *    (MACHINE_CANNOT_REOPEN, the MACHINE_CANNOT_RELEASE/CONCLUDE precedent).
+   *    A machine may SURFACE a question (D-78) and PURSUE what a member
+   *    authored (DEC-24); deciding that the group's own decision to set
+   *    something down no longer holds is a member's judgement about the
+   *    record, not a scheduler's.
+   * 2. THE REASON IS AUTHORED AND NEVER PREFILLED. Refused when absent, exactly
+   *    as dispose's is and as conclude's conclusion and falsifier are. Nothing
+   *    is derived or proposed: "reopened" with no account of why is a state
+   *    change wearing a decision's clothes, and the member who deferred it is
+   *    owed the argument. It lands in the state_history entry and the Session
+   *    Log, the two places this record keeps WHY.
+   * 3. NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute`
+   *    reopens, and the act is ATTRIBUTED. Disagreeing with a disposition is
+   *    precisely the disagreement DEC-30 says is expressed by acting and
+   *    signing the act, not by a vote.
+   *
+   * THE MACHINE IS THE CATALOG'S, and there is NO SECOND EDGE SOURCE: legality
+   * is vocabFor(STATES, <declared type>) offering `open`, the same one table
+   * op=affordances publishes from. A legacy focus/problem document is refused
+   * ILLEGAL_TRANSITION — its own vocabulary has no `open` at all (its open
+   * state is spelled `surfaced`), and inventing the move would judge it by a
+   * contract it was not authored under.
+   *
+   * SCOPED TO REOPENABLE_FROM, DELIBERATELY. The FROM state must be in that
+   * one published array — exported by this module and read by the act, so the
+   * publication and this refusal cannot disagree about what "reopenable" means.
+   *
+   * `concluded -> open` is ALSO a legal edge and this op does NOT write it, for
+   * the reason REC-31 gave and REC-14 did not change: reopening a conclusion
+   * here would produce an `open` inquiry still wearing its conclusion and its
+   * falsifier with NO EDITION RECORDED — exactly the overclaim the edition
+   * machinery exists to prevent — so it is refused BY NAME rather than by
+   * omission, and op=publish is where a conclusion moves forward.
+   *
+   * `published -> open` IS written here, added at the REC-31 x REC-14 merge,
+   * and the distinction is the recorded edition rather than a softening. DEC-12
+   * rules that reopening does not unpublish: edition 1 keeps answering with its
+   * own signature, attestor, time and gate version whatever happens to the
+   * working document afterwards. So there is nothing to erase and nothing to
+   * revert silently — the opposite of the concluded case — and published ->
+   * open is the ONLY route to a second edition, which makes THIS act the front
+   * door of a revision. An act the catalog permits and no caller can perform is
+   * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     try { return this.#reopen({ target, reason, viewer, author }); }
     catch (e) {
@@ -918,7 +1005,18 @@ class Promotion {
     });
     if (!promoted.ok) return { ...promoted, target };
     /* R26: a live edge citing the target does not refuse a reopening. */
-    return { ok: true, target, from: head.currentState, to: "open", why, author: who, at: when, weight: "single" };
+    const answer = { ok: true, target, from: head.currentState, to: "open", why, author: who, at: when, weight: "single" };
+    /* R46: the reopening has committed; each listener, in the modules' order, may add its answer under its module id.
+       A listener that throws, or answers with a promise (which settles after this reply has gone), adds nothing, and
+       a rejection is swallowed: neither changes the reopening or what it wrote. */
+    for (const l of this.#reopenListeners) {
+      let out;
+      try { out = l.fn({ target, from: head.currentState, at: when, author: who, viewer }); }
+      catch { continue; }
+      if (out && typeof out.then === "function") { out.then(null, () => {}); continue; }
+      if (isObj(out) && !has(answer, l.module)) answer[l.module] = out;
+    }
+    return answer;
   }
 }
 

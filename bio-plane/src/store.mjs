@@ -792,6 +792,8 @@ export class Store extends DurableObject {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
       if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
     });
+    /* promotion R46: reevaluation's answer to a reopening (REC-17), registered in its name until reevaluation is extracted. */
+    promotionOf(ctx).onReopened("reevaluation", ({ target, viewer, at }) => ({ source: "reopened", since: at, raised: this.#reevalRaisedBy(target, viewer) }));
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
@@ -5861,66 +5863,8 @@ export class Store extends DurableObject {
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
 
-  /* REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
-   * open, on op=conclude's shape and for op=conclude's reasons.
-   *
-   * WHY IT EXISTS. `deferred -> open` and `dismissed -> open` have been legal
-   * edges in the catalog's table since REC-10, and NO op wrote them: op=dispose
-   * only ever targets the disposition set. REC-13 made that a real hole rather
-   * than an untidiness — a deferred inquiry cannot be concluded (it is picked
-   * back up first, which is what the edge is for), so a question the group set
-   * down was unrecoverable except by hand-editing the document. An act the
-   * table permits and no caller can perform is the state machine lying.
-   *
-   * CONCLUDE'S PROPERTIES, CARRIED OVER, and each for its own reason:
-   * 1. A NAMED MEMBER reopens. The author stamp arrives from the session and a
-   *    machine credential's is `token:<class>`, refused BY SHAPE
-   *    (MACHINE_CANNOT_REOPEN, the MACHINE_CANNOT_RELEASE/CONCLUDE precedent).
-   *    A machine may SURFACE a question (D-78) and PURSUE what a member
-   *    authored (DEC-24); deciding that the group's own decision to set
-   *    something down no longer holds is a member's judgement about the
-   *    record, not a scheduler's.
-   * 2. THE REASON IS AUTHORED AND NEVER PREFILLED. Refused when absent, exactly
-   *    as dispose's is and as conclude's conclusion and falsifier are. Nothing
-   *    is derived or proposed: "reopened" with no account of why is a state
-   *    change wearing a decision's clothes, and the member who deferred it is
-   *    owed the argument. It lands in the state_history entry and the Session
-   *    Log, the two places this record keeps WHY.
-   * 3. NO OWNER GATE AND NO BALLOT (DEC-30). Any holder of `contribute`
-   *    reopens, and the act is ATTRIBUTED. Disagreeing with a disposition is
-   *    precisely the disagreement DEC-30 says is expressed by acting and
-   *    signing the act, not by a vote.
-   *
-   * THE MACHINE IS THE CATALOG'S, and there is NO SECOND EDGE SOURCE: legality
-   * is vocabFor(STATES, <declared type>) offering `open`, the same one table
-   * op=affordances publishes from. A legacy focus/problem document is refused
-   * ILLEGAL_TRANSITION — its own vocabulary has no `open` at all (its open
-   * state is spelled `surfaced`), and inventing the move would judge it by a
-   * contract it was not authored under.
-   *
-   * SCOPED TO REOPENABLE_FROM, DELIBERATELY. The FROM state must be in that
-   * one published array — imported here and by the act, so the publication and
-   * this refusal cannot disagree about what "reopenable" means.
-   *
-   * `concluded -> open` is ALSO a legal edge and this op does NOT write it, for
-   * the reason REC-31 gave and REC-14 did not change: reopening a conclusion
-   * here would produce an `open` inquiry still wearing its conclusion and its
-   * falsifier with NO EDITION RECORDED — exactly the overclaim the edition
-   * machinery exists to prevent — so it is refused BY NAME rather than by
-   * omission, and op=publish is where a conclusion moves forward.
-   *
-   * `published -> open` IS written here, added at the REC-31 x REC-14 merge,
-   * and the distinction is the recorded edition rather than a softening. DEC-12
-   * rules that reopening does not unpublish: edition 1 keeps answering with its
-   * own signature, attestor, time and gate version whatever happens to the
-   * working document afterwards. So there is nothing to erase and nothing to
-   * revert silently — the opposite of the concluded case — and published ->
-   * open is the ONLY route to a second edition, which makes THIS act the front
-   * door of a revision. An act the catalog permits and no caller can perform is
-   * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
-    const r = promotionOf(this.ctx).reopen({ target, reason, viewer, author });
-    return r.ok ? { ...r, reevaluation: { source: "reopened", since: r.at, raised: this.#reevalRaisedBy(target, viewer) } } : r;
+    return promotionOf(this.ctx).reopen({ target, reason, viewer, author });
   }
 
 

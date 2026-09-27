@@ -99,3 +99,80 @@ test("R26: a live edge citing the target does not refuse a reopening", () => {
   const { p } = setup("deferred", { citedBy: { [ID]: ["INQ-2026-0099"] } });
   assert.equal(call(p).ok, true);
 });
+
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+test("R46: onReopened — after an accepted reopening commits, every listener is called once, in the modules' total order, with {target, from, at, author, viewer}; its object answer joins the reply under its module id", async () => {
+  const { makeRecord, makeMembership } = await import("./fixtures.mjs");
+  const { promotionOf } = await import("../../../src/promotion/index.mjs");
+  const record = makeRecord();
+  const p = promotionOf({}, { record, membership: makeMembership(), order: ["reevaluation", "later", "legacy-store"],
+                              now: () => "2026-09-27T10:00:00.000Z" });
+  p.registerFact("producingGroup", "legacy-store", () => "test-group");
+  p.registerFact("caseMember", "legacy-store", () => false);
+  assert.equal(p.promote({ ...create(ID, inq("deferred")), replay: true }).ok, true);
+  const seen = [];
+  /* Registered out of order; called in the modules' order. Each sees the reopening committed. */
+  for (const [m, out] of [["legacy-store", undefined], ["later", null], ["reevaluation", { raised: ["INQ-2026-0009"] }]])
+    assert.deepEqual(p.onReopened(m, (n) => { seen.push([m, n, record.head(n.target).currentState]); return out; }), { ok: true, module: m });
+  const r = call(p);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const n = { target: ID, from: "deferred", at: "2026-09-27T10:00:00Z", author: "member:ann", viewer: "member:ann" };
+  assert.deepEqual(seen, [["reevaluation", n, "open"], ["later", n, "open"], ["legacy-store", n, "open"]]);
+  /* The listener's object joins under its module id; null and undefined add nothing; reopen's own keys stand. */
+  assert.deepEqual(r, { ok: true, target: ID, from: "deferred", to: "open", why: "new evidence arrived", author: "member:ann",
+                        at: n.at, weight: "single", reevaluation: { raised: ["INQ-2026-0009"] } });
+  /* Once per module: a second registration is LISTENER_DECLARED; one naming no module or no function is refused. */
+  assert.equal(p.onReopened("reevaluation", () => ({})).reason, "LISTENER_DECLARED");
+  for (const [m, fn] of [["", () => null], [null, () => null], ["x", null]]) assert.equal(p.onReopened(m, fn).reason, "LISTENER_MALFORMED");
+  /* onReopened and onCommitted are separate registrations: one does not declare the other. */
+  assert.equal(p.onCommitted("reevaluation", () => null).ok, true);
+  /* A listener cannot replace a key of reopen's own answer. */
+  const env = setup();
+  env.p.onReopened("target", () => ({ forged: true }));
+  env.p.onReopened("weight", () => "not an object");
+  const r2 = call(env.p);
+  assert.deepEqual([r2.ok, r2.target, r2.weight], [true, ID, "single"]);
+});
+
+test("R46: never for a refused reopening — whatever refused it, the reopen's own fences or a rule of promote", async () => {
+  const { p, record } = setup("concluded");
+  let called = 0;
+  p.onReopened("later", () => { called++; return { x: 1 }; });
+  const refused = [call(p, { author: "token:ai" }), call(p, { reason: "" }), call(p, { target: "" }), call(p, { target: "INQ-2026-0404" }),
+                   call(p) /* NOT_SET_DOWN */];
+  const again = setup("deferred");
+  again.p.onReopened("later", () => { called++; return { x: 1 }; });
+  again.p.registerStep("step", { check: () => ({ ok: false, reason: "LATER_SAYS_NO" }) });
+  refused.push(call(again.p));
+  assert.deepEqual(refused.map((r) => r.reason),
+                   ["MACHINE_CANNOT_REOPEN", "NO_REASON", "NO_TARGET", "NO_SUCH_BUNDLE", "NOT_SET_DOWN", "LATER_SAYS_NO"]);
+  for (const r of refused) assert.equal("x" in r || "later" in r, false);
+  await tick();
+  assert.equal(called, 0);
+  assert.equal(record.head(ID).currentState, "concluded");
+});
+
+test("R46: a listener that throws, rejects or answers later adds nothing and changes neither the reopening's answer, what it wrote, nor another listener's call", async () => {
+  const run = async (bad) => {
+    const env = setup("dismissed");
+    const order = [];
+    env.p.onReopened("a-bad", (n) => { order.push("a"); return bad(n); });
+    env.p.onReopened("b-good", () => { order.push("b"); return { fine: true }; });
+    const r = call(env.p);
+    const written = env.record.dump();
+    await tick(); await tick();
+    assert.equal(env.record.dump(), written);
+    return { r, order, env };
+  };
+  const base = await run(() => null);
+  for (const bad of [() => { throw new Error("boom"); }, async () => { throw new Error("later boom"); },
+                     async () => ({ late: true }), () => Promise.reject(new Error("rejected"))]) {
+    const { r, order, env } = await run(bad);
+    assert.deepEqual(order, ["a", "b"]);
+    assert.deepEqual(r, base.r);
+    assert.deepEqual(r["b-good"], { fine: true });
+    assert.equal("a-bad" in r, false);
+    assert.equal(env.record.head(ID).currentState, "open");
+  }
+});
