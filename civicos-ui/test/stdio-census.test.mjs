@@ -203,7 +203,10 @@ ok(shared.length === exits.length,
 
 /* ---- ARM D — THE RESIDUAL, PINNED SO LANDING IT CLEARS THIS NOTE --------------- */
 {
-  const RESIDUAL = ["check-semantics.mjs", "check-refusal-codes.mjs", "check-mock-envelope.mjs"];
+  /* T4 (legacy-tests), 2026-09-27: `check-refusal-codes.mjs` REPAIRED (it imports the shared module), measured
+     truncating at 46 KB under `refusal-codes.control.mjs`'s piped read with ~30 failures standing; removed here in the
+     same commit, as this arm asks. The DELEGATION it names was the old process's ledger (retired, N14). */
+  const RESIDUAL = ["check-semantics.mjs", "check-mock-envelope.mjs"];
   const still = RESIDUAL.filter(f => {
     const s = fs.readFileSync(path.join(UIDIR, f), "utf8");
     return /process\.exit/.test(s) && !s.includes("test/stdio.mjs");

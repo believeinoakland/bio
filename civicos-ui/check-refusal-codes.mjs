@@ -101,6 +101,8 @@
  * NEGATIVE CONTROL: recorded in test/refusal-codes.test.mjs's own
  * `NEGATIVE CONTROL:` header, with every arm RUN and what it broke.
  */
+import "../bio-plane/test/stdio.mjs";   /* T4 (legacy-tests): D-282's flush; ~30 standing failures pass 50 KB of stderr and
+                                           the unflushed exit truncated it under a piped reader (refusal-codes.control) */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
