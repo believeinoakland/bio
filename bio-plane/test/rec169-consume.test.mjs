@@ -148,7 +148,11 @@ const boundOf = async (run, b) => {
   return x ? [x.allowed, x.consumed] : null;
 };
 const tick = (tok, body) => RAW(`op=airuntick&${tok}`, body);
-const ENTRY = { level: "meaning", subject: "observation:rec169", state: "NEVER_LOOKED",
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests; observation-log R3, K148): this entry's state was NEVER_LOOKED, which R3
+   now refuses at the append as a look at a subject (only a run's terminal rollup may carry it) — so ARM L1's tick
+   landed with the entry in `refused` and `appended` 0. The arm means one LOOK appended beside a spend, so the entry
+   states a look that found nothing, as airun.test.mjs's fixture does (its line 454). */
+const ENTRY = { level: "meaning", subject: "observation:rec169", state: "LOOKED_ABSENT",
                 detail: "nothing has been derived here, which may only mean nothing was extracted" };
 
 const C = AI_RUN_CHECKS;

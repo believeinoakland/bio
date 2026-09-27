@@ -1091,9 +1091,36 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    deliberately and stated at the method: its three verdict totals are counted over EVERY affected bundle,
    because a total cut at N is the partial count the op exists to replace; only the LISTING is paged
    (CHANGED_FROM_AUDIT_LIMIT 200/1000). Admin and probe only. The figure is this arm's own output (`26 methods`). */
-const CLASS_MEASURED_2026_08_08 = 26;
+/* MOVED 26 -> 33 on 2026-09-27 by legacy-tests (T5-12), READ FROM THIS RUN'S PRINT over the widened corpus (`33 methods`)
+   and DIFFED BY NAME against the same walk run on the T5 opening tree 64386f16eb (the suite's own figure there, 26, off
+   store.mjs alone), never 26 + 7. The walk now reads EXTRACTED (see it), so the accounting is in three parts:
+   - MOVED, STILL SEEN BY THE WALK (7), the same work under the module's name: #sweepSelections, selectionCreate,
+     selectionResolve, selectionRelease -> retrieval/index:{sweepSelections, selectionCreate, selectionResolve,
+     selectionRelease} (RETRIEVAL #1); documentsNamingEntity -> entities/index:namingDocuments (ENTITIES #1);
+     #assembleInstance -> progressions/index:#assemble (PROGRESSIONS #1); biasManifest -> bias/index:biasManifest (BIAS #1).
+   - MOVED, NOW ADMITTED (3): #overdueScan -> progressions/index:overdueScan and proposalsFeed ->
+     progressions/index:proposalsFeed, whose one unbounded scan moved into the helper `#pairs()` (`T5_STAYS`); and the
+     D-384 admission #citesInto -> connections/index:citesInto (CONNECTIONS #1, `home`). 16 + 10 = 26 became 21 + 12.
+   - ARRIVALS (7), none a departure's twin:
+     * content/index:markStale — CHANGED ON PURPOSE by CONTENT #1 (content R41, K102: the graded stale notice). The
+       store's `#markContentStale` was ONE aggregate COUNT and one UPDATE, deliberately ("not a SELECT and a loop",
+       REC-66 / D-227 at the site); R41 reads every row the re-read stales (unbounded: content rows per capture) and
+       grades each and calls every `onStale` listener per row. Today no module registers one (inquiry, T6), and the
+       read runs only when one is registered. The class's shape, taken by a requirement: REPORTED (T5-12) so the bound is
+       decided before inquiry registers.
+     * SIX from T3's and T4's modules, present identically on the opening tree (the same widened walk run there puts
+       all six in the class): the CLASS walk read store.mjs alone until now, so it never saw them. record-core/index:
+       {commit (one archive INSERT per file row of the bundle, a per-bundle read), auditPass (the audit's pass: every
+       bundle id after the cursor read whole, and per bundle its images and the registered checks — the store's own
+       `auditPass`, which D-384 LEAVES, reads a page of this)} (T3); capture/index:{resolveLinks (per link row, the
+       captures at its address), recordSiteAssets (per changed asset, every reusing ref and one UPDATE each) — spelled
+       `[...this.sql.exec(…)]` in the store, which this reader never saw (T4's census note) — and #chromeDeriveCapture,
+       #judgeChrome (T4's new site-chrome derivation, capture R28-R29, D-701: per page and per host, writes per row)}.
+       ARRIVALS NAMED, not graded here; they are T3's and T4's code, reached now because the reader follows the corpus.
+   The seven dispatched arrivals and departures are in CLASS OPS below. */
+const CLASS_MEASURED_2026_08_08 = 33;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -1112,11 +1139,18 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
      and `D384_STAYS` names it. This pin reads the union, because what a caller can reach is the
      half that matters whichever instrument saw it. */
   /* c19-unionfix, 2026-09-24: `changedfromaudit->changedFromAudit` (D-256) is dispatched — the arrival above. */
-  CLASS_OPS, ["biasmanifest->biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
-              "proposals->proposalsFeed",
-              "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
-              "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
-              "selectionrelease->selectionRelease"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): the same five ops, each now an entry of its module's routes (read
+     through the store's spreads, see DISPATCHED), named where the method lives: biasmanifest (bias), proposals
+     (progressions, an ADMITTED member now), readingname (entities' `namingDocuments`), select/selection/selectionrelease
+     (retrieval). ARRIVALS: `recordsiteassets` and `resolvelinks`, capture's routes (T4) — the two capture members of the
+     class the widened walk reaches (see the ratchet's note); their spread was never read before. */
+  CLASS_OPS, ["biasmanifest->bias/index:biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
+              "proposals->progressions/index:proposalsFeed",
+              "publishedcase->publishedCase", "queue->queueFeed", "readingname->entities/index:namingDocuments",
+              "recordsiteassets->capture/index:recordSiteAssets", "reevaluations->reevaluations",
+              "resolvelinks->capture/index:resolveLinks",
+              "select->retrieval/index:selectionCreate", "selection->retrieval/index:selectionResolve",
+              "selectionrelease->retrieval/index:selectionRelease"]);
 
 
 /* ====================== M0-40 · THE SPELLING THE CLASSIFIER READS AMPLIFICATION OFF,
@@ -1342,13 +1376,21 @@ t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on 
    HAND for that reason. With the roster pinned, the instrument names it. M0-63: this is now the
    WALK's roster — 14 — and the admitted ten are pinned by `D384_STAYS`; the two together are the
    figure the ceiling grades. */
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this run's print, diffed by name against the opening tree (see the
+   ratchet's note for every name): 16 -> 21. Seven members MOVED and are read under their module names; #overdueScan and
+   proposalsFeed LEFT the walk with their scan (now `#pairs()`) and are ADMITTED in `T5_STAYS`; content/index:markStale
+   arrived (content R41); six of T3's and T4's modules' methods arrived with the widened corpus. */
 const CLASS_ROSTER_2026_09_18 = [
-  "#assembleInstance", "#flagCasesOnRevision", "#frozenPairsByCase", "#overdueScan", "#sweepSelections",
-  "biasManifest",
+  "#flagCasesOnRevision", "#frozenPairsByCase",
+  "bias/index:biasManifest",
+  "capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "capture/index:recordSiteAssets",
+  "capture/index:resolveLinks",
   /* c19-unionfix, 2026-09-24: D-256's `changedFromAudit`, the arrival the CLASS ratchet above names. */
-  "changedFromAudit", "documentsNamingEntity", "exportManifest", "proposalsFeed",
-  "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
-  "selectionResolve",
+  "changedFromAudit", "content/index:markStale", "entities/index:namingDocuments", "exportManifest",
+  "progressions/index:#assemble",
+  "publishedCase", "publishedRegistryFor", "record-core/index:auditPass", "record-core/index:commit", "reevaluations",
+  "retrieval/index:selectionCreate", "retrieval/index:selectionRelease", "retrieval/index:selectionResolve",
+  "retrieval/index:sweepSelections",
 ];
 t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
 + "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
@@ -1357,7 +1399,7 @@ t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, s
 t("M0-40: and the by-name rosters and the counted ratchet are ONE reader — a pin that could "
 + "disagree with the figure beside it would be two instruments, and this file has already paid "
 + "once for a by-name arm satisfiable by the healthy half of what it pinned (control 9b)",
-  [CLASS_ROSTER_2026_09_18.length + D384_STAYS.length, CLASS_ALL.size],
+  [CLASS_ROSTER_2026_09_18.length + D384_STAYS.length + T5_STAYS.length, CLASS_ALL.size],   /* T5-12: T5's admissions */
   [CLASS_ALL.size, CLASS_MEASURED_2026_08_08]);
 
 /* OVER-STRICTNESS FOR THE NEW ARM, and it is the half the row weighted most heavily. Nothing
@@ -1402,7 +1444,15 @@ t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is
 t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the amplification is "
 + "HOIST-STABLE and must not be called fragile — otherwise the roster would name every inline row "
 + "source and say nothing. These four are measured, not chosen",
-  HOIST.stable, ["documentsNamingEntity", "proposalsFeed", "publishedCase", "selectionRelease"]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from this run's print, diffed by name: documentsNamingEntity and
+     selectionRelease MOVED (entities/index:namingDocuments, retrieval/index:selectionRelease); proposalsFeed LEFT (its
+     inline row source became `this.#pairs()`, and it is admitted, not walked); progressions/index:#assemble ARRIVED —
+     the old `#assembleInstance` was NO INLINE ROW SOURCE, and the module writes its placements read in the `for` header,
+     a spelling of the same work; and four of the widened corpus's T3/T4 arrivals (record-core's commit and auditPass,
+     capture's #chromeDeriveCapture and #judgeChrome) carry an inline row source and body amplification. */
+  HOIST.stable, ["capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "entities/index:namingDocuments",
+                 "progressions/index:#assemble", "publishedCase", "record-core/index:auditPass",
+                 "record-core/index:commit", "retrieval/index:selectionRelease"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
  *
