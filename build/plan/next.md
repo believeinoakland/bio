@@ -152,7 +152,7 @@ Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same 
 
 ### Layer 11
 
-- **legacy-index** · T6-13 · the routes of the ops layers 6–7 move (N43's pattern); N70 (its share: `scripts/pensweep.mjs`'s `git check-ignore` under symlinked `node_modules`; N68's `op-claims` if T4's removal (N12) left any); N21 only if T5-11 leaves it open; N66 (its share) not here: its arms move with `capture` and `instance-setup`.
+- **legacy-index** · T6-13 · K153's `bio-plane/scripts/coverage.mjs` edit (`--strict` stops gating on op reach through the plane and on check naming; the condition becomes `if (STRICT && (uncontrolled.length`), refused to LEGACY-INDEX #3 by its permission check and not approved by Bob before T5 closed: it needs his approval in the session that makes it (§16); the routes of the ops layers 6–7 move (N43's pattern); N70 (its share: `scripts/pensweep.mjs`'s `git check-ignore` under symlinked `node_modules`; N68's `op-claims` if T4's removal (N12) left any); N21 only if T5-11 leaves it open; N66 (its share) not here: its arms move with `capture` and `instance-setup`.
 - **legacy-tests** · T6-14 · re-anchor or retire what layers 6–7 break; N31 (its share: `fleetbundles` arm (j) with N14, and its listed reds); N53 (its share: the old skills tests released as they move); N68 (its share); N70 (its share: `owed-controls` after T5's N88); N46, N57 only if T5-12 leaves them open.
 
 **Size.** Seventeen jobs (layers 1–3: 3; layer 6: 10; layer 7: 2; layer 11: 2). T4: 13 jobs, 703.6M tokens.
