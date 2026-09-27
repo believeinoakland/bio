@@ -4762,7 +4762,7 @@ var BASIS_VERSION_CHECKS = {
        freeze arm)` said exactly this before REC-71 and no instrument could read
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
-    where: "src/store.mjs promote > basis-version-freeze, NOT reachable from a pure document check",
+    where: "src/store.mjs #promoteChecks > basis-version-freeze, reached from op=promote, NOT reachable from a pure document check",
     translation: "That version already exists and has been changed in place. A version is frozen once written, because two people comparing it must be comparing the same thing \u2014 so an edit becomes a NEW version derived from this one, and the original stays exactly as it was."
   },
   /* §6 rule 4's vocabulary. This is the SIXTH state machine and IS-2 owns its
@@ -4813,7 +4813,7 @@ var BASIS_VERSION_CHECKS = {
     check: "C-25.16",
     /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
        block at the head of this file. */
-    where: "src/store.mjs promote > basis-version-resolve, NOT reachable from a pure document check",
+    where: "src/store.mjs #promoteChecks > basis-version-resolve, reached from op=promote, NOT reachable from a pure document check",
     translation: "One part of that version rests on something this record does not hold. A reading of the evidence that points at a document nobody can open is a reading nobody can check."
   },
   /* THE READ'S TWO REFUSALS. Versions are versions OF an inquiry, so there is no
@@ -5576,7 +5576,7 @@ var BIAS_CHECKS = {
      file. */
   BIAS_REFUSED: {
     check: "C-26.11",
-    where: "src/store.mjs promote > bias-set-refusal, reached from op=promote",
+    where: "src/store.mjs #promoteChecks > bias-set-refusal, reached from op=promote",
     translation: "That bias set was not written. One or more of its statements is not something the record can honour, and each one is named below with what is wrong with it. Nothing was saved, so nothing needs undoing \u2014 correct the statements and write it again."
   },
   /* D-468 — THE MACHINE IS ENFORCED AT THE WRITE PATH, AND IT WAS NOT.
@@ -5610,7 +5610,7 @@ var BIAS_CHECKS = {
      whole-function `where` may never claim. */
   BIAS_ILLEGAL_TRANSITION: {
     check: "C-26.12",
-    where: "src/store.mjs promote > bias-state-edge, reached from op=promote",
+    where: "src/promotion/index.mjs #promote > bias-state-edge, reached from op=promote",
     translation: "That is not a move this bias set can make from where it stands. A set is written, then offered, then adopted \u2014 and once it is adopted the only move left is to retire it, because a case published under it names the revision it was held to and a set that could slide backwards would make that unresolvable after the fact. To change an adopted set, write the amendment AS the adopted set \u2014 a new revision re-pins the lens \u2014 or retire it and adopt a successor. Nothing was written."
   },
   BIAS_ADOPTION_NOT_PROPOSED: {
@@ -5852,7 +5852,7 @@ var AI_CREDENTIAL_CHECKS = {
        layer are independent, and neither absorbs the other. */
   AI_CREDENTIAL_MINT_NOT_A_MEMBER: {
     check: "C-29.1",
-    where: "src/store.mjs aiCredentialMint > is-ai-credential-mint",
+    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
     translation: "Only a named person signed in to this instance can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it \u2014 not even about itself."
   },
   /* D-199 (4) / DEC-55 det 4. An organisation-scoped key acts for the group with
@@ -5863,7 +5863,7 @@ var AI_CREDENTIAL_CHECKS = {
      credential nobody can decide what to show. */
   AI_CREDENTIAL_PRINCIPAL_UNSTATED: {
     check: "C-29.2",
-    where: "src/store.mjs aiCredentialMint > is-ai-credential-mint",
+    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
     translation: "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither."
   },
   /* THE IDENTITY IS WHAT ACTS CITE, so rebinding it would rewrite history from
@@ -5872,7 +5872,7 @@ var AI_CREDENTIAL_CHECKS = {
      than upserted. */
   AI_CREDENTIAL_IDENTITY_TAKEN: {
     check: "C-29.3",
-    where: "src/store.mjs aiCredentialMint > is-ai-credential-mint",
+    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
     translation: "That name already belongs to an agent credential on this instance. Acts in the record cite the name, so binding it to something new would quietly change who did work that has already been done. Retire the old one or choose another name."
   },
   /* ---- REVOKING. ALSO A MEMBER ACT, FOR A DIFFERENT REASON. ---- */
@@ -5883,14 +5883,14 @@ var AI_CREDENTIAL_CHECKS = {
      withdrew an authority when nobody in the group decided anything. */
   AI_CREDENTIAL_REVOKE_NOT_A_MEMBER: {
     check: "C-29.4",
-    where: "src/store.mjs aiCredentialRevoke > is-ai-credential-revoke",
+    where: "src/membership/index.mjs aiCredentialRevoke > is-ai-credential-revoke",
     translation: "Withdrawing an agent credential is recorded against the person who withdrew it, so a named member has to be the one doing it. An automated caller has no name to put there and the record would then show a decision nobody made."
   },
   /* A member who believes they revoked something and did not is worse off than
      one who was told plainly. */
   AI_CREDENTIAL_UNKNOWN: {
     check: "C-29.5",
-    where: "src/store.mjs aiCredentialRevoke > is-ai-credential-revoke",
+    where: "src/membership/index.mjs aiCredentialRevoke > is-ai-credential-revoke",
     translation: "There is no agent credential by that name on this instance, so nothing was withdrawn. Being told that plainly matters more than it looks: believing you have taken an authority away when you have not is the worse of the two outcomes."
   },
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
@@ -5941,6 +5941,23 @@ var AI_CREDENTIAL_CHECKS = {
     check: "C-29.10",
     where: "src/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
     translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
+  },
+  /* ---- WHO A CREDENTIAL MAY ACT FOR (T4, legacy-checks, N44, 2026-09-27). ---- */
+  /* Membership R29: a member-scoped credential's principal is the member who mints it. Naming another member
+     would let one member hand an agent another's sight and put acts in another's name. Until this row the
+     refusal carried `check: 'membership.R29'` and its own sentence. */
+  AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: {
+    check: "C-29.11",
+    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
+    translation: "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves."
+  },
+  /* Membership R62 (Bob, 2026-09-26): an organisation-scoped credential acts for the whole group, with nobody
+     individual behind it, so only an active administrator (the founder included) mints one. Until this row the
+     refusal carried `check: 'membership.R62'` and its own sentence. */
+  AI_CREDENTIAL_ORG_NOT_ADMIN: {
+    check: "C-29.12",
+    where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
+    translation: "A credential that acts for the whole group is created by one of its administrators, and the account asking is not an active administrator here. Nothing was created. You can create a credential that acts for you alone, or ask an administrator to create this one."
   }
 };
 var VERSION_STRENGTH_CHECKS = {
@@ -6160,7 +6177,7 @@ var MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_REOPEN: {
     check: "C-32.5",
-    where: "src/store.mjs reopen > is-machine-reopen",
+    where: "src/promotion/index.mjs #reopen > is-machine-reopen",
     translation: "Reopening overturns something the group decided to set down, and that judgement belongs to a person who will be named beside it. The credential that asked here is an automated one: it may raise a question and work one, and may not undo the group's own disposition. Sign in to reopen it."
   },
   MACHINE_CANNOT_PUBLISH: {
@@ -6281,7 +6298,7 @@ var MACHINE_FENCE_CHECKS = {
 var GOVERNING_LAW_CHECKS = {
   GOVERNING_LAWS_REWRITTEN: {
     check: "C-73.1",
-    where: "src/store.mjs promote > is-promote-governing-laws",
+    where: "src/store.mjs #promoteChecks > is-promote-governing-laws, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "The laws that govern a request are set by a member with the governing-laws act, and a document created or revised any other way carries them unchanged. This write would have set or changed them without that act, so nothing was written. Use the governing-laws act to state them."
   },
   NO_LAWS: {
@@ -6484,8 +6501,21 @@ var ACT_SHAPE_CHECKS = {
   },
   CAS_STALE: {
     check: "C-33.21",
-    where: "src/store.mjs promote > is-promote-cas",
+    where: "src/promotion/index.mjs #promote > is-promote-cas",
     translation: "Somebody else changed this document since you last read it, so writing now would quietly discard their work. Read it again, fold your change into what is there, and write once more."
+  },
+  /* T4 (legacy-checks, N36), 2026-09-27: promotion R1's other half. A REVISION of a bundle the record does not
+     hold, and (R20) of one the caller may not see, which answers exactly as one that does not exist. Numbered in
+     this family beside CAS_STALE, R1's third answer; R1's first, EXISTS, is C-96.4. It is minted by ONE literal in
+     promotion, the module-level `ABSENT` helper both of `#promote`'s answers return; that helper is not a declared
+     function the guard can open, so the `where` names the region promotion is to mark around the R1 answers.
+     Two sites outside promotion mint the same code with the same meaning (a bundle by that id that the caller can
+     see does not exist): `src/store.mjs gateFacts` (op=ratify) and `src/index.mjs` op=monitor. The translation is
+     written to be true at all three, and says nothing was changed rather than written, because the monitor reads. */
+  ABSENT: {
+    check: "C-33.49",
+    where: "src/promotion/index.mjs #promote > is-promote-absent",
+    translation: "There is no document by that id here that you can see. Either it does not exist, or it is not one you have been let into, and the answer is the same for both so that it says nothing about what you cannot see. Nothing was changed. To create a new document, create it rather than revising it."
   },
   /* REC-176 (the history law, BIO_State_Rules_Consistency_v1_5.md §2.4: "History is append-only; nothing in
      _history/ is ever modified or deleted"). `op=promote` wrote its manifest and history rows with INSERT OR
@@ -6496,22 +6526,22 @@ var ACT_SHAPE_CHECKS = {
      C-33.n, because two parallel promote items took C-33 numbers the same day. */
   SNAP_KEY_TAKEN: {
     check: "C-67.1",
-    where: "src/store.mjs promote > is-promote-snapkey",
+    where: "src/promotion/index.mjs #promote > is-promote-snapkey",
     translation: "This write names a history entry this document already has, and it is a different write from the one recorded there. The record never rewrites its history, so nothing was written. Send it again under a new history key."
   },
   SELF_BASIS: {
     check: "C-33.22",
-    where: "src/store.mjs promote > is-basis-acyclic",
+    where: "src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "A question cannot be the evidence for its own answer. This write would have it rest on itself, which reads as support and adds nothing anybody outside could check."
   },
   BASIS_CYCLE: {
     check: "C-33.23",
-    where: "src/store.mjs promote > is-basis-acyclic",
+    where: "src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "This write would close a loop: the chain it would join already rests, somewhere further along, on the thing being written. The path is named so the loop can be seen rather than re-derived, and support that circles back is support that rests on nothing."
   },
   FILES_DROPPED: {
     check: "C-33.24",
-    where: "src/store.mjs promote > is-promote-files",
+    where: "src/promotion/index.mjs #promote > is-promote-files",
     translation: "This write would remove files the previous revision had, and it does not say it means to. Carry them forward, or name them for deletion on purpose \u2014 losing part of a document by omission is not something the record will do quietly."
   },
   /* REC-175 (the Mechanical Verification Law, BIO_State_Rules_Consistency_v1_5.md §8: a stored digest is of the
@@ -6520,7 +6550,7 @@ var ACT_SHAPE_CHECKS = {
      its content address) and refuses a supplied value naming another, before anything is written. */
   FILE_DIGEST_MISMATCH: {
     check: "C-33.38",
-    where: "src/store.mjs promote > is-promote-digest",
+    where: "src/promotion/index.mjs #promote > is-promote-digest",
     translation: "A fingerprint sent with this write does not match the file it was sent with, so the record would have stored a fingerprint of something it does not hold. Nothing was written. Send the file again with its own fingerprint, or with none and the record will compute it."
   },
   NO_ALIAS: {
@@ -6540,7 +6570,7 @@ var ACT_SHAPE_CHECKS = {
   },
   LAST_OWNER: {
     check: "C-33.28",
-    where: "src/store.mjs projectOwnerRemove > is-owner-floor",
+    where: "src/membership/index.mjs projectOwnerRemove > is-owner-floor",
     translation: "A project always has at least one owner, so the last one cannot be removed \u2014 the result would be work nobody is answerable for. Add another owner first, or stand the project down."
   },
   /* ---------------------------------------------------------------------------
@@ -6793,11 +6823,18 @@ var ACT_SHAPE_CHECKS = {
   /* REC-186 (BOB #31, 2026-09-23 21:37Z): the last owner's request to leave. C-33.48, not the next
      free number on main, because REC-205 and REC-207's unmerged branches already hold C-33.44..46 in
      this family; the integrator renumbers if the union needs it. RENUMBERED C-33.47 -> C-33.48 by CONDUCT #22
-     (2026-09-25, c22-rec186-renumber): REC-207's renumber landed C-33.46/C-33.47 on main in c21-batch28. */
-  LAST_OWNER_CANNOT_LEAVE: {
+     (2026-09-25, c22-rec186-renumber): REC-207's renumber landed C-33.46/C-33.47 on main in c21-batch28.
+     T4 (legacy-checks, N44), 2026-09-27: THE SAME CHECK UNDER THE CODE ITS SITE NOW MINTS. Membership R35 (REC-224)
+     raised the floor from one owner to one COMMITTED owner (an owner who has not asked to leave), and the region
+     answers LAST_COMMITTED_OWNER; LAST_OWNER_CANNOT_LEAVE is minted nowhere, so this row was translating a code no
+     member can meet. C-33.48 keeps its number, its site and its region. Membership R40 mints the same code at a
+     second site, `projectOwnerRemove`, when a removal would leave only owners who have asked to leave; that site is
+     outside every region, and the translation below is written to be true at both (the control plane's
+     `dec49Decorate` attaches it at every site that mints the code). */
+  LAST_COMMITTED_OWNER: {
     check: "C-33.48",
-    where: "src/store.mjs projectLeave > is-leave-owner-floor",
-    translation: "You are the only owner of this project, and a project always keeps at least one owner, so a request to leave it is one nobody could ever carry out. Add another owner first, then ask to leave \u2014 or stand the project down. Nothing was recorded."
+    where: "src/membership/index.mjs projectLeave > is-leave-owner-floor",
+    translation: "A project always keeps at least one owner who is committed to it, and this would leave it with none: every other owner has asked to leave, or there is no other owner. Add another owner first \u2014 or stand the project down. Nothing was recorded."
   }
 };
 var ROUTE_MARK_CHECKS = {
@@ -8619,161 +8656,186 @@ var LEAD_CHECKS = {
 var MEMBER_ID_CHECKS = {
   MEMBER_ID_RESERVED: {
     check: "C-55.1",
-    where: "src/store.mjs memberAdd > is-member-id-reserved",
+    where: "src/membership/index.mjs memberAdd > is-member-id-reserved",
     translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
   }
 };
 var SIGNER_ENROLMENT_CHECKS = {
   SIGNER_MEMBER_NOT_ENROLLED: {
     check: "C-63.1",
-    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    where: "src/membership/index.mjs #signerMemberBar > is-signer-member-attesting",
     translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
   },
   SIGNER_MEMBER_NOT_ACTIVE: {
     check: "C-63.2",
-    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    where: "src/membership/index.mjs #signerMemberBar > is-signer-member-attesting",
     translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
   }
 };
 var CUSTODIAL_CHECKS = {
   NOT_AN_ADMIN: {
     check: "C-96.1",
-    where: "src/store.mjs #custodialBar > is-custodial-admin",
+    where: "src/membership/index.mjs #custodialBar > is-custodial-admin",
     translation: "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed."
   },
   BAD_MEMBER_ID: {
     check: "C-96.2",
-    where: "src/store.mjs memberAdd > is-member-add-id",
+    where: "src/membership/index.mjs memberAdd > is-member-add-id",
     translation: "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they enrol."
   },
   NO_COVER: {
     check: "C-96.3",
-    where: "src/store.mjs memberAdd > is-member-add-shape",
+    where: "src/membership/index.mjs memberAdd > is-member-add-shape",
     translation: "A cover is needed: the label you use to tell members apart. It need not be, and often should not be, a legal name. Nothing was written."
   },
   EXISTS: {
     check: "C-96.4",
-    where: "src/store.mjs memberAdd > is-member-add-shape",
+    where: "src/membership/index.mjs memberAdd > is-member-add-shape",
     translation: "That id is already taken in this record, so nothing new was created under it. Choose a different id."
   },
   ADMINS_FIRST: {
     check: "C-96.5",
-    where: "src/store.mjs memberAdd > is-admins-first",
+    where: "src/membership/index.mjs memberAdd > is-admins-first",
     translation: "This group needs a second administrator before it has any ordinary members, so that losing one person does not lose the group. Nothing was written. Invite this person as an administrator, or invite a second administrator first."
   },
   CONSENSUS_REQUIRED: {
     check: "C-96.6",
-    where: "src/store.mjs memberAdd > is-admin-consensus",
+    where: "src/membership/index.mjs memberAdd > is-admin-consensus",
     translation: "This addition needs the agreement of everyone who must agree to it \u2014 every existing administrator, or for a project every existing owner \u2014 and not all of them have agreed yet, so it has not taken effect. The answer lists who has agreed and who it is still waiting on."
   },
   ADMIN_REQUIRES_VOTE: {
     check: "C-96.7",
-    where: "src/store.mjs memberSet > is-admin-requires-vote",
+    where: "src/membership/index.mjs memberSet > is-admin-requires-vote",
     translation: "An administrator cannot be deactivated by another administrator acting alone. Removing an administrator takes a majority of all administrators, in which the one facing removal is counted but does not vote. Nothing was changed."
   },
   BAD_KEY: {
     check: "C-96.8",
-    where: "src/store.mjs signerAdd > is-signer-key-shape",
+    where: "src/membership/index.mjs signerAdd > is-signer-key-shape",
     translation: "That is not a public key this group can register. It takes the base64 part of an ssh-ed25519 public key, the part that begins AAAA. Nothing was written."
   },
   TARGET_NOT_AN_ADMIN: {
     check: "C-96.9",
-    where: "src/store.mjs adminRemove > is-remove-target-admin",
+    where: "src/membership/index.mjs adminRemove > is-remove-target-admin",
     translation: "The member named is not an administrator, so there is no administrator to remove. An ordinary member is deactivated instead, which one administrator can do. Nothing was changed."
+  },
+  /* ---- T4 (legacy-checks, N44), 2026-09-27: MEMBERSHIP'S NEW ACTS (N18), SAID IN WORDS. ----
+     Each code is minted at ONE site in `src/membership/index.mjs`. Those sites carry no DEC-49 region yet, and a
+     whole-function `where` cannot serve: each function also refuses with codes held elsewhere (NOT_AN_ADMIN,
+     NO_SUCH_MEMBER), which a whole-function site would judge as not this family's. So each `where` names the region
+     membership is to mark around its one refusal; until it does, the guard reports the region missing, and the
+     control plane's `dec49Decorate` already attaches the row at the wire. */
+  /* Membership R10 (§4.5, §4.2): an administrator resigns only while more than two exist. */
+  RESIGN_AT_TWO: {
+    check: "C-96.10",
+    where: "src/membership/index.mjs adminResign > is-admin-resign-floor",
+    translation: "Administrative access here is always shared by at least two people, and there are no more than two administrators now, so none of them can step down yet. Nothing was changed. Once a third administrator has been added, you can resign and become an ordinary member."
+  },
+  /* Membership R11 (§4.8): the record of who holds hosting access names somebody. */
+  NO_HOLDERS: {
+    check: "C-96.11",
+    where: "src/membership/index.mjs hostingAccessSet > is-hosting-access-holders",
+    translation: "This records who holds access to the hosting account the group's instance runs in, and it named nobody. Write the people who hold that access. Nothing was written."
+  },
+  /* Membership R19 (§3, "Pairing"): whether a member's cover and handle are shown together is that member's
+     decision, or an administrator's. */
+  PAIRING_NOT_YOURS: {
+    check: "C-96.12",
+    where: "src/membership/index.mjs memberPairingSet > is-pairing-yours",
+    translation: "Whether a member's cover is shown beside their handle is theirs to decide, or an administrator's, and you are neither for this member. Nothing was changed."
   }
 };
 var PROJECT_AUTHORITY_CHECKS = {
   PROJECT_ACT_NOT_A_PARTICIPANT: {
     check: "C-56.1",
-    where: "src/store.mjs #projectAuthority > is-project-authority",
+    where: "src/membership/index.mjs projectAuthority > is-project-authority",
     translation: "Only someone working in this project can do that. You can see the project, but you have not joined it, and seeing a project does not let you change it \u2014 administrators included. Nothing was changed. Ask an owner of the project to invite you, then join it."
   },
   PROJECT_ACT_NOT_THE_OWNER: {
     check: "C-56.2",
-    where: "src/store.mjs #projectAuthority > is-project-authority",
+    where: "src/membership/index.mjs projectAuthority > is-project-authority",
     translation: "Only an owner of this project can do that. You are not one of its owners, and seeing a project does not let you direct it \u2014 administrators included. Nothing was changed."
   }
 };
 var PROJECT_VISIBILITY_CHECKS = {
   PROJECT_SEEN_NOT_A_PARTICIPANT: {
     check: "C-70.1",
-    where: "src/store.mjs #existenceOnly > is-project-existence-only",
+    where: "src/membership/index.mjs #existenceOnly > is-project-existence-only",
     translation: "This project can be found, but you are not one of its participants, so you cannot do that in it or see what is inside it. Nothing was changed. You can ask its owners to add you."
   },
   PROJECT_VISIBILITY_NOT_THE_OWNER: {
     check: "C-70.2",
-    where: "src/store.mjs projectVisibilitySet > is-project-visibility-owner",
+    where: "src/membership/index.mjs projectVisibilitySet > is-project-visibility-owner",
     translation: "Only an owner of this project can choose whether it can be found. You are not one of its owners, and seeing a project does not let you direct it \u2014 administrators included. Nothing was changed."
   },
   PROJECT_VISIBILITY_UNKNOWN_SETTING: {
     check: "C-70.3",
     /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
        `visibility`), so this row names that helper's region and the code keeps ONE site. */
-    where: "src/store.mjs #visibilitySettingRefusal > is-project-visibility-setting",
+    where: "src/membership/index.mjs visibilitySettingRefusal > is-project-visibility-setting",
     translation: "A project is either discoverable or hidden, and nothing else. Nothing was changed. Choose one of the two."
   },
   PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
     check: "C-70.4",
-    where: "src/store.mjs projectDirectory > is-project-directory-member",
+    where: "src/membership/index.mjs projectDirectory > is-project-directory-member",
     translation: "The list of projects you can ask to join is for a signed-in member. Sign in as yourself to see it."
   }
 };
 var PROJECT_JOIN_REQUEST_CHECKS = {
   PROJECT_REQUEST_NEEDS_A_MEMBER: {
     check: "C-95.1",
-    where: "src/store.mjs #noRequester > is-join-request-member",
+    where: "src/membership/index.mjs #noRequester > is-join-request-member",
     translation: "Asking to join a project, withdrawing that request and reading your own requests are things a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed."
   },
   PROJECT_REQUEST_NOT_OUTSIDE: {
     check: "C-95.2",
-    where: "src/store.mjs projectRequest > is-join-request-ask",
+    where: "src/membership/index.mjs projectRequest > is-join-request-ask",
     translation: "You can already see this project, so there is nothing to ask. If you were invited, join it with its checkbox. Nothing was changed."
   },
   PROJECT_REQUEST_ALREADY_OPEN: {
     check: "C-95.3",
-    where: "src/store.mjs projectRequest > is-join-request-ask",
+    where: "src/membership/index.mjs projectRequest > is-join-request-ask",
     translation: "You already have a request open to join this project. Its owners answer it; you can withdraw it and ask again. Nothing was changed."
   },
   PROJECT_REQUEST_NONE_OPEN: {
     check: "C-95.4",
-    where: "src/store.mjs #noOpenRequest > is-join-request-none-open",
+    where: "src/membership/index.mjs #noOpenRequest > is-join-request-none-open",
     translation: "There is no open request to join here to act on. It may already have been answered, withdrawn or lapsed. Nothing was changed."
   },
   PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
     check: "C-95.5",
-    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    where: "src/membership/index.mjs projectRequestAnswer > is-join-request-answer",
     translation: "Only an owner of this project can grant or decline a request to join it. Administrators see requests and answer none. Nothing was changed."
   },
   PROJECT_REQUEST_UNKNOWN_ANSWER: {
     check: "C-95.6",
-    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    where: "src/membership/index.mjs projectRequestAnswer > is-join-request-answer",
     translation: "A request to join is either granted or declined, and nothing else. Choose one of the two. Nothing was changed."
   },
   PROJECT_REQUEST_REQUESTER_INACTIVE: {
     check: "C-95.7",
-    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    where: "src/membership/index.mjs projectRequestAnswer > is-join-request-answer",
     translation: "The member who asked is no longer active, so they cannot be invited. The request stays open; you can decline it. Nothing was changed."
   },
   PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: {
     check: "C-95.8",
-    where: "src/store.mjs projectRequestAnswer > is-join-request-answer",
+    where: "src/membership/index.mjs projectRequestAnswer > is-join-request-answer",
     translation: "The member who asked is already a participant of this project, so granting would invite nobody new. You can decline the request, or they can withdraw it. Nothing was changed."
   },
   PROJECT_REQUESTS_NOT_VISIBLE: {
     check: "C-95.9",
-    where: "src/store.mjs projectRequests > is-join-requests-project",
+    where: "src/membership/index.mjs projectRequests > is-join-requests-project",
     translation: "A project's requests to join are seen by the people who asked, its owners and administrators. You can read your own requests without naming a project."
   }
 };
 var PROJECT_CREATION_VISIBILITY_CHECKS = {
   PROJECT_VISIBILITY_NO_OWNER: {
     check: "C-97.1",
-    where: "src/store.mjs promote > is-project-creation-ownerless",
+    where: "src/promotion/index.mjs #promote > is-project-creation-ownerless",
     translation: "Whether a project can be found is chosen by its owners, and a project created by a machine credential has no owner, so it is created hidden and cannot be made discoverable here. Nothing was created. Create it without the setting; an owner who joins it later can make it discoverable."
   },
   PROJECT_VISIBILITY_NOT_A_CREATION: {
     check: "C-97.2",
-    where: "src/store.mjs promote > is-project-creation-visibility",
+    where: "src/promotion/index.mjs #promote > is-project-creation-visibility",
     translation: "Whether a project can be found is chosen when it is created or forked, and this was not a project being created. Nothing was changed. An owner changes an existing project's setting in its settings."
   }
 };
@@ -8785,7 +8847,7 @@ var CASE_AUTHORITY_CHECKS = {
        ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
        was corrected from "this case" to "a case, and each finding in it" at the same time,
        because the same code now answers at both acts and the old sentence was false at one. */
-    where: "src/store.mjs #caseAuthority > is-case-signer-owner",
+    where: "src/membership/index.mjs caseAuthority > is-case-signer-owner",
     translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
   }
 };
@@ -8829,7 +8891,7 @@ var SURFACE_CHECKS = {
      a revision may not supply an origin its creation did not record, nor drop one it did. */
   SURFACED_BY_REWRITTEN: {
     check: "C-66.5",
-    where: "src/store.mjs promote > is-promote-surfaced-by",
+    where: "src/store.mjs #promoteChecks > is-promote-surfaced-by, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "This revision changes who surfaced the question, a member or an assistant. That is recorded once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the value the current version carries and save the revision again."
   },
   /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
@@ -8878,22 +8940,22 @@ var RATIFY_SCOPE_CHECKS = {
 var PROJECT_ID_CHECKS = {
   PROJECT_ID_SUPPLIED: {
     check: "C-59.1",
-    where: "src/store.mjs promote > is-project-id-supplied",
+    where: "src/promotion/index.mjs #promote > is-project-id-supplied",
     translation: "A new project is given its id by the record; it is not chosen. This request named an id, so nothing was created. Send it again without one, and the record will answer with the id it gave the project."
   },
   PROJECT_ID_IN_BYTES: {
     check: "C-59.2",
-    where: "src/store.mjs promote > is-project-id-bytes",
+    where: "src/promotion/index.mjs #promote > is-project-id-bytes",
     translation: "A new project's document must not carry an id line: the record writes the project's id into the document itself when it creates it. Remove the id line and send it again. Nothing was created."
   },
   PROJECT_FORK_ID_SUPPLIED: {
     check: "C-59.3",
-    where: "src/store.mjs forkProject > is-project-fork-id-supplied",
+    where: "src/promotion/index.mjs #fork > is-project-fork-id-supplied",
     translation: "A fork is given its id by the record; it is not chosen. This request named one, so nothing was forked. Send it again without an id, and the record will answer with the id it gave the fork."
   },
   PROJECT_DOCUMENT_UNREADABLE: {
     check: "C-59.4",
-    where: "src/store.mjs promote > is-project-id-bytes",
+    where: "src/promotion/index.mjs #promote > is-project-id-bytes",
     translation: "The record could not write the new project's id into its document, because the document sent is not text that begins with a front matter block. Nothing was created."
   },
   /* REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): an id of a GATED
@@ -8901,7 +8963,7 @@ var PROJECT_ID_CHECKS = {
      allocates one — a counter read through op=allocid would say how many exist, hidden ones included. */
   ALLOCID_PREFIX_GATED: {
     check: "C-59.5",
-    where: "src/store.mjs allocIdOp > is-allocid-prefix-gated",
+    where: "src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated",
     translation: "Ids of this kind are given by the record when the thing itself is created, and are not handed out in advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. Nothing was allocated."
   }
 };
@@ -9751,7 +9813,7 @@ var CONNECTION_CHOICE_CHECKS = {
 var PROMOTED_TYPE_CHECKS = {
   ENVELOPE_TYPE_DISAGREES: {
     check: "C-86.1",
-    where: "src/store.mjs promote > is-promoted-type-disagrees",
+    where: "src/promotion/index.mjs #promote > is-promoted-type-disagrees",
     translation: "The document being filed says what kind of thing it is, and the request that carried it says something different. The record goes by the document, so rather than file an action as information \u2014 or the reverse \u2014 and index it as neither, it stops and tells you both answers. Nothing was written. Send it again with the request naming the type the document names, or change the document first."
   },
   /* D-547 (2026-09-25) — the SECOND way a promotion's type can be wrong, and it is not the first one twice: C-86.1
@@ -9760,7 +9822,7 @@ var PROMOTED_TYPE_CHECKS = {
    * type-scoped fence would then ask the wrong machine. Replay is exempt, as for C-86.1. */
   REVISION_RETYPES_BUNDLE: {
     check: "C-86.2",
-    where: "src/store.mjs promote > is-promote-retypes-bundle",
+    where: "src/promotion/index.mjs #promote > is-promote-retypes-bundle",
     translation: "This change would turn something the record already holds into a different kind of thing, an item of information into an action, say. A change can alter what a document says, but not what it is, because what it is decides which rules protect it. Nothing was written. To record it as the other kind, create a new one of that kind and link the two."
   },
   /* D-563 (2026-09-25) — C-86.1's rule one field over, twice: the document states what it is CALLED and where it STANDS,
@@ -9770,19 +9832,19 @@ var PROMOTED_TYPE_CHECKS = {
    * word. Replay is exempt, as for C-86.1. */
   ENVELOPE_TITLE_DISAGREES: {
     check: "C-86.3",
-    where: "src/store.mjs promote > is-promoted-title-disagrees",
+    where: "src/promotion/index.mjs #promote > is-promoted-title-disagrees",
     translation: "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across the instance, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first."
   },
   ENVELOPE_STATE_DISAGREES: {
     check: "C-86.4",
-    where: "src/store.mjs promote > is-promoted-state-disagrees",
+    where: "src/promotion/index.mjs #promote > is-promoted-state-disagrees",
     translation: "The document being filed says where it stands, and the request that carried it says something different. Where a thing stands decides who may move it and what may cite it, and the record goes by the document, so it stops and tells you both. Nothing was written. Send it again with the request saying what the document says, or saying nothing about it, or change the document first."
   }
 };
 var RISK_TIER_REVISION_CHECKS = {
   RISK_TIER_REWRITTEN: {
     check: "C-90.1",
-    where: "src/store.mjs promote > is-promote-risk-tier",
+    where: "src/store.mjs #promoteChecks > is-promote-risk-tier, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "After an action is created, its risk tier changes only through the risk-tier act, which records who changed it, when and why, and keeps every earlier tier readable. This write would have changed the tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act."
   },
   BAD_RISK_TIER: {

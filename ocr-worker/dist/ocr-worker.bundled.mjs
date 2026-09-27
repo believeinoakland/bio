@@ -3219,8 +3219,21 @@ var JPX_REFUSES = Object.freeze({
   "a JP2 palette": "the image's samples index a palette (pclr box)",
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
-  "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked"
+  "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: 4 bytes a sample for every component of the largest tile, and a tiled image's 8-bit output beside them"
 });
+var MEMORY_BOUND = 613e5;
+function workingSet(siz) {
+  const span = (o, to, t, end) => {
+    const n = ceilDiv(end - to, t);
+    let max = 0;
+    for (const p of /* @__PURE__ */ new Set([0, Math.min(1, n - 1), n - 1])) max = Math.max(max, Math.min(to + (p + 1) * t, end) - Math.max(to + p * t, o));
+    return { n, max };
+  };
+  const x = span(siz.XO, siz.XTO, siz.XT, siz.X), y = span(siz.YO, siz.YTO, siz.YT, siz.Y);
+  const nc = siz.comps.length;
+  return nc * x.max * y.max * 4 + (x.n * y.n > 1 ? (siz.X - siz.XO) * (siz.Y - siz.YO) * nc : 0);
+}
 var f32 = Math.fround;
 function boxes(d, p, end) {
   const out = [];
@@ -3602,9 +3615,10 @@ var RawDecoder = class {
     return this.c >> this.ct & 1;
   }
 };
-function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out) {
+function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scratch) {
   const fw = w + 2;
-  const flags = new Uint16Array(fw * (h + 2));
+  const flags = scratch.subarray(0, fw * (h + 2));
+  flags.fill(0);
   const ctx = mqContexts(19);
   const resetCtx = () => {
     ctx.fill(0);
@@ -3793,7 +3807,7 @@ function packetOrder(tc, layers, progs, tile, comps) {
   }
   return out;
 }
-function decodeTile(cs, t, tileNo) {
+function decodeTile(cs, t, tileNo, pool) {
   const { siz, main } = cs;
   const cod = t.cod || main.cod;
   const nTx = ceilDiv(siz.X - siz.XTO, siz.XT);
@@ -3934,9 +3948,12 @@ function decodeTile(cs, t, tileNo) {
     }
   }
   const irreversible = tc.map((x) => x.sp.qmfbid === 0);
+  const flagScratch = new Uint16Array(1026 * 6);
   const planes = tc.map((x, c) => {
     const w = x.x1 - x.x0, h = x.y1 - x.y0;
-    const plane = irreversible[c] ? new Float32Array(w * h) : new Int32Array(w * h);
+    if (!pool[c] || pool[c].byteLength < w * h * 4) pool[c] = new ArrayBuffer(w * h * 4);
+    const plane = irreversible[c] ? new Float32Array(pool[c], 0, w * h) : new Int32Array(pool[c], 0, w * h);
+    plane.fill(0);
     const tmp = new Int32Array(4096);
     for (let r = 0; r < x.res.length; r++) {
       const R0 = x.res[r], prev = r ? x.res[r - 1] : null;
@@ -3950,7 +3967,7 @@ function decodeTile(cs, t, tileNo) {
           const bpn = x.roi + cb.numbps;
           if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
           tmp.fill(0, 0, cw * ch);
-          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp);
+          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, flagScratch);
           if (x.roi) {
             const th = 2 ** x.roi;
             for (let i = 0; i < cw * ch; i++) {
@@ -4038,13 +4055,18 @@ function decodeJpx(d) {
     if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
   }
   const W2 = siz.X - siz.XO, H = siz.Y - siz.YO;
+  const need = workingSet(siz);
+  if (need > MEMORY_BOUND) {
+    throw unsupported2("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
+  }
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   let out = nTiles > 1 ? new Uint8Array(W2 * H * nc) : null;
   if (cs.tiles.size < nTiles) throw truncated2(`${cs.tiles.size} of ${nTiles} tiles are present`);
   let transform = null;
+  const pool = [];
   for (const [no, t] of cs.tiles) {
     if (no >= nTiles) throw corrupt2(`tile ${no} of ${nTiles}`);
-    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no);
+    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no, pool);
     transform ??= irreversible[0] ? "9/7" : "5/3";
     const shift = 1 << 7;
     if (!out) out = new Uint8Array(planes[0].buffer, 0, W2 * H * nc);
@@ -4077,510 +4099,7 @@ function decodeJpx(d) {
   };
 }
 
-// ../pdf-worker/src/pagepixels.mjs
-var LATIN12 = new TextDecoder("latin1");
-var REFUSALS = {
-  NOT_A_PDF: "the bytes do not carry a %PDF- header",
-  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
-  NO_SUCH_PAGE: "the page index is outside the document",
-  PAGE_UNREADABLE: "the page object could not be read",
-  PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
-  NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page references no image XObject",
-  MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
-  IMAGE_UNREADABLE: "the image XObject's stream could not be read",
-  UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
-  UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
-  TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
-  DECODE_FAILED: "the decoder could not read the image data",
-  UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here"
-};
-var refuse = (reason, detail = {}) => {
-  if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
-  return { ok: false, reason, why: REFUSALS[reason], ...detail };
-};
-async function loadPdf2(bytes) {
-  return openPdf(bytes);
-}
-var nameOf2 = (doc, v) => {
-  v = doc.resolve(v);
-  return v && v.t === "name" ? v.v : null;
-};
-var numOf = (doc, v) => {
-  v = doc.resolve(v);
-  return typeof v === "number" ? v : null;
-};
-function decodeParms(doc, dict, idx) {
-  let p = doc.resolve(dict.DecodeParms) ?? doc.resolve(dict.DP);
-  if (p && p.t === "arr") p = doc.resolve(p.items[idx] ?? p.items[p.items.length - 1]);
-  return p && p.t === "dict" ? p.map : null;
-}
-function inheritedAttr(doc, pageMap, key) {
-  let p = pageMap;
-  for (let d = 0; p && d <= 32; d++) {
-    if (p[key] !== void 0) return doc.resolve(p[key]);
-    p = doc.dictOf(p.Parent);
-  }
-  return void 0;
-}
-function pageRotate(doc, pageMap) {
-  const r = inheritedAttr(doc, pageMap, "Rotate");
-  if (r === void 0) return 0;
-  if (!Number.isInteger(r) || r % 90 !== 0) return null;
-  return (r % 360 + 360) % 360;
-}
-async function pageContentText(doc, pageMap) {
-  const c = doc.resolve(pageMap.Contents);
-  const parts = [];
-  const one = async (v) => {
-    const st = doc.resolve(v);
-    if (!st || st.t !== "stream") return;
-    const data = await doc.streamDecoded(st);
-    if (data) parts.push(LATIN12.decode(data));
-  };
-  if (c && c.t === "arr") {
-    for (const it of c.items) await one(it);
-  } else await one(pageMap.Contents);
-  return parts.join("\n");
-}
-function maskedContent(s) {
-  let out = "";
-  let i = 0;
-  while (i < s.length) {
-    const ch = s[i];
-    if (ch === "(") {
-      let depth = 1;
-      i++;
-      while (i < s.length && depth > 0) {
-        if (s[i] === "\\") {
-          i += 2;
-          continue;
-        }
-        if (s[i] === "(") depth++;
-        else if (s[i] === ")") depth--;
-        i++;
-      }
-      out += " () ";
-      continue;
-    }
-    if (ch === "<" && s[i + 1] !== "<") {
-      const e = s.indexOf(">", i);
-      i = e === -1 ? s.length : e + 1;
-      out += " <> ";
-      continue;
-    }
-    if (ch === "%") {
-      const e = s.indexOf("\n", i);
-      i = e === -1 ? s.length : e + 1;
-      out += " ";
-      continue;
-    }
-    if (ch === "B" && s[i + 1] === "I" && /[\s/]/.test(s[i + 2] || " ")) {
-      const id = s.indexOf("ID", i);
-      if (id !== -1) {
-        const ei = s.indexOf("EI", id);
-        i = ei === -1 ? s.length : ei + 2;
-        out += " INLINEIMAGE ";
-        continue;
-      }
-    }
-    out += ch;
-    i++;
-  }
-  return out;
-}
-var VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
-function imageOf(doc, placement) {
-  const src = imagePlacementSource(placement);
-  const st = src ? src.stream : null;
-  const d = st ? st.dict : {};
-  return {
-    name: placement.name,
-    inline: placement.inline === true,
-    obj: st,
-    width: placement.width,
-    height: placement.height,
-    bpc: numOf(doc, d.BitsPerComponent),
-    colorSpace: nameOf2(doc, d.ColorSpace) || (d.ColorSpace ? "\xABindirect\xBB" : null),
-    isMask: doc.resolve(d.ImageMask) === true,
-    filters: placement.filters
-  };
-}
-async function analyzePage(doc, pageIndex) {
-  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
-  const pageMap = doc.pageDict(pageIndex);
-  if (!pageMap) return null;
-  const painted = await pdfPageImages(doc, pageIndex);
-  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
-  let content = "";
-  try {
-    content = await pageContentText(doc, pageMap);
-  } catch {
-    content = "";
-  }
-  const masked = maskedContent(content);
-  let textShown = null;
-  try {
-    textShown = await pageShowsText(doc, pageMap);
-  } catch {
-    textShown = null;
-  }
-  const mediaBox = (() => {
-    const m = inheritedAttr(doc, pageMap, "MediaBox");
-    if (!m || m.t !== "arr" || m.items.length < 4) return null;
-    const v = m.items.map((x) => numOf(doc, x));
-    if (v.some((x) => x == null)) return null;
-    return { w: Math.abs(v[2] - v[0]), h: Math.abs(v[3] - v[1]) };
-  })();
-  return {
-    page: pageIndex,
-    contentBytes: content.length,
-    contentReadable: content.length > 0 || !pageMap.Contents,
-    hasTextOps: textShown === true,
-    textShown,
-    hasVectorOps: VECTOR_OPS.test(masked),
-    hasInlineImage: masked.includes("INLINEIMAGE"),
-    images: images.map(({ obj, ...rest }) => rest),
-    _images: images,
-    imagesWhy: painted.why,
-    drawnImageNames: images.map((im) => im.name),
-    imageCount: images.length,
-    mediaBox,
-    rotate: pageRotate(doc, pageMap)
-  };
-}
-async function renderPageToPixels(bytes, pageIndex, opts = {}) {
-  const doc = await loadPdf2(bytes);
-  if (!doc) return refuse("NOT_A_PDF");
-  if (doc.isEncrypted()) return refuse("ENCRYPTED");
-  const a = await analyzePage(doc, pageIndex);
-  if (!a) {
-    const n = doc.pageCount;
-    return pageIndex >= 0 && pageIndex < n ? refuse("PAGE_UNREADABLE", { page: pageIndex }) : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
-  }
-  if (a.rotate === null) {
-    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
-  }
-  if (a.hasTextOps && !opts.allowTextPage) {
-    return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
-  }
-  if (a.imagesWhy) {
-    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
-  }
-  if (a.imageCount === 0) {
-    return refuse(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
-      page: pageIndex,
-      hasVectorOps: a.hasVectorOps,
-      hasInlineImage: a.hasInlineImage
-    });
-  }
-  if (a.imageCount > 1) {
-    return refuse("MULTIPLE_IMAGES_ON_PAGE", {
-      page: pageIndex,
-      imageCount: a.imageCount,
-      images: a.images.map((i) => ({ width: i.width, height: i.height, filters: i.filters }))
-    });
-  }
-  const im = a._images[0];
-  if (!im.obj) {
-    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
-  }
-  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
-  if (!out.ok) return { ...out, page: pageIndex };
-  return {
-    ok: true,
-    page: pageIndex,
-    route: out.route,
-    mediaType: out.mediaType,
-    bytes: out.bytes,
-    width: out.width ?? im.width,
-    height: out.height ?? im.height,
-    /* Are these pixels the page as a READER sees it? A route that could not
-     * apply the page's own /Rotate says so HERE rather than leaving a consumer
-     * to discover it in its output. See the note on rotateBilevel. */
-    upright: out.upright,
-    rotate_deg: a.rotate,
-    source: {
-      filters: im.filters,
-      colorSpace: im.colorSpace,
-      bitsPerComponent: im.bpc,
-      imageMask: im.isMask
-    },
-    page_geometry: {
-      mediaBoxPt: a.mediaBox,
-      rotate: a.rotate,
-      dpi: a.mediaBox && im.width && im.height ? { x: +(im.width / (a.mediaBox.w / 72)).toFixed(1), y: +(im.height / (a.mediaBox.h / 72)).toFixed(1) } : null
-    },
-    page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
-    ...out.ccitt ? { ccitt: out.ccitt } : {},
-    ...out.dct ? { dct: out.dct } : {},
-    ...out.jbig2 ? { jbig2: out.jbig2 } : {},
-    ...out.jpx ? { jpx: out.jpx } : {},
-    /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
-     * the cross-runtime arm of the probe found the file digest to be RUNTIME-
-     * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
-     * workerd's and node's produce different (both valid) deflate streams for
-     * identical input: the same page rendered by the same code came out
-     * 147,251 B on workerd and 152,499 B on node. The PIXELS were identical.
-     * A record that hashes the FILE therefore records a value no verifier on a
-     * different runtime can reproduce, which is the whole point of a hash here.
-     * So a decoded route also carries `pixels_sha256`, taken over the normalised
-     * samples before any container is built. A pass-through route does not need
-     * one: its bytes are the publisher's own and are byte-stable by definition. */
-    ...out.pixelsSha256 ? { pixels_sha256: out.pixelsSha256 } : {}
-  };
-}
-async function decodeImage(doc, im, opts) {
-  const dict = im.obj.dict;
-  const filters = im.filters;
-  const last = filters[filters.length - 1] || null;
-  if (last === "DCTDecode" || last === "DCT") {
-    if (filters.length > 1) return refuse("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
-    const raw = doc.streamRawBytes(im.obj);
-    if (!raw || raw.length < 4) return refuse("IMAGE_UNREADABLE", { filters });
-    if (!(raw[0] === 255 && raw[1] === 216)) {
-      return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
-    }
-    if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
-    return {
-      ok: true,
-      route: "passthrough-dct",
-      mediaType: "image/jpeg",
-      bytes: raw,
-      upright: (opts.rotate || 0) === 0
-    };
-  }
-  if (!im.width || !im.height) return refuse("IMAGE_UNREADABLE", { filters });
-  if (last === "CCITTFaxDecode" || last === "CCF") {
-    let data = doc.streamRawBytes(im.obj);
-    if (filters.length > 1) {
-      if (filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) {
-        const st = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
-        data = await doc.streamDecoded(st);
-      } else return refuse("UNSUPPORTED_FILTER", { filters });
-    }
-    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
-    const p = decodeParms(doc, dict, filters.length - 1) || {};
-    const K2 = numOf(doc, p.K) ?? 0;
-    const columns = numOf(doc, p.Columns) ?? 1728;
-    const rows = numOf(doc, p.Rows) ?? im.height;
-    if (K2 > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
-    const blackIs1 = doc.resolve(p.BlackIs1) === true;
-    const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
-    let bits;
-    try {
-      bits = ccittDecode(data, { K: K2, columns, rows, byteAlign });
-    } catch (e) {
-      return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
-    }
-    if (bits.rowsDecoded < im.height) {
-      return refuse("TRUNCATED_IMAGE_DATA", {
-        filters,
-        declaredHeight: im.height,
-        rowsDecoded: bits.rowsDecoded,
-        columns
-      });
-    }
-    const dec = doc.resolve(dict.Decode);
-    const decodeInverts = dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1;
-    let invert = false;
-    if (blackIs1) invert = !invert;
-    if (decodeInverts) invert = !invert;
-    const packed0 = invert ? bits.packed.map((b) => ~b & 255) : bits.packed;
-    const rot = rotateBilevel(normalisePacked(packed0, columns, im.height), columns, im.height, opts.rotate || 0);
-    const png = await encodePng1(rot.packed, rot.width, rot.height);
-    return {
-      ok: true,
-      route: "decoded-ccitt-g4",
-      mediaType: "image/png",
-      bytes: png,
-      width: rot.width,
-      height: rot.height,
-      upright: true,
-      pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
-      ccitt: { K: K2, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded }
-    };
-  }
-  if (last === "JBIG2Decode") {
-    let data = doc.streamRawBytes(im.obj);
-    if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
-      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
-    }
-    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
-    const p = decodeParms(doc, dict, filters.length - 1);
-    let globals = null;
-    if (p && p.JBIG2Globals !== void 0) {
-      const g = doc.resolve(p.JBIG2Globals);
-      globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
-      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
-    }
-    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
-    let out;
-    try {
-      out = decodeJbig2(data, globals);
-    } catch (e) {
-      if (!(e instanceof Jbig2Refusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
-      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
-      return refuse(reason, { filter: last, filters, jbig2: e.code, ...e.detail });
-    }
-    if (out.width !== im.width || out.height > im.height) {
-      return refuse("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
-    }
-    if (out.height < im.height) {
-      return refuse("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
-    }
-    const samples2 = out.packed.map((b) => ~b & 255);
-    const bi = await bilevelPng(doc, dict, samples2, im.width, im.height, opts.rotate || 0);
-    return {
-      ok: true,
-      route: "decoded-jbig2",
-      mediaType: "image/png",
-      ...bi,
-      upright: true,
-      jbig2: { ...out.detail, globals_bytes: globals ? globals.length : 0, stream_bytes: data.length }
-    };
-  }
-  if (last === "JPXDecode") {
-    let data = doc.streamRawBytes(im.obj);
-    if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
-      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
-    }
-    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
-    if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
-    if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
-    const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
-    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
-    let out;
-    try {
-      out = decodeJpx(data);
-    } catch (e) {
-      if (!(e instanceof JpxRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
-      const reason = { UNSUPPORTED: "UNSUPPORTED_FILTER", UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
-      return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
-    }
-    if (pdfComps !== null && pdfComps !== out.comps) {
-      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
-    }
-    if (out.width !== im.width || out.height !== im.height) {
-      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
-    }
-    const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
-    out.samples = null;
-    return {
-      ok: true,
-      route: "decoded-jpx",
-      mediaType: "image/png",
-      upright: true,
-      width: rot.width,
-      height: rot.height,
-      pixelsSha256: await sha256Hex(rot.samples),
-      bytes: await encodePng8(rot.samples, rot.width, rot.height, out.comps),
-      jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length }
-    };
-  }
-  if (filters.length === 0 || filters.every((f) => f === "FlateDecode" || f === "Fl")) {
-    const data = await doc.streamDecoded(im.obj);
-    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
-    const bpc = im.isMask ? 1 : im.bpc ?? 8;
-    const cs = im.colorSpace;
-    const comps = im.isMask ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceGray" ? 1 : null;
-    if (comps == null) return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, filters });
-    const rowBytes = Math.ceil(im.width * comps * bpc / 8);
-    const need = rowBytes * im.height;
-    if (data.length < need) {
-      return refuse("TRUNCATED_IMAGE_DATA", {
-        filters,
-        declaredHeight: im.height,
-        haveBytes: data.length,
-        needBytes: need
-      });
-    }
-    if (bpc === 1 && comps === 1) {
-      const bi = await bilevelPng(doc, dict, data.subarray(0, need), im.width, im.height, opts.rotate || 0);
-      return { ok: true, route: "raw-samples-1bit", mediaType: "image/png", upright: true, ...bi };
-    }
-    if (bpc === 8) {
-      const rot = rotate8(data.subarray(0, need), im.width, im.height, comps, opts.rotate || 0);
-      return {
-        ok: true,
-        route: comps === 3 ? "raw-samples-rgb8" : "raw-samples-grey8",
-        mediaType: "image/png",
-        upright: true,
-        width: rot.width,
-        height: rot.height,
-        pixelsSha256: await sha256Hex(rot.samples),
-        bytes: await encodePng8(rot.samples, rot.width, rot.height, comps)
-      };
-    }
-    return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
-  }
-  return refuse("UNSUPPORTED_FILTER", { filters });
-}
-async function bilevelPng(doc, dict, samples2, width, height, rotate) {
-  const dec = doc.resolve(dict.Decode);
-  const invert = !!(dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1);
-  const packed0 = invert ? Uint8Array.from(samples2, (b) => ~b & 255) : Uint8Array.from(samples2);
-  const rot = rotateBilevel(normalisePacked(packed0, width, height), width, height, rotate);
-  return {
-    width: rot.width,
-    height: rot.height,
-    pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
-    bytes: await encodePng1(rot.packed, rot.width, rot.height)
-  };
-}
-function jpxColourComponents(doc, csv) {
-  const cs = doc.resolve(csv);
-  if (cs == null) return null;
-  if (cs.t === "name") return cs.v === "DeviceGray" ? 1 : cs.v === "DeviceRGB" ? 3 : false;
-  if (cs.t === "arr" && nameOf2(doc, cs.items[0]) === "ICCBased") {
-    const n = numOf(doc, doc.dictOf(cs.items[1])?.N);
-    return n === 1 || n === 3 ? n : false;
-  }
-  return false;
-}
-var DCT_TO_REFUSAL = {
-  UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
-  UNSUPPORTED_PRECISION: "UNSUPPORTED_JPEG_PROCESS",
-  UNSUPPORTED_COMPONENTS: "UNSUPPORTED_SAMPLES",
-  COMPONENT_MISMATCH: "UNSUPPORTED_SAMPLES",
-  UNSUPPORTED_SAMPLING: "UNSUPPORTED_SAMPLES",
-  COLOR_TRANSFORM_CONFLICT: "UNSUPPORTED_SAMPLES",
-  UNSUPPORTED_ROTATION: "UNSUPPORTED_SAMPLES",
-  TRUNCATED: "TRUNCATED_IMAGE_DATA",
-  NOT_A_JPEG: "DECODE_FAILED",
-  CORRUPT_DATA: "DECODE_FAILED",
-  UNSUPPORTED_FRAME: "DECODE_FAILED"
-};
-async function decodeDct(doc, im, raw, rotate) {
-  const filters = im.filters;
-  const dict = im.obj.dict;
-  if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
-  const cs = im.colorSpace;
-  const expectComps = cs === "DeviceGray" ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceCMYK" ? 4 : null;
-  const p = decodeParms(doc, dict, filters.length - 1);
-  const colorTransform = p ? numOf(doc, p.ColorTransform) : null;
-  let out;
-  try {
-    out = decodeBaselineJpeg(raw, { rotate, expectComps, colorTransform });
-  } catch (e) {
-    if (!(e instanceof DctRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
-    return refuse(DCT_TO_REFUSAL[e.code] || "DECODE_FAILED", { filters, jpeg: e.code, ...e.detail });
-  }
-  const bytes = await encodePng8(out.samples, out.width, out.height, out.comps);
-  return {
-    ok: true,
-    route: "decoded-dct",
-    mediaType: "image/png",
-    bytes,
-    width: out.width,
-    height: out.height,
-    upright: true,
-    pixelsSha256: await sha256Hex(out.samples),
-    dct: { ...out.source, comps: out.comps, stream_bytes: raw.length }
-  };
-}
+// ../pdf-worker/src/ccittdecode.mjs
 var WHITE_CODES = {
   "8:00110101": 0,
   "6:000111": 1,
@@ -4948,6 +4467,515 @@ function b2(ref, a0, color) {
   while (i < ref.length && ref[i] <= a0) i++;
   while (i < ref.length && (i & 1) !== color) i++;
   return i + 1 < ref.length ? ref[i + 1] : ref[ref.length - 1];
+}
+
+// ../pdf-worker/src/pagepixels.mjs
+var LATIN12 = new TextDecoder("latin1");
+var REFUSALS = {
+  NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
+  NO_SUCH_PAGE: "the page index is outside the document",
+  PAGE_UNREADABLE: "the page object could not be read",
+  PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
+  NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
+  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
+  IMAGE_UNREADABLE: "the image XObject's stream could not be read",
+  UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
+  UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
+  TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
+  DECODE_FAILED: "the decoder could not read the image data",
+  UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
+  IMAGE_TOO_LARGE: "decoding the image would need more memory than a decode may use here"
+};
+var featureReasons = (declared, named) => Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
+var JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
+var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var refuse = (reason, detail = {}) => {
+  if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
+  return { ok: false, reason, why: REFUSALS[reason], ...detail };
+};
+async function loadPdf2(bytes) {
+  return openPdf(bytes);
+}
+var nameOf2 = (doc, v) => {
+  v = doc.resolve(v);
+  return v && v.t === "name" ? v.v : null;
+};
+var numOf = (doc, v) => {
+  v = doc.resolve(v);
+  return typeof v === "number" ? v : null;
+};
+function decodeParms(doc, dict, idx) {
+  let p = doc.resolve(dict.DecodeParms) ?? doc.resolve(dict.DP);
+  if (p && p.t === "arr") p = doc.resolve(p.items[idx] ?? p.items[p.items.length - 1]);
+  return p && p.t === "dict" ? p.map : null;
+}
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap;
+  for (let d = 0; p && d <= 32; d++) {
+    if (p[key] !== void 0) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return void 0;
+}
+function pageRotate(doc, pageMap) {
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  if (r === void 0) return 0;
+  if (!Number.isInteger(r) || r % 90 !== 0) return null;
+  return (r % 360 + 360) % 360;
+}
+async function pageContentText(doc, pageMap) {
+  const c = doc.resolve(pageMap.Contents);
+  const parts = [];
+  const one = async (v) => {
+    const st = doc.resolve(v);
+    if (!st || st.t !== "stream") return;
+    const data = await doc.streamDecoded(st);
+    if (data) parts.push(LATIN12.decode(data));
+  };
+  if (c && c.t === "arr") {
+    for (const it of c.items) await one(it);
+  } else await one(pageMap.Contents);
+  return parts.join("\n");
+}
+function maskedContent(s) {
+  let out = "";
+  let i = 0;
+  while (i < s.length) {
+    const ch = s[i];
+    if (ch === "(") {
+      let depth = 1;
+      i++;
+      while (i < s.length && depth > 0) {
+        if (s[i] === "\\") {
+          i += 2;
+          continue;
+        }
+        if (s[i] === "(") depth++;
+        else if (s[i] === ")") depth--;
+        i++;
+      }
+      out += " () ";
+      continue;
+    }
+    if (ch === "<" && s[i + 1] !== "<") {
+      const e = s.indexOf(">", i);
+      i = e === -1 ? s.length : e + 1;
+      out += " <> ";
+      continue;
+    }
+    if (ch === "%") {
+      const e = s.indexOf("\n", i);
+      i = e === -1 ? s.length : e + 1;
+      out += " ";
+      continue;
+    }
+    if (ch === "B" && s[i + 1] === "I" && /[\s/]/.test(s[i + 2] || " ")) {
+      const id = s.indexOf("ID", i);
+      if (id !== -1) {
+        const ei = s.indexOf("EI", id);
+        i = ei === -1 ? s.length : ei + 2;
+        out += " INLINEIMAGE ";
+        continue;
+      }
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+var VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
+function imageOf(doc, placement) {
+  const src = imagePlacementSource(placement);
+  const st = src ? src.stream : null;
+  const d = st ? st.dict : {};
+  return {
+    name: placement.name,
+    inline: placement.inline === true,
+    obj: st,
+    width: placement.width,
+    height: placement.height,
+    bpc: numOf(doc, d.BitsPerComponent),
+    colorSpace: nameOf2(doc, d.ColorSpace) || (d.ColorSpace ? "\xABindirect\xBB" : null),
+    isMask: doc.resolve(d.ImageMask) === true,
+    filters: placement.filters
+  };
+}
+async function analyzePage(doc, pageIndex) {
+  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
+  const pageMap = doc.pageDict(pageIndex);
+  if (!pageMap) return null;
+  const painted = await pdfPageImages(doc, pageIndex);
+  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
+  let content = "";
+  try {
+    content = await pageContentText(doc, pageMap);
+  } catch {
+    content = "";
+  }
+  const masked = maskedContent(content);
+  let textShown = null;
+  try {
+    textShown = await pageShowsText(doc, pageMap);
+  } catch {
+    textShown = null;
+  }
+  const mediaBox = (() => {
+    const m = inheritedAttr(doc, pageMap, "MediaBox");
+    if (!m || m.t !== "arr" || m.items.length < 4) return null;
+    const v = m.items.map((x) => numOf(doc, x));
+    if (v.some((x) => x == null)) return null;
+    return { w: Math.abs(v[2] - v[0]), h: Math.abs(v[3] - v[1]) };
+  })();
+  return {
+    page: pageIndex,
+    contentBytes: content.length,
+    contentReadable: content.length > 0 || !pageMap.Contents,
+    hasTextOps: textShown === true,
+    textShown,
+    hasVectorOps: VECTOR_OPS.test(masked),
+    hasInlineImage: masked.includes("INLINEIMAGE"),
+    images: images.map(({ obj, ...rest }) => rest),
+    _images: images,
+    imagesWhy: painted.why,
+    drawnImageNames: images.map((im) => im.name),
+    imageCount: images.length,
+    mediaBox,
+    rotate: pageRotate(doc, pageMap)
+  };
+}
+async function renderPageToPixels(bytes, pageIndex, opts = {}) {
+  const doc = await loadPdf2(bytes);
+  if (!doc) return refuse("NOT_A_PDF");
+  if (doc.isEncrypted()) return refuse("ENCRYPTED");
+  const a = await analyzePage(doc, pageIndex);
+  if (!a) {
+    const n = doc.pageCount;
+    return pageIndex >= 0 && pageIndex < n ? refuse("PAGE_UNREADABLE", { page: pageIndex }) : refuse("NO_SUCH_PAGE", { page: pageIndex, pageCount: n });
+  }
+  if (a.rotate === null) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
+  }
+  if (a.hasTextOps && !opts.allowTextPage) {
+    return refuse("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
+  }
+  if (a.imagesWhy) {
+    return refuse("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
+  }
+  if (a.imageCount === 0) {
+    return refuse(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
+      page: pageIndex,
+      hasVectorOps: a.hasVectorOps,
+      hasInlineImage: a.hasInlineImage
+    });
+  }
+  if (a.imageCount > 1) {
+    return refuse("MULTIPLE_IMAGES_ON_PAGE", {
+      page: pageIndex,
+      imageCount: a.imageCount,
+      images: a.images.map((i) => ({ width: i.width, height: i.height, filters: i.filters }))
+    });
+  }
+  const im = a._images[0];
+  if (!im.obj) {
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+  }
+  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
+  if (!out.ok) return { ...out, page: pageIndex };
+  return {
+    ok: true,
+    page: pageIndex,
+    route: out.route,
+    mediaType: out.mediaType,
+    bytes: out.bytes,
+    width: out.width ?? im.width,
+    height: out.height ?? im.height,
+    /* Are these pixels the page as a READER sees it? A route that could not
+     * apply the page's own /Rotate says so HERE rather than leaving a consumer
+     * to discover it in its output. See the note on rotateBilevel. */
+    upright: out.upright,
+    rotate_deg: a.rotate,
+    source: {
+      filters: im.filters,
+      colorSpace: im.colorSpace,
+      bitsPerComponent: im.bpc,
+      imageMask: im.isMask
+    },
+    page_geometry: {
+      mediaBoxPt: a.mediaBox,
+      rotate: a.rotate,
+      dpi: a.mediaBox && im.width && im.height ? { x: +(im.width / (a.mediaBox.w / 72)).toFixed(1), y: +(im.height / (a.mediaBox.h / 72)).toFixed(1) } : null
+    },
+    page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
+    ...out.ccitt ? { ccitt: out.ccitt } : {},
+    ...out.dct ? { dct: out.dct } : {},
+    ...out.jbig2 ? { jbig2: out.jbig2 } : {},
+    ...out.jpx ? { jpx: out.jpx } : {},
+    /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
+     * the cross-runtime arm of the probe found the file digest to be RUNTIME-
+     * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
+     * workerd's and node's produce different (both valid) deflate streams for
+     * identical input: the same page rendered by the same code came out
+     * 147,251 B on workerd and 152,499 B on node. The PIXELS were identical.
+     * A record that hashes the FILE therefore records a value no verifier on a
+     * different runtime can reproduce, which is the whole point of a hash here.
+     * So a decoded route also carries `pixels_sha256`, taken over the normalised
+     * samples before any container is built. A pass-through route does not need
+     * one: its bytes are the publisher's own and are byte-stable by definition. */
+    ...out.pixelsSha256 ? { pixels_sha256: out.pixelsSha256 } : {}
+  };
+}
+async function decodeImage(doc, im, opts) {
+  const dict = im.obj.dict;
+  const filters = im.filters;
+  const last = filters[filters.length - 1] || null;
+  if (last === "DCTDecode" || last === "DCT") {
+    if (filters.length > 1) return refuse("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
+    const raw = doc.streamRawBytes(im.obj);
+    if (!raw || raw.length < 4) return refuse("IMAGE_UNREADABLE", { filters });
+    if (!(raw[0] === 255 && raw[1] === 216)) {
+      return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
+    }
+    if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
+    return {
+      ok: true,
+      route: "passthrough-dct",
+      mediaType: "image/jpeg",
+      bytes: raw,
+      upright: (opts.rotate || 0) === 0
+    };
+  }
+  if (!im.width || !im.height) return refuse("IMAGE_UNREADABLE", { filters });
+  if (last === "CCITTFaxDecode" || last === "CCF") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) {
+        const st = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
+        data = await doc.streamDecoded(st);
+      } else return refuse("UNSUPPORTED_FILTER", { filters });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const p = decodeParms(doc, dict, filters.length - 1) || {};
+    const K2 = numOf(doc, p.K) ?? 0;
+    const columns = numOf(doc, p.Columns) ?? 1728;
+    const rows = numOf(doc, p.Rows) ?? im.height;
+    if (K2 > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
+    const blackIs1 = doc.resolve(p.BlackIs1) === true;
+    const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
+    let bits;
+    try {
+      bits = ccittDecode(data, { K: K2, columns, rows, byteAlign });
+    } catch (e) {
+      return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+    }
+    if (bits.rowsDecoded < im.height) {
+      return refuse("TRUNCATED_IMAGE_DATA", {
+        filters,
+        declaredHeight: im.height,
+        rowsDecoded: bits.rowsDecoded,
+        columns
+      });
+    }
+    const dec = doc.resolve(dict.Decode);
+    const decodeInverts = dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1;
+    let invert = false;
+    if (blackIs1) invert = !invert;
+    if (decodeInverts) invert = !invert;
+    const packed0 = invert ? bits.packed.map((b) => ~b & 255) : bits.packed;
+    const rot = rotateBilevel(normalisePacked(packed0, columns, im.height), columns, im.height, opts.rotate || 0);
+    const png = await encodePng1(rot.packed, rot.width, rot.height);
+    return {
+      ok: true,
+      route: "decoded-ccitt-g4",
+      mediaType: "image/png",
+      bytes: png,
+      width: rot.width,
+      height: rot.height,
+      upright: true,
+      pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
+      ccitt: { K: K2, columns, rows, blackIs1, byteAlign, rowsDecoded: bits.rowsDecoded }
+    };
+  }
+  if (last === "JBIG2Decode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const p = decodeParms(doc, dict, filters.length - 1);
+    let globals = null;
+    if (p && p.JBIG2Globals !== void 0) {
+      const g = doc.resolve(p.JBIG2Globals);
+      globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
+      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+    }
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    let out;
+    try {
+      out = decodeJbig2(data, globals);
+    } catch (e) {
+      if (!(e instanceof Jbig2Refusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = e.code === "UNSUPPORTED" ? JBIG2_FEATURE_REASONS[e.detail.feature] ?? "UNSUPPORTED_FILTER" : { TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jbig2: e.code, ...e.detail });
+    }
+    if (out.width !== im.width || out.height > im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
+    }
+    if (out.height < im.height) {
+      return refuse("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
+    }
+    const samples2 = out.packed.map((b) => ~b & 255);
+    const bi = await bilevelPng(doc, dict, samples2, im.width, im.height, opts.rotate || 0);
+    return {
+      ok: true,
+      route: "decoded-jbig2",
+      mediaType: "image/png",
+      ...bi,
+      upright: true,
+      jbig2: { ...out.detail, globals_bytes: globals ? globals.length : 0, stream_bytes: data.length }
+    };
+  }
+  if (last === "JPXDecode") {
+    let data = doc.streamRawBytes(im.obj);
+    if (filters.length > 1) {
+      if (!filters.slice(0, -1).every((f) => f === "FlateDecode" || f === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
+    }
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
+    if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
+    const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
+    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    let out;
+    try {
+      out = decodeJpx(data);
+    } catch (e) {
+      if (!(e instanceof JpxRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+      const reason = e.code === "UNSUPPORTED" ? JPX_FEATURE_REASONS[e.detail.feature] ?? "UNSUPPORTED_FILTER" : { UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+      return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
+    }
+    if (pdfComps !== null && pdfComps !== out.comps) {
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+    }
+    if (out.width !== im.width || out.height !== im.height) {
+      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+    }
+    const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
+    out.samples = null;
+    return {
+      ok: true,
+      route: "decoded-jpx",
+      mediaType: "image/png",
+      upright: true,
+      width: rot.width,
+      height: rot.height,
+      pixelsSha256: await sha256Hex(rot.samples),
+      bytes: await encodePng8(rot.samples, rot.width, rot.height, out.comps),
+      jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length }
+    };
+  }
+  if (filters.length === 0 || filters.every((f) => f === "FlateDecode" || f === "Fl")) {
+    const data = await doc.streamDecoded(im.obj);
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
+    const bpc = im.isMask ? 1 : im.bpc ?? 8;
+    const cs = im.colorSpace;
+    const comps = im.isMask ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceGray" ? 1 : null;
+    if (comps == null) return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, filters });
+    const rowBytes = Math.ceil(im.width * comps * bpc / 8);
+    const need = rowBytes * im.height;
+    if (data.length < need) {
+      return refuse("TRUNCATED_IMAGE_DATA", {
+        filters,
+        declaredHeight: im.height,
+        haveBytes: data.length,
+        needBytes: need
+      });
+    }
+    if (bpc === 1 && comps === 1) {
+      const bi = await bilevelPng(doc, dict, data.subarray(0, need), im.width, im.height, opts.rotate || 0);
+      return { ok: true, route: "raw-samples-1bit", mediaType: "image/png", upright: true, ...bi };
+    }
+    if (bpc === 8) {
+      const rot = rotate8(data.subarray(0, need), im.width, im.height, comps, opts.rotate || 0);
+      return {
+        ok: true,
+        route: comps === 3 ? "raw-samples-rgb8" : "raw-samples-grey8",
+        mediaType: "image/png",
+        upright: true,
+        width: rot.width,
+        height: rot.height,
+        pixelsSha256: await sha256Hex(rot.samples),
+        bytes: await encodePng8(rot.samples, rot.width, rot.height, comps)
+      };
+    }
+    return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
+  }
+  return refuse("UNSUPPORTED_FILTER", { filters });
+}
+async function bilevelPng(doc, dict, samples2, width, height, rotate) {
+  const dec = doc.resolve(dict.Decode);
+  const invert = !!(dec && dec.t === "arr" && numOf(doc, dec.items[0]) === 1);
+  const packed0 = invert ? Uint8Array.from(samples2, (b) => ~b & 255) : Uint8Array.from(samples2);
+  const rot = rotateBilevel(normalisePacked(packed0, width, height), width, height, rotate);
+  return {
+    width: rot.width,
+    height: rot.height,
+    pixelsSha256: await sha256Hex(normalisePacked(rot.packed, rot.width, rot.height)),
+    bytes: await encodePng1(rot.packed, rot.width, rot.height)
+  };
+}
+function jpxColourComponents(doc, csv) {
+  const cs = doc.resolve(csv);
+  if (cs == null) return null;
+  if (cs.t === "name") return cs.v === "DeviceGray" ? 1 : cs.v === "DeviceRGB" ? 3 : false;
+  if (cs.t === "arr" && nameOf2(doc, cs.items[0]) === "ICCBased") {
+    const n = numOf(doc, doc.dictOf(cs.items[1])?.N);
+    return n === 1 || n === 3 ? n : false;
+  }
+  return false;
+}
+var DCT_TO_REFUSAL = {
+  UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_PRECISION: "UNSUPPORTED_JPEG_PROCESS",
+  UNSUPPORTED_COMPONENTS: "UNSUPPORTED_SAMPLES",
+  COMPONENT_MISMATCH: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_SAMPLING: "UNSUPPORTED_SAMPLES",
+  COLOR_TRANSFORM_CONFLICT: "UNSUPPORTED_SAMPLES",
+  UNSUPPORTED_ROTATION: "UNSUPPORTED_SAMPLES",
+  TRUNCATED: "TRUNCATED_IMAGE_DATA",
+  NOT_A_JPEG: "DECODE_FAILED",
+  CORRUPT_DATA: "DECODE_FAILED",
+  UNSUPPORTED_FRAME: "DECODE_FAILED"
+};
+async function decodeDct(doc, im, raw, rotate) {
+  const filters = im.filters;
+  const dict = im.obj.dict;
+  if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
+  const cs = im.colorSpace;
+  const expectComps = cs === "DeviceGray" ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceCMYK" ? 4 : null;
+  const p = decodeParms(doc, dict, filters.length - 1);
+  const colorTransform = p ? numOf(doc, p.ColorTransform) : null;
+  let out;
+  try {
+    out = decodeBaselineJpeg(raw, { rotate, expectComps, colorTransform });
+  } catch (e) {
+    if (!(e instanceof DctRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
+    return refuse(DCT_TO_REFUSAL[e.code] || "DECODE_FAILED", { filters, jpeg: e.code, ...e.detail });
+  }
+  const bytes = await encodePng8(out.samples, out.width, out.height, out.comps);
+  return {
+    ok: true,
+    route: "decoded-dct",
+    mediaType: "image/png",
+    bytes,
+    width: out.width,
+    height: out.height,
+    upright: true,
+    pixelsSha256: await sha256Hex(out.samples),
+    dct: { ...out.source, comps: out.comps, stream_bytes: raw.length }
+  };
 }
 function getBit(packed, rowBytes, x, y) {
   return packed[y * rowBytes + (x >> 3)] >> 7 - (x & 7) & 1;
