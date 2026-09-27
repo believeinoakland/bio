@@ -98,3 +98,6 @@ Size: test runs 26, module lines 2151
 
 - R41 did need the prior units: without them every row a re-read staled was graded UNDETERMINED (its citers told, but never "unaffected" or a real grade). content's stale-mark listener now passes the payload's `unitsBefore` to `markStale`, which grades them against the units the write left (the index at the listener's call, which runs after the write). New R41 test drives content's registered listener with an R24-shaped payload: an unchanged page grades A and nobody is told; a rewritten one grades NOT_FOUND and is told.
 - Module tests 49/49. Checks below.
+- Checks: format 0 failures; architecture 39 relative imports, 0 failures; coverage 45 of 45; ownership 3 files changed since `tranche/T5` @ `a616838ce4` (content's own), 0 failures.
+
+Size: test runs 28, module lines 2153
