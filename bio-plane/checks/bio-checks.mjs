@@ -7310,10 +7310,10 @@ export const SUGGEST_CHECKS = {
  * TWO CODES ARE MINTED AT ONE OTHER SITE FOR THE SAME CONDITION: NOT_A_DOCUMENT and NO_BYTES_HELD, which content's
  * mint door (`src/content/index.mjs`) asks in the same words, and its `null_case`. Each sentence is written true at
  * both (T4's `ABSENT` precedent: one code, one row, true wherever it is minted).
- * THREE ARE NOT HERE, by ACT_SHAPE_CHECKS' REC-64 rule: NO_TARGET (minted at 15 sites) and NO_SUCH_BUNDLE (26) are
- * multi-site codes a single `where` cannot claim, and NO_SCOPE is minted for two different conditions (this read's
- * scope, and a published case's authored scope). They wait on BOB's answer to LEGACY-CHECKS #2's QUESTION (T6):
- * codes of run-productions' own, or rows once a `where` can name a set of spans.
+ * TWO ARE NOT HERE, by ACT_SHAPE_CHECKS' REC-64 rule (K163): NO_TARGET (minted at 15 sites) and NO_SUCH_BUNDLE (26)
+ * are multi-site codes a single `where` cannot claim, and run-productions R13 excepts them. NO_SCOPE, minted for
+ * two different conditions, is replaced at this read by run-productions' own EXTRACT_NO_SCOPE (R12; C-104.12),
+ * whose region `is-extract-scope` run-productions marks in `extractProposals`.
  * =========================================================================== */
 export const EXTRACT_PROPOSE_CHECKS = {
   NO_PROPOSER: {
@@ -7382,6 +7382,15 @@ export const EXTRACT_PROPOSE_CHECKS = {
     translation: 'This batch would mark more passages citable than the investigation has left of its limit, so the whole '
       + 'batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes '
       + 'were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation.',
+  },
+  /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
+     store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted
+     nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
+  EXTRACT_NO_SCOPE: {
+    check: 'C-104.12',
+    where: 'src/store.mjs extractProposals > is-extract-scope',
+    translation: 'This list of proposed readings names neither an investigation nor a document, so nothing was '
+      + 'listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean.',
   },
 };
 

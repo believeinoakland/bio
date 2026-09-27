@@ -2,7 +2,7 @@
 
 **Session** LEGACY-CHECKS #2, `session_01FUNffcNqviJLVTLYAn267C`, depth 2, on `job/T6/legacy-checks` (from `tranche/T6` @ `039eb27c33`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T6` (BOB #48, `session_01E4YZNiY3MRoRn59Wr5NnLW`, at the start).
 
-**Status** · COMPLETE, 2026-09-27. Every entry applied, on my best reading of QUESTION 1 (below; its point 2 revised in the job, and BOB's answer can re-open it). Nothing of my own deferred. The REPORTs below are work for other modules that my rows make visible.
+**Status** · COMPLETE again, 2026-09-27, after BOB's CHANGE of 15:13 UTC (K163: the revision stands; `EXTRACT_NO_SCOPE` added as C-104.12). Every entry applied. Nothing of my own deferred. The REPORTs below are work for other modules that my rows make visible.
 
 **Contract** (no requirements file; `build/modules.json`): `bio-plane/checks/bio-checks.mjs`, no `tests` path, no `uses`. My entries: the legacy-checks line of layer 1 in `build/plan/current.md`, with the appendix texts of N81, N87, N94, N97, N118. Per K118 the 1 MB catalogue is read whole in the families this job changes; every other row is resolved by a script that loads the catalogue and checks each `where` against the plane's source.
 
@@ -51,7 +51,7 @@ None of my own.
 ## Found in other modules (REPORT)
 
 1. **connections**: `src/connections/themes.mjs` should re-export C-81.11–C-81.14 from THEME_CHECKS and delete `THEME_WITHDRAW_CHECKS`. Until it does, the guard fails 8 lines: 4 C-numbers claimed twice and 4 identical translations. Connections has no T6 job, so this wants an entry or BOB's routing.
-2. **run-productions (T6-7)**: mark `is-extract-run`, `is-extract-door`, `is-extract-document` and `is-extract-whole-batch` where it moves `extractPropose`, and drive C-104. The three codes without rows are open (QUESTION 1.2). When it moves the code, the C-104 and C-27 `where`s go stale again, and only a legacy-checks entry can re-point them.
+2. **run-productions (T6-7)**: mark `is-extract-run`, `is-extract-door`, `is-extract-document` and `is-extract-whole-batch` where it moves `extractPropose`, and `is-extract-scope` in `extractProposals`, where it mints `EXTRACT_NO_SCOPE` (R12, K163) in place of `NO_SCOPE`; drive C-104.1–C-104.12. `NO_TARGET` and `NO_SUCH_BUNDLE` stay row-less (R13, K163). When it moves the code, the C-104 and C-27 `where`s go stale again, and only a legacy-checks entry can re-point them.
 3. **capture-requests (T6-8)**: mark `is-capture-fetch-failed` in the drain; build `captureRequestRetry` with region `is-capture-request-retry` minting C-28.18; drive both codes. `capturerequests.test` fails its "every code DRIVEN" arm until then (137/2 → 138/1 after my region fix).
 4. **provenance**: mark `is-origin-act` and `is-origin-statement` in `declareOrigin`. Its `{ spent: refusal(…) }` in `is-testify-bytes` is now judged (it was unresolved before) and reads as unclassified: guard ceiling 5 → 6.
 5. **observation-log** (N118's share, next plan): mint `AI_LOG_NEVER_LOOKED_STORED` at region `is-never-looked-stored` in `checkObservation`, in place of C-22.1's code there. Its module tests are unchanged here (42/42).
@@ -60,12 +60,12 @@ None of my own.
 8. **legacy-store / content**: the store's `versionNotice` still answers `VERSION_NOTICE_NO_CONTENT` in `is-version-notice-subject`. C-80.3 now names content's `passageNotice` (N97), so the guard reports that store refusal as outside its region's rows. The store's passage arm should delegate to content.
 9. **entities**: `is-alias-named` is 4 lines / 99 characters, under the guard's floor.
 10. **legacy-tests** (the guard and the old battery), measured against `tranche/T6` @ `039eb27c33`:
-    - **Guard** (`civicos-ui/check-refusal-codes.mjs`): **103 failures before and after. 44 cleared** (every stale `where` and missing region of N87/N94/N97, the connections and NO_ALIAS rows, and the 37-orphan-marker line).
+    - **Guard** (`civicos-ui/check-refusal-codes.mjs`): **103 failures before, 104 after (the one more is `is-extract-scope`, unmarked until T6-7). 44 cleared** (every stale `where` and missing region of N87/N94/N97, the connections and NO_ALIAS rows, and the 37-orphan-marker line).
     - **The new failures** are:
       - items 1–5 and 8–9 above;
       - capture's six regions, where arm C finds no refusal (`answer(status,…)`, T4's known verdict-reader gap);
       - arm G's multi-site list (the five same-condition codes of Decision 2, to declare MULTI_SITE_CLOSED);
-      - the ratchets to re-pin from its print: rows 551→581, families 70→73, census 866→868, governedSites 288→303, regions 246→252, reach 596→622, codesChecked 565→606, refusalsJudged 549→602, untranslated 302→278, multiSiteCodes 64→69.
+      - the ratchets to re-pin from its print: rows 551→582, families 70→73, census 866→869, governedSites 288→304, regions 246→252, reach 596→623, codesChecked 565→606, refusalsJudged 549→602, untranslated 302→278, multiSiteCodes 64→69.
     - **Old battery, each measured here and on the base:**
       - `airun` ARM D1 (C-22 count 16→17) and D3 (C-22.17's site is observation-log's, not `airun.mjs`);
       - `rec165-production-principal` U2 (NO_SUCH_RUN now carries its code: R13's intended effect);
@@ -86,7 +86,7 @@ None of my own.
 - `node checks/coverage.mjs /home/user/bio legacy-checks`: `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures`
 - `node checks/ownership.mjs /home/user/bio legacy-checks tranche/T6`: `ownership: 2 files changed by legacy-checks between tranche/T6 and HEAD; 0 failures`
 
-Size: test runs 250, module lines 14620
+Size: test runs 340, module lines 14629
 
 ## QUESTION 2 (sent 2026-09-27, after reading BOB's ANSWER to QUESTION 1)
 
@@ -98,3 +98,19 @@ BOB's ANSWER (14:39, K162 on `tranche/T6` @ `81320207c2`) accepted QUESTION 1's 
 - **(3)** C-28.18 names `captureRequestRetry > is-capture-request-retry`, a region, because `capturerequests.test.mjs` pins C-28's rule that every `where` is a region. Everything else in (3) is as K162 says.
 
 **Asked of BOB:** either a ruling that replaces K162 (2) and (3) with the revision, or a CHANGE telling me to conform to K162 as written. I will apply either at once. My recommendation is the revision, with run-productions minting its own codes for the three without a row.
+
+## CHANGE of 15:13 UTC (BOB #48; K163)
+
+- **The ANSWER to QUESTION 2:** K163 replaces K162 (2) and (3) with the revision. It accepts C-102–C-104; `NO_TARGET` and `NO_SUCH_BUNDLE` stay row-less, and run-productions R13 excepts them. `NO_SCOPE` becomes run-productions' own `EXTRACT_NO_SCOPE` (R12).
+- **Merged `tranche/T6`** @ `9838979006` (merge `e32a9d5157`). Nothing I read changed except R12, R13 and the rulings.
+- **Applied:** `EXTRACT_NO_SCOPE` **C-104.12**, `where` `src/store.mjs extractProposals > is-extract-scope` (a region run-productions marks when it moves the code). Its sentence names only this read's condition. The C-104 header now states K163. REPORT 2 lists the region.
+- **Re-run:**
+  - Every module suite: **1284 pass, 0 fail**.
+  - The 85 old-battery suites: the same set red as before the CHANGE (REPORT 10, plus the 4 reds shared with the base), all others green.
+  - The DEC-49 guard: **104 failures** (103 + the unmarked `is-extract-scope`). REPORT 10's figures are updated to its print: rows 582, census 869, reach 623, governedSites 304.
+  - Checks: below.
+- Checks (civicos-process `main` @ `5d77655`), after the merge:
+  - `architecture: 1 product files, 0 relative imports (0 naming no tracked file, not judged); 0 failures`
+  - `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures`
+  - `ownership: 2 files changed by legacy-checks between tranche/T6 and HEAD; 0 failures`
+  - `format: 69 modules, 64 requirements files; 1 failure`. The failure is `build/plan/next.md: entry ids given twice under one module: N118`. It is in BOB's file on `tranche/T6` @ `9838979006` and fails the same with my changes stashed, so it is **REPORT 12, for BOB**.
