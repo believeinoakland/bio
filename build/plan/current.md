@@ -47,9 +47,11 @@ Four layers, lowest first (P10): layer 2 (record-core, membership, promotion), l
 ## Layer 11
 
 - **legacy-index** · T5-11 · the routes of the ops layers 4–5 move (N43's pattern); N21's view passed to `docprofile`; N88 (`scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR; `owed-controls` A13b then passes).
-- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record); N46 with N37; N57's remainder.
+- **legacy-tests** · T5-12 · re-anchor or retire what layers 2–5 break (d470 A3/A9 re-pinned for `CATALOG_VERSION` 1.34.0 and A5's literal: the row is in PROMOTION #3's record; peritem's two STRUCTURAL arms, migrate-released.control's first-boot anchors, check-refusal-codes, instance-group.control, rec178-bytes.control and queue-peritem.control after record-core moved their anchors: RECORD-CORE #2's REPORT 5); N46 with N37; N57's remainder.
 
 ## Jobs
+
+Layer 2 CLOSED 2026-09-27 ~06:40 UTC: record-core, membership, promotion merged (ownership 0 failures each; the legacy-store lines each added read by BOB), bundles regenerated (fleetbundles 96/0).
 
 Layer 2, started 2026-09-27 ~05:44 UTC: RECORD-CORE #2 `session_014SH9wUytqUzw3oKoJhPj7C`, MEMBERSHIP #2 `session_01WvJLh3JQvPkdtZptfwXdqf`, PROMOTION #3 `session_01CBqvRerSWp68oj6TfvGgfi`.
 
