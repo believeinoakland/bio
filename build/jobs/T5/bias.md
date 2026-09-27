@@ -84,3 +84,11 @@ Size: test runs 24, module lines 1690
 - format 0 failures; architecture 10 files, 25 imports, 0 failures; coverage 41/41; ownership legacy-store 23 added, 1,412 removed, legacy-checks 0 added, 480 removed, 0 failures.
 
 Size: test runs 30, module lines 1694
+
+## CHANGE from BOB #46 (08:24 UTC; `tranche/T5` @ 9132702d02 merged, progressions merged there)
+
+- BOB #46 took over (`session_01Q3WyZBMy4MH1Acpgtw9awA`). The merge was clean (no conflict in `store.mjs`).
+- Tests: `node --test bio-plane/test/m/bias/` 45 pass, 1 todo (R26); `node --test bio-plane/test/m/` 1,126, 1,121 pass, 2 fail (promotion's R18 arms, REPORT 1, re-opened as PROMOTION #4 by K150), 3 todo; `d86-bias-debt` 20/20, `d84-case-manifest` 44/44, `scheduler` 51/51.
+- format 0 failures; architecture 10 files, 25 imports, 0 failures; coverage 41/41; ownership legacy-store 23 added, 1,412 removed, legacy-checks 0 added, 480 removed, 0 failures.
+
+Size: test runs 32, module lines 1694
