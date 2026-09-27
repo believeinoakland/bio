@@ -66,4 +66,4 @@ Session: `session_01GytnXWpaAYBtTx3b9cEHwE` (IMAGE-CODECS #1). BOB: `session_01P
 - Users' suites (read only): pdf-pixels `jbig2` 179/0, `pagepixels` 173/0, `imagecrop` 54/0, `jpx` 196/1 (the expected K115 check).
 - Checks (civicos-process @ 7549c0b): `format` 0 failures (69 modules, 64 requirements files); `architecture image-codecs` 0 failures (20 product files, 20 relative imports); `coverage image-codecs` 9 of 9 live ids named, 0 failures; `ownership image-codecs tranche/T4` 12 files changed, 0 failures.
 
-Size: test runs 23, module lines 2842
+Size: test runs 23, module lines 2840
