@@ -2,7 +2,7 @@
 
 **Session** CONTENT #1, `session_01RFEshCL4oFYL6LET9Gh1sH`, on `job/T5/content` (from `tranche/T5` @ `1e75fac6b2`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · WORKING (built, tested and checked; the record's sections below are current). Entry T5-3: extract `content` from `legacy-store` and `legacy-checks` per `build/extraction/content.md` and `build/requirements/content.md`, with D-374, D-419, D-580, D-670, D-675, D-686, REC-204 and every requirement marked not yet met.
+**Status** · COMPLETE, 2026-09-27 ~07:30 UTC. Every entry applied; Q1–Q7 answered (K134, K138) and applied. Entry T5-3: extract `content` from `legacy-store` and `legacy-checks` per `build/extraction/content.md` and `build/requirements/content.md`, with D-374, D-419, D-580, D-670, D-675, D-686, REC-204 and every requirement marked not yet met.
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/requirements/content.md` and `README.md`, `build/extraction/content.md`, `build/layers.md`, `build/plan/current.md`, the public parts of `text-chain`, `pdf-pixels`, `record-core`, `membership`, `provenance`, `extraction` (legacy-checks has no requirements file), rulings K3, K6, K23, K31, K49, K61, K64, K70, K73, K78, K102, K120.
 
@@ -19,6 +19,8 @@
 ## Answers from BOB
 
 - **Q1–Q4 · ANSWER** (K134, `tranche/T5` @ `42222e12c0`, merged here @ `7f32c164ca`): all four readings adopted. `format-registry` is in the uses. Q1: write the Provides text for the moved services (below) and Q4's read contract as R42 on.
+
+- **Q5–Q7 · ANSWER** (K138, `tranche/T5` @ `da889675af`, merged here @ `15268c729b`): R42–R45 folded as proposed; `promotion` in the uses; R11's fallback through `extraction.capturesReadFor` (extraction's new R51; injected here until its merge, my bridge supplying it); Q7 adopted.
 
 ## Proposed requirements (K134; for BOB to fold into `build/requirements/content.md`)
 
@@ -68,3 +70,15 @@
 8. **connections**: the portion connection axis on `op=earnedbasis` is composed through `standings(ids, connectionByBundle)` until connections takes it.
 9. **legacy-index**: `op=contentcrop` needs its OPS/NEEDS/NON_ACTS rows to route to the store's new `contentcrop` arm (D-419); `index.mjs` imports `contentIdFor` from the catalogue.
 10. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale; the plane now bundles `pdf-pixels` (`imagecrop.mjs`, `pagepixels.mjs`, image-codecs): +132 KB measured with esbuild on this tree (5,190,421 → 5,322,669 B).
+
+11. **legacy-index** (T5-11) — **needed for `op=attesttext` to work at all**: R43 (K134) makes `attestText` check the control plane's viewer stamp, and `index.mjs` stamps `viewer` only for its listed ops, which do not include `attesttext`; until it does, every `op=attesttext` answers `NO_READING`. Add `attesttext` to the viewer-stamped ops (and route `contentcrop`, item 9). Four old suites fail on exactly this: `machine-attest`, `ocr-member-e2e`, `textchain`, `frontier-chunk`.
+12. **legacy-tests**: three suites boot a copy of `bio-plane/src` in a temporary directory and do not copy `pdf-worker/src`, which the plane now imports (`observation-log`, `project-discoverable`, `reopen`: ENOENT `pdf-worker/src/imagecrop.mjs`); two read `schema.mjs`'s tables (`meaningread`: content's PRIMARY KEY; `airuns`: the index sweep).
+
+## Tests and checks
+
+- **Module:** `node --test bio-plane/test/m/content/` on `15268c729b`: tests 48, pass 48, fail 0 (8 files: grammar, mint, reads, transcribe, citations, notice, crop, context).
+- **Checks** (civicos-process `main`): format 69 modules, 0 failures; architecture 13 product files, 38 relative imports, 0 failures; coverage 45 of 45 live ids named; ownership 17 files, legacy-store 46 added / 2,293 removed, legacy-checks 0 / 34, 0 failures (every added line listed by the check; all are the import from `./content/index.mjs`, the purge filter, the migrate call, delegating one-liners and call sites of `contentOf`/`mintLabel`, and the `attesttext` and `contentcrop` dispatch arms).
+- **Old battery, before and after, on the same machine:** the 24 content suites of map §4 and 83 more that drive content, attestation, notice or cite ops. Against `tranche/T5` @ `0ed1857973`: every suite green there is green here except the 15 named in REPORTs 1, 11 and 12 (6 source-anchored or importing moved names, 4 awaiting legacy-index's viewer stamp, 3 temp-copy harnesses, 2 schema readers); none fails on content's own behaviour. `derivation-bounds`, `fleetbundles` and `reextract` fail on `tranche/T5` itself; `project-sight` failed on the base before this job.
+- No layer tests are named in `build/manifest.md`; no module that uses content is extracted yet.
+
+Size: test runs 22, module lines 2203
