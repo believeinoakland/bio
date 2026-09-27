@@ -1,5 +1,5 @@
 /* JPXDecode: R25 (JPX), with R19, R20, R21, R26, R39 and R40 as they apply to
- * it, and R31/R32 for a cropped JPX image. build/requirements/pdf-worker.md.
+ * it, and R31/R32 for a cropped JPX image. build/requirements/pdf-pixels.md.
  *
  * INDEPENDENT EXPECTATIONS (R25, R40). Every expected picture is opj_decompress's
  * (OpenJPEG 2.5.0) decode of the same bytes, each checked against PyMuPDF's

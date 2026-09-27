@@ -1,6 +1,6 @@
 /* JBIG2Decode: R25 (JBIG2), with R19, R20, R24's 1-bit rule, R26, R39 and R40 as
  * they apply to it, and R31/R32 for a cropped JBIG2 image. build/requirements/
- * pdf-worker.md.
+ * pdf-pixels.md.
  *
  * INDEPENDENT EXPECTATIONS (R25, R40). Every expected picture is jbig2dec 0.20's
  * decode of the same stream, written by `fixtures/make-jbig2-fixtures.py` into
