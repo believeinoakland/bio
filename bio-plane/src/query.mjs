@@ -414,6 +414,10 @@ export const CHAIN_DOES_NOT_APPLY = "does-not-apply";
    chain is (nothing was transcribed, so no derivation step caps anything), and a
    member reading both columns of one row must read one word for one fact. */
 export const CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
+/* The step kinds that are a MACHINE READING of the text (an engine read it): the ones
+   `content:chain` widens to `mixed` (content R14, DEC-4). Only kinds `text-chain`
+   declares are kept, so a kind it retires stops being a word here. */
+export const MACHINE_READ_KINDS = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
 
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
@@ -696,11 +700,26 @@ export const MEANING = {
          about the chain rather than step kinds, so neither becomes a bare word
          (`content:does-not-apply` would read as a kind of content). The literal
          travels as an ARGUMENT, as every value here does. */
-      chain:  { col: "chain_kind", case: "lower", vocab: Object.keys(STEP_KINDS),
+      /* D-686 / D-710 (content R14): `chain_kind` is how THIS UNIT was read — the last
+         derivation step covering its page, or `mixed` where the steps covering it
+         differ. `mixed` is a value the column holds, so it is a word (`content:mixed`),
+         from the constant `text-chain` owns. AND A MACHINE READING FINDS IT (DEC-4):
+         every reader that labels machine-read text treats `mixed` as containing it,
+         so `content:ocr` (and `content:ai`) is that kind OR `mixed`. Answering only
+         the exact kind would hide the units a machine read in part, which is the
+         answer "no machine text here" about text a machine produced. The literal
+         travels as an argument, like every value here. */
+      chain:  { col: "chain_kind", case: "lower", vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
+                selects: "how the unit was read (`chain_last` on the row). A machine reading "
+                       + `(${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more `
+                       + `than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
                 pred: (cmp, v) => v === "undetermined"
                     ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
-                  : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null },
+                  : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] }
+                  : cmp === "=" && MACHINE_READ_KINDS.includes(v)
+                    ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] }
+                  : null },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
          member's basis leg names it. `content:cited` is "passages some claim
@@ -970,29 +989,27 @@ function rowColumns(m) {
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
-/* REC-46 (2026-08-04): the machine-credential prefix `viewerPredicate` below
-   recognises is the one the control plane STAMPS, imported rather than typed a
-   third time. This function is NOT one of the eleven refusal sites that item
-   rewired and is deliberately left asking its own question — see the note at
-   `viewerPredicate` — but the SPELLING is the same spelling, and a viewer
-   parser that stopped recognising what index.mjs mints would fail closed on
-   every machine read at once. So the string moves in one place. */
+/* Every vocabulary is IMPORTED FROM ITS OWNER, never listed (R22). The catalogue
+   (`legacy-checks`) holds the frontmatter parser, the type map, the machine-class
+   prefix and the leg vocabularies; `content` holds the extent grammar's kinds (its
+   R1: the eight and `envelope`), the literal the mint path writes for the plane, and
+   `cited_as`'s rule; `text-chain` holds the step kinds and `mixed`. A hand copy of
+   any of them would let a legitimate spelling (`content:pdf-page`, `content:plane`)
+   go quietly unanswerable while every test written from the same copy passed, which
+   is how the `leg:` arm's first version lost two of five grade sources. */
 import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
-         BASIS_ROLES, GRADE_AXES, GRADE_SOURCES,
-         /* REC-90: the `content:` arm's two vocabularies, IMPORTED for the same
-            reason every other one here is. `CONTENT_EXTENT_KINDS` is the extent
-            grammar's own map (REC-82/REC-85 landed all five arms into it) and
-            `CONTENT_MINTED_BY_PLANE` is the literal the mint path writes — a
-            hand copy of either would let `content:pdf-page` or `content:plane`
-            go quietly unanswerable while every test written from the same copy
-            passed, which is exactly how the `leg:` arm's first version lost two
-            of five grade sources. */
-         CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from "../checks/bio-checks.mjs";
+         BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "../checks/bio-checks.mjs";
+import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from "./content/index.mjs";
 /* REC-90: the chain's step kinds, from the module that CLASSIFIES them. Nothing
    here tests a step name against a literal — `content:chain=ocr` reads its
    vocabulary out of `STEP_KINDS` so a step kind added there is askable the same
    day, and one nobody classified is not a word this arm accepts. */
-import { STEP_KINDS } from "./textchain.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED } from "./textchain.mjs";
+/* R9 (N37, K57): the viewer gate and its mark are `membership`'s (its R43), re-exported
+   unchanged. This module interpolates the ONE compiled predicate into every statement
+   and mints none of its own (R8, R21). */
+import { viewerPredicate, GATE_MARK } from "./membership/index.mjs";
+export { viewerPredicate, GATE_MARK };
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
@@ -1010,12 +1027,6 @@ export const SORTABLE = { relevance: null, ...Object.fromEntries(
    skips NULLs, so the two arms cost nothing on a corpus with no inquiries. */
 export const DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status",
                                "capture", "connection"];
-
-/* The marker every generated statement carries. The runtime test asserts that
-   each statement the store executes contains it, so a query path that skipped
-   the gate would be caught by its absence rather than by an audit of the code.
-   It is a SQL comment, so it changes nothing about what runs. */
-export const GATE_MARK = "/*viewer-gate*/";
 
 /* REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — HOW MANY CAPTURES THE CONTENT-AXIS
    TALLY ON A `rows=passage` ANSWER IS TAKEN OVER, AND IT IS PUBLISHED RATHER
@@ -1037,149 +1048,6 @@ export const GATE_MARK = "/*viewer-gate*/";
    joins instead, so its cost is rows and not bound variables, and raising this
    number cannot walk into that ceiling. */
 export const MEANING_AXIS_CAP = 500;
-
-/* ---------------------------------------------------------------------------
- * The viewer gate: D-15, designed in from the first commit.
- *
- * Search ships at flat member scope ahead of the membership model, which is
- * safe only because visibility filtering has exactly ONE compilation point.
- * Today, for a member, the predicate is true. When projects and positions land
- * this function returns a real predicate over project participation and every
- * query shape inherits it, which is a change in one function instead of an
- * audit of every query path.
- *
- * FAIL CLOSED. An unrecognised or absent viewer gets `0=1`, so a caller that
- * reaches the compiler without an identity sees nothing rather than everything.
- * That is not a test convenience: when the membership model arrives, the
- * dangerous default is the permissive one, and this makes the permissive answer
- * something a viewer must earn.
- * ------------------------------------------------------------------------- */
-/* The predicate is written over the alias `b`, which every statement binds to
-   `bundles`. It is a WHERE clause and NOT a set intersected into the scope CTE:
-   the first shipped version made it a CTE and paid a full table scan plus an
-   INTERSECT in every statement, which measured 283ms for a facet sidebar at
-   20,000 bundles against the probe's 5ms. A predicate on rows already selected
-   is the same guarantee at a fraction of the cost, and it is still exactly one
-   compilation point because every statement below takes its WHERE from here. */
-/* REC-33 / DEC-37: `class:daemon` is RECOGNISED here, and the alternative was
-   not "narrower" — it was INERT. op=monitor reads the bundle image it must diff
-   against by stamping `class:${cls}` on its own inner request, and this function
-   fails closed on anything it does not recognise, so leaving `daemon` out would
-   have made every tick answer ABSENT for every bundle: a class that authenticates
-   and can do nothing, which is worse than the ADMIN_TOKEN fallback it replaces
-   and is exactly DIST-1's armed-alarm trap arriving by a different door.
-   It joins the machine classes rather than getting a predicate of its own for
-   the reason stated below — a machine credential has no person behind it and so
-   no participation to check — and what actually bounds it is the op table, which
-   admits it to two verbs. Recognising it here grants it nothing it cannot reach.
-   Stamping some OTHER class's name on the daemon's inner read was considered and
-   refused: an inner URL that lies about who is asking is the impostor hole
-   REC-29 closed, and it would have put a second, disagreeing answer to "who is
-   this" one function away from the only one that is allowed to exist. */
-/* REC-46 AND WHAT IT DELIBERATELY DID NOT DO HERE. That item put ONE
-   machine-identity predicate in the catalog and rewired eleven refusal sites to
-   it. This function is NOT one of them and was left alone with its difference
-   stated, which is the finding rather than an omission: every one of those
-   eleven answers "is this a machine, and therefore REFUSED"; this one answers
-   "whose view does this credential compile for", and its answer for a machine
-   is a PERMISSION — scope `member`, unfiltered — not a refusal. Rewiring it to
-   `isMachineIdentity` would widen what compiles unfiltered from the four
-   TOKEN CLASSES to every bare class word and every surface/AI name in
-   `NON_MEMBER_AUTHORS`, which is a ruling about who may see the group's
-   thinking and is not a sweep. The vocabulary below is the token classes and is
-   a different set from `ACTOR_CLASSES` for the same reason.
-   What IS shared is the SPELLING, imported above, because index.mjs mints it
-   and a parser reading a different literal would fail closed on every machine
-   read at once. */
-/* PL-11 / IS-5 / D-199 (4): `class:ai` IS RECOGNISED, AND IT IS THE
-   ORGANISATION-SCOPED PRINCIPAL AND ONLY THAT.
-   The `ai` class does not stamp its class here the way the four binding classes
-   do. It stamps THE PRINCIPAL THE RECORD DECLARES, so a MEMBER-scoped
-   credential arrives as `member:<id>` and falls into the participation filter
-   below — it sees exactly what that member sees, and cannot read a project its
-   principal was never invited to. Only an ORGANISATION-scoped credential
-   reaches this alternation, and it belongs here for the reason `class:member`
-   does: it acts for the group, there is no individual behind it whose
-   participation could be checked, and anybody holding one already has
-   instance-level access. Both arms are DRIVEN in test/aicredential.test.mjs and
-   they answer differently, which is what makes D-199 (4)'s distinction a
-   measurement rather than a label.
-   LEAVING IT OUT WAS CONSIDERED AND IS THE WRONG KIND OF NARROW — REC-33's arm
-   (b) exactly. This function fails closed on anything it does not recognise, so
-   an organisation-scoped credential would authenticate, pass its task scope,
-   and then read ABSENT for every bundle in the store: a class that can do
-   nothing while reporting that the record is empty, which is worse than a
-   refusal because it looks like an answer. */
-export function viewerPredicate(viewer) {
-  const v = typeof viewer === "string" ? viewer : "";
-  const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
-  if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
-
-  /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.
-   *
-   * THE EVIDENCE CORPUS STAYS SHARED. Information, Problems and Actions remain
-   * visible to the group generally, because compartmenting evidence would
-   * fracture the thing the record exists to be and would mean a member on one
-   * project could not see material another had already gathered. What
-   * participation scopes is the group's THINKING: where an argument has got to,
-   * what has been ruled out, what is being prepared.
-   *
-   * So the filter applies to PROJECT bundles and to nothing else. An uninvited
-   * member does not see a project at all: not its existence, not its name, not
-   * its references, not its participants. Invited-not-joined and joined differ
-   * in how much of the project they see, which is a per-FIELD distinction the
-   * reader applies; both can see that the project exists, so both pass here.
-   *
-   * This also closes the leak 7.9 names. `cites` lives on the citing object, so
-   * a Project's interest in a piece of Information is a property of the Project
-   * and the Information carries no record of who cites it. The one place the
-   * graph could escape is the derived reverse-edge index, and because every
-   * statement in this compiler takes its WHERE from this function, filtering
-   * the project rows out here filters them out of every shape that could
-   * reveal them.
-   *
-   * MACHINE CREDENTIALS ARE NOT FILTERED, deliberately. `class:member` is a
-   * shared instance-level token with no person behind it and therefore no
-   * participation to check; anyone holding one already has instance-level
-   * access to the record, so filtering it would buy nothing while breaking the
-   * operator path the token exists for. Only an identified session, which is
-   * the only thing that CAN be a participant, gets the participation filter. */
-  /* D-310, 2026-09-10: `member` IS RETURNED, AND IT IS THE ID THIS FUNCTION
-     ALREADY COMPUTED rather than a new question. It is here because a POSITIONAL
-     fact — does this viewer hold the owner position on any project (DEC-72
-     clause 5) — has to be asked of the viewer, and the store's alternative was
-     to parse the viewer string a SECOND time. A second parser is this
-     repository's most-repeated defect class, and here it fails in the direction
-     that reopens a DEC-8 disagreement: a spelling this function recognises and
-     the copy does not reads as "no member", the positional fact goes
-     undetermined, and the act it gates is offered again. So the parse stays in
-     the one place that does it, exactly as the machine-credential PREFIX does
-     (REC-46's note above).
-     IT IS null FOR EVERY ARM THAT IS NOT AN IDENTIFIED SESSION, and that is the
-     honest answer rather than a default: a `class:` credential has no person
-     behind it and therefore no participation to hold, which is the same sentence
-     the paragraph above gives for not filtering it. The bare `admin` spelling
-     takes this arm too — it is the operator-internal viewer, and the control
-     plane stamps the root administrator as `member:admin`, which reaches the
-     branch below and is answered positionally like any other member.
-     NOTHING ELSE MOVES: not the regex, not a `scope` value, not a gate
-     predicate. A consumer reading `sql`/`args`/`viewer`/`scope` is untouched. */
-  const memberId = m[3] || null;
-  if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
-
-  return {
-    member: memberId,
-    sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
-             SELECT 1 FROM project_participants pp
-             WHERE pp.project_id = b.bundle_id AND pp.member_id = ?)
-           OR EXISTS (
-             SELECT 1 FROM members am
-             WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active'))`,
-    args: [memberId, memberId],
-    viewer: v, scope: "participant",
-  };
-}
 
 /* ---- S-10 step 2: the text surface ----
  *
@@ -1278,6 +1146,21 @@ function tokenize(input) {
     while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")" && src[i] !== '"') s += src[i++];
     return { text: s, quoted: false };
   };
+  /* R24 (K105): `NEAR(` — the operator only in capitals, and only where free text is
+     read (a bare term, `text:`, `passage:`). The group is read to its closing
+     parenthesis (a quoted run may hold one) or, unclosed, to the end of the query. */
+  const readNear = () => {
+    i++; // the opening parenthesis
+    let body = "", inQuote = false;
+    while (i < src.length && (inQuote || src[i] !== ")")) {
+      if (src[i] === '"') inQuote = !inQuote;
+      body += src[i++];
+    }
+    const closed = i < src.length;
+    if (closed) i++;
+    return nearGroup(body, closed);
+  };
+  const NEAR_FIELDS = new Set(["text", "passage"]);
   while (i < src.length) {
     const c = src[i];
     if (isSpace(c)) { i++; continue; }
@@ -1287,6 +1170,7 @@ function tokenize(input) {
        its own is not negation of nothing; it is discarded. */
     if (c === "-" && i + 1 < src.length && !isSpace(src[i + 1])) { out.push({ k: "not" }); i++; continue; }
     const first = readValue();
+    if (!first.quoted && first.text === "NEAR" && src[i] === "(") { out.push({ k: "near", field: null, near: readNear() }); continue; }
     /* field:value, where the value may itself be quoted or carry a comparison. */
     if (!first.quoted && first.text.includes(":")) {
       const at = first.text.indexOf(":");
@@ -1342,6 +1226,10 @@ function tokenize(input) {
          opening quote and advances at least one. If it is not, the bare
          reader's own condition holds for that character, so it consumes at
          least one. Every iteration advances `i`. */
+      if (rest === "NEAR" && src[i] === "(" && NEAR_FIELDS.has(field.toLowerCase())) {
+        out.push({ k: "near", field, near: readNear() });
+        continue;
+      }
       if (src[i] === '"') {
         let pieces = 0, onlyQuoted = rest === "";
         while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")") {
@@ -1367,6 +1255,42 @@ function tokenize(input) {
     if (first.text !== "") out.push({ k: "term", value: first.text, quoted: first.quoted });
   }
   return out;
+}
+
+/* R24: a `NEAR(...)` group's body into its terms and distance. Each term is R1's: a
+   word, a quoted phrase, or `word*` a prefix; a term with no letter or digit is dropped.
+   The distance follows the last comma and is 10 when absent. `why` is set when the
+   group cannot be a proximity, and the group is then read as its terms joined by AND. */
+const NEAR_DEFAULT = 10, NEAR_MAX = 100;
+function nearGroup(body, closed) {
+  const terms = [];
+  let j = 0, dist = null, sawComma = false;
+  while (j < body.length) {
+    const c = body[j];
+    if (c === " " || c === "\t" || c === "\n" || c === "\r") { j++; continue; }
+    if (c === ",") { sawComma = true; dist = body.slice(j + 1).trim(); break; }
+    if (c === '"') {
+      let t = ""; j++;
+      while (j < body.length && body[j] !== '"') t += body[j++];
+      j++;
+      terms.push({ value: t, quoted: true });
+      continue;
+    }
+    let t = "";
+    while (j < body.length && !/[\s,"]/.test(body[j])) t += body[j++];
+    terms.push({ value: t, quoted: false });
+  }
+  const kept = terms.filter((t) => /[\p{L}\p{N}]/u.test(t.quoted ? t.value : t.value.replace(/\*$/, "")));
+  let n = NEAR_DEFAULT, clamped = null, why = null;
+  if (!closed) why = "it has no closing parenthesis";
+  else if (kept.length < 2) why = `it has ${kept.length === 1 ? "one term" : "no term"}, and a proximity needs two`;
+  else if (sawComma && !/^[+-]?\d+$/.test(dist)) why = `its distance ${JSON.stringify(dist)} is not a whole number`;
+  else if (sawComma) {
+    const v = Number(dist);
+    n = Math.max(0, Math.min(NEAR_MAX, v));
+    if (n !== v) clamped = v;
+  }
+  return { terms: kept, n, clamped, why, source: `NEAR(${body}${closed ? ")" : ""}` };
 }
 
 /* ---------------------------------------------------------------------------
@@ -1396,24 +1320,33 @@ function parseTokens(tokens, implicitOp, ctx) {
     if (t.k === "not") { eat(); const k = unary(); return k ? { op: "not", kid: k } : null; }
     if (t.k === "term") { eat(); return textAtom(null, t.value, t.quoted, ctx); }
     if (t.k === "sel") { eat(); return selector(t, ctx); }
+    if (t.k === "near") {
+      eat();
+      if (t.field && t.field.toLowerCase() === "passage") return meaningAtom("passage", t, ctx);
+      return nearAtom(t.near, (term) => textAtom(null, term.value, term.quoted, ctx),
+                      (atom) => { ctx.textAtoms.push(atom); return atom; }, ctx);
+    }
     eat();
     return null;
   };
   const unary = () => primary();
+  /* An explicit `AND` is a conjunction whatever `implicitOp` says (R1), and a run holding
+     one is not the bare implicit conjunction that is `widenable` (R13): `explicit` marks it. */
   const andExpr = () => {
     const kids = [];
+    let explicit = false;
     for (;;) {
       const t = peek();
       if (!t || t.k === ")") break;
       if (t.k === "or") break;
-      if (t.k === "and") { eat(); continue; }
+      if (t.k === "and") { eat(); explicit = true; continue; }
       const k = unary();
       if (k) kids.push(k);
       else if (!peek() || peek()?.k === ")") break;
     }
     if (!kids.length) return null;
     if (kids.length === 1) return kids[0];
-    return { op: implicitOp, kids };
+    return explicit ? { op: "and", kids, explicit } : { op: implicitOp, kids };
   };
   const orExpr = () => {
     const kids = [];
@@ -1463,6 +1396,25 @@ function textAtom(column, value, quoted, ctx) {
   const atom = { op: "text", column, value: v, prefix };
   ctx.textAtoms.push(atom);
   return atom;
+}
+
+/* R24: one `NEAR` group into one node. `mk(term, ctx)` builds a term's atom in the
+   caller's grammar (a bundle-text atom, or a `passage:` one). A group that can be a
+   proximity is ONE text atom carrying its terms and distance, and it becomes FTS5's own
+   `NEAR(...)` in `ftsAtom`, bound as an argument (R7). One that cannot is read as its
+   terms joined by AND, and the warning says why. */
+function nearAtom(g, mkTerm, mkNear, ctx) {
+  if (g.why) {
+    ctx.warnings.push(`${g.source}: read as its terms joined by AND, because ${g.why}`);
+    const kids = g.terms.map(mkTerm).filter(Boolean);
+    return kids.length === 0 ? null : kids.length === 1 ? kids[0] : { op: "and", kids, explicit: true };
+  }
+  if (g.clamped !== null)
+    ctx.warnings.push(`${g.source}: the distance ${g.clamped} is outside 0–${NEAR_MAX}; read as ${g.n}`);
+  const sink = { textAtoms: [] };
+  const near = g.terms.map((t) => textAtom(null, t.value, t.quoted, sink));
+  return mkNear({ op: "text", column: null, value: near.map((a) => a.value).join(" "), prefix: false,
+                  near, dist: g.n });
 }
 
 const CMP = [[">=", ">="], ["<=", "<="], [">", ">"], ["<", "<"]];
@@ -1670,6 +1622,19 @@ function meaningAtom(arm, tok, ctx) {
        and answering it through the same path every other arm's presence test
        uses means it cannot drift. There is no term, so there is no snippet and
        the answer says so rather than publishing an empty one. */
+    /* R24: `passage:NEAR(a b, n)` is one proximity over the indexed text; a group that
+       cannot be one is its terms as `passage:` terms joined by AND. */
+    const matchNode = (atom) => {
+      ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+      const expr = ftsAtom(atom);
+      ctx.passageTerms.push(expr);
+      return { op: "meaning", arm, field: subName, col: sub.col, cmp: "match", value: atom.value, fts: expr };
+    };
+    if (tok.near)
+      return nearAtom(tok.near, (t) => {
+        const a = textAtom(null, t.value, t.quoted, { textAtoms: [] });
+        return a ? matchNode(a) : null;
+      }, matchNode, ctx);
     if (raw === "" || raw === "*") {
       ctx.meaningArms.push({ arm, field: subName, column: sub.col });
       return { op: "meaning", arm, field: subName, col: sub.col, cmp: "present", value: null };
@@ -1690,11 +1655,7 @@ function meaningAtom(arm, tok, ctx) {
       ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} has no word in it to match`);
       return null;
     }
-    ctx.meaningArms.push({ arm, field: subName, column: sub.col });
-    const expr = ftsAtom(atom);
-    ctx.passageTerms.push(expr);
-    return { op: "meaning", arm, field: subName, col: sub.col, cmp: "match", value: atom.value,
-             fts: expr };
+    return matchNode(atom);
   }
   /* RECORDED, so the caller and the suite can tell an arm that COMPILED from a
      string that quietly degraded to free text. `unknown field "leg"` and a set
@@ -1756,6 +1717,9 @@ function applySort(spec, ctx) {
 const ftsLiteral = (s) => `"${String(s).replace(/"/g, '""')}"`;
 
 function ftsAtom(a) {
+  /* R24: FTS5's own proximity operator; the terms are literals as everywhere, and
+     the whole expression is a bound argument, never statement text. */
+  if (a.near) return `NEAR(${a.near.map(ftsAtom).join(" ")}, ${a.dist})`;
   const lit = ftsLiteral(a.value) + (a.prefix ? "*" : "");
   return a.column ? `{${a.column}} : ${lit}` : lit;
 }
@@ -1834,7 +1798,7 @@ const K1 = 1.2;
 function visibleBm25({ terms, gate }) {
   const parts = [], args = [];
   /* `vis` is the viewer's own index: every indexed row the gate passes. The gate is the ONE compiled predicate,
-     interpolated (a use, not a mint — the mint-site count stays at three). */
+     interpolated (a use, not a mint: the gate is minted only in `membership`, R21). */
   parts.push(`vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
   args.push(...gate.args);
   parts.push(`nvis(n) AS (SELECT count(*) FROM vis)`);
@@ -2120,10 +2084,14 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   /* Whether the query is a bare implicit conjunction of more than one atom,
      which is the only case where offering the OR reading makes sense. */
-  const widenable = implicitOp !== "or" && ast?.op === "and"
+  const widenable = implicitOp !== "or" && ast?.op === "and" && !ast.explicit
                  && Array.isArray(ast.kids) && ast.kids.length > 1;
 
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
+  /* R12: the snippet's length in tokens, 4–64, 12 when absent or not a number (a
+     non-number was bound as NaN before). */
+  const snipN = Number(snippetChars);
+  const snip = Math.max(4, Math.min(64, Math.floor(Number.isFinite(snipN) ? snipN : 12)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
   /* The meaning shape's OWN bound, from its OWN input against its own ceiling —
      deliberately not the page's `limit` clamped a second way, because one number
@@ -2200,7 +2168,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
                 + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
                 + `FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p\nORDER BY p._pos`,
-             args: [...c.args, Math.max(4, Math.min(64, Math.floor(snippetChars))), rank, ...gate.args, lim, off] };
+             args: [...c.args, snip, rank, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);
@@ -2271,17 +2239,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
    * `Store#runQuery`. So option B was closed by a standing ruling. Everything
    * that makes this safe is inherited rather than rebuilt: `scope` is the same
    * set the page would have shown, `gate.sql` is the same predicate from the
-   * same call to `viewerPredicate`, and NOTHING HERE MINTS A GATE — the count of
-   * gate-marker mint sites in this module is pinned at three, all three inside
-   * `viewerPredicate`, and this shape does not add a fourth. It INTERPOLATES the
-   * compiled predicate, twice, which is a use and not a mint.
-   *
-   * AND THE PIN IS TEXT-ANCHORED, WHICH THIS COMMENT FOUND THE HARD WAY. Writing
-   * the marker's template literal in prose here took the count to FOUR and made
-   * both suites red against an explanatory comment — D-160's shape, met inside
-   * the thing it guards. The prose says "gate-marker" instead; `meaningread`'s
-   * own pin additionally counts over COMMENT-STRIPPED source, so the next reader
-   * who writes it in a sentence gets a passing suite rather than a puzzle.
+   * same call to `viewerPredicate`, and NOTHING HERE MINTS A GATE: the gate is
+   * minted only inside `membership`'s `viewerPredicate` (R9, R21), and this shape
+   * INTERPOLATES the compiled predicate, twice, which is a use and not a mint.
    *
    * REC-36'S STRICTER RULE, WHICH IS THE ONE THING THIS SHAPE ADDS.
    * §14c: a meaning-layer answer is a CANDIDATE LIST, and most reads redact a
@@ -2536,15 +2496,15 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        THE DELIMITERS ARE LITERALS AND THE BUDGET IS BOUND, exactly as the
        `bundles_fts` snippet does — same brackets, same ellipsis, same clamp —
        so a member reading a passage hit and a bundle hit reads one convention. */
-    const snip = m.ftsTable
+    const snipCol = m.ftsTable
       ? (fts
           ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '…', ?) AS snippet`
           : `, NULL AS snippet`)
       : "";
-    const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
+    const snipArgs = m.ftsTable && fts ? [snip] : [];
     const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, `
               + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ")
-              + reached + present + computed + snip;
+              + reached + present + computed + snipCol;
     /* The ORDER BY is the GRAIN's own identity, which is what makes paging over
        meaning rows total rather than merely tidy — without it a leg can appear on
        two pages or on none, exactly as the bundle page's id tiebreak prevents. */
