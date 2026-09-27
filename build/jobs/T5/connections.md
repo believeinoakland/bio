@@ -2,7 +2,7 @@
 
 **Session** CONNECTIONS #1, `session_01WfxC8Lht5EmaF2m5vmrG2i`, on `job/T5/connections` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §3, §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE again, 2026-09-27 ~08:55 UTC, after K152 (Q7 answered, R50–R57 folded) and merging `tranche/T5` @ `84cfbd8db3`. Nothing open. Q8 superseded (R5's provider is observation-log's `derivationStatementFor`).
+**Status** · COMPLETE (CONNECTIONS #2, K155), 2026-09-27 ~13:10 UTC: REPORTs 1, 2, 4, 5, 6 of LEGACY-TESTS #3 applied; nothing open, no `NEEDS BOB`. Size: test runs 16, module lines 2246. **COMPLETE is sent by this record** (K154). (CONNECTIONS #1: COMPLETE again ~08:55 UTC after K152.)
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md §1–§16, `build/manifest.md`, `build/layers.md`, `build/requirements/connections.md`, `build/extraction/connections.md`, `build/plan/current.md`, the public parts of `record-core`, `membership`, `promotion`, `provenance`, `capture`, `extraction`, `content`, `entities` (legacy-checks has no requirements file; `text-chain`'s reading-source functions as the code states them), rulings K3, K6, K23, K31, K61, K64, K72, K73, K76–K79, K102, K120, K134–K141; `build/jobs/T5/content.md` (the pattern); the legacy code the map names, measured again at `f05090bcad` (below); the built work: `land/worker/D-575` (9894d7bc, 617fd5ef), `D-625` (80aa1f03, a42ba046), `D-706` (6dd3e530), `D-722` (9c7a6662, 46ed027d).
 
@@ -117,3 +117,37 @@ Size: test runs 30, module lines 2223
 - Old battery against `tranche/T5` @ `84cfbd8db3`: 22 fail there; here the same 22 plus the six of REPORT 2.
 
 Size: test runs 34, module lines 2223
+
+## CONNECTIONS #2 (K155)
+
+**Session** CONNECTIONS #2, `session_01BaYgG1uv2rixVi2w5kkVZP`, on `job/T5/connections` (fast-forwarded to `tranche/T5` @ `4ea9f5a295`, then to `c1a7a7b114`). BOB #46, `session_01Q3WyZBMy4MH1Acpgtw9awA`. Process: civicos-process `roles/JOB.md`. **Read whole:** `roles/JOB.md`, `build/manifest.md`, `build/requirements/connections.md`, this record, `build/jobs/T5/legacy-tests.md` (REPORTs 1, 2, 4, 5, 6 among the rest), K154, K155, `src/connections/index.mjs` and `schema.mjs`, capture's, extraction's and host-governor's factories, the store's creation order (`store.mjs` 741–797), the bounds suites' graders.
+
+### Entries applied
+
+- **REPORT 1 (K155), the rendering regression.** `connectionsOf` now creates each module it has to create with its own `env`: `captureOf(host, { record, env })` (and so host-governor, which capture creates, gets it too), `extractionOf(host, { record, membership, promotion, env })`, `contentOf(host, { record, membership, extraction })`. A module passed in is used as given. Tested at the factory (`factory.test.mjs`, "R24, R18, K155"): on a fresh host, the capture connections reaches is the one `captureOf` answers every later caller, with the env connections was given (its `RENDERER` binding, the governor's env, extraction's env, and R18's delay read from it). Control, run and restored (sha256 identical): with the one line back to `captureOf(host)` the test fails. The rendered acquire through the plane: `browser-render` 48/0, `rendered-capture` 103/0, `monitor-rendered` 28/0, `d522-unattended-render` 21/0, `capturerequests` 139/0, `doorbell` 72/0, `drive` 160/0 (each red on the tip before: 28/20, 122/17, 9/12, 71/1, 159/1, and the two named red). No `op=acquire` with `render: true` answers `RENDER_NO_RENDERER` there now.
+- **REPORT 2.** "NO INDEX ON connections(grade) … It is earned when an arm reads it" restored beside the `connections` indexes in `schema.mjs`. `meaningquery` 107/0 (was 106/1).
+- **REPORTs 4–6 (R54, R56).** `asserted` asks sight in the SQL (the other end through `#bundleGate`, the same predicate as the redactor) and reads `LIMIT cap + 1`; `truncated` is measured off that read and counts only visible rows; its three lists are filtered inline (no closure). `fileMembership` takes `limit` (as R54's: default 200, maximum 2,000; `op=filemembership` passes `limit=`), reads the stored pairs (sight on both ends in the SQL) and the pending pairs each at `LIMIT cap + 1`, and publishes `limit`, `truncated` (either list cut), `stored_truncated`, `pending_truncated`. Tested ("R54, R33 …", "R56, R33 …"): at a limit equal to the visible rows, nothing withheld is counted as cut; one under, cut; the rows each call takes out of storage are at most `limit + 1` (a spy on the storage's `exec`); default and maximum. Both tests fail on the previous code, pass now.
+
+### Wording for BOB to fold (P17, recorded, not asked)
+
+- **R56**: add "each list at most `limit` (default 200, maximum 2,000), with `truncated`, `stored_truncated` and `pending_truncated`". K155 names the bound; the service gains `limit`.
+
+### Found in other modules (REPORT)
+
+8. **legacy-tests (`derivation-bounds`), figures that recorded the defects now fixed:** 73 arms, 70 pass, 3 fail. The arm that named REPORT 6, TRUNCATION SOURCE BY NAME, **passes** (47 graded, 0 in violation; `connections/index:asserted:rows` and `fileMembership:storedRows` graded). The three reds are pins of the old membership, each moved by the fix and by nothing else: CENSUS IS A FLOOR (190 → 188, departures `connections/index:asserted` and `connections/index:fileMembership`, both now LIMIT-bounded), and SET 2 named and partitioned (`connections/index:asserted` leaves: census-blind 12 → 11, blind to both halves 8 → 7). Re-pin by name (legacy-tests; moving a floor is BOB's).
+9. **legacy-tests (`meaning-bounds`), 92/4 as before, none of them connections':** `filemembership` left BARE for BOUNDED (`bound=[limit] more=[truncated, stored_truncated, pending_truncated]`), 52 → 51; `connectionsasserted` left OPAQUE for BOUNDED (`bound=[limit] more=[truncated]`), 12 → 11, so the named residual no longer lists it. Still red: the BARE ceiling (51 > 43, T3/T4's), the OPAQUE ceiling (11 > 10: `reproject`, REPORTed by legacy-tests), the named residual (`audit->auditPass` arrived, `projectfork->forkProject` and `projectowneradd->projectOwnerAdd` departed: not connections'), D-240 (b) (N70).
+10. **capture (N122, BOB's already):** the first-caller-wins memo is what turned one missing argument into a plane-wide defect; connections no longer triggers it, but any other factory that creates capture without `env` before the store does would.
+11. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale again (`src/connections/` changed).
+
+### Tests and checks
+
+- **Module:** `node --test bio-plane/test/m/connections/`: tests 60, pass 60, fail 0 (6 files; 3 new tests). `test/m/` whole: 1,287 tests, 1,284 pass, 3 todo, 0 fail.
+- **Old suites the REPORTs name** (this branch, each alone in a process, four at a time): browser-render 48/0, rendered-capture 103/0, monitor-rendered 28/0, d522-unattended-render 21/0, capturerequests 139/0, doorbell 72/0, drive 160/0, meaningquery 107/0, derivation-bounds 70/3 (REPORT 8), meaning-bounds 92/4 (REPORT 9).
+- **Checks** (civicos-process `main`): `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 11 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 57 of 57 live requirement ids named by a test; 0 failures`; `ownership: 4 files changed by connections between tranche/T5 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`.
+- Layer tests: none named in `build/manifest.md`.
+
+Size: test runs 16, module lines 2246
+
+### COMPLETE (to BOB #46, by this record, K154)
+
+From connections (T5): COMPLETE. K155 applied on `job/T5/connections`: connections creates capture and extraction with its own env (rendering restored: browser-render 48/0 and the six other suites of REPORT 1 green), the grade-index note restored (meaningquery 107/0), R54 and R56 bounded in SQL at `cap + 1` with sight in the read and `truncated` honest. REPORTs 8–11 above (bounds pins moved by the fix; R56's wording to fold). Checks: format, architecture, coverage, ownership 0 failures.
