@@ -121,6 +121,7 @@
 - N124 · 2026-09-27 · **legacy-tests** (ID-SPACES #2 REPORT R2): `bio-plane/test/nc-rec203.mjs` line 16 and `rec203-idspaces.test.mjs` line 56 still describe id-spaces' legacy adapter, removed in T6 (N105; R26 retired); prose only, correct them.
 - N125 · 2026-09-27 · **connections** (LEGACY-CHECKS #2 REPORT 1): `src/connections/themes.mjs` re-exports C-81.11–C-81.14 from the catalogue's `THEME_CHECKS` and deletes its `THEME_WITHDRAW_CHECKS` copy (the guard fails 8 lines until then).
 - N126 · 2026-09-27 · **entities** (LEGACY-CHECKS #2 REPORT 9): region `is-alias-named` (4 lines, 99 characters) is under the guard's floor; widen it to the whole refusal.
+- N127 · 2026-09-27 · **legacy-store** (its next extracting job; RECORD-CORE #3 REPORT R2): `auditPass`'s `sighted` set is still built by an unbounded SELECT in `store.mjs` (N70's other half); page it as record-core's cursor read now is (N117).
 
 ## Left from T6's preparation
 
