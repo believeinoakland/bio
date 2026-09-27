@@ -15,6 +15,10 @@
  * that capture, which the promotion carries beside `data/provenance.json` so C-18.1's "names a file that does not
  * exist in the bundle" does not fire.
  *
+ * `{ chain: true }` also gives the document the one first-party hop op=acquire records for a direct fetch
+ * (`provenance_chain`), for a fixture whose bundle stands at or past `verified`, where C-18.9 refuses a document that
+ * records no chain. Off by default: a suite that reads chains or route marks states its own.
+ *
  * What it does NOT do: it never makes a register conform that a suite built non-conformant ON PURPOSE (a suite
  * testing C-18 itself), and it never touches a replay. Those fixtures are judged one by one. */
 import { EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
@@ -23,7 +27,7 @@ const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const nameOf = (sha) => `fixture-${String(sha || "unhashed").replace(/[^0-9A-Za-z]/g, "").slice(0, 16) || "unhashed"}.bin`;
 
 /** The document, completed to C-18.1's shape; `at` is the retrieval instant when the document states none. */
-export function registerDoc(doc, { at = "2026-01-01T00:00:00Z", file } = {}) {
+export function registerDoc(doc, { at = "2026-01-01T00:00:00Z", file, chain = false } = {}) {
   const d = isObj(doc) ? doc : {};
   const cap = isObj(d.capture) ? d.capture : {};
   const retrieved = d.retrieved || cap.retrieved || (isObj(d.reading) && d.reading.at) || at;
@@ -36,6 +40,10 @@ export function registerDoc(doc, { at = "2026-01-01T00:00:00Z", file } = {}) {
       authority_basis: `a test fixture: no authority was asserted and none is determined; recorded ${retrieved}`,
     }),
     origin: { kind: "named_request" },
+    ...(chain && !("provenance_chain" in d) ? { provenance_chain: [{
+      who: "instance fixture (a test fixture's first-party fetch)",
+      asserts: `these bytes were served for https://fixture.invalid/${nameOf(cap.sha256)} at ${retrieved}`,
+      evidence: "first-party https fetch, hashed at receipt", bound: false, via: null }] } : {}),
     ...d,
     capture: {
       method: "bio-plane acquire, https fetch, hashed at receipt",
@@ -48,8 +56,8 @@ export function registerDoc(doc, { at = "2026-01-01T00:00:00Z", file } = {}) {
 }
 
 /** The promotion's file entry for the capture `registerDoc` named: a blob addressed by the capture's sha256. */
-export function registerFile(doc) {
-  const d = registerDoc(doc);
+export function registerFile(doc, opts = {}) {
+  const d = registerDoc(doc, opts);
   const sha = String(d.capture.sha256 || "").toLowerCase();
   const bytes = Number.isInteger(d.capture.bytes) && d.capture.bytes >= 0 ? d.capture.bytes : 0;
   return { path: d.file, blobSha: sha, sha256: sha, bytes };
