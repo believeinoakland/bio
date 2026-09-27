@@ -55,6 +55,8 @@ Layer 2 CLOSED 2026-09-27 ~06:40 UTC (sessions archived, rows in `build/metrics/
 
 Layer 2, started 2026-09-27 ~05:44 UTC: RECORD-CORE #2 `session_014SH9wUytqUzw3oKoJhPj7C`, MEMBERSHIP #2 `session_01WvJLh3JQvPkdtZptfwXdqf`, PROMOTION #3 `session_01CBqvRerSWp68oj6TfvGgfi`.
 
+Layer 4 CLOSED 2026-09-27 ~07:55 UTC (sessions archived, rows in `build/metrics/T5.csv`): calibration, extraction, content merged (ownership 0 failures, content's one flag reviewed, K140; every legacy line added read by BOB), bundles regenerated (fleetbundles 96/0).
+
 Layer 4, started 2026-09-27 ~06:36 UTC: CALIBRATION #1 `session_01DT2wYuh5pHNvHTYzS5psTF`, EXTRACTION #1 `session_014jiwG7P66ao1PbMJXwqhSF`, CONTENT #1 `session_01RFEshCL4oFYL6LET9Gh1sH`.
 
 **Size.** Fifteen jobs. T4: 13 jobs, 703.6M tokens, half of it legacy-tests (K126).
