@@ -52,11 +52,12 @@ export function bucket(objects = {}) {
 /** The readings extraction would provide: `readings[sha] = {chain, pageCount, containerExtent, textContainer,
  *  captureFormat, pageBoxes}`, `units[sha] = {units, state}`; `onReading` records listeners. */
 export function readings() {
-  const r = { readings: {}, units: {}, listeners: [] };
+  const r = { readings: {}, units: {}, listeners: [], readFor: {} };
   r.provider = {
     readingOf: (s) => (r.readings[s] ? { reading: { page_boxes: r.readings[s].pageBoxes ?? null }, chain: null,
       pageCount: null, textContainer: null, captureFormat: null, ...r.readings[s] } : null),
     unitsOf: (s) => r.units[s] || { units: [], state: null },
+    capturesReadFor: (b) => (r.readFor[b] || []).map((capture_sha) => ({ capture_sha, at: null })),
     onReading: (module, fn) => { r.listeners.push({ module, fn }); return { ok: true }; },
   };
   return r;

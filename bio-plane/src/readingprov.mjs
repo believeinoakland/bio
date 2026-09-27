@@ -51,25 +51,46 @@ function stepPages(s) {
 }
 const covers = (pages, p) => pages === "all" || pages.has(p);
 
-/* The chain's answer for one page: `{tier, engine}` or null when no step speaks for it. */
-function chainTierOf(chain, page) {
-  if (!Array.isArray(chain)) return null;
-  let layer = null, pixels = null;
+/* D-635: the part a step belongs to. `mergedChain` stamps `extent.part` when two parts share a page;
+   otherwise the parts partition the pages and a part is named by its page list. */
+function partOf(s) {
+  const e = s && s.extent;
+  if (e && Number.isInteger(e.part)) return `#${e.part}`;
+  return e && Array.isArray(e.pages) ? e.pages.join(",") : "all";
+}
+
+/* The chain's answers for one page, one per PART that covers it, in chain order: `[{tier, engine}]`, empty
+   when no step speaks for it. Within a part the steps are a sequence, so a `pixels` step outranks the
+   `layer` step before it. D-635 (BOB #35, 06:25Z): a page whose folio decoded is listed in the layer part
+   AND the engine's part, because its text is the folio followed by the transcription. It then has TWO
+   producers, and both are named. Before D-635 the parts partitioned the pages, and this answered one. */
+function chainTiersOf(chain, page) {
+  if (!Array.isArray(chain)) return [];
+  const byPart = new Map();
   for (let i = 0; i < chain.length; i++) {
     const s = chain[i];
     if (!s || typeof s !== "object") continue;
     const pages = stepPages(s);
     if (!covers(pages, page)) continue;
+    const key = partOf(s);
+    const had = byPart.get(key) || { layer: null, pixels: null };
     if (s.step === "pixels") {
       /* The engine is the `ocr` step that READ these pixels — the next step in the same part. */
       const next = chain[i + 1];
-      pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string"
+      had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string"
         ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
     } else if (s.step === "layer") {
-      layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
+      had.layer = { tier: Number.isInteger(s.tier) ? s.tier : null, engine: null };
     }
+    byPart.set(key, had);
   }
-  return pixels || layer;
+  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
+}
+/* The chain's answer for one page: `{tier, engine}` or null when no step speaks for it. A page with two
+   producers (D-635) answers the LAST, the tier its text was last extended by; `chainTiersOf` names both. */
+function chainTierOf(chain, page) {
+  const all = chainTiersOf(chain, page);
+  return all.length ? all[all.length - 1] : null;
 }
 
 /**
@@ -122,11 +143,21 @@ export async function readingProvenance({ text = null, chain = null, tier = null
         : Number.isInteger(p.tier) ? p.tier
         : out.text_tier;
       const pt = typeof p.text === "string" ? p.text : "";
-      out.pages.push({ page: p.page, tier: t, member: t == null ? null : (TIER_MEMBERS[t] ?? null),
-                       chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null });
+      /* D-635: every producer of a page listed in two parts, in chain order. `tier` and `member` stay the
+         last one's, so a page with one producer reads exactly as before; `producers` is added only when
+         there are two or more. */
+      const several = chainTiersOf(chain, p.page).filter((c) => c.tier != null);
+      const entry = { page: p.page, tier: t, member: t == null ? null : (TIER_MEMBERS[t] ?? null),
+                      chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null };
+      if (several.length > 1)
+        entry.producers = several.map((c) => ({ tier: c.tier, member: TIER_MEMBERS[c.tier] ?? null }));
+      out.pages.push(entry);
       /* THE PAGES TRANSCRIBED are the pages that carry text; a page read to nothing is listed on
          `pages` with its tier and no digest, and is not credited to a producer as transcribed. */
-      if (pt.length) credit(t, fromChain && fromChain.engine, p.page);
+      if (pt.length) {
+        if (several.length > 1) for (const c of several) credit(c.tier, c.engine, p.page);
+        else credit(t, fromChain && fromChain.engine, p.page);
+      }
     }
   } else {
     /* NO PAGE GRAIN — an office container, a bare string. The whole text is one producer's, and which
@@ -154,6 +185,9 @@ export function describePages(list) {
 }
 
 const who = (t, m) => (t == null ? "an undetermined tier" : `tier ${t} on ${m || "an unnamed member"}`);
+/* D-635: a page with two producers is named by both, so a changed page is never attributed to one of them. */
+const whoOf = (p) => (Array.isArray(p.producers) && p.producers.length > 1
+  ? p.producers.map((q) => who(q.tier, q.member)).join(" and ") : who(p.tier, p.member));
 const isProv = (p) => !!(p && typeof p === "object" && p.scheme === PROVENANCE_SCHEME);
 
 /**
@@ -193,10 +227,11 @@ export function compareProvenance(prior, next) {
   for (const pg of all) {
     const a = before.get(pg) || null, b = after.get(pg) || null;
     if (a && b && a.text_sha256 === b.text_sha256) continue;
-    const key = `${a ? a.tier : "-"}|${a ? a.member : "-"}|${b ? b.tier : "-"}|${b ? b.member : "-"}`;
+    const key = `${a ? whoOf(a) : "-"}|${b ? whoOf(b) : "-"}`;
+    const side = (x) => ({ tier: x.tier, member: x.member,
+                           ...(Array.isArray(x.producers) && x.producers.length > 1 ? { producers: x.producers } : {}) });
     if (!groups.has(key))
-      groups.set(key, { before: a ? { tier: a.tier, member: a.member } : null,
-                        now: b ? { tier: b.tier, member: b.member } : null, pages: [] });
+      groups.set(key, { before: a ? side(a) : null, now: b ? side(b) : null, pages: [] });
     groups.get(key).pages.push(pg);
   }
   const changed = [...groups.values()];
@@ -206,12 +241,12 @@ export function compareProvenance(prior, next) {
                  + "how the pages were joined into the text the reader was handed" };
   const says = changed.map((g) => {
     const pgs = describePages(g.pages);
-    if (!g.before) return `${who(g.now.tier, g.now.member)} returned ${pgs}, which the earlier reading did not have`;
-    if (!g.now) return `the earlier reading had ${pgs} (${who(g.before.tier, g.before.member)}), which this reading does not`;
-    if (g.before.tier === g.now.tier && g.before.member === g.now.member)
-      return `${who(g.now.tier, g.now.member)} returned different text for ${pgs}`;
-    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${who(g.before.tier, g.before.member)} before and by `
-         + `${who(g.now.tier, g.now.member)} now, `
+    if (!g.before) return `${whoOf(g.now)} returned ${pgs}, which the earlier reading did not have`;
+    if (!g.now) return `the earlier reading had ${pgs} (${whoOf(g.before)}), which this reading does not`;
+    if (whoOf(g.before) === whoOf(g.now))
+      return `${whoOf(g.now)} returned different text for ${pgs}`;
+    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${whoOf(g.before)} before and by `
+         + `${whoOf(g.now)} now, `
          + `and the text differs`;
   }).join("; ");
   return { state: "differs", changed, says };

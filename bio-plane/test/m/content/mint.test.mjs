@@ -29,6 +29,14 @@ test("R11: an authored capture held wins, one not held answers null; otherwise t
   w.inquiry("INQ-2026-0001-q");
   assert.equal(w.content.captureFor("INQ-2026-0001-q"), null);
   assert.equal(w.content.captureFor("INFO-2026-0099-none"), null);
+  /* provenance holds none: the captures the bundle's readings carry (extraction R51), in their order */
+  w.doc("INFO-2026-0003-read", []);
+  w.ex.readFor["INFO-2026-0003-read"] = ["1".repeat(64), "2".repeat(64)];
+  assert.equal(w.content.captureFor("INFO-2026-0003-read"), "1".repeat(64));
+  assert.equal(w.content.captureFor("INFO-2026-0003-read", "2".repeat(64)), "2".repeat(64), "an authored capture a reading carries");
+  assert.equal(w.content.captureFor("INFO-2026-0003-read", "3".repeat(64)), null);
+  w.ex.readFor[DOC] = ["1".repeat(64)];
+  assert.equal(w.content.captureFor(DOC), a.sha, "provenance first: readings are asked only when it holds none");
 });
 
 test("R12: mint refuses as R7 against the capture's context, else writes the row with its id, ref, chain, cap, page count, minter, instant and cited_as", () => {

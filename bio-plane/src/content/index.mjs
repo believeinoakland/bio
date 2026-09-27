@@ -17,9 +17,8 @@
  * `deps`:
  *   record, membership, provenance   the modules it uses, through their factories on the same host unless a test
  *                                    passes its own.
- *   extraction   `{readingOf, unitsOf, onReading?}` (extraction R30, R36, R24). Until extraction is merged into the
- *                tranche, the default is this module's bridge over the legacy store's reading tables (CONTENT #1's
- *                job record, Q3); it is replaced by `extractionOf(host)` on extraction's CHANGE.
+ *   extraction   `extractionOf(host)` unless a test passes its own: `readingOf` (its R30), `unitsOf` (R36),
+ *                `capturesReadFor` (R51) and `onReading` (R24), with which this module registers its stale mark.
  *   now          the module's clock, an ISO instant (default: the wall clock); a mint or act with no `at` reads it. */
 
 import { isMachineIdentity, normalizeType, OBJECT_TYPES, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
@@ -32,6 +31,7 @@ import { cropImage } from "../../../pdf-worker/src/imagecrop.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
 import { CONTENT_SCHEMA, CONTENT_TABLES, migrateContent } from "./schema.mjs";
 import {
   CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KINDS, checkContentExtent, canonicalExtent, describeExtent, contentIdFor,
@@ -121,45 +121,13 @@ const staleSays = (extent) =>
   + `as it was transcribed then — the record keeps it rather than moving it, because moving an authored citation is `
   + `a member's act and not the record's`;
 
-/* ======================================================================= *
- * THE BRIDGE TO THE LEGACY READING TABLES (until extraction's CHANGE; Q3).
- * It reads exactly what extraction R30 and R36 will provide, in their shapes, and nothing else.
- * ======================================================================= */
-function legacyReadings(sql) {
-  const one = (q, ...a) => { const r = [...sql.exec(q, ...a)]; return r.length ? r[0] : null; };
-  const has = (t) => !!one(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, t);
-  const INDEX_STATE = { PRESENT: "whole", partial: "partial" };
-  return {
-    readingOf(captureSha) {
-      if (!has("readings")) return null;
-      const row = one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
-      if (!row) return null;
-      const reading = safeJson(row.reading) || {};
-      const pc = reading.page_count;
-      return { reading, chain: Array.isArray(reading.text_source) ? reading.text_source : null,
-               pageCount: Number.isInteger(pc) && pc > 0 ? pc : null,
-               containerExtent: Object.prototype.hasOwnProperty.call(reading, "container_extent")
-                 ? reading.container_extent : undefined,
-               textContainer: typeof reading.text_container === "string" ? reading.text_container : null,
-               captureFormat: typeof row.capture_format === "string" ? row.capture_format : null };
-    },
-    /* The captures the bundle's readings carry, in the order the legacy store resolved them by. */
-    capturesReadFor(bundleId) {
-      if (!has("readings")) return [];
-      return [...sql.exec(`SELECT capture_sha FROM readings WHERE bundle_id=? ORDER BY at IS NULL, at, capture_sha`, bundleId)]
-        .map((r) => r.capture_sha);
-    },
-    unitsOf(captureSha) {
-      const units = has("capture_text")
-        ? [...sql.exec(`SELECT extent, ref, text, truncated FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT 4096`,
-                       captureSha)] : [];
-      const obs = has("observation_log") ? one(
-        `SELECT state FROM observation_log WHERE level='content' AND subject_kind='capture' AND subject=?
-           AND authority_kind='derive' ORDER BY seq DESC LIMIT 1`, captureSha) : null;
-      const state = obs ? (INDEX_STATE[obs.state] || "none") : null;
-      return { units: units.map((u) => ({ ...u, truncated: !!u.truncated })), state };
-    },
-  };
+/** A capture's units as `gradeAcross` compares them: each extent in its canonical form (extraction R36 answers it
+ *  parsed), and a missing answer as none held. */
+function normUnits(u) {
+  const units = u && Array.isArray(u.units) ? u.units : [];
+  return { units: units.map((x) => ({ ...x, extent: typeof x.extent === "string" ? x.extent : canonicalExtent(x.extent),
+                                      truncated: !!x.truncated })),
+           state: u ? u.state ?? null : null };
 }
 
 export class Content {
@@ -169,7 +137,7 @@ export class Content {
     this.record = record;
     this.membership = membership;
     this.provenance = provenance;
-    this.extraction = extraction || legacyReadings(storage.sql);
+    this.extraction = extraction;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.staleListeners = [];
   }
@@ -219,7 +187,7 @@ export class Content {
   captureFor(bundleId, authored = null) {
     if (typeof bundleId !== "string" || !bundleId) return null;
     const held = this.provenance.capturesOf(bundleId).map((c) => c.capture_sha);
-    const read = () => (typeof this.extraction.capturesReadFor === "function" ? this.extraction.capturesReadFor(bundleId) : []);
+    const read = () => (this.extraction.capturesReadFor(bundleId) || []).map((c) => (typeof c === "string" ? c : c.capture_sha));
     if (typeof authored === "string" && authored.trim()) {
       const a = authored.trim();
       return held.includes(a) || read().includes(a) ? a : null;
@@ -836,10 +804,8 @@ export class Content {
     const n = hit ? hit.length : this.#one(`SELECT count(*) AS c FROM content WHERE ${where}`, captureSha, live, captureSha).c;
     if (n) this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
     if (hit && hit.length) {
-      const before = unitsBefore && Array.isArray(unitsBefore.units) ? unitsBefore
-        : { units: [], state: null };
-      const after = unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter
-        : this.extraction.unitsOf(captureSha) || { units: [], state: null };
+      const before = normUnits(unitsBefore);
+      const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
       for (const row of hit) {
         const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
         const g = before.units.length ? gradeAcross(row, extent, before, after)
@@ -1071,7 +1037,7 @@ export class Content {
   }
 
   #unitsOf(captureSha, memo) {
-    if (!memo.has(captureSha)) memo.set(captureSha, this.extraction.unitsOf(captureSha) || { units: [], state: null });
+    if (!memo.has(captureSha)) memo.set(captureSha, normUnits(this.extraction.unitsOf(captureSha)));
     return memo.get(captureSha);
   }
 
@@ -1293,11 +1259,12 @@ export function contentOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const provenance = d.provenance || provenanceOf(host);
-    c = new Content({ ...d, storage: d.storage || host.storage, record, membership, provenance });
+    const extraction = d.extraction || extractionOf(host);
+    c = new Content({ ...d, storage: d.storage || host.storage, record, membership, provenance, extraction });
     instances.set(host, c);
     record.declarePurge("content", CONTENT_TABLES);
-    if (c.extraction && typeof c.extraction.onReading === "function")
-      c.extraction.onReading("content", (e) => c.markStale(e.captureSha, e.chainAfter));
+    /* R22 (REC-82): the stale mark on every replaced reading, registered with extraction (its R24; K31's pattern). */
+    c.extraction.onReading("content", (e) => ({ staled: c.markStale(e.captureSha, e.chainAfter) }));
   }
   return c;
 }

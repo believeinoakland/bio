@@ -85,12 +85,18 @@
 - N94 · 2026-09-27 · **legacy-checks** (RECORD-CORE #2 REPORT 4, PROMOTION #3): C-75's five `where`s now name `src/record-core/index.mjs` `perItem` (`is-per-item-*`); catalogue rows for record-core R59's `AUDIT_CHECK_DECLARED`, `AUDIT_CHECK_MALFORMED`, `AUDIT_CHECK_FAILED` and promotion's `FACT_FAILED`.
 - N95 · 2026-09-27 · **queue** (RECORD-CORE #2 REPORT 6): its unattended-capture producer reads record-core's `manifestByAuthor` (R53) instead of `manifest` in its own SQL, at its extraction.
 
+- N96 · 2026-09-27 · **jurisdictions** (EXTRACTION #1 REPORT 1, K139): the profile gains `systems[].links` `{item, file}` patterns, and the first profile's agenda system states REC-206's measured gateway shapes, so extraction R52 derives item-to-file membership on a real instance; a new profile key, so it goes to Bob with N61 and N65.
+
+- N97 · 2026-09-27 · **legacy-checks** (CONTENT #1 REPORT 2): the `where`s of C-45.5, C-45.6, C-52.1–C-52.9 and C-80.3 name `src/content/index.mjs` (the regions its record lists).
+- N98 · 2026-09-27 · **text-chain** (CONTENT #1 REPORT 5): D-670's space rule for `extentCovers` and `readingPositionInExtent`, and `readingSource`'s `space` (built on the D-670 branch).
+- N99 · 2026-09-27 · **basis-versions**, **inquiry** (CONTENT #1 REPORT 7): the narrow act reads content's `extentRelation` (D-670's space rule, `envelope`), not the catalogue's.
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
 
 ### Layer 1
-- **legacy-checks** · N94; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
+- **legacy-checks** · N94; N97; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
 - **promotion** · `CATALOG_VERSION` MINOR bump for C-42.1–.7 leaving the catalogue (CALIBRATION #1 REPORT 2; 1.34.0's precedent); N62 (`onReopened`), its requirement written by BOB once PROMOTION #3 completes in T5.
