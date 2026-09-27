@@ -101,6 +101,13 @@
  * NEGATIVE CONTROL: recorded in test/refusal-codes.test.mjs's own
  * `NEGATIVE CONTROL:` header, with every arm RUN and what it broke.
  */
+import "../bio-plane/test/stdio.mjs";   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; D-282 / M0-36's shared fix):
+   this guard ends in `process.exit(1)` after writing its report, and `process.exit` does not wait for a PIPE. With
+   ~30 failures standing on the tree (T4's stale `where`s) plus a control arm's own, the stderr half passed 50 KB and
+   a parent reading through a pipe (`refusal-codes.control.mjs`'s `execFileSync`) got it CUT OFF mid-line — measured
+   on an isolated copy: the same neutered run read whole once and truncated at 46 KB the next, so arm (n6) passed or
+   failed by timing. The estate's one stdio module makes stdout and stderr blocking, so every byte is written before
+   the exit. Imported for its side effect, as `refusal-codes.control.mjs` imports it. */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
