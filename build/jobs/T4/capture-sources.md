@@ -12,9 +12,11 @@ R54 says the render locale is "the one the instance's active jurisdiction profil
 
 **My reading:** `renderLocaleFor(view)` reads `view.locale`, shaped as `jurisdictions` shapes a one-value fact (R7's `practice.minutes_due_days`: `{value, basis}`, with `profile` beside it in a view, R13/R15): it answers `view.locale.value` when that is a well-formed BCP 47 language tag (`^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$`), and `RENDER_DEFAULTS.locale` for anything else (no view, no section, a withheld conflict, a malformed tag). It never throws. So the function is correct from the day `jurisdictions` adds the section, and answers the fallback until then. The section itself (`locale: {value, basis}` in the profile, one value per key under R15) is `jurisdictions`' to add; I report it rather than write it.
 
+**ANSWER** (BOB, 02:20Z): the reading stands, now R54's text on `tranche/T4` @ `a813d62` (K119); the profile key is N77, next tranche. Merged; nothing to change.
+
 ## Waiting on
 
-- Q1's answer (not blocking: I build on my reading).
+- The N measurement for R26 (running).
 
 ## Progress (work in progress, not complete)
 
