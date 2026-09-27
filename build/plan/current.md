@@ -1,8 +1,26 @@
 # Plan: tranche T6
 
-**Status** · OPEN. Opened by BOB #48, 2026-09-27 ~14:35 UTC (PROCESS-MECHANICS §5), from the plan BOB #45 prepared (P18, K129) and BOB #47 folded (K157–K159); every module's requirements approved by Bob (K102, K157, K158). Branch `tranche/T6` starts at the commit that opened this plan. Bob's meter at the opening: asked. BOB's session: BOB #48 · session_01E4YZNiY3MRoRn59Wr5NnLW · depth 1 (parent ROOT #1); jobs sit at depth 2.
+**Status** · OPEN. Opened by BOB #48, 2026-09-27 ~14:35 UTC (PROCESS-MECHANICS §5), from the plan BOB #45 prepared (P18, K129) and BOB #47 folded (K157–K159); every module's requirements approved by Bob (K102, K157, K158). Branch `tranche/T6` starts at the commit that opened this plan. Bob's meter at the opening: 35% of the weekly limit (Bob, ~14:35 UTC). BOB's session: BOB #48 · session_01E4YZNiY3MRoRn59Wr5NnLW · depth 1 (parent ROOT #1); jobs sit at depth 2.
 
 Seven layers, lowest first (P10): 1, 2, 3, 4, 6, 7, 11. Each extraction is done by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements. Every job writes requirement-named tests for every live id at its interface (P7), applies every carried row its requirements mark *not yet met*, and judges built work on the snapshot against its requirements (§12.5). A layer's jobs run concurrently; a user builds against its provider's Provides, and BOB merges a provider early once its Provides are final (mechanics §4), sending its users a CHANGE. Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). An `N` entry's text, as filed, is in the appendix; a job applies only the share this plan gives it.
+
+**Jobs** · Layer 1 started ~14:30 UTC: ID-SPACES #2 `session_01DAomLCBqmFvF1k6WfbWamt`, LEGACY-CHECKS #2 `session_01FUNffcNqviJLVTLYAn267C` (depth 2). ID-SPACES #2 COMPLETE ~14:39 (7c80ffe5df).
+
+**Process findings in T6** (P3: recorded, not patched while the tranche runs; Bob, 2026-09-27: development stops after T6 until the process is fixed and certified by a fuller test suite):
+- F1 · A new job reads idle, with no turn and no context, for its first minute or two although its creation prompt does start it; nothing in the mechanics says how BOB confirms a start, and BOB #48 re-sent both jobs' first message (K160, replaced by K161). The job then saw a second START from BOB #48.
+- F2 · A job that ends its turn waiting on BOB's ANSWER reads `need_input` / `BLOCKED` with a `needs_action`, which Bob's app shows as waiting on him, and which mechanics §5 tells BOB to relay to Bob as an approval (ID-SPACES #2, 14:35).
+- F3 · A one-time routine lands 40–60 s after the minute it names; a job pushes its record before its routine, so BOB answers from the record and the job's own message arrives after the answer (ordering as §13 allows, but every exchange is doubled).
+- F4 · ROOT's `STARTED` notice goes to the predecessor BOB, which is finished and which its successor archives; it is a message with no reader (BOB #48 deleted it unfired).
+- F5 · An ANSWER can answer a question the job has already revised: LEGACY-CHECKS #2 revised Q1 on evidence while BOB's ANSWER (K162) was in flight, then had to ask again (Q2; K163). The record and the message named no version of the question.
+- Carried from T5 and D7: K140; a job waiting on its own long command reads idle; auto-mode refusals (K153; merge to `main`); archiving outside one's lineage (D7 finding 1); the dry-run toy's `run.mjs` baseline (D7 finding 2).
+
+**Forwarded to T6 jobs at their start** (P9; each is in its reporter's record, read there):
+- promotion (layer 2): LEGACY-CHECKS #2 REPORTs 6 (`FACT_MALFORMED`, `STEP_DECLARED` rows owed), 7 (`CATALOG_VERSION` after 30 rows added and 71 `where`s moved; d470 A3/A9).
+- provenance (layer 3): LEGACY-CHECKS #2 REPORT 4 (mark `is-origin-act`, `is-origin-statement`; the `is-testify-bytes` refusal).
+- content (layer 4): LEGACY-CHECKS #2 REPORT 8 (the store's `versionNotice` passage arm delegates to content's `passageNotice`).
+- run-productions (layer 6): LEGACY-CHECKS #2 REPORT 2; K163 (R12 `EXTRACT_NO_SCOPE`, R13).
+- capture-requests (layer 6): LEGACY-CHECKS #2 REPORT 3 (`is-capture-fetch-failed`; `captureRequestRetry > is-capture-request-retry` mints C-28.18).
+- legacy-tests (layer 11): LEGACY-CHECKS #2 REPORT 10 (the guard's ratchets and arm G, the old-battery re-pins); N124.
 
 ## Layer 1
 - **id-spaces** · N105.
