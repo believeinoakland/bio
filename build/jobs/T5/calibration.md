@@ -44,9 +44,14 @@ ADDED bio-plane/src/store.mjs:857  : ((obligations) => ({ obligations, truncated
 - Tests: `node --test bio-plane/test/m/calibration/` 42/42 (R12 gains the truncation arm and five more malformed answers); `node --test bio-plane/test/m/` 874, 873 pass, 1 todo not mine; the old calibration suite through the Worker with a scratch `identity` stamp (reverted) 107/110, unchanged (D-668's three arms). format, architecture, coverage 17/17, ownership: 0 failures.
 - REPORTs 1, 2 and 4 routed by BOB (T5-12, T6, the layer close); nothing new found.
 
+## CHANGE K136 (re-opened 07:24 UTC; `tranche/T5` @ f7854f1b6b merged, extraction merged there)
+
+- `driftObligations` and its section deleted from `calibration.mjs` (a removal; rule 3 in the header now names extraction as the obligation's owner). Nothing in product code imports it from here: the store and extraction use `src/extraction/drift.mjs`; the old `test/calibration.test.mjs` still imports it from here, one more line for legacy-tests' T5-12 (it already fails on its `CALIBRATION_CHECKS` import). `newgroup/src/release.mjs` holds an old embedded copy as a string, regenerated with the bundles.
+- Tests: `node --test bio-plane/test/m/calibration/ bio-plane/test/m/extraction/` 100/100; `node --test bio-plane/test/m/` 932, 931 pass, 1 todo not mine. format, architecture, coverage 17/17, ownership (only `calibration.mjs` changed): 0 failures.
+
 ## Deferred
 
-- Deleting `driftObligations` from `calibration.mjs`: at BOB's CHANGE once extraction holds its own copy (K136).
+- None.
 
 ## Found in other modules (REPORT)
 
@@ -91,4 +96,4 @@ ADDED bio-plane/src/store.mjs:45171  stamp for REC-30's reason exactly — its r
 ADDED bio-plane/src/store.mjs:45172  is filed in. The other four calibration ops are `calibrationOps`'. */
 ```
 
-Size: test runs 70, module lines 1130
+Size: test runs 73, module lines 1063
