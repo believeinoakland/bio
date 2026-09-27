@@ -2,7 +2,7 @@
 
 **Session** PROMOTION #3, `session_01CBqvRerSWp68oj6TfvGgfi`, on `job/T5/promotion` (from `tranche/T5`, merged up to `e717124b06`). Process: civicos-process @ `7549c0b`, `roles/JOB.md`, mechanics §6, §12.2, §13, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · WAITING, 2026-09-27. Every entry that does not depend on a provider is applied (N86, N56, N63's share; D-592 answered by Q2). N73's share applied at membership's CHANGE. Q1–Q2 answered (K132). **Waiting on:** record-core's CHANGE (R58, and R59 `registerAuditCheck` per K130). Not yet COMPLETE.
+**Status** · COMPLETE, 2026-09-27. Every entry applied: N56 (with D-592 answered by K132), R58, N73's share, N86, N63's share; R59 (K130) with record-core's. No open question, nothing of my own deferred.
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md, `build/manifest.md`, `build/requirements/promotion.md`, the public parts of `record-core`, `membership` and `signatures` (legacy-checks has no requirements file), `build/layers.md`, my entries in `build/plan/current.md` (and N56, N63, N86 in full in `next.md` history), K83, K90, K96, K126–K128, the T3 and T4 promotion records, every file under `bio-plane/src/promotion/`, `bio-plane/src/gate.mjs` and every test under `bio-plane/test/m/promotion/`. D-592's row (old-plan index) and its source (`app.html` UI-109 note on the snapshot branch).
 
@@ -17,6 +17,7 @@
 
 - **Q1, Q2** · ANSWER by K132 (merged @ `406681de0b`): R40 states `fact` as built; D-592 is not promotion's (inquiry's R19, T6).
 - **CHANGE 05:52 UTC** · membership's R77 merged into `tranche/T5`; merged here @ `406681de0b`. Applied (below, N73).
+- **record-core merged early** (`fd80cd117e`, Provides final; its CHANGE message had not yet arrived, so I acted on the tranche's state, mechanics §13): merged here @ `6b2ce97ddc`. R58 and R59 applied (below).
 
 ## Decisions made in the module (P17: recorded, not asked)
 
@@ -30,12 +31,13 @@
 - **N56 · D-592** · nothing to build in promotion (Q2): `reopen` already records and answers who reopened (R25).
 - **N63 (promotion's share) · R45** · `onCommitted(module, fn)`: registered once per module (`LISTENER_DECLARED`), sorted in the modules' total order; each accepted, written promotion (never a refusal, never `wrote: false`) is announced once, after the transaction it committed in has committed, with `{bundleId, bundleSha, type, replay}`; a listener that throws or rejects is contained. Mechanism in "Decisions" above. `legacy-store`'s arm (REC-26's monitored bundle, D-86's bias debt) moved from the `promote` route into its registered listener; the route now only delegates. So every committed promotion arms it (reopen, fork and internal writes included), where before only `op=promote` did: arming only schedules, and the scheduler reconciles.
 - **N73 (promotion's share)** · `promote` (R20) and `forkProject` (R42) answer a caller at existence with `membership.existenceAct` (R77); promotion's own copy of C-70.1 is gone, so it is minted only in membership. The answer's keys are unchanged (`reason`, `code`, `check`, `translation`, `detail`, `project`, `name`); its `detail` is now membership's words. The tests assert the answer is membership's own, byte for byte. `machinefences-dec49` 87/0, as on the base; `project-discoverable` and `project-join-request` green; membership's suite 77/0.
+- **R58** · promotion's own `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` are gone (and `history.mjs`'s second copy of the marker); the door's digest and size checks (R5, R6), the idempotence comparison (R4), a creation's base (R3) and the two rewritten documents (a minted project id, a stamped group) all use record-core's, so the door and the census compute one digest. `EMPTY_STRING_SHA` is no longer exported by promotion (nothing imported it). `rec175-digest`, `rec178-bytes`, record-core's own suite green.
+- **R59 (K130)** · `recordAudit`'s second pass (re-running the catalogue on a bundle the moved checks found in error) is gone: promotion registers C-4.2, C-17.2, C-18.8 and C-20.1 once with record-core's audit when it is reached, with the caller's release registry from the audit's context, and `recordAudit` is now record-core's `auditPass` after that registration (kept by name, so `legacy-store` and `provenance` call it unchanged). Test: "R30, R32: the audit runs the moved checks too". `audit`, `audit-inheritance`, provenance's suite green.
 - **The *not yet met* marks** on R11–R15, R17 and R30–R32 in the requirements' header and body are stale: all were met and tested in T3 (PROMOTION #1), and every one is green here. R45 is met now. For BOB to clear.
 
-## Waiting on
+## Deferred
 
-- **R58** (record-core's CHANGE): drop `fileDigestOf`, `inlineBytesOf` and `EMPTY_STRING_SHA` in `src/promotion/index.mjs`, and the second `EMPTY_STRING_SHA` in `src/promotion/history.mjs`, for record-core's.
-- **R59** (record-core's `registerAuditCheck`, K130): `recordAudit`'s second pass is replaced by registering promotion's moved checks, when that CHANGE comes.
+- Nothing of this module's own.
 
 ## Found in other modules (REPORT)
 
@@ -43,15 +45,15 @@
 2. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` embeds `src/gate.mjs`, `src/promotion/index.mjs` and `src/store.mjs` (still 1.33.0). For the layer close (manifest §14).
 3. **legacy-tests** (T5-12): `d470-catalog-census` A3 and A9 (11 pass, 2 fail here, as on the base): the row to add is `"1.34.0": { count: 568, digest: "4f93c5f6…3f14", changed: [], source: "4fa025ac…ff31" }` (full figures above), and A5's literal `1.33.0` → `1.34.0`.
 
-## Tests and checks run (so far)
+## Tests and checks run (on the merged branch, `tranche/T5` @ `fd80cd117e` merged)
 
-- My module: `node --test bio-plane/test/m/promotion/`: `tests 54, pass 54, fail 0` (baseline 50/50; four new: R40's `fact`, three R45), again after N73.
-- Layer tests: none named in `build/manifest.md`. `onCommitted` and `fact` are additions; no existing service's answer changed, and none of promotion's users has extracted tests that call them.
-- Old-battery suites that drive `promote` or the arm, green on this branch (and those that touch the arm, green on the base too): d86-bias-debt, monitor-cadence, monitor-assess, monitor-address, scheduler, bias, rec207-bias-debt-settle, projection, airun, drive, run-conditions, ratify, rec176-snapkey, rec175-digest, d484-refusal-translation, machine-attest, fence-e2e, refusal-wire, d168-retired-cite, rec173-migration-replay, rec-183-reinstate-retired, store.
+- My module: `node --test bio-plane/test/m/promotion/`: `tests 55, pass 55, fail 0` (baseline 50/50; five new: R40's `fact`, three R45, the audit registration under R30/R32).
+- Layer tests: none named in `build/manifest.md`. `onCommitted` and `fact` are additions and no existing service's answer changed; the extracted users and providers' suites, run anyway: record-core 46/0, membership 77/0, provenance 54/0.
+- Old-battery suites that drive `promote` or the arm, green on this branch (and those that touch the arm, green on the base too): d86-bias-debt, monitor-cadence, monitor-assess, monitor-address, scheduler, bias, rec207-bias-debt-settle, projection, airun, drive, run-conditions, ratify, audit, audit-inheritance, rec178-bytes, project-discoverable, project-join-request, machinefences-dec49 (87/0), rec176-snapkey, rec175-digest, d484-refusal-translation, machine-attest, fence-e2e, refusal-wire, d168-retired-cite, rec173-migration-replay, rec-183-reinstate-retired, store.
 - `node checks/format.mjs /home/user/bio`: `format: 69 modules, 64 requirements files; 0 failures`
-- `node checks/architecture.mjs /home/user/bio promotion`: `architecture: 16 product files, 46 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `node checks/architecture.mjs /home/user/bio promotion`: `architecture: 16 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `node checks/coverage.mjs /home/user/bio promotion`: `coverage: 1 modules, 45 of 45 live requirement ids named by a test; 0 failures`
-- `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 8 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 6 line(s) added, 21 removed; 0 failures`. The added lines, for BOB:
+- `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 10 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 6 line(s) added, 21 removed; 0 failures`. The added lines, for BOB:
 
 ```
 ADDED bio-plane/src/store.mjs:887  /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
@@ -61,3 +63,5 @@ ADDED bio-plane/src/store.mjs:890  if (monitored || this.#biasDebtPending()) awa
 ADDED bio-plane/src/store.mjs:891  });
 ADDED bio-plane/src/store.mjs:45682  promote: () => promotionOf(this.ctx).promote(body),
 ```
+
+Size: test runs 66, module lines 2037
