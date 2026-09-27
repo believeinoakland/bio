@@ -92,4 +92,4 @@ Size: test runs 22, module lines 2184
 - R11 test extended to the R51 fallback (provenance first; an authored capture a reading carries).
 - Checks: format 0 failures; architecture 39 relative imports, 0 failures; coverage 45 of 45; ownership legacy-store 49 added / 2,294 removed, legacy-checks 0 / 34, 1 failure (above). Module tests 48/48. Old suites on the stale and notice paths green (`versionnotice`, `versiongrade`, `narrow`, `content-extent`, `content-extent-arms`, `rec121-chain-bytes`, `d420-image-page`); `content-reads`, `transcribe`, `content-machine-mint` red only on `op=attesttext` (REPORT 11).
 
-Size: test runs 26, module lines 2176
+Size: test runs 26, module lines 2151
