@@ -159,7 +159,7 @@ export class ObservationLog {
       state: pick("state", "state"), governed: pick("governed", "governed", false) === true,
       condition: pick("condition", "condition"), bound: pick("bound", "bound"),
       result_kind: pick("result_kind", "resultKind"), result_ref: pick("result_ref", "resultRef"),
-      detail: pick("detail", "detail"), bundle: pick("bundle", "bundle"),
+      detail: pick("detail", "detail"), bundle: pick("bundle", "bundle"), terminal: !!terminal,
     };
     const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));
     if (bad) return bad;

@@ -1499,7 +1499,11 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      subject with NO ROW, and the membership test above therefore admitted it: an append of it wrote a row claiming
      nobody looked, which is a row that is its own contradiction (§3: "NEVER_LOOKED is the absence of a row"). Refused
      here, under C-22.1's code, since it is not one of the states a look can STORE (`LEAD_LOOK_OUTCOMES`). */
-  if (state === "NEVER_LOOKED")
+  /* ONE EXCEPTION, PROVISIONAL AND PUT TO BOB (this module's job record, Q4): a run's TERMINAL entry is ai-runs'
+     rollup of the run's whole search (ai-runs R14), and a run that looked at nothing rolls up to NEVER_LOOKED — the one
+     honest word for it. Refusing that entry refuses the run's only exit, so a run with no observations could never
+     close. The exception is exactly that entry (`terminal`, authority `run`); every other NEVER_LOOKED is refused. */
+  if (state === "NEVER_LOOKED" && !(e.terminal === true && authorityKind === "run"))
     return refusal("AI_LOG_STATE_UNKNOWN",
       `NEVER_LOOKED is never stored: it is what the record says of a subject with no row at all `
       + `(OBSERVATION-LOG-DESIGN.md section 3). A look that happened found one of ${LEAD_LOOK_OUTCOMES.join(", ")}`);

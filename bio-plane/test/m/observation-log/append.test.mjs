@@ -54,7 +54,7 @@ test("R2 C-22.10's observation referent: an earlier PRESENT row of the same auth
   assert.deepEqual(refused(r), ["OBS_PRESENT_NO_REFERENT", "C-22.10"]);
 });
 
-test("R3 NEVER_LOOKED is refused at the append (C-22.1) and never stored; every state a look can store is accepted", () => {
+test("R3 NEVER_LOOKED is refused at the append (C-22.1) and never stored, but for a run's terminal rollup (Q4, provisional); every state a look can store is accepted", () => {
   const w = world();
   const r = w.obs.observe(entry({ state: "NEVER_LOOKED" }));
   assert.deepEqual(refused(r), ["AI_LOG_STATE_UNKNOWN", "C-22.1"]);
@@ -63,6 +63,12 @@ test("R3 NEVER_LOOKED is refused at the append (C-22.1) and never stored; every 
   for (const s of Object.keys(OBSERVATION_STATES).filter((s) => s !== "NEVER_LOOKED"))
     assert.equal(w.obs.observe(entry({ state: s, result_kind: s === "PRESENT" ? "capture" : null, result_ref: s === "PRESENT" ? "c" : null })), null, s);
   assert.equal(w.row(`SELECT COUNT(*) n FROM observation_log WHERE state = 'NEVER_LOOKED'`).n, 0);
+  // a run's own ticks are refused too; the one provisional exception (Q4) is a run's terminal rollup (ai-runs R14)
+  const run = entry({ authority_kind: "run", authority: "RUN-1", subject_kind: "unstated", state: "NEVER_LOOKED" });
+  assert.equal(w.obs.observe(run).check, "C-22.1");
+  assert.equal(w.obs.observe({ ...run, authority_kind: "sweep" }, null, 1).check, "C-22.1", "only a run's terminal entry");
+  assert.equal(w.obs.observe(run, null, 1), null);
+  assert.deepEqual(w.log().at(-1) && [w.log().at(-1).state, w.log().at(-1).terminal], ["NEVER_LOOKED", 1]);
 });
 
 test("R4 an accepted entry is one row with a store-wide seq that only increases, `at` the writer's instant else now to the second; it answers null", () => {
