@@ -5,7 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
-import { STATES, vocabFor, projectNameKey } from "../../../checks/bio-checks.mjs";
+import { STATES, vocabFor, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import * as C from "../../../checks/bio-checks.mjs";
 
 const ID = "INFO-2026-0001";
 
@@ -377,4 +378,35 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
   const stale = q.promote(revise(ID, "a".repeat(64), infoDoc(ID)));
   assert.deepEqual([stale.code, stale.check, typeof stale.translation], ["CAS_STALE", "C-33.21", "string"]);
   assert.equal(q.promote(revise(ID, head.bundleSha, infoDoc(ID), { snapKey: "k1" })).check, "C-67.1");
+  /* R1's other two answers carry their rows: EXISTS (C-96.4, the row memberAdd shares) and ABSENT (C-33.49). */
+  const exists = q.promote(create(ID, infoDoc(ID), { snapKey: "k9" }));
+  assert.deepEqual([exists.reason, exists.code, exists.check, exists.translation],
+                   ["EXISTS", "EXISTS", CUSTODIAL_CHECKS.EXISTS.check, CUSTODIAL_CHECKS.EXISTS.translation]);
+  const absent = q.promote(revise("INFO-2026-0404", "f".repeat(64), infoDoc("INFO-2026-0404")));
+  assert.deepEqual([absent.reason, absent.code, absent.check, absent.translation],
+                   ["ABSENT", "ABSENT", ACT_SHAPE_CHECKS.ABSENT.check, ACT_SHAPE_CHECKS.ABSENT.translation]);
+  /* Every refusal this door answers with a code the catalogue holds carries that row's check and translation. */
+  const rows = new Map();
+  for (const table of Object.values(C))
+    if (table && typeof table === "object" && !Array.isArray(table))
+      for (const [code, row] of Object.entries(table))
+        if (row && typeof row === "object" && typeof row.check === "string" && typeof row.translation === "string")
+          rows.set(code, row);
+  const answers = [stale, exists, absent, q.promote(revise(ID, head.bundleSha, infoDoc(ID), { snapKey: "k1" })),
+    q.promote(revise(ID, head.bundleSha, infoDoc(ID, { title: "Z" }), { snapKey: "k3", files: [] })),
+    q.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")), files: [{ path: "bundle.md", text: infoDoc("INFO-2026-0002"), sha256: "f".repeat(64) }] }),
+    q.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")), meta: { object_type: "action" } }),
+    q.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")), meta: { title: "Other" } }),
+    q.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")), meta: { current_state: "verified" } }),
+    q.promote(revise(ID, head.bundleSha, infoDoc(ID, { object_type: "bias" }))),
+    q.promote({ ...create("INFO-2026-0002", infoDoc("INFO-2026-0002")), visibility: "hidden" })];
+  const seen = new Set();
+  for (const r of answers) {
+    assert.equal(r.ok, false, JSON.stringify(r));
+    const row = rows.get(r.reason);
+    if (!row) continue;
+    seen.add(r.reason);
+    assert.deepEqual([r.code, r.check, r.translation], [r.reason, row.check, row.translation], r.reason);
+  }
+  assert.ok(seen.size >= 8, `answers carrying a catalogue row: ${[...seen]}`);
 });

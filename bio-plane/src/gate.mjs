@@ -187,7 +187,14 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    `signatures.verifySshsig` (R31), which also admits a sha256-hashed SSHSIG. MINOR, rule 17 moving the stamp for
    changed checks. The catalogue's own census (`checkBundle` alone) lost these four ids; every suite that counts it
    pins the old figures and is legacy-tests' to re-read. */
-export const CATALOG_VERSION = "1.32.0";
+/* 1.33.0 (PROMOTION #2, T4 layer 2, 2026-09-27; K118, entry T4-2b): SIX ARRIVALS, NO DEPARTURES, ONE CHANGED. LEGACY-CHECKS
+   #1 (T4 layer 1, N44 and N36) added C-29.11 AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER, C-29.12 AI_CREDENTIAL_ORG_NOT_ADMIN,
+   C-96.10 RESIGN_AT_TWO, C-96.11 NO_HOLDERS, C-96.12 PAIRING_NOT_YOURS and C-33.49 ABSENT, and C-33.48 now carries the
+   code its site mints, LAST_COMMITTED_OWNER (formerly LAST_OWNER_CANNOT_LEAVE, which nothing mints since REC-224), with
+   its translation rewritten for both of membership's sites. MINOR, rule 17 moving the stamp for arrivals and a changed
+   check. Census 566 -> 572, sha256 86ddf728…, behaviour source 1513f4a8…: the d470 suite's own print on this tree, whose
+   re-pin is legacy-tests' (T4-5). */
+export const CATALOG_VERSION = "1.33.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
