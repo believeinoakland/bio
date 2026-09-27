@@ -15,3 +15,7 @@ R54 says the render locale is "the one the instance's active jurisdiction profil
 ## Waiting on
 
 - Q1's answer (not blocking: I build on my reading).
+
+## Progress (work in progress, not complete)
+
+- 2026-09-27 ~02:50Z · R36, R54 (on Q1's reading), R26's rule (off until N is measured; the measurement is running), own-module fixes, and the requirement-named tests committed. R26's test fails until N is set, by design: the rule is off.

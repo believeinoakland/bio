@@ -117,7 +117,7 @@ const EXPORT_HOST = "docs.google.com";
  *                                                   does not read
  */
 export function readDriveAddress(address) {
-  if (typeof address !== "string" || !/^https:\/\//.test(address)) return null;
+  if (typeof address !== "string") return null;
   let u;
   try { u = new URL(address); } catch { return null; }
   if (u.protocol !== "https:") return null;
@@ -237,6 +237,7 @@ export function exportAddressFor(kindRow, fileId) {
  */
 export function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
   const confirmed = detected && detected.format === drive.format;
+  const signals = detected && Array.isArray(detected.signals) ? detected.signals.join("; ") : "no signals stated";
   return {
     who: `Google Drive (${DRIVE_PRODUCER})`,
     asserts: `these bytes are Google's ${drive.format.toUpperCase()} conversion, made at export time, `
@@ -259,9 +260,9 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
          undeclared interface change wearing the costume of caution. */
       detected
         ? (confirmed
-            ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) — ${detected.signals.join("; ")}`
+            ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) — ${signals}`
             : `NOT confirmed from the bytes: ${drive.format} was asked for and the bytes detect as `
-              + `${detected.format} (${detected.confidence}) — ${detected.signals.join("; ")}. The capture is `
+              + `${detected.format} (${detected.confidence}) — ${signals}. The capture is `
               + `filed with the disagreement stated rather than refused; what is refused by name is the `
               + `application shell, and these bytes are not it.`)
         : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed",
