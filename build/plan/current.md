@@ -22,6 +22,15 @@ Four jobs, concurrently. The split's files all stay in `pdf-worker/`, owned file
 **pdf-worker**
 - T4-0c · Requirement-named tests for its live ids, R41 included; `structure.test.mjs` split so it reads only this module's files (R38 per module; the architecture check reads its imports of `pagepixels.mjs` and `imagecrop.mjs` as failures today); the bundle regenerated and verified by BOB at the layer's close.
 
+## Layer 2 (added 2026-09-27 by P10's exception, K118)
+
+LEGACY-CHECKS #1's N36 row (C-33.49 `ABSENT`) changes a service `promotion` uses, and turns promotion's own R18 test red (`write-path.test.mjs`: no probe for `ACT_SHAPE_CHECKS.ABSENT`). BOB carries the change to the user (P10), so layer 2 runs one job, after layer 1 closes and before layer 3.
+
+**promotion**
+- T4-2a · An `ABSENT` probe for R18 (R1's revision of a bundle not held), so R18's test passes again.
+- T4-2b · `CATALOG_VERSION` (R34) moves for the catalogue's six new checks and C-33.48's new code (census 566 to 572).
+- T4-2c · Mark the DEC-49 regions the 16 re-pointed rows name in `#promote`, `#reopen` and `#fork` (legacy-checks' record, REPORT 2 (c)), and make `ABSENT` a region the guard can open.
+
 ## Layer 3
 
 Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (and `legacy-checks` where a map says so), each by its target module's job (mechanics §12.2), all four concurrently (P10), in the layer's order `host-governor`, `provenance`, `capture-sources`, `capture`; a user builds against its provider's Provides and merges the tranche branch when BOB sends a CHANGE after the provider's early merge. Bob approved the four requirement sets on 2026-09-26 (K67). Each job writes requirement-named tests for every live id at its interface (P7). Maps: `build/extraction/<module>.md` (in preparation, P18).
@@ -52,7 +61,7 @@ Layer 3: the capture layer, extracted from `legacy-store` and `legacy-index` (an
 
 
 **legacy-tests** (layer 11, after layer 3, K53)
-- T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
+- T4-5 · Re-anchor or retire every old-battery test layer 3's extractions break (each job's REPORT), and those LEGACY-CHECKS #1's REPORT 4 names (d134, custodial-acts, aicredential, machinefences-dec49 D-PIN/D0, d470 after T4-2b, `refusal-codes.control`, the guard's floors and arm G), first the seven that read `host_governor`'s DDL in `schema.mjs` (K72 (3)).
 
 
 **Not in T4:** D-593, D-694, D-724 go with `extraction` (K49, layer 4); D-581, D-582, D-584 with `capture-requests` (K58, layer 6).
