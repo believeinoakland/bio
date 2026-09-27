@@ -142,3 +142,12 @@ Size: test runs 12, module lines 2048 (superseded below)
 
 - **COMPLETE could not be sent**, 2026-09-27 08:37 UTC: `create_trigger` into BOB #46 (`session_01Q3WyZBMy4MH1Acpgtw9awA`) was refused with `caller session is at lineage depth 8 (limit 8); cannot spawn or re-arm further child sessions`. That is a platform limit on this session, not a permission prompt Bob could approve here (§16), so there is no workaround: this record, pushed, is the COMPLETE. Its content is the "PROMOTION #4" section above.
 - **REPORT, process (mechanics §2, "Session depth stays minimal"):** each BOB successor is recorded as its predecessor's child, so the lineage grows by one per BOB. BOB #46 sits at depth 7, and its jobs sit at the limit (8). Consequences: (a) a job at depth 8 cannot reach BOB through the §13 channel at all; (b) a BOB #47 started by BOB #46 with `create_session` would be at depth 8, and could neither start jobs nor send a routine. BOB can reach this session (a routine from depth 7 into it); a CHANGE still re-opens this job.
+
+## CHANGE 08:39 UTC (BOB #46: retrieval merged)
+
+- Merged `origin/tranche/T5` @ `508920f1c1` (past the named `376d77c047`; only K152's rulings commit follows it, which touches no catalogue file). Catalogue diff re-taken from `3ec9dbc533` to the merged tip: retrieval's C-23.1, C-23.2, C-33.20, C-33.32 join the 1.35.0 note (49 departures, census 519, figures above). Calibration's C-42.1–.7 and entities' C-91.1–.3 left after 1.34.0 was minted (in the diff) and were already in the note. R18's sited rows are still 38: none of retrieval's four is sited at the promote write.
+- Tests on the merged branch: promotion `tests 56, pass 56, fail 0`; record-core 46/0, membership 77/0, provenance 54/0, bias 45/0, retrieval 56/0. d470 10 pass, 3 fail (A1, A3, A5: legacy-tests' re-pin, REPORT 1, figures updated).
+- Checks: format `69 modules, 64 requirements files; 0 failures`; architecture `16 product files, 47 relative imports …; 0 failures`; coverage `45 of 45 live requirement ids named by a test; 0 failures`; ownership `4 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 0 line(s) added, 0 removed; 0 failures`.
+- COMPLETE again. Waiting on: a CHANGE if connections moves rows.
+
+Size: test runs 20, module lines 2048
