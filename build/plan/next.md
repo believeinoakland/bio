@@ -97,11 +97,15 @@
 - N102 · 2026-09-27 · **text-chain** (EXTRACTION #1 REPORT 3): `mergeTier2Text` carries `image_unread` markers (extraction carries them today).
 - N103 · 2026-09-27 · **capture** (EXTRACTION #1 REPORT 4): `readingInputs` and `acquireOp`'s reading inputs are unused since extraction reads the primary itself; drop them (a second read of the primary per acquire).
 
+- N104 · 2026-09-27 · **text-chain**, **query-language** (QUERY-LANGUAGE #1 Q1, K143): text-chain states which step kinds are machine readings (`ocr`, `ai`), and query-language's `MACHINE_READ_KINDS` re-exports it instead of holding the list.
+- N105 · 2026-09-27 · **id-spaces** (ENTITIES #1 Q1, K143): remove the legacy adapter at the foot of `idspaces.mjs` and its test, retiring R26 (K35): nothing in the plane imports it after T5's entities job.
+
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
 Drafted by a worker from `tranche/T5`'s state, reviewed by BOB #45 (K129). Same rules as T5's plan (its opening paragraph). Registrations whose filler is a layer-8 module (N67's `checkPublishedExtension`, N69's `searchedSection`) land with the legacy arm registering until layer 8 is extracted (the K31 pattern). N21, N46 and N57 join only if T5 leaves them open.
 
 ### Layer 1
+- **id-spaces** · N105.
 - **legacy-checks** · N94; N97; catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87.
 
 ### Layer 2
