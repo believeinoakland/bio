@@ -131,7 +131,9 @@ function seedLogs(armDir, rel, edit = (s) => s) {
   fs.mkdirSync(logs, { recursive: true });
   const src = fs.readFileSync(logFile(BASE_LOGS, rel), "utf8");
   const edited = edit(src);
-  fs.writeFileSync(logFile(logs, rel), edited);
+  /* T4 (legacy-tests): spelled from `armDir` (ledgered in scripts/pensweep.mjs) rather than through `logs`, which the pen
+     walk had resolved only by the retired arm 3's own `logs` binding. Same path. */
+  fs.writeFileSync(logFile(path.join(armDir, "logs"), rel), edited);
   fs.copyFileSync(path.join(BASE_LOGS, "..", "census-summary.txt"), path.join(armDir, "census-summary.txt"));
   return { logs, changed: edited !== src };
 }

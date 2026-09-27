@@ -129,8 +129,11 @@ t("M0-196, BY NAME: the copy-source drivers of D-526 and D-548 read their tree r
    `entries.control.mjs` and `train.control.mjs` — were controls of the old process's tooling, deleted from
    `bio-plane/test/` with the 57 suites and controls that tested it (2abbe2e7d0), so they can be graded no longer.
    The arm holds the three that remain, by name. */
+/* RETIRED IN PART 2026-09-27 (T4, legacy-tests; N14's rule, legacy-index N12): `coord.control.mjs` was deleted with
+   `coord.test.mjs`, whose subject was the old process's `tools/coord.mjs` (its ledger check imported the removed
+   `scripts/op-claims.mjs`); the arm holds the two that remain, by name. */
 t("the six drivers that owned those seven pens are all graded, and none is dirty",
-  ["coord.control.mjs", "m0107-budget.control.mjs", "owed-controls.control.mjs"]
+  ["m0107-budget.control.mjs", "owed-controls.control.mjs"]
     .map((n) => (real.drivers.find((d) => d.file === `bio-plane/test/${n}`) || {}).grade)
     .filter((x) => x === "IN-WORKTREE/DIRTY" || x === "UNCLASSIFIED" || x === undefined), []);
 t("every ledgered path carries a WHY (a judgement with no reason is a name on a list)",
