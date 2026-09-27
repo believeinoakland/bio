@@ -66,7 +66,7 @@ test("R7 the declared refusal sets, exactly: renaming or removing a key is a cha
   }
 });
 
-test("R7 every refusal any fixture draws is a key of its codec's declared set", () => {
+test("R7 every refusal any fixture draws is one of its codec's codes, an UNSUPPORTED one naming a declared key", () => {
   const CLASSES = {
     dct: ["NOT_A_JPEG", "TRUNCATED", "UNSUPPORTED_PROCESS", "UNSUPPORTED_PRECISION", "UNSUPPORTED_FRAME", "CORRUPT_DATA",
       "UNSUPPORTED_COMPONENTS", "COMPONENT_MISMATCH", "COLOR_TRANSFORM_CONFLICT", "UNSUPPORTED_SAMPLING", "UNSUPPORTED_ROTATION"],
@@ -76,6 +76,7 @@ test("R7 every refusal any fixture draws is a key of its codec's declared set", 
   const KIND = { dct: DctRefusal, jbig2: Jbig2Refusal, jpx: JpxRefusal };
   const SET = { jbig2: JBIG2_REFUSES, jpx: JPX_REFUSES };
   let refusals = 0;
+  const codes = { dct: new Set(), jbig2: new Set(), jpx: new Set() };
   for (const [codec, name, fn] of CALLS) {
     const a = answer(fn);
     if (!(a instanceof Error)) continue;
@@ -83,8 +84,13 @@ test("R7 every refusal any fixture draws is a key of its codec's declared set", 
     assert.ok(a instanceof KIND[codec], `${codec} ${name}: a ${KIND[codec] && KIND[codec].name}`);
     assert.ok(CLASSES[codec].includes(a.code), `${codec} ${name}: ${a.code}`);
     if (a.code === "UNSUPPORTED") assert.ok(a.detail.feature in SET[codec], `${codec} ${name}: '${a.detail.feature}'`);
+    codes[codec].add(a.code);
   }
   assert.equal(refusals, 4 + 14 + 13);
+  /* The codes are part of R7 too: JBIG2's and JPX's are all reached by the corpus
+   * (DCT's eleven are all driven in dct.test.mjs). */
+  assert.deepEqual([...codes.jbig2].sort(), [...CLASSES.jbig2].sort());
+  assert.deepEqual([...codes.jpx].sort(), [...CLASSES.jpx].sort());
 });
 
 test("R8 pure: the same bytes and options always answer the same way, in any order", () => {

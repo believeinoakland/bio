@@ -9,9 +9,9 @@
  * fixture carries are made by changing one field of a fixture's markers, each
  * named where it is made.
  *
- * R1's four names (UNSUPPORTED_JPEG_PROCESS, UNSUPPORTED_SAMPLES,
- * TRUNCATED_IMAGE_DATA, DECODE_FAILED) are the reasons `pdf-pixels` maps a
- * DctRefusal's code to; the codec itself answers the codes below (job record Q1). */
+ * R1 (as K117 words it): a DctRefusal carries the codec's own code and a detail
+ * saying why; `pdf-pixels` maps each code to its reasons (shown beside each code
+ * below for reference, not tested here). */
 import "../../../bio-plane/test/sandbox.mjs";
 
 import { test } from "node:test";
@@ -38,6 +38,7 @@ function refusal(fn) {
   try { fn(); } catch (e) {
     assert.ok(e instanceof DctRefusal, `a DctRefusal, not ${e && e.constructor && e.constructor.name}: ${e && e.message}`);
     assert.ok(e.code in CODES, `code ${e.code} is one R1 names`);
+    assert.ok(e.detail && typeof e.detail === "object" && Object.keys(e.detail).length > 0, `${e.code}: a detail that says why`);
     return e;
   }
   assert.fail("no refusal");
