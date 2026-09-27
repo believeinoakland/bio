@@ -23,6 +23,27 @@
 - **R42's write-order dependence (K80, map §5.12)** is removed, not only stated: the content level reads each capture's latest `extract` row by authority, as `contentAxis` does.
 - **Built work judged (§12.5):** D-724's `contentAxis` half (`land/worker/D-724` @ `a944481e`) taken into `contentAxis`, over extraction's current `capture_text_skipped` (its `side` column added to each run). D-682's frontier half (`land/worker/D-682` @ `1d635376`) taken as R49, the words supplied by observation-log's provider. D-672's changes are all extraction's files (`textUnitsFor`, `CAPTURE_TEXT_UNIT_CONTAINERS`); nothing of it is this module's code.
 
+- **CHANGE · merged into `tranche/T5` @ `fe215d89aa`; R55–R58 folded (K151, `376d77c047`)**, merged here @ `508920f1c1`. Applied: R55's "with nothing registered every leg passes unchanged" (the job's first cut published a bounded leg's grade as undetermined without a resolver; changed to R55's text); R55–R58 named by the tests that prove them, and tests added for R56's order and `DECORATION_MALFORMED`, R57's `TAIL_DECLARED`/`TAIL_MALFORMED` and its fail-closed arms, and R58 (`migrate` idempotent; `retrievalRoutes` answering all fourteen ops with the query's stamps).
+
+## Not-yet-met marks now met (for BOB to clear)
+
+All twelve ids marked *(not yet met)* in `build/requirements/retrieval.md` are met at `job/T5/retrieval`, each with its test (`bio-plane/test/m/retrieval/`), so the Status line's "Not yet met" list clears too:
+
+| id | test |
+| --- | --- |
+| R14 (K102's split) | `meaning.test.mjs` "R14 (K102): …" and "R14: the tally counts at most 500 …" |
+| R25 (D-672, this module's half) | `contentaxis.test.mjs` "R25 (D-672): …" — the unit writer is extraction's (REPORT 6) |
+| R27 (D-724) | `contentaxis.test.mjs` "R27 (D-724): …" |
+| R33 (K23) | `projection.test.mjs` "R33: … declared …" and "R33: an older store's text index …" |
+| R41 | `frontier.test.mjs` "R40, R41: …" |
+| R44 | `frontier.test.mjs` "R42, R44: …" |
+| R49 (D-682) | `frontier.test.mjs` "R48, R49: …" |
+| R50 | `frontier.test.mjs` "R50: …" |
+| R51 (N63) | `selections.test.mjs` "R51: …" |
+| R52 (N63) | `selections.test.mjs` "R52: …" |
+| R53 (N65) | `projection.test.mjs` "R53: …" |
+| R54 (K105) | `search.test.mjs` "R54: …" |
+
 ## Decisions made in the module (P17: recorded, not asked)
 
 - **observation-log, through one seam.** `observationOf(o, sql)` (exported) maps observation-log's factory onto what retrieval reads: its vocabulary (`OBSERVATION_STATES`, `DEFINITIVE_STATES`, `CONTENT_AXIS_STATES`, `CONTENT_AXIS_UNDETERMINED`, `MISSING_ROW_CAUSES`, `MEANING_MISSING_ROW_CAUSES`, the three levels' `*_EVIDENCE_IS_ONE_SIDED` maps and an optional `DOCUMENT_EVIDENCE_IS_ONE_SIDED`, `INTERNET_FRONTIER_EMPTY_CAUSES`, `LEAD_VOCABULARY`) and its services (`contentAxisFor`, `observationCoverage`, `causesNotRuledOut`, `missingCause({hasArtifact, registeredAt, firstRowAt})`, `missingMeaningCause(kind, subject, entered)`, `firstRowAt(level)`, `latest(level, {limit, subjectKind})`, `verification(level, kind, subject)`, `rowVisible(row, viewer)`, `leadReach(viewer, identity)`, `leadReferentVisible(kind, ref, viewer)`). the meaning level's pre-log probes (`readings`, `resolutions`, `connections`) are this seam's, `missingCauseAt("meaning", …)` observation-log's. A test may pass its own `deps.observation`; this module's tests use the real one.
@@ -57,8 +78,8 @@
 
 ## Tests and checks
 
-- **Module:** `node --test bio-plane/test/m/retrieval/` on `8db823b892` (real record-core, membership, promotion, provenance, observation-log, query-language): tests 56, pass 56, fail 0 (6 files: projection, search, meaning, selections, contentaxis, frontier; every live id R1–R54 named).
+- **Module:** `node --test bio-plane/test/m/retrieval/` on `8db823b892` (real record-core, membership, promotion, provenance, observation-log, query-language): tests 56, pass 56, fail 0; after K151 @ the R55–R58 commit: tests 58, pass 58, fail 0 (6 files: projection, search, meaning, selections, contentaxis, frontier; every live id R1–R58 named).
 - **Old battery comparison** (47 suites touching the moved code, base `tranche/T5` @ `4643e032ce` vs this branch before the observation-log merge): the only differences are REPORT 1's; every suite that passed at base passes here where it exercises behaviour (`action-loop`, `casesearched`, `frontier-internet`, `gate-reads`, `lead`, `projection`, `purge`, `rec119-version-legs-earned`, `scheduler`, `selection`, `store`, `cite`, `citeinquiry`, `release`, `reopen` …). Re-run after the merge (@ `8db823b892`, 13 suites): the same; `lead` and `observation-meaning` A6 fail identically at `tranche/T5` itself (observation-log's merge, not this change).
-- **Checks** (civicos-process `main`): format 69 modules, 0 failures; architecture 13 product files, 44 relative imports, 0 failures; coverage 54 of 54 live ids named; ownership 16 files, legacy-store 60 added / 2,867 removed, legacy-checks 0 / 82, 0 failures.
+- **Checks** (civicos-process `main`): format 69 modules, 0 failures; architecture 13 product files, 44 relative imports, 0 failures; coverage 58 of 58 live ids named (after K151); ownership 16 files, legacy-store 60 added / 2,867 removed, legacy-checks 0 / 82, 0 failures.
 
-Size: test runs 34, module lines 2114
+Size: test runs 36, module lines 2110

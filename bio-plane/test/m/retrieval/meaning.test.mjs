@@ -57,15 +57,16 @@ test("R11: the answer carries arm, table, grain, identity, query, gate, cached, 
   assert.deepEqual([deny.count, deny.total, deny.gate.scope], [0, 0, "DENY"]);
 });
 
-test("R12: a leg row carries grade resolved on the capture axis, grade_authored verbatim and grade_why; connection legs, null grades and inquiry targets pass unchanged; one resolver call per page; with no resolver the bounded grade is undetermined and says so", () => {
+test("R12, R55: a leg row carries grade resolved on the capture axis, grade_authored verbatim and grade_why; connection legs, null grades and inquiry targets pass unchanged; one resolver call per page; with no resolver every leg passes unchanged; a second registration RESOLVER_DECLARED, a malformed one RESOLVER_MALFORMED", () => {
   const w = world();
   legs(w);
   const read = () => w.retrieval.meaningRows({ q: "", rows: "leg", viewer: V("vera") }).rows;
   const key = (r) => `${r.bundle_id}/${r.ord}`;
   /* No resolver registered. */
   const bare = Object.fromEntries(read().map((r) => [key(r), r]));
-  assert.deepEqual([bare["INQ-1/0"].grade, bare["INQ-1/0"].grade_authored], [null, "A"]);
-  assert.match(bare["INQ-1/0"].grade_why, /undetermined/);
+  assert.deepEqual([bare["INQ-1/0"].grade, bare["INQ-1/0"].grade_authored, bare["INQ-1/0"].grade_why], ["A", "A", null],
+    "with nothing registered the leg passes unchanged (R55)");
+  assert.equal(w.retrieval.registerLegGrades("strength", "not a function").reason, "RESOLVER_MALFORMED");
   assert.deepEqual([bare["INQ-1/1"].grade, bare["INQ-1/1"].grade_authored, bare["INQ-1/1"].grade_why], ["B", "B", null], "connection axis");
   assert.deepEqual([bare["INQ-1/2"].grade, bare["INQ-1/2"].grade_why], ["A", null], "an inquiry target");
   assert.deepEqual([bare["INQ-2/0"].grade, bare["INQ-2/0"].grade_authored, bare["INQ-2/0"].grade_why], [null, null, null], "a null grade");

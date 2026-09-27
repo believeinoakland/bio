@@ -122,7 +122,7 @@ export class Retrieval {
 
   /* ---- storage (K4) ---- */
 
-  /** This module's storage at every start, idempotent: the projection columns and their indexes, the text index (R33's
+  /** R58: this module's storage at every start, idempotent: the projection columns and their indexes, the text index (R33's
    *  keyed form, rebuilt in place from an older store's table), the selections, and the bounded backfill (R3). */
   migrate() {
     const have = this.#rows(`PRAGMA table_info(bundles)`).map((r) => r.name);
@@ -179,7 +179,7 @@ export class Retrieval {
     return { ok: true, module };
   }
 
-  /** R12: the leg-grade resolver `strength` registers: `fn(legs)` answers, for each capture-axis leg with a letter and
+  /** R12, R55: the leg-grade resolver `strength` registers: `fn(legs)` answers, for each capture-axis leg with a letter and
    *  a target that is not an inquiry, `{grade, why}` — the letter the record can earn for that target, and why the
    *  authored one does not stand (null when it does). It is called once per page. */
   registerLegGrades(module, fn) {
@@ -191,7 +191,7 @@ export class Retrieval {
     return { ok: true, module };
   }
 
-  /** The single-bundle `projection` answer's decorations (`actions`' action block, `inquiry`'s no-project conclusion,
+  /** R56: the single-bundle `projection` answer's decorations (`actions`' action block, `inquiry`'s no-project conclusion,
    *  `ai-runs`' surfacing): `fn(row, {viewer, nowMs})` answers an object (or a promise of one) whose keys are added to
    *  the row. One registration per module, applied in the modules' order. */
   registerProjectionDecoration(module, fn) {
@@ -204,7 +204,7 @@ export class Retrieval {
     return { ok: true, module };
   }
 
-  /** R39 (K80): the rows the frontier tallies leave out for a viewer — a run's rows in a project the viewer cannot
+  /** R39, R57 (K80): the rows the frontier tallies leave out for a viewer — a run's rows in a project the viewer cannot
    *  see — as `fn(viewer)` answering a WHERE tail `{sql, args}` over `observation_log` (`ai-runs` registers it). */
   registerHiddenRunTail(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
@@ -546,9 +546,8 @@ export class Retrieval {
    *  registered resolver does (its earned registry and its three-case policy), called ONCE for the whole page. The
    *  three conditions: capture axis only (a connection leg's earned answer is a value the write already pins); a leg
    *  actually carrying a letter (null stays null); and a target that is NOT an inquiry (a capture grade on an INQ- leg
-   *  ranges over no document). With no resolver registered, a bounded leg's grade is UNDETERMINED (null) and says so:
-   *  the authored letter is never passed off as earned. BOTH DERIVED FIELDS ARE ALWAYS PRESENT, as `rowColumns`
-   *  publishes them. */
+   *  ranges over no document). With no resolver registered every leg passes unchanged (R55). BOTH DERIVED FIELDS ARE
+   *  ALWAYS PRESENT, as `rowColumns` publishes them. */
   #legEarnedCapture(arm, rows) {
     if (arm !== "leg" || !Array.isArray(rows) || !rows.length) return rows;
     const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
@@ -560,14 +559,11 @@ export class Retrieval {
       try { resolved = this.#legGrades.fn(legs.map((r) => ({ grade: r.grade, target_id: r.target_id }))); }
       catch { resolved = null; }
     }
-    const NO_RESOLVER = "the capture letter this leg can earn is undetermined: the earned-grade registry is not "
-      + "reachable from this read, so the authored letter is published as authored and never as earned";
     let i = 0;
     return rows.map((r) => {
       if (!bounded(r)) return { ...r, grade: r ? r.grade : null, grade_authored: r ? r.grade : null, grade_why: null };
-      const res = Array.isArray(resolved) ? resolved[i++] : (i++, undefined);
-      if (res === undefined) return { ...r, grade: null, grade_authored: r.grade, grade_why: NO_RESOLVER };
-      /* The resolver answers null for a leg whose authored letter stands. */
+      const res = Array.isArray(resolved) ? resolved[i++] : (i++, null);
+      /* No resolver (R55), or one that answers null for a leg whose authored letter stands. */
       if (!res || typeof res !== "object") return { ...r, grade: r.grade, grade_authored: r.grade, grade_why: null };
       return { ...r, grade: res.grade ?? null, grade_authored: r.grade, grade_why: res.why ?? null };
     });
@@ -1075,7 +1071,7 @@ export function retrievalOf(host, deps) {
   return r;
 }
 
-/** K3: the ops this module answers, as entries of the store's op map (its dispatcher spreads them in). `url` carries
+/** R58, K3: the ops this module answers, as entries of the store's op map (its dispatcher spreads them in). `url` carries
  *  the control plane's stamps (`viewer`, `owner`, `identity`), never taken from the caller's own parameters there. */
 export function retrievalRoutes(r, url, body) {
   const q = url.searchParams;
