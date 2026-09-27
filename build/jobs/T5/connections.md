@@ -2,7 +2,7 @@
 
 **Session** CONNECTIONS #1, `session_01WfxC8Lht5EmaF2m5vmrG2i`, on `job/T5/connections` (from `tranche/T5` @ `f05090bcad`). Process: civicos-process `main`, `roles/JOB.md`, mechanics §3, §6, §12.2, §13, §14, §16. BOB: read from the Status line of `build/plan/current.md` on `origin/tranche/T5`.
 
-**Status** · COMPLETE (CONNECTIONS #2, K155), 2026-09-27 ~13:10 UTC: REPORTs 1, 2, 4, 5, 6 of LEGACY-TESTS #3 applied; nothing open, no `NEEDS BOB`. Size: test runs 16, module lines 2246. **COMPLETE is sent by this record** (K154). (CONNECTIONS #1: COMPLETE again ~08:55 UTC after K152.)
+**Status** · COMPLETE (CONNECTIONS #2, K155), 2026-09-27 ~12:30 UTC: REPORTs 1, 2, 4, 5, 6 of LEGACY-TESTS #3 applied; nothing open, no `NEEDS BOB`. Size: test runs 16, module lines 2246. **COMPLETE is sent by this record** (K154). (CONNECTIONS #1: COMPLETE again ~08:55 UTC after K152.)
 
 **Read whole:** `roles/JOB.md`, PROCESS-MECHANICS.md §1–§16, `build/manifest.md`, `build/layers.md`, `build/requirements/connections.md`, `build/extraction/connections.md`, `build/plan/current.md`, the public parts of `record-core`, `membership`, `promotion`, `provenance`, `capture`, `extraction`, `content`, `entities` (legacy-checks has no requirements file; `text-chain`'s reading-source functions as the code states them), rulings K3, K6, K23, K31, K61, K64, K72, K73, K76–K79, K102, K120, K134–K141; `build/jobs/T5/content.md` (the pattern); the legacy code the map names, measured again at `f05090bcad` (below); the built work: `land/worker/D-575` (9894d7bc, 617fd5ef), `D-625` (80aa1f03, a42ba046), `D-706` (6dd3e530), `D-722` (9c7a6662, 46ed027d).
 
@@ -143,7 +143,7 @@ Size: test runs 34, module lines 2223
 
 - **Module:** `node --test bio-plane/test/m/connections/`: tests 60, pass 60, fail 0 (6 files; 3 new tests). `test/m/` whole: 1,287 tests, 1,284 pass, 3 todo, 0 fail.
 - **Old suites the REPORTs name** (this branch, each alone in a process, four at a time): browser-render 48/0, rendered-capture 103/0, monitor-rendered 28/0, d522-unattended-render 21/0, capturerequests 139/0, doorbell 72/0, drive 160/0, meaningquery 107/0, derivation-bounds 70/3 (REPORT 8), meaning-bounds 92/4 (REPORT 9).
-- **Checks** (civicos-process `main`): `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 11 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 57 of 57 live requirement ids named by a test; 0 failures`; `ownership: 4 files changed by connections between tranche/T5 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`.
+- **Checks** (civicos-process `main`): `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 11 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 57 of 57 live requirement ids named by a test; 0 failures`; `ownership: 5 files changed by connections between tranche/T5 and HEAD (this record included); legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`.
 - Layer tests: none named in `build/manifest.md`.
 
 Size: test runs 16, module lines 2246
