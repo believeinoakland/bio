@@ -27,7 +27,10 @@
  * `prefer` breaks the READER (the count is there and is ignored) — two different
  * failures that a single arm would have collapsed into one. `overstrict` arms the
  * direction that refuses CORRECT work. `derived` proves this suite still
- * exercises the pre-CAP-9 derivation this landing must not remove.
+ * exercises the pre-CAP-9 derivation this landing must not remove. *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): writer in extraction's pipeline, reader
+ * in content. baseline 22/0 · drop 17/5 · prefer 17/5 · overstrict 19/3 · derived 20/2 — every arm AS DECLARED, the
+ * held-open halves green (drop leaves the reader's arms, prefer the persist arms), every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -48,8 +51,11 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("cap9");
 mkdirSync(SAFE, { recursive: true });
 
-const INDEX = join(PLANE, "src/index.mjs");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the writer (the reading's `page_count`, R13) moved from `index.mjs`'s
+   acquire to extraction's pipeline, and the reader (`#pageSetForCapture`) from `store.mjs` to content
+   (`src/content/index.mjs`); every anchor's text is unchanged there. The names INDEX and STORE are kept. */
+const INDEX = join(PLANE, "src/extraction/pipeline.mjs");
+const STORE = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
 

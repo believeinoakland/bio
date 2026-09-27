@@ -20,7 +20,11 @@ import { fileURLToPath } from "node:url";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
-const STORE = join(PLANE, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5): `op=promote` moved to `src/promotion/index.mjs`
+   (T3), and the one measure `Store.#inlineBytesOf` is record-core's `inlineBytesOf` (R58), which promotion imports.
+   Both arms' sites (the OVERSIZE_INLINE judge and the stored-bytes override) are promotion's now, so the subject is
+   that file; the name STORE is kept for the runner. */
+const STORE = join(PLANE, "src", "promotion", "index.mjs");
 const SUITE = join(PLANE, "test", "rec178-bytes.test.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
@@ -47,8 +51,9 @@ const ARMS = [
     expect: `MUST FAIL by name: "${NONASCII}", and the creation arm. MUST NOT FAIL: the over-strictness arms, and `
           + "section 3's stored-bytes arms (the override still stores UTF-8).",
     patch: (s) => {
-      const a = "        const inlineBytes = Store.#inlineBytesOf(f);\n";
-      return s.split(a).length === 2 ? s.replace(a, "        const inlineBytes = typeof f.text === \"string\" ? f.text.length : null;\n") : null;
+      /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): promotion R6's judge. */
+      const a = "        const n = inlineBytesOf(f);\n        if (n !== null && n > INLINE_MAX)";
+      return s.split(a).length === 2 ? s.replace(a, "        const n = typeof f.text === \"string\" ? f.text.length : null;\n        if (n !== null && n > INLINE_MAX)") : null;
     },
     ok: (r) => r.failed.includes(NONASCII) && r.failed.includes("the non-ASCII arm on a CREATION is refused OVERSIZE_INLINE")
             && !OVERSTRICT.some((x) => r.failed.includes(x)) && !r.failed.includes(STORED) },
@@ -65,8 +70,9 @@ const ARMS = [
 const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const origSha = sha(STORE);
 const origLen = readFileSync(STORE).length;
-if (origLen < 1_000_000) { console.error(`store.mjs is ${origLen} bytes — not the file this control expects`); process.exit(2); }
-console.log(`subject src/store.mjs sha256 ${origSha} (${origLen} bytes)`);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the floor is promotion's size, not the store's. */
+if (origLen < 20_000) { console.error(`promotion/index.mjs is ${origLen} bytes — not the file this control expects`); process.exit(2); }
+console.log(`subject src/promotion/index.mjs sha256 ${origSha} (${origLen} bytes)`);
 let bad = 0;
 for (const arm of ARMS.filter((a) => !only.length || only.includes(a.id))) {
   const pristine = join(tmpdir(), `rec178-control-${arm.id}-${process.pid}.pristine`);

@@ -28,8 +28,11 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "instance-group.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the modules the re-anchored arms below patch (in the copy) are
+   hashed too, so the real ones are proven untouched as well. */
 const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "src/livefire.mjs",
-              "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+              "checks/bio-checks.mjs", "src/promotion/index.mjs", "src/provenance/index.mjs",
+              "src/record-core/index.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const LIT = ["believe", "in", "oakland"].join("-");   /* spelled apart so this driver's own text is not a site */
@@ -37,15 +40,22 @@ const READER = "    const r = this.#one(`SELECT slug FROM instance_group WHERE i
              + "    return r && typeof r.slug === \"string\" && r.slug ? r.slug : null;";
 const FIRST_BOOT_CALL = "    if (firstBoot) this.#recordGroupAtFirstBoot();";
 const BOOT_WRITE = "VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,";
-const STAMP_CALL = "      if (groupStamp) files = Store.#stampGroup(files, groupStamp);";
-const TESTIFY_LINE = "      `group: ${group}`, \"references: []\", \"state_history: []\",";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the stamp moved with `promote` to `src/promotion/index.mjs`'s module
+   function `stampGroup` (promotion R13, T3); testify moved to `src/provenance/index.mjs` (T4 layer 3), where it
+   composes NO `group:` line at all (promote stamps the recorded group), so arm (b) restores the literal as a line of
+   testify's bytes there, the call site the arm always meant. */
+const STAMP_CALL = "      if (groupStamp) files = stampGroup(files, groupStamp);";
+const TESTIFY_LINE = "        \"references: []\", \"state_history: []\",";
 const SEED_HELD = "    if (held)\n      return refusal(\"GROUP_ALREADY_RECORDED\",";
 const UNDETERMINED_DEFAULT = "        createdGroup = stated ? stated.trim() : recorded;";
-const PURGE_ANCHOR = "        this.sql.exec(`DELETE FROM bundles`);";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): purge is record-core's (R21–R24); the whole-store form's return. */
+const PURGE_ANCHOR = "    return { ok: true, scope: one ? bundleId : \"ALL\", removed };";
 /* The catalogue's ONE definition of writing the group (the store's stamp calls it): its two write lines. */
 const DEF_REPLACE = "    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\\n'); }";
 const DEF_OPEN = "  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\\n');";
-const WITNESS = "    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5): the witness is record-core's, taken once at
+   start (`isFirstBoot()` reads it); the store's `#migrate` only asks it. */
+const WITNESS = "    try { this.#firstBoot = [...this.#sql.exec(`PRAGMA table_info(bundles)`)].length === 0; }";
 
 /* Label prefixes, grouped as the suite names them. */
 const EVERY_W = ["W1:", "W1b:", "W2:", "W3:", "W4:", "W5:", "W5b:", "W6:", "W7:", "W8:", "W8b:"];
@@ -59,8 +69,14 @@ const ARMS = {
      authority healing a caller-side literal is exactly what makes the member UI's and the setup page's literals
      harmless. So no behavioural assertion can see this arm; S1, the source census, is what does. */
   "literal-at-a-call-site": {
-    patches: [["store.mjs", TESTIFY_LINE, `      "group: ${LIT}", "references: []", "state_history: []",`]],
-    mustFail: ["S1:"],
+    patches: [["src/provenance/index.mjs", TESTIFY_LINE, `        "group: ${LIT}", "references: []", "state_history: []",`]],
+    /* RE-DECLARED 2026-09-27 (T5-12, legacy-tests), MEASURED 46/1 on the re-anchor: testify composes no `group:` line
+       since T4 (the stamp names the recorded group), so a literal restored there is now a STATED group, kept where the
+       store records none: C3 (the plane's own composer is refused by name when recording none) fails, and is declared.
+       S1 STAYS DECLARED AND DID NOT FAIL: the suite's census corpus (S0) walks `src/` flat plus `record-core`,
+       `membership` and `promotion` only, so a literal in `src/provenance/` (or any later module) is invisible to it.
+       That is a finding about the SUITE (its corpus must take every `src/<module>/`), reported, not smoothed here. */
+    mustFail: ["S1:", "C3:"],
   },
 
   /* THE ROW'S CONTROL — ONE LITERAL RESTORED AT THE AUTHORITY: the one reader every default and every stamp asks
@@ -78,8 +94,11 @@ const ARMS = {
   /* THE STAMP REMOVED: the member UI's and the setup page's bytes are then stored as sent — the class the row names,
      arriving through the callers the plane does not compose for. testify still composes its own line (W4, L3 green). */
   "stamp-removed": {
-    patches: [["store.mjs", STAMP_CALL, "      /* armed: no stamp */"]],
-    mustFail: ["W1:", "W1b:", "W2:", "W5:", "W5b:", "W6:", "W7:", "W8:", "W8b:", "L2:", "P8:"],
+    patches: [["src/promotion/index.mjs", STAMP_CALL, "      /* armed: no stamp */"]],
+    /* RE-DECLARED 2026-09-27 (T5-12, legacy-tests), measured 34/13: testify no longer composes its own line (T4: it
+       moved to provenance and relies on the stamp), so W4 and L3 fail with the stamp, as the header above no longer
+       says. */
+    mustFail: ["W1:", "W1b:", "W2:", "W4:", "W5:", "W5b:", "W6:", "W7:", "W8:", "W8b:", "L2:", "L3:", "P8:"],
   },
 
   /* THE LIAR THE ROW NAMES: the value RE-READ FROM THE DEPLOY VAR at every write. Every assertion about the first
@@ -95,6 +114,11 @@ const ARMS = {
   /* DECISION (a) ABSENT: the first boot records nothing. The install under a second slug is then a store recording
      no group — every writer that states none is refused, and those that state the literal keep it. W3 stays green:
      its bytes name oak-town themselves, which is kept as the caller's own statement. */
+  /* MEASURED 2026-09-27 (T5-12, legacy-tests), NOT AS DECLARED AND NOT OWED TO THE ANCHOR (it armed once, as
+     before): 12/10 and the suite DIED before its foot — its REC-171 fixture creates a project through the deploy token,
+     and project creation now needs a recorded group (C-64.1 GROUP_UNDETERMINED), so a store that recorded none cannot
+     build the fixture the later sections stand on. The arm measures the fixture, not decision (a); the suite needs a
+     fixture that survives this arm (reported to the suite's owner). Declaration unchanged. */
   "no-first-boot-write": {
     patches: [["store.mjs", FIRST_BOOT_CALL, "    /* armed: nothing recorded at the first boot */"]],
     mustFail: ["B1:", "B2:", "B3:", ...EVERY_W.filter((l) => l !== "W3:"), "W9:", "L1:", "L2:", "L3:", "L4:"],
@@ -126,14 +150,17 @@ const ARMS = {
   /* ONE LITERAL RESTORED IN DECISION (c)'s PATH: recording none, a creation stating none is given the old default
      instead of being refused. The census sees the literal; C2 and C2b see the default. */
   "default-when-undetermined": {
-    patches: [["store.mjs", UNDETERMINED_DEFAULT, `        createdGroup = stated ? stated.trim() : (recorded || "${LIT}");`]],
-    mustFail: ["S1:", "C2:", "C2b:"],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): decision (c)'s default is promotion's (T3). */
+    patches: [["src/promotion/index.mjs", UNDETERMINED_DEFAULT, `        createdGroup = stated ? stated.trim() : (recorded || "${LIT}");`]],
+    /* RE-DECLARED 2026-09-27 (T5-12, legacy-tests), measured 43/4: testify states no group now, so its creation takes
+       decision (c)'s path too and is given the default instead of refused: C3 fails with C2 and C2b. */
+    mustFail: ["S1:", "C2:", "C2b:", "C3:"],
   },
 
   /* THE PURGE CLEARS IT — the "derived table" reflex CLAUDE.md §7 would apply. S2 sees the DELETE; W9 sees the value
      gone; and the store, not being fresh, never records one again, so §3's writers are refused. */
   "purge-clears-it": {
-    patches: [["store.mjs", PURGE_ANCHOR, "        this.sql.exec(`DELETE FROM instance_group`);\n" + PURGE_ANCHOR]],
+    patches: [["src/record-core/index.mjs", PURGE_ANCHOR, "    if (!one) this.#sql.exec(`DELETE FROM instance_group`);\n" + PURGE_ANCHOR]],
     mustFail: ["S2:", "W9:", "L1:", "L2:", "L3:", "L4:"],
   },
 
@@ -147,7 +174,7 @@ const ARMS = {
     mustFail: [],
   },
   "witness-other-spelling": {
-    patches: [["store.mjs", WITNESS, "    const firstBoot = !this.#one(`SELECT name FROM sqlite_master WHERE name = 'bundles' AND type = 'table'`);"]],
+    patches: [["src/record-core/index.mjs", WITNESS, "    try { this.#firstBoot = !this.#one(`SELECT name FROM sqlite_master WHERE name = 'bundles' AND type = 'table'`); }"]],
     mustFail: [],
   },
 };

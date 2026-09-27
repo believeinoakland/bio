@@ -23,6 +23,10 @@
  *     guarded. `git checkout --` is never used: it restores to HEAD, not to
  *     what was there, and has twice discarded a session's own uncommitted work.
  *   - A SURPRISING GREEN IS A FINDING ABOUT THE ARM and is printed, not smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): docattest, fixedkey, portion and pin
+ * arm content; unwired the store. baseline 70/0 · docattest 67/3 · fixedkey 66/4 · portion 66/4 · unwired 58/12 (the six
+ * declared and the backfill arms beside them) · pin 68/2 — every arm AS DECLARED, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -44,6 +48,12 @@ const SAFE = controlPen("rec83");
 mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): content's reads left `store.mjs` for `src/content/index.mjs` (T5
+   layer 5): `#contentTarget` is `contentTarget` (R21), `op=content`'s fixed-key refusal reads the module's
+   `CONTENT_READ_PARAMS`, and a row's connection axis is `legacyConnectionAxis`, whose portion answer the store then
+   takes from connections (`portionAxes`, connections R13) only where the grain is `portion`. `unwired` stays on the
+   store (`#backfillLegContent` is still called there). */
+const CONTENT = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // store.mjs is over a megabyte; a restore over a stub must fail loudly.
 
@@ -78,7 +88,7 @@ const ARMS = {
     mustFail: [], mustPass: "everything", patch: () => ({ armed: true, matches: 0 }),
   },
   docattest: {
-    files: [STORE],
+    files: [CONTENT],
     why: "make a `document` row present itself to the coverage rule as PAGE 1, so the page-1 "
        + "attestation would cover the whole document. IC-83: a page attestation does not cover a "
        + "document-extent row",
@@ -96,12 +106,12 @@ const ARMS = {
     mustPass: "NOW the `document` row is raised to B — the OTHER direction, and it must survive this "
             + "arm, because a `#contentTarget` that covered NOTHING would also pass the first "
             + "assertion and the pair is what distinguishes the two",
-    patch: () => arm(STORE,
-      `    if (kind === "document") return {};`,
-      `    if (kind === "document") return { page: 1 };`),
+    patch: () => arm(CONTENT,
+      `  if (kind === "document") return {};`,
+      `  if (kind === "document") return { page: 1 };`),
   },
   fixedkey: {
-    files: [STORE],
+    files: [CONTENT],
     why: "neuter the unknown-parameter refusal, so op=content silently ACCEPTS a predicate or a page "
        + "— D-222 puts the content-grain query arm in stage C and a read that quietly ignored a "
        + "filter would be a query surface nobody capped",
@@ -110,12 +120,12 @@ const ARMS = {
                "a parameter this op has never heard of is refused too",
                "and the refusal says WHY it refuses rather than ignoring the parameter"],
     mustPass: "every plain fixed-key read — the arm must break the REFUSAL and not the read",
-    patch: () => arm(STORE,
-      `      .filter((k) => !Store.CONTENT_READ_PARAMS.has(k)))].sort();`,
-      `      .filter(() => false))].sort();`),
+    patch: () => arm(CONTENT,
+      `.filter((k) => !CONTENT_READ_PARAMS.has(k)))].sort();`,
+      `.filter(() => false))].sort();`),
   },
   portion: {
-    files: [STORE],
+    files: [CONTENT],
     why: "THE ITEM'S OWN ARM — answer a PORTION row's connection axis from the whole document, which "
        + "is exactly the provisional Bob WITHDREW on 2026-09-14 (study 5.1). The UNDETERMINED "
        + "statement is the assertion, so an arm that left these green would mean the suite is "
@@ -125,9 +135,11 @@ const ARMS = {
                "the portion's own sentence says it refers only to its portion",
                "STRUCTURAL: not one non-`document` row in the whole answer carries a connection grade"],
     mustPass: "every ceiling arm, every fixed-key arm, and the over-strictness pin",
-    patch: () => arm(STORE,
-      `    const connection = r.extent_kind === "document"`,
-      `    const connection = true`),
+    /* RE-ANCHORED 2026-09-27 (T5-12): every row answered as its document, so a portion keeps the document's grade
+       (grain `document`, which the store's connections pass does not replace): the withdrawn provisional exactly. */
+    patch: () => arm(CONTENT,
+      `  if (r.extent_kind === "document")\n    return doc ? { determined: true, grain: "document", ...doc }`,
+      `  if (true)\n    return doc ? { determined: true, grain: "document", ...doc }`),
   },
   unwired: {
     files: [STORE],
@@ -147,7 +159,7 @@ const ARMS = {
       `    const backfill = { ran: 0, truncated: false };`),
   },
   pin: {
-    files: [STORE],
+    files: [CONTENT],
     why: "THE OVER-STRICTNESS PIN'S OWN ARM — make `#contentEarned` MUTATE the `earned.connection` "
        + "entry it was handed instead of copying it, which is the ordinary way a new reader silently "
        + "changes what an old one answers. The pin exists to catch exactly this and must be shown "
@@ -157,9 +169,9 @@ const ARMS = {
     mustPass: "every content-grain assertion — the `document` row still earns A and the portion row "
             + "is still undetermined, which is what makes this arm about the PIN and not about the "
             + "feature",
-    patch: () => arm(STORE,
-      `      ? (doc ? { determined: true, grain: "document", ...doc }`,
-      `      ? (doc ? Object.assign(doc, { determined: true, grain: "document" })`),
+    patch: () => arm(CONTENT,
+      `    return doc ? { determined: true, grain: "document", ...doc }`,
+      `    return doc ? Object.assign(doc, { determined: true, grain: "document" })`),
   },
 };
 

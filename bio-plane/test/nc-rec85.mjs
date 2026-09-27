@@ -23,6 +23,10 @@
  *     guarded. `git checkout --` is never used: it restores to HEAD, not to
  *     what was there, and has twice discarded a session's own uncommitted work.
  *   - A SURPRISING GREEN IS A FINDING ABOUT THE ARM and is printed, not smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): no anchor moved (the grammar is the catalogue's; content's extent module delegates to it for these kinds).
+ * baseline 64/0 · sheetcell 60/4 · docpara 62/2 · slideshape 62/2 · a1 62/2 · onebased 61/3 · canon 51/13 · overstrict
+ * -1/-1 with its three markers in the crash, as declared — every arm AS DECLARED, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";

@@ -34,6 +34,10 @@
  * `test/pen.mjs` (M0-182, BOB #32) — UNIQUELY NAMED per arm; every restore is
  * verified by sha256 AND by content with a byte count printed and a minimum
  * guarded — never `git checkout --`.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): dropwire arms extraction's pipeline, restorekey the store and content, silent and overstate content's extent
+ * grammar. baseline 29/0 · droppage 22/7 · dropwire 18/11 · widetol 24/5 · absentrefuses 25/4 · restorekey 27/2 · silent
+ * 26/3 · overstate 28/1 — every arm AS DECLARED, no held-open assertion broken, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -49,10 +53,17 @@ const SAFE = controlPen("d420");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
-const INDEX = join(PLANE, "src/index.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): acquire's container extent moved from `index.mjs` to extraction's
+   pipeline (`src/extraction/pipeline.mjs` `containerExtentOf`, R13; dropwire arms it there, dedented); the mint's
+   answer to content (`src/content/index.mjs`; restorekey's second site); the page form's statement from the
+   catalogue to content's extent grammar (`src/content/extent.mjs`, silent and overstate, in its double quotes). The
+   checker arms (droppage, widetol, absentrefuses) stay on the catalogue. The name INDEX is kept. */
+const INDEX = join(PLANE, "src/extraction/pipeline.mjs");
 const STORE = join(PLANE, "src/store.mjs");
+const CONTENT = join(PLANE, "src/content/index.mjs");
+const EXTENT = join(PLANE, "src/content/extent.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = 500000;   // both sources are > 700 KB; a restore over a stub must fail loudly.
+const MIN_BYTES = 20000;    // RE-ANCHORED 2026-09-27 (T5-12): the smallest subject now, extent.mjs, is ~25 KB.
 
 const SUITES = { d420: "test/d420-image-page.test.mjs" };
 function runSuite(key) {
@@ -117,8 +128,8 @@ const ARMS = {
     why: "acquire stops persisting a PDF's placements (container_extent null, as before D-420)",
     mustFail: [WIRE, FAR, NEAR, ACT],
     mustNotFail: [EQUAL, BEFORE, STATED, AGREE],
-    patch: () => arm(INDEX, `              if (!containerExtent && pdfPaints && fmt === "pdf") {`,
-                            `              if (false) {`),
+    patch: () => arm(INDEX, `  if (!containerExtent && pdfPaints && fmt === "pdf") {`,
+                            `  if (false) {`),
   },
   widetol: {
     files: [CHECKS], suites: ["d420"],
@@ -137,33 +148,40 @@ const ARMS = {
       "  if (!container) return null;\n  const all = Array.isArray(container.images) ? container.images : [];"),
   },
   restorekey: {
-    files: [STORE], suites: ["d420"],
+    files: [STORE, CONTENT], suites: ["d420"],
     why: "CPDF-22's row control: D-420's withdrawn key restored beside `undetermined` — two shapes again",
     mustFail: [ONESHAPE, ACTSAME],
     mustNotFail: [WIRE, EQUAL, FAR, BEFORE, STATED, UNFINISHED, NOSTMT, AGREE],
-    patch: () => armAll(STORE, [
-      ["                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });",
-       `                ...(legUndetermined ? { undetermined: legUndetermined } : {}), ${oldShape("legUndetermined")} });`],
-      ["             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };",
-       `             ...(out.undetermined ? { undetermined: out.undetermined } : {}), ${oldShape("out.undetermined")} };`]]),
+    /* RE-ANCHORED 2026-09-27 (T5-12): the two sites are now in two files (the leg's in the store, the mint's answer
+       in content); each is armed with the same check, and both files are restored whatever happens. */
+    patch: () => {
+      const a = armAll(STORE, [
+        ["                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });",
+         `                ...(legUndetermined ? { undetermined: legUndetermined } : {}), ${oldShape("legUndetermined")} });`]]);
+      if (!a.armed) return a;
+      const b = armAll(CONTENT, [
+        ["             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };",
+         `             ...(out.undetermined ? { undetermined: out.undetermined } : {}), ${oldShape("out.undetermined")} };`]]);
+      return { armed: b.armed, matches: `${a.matches}+${b.matches}` };
+    },
   },
   silent: {
-    files: [CHECKS], suites: ["d420"],
+    files: [EXTENT], suites: ["d420"],
     why: "the page form's statement dropped: an admission without the bound says nothing",
     mustFail: [STATED, UNFINISHED, ACTSAME],
     mustNotFail: [WIRE, EQUAL, FAR, BEFORE, ONESHAPE, NOSTMT, AGREE],
-    patch: () => arm(CHECKS,
-      "  return { level: 'page_images', why: c.page_images_why };",
+    patch: () => arm(EXTENT,
+      "  return { level: \"page_images\", why: c.page_images_why };",
       "  return null;"),
   },
   overstate: {
-    files: [CHECKS], suites: ["d420"],
+    files: [EXTENT], suites: ["d420"],
     why: "over-strictness: the page form states `undetermined` even when the list was held and passed",
     mustFail: [NOSTMT],
     mustNotFail: [WIRE, EQUAL, FAR, BEFORE, STATED, UNFINISHED, ONESHAPE, AGREE],
-    patch: () => arm(CHECKS,
-      "  if (!c || typeof c.page_images_why !== 'string' || !c.page_images_why) return null;\n  return { level: 'page_images', why: c.page_images_why };",
-      "  return { level: 'page_images', why: (c && c.page_images_why) || 'held' };"),
+    patch: () => arm(EXTENT,
+      "  if (!c || typeof c.page_images_why !== \"string\" || !c.page_images_why) return null;\n  return { level: \"page_images\", why: c.page_images_why };",
+      "  return { level: \"page_images\", why: (c && c.page_images_why) || \"held\" };"),
   },
 };
 

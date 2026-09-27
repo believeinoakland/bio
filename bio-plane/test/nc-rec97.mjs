@@ -22,6 +22,10 @@
  *     guarded. `git checkout --` is never used: it restores to HEAD, not to
  *     what was there, and has twice discarded a session's own uncommitted work.
  *   - A SURPRISING GREEN IS A FINDING ABOUT THE ARM and is printed, not smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): overstrict's anchor made unique (REC-86 had repeated it). baseline 49/0 · splice 37/12 · bag 22/27 · unknown
+ * 43/6 · many 45/4 · grammar 46/3 · overstrict 39/10 (citeinquiry red, cite green) — every arm AS DECLARED, every restore
+ * byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -200,12 +204,16 @@ const ARMS = {
        in the output. A tally of -1 with the declared lines missing is still a
        finding. */
     mayDie: true,
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): stale since REC-86, whose `op=narrow` repeats the `authored`
+       line, so the anchor occurred twice and the arm did not arm; found in this sweep. It now carries the cite act's
+       own next line, so it names that one site; the arm inserts the same refusal there. */
     patch: () => arm(STORE,
-      "    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? \"\").trim() !== \"\").sort();",
+      "    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? \"\").trim() !== \"\").sort();\n    if (authored.length && !ontoInquiry)",
       "    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? \"\").trim() !== \"\").sort();\n"
       + "    if (!authored.length && ontoInquiry)\n"
       + "      return { ok: false, reason: \"UNKNOWN_EXTENT_FIELD\", project, handle,\n"
-      + "               detail: \"nc-rec97 overstrict arm: a cite naming no part is refused\" };"),
+      + "               detail: \"nc-rec97 overstrict arm: a cite naming no part is refused\" };\n"
+      + "    if (authored.length && !ontoInquiry)"),
   },
 };
 

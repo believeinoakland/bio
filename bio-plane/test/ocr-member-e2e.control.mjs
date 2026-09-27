@@ -39,7 +39,11 @@ const SUITE = join(HERE, "ocr-member-e2e.test.mjs");
 const F = {
   engine: join(MEMBER, "src/tessengine.mjs"),
   index: join(MEMBER, "src/index.mjs"),
-  planeIndex: join(PLANE, "src/index.mjs"),
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the floor's read moved to the member's engine-free `member.mjs`
+     (ocr-worker T2-12), and the plane's OCR chain to extraction's pipeline (`src/extraction/pipeline.mjs`, T5
+     layer 4: `index.mjs`'s tier-3 wire went with the reading). Arms (2) and (3) arm those files. */
+  member: join(MEMBER, "src/member.mjs"),
+  planeIndex: join(PLANE, "src/extraction/pipeline.mjs"),
   artifact: join(MEMBER, "dist/ocr-worker.bundled.mjs"),
   manifest: join(MEMBER, "dist/ocr-worker.bundle.json"),
   dct: join(REPO, "pdf-worker/src/dctdecode.mjs"),
@@ -160,7 +164,7 @@ arm("2 · DROP THE CONFIDENCE FLOOR (a region below it emits a best guess instea
   { what: "the member stops reporting the floor its instance is configured with",
     mustFail: "the floor arms in section 9 — the floored instance reads the page instead of refusing to guess",
     mustNot: "the un-floored instance's arms, which never had a floor to lose" },
-  [[F.index, "  const raw = env && env.OCR_CONFIDENCE_FLOOR;",
+  [[F.member, "  const raw = env && env.OCR_CONFIDENCE_FLOOR;",
              "  const raw = null;  /* NC ARM 2 */"]],
   (r) => ({ ok: r.fail > 0 && r.foot, why: `${r.fail} failure(s); the section-9 floor arms are the subject` }));
 
@@ -175,8 +179,8 @@ arm("3 · COLLAPSE THE CHAIN TO ONE LABEL (the wire stops recording the `pixels`
     mustFail: "every arm asserting the chain names EACH step, in the acquire path AND in the export",
     mustNot: "the index and the terminal-step projection, which read only the LAST step and cannot see this" },
   [[F.planeIndex,
-    'let chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by,\n                            calibration }],\n                         { step: "ocr", engine: r.engine, version: r.version,\n                           cap: r.cap, measured_by: r.measured_by, calibration });',
-    'let chain = [{ step: "ocr", engine: r.engine, version: r.version,\n                 cap: r.cap, measured_by: r.measured_by, calibration }];  /* NC ARM 3 */']],
+    'const chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by, calibration }],\n                           { step: "ocr", engine: r.engine, version: r.version,\n                             cap: r.cap, measured_by: r.measured_by, calibration });',
+    'const chain = [{ step: "ocr", engine: r.engine, version: r.version,\n                 cap: r.cap, measured_by: r.measured_by, calibration }];  /* NC ARM 3 */']],
   (r) => ({ ok: r.fail > 0 && r.foot, why: `${r.fail} failure(s); the chain-shape arms are the subject` }));
 
 /* (4) D-320: A NO-OP DECODER on the real path. The IDCT writes nothing, so the

@@ -36,6 +36,10 @@
  *   UNDETERMINED arms) · nodedupe 59/1 (exactly "NOT kept twice") · nopurge 59/1 (exactly the purge arm).
  *   Every restore byte-identical by sha256 AND by byte comparison (readingprov.mjs 12,804 B sha256
  *   c398c899…, store.mjs 3,328,563 B sha256 25f42566…).
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): overwrite, inferred, nodedupe and nopurge
+ *   arm extraction (`src/extraction/index.mjs`); nodigest's page site and nochain re-anchored on D-635's shape. 7 arms,
+ *   0 NOT AS DECLARED, at the recorded figures: baseline 60/0 · nodigest 51/9 · nochain 57/3 · overwrite 56/4 · inferred
+ *   58/2 · nodedupe 59/1 · nopurge 59/1; every restore byte-identical by sha256 AND byte comparison.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -48,7 +52,11 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HOLD = join(process.env.NC_HOLD || tmpdir(), `nc-d536-pristine-${process.pid}`);
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const PROV = join(ROOT, "src/readingprov.mjs");
-const STORE = join(ROOT, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#keepReading`, the provenance read and the reading tables' purge
+   declaration moved from `store.mjs` to extraction (`src/extraction/index.mjs`, R23, R26, R49); `readingprov.mjs` is
+   where it was. Arms overwrite, inferred and nodedupe keep their anchors' text; nopurge now takes `reading_history`
+   out of extraction's own declaration (the store's list filters extraction's tables out, `extractionOwns`). */
+const STORE = join(ROOT, "src/extraction/index.mjs");
 
 const ATTRIB = "ATTRIBUTED: the tier, the member and the page";
 const UNDET = "the pre-D-536 reading's provenance reads UNDETERMINED";
@@ -56,12 +64,16 @@ const ARMS = {
   baseline: { patches: [], mustFail: [], mustPass: [ATTRIB, UNDET] },
   nodigest: {
     patches: [[PROV, "  out.text_sha256 = flat.text.length ? await sha256Hex(flat.text) : null;\n", "  out.text_sha256 = null;\n"],
-              [PROV, "chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null });", "chars: pt.length, text_sha256: null });"]],
+              /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): stale since D-635 (the page entry gained `producers`, so
+                 the literal closes with `};` now, not `});`); found in this sweep. */
+              [PROV, "chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null };", "chars: pt.length, text_sha256: null };"]],
     mustFail: [ATTRIB, "the document digest is the SHA-256 of the text the reader was handed", "the page digest agrees"],
     mustPass: [UNDET],
   },
   nochain: {
-    patches: [[PROV, "function chainTierOf(chain, page) {\n  if (!Array.isArray(chain)) return null;", "function chainTierOf(chain, page) {\n  return null;"]],
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): stale since D-635, which made `chainTierOf` the last of
+       `chainTiersOf`'s answers; the chain is read there now, so the arm reads nothing off it there. */
+    patches: [[PROV, "function chainTiersOf(chain, page) {\n  if (!Array.isArray(chain)) return [];", "function chainTiersOf(chain, page) {\n  return [];"]],
     mustFail: ["each page's tier is read off the CHAIN"],
     mustPass: [ATTRIB, "the re-read's answer carries its ATTRIBUTION"],
   },
@@ -83,7 +95,8 @@ const ARMS = {
     mustPass: [ATTRIB, "the re-read's answer carries its ATTRIBUTION"],
   },
   nopurge: {
-    patches: [[STORE, "                    \"reading_history\",\n", ""]],
+    patches: [[STORE, "      [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name) => ({ name, keys: [] }))]);",
+                      "      [...EXTRACTION_TABLES.filter((t) => t !== \"reading_history\"), ...EXTRACTION_WHOLE_ONLY.map((name) => ({ name, keys: [] }))]);"]],
     mustFail: ["exactly the purged document's kept readings are gone"],
     mustPass: [ATTRIB],
   },

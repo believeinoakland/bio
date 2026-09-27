@@ -29,6 +29,11 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-projection-noproject");      /* inside this worktree */
 const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `projection()` moved to `src/retrieval/index.mjs` (retrieval R5);
+   the store keeps the one reader `#noProjectConclusionOf` and calls it from its REGISTERED projection decoration
+   (`retrieval.registerProjectionDecoration("legacy-store", …)`, retrieval REPORT 11), which the single-bundle arm
+   applies. Arms (a) and (c) now edit that decoration's call; arm (b) edits retrieval's list arm. */
+const RETRIEVAL = join(ROOT, "src", "retrieval", "index.mjs");
 const SUITE = join(DIR, "projection-noproject.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -47,11 +52,11 @@ const edit = (file, needle, replacement) => {
   writeFileSync(file, src.replace(needle, () => replacement), "latin1");
 };
 
-const CALL = `        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null,`;
+const CALL = `                    no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null };`;
 /* The copy's call spelled out whole, not derived by a `.replace` of the reader's
    name: that name occurs at two call sites, and m025-arm-anchor-witness reads a
    `.replace(` literal as an anchor that must occur once in its subject. */
-const CALL_COPY = `        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOfCopy(row.bundle_id) : null,`;
+const CALL_COPY = `                    no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOfCopy(row.bundle_id) : null };`;
 const HEAD = "  #noProjectConclusionOf(inquiryId) {\n";
 const BRANCH = `"the inquiry carries no such reading"`;
 
@@ -76,20 +81,38 @@ const ARMS = {
          edit(STORE, CALL, CALL_COPY);
        } },
 
-  b: { files: [STORE],
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the list arm is retrieval's now, and the one reader is reachable
+     from there only through the registered decorations (the store's `#noProjectConclusionOf` is private to it). The
+     defect is the same: every list row carries `no_project_conclusion` through the one reader, here by applying the
+     decorations to each list row. RE-DECLARED: it no longer adds a call site of the reader in store.mjs, so §4's
+     exactly-THREE-call-sites arm is not among its must-fails (the suite's header records it). */
+  b: { files: [RETRIEVAL],
        label: "(B) THE FIELD ON THE LIST FORM: every list row carries no_project_conclusion through the one reader",
-       apply: () => edit(STORE,
-         "      ...pageArgs, cap);\n    return {\n      bundles,",
-         "      ...pageArgs, cap).map((r) => ({ ...r, no_project_conclusion: normalizeType(r.object_type) === \"inquiry\""
-         + " ? this.#noProjectConclusionOf(r.bundle_id) : null }));\n    return {\n      bundles,") },
+       apply: () => {
+         edit(RETRIEVAL,
+           "...pageArgs, cap);\n    return {\n      bundles,",
+           "...pageArgs, cap);\n"
+           + "    /* NC ARM (b) */\n"
+           + "    const decorate = (r) => Promise.all(this.#decorations.map((d) => { try { return Promise.resolve(d.fn(r, { viewer, nowMs }))"
+           + ".catch(() => null); } catch { return null; } })).then((vs) => ({ ...r, no_project_conclusion: vs.reduce((a, v) =>"
+           + " (v && v.no_project_conclusion !== undefined ? v.no_project_conclusion : a), null) }));\n"
+           + "    const page = {\n      bundles,");
+         edit(RETRIEVAL,
+           "SELECT COUNT(*) AS n FROM bundles b WHERE ${base.join(\" AND \")}`, ...baseArgs).n,\n    };",
+           "SELECT COUNT(*) AS n FROM bundles b WHERE ${base.join(\" AND \")}`, ...baseArgs).n,\n    };\n"
+           + "    return Promise.all(page.bundles.map(decorate)).then((bundles) => ({ ...page, bundles }));");
+       } },
 
   c: { files: [STORE],
        label: "(C) OVER-STRICTNESS: the single-bundle arm reaches the ONE reader through a local `npc` and the "
             + "argument spelled `bundleId` — correct work in a spelling the pin did not anticipate",
        apply: () => {
-         edit(STORE, CALL, "        no_project_conclusion: npc,");
+         /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): in the store's registered decoration, where the call now is;
+            `bundleId` is spelled as a local, since the decoration receives the row. */
+         edit(STORE, CALL, "                    no_project_conclusion: npc };");
          edit(STORE, "      const type = normalizeType(row.object_type);\n",
                      "      const type = normalizeType(row.object_type);\n"
+                   + "      const bundleId = row.bundle_id;\n"
                    + "      const npc = type === \"inquiry\"\n        ? this.#noProjectConclusionOf(bundleId) : null;\n");
        } },
 };
@@ -168,3 +191,10 @@ console.log(`\npen removed: ${PEN}`);
      b         projection-noproject: 22 pass, 4 fail   as declared
      c         projection-noproject: 26 pass, 0 fail   as declared — over-strictness holds
    The declarations are in the suite's own NEGATIVE CONTROL header. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1), preflight 6 anchors live, every
+   restore sha256 MATCH / content IDENTICAL:
+     baseline  26 pass, 0 fail
+     a         23 pass, 3 fail   as declared — the three ONE-READER arms
+     b         23 pass, 3 fail   as RE-DECLARED — both list-form arms and NEVER-ON-THE-LIST-FORM; the call-site count
+                                 no longer moves (the list reaches the reader through the decorations, no new call site)
+     c         26 pass, 0 fail   as declared */

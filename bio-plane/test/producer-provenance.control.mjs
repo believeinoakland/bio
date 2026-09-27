@@ -52,6 +52,11 @@
  *     exercised sample per row. MUST NOT HELD: nothing crashed — every fixture
  *     still answered `ok:true`, which is the other half of "rather than crash or
  *     guess", and the parser suite stayed fully green.
+ *
+ * RE-RUN 2026-09-27 (T5-12, legacy-tests; worktree bio-ctl1): anchors unmoved (`pdfstructure.mjs` is where it was),
+ * no edit. BASELINE producer-provenance 58/0 · pdfstructure 170/0. ARM 1 37/21 · 163/7; ARM 2 52/6 · 169/1, the
+ * Word arm and the re-save arm BY NAME; ARM 3 50/8 · 170/0. Every arm as declared, every restore sha256 EQUAL and
+ * cmp IDENTICAL.
  * =====================================================================
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";

@@ -17,6 +17,9 @@
  * `test/pen.mjs`; M0-182, BOB #32), and restored from it and verified by sha256 AND by
  * byte comparison, with the byte count printed and a minimum guarded. Never
  * `git checkout --`. A missing tally is -1, never 0.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): every arm arms content. baseline 41/0 · persist 39/2 · nochain 27/14 · unreadlie 39/2 · identity 39/2 · unheld
+ * 40/1 · overstrict 38/3 — every arm AS DECLARED, no must-pass assertion broken, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -31,7 +34,11 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("d394");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the version notice (`#extentTestAcross` and the read over newer
+   captures) left `store.mjs` for content (`src/content/index.mjs`, T5 layer 5), and `Store.#extentBoundUnheld` is the
+   module function `extentBoundUnheld` (content's `notice.mjs`, called with the page-box reader). Every arm arms content;
+   the name STORE is kept. `persist` and `unheld` are re-spelled to the calls as they are; the rest are unchanged. */
+const STORE = join(PLANE, "src/content/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -70,9 +77,9 @@ const ARMS = {
     mustFail: WRITTEN,
     mustPass: [...CERTAINTY, ...SILENCE, ...LABEL],
     patch: () => arm(STORE,
-      "      const test = this.#extentTestAcross(extent, v.capture_sha);\n",
-      "      const test = this.#extentTestAcross(extent, v.capture_sha);\n"
-      + "      if (test.holds) this.mintContent({ bundleId: v.bundle_id, captureSha: v.capture_sha, extent });\n"),
+      "      const test = this.#extentTestAcross(fullExtent, v.capture_sha);\n",
+      "      const test = this.#extentTestAcross(fullExtent, v.capture_sha);\n"
+      + "      if (test.holds) this.mintContent({ bundleId: v.bundle_id, captureSha: v.capture_sha, extent: fullExtent });\n"),
   },
   nochain: {
     files: [STORE],
@@ -104,7 +111,7 @@ const ARMS = {
     why: "an UNHELD bound is read as a fit — the checker's permissiveness turned into a claim",
     mustFail: ["UNDETERMINED, bound NOT HELD"],
     mustPass: [...CERTAINTY, ...WRITTEN, ...SILENCE, "page 1 exists in the newest capture's page set"],
-    patch: () => arm(STORE, "    const unheld = Store.#extentBoundUnheld(extent, ctx);", "    const unheld = null;"),
+    patch: () => arm(STORE, "    const unheld = extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined);", "    const unheld = null;"),
   },
   overstrict: {
     files: [STORE],

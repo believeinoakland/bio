@@ -24,6 +24,10 @@
  *     guarded. `git checkout --` is never used: it restores to HEAD, not to
  *     what was there, and has twice discarded a session's own uncommitted work.
  *   - A SURPRISING GREEN IS A FINDING ABOUT THE ARM and is printed, not smoothed.
+ *
+ * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): `label` re-spelled to content's
+ * `mintLabel`. baseline 62/0 · strengthen 60/2 · label 60/2 · bound 61/1 · coverage 61/1 · overstrict 59/3 — every arm
+ * AS DECLARED, exactly the declared failures, every restore byte-identical.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -125,8 +129,10 @@ const ARMS = {
             + "three — which is what makes the failure a location; the minted CONTENT row stays "
             + "labelled by SK-7's own helper, because this arm does not touch that call site; and "
             + "every bound, grade, coverage and run assertion stays green",
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `#mintLabel` is content's exported `mintLabel`
+       (content R16, T5 layer 5); `extractPropose` stays in store.mjs and calls it. The arm drops the same line. */
     patch: () => arm(STORE,
-      `             mint: Store.#mintLabel(proposedBy.trim()),\n             proposed: out, minted,`,
+      `             mint: mintLabel(proposedBy.trim()),\n             proposed: out, minted,`,
       `             proposed: out, minted,`),
   },
 
