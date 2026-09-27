@@ -182,6 +182,10 @@ const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC = {
   airun: readFileSync(new URL("../src/airun.mjs", import.meta.url), "utf8"),
   store: readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8"),
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the meaning writers moved to observation-log (its R8) and the
+     meaning frontier to retrieval (its R45, R46, R50); A6, J3 and J5 read them there. */
+  obs: readFileSync(new URL("../src/observation-log/index.mjs", import.meta.url), "utf8"),
+  frontier: readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8"),
 };
 
 const TOK = "mem-rec95";
@@ -328,14 +332,17 @@ t("A5: `partial` is in D-129's set already, so a CUT derivation is recorded in t
    matters: anchored on the DEFINITIONS, with a size guard so a span that
    collapses to nothing cannot pass by being empty. */
 {
-  const from = SRC.store.indexOf("  #observeReaderRun(bundleId, captureSha, reading");
-  const to   = SRC.store.indexOf("  #missingMeaningCause(subjectKind, subject");
-  const span = from >= 0 && to > from ? SRC.store.slice(from, to) : "";
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R8): the three meaning writers are now the
+     module's `observeReaderRun`, `observeResolutionAttempt`, `observeConnectionDerivation`, followed by
+     `attachMeaning`; each appends through the module's own `this.observe({`. */
+  const from = SRC.obs.indexOf("  observeReaderRun(bundleId, captureSha, reading");
+  const to   = SRC.obs.indexOf("  attachMeaning(");
+  const span = from >= 0 && to > from ? SRC.obs.slice(from, to) : "";
   t("A6: no refusal is CONSTRUCTED at any of this item's three writers — the judgement lives in "
   + "the pure module and the store puts judged rows in, which is what keeps ONE append site one "
   + "rule. Citing a refusal in a comment is fine; building one here would be a second copy of it",
     [span.length > 1000, span.length < 20000, /\brefusal\s*\(/.test(span),
-     /AI_RUN_CHECKS/.test(span), (span.match(/this\.#observe\(\{/g) || []).length],
+     /AI_RUN_CHECKS/.test(span), (span.match(/this\.observe\(\{/g) || []).length],
     [true, true, false, false, 3]);
 }
 
@@ -710,10 +717,18 @@ t("F5b: and the ENTITY partition is NOT withheld, STATED on the answer rather th
 + "discovered — the subject registry is instance-wide and op=concerns already serves it, so a "
 + "fence here and nowhere else would be tighter than its rule while changing nothing a caller "
 + "could not read one op over",
-  await (async () => { const m = await DO("frontier", `level=meaning&viewer=project:NO-SUCH&limit=500`);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R50): `project:NO-SUCH` is a viewer the gate does not
+     recognise (DENY), and R50 now withholds EVERY row from such a viewer, entities included. The decision this arm
+     pins (the entity partition is not fenced by a bundle, K102) holds for a RECOGNISED viewer, so it is asked of a
+     member invited to nothing: the answer carries entity rows and states the decision, and the DENY viewer sees no
+     row at all. (This fixture holds no project, so that member also sees the capture and reference rows; the
+     entity-only reader the arm first drove no longer exists at this fixture.) */
+  await (async () => { const m = await DO("frontier", `level=meaning&viewer=member:not-invited&limit=500`);
+    const d = await DO("frontier", `level=meaning&viewer=project:NO-SUCH&limit=500`);
     return [(m.looked || []).some((r) => r.subject_kind === "entity"),
-            /ENTITY subject is not withheld/.test(m.note || "")]; })(),
-  [true, true]);
+            /ENTITY subject is not withheld/.test(m.note || ""),
+            (d.looked || []).length]; })(),
+  [true, true, 0]);
 
 /* ========================================================================= *
  *  G · NOTHING DERIVED IS NOT NEVER RUN — the accepts-when, and §5.1's order.
@@ -1065,13 +1080,17 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
   t("J3: AND THE DECISION IS AT THIS SITE — `#frontierMeaning`'s tally names REC-110 and D-386 "
   + "and POINTS at the document arm rather than restating it. A session that gated the field "
   + "would delete this comment too, so the arm reads the SOURCE and not only the answer",
-    [/REC-110, 2026-09-17, D-386 CLOSED/.test(
-       SRC.store.slice(SRC.store.indexOf("#frontierMeaning(cap, viewer"))),
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39): the meaning arm is retrieval's `#meaning`, and
+       the three levels' tally is ONE method, `#tally(level, viewer)`, so the pointer to the document arm is now a
+       call of the same method: the arm calls it, the ruling (REC-110, D-386) is recorded at the document arm beside
+       its own call, and the method's statement is the whole level grouped by state (the tokens below). */
+    [/#meaning\(cap, viewer\) \{[\s\S]*?const tally = this\.#tally\("meaning", viewer\);/.test(SRC.frontier)
+       && /THE TALLY IS DELIBERATELY NOT GATED \(REC-110, D-386 closed/.test(SRC.frontier),
      /* CORRECTED 2026-09-24 BY D-486, NEVER EXEMPTED — the content suite's J3 carries the reasoning and
         it is not restated here: this was an ADJACENCY pin, and D-486 interpolates `#hiddenRunTail(viewer)`
         between the level literal and the GROUP BY, so the two tokens stopped being neighbours. The rule
         (whole level, grouped by state, never the page) is pinned as its own tokens instead of a spelling. */
-     /level = 'meaning'\$\{hidTail\.sql\} GROUP BY state/.test(SRC.store)],
+     /FROM observation_log WHERE level = \?\$\{tail\.sql\} GROUP BY state/.test(SRC.frontier)],
     [true, true]);
 
   /* J5 — D-486 / BOB #32 (2026-09-24): THE ONE NARROWING, AND ITS PIN AT THIS SITE. The content suite's J5
@@ -1084,12 +1103,18 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
      still passes, which is the statement that the ENTITY decision was not reopened by this. */
   t("J5: D-486's narrowing is at this site and is the SHARED predicate; and the run referent is now gated "
   + "row-whole at this level through the reader that already gates it, delegated rather than spelled twice",
-    [/const hidTail = this\.#hiddenRunTail\(viewer\);/.test(
-       SRC.store.slice(SRC.store.indexOf("#frontierMeaning(cap, viewer"))),
-     /const runSeen = \(r\) => r\.authority_kind !== "run" \|\| !r\.authority/.test(SRC.store),
-     /aiRunLog\(\{ run: r\.authority, viewer, limit: 1 \}\)\.found === true/.test(SRC.store),
-     (SRC.store.match(/this\.#hiddenRunTail\(viewer\)/g) || []).length],
-    [true, true, true, 3]);
+    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39, R57; observation-log R13): the narrowing is
+       reached through the one `#tally`, which asks `retrieval.hiddenRunTail(viewer)`, the store's `#hiddenRunTail`
+       registered as that tail; the meaning arm's `runSeen` asks observation-log's row fence for a `run` row, whose
+       `run` resolver the store registers as the run's own gate (`aiRunLog`), so it is still delegated, not
+       spelled twice. */
+    [/const tally = this\.#tally\("meaning", viewer\);/.test(SRC.frontier)
+       && (SRC.frontier.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length === 1,
+     /const runSeen = \(r\) => r\.authority_kind !== "run" \|\| !r\.authority\s*\|\| this\.obs\.rowVisible\(\{ authority_kind: "run", authority: r\.authority/
+       .test(SRC.frontier),
+     /registerAuthority\("run", \(run, viewer\) => this\.aiRunLog\(\{ run, viewer, limit: 1 \}\)\.found === true\)/.test(SRC.store),
+     (SRC.store.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length],
+    [true, true, true, 1]);
 
   /* J4 — THE OVER-STRICTNESS ARM, AND IT IS THE ONE THAT MATTERS MOST HERE.
      The ruling is about `tally` and about NOTHING ELSE. `by_subject_kind` is a
@@ -1102,9 +1127,14 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
   + "sees more than one. **A pin that held this invariant alongside `tally` would be pinning a "
   + "leak into place**, which is the mistake a reader who skims J1 is most likely to make, so "
   + "the arm asserts the DIFFERENCE rather than trusting nobody will widen it",
+    /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R50): the DENY caller (no viewer) now sees NO row at
+       all, entities included, so its projection is EMPTY where it was `entity`; the difference the arm asserts (the
+       projection follows the reader while the tally, J1, does not) is unchanged against the entitled viewer's
+       several kinds. (This fixture holds no project, so a recognised member sees every row here and cannot stand
+       in for the old entity-only reader; F5b pins the entity decision for a recognised viewer.) */
     [Object.keys(nobody.by_subject_kind || {}).sort().join(","),
      Object.keys(machine.by_subject_kind || {}).length > 1],
-    ["entity", true]);
+    ["", true]);
 }
 
 } catch (e) {

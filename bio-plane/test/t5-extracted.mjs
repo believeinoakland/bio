@@ -22,6 +22,21 @@
    Nothing else changes: every other store method is the store's own, a module method nothing reaches is not added,
    and module code outside the modules' classes (free functions, the routes' local helpers such as `q`) is not
    included. `reinlined` names each substitution. */
+/* ADDED 2026-09-27 by legacy-tests (T5-12), for `meaning-bounds.test.mjs`, OPT-IN (`{ privates: true }`; without it
+   the text is byte-identical to what it was, so `bounds.test.mjs` and every other caller read what they read):
+     (5) a module's PRIVATE methods, which the store never held under the module's spelling. That walk follows a
+         method's RETURN-DELEGATES (`return this.#x(…)`, `const v = this.#x(…); … return v;`) into their segments,
+         and T5 moved the private helpers behind several reads with their public methods (entities' `#resolveOne`
+         behind `op=resolve`, D-291's own helper; retrieval's frontier reader's `#document`/`#content`/`#meaning`/
+         `#internet` behind `op=frontier`; progressions' `#answer` behind `op=instance`). So: in every re-inlined,
+         hopped or appended module method, a call `this.#x(` to a private method of the same module (its own class
+         first) is spelled `this.#x$<module>Of(` and that method is appended under that name, transitively; and a
+         store method (not a pure delegation) that RETURNS a module's answer, `return <module>Of(this.ctx).y(…)` or
+         `const v = <module>Of(this.ctx).y(…)`, has that call spelled `this.#y$<module>Of(` with `y` appended, so
+         the walk's delegate rule reads it as it read the store's own helper (`resolveReferences` arms the derive
+         sweep around entities' `resolve`, so it is not a pure delegation). The row primitives `#rows` and `#one`
+         are never renamed (the walk reads `#rows(` as the row source, whichever class runs it). A dispatch arrow
+         is neither shape, so the dispatch census does not move. */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -64,6 +79,14 @@ function followHop(methodText, moduleSrc, classes) {
   return target ? target.replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${h[2]}`) : null;
 }
 
+/** (5) The class whose method (4) followed for `methodText`, or null: the same reading as `followHop`'s. */
+function hopClass(methodText, moduleSrc, classes) {
+  const h = /^\s*(?:static\s+|async\s+)*(?:\*\s*)?#?[A-Za-z_$][\w$]*\s*\([^)]*\)\s*\{\s*return\s+(?:await\s+)?this\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\([^;]*\);\s*\}\s*$/.exec(methodText);
+  if (!h) return null;
+  const f = new RegExp(String.raw`this\.${h[1]}\s*=\s*new\s+([A-Za-z_$][\w$]*)\(`).exec(moduleSrc);
+  return f && classes.get(f[1]) && classes.get(f[1]).get(h[2]) ? f[1] : null;
+}
+
 /** The class methods of a module's files, `name -> text`, each bounded by the next method or a column-0 line. */
 function classMethods(text) {
   const lines = text.split("\n"), out = new Map();
@@ -80,11 +103,29 @@ function classMethods(text) {
 
 /** The store's text (as handed in) with each pure T5 delegation re-inlined and, with `{ ops: true }`, each T5 routes
  *  spread expanded; `reinlined` lists every substitution. */
-export function reinlineLayer5(storeText, { ops = false } = {}) {
+export function reinlineLayer5(storeText, { ops = false, privates = false } = {}) {
   const texts = Object.fromEntries(Object.entries(T5_MODULES).map(([of, mod]) => [of, moduleText(mod)]));
   const methods = Object.fromEntries(Object.entries(texts).map(([of, t]) => [of, classMethods(t)]));
   const classes = Object.fromEntries(Object.entries(texts).map(([of, t]) => [of, moduleClasses(t)]));
   const hop = (of, m) => followHop(m, texts[of], classes[of]) || m;
+  /* (5), with `{ privates: true }`: `priv` spells a chunk's calls to its module's private methods apart and queues
+     them; without the option it is the identity, and nothing below it runs. */
+  const classOf = (of, m) => [...classes[of]].find(([, ms]) => ms.has(m))?.[0] || null;
+  const privQueue = [], privNamed = new Map();   /* spelled name -> `${of}|${cls}|${m}` */
+  const privName = (of, cls, m) => {
+    const key = `${of}|${cls}|${m}`, base = `#${m.replace(/^#/, "")}$${of}`;
+    for (const name of [base, `${base}$${cls}`]) {
+      if (privNamed.get(name) === key) return name;
+      if (!privNamed.has(name)) { privNamed.set(name, key); privQueue.push({ name, of, cls, m }); return name; }
+    }
+    return `${base}$${cls}`;
+  };
+  const priv = (of, cls, chunk) => !privates ? chunk : chunk.replace(/\bthis\.(#[A-Za-z_$][\w$]*)\(/g, (whole, x) => {
+    if (x === "#rows" || x === "#one") return whole;
+    const own = cls && classes[of].get(cls) && classes[of].get(cls).has(x) ? cls : classOf(of, x);
+    return own ? `this.${privName(of, own, x)}(` : whole;
+  });
+  const chunkOf = (of, m) => priv(of, hopClass(methods[of].get(m), texts[of], classes[of]) || classOf(of, m), hop(of, methods[of].get(m)));
   const reinlined = [];
   const fromStore = new Map();   /* store name -> `${of}.${m}` for (1)'s re-inlined delegations */
   let text = storeText.split("\n").map((l) => {
@@ -92,7 +133,7 @@ export function reinlineLayer5(storeText, { ops = false } = {}) {
     if (!d || !methods[d[3]].has(d[4])) return l;
     reinlined.push(`${d[2]} <- ${T5_MODULES[d[3]]}.${d[4]}`);
     fromStore.set(d[2], `${d[3]}.${d[4]}`);
-    return hop(d[3], methods[d[3]].get(d[4])).replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${d[2]}`);
+    return chunkOf(d[3], d[4]).replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${d[2]}`);
   }).join("\n");
   if (ops) {
     const have = new Set([...text.matchAll(/^ {2}(?:static\s+|async\s+)*(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/gm)].map((m) => m[1]));
@@ -118,9 +159,28 @@ export function reinlineLayer5(storeText, { ops = false } = {}) {
     for (const [name, key] of appended) {
       const [of, m] = key.split(".");
       add.push(name === m ? `${T5_MODULES[of]}.${m}` : `${T5_MODULES[of]}.${m} as ${name}`);
-      text += "\n" + hop(of, methods[of].get(m)).replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${name}`);
+      text += "\n" + chunkOf(of, m).replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${name}`);
     }
     if (add.length) reinlined.push(`appended module methods: ${add.join(", ")}`);
+  }
+  if (privates) {
+    const RETURNED = new RegExp(String.raw`(return\s+(?:await\s+)?|const\s+[A-Za-z_$][\w$]*\s*=\s*(?:await\s+)?)(${OF})\(this\.ctx\)\.([A-Za-z_$][\w$]*)\(`, "g");
+    const wrapped = [];
+    text = text.replace(RETURNED, (whole, lead, of, m) => {
+      if (!methods[of].has(m)) return whole;
+      wrapped.push(`${T5_MODULES[of]}.${m}`);
+      return `${lead}this.${privName(of, classOf(of, m), m)}(`;
+    });
+    if (wrapped.length) reinlined.push(`store calls returned as private delegates: ${wrapped.join(", ")}`);
+    const add = [];
+    for (let i = 0; i < privQueue.length; i++) {
+      const { name, of, cls, m } = privQueue[i];
+      const own = (cls && classes[of].get(cls) && classes[of].get(cls).get(m)) || methods[of].get(m);
+      const body = m.startsWith("#") ? priv(of, cls, own) : chunkOf(of, m);
+      add.push(`${T5_MODULES[of]}.${cls}.${m} as ${name}`);
+      text += "\n" + body.replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${name}`);
+    }
+    if (add.length) reinlined.push(`appended private module methods: ${add.join(", ")}`);
   }
   return { text, reinlined };
 }

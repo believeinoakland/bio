@@ -39,15 +39,31 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
-import { IDSPACE_CHECKS } from "../checks/bio-checks.mjs";
+import { DatabaseSync } from "node:sqlite";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-91's rows moved out of the catalogue with op=idmatch into
+   `src/entities/checks.mjs` (ENTITIES #1, R29). */
+import { IDSPACE_CHECKS } from "../src/entities/checks.mjs";
+import { combine } from "../../jurisdictions/index.mjs";
 
 const SRC_DIR = process.env.REC203_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { recognise, apnStanding, judgePair, systemOfAddresses, CMS_FLOOR } = await import(join(SRC_DIR, "idspaces.mjs"));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): N6 (entities R20, K143) took op=idmatch off id-spaces' legacy
+   adapter (`CMS_FLOOR`, `apnStanding`, `systemOfAddresses`, the old space names `cms`/`apn`) onto the view-first
+   services, over the view `jurisdictions.combine` makes of the instance's active profiles. The module arms ask the
+   same services over the same view the plane is given below: Oakland's profile, the one M-119, M-132 and M-157
+   measured. The spaces are now named `enactment` (was `cms`) and `parcel` (was `apn`). */
+const { recognise, parcelStanding, judgePair, systemOf } = await import(join(SRC_DIR, "idspaces.mjs"));
+const PROFILES = ["oakland-alameda"];
+const VIEW = combine(PROFILES);
+if (!VIEW || !VIEW.ok) throw new Error(`combine(${JSON.stringify(PROFILES)}): ${JSON.stringify(VIEW).slice(0, 300)}`);
+/* The enactment kinds' coverage floors as the view states them (the old adapter's CMS_FLOOR was this, over every
+   non-test profile). */
+const FLOOR = Object.fromEntries(VIEW.view.spaces.enactment.kinds.map((k) => [k.kind, k.floor.first]));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -70,10 +86,16 @@ const SOURCES = {
 
 /* THE BITE: the ODP bytes served again at 32 more addresses of the same system, so one capture is located at 33. */
 const MANY = "https://data.oaklandca.gov/resource/vmzx-e5fe.csv?page=";
-const mf = new Miniflare({
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the plane now judges over the instance's `jurisdiction_profiles`
+   setting (record-core R26, entities R20), and an instance holding none has an empty view in which no space has a
+   form. Its writer, instance-setup R13 (the installer's JURISDICTION_PROFILES recorded at first boot), is not yet
+   built (N10), and no op sets it, so the fixture records it as that first boot would: the Durable Object is booted
+   once (its schema made), stopped, the setting written into its own SQLite file, and booted again. */
+const PERSIST = mkdtempSync(join(tmpdir(), "rec203-persist-"));
+const MF_OPTIONS = {
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  durableObjects: { STORE: { className: "Store", useSQLite: true } }, durableObjectsPersist: PERSIST,
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r203", MEMBER_TOKEN: "mem-r203", PROBE_TOKEN: "prb-r203", VERSION: "test",
               GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
@@ -83,7 +105,8 @@ const mf = new Miniflare({
     return hit ? new Response(hit[1], { headers: { "content-type": "text/plain" } })
                : new Response("unscripted", { status: 500 });
   },
-});
+};
+let mf = new Miniflare(MF_OPTIONS);
 
 const POST = async (qs, body) => {
   const j = await (await mf.dispatchFetch(`http://x/api/?${qs}`, { method: "POST", body: JSON.stringify(body) })).json();
@@ -98,6 +121,23 @@ const idmatch = async (params, tok = "adm-r203") => {
 /* ------------------------------------------------------------------ *
  * The fixture: each source ACQUIRED (which writes its locator) and registered under a bundle.
  * ------------------------------------------------------------------ */
+{
+  const q = new URLSearchParams({ op: "idmatch", token: "adm-r203", space: "project", a: "C329142" });
+  const bare = await (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
+  const r = bare && typeof bare === "object" && "result" in bare ? bare.result : bare;
+  t("before the profiles are recorded, the instance's view gives the project space no form, and says so",
+    [r && r.code, r && /give this space no form/.test(r.detail)], ["IDSPACE_VALUE_NOT_IN_SPACE", true]);
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const DB_PATH = join(PERSIST, "-Store", `${ns.idFromName("bio").toString()}.sqlite`);
+  await mf.dispose();
+  const db = new DatabaseSync(DB_PATH);
+  try {
+    db.prepare("INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)")
+      .run("jurisdiction_profiles", JSON.stringify(PROFILES), "rec203 fixture (instance-setup R13's first boot)", "2026-09-25T02:00:00Z");
+  } finally { db.close(); }
+  mf = new Miniflare(MF_OPTIONS);
+}
+
 const CAP = {};
 {
   const NOW = "2026-09-25T02:00:00Z";
@@ -147,7 +187,7 @@ console.log("\n--- rule 1: INDEPENDENCE — two publications of one source are O
                                   referent: "agrees" });
   t("the budget system published two ways (one host) is ONE system, whatever the reading", [twoWays.verdict, twoWays.counts],
     ["SAME_SYSTEM", false]);
-  const roll = await idmatch({ space: "apn", a: "011-0836-017-00", a_capture: CAP.c3xp, b: "11-836-17", b_capture: CAP.county,
+  const roll = await idmatch({ space: "parcel", a: "011-0836-017-00", a_capture: CAP.c3xp, b: "11-836-17", b_capture: CAP.county,
                                referent: "agrees" });
   t("the county's roll and Oakland's republication of it are ONE system", [roll.verdict, roll.counts], ["SAME_SYSTEM", false]);
   t("and the republication says the portal does not state its provenance",
@@ -186,37 +226,37 @@ console.log("\n--- rule 2: forms told apart by SHAPE; across forms only through 
   t("and it says no crosswalk is captured", /no(ne is)? captured|none is captured/.test(cross.says), true);
   const suffix = await idmatch({ space: "project", a: "1003439A", a_capture: CAP.odp, b: "1003439", b_capture: CAP.leg, referent: "agrees" });
   t("a suffixed value is a different form and string (M-157's 1003439A)", [suffix.verdict, suffix.counts], ["FORMS_UNJOINED", false]);
-  const t1 = recognise("project", "C329142"), t2 = recognise("project", "1003439");
+  const t1 = recognise(VIEW, "project", "C329142"), t2 = recognise(VIEW, "project", "1003439");
   t("the recognisers tell the forms apart by shape", [t1.form, t2.form], ["C#####", "100xxxx"]);
   t("a leading-zero variant is a NEAR-MISS, never counted",
-    (await idmatch({ space: "cms", a: "9917 C.M.S.", a_capture: CAP.www, b: "09917", b_capture: CAP.leg })).near_miss, true);
+    (await idmatch({ space: "enactment", a: "9917 C.M.S.", a_capture: CAP.www, b: "09917", b_capture: CAP.leg })).near_miss, true);
 }
 
 console.log("\n--- OVER-STRICTNESS: correct values in spellings the recognisers must accept ---");
 {
-  const r = await idmatch({ space: "cms", a: "C.M.S. 87551", a_capture: CAP.odp, b: "87551 CMS", b_capture: CAP.leg, referent: "agrees" });
+  const r = await idmatch({ space: "enactment", a: "C.M.S. 87551", a_capture: CAP.odp, b: "87551 CMS", b_capture: CAP.leg, referent: "agrees" });
   t("'C.M.S. 87551' and '87551 CMS' are one value", [r.verdict, r.a.normal, r.b.normal], ["SHARED", "87551", "87551"]);
   const p = await idmatch({ space: "project", a: "#c329142", a_capture: CAP.odp, b: " C329142 ", b_capture: CAP.leg, referent: "agrees" });
   t("'#c329142' and ' C329142 ' are one project number", [p.verdict, p.counts], ["SHARED", true]);
-  const apn = await idmatch({ space: "apn", a: "011-0836-017-00", a_capture: CAP.leg, b: "11-836-17", b_capture: CAP.county, referent: "agrees" });
+  const apn = await idmatch({ space: "parcel", a: "011-0836-017-00", a_capture: CAP.leg, b: "11-836-17", b_capture: CAP.county, referent: "agrees" });
   t("Legistar's padded APN and the county's unpadded one are one parcel (M-157's key)", [apn.verdict, apn.a.normal], ["SHARED", "11-836-17-0"]);
 }
 
 console.log("\n--- rule 3: the C.M.S. coverage floor — OUTSIDE THE RECORD'S REACH, never NOT FOUND ---");
 {
-  const old = await idmatch({ space: "cms", a: "Resolution No. 59916 C.M.S." });
+  const old = await idmatch({ space: "enactment", a: "Resolution No. 59916 C.M.S." });
   t("a resolution below Legistar's first reads OUTSIDE_REACH", old.a.reach.reach, "OUTSIDE_REACH");
   t("and never 'not found'", /not found/.test(old.a.reach.says) && /never "not found"/.test(old.a.reach.says), true);
-  t("a resolution at the floor is INSIDE", (await idmatch({ space: "cms", a: `Resolution No. ${CMS_FLOOR.resolution}` })).a.reach.reach, "INSIDE");
+  t("a resolution at the floor is INSIDE", (await idmatch({ space: "enactment", a: `Resolution No. ${FLOOR.resolution}` })).a.reach.reach, "INSIDE");
   t("an ordinance one below its floor is OUTSIDE_REACH",
-    (await idmatch({ space: "cms", a: `Ordinance No. ${CMS_FLOOR.ordinance - 1} C.M.S.` })).a.reach.reach, "OUTSIDE_REACH");
+    (await idmatch({ space: "enactment", a: `Ordinance No. ${FLOOR.ordinance - 1} C.M.S.` })).a.reach.reach, "OUTSIDE_REACH");
   t("13035 with no kind stated is UNDETERMINED between the floors, and says so",
-    (await idmatch({ space: "cms", a: "13035 C.M.S." })).a.reach.reach, "UNDETERMINED");
+    (await idmatch({ space: "enactment", a: "13035 C.M.S." })).a.reach.reach, "UNDETERMINED");
 }
 
 console.log("\n--- rule 3 as BOB #34 amended it: an APN is RETIRED only where the assessor's lineage says so ---");
 {
-  const op = await idmatch({ space: "apn", a: "011-0836-017-00" });
+  const op = await idmatch({ space: "parcel", a: "011-0836-017-00" });
   t("through the op, with no vintage held, an APN reads UNDETERMINED over none searched",
     [op.a.standing.standing, op.a.standing.vintages_searched], ["UNDETERMINED", []]);
   t("between retired-before-the-lineage and never-a-parcel", op.a.standing.between,
@@ -228,11 +268,11 @@ console.log("\n--- rule 3 as BOB #34 amended it: an APN is RETIRED only where th
      (JSON.stringify(op).match(/no such parcel/gi) || []).length
        === (JSON.stringify(op).match(/never \\"no such parcel\\"/gi) || []).length], [true, true]);
   const lineage = new Map([["11-836-17-0", [{ roll_year: 2014, children: ["11-836-40-0", "11-836-41-0"] }]]]);
-  const ret = apnStanding("11-836-17-0", { lineage, current: new Set(), vintages: ["lineage 2005-06..2026-27"] });
+  const ret = parcelStanding("11-836-17-0", { lineage, current: new Set(), vintages: ["lineage 2005-06..2026-27"] });
   t("with the assessor's own lineage recording it: RETIRED, its roll year and children",
     [ret.standing, ret.roll_year, ret.children], ["RETIRED", 2014, ["11-836-40-0", "11-836-41-0"]]);
-  t("in the current layer: CURRENT", apnStanding("10-787-33-0", { current: new Set(["10-787-33-0"]), lineage }).standing, "CURRENT");
-  const none = apnStanding("33-2130-35-0", { current: new Set(), lineage, vintages: ["current layer", "lineage 2005-06..2026-27"] });
+  t("in the current layer: CURRENT", parcelStanding("10-787-33-0", { current: new Set(["10-787-33-0"]), lineage }).standing, "CURRENT");
+  const none = parcelStanding("33-2130-35-0", { current: new Set(), lineage, vintages: ["current layer", "lineage 2005-06..2026-27"] });
   t("absent from every vintage searched: UNDETERMINED, NAMING the vintages",
     [none.standing, none.vintages_searched], ["UNDETERMINED", ["current layer", "lineage 2005-06..2026-27"]]);
 }
@@ -266,11 +306,11 @@ console.log("\n--- the BOUND: a system is judged from EVERY address, and a cut r
 
 console.log("\n--- the module: a system is judged from EVERY address the record holds for the bytes ---");
 {
-  const mixed = systemOfAddresses([SOURCES.leg[0], SOURCES.odp[0]]);
+  const mixed = systemOf(VIEW, [SOURCES.leg[0], SOURCES.odp[0]]);
   t("bytes located at two systems' addresses name neither", mixed.origin, null);
-  t("no address at all names no system", systemOfAddresses([]).origin, null);
-  const j = judgePair("project", { rec: recognise("project", "C329142"), system: { origin: "x" } },
-                                 { rec: recognise("project", "C329142"), system: { origin: "x" } }, "agrees");
+  t("no address at all names no system", systemOf(VIEW, []).origin, null);
+  const j = judgePair(VIEW, "project", { rec: recognise(VIEW, "project", "C329142"), system: { origin: "x" } },
+                                 { rec: recognise(VIEW, "project", "C329142"), system: { origin: "x" } }, "agrees");
   t("the judge checks independence BEFORE the referent", j.verdict, "SAME_SYSTEM");
 }
 

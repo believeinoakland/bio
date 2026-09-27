@@ -472,7 +472,10 @@ const analyse = (body) => {
      write, or another scan, per row. A single linear pass is not this class and must not
      be called one; that is an over-strictness arm below. */
   const nested = [...body.matchAll(/\b(?:for|while)\s*\(/g)].filter((x) => inLoop(x.index)).length;
-  const writes = [...body.matchAll(/this\.sql\.exec\(/g)].filter((x) => inLoop(x.index)).length;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a WRITE is `this.sql.exec(` in the store and `this.#sql.exec(` in the
+     modules that hold their handle privately (retrieval, entities, calibration, bias, extraction: `#sql`). The same
+     statement under the module's spelling; store.mjs has no `this.#sql`, so nothing the store's walk reads moved. */
+  const writes = [...body.matchAll(/this\.#?sql\.exec\(/g)].filter((x) => inLoop(x.index)).length;
   /* D-384, ENACTED BY M0-63 (2026-09-18, BOB #14's ruling): A SCAN PER ROW IS A SCAN IN A LOOP'S
      BODY, NEVER ONE IN ITS OWN HEADER. A scan written in `for (… of this.#rows(…))` is that loop's
      ROW SOURCE and runs exactly ONCE; crediting it as a scan per row graded where the call was
@@ -490,9 +493,12 @@ const analyse = (body) => {
            loops: loops.length, nested, writes, perRowScan, amplified: nested + writes + perRowScan };
 };
 
+/* T4 (legacy-tests): `code` may be a text (segmented here) or already-named segments (the widened corpus).
+   MOVED UP 2026-09-27 (T5-12, legacy-tests) from the truncation grader, so the CLASS walk can take the widened corpus. */
+const segsOf = (code) => (typeof code === "string" ? segments(code) : code);
 const classMembers = (code) => {
   const out = new Map();
-  for (const [name, body] of segments(code)) {
+  for (const [name, body] of segsOf(code)) {
     const a = analyse(body);
     if (!a.unbounded || !a.loops || !a.amplified) continue;
     out.set(name, a);
@@ -509,7 +515,38 @@ const dispatchedOps = (code) => {
 
 const CODE = decomment(SRC_STORE);
 const SEGMENTS = segments(CODE);
-const CLASS = classMembers(CODE);
+/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted in T3 layer 2): the
+   CENSUS (and only the census) is widened to the extracted modules' files, walked by the same segmenter one file
+   at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
+   store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
+   row sources, which is the direction the FLOOR exists to refuse. */
+/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 extracted three more
+   modules and their row sources left store.mjs with them, so the census's corpus widens to `src/host-governor/`,
+   `src/provenance/` and `src/capture/` the same way, one file at a time, `<module>/<file>:<method>`. The in-memory
+   truncation readers, SET 2 and the UNREAD roster below read this same widened corpus (`EXTRACTED`), because
+   `provenanceRoutesMarked` and `versionChain` publish their claims from provenance now. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; layers 4 and 5 of T5): nine more modules left store.mjs — calibration,
+   extraction, content, entities, connections, progressions, bias, observation-log, retrieval — and their row sources,
+   their truncation claims and nine of the CLASS's members with them (`documentsNamingEntity`, `proposalsFeed`,
+   `biasManifest`, the three `selection*` and `#sweepSelections`, `#assembleInstance`, `#overdueScan`). The corpus
+   widens to their files the same way, `<module>/<file>:<method>`, and from T5 on the CLASS walk (the ratchet, the
+   by-name rosters, the hoist partition, the admissions) reads this same corpus, as the census has since T3: a member
+   that moved is the same work, and a class read off store.mjs alone fell 26 -> 17 because the READER stopped seeing it. */
+const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
+                   "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
+                   "observation-log", "retrieval"];
+const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
+  .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
+/* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
+const moduleSegments = (xf = decomment) => MODULE_TEXTS.flatMap(([f, text]) =>
+  [...segments(xf(text))].map(([n, b]) => [`${f}:${n}`, b]));
+const MODULE_SEGMENTS = new Map(moduleSegments());
+const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
+/* T5-12: every method segment of the widened corpus by its name, for the by-name lookups below (the store's own
+   names are bare, the modules' `<module>/<file>:<method>`, so none collides). */
+const ALL_SEGMENTS = new Map(CENSUS_SEGMENTS);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the CLASS walk reads the widened corpus (see EXTRACTED). */
+const CLASS = classMembers(CENSUS_SEGMENTS);
 
 /* ============================ D-384 ENACTED (M0-63, 2026-09-18) — EVERY MEMBER THE HEADER CREDIT
  * HELD, DISPOSITIONED BY NAME. The ruling is BOB #14's and is not re-opened here: the class keeps
@@ -644,25 +681,34 @@ const ADMITTED = new Map(D384_STAYS.map((s) => [s.name, s]));
 /* THE CLASS IS THE WALK'S MEMBERS AND THE ADMITTED ONES, and the ceiling below grades the union —
    a member the walk cannot see is still a member, and it is named, not counted into a hole. */
 const CLASS_ALL = new Set([...CLASS.keys(), ...ADMITTED.keys()]);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's dispatch now SPREADS the modules' routes
+   (`...entitiesOps(entitiesOf(this.ctx), url, body),`), so `op=readingname`, `op=proposals`, `op=select` … are entries of a
+   module's routes function and no longer arrows of the store's map. Each spread in the store's dispatch is read as the
+   entries its function returns, and an entry `op: () => r.m(` is the op of the module's method `m`, named as the class
+   and the census name it (`<module>/<file>:m`, the module file whose segment is `m`). The store's own arrows are read as
+   before; an op the store's own map ALSO names keeps the store's (the spreads are read after it and never overwrite). */
+const moduleRouteOps = (code) => {
+  const out = new Map();
+  const spread = /^\s+\.\.\.([A-Za-z_$][\w$]*)\([A-Za-z_$][\w$]*Of\(this\.ctx\), url, body(?:, this\.env)?\),/gm;
+  let m; while ((m = spread.exec(code))) {
+    const at = MODULE_TEXTS.find(([, text]) => new RegExp(`^export function ${m[1]}\\(`, "m").test(text));
+    if (!at) continue;
+    const [file, text] = at, mod = file.split("/")[0];
+    const fn = new RegExp(`^export function ${m[1]}\\(([A-Za-z_$][\\w$]*)[^)]*\\) \\{[\\s\\S]*?\\n  return \\{\\n([\\s\\S]*?)\\n  \\};\\n\\}`, "m")
+      .exec(decomment(text));
+    if (!fn) continue;
+    const entry = new RegExp(`^\\s+([a-z][a-z0-9]*):\\s*(?:async\\s*)?\\(\\)\\s*=>\\s*(?:await\\s+)?${fn[1]}\\.([A-Za-z_$][\\w$]*)\\(`, "gm");
+    let e; while ((e = entry.exec(fn[2]))) {
+      const own = `${file.replace(/\.mjs$/, "")}:${e[2]}`;   /* the routes function's own file first */
+      const home = MODULE_SEGMENTS.has(own) ? own
+        : [...MODULE_SEGMENTS.keys()].find((k) => k.startsWith(`${mod}/`) && k.endsWith(`:${e[2]}`)) || own;
+      if (!out.has(e[1])) out.set(e[1], home);
+    }
+  }
+  return out;
+};
 const DISPATCHED = dispatchedOps(CODE);
-/* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core, membership, promotion extracted in T3 layer 2): the
-   CENSUS (and only the census) is widened to the extracted modules' files, walked by the same segmenter one file
-   at a time and named `<module>/<file>:<method>` so no name collides with the store's. Their reads left
-   store.mjs with them, and a census of store.mjs alone fell 122 -> 107 because the READER stopped seeing those
-   row sources, which is the direction the FLOOR exists to refuse. */
-/* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, provenance T4-2, capture): layer 3 extracted three more
-   modules and their row sources left store.mjs with them, so the census's corpus widens to `src/host-governor/`,
-   `src/provenance/` and `src/capture/` the same way, one file at a time, `<module>/<file>:<method>`. The in-memory
-   truncation readers, SET 2 and the UNREAD roster below read this same widened corpus (`EXTRACTED`), because
-   `provenanceRoutesMarked` and `versionChain` publish their claims from provenance now. */
-const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture"];
-const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
-  .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
-/* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
-const moduleSegments = (xf = decomment) => MODULE_TEXTS.flatMap(([f, text]) =>
-  [...segments(xf(text))].map(([n, b]) => [`${f}:${n}`, b]));
-const MODULE_SEGMENTS = new Map(moduleSegments());
-const CENSUS_SEGMENTS = [...SEGMENTS, ...MODULE_SEGMENTS];
+for (const [op, meth] of moduleRouteOps(CODE)) if (!DISPATCHED.has(op)) DISPATCHED.set(op, meth);
 const SCANNING = CENSUS_SEGMENTS.filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
 const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
   .map(([op, meth]) => `${op}->${meth}`).sort();
@@ -1546,8 +1592,7 @@ const rowSourceCalls = (body, id) => {
   let m; while ((m = re.exec(body))) out.push(body.slice(m.index, closeParen(body, m.index + m[0].length - 1)));
   return out;
 };
-/* T4 (legacy-tests): `code` may be a text (segmented here) or already-named segments (the widened corpus). */
-const segsOf = (code) => (typeof code === "string" ? segments(code) : code);
+/* T4 (legacy-tests): `segsOf` (defined above `classMembers` since T5-12) takes a text or named segments. */
 const truncationVerdicts = (code) => {
   const graded = [], ungraded = [], violations = [];
   for (const [name, body] of segsOf(code)) {

@@ -29,7 +29,10 @@ import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { readingPositionInExtent } from "../src/textchain.mjs";
 import * as CHECKS from "../checks/bio-checks.mjs";
-const { checkConnectionMentionUnchosen, CONNECTION_PAIR_CHECKS } = CHECKS;
+const { CONNECTION_PAIR_CHECKS } = CHECKS;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the pair predicate moved out of the catalogue into connections'
+   `src/connections/pair.mjs` (CONNECTIONS #1 Q1, K145); the C-49 rows stay in the catalogue. */
+import { checkConnectionMentionUnchosen } from "../src/connections/pair.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({

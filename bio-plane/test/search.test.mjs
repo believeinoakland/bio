@@ -61,6 +61,7 @@ import { createHash } from "node:crypto";
    importable and assertable in plain node exactly like the compiler is. The
    store maintains the index; the module derives what goes in it. */
 import { textOf, FTS_COLUMNS } from "../src/query.mjs";
+import { storeCorpus } from "./extracted-sources.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -79,7 +80,9 @@ console.log("\n--- the compiler is the only place a query comes from ---");
 {
   const store = readFileSync(SRC("store.mjs"), "utf8");
   const query = readFileSync(SRC("query.mjs"), "utf8");
-  t("store.mjs contains no MATCH against the text index", /bundles_fts\s+MATCH/.test(store), false);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval): asked of retrieval's files too, where the executor now is. */
+  t("store.mjs contains no MATCH against the text index",
+    /bundles_fts\s+MATCH/.test(storeCorpus(["retrieval"])), false);
   t("query.mjs is where MATCH is built", /bundles_fts MATCH/.test(query), true);
   /* Every compiled statement the store executes goes through the one guarded
      executor. Checked on the source because the guard is what protects the code
@@ -87,15 +90,20 @@ console.log("\n--- the compiler is the only place a query comes from ---");
   /* Checked in a WINDOW rather than per line, because a batched statement is
      consumed by a loop whose #runQuery sits on the next line. What matters is
      that no compiled statement reaches the engine by any other route. */
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R1–R3): the executor and every caller of a compiled
+     statement moved to `retrieval` (`src/retrieval/`), where the one guarded executor is the module's `runQuery`
+     (called `this.runQuery(`). The census is over the store's corpus as it stood before the extraction: store.mjs
+     and retrieval's files. */
+  const corpus = storeCorpus(["retrieval"]);
   const uses = [];
-  for (let i = store.indexOf(".statements."); i !== -1; i = store.indexOf(".statements.", i + 1))
-    uses.push(store.slice(Math.max(0, i - 80), i + 160));
+  for (let i = corpus.indexOf(".statements."); i !== -1; i = corpus.indexOf(".statements.", i + 1))
+    uses.push(corpus.slice(Math.max(0, i - 80), i + 160));
   t("the store executes compiled statements", uses.length > 0, true);
   t("and every one of them goes through #runQuery",
-    uses.filter((w) => !/#runQuery\(/.test(w)).length, 0);
+    uses.filter((w) => !/(?:#|this\.)runQuery\(/.test(w)).length, 0);
   t("no compiled statement is handed to the raw row helper instead",
-    /#rows\([^)]*statements\./.test(store) || /sql\.exec\([^)]*statements\./.test(store), false);
-  t("the guard refuses a statement without the gate", /REFUSED: a retrieval statement/.test(store), true);
+    /#rows\([^)]*statements\./.test(corpus) || /sql\.exec\([^)]*statements\./.test(corpus), false);
+  t("the guard refuses a statement without the gate", /REFUSED: a retrieval statement/.test(corpus), true);
 }
 
 /* ------------------------------------------------------------------ *

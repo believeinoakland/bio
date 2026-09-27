@@ -53,6 +53,9 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R35–R46): the three bundle-level frontier arms and the one
+   exhaustion test moved to `src/retrieval/frontier.mjs`; S1 reads them there. */
+const FRONTIER_SRC = readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8");
 
 const TOK = "mem-rec174";
 const ADM = "adm-rec174";
@@ -164,7 +167,11 @@ t("A1: THE S-LOG CORPUS — at limit=500 [looked, never_looked, missing_unexplai
   [(await perViewer(LOG, "document", 500, listsOf)).slice(0, 2),
    (await perViewer(LOG, "content", 500, listsOf)).slice(0, 2),
    (await perViewer(LOG, "meaning", 500, listsOf)).slice(0, 2)],
-  [[["class:member", 0, 9, 0], ["member:not-invited", 0, 1, 0]],
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R41): the document level now reads a missing row through
+     §5.1's order, as the other levels do, so its deferred addresses are split by cause; at this fixture all of them
+     (9 entitled, 1 uninvited) are not the positive `never_looked` and move to `missing_unexplained`. The supply and
+     the fence are unchanged, so B1's full-fetch bit is asked of the same rows. */
+  [[["class:member", 0, 0, 9], ["member:not-invited", 0, 0, 1]],
    [["class:member", 1, 9, 0], ["member:not-invited", 1, 1, 0]],
    [["class:member", 1, 9, 0], ["member:not-invited", 1, 1, 0]]]);
 
@@ -270,7 +277,9 @@ for (let i = 0; i < 6; i++)
   await ENTS.POST(`op=entitycreate&token=${ADM}`, { kind: "person", label: `Person rec174-${i}` });
 t("A4: THE S-ENT CORPUS — 6 missing entities at limit=500 for EVERY viewer, nothing else",
   (await perViewer(ENTS, "meaning", 500, listsOf)).map((r) => [r[0], r[1], r[2] + r[3]]),
-  [["class:member", 0, 6], ["member:not-invited", 0, 6], ["(none)", 0, 6]]);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; retrieval R50): an absent viewer now sees no missing subject at any
+     level, entities included; the recognised viewers still hold the whole ungated supply. */
+  [["class:member", 0, 6], ["member:not-invited", 0, 6], ["(none)", 0, 0]]);
 t("B7: MEANING MISSING ENTITIES — at limit=1 the entity fetch of 4 comes back FULL over 6; every viewer reads `true`",
   (await perViewer(ENTS, "meaning", 1, (f) => [f.truncated])).map((r) => r[1]), [true, true, true]);
 t("C7: MEANING — the exhausted entity supply reads as before (limit=500)", await wide(ENTS, "meaning"),
@@ -291,22 +300,26 @@ t("F1: THE `true` DISTINGUISHES NOBODY — on every full fetch above, the entitl
 /* ---- S · THE ONE EXHAUSTION TEST, AND EVERY SUPPLY ROUTED THROUGH IT ----------------------------------------- */
 {
   /* CODE, not prose: the test as an expression (`full: raw.length === …`), anywhere in the store. */
-  const fullTest = (STORE_SRC.match(/full:\s*raw\.length\s*===/g) || []).length;
-  const fetches = (STORE_SRC.match(/this\.#frontierFetch\(\(cap \+ 1\) \* 2,/g) || []).length;
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R37): the one test is retrieval's `#fetch`, and the
+     arms are its `#document`, `#content`, `#meaning`. The content arm's LOOKED page statement is now written inline
+     in the arm (handed to `#page`, which fetches through `#fetch`), so it is a sixth bounded statement in the walk,
+     and it binds `n` too; the five supplies are the five `#fetch((cap + 1) * 2,` calls. */
+  const fullTest = (FRONTIER_SRC.match(/full:\s*raw\.length\s*===/g) || []).length;
+  const fetches = (FRONTIER_SRC.match(/this\.#fetch\(\(cap \+ 1\) \* 2,/g) || []).length;
   /* Inside the three arm methods, every bounded statement binds `n` — the limit `#frontierFetch` handed it — and
      the never-looked partition is called with `n`. A statement bound to its own `cap + 1` is a supply fetched
      BESIDE the one test, which is the shape this row closed. */
   const bound = [];
-  for (const head of ["  #frontierContent(cap", "  #frontierMeaning(cap", "  frontier({ level"]) {
-    const i = STORE_SRC.indexOf(head), j = STORE_SRC.indexOf("\n  }\n", i);
-    const body = i < 0 || j < 0 ? "" : STORE_SRC.slice(i, j);
+  for (const head of ["  #document(cap", "  #content(cap", "  #meaning(cap"]) {
+    const i = FRONTIER_SRC.indexOf(head), j = FRONTIER_SRC.indexOf("\n  }\n", i);
+    const body = i < 0 || j < 0 ? "" : FRONTIER_SRC.slice(i, j);
     for (const m of body.matchAll(/LIMIT \?`,\s*([^)\n]*)/g)) bound.push(m[1].trim());
     for (const m of body.matchAll(/#frontierNeverLooked\(([^)]*)\)/g)) bound.push(m[1].trim());
   }
   t("S1: THE FULL-FETCH TEST IS WRITTEN ONCE (`#frontierFetch`), and the five never-looked / missing supplies — "
   + "document, content, and meaning's capture, reference and entity — each fetch through it at `(cap + 1) * 2`, "
   + "every one bound to the limit the test is taken at",
-    [fullTest, fetches, bound], [1, 5, ["n", "n", "n", "n", "n"]]);
+    [fullTest, fetches, bound], [1, 5, ["n", "n", "n", "n", "n", "n"]]);
 }
 
 reachedFoot = true;

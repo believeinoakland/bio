@@ -39,7 +39,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerFile } from "./register-doc.mjs";
-import { REEXTRACT_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-51 left the catalogue with extraction (T5-2);
+   REEXTRACT_CHECKS is src/extraction/checks.mjs's export. */
+import { REEXTRACT_CHECKS } from "../src/extraction/checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
@@ -262,6 +264,20 @@ const PRE_ITEM_DIGEST = {
   scan: "c5d019aedaa9afc682fdd20cc82054b7bee493a7955e09490e170bfea3861ad8",
   layer: "2a04e765d906eeabe38cb143d8dd1dd92a4a8aa4cafc178ffe4ea7f33bdd64b1",
 };
+/* RE-PINNED 2026-09-27 (T5-12, legacy-tests): extraction R52 (N48, K135, K139) adds two keys to the plain
+   `op=pdfstructure` answer, `membership` and `membershipWhy`, beside `links[]`; R31 is worded (K139) to allow
+   exactly those two. So the digest is taken over the answer with THOSE TWO KEYS, AND ONLY THEM, removed BY NAME
+   and the rest re-serialised in the plane's own form (`JSON.stringify(o, null, 1)`, asserted faithful on the raw
+   text first); the literals above are NOT re-taken. Any other added, moved or changed key still moves the digest,
+   so the over-strictness arm (f) still fails here. */
+const R52_KEYS = ["membership", "membershipWhy"];
+const withoutR52 = (text) => {
+  const o = JSON.parse(text);
+  const present = R52_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(o, k));
+  for (const k of R52_KEYS) delete o[k];
+  return { text: JSON.stringify(o, null, 1), present,
+           faithful: JSON.stringify(JSON.parse(text), null, 1) === text };
+};
 
 try {
 
@@ -296,10 +312,17 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
   const callsBefore = CALLS;
   const plainScan = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${S}`);
   const plainLayer = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${L}`);
-  console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`);
-  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(plainScan.text), PRE_ITEM_DIGEST.scan);
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): R52's two additive keys removed by name (above). */
+  const scanLess = withoutR52(plainScan.text), layerLess = withoutR52(plainLayer.text);
+  console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`
+    + ` · less R52's keys: ${sha(scanLess.text)} · ${sha(layerLess.text)}`);
+  t("the plain answers are in the plane's serialised form, so removing two keys by name changes nothing else",
+    [scanLess.faithful, layerLess.faithful], [true, true]);
+  t("both plain answers carry R52's two keys (extraction R52, K139), and only those are removed",
+    [scanLess.present, layerLess.present], [R52_KEYS, R52_KEYS]);
+  t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(scanLess.text), PRE_ITEM_DIGEST.scan);
   t("the plain read of the text-layer document is BYTE-IDENTICAL to the pre-item answer (digest)",
-    sha(plainLayer.text), PRE_ITEM_DIGEST.layer);
+    sha(layerLess.text), PRE_ITEM_DIGEST.layer);
   t("the plain read of the scan does NOT reach tier 3 — the seam is opt-in, never automatic",
     plainScan.body?.tier !== 3, true);
   t("and it carries no re-extraction key at all", "reextraction" in (plainScan.body || {}), false);

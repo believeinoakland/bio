@@ -1903,7 +1903,9 @@ function planeCensus() {
   /* The family rows come from `checks/bio-checks.mjs`, a NAMED path rather than a
      discovered one, so they belong to both unions on the same terms. */
   yields["M6 a DEC-49 row"] = new Set(FAMILY_CODES);
-  for (const c of FAMILY_CODES) { union.add(c); if (inCommit(CATALOG)) unionRepro.add(c); }
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): a family row may be defined in a module file (see
+     `dec49Families`), so each code is gated on the commit status of the file that defines ITS row. */
+  for (const c of FAMILY_CODES) { union.add(c); if (inCommit(FAMILY_CODE_FILE.get(c) || CATALOG)) unionRepro.add(c); }
   return { files: files.length, filesRepro: files.length - off.length, yields, union, unionRepro };
 }
 
@@ -1914,16 +1916,79 @@ function planeCensus() {
 /* Harvested by export name matching /_CHECKS$/, never listed here — a family
    added by PL-1 or PL-12 must be guarded the moment it lands, not the release
    after somebody remembers to add it to a list. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): THE FAMILIES NO LONGER LIVE IN ONE FILE. Tranche T5 moved whole
+   DEC-49 families out of the catalogue into the modules that mint their refusals (calibration's C-42
+   `CALIBRATION_CHECKS`, extraction's C-51 `REEXTRACT_CHECKS`, entities' C-91 `IDSPACE_CHECKS`, retrieval's
+   `MEANING_READ_CHECKS` and `SELECTION_CHECKS`, progressions' `PROGRESSION_CHECKS`, observation-log's C-54.2–.10
+   `LEAD_CHECKS`, bias's `BIAS_CHECKS` less C-26.12), and some modules hold rows the catalogue — which may only lose
+   rows while it is a legacy module — does not carry yet (`CONTENT_EXTENT_OWN_CHECKS`, `THEME_WITHDRAW_CHECKS`). T4
+   promotion's `PROMOTION_CHECKS` had been one since T4 and this harvest never read it. Reading the catalogue alone
+   dropped every one of them from R1, the rows' `where`s, the orphan-marker claims and arm G at once, while their
+   codes went on being minted — REC-70's blind walk exactly. The harvest now reads the catalogue AND every plane source
+   file (`planeSourceFiles`, discovered, never listed) whose text exports a `*_CHECKS` name, importing each.
+   ONE FAMILY, COUNTED ONCE, and this is how the dedupe works:
+     - BY NAME. `BIAS_CHECKS` in the catalogue (C-26.12) and in `src/bias/checks.mjs` (the rest) is ONE family whose
+       rows are the union of both halves; so is `LEAD_CHECKS` (C-54.1 in the catalogue, C-54.2–.10 in
+       observation-log). A code in both halves is a failure (one code, one row).
+     - BY IDENTITY. The same object re-exported under the same name (`connections/index.mjs` re-exporting the
+       catalogue's `THEME_CHECKS`, `airun.mjs` its `AI_RUN_CHECKS`, a module's `index.mjs` its own `checks.mjs`) is
+       read once. A ROW already harvested is never harvested again, whatever family names it: a module family whose
+       every row is a catalogue row BY REFERENCE (observation-log's `OBSERVATION_CHECKS`, the seven C-22 rows of
+       `AI_RUN_CHECKS`, K142) is a VIEW of that family, not a second one, and is named on arm A's line as such.
+   The catalogue is read first, so a row's family is the one that DEFINES it. */
+const EXPORTS_A_FAMILY = /\bexport\s+(?:const|let|var)\s+[A-Z][A-Z0-9_]*_CHECKS\b|\bexport\s*\{[^}]*\b[A-Z][A-Z0-9_]*_CHECKS\b/;
+const DEFINES_A_FAMILY = /\bexport\s+(?:const|let|var)\s+[A-Z][A-Z0-9_]*_CHECKS\b/;
+const FAMILY_VIEWS = [];                     // "NAME (file) -> rows of FAM" — families by reference, not counted
+const FAMILY_HOMES = new Map();              // family name -> [files defining its rows], relative to bio-plane/
+const FAMILY_CODE_FILE = new Map();          // code -> absolute path of the file that defines its row
 async function dec49Families() {
-  const mod = await import("file://" + CATALOG);
-  return Object.entries(mod)
-    .filter(([k, v]) => /_CHECKS$/.test(k) && v && typeof v === "object" && !Array.isArray(v));
+  const sources = [CATALOG, ...planeSourceFiles().map(f => path.join(PLANE_SRC, f))
+    .filter(abs => EXPORTS_A_FAMILY.test(fs.readFileSync(abs, "utf8")))
+    /* a file DEFINING a family (`export const X_CHECKS`) before one re-exporting it, so a row's home is its definer */
+    .sort((a, b) => DEFINES_A_FAMILY.test(fs.readFileSync(b, "utf8")) - DEFINES_A_FAMILY.test(fs.readFileSync(a, "utf8")))];
+  const byName = new Map();                  // name -> { table, objs:Set }
+  const rowHome = new Map();                 // row object -> "FAM.CODE"
+  for (const abs of sources) {
+    let mod;
+    try { mod = await import("file://" + abs); }
+    catch (e) {
+      FAIL(`arm A could not import ${repoPath(REPO, abs)}, which exports a \`*_CHECKS\` name (${e.message.slice(0, 160)}). `
+         + `Its families are unread, so their codes have no rows here and their \`where\`s are judged by nobody.`);
+      continue;
+    }
+    const rel = path.relative(PLANE, abs).split(path.sep).join("/");
+    for (const [k, v] of Object.entries(mod)) {
+      if (!/_CHECKS$/.test(k) || !v || typeof v !== "object" || Array.isArray(v)) continue;
+      const fam = byName.get(k);
+      if (fam && fam.objs.has(v)) continue;                     // the same object, re-exported under its name
+      const entries = Object.entries(v);
+      const own = entries.filter(([, row]) => !(row && typeof row === "object" && rowHome.has(row)));
+      if (!fam && entries.length && own.length === 0) {         // a view: every row is another family's, by reference
+        const of = [...new Set(entries.map(([, row]) => rowHome.get(row).split(".")[0]))];
+        FAMILY_VIEWS.push(`${k} (${rel}) -> ${entries.length} row(s) of ${of.join(", ")} by reference`);
+        continue;
+      }
+      const into = fam || { table: {}, objs: new Set() };
+      if (!fam) { byName.set(k, into); FAMILY_HOMES.set(k, []); }
+      into.objs.add(v);
+      if (own.length) FAMILY_HOMES.get(k).push(rel);
+      for (const [code, row] of own) {
+        if (Object.prototype.hasOwnProperty.call(into.table, code))
+          FAIL(`${k}.${code} is defined TWICE — in ${FAMILY_CODE_FILE.has(code) ? repoPath(REPO, FAMILY_CODE_FILE.get(code)) : "?"} `
+             + `and in ${rel}. One code is one row; two rows are two translations of one condition that will drift.`);
+        into.table[code] = row;
+        if (row && typeof row === "object") rowHome.set(row, `${k}.${code}`);
+        FAMILY_CODE_FILE.set(code, abs);
+      }
+    }
+  }
+  return [...byName].map(([k, { table }]) => [k, table]).sort(([a], [b]) => a.localeCompare(b));
 }
 
 function armA(families) {
-  MEASURE("families", families.length, "DEC-49 families harvested from bio-checks.mjs (the `arm A` line)");
+  MEASURE("families", families.length, "DEC-49 families harvested from bio-checks.mjs and the modules' exports (the `arm A` line)");
   if (families.length < FLOOR.families)
-    FAIL(`only ${families.length} DEC-49 check families found in checks/bio-checks.mjs, floor is `
+    FAIL(`only ${families.length} DEC-49 check families found in checks/bio-checks.mjs and the modules' exports, floor is `
        + `${FLOOR.families}. A family that vanished took its codes' translations with it, and the `
        + `codes did not vanish with it. Harvested by export name matching /_CHECKS$/ — a family `
        + `RENAMED out of that shape is invisible to this guard and reads exactly like a deletion.`);
@@ -1933,7 +1998,8 @@ function armA(families) {
 
   for (const [fam, table] of families) {
     for (const [code, row] of Object.entries(table)) {
-      rows.push({ fam, code, ...row });
+      /* `home`: the file defining the row (T5-12: the catalogue or a module), relative to bio-plane/. */
+      rows.push({ fam, code, ...row, home: path.relative(PLANE, FAMILY_CODE_FILE.get(code) || CATALOG).split(path.sep).join("/") });
 
       if (!CODE_RE.test(code))
         FAIL(`${fam}.${code} is not the shape a wire code has (SCREAMING_SNAKE, 3+ chars). `
@@ -1944,7 +2010,7 @@ function armA(families) {
       if (typeof t !== "string" || !t.trim())
         FAIL(`${fam}.${code} has NO CANNED TRANSLATION. DEC-49: every code a surface can receive has `
            + `a translation, and an untranslated code FAILS THE HARNESS rather than reaching a member. `
-           + `Add a \`translation\` to this row in checks/bio-checks.mjs.`);
+           + `Add a \`translation\` to this row in ${rows[rows.length - 1].home}.`);
       else {
         /* 40 characters is THIS REPOSITORY'S OWN BAR, not one invented here:
            `airun.test.mjs` and `meaningread.test.mjs` both already assert a
@@ -2009,6 +2075,11 @@ function armA(families) {
   NOTE(`arm A: ${families.length} DEC-49 families (${families.map(([k]) => k).join(", ")}), `
      + `${rows.length} rows — floor ${FLOOR.families}/${FLOOR.rows}`
      + `${rows.length > FLOOR.rows ? ` · GREW by ${rows.length - FLOOR.rows} row(s) since the floor was set` : ""}`);
+  /* T5-12: where each family is defined, so a family that moved is visible as moved, not as gone and new. */
+  NOTE(`arm A: HOMES — ${families.map(([k]) => `${k} ${FAMILY_HOMES.get(k).join(" + ")}`)
+     .filter(s => !/ checks\/bio-checks\.mjs$/.test(s)).join(" · ")} (every other family: checks/bio-checks.mjs)`);
+  NOTE(`arm A: VIEWS, read and NOT counted (every row is another family's, by reference) — `
+     + `${FAMILY_VIEWS.join(" · ") || "(none)"}`);
   return rows;
 }
 
@@ -2344,7 +2415,7 @@ function armB(rows, census, surfaceTables, helpers) {
      drift is the entire reason the guard is not optional (REC-43's fence).
      Gated at zero: there is no overlap today and there must not be a first one. */
   const translated = new Map();       // code -> where its translation lives
-  for (const r of rows) translated.set(r.code, `${r.fam}.${r.code} (checks/bio-checks.mjs)`);
+  for (const r of rows) translated.set(r.code, `${r.fam}.${r.code} (${r.home})`);   /* T5-12: the row's own file */
   for (const t of surfaceTables)
     for (const c of t.codes) {
       if (translated.has(c))
@@ -2430,7 +2501,8 @@ function armB(rows, census, surfaceTables, helpers) {
         counted: "harvested for R3, and counted into the reach floor" })),
       { path: repoPath(REPO, APP), what: "app.html", counted: "harvested for R2 (a NAMED path, not discovered)" },
       { path: repoPath(REPO, CATALOG), what: "checks/bio-checks.mjs",
-        counted: "the DEC-49 families, R1 (a NAMED path, not discovered)" },
+        counted: "the catalogue's DEC-49 families, R1 (a NAMED path, not discovered; the modules' families are read "
+          + "from the src files above — T5-12)" },
     ],
     instrument: "this guard's census and reach walks",
     corpus: `bio-plane/src/: ${census.files} file(s), ${census.filesRepro} in the commit`
@@ -3711,7 +3783,10 @@ NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of $
    + `**two different defects, and arm F partitions them by the decision each needs.** `
    + `${census.union.size - ungoverned.length} are translated.`);
 armF(census, translated, reach);
-armG(await import("file://" + CATALOG));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): arm G reads the SAME families arm A harvested (the catalogue and
+   the modules' exports, deduped by name and by identity — see `dec49Families`), handed to the shared census in the
+   catalogue's own shape (`{ NAME_CHECKS: table }`), not the catalogue module alone, which no longer holds them all. */
+armG(Object.fromEntries(families));
 
 /* ============================================================== M0-79, 2026-09-21
    THE SLACK ARM — EVERY RATCHET KEY JUDGED IN THE DIRECTION ITS OWN ARM DOES NOT

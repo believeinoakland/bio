@@ -140,6 +140,13 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the name lookup's builder (`refTermsSql`), `namingPlan`, the
+   REC-77 rule (`isUninformative`) and the candidate ordering (`CORRESPONDENCE_RANK`, `candOrderCmp`,
+   `PARTIAL_BAND`) moved out of store.mjs into `src/entities/index.mjs` (ENTITIES #1, T5-4), as module-level
+   functions and constants. Every source pin below reads store.mjs AND that file, as one text, so a second copy
+   in either is still counted. */
+const ENTITIES = fileURLToPath(new URL("../src/entities/index.mjs", import.meta.url));
+const PLANE_TEXT = () => readFileSync(STORE, "utf8") + "\n" + readFileSync(ENTITIES, "utf8");
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -596,13 +603,16 @@ t("the explained SQL carries the source group, which is the shape the correctnes
 /* THE DRIFT LEVER, asserted STRUCTURALLY: a second builder anywhere in store.mjs
    is a second query nothing explains. A copy that agrees today agrees at zero
    cost, so what is pinned is that there is only ONE. */
-const STORE_SRC = readFileSync(STORE, "utf8");
+const STORE_SRC = PLANE_TEXT();
 t("store.mjs builds this lookup in exactly ONE place — a second copy fails here by count",
   [STORE_SRC.split("GROUP BY t.capture_sha, t.ref, t.src").length - 1,
    STORE_SRC.split("JOIN reading_refs rr ON").length - 1], [1, 1]);
 t("and the read does not spell its own grouping: the ONE builder is what both callers use",
   STORE_SRC.split("EXPLAIN QUERY PLAN").length - 1 >= 1
-  && /readingNamePlan\(terms[\s\S]{0,600}Store\.#refTermsSql/.test(STORE_SRC), true);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `readingNamePlan` is entities' `namingPlan` (R19),
+     which now first takes the profiles' terms when none are given (N4), so the window to its one builder call is
+     wider (708 characters measured, 900 allowed); the builder is the module function `refTermsSql`. */
+  && /namingPlan\(terms[\s\S]{0,900}refTermsSql\(/.test(STORE_SRC), true);
 
 console.log("\n--- fail-closed: no viewer stamp reaches the store = no candidates, never all of them ---");
 const DIRECT_DOC = registerDoc({ capture: { sha256: sha("direct"), encoding: "binary", bytes: 10 },
@@ -792,7 +802,7 @@ t("the discriminator is reach-against-corpus and not a threshold: the withheld n
 /* AND THE 8.1x FIGURE IS NOT IN THE CODE. Nothing the plane ships names 67.5,
    8.3, 8.1 or 41 — a pin on M-4's document would be exactly the hand-carried
    number this project has been bitten by four times on one line count. */
-const STORE_TEXT = readFileSync(STORE, "utf8");
+const STORE_TEXT = PLANE_TEXT();   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): store.mjs and src/entities/index.mjs */
 t("NOTHING IN store.mjs PINS M-4's PERCENTAGES — the discriminator is arithmetic over the corpus in front of it",
   /67\.5|8\.3%|8\.1x|SELECTIVITY_(FLOOR|THRESHOLD|MIN)/.test(STORE_TEXT), false);
 /* THE STRUCTURAL PIN ON THE RULE ITSELF, and it is the arm the "pin it to a
@@ -802,7 +812,9 @@ t("NOTHING IN store.mjs PINS M-4's PERCENTAGES — the discriminator is arithmet
    relative rule from a lucky constant, and only the rule's own TEXT can. That
    is the same reason REC-43's fence needed a structural pin: an identical copy
    agrees at zero cost. */
-const RULE = (STORE_TEXT.match(/static #isUninformative\(reach, corpus\) \{ return ([^;]+); \}/) || [])[1];
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the rule is the module constant `isUninformative` in
+   src/entities/index.mjs, an arrow function; its body is read the same way. */
+const RULE = (STORE_TEXT.match(/const isUninformative = \(reach, corpus\) => ([^;]+);/) || [])[1];
 t("THE RULE IS CORPUS-RELATIVE, PINNED ON ITS OWN TEXT: its whole body names the corpus and carries no threshold literal",
   [RULE, /[0-9]*\.[0-9]+|\b[2-9][0-9]*\b/.test(RULE || "x")],
   ["corpus > 1 && reach >= corpus", false]);
@@ -880,7 +892,7 @@ const RANKED = [...STORE_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.)?#?[A-Z][A-Z_]{2
   .map((m) => m[1]);
 const ORDER_BY = (STORE_TEXT.match(/ORDER BY/g) || []).length;
 const SORTS = (STORE_TEXT.match(/\.sort\(/g) || []).length;
-console.log(`  [corpus] store.mjs · ${STORE_TEXT.split("\n").length} lines · ${SORTS} .sort( sites · ${ORDER_BY} SQL ORDER BY clauses`);
+console.log(`  [corpus] store.mjs + entities/index.mjs · ${STORE_TEXT.split("\n").length} lines · ${SORTS} .sort( sites · ${ORDER_BY} SQL ORDER BY clauses`);
 console.log(`  [reach]  ${RANKED.length} site(s) rank by position in a named constant: ${JSON.stringify(RANKED)}`);
 t("SWEEP GUARD: the detector found something, so a clean verdict below is a reading and not an empty corpus",
   [RANKED.length > 0, SORTS > 0, ORDER_BY > 0], [true, true, true]);
@@ -900,16 +912,21 @@ t("SWEEP GUARD: the detector found something, so a clean verdict below is a read
                            the claim. It keeps its fixed positions for the WHOLE
                            tiers, which `#recognise` grades, and defers to a
                            measurement inside the partial band. */
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the walk reads store.mjs and src/entities/index.mjs; the third
+   ordering is the same constant, now entities' module-level `CORRESPONDENCE_RANK` (was `Store.#CORRESPONDENCE_RANK`). */
 t("the fixed-position orderings in store.mjs are exactly the three that can each answer for themselves",
-  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "Store.#CORRESPONDENCE_RANK", "Store.QUEUE_CLASSES"]);
+  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "CORRESPONDENCE_RANK", "Store.QUEUE_CLASSES"]);
 /* AND THE SWEEP MUST NOT PASS BY CITING ITSELF. The arm above would go on
    passing if this item were reverted, because the constant would still be there
    with the same name. What makes it a finding is that the ONE ordering of
    candidate evidence now consults a measured quantity: revert `#candOrderCmp` to
    position alone and this fails, naming the field it stopped reading. */
 t("and the one that orders EVIDENCE no longer decides on position alone — its comparator reads the measured selectivity",
-  /#candOrderCmp\(x, y\)[\s\S]{0,700}?selectivity/.test(STORE_TEXT)
-  && /#PARTIAL_BAND[\s\S]{0,400}?selectivity\.value/.test(STORE_TEXT), true);
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `candOrderCmp` and `PARTIAL_BAND` are module-level in
+     src/entities/index.mjs (no `#`); PARTIAL_BAND's definition to the comparator's `selectivity.value` measures 490
+     characters there, so its window is 600. */
+  /function candOrderCmp\(x, y\)[\s\S]{0,700}?selectivity/.test(STORE_TEXT)
+  && /PARTIAL_BAND[\s\S]{0,600}?selectivity\.value/.test(STORE_TEXT), true);
 
 await bmf.dispose();
 await mf.dispose();

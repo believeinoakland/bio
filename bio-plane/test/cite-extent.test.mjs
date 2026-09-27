@@ -59,8 +59,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
-import { parseFrontmatter, legExtent, legHasAuthoredExtent, legContentId,
+import { parseFrontmatter, legExtent, legHasAuthoredExtent,
          CONTENT_EXTENT_KINDS, CONTENT_EXTENT_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `legContentId` left the catalogue with content (T5-3,
+   content REPORT 1); its home is src/content/extent.mjs, the grammar's one public face (K138). */
+import { legContentId } from "../src/content/extent.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({

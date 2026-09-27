@@ -197,6 +197,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations and routes re-inlined */
+import { reinlineLayer5 } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes re-inlined */
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -227,7 +228,13 @@ const t = (label, got, want) => {
    denominator lost capture's routes. The corpus is T3's re-inlined store with layer 3's pure delegations re-inlined
    too and capture's routes read as entries of the map (`reinlineLayer3(…, { ops: true })`, `t4-extracted.mjs`, which
    states each substitution); every figure and name below is diffed against the T4 base's print, not re-pinned. */
-const SRC_STORE = reinlineLayer3(inlinedStore(), { ops: true }).text;
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; layers 4 and 5 of T5): nine more modules (calibration, extraction,
+   content, entities, connections, progressions, bias, observation-log, retrieval) left the store behind one-line
+   delegations and spreads of their routes (`...entitiesOps(...)`, `...retrievalRoutes(...)`), so the walk read
+   delegations again. The corpus is T4's with those delegations and routes re-inlined too (`reinlineLayer5(…,
+   { ops: true })`, `t5-extracted.mjs`, which states each substitution), as `bounds.test.mjs`'s; every figure and name
+   below is diffed BY NAME against this suite's print on the T5 opening (64386f16eb), not re-pinned. */
+const SRC_STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own

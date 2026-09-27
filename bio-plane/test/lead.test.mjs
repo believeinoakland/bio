@@ -39,8 +39,12 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
-import { LEAD_CHECKS, LEAD_ID_RE, BUNDLE_ID_RE, leadLegFindings, basisVersionFindings,
+import { LEAD_ID_RE, BUNDLE_ID_RE, leadLegFindings, basisVersionFindings,
          actionBasisFindings } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log, K142 (2)): C-54.2–C-54.10 left the catalogue for
+   observation-log's `LEAD_CHECKS` (`src/observation-log/checks.mjs`); the catalogue's `LEAD_CHECKS` keeps C-54.1
+   alone. This suite reads the lead's own rows, so it reads them where they now live. */
+import { LEAD_CHECKS } from "../src/observation-log/checks.mjs";
 
 const SRC_DIR = process.env.MK4_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");

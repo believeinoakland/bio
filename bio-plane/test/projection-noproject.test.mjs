@@ -245,16 +245,26 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
 {
   const store = readFileSync(SRC("store.mjs"), "latin1");     /* the stray byte: read as bytes */
   const count = (s, needle) => s.split(needle).length - 1;
-  const from = store.indexOf("\n  projection({ bundleId");
-  const to = store.indexOf("\n  #actionDerived(", from);
-  const body = from > 0 && to > from ? store.slice(from, to) : "";
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R5, and its REPORT 11's `registerProjectionDecoration`):
+     `projection()` moved to `src/retrieval/index.mjs`. Its single-bundle arm now carries the REGISTERED decorations
+     (`this.#decorations`, each `d.fn(row, …)`), and the no-project conclusion is the store's registered decoration,
+     which calls the one reader. So the split is taken of retrieval's method, and "the single-bundle arm calls the
+     reader" is asked as its two halves: the arm applies the decorations, and the store's decoration calls
+     `this.#noProjectConclusionOf(` on the inquiry. */
+  const RET = readFileSync(SRC("retrieval/index.mjs"), "latin1");
+  const from = RET.indexOf("\n  projection({ bundleId");
+  const to = RET.indexOf("\n  }\n", from);
+  const body = from > 0 && to > from ? RET.slice(from, to) : "";
   const single = body.slice(0, body.indexOf("IC-24 / REC-59"));
   const list = body.slice(body.indexOf("IC-24 / REC-59"));
+  const decAt = store.indexOf('retrieval.registerProjectionDecoration("legacy-store"');
+  const decoration = decAt < 0 ? "" : store.slice(decAt, store.indexOf("\n    });", decAt));
   t("the projection() source was found and split (else the next arms prove nothing)",
     [body.length > 2000, single.length > 500, list.length > 500, single.includes("if (bundleId)")],
     [true, true, true, true]);
   t("ONE READER: the single-bundle arm calls `this.#noProjectConclusionOf(`",
-    single.includes("this.#noProjectConclusionOf("), true);
+    single.includes("for (const d of this.#decorations)") && single.includes("d.fn(row,")
+      && decoration.includes("this.#noProjectConclusionOf("), true);
   t("ONE READER: exactly ONE definition of the reader in store.mjs",
     count(store, "\n  #noProjectConclusionOf("), 1);
   /* EXACT, not a floor — severedhomes.test.mjs's reason: it is the only
@@ -275,12 +285,17 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
     count(store, "this.#noProjectConclusionOf("), 3);
   /* NAMED FILES, NOT A DIRECTORY WALK (hygiene.test.mjs's walk census): the store
      that holds the reader and the dispatch that could host a copy beside the op. */
-  const srcs = ["store.mjs", "index.mjs"].map((f) => readFileSync(SRC(f), "latin1")).join("\n");
+  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval): retrieval's files join the named ones, since the op's
+     implementation now lives there and a copy beside it would sit there. */
+  const srcs = ["store.mjs", "index.mjs", "retrieval/index.mjs", "retrieval/projection.mjs"]
+    .map((f) => readFileSync(SRC(f), "latin1")).join("\n");
   t("ONE READER: the reader's own tokens occur ONCE across store.mjs and index.mjs (a copy carries them twice)",
     [count(srcs, "relationship_established: false"), count(srcs, "fm.conclusion_claim"),
      count(srcs, "fm.conclusion_version")], [1, 1, 1]);
   t("NEVER ON THE LIST FORM: the list arm neither calls the reader nor names the field",
-    [list.includes("#noProjectConclusionOf"), list.includes("no_project_conclusion")], [false, false]);
+    /* RE-ANCHORED 2026-09-27 (T5-12): and it applies no registered decoration, the route the reader now takes. */
+    [list.includes("#noProjectConclusionOf"), list.includes("no_project_conclusion"), list.includes("#decorations")],
+    [false, false, false]);
 }
 
 /* hygiene.test.mjs's rule: every Miniflare instance is disposed, so the process ends on its own result. */

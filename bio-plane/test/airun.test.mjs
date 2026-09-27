@@ -451,7 +451,10 @@ const KILLED = "RUN-2026-0807-killed";
     state: { queue: ["budget-2025"] },
     consume: { fetches: 7, subsessions: 1 },
     log: [
-      { level: "meaning", subject: "observation:sewer-transfers-finding", state: "NEVER_LOOKED",
+      /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R3, K148): this was NEVER_LOOKED, which R3
+         now refuses at the append as a look at a subject (only a run's terminal rollup may carry it, ARM C1–C3).
+         The arm means three LOOKS made before the death, so this one states a look that found nothing. */
+      { level: "meaning", subject: "observation:sewer-transfers-finding", state: "LOOKED_ABSENT",
         detail: "the framework layer holds no finding about sewer fund transfers; nothing was extracted to derive one from" },
       /* REC-100 (2026-09-18, IC-130): the PRESENT now NAMES what it found —
          C-22.10's `run` carve-out is deleted, so a bare one is refused. That
@@ -490,7 +493,7 @@ const KILLED = "RUN-2026-0807-killed";
   t("ARM K3: the KILLED run's log EXISTS", log.entries.length, 4);
   t("ARM K3b: and the three observations it made before dying SURVIVED (§14b.7)",
     log.entries.filter((e) => !e.terminal).map((e) => e.state),
-    ["NEVER_LOOKED", "PRESENT", "LOOKED_INDETERMINATE"]);
+    ["LOOKED_ABSENT", "PRESENT", "LOOKED_INDETERMINATE"]);   /* RE-ANCHORED 2026-09-27 (T5-12): the fixture's look above */
   t("ARM K4: and its terminal entry NAMES THE BOUND that stopped it",
     terminal.length === 1 ? terminal[0].bound : null, "lease");
   /* The heldMatch discipline, and it is the reason the whole vocabulary exists:

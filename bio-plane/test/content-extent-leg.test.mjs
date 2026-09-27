@@ -31,9 +31,12 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { checkInquiryBasis, basisVersionFindings, checkLegExtentGrammar,
-         legExtent, legHasAuthoredExtent, legContentId, contentIdFor,
+         legExtent, legHasAuthoredExtent, contentIdFor,
          CONTENT_ID_RE, CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KINDS,
          CONTENT_EXTENT_DOCUMENT_ONLY } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `legContentId` left the catalogue with content (T5-3,
+   content REPORT 1); its home is src/content/extent.mjs, the grammar's one public face (K138). */
+import { legContentId } from "../src/content/extent.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({

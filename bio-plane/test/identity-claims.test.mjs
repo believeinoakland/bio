@@ -68,6 +68,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { sweep, wideClaims, methodBodies } from "../scripts/identity-claims.mjs";
 import { moduleSources } from "./extracted-sources.mjs";
+import { reinlineLayer5 } from "./t5-extracted.mjs";
 /* M0-18 — ONE mechanism, imported. The reason this suite needed it is at the
    wide-ledger walk in block 3. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
@@ -97,13 +98,22 @@ const STORE_RAW = readFileSync(SRC("src/store.mjs"), "utf8");
 const PROV_METHODS = methodBodies(moduleSources(["provenance"]));
 const PROV_DELEGATION = /^ {2}(#?[A-Za-z_$][\w$]*)\([^)]*\) \{ return provenanceOf\(this\.ctx\)\.([A-Za-z_$][\w$]*)\([^;]*\); \}$/;
 const REINLINED = [];
-const STORE_SRC = STORE_RAW.split("\n").map((l) => {
+let STORE_SRC = STORE_RAW.split("\n").map((l) => {
   const m = PROV_DELEGATION.exec(l);
   if (!m || !PROV_METHODS.has(m[2])) return l;
   REINLINED.push(`${m[1]} <- provenance.${m[2]}`);
   return PROV_METHODS.get(m[2]).replace(/^( {2}(?:static\s+|async\s+)*)#?[A-Za-z_$][\w$]*/, `$1${m[1]}`);
 }).join("\n");
 console.log(`  T4: ${REINLINED.length} provenance delegations re-inlined for the sweep: ${REINLINED.join(", ")}`);
+/* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): T5's layers 4 and 5 moved more of the store's acts into modules:
+   `transcribe`'s machine fence (C-52.1) to `src/content/` (content REPORT 1), `biasdebtresolve`'s to `src/bias/`
+   (bias REPORT 4), `themedeclare`/`themeplace`'s (C-81.2, C-81.7) to `src/connections/`, and the dispatch map now
+   SPREADS each module's routes (`...biasOps(biasOf(this.ctx), url, body),`). So the store's text is judged with T5's
+   pure delegations and route spreads re-inlined (`t5-extracted.mjs`, the same mechanical substitution as T4's
+   above): each op reads the method the fence now lives in, under the store's name; nothing else changes. */
+const T5_INLINE = reinlineLayer5(STORE_SRC, { ops: true });
+STORE_SRC = T5_INLINE.text;
+console.log(`  T5: ${T5_INLINE.reinlined.length} substitutions for the sweep: ${T5_INLINE.reinlined.join(", ")}`);
 
 let MF;
 const mf = new Miniflare({
