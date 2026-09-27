@@ -22,7 +22,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 **governorReport({host, status, retry_after_ms}) → `{recorded, …}`**
 - **R7** With no `host`, returns `{recorded: false}` and writes nothing.
 - **R8** `status` 200–399: resets the host's consecutive refusals to 0 and returns `{recorded: true, refusals: 0}`. It does not shorten a cool-off.
-- **R9** `status` 429, 403 or 503: adds one to the host's consecutive refusals (n), records `last_refusal_at` and `last_refusal_status`, and sets the cool-off to end at now + max(min(cap, base × 2^(n−1)), `retry_after_ms`), where base/cap are 60 s / 1 h for 429 and 30 s / 30 min for 403 and 503. A counterparty's `Retry-After` is honoured when longer than the escalation, never when shorter. Returns `{recorded: true, refusals: n, cooloff_until, cooloff_ms}`.
+- **R9** `status` 429, 403 or 503: adds one to the host's consecutive refusals (n), records `last_refusal_at` and `last_refusal_status`, and sets the cool-off to end at the later of the cool-off already standing and now + max(min(cap, base × 2^(n−1)), `retry_after_ms`) (R21: no outcome shortens a cool-off; K122), where base/cap are 60 s / 1 h for 429 and 30 s / 30 min for 403 and 503. A counterparty's `Retry-After` is honoured when longer than the escalation, never when shorter. Returns `{recorded: true, refusals: n, cooloff_until, cooloff_ms}`.
 - **R10** Any other `status` (404, 500, and 0 for a fetch that produced no response) changes nothing and returns `{recorded: true, ignored: status}`: it is an outcome for monitoring, not a capacity signal.
 - Errors: never throws on its own logic.
 

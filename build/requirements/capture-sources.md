@@ -17,7 +17,7 @@ The source-specific halves of capture that decide what a fetch from a particular
 - **R2** `RENDER_TICK_UNDETERMINED` = "content undetermined — not watched: this source renders its content in the browser" and `RENDER_INCOMPLETE_READING` = "render may be incomplete (wait timed out)": the one copy of each sentence, which the record, the provenance assertion and the monitor read.
 
 **renderLocaleFor(view) → string**
-- **R54** The locale a render asks for: the one the instance's active jurisdiction profiles name (`view`, `jurisdictions.combine`'s view, passed by the caller), else `RENDER_DEFAULTS.locale`. Never throws. *(not yet met: K48 — every render asks "en-US"; the profiles name no locale yet)*
+- **R54** The locale a render asks for: the one the instance's active jurisdiction profiles name (`view`, `jurisdictions.combine`'s view, passed by the caller), else `RENDER_DEFAULTS.locale`: the view's `locale.value` when it is a well-formed BCP 47 tag (a `{value, basis}` key, as `practice.minutes_due_days` is), else the fallback. Never throws (K119). *(not yet met: K48 — every render asks "en-US"; the profiles name no locale yet)*
 
 **waitFiredClass(fired, askedWait) → "condition" | "settled" | "timeout" | "undetermined"**
 - **R3** Of `fired` trimmed and lowercased: "timeout" when it matches `/timed?[ _-]?out|timeout/` (e.g. "timeout", "timed out", "time-out"); "settled" when it is "quiet_excluding_long_lived" (R26); "condition" when it equals `askedWait.until` (trimmed, lowercased); "undetermined" otherwise, including a non-string or empty `fired` and a word never seen. Never throws. *(not yet met: D-570, K48 — the "settled" class)*
