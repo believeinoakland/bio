@@ -136,3 +136,8 @@ None is unmet.
 - `node checks/ownership.mjs /home/user/bio promotion tranche/T5`: `ownership: 3 files changed by promotion between tranche/T5 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 0 line(s) added, 0 removed; 0 failures`
 
 Size: test runs 12, module lines 2048
+
+## Message to BOB not delivered (for BOB's backstop check, mechanics §5, §13)
+
+- **COMPLETE could not be sent**, 2026-09-27 08:37 UTC: `create_trigger` into BOB #46 (`session_01Q3WyZBMy4MH1Acpgtw9awA`) was refused with `caller session is at lineage depth 8 (limit 8); cannot spawn or re-arm further child sessions`. That is a platform limit on this session, not a permission prompt Bob could approve here (§16), so there is no workaround: this record, pushed, is the COMPLETE. Its content is the "PROMOTION #4" section above.
+- **REPORT, process (mechanics §2, "Session depth stays minimal"):** each BOB successor is recorded as its predecessor's child, so the lineage grows by one per BOB. BOB #46 sits at depth 7, and its jobs sit at the limit (8). Consequences: (a) a job at depth 8 cannot reach BOB through the §13 channel at all; (b) a BOB #47 started by BOB #46 with `create_session` would be at depth 8, and could neither start jobs nor send a routine. BOB can reach this session (a routine from depth 7 into it); a CHANGE still re-opens this job.
