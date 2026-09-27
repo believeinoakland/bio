@@ -1317,9 +1317,7 @@ function sectionText(body, heading) {
   return body.slice(idx, next === -1 ? void 0 : next);
 }
 var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", "accelerator", "apps-script", "system", "agent", "ai"];
-var CAPTURE_GRADES = ["A", "B", "C"];
 var ACTOR_CLASSES = ["daemon", "session", "member"];
-var ORIGIN_KINDS = ["named_request", "sweep", "member"];
 var MACHINE_AUTHOR_PREFIX = "token:";
 var MACHINE_CLASS_PREFIX = "class:";
 var MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
@@ -1368,187 +1366,6 @@ function contentMintState(mintedBy) {
 }
 function isMachineMinted(mintedBy) {
   return contentMintState(mintedBy) === "machine_marked";
-}
-function checkAuthorityPublishable(ctx, findings) {
-  const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
-  const atFence = ctx.fm?.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
-  if (!atFence) return;
-  const raw = ctx.files.get("data/provenance.json");
-  if (!raw) return;
-  let reg;
-  try {
-    reg = JSON.parse(asText(raw));
-  } catch {
-    return;
-  }
-  const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
-  docs.forEach((d, i) => {
-    if (!d || typeof d !== "object") return;
-    const chain2 = d.provenance_chain;
-    if (!("provenance_chain" in d)) {
-      findings.push(f(
-        "C-18.9",
-        "error",
-        `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
-        [
-          "record the chain of custody for this capture, one hop per party, from us back to the source",
-          "or, where the capture record already holds the route, derive it from that evidence with op=provenancechain"
-        ],
-        /* REC-56 / D-206: the codes REC-54's three findings needed to reach a
-           reader through the TALLY and not only through the bounded offender
-           sample. One per arm, and they are the three facts in the comment
-           above in the order it states them. */
-        "chain-absent"
-      ));
-    } else if (!Array.isArray(chain2)) {
-      findings.push(f(
-        "C-18.9",
-        "error",
-        `provenance documents[${i}] is at or past verified and its provenance_chain is ${chain2 === null ? "null" : typeof chain2}, not an array of hops: whatever wrote this did not write a chain`,
-        ["record the chain of custody as an array of hops, one per party, from us back to the source"],
-        "chain-not-an-array"
-      ));
-    } else if (chain2.length === 0) {
-      findings.push(f(
-        "C-18.9",
-        "error",
-        `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
-        [
-          "name the parties that actually served these bytes, one hop each",
-          "or state plainly that the route is undetermined rather than leaving an empty chain standing at verified"
-        ],
-        "chain-empty"
-      ));
-    } else {
-      chain2.forEach((hop, h) => {
-        if (!hop || typeof hop !== "object" || typeof hop.who !== "string" || hop.who.trim() === "") {
-          findings.push(f(
-            "C-18.9",
-            "error",
-            `provenance documents[${i}].provenance_chain[${h}] names no attestor: an unattributed hop cannot support the claim a published hash makes`,
-            ["name the party that served these bytes at this hop", "or remove the hop if it did not happen"]
-          ));
-        }
-      });
-    }
-    if (d.authority_state === "undetermined") {
-      const basis = d.authority_basis;
-      if (typeof basis !== "string" || basis.trim() === "") {
-        findings.push(f(
-          "C-18.9",
-          "error",
-          `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
-          [
-            "record a dated authority_basis saying what was tried and what it established",
-            "or determine the authority through the task list and record the determination"
-          ]
-        ));
-      }
-    } else if (d.authority_state === "determined" && (typeof d.authority !== "string" || d.authority.trim() === "")) {
-      findings.push(f(
-        "C-18.9",
-        "error",
-        `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
-        ["name the issuing party", "or correct authority_state to 'undetermined' with a dated basis"]
-      ));
-    }
-  });
-}
-function checkReleaseAuthority(ctx, findings) {
-  if (ctx.fm?.object_type !== "information") return;
-  const raw = ctx.files.get("data/provenance.json");
-  if (!raw) return;
-  let reg;
-  try {
-    reg = JSON.parse(asText(raw));
-  } catch {
-    return;
-  }
-  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
-  if (!docs) {
-    findings.push(f("C-18.1", "error", 'data/provenance.json must be {"documents": [...]} (the intake provenance register)'));
-    return;
-  }
-  let sweepOrigin = false;
-  docs.forEach((d, i) => {
-    if (!d || typeof d !== "object") {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] is not an object`));
-      return;
-    }
-    for (const k of ["file", "locator", "retrieved"]) {
-      if (!d[k]) findings.push(f("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
-    }
-    const aState = d.authority_state;
-    if (aState !== void 0 && !["determined", "undetermined"].includes(aState)) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
-    }
-    if (aState === "undetermined") {
-      if (!d.authority_basis) findings.push(f("C-18.1", "error", `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
-    } else if (!d.authority) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
-    }
-    if (aState === "determined" && !d.authority_basis) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
-    }
-    if (d.file && !hasFile_(ctx, String(d.file)) && !Array.isArray(d.parts)) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
-    }
-    const cap = d.capture;
-    if (!cap || typeof cap !== "object") findings.push(f("C-18.1", "error", `provenance documents[${i}] missing capture block`));
-    else {
-      if (!cap.method) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
-      if (d.authored === true) {
-        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
-        if (cap.actor_class !== "member") findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
-      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
-      if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
-    }
-    const or = d.origin;
-    if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
-    }
-    if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
-    } else if (or.kind === "sweep") {
-      sweepOrigin = true;
-      if (!or.matched_sweep) findings.push(f("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
-      if (!or.deeming_actor) findings.push(f("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
-    }
-  });
-  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
-  const releases = hist.filter((e) => e && e.from_state === "collected" && e.to_state === "verified");
-  for (const e of releases) {
-    const a = String(e.author || "").toLowerCase();
-    if (!a || isMachineIdentity(a)) {
-      findings.push(f(
-        "C-18.1",
-        "error",
-        `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
-        [
-          "retire this bundle with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is",
-          "or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform",
-          "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one"
-        ]
-      ));
-    }
-  }
-  const everVerified = ctx.fm.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
-  const memberRelease = releases.some((e) => {
-    const a = String(e.author || "").toLowerCase();
-    return a && !isMachineIdentity(a);
-  });
-  if (sweepOrigin && everVerified && !memberRelease) {
-    findings.push(f(
-      "C-18.1",
-      "error",
-      "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
-      [
-        "retire this bundle with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands",
-        "or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a bundle already at verified, so the ratification cannot be re-made in place",
-        "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine"
-      ]
-    ));
-  }
 }
 function latestHistorySnapshot(ctx) {
   const snaps = [...ctx.files.keys()].filter((p) => /^_history\/bundle_.*\.md$/.test(p)).sort();
@@ -3526,66 +3343,7 @@ var GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 var CRITICALITY_ENUM = ["crucial", "supporting"];
 var CADENCE_ENUM = ["hourly", "daily", "weekly", "monthly", "none"];
 var GATH_STATUS_ENUM = ["open", "captured", "retired"];
-function checkRegisterIntegrity(ctx, findings) {
-  if (ctx.fm?.object_type !== "information") return;
-  const raw = ctx.files.get("data/provenance.json");
-  if (!raw) return;
-  let reg;
-  try {
-    reg = JSON.parse(asText(raw));
-  } catch {
-    return;
-  }
-  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
-  if (!docs) return;
-  const byHash = {};
-  const byEvid = {};
-  for (let i = 0; i < docs.length; i++) {
-    const h = docs[i] && docs[i].capture && docs[i].capture.sha256;
-    if (h) (byHash[h] = byHash[h] || []).push(i);
-    const dg = docs[i] && docs[i].profile && docs[i].profile.digests;
-    if (dg && dg.determined === true && typeof dg.evidentiary === "string")
-      (byEvid[dg.evidentiary] = byEvid[dg.evidentiary] || []).push(i);
-  }
-  for (const h of Object.keys(byHash)) {
-    if (byHash[h].length > 1) {
-      findings.push(f(
-        "C-18.3",
-        "error",
-        `capture hash ${h.slice(0, 16)}\u2026 appears in ${byHash[h].length} register documents (indices ${byHash[h].join(", ")}); identical content is corroboration on one entry, never duplicate review items`,
-        ["fold the duplicates into corroborations[] on the earliest entry", "if the captures genuinely differ, correct the recorded hashes"]
-      ));
-    }
-  }
-  for (const e of Object.keys(byEvid)) {
-    const idx = byEvid[e];
-    if (idx.length < 2) continue;
-    const rawShas = new Set(idx.map((i) => docs[i] && docs[i].capture && docs[i].capture.sha256).filter(Boolean));
-    if (rawShas.size < 2) continue;
-    findings.push(f(
-      "C-18.3",
-      "error",
-      `${idx.length} register documents (indices ${idx.join(", ")}) share the evidentiary digest ${e.slice(0, 16)}\u2026 but differ in raw bytes; the substance is identical and only per-render machinery or furniture differs \u2014 corroboration on one entry, never duplicate review items`,
-      ["fold the duplicates into corroborations[] on the earliest entry", "if the substance genuinely differs the normalisation is wrong \u2014 correct the handler"]
-    ));
-  }
-  if (ctx.fm.criticality === "crucial") {
-    for (let i = 0; i < docs.length; i++) {
-      const d = docs[i];
-      if (!d || typeof d !== "object") continue;
-      if (!d.co_archive && !d.timestamp) {
-        findings.push(f(
-          "C-18.4",
-          "warn",
-          `crucial-criticality document[${i}] (${d.file || "?"}) carries neither co_archive nor timestamp; a reviewing member must verify co-attestation before release (F4)`,
-          ["attach a co-archive or trusted timestamp", "record the verified provenance in Review Notes at ratification"]
-        ));
-      }
-    }
-  }
-}
 var CAPTURE_ENCODINGS = ["utf8", "base64", "binary"];
-var HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var RAW_SHA_RE = /^[0-9a-f]{64}$/;
 function b64ToBytes(s) {
   const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -3778,7 +3536,6 @@ async function checkInfo2Contract(ctx, findings) {
   if (ctx.fm?.object_type !== "information" || ctx.fm?.schema !== "information@2") return;
   const raw = ctx.files.get("data/provenance.json");
   if (!raw) {
-    findings.push(f("C-18.1", "error", "information@2 requires data/provenance.json: the schema bump makes the intake provenance register mandatory"));
     return;
   }
   let reg;
@@ -3789,112 +3546,6 @@ async function checkInfo2Contract(ctx, findings) {
   }
   const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
   if (!docs) return;
-  for (let i = 0; i < docs.length; i++) {
-    const d = docs[i];
-    if (!d || typeof d !== "object") continue;
-    const cap = d.capture && typeof d.capture === "object" ? d.capture : {};
-    if (!CAPTURE_ENCODINGS.includes(cap.encoding)) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.encoding '${cap.encoding}' is not one of: ${CAPTURE_ENCODINGS.join(", ")} (@2)`));
-    }
-    const or = d.origin && typeof d.origin === "object" ? d.origin : {};
-    if (or.kind === "member") {
-      if (cap.actor_class !== "member") {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin capture must record actor_class 'member' (@2)`));
-      }
-      const c = d.custody;
-      if (!c || typeof c !== "object") {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin document missing custody block {holder, obtained, setting, attestation} (doctrine 3a) (@2)`));
-      } else {
-        for (const k of ["holder", "setting", "attestation"]) {
-          if (!c[k]) findings.push(f("C-18.1", "error", `provenance documents[${i}].custody missing '${k}' (@2)`));
-        }
-        if (!HIST_TS_RE.test(c.obtained || "")) {
-          findings.push(f("C-18.1", "error", `provenance documents[${i}].custody.obtained '${c.obtained}' is not YYYY-MM-DDTHH:MM:SSZ (@2)`));
-        }
-      }
-      if (d.attestation_attempts === void 0) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}]: member-origin document missing attestation_attempts; the 7.7 asymmetry is recorded honestly, attempted false with the reason in note (@2)`));
-      }
-    }
-    if (d.attestation_attempts !== void 0) {
-      if (!Array.isArray(d.attestation_attempts)) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}].attestation_attempts must be an array (@2)`));
-      } else {
-        d.attestation_attempts.forEach((a, j) => {
-          if (!a || typeof a !== "object" || !a.service || typeof a.attempted !== "boolean" || typeof a.ok !== "boolean") {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].attestation_attempts[${j}] lacks the {service, attempted, ok} shape (@2)`));
-          }
-        });
-      }
-    }
-    if (d.parts !== void 0) {
-      if (!Array.isArray(d.parts) || !d.parts.length) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}].parts must be a nonempty array (@2)`));
-      } else {
-        if (!RAW_SHA_RE.test(cap.sha256 || "")) {
-          findings.push(f("C-18.1", "error", `provenance documents[${i}]: parts require capture.sha256 over the reassembled whole (@2)`));
-        }
-        d.parts.forEach((p, j) => {
-          if (!p || typeof p !== "object" || !p.file || !RAW_SHA_RE.test(p.sha256 || "") || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
-          } else if (!hasFile_(ctx, String(p.file))) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
-          }
-        });
-      }
-    }
-    if (d.derived !== void 0) {
-      const dv = d.derived;
-      const shapeOk = dv && typeof dv === "object" && dv.transform && dv.reason && (dv.from_file || dv.from_ref);
-      if (!shapeOk) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
-      } else if (dv.from_file && !hasFile_(ctx, String(dv.from_file))) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
-      }
-    }
-    if (d.renditions !== void 0) {
-      if (!Array.isArray(d.renditions)) {
-        findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions must be an array (@2)`));
-      } else {
-        d.renditions.forEach((r, j) => {
-          if (!r || typeof r !== "object" || !r.file || !RAW_SHA_RE.test(r.sha256 || "") || !r.transform || !r.reason || !r.from_file) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] lacks the {file, sha256, transform, reason, from_file} shape: a derived artifact must say what was done to it, why, and what it was made from (@2)`));
-            return;
-          }
-          if (!hasFile_(ctx, String(r.file))) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
-          }
-          if (!hasFile_(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
-          }
-          if (r.sha256 === cap?.sha256) {
-            findings.push(f("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
-          }
-        });
-      }
-    }
-  }
-  if (reg.releases !== void 0) {
-    if (!Array.isArray(reg.releases)) {
-      findings.push(f("C-18.1", "error", "provenance releases must be an array (@2)"));
-    } else {
-      reg.releases.forEach((r, i) => {
-        if (!r || typeof r !== "object" || !HIST_TS_RE.test(r.transition || "") || !r.author) {
-          findings.push(f("C-18.1", "error", `provenance releases[${i}] lacks the {transition, author} shape (@2)`));
-          return;
-        }
-        if (r.signature_file) {
-          if (!hasFile_(ctx, String(r.signature_file))) {
-            findings.push(f("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
-          }
-          if (!r.signer) findings.push(f("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
-          if (r.namespace !== "bio-release") {
-            findings.push(f("C-18.1", "error", `provenance releases[${i}].namespace '${r.namespace}' must be 'bio-release' (ssh-keygen -Y namespace discipline) (@2)`));
-          }
-        }
-      });
-    }
-  }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
   const rels = Array.isArray(reg.releases) ? reg.releases : [];
   for (const e of hist) {
@@ -4262,9 +3913,6 @@ async function checkBundle(input, opts = {}) {
     checkStateLegality(ctx, findings);
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
-    checkReleaseAuthority(ctx, findings);
-    checkAuthorityPublishable(ctx, findings);
-    checkRegisterIntegrity(ctx, findings);
     await checkInfo2Contract(ctx, findings);
     checkGatheringGrammar(ctx, findings);
     checkInboxGrammar(ctx, findings);
@@ -10443,9 +10091,9 @@ var RecordCore = class _RecordCore {
         written = [];
       }
       if (!Array.isArray(written)) written = [];
-      const writtenPairs = written.map((f3) => typeof f3 === "string" ? { name: f3, sha256: null } : f3);
-      const files = writtenPairs.map((f3) => f3.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f3) => f3.name);
+      const writtenPairs = written.map((f4) => typeof f4 === "string" ? { name: f4, sha256: null } : f4);
+      const files = writtenPairs.map((f4) => f4.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f4) => f4.name);
       entries.push({
         key: r.snap_key,
         seq: ++seq,
@@ -10597,22 +10245,22 @@ var RecordCore = class _RecordCore {
         base,
         author,
         now,
-        JSON.stringify(files.map((f3) => ({ name: f3.path, sha256: f3.sha256 }))),
+        JSON.stringify(files.map((f4) => ({ name: f4.path, sha256: f4.sha256 }))),
         writer,
         operation
       );
       this.#sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f3 of files)
+      for (const f4 of files)
         this.#sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f3.path,
-          f3.text ?? null,
-          f3.blobSha ?? null,
-          f3.bytes ?? (typeof f3.text === "string" ? te.encode(f3.text).length : 0),
-          f3.sha256
+          f4.path,
+          f4.text ?? null,
+          f4.blobSha ?? null,
+          f4.bytes ?? (typeof f4.text === "string" ? te.encode(f4.text).length : 0),
+          f4.sha256
         );
-      const bundleSha = (files.find((f3) => f3.path === "bundle.md") || files[0] || {}).sha256 ?? "";
+      const bundleSha = (files.find((f4) => f4.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [
         ["current_state", state],
         ["prior_state", priorState],
@@ -10691,7 +10339,7 @@ var RecordCore = class _RecordCore {
         resolveTarget: (t) => known.has(t),
         ...typeof context === "function" ? context(id) || {} : {}
       });
-      const errs = findings.filter((f3) => f3.severity === "error");
+      const errs = findings.filter((f4) => f4.severity === "error");
       if (!errs.length) {
         clean++;
         continue;
@@ -10832,22 +10480,8 @@ var RecordCore = class _RecordCore {
   }
 };
 
-// src/schema.mjs
-var SCHEMA = `-- BIO store schema, draft 1, derived from the real bundle.md frontmatter and
--- _history/manifest.json shapes in tree 0.1.94. The bundle format is
--- authoritative; this is a projection of it and must never bend it.
-
-${RECORD_SCHEMA}
-
--- References extracted from frontmatter, so C-6.2 is a join rather than a scan.
-CREATE TABLE IF NOT EXISTS refs (
-  bundle_id TEXT NOT NULL,
-  target_id TEXT NOT NULL,
-  kind      TEXT NOT NULL DEFAULT '',
-  PRIMARY KEY (bundle_id, target_id, kind)
-);
-CREATE INDEX IF NOT EXISTS refs_target ON refs(target_id);
-
+// src/provenance/schema.mjs
+var PROVENANCE_SCHEMA = `
 -- The register: the trust root. capture_sha is the only thing that proves bytes.
 CREATE TABLE IF NOT EXISTS register (
   capture_sha TEXT PRIMARY KEY,
@@ -10872,6 +10506,255 @@ CREATE TABLE IF NOT EXISTS register (
   observed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
+
+-- Which ADDRESSES the record has captured, and when. The register is keyed by
+-- capture hash and carries no locator, so nothing could answer "does the store
+-- hold a capture of https://..." without this. One row per (address, capture),
+-- because the point is precisely that an address is captured repeatedly over
+-- time and the versions are what a contemporaneity verdict compares.
+-- One row per (address, DISTINCT BYTES), carrying the INTERVAL over which those
+-- bytes were seen served rather than a single date. That interval is the whole
+-- point: identical bytes observed on both sides of another document's retrieval
+-- prove the target did not change across it, which settles contemporaneity
+-- outright and needs no timestamp from the source that anyone has to trust. A
+-- first draft keyed rows by (address, sha) and kept only the earliest date,
+-- which threw away exactly the evidence the verdict is built on.
+-- D-96: via names the SOURCE of an observation, because once an alternative
+-- source counts as a re-fetch for monitoring (RULED, AUTHORITY-AND-TRUST.md),
+-- archive bytes and live bytes must never be compared as one observation
+-- stream. Two sources agreeing is STRONGER evidence than one source repeating;
+-- two sources disagreeing is not evidence of change at all. The bracket arm
+-- cannot tell those apart without knowing which is which, so via is part of
+-- the KEY: an archive observation of the same bytes is a different fact from a
+-- direct one, not a repeat of it.
+--
+-- The address columns carry the DOCUMENT ADDRESS, the address the record
+-- reasons about; retrieval_locator carries what was actually fetched. For an
+-- archive capture the document address is the CDX original field through our own
+-- normaliser and the retrieval locator is the archive's replay address, and
+-- conflating them is how a provenance difference gets reported as a change.
+--
+-- CORRECTED 2026-09-14 BY CAP-8, AND THE OLD SENTENCE IS SAID RATHER THAN
+-- DELETED. This read "For a direct capture they are the same string", and that
+-- was true of every capture the plane could make until Bob ruled that a link to
+-- a Google Drive file KEEPS THE LINK while the harvest is the OpenDocument
+-- export. A Drive capture is via 'direct' -- we asked Google and Google answered
+-- us, with nobody in between -- and its two addresses differ anyway: the address
+-- columns hold the Drive link the source page carried, and retrieval_locator
+-- holds the export address the plane composed from the file id and the kind.
+-- So via no longer tells a reader whether the two are equal, and a reader that
+-- wants the document address must read it here rather than infer it. IC-85.
+CREATE TABLE IF NOT EXISTS captured_locators (
+  address_norm      TEXT NOT NULL,
+  address           TEXT NOT NULL,
+  capture_sha       TEXT NOT NULL,
+  via               TEXT NOT NULL DEFAULT 'direct',
+  retrieval_locator TEXT,
+  first_retrieved   TEXT NOT NULL,
+  last_retrieved    TEXT NOT NULL,
+  observations      INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (address_norm, capture_sha, via)
+);
+CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
+CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
+
+-- REC-63 / DEC-56 / D-204: THE STANDING MARKER. When a document's provenance
+-- ROUTE cannot be shown, the record carries that fact BESIDE the state rather
+-- than un-saying the verification. Bob ruled the principle across DEC-56/57/58
+-- on 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.
+--
+-- WHY A ROW HERE AND NOT A FIELD IN THE BUNDLE'S OWN BYTES, which is the first
+-- question a reader will ask. Writing the marker into data/provenance.json
+-- would change the bundle_sha of a VERIFIED document, so the doubt about the
+-- bytes would alter the bytes -- and it would be a second claim nobody made,
+-- which is the same reasoning provenanceChainRebuild already gives for leaving
+-- bundle.md alone. The marker is a statement by THIS INSTANCE about its own
+-- evidence, so it lives where the instance's other statements live.
+--
+-- APPEND-ONLY, AND THAT IS DEC-19. Correction moves FORWARD: a route later
+-- shown is a NEW row saying so, never a delete of the row that said it could
+-- not be. The current finding is the row with the highest 'seq' for a bundle,
+-- and the ones before it stay readable.
+--
+-- 'finding' IS D-129's VOCABULARY, taken from airun.mjs's OBSERVATION_STATES
+-- rather than invented here, because this record already has words for which
+-- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
+-- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
+-- PRESENT is an assessment that found the route showable. LOOKED_ABSENT is
+-- deliberately unreachable here: it would assert the bytes have no route, and
+-- every captured byte came from somewhere -- what we cannot show is OUR
+-- EVIDENCE of it, which is a statement about us.
+--
+-- 'state_at' RECORDS THE STATE THE DOCUMENT SAT IN WHEN THE MARKER WAS MADE,
+-- because the marker's whole point is that the state STANDS while the doubt is
+-- carried: a reader of the history has to be able to see that the two disagreed
+-- ON PURPOSE and that nothing moved the document.
+CREATE TABLE IF NOT EXISTS provenance_route_marks (
+  bundle_id      TEXT    NOT NULL,
+  seq            INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the current finding
+  at             TEXT    NOT NULL,
+  by             TEXT    NOT NULL, -- the MEMBER who made the assessment. Never a machine
+  finding        TEXT    NOT NULL, -- LOOKED_INDETERMINATE (the marker) | PRESENT
+  state_at       TEXT    NOT NULL, -- current_state at the moment of marking
+  register_state TEXT    NOT NULL, -- readable | absent | unparsable | no_documents | empty
+  undetermined   INTEGER NOT NULL, -- documents whose route could not be shown
+  documents_n    INTEGER NOT NULL, -- documents the register named at all
+  documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
+  PRIMARY KEY (bundle_id, seq)
+);
+-- =========================================================================
+-- REC-112, 2026-09-17 -- THIS INDEX HAS NO READER, AND IT IS KEPT ON PURPOSE.
+--
+-- WHAT IT WAITS FOR: a READ op answering the question no op asks --
+-- "which documents in this instance carry a standing LOOKED_INDETERMINATE
+-- marker". All four SQL readers of this table key on bundle_id and seq and
+-- classify in JS, so a group asking where its own record's provenance is
+-- doubted must page the whole store and count for itself. The route act is
+-- registered mutating:true in index.mjs -- a WRITE. There is no read.
+--
+-- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
+-- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
+-- ANALYZE, which is this plane's live condition because nothing here ever
+-- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
+--   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
+--                                    none touches this index, and DROPPING it
+--                                    leaves all four plans IDENTICAL
+--   finding = ?                   -- SEARCH USING INDEX (finding=?)
+--   finding = ? AND bundle_id > ? -- SEARCH USING INDEX (finding=? AND
+--                                    bundle_id>?) -- BOTH columns, which is
+--                                    this plane's after-cursor paging shape
+--   COUNT over finding = ?        -- COVERING INDEX
+-- The second column is therefore not decoration: whoever declared this knew
+-- the intended reader's PAGING shape. That is evidence of a SPECIFIC reader
+-- rather than a speculative index, and it is why the act was to row the
+-- reader rather than to delete the declaration.
+--
+-- DELETING IT WAS CONSIDERED AND REFUSED. REC-92 withdrew a chain_kind index
+-- a few hundred lines down on REC-12's rule -- an index nobody seeks on is
+-- cost with no reader -- but that precedent governs ADDING one, not removing
+-- one a dated delegation has pointed at for 39 days. Removing this would take
+-- the airuns sweep's unread roster DOWN by one for a reason that is not the
+-- plane getting better, which is the one direction that ratchet must never
+-- move, and it would delete the very artifact that made the sweep find this
+-- owed act at all. The write cost is one row per member assessment, on an
+-- append-only table a member writes by hand.
+--
+-- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
+-- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
+-- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
+-- 2026-09-16, airuns.test.mjs carries it on the unread roster AND pins it BY
+-- NAME, and the declaration is here.
+--
+-- DO NOT REFLOW THE TWO LINES BELOW. test/nc-rec69-selects.mjs patches them as
+-- EXACT STRING LITERALS to arm two negative controls, so a whitespace change
+-- makes those arms match zero times and PASS while testing nothing.
+-- =========================================================================
+CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
+  ON provenance_route_marks(finding, bundle_id);
+
+-- REC-225 (Content Framework v0.10 section 8.3; R29, R30): A MEMBER'S DECLARATION OF THE SYSTEM A
+-- DOCUMENT CAME FROM. A host serves many offices, so a host is not an origin: the office a document
+-- came from is a member's attributed statement, per document, dated, append-only; the row with the
+-- highest seq for a bundle is the standing declaration, and the ones before it stay readable.
+CREATE TABLE IF NOT EXISTS origin_declarations (
+  bundle_id TEXT    NOT NULL,
+  seq       INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the standing declaration
+  system    TEXT    NOT NULL, -- the system the member says the document came from
+  by        TEXT    NOT NULL, -- the member who declared it. Never a machine
+  at        TEXT    NOT NULL, -- this module's clock at the declaration
+  PRIMARY KEY (bundle_id, seq)
+);
+
+-- K59 (R34): THE INSTANCE'S OWN SIGNED RECEIPTS FOR ARCHIVE-SOURCED CAPTURES, and the public keys that
+-- signed them. One signing key per instance, held as a secret and replaceable by the operator; each
+-- public key the instance ever signed with is kept here, so a receipt signed before a replacement
+-- stays verifiable against the key it was signed with. key_id is the SHA-256 of the raw public key.
+CREATE TABLE IF NOT EXISTS receipt_keys (
+  key_id     TEXT PRIMARY KEY,
+  public_key TEXT NOT NULL, -- the raw Ed25519 public key, base64
+  first_used TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS signed_receipts (
+  capture_sha       TEXT NOT NULL,
+  retrieval_locator TEXT NOT NULL,
+  retrieved         TEXT NOT NULL,
+  statement         TEXT NOT NULL, -- the exact bytes signed (UTF-8)
+  signature         TEXT NOT NULL, -- Ed25519 over the statement, base64
+  key_id            TEXT NOT NULL,
+  signed_at         TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, retrieval_locator, retrieved)
+);
+`;
+var REGISTER_ADDITIVE = [
+  ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
+  ["register", "author", "TEXT"],
+  ["register", "observed_at", "TEXT"]
+];
+function migrateProvenance(sql) {
+  const cols = (t) => [...sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
+  const cl = cols("captured_locators");
+  if (cl.length && !cl.includes("via")) sql.exec(`DROP TABLE captured_locators`);
+  for (const [t, c, decl] of REGISTER_ADDITIVE) {
+    const have = cols(t);
+    if (have.length && !have.includes(c)) sql.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${decl}`);
+  }
+  const bare = PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare.split(";")) {
+    const t = s.trim();
+    if (t) sql.exec(t);
+  }
+}
+
+// src/host-governor/schema.mjs
+var HOST_GOVERNOR_SCHEMA = `
+-- D-95: the per-host request governor. Our APPETITE is a configured constant
+-- because it is ours; their CAPACITY is discovered by being refused and
+-- recorded, following the pattern capture_limits proved for the subrequest
+-- ceiling. It lives in the Durable Object because the object serialises, which
+-- makes one token bucket globally correct for the instance for free; a bucket
+-- in Worker memory governs nothing because every invocation is independent.
+-- appetite_per_min NULL means the configured default (a CHOSEN constant,
+-- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
+-- a refusal overrides the bucket entirely: while it is in the future, no token
+-- balance admits anything to that host. refusals counts CONSECUTIVE refusals
+-- and decays to zero on success, so the cool-off escalates the way the
+-- counterparty's own escalation does and resets when they relent.
+CREATE TABLE IF NOT EXISTS host_governor (
+  host                TEXT PRIMARY KEY,
+  appetite_per_min    REAL,
+  tokens              REAL    NOT NULL DEFAULT 0,
+  refilled_at         INTEGER NOT NULL DEFAULT 0,
+  last_grant_at       INTEGER NOT NULL DEFAULT 0,
+  cooloff_until       INTEGER NOT NULL DEFAULT 0,
+  refusals            INTEGER NOT NULL DEFAULT 0,
+  last_refusal_at     INTEGER,
+  last_refusal_status INTEGER,
+  granted             INTEGER NOT NULL DEFAULT 0,
+  refused_total       INTEGER NOT NULL DEFAULT 0,
+  updated_at          TEXT
+);
+`;
+
+// src/schema.mjs
+var SCHEMA = `-- BIO store schema, draft 1, derived from the real bundle.md frontmatter and
+-- _history/manifest.json shapes in tree 0.1.94. The bundle format is
+-- authoritative; this is a projection of it and must never bend it.
+
+${RECORD_SCHEMA}
+
+-- References extracted from frontmatter, so C-6.2 is a join rather than a scan.
+CREATE TABLE IF NOT EXISTS refs (
+  bundle_id TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  kind      TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (bundle_id, target_id, kind)
+);
+CREATE INDEX IF NOT EXISTS refs_target ON refs(target_id);
+
+-- The register, the acquisition receipts (captured_locators) and the route marks are provenance's tables,
+-- defined with their reasons in src/provenance/schema.mjs (R41, R48).
+${PROVENANCE_SCHEMA}
 
 -- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG,
 -- ONE VALUE FOR THE WHOLE INSTANCE. Every bundle this instance writes names it as its
@@ -10988,260 +10871,6 @@ CREATE TABLE IF NOT EXISTS published_shas (
 );
 CREATE INDEX IF NOT EXISTS published_shas_sha ON published_shas(sha256);
 
--- The knock: quarantined public intake. Payload bytes live in R2 under
--- <store>/inbox/<sha256> when R2 is configured, else inline here (small
--- only). Nothing reads this table except member review; nothing here
--- touches the record until a member pulls it through the gate.
-CREATE TABLE IF NOT EXISTS inbox (
-  knock_id    TEXT PRIMARY KEY,
-  sha256      TEXT NOT NULL,
-  bytes       INTEGER NOT NULL,
-  content     TEXT,
-  in_r2       INTEGER NOT NULL DEFAULT 0,
-  note        TEXT,
-  contact     TEXT,
-  received    TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'new',
-  resolved    TEXT,
-  resolved_by TEXT
-);
-CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
-
--- Fixed-window knock rate accounting. Rows are pruned as windows pass.
-CREATE TABLE IF NOT EXISTS knock_rate (
-  bucket TEXT PRIMARY KEY,
-  count  INTEGER NOT NULL
-);
-
--- What this RUNTIME was observed to allow, as opposed to what we choose to
--- spend. Cloudflare's per-invocation subrequest limit differs by account, can
--- change on either plan without notice, and is not documented anywhere this
--- code can read, so the only honest source for it is having been refused.
---
--- previous and moved_at exist because a ceiling that MOVES is itself a fact the
--- instance should notice: an upgraded plan and a tightened platform look
--- identical in a single scalar, and telling them apart needs the history.
---
--- samples drives re-probing. Once a value has been confirmed enough times the
--- instance deliberately runs without a ceiling again, because a limit only ever
--- learned downward would leave an upgraded account capped forever.
-CREATE TABLE IF NOT EXISTS capture_limits (
-  runtime     TEXT PRIMARY KEY,
-  observed    INTEGER NOT NULL,
-  observed_at TEXT NOT NULL,
-  first_seen  TEXT NOT NULL,
-  samples     INTEGER NOT NULL DEFAULT 1,
-  since_probe INTEGER NOT NULL DEFAULT 0,
-  previous    INTEGER,
-  moved_at    TEXT
-);
--- What a HOST has served, across every document captured from it.
---
--- Bytes were always shared: captures are content-addressed, so one stylesheet
--- occupies one R2 object however many documents reference it. FETCHES were not,
--- and fetches are the scarce thing. On a Legistar page roughly forty of the
--- forty-five available subrequests go to site-wide chrome that will be
--- byte-identical on the next document captured from that host.
---
--- stable_since is the last time the sha CHANGED, not the last time it was seen,
--- because "unchanged for three months" and "not looked at for three months" are
--- different facts. Neither licenses reuse. RECENCY OF FETCH does - last_fetched,
--- the last time the source was actually seen serving these bytes, within the
--- freshness window - together with a furniture kind and at least two distinct
--- PAGES on the host (reuseDecision in subresources.mjs). A stability gate was
--- measured live in 0.40.0 and reused nothing, so stable_since is a secondary
--- confidence signal and keeps its own job in nav-change evidence.
---
--- The same table answers chrome detection. An address referenced by fifteen of
--- fifteen captured documents on a host is the site's; one referenced by a single
--- document is that document's own. That works on sites that never write a <nav>
--- element, which is most municipal sites.
-CREATE TABLE IF NOT EXISTS site_assets (
-  host         TEXT NOT NULL,
-  address_norm TEXT NOT NULL,
-  address      TEXT NOT NULL,
-  sha256       TEXT NOT NULL,
-  content_type TEXT,
-  bytes        INTEGER NOT NULL DEFAULT 0,
-  kind         TEXT,
-  first_seen   TEXT NOT NULL,
-  last_seen    TEXT NOT NULL,
-  last_fetched TEXT NOT NULL,
-  stable_since TEXT NOT NULL,
-  changes      INTEGER NOT NULL DEFAULT 0,
-  last_fetched_by TEXT,
-  PRIMARY KEY (host, address_norm)
-);
-CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
-CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
-
--- One row per (asset, primary capture). It replaces an incrementing counter, and
--- it is what makes post-hoc verification possible: when an asset's sha later
--- changes, the captures that REUSED the old bytes are exactly the rows here with
--- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
--- whose bytes changed between two captures has two rows. So the distinct-document
--- count joins primary_sha to captured_locators and counts document ADDRESSES
--- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
--- row is counted apart as undetermined rather than as a page.
---
--- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
--- part names the capture whose FETCH served its bytes. site_assets.last_fetched_by
--- is the primary capture sha whose fetch set last_fetched, written beside it on
--- every fetched observation and never moved by a reuse. A reusing capture's row
--- here keeps it as reused_from, taken from the capture's own observation so the
--- manifest and the store cannot disagree, and reusedParts reads it from THIS row,
--- never from site_assets, whose value a later fetch moves. Both are NULLABLE and
--- NEVER BACK-FILLED: a reuse recorded before the build is UNDETERMINED as to its
--- source, and matching a ref row at against last_fetched would prove nothing
--- (both whole seconds, and a ref row is overwritten in place).
-CREATE TABLE IF NOT EXISTS site_asset_refs (
-  host         TEXT NOT NULL,
-  address_norm TEXT NOT NULL,
-  primary_sha  TEXT NOT NULL,
-  at           TEXT NOT NULL,
-  reused       INTEGER NOT NULL DEFAULT 0,
-  sha256       TEXT NOT NULL,
-  reused_from  TEXT,
-  PRIMARY KEY (host, address_norm, primary_sha)
-);
-CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
--- A capture that ran out of subrequest budget, waiting for another tick.
---
--- SCRATCH, not record. The intake doctrine says no intake path writes live
--- state, and that keeps holding: this is a work list with an expiry, it names
--- no bundle, and acquire still returns a provenance document and promotes
--- nothing. The primary capture is complete from the first tick and its bytes
--- are already in the store; what is outstanding here is only support material.
---
--- The primary HTML is deliberately NOT stored here. It is in the store under
--- primary_sha, and a copy in session state would be a second, unverified copy
--- of evidence sitting somewhere nothing checks.
-CREATE TABLE IF NOT EXISTS capture_sessions (
-  session     TEXT PRIMARY KEY,
-  locator     TEXT NOT NULL,
-  primary_sha TEXT NOT NULL,
-  primary_file TEXT NOT NULL,
-  base        TEXT NOT NULL,
-  created     TEXT NOT NULL,
-  updated     TEXT NOT NULL,
-  expires     TEXT NOT NULL,
-  ticks       INTEGER NOT NULL DEFAULT 1,
-  state       TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
--- Links a captured document made, and what they resolve to.
---
--- Address-keyed, which refs is not: refs is bundle-to-bundle and answers a
--- different question. An UNRESOLVED link has no canonical target and cannot be
--- a citation at all, because C-6.1 rightly refuses a locator as a
--- references[].target. Resolution is the act that makes a link expressible as
--- an edge: once the store holds a capture of the address, there is a canonical
--- ID to point at, and the address rides along as a comment string.
---
--- address_norm is stored ALONGSIDE address, never instead of it, because a
--- normalisation rule that later proves wrong must be re-derivable and a
--- normalisation MISS looks exactly like "not captured".
---
--- The verdict is about CONTEMPORANEITY: whether the capture the store holds of
--- the target is the version the source was pointing at on the day this document
--- was captured. It is three-valued on purpose. undetermined is the resting
--- state and the expected common case, because Last-Modified is absent from most
--- dynamic pages, wrong on many others, and reset by deployments that changed
--- nothing. A binary design silently sorts every undetermined link into one
--- bucket or the other and both errors are bad.
-CREATE TABLE IF NOT EXISTS links (
-  source_bundle  TEXT,
-  source_capture TEXT NOT NULL,
-  link_ref       TEXT NOT NULL,
-  address        TEXT NOT NULL,
-  -- Two keys, deliberately. address_norm identifies the RESOURCE and is what
-  -- resolution matches against captured_locators; the server never sees a
-  -- fragment, so it has none. citation_norm identifies the CITATION and keeps
-  -- the fragment, because scientific and legal practice cite ELEMENTS and BIO
-  -- citations support element references: a link to #findings and a link to
-  -- #methodology in one report are two citations, and a single key made them
-  -- indistinguishable.
-  address_norm   TEXT NOT NULL,
-  citation_norm  TEXT NOT NULL,
-  fragment       TEXT,
-  partition      TEXT NOT NULL,
-  origin         TEXT,
-  chrome         INTEGER NOT NULL DEFAULT 0,
-  captured_at    TEXT NOT NULL,
-  first_seen     TEXT NOT NULL,
-  PRIMARY KEY (source_capture, link_ref, citation_norm)
-);
-CREATE INDEX IF NOT EXISTS links_citation ON links(citation_norm);
-CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
-CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
-
--- The verdict, APPENDED and dated, never overwritten. A verdict that changed is
--- itself a fact about the record, for the same reason state history is
--- append-only: the current answer is the newest row, and the older rows are how
--- anyone can tell whether it was always this answer.
-CREATE TABLE IF NOT EXISTS link_verdicts (
-  source_capture TEXT NOT NULL,
-  address_norm   TEXT NOT NULL,
-  verdict        TEXT NOT NULL,
-  basis          TEXT NOT NULL,
-  target_bundle  TEXT,
-  target_capture TEXT,
-  at             TEXT NOT NULL,
-  detail         TEXT,
-  PRIMARY KEY (source_capture, address_norm, at)
-);
-CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, address_norm);
--- Which ADDRESSES the record has captured, and when. The register is keyed by
--- capture hash and carries no locator, so nothing could answer "does the store
--- hold a capture of https://..." without this. One row per (address, capture),
--- because the point is precisely that an address is captured repeatedly over
--- time and the versions are what a contemporaneity verdict compares.
--- One row per (address, DISTINCT BYTES), carrying the INTERVAL over which those
--- bytes were seen served rather than a single date. That interval is the whole
--- point: identical bytes observed on both sides of another document's retrieval
--- prove the target did not change across it, which settles contemporaneity
--- outright and needs no timestamp from the source that anyone has to trust. A
--- first draft keyed rows by (address, sha) and kept only the earliest date,
--- which threw away exactly the evidence the verdict is built on.
--- D-96: via names the SOURCE of an observation, because once an alternative
--- source counts as a re-fetch for monitoring (RULED, AUTHORITY-AND-TRUST.md),
--- archive bytes and live bytes must never be compared as one observation
--- stream. Two sources agreeing is STRONGER evidence than one source repeating;
--- two sources disagreeing is not evidence of change at all. The bracket arm
--- cannot tell those apart without knowing which is which, so via is part of
--- the KEY: an archive observation of the same bytes is a different fact from a
--- direct one, not a repeat of it.
---
--- The address columns carry the DOCUMENT ADDRESS, the address the record
--- reasons about; retrieval_locator carries what was actually fetched. For an
--- archive capture the document address is the CDX original field through our own
--- normaliser and the retrieval locator is the archive's replay address, and
--- conflating them is how a provenance difference gets reported as a change.
---
--- CORRECTED 2026-09-14 BY CAP-8, AND THE OLD SENTENCE IS SAID RATHER THAN
--- DELETED. This read "For a direct capture they are the same string", and that
--- was true of every capture the plane could make until Bob ruled that a link to
--- a Google Drive file KEEPS THE LINK while the harvest is the OpenDocument
--- export. A Drive capture is via 'direct' -- we asked Google and Google answered
--- us, with nobody in between -- and its two addresses differ anyway: the address
--- columns hold the Drive link the source page carried, and retrieval_locator
--- holds the export address the plane composed from the file id and the kind.
--- So via no longer tells a reader whether the two are equal, and a reader that
--- wants the document address must read it here rather than infer it. IC-85.
-CREATE TABLE IF NOT EXISTS captured_locators (
-  address_norm      TEXT NOT NULL,
-  address           TEXT NOT NULL,
-  capture_sha       TEXT NOT NULL,
-  via               TEXT NOT NULL DEFAULT 'direct',
-  retrieval_locator TEXT,
-  first_retrieved   TEXT NOT NULL,
-  last_retrieved    TEXT NOT NULL,
-  observations      INTEGER NOT NULL DEFAULT 1,
-  PRIMARY KEY (address_norm, capture_sha, via)
-);
-CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
--- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
-CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
 -- assumed. capture_limits holds ceilings found by being refused; this holds
 -- consumption found by measuring, which is a different kind of fact and the only
@@ -11276,37 +10905,6 @@ CREATE TABLE IF NOT EXISTS cpu_probe (
 );
 
 -- ---- D-98: the task inbox, and the queue that makes auto-creation safe ----
-
--- THE PRODUCER/CONSUMER BOUNDARY, and it is a safety property rather than a
--- transport detail. Bob RULED that an undetermined-authority capture creates a
--- task automatically at capture. If the capture path wrote the task directly
--- then a leaked capture credential could put arbitrary assignees, forged
--- history and chosen subjects in front of a member. It cannot: the capture path
--- reaches only this table, every field here is already bounded at enqueue, and
--- nothing here names an assignee, a status or an actor because those are not
--- the producer's to say.
---
--- A table rather than a Cloudflare Queue, deliberately. Everything stays inside
--- the Durable Object and therefore inside the audit model, which is the same
--- reasoning that keeps the store in the DO. A Queue would buy cross-instance
--- fan-out that a sovereign single-instance record does not want.
---
--- Keyed on (kind, capture_sha) so a noisy re-capture loop cannot flood the
--- queue: re-enqueuing the same capture is a no-op, and the consumer folds the
--- event into the open task rather than spawning a duplicate. capture_sha and
--- NOT a bundle id, because at the moment of capture no bundle exists yet: the
--- consumer resolves the sha through the register once the capture is filed, and
--- an event whose capture has not been promoted simply waits.
-CREATE TABLE IF NOT EXISTS task_queue (
-  kind        TEXT NOT NULL,
-  capture_sha TEXT NOT NULL,
-  subject     TEXT NOT NULL,
-  locator     TEXT,
-  enqueued    TEXT NOT NULL,
-  attempts    INTEGER NOT NULL DEFAULT 0,
-  last_try    TEXT,
-  PRIMARY KEY (kind, capture_sha)
-);
 
 -- The inbox itself, the tasks array of data/inbox.json persisted. WORKING store
 -- only: an inbox is the group talking to itself about what it has NOT
@@ -11344,81 +10942,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WH
 
 -- ---- D-104: source reachability, and what may NOT count as a failure ----
 
--- The counter the archive fallback will consume. Built BEFORE the fallback
--- exists, and built to exclude governed refusals from the first line, because
--- discovering the exclusion after a spurious fallback would mean we had already
--- fetched from the Internet Archive because WE paced ourselves.
---
--- The distinction this table exists to hold: an outcome the SOURCE produced (a
--- real 4xx or 5xx from the origin, a network failure reaching it) is evidence
--- about the source. Our own governor declining to ask is not evidence about
--- anything except our politeness. Only the first kind moves
--- consecutive_failures.
---
--- governed_refusals is counted anyway, in its own column, rather than dropped.
--- A number that is deliberately excluded from a decision should still be
--- visible, or the exclusion cannot be audited and a future reader cannot tell a
--- source nobody could reach from a source nobody asked.
---
--- Keyed on address_norm, the same normalised document address captured_locators
--- keys on, so reachability is a property of the DOCUMENT rather than of a host:
--- one page can be gone while the rest of a site answers.
-CREATE TABLE IF NOT EXISTS source_reachability (
-  address_norm         TEXT PRIMARY KEY,
-  consecutive_failures INTEGER NOT NULL DEFAULT 0,
-  attempts             INTEGER NOT NULL DEFAULT 0,
-  failures_total       INTEGER NOT NULL DEFAULT 0,
-  governed_refusals    INTEGER NOT NULL DEFAULT 0,
-  last_success         TEXT,
-  last_failure         TEXT,
-  last_outcome         TEXT,
-  last_status          INTEGER,
-  first_failure_since  TEXT,
-  updated_at           TEXT
-);
-CREATE INDEX IF NOT EXISTS source_reach_failing ON source_reachability(consecutive_failures);
 
--- CAP-4: the verdict on a REUSED subresource, APPENDED and dated, never
--- overwritten, the same append-only discipline link_verdicts follows and for the
--- same reason: a verdict that changed is itself a fact about the record, so the
--- current answer is the newest row and the older rows are how anyone tells
--- whether it was always this answer.
---
--- Two producers write here, and the phase column says which. POSTHOC detection
--- is free and unconditional (CAPTURE-SCALING item 6a): when a later direct
--- capture of a host fetches an asset whose bytes differ from the stored ones,
--- every earlier capture that REUSED the old bytes is named here as 'changed' at
--- zero request cost. RATIFY re-fetches every reused part with a PLAIN GET
--- (item 6b/6c) -- our own SHA-256 over what we received is the evidence, where a
--- 304 would be only the origin's assertion -- and records one of four outcomes:
---   confirmed      the re-fetch matched the reused bytes; the strongest claim.
---   changed        the source now serves something else; ratified with the bytes
---                  captured on the day, the divergence a dated fact.
---   unavailable    the source no longer answers; ratified with the bytes
---                  captured, the record now holding what nobody can re-fetch.
---   not_attempted  the invocation's re-fetch budget (the calibrated capture_limits
---                  ceiling, item 6d) could not reach this part; recorded WITH its
---                  reason, never silently omitted.
--- All four are valid ratifications. What is forbidden is ratifying with a reused
--- part and saying nothing: the mandatory part is the ATTEMPT and the RECORD, not
--- the agreement. source_capture is the primary_sha of the capture that reused the
--- part; bundle_id is set for a ratify verdict and null for a posthoc one, which
--- happens at capture time when no bundle exists yet.
-CREATE TABLE IF NOT EXISTS reuse_verdicts (
-  source_capture TEXT NOT NULL,
-  bundle_id      TEXT,
-  host           TEXT NOT NULL,
-  address_norm   TEXT NOT NULL,
-  phase          TEXT NOT NULL,
-  verdict        TEXT NOT NULL,
-  reused_sha     TEXT NOT NULL,
-  observed_sha   TEXT,
-  basis          TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  PRIMARY KEY (source_capture, address_norm, phase, at)
-);
-CREATE INDEX IF NOT EXISTS reuse_verdicts_bundle ON reuse_verdicts(bundle_id);
-CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture, address_norm);
 -- 2026-09-14, REC-81: every citation into the content framework in this file names a
 -- SECTION rather than a line. The line numbers they carried went stale the moment the
 -- framework gained front matter -- 89 lines, measured -- and CORPUS-STANDARD.md
@@ -13454,100 +12978,6 @@ CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, req
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
 CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
 
--- REC-63 / DEC-56 / D-204: THE STANDING MARKER. When a document's provenance
--- ROUTE cannot be shown, the record carries that fact BESIDE the state rather
--- than un-saying the verification. Bob ruled the principle across DEC-56/57/58
--- on 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.
---
--- WHY A ROW HERE AND NOT A FIELD IN THE BUNDLE'S OWN BYTES, which is the first
--- question a reader will ask. Writing the marker into data/provenance.json
--- would change the bundle_sha of a VERIFIED document, so the doubt about the
--- bytes would alter the bytes -- and it would be a second claim nobody made,
--- which is the same reasoning provenanceChainRebuild already gives for leaving
--- bundle.md alone. The marker is a statement by THIS INSTANCE about its own
--- evidence, so it lives where the instance's other statements live.
---
--- APPEND-ONLY, AND THAT IS DEC-19. Correction moves FORWARD: a route later
--- shown is a NEW row saying so, never a delete of the row that said it could
--- not be. The current finding is the row with the highest 'seq' for a bundle,
--- and the ones before it stay readable.
---
--- 'finding' IS D-129's VOCABULARY, taken from airun.mjs's OBSERVATION_STATES
--- rather than invented here, because this record already has words for which
--- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
--- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
--- PRESENT is an assessment that found the route showable. LOOKED_ABSENT is
--- deliberately unreachable here: it would assert the bytes have no route, and
--- every captured byte came from somewhere -- what we cannot show is OUR
--- EVIDENCE of it, which is a statement about us.
---
--- 'state_at' RECORDS THE STATE THE DOCUMENT SAT IN WHEN THE MARKER WAS MADE,
--- because the marker's whole point is that the state STANDS while the doubt is
--- carried: a reader of the history has to be able to see that the two disagreed
--- ON PURPOSE and that nothing moved the document.
-CREATE TABLE IF NOT EXISTS provenance_route_marks (
-  bundle_id      TEXT    NOT NULL,
-  seq            INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the current finding
-  at             TEXT    NOT NULL,
-  by             TEXT    NOT NULL, -- the MEMBER who made the assessment. Never a machine
-  finding        TEXT    NOT NULL, -- LOOKED_INDETERMINATE (the marker) | PRESENT
-  state_at       TEXT    NOT NULL, -- current_state at the moment of marking
-  register_state TEXT    NOT NULL, -- readable | absent | unparsable | no_documents | empty
-  undetermined   INTEGER NOT NULL, -- documents whose route could not be shown
-  documents_n    INTEGER NOT NULL, -- documents the register named at all
-  documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
-  PRIMARY KEY (bundle_id, seq)
-);
--- =========================================================================
--- REC-112, 2026-09-17 -- THIS INDEX HAS NO READER, AND IT IS KEPT ON PURPOSE.
---
--- WHAT IT WAITS FOR: a READ op answering the question no op asks --
--- "which documents in this instance carry a standing LOOKED_INDETERMINATE
--- marker". All four SQL readers of this table key on bundle_id and seq and
--- classify in JS, so a group asking where its own record's provenance is
--- doubted must page the whole store and count for itself. The route act is
--- registered mutating:true in index.mjs -- a WRITE. There is no read.
---
--- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
--- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
--- ANALYZE, which is this plane's live condition because nothing here ever
--- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
---   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
---                                    none touches this index, and DROPPING it
---                                    leaves all four plans IDENTICAL
---   finding = ?                   -- SEARCH USING INDEX (finding=?)
---   finding = ? AND bundle_id > ? -- SEARCH USING INDEX (finding=? AND
---                                    bundle_id>?) -- BOTH columns, which is
---                                    this plane's after-cursor paging shape
---   COUNT over finding = ?        -- COVERING INDEX
--- The second column is therefore not decoration: whoever declared this knew
--- the intended reader's PAGING shape. That is evidence of a SPECIFIC reader
--- rather than a speculative index, and it is why the act was to row the
--- reader rather than to delete the declaration.
---
--- DELETING IT WAS CONSIDERED AND REFUSED. REC-92 withdrew a chain_kind index
--- a few hundred lines down on REC-12's rule -- an index nobody seeks on is
--- cost with no reader -- but that precedent governs ADDING one, not removing
--- one a dated delegation has pointed at for 39 days. Removing this would take
--- the airuns sweep's unread roster DOWN by one for a reason that is not the
--- plane getting better, which is the one direction that ratchet must never
--- move, and it would delete the very artifact that made the sweep find this
--- owed act at all. The write cost is one row per member assessment, on an
--- append-only table a member writes by hand.
---
--- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
--- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
--- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
--- 2026-09-16, airuns.test.mjs carries it on the unread roster AND pins it BY
--- NAME, and the declaration is here.
---
--- DO NOT REFLOW THE TWO LINES BELOW. test/nc-rec69-selects.mjs patches them as
--- EXACT STRING LITERALS to arm two negative controls, so a whitespace change
--- makes those arms match zero times and PASS while testing nothing.
--- =========================================================================
-CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
-  ON provenance_route_marks(finding, bundle_id);
-
 -- CPDF-10: TEXT ATTESTATIONS. A member says they compared a document's text
 -- against the image of the page and it matches, OVER A STATED EXTENT.
 --
@@ -14576,45 +14006,6 @@ CREATE TABLE IF NOT EXISTS theme_placements (
 CREATE INDEX IF NOT EXISTS theme_placements_bundle ON theme_placements(bundle_id);
 -- =========================================================================
 
--- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
--- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
--- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
--- renderer's claim summed, not a platform meter. deferred counts the renders
--- this instance declined because the allowance was spent: a deferral is a
--- recorded fact, never a silent fall-back to filing the shell as the content.
--- An operational fact about this instance, not corpus-derived.
--- D-492: reserved_ms is browser time COMMITTED to renders now in flight and not
--- yet reported. spent_ms alone could not bound the allowance, because a render
--- runs in the Worker and reports its cost afterwards, so every render in flight
--- at once was admitted against one spent_ms. A render reserves its maximum cost
--- at admission and releases the reservation when it reports, so the figure the
--- admission test reads is spent_ms + reserved_ms. A render that never reports
--- stays charged for the day: the allowance is then UNDER-used, which is the
--- direction that cannot overrun. Added to an existing store by the additive
--- pass in store.mjs #migrate, so a store written before D-492 reads 0.
-CREATE TABLE IF NOT EXISTS render_allowance (
-  day        TEXT PRIMARY KEY,
-  spent_ms   INTEGER NOT NULL DEFAULT 0,
-  reserved_ms INTEGER NOT NULL DEFAULT 0,
-  renders    INTEGER NOT NULL DEFAULT 0,
-  deferred   INTEGER NOT NULL DEFAULT 0,
-  last_at    TEXT NOT NULL
-);
-
--- D-520: THE RENDERS RUNNING NOW, one row per admitted render, so the
--- instance can CAP how many run at once (CLIENT-RENDERED.md, RULED by BOB #33:
--- a concurrency cap from the vendor's stated limit, labelled; over the cap a
--- render WAITS). render_allowance is an ACCOUNT of browser time and cannot say
--- how many are in flight. A slot is released when its render reports, and
--- EXPIRES at its admission plus its reservation (the most time the asked
--- environment permits it), so a render that never reports cannot hold a slot
--- for ever. An operational fact about this instance, not corpus-derived.
-CREATE TABLE IF NOT EXISTS render_slots (
-  slot        TEXT PRIMARY KEY,
-  admitted_at TEXT NOT NULL,
-  expires_ms  INTEGER NOT NULL
-);
-
 -- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md \xA72): A MACHINE'S
 -- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
 --
@@ -14769,32 +14160,7 @@ CREATE TABLE IF NOT EXISTS contradiction_candidates (
 );
 CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
 
--- D-95: the per-host request governor. Our APPETITE is a configured constant
--- because it is ours; their CAPACITY is discovered by being refused and
--- recorded, following the pattern capture_limits proved for the subrequest
--- ceiling. It lives in the Durable Object because the object serialises, which
--- makes one token bucket globally correct for the instance for free; a bucket
--- in Worker memory governs nothing because every invocation is independent.
--- appetite_per_min NULL means the configured default (a CHOSEN constant,
--- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
--- a refusal overrides the bucket entirely: while it is in the future, no token
--- balance admits anything to that host. refusals counts CONSECUTIVE refusals
--- and decays to zero on success, so the cool-off escalates the way the
--- counterparty's own escalation does and resets when they relent.
-CREATE TABLE IF NOT EXISTS host_governor (
-  host                TEXT PRIMARY KEY,
-  appetite_per_min    REAL,
-  tokens              REAL    NOT NULL DEFAULT 0,
-  refilled_at         INTEGER NOT NULL DEFAULT 0,
-  last_grant_at       INTEGER NOT NULL DEFAULT 0,
-  cooloff_until       INTEGER NOT NULL DEFAULT 0,
-  refusals            INTEGER NOT NULL DEFAULT 0,
-  last_refusal_at     INTEGER,
-  last_refusal_status INTEGER,
-  granted             INTEGER NOT NULL DEFAULT 0,
-  refused_total       INTEGER NOT NULL DEFAULT 0,
-  updated_at          TEXT
-);
+${HOST_GOVERNOR_SCHEMA}
 `;
 
 // src/tokens.mjs
@@ -16676,8 +16042,8 @@ function checkStateHistory({ fm, files }, findings) {
 
 // src/sshsig.mjs
 var te2 = new TextEncoder();
-var b64ToBytes2 = (b64) => {
-  const bin = atob(b64.replace(/\s+/g, ""));
+var b64ToBytes2 = (b642) => {
+  const bin = atob(b642.replace(/\s+/g, ""));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
@@ -16728,15 +16094,15 @@ var cat = (...parts) => {
 function parsePubkeyLine(line) {
   const m = String(line || "").trim().split(/\s+/);
   if (m.length < 2) throw new Error("pubkey: not an OpenSSH public key line");
-  const [keyType, b64] = m;
+  const [keyType, b642] = m;
   if (keyType !== "ssh-ed25519") throw new Error("pubkey: only ssh-ed25519 is supported, got " + keyType);
-  const blob = b64ToBytes2(b64);
+  const blob = b64ToBytes2(b642);
   const r = new Rd(blob);
   const t = new TextDecoder().decode(r.str());
   if (t !== "ssh-ed25519") throw new Error("pubkey: wire type mismatch");
   const raw = r.str();
   if (raw.length !== 32) throw new Error("pubkey: ed25519 key must be 32 bytes");
-  return { keyType, raw, b64, comment: m.slice(2).join(" ") };
+  return { keyType, raw, b64: b642, comment: m.slice(2).join(" ") };
 }
 function wirePubkey(raw) {
   return cat(wStr(te2.encode("ssh-ed25519")), wStr(raw));
@@ -16744,10 +16110,10 @@ function wirePubkey(raw) {
 function normalizeKey(entry) {
   const toks = String(entry || "").trim().split(/\s+/);
   const i = toks.indexOf("ssh-ed25519");
-  const b64 = i >= 0 ? toks[i + 1] : toks.length === 1 ? toks[0] : null;
-  if (!b64 || !b64.startsWith("AAAA")) return null;
+  const b642 = i >= 0 ? toks[i + 1] : toks.length === 1 ? toks[0] : null;
+  if (!b642 || !b642.startsWith("AAAA")) return null;
   try {
-    return parsePubkeyLine("ssh-ed25519 " + b64).b64;
+    return parsePubkeyLine("ssh-ed25519 " + b642).b64;
   } catch {
     return null;
   }
@@ -17137,7 +16503,7 @@ async function runGate({
     releaseRegistry: releaseRegistry || null,
     sha256: sha2562
   })];
-  const errors = findings.filter((f3) => f3.severity === "error").map((f3) => ({ check: f3.check, detail: f3.message, ...f3.repairs ? { repairs: f3.repairs } : {} }));
+  const errors = findings.filter((f4) => f4.severity === "error").map((f4) => ({ check: f4.check, detail: f4.message, ...f4.repairs ? { repairs: f4.repairs } : {} }));
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
     if (!probe.present && probe.parts) {
@@ -17192,7 +16558,7 @@ async function runGate({
     gateVersion: GATE_VERSION,
     ok: errors.length === 0,
     findings: errors,
-    warnings: findings.filter((f3) => f3.severity !== "error").length
+    warnings: findings.filter((f4) => f4.severity !== "error").length
   };
 }
 
@@ -17527,8 +16893,8 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
   signals.push(`container:zip entries=${container.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f3 of Array.isArray(flavours) ? flavours : []) {
-    if (f3 && typeof f3 === "object") ((f3.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f3);
+  for (const f4 of Array.isArray(flavours) ? flavours : []) {
+    if (f4 && typeof f4 === "object") ((f4.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f4);
   }
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -17548,26 +16914,26 @@ async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAV
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f3 of opcRows) {
+  for (const f4 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
-      if (ct === f3.mainContentType) {
+      if (ct === f4.mainContentType) {
         declared = part;
         break;
       }
     }
     if (!declared) {
-      const conv = normalizePartName(f3.conventionalMainPart);
-      if (partContentType(conv, types2) === f3.mainContentType) declared = conv;
+      const conv = normalizePartName(f4.conventionalMainPart);
+      if (partContentType(conv, types2) === f4.mainContentType) declared = conv;
     }
     if (!declared) continue;
     const present = container.byName.has(declared) || container.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present) {
-      signals.push(`ct:${f3.mainContentType} declared for ${declared}, but the part is ABSENT`);
-      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f3.flavour, signals };
+      signals.push(`ct:${f4.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f4.flavour, signals };
     }
-    signals.push(`ct:${f3.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f3.flavour, mainPart: declared, confidence: "high", signals };
+    signals.push(`ct:${f4.mainContentType}`, `part:${declared} present`);
+    return { ok: true, format: f4.flavour, mainPart: declared, confidence: "high", signals };
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
@@ -17595,7 +16961,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read.why}`, signals };
   }
   const declared = UTF8.decode(read.bytes);
-  const row = rows.find((f3) => f3.mimetype === declared);
+  const row = rows.find((f4) => f4.mimetype === declared);
   if (!row) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
@@ -19700,11 +19066,11 @@ function splitTopLevel(s, sep) {
   return out;
 }
 function definedNameUnit(formula, sheets) {
-  const f3 = String(formula ?? "").trim();
-  if (!f3) return { why: "empty_reference" };
-  if (/#REF!/i.test(f3)) return { why: "broken_reference" };
-  if (splitTopLevel(f3, ",").length > 1 || /^\(.*\)$/.test(f3)) return { why: "multi_area" };
-  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f3);
+  const f4 = String(formula ?? "").trim();
+  if (!f4) return { why: "empty_reference" };
+  if (/#REF!/i.test(f4)) return { why: "broken_reference" };
+  if (splitTopLevel(f4, ",").length > 1 || /^\(.*\)$/.test(f4)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f4);
   if (!m) return { why: "not_a_range_reference" };
   const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
   if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
@@ -19888,13 +19254,13 @@ function walkSheetXml(xml) {
     r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
     hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
     cells: elements(row.inner, "c").map((c) => {
-      const f3 = elements(c.inner, "f");
+      const f4 = elements(c.inner, "f");
       const v = elements(c.inner, "v");
       const is = elements(c.inner, "is");
       return {
         cell: c.attrs.r ?? null,
         t: c.attrs.t ?? null,
-        f: f3.length ? decodeXmlEntities2(f3[0].inner) : null,
+        f: f4.length ? decodeXmlEntities2(f4[0].inner) : null,
         v: v.length ? decodeXmlEntities2(v[0].inner) : null,
         is: is.length ? textRuns(is[0].inner) : null
       };
@@ -20858,9 +20224,9 @@ function asBytes(x) {
   }
   return null;
 }
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f3) => f3.partMap === "odf");
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f4) => f4.partMap === "odf");
 function odfRow(flavour) {
-  const row = ODF_ROWS.find((f3) => f3.flavour === flavour);
+  const row = ODF_ROWS.find((f4) => f4.flavour === flavour);
   if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
   return row;
 }
@@ -21217,8 +20583,8 @@ async function manifestIntraLinks(bytes, container, contentXml, undetermined) {
   }
   const fonts = /* @__PURE__ */ new Set();
   if (contentXml != null) {
-    for (const f3 of elementsNested(contentXml, "font-face-uri")) {
-      const href = f3.attrs.href;
+    for (const f4 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f4.attrs.href;
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
@@ -22183,9 +21549,9 @@ var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
     apply: odtNormalisedContentXml
   }
 });
-async function odfEvidentiaryDigest(bytes, sha256Hex8) {
+async function odfEvidentiaryDigest(bytes, sha256Hex9) {
   try {
-    return await odfEvidentiaryDigestUnguarded(bytes, sha256Hex8);
+    return await odfEvidentiaryDigestUnguarded(bytes, sha256Hex9);
   } catch (e) {
     return {
       determined: false,
@@ -22195,7 +21561,7 @@ async function odfEvidentiaryDigest(bytes, sha256Hex8) {
     };
   }
 }
-async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex8) {
+async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex9) {
   const b = asBytes(bytes) ?? new Uint8Array(0);
   const no2 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
   let row = null;
@@ -22233,7 +21599,7 @@ async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex8) {
     determined: true,
     flavour,
     over: CONTENT_PART,
-    evidentiary: await sha256Hex8(digested),
+    evidentiary: await sha256Hex9(digested),
     basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm ? `, normalised by ${norm.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
@@ -22269,7 +21635,7 @@ var FILE_ID = /^[A-Za-z0-9_-]{10,200}$/;
 var DRIVE_PRODUCER = "Google Drive export";
 var EXPORT_HOST = "docs.google.com";
 function readDriveAddress(address) {
-  if (typeof address !== "string" || !/^https:\/\//.test(address)) return null;
+  if (typeof address !== "string") return null;
   let u;
   try {
     u = new URL(address);
@@ -22346,6 +21712,7 @@ function exportAddressFor(kindRow, fileId) {
 }
 function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
   const confirmed = detected && detected.format === drive.format;
+  const signals = detected && Array.isArray(detected.signals) ? detected.signals.join("; ") : "no signals stated";
   return {
     who: `Google Drive (${DRIVE_PRODUCER})`,
     asserts: `these bytes are Google's ${drive.format.toUpperCase()} conversion, made at export time, of the Drive ${drive.kind} ${drive.fileId}, served for ${drive.exportAddress} at ${retrieved}. The document itself lives at ${drive.address}, which is the address the record keeps.`,
@@ -22363,7 +21730,7 @@ function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
          shell is never filed as the document, not that only a perfectly
          detecting export may be filed, and a fence tighter than its rule is an
          undeclared interface change wearing the costume of caution. */
-      detected ? confirmed ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) \u2014 ${detected.signals.join("; ")}` : `NOT confirmed from the bytes: ${drive.format} was asked for and the bytes detect as ${detected.format} (${detected.confidence}) \u2014 ${detected.signals.join("; ")}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.` : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed"
+      detected ? confirmed ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) \u2014 ${signals}` : `NOT confirmed from the bytes: ${drive.format} was asked for and the bytes detect as ${detected.format} (${detected.confidence}) \u2014 ${signals}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.` : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed"
     ].filter(Boolean).join("; "),
     bound: false,
     unsigned_reason: "no attestation exists over a Google Drive export, and the bytes are not the original file: they are Google's conversion performed at fetch time. What this hop discloses is the FACT that Google served a conversion of the named file, never the fidelity of the conversion and never the credibility of the content.",
@@ -22430,9 +21797,9 @@ function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
   const htmlSaid = format === "html" || declared !== null && HTML_TYPE.test(declared) || kind === "shell";
   const docSaid = !htmlSaid && format !== null && format !== "html" && format !== "undetermined";
   const fetched = (Array.isArray(retrievals) ? retrievals : []).map((r) => r.via && r.via !== "direct" ? { via: r.via, at: r.retrieval_locator || null } : { via: "direct", at: r.retrieval_locator || r.address || null });
-  const fromExport = fetched.some((f3) => f3.via === "direct" && f3.at === drive.exportAddress);
-  const fromPage = fetched.some((f3) => f3.via === "direct" && f3.at && f3.at !== drive.exportAddress);
-  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f3) => f3.via === "direct" && f3.at) || {}).at || null;
+  const fromExport = fetched.some((f4) => f4.via === "direct" && f4.at === drive.exportAddress);
+  const fromPage = fetched.some((f4) => f4.via === "direct" && f4.at && f4.at !== drive.exportAddress);
+  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f4) => f4.via === "direct" && f4.at) || {}).at || null;
   const facts = {
     baseline: {
       sha256: row.capture?.sha256 || null,
@@ -23033,8 +22400,8 @@ var CAPTURE_ACTS = [
      guessed anywhere in this file. */
   { id: "attesttext", label: "Attest that this text matches the page image" }
 ];
-var edgesFrom = (f3) => vocabFor(STATES, f3.declared_type ?? f3.object_type)?.edges?.[f3.current_state] || [];
-var anyVersionEdgeTo = (f3, to) => (f3.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
+var edgesFrom = (f4) => vocabFor(STATES, f4.declared_type ?? f4.object_type)?.edges?.[f4.current_state] || [];
+var anyVersionEdgeTo = (f4, to) => (f4.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 var ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -23043,7 +22410,7 @@ var ACTS = [
     label: "Release (verify)",
     weight: "refuse",
     types: ["information"],
-    applies: (f3, ty) => ty === "information" && edgesFrom(f3).includes("verified")
+    applies: (f4, ty) => ty === "information" && edgesFrom(f4).includes("verified")
   },
   /* S-11 step 4. verified -> retired, AND nothing with a live cites edge: the
      same predicate the store's CITED refusal runs (#citesInto). A severed edge
@@ -23053,7 +22420,7 @@ var ACTS = [
     label: "Retire",
     weight: "refuse",
     types: ["information"],
-    applies: (f3, ty) => ty === "information" && edgesFrom(f3).includes("retired") && f3.cites_in.confirmed.length === 0
+    applies: (f4, ty) => ty === "information" && edgesFrom(f4).includes("retired") && f4.cites_in.confirmed.length === 0
   },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
      normalizeType, so all three spellings land on this arm) may be
@@ -23082,7 +22449,7 @@ var ACTS = [
     label: "Dispose (defer or dismiss)",
     weight: "refuse",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && !f3.case_member && DISPOSITIONS.some((d) => edgesFrom(f3).includes(d))
+    applies: (f4, ty) => ty === "inquiry" && !f4.case_member && DISPOSITIONS.some((d) => edgesFrom(f4).includes(d))
   },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
@@ -23137,7 +22504,7 @@ var ACTS = [
     label: "Conclude",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (edgesFrom(f3).includes("concluded") || f3.current_state === "concluded" && f3.concludes_for_project === true)
+    applies: (f4, ty) => ty === "inquiry" && (edgesFrom(f4).includes("concluded") || f4.current_state === "concluded" && f4.concludes_for_project === true)
   },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
@@ -23180,7 +22547,7 @@ var ACTS = [
     label: "Reopen",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f3.current_state) || !!f3.case_member) && edgesFrom(f3).includes("open")
+    applies: (f4, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f4.current_state) || !!f4.case_member) && edgesFrom(f4).includes("open")
   },
   /* REC-14. An inquiry whose machine offers the `published` edge — which is
        `concluded` and nothing else, because a material set cannot be asserted
@@ -23301,7 +22668,7 @@ var ACTS = [
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (f3.current_state === "concluded" || f3.concluded_for_project === true) && (!f3.case_member || f3.edition_warranted_for_project === true) && f3.project_owner !== false
+    applies: (f4, ty) => ty === "inquiry" && (f4.current_state === "concluded" || f4.concluded_for_project === true) && (!f4.case_member || f4.edition_warranted_for_project === true) && f4.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -23354,7 +22721,7 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
-    applies: (f3, ty) => ty === "inquiry" && edgesFrom(f3).includes("divided") && !f3.case_member && (f3.basis_legs ?? 0) >= 1 && (f3.rested_on?.working ?? 0) === 0
+    applies: (f4, ty) => ty === "inquiry" && edgesFrom(f4).includes("divided") && !f4.case_member && (f4.basis_legs ?? 0) >= 1 && (f4.rested_on?.working ?? 0) === 0
   },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
        something, and whose record is still working.
@@ -23412,7 +22779,7 @@ var ACTS = [
        would then refuse it. That is a pre-flight disagreeing with the refusal it
        fronts, which is DEC-8's headline failure and the one thing this file
        exists to prevent. `divided` is untouched: it is still a state. */
-    applies: (f3, ty) => ty === "inquiry" && (f3.basis_legs ?? 0) >= 1 && !f3.case_member && f3.current_state !== "divided"
+    applies: (f4, ty) => ty === "inquiry" && (f4.basis_legs ?? 0) >= 1 && !f4.case_member && f4.current_state !== "divided"
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
@@ -23466,7 +22833,7 @@ var ACTS = [
     label: "Move this action",
     weight: "single",
     types: ["action"],
-    applies: (f3, ty) => ty === "action" && edgesFrom(f3).length > 0
+    applies: (f4, ty) => ty === "action" && edgesFrom(f4).length > 0
   },
   /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
      Published for an action in ANY state, and the breadth is deliberate: the
@@ -23482,7 +22849,7 @@ var ACTS = [
     label: "Record correspondence",
     weight: "single",
     types: ["action"],
-    applies: (f3, ty) => ty === "action"
+    applies: (f4, ty) => ty === "action"
   },
   /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
@@ -23491,7 +22858,7 @@ var ACTS = [
     label: "State governing laws",
     weight: "single",
     types: ["action"],
-    applies: (f3, ty) => ty === "action"
+    applies: (f4, ty) => ty === "action"
   },
   /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
      guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
@@ -23501,7 +22868,7 @@ var ACTS = [
     label: "Revise risk tier",
     weight: "single",
     types: ["action"],
-    applies: (f3, ty) => ty === "action"
+    applies: (f4, ty) => ty === "action"
   },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
@@ -23559,28 +22926,28 @@ var ACTS = [
     label: "Accept a reading of the evidence",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && anyVersionEdgeTo(f3, "accepted")
+    applies: (f4, ty) => ty === "inquiry" && anyVersionEdgeTo(f4, "accepted")
   },
   {
     id: "versionreject",
     label: "Turn down a reading (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && anyVersionEdgeTo(f3, "rejected")
+    applies: (f4, ty) => ty === "inquiry" && anyVersionEdgeTo(f4, "rejected")
   },
   {
     id: "versionconsider",
     label: "Set a reading aside for now (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && anyVersionEdgeTo(f3, "considering")
+    applies: (f4, ty) => ty === "inquiry" && anyVersionEdgeTo(f4, "considering")
   },
   {
     id: "versionrevert",
     label: "Put a reading back to where nobody had acted on it",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && anyVersionEdgeTo(f3, "suggested")
+    applies: (f4, ty) => ty === "inquiry" && anyVersionEdgeTo(f4, "suggested")
   },
   /* MAKE-CURRENT is offered when the question holds a reading a member has
      ACCEPTED, which is the store's own entry requirement (current implies
@@ -23592,7 +22959,7 @@ var ACTS = [
     label: "Stand this project on a reading",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (f3.basis_version_states ?? []).includes("accepted")
+    applies: (f4, ty) => ty === "inquiry" && (f4.basis_version_states ?? []).includes("accepted")
   },
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a PROJECT withdraws its
      conclusion, and the withdrawal APPENDS — the conclusion stays in the record.
@@ -23607,7 +22974,7 @@ var ACTS = [
     label: "Withdraw this project's conclusion (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (f3.basis_version_states ?? []).includes("accepted")
+    applies: (f4, ty) => ty === "inquiry" && (f4.basis_version_states ?? []).includes("accepted")
   },
   /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
      breadth is deliberate rather than an omission: the prune offer's whole point
@@ -23621,7 +22988,7 @@ var ACTS = [
     label: "Hide a reading from the display (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f3, ty) => ty === "inquiry" && (f3.basis_versions ?? 0) >= 1
+    applies: (f4, ty) => ty === "inquiry" && (f4.basis_versions ?? 0) >= 1
   },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
@@ -23641,7 +23008,7 @@ var ACTS = [
        citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
        offered on one — offering it would be the pre-flight disagreeing with the refusal it
        fronts (DEC-8). `source_status` is not read: a removed or modified source stays citable. */
-    applies: (f3, ty) => ty === "information" && f3.current_state !== "retired" || ty === "project" && f3.project_participant !== false || ty === "inquiry"
+    applies: (f4, ty) => ty === "information" && f4.current_state !== "retired" || ty === "project" && f4.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -23684,7 +23051,7 @@ var ACTS = [
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f3, ty) => (ty === "information" || ty === "inquiry") && (f3.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f3.cites_out.confirmed > 0 && f3.project_participant !== false
+    applies: (f4, ty) => (ty === "information" || ty === "inquiry") && (f4.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f4.cites_out.confirmed > 0 && f4.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
        refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -23710,7 +23077,7 @@ var ACTS = [
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f3, ty) => (ty === "information" || ty === "inquiry") && (f3.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f3.current_state === "retired") || ty === "project" && (f3.cites_out.severed_reinstatable ?? 0) > 0 && f3.project_participant !== false
+    applies: (f4, ty) => (ty === "information" || ty === "inquiry") && (f4.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f4.current_state === "retired") || ty === "project" && (f4.cites_out.severed_reinstatable ?? 0) > 0 && f4.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -23753,49 +23120,49 @@ var ACTS = [
     label: "Invite a member to this project",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.owner === true
+    applies: (f4, ty) => ty === "project" && f4.roster?.owner === true
   },
   {
     id: "projectjoin",
     label: "Join this project",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && typeof f3.roster?.state === "string" && f3.roster.state !== "joined"
+    applies: (f4, ty) => ty === "project" && typeof f4.roster?.state === "string" && f4.roster.state !== "joined"
   },
   {
     id: "projectleave",
     label: "Ask to leave this project",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.state === "joined" && (f3.roster?.owner !== true || f3.roster?.owner_floor_clear === true)
+    applies: (f4, ty) => ty === "project" && f4.roster?.state === "joined" && (f4.roster?.owner !== true || f4.roster?.owner_floor_clear === true)
   },
   {
     id: "projectremove",
     label: "Remove a participant",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.owner === true
+    applies: (f4, ty) => ty === "project" && f4.roster?.owner === true
   },
   {
     id: "projectowneradd",
     label: "Add an owner",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.owner === true
+    applies: (f4, ty) => ty === "project" && f4.roster?.owner === true
   },
   {
     id: "projectownerremove",
     label: "Remove an owner (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.owner === true && f3.roster?.owner_floor_clear === true
+    applies: (f4, ty) => ty === "project" && f4.roster?.owner === true && f4.roster?.owner_floor_clear === true
   },
   {
     id: "projectownerrescue",
     label: "Add an owner to a project whose owners are all inactive (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.roster?.rescue_open === true
+    applies: (f4, ty) => ty === "project" && f4.roster?.rescue_open === true
   },
   /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
      that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
@@ -23809,7 +23176,7 @@ var ACTS = [
     label: "Choose whether this project can be found",
     weight: "single",
     types: ["project"],
-    applies: (f3, ty) => ty === "project" && f3.project_target_owner === true
+    applies: (f4, ty) => ty === "project" && f4.project_target_owner === true
   }
 ];
 var MACHINE_REFUSALS = {
@@ -23889,134 +23256,11 @@ function deriveActs(facts) {
   return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
 }
 
-// src/tsa.mjs
-var cat2 = (...parts) => {
-  let n = 0;
-  for (const p of parts) n += p.length;
-  const out = new Uint8Array(n);
-  let i = 0;
-  for (const p of parts) {
-    out.set(p, i);
-    i += p.length;
-  }
-  return out;
-};
-function derLen(n) {
-  if (n < 128) return new Uint8Array([n]);
-  const bytes = [];
-  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes.unshift(v % 256);
-  return new Uint8Array([128 | bytes.length, ...bytes]);
-}
-var tlv = (tag2, body) => cat2(new Uint8Array([tag2]), derLen(body.length), body);
-var derSequence = (...items) => tlv(48, cat2(...items));
-var derOctetString = (bytes) => tlv(4, bytes);
-var derNull = () => new Uint8Array([5, 0]);
-var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
-function derInteger(bytes) {
-  let i = 0;
-  while (i < bytes.length - 1 && bytes[i] === 0 && (bytes[i + 1] & 128) === 0) i++;
-  const trimmed = bytes.slice(i);
-  return tlv(2, trimmed[0] & 128 ? cat2(new Uint8Array([0]), trimmed) : trimmed);
-}
-var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
-var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
-var hexToBytes = (hex3) => {
-  const out = new Uint8Array(hex3.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex3.substr(i * 2, 2), 16);
-  return out;
-};
-function timestampRequest(sha256Hex8, nonceBytes) {
-  const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
-  return {
-    der: derSequence(
-      derIntegerSmall(1),
-      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex8))),
-      derInteger(nonce),
-      derBoolean(true)
-    ),
-    nonce
-  };
-}
-function readTlv(bytes, at) {
-  if (at + 2 > bytes.length) return null;
-  const tag2 = bytes[at];
-  let i = at + 1, length = bytes[i++];
-  if (length & 128) {
-    const count = length & 127;
-    if (count === 0 || i + count > bytes.length) return null;
-    length = 0;
-    for (let k = 0; k < count; k++) length = length * 256 + bytes[i++];
-  }
-  if (i + length > bytes.length) return null;
-  return { tag: tag2, value: bytes.subarray(i, i + length), end: i + length, headerEnd: i };
-}
-function parseTimestampResponse(bytes, expectDigestHex) {
-  try {
-    return parseResponse(bytes, expectDigestHex);
-  } catch {
-    return { ok: false, reason: "MALFORMED" };
-  }
-}
-function parseResponse(bytes, expectDigestHex) {
-  if (!(bytes instanceof Uint8Array)) return { ok: false, reason: "MALFORMED" };
-  const outer = readTlv(bytes, 0);
-  if (!outer || outer.tag !== 48) return { ok: false, reason: "MALFORMED" };
-  const info = readTlv(outer.value, 0);
-  if (!info || info.tag !== 48) return { ok: false, reason: "MALFORMED" };
-  const statusTlv = readTlv(info.value, 0);
-  if (!statusTlv || statusTlv.tag !== 2) return { ok: false, reason: "MALFORMED" };
-  let status = 0;
-  for (const b of statusTlv.value) status = status * 256 + b;
-  if (status !== 0 && status !== 1) return { ok: false, reason: "REJECTED", status };
-  const token = readTlv(outer.value, info.end);
-  if (!token || token.tag !== 48) return { ok: false, reason: "NO_TOKEN", status };
-  const tokenBytes = outer.value.subarray(info.end, token.end);
-  if (typeof expectDigestHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(expectDigestHex))
-    return { ok: false, reason: "NOT_BOUND", status };
-  const want = hexToBytes(expectDigestHex);
-  let found = false;
-  outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
-    for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
-    found = true;
-    break;
-  }
-  if (!found) return { ok: false, reason: "NOT_BOUND", status };
-  return { ok: true, status, token: tokenBytes };
-}
-var TSA_ENDPOINTS = Object.freeze([
-  "http://timestamp.digicert.com",
-  "http://timestamp.sectigo.com",
-  "http://rfc3161.ai.moda"
-]);
-var TSA_CONTENT_TYPE = "application/timestamp-query";
-var TSA_ACCEPT = "application/timestamp-reply";
-var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
-var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
-function archiveLocatorFrom(res, requested) {
-  const header = (name) => {
-    try {
-      return res.headers.get(name) || "";
-    } catch {
-      return "";
-    }
-  };
-  let url = "";
-  try {
-    url = typeof res.url === "string" ? res.url : "";
-  } catch {
-  }
-  for (const loc of [header("content-location"), header("location"), url]) {
-    if (typeof loc !== "string") continue;
-    if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
-    if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
-  }
-  return null;
-}
-
 // src/browserrender.mjs
 var FAKE_HOST = "https://fake.host";
 var CLIENT_HEADER = "bio-plane";
 var IDLE_QUIET_MS = 500;
+var LONG_LIVED_AFTER_MS = 4e3;
 var SERIALISE_MS = 1e3;
 var BODY_PHASE_MS = 1e4;
 var BODY_CALL_MS = 5e3;
@@ -24093,8 +23337,18 @@ async function boundedOpen(binding, ms) {
   const expire = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`)), ms);
   });
+  const opening = openSession(binding);
   try {
-    return await Promise.race([openSession(binding), expire]);
+    return await Promise.race([opening, expire]);
+  } catch (e) {
+    opening.then((s) => {
+      try {
+        s.ws.close();
+      } catch {
+      }
+    }, () => {
+    });
+    throw e;
   } finally {
     clearTimeout(timer);
   }
@@ -24255,6 +23509,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     } catch {
     }
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
+    let quietYoungSince = null;
     conn.on((m) => {
       const p = m.params || {};
       switch (m.method) {
@@ -24275,8 +23530,10 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
             type: resourceType(p.type),
             outcome: "pending",
             status: null,
-            blocked_by: null
+            blocked_by: null,
+            since: now()
           });
+          quietYoungSince = null;
           break;
         case "Network.responseReceived": {
           const r = requests.get(p.requestId);
@@ -24321,6 +23578,9 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     const overall = started + navMs + timeoutMs;
     const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
     let fired = null;
+    const pending = () => [...requests.values()].filter((r) => r.outcome === "pending");
+    const isLongLived = (r) => LONG_LIVED_AFTER_MS !== null && now() - r.since >= LONG_LIVED_AFTER_MS;
+    const longLived = () => pending().filter(isLongLived);
     while (now() < deadline) {
       if (until === "load" && loadFired) {
         fired = "load";
@@ -24331,9 +23591,19 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
         break;
       }
       if (loadFired && inflight <= 0 && lastQuietAt === null) lastQuietAt = now();
+      const openNow = LONG_LIVED_AFTER_MS !== null && until !== "load" && loadFired ? pending() : [];
+      if (openNow.length > 0 && openNow.every(isLongLived)) {
+        if (quietYoungSince === null) quietYoungSince = now();
+        else if (now() - quietYoungSince >= IDLE_QUIET_MS) {
+          fired = "quiet_excluding_long_lived";
+          break;
+        }
+      } else quietYoungSince = null;
       await new Promise((r) => setTimeout(r, 25));
     }
     if (!fired) fired = "timeout";
+    const open = longLived();
+    const longLivedReport = LONG_LIVED_AFTER_MS === null ? null : { older_than_s: LONG_LIVED_AFTER_MS / 1e3, count: open.length, urls: open.map((r) => r.url) };
     const evaluated = await conn.send("Runtime.evaluate", {
       expression: `JSON.stringify({html: (document.doctype ? "<!DOCTYPE " + document.doctype.name + ">\\n" : "") + document.documentElement.outerHTML,url: location.href })`,
       returnByValue: true,
@@ -24364,7 +23634,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
       dpr: envOk.dpr ? Number(asked.dpr) || 1 : null,
       locale: envOk.locale ? asked.locale : null,
       timezone: envOk.timezone ? asked.timezone : null,
-      wait: { condition: asked.wait || null, fired },
+      wait: { condition: asked.wait || null, fired, ...longLivedReport ? { long_lived: longLivedReport } : {} },
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,
@@ -24439,43 +23709,60 @@ var RENDER_DEFAULTS = Object.freeze({
   navigation_timeout_ms: RENDER_NAVIGATION_TIMEOUT_MS,
   viewport: Object.freeze({ width: 1280, height: 800 }),
   dpr: 1,
+  /* R54: the FALLBACK only. The locale a render asks for is the one the instance's
+     jurisdiction profiles name (`renderLocaleFor`); this is used when they name none. */
   locale: "en-US",
   timezone: "UTC",
   wait: Object.freeze({ until: "networkidle", timeout_ms: 15e3 })
 });
+var LANGUAGE_TAG = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$/;
+function renderLocaleFor(view) {
+  try {
+    const fact = view && typeof view === "object" ? view.locale : null;
+    const v = fact && typeof fact === "object" ? fact.value : null;
+    return typeof v === "string" && LANGUAGE_TAG.test(v) ? v : RENDER_DEFAULTS.locale;
+  } catch {
+    return RENDER_DEFAULTS.locale;
+  }
+}
 var RENDERED_METHOD = "rendered";
 var RENDER_TICK_UNDETERMINED = "content undetermined \u2014 not watched: this source renders its content in the browser";
 var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
+var SETTLED_WORD = "quiet_excluding_long_lived";
 function waitFiredClass(fired, askedWait) {
   if (!isStr(fired)) return "undetermined";
-  const f3 = fired.trim().toLowerCase();
-  if (TIMEOUT_WORD.test(f3)) return "timeout";
+  const f4 = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f4)) return "timeout";
+  if (f4 === SETTLED_WORD) return "settled";
   const until = askedWait && isStr(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
-  return until && f3 === until ? "condition" : "undetermined";
+  return until && f4 === until ? "condition" : "undetermined";
 }
 var RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
+function settledReading(count) {
+  return `settled; ${Number.isInteger(count) && count >= 0 ? count : "an unstated number of"} long-lived request(s) still open were not waited for`;
+}
 function completenessReading(render) {
-  if (!render || render.completeness !== "undetermined") return null;
+  if (!render) return null;
+  if (render.completeness === "settled_with_open_requests")
+    return settledReading(render.wait && render.wait.long_lived ? render.wait.long_lived.count : null);
+  if (render.completeness !== "undetermined") return null;
   if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
   return "render completeness is undetermined (which wait ended the render was not established)";
 }
 var RENDER_DAILY_ALLOWANCE_MS_DEFAULT = 20 * 60 * 1e3;
+var figure = (v) => typeof v === "number" ? v : typeof v === "string" && /\S/.test(v) ? Number(v) : NaN;
 function renderAllowanceMs(env) {
-  const v = env && env.RENDER_DAILY_ALLOWANCE_MS;
-  if (v === void 0 || v === null || v === "") return RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
-  const n = Number(v);
+  const n = figure(env && env.RENDER_DAILY_ALLOWANCE_MS);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : RENDER_DAILY_ALLOWANCE_MS_DEFAULT;
 }
 var RENDER_CONCURRENCY_CAP_DEFAULT = 10;
 function renderConcurrencyCap(env) {
-  const v = env && env.RENDER_CONCURRENCY_CAP;
-  if (v === void 0 || v === null || v === "") return RENDER_CONCURRENCY_CAP_DEFAULT;
-  const n = Number(v);
+  const n = figure(env && env.RENDER_CONCURRENCY_CAP);
   return Number.isInteger(n) && n > 0 ? n : RENDER_CONCURRENCY_CAP_DEFAULT;
 }
 function renderReserveMs(asked = RENDER_DEFAULTS) {
   const pos = (v, fallback) => {
-    const n = Number(v);
+    const n = figure(v);
     return Number.isFinite(n) && n >= 0 ? n : fallback;
   };
   const wait = pos(asked && asked.wait && asked.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
@@ -24567,17 +23854,19 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, d
   if (typeof answer.html !== "string" || answer.html.length === 0)
     return { ok: false, problem: "the renderer answered with no rendered document" };
   const undetermined = [];
-  const pageHost = (() => {
+  const hostOf2 = (u) => {
     try {
-      return new URL(answer.navigated_to || pageUrl).hostname.toLowerCase();
+      return isStr(u) ? new URL(u).hostname.toLowerCase() : null;
     } catch {
       return null;
     }
-  })();
+  };
+  const pageHost = hostOf2(answer.navigated_to) || hostOf2(pageUrl);
   let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
+    const at2 = new Map(answer.requests.map((r, i) => [r, i]));
     const digestOf = (r) => {
-      const i = answer.requests.indexOf(r);
+      const i = at2.get(r);
       const d = Array.isArray(digests2) ? digests2[i] : null;
       if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
       return {
@@ -24653,8 +23942,16 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, d
   };
   const waitFired = pick("wait.fired", answer.wait && isStr(answer.wait.fired) ? answer.wait.fired : null);
   const firedClass = waitFiredClass(waitFired, asked.wait);
-  const completeness = firedClass === "condition" ? "condition_met" : "undetermined";
-  if (firedClass === "timeout")
+  const completeness = firedClass === "condition" ? "condition_met" : firedClass === "settled" ? "settled_with_open_requests" : "undetermined";
+  const ll = answer.wait && answer.wait.long_lived && typeof answer.wait.long_lived === "object" ? answer.wait.long_lived : null;
+  const longLived = ll ? {
+    older_than_s: num(ll.older_than_s),
+    count: Number.isInteger(ll.count) && ll.count >= 0 ? ll.count : null,
+    urls: Array.isArray(ll.urls) ? ll.urls.filter(isStr) : null
+  } : null;
+  if (firedClass === "settled")
+    undetermined.push(`completeness: ${settledReading(longLived ? longLived.count : null)}${longLived && longLived.older_than_s !== null ? ` (requests open longer than ${longLived.older_than_s} s)` : ""} \u2014 the renderer's wait ended on its quiet window, which does not wait for them, so what they would have brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (D-570, BOB #34, 2026-09-25).`);
+  else if (firedClass === "timeout")
     undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
   else if (firedClass === "undetermined")
     undetermined.push(`completeness: ${isStr(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition this plane asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
@@ -24667,7 +23964,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, d
     locale: pick("locale", isStr(answer.locale) ? answer.locale : null),
     timezone: pick("timezone", isStr(answer.timezone) ? answer.timezone : null),
     /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
-    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass },
+    wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
     /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
        not that the page was finished, which no renderer reports. `undetermined`
        carries its reason in `undetermined[]` above. The GRADE is untouched either
@@ -24721,11 +24018,16 @@ function renderedAuthority({ asserted, render, at }) {
 function rendererFor(env) {
   if (env && env.RENDERER && typeof env.RENDERER.fetch === "function")
     return { kind: "service", render: async (req) => {
-      const r = await env.RENDERER.fetch("http://renderer/render", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(req)
-      });
+      let r;
+      try {
+        r = await env.RENDERER.fetch("http://renderer/render", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(req)
+        });
+      } catch (e) {
+        return { ok: false, error: `the renderer service could not be reached: ${String(e && e.message || e).slice(0, 200)}` };
+      }
       return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
     } };
   if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")
@@ -24964,16 +24266,16 @@ function parseLiteralString(s, pos) {
 }
 function parseHexString(s, pos) {
   pos++;
-  let hex3 = "";
+  let hex4 = "";
   while (pos < s.length && s.charCodeAt(pos) !== 62) {
     const c = s[pos];
-    if (/[0-9a-fA-F]/.test(c)) hex3 += c;
+    if (/[0-9a-fA-F]/.test(c)) hex4 += c;
     pos++;
   }
   pos++;
-  if (hex3.length % 2) hex3 += "0";
+  if (hex4.length % 2) hex4 += "0";
   let raw = "";
-  for (let i = 0; i < hex3.length; i += 2) raw += String.fromCharCode(parseInt(hex3.substr(i, 2), 16));
+  for (let i = 0; i < hex4.length; i += 2) raw += String.fromCharCode(parseInt(hex4.substr(i, 2), 16));
   return { value: { t: "str", v: decodePdfText(raw) }, pos };
 }
 function decodePdfText(raw) {
@@ -25116,7 +24418,7 @@ var PdfDoc = class {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f3) => f3 && f3.t === "name" ? f3.v : null) : [];
+    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -25650,16 +24952,16 @@ function readLiteralBytes(s, pos) {
 }
 function readHexBytes(s, pos) {
   pos++;
-  let hex3 = "";
+  let hex4 = "";
   while (pos < s.length && s.charCodeAt(pos) !== 62) {
     const ch = s[pos];
-    if (/[0-9a-fA-F]/.test(ch)) hex3 += ch;
+    if (/[0-9a-fA-F]/.test(ch)) hex4 += ch;
     pos++;
   }
   pos++;
-  if (hex3.length % 2) hex3 += "0";
+  if (hex4.length % 2) hex4 += "0";
   const bytes = [];
-  for (let i = 0; i < hex3.length; i += 2) bytes.push(parseInt(hex3.substr(i, 2), 16));
+  for (let i = 0; i < hex4.length; i += 2) bytes.push(parseInt(hex4.substr(i, 2), 16));
   return { bytes, pos };
 }
 function readContentName(s, pos) {
@@ -25692,17 +24994,17 @@ function readContentNumber(s, pos) {
   const v = parseFloat(s.slice(start, pos));
   return { v: Number.isNaN(v) ? 0 : v, pos };
 }
-function hexToUnicode(hex3) {
-  if (hex3.length <= 2) return String.fromCharCode(parseInt(hex3 || "0", 16));
+function hexToUnicode(hex4) {
+  if (hex4.length <= 2) return String.fromCharCode(parseInt(hex4 || "0", 16));
   let out = "";
-  for (let i = 0; i + 4 <= hex3.length; i += 4) out += String.fromCharCode(parseInt(hex3.substr(i, 4), 16));
-  if (hex3.length % 4 === 2) out += String.fromCharCode(parseInt(hex3.substr(hex3.length - 2, 2), 16));
+  for (let i = 0; i + 4 <= hex4.length; i += 4) out += String.fromCharCode(parseInt(hex4.substr(i, 4), 16));
+  if (hex4.length % 4 === 2) out += String.fromCharCode(parseInt(hex4.substr(hex4.length - 2, 2), 16));
   return out;
 }
-function unicodeIncr(hex3, off) {
+function unicodeIncr(hex4, off) {
   const units = [];
-  for (let i = 0; i + 4 <= hex3.length; i += 4) units.push(parseInt(hex3.substr(i, 4), 16));
-  if (units.length === 0) return String.fromCharCode(parseInt(hex3 || "0", 16) + off & 65535);
+  for (let i = 0; i + 4 <= hex4.length; i += 4) units.push(parseInt(hex4.substr(i, 4), 16));
+  if (units.length === 0) return String.fromCharCode(parseInt(hex4 || "0", 16) + off & 65535);
   units[units.length - 1] = units[units.length - 1] + off & 65535;
   return units.map((u) => String.fromCharCode(u)).join("");
 }
@@ -25948,9 +25250,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const ref = curFontDict[name];
     const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
-    const f3 = await loadFont(doc, ref);
-    fontCache.set(key, f3);
-    return f3;
+    const f4 = await loadFont(doc, ref);
+    fontCache.set(key, f4);
+    return f4;
   };
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
@@ -26453,10 +25755,10 @@ function matrixOf(doc, v) {
   return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
 }
 function imageFilters(doc, dict) {
-  const f3 = doc.resolve(dict.Filter);
-  if (!f3) return [];
-  if (f3.t === "name") return [f3.v];
-  if (f3.t === "arr") return f3.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  const f4 = doc.resolve(dict.Filter);
+  if (!f4) return [];
+  if (f4.t === "name") return [f4.v];
+  if (f4.t === "arr") return f4.items.map((x) => nameOf(doc, x)).filter(Boolean);
   return [];
 }
 async function decodeContentStreams(doc, contents) {
@@ -27576,7 +26878,7 @@ function checkChain(chain2) {
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
     const mustName = STEP_KINDS[step.step].names || [];
-    const unnamed = mustName.filter((f3) => !(typeof step[f3] === "string" && step[f3].trim()));
+    const unnamed = mustName.filter((f4) => !(typeof step[f4] === "string" && step[f4].trim()));
     if (unnamed.length)
       return refusal2(
         "TEXT_CHAIN_STEP_UNNAMED",
@@ -28142,6 +27444,9 @@ function selectCapture(rows, { notAfter = null } = {}) {
   return {
     ok: true,
     chosen: {
+      /* R36: the archive's own key for the address (SURT form), carried verbatim so the
+         hop can name which index entry it read; `null` when the row carried none. */
+      urlkey: typeof chosen.urlkey === "string" && chosen.urlkey ? chosen.urlkey : null,
       timestamp: chosen.timestamp,
       archived_at: cdxTimestampToIso(chosen.timestamp),
       original: chosen.original,
@@ -28174,6 +27479,7 @@ function archiveHop(chosen, replay, { mementoDatetime = null, warcSource = null 
     who: "Internet Archive Wayback Machine",
     asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
     evidence: [
+      chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : "the CDX record carried no urlkey",
       `CDX record: timestamp ${chosen.timestamp}, digest ${chosen.digest} (base32 SHA-1, over the body as they stored it)`,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
       chosen.warc_record_length ? `WARC record length ${chosen.warc_record_length}, which is THEIR compressed record size and not the length of what we received` : null,
@@ -28254,7 +27560,7 @@ function applyRules(text, rules) {
     }
     if (count) found.push({ rule: rule.key, region: rule.region, label: rule.label, count, bytes });
   }
-  return { text: out, found, bytes: found.reduce((n, f3) => n + f3.bytes, 0) };
+  return { text: out, found, bytes: found.reduce((n, f4) => n + f4.bytes, 0) };
 }
 function applyBoundary(text, boundary) {
   if (!boundary) return { text, found: [], bytes: 0 };
@@ -29538,21 +28844,21 @@ function validateInto(p, errors) {
       str(`${at}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list2(`${at}.forms`, s.forms).forEach((f3, i) => {
+      list2(`${at}.forms`, s.forms).forEach((f4, i) => {
         const fa = `${at}.forms[${i}]`;
-        if (!entry(fa, f3)) return;
-        fields(fa, f3, ["form", "pattern", "normal", "clean", "basis"]);
-        str(`${fa}.form`, f3.form, "form");
-        if (isStr2(f3.form)) {
-          if (names.has(f3.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f3.form}' is named twice in ${name}`);
-          names.add(f3.form);
+        if (!entry(fa, f4)) return;
+        fields(fa, f4, ["form", "pattern", "normal", "clean", "basis"]);
+        str(`${fa}.form`, f4.form, "form");
+        if (isStr2(f4.form)) {
+          if (names.has(f4.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f4.form}' is named twice in ${name}`);
+          names.add(f4.form);
         }
-        const re = compile(f3.pattern);
-        if (!re) pattern(`${fa}.pattern`, f3.pattern);
+        const re = compile(f4.pattern);
+        if (!re) pattern(`${fa}.pattern`, f4.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f3.normal) && f3.normal.length > 0;
+        let normalOk = Array.isArray(f4.normal) && f4.normal.length > 0;
         if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f3.normal.forEach((part, j) => {
+        else f4.normal.forEach((part, j) => {
           if (typeof part === "string") return;
           const pa = `${fa}.normal[${j}]`;
           if (!isObj(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own(part, "unpad") && typeof part.unpad !== "boolean" || own(part, "upper") && typeof part.upper !== "boolean" || own(part, "default") && typeof part.default !== "string") {
@@ -29560,16 +28866,16 @@ function validateInto(p, errors) {
             err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
           }
         });
-        if (own(f3, "clean")) {
-          const c = f3.clean;
+        if (own(f4, "clean")) {
+          const c = f4.clean;
           const bad = !isObj(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
           }
         }
-        basis(fa, f3);
-        if (isStr2(f3.form) && re && normalOk) spaceForms[name].set(f3.form, f3);
+        basis(fa, f4);
+        if (isStr2(f4.form) && re && normalOk) spaceForms[name].set(f4.form, f4);
       });
       if (name === "enactment" && own(s, "kinds")) list2(`${at}.kinds`, s.kinds).forEach((k, i) => {
         const ka = `${at}.kinds[${i}]`;
@@ -29601,8 +28907,8 @@ function validateInto(p, errors) {
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
     if (!forms) err(`${at}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f3, j) => {
-      if (!known.has(f3)) err(`${at}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f3)}'`);
+    else forms.forEach((f4, j) => {
+      if (!known.has(f4)) err(`${at}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f4)}'`);
     });
     list2(`${at}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
@@ -29611,8 +28917,8 @@ function validateInto(p, errors) {
       }
       if (!forms) return;
       pair.forEach((v, n) => {
-        const f3 = known.get(forms[n]);
-        if (f3 && applyForm(f3, v) == null) err(`${at}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        const f4 = known.get(forms[n]);
+        if (f4 && applyForm(f4, v) == null) err(`${at}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
     basis(at, x);
@@ -29851,9 +29157,9 @@ function merge(profiles) {
       if (!givers.length) continue;
       const s = { label: [...new Set(givers.map((p) => p.spaces[space].label))].join("; "), forms: [] };
       const byForm = /* @__PURE__ */ new Map();
-      for (const p of givers) for (const f3 of p.spaces[space].forms || []) {
-        if (!byForm.has(f3.form)) byForm.set(f3.form, []);
-        byForm.get(f3.form).push({ profile: p.id, value: f3 });
+      for (const p of givers) for (const f4 of p.spaces[space].forms || []) {
+        if (!byForm.has(f4.form)) byForm.set(f4.form, []);
+        byForm.get(f4.form).push({ profile: p.id, value: f4 });
       }
       for (const [form, given] of byForm) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
@@ -29986,11 +29292,11 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f3 of ["tier", "venue", "template"]) {
-        const vals = given.filter((g) => own(g.k, f3)).map((g) => ({ profile: g.profile, value: clone(g.k[f3]), basis: g.k.basis }));
+      for (const f4 of ["tier", "venue", "template"]) {
+        const vals = given.filter((g) => own(g.k, f4)).map((g) => ({ profile: g.profile, value: clone(g.k[f4]), basis: g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f3] = f3 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f3}`, vals, `the active profiles give different ${f3 === "tier" ? "risk tiers" : `${f3}s`} for ${kind}, so none is given`);
+        if (agree(vals)) e[f4] = f4 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
+        else conflict(`action_kinds[${kind}].${f4}`, vals, `the active profiles give different ${f4 === "tier" ? "risk tiers" : `${f4}s`} for ${kind}, so none is given`);
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -30009,11 +29315,11 @@ function merge(profiles) {
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f3 of ["days", "count", "starts", "extension"]) {
-        const vals = given.filter((g) => own(g.d, f3)).map((g) => ({ profile: g.profile, value: clone(g.d[f3]), basis: g.d.basis }));
+      for (const f4 of ["days", "count", "starts", "extension"]) {
+        const vals = given.filter((g) => own(g.d, f4)).map((g) => ({ profile: g.profile, value: clone(g.d[f4]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f3] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f3}`, vals, `the active profiles disagree on the ${f3} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (agree(vals)) e[f4] = vals[0].value;
+        else conflict(`deadlines[${rule}/${applies_to}].${f4}`, vals, `the active profiles disagree on the ${f4} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
       }
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
@@ -30037,10 +29343,10 @@ function selfNaming(text, re) {
 }
 var FURNITURE_RECURS = 3;
 function alsoSatisfies(ctx, selfKey) {
-  const f3 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
-  if (!f3) return [];
+  const f4 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f4) return [];
   try {
-    return f3(selfKey) || [];
+    return f4(selfKey) || [];
   } catch {
     return [];
   }
@@ -30125,8 +29431,8 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   const v = readerView(ctx);
   const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f3) => f3 && f3.pattern && typeof f3.pattern.re === "string" && vocabRegex(f3.pattern));
-  const forms = formList.map((f3) => vocabPiece(f3.pattern.re));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f4) => f4 && f4.pattern && typeof f4.pattern.re === "string" && vocabRegex(f4.pattern));
+  const forms = formList.map((f4) => vocabPiece(f4.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers").map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null).filter((s) => s && vocabRegex({ re: s }));
   if (!forms.length && !blankNumber) return [];
   const num2 = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
@@ -30142,9 +29448,9 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
 }
 function enactmentNumber(forms, text) {
   if (typeof text !== "string" || !text.trim()) return null;
-  for (const f3 of forms || []) {
+  for (const f4 of forms || []) {
     let t = text.trim();
-    const c = f3.clean || {};
+    const c = f4.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
       if (re2) t = t.replace(re2, "");
@@ -30152,11 +29458,11 @@ function enactmentNumber(forms, text) {
     if (c.spaces === "remove") t = t.replace(/\s+/g, "");
     else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
     if (c.upper === true) t = t.toUpperCase();
-    const re = vocabRegex(f3.pattern);
+    const re = vocabRegex(f4.pattern);
     const m = re && re.exec(t);
     if (!m) continue;
     let out = "";
-    for (const part of Array.isArray(f3.normal) ? f3.normal : []) {
+    for (const part of Array.isArray(f4.normal) ? f4.normal : []) {
       if (typeof part === "string") {
         out += part;
         continue;
@@ -30227,9 +29533,9 @@ function diffEntities(before, after) {
       continue;
     }
     const moved = [];
-    for (const f3 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
-      if (String(was.facts[f3]) !== String(now.facts[f3]))
-        moved.push({ fact: f3, was: was.facts[f3], now: now.facts[f3] });
+    for (const f4 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f4]) !== String(now.facts[f4]))
+        moved.push({ fact: f4, was: was.facts[f4], now: now.facts[f4] });
     if (moved.length) altered.push({ entity: now, was, moved });
   }
   for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
@@ -30369,38 +29675,38 @@ var meeting_calendar_default = {
       ));
     }
     for (const alt of d.altered) {
-      const f3 = new Map(alt.moved.map((m) => [m.fact, m]));
-      if (f3.has("status")) {
-        const now = f3.get("status").now;
+      const f4 = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f4.has("status")) {
+        const now = f4.get("status").now;
         events.push(event(
           now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
           {
             key: alt.entity.key,
             label: alt.entity.label,
-            was: f3.get("status").was,
+            was: f4.get("status").was,
             now,
-            why: `a meeting's status changed from ${f3.get("status").was} to ${now}`
+            why: `a meeting's status changed from ${f4.get("status").was} to ${now}`
           }
         ));
       }
-      if (f3.has("date"))
+      if (f4.has("date"))
         events.push(event("moved", {
           key: alt.entity.key,
           label: alt.entity.label,
-          was: f3.get("date").was,
-          now: f3.get("date").now,
+          was: f4.get("date").was,
+          now: f4.get("date").now,
           why: "a meeting's date changed"
         }));
-      if (f3.has("body"))
+      if (f4.has("body"))
         events.push(event("renamed", {
           key: alt.entity.key,
-          was: f3.get("body").was,
-          now: f3.get("body").now,
+          was: f4.get("body").was,
+          now: f4.get("body").now,
           why: "the body holding a meeting is named differently"
         }));
       for (const kind of ["agenda", "minutes"]) {
-        if (!f3.has(kind)) continue;
-        const { was, now } = f3.get(kind);
+        if (!f4.has(kind)) continue;
+        const { was, now } = f4.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, {
             key: alt.entity.key,
@@ -31225,7 +30531,7 @@ var staff_report_default = {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const memo = memoHeader(flat);
-    const f3 = memo && memo.fields || {};
+    const f4 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
     let recommendation = null;
@@ -31288,10 +30594,10 @@ var staff_report_default = {
       );
     return {
       entities,
-      to: f3.to || null,
-      from: f3.from || null,
-      subject: f3.subject || null,
-      date: f3.date || null,
+      to: f4.to || null,
+      from: f4.from || null,
+      subject: f4.subject || null,
+      date: f4.date || null,
       recommendation,
       sections: secs.length,
       signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
@@ -36120,31 +35426,31 @@ var refusal3 = (code, detail, extra) => {
   const row = rowOf(code);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
 };
-function fileDigestOf(f3) {
-  if (f3 && typeof f3.text === "string") return hexOf(f3.text);
-  if (f3 && typeof f3.blobSha === "string" && f3.blobSha) return f3.blobSha.toLowerCase();
+function fileDigestOf(f4) {
+  if (f4 && typeof f4.text === "string") return hexOf(f4.text);
+  if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
   return null;
 }
-function inlineBytesOf(f3) {
-  return f3 && typeof f3.text === "string" ? te4.encode(f3.text).length : null;
+function inlineBytesOf(f4) {
+  return f4 && typeof f4.text === "string" ? te4.encode(f4.text).length : null;
 }
 function digestFiles(files) {
   const disagree = [];
-  const out = files.map((f3) => {
-    const computed = fileDigestOf(f3);
-    if (computed === null) return f3;
-    const supplied = f3.sha256;
-    if (supplied === void 0 || supplied === null) return { ...f3, sha256: computed };
+  const out = files.map((f4) => {
+    const computed = fileDigestOf(f4);
+    if (computed === null) return f4;
+    const supplied = f4.sha256;
+    if (supplied === void 0 || supplied === null) return { ...f4, sha256: computed };
     if (typeof supplied !== "string" || supplied.toLowerCase() !== computed) {
       disagree.push({
-        path: f3.path ?? null,
-        kind: typeof f3.text === "string" ? "inline" : "blob",
+        path: f4.path ?? null,
+        kind: typeof f4.text === "string" ? "inline" : "blob",
         supplied: typeof supplied === "string" ? supplied : String(supplied),
         computed
       });
-      return f3;
+      return f4;
     }
-    return supplied === computed ? f3 : { ...f3, sha256: computed };
+    return supplied === computed ? f4 : { ...f4, sha256: computed };
   });
   return { files: out, disagree };
 }
@@ -36155,24 +35461,24 @@ function samePromotion(entry, want) {
   if (!held.length || held.length !== want.files.length) return false;
   const digestOf = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
   const byName = /* @__PURE__ */ new Map();
-  for (const f3 of held) {
-    const d = digestOf(f3.sha256);
-    if (typeof f3.name !== "string" || d === null || byName.has(f3.name)) return false;
-    byName.set(f3.name, d);
+  for (const f4 of held) {
+    const d = digestOf(f4.sha256);
+    if (typeof f4.name !== "string" || d === null || byName.has(f4.name)) return false;
+    byName.set(f4.name, d);
   }
-  for (const f3 of want.files) {
-    const d = f3 ? digestOf(f3.sha256) : null;
-    if (!f3 || typeof f3.path !== "string" || d === null || byName.get(f3.path) !== d) return false;
-    byName.delete(f3.path);
+  for (const f4 of want.files) {
+    const d = f4 ? digestOf(f4.sha256) : null;
+    if (!f4 || typeof f4.path !== "string" || d === null || byName.get(f4.path) !== d) return false;
+    byName.delete(f4.path);
   }
   return byName.size === 0;
 }
 function stampGroup(files, slug) {
-  return files.map((f3) => {
-    if (!f3 || f3.path !== "bundle.md" || typeof f3.text !== "string") return f3;
-    const text = withProducingGroup(f3.text, slug);
-    if (text === f3.text) return f3;
-    return { ...f3, text, bytes: te4.encode(text).length, sha256: hexOf(text) };
+  return files.map((f4) => {
+    if (!f4 || f4.path !== "bundle.md" || typeof f4.text !== "string") return f4;
+    const text = withProducingGroup(f4.text, slug);
+    if (text === f4.text) return f4;
+    return { ...f4, text, bytes: te4.encode(text).length, sha256: hexOf(text) };
   });
 }
 var NAME_TAKEN = () => ({
@@ -36279,7 +35585,7 @@ var Promotion = class {
         reason: "BASIS_IN_PAYLOAD",
         detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field"
       };
-    const sentMd = Array.isArray(files) ? files.find((f3) => isObj2(f3) && f3.path === "bundle.md") : null;
+    const sentMd = Array.isArray(files) ? files.find((f4) => isObj2(f4) && f4.path === "bundle.md") : null;
     const sentFm0 = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
     const sentFm = isObj2(sentFm0) ? sentFm0 : null;
     const envelope = isObj2(meta) ? meta : null;
@@ -36331,22 +35637,22 @@ var Promotion = class {
         "PROMOTE_SNAP_KEY_UNSTATED",
         "this request names no snapKey (a non-blank string), so the revision has no name in the history. Nothing was written."
       );
-    const pathless = files.map((f3, i) => isObj2(f3) && typeof f3.path === "string" && f3.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
+    const pathless = files.map((f4, i) => isObj2(f4) && typeof f4.path === "string" && f4.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
     if (pathless.length)
       return refusal3(
         "PROMOTED_FILE_PATH_UNSTATED",
         `files entr${pathless.length > 1 ? "ies" : "y"} ${pathless.join(", ")} (counting from 0) name no path (a non-blank string), or are not file objects. Nothing was written.`,
         { entries: pathless }
       );
-    const blobHeld = (f3) => typeof f3.text !== "string" && typeof f3.blobSha === "string" && f3.blobSha !== "";
-    const empty = files.filter((f3) => typeof f3.text !== "string" && !blobHeld(f3)).map((f3) => f3.path);
+    const blobHeld = (f4) => typeof f4.text !== "string" && typeof f4.blobSha === "string" && f4.blobSha !== "";
+    const empty = files.filter((f4) => typeof f4.text !== "string" && !blobHeld(f4)).map((f4) => f4.path);
     if (empty.length)
       return refusal3(
         "PROMOTED_FILE_CONTENT_UNSTATED",
         `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.`,
         { paths: empty }
       );
-    const sizeless = files.filter((f3) => blobHeld(f3) && !(Number.isInteger(f3.bytes) && f3.bytes >= 0)).map((f3) => f3.path);
+    const sizeless = files.filter((f4) => blobHeld(f4) && !(Number.isInteger(f4.bytes) && f4.bytes >= 0)).map((f4) => f4.path);
     if (sizeless.length)
       return refusal3(
         "PROMOTED_FILE_BYTES_UNSTATED",
@@ -36386,9 +35692,9 @@ var Promotion = class {
         "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ") + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree }
       );
-    files = digested.files.map((f3) => {
-      const n = inlineBytesOf(f3);
-      return n === null || f3.bytes === n ? f3 : { ...f3, bytes: n };
+    files = digested.files.map((f4) => {
+      const n = inlineBytesOf(f4);
+      return n === null || f4.bytes === n ? f4 : { ...f4, bytes: n };
     });
     let groupStamp = null, createdGroup = null;
     if (base === null) {
@@ -36435,8 +35741,8 @@ var Promotion = class {
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");
-        const written = { ...files.find((f3) => f3.path === "bundle.md"), text, bytes: te4.encode(text).length, sha256: hexOf(text) };
-        files = files.map((f3) => f3.path === "bundle.md" ? written : f3);
+        const written = { ...files.find((f4) => f4.path === "bundle.md"), text, bytes: te4.encode(text).length, sha256: hexOf(text) };
+        files = files.map((f4) => f4.path === "bundle.md" ? written : f4);
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
       const head = record.head(bundleId);
@@ -36463,7 +35769,7 @@ var Promotion = class {
         writer,
         operation
       })) {
-        const md = held.files.find((f3) => f3 && f3.name === "bundle.md");
+        const md = held.files.find((f4) => f4 && f4.name === "bundle.md");
         return {
           ok: true,
           bundleId,
@@ -36555,7 +35861,7 @@ var Promotion = class {
           `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says '${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again with the group the record holds, or with none. Nothing was written.`,
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) }
         );
-      const finalMd = files.find((f3) => f3.path === "bundle.md");
+      const finalMd = files.find((f4) => f4.path === "bundle.md");
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj2(finalFm0) ? finalFm0 : null;
       if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
@@ -36577,9 +35883,9 @@ var Promotion = class {
             detail: RETIRE_CITED_DETAIL
           };
       }
-      for (const f3 of files) {
-        const n = inlineBytesOf(f3);
-        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f3.path, bytes: n };
+      for (const f4 of files) {
+        const n = inlineBytesOf(f4);
+        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f4.path, bytes: n };
       }
       if (!replay) {
         if (documentType !== null && envelopeType !== null && documentType !== envelopeType)
@@ -36645,7 +35951,7 @@ var Promotion = class {
         }
       }
       if (head && !replay) {
-        const now = new Set(files.map((f3) => f3.path));
+        const now = new Set(files.map((f4) => f4.path));
         const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
         const dropped = record.livePaths(bundleId).filter((p) => !now.has(p) && !declared.has(p));
         if (dropped.length)
@@ -36846,9 +36152,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const carried = [];
     for (const path of record.livePaths(projectId)) {
       if (path === "bundle.md") continue;
-      const f3 = record.readFile(projectId, path);
-      if (!f3) continue;
-      carried.push(typeof f3.text === "string" ? { path, text: f3.text, sha256: f3.sha256 } : { path, blobSha: f3.blobSha, sha256: f3.sha256, bytes: f3.bytes });
+      const f4 = record.readFile(projectId, path);
+      if (!f4) continue;
+      carried.push(typeof f4.text === "string" ? { path, text: f4.text, sha256: f4.sha256 } : { path, blobSha: f4.blobSha, sha256: f4.sha256, bytes: f4.bytes });
     }
     const promoted = this.promote({
       base: null,
@@ -36981,9 +36287,9 @@ Changes: state ${head.currentState} to open. Reason: ${why}.
     const carried = [];
     for (const path of record.livePaths(target)) {
       if (path === "bundle.md") continue;
-      const f3 = record.readFile(target, path);
-      if (!f3) continue;
-      carried.push(typeof f3.text === "string" ? { path, text: f3.text, sha256: f3.sha256 } : { path, blobSha: f3.blobSha, sha256: f3.sha256, bytes: f3.bytes });
+      const f4 = record.readFile(target, path);
+      if (!f4) continue;
+      carried.push(typeof f4.text === "string" ? { path, text: f4.text, sha256: f4.sha256 } : { path, blobSha: f4.blobSha, sha256: f4.sha256, bytes: f4.bytes });
     }
     const promoted = this.promote({
       bundleId: target,
@@ -37018,8 +36324,8 @@ function promotionOf(host, deps) {
 async function recordAudit(host, opts = {}) {
   const record = recordOf(host);
   const pass = await record.auditPass(opts);
-  const hex3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  const sha2562 = async (v) => hex3(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te4.encode(v) : v));
+  const hex4 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  const sha2562 = async (v) => hex4(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te4.encode(v) : v));
   const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
   const tallyDetail = { ...pass.tallyDetail || {} };
   const out = { ...pass, tally: { ...pass.tally }, offenders: [...pass.offenders] };
@@ -37027,7 +36333,7 @@ async function recordAudit(host, opts = {}) {
     const img = record.readImage(id) || {};
     const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
     for (const [path, v] of Object.entries(img)) typeof v === "string" ? files.set(path, v) : elided.add(path);
-    const moved = (await recordChecks({ folderName: id, files, sha256: sha2562 })).filter((f3) => f3.severity === "error");
+    const moved = (await recordChecks({ folderName: id, files, sha256: sha2562 })).filter((f4) => f4.severity === "error");
     if (!moved.length) continue;
     const { findings } = await checkBundle({
       folderName: id,
@@ -37038,7 +36344,7 @@ async function recordAudit(host, opts = {}) {
       resolveTarget: (t) => !!record.bundleInfo(t),
       ...typeof opts.context === "function" ? opts.context(id) || {} : {}
     });
-    const before = findings.filter((f3) => f3.severity === "error");
+    const before = findings.filter((f4) => f4.severity === "error");
     if (!before.length) {
       out.clean--;
       out.withErrors++;
@@ -37060,6 +36366,6043 @@ async function recordAudit(host, opts = {}) {
 }
 function stepContext(c) {
   return c;
+}
+
+// src/tsa.mjs
+var cat2 = (...parts) => {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let i = 0;
+  for (const p of parts) {
+    out.set(p, i);
+    i += p.length;
+  }
+  return out;
+};
+function derLen(n) {
+  if (n < 128) return new Uint8Array([n]);
+  const bytes = [];
+  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes.unshift(v % 256);
+  return new Uint8Array([128 | bytes.length, ...bytes]);
+}
+var tlv = (tag2, body) => cat2(new Uint8Array([tag2]), derLen(body.length), body);
+var derSequence = (...items) => tlv(48, cat2(...items));
+var derOctetString = (bytes) => tlv(4, bytes);
+var derNull = () => new Uint8Array([5, 0]);
+var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
+function derInteger(bytes) {
+  let i = 0;
+  while (i < bytes.length - 1 && bytes[i] === 0 && (bytes[i + 1] & 128) === 0) i++;
+  const trimmed = bytes.slice(i);
+  return tlv(2, trimmed[0] & 128 ? cat2(new Uint8Array([0]), trimmed) : trimmed);
+}
+var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
+var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
+var hexToBytes = (hex4) => {
+  const out = new Uint8Array(hex4.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex4.substr(i * 2, 2), 16);
+  return out;
+};
+function timestampRequest(sha256Hex9, nonceBytes) {
+  const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
+  return {
+    der: derSequence(
+      derIntegerSmall(1),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex9))),
+      derInteger(nonce),
+      derBoolean(true)
+    ),
+    nonce
+  };
+}
+function readTlv(bytes, at) {
+  if (at + 2 > bytes.length) return null;
+  const tag2 = bytes[at];
+  let i = at + 1, length = bytes[i++];
+  if (length & 128) {
+    const count = length & 127;
+    if (count === 0 || i + count > bytes.length) return null;
+    length = 0;
+    for (let k = 0; k < count; k++) length = length * 256 + bytes[i++];
+  }
+  if (i + length > bytes.length) return null;
+  return { tag: tag2, value: bytes.subarray(i, i + length), end: i + length, headerEnd: i };
+}
+function parseTimestampResponse(bytes, expectDigestHex) {
+  try {
+    return parseResponse(bytes, expectDigestHex);
+  } catch {
+    return { ok: false, reason: "MALFORMED" };
+  }
+}
+function parseResponse(bytes, expectDigestHex) {
+  if (!(bytes instanceof Uint8Array)) return { ok: false, reason: "MALFORMED" };
+  const outer = readTlv(bytes, 0);
+  if (!outer || outer.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const info = readTlv(outer.value, 0);
+  if (!info || info.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const statusTlv = readTlv(info.value, 0);
+  if (!statusTlv || statusTlv.tag !== 2) return { ok: false, reason: "MALFORMED" };
+  let status = 0;
+  for (const b of statusTlv.value) status = status * 256 + b;
+  if (status !== 0 && status !== 1) return { ok: false, reason: "REJECTED", status };
+  const token = readTlv(outer.value, info.end);
+  if (!token || token.tag !== 48) return { ok: false, reason: "NO_TOKEN", status };
+  const tokenBytes = outer.value.subarray(info.end, token.end);
+  if (typeof expectDigestHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(expectDigestHex))
+    return { ok: false, reason: "NOT_BOUND", status };
+  const want = hexToBytes(expectDigestHex);
+  let found = false;
+  outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
+    for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
+    found = true;
+    break;
+  }
+  if (!found) return { ok: false, reason: "NOT_BOUND", status };
+  return { ok: true, status, token: tokenBytes };
+}
+var TSA_ENDPOINTS = Object.freeze([
+  "http://timestamp.digicert.com",
+  "http://timestamp.sectigo.com",
+  "http://rfc3161.ai.moda"
+]);
+var TSA_CONTENT_TYPE = "application/timestamp-query";
+var TSA_ACCEPT = "application/timestamp-reply";
+var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
+var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
+function archiveLocatorFrom(res, requested) {
+  const header = (name) => {
+    try {
+      return res.headers.get(name) || "";
+    } catch {
+      return "";
+    }
+  };
+  let url = "";
+  try {
+    url = typeof res.url === "string" ? res.url : "";
+  } catch {
+  }
+  for (const loc of [header("content-location"), header("location"), url]) {
+    if (typeof loc !== "string") continue;
+    if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
+    if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
+  }
+  return null;
+}
+
+// src/provenance/register-checks.mjs
+function f3(check, severity, message, repairs, code) {
+  const out = { check, severity, message };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  if (code) out.code = code;
+  return out;
+}
+function asText4(v) {
+  if (typeof v === "string") return v;
+  return new TextDecoder().decode(v);
+}
+function hasFile_2(ctx, path) {
+  return ctx.files.has(path) || ctx.elided && ctx.elided.has(path);
+}
+var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
+var ORIGIN_KINDS = ["named_request", "sweep", "member"];
+var CAPTURE_ENCODINGS2 = ["utf8", "base64", "binary"];
+var HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var RAW_SHA_RE2 = /^[0-9a-f]{64}$/;
+function checkAuthorityPublishable(ctx, findings) {
+  const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
+  const atFence = ctx.fm?.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
+  if (!atFence) return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText4(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+  docs.forEach((d, i) => {
+    if (!d || typeof d !== "object") return;
+    const chain2 = d.provenance_chain;
+    if (!("provenance_chain" in d)) {
+      findings.push(f3(
+        "C-18.9",
+        "error",
+        `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
+        [
+          "record the chain of custody for this capture, one hop per party, from us back to the source",
+          "or, where the capture record already holds the route, derive it from that evidence with op=provenancechain"
+        ],
+        /* REC-56 / D-206: the codes REC-54's three findings needed to reach a
+           reader through the TALLY and not only through the bounded offender
+           sample. One per arm, and they are the three facts in the comment
+           above in the order it states them. */
+        "chain-absent"
+      ));
+    } else if (!Array.isArray(chain2)) {
+      findings.push(f3(
+        "C-18.9",
+        "error",
+        `provenance documents[${i}] is at or past verified and its provenance_chain is ${chain2 === null ? "null" : typeof chain2}, not an array of hops: whatever wrote this did not write a chain`,
+        ["record the chain of custody as an array of hops, one per party, from us back to the source"],
+        "chain-not-an-array"
+      ));
+    } else if (chain2.length === 0) {
+      findings.push(f3(
+        "C-18.9",
+        "error",
+        `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
+        [
+          "name the parties that actually served these bytes, one hop each",
+          "or state plainly that the route is undetermined rather than leaving an empty chain standing at verified"
+        ],
+        "chain-empty"
+      ));
+    } else {
+      chain2.forEach((hop, h) => {
+        if (!hop || typeof hop !== "object" || typeof hop.who !== "string" || hop.who.trim() === "") {
+          findings.push(f3(
+            "C-18.9",
+            "error",
+            `provenance documents[${i}].provenance_chain[${h}] names no attestor: an unattributed hop cannot support the claim a published hash makes`,
+            ["name the party that served these bytes at this hop", "or remove the hop if it did not happen"]
+          ));
+        }
+      });
+    }
+    if (d.authority_state === "undetermined") {
+      const basis = d.authority_basis;
+      if (typeof basis !== "string" || basis.trim() === "") {
+        findings.push(f3(
+          "C-18.9",
+          "error",
+          `provenance documents[${i}] is content-authority undetermined and this bundle is at or past verified, but states no authority_basis: publishing an unanswered question is honest only when the record says it is unanswered and since when`,
+          [
+            "record a dated authority_basis saying what was tried and what it established",
+            "or determine the authority through the task list and record the determination"
+          ]
+        ));
+      }
+    } else if (d.authority_state === "determined" && (typeof d.authority !== "string" || d.authority.trim() === "")) {
+      findings.push(f3(
+        "C-18.9",
+        "error",
+        `provenance documents[${i}] declares authority_state 'determined' with no authority named, and this bundle is at or past verified`,
+        ["name the issuing party", "or correct authority_state to 'undetermined' with a dated basis"]
+      ));
+    }
+  });
+}
+function checkReleaseAuthority(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText4(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) {
+    findings.push(f3("C-18.1", "error", 'data/provenance.json must be {"documents": [...]} (the intake provenance register)'));
+    return;
+  }
+  let sweepOrigin = false;
+  docs.forEach((d, i) => {
+    if (!d || typeof d !== "object") {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}] is not an object`));
+      return;
+    }
+    for (const k of ["file", "locator", "retrieved"]) {
+      if (!d[k]) findings.push(f3("C-18.1", "error", `provenance documents[${i}] missing '${k}'`));
+    }
+    const aState = d.authority_state;
+    if (aState !== void 0 && !["determined", "undetermined"].includes(aState)) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}].authority_state '${aState}' is not 'determined' or 'undetermined'`));
+    }
+    if (aState === "undetermined") {
+      if (!d.authority_basis) findings.push(f3("C-18.1", "error", `provenance documents[${i}] is authority-undetermined but names no authority_basis: why it could not be established is itself a recorded fact`));
+    } else if (!d.authority) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}] missing 'authority' and does not state authority_state 'undetermined': the source axis is named or its absence is declared, never left blank`));
+    }
+    if (aState === "determined" && !d.authority_basis) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}] is authority-determined but names no authority_basis: how it was reached is recorded in BOTH cases`));
+    }
+    if (d.file && !hasFile_2(ctx, String(d.file)) && !Array.isArray(d.parts)) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}] names '${d.file}' which does not exist in the bundle`));
+    }
+    const cap = d.capture;
+    if (!cap || typeof cap !== "object") findings.push(f3("C-18.1", "error", `provenance documents[${i}] missing capture block`));
+    else {
+      if (!cap.method) findings.push(f3("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
+      if (d.authored === true) {
+        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f3("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
+        if (cap.actor_class !== "member") findings.push(f3("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f3("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+      if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f3("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
+    }
+    const or = d.origin;
+    if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
+    }
+    if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
+    } else if (or.kind === "sweep") {
+      sweepOrigin = true;
+      if (!or.matched_sweep) findings.push(f3("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'matched_sweep'`));
+      if (!or.deeming_actor) findings.push(f3("C-18.1", "error", `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
+    }
+  });
+  const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
+  const releases = hist.filter((e) => e && e.from_state === "collected" && e.to_state === "verified");
+  for (const e of releases) {
+    const a = String(e.author || "").toLowerCase();
+    if (!a || isMachineIdentity(a)) {
+      findings.push(f3(
+        "C-18.1",
+        "error",
+        `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
+        [
+          "retire this bundle with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is",
+          "or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform",
+          "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one"
+        ]
+      ));
+    }
+  }
+  const everVerified = ctx.fm.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
+  const memberRelease = releases.some((e) => {
+    const a = String(e.author || "").toLowerCase();
+    return a && !isMachineIdentity(a);
+  });
+  if (sweepOrigin && everVerified && !memberRelease) {
+    findings.push(f3(
+      "C-18.1",
+      "error",
+      "sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)",
+      [
+        "retire this bundle with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands",
+        "or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a bundle already at verified, so the ratification cannot be re-made in place",
+        "the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine"
+      ]
+    ));
+  }
+}
+function checkRegisterIntegrity(ctx, findings) {
+  if (ctx.fm?.object_type !== "information") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) return;
+  let reg;
+  try {
+    reg = JSON.parse(asText4(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) return;
+  const byHash = {};
+  const byEvid = {};
+  for (let i = 0; i < docs.length; i++) {
+    const h = docs[i] && docs[i].capture && docs[i].capture.sha256;
+    if (h) (byHash[h] = byHash[h] || []).push(i);
+    const dg = docs[i] && docs[i].profile && docs[i].profile.digests;
+    if (dg && dg.determined === true && typeof dg.evidentiary === "string")
+      (byEvid[dg.evidentiary] = byEvid[dg.evidentiary] || []).push(i);
+  }
+  for (const h of Object.keys(byHash)) {
+    if (byHash[h].length > 1) {
+      findings.push(f3(
+        "C-18.3",
+        "error",
+        `capture hash ${h.slice(0, 16)}\u2026 appears in ${byHash[h].length} register documents (indices ${byHash[h].join(", ")}); identical content is corroboration on one entry, never duplicate review items`,
+        ["fold the duplicates into corroborations[] on the earliest entry", "if the captures genuinely differ, correct the recorded hashes"]
+      ));
+    }
+  }
+  for (const e of Object.keys(byEvid)) {
+    const idx = byEvid[e];
+    if (idx.length < 2) continue;
+    const rawShas = new Set(idx.map((i) => docs[i] && docs[i].capture && docs[i].capture.sha256).filter(Boolean));
+    if (rawShas.size < 2) continue;
+    findings.push(f3(
+      "C-18.3",
+      "error",
+      `${idx.length} register documents (indices ${idx.join(", ")}) share the evidentiary digest ${e.slice(0, 16)}\u2026 but differ in raw bytes; the substance is identical and only per-render machinery or furniture differs \u2014 corroboration on one entry, never duplicate review items`,
+      ["fold the duplicates into corroborations[] on the earliest entry", "if the substance genuinely differs the normalisation is wrong \u2014 correct the handler"]
+    ));
+  }
+  if (ctx.fm.criticality === "crucial") {
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      if (!d || typeof d !== "object") continue;
+      if (!d.co_archive && !d.timestamp) {
+        findings.push(f3(
+          "C-18.4",
+          "warn",
+          `crucial-criticality document[${i}] (${d.file || "?"}) carries neither co_archive nor timestamp; a reviewing member must verify co-attestation before release (F4)`,
+          ["attach a co-archive or trusted timestamp", "record the verified provenance in Review Notes at ratification"]
+        ));
+      }
+    }
+  }
+}
+function checkInfo2Register(ctx, findings) {
+  if (ctx.fm?.object_type !== "information" || ctx.fm?.schema !== "information@2") return;
+  const raw = ctx.files.get("data/provenance.json");
+  if (!raw) {
+    findings.push(f3("C-18.1", "error", "information@2 requires data/provenance.json: the schema bump makes the intake provenance register mandatory"));
+    return;
+  }
+  let reg;
+  try {
+    reg = JSON.parse(asText4(raw));
+  } catch {
+    return;
+  }
+  const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+  if (!docs) return;
+  for (let i = 0; i < docs.length; i++) {
+    const d = docs[i];
+    if (!d || typeof d !== "object") continue;
+    const cap = d.capture && typeof d.capture === "object" ? d.capture : {};
+    if (!CAPTURE_ENCODINGS2.includes(cap.encoding)) {
+      findings.push(f3("C-18.1", "error", `provenance documents[${i}].capture.encoding '${cap.encoding}' is not one of: ${CAPTURE_ENCODINGS2.join(", ")} (@2)`));
+    }
+    const or = d.origin && typeof d.origin === "object" ? d.origin : {};
+    if (or.kind === "member") {
+      if (cap.actor_class !== "member") {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}]: member-origin capture must record actor_class 'member' (@2)`));
+      }
+      const c = d.custody;
+      if (!c || typeof c !== "object") {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}]: member-origin document missing custody block {holder, obtained, setting, attestation} (doctrine 3a) (@2)`));
+      } else {
+        for (const k of ["holder", "setting", "attestation"]) {
+          if (!c[k]) findings.push(f3("C-18.1", "error", `provenance documents[${i}].custody missing '${k}' (@2)`));
+        }
+        if (!HIST_TS_RE.test(c.obtained || "")) {
+          findings.push(f3("C-18.1", "error", `provenance documents[${i}].custody.obtained '${c.obtained}' is not YYYY-MM-DDTHH:MM:SSZ (@2)`));
+        }
+      }
+      if (d.attestation_attempts === void 0) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}]: member-origin document missing attestation_attempts; the 7.7 asymmetry is recorded honestly, attempted false with the reason in note (@2)`));
+      }
+    }
+    if (d.attestation_attempts !== void 0) {
+      if (!Array.isArray(d.attestation_attempts)) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}].attestation_attempts must be an array (@2)`));
+      } else {
+        d.attestation_attempts.forEach((a, j) => {
+          if (!a || typeof a !== "object" || !a.service || typeof a.attempted !== "boolean" || typeof a.ok !== "boolean") {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].attestation_attempts[${j}] lacks the {service, attempted, ok} shape (@2)`));
+          }
+        });
+      }
+    }
+    if (d.parts !== void 0) {
+      if (!Array.isArray(d.parts) || !d.parts.length) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}].parts must be a nonempty array (@2)`));
+      } else {
+        if (!RAW_SHA_RE2.test(cap.sha256 || "")) {
+          findings.push(f3("C-18.1", "error", `provenance documents[${i}]: parts require capture.sha256 over the reassembled whole (@2)`));
+        }
+        d.parts.forEach((p, j) => {
+          if (!p || typeof p !== "object" || !p.file || !RAW_SHA_RE2.test(p.sha256 || "") || !(Number.isInteger(p.bytes) && p.bytes > 0)) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].parts[${j}] lacks the {file, sha256, bytes} shape (@2)`));
+          } else if (!hasFile_2(ctx, String(p.file))) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].parts[${j}] names '${p.file}' which does not exist in the bundle (@2)`));
+          }
+        });
+      }
+    }
+    if (d.derived !== void 0) {
+      const dv = d.derived;
+      const shapeOk = dv && typeof dv === "object" && dv.transform && dv.reason && (dv.from_file || dv.from_ref);
+      if (!shapeOk) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}].derived lacks the {transform, reason, from_file|from_ref} shape (doctrine 4a) (@2)`));
+      } else if (dv.from_file && !hasFile_2(ctx, String(dv.from_file))) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}].derived.from_file '${dv.from_file}' does not exist in the bundle (@2)`));
+      }
+    }
+    if (d.renditions !== void 0) {
+      if (!Array.isArray(d.renditions)) {
+        findings.push(f3("C-18.1", "error", `provenance documents[${i}].renditions must be an array (@2)`));
+      } else {
+        d.renditions.forEach((r, j) => {
+          if (!r || typeof r !== "object" || !r.file || !RAW_SHA_RE2.test(r.sha256 || "") || !r.transform || !r.reason || !r.from_file) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].renditions[${j}] lacks the {file, sha256, transform, reason, from_file} shape: a derived artifact must say what was done to it, why, and what it was made from (@2)`));
+            return;
+          }
+          if (!hasFile_2(ctx, String(r.file))) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].renditions[${j}] names '${r.file}' which does not exist in the bundle (@2)`));
+          }
+          if (!hasFile_2(ctx, String(r.from_file)) && !Array.isArray(d.parts)) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].renditions[${j}].from_file '${r.from_file}' does not exist in the bundle (@2)`));
+          }
+          if (r.sha256 === cap?.sha256) {
+            findings.push(f3("C-18.1", "error", `provenance documents[${i}].renditions[${j}] has the same hash as the capture it claims to be derived from, so one of the two is mislabelled (@2)`));
+          }
+        });
+      }
+    }
+  }
+  if (reg.releases !== void 0) {
+    if (!Array.isArray(reg.releases)) {
+      findings.push(f3("C-18.1", "error", "provenance releases must be an array (@2)"));
+    } else {
+      reg.releases.forEach((r, i) => {
+        if (!r || typeof r !== "object" || !HIST_TS_RE.test(r.transition || "") || !r.author) {
+          findings.push(f3("C-18.1", "error", `provenance releases[${i}] lacks the {transition, author} shape (@2)`));
+          return;
+        }
+        if (r.signature_file) {
+          if (!hasFile_2(ctx, String(r.signature_file))) {
+            findings.push(f3("C-18.1", "error", `provenance releases[${i}].signature_file '${r.signature_file}' does not exist in the bundle (@2)`));
+          }
+          if (!r.signer) findings.push(f3("C-18.1", "error", `provenance releases[${i}] carries a signature_file but no signer (@2)`));
+          if (r.namespace !== "bio-release") {
+            findings.push(f3("C-18.1", "error", `provenance releases[${i}].namespace '${r.namespace}' must be 'bio-release' (ssh-keygen -Y namespace discipline) (@2)`));
+          }
+        }
+      });
+    }
+  }
+}
+function registerChecks({ files, fm, elided = null }) {
+  const findings = [];
+  const ctx = {
+    files: files instanceof Map ? files : new Map(Object.entries(files || {})),
+    fm: fm || null,
+    elided: elided instanceof Set ? elided : new Set(elided || [])
+  };
+  if (!ctx.fm || typeof ctx.fm !== "object") return findings;
+  checkReleaseAuthority(ctx, findings);
+  checkAuthorityPublishable(ctx, findings);
+  checkRegisterIntegrity(ctx, findings);
+  checkInfo2Register(ctx, findings);
+  return findings;
+}
+
+// src/provenance/index.mjs
+var PROVENANCE_TABLES = [
+  "register",
+  "captured_locators",
+  "provenance_route_marks",
+  "origin_declarations",
+  "signed_receipts",
+  "receipt_keys"
+];
+var te5 = new TextEncoder();
+var hexOf2 = (bytes) => createSha256().update(bytes).hex();
+var hexBytes = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var rand2 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var isObj3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var secondOf = (iso2) => String(iso2).replace(/\.\d+Z$/, "Z");
+var b64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+var unb64 = (s) => Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0));
+function safeJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+var bareSha = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
+var FINDING_MEANS = {
+  NEVER_LOOKED: "nobody looked at this level for this subject",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT: "we looked and it is there"
+};
+function bundleGate(col, viewer) {
+  if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+    throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). An unqualified name binds to \`bundles\` inside the gate's own subquery and passes everything.`);
+  const gate = viewerPredicate(viewer);
+  if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+  if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+  return {
+    sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
+            WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
+    args: gate.args
+  };
+}
+var ARCHIVE_VIA = "archive.org";
+var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
+function chainFromEvidence(doc, { instanceName = "unnamed", at = null } = {}) {
+  if (!doc || typeof doc !== "object")
+    return { ok: false, missing: ["the document entry is not an object"] };
+  const str = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+  const cap = doc.capture && typeof doc.capture === "object" ? doc.capture : {};
+  const method = str(cap.method);
+  const sha = str(cap.sha256);
+  const retrieved = str(doc.retrieved);
+  const locator = str(doc.locator);
+  const custody = doc.custody && typeof doc.custody === "object" ? doc.custody : null;
+  const holder = custody ? str(custody.holder) : null;
+  const obtained = custody ? str(custody.obtained) : null;
+  const tsr = doc.timestamp && typeof doc.timestamp === "object" ? doc.timestamp : null;
+  const tsrAuth = tsr ? str(tsr.authority) : null;
+  const tsrFile = tsr ? str(tsr.token_file) : null;
+  const tsrNote = tsrAuth && tsrFile ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address` : "";
+  const stamp = (from) => ({
+    at: at || secondOf((/* @__PURE__ */ new Date()).toISOString()),
+    by: "op=provenancechain (REC-54)",
+    basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
+    from
+  });
+  if (method && retrieved && locator && locator !== "in hand") {
+    const actor = str(cap.actor_class);
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (${actor ? `${actor} ` : ""}capture method ${method})`,
+      asserts: `these bytes were served for ${locator} at ${retrieved}`,
+      evidence: `${method}, sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+      bound: false,
+      via: "direct",
+      reconstructed: stamp(["locator", "retrieved", "capture.method", "capture.actor_class", "capture.sha256"])
+    }] };
+  }
+  if (holder && obtained) {
+    return { ok: true, hops: [{
+      who: `member ${holder}`,
+      asserts: `this member held these bytes and supplied them to the record at ${obtained}`,
+      evidence: `${str(custody.setting) || "setting not recorded"}${str(custody.attestation) ? `; ${str(custody.attestation)}` : ""}; sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+      bound: false,
+      via: "member",
+      reconstructed: stamp(["custody.holder", "custody.obtained", "custody.setting", "custody.attestation", "capture.sha256"])
+    }] };
+  }
+  const missing = [];
+  if (!locator || locator === "in hand") missing.push("a fetched address (`locator`)");
+  if (!retrieved) missing.push("the instant it was retrieved (`retrieved`)");
+  if (!method) missing.push("how it was captured (`capture.method`)");
+  if (!holder) missing.push("a named custodian (`custody.holder`)");
+  if (!obtained) missing.push("when the custodian obtained it (`custody.obtained`)");
+  return { ok: false, missing };
+}
+var ROUTE_MARK_NOTE = "this document stays where the group put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held \u2014 a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
+function routeFinding(objectType, mark) {
+  if (objectType !== "information")
+    return {
+      applies: false,
+      assessed: false,
+      marked: false,
+      finding: null,
+      means: null,
+      note: "a route is a fact about a captured document, and this bundle is not one"
+    };
+  if (!mark)
+    return {
+      applies: true,
+      assessed: false,
+      marked: false,
+      finding: "NEVER_LOOKED",
+      means: FINDING_MEANS.NEVER_LOOKED,
+      note: "no assessment of this document's route has ever been recorded. This is NOT a finding that the route cannot be shown; it is the absence of the question having been asked."
+    };
+  const marked = mark.finding === "LOOKED_INDETERMINATE";
+  return {
+    applies: true,
+    assessed: true,
+    marked,
+    finding: mark.finding,
+    means: FINDING_MEANS[mark.finding] ?? null,
+    at: mark.at,
+    by: mark.by,
+    stateAt: mark.state_at,
+    seq: mark.seq,
+    register: mark.register_state,
+    undetermined: mark.undetermined,
+    documents: mark.documents_n,
+    note: marked ? ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
+  };
+}
+var ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
+var ROUTE_MARKED_LIMIT_DEFAULT = 50;
+var ROUTE_MARKED_LIMIT_MAX = 200;
+var ROUTE_MARKED_CAUSES = {
+  no_documents_visible: "there is no captured document in this record that this viewer may see, so the question cannot be asked of them. This says NOTHING about whether any document carries a marker",
+  never_assessed: "no document in this record has EVER been assessed for its provenance route. This is NEVER_LOOKED \u2014 the absence of the question having been asked \u2014 and it is NOT a finding that every route can be shown. Nobody has looked",
+  none_standing: "documents in this record HAVE been assessed, and every assessment that still stands found the route showable. This is the earned statement that no document carries a marker: somebody looked",
+  page_exhausted: "there are no further marked documents after this cursor. Documents DO carry standing markers in this record \u2014 this page is past the last of them, which is a fact about the cursor and not about the record"
+};
+var VERSION_CHAIN_LIMIT_DEFAULT = 200;
+var VERSION_CHAIN_LIMIT_MAX = 1e3;
+var TESTIMONY_MAX_BYTES = 128 * 1024;
+var TESTIMONY_FORMAT = "bio-testimony/1";
+function testimonyBytes({ id, observedAt, words }) {
+  return `${TESTIMONY_FORMAT}
+id: ${id}
+observed_at: ${observedAt}
+
+${words}`;
+}
+function observerRef(testimonyId) {
+  return `observer:${testimonyId}`;
+}
+function rowUnlessStated(files, row) {
+  const md = files.find((f4) => f4 && f4.path === "bundle.md");
+  const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+  const out = {};
+  for (const [k, v] of Object.entries(row))
+    if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+  return out;
+}
+var rowRefusal2 = (family) => (code, detail, extra) => {
+  const row = family[code];
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
+};
+var TESTIMONY_PATH = Symbol("mk1-testimony-path");
+function observedMs(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
+  if (!m) return null;
+  const ms = Date.parse(m[4] === void 0 ? `${v}T00:00:00Z` : v);
+  if (!Number.isFinite(ms)) return null;
+  const back = new Date(ms).toISOString();
+  if (back.slice(0, 10) !== v.slice(0, 10)) return null;
+  return ms;
+}
+var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
+async function partsHeld(bucket, keyOf, parts) {
+  const missing = [], disagree = [], unverified = [];
+  for (const p of parts) {
+    const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
+    const h = await bucket.head(keyOf(p.sha256));
+    if (!h) {
+      missing.push(name);
+      continue;
+    }
+    if (h.size !== p.bytes) {
+      disagree.push({ ...name, stored_bytes: h.size });
+      continue;
+    }
+    let digest = h.checksums?.sha256 ? hexBytes(h.checksums.sha256) : null;
+    if (!digest && h.size <= PART_VERIFY_READ_MAX) {
+      const o = await bucket.get(keyOf(p.sha256));
+      if (o) digest = hexBytes(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
+    }
+    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
+    else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
+  }
+  return { missing, disagree, unverified };
+}
+async function registerAuditReport(r, evidence) {
+  const canProbe = !!(evidence && typeof evidence.head === "function");
+  const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
+  for (const { named_parts: named, ...row } of r.unresolved || []) {
+    if (row.class === "orphan") {
+      unbacked.push({ ...row, why: "the bundle itself is absent" });
+      continue;
+    }
+    if (!canProbe) {
+      unbacked.push({ ...row, why: "no capture bucket is configured to check" });
+      continue;
+    }
+    const h = await evidence.head(row.capture_sha);
+    if (h) {
+      if (typeof row.bytes === "number" && h.size !== row.bytes)
+        mismatched.push({ ...row, registered: row.bytes, stored: h.size });
+      else captured.push(row);
+      continue;
+    }
+    if (named?.state === "unreadable") {
+      undetermined.push({ ...row, why: named.why });
+      continue;
+    }
+    if (named?.state !== "named") {
+      unbacked.push({ ...row, why: "no bytes in the working bucket" });
+      continue;
+    }
+    const v = await partsHeld(evidence, (s) => s, named.parts);
+    const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
+    if (v.missing.length)
+      unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names are not in the working bucket`, missing_parts: v.missing });
+    else if (v.disagree.length || typeof row.bytes === "number" && sum !== row.bytes)
+      mismatched.push({
+        ...row,
+        registered: row.bytes,
+        stored: sum,
+        ...v.disagree.length ? { disagreeing_parts: v.disagree } : {}
+      });
+    else if (v.unverified.length)
+      undetermined.push({ ...row, why: `every part the record names is present, but the digest of ${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
+    else heldInParts.push(row);
+  }
+  return {
+    total: r.total,
+    live: r.live,
+    superseded: r.superseded,
+    historical: r.historical,
+    captured: captured.length,
+    held_in_parts: heldInParts.length,
+    mismatched: mismatched.length,
+    unbacked: unbacked.length,
+    undetermined: undetermined.length,
+    sound: unbacked.length === 0 && mismatched.length === 0,
+    probed: canProbe,
+    detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. held_in_parts is the same for a document the store keeps only in parts: every part the record names is in the working bucket and each part's digest is verified (the reassembled whole's digest is C-18.6's check, not re-read here). unbacked is the only broken state, and names any missing part; mismatched means the register and the stored object disagree about size, or a part about its digest. undetermined rows resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
+    sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40)
+  };
+}
+async function attest(body, { head, put, fetch: fetchFn, holds, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
+  const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
+  let held = null;
+  if (!await head(sha)) {
+    let holdsAnswer = null;
+    try {
+      holdsAnswer = typeof holds === "function" ? await holds(sha) : null;
+    } catch {
+      holdsAnswer = null;
+    }
+    if (holdsAnswer && holdsAnswer.acquired === true) {
+      held = {
+        form: "parts",
+        on: "acquisition_receipt",
+        detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. This plane hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
+      };
+    } else {
+      if (holdsAnswer && holdsAnswer.registered === true)
+        return {
+          ok: false,
+          reason: "CAPTURE_HELD_IN_PARTS",
+          sha256: sha,
+          detail: "the record's register names these bytes, but no object is stored under this hash and this plane holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
+        };
+      return {
+        ok: false,
+        reason: "NO_SUCH_CAPTURE",
+        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a bundle that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
+      };
+    }
+  }
+  const stamp = () => secondOf(now());
+  const attempts = [];
+  let token = null, tokenSha = null, service = null;
+  for (const endpoint of TSA_ENDPOINTS) {
+    const attempted = stamp();
+    try {
+      const { der } = timestampRequest(sha);
+      const res = await fetchFn(endpoint, {
+        method: "POST",
+        body: der,
+        headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT }
+      });
+      if (!res.ok) {
+        attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
+        continue;
+      }
+      const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
+      if (!parsed.ok) {
+        attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
+        continue;
+      }
+      tokenSha = hexBytes(await crypto.subtle.digest("SHA-256", parsed.token));
+      await put(tokenSha, parsed.token);
+      token = parsed.token;
+      service = endpoint;
+      attempts.push({
+        service: endpoint,
+        attempted,
+        ok: true,
+        kind: "rfc3161",
+        token_sha256: tokenSha,
+        token_bytes: parsed.token.length
+      });
+      break;
+    } catch (e) {
+      attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
+    }
+  }
+  let archive = null;
+  if (body.archive === true) {
+    const attempted = stamp();
+    const locator = typeof body.locator === "string" ? body.locator : "";
+    if (!isPublicHttpsLocator(locator)) {
+      attempts.push({
+        service: ARCHIVE_SERVICE,
+        attempted,
+        ok: false,
+        note: "no public https locator to archive"
+      });
+    } else {
+      try {
+        const res = await fetchFn(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
+        const archived = archiveLocatorFrom(res, locator);
+        if (res.ok && archived) {
+          archive = { service: ARCHIVE_SERVICE, locator: archived };
+          attempts.push({
+            service: ARCHIVE_SERVICE,
+            attempted,
+            ok: true,
+            kind: "co-archive",
+            archived_locator: archived
+          });
+        } else {
+          attempts.push({
+            service: ARCHIVE_SERVICE,
+            attempted,
+            ok: false,
+            note: res.ok ? "archived but returned no locator" : `http ${res.status}`
+          });
+        }
+      } catch (e) {
+        attempts.push({
+          service: ARCHIVE_SERVICE,
+          attempted,
+          ok: false,
+          note: String(e && e.message || e).slice(0, 120)
+        });
+      }
+    }
+  }
+  return {
+    ok: !!token,
+    attempts,
+    ...archive ? { archive } : {},
+    ...token ? {
+      attestation: {
+        file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
+        kind: "rfc3161",
+        service,
+        sha256: tokenSha,
+        bytes: token.length,
+        over: sha
+      },
+      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+      ...held ? { held } : {}
+    } : {
+      reason: "NO_ATTESTATION",
+      note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
+    }
+  };
+}
+function attestStatus(a) {
+  if (a && a.ok) return 200;
+  return { BAD_SHA: 400, CAPTURE_HELD_IN_PARTS: 409, NO_SUCH_CAPTURE: 404 }[a && a.reason] ?? 502;
+}
+function imageForChecks(image) {
+  const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
+  for (const [path, v] of Object.entries(image || {})) typeof v === "string" ? files.set(path, v) : elided.add(path);
+  const md = files.get("bundle.md");
+  const fm = typeof md === "string" ? parseFrontmatter(md).data : null;
+  return { files, elided, fm: isObj3(fm) ? fm : null };
+}
+function withRegisterChecks(image, gate) {
+  const found = registerChecks(imageForChecks(image));
+  const errors = found.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
+  const findings = [...gate.findings || [], ...errors];
+  return {
+    ...gate,
+    ok: gate.ok && errors.length === 0,
+    findings,
+    warnings: (gate.warnings || 0) + found.length - errors.length
+  };
+}
+async function provenanceAudit(host, opts = {}) {
+  const pass = await recordAudit(host, opts);
+  const record = recordOf(host);
+  const out = { ...pass, tally: { ...pass.tally || {} }, offenders: [...pass.offenders || []] };
+  const tallyDetail = { ...pass.tallyDetail || {} };
+  const sha2562 = async (v) => hexBytes(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te5.encode(v) : v));
+  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
+  for (const id of pass.page || []) {
+    const moved = registerChecks(imageForChecks(record.readImage(id) || {})).filter((x) => x.severity === "error");
+    if (!moved.length) continue;
+    const img = record.readImage(id) || {};
+    const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
+    for (const [path, v] of Object.entries(img)) typeof v === "string" ? files.set(path, v) : elided.add(path);
+    const { findings } = await checkBundle({
+      folderName: id,
+      files,
+      elidedPaths: elided,
+      sha256: sha2562,
+      sha512,
+      resolveTarget: (t) => !!record.bundleInfo(t),
+      ...typeof opts.context === "function" ? opts.context(id) || {} : {}
+    });
+    const before = [...findings, ...await recordChecks({ folderName: id, files, sha256: sha2562 })].filter((x) => x.severity === "error");
+    if (!before.length) {
+      out.clean--;
+      out.withErrors++;
+    }
+    const at = out.offenders.findIndex((o) => o.bundleId === id);
+    for (const e of moved) {
+      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
+      if (e.code) {
+        const k = `${e.check}/${e.code}`;
+        tallyDetail[k] = (tallyDetail[k] || 0) + 1;
+      }
+    }
+    const extra = moved.map((e) => ({ check: e.check, detail: e.message }));
+    if (at >= 0) out.offenders[at] = { bundleId: id, errors: [...out.offenders[at].errors, ...extra].slice(0, 5) };
+    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors: extra.slice(0, 5) });
+  }
+  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
+  return out;
+}
+var Provenance = class _Provenance {
+  #storage;
+  #sql;
+  #record;
+  #membership;
+  #promotion;
+  #now;
+  #instanceName;
+  #signingKey;
+  #listeners = [];
+  // R47: {module, fn, rank}
+  #order;
+  constructor({ storage, record, membership, promotion, now, instanceName, signingKey, order } = {}) {
+    this.#storage = storage;
+    this.#sql = storage.sql;
+    this.#record = record;
+    this.#membership = membership;
+    this.#promotion = promotion;
+    this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+    this.#instanceName = typeof instanceName === "string" && instanceName ? instanceName : "unnamed";
+    this.#signingKey = typeof signingKey === "string" && signingKey.trim() ? signingKey.trim() : null;
+    this.#order = Array.isArray(order) ? order : [];
+  }
+  #rows(q, ...a) {
+    return [...this.#sql.exec(q, ...a)];
+  }
+  #one(q, ...a) {
+    const r = this.#rows(q, ...a);
+    return r.length ? r[0] : null;
+  }
+  /** This module's tables (R41), created or brought up to shape. Called by the host at every boot; idempotent. */
+  migrate() {
+    migrateProvenance(this.#sql);
+    return { ok: true };
+  }
+  /* ===================================================================== *
+   * R1–R3, R42–R46: THE REGISTER, WRITTEN INSIDE A PROMOTION (promotion R39, K31).
+   * ===================================================================== */
+  /* The check, before anything is written: the testimony fence (R3) and one capture, one home (R2), then the C-18
+     register arms (R42–R46). A refusal refuses the whole promotion (promotion R2). */
+  #check(c) {
+    const { pkg, bundleId, files, register: register2, head, promotedType, replay } = c;
+    const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
+    const fenced = this.#testimonyFence(
+      bundleId,
+      files,
+      register2,
+      testimony,
+      { identity: pkg ? pkg.actorIdentity ?? null : null, viewer: pkg ? pkg.actorViewer ?? null : null }
+    );
+    if (fenced) return fenced;
+    return this.#registerArms({ bundleId, files, head, promotedType, replay, docFm: c.docFm });
+  }
+  /* R42–R46 at the write (K72 (4)): the C-18 arms over the promoted package, for an information bundle whose register
+     is present. Every error finding of a creation refuses it; a revision is refused for an error finding the held
+     version does not already carry, so a promotion never adds a violation and is never refused for one it inherited
+     (correction moves forward; Q1 in the job record). A replay is exempt, as the gathering grammar's check is: the
+     record's history must be holdable verbatim. A warning (C-18.4) never refuses. */
+  #registerArms({ bundleId, files, head, promotedType, replay, docFm }) {
+    if (replay) return null;
+    const type = String(promotedType ?? "").toLowerCase();
+    if (type !== "information") return null;
+    if (!files.some((f4) => f4 && f4.path === "data/provenance.json")) return null;
+    const asImage = (list2) => {
+      const img = {};
+      for (const f4 of list2) if (f4 && typeof f4.path === "string") img[f4.path] = typeof f4.text === "string" ? f4.text : { blobSha: f4.blobSha };
+      return img;
+    };
+    const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj3(docFm) ? docFm : imageForChecks(asImage(files)).fm }).filter((x) => x.severity === "error");
+    if (!now.length) return null;
+    let held = /* @__PURE__ */ new Set();
+    if (head) {
+      const live = {};
+      for (const p of this.#record.livePaths(bundleId) || []) {
+        const f4 = this.#record.readFile(bundleId, p);
+        if (f4) live[p] = typeof f4.text === "string" ? f4.text : { blobSha: f4.blobSha };
+      }
+      held = new Set(registerChecks(imageForChecks(live)).filter((x) => x.severity === "error").map((x) => `${x.check}\0${x.message}`));
+    }
+    const added = now.filter((x) => !held.has(`${x.check}\0${x.message}`));
+    if (!added.length) return null;
+    return {
+      ok: false,
+      reason: "PROVENANCE_REGISTER_REFUSED",
+      bundleId,
+      findings: added.map((x) => ({
+        check: x.check,
+        detail: x.message,
+        ...x.code ? { code: x.code } : {},
+        ...x.repairs ? { repairs: x.repairs } : {}
+      })),
+      detail: `this promotion's data/provenance.json fails ${added.length} of the intake provenance register's rules (C-18) that the version it revises did not fail. Nothing was written.`
+    };
+  }
+  /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
+     authored columns are written from the testimony path's own key and never from the entry a caller sent. */
+  #project(c) {
+    const { pkg, bundleId, register: register2 } = c;
+    const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
+    const at = this.#now();
+    for (const r of Array.isArray(register2) ? register2 : []) {
+      if (!r || typeof r.sha256 !== "string") continue;
+      const own2 = !!(testimony && testimony.captureSha === r.sha256);
+      this.#sql.exec(
+        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
+         VALUES (?,?,?,?,?,?,?,?,?)
+         ON CONFLICT(capture_sha) DO UPDATE SET
+           bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
+           bytes=excluded.bytes, registered=excluded.registered,
+           authored=MAX(register.authored, excluded.authored),
+           author=COALESCE(excluded.author, register.author),
+           observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
+        r.sha256,
+        bundleId,
+        r.path,
+        r.encoding ?? "utf8",
+        r.bytes,
+        at,
+        own2 ? 1 : 0,
+        own2 ? testimony.author : null,
+        own2 ? testimony.observedAt : null
+      );
+    }
+    return null;
+  }
+  /** Registers this module's check and projection with promotion, once (the factory calls it). */
+  joinPromotion() {
+    return this.#promotion.registerStep("provenance", { check: (c) => this.#check(c), project: (c) => this.#project(c) });
+  }
+  /* Why is a register row unreferenced? (D-9)
+   *
+   * The register maps a capture's sha to the bundle and path it was intake for.
+   * Nothing could read it until 0.22.0, so the 30 unreferenced rows on the live
+   * record were explained only by a guess.
+   *
+   * THE FIRST VERSION OF THIS LOOKED IN TWO OF THE THREE PLACES BYTES CAN LIVE.
+   * It checked `files` and `history` and called everything else "dropped", which
+   * produced a confident and wrong finding: that the Apps Script migration could
+   * not be audited from the record it produced. The bytes were in R2 the whole
+   * time. `migrate.mjs` says so in its own header, carrying Drive provenance
+   * "verbatim as a registered drive-provenance capture, so the Drive era remains
+   * inspectable without polluting the live file image", which is precisely what
+   * the two-bucket design is for.
+   *
+   * So this returns rows and their capture hashes, and the CONTROL PLANE probes
+   * `bio-captures` to finish the classification, exactly as the ratify path does
+   * with `hasCapture`. The Durable Object does not know its own store name and
+   * R2 keys are `<store>/captures/<sha>`, so the probe cannot honestly be done
+   * from in here.
+   *
+   *   live        the capture's bytes are the current file at that path
+   *   superseded  the path is still there carrying different bytes now
+   *   historical  not live anywhere, but present in history
+   *   unresolved  in neither, so the control plane must ask R2 before this row
+   *               can be called sound or broken
+   */
+  registerRows() {
+    const rows = this.#rows(`SELECT capture_sha, bundle_id, path, encoding, bytes, registered FROM register`);
+    const out = { total: rows.length, live: 0, superseded: 0, historical: 0, orphan: 0, unresolved: [] };
+    for (const r of rows) {
+      if (!this.#record.bundleInfo(r.bundle_id)) {
+        out.orphan++;
+        out.unresolved.push({ ...r, class: "orphan" });
+        continue;
+      }
+      const here = this.#record.readFile(r.bundle_id, r.path);
+      if (here && here.sha256 === r.capture_sha) {
+        out.live++;
+        continue;
+      }
+      if (this.#one(`SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`, r.bundle_id, r.capture_sha)) {
+        out.historical++;
+        continue;
+      }
+      if (here) {
+        out.superseded++;
+        continue;
+      }
+      out.unresolved.push({ ...r, class: "unresolved", named_parts: this.partsNamed(r.bundle_id, r.capture_sha) });
+    }
+    return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
+  }
+  /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): WHICH PARTS DOES THE RECORD NAME FOR A
+   * CAPTURE IT HOLDS IN PARTS? `op=acquire` stores a multi-part document ONLY as its parts, each under its own
+   * hash, and never the whole under the whole's; the one place the record names those parts is the holding
+   * bundle's intake provenance register, `data/provenance.json`, whose document for that `capture_sha` carries
+   * `parts: [{file, sha256, bytes}]` (the shape C-18.1 checks). So the audit's R2 probe of the WHOLE key can
+   * only ever miss for such a row, and it called held bytes missing.
+   *
+   *   none        the register document names no parts for this sha (or the bundle has no register): the
+   *               whole key is the only place the record says the bytes live
+   *   named       the parts, as the record names them, for the control plane to head and verify
+   *   unreadable  the register exists and could not be read to an answer, with why: the row resolves
+   *               NEITHER way, and the ruling counts it UNDETERMINED, outside `sound`
+   *
+   * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
+  partsNamed(bundleId, sha) {
+    const f4 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
+    if (!f4) return { state: "none" };
+    if (typeof f4.text !== "string")
+      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
+    let reg;
+    try {
+      reg = JSON.parse(f4.text);
+    } catch {
+      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
+    }
+    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bare(d.capture?.sha256) === bareSha(sha) && d.parts !== void 0);
+    if (!doc) return { state: "none" };
+    const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) => p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    return { state: "named", parts: doc.parts.map((p) => ({
+      file: typeof p.file === "string" ? p.file : null,
+      sha256: bare(p.sha256),
+      bytes: p.bytes
+    })) };
+  }
+  /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
+     D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
+     second bundle registering bytes the record already held MOVED the first bundle's register row to itself, and the
+     first bundle's own `files` / `history` rows kept carrying bytes the register now says live elsewhere. This lists
+     every such row: a `files` or `history` row whose sha256 the register assigns to a DIFFERENT bundle that STILL
+     EXISTS, with both bundles named, grouped by the sha. READ-ONLY and never a repair (BOB #31, 2026-09-23 22:03Z: the
+     census's report STANDS ALONE): WHICH BUNDLE HELD THE CAPTURE FIRST IS UNDETERMINED — the register keeps one holder
+     and no prior one, and a row a bundle carried without ever registering it reads the same — so the answer names the
+     register's CURRENT holder as that and nothing more, and says so. A sha shared by several bundles that the register
+     does not assign elsewhere (an identical ordinary file, or the holder's own revisions) is NOT a displaced home and
+     is not listed: only the register decides a home. A register row whose bundle no longer exists names no home and
+     is counted apart (`home_absent`), never listed. The digest-level duplicate (the same content in different bytes)
+     is out of reach: this compares the bytes' digest and nothing about their meaning. Shas are compared lower-cased on
+     both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
+     always whole). */
+  homeCensus({ limit } = {}) {
+    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const homes = /* @__PURE__ */ new Map();
+    const reg = { rows: 0, home_absent: 0 };
+    for (const r of this.#sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
+                                     FROM register r LEFT JOIN bundles b ON b.bundle_id = r.bundle_id`)) {
+      reg.rows++;
+      if (r.present === null) {
+        reg.home_absent++;
+        continue;
+      }
+      homes.set(String(r.capture_sha).toLowerCase(), { bundle_id: r.bundle_id, path: r.path });
+    }
+    const bySha = /* @__PURE__ */ new Map();
+    const walk = (table) => {
+      const out = { rows: 0, displaced: 0 };
+      for (const r of this.#sql.exec(table === "files" ? `SELECT bundle_id, NULL AS snap_key, path, sha256 FROM files` : `SELECT bundle_id, snap_key, path, sha256 FROM history`)) {
+        out.rows++;
+        const s = String(r.sha256 ?? "").toLowerCase();
+        const home = homes.get(s);
+        if (!home) continue;
+        if (home.bundle_id === r.bundle_id) continue;
+        out.displaced++;
+        if (!bySha.has(s)) bySha.set(s, { capture_sha: s, home: { ...home }, held_by: [] });
+        bySha.get(s).held_by.push({
+          table,
+          bundle_id: r.bundle_id,
+          path: r.path,
+          ...r.snap_key ? { snap_key: r.snap_key } : {}
+        });
+      }
+      return out;
+    };
+    const files = walk("files"), history = walk("history");
+    return {
+      ok: true,
+      register: reg,
+      files,
+      history,
+      shas: bySha.size,
+      listed: [...bySha.values()].slice(0, cap),
+      first_holder: "UNDETERMINED",
+      rewritten: 0,
+      note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which bundle held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
+    };
+  }
+  /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
+   *  THE REGISTER'S OWN KEY, and the only question `op=acquire` can ask about a
+   *  MULTI-PART capture.
+   *
+   *  D-469 answered acquire's `existed` for a single-part capture by asking R2 for
+   *  the whole's own key BEFORE the put. A multi-part capture has no such key: the
+   *  whole is never stored under its own hash, only its parts are. So that
+   *  question cannot be asked at all, and acquire answered a flat `false` - which
+   *  CLAIMS THE BYTES ARE NEW every time a document the record already holds is
+   *  re-fetched. This is the question that CAN be asked, and it is the record's
+   *  own: `register` is keyed by `capture_sha`, the identity of the bytes across
+   *  the whole system (`INTERFACES.md` I1 section 1), and one capture has one
+   *  home (D-179; `BIO_Intake_Doctrine_v1_1.md` section 8).
+   *
+   *  THE HOLDER MUST STILL EXIST - the `bundles` join D-179's fence makes, for
+   *  the reason that ruling gives: bytes whose home was purged register afresh,
+   *  so a register row whose bundle is gone is not a holding.
+   *
+   *  IT NAMES NO BUNDLE, and so it needs no viewer. A caller learns only that the
+   *  record holds these bytes, which is the whole of what `existed` has ever said;
+   *  WHICH bundle holds them is D-15's question, answered under a visibility stamp
+   *  by `op=promote`'s refusal and never here.
+   *
+   *  A MISS IS NOT AN ABSENCE, and THE CALLER STATES THAT, not this read: the
+   *  register answers for documents the record REGISTERED, and a prior acquire
+   *  never promoted leaves parts in R2 and no register row. `registered: false` is
+   *  that one fact and nothing more; `registered: null` is no question asked.
+   *
+   *  D-530 - AND THE PLANE'S OWN RECEIPT, `acquired`. `captured_locators` has one
+   *  writer, `op=acquire`, and the hash in it is the one the plane computed as the
+   *  bytes ARRIVED; nothing deletes a store's captures. So a receipt for a whole
+   *  hash that has no object under it says the plane took the document and keeps
+   *  it in parts, and no caller can write it. The register cannot say that: a
+   *  register row is written by `op=promote` from what its CALLER names, and
+   *  promote does not read R2 (D-45). `op=attest` attests on the receipt and not on
+   *  the register alone; the ratify gate names a whole-hash row held in parts
+   *  rather than calling its bytes absent. One bounded read on the
+   *  `captured_locators_sha` index, and like `registered` it names no bundle.
+   */
+  /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
+   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
+   *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
+   *  read, so it names nothing the ratifier has not already been handed in the image. */
+  registerHolds({ sha = null, bundle = null } = {}) {
+    const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
+    const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
+    return {
+      ok: true,
+      sha: s,
+      asked: true,
+      ...b ? { parts: this.partsNamed(b, s) } : {},
+      registered: !!this.#one(
+        `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha = ? LIMIT 1`,
+        s
+      ),
+      acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s)
+    };
+  }
+  /** R8, R9 — the register audit: every row classified (`registerRows`), each unresolved one probed in the evidence
+   *  store (`{head, get}` by digest; record-core's R38 when none is passed; null when the instance has none). */
+  async registerAudit(evidence) {
+    const store = evidence === void 0 ? this.#record.evidenceStore?.() ?? null : evidence;
+    return { ok: true, ...await registerAuditReport(this.registerRows(), store) };
+  }
+  /** R4 — the capture's home, or null when no row names it or its bundle no longer exists. Never the author. */
+  homeOf(captureSha) {
+    const s = bareSha(captureSha);
+    if (!s) return null;
+    const r = this.#one(`SELECT r.capture_sha, r.bundle_id, r.path, r.encoding, r.bytes, r.registered, r.authored
+                           FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, s);
+    return r ? {
+      bundleId: r.bundle_id,
+      path: r.path,
+      encoding: r.encoding,
+      bytes: r.bytes,
+      registered: r.registered,
+      authored: Number(r.authored) === 1
+    } : null;
+  }
+  /** R11 — every register row whose home is `bundleId`, in `capture_sha` order. */
+  registeredFor(bundleId) {
+    return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored FROM register
+                        WHERE bundle_id = ? ORDER BY capture_sha`, String(bundleId ?? "")).map((r) => ({
+      capture_sha: r.capture_sha,
+      path: r.path,
+      bytes: r.bytes,
+      encoding: r.encoding,
+      registered: r.registered,
+      authored: Number(r.authored) === 1
+    }));
+  }
+  /** R12 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
+   *  row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock, compared as
+   *  instants and never as strings (`…:00Z` is before `…:00.123Z`). A document's own stated date never orders them,
+   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. */
+  capturesOf(bundleId) {
+    const rows = this.#rows(
+      `SELECT r.capture_sha, r.registered,
+              (SELECT MIN(cl.first_retrieved) FROM captured_locators cl WHERE cl.capture_sha = r.capture_sha) AS first
+         FROM register r WHERE r.bundle_id = ?`,
+      String(bundleId ?? "")
+    );
+    const ms = (v) => typeof v === "string" && v ? Date.parse(v) : NaN;
+    return rows.map((r) => {
+      const a = ms(r.registered), b = ms(r.first);
+      const held = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
+      return { capture_sha: r.capture_sha, held_at: held, t: ms(held) };
+    }).sort((x, y) => (Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity) || (x.capture_sha < y.capture_sha ? -1 : x.capture_sha > y.capture_sha ? 1 : 0)).map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
+  }
+  /* ===================================================================== *
+   * THE ACQUISITION RECEIPTS (R13–R16, R47).
+   * ===================================================================== */
+  /** R47 — a later module's work on each receipt, registered once at start (K31's pattern, promotion R39). */
+  onReceipt(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names its module and its function" };
+    if (this.#listeners.some((l) => l.module === module))
+      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const i = this.#order.indexOf(module);
+    this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /** R13, R14, R47 — the plane's own acquisition receipt: one row per (address, capture, via).
+   *
+   *  WHICH OF THE THREE — `new`, `unchanged`, `changed` — this look was is READ FROM THE RECORD BEFORE THE UPSERT,
+   *  never declared by the caller (REC-93; OBSERVATION-LOG-DESIGN.md §4.1). A caller that tells us the bytes were
+   *  unchanged is a caller we would be taking a coverage claim from for free, and an equality that costs nothing to
+   *  produce is not evidence. ONE AGGREGATE ROW, NOT A SCAN: the decision needs exactly two facts — has this address
+   *  been retrieved through this source before, and were these the same bytes.
+   *
+   *  Widen the interval rather than replacing a date. Seeing the same bytes again later is not a duplicate, it is the
+   *  observation that proves the target held still in between. The interval widens PER SOURCE (D-96): via is part of
+   *  the key, so a direct observation and an archive observation of the same bytes are two rows.
+   *
+   *  THE LISTENERS (R47): after the write, every registered listener runs inside the same transaction, in the
+   *  modules' order, with the receipt and the observation; one that refuses or throws does not undo the receipt, and
+   *  the answer names each one's outcome. `context` is the caller's own, handed to the listeners unread (who asked,
+   *  under which authority), so a listener can attribute its row without this module knowing what it writes. */
+  recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, context = null } = {}) {
+    if (!addressNorm || !captureSha) return { recorded: false };
+    const v = String(via || "direct");
+    const when = typeof retrieved === "string" && retrieved ? retrieved : this.#now();
+    return this.#record.transact(() => {
+      const seen = this.#one(
+        `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
+           FROM captured_locators WHERE address_norm = ? AND via = ?`,
+        captureSha,
+        addressNorm,
+        v
+      ) || { n: 0, same: 0 };
+      const observation = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
+      this.#sql.exec(
+        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+         ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
+           first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
+           last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
+           retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
+           observations      = observations + 1`,
+        addressNorm,
+        address || addressNorm,
+        captureSha,
+        v,
+        retrievalLocator,
+        when,
+        when
+      );
+      const event2 = {
+        address: address || addressNorm,
+        address_norm: addressNorm,
+        capture_sha: captureSha,
+        via: v,
+        retrieval_locator: retrievalLocator,
+        retrieved: when,
+        observation,
+        context
+      };
+      const listeners = this.#listeners.map(({ module, fn }) => {
+        try {
+          const out = fn(event2);
+          return out && out.ok === false ? { module, outcome: "refused", answer: out } : { module, outcome: "ran", answer: out ?? null };
+        } catch (e) {
+          return { module, outcome: "threw", error: String(e && e.message ? e.message : e).slice(0, 200) };
+        }
+      });
+      return { recorded: true, address_norm: addressNorm, via: v, observation, listeners };
+    });
+  }
+  /** R16 — every receipt for the address (all when none is given), ordered by `via`, and their summed observations.
+   *  `observations` is not bookkeeping — a run of them across an interval is the PRIMARY route by which the record
+   *  establishes that a link was contemporaneous (LINK-FIDELITY.md), REC-26. */
+  receipts({ addressNorm = null } = {}) {
+    const rows = addressNorm ? this.#rows(`SELECT * FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm) : this.#rows(`SELECT * FROM captured_locators ORDER BY address_norm, via`);
+    return {
+      address_norm: addressNorm,
+      rows: rows.map((r) => ({ ...r })),
+      observations: rows.reduce((n, r) => n + r.observations, 0)
+    };
+  }
+  /* ===================================================================== *
+   * R24–R27: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * ===================================================================== */
+  /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
+   *  WHO SERVED the bytes, written by the fetch that received them (the receipts' `via`), never by a member; the
+   *  issuing authority (D-97) is a different axis and is never read here. No letter above the ceiling is earned. */
+  captureGrade(captureSha) {
+    const s = bareSha(captureSha);
+    const reg = s ? this.#one(`SELECT authored FROM register WHERE capture_sha = ?`, s) : null;
+    if (reg && Number(reg.authored) === 1)
+      return {
+        grade: null,
+        route: "authored",
+        determined: false,
+        basis: "CAPTURE_AXIS_AUTHORED",
+        testimony: TESTIMONY_GRADE,
+        why: `a member's own words were not read in from anywhere, so the capture axis earns no letter; the observation is graded as testimony, ${TESTIMONY_GRADE}, and nothing raises that`
+      };
+    const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s).map((r) => r.via) : [];
+    if (vias.includes("direct"))
+      return {
+        grade: EARNED_CAPTURE_CEILING,
+        route: "direct",
+        determined: true,
+        basis: "measured",
+        why: `this instance fetched these bytes directly from their address, so their capture grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account`
+      };
+    if (vias.includes(ARCHIVE_VIA))
+      return {
+        grade: ARCHIVE_CAPTURE_GRADE,
+        route: "archive",
+        determined: ARCHIVE_CAPTURE_GRADE !== null,
+        basis: "measured",
+        why: `this instance fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from their publisher: one more party stands between the record and the publisher, so their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture`
+      };
+    if (!vias.length)
+      return {
+        grade: null,
+        route: "unrecorded",
+        determined: false,
+        basis: "CAPTURE_ROUTE_UNRECORDED",
+        ceiling: EARNED_CAPTURE_CEILING,
+        why: `no fetch route is recorded for these bytes (bytes a provenance document carried, or a member's upload), so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored`
+      };
+    return {
+      grade: null,
+      route: vias.join(","),
+      determined: false,
+      basis: "CAPTURE_GRADE_VIA_UNRULED",
+      ceiling: EARNED_CAPTURE_CEILING,
+      why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the capture axis is UNDETERMINED`
+    };
+  }
+  /* ===================================================================== *
+   * R29, R30 · REC-225: A MEMBER'S DECLARED ORIGIN FOR A DOCUMENT. A host serves many offices, so a host is not an
+   * origin: the system a document came from is a member's attributed statement, per document, dated and append-only.
+   * ===================================================================== */
+  declareOrigin({ bundleId = "", system = "", by = null, viewer = null } = {}) {
+    const who2 = String(by ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "ORIGIN_NOT_A_MEMBER",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine credential. Which system a document came from is a named member's attributed statement, never a machine's` : "declaring a document's origin is a named member's act, and this call carries nobody"
+      };
+    if (!bundleId) return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+    const info = this.#record.bundleInfo(bundleId);
+    if (!info || !this.#membership.inSight(bundleId, viewer))
+      return {
+        ok: false,
+        reason: "NO_SUCH_BUNDLE",
+        bundleId,
+        detail: "no document of that name is in the record, or none this viewer may see; the two answer alike"
+      };
+    if (String(info.type).toLowerCase() !== "information")
+      return {
+        ok: false,
+        reason: "ORIGIN_NOT_A_DOCUMENT",
+        bundleId,
+        detail: `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`
+      };
+    const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
+    if (!sys || sys.length > 200)
+      return {
+        ok: false,
+        reason: "ORIGIN_NO_SYSTEM",
+        detail: "name the system the document came from, in at most 200 characters"
+      };
+    const at = secondOf(this.#now());
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM origin_declarations WHERE bundle_id = ?`, bundleId).m || 0) + 1;
+    this.#sql.exec(
+      `INSERT INTO origin_declarations (bundle_id, seq, system, by, at) VALUES (?, ?, ?, ?, ?)`,
+      bundleId,
+      seq,
+      sys,
+      who2,
+      at
+    );
+    return { ok: true, bundleId, system: sys, by: who2, at, seq };
+  }
+  /** R30 — the standing declaration (the latest), or null. A reader of a document's origin asks this before any
+   *  system derived from its host. */
+  originOf(bundleId) {
+    const r = this.#one(
+      `SELECT system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq DESC LIMIT 1`,
+      String(bundleId ?? "")
+    );
+    return r ? { system: r.system, by: r.by, at: r.at } : null;
+  }
+  /* ===================================================================== *
+   * R34 · K59: THE INSTANCE SIGNS ITS OWN RECEIPT FOR AN ARCHIVE-SOURCED CAPTURE (ARCHIVE-FALLBACK §Shape on the
+   * capture): that on this date it fetched these bytes from this retrieval locator and they hashed to this value.
+   * One key per instance, held as a secret and replaceable by the operator; every public key it signed with is kept,
+   * so a receipt signed before a replacement stays verifiable against the key it was signed with.
+   * ===================================================================== */
+  /** The exact statement a receipt signs, UTF-8. */
+  static receiptStatement({ instance, retrieved, retrievalLocator, captureSha }) {
+    return `bio-receipt/1
+instance: ${instance}
+fetched: ${retrieved}
+locator: ${retrievalLocator}
+sha256: ${captureSha}
+`;
+  }
+  async #key() {
+    if (!this.#signingKey) return null;
+    const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
+    const jwk = await crypto.subtle.exportKey("jwk", priv);
+    const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
+    return { priv, pub: b64(pub), keyId: hexOf2(pub) };
+  }
+  /** Signs and keeps the receipt for an archive-sourced capture. Answers `{ok, statement, signature, key_id,
+   *  public_key}`, or `RECEIPT_NO_KEY` when no key is bound (stated, never a silent skip), or `RECEIPT_MALFORMED`. */
+  async signReceipt({ captureSha, retrievalLocator, retrieved } = {}) {
+    const s = bareSha(captureSha);
+    if (!s || !/^[0-9a-f]{64}$/.test(s) || typeof retrievalLocator !== "string" || !retrievalLocator || typeof retrieved !== "string" || !retrieved)
+      return {
+        ok: false,
+        reason: "RECEIPT_MALFORMED",
+        detail: "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched"
+      };
+    const key = await this.#key();
+    if (!key)
+      return {
+        ok: false,
+        reason: "RECEIPT_NO_KEY",
+        detail: "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds one as a secret; nothing is claimed signed until then"
+      };
+    const statement = _Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
+    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te5.encode(statement)));
+    const at = this.#now();
+    this.#record.transact(() => {
+      this.#sql.exec(
+        `INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
+        key.keyId,
+        key.pub,
+        at
+      );
+      this.#sql.exec(`INSERT OR REPLACE INTO signed_receipts
+                        (capture_sha, retrieval_locator, retrieved, statement, signature, key_id, signed_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)`, s, retrievalLocator, retrieved, statement, signature, key.keyId, at);
+      return { ok: true };
+    });
+    return { ok: true, statement, signature, key_id: key.keyId, public_key: key.pub };
+  }
+  /** The receipts signed for a capture, each verified against the public key it was signed with (kept, R34). */
+  async signedReceipts(captureSha) {
+    const s = bareSha(captureSha) || "";
+    const out = [];
+    for (const r of this.#rows(`SELECT sr.*, k.public_key FROM signed_receipts sr
+                                  LEFT JOIN receipt_keys k ON k.key_id = sr.key_id
+                                 WHERE sr.capture_sha = ? ORDER BY sr.retrieved`, s)) {
+      let verified = false;
+      if (r.public_key) {
+        try {
+          const pub = await crypto.subtle.importKey("raw", unb64(r.public_key), { name: "Ed25519" }, false, ["verify"]);
+          verified = await crypto.subtle.verify({ name: "Ed25519" }, pub, unb64(r.signature), te5.encode(r.statement));
+        } catch {
+          verified = false;
+        }
+      }
+      out.push({
+        capture_sha: r.capture_sha,
+        retrieval_locator: r.retrieval_locator,
+        retrieved: r.retrieved,
+        statement: r.statement,
+        signature: r.signature,
+        key_id: r.key_id,
+        public_key: r.public_key ?? null,
+        verified
+      });
+    }
+    return out;
+  }
+  /** PL-10 / D-220 — EVERY VERSION AT AN ADDRESS, IN DATE ORDER, WITH ITS
+   *  BUNDLE, AND NOT ONE NEW BYTE OF SCHEMA TO ANSWER IT.
+   *
+   *  Bob ruled (2026-08-06) that versions of one document must be linked and
+   *  indexed by the same url. **The index he described already existed.**
+   *  `captured_locators` is keyed `(address_norm, capture_sha, via)` with
+   *  `captured_locators_addr ON (address_norm, first_retrieved)`; `register`
+   *  maps `capture_sha` to `bundle_id` on its primary key. So the link is not a
+   *  thing to BUILD, it is a thing to ASK — one indexed seek and one join, and
+   *  this method is the asking.
+   *
+   *  **THEREFORE NO EDGE BETWEEN VERSIONS IS ADDED, AND THAT IS THE ITEM.** An
+   *  explicit `supersedes` relation would be a SECOND COPY of a fact the record
+   *  already holds, and a second copy of a fact drifts from the first — D-164's
+   *  solve-it-once, D-138's guard that guarded nothing. There is no new table,
+   *  no new column, no new index and no new write: `recordReceipt` above
+   *  is untouched and remains the only writer. `test/versionchain.test.mjs`
+   *  asserts that STRUCTURALLY rather than trusting this comment, because a
+   *  comment promising an absence is exactly the kind of guard that has guarded
+   *  nothing here before.
+   *
+   *  ONE VERSION IS ONE `capture_sha`, WHICH IS WHY THIS GROUPS. The primary key
+   *  carries `via` (D-96): an archive sighting of the same bytes is a different
+   *  FACT from a direct one, and the write path keeps both rows deliberately. It
+   *  is not a different VERSION. Grouping on the sha is what stops a document
+   *  seen twice through two routes from reading as two versions — the same
+   *  false-coverage failure this op exists to remove, one axis over. The `via`
+   *  values survive into the answer, so the distinction the key preserves is
+   *  reported rather than flattened away.
+   *
+   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — and never
+   *  `last_retrieved`, which moves every time the target holds still and would
+   *  reorder a settled history as a side effect of re-checking it. `capture_sha`
+   *  is the tiebreak, so the order is TOTAL and `offset` paging cannot repeat or
+   *  skip a version. The record cannot say when the SOURCE published a version;
+   *  it can say when we first saw it, and that difference is why the field is
+   *  named in the answer rather than relabelled "published".
+   *
+   *  D-221's FIX LIVES HERE, and it is a consequence of the shape rather than a
+   *  patch on top of it. The defect was that `heldMatch` found prior versions
+   *  with `locator:"<url>"` — a FULL-TEXT query on a text-indexed field, which
+   *  compiles to a text atom, which creates a rank arm, which orders by
+   *  RELEVANCE; every capture at one address carries identical URL text, the
+   *  bm25 scores tie, and the tiebreak decided. The predecessor named was
+   *  therefore not the previous version at all. Here `at` is resolved by
+   *  ADDRESS EQUALITY and the predecessor is the row immediately before it in
+   *  date order. No text index is consulted, no relevance exists to be ordered
+   *  by, and there is nothing to get wrong.
+   *
+   *  A CHAIN OF ONE IS A CHAIN. A single capture at an address answers with one
+   *  version, `at_index` 0 and `predecessor: null` — that is the record saying
+   *  "these are the first bytes we held", not a degenerate failure, and the
+   *  suite pins it as its own arm.
+   *
+   *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
+   *  every other read in this file compiles, and `total` is counted through the
+   *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
+   *  from a total that something was withheld. Nothing publishes how many rows
+   *  the gate removed, because that count is the leak (REC-36). */
+  versionChain({ addressNorm = null, at = null, limit = null, offset = 0, viewer = null } = {}) {
+    const refuse = (key, detail) => {
+      const row = VERSION_CHAIN_CHECKS[key];
+      return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
+    };
+    const addr = addressNorm == null ? "" : String(addressNorm).trim();
+    if (!addr)
+      return refuse(
+        "VERSION_CHAIN_NO_ADDRESS",
+        "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
+      );
+    const anchor = at == null ? "" : String(at).trim().toLowerCase();
+    if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
+      return refuse(
+        "VERSION_CHAIN_BAD_ANCHOR",
+        `at=${JSON.stringify(String(at).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
+      );
+    const cap = Math.max(1, Math.min(
+      VERSION_CHAIN_LIMIT_MAX,
+      Math.floor(Number(limit) || VERSION_CHAIN_LIMIT_DEFAULT)
+    ));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    const seen = bundleGate("r.bundle_id", viewer);
+    const CHAIN = `WITH chain AS (
+        SELECT cl.capture_sha                   AS capture_sha,
+               MIN(cl.first_retrieved)          AS first_retrieved,
+               MAX(cl.last_retrieved)           AS last_retrieved,
+               SUM(cl.observations)             AS observations,
+               COUNT(*)                         AS sightings,
+               MIN(cl.address)                  AS address,
+               group_concat(DISTINCT cl.via)    AS via,
+               r.bundle_id                      AS bundle_id,
+               r.path                           AS path,
+               r.encoding                       AS encoding,
+               r.bytes                          AS bytes,
+               r.registered                     AS registered
+          FROM captured_locators cl
+          JOIN register r ON r.capture_sha = cl.capture_sha
+         WHERE cl.address_norm = ?
+           AND (${seen.sql})
+         GROUP BY cl.capture_sha)`;
+    const args = [addr, ...seen.args];
+    const total = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain`, ...args)?.n ?? 0;
+    const shape = (r) => r && {
+      capture_sha: r.capture_sha,
+      bundle_id: r.bundle_id,
+      first_retrieved: r.first_retrieved,
+      last_retrieved: r.last_retrieved,
+      observations: r.observations,
+      sightings: r.sightings,
+      via: String(r.via || "").split(",").filter(Boolean).sort(),
+      address: r.address,
+      path: r.path,
+      encoding: r.encoding,
+      bytes: r.bytes,
+      registered: r.registered
+    };
+    const versions = this.#rows(
+      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
+      ...args,
+      cap,
+      from
+    ).map(shape);
+    let anchorRow = null, predecessor = null, atIndex = null;
+    if (anchor) {
+      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
+      if (!anchorRow)
+        return refuse(
+          "VERSION_CHAIN_NO_SUCH_VERSION",
+          `no version with capture ${anchor.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
+        );
+      const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
+      const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
+      atIndex = this.#one(
+        `${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
+        ...args,
+        ...beforeArgs
+      )?.n ?? 0;
+      predecessor = shape(this.#one(
+        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
+        ...args,
+        ...beforeArgs
+      )) || null;
+    }
+    return {
+      ok: true,
+      address_norm: addr,
+      /* The count of DOCUMENTS is one, always, and saying so is the point of the
+         op: sixty rows here are sixty versions of ONE document, and a consumer
+         that read `count` as a document count would rebuild the exact false
+         coverage D-220 names. It is stated in the answer rather than left to be
+         inferred from a field name. */
+      documents: total > 0 ? 1 : 0,
+      versions,
+      count: versions.length,
+      total,
+      limit: cap,
+      offset: from,
+      /* REC-57's discipline: the bound PUBLISHED is the one APPLIED, after
+         clamping, never the number asked for; and `truncated` settles
+         completeness so "this is all of it" cannot read like "the first N". */
+      truncated: from + versions.length < total,
+      /* Present only when asked for, and null-valued rather than absent when the
+         anchor IS the oldest, so a consumer can tell "there is no earlier
+         version" from "nobody asked". */
+      at: anchorRow,
+      at_index: atIndex,
+      predecessor
+    };
+  }
+  /** REC-54 / D-200: rebuild the provenance chains of ONE bundle from the
+   *  evidence its own capture record holds, through the plane's own write path.
+   *
+   *  Reports before it writes and writes nothing unless `apply` is set, because
+   *  the dispositions this exists for are corrections to the REAL record and
+   *  each one is a decision that wants its evidence read first.
+   *
+   *  A document that ALREADY has a chain is never touched — overwriting a
+   *  recorded route with a derived one would destroy the better evidence and
+   *  replace a witnessed chain with a reconstructed one.
+   *
+   *  The bundle is refused WHOLE when any document cannot be derived, on
+   *  release()'s precedent: a register half-reconstructed is a record where the
+   *  reader cannot tell which documents were established and which were skipped.
+   */
+  provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
+    const who2 = String(author ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "NO_AUTHOR",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine credential. Reconstructing a provenance chain is a named member's act: the record must show which person decided that the evidence supported this route` : "reconstructing a provenance chain is a named act: the record must show who decided that the evidence supported this route"
+      };
+    if (!bundleId)
+      return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+    const head = this.#record.head(bundleId);
+    const seen = head && this.#membership.inSight(bundleId, viewer) ? {
+      bundle_sha: head.bundleSha,
+      object_type: head.type,
+      group_id: head.groupId,
+      title: head.title,
+      current_state: head.currentState,
+      prior_state: head.priorState,
+      ...this.#one(`SELECT created, last_updated, criticality FROM bundles WHERE bundle_id=?`, bundleId) || {}
+    } : null;
+    if (!seen)
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId };
+    const img = this.#record.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    if (typeof raw !== "string")
+      return {
+        ok: false,
+        reason: "NO_REGISTER",
+        detail: "this bundle carries no readable data/provenance.json, so there is no capture record to derive from"
+      };
+    let reg;
+    try {
+      reg = JSON.parse(raw);
+    } catch {
+      return { ok: false, reason: "UNPARSABLE_REGISTER", detail: "data/provenance.json is not valid JSON" };
+    }
+    const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+    if (!docs)
+      return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
+    const at = secondOf(this.#now());
+    const instanceName = this.#instanceName;
+    const report = [], refused = [];
+    let changed = 0;
+    const next = docs.map((d, i) => {
+      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
+      if (Array.isArray(existing) && existing.length) {
+        report.push({ index: i, file: d.file ?? null, outcome: "already_recorded", hops: existing.length });
+        return d;
+      }
+      const built = chainFromEvidence(d, { instanceName, at });
+      if (!built.ok) {
+        report.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+        refused.push(i);
+        return d;
+      }
+      changed++;
+      report.push({
+        index: i,
+        file: (d && d.file) ?? null,
+        outcome: "reconstructed",
+        hops: built.hops.length,
+        who: built.hops.map((h) => h.who)
+      });
+      return { ...d, provenance_chain: built.hops };
+    });
+    if (refused.length)
+      return {
+        ok: false,
+        reason: "EVIDENCE_INSUFFICIENT",
+        bundleId,
+        documents: report,
+        /* REC-63 / D-204: the honest route, named in the refusal that
+           needs it. Until now a bundle whose chain could not be
+           reconstructed had nowhere to go but `retire`, which asserts
+           something quite different — that the document is withdrawn.
+           It has somewhere to go now: the doubt is RECORDED at the state
+           the document already sits in, which is what DEC-56 settles. */
+        route: routeFinding("information", this.#latestRouteMark(bundleId)),
+        detail: "the capture record does not hold a route for every document in this register, and a chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was written. Stating the route these bytes took would be an invention, which is the one thing this path exists to refuse. What CAN be done is to say so in the record: op=provenanceroute records a standing marker on this document that its route cannot be shown, leaving the document where it is (DEC-56, DEC-19)."
+      };
+    if (!apply || !changed)
+      return {
+        ok: true,
+        bundleId,
+        applied: false,
+        changed,
+        documents: report,
+        /* REC-63: the marker travels with the report too, so an operator
+           deciding whether to rebuild sees whether this document already
+           carries a standing statement that its route cannot be shown. */
+        route: routeFinding("information", this.#latestRouteMark(bundleId)),
+        detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain"
+      };
+    const text = JSON.stringify({ ...reg, documents: next }, null, 2);
+    const bytes = new TextEncoder().encode(text);
+    const carried = [];
+    for (const path of this.#record.livePaths(bundleId) || []) {
+      if (path === "data/provenance.json") continue;
+      const f4 = this.#record.readFile(bundleId, path);
+      if (!f4) continue;
+      carried.push(typeof f4.text === "string" ? { path, text: f4.text, bytes: te5.encode(f4.text).length, sha256: f4.sha256 } : { path, blobSha: f4.blobSha, sha256: f4.sha256, bytes: f4.bytes });
+    }
+    const promoted = this.#promotion.promote({
+      bundleId,
+      base: seen.bundle_sha,
+      snapKey: `${at.replace(/[-:]/g, "")}_${rand2(4)}`,
+      author: who2,
+      files: [{
+        path: "data/provenance.json",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
+      meta: {
+        object_type: seen.object_type,
+        group: seen.group_id,
+        ...rowUnlessStated(carried, {
+          title: seen.title,
+          current_state: seen.current_state,
+          prior_state: seen.prior_state ?? null
+        }),
+        created: seen.created,
+        last_updated: seen.last_updated,
+        criticality: seen.criticality ?? null
+      }
+    });
+    if (!promoted.ok) return { ...promoted, bundleId, documents: report };
+    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.sha ?? null };
+  }
+  /** The current finding for one bundle, or null when no assessment ever ran.
+   *  Append-only: the highest `seq` is the current one and the ones before it
+   *  stay readable, which is how correction moves forward here. */
+  #latestRouteMark(bundleId) {
+    return this.#one(
+      `SELECT * FROM provenance_route_marks WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`,
+      bundleId
+    ) || null;
+  }
+  /** R23's read for one bundle: the latest mark read through `routeFinding`, for the reads that publish `route`
+   *  beside a bundle (`op=list`, `op=audit`; the legacy store's `#withRoute`). `objectType` is the bundle's. */
+  routeOf(bundleId, objectType) {
+    return routeFinding(objectType, this.#latestRouteMark(bundleId));
+  }
+  /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
+   *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
+   *
+   *  IT RUNS THE SAME DERIVATION `op=provenancechain` RUNS, through the same
+   *  `Store.chainFromEvidence`, and that is the point rather than a convenience:
+   *  the marker must say the route cannot be shown for exactly the registers the
+   *  reconstruction path refuses to invent a chain for, or the two would disagree
+   *  about one fact and a member would have to know which to believe.
+   *
+   *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
+   *  changes — the whole shape of DEC-56(b) is that the document stays where the
+   *  group put it. The suite asserts the bundle_sha and current_state are
+   *  byte-identical across a marking.
+   *
+   *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
+   *  something changed; a second identical row would be the record repeating
+   *  itself rather than saying anything, and it would let a caller grow the log
+   *  without limit. */
+  provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
+    const refusal8 = rowRefusal2(ROUTE_MARK_CHECKS);
+    const who2 = String(author ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return refusal8(
+        "ROUTE_MARK_NO_AUTHOR",
+        who2 ? `'${who2.slice(0, 60)}' is a machine credential. Recording that a route cannot be shown is a named member's act: the record must show which person assessed the evidence and found it did not support a route, and a credential's class is nobody's name.` : "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement."
+      );
+    if (!bundleId)
+      return refusal8("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+    const gate = viewerPredicate(viewer);
+    const seen = this.#one(
+      `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      bundleId,
+      ...gate.args
+    );
+    if (!seen)
+      return refusal8(
+        "ROUTE_MARK_NO_SUCH_BUNDLE",
+        "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
+        { bundleId }
+      );
+    if (seen.object_type !== "information")
+      return refusal8(
+        "ROUTE_MARK_NOT_A_DOCUMENT",
+        `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
+        { bundleId, objectType: seen.object_type }
+      );
+    const img = this.#record.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    let registerState = "readable", docs = [];
+    if (typeof raw !== "string") registerState = "absent";
+    else {
+      let reg = null;
+      try {
+        reg = JSON.parse(raw);
+      } catch {
+        reg = void 0;
+      }
+      if (reg === void 0) registerState = "unparsable";
+      else if (!reg || !Array.isArray(reg.documents)) registerState = "no_documents";
+      else if (!reg.documents.length) registerState = "empty";
+      else docs = reg.documents;
+    }
+    const documents = [];
+    let undetermined = 0;
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
+      if (Array.isArray(existing) && existing.length) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "recorded", hops: existing.length });
+        continue;
+      }
+      const built = chainFromEvidence(d, { instanceName: "unassessed", at: "1970-01-01T00:00:00Z" });
+      if (built.ok) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "derivable" });
+        continue;
+      }
+      undetermined++;
+      documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+    }
+    const finding2 = registerState !== "readable" || undetermined > 0 ? "LOOKED_INDETERMINATE" : "PRESENT";
+    const at = secondOf(this.#now());
+    const docsJson = JSON.stringify(documents);
+    const prev = this.#latestRouteMark(bundleId);
+    const same = prev && prev.finding === finding2 && prev.register_state === registerState && prev.undetermined === undetermined && prev.documents_n === docs.length && prev.documents === docsJson;
+    if (!same) {
+      const seq = (this.#one(
+        `SELECT COALESCE(MAX(seq), 0) AS m FROM provenance_route_marks WHERE bundle_id=?`,
+        bundleId
+      ).m || 0) + 1;
+      this.#sql.exec(
+        `INSERT INTO provenance_route_marks
+           (bundle_id, seq, at, by, finding, state_at, register_state, undetermined, documents_n, documents)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        bundleId,
+        seq,
+        at,
+        who2,
+        finding2,
+        seen.current_state,
+        registerState,
+        undetermined,
+        docs.length,
+        docsJson
+      );
+    }
+    return {
+      ok: true,
+      bundleId,
+      appended: !same,
+      route: routeFinding("information", this.#latestRouteMark(bundleId)),
+      documents,
+      detail: same ? "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself" : finding2 === "LOOKED_INDETERMINATE" ? "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched" : "recorded: every document in this register can show its route"
+    };
+  }
+  /* ===================================================================== *
+   * REC-116 / IC-120 — THE READ THE MARKER NEVER HAD.
+   * ===================================================================== *
+   *
+   * REC-69's DELEGATION of 2026-08-09 asked one question — *which documents in
+   * this instance carry a standing `LOOKED_INDETERMINATE` marker* — and the
+   * INDEX for it landed 2026-08-08, one day before the sweep that would have
+   * caught it. The reader never did. For 39 days `op=provenanceroute` was
+   * `mutating: true`, a WRITE, `query.mjs` named this table ZERO times, and a
+   * group wanting to know where its own record's provenance was doubted had to
+   * page the whole store and count for itself. This is that reader.
+   *
+   * IT ANSWERS THE DELEGATED QUESTION AND NOT A WIDER ONE, AND THAT IS A
+   * DECISION RATHER THAN AN OMISSION. `finding` is NOT a caller parameter: it is
+   * bound from the constant below. A caller-chosen finding would have needed a
+   * refusal for a value outside the stored vocabulary, and therefore a fifth
+   * DEC-49 code minted for a READ — but the stronger reason is the row's own
+   * warning. The cheapest wrong answer here is *an op that returns every
+   * document with any route row at all*: non-empty, plausible, and not the
+   * question. An op that cannot be ASKED for that cannot drift into it.
+   *
+   * ============ WHY THIS IS NOT `WHERE finding = 'LOOKED_INDETERMINATE'` =====
+   *
+   * THE TABLE IS APPEND-ONLY AND CORRECTION MOVES FORWARD (DEC-19, and the
+   * schema comment says so). A document marked at `seq` 1 and re-assessed
+   * showable at `seq` 2 has NO STANDING MARKER — the doubt was raised and then
+   * answered. A bare `finding = ?` returns every document that EVER carried the
+   * marker, which would publish a standing doubt over documents whose route the
+   * record can now show. That is the record claiming more than it can support,
+   * which `CLAUDE.md` ranks worse than a missing feature. So the predicate
+   * carries the same `MAX(seq)` clause `auditPass` and `#latestRouteMark`
+   * already use — three readers, one rule about what "current" means.
+   *
+   * ============ THE TWO FACTS THIS CONSTRUCT EXISTS TO SEPARATE =============
+   *
+   * *The op returned nothing* and *no document carries a marker* are DIFFERENT
+   * FACTS, and an empty list that cannot say which is the unearned absence this
+   * whole design was written against — D-129's vocabulary, `OBSERVATION-LOG-
+   * DESIGN.md` §5.1's three causes, and `Store.routeFinding`'s own NEVER_LOOKED
+   * branch are all the same rule. An empty page therefore always carries a
+   * CAUSE, taken in order, and each one is a different statement about the
+   * world:
+   *
+   *   `no_documents_visible`  this viewer can see no captured document at all,
+   *                           so the question is not askable of them. Covers a
+   *                           DENY stamp and an empty store, and those two are
+   *                           deliberately indistinguishable — REC-25/D-15.
+   *   `never_assessed`        documents exist and NOT ONE has ever been
+   *                           assessed. NEVER_LOOKED, at the level of the whole
+   *                           instance. This is the cause that is NOT "no
+   *                           document carries a marker".
+   *   `none_standing`         assessments exist and every one of them found the
+   *                           route showable. THIS, and only this, is the
+   *                           earned statement that no document carries a
+   *                           marker — earned because somebody looked.
+   *   `page_exhausted`        the caller paged past the last marked document.
+   *                           An artefact of the cursor, not a fact about the
+   *                           record, and saying so stops a reader banking it.
+   *
+   * AND `never_assessed` IS PUBLISHED EVEN WHEN THE PAGE IS FULL, because a
+   * roster of marked documents drawn over a corpus half of which nobody ever
+   * assessed is an answer whose COMPLETENESS is undetermined. `complete` says
+   * which of those two the caller is holding. Sparse is the normal condition at
+   * every level and absence at one level is not evidence of absence at the next.
+   *
+   * ============ THE FENCE =================================================
+   *
+   * A route mark names a DOCUMENT the group holds, so the page is resolved
+   * through the viewer gate and a row naming a bundle this viewer cannot see —
+   * or one that no longer exists — is WITHHELD WHOLE and counted nowhere. That
+   * is REC-103's row-whole withholding at the document level and `op=airuns`'
+   * rule for a collection read: absent, byte-identically to a row that never
+   * existed. Nothing here publishes how many rows were withheld, because that
+   * count is itself the disclosure.
+   *
+   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
+   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
+   * and its own comment says the evidence corpus stays shared), and a route mark
+   * can only ever name an `information` bundle — the write refuses every other
+   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
+   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
+   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
+   * applied anyway rather than reasoned away: the gate is the only place that
+   * rule lives, and an op that skipped it would be correct today and wrong the
+   * day the predicate widens. */
+  provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const asked = ROUTE_MARKED_FINDING;
+    const after0 = String(after ?? "");
+    const want = Number(limit);
+    const n = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), ROUTE_MARKED_LIMIT_MAX) : ROUTE_MARKED_LIMIT_DEFAULT;
+    const raw = this.#rows(
+      `SELECT m.* FROM provenance_route_marks m
+        WHERE m.finding = ?
+          AND m.bundle_id > ?
+          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+        ORDER BY m.bundle_id
+        LIMIT ?`,
+      asked,
+      after0,
+      n + 1
+    );
+    const truncated = raw.length > n;
+    const page = truncated ? raw.slice(0, n) : raw;
+    const seen = /* @__PURE__ */ new Map();
+    if (page.length)
+      for (const b of this.#rows(
+        `SELECT b.bundle_id, b.current_state, b.object_type FROM bundles b
+          WHERE b.bundle_id > ? AND b.bundle_id <= ? AND (${gate.sql})`,
+        after0,
+        page[page.length - 1].bundle_id,
+        ...gate.args
+      ))
+        seen.set(b.bundle_id, b);
+    const documents = [];
+    for (const m of page) {
+      const b = seen.get(m.bundle_id);
+      if (!b) continue;
+      documents.push({
+        bundleId: m.bundle_id,
+        state: b.current_state,
+        ...routeFinding(b.object_type, m)
+      });
+    }
+    const cursor = truncated && page.length ? page[page.length - 1].bundle_id : null;
+    const standing = {};
+    for (const r of this.#rows(
+      `SELECT m.finding AS f, COUNT(*) AS n FROM provenance_route_marks m
+         JOIN bundles b ON b.bundle_id = m.bundle_id
+        WHERE m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+          AND b.object_type = 'information'
+          AND (${gate.sql})
+        GROUP BY m.finding`,
+      ...gate.args
+    ))
+      standing[r.f] = r.n;
+    const documentsVisible = this.#one(
+      `SELECT COUNT(*) AS n FROM bundles b WHERE b.object_type = 'information' AND (${gate.sql})`,
+      ...gate.args
+    ).n;
+    const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
+    const marked = standing[asked] || 0;
+    const neverAssessed = Math.max(0, documentsVisible - assessed);
+    let cause = null;
+    if (!documents.length) {
+      cause = documentsVisible === 0 ? "no_documents_visible" : assessed === 0 ? "never_assessed" : marked === 0 ? "none_standing" : "page_exhausted";
+    }
+    return {
+      ok: true,
+      finding: asked,
+      means: FINDING_MEANS[asked],
+      documents,
+      returned: documents.length,
+      limit: n,
+      after: after0,
+      cursor,
+      truncated,
+      /* `marked` is the TOTAL standing at this finding, beside a page bounded at
+         `limit` — the two are different numbers and publishing only the page's
+         would be REC-57's defect. */
+      census: {
+        documents_visible: documentsVisible,
+        assessed,
+        never_assessed: neverAssessed,
+        standing,
+        marked
+      },
+      /* WHY THE ANSWER LOOKS THE WAY IT DOES, IN WORDS, ALWAYS. */
+      cause,
+      complete: neverAssessed === 0,
+      says: !documents.length ? ROUTE_MARKED_CAUSES[cause] : `${marked} document${marked === 1 ? "" : "s"} in this record carry a standing marker saying their route cannot be shown from the evidence held`,
+      completeness: neverAssessed === 0 ? "every captured document this viewer can see has been assessed at least once, so this roster is complete over the corpus" : `${neverAssessed} of ${documentsVisible} captured documents have NEVER been assessed \u2014 NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest`
+    };
+  }
+  /** THE AUTHORED FLAG'S FENCE, run by `promote` before its first write.
+   *
+   *  THREE REFUSALS, and each is a way the register could let a member's word
+   *  pass for a captured document or the other way round (§7):
+   *   (1) a document claiming `authored` that this record did not author through
+   *       the testimony path — including a register entry that would re-file an
+   *       authored capture's bytes under a DIFFERENT bundle (C-53.8, THE LIAR);
+   *   (2) an authored document whose origin or actor class is not `member`
+   *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
+   *   (3) an authored document that stops saying `authored: true`, or whose
+   *       provenance document is gone from the revision (C-53.9).
+   *  AND ONE MORE, ASKED OF EVERY CAPTURE (D-179, C-53.13): a register entry
+   *  whose bytes another EXISTING bundle already holds — one capture, one home.
+   *
+   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
+   *  there is no replay exemption here, so a migration carrying an authored
+   *  bundle must re-author it through `testify`, never promote it verbatim.
+   *
+   *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
+   *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
+   *  here a caller cannot have produced; the document's `authored` field is the
+   *  CLAIM being judged against it. ONE read, whatever the package holds: the
+   *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
+  #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
+    const refusal8 = rowRefusal2(TESTIMONY_CHECKS);
+    const prov = Array.isArray(files) ? files.find((f4) => f4 && f4.path === "data/provenance.json") : null;
+    let docs = [], unreadable = false;
+    if (prov) {
+      const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
+      if (j === null) unreadable = true;
+      else docs = Array.isArray(j.documents) ? j.documents : [];
+    }
+    const shaOf = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
+    const regs = Array.isArray(register2) ? register2.filter((c) => c && typeof c.sha256 === "string") : [];
+    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const held = this.#rows(
+      `SELECT capture_sha, bundle_id FROM register
+        WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
+        LIMIT ?`,
+      bundleId,
+      JSON.stringify(asked),
+      asked.length + 1
+    );
+    const here = new Set(held.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
+    const elsewhere = new Set(held.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
+    const own2 = (s) => !!(testimony && testimony.captureSha === s && !elsewhere.has(s));
+    for (const c of regs)
+      if (elsewhere.has(c.sha256))
+        return refusal8(
+          "TESTIMONY_AUTHORED_UNEARNED",
+          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER bundle's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
+          { bundleId, capture_sha: c.sha256 }
+        );
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      if (!d || typeof d !== "object") continue;
+      const s = shaOf(d);
+      const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
+      const authored = s != null && (here.has(s) || own2(s));
+      if (claims && !authored)
+        return refusal8(
+          "TESTIMONY_AUTHORED_UNEARNED",
+          `data/provenance.json documents[${i}] claims authored: ${JSON.stringify(d.authored).slice(0, 40)}, and ${s ? `capture ${s.slice(0, 16)}\u2026 was not authored through op=testify` : `names no capture at all`}. Only the testimony act marks a document as a member's own observation`,
+          { bundleId, index: i }
+        );
+      if (!authored) continue;
+      if (d.authored !== true)
+        return refusal8(
+          "TESTIMONY_AUTHORED_DROPPED",
+          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and this revision sets authored to ${JSON.stringify(d.authored ?? null).slice(0, 40)}`,
+          { bundleId, index: i }
+        );
+      const origin = d.origin && typeof d.origin === "object" ? d.origin.kind : void 0;
+      const actor = d.capture.actor_class;
+      if (origin !== "member" || actor !== "member")
+        return refusal8(
+          "TESTIMONY_ORIGIN_NOT_MEMBER",
+          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and claims origin '${String(origin).slice(0, 40)}', actor class '${String(actor).slice(0, 40)}' \u2014 both must be 'member'`,
+          { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
+        );
+    }
+    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf).filter(Boolean));
+    for (const s of here)
+      if (!stated.has(s))
+        return refusal8(
+          "TESTIMONY_AUTHORED_DROPPED",
+          unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
+          { bundleId, capture_sha: s }
+        );
+    const shas = [...new Set(regs.map((c) => c.sha256))];
+    const homes = shas.length ? this.#rows(
+      `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      bundleId,
+      JSON.stringify(shas),
+      shas.length
+    ) : [];
+    if (homes.length) {
+      const h = homes[0];
+      const caller = viewing.identity != null || viewing.viewer != null;
+      const named = !caller || this.#membership.inSight(h.bundle_id, viewing.viewer ?? null);
+      return refusal8(
+        "CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+        `this promotion registers capture ${h.capture_sha.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the original's; registering it here would move that bundle's register row`,
+        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null }
+      );
+    }
+    return null;
+  }
+  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
+  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
+    const refusal8 = rowRefusal2(TESTIMONY_CHECKS);
+    const who2 = typeof author === "string" ? author.trim() : "";
+    if (!who2 || isMachineIdentity(who2))
+      return refusal8(
+        "TESTIMONY_NOT_A_MEMBER",
+        who2 ? `'${who2.slice(0, 60)}' is a machine credential. A firsthand observation is a person's word about what they saw, and it stands on that person's trust` : `this call carries nobody. The plane stamps the author from the credential that asked, so an empty one means the act arrived by a route that does not attribute it`
+      );
+    if (claimedAuthor !== null && claimedAuthor !== void 0)
+      return refusal8(
+        "TESTIMONY_AUTHOR_SUPPLIED",
+        `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
+      );
+    const text = typeof words === "string" ? words : "";
+    const bytes = new TextEncoder().encode(text);
+    const recorded = secondOf(this.#now());
+    const obs = typeof observedAt === "string" ? observedAt.trim() : "";
+    const obsMs = observedMs(obs);
+    if (!text.trim())
+      return refusal8(
+        "TESTIMONY_NO_WORDS",
+        `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
+      );
+    if (bytes.length > TESTIMONY_MAX_BYTES)
+      return refusal8(
+        "TESTIMONY_WORDS_TOO_LONG",
+        `${bytes.length} B written, over the ${TESTIMONY_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: words silently truncated would be words the member did not write, standing in their name`,
+        { bytes: bytes.length, limit: TESTIMONY_MAX_BYTES }
+      );
+    if (obsMs == null || obsMs > Date.parse(recorded))
+      return refusal8(
+        "TESTIMONY_OBSERVED_AT_INVALID",
+        obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
+        { observed_at: obs || null }
+      );
+    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
+    const out = this.#record.transact(() => {
+      const id2 = `${this.#record.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
+      const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text });
+      const fileBytes2 = new TextEncoder().encode(fileText);
+      const sha2 = createSha256().update(fileBytes2).hex();
+      if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha2))
+        return { spent: refusal8(
+          "TESTIMONY_WORDS_REGISTERED",
+          `the canonical bytes of ${id2} (${sha2.slice(0, 16)}\u2026) are already registered in this record`
+        ) };
+      const file2 = `snapshots/observation-${sha2.slice(0, 16)}.txt`;
+      const locator = "a member's firsthand observation, authored in this record";
+      const observer = observerRef(id2);
+      const md = [
+        "---",
+        `id: ${id2}`,
+        "object_type: information",
+        "schema: information@1",
+        `title: ${JSON.stringify(heading)}`,
+        "current_state: collected",
+        "prior_state: null",
+        `created: "${recorded}"`,
+        `last_updated: "${recorded}"`,
+        "produced_by:",
+        "  mode: human",
+        "  capability_tier: session",
+        "references: []",
+        "state_history: []",
+        "annotations_open: 0",
+        "reeval_pending:",
+        "  flag: false",
+        "  since: null",
+        "  source: null",
+        "visuals: []",
+        "criticality: supporting",
+        "source_status: unchanged",
+        "source:",
+        `  locator: ${JSON.stringify(locator)}`,
+        "  authority: the observing member",
+        `  retrieved: ${recorded}`,
+        "monitoring:",
+        "  enabled: false",
+        "  frequency: none",
+        "---",
+        "",
+        "## Summary",
+        "",
+        `A member's firsthand observation. Their words are \`${file2}\`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.`,
+        "",
+        "## Provenance Notes",
+        "",
+        `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is stamped by the plane from the signed-in session. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
+        "",
+        "## Session Log",
+        "",
+        `### Session ${recorded} | Authored | ${observer}`,
+        "Trigger: testify",
+        "Changes: created as a member's authored observation.",
+        "",
+        "## Review Notes",
+        ""
+      ].join("\n");
+      const doc = {
+        file: file2,
+        locator,
+        retrieved: recorded,
+        /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
+           only because this method wrote it (the fence reads the register's flag,
+           not this field); the author is the STAMP, recorded in the register and
+           named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
+        authored: true,
+        author: observer,
+        observed_at: obs,
+        recorded_at: recorded,
+        authority: "the observing member",
+        authority_state: "determined",
+        authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
+        provenance_chain: [{
+          who: observer,
+          asserts: `these are my own words, as written, about what I observed at ${obs}`,
+          evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
+          bound: false
+        }],
+        capture: {
+          method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, hashed at receipt",
+          /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
+             arm): the capture axis measures reading a document in, and nothing was
+             read in. */
+          actor_class: "member",
+          sha256: sha2,
+          encoding: "utf8",
+          bytes: fileBytes2.length,
+          content_type: "text/plain; charset=utf-8"
+        },
+        origin: { kind: "member" },
+        attestation_attempts: []
+      };
+      const provText = JSON.stringify({ documents: [doc] }, null, 2);
+      const enc2 = (t) => {
+        const b = new TextEncoder().encode(t);
+        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
+      };
+      const promoted2 = this.#promotion.promote({
+        bundleId: id2,
+        base: null,
+        snapKey: `${recorded.replace(/[-:]/g, "")}_${rand2(4)}`,
+        author: who2,
+        files: [
+          { path: "bundle.md", ...enc2(md) },
+          { path: "data/provenance.json", ...enc2(provText) },
+          { path: file2, text: fileText, bytes: fileBytes2.length, sha256: sha2 }
+        ],
+        meta: {
+          object_type: "information",
+          title: heading,
+          current_state: "collected",
+          prior_state: null,
+          created: recorded,
+          last_updated: recorded,
+          criticality: "supporting"
+        },
+        register: [{ sha256: sha2, path: file2, encoding: "utf8", bytes: fileBytes2.length }],
+        [TESTIMONY_PATH]: { captureSha: sha2, author: who2, observedAt: obs, recordedAt: recorded, words: text }
+      });
+      if (!promoted2.ok) return promoted2;
+      return { ok: true, id: id2, sha: sha2, file: file2, fileBytes: fileBytes2, promoted: promoted2 };
+    });
+    if (out.spent) return out.spent;
+    if (!out.ok) return out;
+    const { id, sha, file, fileBytes, promoted } = out;
+    return {
+      ok: true,
+      bundle_id: id,
+      bundle_sha: promoted.bundleSha ?? null,
+      capture_sha: sha,
+      file,
+      bytes: fileBytes.length,
+      words_bytes: bytes.length,
+      content_id: promoted.testimony ? promoted.testimony.content_id ?? null : null,
+      authored: true,
+      origin: "member",
+      actor_class: "member",
+      author: who2,
+      observed_at: obs,
+      recorded_at: recorded,
+      axes: {
+        capture: {
+          grade: null,
+          determined: false,
+          undetermined_because: "CAPTURE_AXIS_AUTHORED",
+          why: "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here"
+        },
+        connection: {
+          grade: null,
+          determined: false,
+          why: "no reader ran over these words and nothing resolved them to a subject"
+        },
+        /* MK-2 / IC-142: the letter is the registry's own constant, so this answer and a leg's refusal cannot
+           name different letters. */
+        testimony: {
+          grade: TESTIMONY_GRADE,
+          determined: true,
+          why: `an observation is graded as testimony, ${TESTIMONY_GRADE}, on the observing member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3). A leg citing it carries grade_axis: testimony, grade: ${TESTIMONY_GRADE}, grade_source: testimony, and nothing raises it \u2014 another member agreeing is a co-signature, not a second observation`
+        }
+      },
+      says: `${who2} recorded a firsthand observation, observed ${obs}. The words are held exactly as written and are the document; they stand on ${who2}'s trust. This record takes the author from the signed-in account and never from the request.`
+    };
+  }
+};
+var instances3 = /* @__PURE__ */ new WeakMap();
+function provenanceOf(host, deps) {
+  let p = instances3.get(host);
+  if (!p) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host);
+    p = new Provenance({ ...d, storage: d.storage || host.storage, record, membership, promotion });
+    instances3.set(host, p);
+    record.declarePurge("provenance", [
+      "register",
+      "provenance_route_marks",
+      "origin_declarations",
+      { name: "captured_locators", keys: [] },
+      { name: "signed_receipts", keys: [] }
+    ], { exempt: ["receipt_keys"] });
+    p.joinPromotion();
+  }
+  return p;
+}
+
+// src/host-governor/index.mjs
+var GOVERNOR = Object.freeze({
+  defaultAppetitePerMin: 12,
+  /* chosen: one document fetch every ~5s on average */
+  jitterLow: 0.6,
+  jitterHigh: 1.5,
+  burstTokens: 3,
+  /* a person opens a few tabs; a loop opens forty */
+  cooloff429BaseMs: 6e4,
+  cooloff429CapMs: 36e5,
+  cooloffRefusedBaseMs: 3e4,
+  cooloffRefusedCapMs: 18e5
+});
+function appetiteOf(value) {
+  if (typeof value === "string") {
+    if (value.trim() === "") return null;
+  } else if (typeof value !== "number") return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+function badAppetite(host = null) {
+  const detail = "appetite_per_min must be a positive number, or omit it to reset to the instance default";
+  return {
+    ok: false,
+    configured: false,
+    reason: "BAD_APPETITE",
+    code: "BAD_APPETITE",
+    check: "host-governor.R12",
+    translation: detail,
+    detail,
+    ...host ? { host } : {}
+  };
+}
+function retryAfterMs(value, nowMs = Date.now()) {
+  if (value == null) return null;
+  const s = String(value).trim();
+  if (s === "") return null;
+  if (/^[+-]?\d+(\.\d+)?$/.test(s)) return Math.max(0, Number(s) * 1e3);
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? Math.max(0, t - nowMs) : null;
+}
+var hostOf = (q) => q && typeof q.host === "string" && q.host !== "" ? q.host : null;
+var HostGovernor = class {
+  /** `sql` is the Durable Object's (`ctx.storage.sql`); `core` is record-core, for the purge declaration (R24);
+   *  `env` carries the instance binding `GOVERNOR_APPETITE_PER_MIN` (R3), read at each admission; `now` and
+   *  `random` are the clock and the jitter source (the Suggestion), so R5, R6 and R9 are exact under test. */
+  constructor({ sql, core = null, env = null, now = () => Date.now(), random = () => Math.random() } = {}) {
+    this.sql = sql;
+    this.core = core;
+    this.env = env;
+    this.now = now;
+    this.random = random;
+  }
+  #rows(q, ...a) {
+    return [...this.sql.exec(q, ...a)].map((r) => ({ ...r }));
+  }
+  #row(host) {
+    return this.#rows(`SELECT * FROM host_governor WHERE host = ?`, host)[0] || null;
+  }
+  /* R2: first contact creates the host's state with a full burst, no cool-off and no refusals. */
+  #rowOrNew(host, now) {
+    let r = this.#row(host);
+    if (!r) {
+      this.sql.exec(
+        `INSERT INTO host_governor (host, tokens, refilled_at, updated_at) VALUES (?, ?, ?, ?)`,
+        host,
+        GOVERNOR.burstTokens,
+        now,
+        new Date(now).toISOString()
+      );
+      r = this.#row(host);
+    }
+    return r;
+  }
+  /** This module's table, at every boot, idempotent; and its purge declaration (R24), once: exempt, because a
+   *  cool-off is a counterparty's refusal and a purged instance still honours it. Run by the host inside its boot. */
+  migrate() {
+    const bare = HOST_GOVERNOR_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare.split(";")) {
+      const t = st.trim();
+      if (t) this.sql.exec(t);
+    }
+    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return;
+    const answer = this.core.declarePurge("host-governor", [], { exempt: ["host_governor"] });
+    if (answer && answer.ok === false)
+      throw new Error(`host-governor: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    this.#declared = true;
+  }
+  #declared = false;
+  /* R3: the host's configured appetite, else the instance binding when it is a positive finite number, else the
+     chosen default. A stored value that is not a positive finite number (one written before R12 held) is no
+     configuration, and the precedence goes on past it. */
+  #appetite(r) {
+    return appetiteOf(r.appetite_per_min) ?? appetiteOf(this.env ? this.env.GOVERNOR_APPETITE_PER_MIN : void 0) ?? GOVERNOR.defaultAppetitePerMin;
+  }
+  /** R1–R6. Never throws on its own logic. */
+  governorAdmit(q) {
+    const host = hostOf(q);
+    if (!host) return { admitted: false, reason: "no host named" };
+    const now = this.now();
+    const at = new Date(now).toISOString();
+    const r = this.#rowOrNew(host, now);
+    const appetite = this.#appetite(r);
+    if (r.cooloff_until > now) {
+      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at, host);
+      return {
+        admitted: false,
+        reason: "cooling_off",
+        retry_in_ms: r.cooloff_until - now,
+        refusals: r.refusals,
+        last_refusal_status: r.last_refusal_status
+      };
+    }
+    const tokens2 = Math.min(GOVERNOR.burstTokens, r.tokens + Math.max(0, now - r.refilled_at) / 6e4 * appetite);
+    if (tokens2 < 1) {
+      const retryIn = Math.ceil((1 - tokens2) / appetite * 6e4);
+      this.sql.exec(
+        `UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+        tokens2,
+        now,
+        at,
+        host
+      );
+      return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
+    }
+    const j = GOVERNOR.jitterLow + this.random() * (GOVERNOR.jitterHigh - GOVERNOR.jitterLow);
+    const gapWanted = 6e4 / appetite * j;
+    const sinceLast = now - (r.last_grant_at || 0);
+    const wait = Math.max(0, Math.round(gapWanted - sinceLast));
+    this.sql.exec(
+      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
+      tokens2 - 1,
+      now,
+      now + wait,
+      at,
+      host
+    );
+    return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
+  }
+  /** R7–R10. Never throws on its own logic. */
+  governorReport(q) {
+    const host = hostOf(q);
+    if (!host) return { recorded: false };
+    const s = Number(q.status) || 0;
+    const now = this.now();
+    const at = new Date(now).toISOString();
+    if (s >= 200 && s < 400) {
+      this.#rowOrNew(host, now);
+      this.sql.exec(`UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`, at, host);
+      return { recorded: true, refusals: 0 };
+    }
+    if (s === 429 || s === 403 || s === 503) {
+      const r = this.#rowOrNew(host, now);
+      const refusals = (r.refusals || 0) + 1;
+      const base = s === 429 ? GOVERNOR.cooloff429BaseMs : GOVERNOR.cooloffRefusedBaseMs;
+      const cap = s === 429 ? GOVERNOR.cooloff429CapMs : GOVERNOR.cooloffRefusedCapMs;
+      const escalated = Math.min(cap, base * Math.pow(2, refusals - 1));
+      const cooloff = Math.max(Number(r.cooloff_until) || 0, now + Math.max(escalated, Number(q.retry_after_ms) || 0));
+      this.sql.exec(
+        `UPDATE host_governor SET refusals = ?, last_refusal_at = ?, last_refusal_status = ?, cooloff_until = ?, updated_at = ? WHERE host = ?`,
+        refusals,
+        now,
+        s,
+        cooloff,
+        at,
+        host
+      );
+      return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
+    }
+    return { recorded: true, ignored: s };
+  }
+  /** R11, R12. A host is required, so a global appetite cannot be set; `null` or an omitted appetite clears the
+   *  host's, which is how an operator says "stop treating this host specially". Never throws. */
+  governorConfig(q) {
+    const host = hostOf(q);
+    if (!host) return { configured: false };
+    const given = q.appetite_per_min;
+    const appetite = given == null ? null : appetiteOf(given);
+    if (given != null && appetite === null) return badAppetite(host);
+    const now = this.now();
+    this.#rowOrNew(host, now);
+    this.sql.exec(
+      `UPDATE host_governor SET appetite_per_min = ?, updated_at = ? WHERE host = ?`,
+      appetite,
+      new Date(now).toISOString(),
+      host
+    );
+    return { configured: true, host, appetite_per_min: appetite };
+  }
+  /** R13: one host's row, or every row by host; never creates one. Never throws. */
+  governorState(q) {
+    const host = q && q.host != null && q.host !== "" ? String(q.host) : null;
+    return { hosts: host ? this.#rows(`SELECT * FROM host_governor WHERE host = ?`, host) : this.#rows(`SELECT * FROM host_governor ORDER BY host`) };
+  }
+  /** R14: every host held at `now`, by R4's own test (`cooloff_until > now`); spends nothing, writes nothing. */
+  governorHolding(q) {
+    const now = q && Number.isFinite(Number(q.now)) && q.now !== null && q.now !== "" ? Number(q.now) : this.now();
+    return this.#rows(`SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now);
+  }
+  /** R14: whether one host is held at `now`; `false` for a host with no state. A NON-CONSUMING read: a caller that
+   *  must not spend a token it is not about to use asks this, never `governorAdmit`. */
+  isHeld(host, now = this.now()) {
+    if (typeof host !== "string" || host === "") return false;
+    const r = this.#row(host);
+    const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    return !!r && Number(r.cooloff_until) > at;
+  }
+};
+var OF2 = /* @__PURE__ */ new WeakMap();
+function governorOf(ctx, { env = null, now, random, record = null } = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let g = OF2.get(storage);
+  if (!g) {
+    g = new HostGovernor({
+      sql: storage.sql,
+      core: record ?? recordOf(ctx),
+      env,
+      ...now ? { now } : {},
+      ...random ? { random } : {}
+    });
+    OF2.set(storage, g);
+  }
+  return g;
+}
+function governorRoutes(g, url, body) {
+  return {
+    governoradmit: () => g.governorAdmit(body || { host: url.searchParams.get("host") }),
+    governorreport: () => g.governorReport(body || {}),
+    governorconfig: () => g.governorConfig(body || {}),
+    governorstate: () => g.governorState(body || { host: url.searchParams.get("host") })
+  };
+}
+function governorOverStub(stub) {
+  const ask2 = async (path, body) => {
+    const res = await stub.fetch(`http://x/${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const out = await res.json();
+    return out && out.ok === true && out.result ? out.result : null;
+  };
+  return { admit: (q) => ask2("governoradmit", q), report: (q) => ask2("governorreport", q) };
+}
+async function governedFetch(target, {
+  userAgent: userAgent2 = null,
+  fetch: doFetch = globalThis.fetch,
+  governor = null,
+  now = () => Date.now(),
+  sleep = (ms) => new Promise((s) => setTimeout(s, ms))
+} = {}) {
+  let host = null;
+  try {
+    host = new URL(target).host || null;
+  } catch {
+  }
+  const gov = host && governor && typeof governor.admit === "function" ? governor : null;
+  let waitMs = 0;
+  if (gov) {
+    try {
+      const g = await gov.admit({ host });
+      if (g && g.admitted === false)
+        return {
+          refusedByGovernor: true,
+          reason: g.reason || "governed",
+          retry_in_ms: g.retry_in_ms || 0,
+          last_refusal_status: g.last_refusal_status ?? null
+        };
+      waitMs = g && Number(g.wait_ms) || 0;
+    } catch {
+    }
+  }
+  if (waitMs > 0) await sleep(waitMs);
+  const headers = typeof userAgent2 === "string" && userAgent2 !== "" ? { "user-agent": userAgent2 } : {};
+  const res = await doFetch(target, { redirect: "follow", headers });
+  if (gov && typeof gov.report === "function") {
+    try {
+      const ra = res && res.headers && typeof res.headers.get === "function" ? res.headers.get("retry-after") : null;
+      await gov.report({ host, status: res.status, retry_after_ms: retryAfterMs(ra, now()) });
+    } catch {
+    }
+  }
+  return { res };
+}
+async function answerOf(call) {
+  try {
+    const out = await (await call()).json();
+    return out && out.ok === true ? { answered: true, result: out.result } : { answered: false };
+  } catch {
+    return { answered: false };
+  }
+}
+async function governorOp(op, url, store) {
+  if (op !== "governorstate" && op !== "governorconfig") return null;
+  const st = typeof store === "function" ? store() : store;
+  const host = url.searchParams.get("host");
+  if (op === "governorstate") {
+    const r2 = await answerOf(() => st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
+    return r2.answered ? { status: 200, body: { ok: true, ...r2.result } } : { silent: true };
+  }
+  if (!host)
+    return { status: 400, body: {
+      ok: false,
+      reason: "NEED_HOST",
+      detail: "pass host=<hostname>; governorconfig never sets a global appetite"
+    } };
+  const raw = url.searchParams.get("appetite_per_min");
+  const appetite = raw === null || raw === "" ? null : appetiteOf(raw);
+  if (raw !== null && raw !== "" && appetite === null) return { status: 400, body: badAppetite(host) };
+  const r = await answerOf(() => st.fetch("http://x/governorconfig", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ host, appetite_per_min: appetite })
+  }));
+  if (!r.answered) return { silent: true };
+  if (r.result && r.result.ok === false) return { status: 400, body: r.result };
+  return { status: 200, body: { ok: true, ...r.result } };
+}
+
+// src/capture/doorbell.mjs
+var KNOCK = {
+  windowMs: 10 * 60 * 1e3,
+  perIp: 12,
+  // knocks per source per window
+  global: 300,
+  // knocks per instance per window; bounds hostile writes to the evidence store
+  maxBytes: 8 * 1024 * 1024,
+  // with an evidence store: enough for a captured PDF
+  maxInline: 64 * 1024
+  // without one: inline into the store, small only
+};
+KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+function knockEnvelopeTooLarge() {
+  const row = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_ENVELOPE_TOO_LARGE",
+    code: "KNOCK_ENVELOPE_TOO_LARGE",
+    check: row.check,
+    translation: row.translation,
+    maxBytes: KNOCK.maxBytes
+  };
+}
+function knockPayloadTooLarge(cap, evidence) {
+  const row = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_PAYLOAD_TOO_LARGE",
+    code: "KNOCK_PAYLOAD_TOO_LARGE",
+    check: row.check,
+    translation: row.translation,
+    maxBytes: cap,
+    detail: evidence ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
+  };
+}
+function knockEmpty() {
+  const row = KNOCK_CHECKS.KNOCK_EMPTY;
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row.check, translation: row.translation };
+}
+async function knockOp(req, env, store, { json: json2, requiredArgument: requiredArgument2, storeSilent: storeSilent2 }) {
+  if (req.method !== "POST") return json2({ ok: false, error: "knock is a POST" }, 405);
+  const raw = await req.arrayBuffer();
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return json2(knockEnvelopeTooLarge(), 413);
+  let body;
+  try {
+    body = JSON.parse(new TextDecoder().decode(raw));
+  } catch {
+    body = null;
+  }
+  if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
+    return json2({ ok: false, ...requiredArgument2(
+      "knock",
+      "contentB64 or contentText",
+      "a JSON body with contentB64=<base64> or contentText=<text>",
+      "knock requires contentB64 or contentText, plus optional note and contact"
+    ) }, 400);
+  let bytes;
+  try {
+    bytes = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
+  } catch {
+    return json2({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
+  }
+  if (bytes.length === 0) return json2(knockEmpty(), 400);
+  const evidence = typeof env.CAPTURES?.put === "function";
+  const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
+  if (bytes.length > cap) return json2(knockPayloadTooLarge(cap, evidence), 413);
+  const source = req.headers.get("cf-connecting-ip") || "unknown";
+  let out = null;
+  try {
+    out = await (await store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
+        content: typeof body.contentB64 === "string" ? null : body.contentText,
+        note: body.note,
+        contact: body.contact,
+        windowMs: KNOCK.windowMs,
+        perIpLimit: KNOCK.perIp,
+        globalLimit: KNOCK.global,
+        /* D-487: the window's instant is the control plane's, read once, as it always was. */
+        now: Date.now()
+      })
+    }))).json();
+  } catch {
+    out = null;
+  }
+  if (!out || out.ok !== true) return storeSilent2("knock");
+  const rec = out.result || {};
+  if (!rec.ok) {
+    if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
+      return json2({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
+    return json2({ ok: false, ...rec }, rec.status || 502);
+  }
+  return json2({
+    ok: true,
+    knockId: rec.knockId,
+    sha256: rec.sha256,
+    bytes: rec.bytes,
+    received: "Your material is in the group's inbox awaiting member review."
+  }, 200);
+}
+
+// src/capture/acquire.mjs
+var hex3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+async function sha256Hex7(v) {
+  return hex3(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
+}
+var driveRow2 = (code) => {
+  const row = DRIVE_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
+var renderRow = (code) => {
+  const row = RENDER_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
+function userAgent(env, purpose = "acquire", delegated = null) {
+  if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
+  return civicosUserAgent(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
+}
+var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+var ODF_DIGEST_MAX = 8 * 1024 * 1024;
+function profilesAsText(ct, total, multipart) {
+  return !multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
+}
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
+  const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
+  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
+    let od;
+    try {
+      od = await odfEvidentiaryDigest(containerBytes, sha256Hex7);
+    } catch (e) {
+      od = {
+        determined: false,
+        flavour: "unread",
+        basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed`
+      };
+    }
+    if (od.determined) {
+      if (await sha256Hex7(containerBytes) !== sha)
+        return {
+          determined: false,
+          rendition: null,
+          evidentiary: null,
+          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted"
+        };
+      return {
+        determined: true,
+        rendition: null,
+        evidentiary: od.evidentiary,
+        over: od.over,
+        container: od.flavour,
+        boundary_missed: false,
+        basis: od.basis
+      };
+    }
+    if (od.flavour) return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
+  }
+  if (!digestCertain)
+    return {
+      determined: false,
+      rendition: null,
+      evidentiary: null,
+      basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
+    };
+  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex7 });
+  if (dg.identity !== sha)
+    return {
+      determined: false,
+      rendition: null,
+      evidentiary: null,
+      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted"
+    };
+  return {
+    determined: true,
+    rendition: dg.rendition,
+    evidentiary: dg.evidentiary,
+    boundary_missed: !!dg.boundary_missed,
+    basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`
+  };
+}
+function profileView(core) {
+  const ids = core && typeof core.getSetting === "function" ? core.getSetting("jurisdiction_profiles") : null;
+  if (!Array.isArray(ids)) return { view: void 0, ids: null, basis: "no active jurisdiction profiles are set" };
+  const c = combine(ids);
+  return c.ok ? { view: c.view, ids, basis: `the combined view of ${ids.length ? ids.join(", ") : "no profile"}` } : { view: void 0, ids, basis: `the active profiles did not combine (${(c.errors || []).map((e) => e.code).join(", ")})` };
+}
+var renderLocale = (view) => renderLocaleFor(view);
+async function governedFetch2(cap, target, purpose, delegated = null) {
+  const g = cap.governor;
+  return governedFetch(target, {
+    userAgent: userAgent(cap.env, purpose, delegated),
+    fetch: (u, i) => fetch(u, i),
+    governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null
+  });
+}
+async function archiveSelect(cap, address) {
+  const reach2 = cap.sourceReachability({ addressNorm: normalizeAddress(address) });
+  if (!reach2.fallback_eligible)
+    return { ok: false, status: 409, payload: {
+      ok: false,
+      reason: "NOT_ELIGIBLE",
+      detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+      reachability: reach2
+    } };
+  try {
+    await cap.governor?.governorConfig({ host: "web.archive.org", appetite_per_min: 24 });
+  } catch {
+  }
+  let res;
+  try {
+    const g = await governedFetch2(cap, cdxQuery(address), "archive-lookup");
+    if (g.refusedByGovernor)
+      return { ok: false, status: 429, payload: {
+        ok: false,
+        reason: "HOST_COOLING_OFF",
+        detail: `the governor is holding requests to web.archive.org (${g.reason})`,
+        retry_in_ms: g.retry_in_ms || 0
+      } };
+    res = g.res;
+  } catch (e) {
+    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+  }
+  if (!res.ok)
+    return { ok: false, status: 502, payload: {
+      ok: false,
+      reason: "ARCHIVE_REFUSED",
+      status: res.status,
+      detail: res.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
+    } };
+  const parsed = parseCdx(await res.text());
+  if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
+  const sel = selectCapture(parsed.rows);
+  if (!sel.ok)
+    return { ok: false, status: 404, payload: { ok: false, reason: sel.reason, detail: sel.detail, considered: sel.considered, address } };
+  const replay = replayLocator(sel.chosen);
+  return {
+    ok: true,
+    reach: reach2,
+    chosen: sel.chosen,
+    rejected: sel.rejected,
+    usable_count: sel.usable_count,
+    replay,
+    hop: archiveHop(sel.chosen, replay)
+  };
+}
+async function archiveLookup(cap, { address } = {}) {
+  if (typeof address !== "string" || !isPublicHttpsLocator(address))
+    return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
+  const sel = await archiveSelect(cap, address);
+  if (!sel.ok) return { status: sel.status, body: sel.payload };
+  return { status: 200, body: {
+    ok: true,
+    address,
+    eligible_because: sel.reach.basis,
+    chosen: sel.chosen,
+    /* Every row the index offered and why it was not used: "nothing suitable" alone is unauditable. */
+    rejected: sel.rejected,
+    usable_count: sel.usable_count,
+    retrieval_locator: sel.replay,
+    provenance_hop: sel.hop,
+    capture_with: { op: "acquire", via: "archive.org", address },
+    note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the CDX record"
+  } };
+}
+function governedCall(cap, purpose) {
+  const g = cap.governor;
+  return async (u, init = {}) => {
+    let host = null;
+    try {
+      host = new URL(String(u)).host;
+    } catch {
+      host = null;
+    }
+    if (host && g) {
+      let a = null;
+      try {
+        a = await g.governorAdmit({ host });
+      } catch {
+        a = null;
+      }
+      if (a && a.admitted === false) throw new Error(`the per-host governor is holding requests to ${host} (${a.reason || "governed"})`);
+      if (a && a.wait_ms > 0) await new Promise((r) => setTimeout(r, a.wait_ms));
+    }
+    const res = await fetch(u, { ...init, headers: { ...init.headers || {}, "user-agent": userAgent(cap.env, purpose) } });
+    if (host && g) {
+      try {
+        await g.governorReport({ host, status: res.status, retry_after_ms: retryAfterMs(res.headers.get("retry-after")) });
+      } catch {
+      }
+    }
+    return res;
+  };
+}
+async function coAttest(cap, { sha, locator, via, ev }) {
+  const p = cap.provenance;
+  const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : attest;
+  const recorded = (a) => ({
+    ...a,
+    service: String(a.service || a.kind || "attest"),
+    attempted: true,
+    ok: a.ok === true,
+    ...typeof a.attempted === "string" ? { at: a.attempted } : {}
+  });
+  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond2(), note: why }];
+  try {
+    const out = await attestFn(
+      { sha256: sha, archive: via !== "archive.org", locator },
+      {
+        head: (s) => ev.head(s),
+        put: (s, b) => ev.put(s, b),
+        fetch: governedCall(cap, "attest"),
+        holds: async (s) => p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null
+      }
+    );
+    const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
+    return attempts.length ? attempts.map(recorded) : notAsked(String(out && (out.reason || out.note || out.detail) || "no attempt was reported"));
+  } catch (e) {
+    return notAsked(String(e && e.message || e).slice(0, 200));
+  }
+}
+async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null } = {}) {
+  const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
+  const answer = (status, b) => ({ status, body: b });
+  const op = "acquire";
+  const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
+  if (!ev) return answer(503, {
+    ok: false,
+    reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+    op,
+    error: "this instance has no evidence storage configured"
+  });
+  if (!captureRequest && body.via === "capture-request") {
+    const row = CAPTURE_REQUEST_CHECKS.CAPTURE_NOT_DRAINING;
+    return answer(403, {
+      ok: false,
+      reason: "CAPTURE_NOT_DRAINING",
+      code: "CAPTURE_NOT_DRAINING",
+      check: row.check,
+      translation: row.translation,
+      cls,
+      request: body.request ?? null,
+      op,
+      detail: "this instance fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it."
+    });
+  }
+  if (cls === "daemon" && body.via !== "archive.org" && !captureRequest)
+    return answer(403, {
+      ok: false,
+      reason: "NOT_PERMITTED",
+      op,
+      cls,
+      detail: `the daemon class reaches op=acquire through the archive fallback (via: "archive.org") and through the capture-request drain (via: "capture-request"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.`
+    });
+  let archiveHopRecorded = null, archiveAddress = null;
+  if (body.via === "archive.org") {
+    if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
+      return answer(403, {
+        ok: false,
+        reason: "NOT_PERMITTED",
+        op,
+        via: "archive.org",
+        detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback."
+      });
+    const addr = body.address;
+    if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
+      return answer(400, {
+        ok: false,
+        reason: "BAD_ADDRESS",
+        detail: "an archive-sourced capture names the document address, not a replay locator"
+      });
+    const sel = await archiveSelect(cap, addr);
+    if (!sel.ok) return answer(sel.status, sel.payload);
+    archiveHopRecorded = sel.hop;
+    archiveAddress = sel.chosen.original;
+    body.locator = sel.replay;
+  }
+  let crPurpose = null, crAgent = null;
+  if (captureRequest) {
+    body.locator = captureRequest.locator;
+    crPurpose = captureRequest.purpose || null;
+    crAgent = captureRequest.agent || null;
+    if (captureRequest.render === true) body.render = true;
+    else delete body.render;
+  }
+  let driveCapture = null, driveHopRecorded = null;
+  {
+    const supplied = callerSuppliedHopFacts(body);
+    if (supplied.length)
+      return answer(400, {
+        ok: false,
+        reason: "DRIVE_HOP_FACT_SUPPLIED",
+        ...driveRow2("DRIVE_HOP_FACT_SUPPLIED"),
+        op,
+        supplied,
+        detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
+      });
+    const drive = readDriveAddress(body.locator);
+    if (drive) {
+      if (drive.shape === "folder")
+        return answer(422, {
+          ok: false,
+          reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
+          ...driveRow2("DRIVE_FOLDER_NOT_A_DOCUMENT"),
+          op,
+          drive: { host: drive.host, shape: drive.shape, harvestable: false },
+          locator: drive.address,
+          detail: drive.why
+        });
+      if (drive.shape === "file")
+        return answer(422, {
+          ok: false,
+          reason: "DRIVE_KIND_UNDETERMINED",
+          ...driveRow2("DRIVE_KIND_UNDETERMINED"),
+          op,
+          drive: { host: drive.host, shape: drive.shape, harvestable: false, ...drive.fileId ? { file_id: drive.fileId } : {} },
+          locator: drive.address,
+          detail: drive.why
+        });
+      if (drive.shape === "unknown")
+        return answer(422, {
+          ok: false,
+          reason: "DRIVE_SHAPE_UNRECOGNISED",
+          ...driveRow2("DRIVE_SHAPE_UNRECOGNISED"),
+          op,
+          drive: { host: drive.host, shape: drive.shape, harvestable: false },
+          locator: drive.address,
+          detail: drive.why
+        });
+      if (drive.harvestable) {
+        driveCapture = drive;
+        body.locator = drive.exportAddress;
+      }
+    }
+  }
+  let session = null, sessionSkip = null;
+  if (body.continue && !body.render) {
+    const ld = cap.loadCaptureSession({ session: String(body.continue) });
+    if (ld && ld.found) session = ld;
+    else sessionSkip = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
+  }
+  const locator = session ? session.locator : body.locator;
+  if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+    return answer(400, {
+      ok: false,
+      reason: "BAD_LOCATOR",
+      detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
+    });
+  if (session) return continueCapture(cap, { body, session, cls, storeName, ev });
+  const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
+  const retrieved = stampSecond2();
+  const pv = profileView(cap.core);
+  const renderAsked = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
+  let renderer = null, renderReserved = 0, renderSlot = null;
+  if (renderAsked) {
+    if (body.render !== true)
+      return answer(400, {
+        ok: false,
+        reason: "RENDER_FLAG_MALFORMED",
+        ...renderRow("RENDER_FLAG_MALFORMED"),
+        op,
+        detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.`
+      });
+    const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)" : driveCapture ? "a Google Drive export (a document, not a page)" : body.continue ? "continue: <session> (a capture already filed)" : null;
+    if (conflict)
+      return answer(400, {
+        ok: false,
+        reason: "RENDER_ARM_CONFLICT",
+        ...renderRow("RENDER_ARM_CONFLICT"),
+        op,
+        conflict,
+        detail: `render: true cannot be combined with ${conflict}.`
+      });
+    renderer = rendererFor(cap.env);
+    if (typeof renderer.render !== "function")
+      return answer(501, {
+        ok: false,
+        reason: "RENDER_NO_RENDERER",
+        ...renderRow("RENDER_NO_RENDERER"),
+        op,
+        renderer: renderer.kind,
+        detail: renderer.kind === "browser-binding-without-driver" ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched."
+      });
+    let rHost = null;
+    try {
+      rHost = new URL(locator).host;
+    } catch {
+      rHost = null;
+    }
+    if (rHost && cap.governor) {
+      let g = null;
+      try {
+        g = await cap.governor.governorAdmit({ host: rHost });
+      } catch {
+        g = null;
+      }
+      if (g && g.admitted === false)
+        return answer(429, {
+          ok: false,
+          reason: "RENDER_HOST_COOLING_OFF",
+          ...renderRow("RENDER_HOST_COOLING_OFF"),
+          op,
+          host: rHost,
+          retry_in_ms: g.retry_in_ms || 0,
+          detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
+        });
+    }
+    renderReserved = renderReserveMs(RENDER_DEFAULTS);
+    let adm = null;
+    try {
+      adm = cap.renderAdmit({
+        allowanceMs: renderAllowanceMs(cap.env),
+        reserveMs: renderReserved,
+        cap: renderConcurrencyCap(cap.env),
+        at: retrieved
+      });
+    } catch {
+      adm = null;
+    }
+    if (adm && adm.state === "waiting")
+      return answer(429, {
+        ok: false,
+        reason: "RENDER_AT_CAPACITY",
+        ...renderRow("RENDER_AT_CAPACITY"),
+        op,
+        render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
+        detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; this render is waiting and nothing was fetched.`
+      });
+    if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
+    if (!adm || adm.state !== "admitted")
+      return answer(429, {
+        ok: false,
+        reason: "RENDER_DEFERRED",
+        ...renderRow("RENDER_DEFERRED"),
+        op,
+        render: { state: "deferred", content: "undetermined", allowance: adm || null },
+        detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
+      });
+  }
+  const via = body.via === "archive.org" ? "archive.org" : "direct";
+  const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
+  const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
+  const addrNorm = normalizeAddress(documentAddress);
+  const noteOutcome = async (outcome, status) => {
+    try {
+      await cap.recordSourceOutcome({ addressNorm: addrNorm, outcome, status: status ?? null, at: retrieved });
+    } catch {
+    }
+  };
+  let res;
+  try {
+    const g = await governedFetch2(cap, locator, crPurpose || "acquire", crAgent);
+    if (g.refusedByGovernor) {
+      await noteOutcome("governed", null);
+      return answer(429, {
+        ok: false,
+        reason: "HOST_COOLING_OFF",
+        detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
+        retry_in_ms: g.retry_in_ms || 0,
+        locator
+      });
+    }
+    res = g.res;
+  } catch (e) {
+    await noteOutcome("fetch_failed", null);
+    return answer(502, { ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator });
+  }
+  const driveFacts = driveCapture ? {
+    host: driveCapture.host,
+    shape: driveCapture.shape,
+    kind: driveCapture.kind,
+    file_id: driveCapture.fileId,
+    export_format: driveCapture.format
+  } : null;
+  if (driveCapture && !res.ok) {
+    await noteOutcome("source_refused", res.status);
+    return answer(502, {
+      ok: false,
+      reason: "DRIVE_EXPORT_UNREACHABLE",
+      ...driveRow2("DRIVE_EXPORT_UNREACHABLE"),
+      op,
+      status: res.status,
+      locator: driveCapture.address,
+      export_address: driveCapture.exportAddress,
+      drive: driveFacts,
+      detail: `Google answered ${res.status} at the OpenDocument export address ${driveCapture.exportAddress}, which this instance composed from the ${driveCapture.kind} id in ${driveCapture.address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.`
+    });
+  }
+  if (driveCapture) {
+    const ect = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (ect === "text/html" || ect === "application/xhtml+xml") {
+      await noteOutcome("source_refused", res.status);
+      try {
+        await res.body?.cancel?.();
+      } catch {
+      }
+      return answer(502, {
+        ok: false,
+        reason: "DRIVE_EXPORT_IS_THE_SHELL",
+        ...driveRow2("DRIVE_EXPORT_IS_THE_SHELL"),
+        op,
+        status: res.status,
+        locator: driveCapture.address,
+        export_address: driveCapture.exportAddress,
+        declared_content_type: ect,
+        refused_on: "the declared content type",
+        drive: driveFacts,
+        detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.`
+      });
+    }
+  }
+  if (!res.ok) {
+    await noteOutcome("source_refused", res.status);
+    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
+  }
+  await noteOutcome("success", res.status);
+  const PART = 8 * 1024 * 1024;
+  const MAX = 256 * 1024 * 1024;
+  const whole = createSha256();
+  const parts = [];
+  const partHeldBefore = [];
+  let total = 0, held = [], heldBytes = 0, oversize = false;
+  const part = async (buf) => {
+    const psha = hex3(await crypto.subtle.digest("SHA-256", buf));
+    const heldBefore = !!await ev.head(psha);
+    if (!heldBefore) await ev.put(psha, buf);
+    parts.push({ sha256: psha, bytes: buf.length });
+    partHeldBefore.push(heldBefore);
+  };
+  const flush = async (all = true) => {
+    while (heldBytes >= PART || all && heldBytes > 0) {
+      const n = Math.min(PART, heldBytes);
+      const buf = new Uint8Array(n);
+      let at = 0;
+      while (at < n) {
+        const c = held[0], take = Math.min(c.length, n - at);
+        buf.set(c.subarray(0, take), at);
+        at += take;
+        if (take === c.length) held.shift();
+        else held[0] = c.subarray(take);
+      }
+      heldBytes -= n;
+      await part(buf);
+    }
+  };
+  const driveHead = driveCapture ? new Uint8Array(1024) : null;
+  let driveHeadBytes = 0;
+  const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+  if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
+  for (; ; ) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > MAX) {
+      oversize = true;
+      break;
+    }
+    whole.update(value);
+    if (driveHead && driveHeadBytes < driveHead.length) {
+      const take = Math.min(value.length, driveHead.length - driveHeadBytes);
+      driveHead.set(value.subarray(0, take), driveHeadBytes);
+      driveHeadBytes += take;
+    }
+    held.push(value);
+    heldBytes += value.length;
+    if (heldBytes >= PART) await flush(false);
+  }
+  if (driveCapture && driveHeadBytes > 0) {
+    const sniff = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
+    const declared = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (sniff.format === "html") {
+      try {
+        await reader.cancel();
+      } catch {
+      }
+      await noteOutcome("source_refused", res.status);
+      return answer(502, {
+        ok: false,
+        reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL",
+        ...driveRow2("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
+        op,
+        status: res.status,
+        locator: driveCapture.address,
+        export_address: driveCapture.exportAddress,
+        declared_content_type: declared || null,
+        refused_on: "the bytes",
+        detected: sniff,
+        drive: driveFacts,
+        detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring \`${declared || "(no content type)"}\`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.`
+      });
+    }
+  }
+  if (oversize) {
+    try {
+      await reader.cancel();
+    } catch {
+    }
+    return answer(413, {
+      ok: false,
+      reason: "TOO_LARGE",
+      bytes: total,
+      maxBytes: MAX,
+      detail: "the document exceeds what this surface will capture even in parts"
+    });
+  }
+  await flush();
+  if (total === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
+  let sha = whole.hex();
+  let existed = false, existedUndetermined = null;
+  const multipart = parts.length > 1;
+  if (!multipart) {
+    if (parts[0].sha256 !== sha)
+      return answer(500, { ok: false, reason: "HASH_DISAGREEMENT", detail: "the incremental hash and the block hash of the same bytes differ" });
+    existed = partHeldBefore[0];
+  } else {
+    let reg = null;
+    try {
+      reg = cap.provenance && typeof cap.provenance.registerHolds === "function" ? await cap.provenance.registerHolds({ sha }) : null;
+    } catch {
+      reg = null;
+    }
+    const heldParts = partHeldBefore.filter(Boolean).length;
+    if (reg && reg.registered === true) existed = true;
+    else {
+      existed = null;
+      existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a bundle that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
+    }
+  }
+  let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
+  const responseHeaders = [];
+  for (const [k, v] of res.headers) responseHeaders.push([k, v]);
+  const transport = {
+    requested: locator,
+    resolved: res.url || locator,
+    redirected: !!(res.url && res.url !== locator),
+    status: res.status,
+    http_headers: responseHeaders,
+    peer_address: null,
+    peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch"
+  };
+  const name = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
+  let renderRecorded = null, shellRecorded = null, renderedAuth = null;
+  if (renderAsked) {
+    const pageUrl = res.url || locator;
+    let answerR = null, rbytes = null, rb = null;
+    if (multipart || detectFormat(null, ct || null).format !== "html") {
+      try {
+        cap.renderSpend({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved });
+      } catch {
+      }
+      return answer(422, {
+        ok: false,
+        reason: "RENDER_NOT_A_PAGE",
+        ...renderRow("RENDER_NOT_A_PAGE"),
+        op,
+        content_type: ct || null,
+        bytes: total,
+        multipart,
+        detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
+      });
+    }
+    try {
+      answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view) });
+    } catch (e) {
+      answerR = { ok: false, error: String(e && e.message || e) };
+    }
+    try {
+      cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved });
+    } catch {
+    }
+    const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
+    if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
+    if (!rb.ok || rbytes.length > MAX)
+      return answer(502, {
+        ok: false,
+        reason: "RENDER_FAILED",
+        ...renderRow("RENDER_FAILED"),
+        op,
+        shell_sha256: sha,
+        filed: false,
+        detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem
+      });
+    const renderDigests = await keepRenderBodies(answerR, {
+      sha256: sha256Hex7,
+      put: async (s, b) => {
+        if (!await ev.head(s)) await ev.put(s, b);
+      }
+    });
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved, digests: renderDigests });
+    const rsha = await sha256Hex7(rbytes);
+    const renderedExisted = !!await ev.head(rsha);
+    if (!renderedExisted) await ev.put(rsha, rbytes);
+    shellRecorded = {
+      file: `snapshots/${name}.shell.html`,
+      sha256: sha,
+      bytes: total,
+      method: "bio-plane acquire, https fetch, hashed at receipt",
+      ...ct ? { content_type: ct } : {},
+      transport
+    };
+    renderRecorded = rb.render;
+    renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
+    if (typeof renderRecorded.status === "number" && cap.governor) {
+      try {
+        await cap.governor.governorReport({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null });
+      } catch {
+      }
+    }
+    sha = rsha;
+    total = rbytes.length;
+    ct = "text/html";
+    existed = renderedExisted;
+  }
+  try {
+    await cap.provenance?.recordReceipt?.({
+      address: addressIsDerived ? documentAddress : res.url || locator,
+      addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res.url || locator),
+      captureSha: sha,
+      retrieved,
+      via,
+      retrievalLocator: locator
+    });
+  } catch {
+  }
+  let receiptSignature = null;
+  if (via === "archive.org") {
+    try {
+      receiptSignature = await cap.provenance?.signReceipt?.({ captureSha: sha, retrievalLocator: locator, retrieved }) ?? null;
+    } catch (e) {
+      receiptSignature = { ok: false, reason: "RECEIPT_NOT_SIGNED", detail: String(e && e.message || e).slice(0, 200) };
+    }
+  }
+  if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
+    try {
+      await cap.taskEnqueue({
+        kind: "authority-undetermined",
+        captureSha: sha,
+        subject: driveCapture ? documentAddress : locator,
+        locator,
+        at: retrieved
+      });
+    } catch {
+    }
+  }
+  let subs = null, subsSkipped = sessionSkip, sessionId = null;
+  if (body.subresources === true && !subsSkipped) {
+    const w = await walkSubresources(cap, {
+      ev,
+      sha,
+      total,
+      multipart,
+      ct,
+      name,
+      locator,
+      base: res.url || locator,
+      retrieved,
+      resume: null,
+      sessionId: null
+    });
+    subs = w.subs;
+    subsSkipped = w.skipped;
+    sessionId = w.sessionId;
+  }
+  let profileText = "", profileBytes = null;
+  if (profilesAsText(ct, total, multipart)) {
+    try {
+      const pobj = await ev.get(sha);
+      if (pobj) {
+        profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
+      }
+    } catch {
+    }
+  }
+  let formatBytes = profileBytes;
+  if (!formatBytes && !multipart && total > 0) {
+    try {
+      const fobj = await ev.get(sha);
+      if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer()).subarray(0, 1024);
+    } catch {
+    }
+  }
+  const profHeaders = {};
+  for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
+  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
+  const stackId = identify(profCtx);
+  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...pv.view ? { view: pv.view } : {} });
+  const profile = {
+    ...profileRecord(stackId, { now: retrieved }),
+    content_type: docType.type.key,
+    content_type_label: docType.type.label,
+    content_type_version: docType.type.version,
+    content_type_confidence: docType.confidence,
+    content_type_signals: docType.signals,
+    contract: docType.type.contract || null,
+    normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
+    boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
+    source_content_type: ct || null,
+    profiled_from_text: !!profileText,
+    /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
+    jurisdiction_view: pv.ids,
+    format: detectFormat(formatBytes, ct || null)
+  };
+  if (driveCapture) driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected: profile.format });
+  let containerBytes = null;
+  const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
+  if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
+    try {
+      const cobj = await ev.get(sha);
+      if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
+    } catch {
+    }
+  }
+  profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
+  const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
+  const document = {
+    file: `snapshots/${name}`,
+    locator,
+    retrieved,
+    profile,
+    /* R14, D-97: authority mirrors verdict / basis / at: the STATE always, the basis dated in both cases. */
+    ...renderedAuth ? renderedAuth : {
+      ...authorityAsserted ? { authority: authorityAsserted } : {},
+      authority_state: authorityAsserted ? "determined" : "undetermined",
+      authority_basis: authorityAsserted ? `asserted by the capturing ${member ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`
+    },
+    /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
+       sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
+       as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. */
+    provenance_chain: [{
+      who: `instance ${cap.env.INSTANCE_NAME || "unnamed"} (CivicOS/${cap.env.VERSION || "0.0.0"})`,
+      asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
+      evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
+      bound: false,
+      via
+    }, ...archiveHopRecorded ? [archiveHopRecorded] : [], ...driveHopRecorded ? [driveHopRecorded] : []],
+    capture: {
+      method: renderRecorded ? RENDERED_METHOD : multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
+      /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
+      grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
+      ...via === "archive.org" ? { authority: "Internet Archive" } : {},
+      actor_class: member ? "member" : cls === "probe" ? "session" : "daemon",
+      sha256: sha,
+      encoding: "binary",
+      bytes: total,
+      ...ct ? { content_type: ct } : {},
+      ...renderRecorded ? {} : { transport }
+    },
+    ...renderRecorded ? {
+      pair: {
+        primary: "rendered",
+        rendered: { file: `snapshots/${name}`, sha256: sha },
+        shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 }
+      },
+      render: renderRecorded,
+      shell: shellRecorded
+    } : {},
+    ...multipart ? { parts: parts.map((p, i) => ({ file: `snapshots/${name}.part${String(i).padStart(3, "0")}`, sha256: p.sha256, bytes: p.bytes })) } : {},
+    /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
+    ...subs ? { renditions: subs.renditions } : {},
+    origin: {
+      kind: body.matchedSweep ? "sweep" : "named_request",
+      ...body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}
+    },
+    attestation_attempts: attestations
+  };
+  return answer(200, {
+    ok: true,
+    existed,
+    ...existedUndetermined ? { existed_undetermined: existedUndetermined } : {},
+    document,
+    ...multipart ? { parts: parts.length } : {},
+    ...snapshotOf(subs, sessionId, name, shellRecorded),
+    ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
+    ...receiptSignature ? { receipt_signature: receiptSignature } : {},
+    store: storeName,
+    tokenClass: cls
+  });
+}
+function snapshotOf(subs, sessionId, name, shellRecorded) {
+  if (!subs) return shellRecorded ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {};
+  return {
+    subresources: subs.subresources,
+    snapshot: {
+      manifest_file: "data/snapshot-manifest.json",
+      manifest_sha256: subs.manifestSha,
+      render_file: `snapshots/${name}.render.html`,
+      render_sha256: subs.companionSha,
+      discovered: subs.discovered,
+      attempted: subs.attempted,
+      truncated: subs.truncated,
+      fetched: subs.manifest.counts.fetched,
+      failed: subs.manifest.counts.failed,
+      refused: subs.manifest.counts.refused,
+      scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
+      complete: subs.manifest.complete,
+      outstanding: subs.manifest.outstanding,
+      platform: subs.manifest.platform,
+      reuse: subs.manifest.reuse,
+      part_fetch_spread: subs.manifest.part_fetch_spread,
+      compute: subs.manifest.compute,
+      ...subs.resumeState ? { continuation: {
+        session: sessionId,
+        outstanding: subs.manifest.outstanding,
+        ticks: subs.session ? subs.session.ticks : 1,
+        how: 'call op=acquire again with {continue: "<session>"} to pick up the outstanding parts; the primary is already complete and is never re-fetched'
+      } } : {},
+      ...subs.siteRecord ? { site: subs.siteRecord } : {},
+      ...subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}
+    },
+    files: {
+      [`snapshots/${name}.render.html`]: subs.companionSha,
+      "data/snapshot-manifest.json": subs.manifestSha,
+      ...shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}
+    }
+  };
+}
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId }) {
+  const SUB_PARSE_MAX = 8 * 1024 * 1024;
+  if (multipart || total > SUB_PARSE_MAX)
+    return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` } };
+  if (detectFormat(null, ct || null).format !== "html")
+    return { subs: null, skipped: { reason: "NOT_HTML", content_type: ct || null, detail: "only an HTML page has subresources; the capture is unaffected and complete" } };
+  let obj = null;
+  try {
+    obj = await ev.get(sha);
+  } catch {
+    obj = null;
+  }
+  if (!obj) return { subs: null, skipped: { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" } };
+  const primaryBytes = new Uint8Array(await obj.arrayBuffer());
+  let limit = null;
+  try {
+    limit = cap.captureLimit("subrequests");
+  } catch {
+    limit = null;
+  }
+  const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
+  let baseHost = null;
+  try {
+    baseHost = new URL(base).hostname.toLowerCase();
+  } catch {
+    baseHost = null;
+  }
+  let siteKnown = {};
+  if (baseHost) {
+    try {
+      siteKnown = cap.siteAssets({ host: baseHost }).assets || {};
+    } catch {
+      siteKnown = {};
+    }
+  }
+  const env = cap.env || {};
+  const subs = await captureSubresources({
+    platformCeiling: useCeiling,
+    resume,
+    siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
+    readBack: async (sh) => {
+      const o = await ev.get(sh);
+      return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null;
+    },
+    html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
+    base,
+    primarySha: sha,
+    primaryFile: `snapshots/${name}`,
+    isPublic: isPublicHttpsLocator,
+    sha256: sha256Hex7,
+    put: async (s, b) => {
+      if (await ev.head(s)) return { existed: true };
+      await ev.put(s, b);
+      return { existed: false };
+    },
+    fetchOne: async (u) => {
+      let subHost = null;
+      try {
+        subHost = new URL(u).host;
+      } catch {
+      }
+      if (subHost && cap.governor) {
+        try {
+          if (await cap.governor.isHeld(subHost, Date.now())) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
+        } catch {
+        }
+      }
+      const stagger = cap.subresourceStaggerMs();
+      if (stagger) await new Promise((s) => setTimeout(s, stagger));
+      const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+      if (subHost && cap.governor) {
+        try {
+          await cap.governor.governorReport({ host: subHost, status: r.status, retry_after_ms: retryAfterMs(r.headers.get("retry-after")) });
+        } catch {
+        }
+      }
+      if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
+      return { ok: true, status: r.status, bytes: new Uint8Array(await r.arrayBuffer()), contentType: r.headers.get("content-type") || "" };
+    }
+  });
+  try {
+    subs.limitRecord = cap.recordCaptureLimit({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling });
+  } catch {
+  }
+  let sid = sessionId;
+  if (subs.resumeState) {
+    sid = sid || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
+    try {
+      subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state: subs.resumeState });
+    } catch {
+    }
+  } else if (sid) {
+    try {
+      cap.dropCaptureSession({ session: sid });
+    } catch {
+    }
+  }
+  try {
+    await cap.emit("compute", {
+      metric: "capture_work_bytes",
+      value: subs.manifest.compute.work_bytes,
+      detail: `${subs.manifest.compute.work_calls} compute calls over ${subs.manifest.compute.work_bytes} bytes; ${subs.manifest.counts.fetched} fetched, ${subs.manifest.discovered} discovered`
+    });
+  } catch {
+  }
+  try {
+    if (subs.links && subs.links.length)
+      cap.recordLinks({
+        sourceCapture: sha,
+        capturedAt: retrieved,
+        links: subs.links.filter((l) => l.address).map((l) => ({
+          ref: l.ref,
+          address: l.address,
+          address_norm: normalizeAddress(l.address),
+          citation_norm: l.citation || normalizeCitation(l.address),
+          fragment: l.fragment || null,
+          type: l.type,
+          origin: l.origin,
+          chrome: l.chrome === true,
+          chrome_basis: l.chrome_basis || null
+        }))
+      });
+  } catch {
+  }
+  if (baseHost && subs.siteObservations && subs.siteObservations.length) {
+    try {
+      subs.siteRecord = cap.recordSiteAssets({ host: baseHost, primarySha: sha, observations: subs.siteObservations });
+    } catch {
+    }
+  }
+  return { subs, skipped: null, sessionId: sid };
+}
+async function continueCapture(cap, { body, session, cls, storeName, ev }) {
+  const name = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
+  let obj = null;
+  try {
+    obj = await ev.head(session.primarySha);
+  } catch {
+    obj = null;
+  }
+  const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
+  const w = await walkSubresources(cap, {
+    ev,
+    sha: session.primarySha,
+    total: size,
+    multipart: false,
+    ct: "text/html",
+    name,
+    locator: session.locator,
+    base: session.base,
+    retrieved: stampSecond2(),
+    resume: session.state,
+    sessionId: session.session
+  });
+  return { status: 200, body: {
+    ok: true,
+    existed: true,
+    continued: {
+      session: session.session,
+      primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+      note: "a continuation files no new document: the primary was captured by the session's first tick and is never re-fetched"
+    },
+    ...snapshotOf(w.subs, w.sessionId, name, null),
+    ...w.skipped ? { subresources_skipped: w.skipped } : {},
+    store: storeName,
+    tokenClass: cls
+  } };
+}
+async function readingInputs(env, storeName, answer) {
+  const doc = answer.document;
+  const ids = doc.profile && doc.profile.jurisdiction_view;
+  const combined = Array.isArray(ids) ? combine(ids) : null;
+  const view = combined && combined.ok ? combined.view : void 0;
+  const sha = doc.capture.sha256, total = doc.capture.bytes, ct = doc.capture.content_type || "";
+  const multipart = Array.isArray(doc.parts);
+  const retrieved = doc.retrieved;
+  const headerPairs = (doc.capture.transport || doc.shell && doc.shell.transport || {}).http_headers || [];
+  const profHeaders = {};
+  for (const [hk, hv] of headerPairs) profHeaders[String(hk).toLowerCase()] = hv;
+  const driveHopOf = (doc.provenance_chain || []).find((h) => h && h.drive_file_id);
+  const driveCapture = driveHopOf ? readDriveAddress(driveHopOf.document_address) : null;
+  const documentAddress = driveCapture ? driveCapture.address : (doc.provenance_chain || []).find((h) => h && h.via === "archive.org" && h.document_address)?.document_address || doc.locator;
+  let profileText = "", profileBytes = null;
+  if (profilesAsText(ct, total, multipart) && typeof env.CAPTURES?.get === "function") {
+    try {
+      const o = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+      if (o) {
+        profileBytes = new Uint8Array(await o.arrayBuffer());
+        profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
+      }
+    } catch {
+    }
+  }
+  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
+  const stackId = identify(profCtx);
+  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...view ? { view } : {} });
+  return {
+    sha,
+    total,
+    ct,
+    multipart,
+    retrieved,
+    profHeaders,
+    profCtx,
+    profileText,
+    profileBytes,
+    stackId,
+    docType,
+    documentAddress,
+    driveCapture,
+    profile: doc.profile
+  };
+}
+
+// src/capture/schema.mjs
+var CAPTURE_SCHEMA = `
+-- The knock: quarantined public intake. Payload bytes live in R2 under
+-- <store>/inbox/<sha256> when R2 is configured, else inline here (small
+-- only). Nothing reads this table except member review; nothing here
+-- touches the record until a member pulls it through the gate.
+CREATE TABLE IF NOT EXISTS inbox (
+  knock_id    TEXT PRIMARY KEY,
+  sha256      TEXT NOT NULL,
+  bytes       INTEGER NOT NULL,
+  content     TEXT,
+  in_r2       INTEGER NOT NULL DEFAULT 0,
+  note        TEXT,
+  contact     TEXT,
+  received    TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'new',
+  resolved    TEXT,
+  resolved_by TEXT
+);
+CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
+
+-- Fixed-window knock rate accounting. Rows are pruned as windows pass.
+CREATE TABLE IF NOT EXISTS knock_rate (
+  bucket TEXT PRIMARY KEY,
+  count  INTEGER NOT NULL
+);
+
+-- What this RUNTIME was observed to allow, as opposed to what we choose to
+-- spend. Cloudflare's per-invocation subrequest limit differs by account, can
+-- change on either plan without notice, and is not documented anywhere this
+-- code can read, so the only honest source for it is having been refused.
+--
+-- previous and moved_at exist because a ceiling that MOVES is itself a fact the
+-- instance should notice: an upgraded plan and a tightened platform look
+-- identical in a single scalar, and telling them apart needs the history.
+--
+-- samples drives re-probing. Once a value has been confirmed enough times the
+-- instance deliberately runs without a ceiling again, because a limit only ever
+-- learned downward would leave an upgraded account capped forever.
+CREATE TABLE IF NOT EXISTS capture_limits (
+  runtime     TEXT PRIMARY KEY,
+  observed    INTEGER NOT NULL,
+  observed_at TEXT NOT NULL,
+  first_seen  TEXT NOT NULL,
+  samples     INTEGER NOT NULL DEFAULT 1,
+  since_probe INTEGER NOT NULL DEFAULT 0,
+  previous    INTEGER,
+  moved_at    TEXT
+);
+-- What a HOST has served, across every document captured from it.
+--
+-- Bytes were always shared: captures are content-addressed, so one stylesheet
+-- occupies one R2 object however many documents reference it. FETCHES were not,
+-- and fetches are the scarce thing. On a Legistar page roughly forty of the
+-- forty-five available subrequests go to site-wide chrome that will be
+-- byte-identical on the next document captured from that host.
+--
+-- stable_since is the last time the sha CHANGED, not the last time it was seen,
+-- because "unchanged for three months" and "not looked at for three months" are
+-- different facts. Neither licenses reuse. RECENCY OF FETCH does - last_fetched,
+-- the last time the source was actually seen serving these bytes, within the
+-- freshness window - together with a furniture kind and at least two distinct
+-- PAGES on the host (reuseDecision in subresources.mjs). A stability gate was
+-- measured live in 0.40.0 and reused nothing, so stable_since is a secondary
+-- confidence signal and keeps its own job in nav-change evidence.
+--
+-- The same table answers chrome detection. An address referenced by fifteen of
+-- fifteen captured documents on a host is the site's; one referenced by a single
+-- document is that document's own. That works on sites that never write a <nav>
+-- element, which is most municipal sites.
+CREATE TABLE IF NOT EXISTS site_assets (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  address      TEXT NOT NULL,
+  sha256       TEXT NOT NULL,
+  content_type TEXT,
+  bytes        INTEGER NOT NULL DEFAULT 0,
+  kind         TEXT,
+  first_seen   TEXT NOT NULL,
+  last_seen    TEXT NOT NULL,
+  last_fetched TEXT NOT NULL,
+  stable_since TEXT NOT NULL,
+  changes      INTEGER NOT NULL DEFAULT 0,
+  last_fetched_by TEXT,
+  PRIMARY KEY (host, address_norm)
+);
+CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
+CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
+
+-- One row per (asset, primary capture). It replaces an incrementing counter, and
+-- it is what makes post-hoc verification possible: when an asset's sha later
+-- changes, the captures that REUSED the old bytes are exactly the rows here with
+-- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
+-- whose bytes changed between two captures has two rows. So the distinct-document
+-- count joins primary_sha to captured_locators and counts document ADDRESSES
+-- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
+-- row is counted apart as undetermined rather than as a page.
+--
+-- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
+-- part names the capture whose FETCH served its bytes. site_assets.last_fetched_by
+-- is the primary capture sha whose fetch set last_fetched, written beside it on
+-- every fetched observation and never moved by a reuse. A reusing capture's row
+-- here keeps it as reused_from, taken from the capture's own observation so the
+-- manifest and the store cannot disagree, and reusedParts reads it from THIS row,
+-- never from site_assets, whose value a later fetch moves. Both are NULLABLE and
+-- NEVER BACK-FILLED: a reuse recorded before the build is UNDETERMINED as to its
+-- source, and matching a ref row at against last_fetched would prove nothing
+-- (both whole seconds, and a ref row is overwritten in place).
+CREATE TABLE IF NOT EXISTS site_asset_refs (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  primary_sha  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  reused       INTEGER NOT NULL DEFAULT 0,
+  sha256       TEXT NOT NULL,
+  reused_from  TEXT,
+  PRIMARY KEY (host, address_norm, primary_sha)
+);
+CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
+-- A capture that ran out of subrequest budget, waiting for another tick.
+--
+-- SCRATCH, not record. The intake doctrine says no intake path writes live
+-- state, and that keeps holding: this is a work list with an expiry, it names
+-- no bundle, and acquire still returns a provenance document and promotes
+-- nothing. The primary capture is complete from the first tick and its bytes
+-- are already in the store; what is outstanding here is only support material.
+--
+-- The primary HTML is deliberately NOT stored here. It is in the store under
+-- primary_sha, and a copy in session state would be a second, unverified copy
+-- of evidence sitting somewhere nothing checks.
+CREATE TABLE IF NOT EXISTS capture_sessions (
+  session     TEXT PRIMARY KEY,
+  locator     TEXT NOT NULL,
+  primary_sha TEXT NOT NULL,
+  primary_file TEXT NOT NULL,
+  base        TEXT NOT NULL,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL,
+  expires     TEXT NOT NULL,
+  ticks       INTEGER NOT NULL DEFAULT 1,
+  state       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS capture_sessions_expires ON capture_sessions(expires);
+-- Links a captured document made, and what they resolve to.
+--
+-- Address-keyed, which refs is not: refs is bundle-to-bundle and answers a
+-- different question. An UNRESOLVED link has no canonical target and cannot be
+-- a citation at all, because C-6.1 rightly refuses a locator as a
+-- references[].target. Resolution is the act that makes a link expressible as
+-- an edge: once the store holds a capture of the address, there is a canonical
+-- ID to point at, and the address rides along as a comment string.
+--
+-- address_norm is stored ALONGSIDE address, never instead of it, because a
+-- normalisation rule that later proves wrong must be re-derivable and a
+-- normalisation MISS looks exactly like "not captured".
+--
+-- The verdict is about CONTEMPORANEITY: whether the capture the store holds of
+-- the target is the version the source was pointing at on the day this document
+-- was captured. It is three-valued on purpose. undetermined is the resting
+-- state and the expected common case, because Last-Modified is absent from most
+-- dynamic pages, wrong on many others, and reset by deployments that changed
+-- nothing. A binary design silently sorts every undetermined link into one
+-- bucket or the other and both errors are bad.
+CREATE TABLE IF NOT EXISTS links (
+  source_bundle  TEXT,
+  source_capture TEXT NOT NULL,
+  link_ref       TEXT NOT NULL,
+  address        TEXT NOT NULL,
+  -- Two keys, deliberately. address_norm identifies the RESOURCE and is what
+  -- resolution matches against captured_locators; the server never sees a
+  -- fragment, so it has none. citation_norm identifies the CITATION and keeps
+  -- the fragment, because scientific and legal practice cite ELEMENTS and BIO
+  -- citations support element references: a link to #findings and a link to
+  -- #methodology in one report are two citations, and a single key made them
+  -- indistinguishable.
+  address_norm   TEXT NOT NULL,
+  citation_norm  TEXT NOT NULL,
+  fragment       TEXT,
+  partition      TEXT NOT NULL,
+  origin         TEXT,
+  chrome         INTEGER NOT NULL DEFAULT 0,
+  -- D-340: WHY the link reads as contained in a chrome region (the region it sat in, e.g. <nav> or
+  -- role=navigation). NULL on a link that is not, and on one filed before the column existed.
+  chrome_basis   TEXT,
+  captured_at    TEXT NOT NULL,
+  first_seen     TEXT NOT NULL,
+  PRIMARY KEY (source_capture, link_ref, citation_norm)
+);
+CREATE INDEX IF NOT EXISTS links_citation ON links(citation_norm);
+CREATE INDEX IF NOT EXISTS links_target ON links(address_norm);
+CREATE INDEX IF NOT EXISTS links_source ON links(source_bundle);
+
+-- The verdict, APPENDED and dated, never overwritten. A verdict that changed is
+-- itself a fact about the record, for the same reason state history is
+-- append-only: the current answer is the newest row, and the older rows are how
+-- anyone can tell whether it was always this answer.
+CREATE TABLE IF NOT EXISTS link_verdicts (
+  source_capture TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  verdict        TEXT NOT NULL,
+  basis          TEXT NOT NULL,
+  target_bundle  TEXT,
+  target_capture TEXT,
+  at             TEXT NOT NULL,
+  detail         TEXT,
+  PRIMARY KEY (source_capture, address_norm, at)
+);
+CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, address_norm);
+
+-- THE PRODUCER/CONSUMER BOUNDARY, and it is a safety property rather than a
+-- transport detail. Bob RULED that an undetermined-authority capture creates a
+-- task automatically at capture. If the capture path wrote the task directly
+-- then a leaked capture credential could put arbitrary assignees, forged
+-- history and chosen subjects in front of a member. It cannot: the capture path
+-- reaches only this table, every field here is already bounded at enqueue, and
+-- nothing here names an assignee, a status or an actor because those are not
+-- the producer's to say.
+--
+-- A table rather than a Cloudflare Queue, deliberately. Everything stays inside
+-- the Durable Object and therefore inside the audit model, which is the same
+-- reasoning that keeps the store in the DO. A Queue would buy cross-instance
+-- fan-out that a sovereign single-instance record does not want.
+--
+-- Keyed on (kind, capture_sha) so a noisy re-capture loop cannot flood the
+-- queue: re-enqueuing the same capture is a no-op, and the consumer folds the
+-- event into the open task rather than spawning a duplicate. capture_sha and
+-- NOT a bundle id, because at the moment of capture no bundle exists yet: the
+-- consumer resolves the sha through the register once the capture is filed, and
+-- an event whose capture has not been promoted simply waits.
+CREATE TABLE IF NOT EXISTS task_queue (
+  kind        TEXT NOT NULL,
+  capture_sha TEXT NOT NULL,
+  subject     TEXT NOT NULL,
+  locator     TEXT,
+  enqueued    TEXT NOT NULL,
+  attempts    INTEGER NOT NULL DEFAULT 0,
+  last_try    TEXT,
+  PRIMARY KEY (kind, capture_sha)
+);
+
+-- The counter the archive fallback will consume. Built BEFORE the fallback
+-- exists, and built to exclude governed refusals from the first line, because
+-- discovering the exclusion after a spurious fallback would mean we had already
+-- fetched from the Internet Archive because WE paced ourselves.
+--
+-- The distinction this table exists to hold: an outcome the SOURCE produced (a
+-- real 4xx or 5xx from the origin, a network failure reaching it) is evidence
+-- about the source. Our own governor declining to ask is not evidence about
+-- anything except our politeness. Only the first kind moves
+-- consecutive_failures.
+--
+-- governed_refusals is counted anyway, in its own column, rather than dropped.
+-- A number that is deliberately excluded from a decision should still be
+-- visible, or the exclusion cannot be audited and a future reader cannot tell a
+-- source nobody could reach from a source nobody asked.
+--
+-- Keyed on address_norm, the same normalised document address captured_locators
+-- keys on, so reachability is a property of the DOCUMENT rather than of a host:
+-- one page can be gone while the rest of a site answers.
+CREATE TABLE IF NOT EXISTS source_reachability (
+  address_norm         TEXT PRIMARY KEY,
+  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+  attempts             INTEGER NOT NULL DEFAULT 0,
+  failures_total       INTEGER NOT NULL DEFAULT 0,
+  governed_refusals    INTEGER NOT NULL DEFAULT 0,
+  last_success         TEXT,
+  last_failure         TEXT,
+  last_outcome         TEXT,
+  last_status          INTEGER,
+  first_failure_since  TEXT,
+  updated_at           TEXT
+);
+CREATE INDEX IF NOT EXISTS source_reach_failing ON source_reachability(consecutive_failures);
+
+-- CAP-4: the verdict on a REUSED subresource, APPENDED and dated, never
+-- overwritten, the same append-only discipline link_verdicts follows and for the
+-- same reason: a verdict that changed is itself a fact about the record, so the
+-- current answer is the newest row and the older rows are how anyone tells
+-- whether it was always this answer.
+--
+-- Two producers write here, and the phase column says which. POSTHOC detection
+-- is free and unconditional (CAPTURE-SCALING item 6a): when a later direct
+-- capture of a host fetches an asset whose bytes differ from the stored ones,
+-- every earlier capture that REUSED the old bytes is named here as 'changed' at
+-- zero request cost. RATIFY re-fetches every reused part with a PLAIN GET
+-- (item 6b/6c) -- our own SHA-256 over what we received is the evidence, where a
+-- 304 would be only the origin's assertion -- and records one of four outcomes:
+--   confirmed      the re-fetch matched the reused bytes; the strongest claim.
+--   changed        the source now serves something else; ratified with the bytes
+--                  captured on the day, the divergence a dated fact.
+--   unavailable    the source no longer answers; ratified with the bytes
+--                  captured, the record now holding what nobody can re-fetch.
+--   not_attempted  the invocation's re-fetch budget (the calibrated capture_limits
+--                  ceiling, item 6d) could not reach this part; recorded WITH its
+--                  reason, never silently omitted.
+-- All four are valid ratifications. What is forbidden is ratifying with a reused
+-- part and saying nothing: the mandatory part is the ATTEMPT and the RECORD, not
+-- the agreement. source_capture is the primary_sha of the capture that reused the
+-- part; bundle_id is set for a ratify verdict and null for a posthoc one, which
+-- happens at capture time when no bundle exists yet.
+CREATE TABLE IF NOT EXISTS reuse_verdicts (
+  source_capture TEXT NOT NULL,
+  bundle_id      TEXT,
+  host           TEXT NOT NULL,
+  address_norm   TEXT NOT NULL,
+  phase          TEXT NOT NULL,
+  verdict        TEXT NOT NULL,
+  reused_sha     TEXT NOT NULL,
+  observed_sha   TEXT,
+  basis          TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (source_capture, address_norm, phase, at)
+);
+CREATE INDEX IF NOT EXISTS reuse_verdicts_bundle ON reuse_verdicts(bundle_id);
+CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture, address_norm);
+
+
+-- D-64: the instance's DAILY RENDER ALLOWANCE, spent by the render arm of
+-- op=acquire (CLIENT-RENDERED.md, RULED 2026-09-23 by BOB #32 item 3). One row
+-- per UTC day. spent_ms is browser time the renderer REPORTED, so it is the
+-- renderer's claim summed, not a platform meter. deferred counts the renders
+-- this instance declined because the allowance was spent: a deferral is a
+-- recorded fact, never a silent fall-back to filing the shell as the content.
+-- An operational fact about this instance, not corpus-derived.
+-- D-492: reserved_ms is browser time COMMITTED to renders now in flight and not
+-- yet reported. spent_ms alone could not bound the allowance, because a render
+-- runs in the Worker and reports its cost afterwards, so every render in flight
+-- at once was admitted against one spent_ms. A render reserves its maximum cost
+-- at admission and releases the reservation when it reports, so the figure the
+-- admission test reads is spent_ms + reserved_ms. A render that never reports
+-- stays charged for the day: the allowance is then UNDER-used, which is the
+-- direction that cannot overrun. Added to an existing store by the additive
+-- pass in store.mjs #migrate, so a store written before D-492 reads 0.
+CREATE TABLE IF NOT EXISTS render_allowance (
+  day        TEXT PRIMARY KEY,
+  spent_ms   INTEGER NOT NULL DEFAULT 0,
+  reserved_ms INTEGER NOT NULL DEFAULT 0,
+  renders    INTEGER NOT NULL DEFAULT 0,
+  deferred   INTEGER NOT NULL DEFAULT 0,
+  last_at    TEXT NOT NULL
+);
+
+-- D-520: THE RENDERS RUNNING NOW, one row per admitted render, so the
+-- instance can CAP how many run at once (CLIENT-RENDERED.md, RULED by BOB #33:
+-- a concurrency cap from the vendor's stated limit, labelled; over the cap a
+-- render WAITS). render_allowance is an ACCOUNT of browser time and cannot say
+-- how many are in flight. A slot is released when its render reports, and
+-- EXPIRES at its admission plus its reservation (the most time the asked
+-- environment permits it), so a render that never reports cannot hold a slot
+-- for ever. An operational fact about this instance, not corpus-derived.
+CREATE TABLE IF NOT EXISTS render_slots (
+  slot        TEXT PRIMARY KEY,
+  admitted_at TEXT NOT NULL,
+  expires_ms  INTEGER NOT NULL
+);
+`;
+var CAPTURE_DERIVED_SCHEMA = `
+CREATE TABLE IF NOT EXISTS site_chrome (
+  host           TEXT NOT NULL,
+  fingerprint    TEXT NOT NULL,
+  links          TEXT NOT NULL,
+  first_observed TEXT NOT NULL,
+  last_observed  TEXT NOT NULL,
+  captures       INTEGER NOT NULL,
+  PRIMARY KEY (host, fingerprint)
+);
+CREATE TABLE IF NOT EXISTS site_chrome_refs (
+  host           TEXT NOT NULL,
+  source_capture TEXT NOT NULL,
+  page           TEXT NOT NULL,
+  first_observed TEXT NOT NULL,
+  last_observed  TEXT NOT NULL,
+  fingerprint    TEXT NOT NULL,
+  basis          TEXT NOT NULL,
+  PRIMARY KEY (host, source_capture, page)
+);
+CREATE INDEX IF NOT EXISTS site_chrome_refs_host ON site_chrome_refs(host, first_observed);
+CREATE TABLE IF NOT EXISTS link_chrome (
+  host         TEXT NOT NULL,
+  address_norm TEXT NOT NULL,
+  state        TEXT NOT NULL,
+  pages        INTEGER NOT NULL,
+  basis        TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (host, address_norm)
+);
+-- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
+-- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
+CREATE TABLE IF NOT EXISTS knock_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+)`;
+var CAPTURE_ADDITIVE_COLUMNS = [
+  ["site_assets", "last_fetched_by", "TEXT"],
+  // CAP-14: which capture's fetch served a reused part
+  ["site_asset_refs", "reused_from", "TEXT"],
+  // CAP-14
+  ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
+  // D-492: 0 is the measured truth
+  ["links", "chrome_basis", "TEXT"]
+  // D-340: the region a contained link sat in
+];
+var CAPTURE_RESHAPE = [["links", "citation_norm"]];
+var CAPTURE_PURGED_TABLES = [
+  "task_queue",
+  "source_reachability",
+  "link_verdicts",
+  "links",
+  "site_asset_refs",
+  "site_assets",
+  "reuse_verdicts",
+  "capture_sessions",
+  "site_chrome_refs",
+  "site_chrome",
+  "link_chrome"
+];
+var CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key"];
+
+// src/capture/index.mjs
+var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var HEX643 = /^[0-9a-f]{64}$/;
+var te6 = new TextEncoder();
+var hexOf3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var TASK_KINDS = Object.freeze(["authority-undetermined"]);
+var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
+var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
+var REACHABILITY_DEFAULTS = Object.freeze({ failures: 3, days: 14, minForAge: 2 });
+var REACHABILITY_SETTINGS = Object.freeze({
+  failures: "reachability_consecutive_failures",
+  days: "reachability_stale_days",
+  minForAge: "reachability_min_failures_for_age"
+});
+var SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
+var PROBE_EVERY = 25;
+var CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
+var instances4 = /* @__PURE__ */ new WeakMap();
+function captureOf(ctx, opts = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let c = instances4.get(storage);
+  if (!c) {
+    c = new Capture(storage, {
+      ...opts,
+      record: opts.record ?? recordOf(ctx),
+      governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
+      provenance: opts.provenance ?? provenanceOf(ctx)
+    });
+    instances4.set(storage, c);
+  }
+  return c;
+}
+var Capture = class _Capture {
+  #sql;
+  #storage;
+  #listeners = /* @__PURE__ */ new Map();
+  #declared = false;
+  constructor(storage, { record, env = {}, governor = null, provenance = null } = {}) {
+    this.#storage = storage;
+    this.#sql = storage.sql;
+    this.core = record;
+    this.env = env || {};
+    this.governor = governor;
+    this.provenance = provenance;
+  }
+  #rows(q, ...a) {
+    return [...this.#sql.exec(q, ...a)];
+  }
+  #one(q, ...a) {
+    const r = this.#rows(q, ...a);
+    return r.length ? r[0] : null;
+  }
+  #cols(t) {
+    return this.#rows(`PRAGMA table_info(${t})`).map((r) => r.name);
+  }
+  /* ---- boot (layers.md ruling 3) ---- */
+  /** This module's tables, at every boot, idempotent: a derived table whose key changed shape is dropped first
+   *  (so the CREATE INDEX below never meets the old table, which would throw inside blockConcurrencyWhile and
+   *  brick the Durable Object); the additive columns an older store lacks are added; every table and index is
+   *  created if absent; the tables are declared to record-core's purge (R21). */
+  migrate() {
+    for (const [table, needed] of CAPTURE_RESHAPE) {
+      const cols = this.#cols(table);
+      if (cols.length && !cols.includes(needed)) this.#sql.exec(`DROP TABLE ${table}`);
+    }
+    for (const [table, column, decl] of CAPTURE_ADDITIVE_COLUMNS) {
+      const have = this.#cols(table);
+      if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
+    for (const text of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA]) {
+      const bare = text.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+      for (const st of bare.split(";")) {
+        const t = st.trim();
+        if (t) this.#sql.exec(t);
+      }
+    }
+    this.declareTables();
+  }
+  declareTables() {
+    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
+    const answer = this.core.declarePurge(
+      "capture",
+      CAPTURE_PURGED_TABLES.map((name) => ({ name, keys: [] })),
+      { exempt: CAPTURE_EXEMPT_TABLES }
+    );
+    if (answer && answer.ok === false)
+      throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    this.#declared = true;
+    return true;
+  }
+  /* ---- listeners (R44, R55) ---- */
+  /** A later module registers, once at start, a listener for one of `CAPTURE_EVENTS`. Listeners are called after
+   *  this module's own write, in the order they registered (the host registers the modules in their total order),
+   *  and a listener's failure never fails the act; its outcome is named. */
+  on(event2, module, fn) {
+    if (!CAPTURE_EVENTS.includes(event2)) return { ok: false, reason: "UNKNOWN_EVENT", event: event2 };
+    if (typeof fn !== "function" || typeof module !== "string" || !module)
+      return { ok: false, reason: "BAD_LISTENER", event: event2 };
+    const list2 = this.#listeners.get(event2) || [];
+    if (list2.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED", event: event2, module };
+    list2.push({ module, fn });
+    this.#listeners.set(event2, list2);
+    return { ok: true, event: event2, module };
+  }
+  async #emit(event2, payload) {
+    const out = [];
+    for (const { module, fn } of this.#listeners.get(event2) || []) {
+      try {
+        out.push({ module, ok: true, result: await fn(payload) });
+      } catch (e) {
+        out.push({ module, ok: false, error: String(e && e.message || e).slice(0, 200) });
+      }
+    }
+    return out;
+  }
+  /** Hands `payload` to the listeners of `event` (the acquisition act calls it for R55's measurement). */
+  emit(event2, payload) {
+    return this.#emit(event2, payload);
+  }
+  /* ---- the acquisition act (acquire.mjs) ---- */
+  /** R1–R20: answers `{status, body}`. */
+  acquire(body, opts) {
+    return acquire(this, body, opts);
+  }
+  /** R3 */
+  archiveLookup(args) {
+    return archiveLookup(this, args);
+  }
+  #emitSync(event2, payload) {
+    const out = [];
+    for (const { module, fn } of this.#listeners.get(event2) || []) {
+      try {
+        out.push({ module, ok: true, result: fn(payload) });
+      } catch (e) {
+        out.push({ module, ok: false, error: String(e && e.message || e).slice(0, 200) });
+      }
+    }
+    return out;
+  }
+  /* ---- D-701: what a viewer may see of a capture ---- */
+  /** The sight predicate (membership R43) over a column that holds a CAPTURE sha, as a WHERE term. `register`
+   *  files a capture in ONE bundle, so the capture is seen exactly when that bundle is. A capture filed in NO
+   *  bundle (acquired, never promoted) names no bundle and so discloses none. An absent or unrecognised viewer
+   *  sees nothing (fail closed); a machine credential is not filtered. `viewer === undefined` is an internal
+   *  caller, not asked. The column must be qualified: a bare name binds inside the subquery and passes all. */
+  #captureGate(col, viewer) {
+    if (viewer === void 0) return { sql: "1=1", args: [] };
+    if (!/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+      throw new Error(`capture gate needs a qualified column (got ${col})`);
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    return { sql: `${GATE_MARK} NOT EXISTS (SELECT 1 FROM register reg JOIN bundles b ON b.bundle_id = reg.bundle_id
+                     WHERE reg.capture_sha = ${col} AND NOT (${gate.sql}))`, args: gate.args };
+  }
+  /* ==================================================================== *
+   * The doorbell's store side (R31, R32, R47, R48, R53, R54, R56)
+   * ==================================================================== */
+  /** R56: the key the source fingerprint is computed under: the operator's secret binding when set, else the
+   *  instance's own, generated once and held in `knock_key`. */
+  #knockKey() {
+    const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
+    if (bound) return te6.encode(bound);
+    let r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+    if (!r) {
+      const k = new Uint8Array(32);
+      crypto.getRandomValues(k);
+      this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf3(k), stampSecond3());
+      r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+    }
+    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
+  }
+  /** R31, R56: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the address and
+   *  never an unkeyed hash, which can be reversed by trying every address. */
+  async sourceFingerprint(address) {
+    const key = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const mac = await crypto.subtle.sign("HMAC", key, te6.encode(String(address || "unknown")));
+    return hexOf3(mac).slice(0, 32);
+  }
+  /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from the catalogue at
+     the moment of the refusal, so this file holds no member-facing word, and THE CODE STAYS A STRING LITERAL AT ITS
+     SITE. It THROWS on a missing row (R52): a throw is a 500 in a test, which is loud, where a missing sentence is
+     silent and reaches a stranger with no account and no other way to find out what happened. */
+  static #rateRefusal(code, extra) {
+    const row = KNOCK_CHECKS[code];
+    if (!row || typeof row.translation !== "string" || !row.translation)
+      throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra || {} };
+  }
+  /* D-496: a TWO-BUCKET WEIGHTED SLIDING WINDOW, because a fixed bucket published a bound it did not hold: a caller
+     who sends the limit just before the edge and again just after it got TWICE the published number inside one
+     window. The estimate weights the PREVIOUS bucket by how much of it is still inside the trailing window —
+     `est = prev x (1 - elapsed/W) + cur` — refused at `est >= limit`. It is APPROXIMATE IN BOTH DIRECTIONS (it
+     assumes the previous bucket's knocks were spread evenly), which is why the published sentence says
+     "estimated by a sliding window". */
+  #knockRateRefusal({ ipBucket, ipPrevBucket, globalBucket, globalPrevBucket, elapsedFrac, perIpLimit, globalLimit }) {
+    const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
+    const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
+    const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
+    if (est(ipBucket, ipPrevBucket) >= perIpLimit) return _Capture.#rateRefusal("RATE_IP");
+    if (est(globalBucket, globalPrevBucket) >= globalLimit) return _Capture.#rateRefusal("RATE_GLOBAL");
+    return null;
+  }
+  /** R31, R32, R53, R54: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
+   *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
+   *  are stored BEFORE the row, so a row never stands without its bytes (R54: a failed store answers a failure
+   *  and leaves no row); the row and the rate count land in ONE transaction that asks the rate again, so a race
+   *  cannot slip past the caps. A knock refused on that second ask stores no bytes of its own: the object is
+   *  removed unless another knock's row already names the same digest. */
+  async knock({
+    contentB64 = null,
+    content = null,
+    note,
+    contact,
+    sourceAddress = null,
+    windowMs = KNOCK.windowMs,
+    perIpLimit = KNOCK.perIp,
+    globalLimit = KNOCK.global,
+    now = null
+  } = {}) {
+    const nowMs = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    let bytes;
+    try {
+      bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te6.encode(String(content ?? ""));
+    } catch {
+      return { ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" };
+    }
+    const sha = hexOf3(await crypto.subtle.digest("SHA-256", bytes));
+    const win = Math.floor(nowMs / windowMs);
+    const elapsedFrac = (nowMs - win * windowMs) / windowMs;
+    const fp = await this.sourceFingerprint(sourceAddress);
+    const rate = {
+      ipBucket: `ip:${fp}:${win}`,
+      ipPrevBucket: `ip:${fp}:${win - 1}`,
+      globalBucket: `all:${win}`,
+      globalPrevBucket: `all:${win - 1}`,
+      elapsedFrac,
+      perIpLimit,
+      globalLimit
+    };
+    const early = this.#knockRateRefusal(rate);
+    if (early) return early;
+    const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
+    const key = `bio/inbox/${sha}`;
+    let stored = false;
+    if (bucket) {
+      try {
+        const held = typeof bucket.head === "function" ? await bucket.head(key) : null;
+        if (!held) {
+          await bucket.put(key, bytes, { sha256: await crypto.subtle.digest("SHA-256", bytes) });
+          stored = true;
+        }
+      } catch (e) {
+        return {
+          ok: false,
+          reason: "KNOCK_NOT_STORED",
+          status: 502,
+          detail: "the material could not be stored, so nothing was received and no inbox row was written"
+        };
+      }
+    }
+    const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+    const received = new Date(nowMs).toISOString();
+    const answer = this.#storage.transactionSync(() => {
+      const late = this.#knockRateRefusal(rate);
+      if (late) return late;
+      for (const b of [rate.ipBucket, rate.globalBucket])
+        this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+      this.#sql.exec(
+        `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+        String(win),
+        String(win - 1)
+      );
+      this.#sql.exec(
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status) VALUES (?,?,?,?,?,?,?,?,'new')`,
+        knockId,
+        sha,
+        bytes.length,
+        bucket ? null : new TextDecoder().decode(bytes),
+        bucket ? 1 : 0,
+        String(note ?? "").slice(0, 2e3),
+        String(contact ?? "").slice(0, 300),
+        received
+      );
+      return { ok: true, knockId, sha256: sha, bytes: bytes.length };
+    });
+    if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
+      try {
+        await bucket.delete?.(key);
+      } catch {
+      }
+    }
+    return answer;
+  }
+  /** R32: only a signed-in member reaches these (the op's fence). */
+  inboxList(status) {
+    return { inbox: this.#rows(
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
+       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
+      ...status ? [status] : []
+    ) };
+  }
+  inboxGet(knockId) {
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
+    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
+  }
+  inboxResolve({ knockId, status, by } = {}) {
+    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    if (!this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId)) return { ok: false, reason: "NOT_FOUND" };
+    this.#sql.exec(
+      `UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
+      status,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      by ?? null,
+      knockId
+    );
+    return { ok: true, knockId, status };
+  }
+  /* ==================================================================== *
+   * D-64: the daily render allowance (R39, R40)
+   * ==================================================================== */
+  /** R39. Admit one render against today's allowance, or say it waits or is deferred. The verdict is the STRING
+   *  `state`, never a leading boolean. THE BOUND THIS HOLDS (D-492): at every moment spent + reserved <= allowance,
+   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and its reservation is
+   *  the maximum the asked environment permits it to cost. Two residues stay named: the reservation binds only a
+   *  renderer that honours what it was asked (its elapsed time is its own claim), and the allowance is an ACCOUNT;
+   *  the concurrency cap (D-520) is the throttle, decided first and taking nothing from the day. Slots EXPIRE at
+   *  admission plus reservation, so a render that never reports cannot hold one for ever. */
+  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null } = {}) {
+    const now = at || stampSecond3();
+    const day = now.slice(0, 10);
+    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
+    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
+    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
+    const nowMs = Date.parse(now);
+    if (capN !== null) {
+      if (Number.isFinite(nowMs)) this.#sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
+      const running = this.#one(`SELECT COUNT(*) AS n FROM render_slots`).n;
+      if (running >= capN)
+        return {
+          state: "waiting",
+          day,
+          cap: capN,
+          running,
+          reserve_ms: reserve,
+          why: `${running} renders are running and this instance runs at most ${capN} at once`
+        };
+    }
+    const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
+    const spent = cur ? cur.spent_ms : 0;
+    const reserved = cur ? cur.reserved_ms || 0 : 0;
+    const defer = (why) => {
+      if (cur) this.#sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
+      else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
+      return {
+        state: "deferred",
+        day,
+        spent_ms: spent,
+        reserved_ms: reserved,
+        reserve_ms: reserve,
+        allowance_ms: allowance,
+        deferred: (cur ? cur.deferred : 0) + 1,
+        renders: cur ? cur.renders : 0,
+        why
+      };
+    };
+    if (!(reserve > 0)) return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
+    if (spent + reserved + reserve > allowance) return defer(null);
+    if (cur) this.#sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
+    else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
+    const slot = crypto.randomUUID();
+    this.#sql.exec(
+      `INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
+      slot,
+      now,
+      (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve
+    );
+    return {
+      state: "admitted",
+      day,
+      spent_ms: spent,
+      reserved_ms: reserved + reserve,
+      reserve_ms: reserve,
+      allowance_ms: allowance,
+      renders: (cur ? cur.renders : 0) + 1,
+      deferred: cur ? cur.deferred : 0,
+      slot,
+      cap: capN
+    };
+  }
+  /** R40. Frees the slot on every path; adds the REPORTED browser time and releases at most the reservation still
+   *  held (never below zero). AN UNREPORTED RENDER STAYS CHARGED: it may have burned any time up to its
+   *  reservation, so the reservation is kept for the day, which under-uses the allowance and cannot overrun. */
+  renderSpend({ ms, releaseMs = 0, slot = null, at = null } = {}) {
+    if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
+    const now = at || stampSecond3();
+    const day = now.slice(0, 10);
+    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
+    const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
+    if (n === null)
+      return {
+        day,
+        spent_ms: cur ? cur.spent_ms : 0,
+        reserved_ms: cur ? cur.reserved_ms || 0 : 0,
+        released_ms: 0,
+        why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day"
+      };
+    const held = cur ? cur.reserved_ms || 0 : 0;
+    const released = Math.min(held, rel);
+    if (cur) this.#sql.exec(
+      `UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
+      n,
+      held - released,
+      now,
+      day
+    );
+    else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
+    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
+  }
+  /* ==================================================================== *
+   * Links (R27) and the host's chrome (R28, R29)
+   * ==================================================================== */
+  /** R27. File the links a captured document made. Replaces this capture's rows rather than appending: a
+   *  capture's own links are a property of its bytes. A link carries `chrome: true` with its `chrome_basis` when
+   *  it sat in a chrome region (containment, D-340); whether it IS the site's chrome is decided by recurrence
+   *  (R28), re-derived here for this capture in the same write. */
+  recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
+    if (!sourceCapture) return { recorded: 0 };
+    const now = stampSecond3();
+    this.#sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
+    let n = 0;
+    for (const l of links) {
+      if (!l || !l.address_norm) continue;
+      this.#sql.exec(
+        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
+           citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
+        sourceBundle,
+        sourceCapture,
+        String(l.ref || l.address),
+        l.address || l.address_norm,
+        l.address_norm,
+        l.citation_norm || l.address_norm,
+        l.fragment || null,
+        l.type || "deferred",
+        l.origin || null,
+        l.chrome ? 1 : 0,
+        l.chrome ? String(l.chrome_basis || "") || null : null,
+        capturedAt || now,
+        now
+      );
+      n++;
+    }
+    const chrome = this.#chromeDeriveCapture(sourceCapture, now);
+    return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
+  }
+  /** R27, D-701. Everything that points AT an address, matched on the RESOURCE key so the citations of its
+   *  sections are found too. Only sources the viewer may see; `count` and `elements` from what passed. */
+  linksTo({ address_norm, viewer = void 0 } = {}) {
+    const seen = this.#captureGate("l.source_capture", viewer);
+    const rows = this.#rows(
+      `SELECT l.source_capture, l.source_bundle, l.link_ref, l.partition, l.fragment, l.citation_norm, l.captured_at
+         FROM links l WHERE l.address_norm = ? AND (${seen.sql})`,
+      address_norm,
+      ...seen.args
+    );
+    return {
+      address_norm,
+      count: rows.length,
+      sources: rows,
+      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))]
+    };
+  }
+  /** R27. Resolve a capture's links against the record, with a contemporaneity verdict for each that resolves:
+   *  is the capture the record holds of the target the version the source pointed at on the day the source was
+   *  captured? Three values, because the question is usually unanswerable and a binary scheme would sort every
+   *  unanswerable case into one bucket or the other. The strongest evidence is two captures of the target
+   *  BRACKETING the source's retrieval whose bytes hash equal. D-96: the bracket reads DIRECT receipts only.
+   *  D-701: a source the viewer may not see answers as a capture the record does not hold, and a target capture
+   *  the viewer may not see is filtered out BEFORE the bracket. */
+  resolveLinks({ sourceCapture, at = null, viewer = void 0 } = {}) {
+    const src = this.#captureGate("l.source_capture", viewer);
+    const rows = this.#rows(`SELECT l.* FROM links l WHERE l.source_capture = ? AND (${src.sql})`, sourceCapture, ...src.args);
+    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
+    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
+    const out = [];
+    const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
+    const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
+    const tgt = this.#captureGate("cl.capture_sha", viewer);
+    for (const r of rows) {
+      if (r.partition !== "deferred") {
+        tally[r.partition] = (tally[r.partition] || 0) + 1;
+        out.push({ ...r, resolution: r.partition, verdict: null });
+        continue;
+      }
+      const caps = this.#rows(
+        `SELECT cl.capture_sha, cl.first_retrieved, cl.last_retrieved, cl.observations FROM captured_locators cl
+          WHERE cl.address_norm = ? AND cl.via = 'direct' AND (${tgt.sql}) ORDER BY cl.first_retrieved`,
+        r.address_norm,
+        ...tgt.args
+      );
+      if (!caps.length) {
+        tally.offsite++;
+        out.push({ ...r, resolution: "offsite", verdict: null, basis: "the record holds no capture of this address" });
+        continue;
+      }
+      tally.linked++;
+      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T && c.observations > 1) || null;
+      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
+      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
+      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
+      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
+      let verdict, basis, detail = null, pick = null;
+      if (bracket && bracket.capture_sha === sourceCapture) {
+        verdict = "contemporaneous";
+        pick = bracket;
+        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, and those same bytes were seen served on both sides of its retrieval";
+        detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (bracket) {
+        verdict = "contemporaneous";
+        pick = bracket;
+        basis = "the same bytes were seen served on both sides of this document's retrieval and hash equal, so the target did not change across the interval";
+        detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
+      } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
+        verdict = "undetermined";
+        pick = selfCap;
+        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, observed once, so no second observation says whether the target was ever served as anything else";
+        detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
+      } else if (oneCapture) {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the record holds one capture of the target made at this document's retrieval instant and observed once; one observation is not a second version, and it does not establish that the target was unchanged on either side";
+        detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
+      } else if (before && after) {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the target changed somewhere between the captures bracketing this document's retrieval, so which version it pointed at is not established";
+        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, ${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
+      } else if (!before && after) {
+        verdict = "superseded";
+        pick = after;
+        basis = "every capture of the target postdates this document's retrieval, so the record holds a later version than the one pointed at";
+      } else {
+        verdict = "undetermined";
+        pick = before;
+        basis = "the record's captures of the target all predate this document's retrieval, and nothing establishes that it was unchanged in between";
+      }
+      verdicts[verdict]++;
+      const reg = pick ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha) : null;
+      out.push({
+        ...r,
+        resolution: "linked",
+        verdict,
+        basis,
+        detail,
+        target_capture: pick ? pick.capture_sha : null,
+        target_bundle: reg ? reg.bundle_id : null,
+        target_retrieved: pick ? pick.first_retrieved : null,
+        target_last_seen: pick ? pick.last_retrieved : null,
+        target_captures: caps.length
+      });
+    }
+    return {
+      sourceCapture,
+      resolved: out.length,
+      at: rows[0].captured_at,
+      tally,
+      verdicts,
+      links: out,
+      note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
+    };
+  }
+  /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. */
+  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null } = {}) {
+    const now = at || stampSecond3();
+    this.#sql.exec(
+      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+      sourceCapture,
+      addressNorm,
+      verdict,
+      basis,
+      targetBundle,
+      targetCapture,
+      now,
+      detail
+    );
+    const all = this.#rows(
+      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
+      sourceCapture,
+      addressNorm
+    );
+    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
+  }
+  /* ---- R28, R29: the host's chrome, derived per HOST ---- */
+  /** The hosts and pages a capture is on record at. DIRECT receipts only: an archive capture's retrieval date is
+   *  when WE asked the archive, not when the site served that navigation. */
+  #chromePagesOf(sourceCapture) {
+    const out = [];
+    for (const r of this.#rows(
+      `SELECT address_norm, MIN(first_retrieved) AS first_retrieved, MAX(last_retrieved) AS last_retrieved
+         FROM captured_locators WHERE capture_sha = ? AND via = 'direct' GROUP BY address_norm`,
+      sourceCapture
+    )) {
+      const host = URL.canParse(r.address_norm) ? new URL(r.address_norm).hostname.toLowerCase() : null;
+      if (host) out.push({ host, page: r.address_norm, first: r.first_retrieved, last: r.last_retrieved });
+    }
+    return out;
+  }
+  /** One capture's contribution: for each host and page it is on record at, the set of contained chrome addresses
+   *  it carried, fingerprinted. A capture that carried NO chrome contributes nothing: a page with no <nav> says
+   *  nothing about the site's navigation. Then every touched host's classification is judged again (R28). */
+  #chromeDeriveCapture(sourceCapture, at) {
+    const pages = this.#chromePagesOf(sourceCapture);
+    const touched = /* @__PURE__ */ new Map(), hosts = new Set(pages.map((p) => p.host));
+    for (const old of this.#rows(`SELECT host, fingerprint FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture)) {
+      touched.set(`${old.host}\0${old.fingerprint}`, old);
+      hosts.add(old.host);
+    }
+    this.#sql.exec(`DELETE FROM site_chrome_refs WHERE source_capture = ?`, sourceCapture);
+    const chromeRows = this.#rows(
+      `SELECT DISTINCT address_norm, chrome_basis FROM links WHERE source_capture = ? AND chrome = 1 AND partition <> 'anchor'`,
+      sourceCapture
+    );
+    const links = [...new Set(chromeRows.map((r) => r.address_norm))].sort();
+    const basis = [...new Set(chromeRows.map((r) => r.chrome_basis).filter(Boolean))].sort();
+    let observed = 0;
+    if (links.length) {
+      const fingerprint2 = _Capture.#fingerprintOf(links);
+      for (const p of pages) {
+        this.#sql.exec(
+          `INSERT INTO site_chrome_refs (host, source_capture, page, first_observed, last_observed, fingerprint, basis)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          p.host,
+          sourceCapture,
+          p.page,
+          p.first,
+          p.last,
+          fingerprint2,
+          `containment: ${basis.length ? basis.join(", ") : "chrome region not recorded"}`
+        );
+        this.#sql.exec(
+          `INSERT INTO site_chrome (host, fingerprint, links, first_observed, last_observed, captures)
+           VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT(host, fingerprint) DO NOTHING`,
+          p.host,
+          fingerprint2,
+          JSON.stringify(links),
+          p.first,
+          p.last
+        );
+        touched.set(`${p.host}\0${fingerprint2}`, { host: p.host, fingerprint: fingerprint2 });
+        observed++;
+      }
+    }
+    for (const { host, fingerprint: fingerprint2 } of touched.values()) {
+      const agg = this.#one(`SELECT MIN(first_observed) AS f, MAX(last_observed) AS l, COUNT(*) AS n
+                               FROM site_chrome_refs WHERE host = ? AND fingerprint = ?`, host, fingerprint2);
+      if (!agg || !agg.n) this.#sql.exec(`DELETE FROM site_chrome WHERE host = ? AND fingerprint = ?`, host, fingerprint2);
+      else this.#sql.exec(
+        `UPDATE site_chrome SET first_observed = ?, last_observed = ?, captures = ? WHERE host = ? AND fingerprint = ?`,
+        agg.f,
+        agg.l,
+        agg.n,
+        host,
+        fingerprint2
+      );
+    }
+    for (const h of hosts) this.#judgeChrome(h, at);
+    return { observed, chrome_links: links.length };
+  }
+  /* A deterministic digest of the sorted address set (FNV-1a over UTF-16, 64 bits as two halves): the fingerprint
+     names a navigation, it is not evidence, so a synchronous digest is enough and keeps the write transactional. */
+  static #fingerprintOf(list2) {
+    const s = list2.join("\n");
+    let h1 = 2166136261, h2 = 16777619;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+      h2 = Math.imul(h2 ^ c, 1540483477) >>> 0;
+    }
+    return h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0");
+  }
+  /** R28. A contained address is the site's chrome only when it recurred on TWO OR MORE distinct pages of the host;
+   *  contained on one page it reads `undetermined`, never lost. Recorded with its basis and the date judged, and
+   *  judged again whenever the host is observed: always reclassifiable, never a deletion of the link. */
+  #judgeChrome(host, at) {
+    const pagesOf = /* @__PURE__ */ new Map();
+    for (const r of this.#rows(`SELECT page, fingerprint FROM site_chrome_refs WHERE host = ?`, host)) {
+      const rec = this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, host, r.fingerprint);
+      for (const a of JSON.parse(rec && rec.links || "[]")) {
+        if (!pagesOf.has(a)) pagesOf.set(a, /* @__PURE__ */ new Set());
+        pagesOf.get(a).add(r.page);
+      }
+    }
+    this.#sql.exec(`DELETE FROM link_chrome WHERE host = ?`, host);
+    for (const [a, pages] of pagesOf) {
+      const n = pages.size;
+      this.#sql.exec(
+        `INSERT INTO link_chrome (host, address_norm, state, pages, basis, at) VALUES (?, ?, ?, ?, ?, ?)`,
+        host,
+        a,
+        n >= 2 ? "chrome" : "undetermined",
+        n,
+        n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}` : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it`,
+        at || stampSecond3()
+      );
+    }
+  }
+  /** R28. The standing classification of a host's contained links, with basis and date. */
+  chromeOf({ host } = {}) {
+    const h = String(host || "").trim().toLowerCase();
+    return { host: h, links: this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? ORDER BY address_norm`, h) };
+  }
+  /** R29. Regenerate a host's chrome by SCAN, which is what makes it derived: everything recomputed from `links`
+   *  and the receipts. Bounded and paged: the first page (no `after`) clears the host's derived rows; each page
+   *  re-derives up to `limit` captures in capture-sha order and says whether more remain. */
+  deriveSiteChrome({ host, limit = null, after = null } = {}) {
+    const h = String(host || "").trim().toLowerCase();
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(2e3, Math.floor(asked)) : 500;
+    if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
+    const from = String(after || "");
+    if (!from) for (const t of ["site_chrome_refs", "site_chrome", "link_chrome"]) this.#sql.exec(`DELETE FROM ${t} WHERE host = ?`, h);
+    const found = this.#rows(
+      `SELECT DISTINCT capture_sha FROM captured_locators
+        WHERE via = 'direct' AND capture_sha > ? AND (substr(address_norm, 1, ?) = ? OR substr(address_norm, 1, ?) = ?)
+        ORDER BY capture_sha LIMIT ?`,
+      from,
+      `https://${h}/`.length,
+      `https://${h}/`,
+      `http://${h}/`.length,
+      `http://${h}/`,
+      cap + 1
+    );
+    const page = found.slice(0, cap);
+    const at = stampSecond3();
+    for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at);
+    const truncated = found.length > cap;
+    return {
+      host: h,
+      captures: page.length,
+      derived: page.map((r) => r.capture_sha),
+      limit: cap,
+      truncated,
+      next: truncated ? page[page.length - 1].capture_sha : null,
+      ...truncated ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}
+    };
+  }
+  /** R29, D-701. THE PER-HOST READ: how a host's navigation changed between captures. Observations (only those the
+   *  viewer may see, before anything is ordered, cut or counted) are ordered by when each was first seen; each
+   *  adjacent pair is compared. A contained link the earlier carried and the later did not is LOST only when it is
+   *  the site's chrome (R28: it recurred on two or more distinct pages among the visible observations); one carried
+   *  on one page only is `undetermined`, with its reason, never lost. */
+  navChanges({ host, limit = null, viewer = void 0 } = {}) {
+    const h = String(host || "").trim().toLowerCase();
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
+    const seen = this.#captureGate("s.source_capture", viewer);
+    const found = this.#rows(
+      `SELECT s.source_capture, s.page, s.first_observed, s.last_observed, s.fingerprint, s.basis
+         FROM site_chrome_refs s WHERE s.host = ? AND (${seen.sql})
+        ORDER BY s.first_observed DESC, s.source_capture DESC LIMIT ?`,
+      h,
+      ...seen.args,
+      cap + 1
+    );
+    const seq = found.slice(0, cap).reverse();
+    const fps = [...new Set(seq.map((o) => o.fingerprint))];
+    const linksOf = new Map(fps.map((f4) => [f4, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f4)?.links || "[]")]));
+    const records = fps.map((f4) => {
+      const mine = seq.filter((o) => o.fingerprint === f4);
+      return {
+        fingerprint: f4,
+        links: linksOf.get(f4),
+        captures: mine.length,
+        first_observed: mine.map((o) => o.first_observed).sort()[0],
+        last_observed: mine.map((o) => o.last_observed).sort().pop()
+      };
+    });
+    const pagesCarrying = (a) => new Set(seq.filter((o) => linksOf.get(o.fingerprint).includes(a)).map((o) => o.page));
+    const obs = (o) => ({
+      source_capture: o.source_capture,
+      page: o.page,
+      first_observed: o.first_observed,
+      last_observed: o.last_observed,
+      fingerprint: o.fingerprint
+    });
+    const changes = [], lost = [], undetermined = [];
+    for (let i = 1; i < seq.length; i++) {
+      const a = seq[i - 1], b = seq[i];
+      if (a.fingerprint === b.fingerprint) continue;
+      const A = new Set(linksOf.get(a.fingerprint)), B = new Set(linksOf.get(b.fingerprint));
+      const gone = [...A].filter((x) => !B.has(x)).sort();
+      const came = [...B].filter((x) => !A.has(x)).sort();
+      changes.push({ from: obs(a), to: obs(b), lost: gone, gained: came, same_page: a.page === b.page });
+      for (const address_norm of gone) {
+        const pages = pagesCarrying(address_norm);
+        if (pages.size >= 2) {
+          const again = seq.filter((o) => o.last_observed > b.first_observed && linksOf.get(o.fingerprint).includes(address_norm)).map((o) => o.last_observed).sort().pop() || null;
+          lost.push({
+            address_norm,
+            recurred_on: pages.size,
+            last_carried: obs(a),
+            first_missing: obs(b),
+            same_page: a.page === b.page,
+            seen_again_at: again
+          });
+        } else {
+          undetermined.push({
+            address_norm,
+            recurred_on: pages.size,
+            last_carried: obs(a),
+            first_missing: obs(b),
+            chrome: "undetermined",
+            why: "carried in a chrome region on one page only, so whether it was the site's navigation is undetermined"
+          });
+        }
+      }
+    }
+    return {
+      host: h,
+      observations: seq.length,
+      limit: cap,
+      truncated: found.length > cap,
+      records,
+      sequence: seq.map((o) => ({ ...obs(o), basis: o.basis })),
+      changes,
+      lost,
+      undetermined,
+      note: (seq.length < 2 ? "fewer than two captures of this host carried navigation: nothing to compare yet" : "a link is LOST when the site's chrome carried it in one capture and not in the next") + "; chrome is containment in a chrome region AND recurrence on two or more distinct pages of the host; a capture with no chrome at all is not an observation; direct captures only"
+    };
+  }
+  /* ==================================================================== *
+   * Capture sessions (R22, R46): a capture that needs another tick
+   * ==================================================================== */
+  /** SCRATCH, not record. Expired rows are pruned on the way past, so an abandoned session costs one row until its
+   *  hour is up. The primary is never stored here: it is in the store under its own digest. */
+  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at = null } = {}) {
+    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
+    const iso2 = (d) => stampSecond3(d.getTime());
+    this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso2(now));
+    if (!session || !state) return { session: null, saved: false };
+    const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
+    const body = JSON.stringify(state);
+    const expires = iso2(new Date(now.getTime() + (Number(ttlMs) || 36e5)));
+    if (cur) {
+      this.#sql.exec(
+        `UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
+        iso2(now),
+        expires,
+        body,
+        session
+      );
+      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
+    }
+    this.#sql.exec(
+      `INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+      session,
+      locator,
+      primarySha,
+      primaryFile,
+      base,
+      iso2(now),
+      iso2(now),
+      expires,
+      body
+    );
+    return { session, saved: true, ticks: 1, bytes: body.length };
+  }
+  loadCaptureSession({ session, at = null } = {}) {
+    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
+    this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond3(now.getTime()));
+    const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
+    if (!r) return {
+      session,
+      found: false,
+      note: "no such capture session: it either never existed, was already finished, or expired"
+    };
+    let state = null;
+    try {
+      state = JSON.parse(r.state);
+    } catch {
+      return { session, found: false, note: "session state did not parse" };
+    }
+    return {
+      session,
+      found: true,
+      locator: r.locator,
+      primarySha: r.primary_sha,
+      primaryFile: r.primary_file,
+      base: r.base,
+      ticks: r.ticks,
+      created: r.created,
+      state
+    };
+  }
+  dropCaptureSession({ session } = {}) {
+    this.#sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
+    return { session, dropped: true };
+  }
+  /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
+  liveCaptureSessions(now) {
+    try {
+      const at = typeof now === "string" ? now : stampSecond3(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at).map((r) => {
+        let state = null;
+        try {
+          state = JSON.parse(r.state);
+        } catch {
+          state = null;
+        }
+        return {
+          session: r.session,
+          locator: r.locator,
+          primarySha: r.primary_sha,
+          primaryFile: r.primary_file,
+          base: r.base,
+          created: r.created,
+          updated: r.updated,
+          expires: r.expires,
+          ticks: r.ticks,
+          state
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
+  /* ==================================================================== *
+   * What a host has served (R24, R25, R26)
+   * ==================================================================== */
+  /** R24. Assets this host has served, by normalised address. `documents` counts distinct PAGES, a page being the
+   *  primary's DOCUMENT ADDRESS in the receipts (CAP-13): a primary sha is a content hash, so one page whose bytes
+   *  changed would otherwise read as two documents. A primary with NO receipt cannot say which page it was: it is
+   *  counted apart as `documents_undetermined`, never guessed into `documents`. */
+  siteAssets({ host, addresses = [] } = {}) {
+    if (!host) return { host: null, assets: {} };
+    const out = {};
+    const want = addresses && addresses.length ? new Set(addresses) : null;
+    const counts = /* @__PURE__ */ new Map();
+    for (const c of this.#rows(
+      `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
+      host
+    )) counts.set(c.address_norm, c);
+    for (const r of this.#rows(`SELECT * FROM site_assets WHERE host = ?`, host)) {
+      if (want && !want.has(r.address_norm)) continue;
+      const c = counts.get(r.address_norm);
+      out[r.address_norm] = { ...r, documents: c && c.pages || 0, documents_undetermined: c && c.unlocated || 0 };
+    }
+    return { host, assets: out, count: Object.keys(out).length };
+  }
+  /** R25. File what a capture saw of a host. When an address comes back with different bytes, that is a dated fact
+   *  about the site AND it puts every document that REUSED the old bytes into question: the asset moves, the
+   *  change is counted, and a dated `posthoc` `changed` verdict is appended for each (CAP-4 item 6a, zero request
+   *  cost). A fetched asset's `last_fetched_by` names the capture whose fetch it was; a reuse never moves it
+   *  (CAP-14), and a reused part's source is the reusing capture's own record. */
+  recordSiteAssets({ host, primarySha, observations = [], at = null } = {}) {
+    if (!host || !primarySha) return { host: null, recorded: 0 };
+    const now = at || stampSecond3();
+    let added = 0, changedCount = 0;
+    const changed = [];
+    const fromObs = (o) => typeof o.reused_from === "string" && HEX643.test(o.reused_from) ? o.reused_from : null;
+    for (const o of observations) {
+      if (!o || !o.address_norm || !o.sha256) continue;
+      const cur = this.#one(`SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm);
+      if (!cur) {
+        this.#sql.exec(
+          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
+             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+          host,
+          o.address_norm,
+          o.address || o.address_norm,
+          o.sha256,
+          o.content_type || null,
+          o.bytes || 0,
+          o.kind || null,
+          now,
+          now,
+          now,
+          now,
+          o.reused ? fromObs(o) : primarySha
+        );
+        added++;
+      } else if (!o.reused && cur.sha256 !== o.sha256) {
+        const affected = this.#rows(
+          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+          host,
+          o.address_norm
+        );
+        this.#sql.exec(
+          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
+             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
+          o.sha256,
+          o.content_type || cur.content_type,
+          o.bytes || 0,
+          now,
+          now,
+          primarySha,
+          now,
+          host,
+          o.address_norm
+        );
+        changedCount++;
+        changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256, reused_by: affected.map((a) => a.primary_sha) });
+        for (const a of affected)
+          this.#sql.exec(
+            `INSERT OR IGNORE INTO reuse_verdicts
+               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
+            a.primary_sha,
+            host,
+            o.address_norm,
+            cur.sha256,
+            o.sha256,
+            "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
+            now
+          );
+      } else if (!o.reused) {
+        this.#sql.exec(
+          `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
+          now,
+          now,
+          primarySha,
+          host,
+          o.address_norm
+        );
+      } else {
+        this.#sql.exec(`UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`, now, host, o.address_norm);
+      }
+      this.#sql.exec(
+        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
+           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
+        host,
+        o.address_norm,
+        primarySha,
+        now,
+        o.reused ? 1 : 0,
+        o.sha256,
+        o.reused ? fromObs(o) : null
+      );
+    }
+    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+  }
+  /** CAP-4: the reused subresource PARTS of a bundle, so ratification can re-fetch each. Scoped to THIS bundle by
+   *  the register (provenance R48's read contract). `reused_from` is read from the reusing capture's own ref row;
+   *  NULL is stated as `reused_from_state: "undetermined"`, never inferred. */
+  reusedParts(bundleId) {
+    if (!bundleId) return { bundleId: null, parts: [] };
+    const parts = this.#rows(
+      `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
+              ar.sha256 AS reused_sha, ar.reused_from AS reused_from, sa.address AS address, sa.content_type AS content_type
+         FROM site_asset_refs ar JOIN register r ON r.capture_sha = ar.primary_sha
+         LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
+        WHERE r.bundle_id = ? AND ar.reused = 1 ORDER BY ar.host, ar.address_norm`,
+      bundleId
+    ).map((p) => ({ ...p, reused_from_state: p.reused_from ? "recorded" : "undetermined" }));
+    return { bundleId, parts, count: parts.length };
+  }
+  /** R26. Append the outcome of a ratification's re-fetch of the reused parts, dated, never overwritten. The
+   *  document-level observation each maps to (OBSERVATION-LOG-DESIGN §4.1 row 3; no new words: confirmed →
+   *  PRESENT unchanged, changed → PRESENT changed, unreachable → LOOKED_INDETERMINATE, not_attempted → NO ROW,
+   *  because a look not taken is NEVER_LOOKED, the absence of a row) is handed to the `observation` listener;
+   *  refusals are collected and reported, never thrown. */
+  recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
+    const now = at || stampSecond3();
+    let recorded = 0;
+    const refusals = [];
+    for (const v of verdicts) {
+      if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
+      this.#sql.exec(
+        `INSERT OR IGNORE INTO reuse_verdicts
+           (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+         VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
+        v.source_capture,
+        bundleId,
+        v.host || "",
+        v.address_norm,
+        v.verdict,
+        v.reused_sha || "",
+        v.observed_sha ?? null,
+        v.basis || "",
+        now
+      );
+      recorded++;
+      const mapped = v.verdict === "confirmed" ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null } : v.verdict === "changed" ? { state: "PRESENT", detail: "changed", ref: v.observed_sha || v.reused_sha || null } : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null } : null;
+      if (mapped)
+        for (const o of this.#emitSync("observation", { at: now, row: {
+          actorClass: "plane",
+          authorityKind: "ratify",
+          authority: bundleId || v.source_capture,
+          level: "document",
+          subjectKind: "address",
+          subject: v.address_norm,
+          state: mapped.state,
+          resultKind: mapped.ref ? "capture" : null,
+          resultRef: mapped.ref,
+          detail: mapped.detail
+        } }))
+          refusals.push(o.ok ? o.result : { reason: "LISTENER_FAILED", module: o.module, detail: o.error });
+    }
+    return { ok: true, bundleId, recorded, at: now, observation_refusals: refusals.filter(Boolean) };
+  }
+  /** R26. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
+   *  posthoc verdicts). */
+  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
+    const cols = "source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at";
+    if (bundleId) return { bundleId, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`, bundleId) };
+    if (sourceCapture) return { sourceCapture, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`, sourceCapture) };
+    return { verdicts: [] };
+  }
+  /** Asset chrome by RECURRENCE across a host's pages (CAP-13: a page is its document address), a ratio, not a
+   *  boolean: the threshold is the caller's. Primaries with no page on record enter neither side. */
+  siteChrome({ host, threshold = 0.6 } = {}) {
+    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const d = this.#one(
+      `SELECT COUNT(DISTINCT cl.address_norm) AS pages, COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha WHERE r.host = ?`,
+      host
+    );
+    const documents = d && d.pages || 0;
+    const undetermined = d && d.unlocated || 0;
+    const assets = [];
+    for (const r of this.#rows(
+      `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
+              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+         FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+        WHERE r.host = ? GROUP BY r.address_norm`,
+      host
+    )) {
+      const share = documents ? r.pages / documents : 0;
+      assets.push({
+        address_norm: r.address_norm,
+        documents: r.pages,
+        documents_undetermined: r.unlocated || 0,
+        share,
+        chrome: documents >= 3 && share >= threshold
+      });
+    }
+    assets.sort((a, b) => b.share - a.share);
+    return {
+      host,
+      documents,
+      documents_undetermined: undetermined,
+      threshold,
+      assets,
+      note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents") + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, so which document each was is undetermined and none is counted` : "")
+    };
+  }
+  /* ==================================================================== *
+   * The platform's ceiling (R23)
+   * ==================================================================== */
+  /** R23. The ceiling is learned by being refused, never declared; `probeDue` deliberately discards it every so
+   *  often and runs to refusal again. */
+  captureLimit(runtime = "subrequests") {
+    const r = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
+    return r ? { ...r, probeDue: r.since_probe >= PROBE_EVERY, probeEvery: PROBE_EVERY } : { runtime, observed: null, probeDue: true, probeEvery: PROBE_EVERY };
+  }
+  /** R23. A run never refused is NOT evidence about where the ceiling is: it only advances the counter. A ceiling
+   *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
+  recordCaptureLimit({ runtime = "subrequests", observed = null, at = null } = {}) {
+    const now = at || stampSecond3();
+    const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
+    if (observed == null) {
+      if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
+      return {
+        runtime,
+        observed: cur ? cur.observed : null,
+        recorded: false,
+        note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is"
+      };
+    }
+    if (!cur) {
+      this.#sql.exec(
+        `INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe) VALUES (?, ?, ?, ?, 1, 0)`,
+        runtime,
+        observed,
+        now,
+        now
+      );
+      return { runtime, observed, recorded: true, moved: false, samples: 1 };
+    }
+    if (cur.observed === observed) {
+      this.#sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
+      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
+    }
+    this.#sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
+                    WHERE runtime = ?`, now, observed, now, runtime);
+    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
+  }
+  /* ==================================================================== *
+   * D-98: the event queue (R15, R45)
+   *
+   * Bob RULED that an undetermined-authority capture creates a task AUTOMATICALLY AT CAPTURE, through a
+   * PRODUCER/CONSUMER QUEUE, and the queue is the safety property. The capture path may only ENQUEUE: it cannot
+   * write a task, name an assignee, set a status or forge a history entry, so the blast radius of a leaked
+   * capture credential stops at `task_queue`. The consumer (`queue`, K91 (3)) is the sole writer of tasks and
+   * drains this through R45.
+   * ==================================================================== */
+  /** R15. Bounds what it accepts, records no decision, idempotent on (kind, capture_sha); every enqueue (a dedupe
+   *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
+  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
+    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
+    if (typeof captureSha !== "string" || !HEX643.test(captureSha))
+      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
+    const text = boundedSubject(subject) || "a capture whose authority could not be determined";
+    const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond3();
+    const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
+    if (!existing)
+      this.#sql.exec(
+        `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
+        kind,
+        captureSha,
+        text,
+        loc,
+        now
+      );
+    const heard = await this.#emit("task", { kind, captureSha, subject: text, locator: loc, enqueued: now, deduped: !!existing });
+    const armedAt = heard.map((h) => h.ok && h.result && h.result.armedAt).find((x) => x != null) ?? null;
+    return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt } : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
+  }
+  /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`. */
+  taskEvents({ limit = 50 } = {}) {
+    try {
+      const n = Math.max(0, Math.min(1e3, Math.trunc(Number(limit)) || 0));
+      return this.#rows(`SELECT kind, capture_sha, subject, locator, enqueued, attempts, last_try FROM task_queue
+                          ORDER BY enqueued, capture_sha LIMIT ?`, n).map((r) => ({
+        kind: r.kind,
+        captureSha: r.capture_sha,
+        subject: r.subject,
+        locator: r.locator,
+        enqueued: r.enqueued,
+        attempts: r.attempts,
+        lastTry: r.last_try
+      }));
+    } catch {
+      return [];
+    }
+  }
+  /** R45 */
+  taskEventCount() {
+    try {
+      return Number(this.#one(`SELECT COUNT(*) AS n FROM task_queue`).n);
+    } catch {
+      return 0;
+    }
+  }
+  /** R45 */
+  taskEventAttempt({ kind, captureSha, at } = {}) {
+    try {
+      if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
+      this.#sql.exec(
+        `UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
+        at ?? stampSecond3(),
+        kind,
+        captureSha
+      );
+      return { found: true };
+    } catch {
+      return { found: false };
+    }
+  }
+  /** R45 */
+  taskEventRemove({ kind, captureSha } = {}) {
+    try {
+      if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
+      this.#sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
+      return { found: true };
+    } catch {
+      return { found: false };
+    }
+  }
+  /* ==================================================================== *
+   * D-104: source reachability (R8, R43)
+   * ==================================================================== */
+  /** R43, R8 (K120 (3)): the three figures as they stand, instance settings in record-core (`getSetting`), a
+   *  setting not set answering its default. A value that is not a number at or above its floor is never obeyed. */
+  reachabilityThresholds() {
+    const get2 = (name) => {
+      try {
+        return this.core && typeof this.core.getSetting === "function" ? this.core.getSetting(name) : null;
+      } catch {
+        return null;
+      }
+    };
+    const pick = (v, dflt, min) => {
+      const n = Number(v);
+      return v != null && v !== "" && Number.isFinite(n) && n >= min ? n : dflt;
+    };
+    return {
+      failures: pick(get2(REACHABILITY_SETTINGS.failures), REACHABILITY_DEFAULTS.failures, 1),
+      days: pick(get2(REACHABILITY_SETTINGS.days), REACHABILITY_DEFAULTS.days, 0),
+      minForAge: pick(get2(REACHABILITY_SETTINGS.minForAge), REACHABILITY_DEFAULTS.minForAge, 1)
+    };
+  }
+  /** R19 (K120 (3)): the subresource stagger, an instance setting in record-core in milliseconds; not set, a jittered
+   *  50–250 ms. */
+  subresourceStaggerMs() {
+    let v = null;
+    try {
+      v = this.core && typeof this.core.getSetting === "function" ? this.core.getSetting(SUBRESOURCE_STAGGER_SETTING) : null;
+    } catch {
+      v = null;
+    }
+    const n = Number(v);
+    return v != null && v !== "" && Number.isFinite(n) && n >= 0 ? n : 50 + Math.floor(Math.random() * 200);
+  }
+  /** R8. One attempt at one document address. A governed refusal is counted in its own column and never as a
+   *  failure: the silence is ours. Every recorded outcome is then handed to the `source-outcome` listeners (R44),
+   *  which is how monitoring's alarm is armed on a counted failure. */
+  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
+    if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
+    if (!SOURCE_OUTCOMES.includes(outcome))
+      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond3();
+    const st = Number.isInteger(status) ? status : null;
+    this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
+    if (outcome === "governed")
+      this.#sql.exec(`UPDATE source_reachability SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
+                       WHERE address_norm = ?`, outcome, now, addressNorm);
+    else if (outcome === "success")
+      this.#sql.exec(
+        `UPDATE source_reachability SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
+                        last_success = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
+        now,
+        outcome,
+        st,
+        now,
+        addressNorm
+      );
+    else
+      this.#sql.exec(
+        `UPDATE source_reachability SET attempts = attempts + 1, failures_total = failures_total + 1,
+                        consecutive_failures = consecutive_failures + 1, first_failure_since = COALESCE(first_failure_since, ?),
+                        last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ? WHERE address_norm = ?`,
+        now,
+        now,
+        outcome,
+        st,
+        now,
+        addressNorm
+      );
+    await this.#emit("source-outcome", { addressNorm, outcome, status: st, at: now, counted: outcome !== "governed" });
+    return { ok: true, counted: outcome !== "governed", ...this.sourceReachability({ addressNorm, now }) };
+  }
+  /** R8. The reachability of one address and whether the fallback threshold is met, with the facts it is computed
+   *  from. Staleness runs from the FIRST failure of the current run, and the age arm needs corroboration. */
+  sourceReachability({ addressNorm = null, now = null } = {}) {
+    const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
+    const TH = this.reachabilityThresholds();
+    if (!row)
+      return {
+        address_norm: addressNorm,
+        known: false,
+        consecutive_failures: 0,
+        governed_refusals: 0,
+        fallback_eligible: false,
+        thresholds: TH,
+        basis: "no attempt on this address has ever been recorded"
+      };
+    const at = now && ISO_INSTANT.test(now) ? now : stampSecond3();
+    const byCount = row.consecutive_failures >= TH.failures;
+    const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
+    const staleDays = since === null ? 0 : (Date.parse(at) - since) / 864e5;
+    const byAge = row.consecutive_failures >= TH.minForAge && staleDays >= TH.days;
+    return {
+      address_norm: row.address_norm,
+      known: true,
+      consecutive_failures: row.consecutive_failures,
+      attempts: row.attempts,
+      failures_total: row.failures_total,
+      /* A number excluded from a decision must stay visible or the exclusion cannot be audited. */
+      governed_refusals: row.governed_refusals,
+      last_success: row.last_success || null,
+      last_failure: row.last_failure || null,
+      last_outcome: row.last_outcome || null,
+      last_status: row.last_status === null ? null : row.last_status,
+      first_failure_since: row.first_failure_since || null,
+      failing_days: since === null ? 0 : Math.floor(staleDays),
+      fallback_eligible: byCount || byAge,
+      thresholds: TH,
+      basis: byCount ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}` : byAge ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures` : row.governed_refusals > 0 && row.consecutive_failures === 0 ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : row.consecutive_failures === 1 && staleDays >= TH.days ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it` : "not eligible: the threshold is not met"
+    };
+  }
+};
+function captureOwns(t) {
+  const name = typeof t === "string" ? t : t && t.name;
+  return CAPTURE_PURGED_TABLES.includes(name) || CAPTURE_EXEMPT_TABLES.includes(name);
+}
+function captureOps(c, url, body, env) {
+  const q = (k) => url.searchParams.get(k);
+  const viewerOf = () => url.searchParams.has("viewer") ? q("viewer") : void 0;
+  return {
+    capturelimit: () => c.captureLimit(q("runtime") || "subrequests"),
+    siteassets: () => c.siteAssets(body || { host: q("host") }),
+    recordsiteassets: () => c.recordSiteAssets(body || {}),
+    reusedparts: () => c.reusedParts(q("id")),
+    recordreuseverdicts: () => c.recordReuseVerdicts(body || {}),
+    reuseverdicts: () => c.reuseVerdicts({ bundleId: q("bundle"), sourceCapture: q("capture") }),
+    renderadmit: () => c.renderAdmit(body || {}),
+    renderspend: () => c.renderSpend(body || {}),
+    recordlinks: () => c.recordLinks(body || {}),
+    resolvelinks: () => c.resolveLinks({ sourceCapture: q("capture"), viewer: viewerOf() }),
+    linksto: () => c.linksTo({ address_norm: q("address"), viewer: viewerOf() }),
+    recordlinkverdict: () => c.recordLinkVerdict(body || {}),
+    navchanges: () => c.navChanges({ host: q("host"), limit: q("limit"), viewer: viewerOf() }),
+    derivesitechrome: () => c.deriveSiteChrome({ host: q("host"), limit: q("limit"), after: q("after") }),
+    chromeof: () => c.chromeOf({ host: q("host") }),
+    recordsourceoutcome: () => c.recordSourceOutcome(body || {}),
+    sourcereach: () => c.sourceReachability({ addressNorm: q("address"), now: q("now") }),
+    taskenqueue: () => c.taskEnqueue(body || {}),
+    savecapturesession: () => c.saveCaptureSession(body || {}),
+    loadcapturesession: () => c.loadCaptureSession({ session: q("session") }),
+    dropcapturesession: () => c.dropCaptureSession({ session: q("session") }),
+    sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6 }),
+    recordcapturelimit: () => c.recordCaptureLimit(body || {}),
+    knock: () => c.knock({ ...body || {}, sourceAddress: q("source") }),
+    inboxlist: () => c.inboxList(q("status") || null),
+    inboxget: () => c.inboxGet(q("id")),
+    inboxresolve: () => c.inboxResolve(body || {}),
+    /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
+    acquire: () => c.acquire(body || {}, {
+      cls: q("cls"),
+      member: q("member") === "1",
+      sessMember: q("sessMember") || null,
+      storeName: q("store") || "bio"
+    }),
+    archivelookup: () => c.archiveLookup({ address: body && body.address || q("address") })
+  };
 }
 
 // src/queuestate.mjs
@@ -37292,7 +42635,7 @@ var FIELDS = {
   overdue: { col: "action_clock_overdue", type: "bool" }
 };
 var CACHED_FIELDS = Object.fromEntries(
-  Object.entries(FIELDS).filter(([, f3]) => f3.asOf).map(([name, f3]) => [f3.col, { field: name, asOf: f3.asOf, authority: f3.authority, why: f3.why }])
+  Object.entries(FIELDS).filter(([, f4]) => f4.asOf).map(([name, f4]) => [f4.col, { field: name, asOf: f4.asOf, authority: f4.authority, why: f4.why }])
 );
 function metaColumnsOf(node, into = /* @__PURE__ */ new Set()) {
   if (!node || typeof node !== "object") return into;
@@ -37309,12 +42652,12 @@ function cachedRoutes(ast, facetList, sortField) {
     (routes[col] ||= /* @__PURE__ */ new Set()).add(route);
   };
   for (const c of cols) mark(c, "filter");
-  for (const f3 of facetList) mark(FIELDS[f3]?.col, "facet");
+  for (const f4 of facetList) mark(FIELDS[f4]?.col, "facet");
   if (sortField && sortField in FIELDS) mark(FIELDS[sortField].col, "sort");
   return routes;
 }
 function cachedNotes(routes, { facets = true, ordered = true } = {}) {
-  const order = Object.values(FIELDS).map((f3) => f3.col);
+  const order = Object.values(FIELDS).map((f4) => f4.col);
   return Object.entries(routes).map(([col, set]) => {
     const via = ["filter", "facet", "sort"].filter((r) => set.has(r) && (r !== "facet" || facets) && (r !== "sort" || ordered));
     return { col, via };
@@ -37925,7 +43268,7 @@ function rowColumns(m) {
 }
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f3]) => [k, f3.col])
+  Object.entries(FIELDS).map(([k, f4]) => [k, f4.col])
 ) };
 var DEFAULT_FACETS = [
   "type",
@@ -37961,8 +43304,8 @@ function viewerPredicate2(viewer) {
 var TEXT_PATHS = /\.(md|txt)$/i;
 var TEXT_CAP = 128 * 1024;
 function textOf(bundleId, files) {
-  const list2 = (files || []).map((f3) => ({ path: f3.path, text: typeof f3.text === "string" ? f3.text : typeof f3.content === "string" ? f3.content : null }));
-  const md = list2.find((f3) => f3.path === "bundle.md");
+  const list2 = (files || []).map((f4) => ({ path: f4.path, text: typeof f4.text === "string" ? f4.text : typeof f4.content === "string" ? f4.content : null }));
+  const md = list2.find((f4) => f4.path === "bundle.md");
   let fm = null, prose = "";
   if (md && md.text !== null) {
     let p = null;
@@ -37991,7 +43334,7 @@ function textOf(bundleId, files) {
     bits.push(String(v));
   };
   walk(fm);
-  const others = list2.filter((f3) => f3.path !== "bundle.md" && f3.text !== null && TEXT_PATHS.test(f3.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  const others = list2.filter((f4) => f4.path !== "bundle.md" && f4.text !== null && TEXT_PATHS.test(f4.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
   const cap = (s) => String(s ?? "").slice(0, TEXT_CAP);
   const nested = (block, key) => {
     const b = fm && typeof fm === "object" ? fm[block] : null;
@@ -37999,7 +43342,7 @@ function textOf(bundleId, files) {
   };
   return {
     title: cap(fm && fm.title != null ? String(fm.title) : ""),
-    body: cap([prose, ...others.map((f3) => f3.path + "\n" + f3.text)].join("\n\n")),
+    body: cap([prose, ...others.map((f4) => f4.path + "\n" + f4.text)].join("\n\n")),
     /* The identifier is folded into `meta` so pasting a bundle id into the
        search bar finds the bundle, which is the first thing anyone tries. */
     meta: cap([String(bundleId), ...bits].join(" ")),
@@ -38164,12 +43507,12 @@ function selector(tok, ctx) {
   if (name === "has") {
     const v = String(tok.value).toLowerCase();
     if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
-    const f4 = FIELDS[v];
-    if (!f4) {
+    const f5 = FIELDS[v];
+    if (!f5) {
       ctx.warnings.push(`has: unknown field ${JSON.stringify(tok.value)}`);
       return null;
     }
-    return { op: "meta", col: f4.col, cmp: "present", value: null };
+    return { op: "meta", col: f5.col, cmp: "present", value: null };
   }
   if (name === "sort") {
     applySort(tok.value, ctx);
@@ -38187,25 +43530,25 @@ function selector(tok, ctx) {
     return val === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val };
   }
   if (name in MEANING) return meaningAtom(name, tok, ctx);
-  const f3 = FIELDS[name];
-  if (!f3) {
+  const f4 = FIELDS[name];
+  if (!f4) {
     ctx.warnings.push(`unknown field ${JSON.stringify(tok.field)}; read as free text`);
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
   let raw = String(tok.value);
-  if (f3.col === "object_type") raw = normalizeType(raw.toLowerCase());
+  if (f4.col === "object_type") raw = normalizeType(raw.toLowerCase());
   const range = raw.split("..");
-  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f3.type === "time" || f3.type === "number")) {
+  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f4.type === "time" || f4.type === "number")) {
     return { op: "and", kids: [
-      { op: "meta", col: f3.col, cmp: ">=", value: coerce(f3, range[0]) },
-      { op: "meta", col: f3.col, cmp: "<=", value: coerce(f3, range[1]) }
+      { op: "meta", col: f4.col, cmp: ">=", value: coerce(f4, range[0]) },
+      { op: "meta", col: f4.col, cmp: "<=", value: coerce(f4, range[1]) }
     ] };
   }
   for (const [lead, cmp] of CMP)
-    if (raw.startsWith(lead)) return { op: "meta", col: f3.col, cmp, value: coerce(f3, raw.slice(lead.length)) };
-  if (raw === "" || raw === "*") return { op: "meta", col: f3.col, cmp: "present", value: null };
-  if (f3.fts) return textAtom(f3.fts, raw, tok.quoted, ctx);
-  return { op: "meta", col: f3.col, cmp: "=", value: coerce(f3, raw) };
+    if (raw.startsWith(lead)) return { op: "meta", col: f4.col, cmp, value: coerce(f4, raw.slice(lead.length)) };
+  if (raw === "" || raw === "*") return { op: "meta", col: f4.col, cmp: "present", value: null };
+  if (f4.fts) return textAtom(f4.fts, raw, tok.quoted, ctx);
+  return { op: "meta", col: f4.col, cmp: "=", value: coerce(f4, raw) };
 }
 function meaningAtom(arm, tok, ctx) {
   const m = MEANING[arm];
@@ -38279,13 +43622,13 @@ function meaningAtom(arm, tok, ctx) {
       return { op: "meaning", arm, field: subName, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
   return { op: "meaning", arm, field: subName, col: sub.col, cmp: "=", value: norm(raw) };
 }
-function coerce(f3, v) {
-  if (f3.type === "number") {
+function coerce(f4, v) {
+  if (f4.type === "number") {
     const n = Number(v);
     return Number.isFinite(n) ? n : v;
   }
-  if (f3.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
-  return f3.lower ? String(v).toLowerCase() : f3.upper ? String(v).toUpperCase() : String(v);
+  if (f4.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
+  return f4.lower ? String(v).toLowerCase() : f4.upper ? String(v).toUpperCase() : String(v);
 }
 function applySort(spec, ctx) {
   let s = String(spec || "");
@@ -38605,7 +43948,7 @@ SELECT b.bundle_id, b.bundle_sha FROM scope s JOIN bundles b ON b.fts_id = s.fid
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
-  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f3) => String(f3).toLowerCase()).filter((f3) => f3 in FIELDS);
+  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f4) => String(f4).toLowerCase()).filter((f4) => f4 in FIELDS);
   const facets_ = () => {
     if (!facetList.length) return [];
     const out = [];
@@ -38613,10 +43956,10 @@ ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
       const group = facetList.slice(i, i + MAX_COMPOUND);
       const c = cte(false);
       const arms = group.map((name) => {
-        const f3 = FIELDS[name];
-        return `SELECT '${name}' AS field, b.${f3.col} AS value, count(*) AS n
+        const f4 = FIELDS[name];
+        return `SELECT '${name}' AS field, b.${f4.col} AS value, count(*) AS n
   FROM scope s JOIN bundles b ON b.fts_id = s.fid
-  WHERE ${gate.sql} AND b.${f3.col} IS NOT NULL GROUP BY b.${f3.col}`;
+  WHERE ${gate.sql} AND b.${f4.col} IS NOT NULL GROUP BY b.${f4.col}`;
       });
       out.push({
         sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
@@ -40352,10 +45695,10 @@ var SPACES2 = Object.freeze({
 });
 var SPACE_NAMES = Object.keys(SPACES2);
 var has2 = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
-var isObj3 = (o) => o != null && typeof o === "object";
+var isObj4 = (o) => o != null && typeof o === "object";
 function viewOf(v) {
-  if (!isObj3(v)) return { view: {}, conflicts: [] };
-  if (has2(v, "view") && isObj3(v.view) && has2(v, "ok")) {
+  if (!isObj4(v)) return { view: {}, conflicts: [] };
+  if (has2(v, "view") && isObj4(v.view) && has2(v, "ok")) {
     const conflicts = Array.isArray(v.conflicts) ? v.conflicts : Array.isArray(v.view.conflicts) ? v.view.conflicts : [];
     return { view: v.view, conflicts };
   }
@@ -40364,14 +45707,14 @@ function viewOf(v) {
 var arr = (x) => Array.isArray(x) ? x : [];
 function spaceOf(view, space) {
   if (!SPACE_NAMES.includes(space)) return null;
-  const s = isObj3(view.spaces) && has2(view.spaces, space) && isObj3(view.spaces[space]) ? view.spaces[space] : {};
+  const s = isObj4(view.spaces) && has2(view.spaces, space) && isObj4(view.spaces[space]) ? view.spaces[space] : {};
   return s;
 }
-var formsOf = (view, space) => arr((spaceOf(view, space) || {}).forms).filter(isObj3);
-var kindsOf = (view) => arr((spaceOf(view, "enactment") || {}).kinds).filter(isObj3);
+var formsOf = (view, space) => arr((spaceOf(view, space) || {}).forms).filter(isObj4);
+var kindsOf = (view) => arr((spaceOf(view, "enactment") || {}).kinds).filter(isObj4);
 var COMPILED = /* @__PURE__ */ new WeakMap();
 function compile3(p, mode) {
-  if (!isObj3(p) || typeof p.re !== "string") return null;
+  if (!isObj4(p) || typeof p.re !== "string") return null;
   let byMode = COMPILED.get(p);
   if (!byMode) COMPILED.set(p, byMode = {});
   if (has2(byMode, mode)) return byMode[mode];
@@ -40390,12 +45733,12 @@ function spaces(v) {
   return SPACE_NAMES.map((space) => {
     const s = spaceOf(view, space);
     const label = typeof s.label === "string" && s.label ? s.label : SPACES2[space].label;
-    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f3) => ({ ...f3 })) };
+    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f4) => ({ ...f4 })) };
   });
 }
 function cleaned(form, value) {
   let v = value.trim();
-  const c = isObj3(form.clean) ? form.clean : {};
+  const c = isObj4(form.clean) ? form.clean : {};
   for (const p of arr(c.strip)) {
     const re = compile3(p, "start");
     if (re) v = v.replace(re, "").trim();
@@ -40413,7 +45756,7 @@ function normalOf(form, m) {
       out += part;
       continue;
     }
-    if (!isObj3(part)) return null;
+    if (!isObj4(part)) return null;
     const g = part.group;
     let s = typeof g === "number" ? m[g] : typeof g === "string" && m.groups ? m.groups[g] : void 0;
     if (s === void 0) s = typeof part.default === "string" ? part.default : "";
@@ -40451,11 +45794,11 @@ function recognise(v, space, value) {
   let rest = raw, kind = null;
   if (space === "enactment") ({ kind, rest } = kindPrefix(view, raw));
   if (!rest) return null;
-  for (const f3 of formsOf(view, space)) {
-    if (typeof f3.form !== "string") continue;
-    const normal = matchForm(f3, rest);
+  for (const f4 of formsOf(view, space)) {
+    if (typeof f4.form !== "string") continue;
+    const normal = matchForm(f4, rest);
     if (normal == null) continue;
-    const out = { space, value: raw, form: f3.form, normal };
+    const out = { space, value: raw, form: f4.form, normal };
     if (space === "enactment") {
       out.kind = kind;
       out.reach = reach(v, normal, kind);
@@ -40465,26 +45808,26 @@ function recognise(v, space, value) {
   return null;
 }
 function systemName(view, origin) {
-  const s = arr(view.systems).find((x) => isObj3(x) && x.origin === origin);
+  const s = arr(view.systems).find((x) => isObj4(x) && x.origin === origin);
   return s && typeof s.name === "string" ? s.name : origin;
 }
 function floorConflicts(conflicts, kind) {
   return conflicts.filter((c) => {
-    if (!isObj3(c)) return false;
+    if (!isObj4(c)) return false;
     const at = typeof c.at === "string" ? c.at : JSON.stringify(c.at ?? "");
     return /floor/i.test(at) && new RegExp(`(^|[^a-z0-9_])${kind.replace(/[^a-z0-9_]/gi, "\\$&")}([^a-z0-9_]|$)`, "i").test(at);
   });
 }
 function conflictSays(cs) {
-  return cs.map((c) => arr(c.values).map((x) => isObj3(x) ? `${x.profile ?? "a profile"} gives ${JSON.stringify(isObj3(x.value) && has2(x.value, "first") ? x.value.first : x.value)}` : String(x)).join(", ")).join("; ");
+  return cs.map((c) => arr(c.values).map((x) => isObj4(x) ? `${x.profile ?? "a profile"} gives ${JSON.stringify(isObj4(x.value) && has2(x.value, "first") ? x.value.first : x.value)}` : String(x)).join(", ")).join("; ");
 }
 function floorOf(view, conflicts, kind) {
   const entries = kindsOf(view).filter((k) => k.kind === kind);
-  const floors = entries.map((k) => k.floor).filter((f3) => isObj3(f3) && Number.isFinite(f3.first));
-  const distinct = [...new Set(floors.map((f3) => f3.first))];
+  const floors = entries.map((k) => k.floor).filter((f4) => isObj4(f4) && Number.isFinite(f4.first));
+  const distinct = [...new Set(floors.map((f4) => f4.first))];
   if (distinct.length === 1) {
-    const f3 = floors[0];
-    return { floor: f3.first, system: f3.system, basis: f3.basis };
+    const f4 = floors[0];
+    return { floor: f4.first, system: f4.system, basis: f4.basis };
   }
   const cs = floorConflicts(conflicts, kind);
   if (distinct.length > 1 || cs.length)
@@ -40492,16 +45835,16 @@ function floorOf(view, conflicts, kind) {
   if (!entries.length) return { why: `the active profiles name no enactment kind "${kind}", so no coverage floor is measured for it` };
   return { why: `no coverage floor is measured for ${kind} in the active profiles` };
 }
-var outsideSays = (view, kind, f3) => `a ${kind} below ${systemName(view, f3.system)}'s first (${f3.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
+var outsideSays = (view, kind, f4) => `a ${kind} below ${systemName(view, f4.system)}'s first (${f4.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
 function reach(v, number, kind = null) {
   const { view, conflicts } = viewOf(v);
   const n = typeof number === "number" ? number : typeof number === "string" && /^\s*\d+\s*$/.test(number) ? Number(number) : NaN;
   if (!Number.isFinite(n))
     return { reach: "UNDETERMINED", says: `${JSON.stringify(String(number))} is not a number, so it cannot be compared with a coverage floor` };
   if (typeof kind === "string" && kind) {
-    const f3 = floorOf(view, conflicts, kind);
-    if (f3.floor == null) return { reach: "UNDETERMINED", says: `${f3.why}: whether ${n} is inside the record's reach is undetermined` };
-    return n >= f3.floor ? { reach: "INSIDE", floor: f3.floor, says: `a ${kind} at or above ${systemName(view, f3.system)}'s first (${f3.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f3.floor, says: outsideSays(view, kind, f3) };
+    const f4 = floorOf(view, conflicts, kind);
+    if (f4.floor == null) return { reach: "UNDETERMINED", says: `${f4.why}: whether ${n} is inside the record's reach is undetermined` };
+    return n >= f4.floor ? { reach: "INSIDE", floor: f4.floor, says: `a ${kind} at or above ${systemName(view, f4.system)}'s first (${f4.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f4.floor, says: outsideSays(view, kind, f4) };
   }
   const kinds = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
   if (!kinds.length)
@@ -40527,12 +45870,12 @@ function inCurrent(current, key) {
 function lineageOf(lineage, key) {
   let rec;
   if (lineage instanceof Map) rec = lineage.get(key);
-  else if (isObj3(lineage) && typeof key === "string" && has2(lineage, key)) rec = lineage[key];
-  if (isObj3(rec) && !Array.isArray(rec)) rec = [rec];
-  return arr(rec).filter((r) => isObj3(r) && Number.isFinite(r.roll_year));
+  else if (isObj4(lineage) && typeof key === "string" && has2(lineage, key)) rec = lineage[key];
+  if (isObj4(rec) && !Array.isArray(rec)) rec = [rec];
+  return arr(rec).filter((r) => isObj4(r) && Number.isFinite(r.roll_year));
 }
 function parcelStanding(key, evidence) {
-  const ev = isObj3(evidence) ? evidence : {};
+  const ev = isObj4(evidence) ? evidence : {};
   const vintages = arr(ev.vintages).map(String);
   if (inCurrent(ev.current, key))
     return { standing: "CURRENT", vintages_searched: vintages, says: "in the assessor's current parcel layer" };
@@ -40565,7 +45908,7 @@ function systemOfOne(view, address) {
   const host = u.hostname.toLowerCase();
   const path = u.pathname + u.search;
   for (const s of arr(view.systems)) {
-    if (!isObj3(s) || typeof s.origin !== "string" || !s.origin) continue;
+    if (!isObj4(s) || typeof s.origin !== "string" || !s.origin) continue;
     if (!arr(s.hosts).some((h) => typeof h === "string" && h.toLowerCase() === host)) continue;
     if (s.path != null) {
       const re = compile3(s.path, "find");
@@ -40579,7 +45922,7 @@ function systemOfOne(view, address) {
       basis: s.basis ?? null
     };
   }
-  const mixed = arr(view.mixed_hosts).find((m) => isObj3(m) && typeof m.host === "string" && m.host.toLowerCase() === host);
+  const mixed = arr(view.mixed_hosts).find((m) => isObj4(m) && typeof m.host === "string" && m.host.toLowerCase() === host);
   if (mixed) return { origin: null, unknown: true, why: `${host} serves many offices' publications${typeof mixed.why === "string" && mixed.why ? ` (${mixed.why})` : ""}; which system a document there came from is not derivable from its address` };
   return { origin: null, unknown: true, why: `no system in the active profiles matches ${host}` };
 }
@@ -40602,12 +45945,12 @@ function normName(n) {
 }
 var unpadAll = (s) => String(s).replace(/(^|\D)0+(?=\d)/g, "$1");
 function throughCrosswalk(view, space, ra, rb) {
-  const walks = arr(view.crosswalks).filter((c) => isObj3(c) && c.space === space && Array.isArray(c.forms) && (c.forms[0] === ra.form && c.forms[1] === rb.form || c.forms[0] === rb.form && c.forms[1] === ra.form));
+  const walks = arr(view.crosswalks).filter((c) => isObj4(c) && c.space === space && Array.isArray(c.forms) && (c.forms[0] === ra.form && c.forms[1] === rb.form || c.forms[0] === rb.form && c.forms[1] === ra.form));
   if (!walks.length) return null;
-  const formByName = new Map(formsOf(view, space).map((f3) => [f3.form, f3]));
+  const formByName = new Map(formsOf(view, space).map((f4) => [f4.form, f4]));
   const norm = (form, value) => {
-    const f3 = formByName.get(form);
-    return f3 && (typeof value === "string" || typeof value === "number") ? matchForm(f3, String(value)) : null;
+    const f4 = formByName.get(form);
+    return f4 && (typeof value === "string" || typeof value === "number") ? matchForm(f4, String(value)) : null;
   };
   const partners = /* @__PURE__ */ new Set();
   for (const c of walks) {
@@ -40622,8 +45965,8 @@ function throughCrosswalk(view, space, ra, rb) {
 }
 function judgePair(v, space, a, b, reading = null) {
   if (typeof v === "string" && typeof space !== "string") return legacyJudgePair(v, space, a, b);
-  const ra = isObj3(a) ? a.rec : null, rb = isObj3(b) ? b.rec : null;
-  if (!isObj3(ra) || !isObj3(rb)) throw new TypeError("judgePair: a.rec and b.rec must both be recognised values (recognise() first)");
+  const ra = isObj4(a) ? a.rec : null, rb = isObj4(b) ? b.rec : null;
+  if (!isObj4(ra) || !isObj4(rb)) throw new TypeError("judgePair: a.rec and b.rec must both be recognised values (recognise() first)");
   if (!SPACE_NAMES.includes(space) || ra.space !== space || rb.space !== space)
     throw new TypeError(`judgePair: both values must be recognised in the space "${space}"`);
   const { view } = viewOf(v);
@@ -40643,7 +45986,7 @@ function judgePair(v, space, a, b, reading = null) {
     const near = unpadAll(ra.normal) === unpadAll(rb.normal);
     return verdict("VALUES_DIFFER", near ? `the values differ only by leading zeros (${ra.normal}, ${rb.normal}): a near miss, never counted \u2014 a digit is never folded` : `different values (${ra.normal}, ${rb.normal})`, { near_miss: near });
   }
-  const sa = isObj3(a.system) ? a.system : {}, sb = isObj3(b.system) ? b.system : {};
+  const sa = isObj4(a.system) ? a.system : {}, sb = isObj4(b.system) ? b.system : {};
   if (!sa.origin || !sb.origin) {
     const which = !sa.origin ? "first" : "second", s = !sa.origin ? sa : sb;
     return verdict("SYSTEM_UNDETERMINED", `which system published the ${which} end is undetermined${typeof s.why === "string" ? ` (${s.why})` : ""}; a match counts only between two systems known to be independent`);
@@ -40688,9 +46031,9 @@ var LEGACY_VIEW2 = (() => {
   return c && c.ok ? { ...c.view, conflicts: Array.isArray(c.conflicts) ? c.conflicts : [] } : { conflicts: [] };
 })();
 var outRec = (r) => r ? { ...r, space: NEW_TO_OLD[r.space] } : r;
-var inEnd = (e) => isObj3(e) && isObj3(e.rec) && has2(OLD_TO_NEW, e.rec.space) ? { ...e, rec: { ...e.rec, space: OLD_TO_NEW[e.rec.space] } } : e;
+var inEnd = (e) => isObj4(e) && isObj4(e.rec) && has2(OLD_TO_NEW, e.rec.space) ? { ...e, rec: { ...e.rec, space: OLD_TO_NEW[e.rec.space] } } : e;
 var ID_SPACES = Object.freeze(Object.fromEntries(spaces(LEGACY_VIEW2).map((s) => [NEW_TO_OLD[s.space], Object.freeze({ label: s.label, forms: Object.freeze(s.forms), referent: s.referent })])));
-var CMS_FLOOR = Object.freeze(Object.fromEntries(kindsOf(LEGACY_VIEW2).filter((k) => typeof k.kind === "string" && isObj3(k.floor) && Number.isFinite(k.floor.first)).map((k) => [k.kind, k.floor.first])));
+var CMS_FLOOR = Object.freeze(Object.fromEntries(kindsOf(LEGACY_VIEW2).filter((k) => typeof k.kind === "string" && isObj4(k.floor) && Number.isFinite(k.floor.first)).map((k) => [k.kind, k.floor.first])));
 var apnStanding = (key, evidence) => parcelStanding(key, evidence);
 var systemOfAddresses = (addresses) => systemOf(LEGACY_VIEW2, addresses);
 function legacyRecognise(space, raw) {
@@ -40701,7 +46044,6 @@ function legacyJudgePair(space, a, b, reading = null) {
 }
 
 // src/store.mjs
-var TESTIMONY_PATH = Symbol("mk1-testimony-path");
 var LAWS_ACT = Symbol("d149-laws-act");
 var RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
 function refusal7(key, extra = {}) {
@@ -40738,13 +46080,11 @@ function actNoCitation(detail, extra = {}) {
 }
 var EMPTY_STRING_SHA3 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX2 = 1024 * 1024;
-var TASK_KINDS = ["authority-undetermined"];
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
-var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
-var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 function stampInstant(precision, when = Date.now()) {
   const iso2 = new Date(when).toISOString();
   if (precision === "millisecond") return iso2;
@@ -40756,13 +46096,12 @@ function instantOrder(a, b) {
   return x - y;
 }
 var SETTLED_BY_AN_ACT = /* @__PURE__ */ new Set(["rerun", "resolved"]);
-var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var taskSlug = (subject) => {
   const s = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/g, "");
   return s || "authority";
 };
 var isHttpsPublic = (u) => isPublicHttpsLocator(u);
-var safeJson = (s) => {
+var safeJson2 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -40858,12 +46197,18 @@ var Store = class _Store extends DurableObject {
       { name: "bias_debt_settlements", keys: [] },
       { name: "bias_debt_sweeps", keys: [] },
       { name: "ai_runs", keys: [] }
-    ]);
+    ].filter((t) => !captureOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name)));
+    provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }).onReceipt("legacy-store", (e) => this.#receiptLook(e));
     const promotion = promotionOf(ctx);
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("citedBy", "legacy-store", (id) => this.#retirementCitedBy(id));
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
+    const capture = captureOf(ctx, { env });
+    capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
+    capture.on("source-outcome", "legacy-store", async (o) => o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null);
+    capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
+    capture.on("compute", "legacy-store", (m) => this.recordRuntimeObservation({ metric: m.metric, ms: m.value, detail: m.detail }));
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
   #migrate() {
@@ -40873,7 +46218,7 @@ var Store = class _Store extends DurableObject {
       ["links", "citation_norm"],
       ["captured_locators", "via"],
       ["reading_ref_terms", "src"]
-    ]) {
+    ].filter(([t]) => !PROVENANCE_TABLES.includes(t))) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
     }
@@ -41167,15 +46512,6 @@ var Store = class _Store extends DurableObject {
          was admissible), so the default IS the true value for all of them —
          a backfill by construction, not a guess. */
       ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"],
-      /* MK-1 / D-184 / IC-134: the register's `authored` flag and its two
-         stamps. The default IS the true value for every row that can exist
-         before this column did — no route could author a bundle until
-         op=testify existed — so it is a backfill by construction, `cited_as`'s
-         reasoning one table over. `author` and `observed_at` are NULL on every
-         row that is not authored, which is what they mean. */
-      ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
-      ["register", "author", "TEXT"],
-      ["register", "observed_at", "TEXT"],
       /* REC-128 / IC-140: WHO DELIVERED a ratification — the authenticated
          session that performed the act, beside the signature's signer. NULLABLE
          AND NEVER BACK-FILLED, and that is the item rather than a convenience:
@@ -41195,15 +46531,6 @@ var Store = class _Store extends DurableObject {
          and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
          states the kind UNDETERMINED rather than guessing it. */
       ["readings", "capture_format", "TEXT"],
-      /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): WHICH capture's fetch served a reused
-         part. ALTER rather than the derived-table DROP above, though both tables are derived: neither column is in
-         the key, so an old row is not wrong, and dropping `site_asset_refs` would erase the reused=1 rows that
-         ratification's re-fetch (CAP-4) and post-hoc detection read. NULLABLE AND NEVER BACK-FILLED: a fetch or
-         reuse recorded before this column existed named no capture, and the only value a backfill could reach for
-         is a match of a ref row's `at` against `last_fetched` -- whole seconds, a row overwritten in place -- which
-         costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
-      ["site_assets", "last_fetched_by", "TEXT"],
-      ["site_asset_refs", "reused_from", "TEXT"],
       /* REC-184 (framework §8.2, D-128's follow-on): the progression definition version a proposal
          disposition was decided against. NULLABLE AND NEVER BACK-FILLED: a decision taken before this
          column existed recorded no version, and the one value a backfill could reach for is the
@@ -41223,11 +46550,6 @@ var Store = class _Store extends DurableObject {
          every old row rather than a gap: no act could name a draft before this column existed, so a document
          authored earlier was bound to none. */
       ["case_documents", "draft_id", "TEXT"],
-      /* D-492: browser time COMMITTED to renders in flight and not yet reported. NOT NULL with a
-         DEFAULT because it is a running total and not an attribution: a store written before this
-         column existed had no renders in flight at the moment it gained the column, so 0 is the
-         MEASURED truth for every old row rather than a value a backfill reached for. */
-      ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
       /* REC-207 (BOB #32, 2026-09-23 23:42Z): THE RUN THIS RUN RE-RUNS, as its opener AUTHORED it. A link
          nothing derives: DEC-24's authored-binds side, because "is this a re-run of that" is a judgement
          about what was asked, and a plane inferring it from a context and a clock would be guessing. NULLABLE
@@ -41264,6 +46586,9 @@ var Store = class _Store extends DurableObject {
       if (t) this.sql.exec(t);
     }
     membershipOf(this.ctx).migrate();
+    provenanceOf(this.ctx).migrate();
+    governorOf(this.ctx, { env: this.env }).migrate();
+    captureOf(this.ctx).migrate();
     if (firstBoot) this.#recordGroupAtFirstBoot();
     {
       const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
@@ -41625,7 +46950,7 @@ var Store = class _Store extends DurableObject {
     let n = 0, t = 0;
     for (const r of stale) {
       const files = this.#filesOf(r.bundle_id);
-      const md = files.find((f3) => f3.path === "bundle.md");
+      const md = files.find((f4) => f4.path === "bundle.md");
       if (!md || md.text === null) continue;
       if (r.need_proj) {
         this.#writeProjection(r.bundle_id, md.text);
@@ -42344,7 +47669,7 @@ var Store = class _Store extends DurableObject {
    *  plane's vocabulary rather than a copy of it that drifts. */
   searchFields() {
     return {
-      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f3]) => [k, { type: f3.type, freeText: !!f3.fts, column: f3.col }])),
+      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f4]) => [k, { type: f4.type, freeText: !!f4.fts, column: f4.col }])),
       ftsColumns: FTS_COLUMNS,
       defaultFacets: DEFAULT_FACETS,
       idsMax: IDS_MAX,
@@ -43754,7 +49079,7 @@ var Store = class _Store extends DurableObject {
   static FACET_MODE_DEFAULT = "scan";
   #facetCounts(plan, tally, mode) {
     const use = mode === "groupby" || mode === "scan" ? mode : _Store.FACET_MODE_DEFAULT;
-    const out = Object.fromEntries(plan.facetFields.map((f3) => [f3, []]));
+    const out = Object.fromEntries(plan.facetFields.map((f4) => [f4, []]));
     if (!plan.facetFields.length) return out;
     if (use === "groupby") {
       for (const stmt2 of plan.statements.facets())
@@ -45601,33 +50926,33 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
    * THE CLAIM IS FROZEN VERBATIM: it is copied out of the reading at the moment
    * of adoption and never re-read, so a later rewording of the reading (a NEW
    * version, D-217b) cannot change what this project concluded. */
-  static #appendConclusionEntry(text, inquiryId, f3) {
+  static #appendConclusionEntry(text, inquiryId, f4) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
     const end = lines.indexOf("---", 1);
     if (end === -1) return null;
     const q = (s) => `"${_Store.#fmSafe(String(s ?? ""))}"`;
-    const block = f3.act === "withdrawn" ? [
+    const block = f4.act === "withdrawn" ? [
       `  - inquiry: ${q(inquiryId)}`,
       `    act: "withdrawn"`,
-      `    withdraws_version: ${q(f3.version)}`,
-      `    withdraws_at: ${q(f3.withdrawsAt)}`,
-      `    reason: ${q(f3.reason)}`,
-      `    at: ${q(f3.when)}`,
-      `    by: ${q(f3.who)}`
+      `    withdraws_version: ${q(f4.version)}`,
+      `    withdraws_at: ${q(f4.withdrawsAt)}`,
+      `    reason: ${q(f4.reason)}`,
+      `    at: ${q(f4.when)}`,
+      `    by: ${q(f4.who)}`
     ] : [
       `  - inquiry: ${q(inquiryId)}`,
       `    act: "concluded"`,
-      `    version: ${q(f3.version)}`,
-      `    claim: ${q(f3.claim)}`,
-      `    falsifier: ${q(f3.falsifier)}`,
-      ...f3.noFals ? [
-        `    falsifier_override_by: ${q(f3.who)}`,
-        `    falsifier_override_at: ${q(f3.when)}`
+      `    version: ${q(f4.version)}`,
+      `    claim: ${q(f4.claim)}`,
+      `    falsifier: ${q(f4.falsifier)}`,
+      ...f4.noFals ? [
+        `    falsifier_override_by: ${q(f4.who)}`,
+        `    falsifier_override_at: ${q(f4.when)}`
       ] : [],
-      ...f3.commentary ? [`    commentary: ${q(f3.commentary)}`] : [],
-      `    at: ${q(f3.when)}`,
-      `    by: ${q(f3.who)}`
+      ...f4.commentary ? [`    commentary: ${q(f4.commentary)}`] : [],
+      `    at: ${q(f4.when)}`,
+      `    by: ${q(f4.who)}`
     ];
     let at = -1;
     for (let i2 = 1; i2 < end; i2++) if (/^conclusions:/.test(lines[i2])) {
@@ -45649,7 +50974,7 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
      read go through one implementation each, so they cannot come apart. It
      writes a conclusion (op=conclude&project=) or a withdrawal
      (op=withdrawconclusion), and only ever by appending. */
-  #setProjectConclusion(projectRow, inquiryId, f3) {
+  #setProjectConclusion(projectRow, inquiryId, f4) {
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null)
@@ -45659,25 +50984,25 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
         detail: `${pid} has no readable file, so its conclusion cannot be recorded`
       };
     const pfm = parseFrontmatter(md.content).data || {};
-    let text = _Store.#appendConclusionEntry(md.content, inquiryId, f3);
+    let text = _Store.#appendConclusionEntry(md.content, inquiryId, f4);
     if (text === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CONCLUSIONS",
         detail: `${pid}'s conclusions block could not be extended in place`
       };
-    text = _Store.#setScalar(text, "last_updated", `"${f3.when}"`);
-    text = _Store.#appendSessionLog(text, f3.act === "withdrawn" ? `### Session ${f3.when} | Conclusion withdrawn | ${f3.who}
+    text = _Store.#setScalar(text, "last_updated", `"${f4.when}"`);
+    text = _Store.#appendSessionLog(text, f4.act === "withdrawn" ? `### Session ${f4.when} | Conclusion withdrawn | ${f4.who}
 Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}
-Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f3.version}', concluded ${f3.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
-Reason: ${f3.reason}
-` : `### Session ${f3.when} | Concluded | ${f3.who}
+Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f4.version}', concluded ${f4.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
+Reason: ${f4.reason}
+` : `### Session ${f4.when} | Concluded | ${f4.who}
 Trigger: op=conclude on ${inquiryId} for ${pid}
-Changes: this project concluded ${inquiryId} on reading '${f3.version}', adopting its claim.
-Claim: ${f3.claim}
-` + (f3.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f3.who} at ${f3.when}
-` : `Falsifier: ${f3.falsifier}
-`) + (f3.commentary ? `Commentary (${f3.who}, not evidence): ${f3.commentary}
+Changes: this project concluded ${inquiryId} on reading '${f4.version}', adopting its claim.
+Claim: ${f4.claim}
+` + (f4.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f4.who} at ${f4.when}
+` : `Falsifier: ${f4.falsifier}
+`) + (f4.commentary ? `Commentary (${f4.who}, not evidence): ${f4.commentary}
 ` : ""));
     const carried = [];
     for (const r of this.sql.exec(
@@ -45689,8 +51014,8 @@ Claim: ${f3.claim}
     return this.promote({
       bundleId: pid,
       base: projectRow.bundle_sha,
-      snapKey: `${f3.when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-      author: f3.who,
+      snapKey: `${f4.when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: f4.who,
       files: [{
         path: "bundle.md",
         text,
@@ -45703,7 +51028,7 @@ Claim: ${f3.claim}
         current_state: pfm.current_state ?? "forming",
         prior_state: pfm.prior_state ?? null,
         created: pfm.created,
-        last_updated: f3.when,
+        last_updated: f4.when,
         criticality: pfm.criticality ?? null
       }
     });
@@ -50144,7 +55469,7 @@ Changes: responds_to edge added to ${actionId}.
          can be signed. Unchosen is what op=caseratify refuses (§4.4). A draft naming no case has no identity a
          level can be keyed to (a case id is minted only by publication), so each is unchosen and says why. */
       observations: (() => {
-        const seen = findings.filter((f3) => f3.present).map((f3) => f3.target);
+        const seen = findings.filter((f4) => f4.present).map((f4) => f4.target);
         const r = this.testimonyReach(seen);
         return [.../* @__PURE__ */ new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
           const act = ident.caseId ? this.#attributionInForce(ident.caseId, ident.edition, obs) : null;
@@ -53217,8 +58542,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       para: "extent_para",
       run: "extent_run"
     };
-    for (const [f3, k] of Object.entries(FIELD_OF))
-      if (e[f3] !== void 0 && e[f3] !== null) out[k] = e[f3];
+    for (const [f4, k] of Object.entries(FIELD_OF))
+      if (e[f4] !== void 0 && e[f4] !== null) out[k] = e[f4];
     return out;
   }
   /** How many candidates each source may list. A PUBLISHED bound, reported with
@@ -53308,7 +58633,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       push({
         source: "marked",
         ref: r.ref,
-        extent: { kind: r.extent_kind, ...safeJson(r.extent) || {} },
+        extent: { kind: r.extent_kind, ...safeJson2(r.extent) || {} },
         reference: null,
         label: null,
         mentions_subject: null,
@@ -53449,7 +58774,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       `SELECT content_type, reading FROM readings WHERE capture_sha=? LIMIT 1`,
       captureSha
     );
-    const reading = row ? safeJson(row.reading) : null;
+    const reading = row ? safeJson2(row.reading) : null;
     const s = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
     const out = {
       read: !!row,
@@ -54160,17 +59485,17 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const p = list2[i];
       const key = String(p.key ?? "").trim().toUpperCase();
       const a = this.#candidateSide(p.a), b = this.#candidateSide(p.b);
-      const f3 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
-      if (!f3)
+      const f4 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      if (!f4)
         return refusal8(
           "CANDIDATE_PAIR_NOT_FORMED",
           `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now` + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
           { run: runId, index: i, cut_keys: cutKeys }
         );
-      const [x, y] = handle(f3.a) <= handle(f3.b) ? [f3.a, f3.b] : [f3.b, f3.a];
+      const [x, y] = handle(f4.a) <= handle(f4.b) ? [f4.a, f4.b] : [f4.b, f4.a];
       rows.push({
-        candidate: sha256HexSync(canonicalJson({ v: 1, key: f3.key, sides: [handle(x), handle(y)] })),
-        key: f3.key,
+        candidate: sha256HexSync(canonicalJson({ v: 1, key: f4.key, sides: [handle(x), handle(y)] })),
+        key: f4.key,
         a: x,
         b: y,
         run: runId,
@@ -54883,7 +60208,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   async auditPass({ after = "", limit = 200, viewer = null } = {}) {
     const gate = viewerPredicate2(viewer);
     const sighted = new Set(this.#rows(`SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})`, ...gate.args).map((r) => r.bundle_id));
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await provenanceAudit(this.ctx, {
       after,
       limit,
       visible: (id) => sighted.has(id),
@@ -54913,7 +60238,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const routeMarked = [];
     let markedTotal = 0;
     for (const row of page) {
-      const found = _Store.routeFinding(row.object_type, marks.get(row.bundle_id) || null);
+      const found = routeFinding(row.object_type, marks.get(row.bundle_id) || null);
       if (!found.applies) {
         routeTally.notApplicable++;
         continue;
@@ -54975,704 +60300,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       })()
     };
   }
-  /* REC-54 / D-200: DERIVE a provenance chain from what the capture record
-   * ACTUALLY HOLDS, or refuse and say what is missing. Nothing here invents a
-   * hop, and the difference between deriving and inventing is the whole item.
-   *
-   * WHAT MAKES THIS A RECONSTRUCTION RATHER THAN A BACK-DATING. The ten bundles
-   * D-200 names were captured 2026-07-19..22; C-18.9's chain requirement was
-   * written 2026-07-31. The chain FIELD was never populated because the field
-   * did not exist yet — but the FACTS a hop carries were recorded at capture
-   * time, in the same register, by the path that fetched the bytes: `locator`
-   * (the address asked), `retrieved` (the instant), `capture.method` and
-   * `capture.actor_class` (who asked), `capture.sha256` (what came back). This
-   * moves those recorded facts into the field that now has to carry them. It
-   * asserts NOTHING the register did not already assert, which is exactly the
-   * test: if a fact is not already in the record, no hop may claim it.
-   *
-   * THREE RULES THAT ARE THE POINT, not implementation detail:
-   *
-   *  1. EVERY HOP IS STAMPED `reconstructed`. A chain derived today must not be
-   *     readable as one recorded at capture. Without the stamp the record would
-   *     silently claim these routes were witnessed when they were re-derived,
-   *     and THAT is the back-dating the gate exists to prevent — the invention
-   *     is not in the hop's content, it is in letting it pass as contemporaneous.
-   *
-   *  2. `co_archive` IS NEVER A HOP. Eight of the ten carry an archive.org
-   *     replay URL, and it is tempting to read it as a second hop. It is not: it
-   *     records that we ALSO asked an archive to keep a copy, not that the bytes
-   *     REACHED US THROUGH one. Writing it as a hop would state the capture was
-   *     archive-sourced, which is a WEAKER route than what happened, and would
-   *     contradict the `grade: B` the register already carries — B being what a
-   *     direct capture by this instance earns (EARNED_CAPTURE_CEILING). The
-   *     recorded grade is itself evidence the route was direct and single-hop.
-   *
-   *  3. REFUSAL IS A REAL OUTCOME AND NAMES WHAT IS MISSING. A document whose
-   *     route was never recorded is `undetermined`, and undetermined is
-   *     first-class and must be STATED (CLAUDE.md). It is not repaired here.
-   */
-  static chainFromEvidence(doc, { instanceName = "unnamed", at = null } = {}) {
-    if (!doc || typeof doc !== "object")
-      return { ok: false, missing: ["the document entry is not an object"] };
-    const str = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
-    const cap = doc.capture && typeof doc.capture === "object" ? doc.capture : {};
-    const method = str(cap.method);
-    const sha = str(cap.sha256);
-    const retrieved = str(doc.retrieved);
-    const locator = str(doc.locator);
-    const custody = doc.custody && typeof doc.custody === "object" ? doc.custody : null;
-    const holder = custody ? str(custody.holder) : null;
-    const obtained = custody ? str(custody.obtained) : null;
-    const tsr = doc.timestamp && typeof doc.timestamp === "object" ? doc.timestamp : null;
-    const tsrAuth = tsr ? str(tsr.authority) : null;
-    const tsrFile = tsr ? str(tsr.token_file) : null;
-    const tsrNote = tsrAuth && tsrFile ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address` : "";
-    const stamp = (from) => ({
-      at: at || stampInstant("second"),
-      by: "op=provenancechain (REC-54)",
-      basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
-      from
-    });
-    if (method && retrieved && locator && locator !== "in hand") {
-      const actor = str(cap.actor_class);
-      return { ok: true, hops: [{
-        who: `instance ${instanceName} (${actor ? `${actor} ` : ""}capture method ${method})`,
-        asserts: `these bytes were served for ${locator} at ${retrieved}`,
-        evidence: `${method}, sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
-        bound: false,
-        via: "direct",
-        reconstructed: stamp(["locator", "retrieved", "capture.method", "capture.actor_class", "capture.sha256"])
-      }] };
-    }
-    if (holder && obtained) {
-      return { ok: true, hops: [{
-        who: `member ${holder}`,
-        asserts: `this member held these bytes and supplied them to the record at ${obtained}`,
-        evidence: `${str(custody.setting) || "setting not recorded"}${str(custody.attestation) ? `; ${str(custody.attestation)}` : ""}; sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
-        bound: false,
-        via: "member",
-        reconstructed: stamp(["custody.holder", "custody.obtained", "custody.setting", "custody.attestation", "capture.sha256"])
-      }] };
-    }
-    const missing = [];
-    if (!locator || locator === "in hand") missing.push("a fetched address (`locator`)");
-    if (!retrieved) missing.push("the instant it was retrieved (`retrieved`)");
-    if (!method) missing.push("how it was captured (`capture.method`)");
-    if (!holder) missing.push("a named custodian (`custody.holder`)");
-    if (!obtained) missing.push("when the custodian obtained it (`custody.obtained`)");
-    return { ok: false, missing };
+  /* REC-54 / D-200: the provenance chain, derived from what the capture record holds, and its rebuild through the
+     plane's own write path: provenance's (R19–R21). */
+  provenanceChainRebuild(...a) {
+    return provenanceOf(this.ctx).provenanceChainRebuild(...a);
   }
-  /** REC-54 / D-200: rebuild the provenance chains of ONE bundle from the
-   *  evidence its own capture record holds, through the plane's own write path.
-   *
-   *  Reports before it writes and writes nothing unless `apply` is set, because
-   *  the dispositions this exists for are corrections to the REAL record and
-   *  each one is a decision that wants its evidence read first.
-   *
-   *  A document that ALREADY has a chain is never touched — overwriting a
-   *  recorded route with a derived one would destroy the better evidence and
-   *  replace a witnessed chain with a reconstructed one.
-   *
-   *  The bundle is refused WHOLE when any document cannot be derived, on
-   *  release()'s precedent: a register half-reconstructed is a record where the
-   *  reader cannot tell which documents were established and which were skipped.
-   */
-  /* D-563: an internal relabel's fallback — each row value is sent only when the carried `bundle.md` states no such
-     key, so the plane never labels its own write against the document it is carrying. */
-  static #rowUnlessStated(files, row) {
-    const md = files.find((f3) => f3 && f3.path === "bundle.md");
-    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
-    const out = {};
-    for (const [k, v] of Object.entries(row))
-      if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
-    return out;
+  /* REC-63 / DEC-56 / D-204, REC-116: the standing route marker and its reads: provenance's (R22, R23). */
+  provenanceRouteAssess(...a) {
+    return provenanceOf(this.ctx).provenanceRouteAssess(...a);
   }
-  provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
-    const who2 = String(author ?? "").trim();
-    if (!who2)
-      return {
-        ok: false,
-        reason: "NO_AUTHOR",
-        detail: "reconstructing a provenance chain is a named act: the record must show who decided that the evidence supported this route"
-      };
-    if (!bundleId)
-      return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
-    const gate = viewerPredicate2(viewer);
-    const seen = this.#one(
-      `SELECT bundle_id, bundle_sha, object_type, group_id, title, current_state, prior_state,
-              created, last_updated, criticality
-         FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      bundleId,
-      ...gate.args
-    );
-    if (!seen)
-      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId };
-    const img = recordOf(this.ctx).readImage(bundleId) || {};
-    const raw = img["data/provenance.json"];
-    if (typeof raw !== "string")
-      return {
-        ok: false,
-        reason: "NO_REGISTER",
-        detail: "this bundle carries no readable data/provenance.json, so there is no capture record to derive from"
-      };
-    let reg;
-    try {
-      reg = JSON.parse(raw);
-    } catch {
-      return { ok: false, reason: "UNPARSABLE_REGISTER", detail: "data/provenance.json is not valid JSON" };
-    }
-    const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
-    if (!docs)
-      return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
-    const at = stampInstant("second");
-    const instanceName = this.env && this.env.INSTANCE_NAME || "unnamed";
-    const report = [], refused = [];
-    let changed = 0;
-    const next = docs.map((d, i) => {
-      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
-      if (Array.isArray(existing) && existing.length) {
-        report.push({ index: i, file: d.file ?? null, outcome: "already_recorded", hops: existing.length });
-        return d;
-      }
-      const built = _Store.chainFromEvidence(d, { instanceName, at });
-      if (!built.ok) {
-        report.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
-        refused.push(i);
-        return d;
-      }
-      changed++;
-      report.push({
-        index: i,
-        file: (d && d.file) ?? null,
-        outcome: "reconstructed",
-        hops: built.hops.length,
-        who: built.hops.map((h) => h.who)
-      });
-      return { ...d, provenance_chain: built.hops };
-    });
-    if (refused.length)
-      return {
-        ok: false,
-        reason: "EVIDENCE_INSUFFICIENT",
-        bundleId,
-        documents: report,
-        /* REC-63 / D-204: the honest route, named in the refusal that
-           needs it. Until now a bundle whose chain could not be
-           reconstructed had nowhere to go but `retire`, which asserts
-           something quite different — that the document is withdrawn.
-           It has somewhere to go now: the doubt is RECORDED at the state
-           the document already sits in, which is what DEC-56 settles. */
-        route: _Store.routeFinding("information", this.#latestRouteMark(bundleId)),
-        detail: "the capture record does not hold a route for every document in this register, and a chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was written. Stating the route these bytes took would be an invention, which is the one thing this path exists to refuse. What CAN be done is to say so in the record: op=provenanceroute records a standing marker on this document that its route cannot be shown, leaving the document where it is (DEC-56, DEC-19)."
-      };
-    if (!apply || !changed)
-      return {
-        ok: true,
-        bundleId,
-        applied: false,
-        changed,
-        documents: report,
-        /* REC-63: the marker travels with the report too, so an operator
-           deciding whether to rebuild sees whether this document already
-           carries a standing statement that its route cannot be shown. */
-        route: _Store.routeFinding("information", this.#latestRouteMark(bundleId)),
-        detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain"
-      };
-    const text = JSON.stringify({ ...reg, documents: next }, null, 2);
-    const bytes = new TextEncoder().encode(text);
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'data/provenance.json'`,
-      bundleId
-    ))
-      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-    const promoted = this.promote({
-      bundleId,
-      base: seen.bundle_sha,
-      snapKey: `${at.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-      author: who2,
-      files: [{
-        path: "data/provenance.json",
-        text,
-        bytes: bytes.length,
-        sha256: createSha256().update(bytes).hex()
-      }, ...carried],
-      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
-         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
-         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
-         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
-         document's value, which is the value the bundle's own bytes have always carried. */
-      meta: {
-        object_type: seen.object_type,
-        group: seen.group_id,
-        ..._Store.#rowUnlessStated(carried, {
-          title: seen.title,
-          current_state: seen.current_state,
-          prior_state: seen.prior_state ?? null
-        }),
-        created: seen.created,
-        last_updated: seen.last_updated,
-        criticality: seen.criticality ?? null
-      }
-    });
-    if (!promoted.ok) return { ...promoted, bundleId, documents: report };
-    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.sha ?? null };
+  provenanceRoutesMarked(...a) {
+    return provenanceOf(this.ctx).provenanceRoutesMarked(...a);
   }
-  /* ==================================================================== *
-   * REC-63 / DEC-56 / D-204 — THE STANDING MARKER, AND ITS PUBLICATION.
-   *
-   * Bob ruled the principle across DEC-56/57/58 together, 2026-08-06: ACT, AND
-   * SAY WHAT YOU COULD NOT ESTABLISH. Applied to a provenance chain that cannot
-   * be reconstructed it settles a shape rather than a mechanism: NOT a
-   * `verified -> collected` retraction edge, and NOT silence — a standing MARKER
-   * at `verified` stating that the route cannot be shown.
-   *
-   * WHY NOT THE RETRACTION EDGE, so nobody re-opens it here. Retracting a
-   * verification RESTATES A GROUP'S OWN PAST ACT, and this project's posture is
-   * that correction moves FORWARD (DEC-19): a record adds, and every correction
-   * is itself a dated, attributed act. A marker is also what is actually TRUE —
-   * the bytes may be exactly what was captured, and what cannot be shown is the
-   * ROUTE, which is a statement about OUR EVIDENCE rather than about the
-   * document. `STATES.information.edges` is untouched by this item and the suite
-   * pins that it stays untouched.
-   *
-   * ------------------------------------------------------------------------
-   * THE PART THAT IS ACTUALLY HARD, AND IT IS A PUBLICATION QUESTION:
-   * A MARKER NOBODY CAN SEE IS NOT A MARKER.
-   *
-   * REC-74 is running on exactly this failure one field over — a run condition
-   * WRITTEN by one op and PUBLISHED by none, so a condition recorded and never
-   * published is not recorded for anybody who was not there. So the finding is
-   * driven out through the reads a member actually uses:
-   *
-   *   op=list             every row carries `route`. 14 call sites in app.html —
-   *                       the most-used bundle read there is.
-   *   op=audit            a `route` block: the tally over the page, the marked
-   *                       bundles named with their STATE beside the finding, and
-   *                       the standing sentence that says the two disagree ON
-   *                       PURPOSE. `ok`, `clean` and `tally` do not move — a
-   *                       marker is a stated doubt, NOT a conformance error, or
-   *                       a store carrying one could never be "audit clean"
-   *                       again and CLAUDE.md's own ladder would break.
-   *   op=provenanceroute  the act's own answer.
-   *   op=provenancechain  both arms, so the op that MEETS the underivable chain
-   *                       also shows whether the doubt was ever recorded.
-   *
-   * AND THE THING A CONSUMER MUST BE ABLE TO DO: TELL THE TWO ABSENCES APART.
-   * "The route cannot be shown" and "nobody looked" are different facts and they
-   * read alike if the field is simply absent when there is no marker. So `route`
-   * is NEVER ABSENT and never null on these reads, and its `finding` is D-129's
-   * vocabulary taken LIVE from `airun.mjs` rather than a fifth private spelling
-   * of absence:
-   *
-   *   NEVER_LOOKED          no assessment has ever run. NOBODY LOOKED.
-   *   LOOKED_INDETERMINATE  THE MARKER. We looked and the route cannot be shown.
-   *   PRESENT               we looked and every document's route can be shown.
-   *
-   * LOOKED_ABSENT is deliberately unreachable and the reason is doctrinal: it
-   * would assert the bytes have NO route, and every captured byte came from
-   * somewhere. What is absent is our EVIDENCE, which is the LOOKED_INDETERMINATE
-   * case exactly. `partial` is unreachable for the same reason one level up: a
-   * register where three of five documents can be shown is one whose route
-   * CANNOT be shown, and the per-document array says which three.
-   * ==================================================================== */
-  /** The standing sentence that makes the disagreement LEGIBLE rather than
-   *  readable as a bug. Composed once, published by every read that carries a
-   *  marker, because the whole risk of this shape is a member meeting a
-   *  `verified` document with a doubt on it and concluding the record is broken. */
-  static ROUTE_MARK_NOTE = "this document stays where the group put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held \u2014 a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
-  /** The current finding for one bundle, or null when no assessment ever ran.
-   *  Append-only: the highest `seq` is the current one and the ones before it
-   *  stay readable, which is how correction moves forward here. */
-  #latestRouteMark(bundleId) {
-    return this.#one(
-      `SELECT * FROM provenance_route_marks WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`,
-      bundleId
-    ) || null;
-  }
-  /** THE ONE COMPOSITION POINT for what a read publishes, so `op=list`,
-   *  `op=audit` and both provenance ops cannot answer this question in three
-   *  slightly different shapes. A hand copy agrees with its author at zero cost
-   *  and this repository has measured that five times.
-   *
-   *  `applies` is the FOURTH state and it is not a fudge: a route is a fact
-   *  about a CAPTURED document, and a question or a project was written into the
-   *  record rather than fetched from anywhere. Publishing `NEVER_LOOKED` for an
-   *  inquiry would be true and useless — it would say nobody looked for a thing
-   *  there was never anything to look for. Publishing NOTHING would re-create
-   *  the conflation this whole item exists to remove, so it is stated. */
-  static routeFinding(objectType, mark) {
-    if (objectType !== "information")
-      return {
-        applies: false,
-        assessed: false,
-        marked: false,
-        finding: null,
-        means: null,
-        note: "a route is a fact about a captured document, and this bundle is not one"
-      };
-    if (!mark)
-      return {
-        applies: true,
-        assessed: false,
-        marked: false,
-        finding: "NEVER_LOOKED",
-        means: OBSERVATION_STATES.NEVER_LOOKED,
-        note: "no assessment of this document's route has ever been recorded. This is NOT a finding that the route cannot be shown; it is the absence of the question having been asked."
-      };
-    const marked = mark.finding === "LOOKED_INDETERMINATE";
-    return {
-      applies: true,
-      assessed: true,
-      marked,
-      finding: mark.finding,
-      means: OBSERVATION_STATES[mark.finding] ?? null,
-      at: mark.at,
-      by: mark.by,
-      stateAt: mark.state_at,
-      seq: mark.seq,
-      register: mark.register_state,
-      undetermined: mark.undetermined,
-      documents: mark.documents_n,
-      note: marked ? _Store.ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
-    };
-  }
-  /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
-   *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
-   *
-   *  IT RUNS THE SAME DERIVATION `op=provenancechain` RUNS, through the same
-   *  `Store.chainFromEvidence`, and that is the point rather than a convenience:
-   *  the marker must say the route cannot be shown for exactly the registers the
-   *  reconstruction path refuses to invent a chain for, or the two would disagree
-   *  about one fact and a member would have to know which to believe.
-   *
-   *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
-   *  changes — the whole shape of DEC-56(b) is that the document stays where the
-   *  group put it. The suite asserts the bundle_sha and current_state are
-   *  byte-identical across a marking.
-   *
-   *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
-   *  something changed; a second identical row would be the record repeating
-   *  itself rather than saying anything, and it would let a caller grow the log
-   *  without limit. */
-  provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
-    const refusal8 = (code, detail, extra) => {
-      const row = ROUTE_MARK_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const who2 = String(author ?? "").trim();
-    if (!who2)
-      return refusal8(
-        "ROUTE_MARK_NO_AUTHOR",
-        "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement. This refuses an act with NO principal, and deliberately not a machine one \u2014 op=provenancechain draws the same line and no other, and a stricter fence here would be this op ruling on DEC-52's ground as a side effect."
-      );
-    if (!bundleId)
-      return refusal8("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
-    const gate = viewerPredicate2(viewer);
-    const seen = this.#one(
-      `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      bundleId,
-      ...gate.args
-    );
-    if (!seen)
-      return refusal8(
-        "ROUTE_MARK_NO_SUCH_BUNDLE",
-        "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
-        { bundleId }
-      );
-    if (seen.object_type !== "information")
-      return refusal8(
-        "ROUTE_MARK_NOT_A_DOCUMENT",
-        `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
-        { bundleId, objectType: seen.object_type }
-      );
-    const img = recordOf(this.ctx).readImage(bundleId) || {};
-    const raw = img["data/provenance.json"];
-    let registerState = "readable", docs = [];
-    if (typeof raw !== "string") registerState = "absent";
-    else {
-      let reg = null;
-      try {
-        reg = JSON.parse(raw);
-      } catch {
-        reg = void 0;
-      }
-      if (reg === void 0) registerState = "unparsable";
-      else if (!reg || !Array.isArray(reg.documents)) registerState = "no_documents";
-      else if (!reg.documents.length) registerState = "empty";
-      else docs = reg.documents;
-    }
-    const documents = [];
-    let undetermined = 0;
-    for (let i = 0; i < docs.length; i++) {
-      const d = docs[i];
-      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
-      if (Array.isArray(existing) && existing.length) {
-        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "recorded", hops: existing.length });
-        continue;
-      }
-      const built = _Store.chainFromEvidence(d, { instanceName: "unassessed", at: "1970-01-01T00:00:00Z" });
-      if (built.ok) {
-        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "derivable" });
-        continue;
-      }
-      undetermined++;
-      documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
-    }
-    const finding2 = registerState !== "readable" || undetermined > 0 ? "LOOKED_INDETERMINATE" : "PRESENT";
-    const at = stampInstant("second");
-    const docsJson = JSON.stringify(documents);
-    const prev = this.#latestRouteMark(bundleId);
-    const same = prev && prev.finding === finding2 && prev.register_state === registerState && prev.undetermined === undetermined && prev.documents_n === docs.length && prev.documents === docsJson;
-    if (!same) {
-      const seq = (this.#one(
-        `SELECT COALESCE(MAX(seq), 0) AS m FROM provenance_route_marks WHERE bundle_id=?`,
-        bundleId
-      ).m || 0) + 1;
-      this.sql.exec(
-        `INSERT INTO provenance_route_marks
-           (bundle_id, seq, at, by, finding, state_at, register_state, undetermined, documents_n, documents)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        bundleId,
-        seq,
-        at,
-        who2,
-        finding2,
-        seen.current_state,
-        registerState,
-        undetermined,
-        docs.length,
-        docsJson
-      );
-    }
-    return {
-      ok: true,
-      bundleId,
-      appended: !same,
-      route: _Store.routeFinding("information", this.#latestRouteMark(bundleId)),
-      documents,
-      detail: same ? "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself" : finding2 === "LOOKED_INDETERMINATE" ? "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched" : "recorded: every document in this register can show its route"
-    };
-  }
-  /* ===================================================================== *
-   * REC-116 / IC-120 — THE READ THE MARKER NEVER HAD.
-   * ===================================================================== *
-   *
-   * REC-69's DELEGATION of 2026-08-09 asked one question — *which documents in
-   * this instance carry a standing `LOOKED_INDETERMINATE` marker* — and the
-   * INDEX for it landed 2026-08-08, one day before the sweep that would have
-   * caught it. The reader never did. For 39 days `op=provenanceroute` was
-   * `mutating: true`, a WRITE, `query.mjs` named this table ZERO times, and a
-   * group wanting to know where its own record's provenance was doubted had to
-   * page the whole store and count for itself. This is that reader.
-   *
-   * IT ANSWERS THE DELEGATED QUESTION AND NOT A WIDER ONE, AND THAT IS A
-   * DECISION RATHER THAN AN OMISSION. `finding` is NOT a caller parameter: it is
-   * bound from the constant below. A caller-chosen finding would have needed a
-   * refusal for a value outside the stored vocabulary, and therefore a fifth
-   * DEC-49 code minted for a READ — but the stronger reason is the row's own
-   * warning. The cheapest wrong answer here is *an op that returns every
-   * document with any route row at all*: non-empty, plausible, and not the
-   * question. An op that cannot be ASKED for that cannot drift into it.
-   *
-   * ============ WHY THIS IS NOT `WHERE finding = 'LOOKED_INDETERMINATE'` =====
-   *
-   * THE TABLE IS APPEND-ONLY AND CORRECTION MOVES FORWARD (DEC-19, and the
-   * schema comment says so). A document marked at `seq` 1 and re-assessed
-   * showable at `seq` 2 has NO STANDING MARKER — the doubt was raised and then
-   * answered. A bare `finding = ?` returns every document that EVER carried the
-   * marker, which would publish a standing doubt over documents whose route the
-   * record can now show. That is the record claiming more than it can support,
-   * which `CLAUDE.md` ranks worse than a missing feature. So the predicate
-   * carries the same `MAX(seq)` clause `auditPass` and `#latestRouteMark`
-   * already use — three readers, one rule about what "current" means.
-   *
-   * ============ THE TWO FACTS THIS CONSTRUCT EXISTS TO SEPARATE =============
-   *
-   * *The op returned nothing* and *no document carries a marker* are DIFFERENT
-   * FACTS, and an empty list that cannot say which is the unearned absence this
-   * whole design was written against — D-129's vocabulary, `OBSERVATION-LOG-
-   * DESIGN.md` §5.1's three causes, and `Store.routeFinding`'s own NEVER_LOOKED
-   * branch are all the same rule. An empty page therefore always carries a
-   * CAUSE, taken in order, and each one is a different statement about the
-   * world:
-   *
-   *   `no_documents_visible`  this viewer can see no captured document at all,
-   *                           so the question is not askable of them. Covers a
-   *                           DENY stamp and an empty store, and those two are
-   *                           deliberately indistinguishable — REC-25/D-15.
-   *   `never_assessed`        documents exist and NOT ONE has ever been
-   *                           assessed. NEVER_LOOKED, at the level of the whole
-   *                           instance. This is the cause that is NOT "no
-   *                           document carries a marker".
-   *   `none_standing`         assessments exist and every one of them found the
-   *                           route showable. THIS, and only this, is the
-   *                           earned statement that no document carries a
-   *                           marker — earned because somebody looked.
-   *   `page_exhausted`        the caller paged past the last marked document.
-   *                           An artefact of the cursor, not a fact about the
-   *                           record, and saying so stops a reader banking it.
-   *
-   * AND `never_assessed` IS PUBLISHED EVEN WHEN THE PAGE IS FULL, because a
-   * roster of marked documents drawn over a corpus half of which nobody ever
-   * assessed is an answer whose COMPLETENESS is undetermined. `complete` says
-   * which of those two the caller is holding. Sparse is the normal condition at
-   * every level and absence at one level is not evidence of absence at the next.
-   *
-   * ============ THE FENCE =================================================
-   *
-   * A route mark names a DOCUMENT the group holds, so the page is resolved
-   * through the viewer gate and a row naming a bundle this viewer cannot see —
-   * or one that no longer exists — is WITHHELD WHOLE and counted nowhere. That
-   * is REC-103's row-whole withholding at the document level and `op=airuns`'
-   * rule for a collection read: absent, byte-identically to a row that never
-   * existed. Nothing here publishes how many rows were withheld, because that
-   * count is itself the disclosure.
-   *
-   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
-   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
-   * and its own comment says the evidence corpus stays shared), and a route mark
-   * can only ever name an `information` bundle — the write refuses every other
-   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
-   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
-   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
-   * applied anyway rather than reasoned away: the gate is the only place that
-   * rule lives, and an op that skipped it would be correct today and wrong the
-   * day the predicate widens. */
-  provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
-    const gate = viewerPredicate2(viewer);
-    const asked = _Store.ROUTE_MARKED_FINDING;
-    const after0 = String(after ?? "");
-    const want = Number(limit);
-    const n = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), _Store.ROUTE_MARKED_LIMIT_MAX) : _Store.ROUTE_MARKED_LIMIT_DEFAULT;
-    const raw = this.#rows(
-      `SELECT m.* FROM provenance_route_marks m
-        WHERE m.finding = ?
-          AND m.bundle_id > ?
-          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
-        ORDER BY m.bundle_id
-        LIMIT ?`,
-      asked,
-      after0,
-      n + 1
-    );
-    const truncated = raw.length > n;
-    const page = truncated ? raw.slice(0, n) : raw;
-    const seen = /* @__PURE__ */ new Map();
-    if (page.length)
-      for (const b of this.#rows(
-        `SELECT b.bundle_id, b.current_state, b.object_type FROM bundles b
-          WHERE b.bundle_id > ? AND b.bundle_id <= ? AND (${gate.sql})`,
-        after0,
-        page[page.length - 1].bundle_id,
-        ...gate.args
-      ))
-        seen.set(b.bundle_id, b);
-    const documents = [];
-    for (const m of page) {
-      const b = seen.get(m.bundle_id);
-      if (!b) continue;
-      documents.push({
-        bundleId: m.bundle_id,
-        state: b.current_state,
-        ..._Store.routeFinding(b.object_type, m)
-      });
-    }
-    const cursor = truncated && page.length ? page[page.length - 1].bundle_id : null;
-    const standing = {};
-    for (const r of this.#rows(
-      `SELECT m.finding AS f, COUNT(*) AS n FROM provenance_route_marks m
-         JOIN bundles b ON b.bundle_id = m.bundle_id
-        WHERE m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
-          AND b.object_type = 'information'
-          AND (${gate.sql})
-        GROUP BY m.finding`,
-      ...gate.args
-    ))
-      standing[r.f] = r.n;
-    const documentsVisible = this.#one(
-      `SELECT COUNT(*) AS n FROM bundles b WHERE b.object_type = 'information' AND (${gate.sql})`,
-      ...gate.args
-    ).n;
-    const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
-    const marked = standing[asked] || 0;
-    const neverAssessed = Math.max(0, documentsVisible - assessed);
-    let cause = null;
-    if (!documents.length) {
-      cause = documentsVisible === 0 ? "no_documents_visible" : assessed === 0 ? "never_assessed" : marked === 0 ? "none_standing" : "page_exhausted";
-    }
-    return {
-      ok: true,
-      finding: asked,
-      means: OBSERVATION_STATES[asked],
-      documents,
-      returned: documents.length,
-      limit: n,
-      after: after0,
-      cursor,
-      truncated,
-      /* `marked` is the TOTAL standing at this finding, beside a page bounded at
-         `limit` — the two are different numbers and publishing only the page's
-         would be REC-57's defect. */
-      census: {
-        documents_visible: documentsVisible,
-        assessed,
-        never_assessed: neverAssessed,
-        standing,
-        marked
-      },
-      /* WHY THE ANSWER LOOKS THE WAY IT DOES, IN WORDS, ALWAYS. */
-      cause,
-      complete: neverAssessed === 0,
-      says: !documents.length ? _Store.ROUTE_MARKED_CAUSES[cause] : `${marked} document${marked === 1 ? "" : "s"} in this record carry a standing marker saying their route cannot be shown from the evidence held`,
-      completeness: neverAssessed === 0 ? "every captured document this viewer can see has been assessed at least once, so this roster is complete over the corpus" : `${neverAssessed} of ${documentsVisible} captured documents have NEVER been assessed \u2014 NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest`
-    };
-  }
-  /* ================= WHERE THESE CONSTANTS SIT, AND WHY IT IS NOT COSMETIC ===
-     They are declared AFTER the method that uses them rather than before it,
-     which is the opposite of this file's usual habit, so the reason is recorded
-     at the site. THREE SUITES WALK THIS SOURCE BY SEGMENT — `bounds`,
-     `derivation-bounds` and `meaning-bounds` each split `store.mjs` on lines
-     matching a METHOD SIGNATURE and treat everything up to the next signature as
-     one method's body. A `static NAME = value;` line has no parentheses, so it
-     matches no signature and is absorbed into whichever segment PRECEDES it.
-     MEASURED, NOT REASONED: with this block ABOVE the method, bounds.test.mjs
-     read ROUTE_MARKED_LIMIT_MAX and the page statement's bound as belonging to
-     `provenanceRouteAssess` and put op=provenanceroute — a WRITE that applies no
-     bound at all — on the capped-op roster, while `provenanceRoutesMarked`,
-     which really is capped, was INVISIBLE to it. A false positive on one method
-     and a false negative on another, from nothing but declaration order.
-     THE SOURCE IS NOT BEING REWORDED TO FLATTER A DETECTOR, which is REC-57's
-     standing rule for that walk. It is being written so the detector's own
-     premise holds: a class member's constants belong to the member they serve.
-     Moving them here makes BOTH readings true — the write op is uncapped, this
-     read op is capped — and not one of the three suites was touched to get it. */
-  /** The one finding this op asks about. Bound as a PARAMETER rather than
-   *  inlined, so the statement below reads `m.finding = ?` and the planner sees
-   *  the leading-column equality `provenance_route_marks_finding` was declared
-   *  for (M-41, M-49). */
-  static ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
-  static ROUTE_MARKED_LIMIT_DEFAULT = 50;
-  static ROUTE_MARKED_LIMIT_MAX = 200;
-  /** REC-116 / IC-120: which documents in this instance carry a STANDING
-   *  `LOOKED_INDETERMINATE` marker. Bounded, gated, and an empty answer always
-   *  says WHY it is empty. See the block above for every decision in here. */
-  /** The canned sentence per cause, held beside the ladder rather than typed at
-   *  the site, so the four answers cannot drift apart. */
-  static ROUTE_MARKED_CAUSES = {
-    no_documents_visible: "there is no captured document in this record that this viewer may see, so the question cannot be asked of them. This says NOTHING about whether any document carries a marker",
-    never_assessed: "no document in this record has EVER been assessed for its provenance route. This is NEVER_LOOKED \u2014 the absence of the question having been asked \u2014 and it is NOT a finding that every route can be shown. Nobody has looked",
-    none_standing: "documents in this record HAVE been assessed, and every assessment that still stands found the route showable. This is the earned statement that no document carries a marker: somebody looked",
-    page_exhausted: "there are no further marked documents after this cursor. Documents DO carry standing markers in this record \u2014 this page is past the last of them, which is a fact about the cursor and not about the record"
-  };
   /* Every bundle, or a page of them.
    *
    * Measured: 81ms at 5,000 bundles and 434ms at 20,000, which is honestly linear
@@ -55699,7 +60338,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       undetermined: r.route_undetermined,
       documents_n: r.route_documents_n
     };
-    const out = { ...r, route: _Store.routeFinding(r.object_type, mark) };
+    const out = { ...r, route: routeFinding(r.object_type, mark) };
     for (const k of [
       "route_seq",
       "route_at",
@@ -55808,7 +60447,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1;
         continue;
       }
-      const f3 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const f4 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
       const base = {
         bundle: r.id,
         locator: r.locator,
@@ -55817,17 +60456,17 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         kind: drive.kind
       };
       let reg = null;
-      if (f3 && typeof f3.content === "string") {
+      if (f4 && typeof f4.content === "string") {
         try {
-          reg = JSON.parse(f3.content);
+          reg = JSON.parse(f4.content);
         } catch {
           reg = null;
         }
-      } else if (f3) {
+      } else if (f4) {
         unreadable.push({ ...base, reason: "the register is not held inline" });
         continue;
       }
-      if (f3 && !reg) {
+      if (f4 && !reg) {
         unreadable.push({ ...base, reason: "the register is not parsable JSON" });
         continue;
       }
@@ -56343,7 +60982,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
       };
       const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-      const nextMd = files.find((f3) => f3 && f3.path === "bundle.md");
+      const nextMd = files.find((f4) => f4 && f4.path === "bundle.md");
       const was = surfacedOf(heldMd ? heldMd.content : null);
       const now = surfacedOf(nextMd ? nextMd.text : null);
       const refusal8 = (code, detail, extra) => {
@@ -56366,7 +61005,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         return JSON.stringify([l, fm.governing_laws_by ?? null, fm.governing_laws_at ?? null]);
       };
       const heldLaws = cur ? this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId) : null;
-      const nextLaws = files.find((f3) => f3 && f3.path === "bundle.md");
+      const nextLaws = files.find((f4) => f4 && f4.path === "bundle.md");
       const was = cur ? lawsOf(heldLaws ? heldLaws.content : null) : JSON.stringify([null, null, null]);
       const now = lawsOf(nextLaws ? nextLaws.text : null);
       if (was !== now)
@@ -56377,16 +61016,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           detail: `${cur ? "this revision of" : "this creation of"} ${bundleId} sets or changes its governing laws without op=actionlaws. The laws that govern a request are a member's authored statement, set by that act and carried forward unchanged by every other write. Nothing was written.`
         };
     }
-    const testimony = pkg[TESTIMONY_PATH] || null;
-    const fenced = this.#testimonyFence(
-      bundleId,
-      files,
-      register2,
-      testimony,
-      { identity: pkg.actorIdentity ?? null, viewer: pkg.actorViewer ?? null }
-    );
-    if (fenced) return fenced;
-    const gj = pkg.replay ? null : files.find((f3) => f3.path === "data/gathering.json");
+    const extentBad = pkg[TESTIMONY_PATH] ? checkContentExtent({ kind: "document" }, this.contentContextFor(pkg[TESTIMONY_PATH].captureSha)) : null;
+    if (extentBad) return extentBad;
+    const gj = pkg.replay ? null : files.find((f4) => f4.path === "data/gathering.json");
     if (gj && typeof gj.text === "string") {
       const gf = [];
       checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf);
@@ -56398,7 +61030,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           findings: errs.map((x) => ({ check: x.check, detail: x.message }))
         };
     }
-    const basisMd = files.find((f3) => f3.path === "bundle.md");
+    const basisMd = files.find((f4) => f4.path === "bundle.md");
     const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
     const basisFm = isInquiry ? docFmW : null;
@@ -56790,7 +61422,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       bundleId
     )].map((r) => r.target_id);
     this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-    const md = files.find((f3) => f3.path === "bundle.md");
+    const md = files.find((f4) => f4.path === "bundle.md");
     const fmRefs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references ?? [] : [];
     for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
       if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
@@ -57126,33 +61758,11 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          empty string" are the same fact and the column states it once. */
       basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null
     );
-    for (const c2 of register2) {
-      const own2 = testimony && testimony.captureSha === c2.sha256;
-      this.sql.exec(
-        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
-           VALUES (?,?,?,?,?,?,?,?,?)
-           ON CONFLICT(capture_sha) DO UPDATE SET
-             bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
-             bytes=excluded.bytes, registered=excluded.registered,
-             authored=MAX(register.authored, excluded.authored),
-             author=COALESCE(excluded.author, register.author),
-             observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
-        c2.sha256,
-        bundleId,
-        c2.path,
-        c2.encoding ?? "utf8",
-        c2.bytes,
-        (/* @__PURE__ */ new Date()).toISOString(),
-        own2 ? 1 : 0,
-        own2 ? testimony.author : null,
-        own2 ? testimony.observedAt : null
-      );
-    }
-    const bundleMd = files.find((f3) => f3.path === "bundle.md");
+    const bundleMd = files.find((f4) => f4.path === "bundle.md");
     this.#writeProjection(bundleId, bundleMd?.text ?? null);
     this.#writeText(bundleId, files);
     this.#writeReadings(bundleId, files, author);
-    const testimonyWrote = testimony ? testimony.within(bundleId) : null;
+    const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
     let surfacedIn = null;
     if (!cur && surfacing) {
       const ts = (/* @__PURE__ */ new Date()).toISOString();
@@ -57265,7 +61875,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
      stale references behind. Every reference is stored AS IT APPEARS — the raw
      kind:key — and is NEVER resolved to a canonical entity (Step 4 / D-83). */
   #writeReadings(bundleId, files, author = null) {
-    const prov = files.find((f3) => f3.path === "data/provenance.json");
+    const prov = files.find((f4) => f4.path === "data/provenance.json");
     if (!prov || typeof prov.text !== "string") return;
     let docs;
     try {
@@ -57287,7 +61897,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   #heldByReextraction(sha, reading) {
     if (reading && reading.reextracted) return false;
     const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
-    const prior = row ? safeJson(row.reading) : null;
+    const prior = row ? safeJson2(row.reading) : null;
     return !!(prior && prior.reextracted && typeof prior.at === "string" && typeof reading.at === "string" && prior.at === reading.at);
   }
   /* CPDF-19: THE PER-CAPTURE BODY OF `#writeReadings`, MOVED VERBATIM into its
@@ -57416,12 +62026,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
     const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
     if (!row || !this.#viewerSees(row.bundle_id, viewer)) return { held: false };
-    const f3 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
-    const docs = (safeJson(f3 && f3.content) || {}).documents;
+    const f4 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
+    const docs = (safeJson2(f4 && f4.content) || {}).documents;
     const doc = Array.isArray(docs) ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
     return {
       held: true,
-      reading: safeJson(row.reading) || {},
+      reading: safeJson2(row.reading) || {},
       locator: doc && typeof doc.locator === "string" ? doc.locator : null
     };
   }
@@ -57498,7 +62108,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (!last) {
       const prior = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
       if (prior) {
-        const pr = safeJson(prior.reading);
+        const pr = safeJson2(prior.reading);
         const pp = provOf(pr);
         const pd = sha256HexSync(prior.reading);
         this.sql.exec(
@@ -57518,7 +62128,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     }
     if (last && last.reading_sha256 === digest) return { seq: last.seq, added: false, compared: null };
     const np = provOf(reading);
-    const compared = last ? compareProvenance(safeJson(last.provenance), np) : null;
+    const compared = last ? compareProvenance(safeJson2(last.provenance), np) : null;
     const seq = last ? last.seq + 1 : 1;
     this.sql.exec(
       `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
@@ -57552,7 +62162,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       limit: cap,
       truncated: page.length > cap,
       readings: page.slice(0, cap).map((r) => {
-        const prov = safeJson(r.provenance);
+        const prov = safeJson2(r.provenance);
         return {
           seq: r.seq,
           kept_at: r.kept_at,
@@ -57562,7 +62172,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             state: "undetermined",
             why: "this reading carries no reading provenance (it was written before D-536, or by a caller that did not carry it), so the tier, the member and the text it classified are UNDETERMINED and are not inferred"
           },
-          compared: safeJson(r.compared)
+          compared: safeJson2(r.compared)
         };
       })
     };
@@ -57875,7 +62485,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         reason: "NO_READING",
         detail: `nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says`
       };
-    const chain2 = (safeJson(row.reading) || {}).text_source ?? null;
+    const chain2 = (safeJson2(row.reading) || {}).text_source ?? null;
     const e = att.extent;
     return this.ctx.storage.transactionSync(() => {
       this.sql.exec(
@@ -57910,7 +62520,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "attestations are read by a capture sha256" };
     const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    const chain2 = row ? (safeJson(row.reading) || {}).text_source ?? null : null;
+    const chain2 = row ? (safeJson2(row.reading) || {}).text_source ?? null : null;
     const live = chain2 == null ? null : JSON.stringify(chain2);
     const keep = this.#bundleRedactor(viewer);
     const cap = Math.max(1, Math.min(
@@ -57929,7 +62539,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         kind: "pdf-page",
         ref: `p${a.extent_page}`,
         page: a.extent_page,
-        rect: safeJson(a.extent_rect)
+        rect: safeJson2(a.extent_rect)
       } };
       return {
         bundle_id: keep(a.bundle_id),
@@ -57941,7 +62551,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            staleness -- it is an unrecorded chain, and saying "stale" there
            would be inventing a comparison nobody made. */
         stale: a.chain != null && live != null && a.chain !== live,
-        chain_at_attestation: safeJson(a.chain)
+        chain_at_attestation: safeJson2(a.chain)
       };
     });
     const ceiling = gradeCeiling(
@@ -58032,15 +62642,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       );
       return held ? held.capture_sha : null;
     }
-    const row = this.#one(
-      `SELECT capture_sha, at FROM (
-         SELECT capture_sha, registered AS at FROM register WHERE bundle_id=?
-         UNION ALL
-         SELECT capture_sha, at AS at FROM readings WHERE bundle_id=?)
-       ORDER BY at IS NULL, at, capture_sha LIMIT 1`,
-      bundleId,
-      bundleId
-    );
+    const row = provenanceOf(this.ctx).capturesOf(bundleId)[0] || this.#one(`SELECT capture_sha FROM readings WHERE bundle_id=? ORDER BY at IS NULL, at, capture_sha LIMIT 1`, bundleId);
     return row ? row.capture_sha : null;
   }
   /** THE PERSISTED READING for a capture, parsed, or null.
@@ -58057,7 +62659,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   #persistedReading(captureSha) {
     const row = this.#one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
     return {
-      reading: row ? safeJson(row.reading) || null : null,
+      reading: row ? safeJson2(row.reading) || null : null,
       captureFormat: row && typeof row.capture_format === "string" ? row.capture_format : null,
       held: !!row
     };
@@ -58730,97 +63332,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.#transcriptionsOver([contentId])
     );
   }
-  /* ==================================================================== *
-   * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE.
-   *
-   * `MEMBER-KNOWLEDGE-DESIGN.md` §2, read at the artifact before this was built
-   * (§8's condition): *an observation is an authored INFORMATION bundle whose
-   * bytes are exactly the member's words, registered like any capture, so that it
-   * IS content in the record's one sense of the word … and every reader already
-   * built works on it unchanged.* Bob's ruling it serves (§1, quoted there): *a
-   * member's own eyewitness knowledge can be evidence — though it stands on the
-   * trust held by that member.*
-   *
-   * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
-   * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
-   * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
-   * actor class `member` and `authored: true`, and a register row over the
-   * words' bytes. In the SAME transaction: one passage-index unit over the whole
-   * words (so `passage:` search finds them) and one `document` content row
-   * (so a leg can cite them by `content_id` exactly as it cites any row).
-   *
-   * WHAT KEEPS IT HONEST, and it is the half that matters (§2): a capture of a
-   * publisher's document and a member's authored statement are different acts
-   * and the register must never let one pass for the other.
-   *   - the `authored` flag is settable ONLY here — `TESTIMONY_PATH` is a Symbol,
-   *     which no JSON body can carry — and `#testimonyFence` refuses it at
-   *     `promote` on anything this method did not write (C-53.8);
-   *   - the author is STAMPED by the control plane from the session; a caller
-   *     naming one is refused (C-53.2), and a machine is refused (C-53.1);
-   *   - two dates, kept apart: `observed_at` is the member's statement,
-   *     `recorded_at` is this record's own clock and is not taken from the caller;
-   *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
-   *     or cleans them. An edit is a new observation, never a rewrite.
-   *
-   * HOW IT READS ON THE THREE AXES (MK-2 built the third, §3): the TESTIMONY
-   * axis earns TESTIMONY_GRADE — `earnedBasisRegistry`'s `testimony` map, from
-   * the register's `authored` flag and from nothing else; the CAPTURE axis earns
-   * NO letter for an authored capture — undetermined and stated
-   * (`CAPTURE_AXIS_AUTHORED`) — because the axis measures the act of reading a
-   * document in, which did not happen; the CONNECTION axis earns nothing, since
-   * no reader ran over the words and nothing resolved them. A leg citing an
-   * observation is graded on the testimony axis or not at all (checkTestimonyLeg).
-   * ==================================================================== */
-  /** One passage: the same per-unit cap the content-grain text index stores a
-   *  unit to, for `TRANSCRIPTION_MAX_BYTES`'s reason — REFUSED over it, never
-   *  cut, because words silently truncated are words the member did not write. */
-  static TESTIMONY_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
-  /** THE CANONICAL AUTHORED BYTES — PERMANENT ONCE ON MAIN, so stated exactly.
-   *
-   *  Ruled by BOB #14, 2026-09-18 (MK-1 design gap 1): identical words from two
-   *  members are two testimonies, and the register is keyed by the bytes' sha,
-   *  so the bytes carry a header that makes them unique per testimony. The
-   *  format, byte for byte, UTF-8:
-   *
-   *      bio-testimony/1\n
-   *      id: <the testimony's own bundle id>\n
-   *      observed_at: <the member's observedAt, exactly as accepted>\n
-   *      \n
-   *      <the member's words, exactly as written — nothing added after them>
-   *
-   *  Three header lines in THIS order, each `key: value` with one space, LF line
-   *  ends, then ONE empty line; the words begin at the first byte after the first
-   *  "\n\n" and run to the end of the file. `bio-testimony/1` names the format so
-   *  a later one is a new version line, never a silent change. Both values are
-   *  single-line by construction (`id` is canonical, `observed_at` is validated
-   *  to a date or instant), so the header cannot be forged from inside the words.
-   *
-   *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
-   *  and what a published case shows of them is the attribution level's to
-   *  govern (§4), and bytes are what verification publishes. The author is in
-   *  the REGISTER alone (`register.author`, written only under TESTIMONY_PATH);
-   *  every other file of the bundle names them by `Store.observerRef` (§4.1). */
-  static TESTIMONY_FORMAT = "bio-testimony/1";
-  static testimonyBytes({ id, observedAt, words }) {
-    return `${_Store.TESTIMONY_FORMAT}
-id: ${id}
-observed_at: ${observedAt}
-
-${words}`;
+  /* MK-1 / D-184 / IC-133 / IC-134: the authored bundle, its bytes and its observer reference: provenance's (R28). */
+  static TESTIMONY_MAX_BYTES = TESTIMONY_MAX_BYTES;
+  static TESTIMONY_FORMAT = TESTIMONY_FORMAT;
+  static testimonyBytes(...a) {
+    return testimonyBytes(...a);
   }
-  /** MK-6 — THE BUNDLE NEVER NAMES ITS AUTHOR (MEMBER-KNOWLEDGE-DESIGN.md §4.1,
-   *  BOB #19, 2026-09-21). §2 kept the author out of the testimony BYTES; §4.1
-   *  extends the rule to EVERY file of an authored bundle, because a ratified
-   *  bundle's files are exactly what the published bucket receives. Wherever a
-   *  file records who authored it (the Session Log, `data/provenance.json`'s
-   *  `author` and its chain's `who`), it writes this OPAQUE, PER-OBSERVATION
-   *  reference instead of the member. One reference per testimony, so two
-   *  observations by one member are unlinkable by construction. Only the
-   *  register's `author` column resolves it, privately. The bundle is therefore
-   *  the same bytes at every attribution level, and the level lives outside it
-   *  (§4.3). */
-  static observerRef(testimonyId) {
-    return `observer:${testimonyId}`;
+  static observerRef(...a) {
+    return observerRef(...a);
   }
   /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
    *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
@@ -59167,399 +63686,50 @@ ${words}`;
       stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; its owner signs the new bytes. A later edition inherits this choice until you change it.`
     };
   }
-  /** When the member says they observed it: a calendar date or a UTC instant,
-   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null.
-   *  REQUIRED, and that STANDS by BOB #14's ruling of 2026-09-18: the record does
-   *  not date a member's observation for them. */
-  static #observedMs(v) {
-    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
-    if (!m) return null;
-    const ms = Date.parse(m[4] === void 0 ? `${v}T00:00:00Z` : v);
-    if (!Number.isFinite(ms)) return null;
-    const back = new Date(ms).toISOString();
-    if (back.slice(0, 10) !== v.slice(0, 10)) return null;
-    return ms;
+  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION: provenance's (R28), with the authored flag's fence. */
+  testify(...a) {
+    return provenanceOf(this.ctx).testify(...a);
   }
-  /** THE AUTHORED FLAG'S FENCE, run by `promote` before its first write.
-   *
-   *  THREE REFUSALS, and each is a way the register could let a member's word
-   *  pass for a captured document or the other way round (§7):
-   *   (1) a document claiming `authored` that this record did not author through
-   *       the testimony path — including a register entry that would re-file an
-   *       authored capture's bytes under a DIFFERENT bundle (C-53.8, THE LIAR);
-   *   (2) an authored document whose origin or actor class is not `member`
-   *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
-   *   (3) an authored document that stops saying `authored: true`, or whose
-   *       provenance document is gone from the revision (C-53.9).
-   *  AND ONE MORE, ASKED OF EVERY CAPTURE (D-179, C-53.13): a register entry
-   *  whose bytes another EXISTING bundle already holds — one capture, one home.
-   *
-   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
-   *  there is no replay exemption here, so a migration carrying an authored
-   *  bundle must re-author it through `testify`, never promote it verbatim.
-   *
-   *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
-   *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
-   *  here a caller cannot have produced; the document's `authored` field is the
-   *  CLAIM being judged against it. ONE read, whatever the package holds: the
-   *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
-  #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
-    const refusal8 = (code, detail, extra) => {
-      const row = TESTIMONY_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const prov = Array.isArray(files) ? files.find((f3) => f3 && f3.path === "data/provenance.json") : null;
-    let docs = [], unreadable = false;
-    if (prov) {
-      const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
-      if (j === null) unreadable = true;
-      else docs = Array.isArray(j.documents) ? j.documents : [];
-    }
-    const shaOf = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
-    const regs = Array.isArray(register2) ? register2.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf).filter(Boolean), ...regs.map((c) => c.sha256)])];
-    const held = this.#rows(
-      `SELECT capture_sha, bundle_id FROM register
-        WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
-        LIMIT ?`,
-      bundleId,
-      JSON.stringify(asked),
-      asked.length + 1
+  // MK-1 / D-184: the testimony path's later work, inside the promotion's transaction, read from the payload under
+  // provenance's TESTIMONY_PATH until `extraction`, `content` and `observation-log` register it as their projections
+  // (K31). ONE unit over the whole words, at the `document` extent: the content row is minted at that same extent
+  // under that same (null) chain, so a `passage:` hit and a citation address one passage under one id. The index
+  // observation reads PRESENT because it is: the words are the whole document. No READING is written, because no
+  // reader ran over the words. The extraction look is not a formality: without it `op=contentaxis` finds no
+  // `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the words ARE the text. It
+  // throws to roll the whole promotion back rather than return a half.
+  #testimonyWithin(bid, pkg) {
+    const indexed = this.#writeCaptureText(
+      bid,
+      pkg[TESTIMONY_PATH].captureSha,
+      [{ extent: { kind: "document" }, text: pkg[TESTIMONY_PATH].words, seq: 0 }],
+      null
     );
-    const here = new Set(held.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
-    const elsewhere = new Set(held.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
-    const own2 = (s) => !!(testimony && testimony.captureSha === s && !elsewhere.has(s));
-    for (const c of regs)
-      if (elsewhere.has(c.sha256))
-        return refusal8(
-          "TESTIMONY_AUTHORED_UNEARNED",
-          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER bundle's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
-          { bundleId, capture_sha: c.sha256 }
-        );
-    for (let i = 0; i < docs.length; i++) {
-      const d = docs[i];
-      if (!d || typeof d !== "object") continue;
-      const s = shaOf(d);
-      const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
-      const authored = s != null && (here.has(s) || own2(s));
-      if (claims && !authored)
-        return refusal8(
-          "TESTIMONY_AUTHORED_UNEARNED",
-          `data/provenance.json documents[${i}] claims authored: ${JSON.stringify(d.authored).slice(0, 40)}, and ${s ? `capture ${s.slice(0, 16)}\u2026 was not authored through op=testify` : `names no capture at all`}. Only the testimony act marks a document as a member's own observation`,
-          { bundleId, index: i }
-        );
-      if (!authored) continue;
-      if (d.authored !== true)
-        return refusal8(
-          "TESTIMONY_AUTHORED_DROPPED",
-          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and this revision sets authored to ${JSON.stringify(d.authored ?? null).slice(0, 40)}`,
-          { bundleId, index: i }
-        );
-      const origin = d.origin && typeof d.origin === "object" ? d.origin.kind : void 0;
-      const actor = d.capture.actor_class;
-      if (origin !== "member" || actor !== "member")
-        return refusal8(
-          "TESTIMONY_ORIGIN_NOT_MEMBER",
-          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and claims origin '${String(origin).slice(0, 40)}', actor class '${String(actor).slice(0, 40)}' \u2014 both must be 'member'`,
-          { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
-        );
-    }
-    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf).filter(Boolean));
-    for (const s of here)
-      if (!stated.has(s))
-        return refusal8(
-          "TESTIMONY_AUTHORED_DROPPED",
-          unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
-          { bundleId, capture_sha: s }
-        );
-    const shas = [...new Set(regs.map((c) => c.sha256))];
-    const homes = shas.length ? this.#rows(
-      `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,
-      bundleId,
-      JSON.stringify(shas),
-      shas.length
-    ) : [];
-    if (homes.length) {
-      const h = homes[0];
-      const caller = viewing.identity != null || viewing.viewer != null;
-      const named = !caller || this.#inSight(h.bundle_id, viewing.viewer ?? null);
-      return refusal8(
-        "CAPTURE_HELD_BY_ANOTHER_BUNDLE",
-        `this promotion registers capture ${h.capture_sha.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered under ${named ? h.bundle_id : "another bundle"}. One capture has one home, the original's; registering it here would move that bundle's register row`,
-        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null }
-      );
-    }
-    return null;
-  }
-  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
-  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
-    const refusal8 = (code, detail, extra) => {
-      const row = TESTIMONY_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const who2 = typeof author === "string" ? author.trim() : "";
-    if (!who2 || isMachineIdentity(who2))
-      return refusal8(
-        "TESTIMONY_NOT_A_MEMBER",
-        who2 ? `'${who2.slice(0, 60)}' is a machine credential. A firsthand observation is a person's word about what they saw, and it stands on that person's trust` : `this call carries nobody. The plane stamps the author from the credential that asked, so an empty one means the act arrived by a route that does not attribute it`
-      );
-    if (claimedAuthor !== null && claimedAuthor !== void 0)
-      return refusal8(
-        "TESTIMONY_AUTHOR_SUPPLIED",
-        `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
-      );
-    const text = typeof words === "string" ? words : "";
-    const bytes = new TextEncoder().encode(text);
-    const recorded = stampInstant("second");
-    const obs = typeof observedAt === "string" ? observedAt.trim() : "";
-    const obsMs = _Store.#observedMs(obs);
-    if (!text.trim())
-      return refusal8(
-        "TESTIMONY_NO_WORDS",
-        `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
-      );
-    if (bytes.length > _Store.TESTIMONY_MAX_BYTES)
-      return refusal8(
-        "TESTIMONY_WORDS_TOO_LONG",
-        `${bytes.length} B written, over the ${_Store.TESTIMONY_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: words silently truncated would be words the member did not write, standing in their name`,
-        { bytes: bytes.length, limit: _Store.TESTIMONY_MAX_BYTES }
-      );
-    if (obsMs == null || obsMs > Date.parse(recorded))
-      return refusal8(
-        "TESTIMONY_OBSERVED_AT_INVALID",
-        obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
-        { observed_at: obs || null }
-      );
-    const group = this.#producingGroup();
-    if (!group)
-      return this.#groupUndetermined(
-        "testify",
-        "a firsthand observation is a document the record writes itself, and it must name the group that produced it; this store records none, so the observation was not written. Nothing was spent."
-      );
-    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
-    const id = `${recordOf(this.ctx).allocId("INFO", recorded.slice(0, 4)).id}-observation`;
-    const fileText = _Store.testimonyBytes({ id, observedAt: obs, words: text });
-    const fileBytes = new TextEncoder().encode(fileText);
-    const sha = createSha256().update(fileBytes).hex();
-    if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
-      return refusal8(
-        "TESTIMONY_WORDS_REGISTERED",
-        `the canonical bytes of ${id} (${sha.slice(0, 16)}\u2026) are already registered in this record`
-      );
-    const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
-    const locator = "a member's firsthand observation, authored in this record";
-    const observer = _Store.observerRef(id);
-    const md = [
-      "---",
-      `id: ${id}`,
-      "object_type: information",
-      "schema: information@1",
-      `title: ${JSON.stringify(heading)}`,
-      "current_state: collected",
-      "prior_state: null",
-      `created: "${recorded}"`,
-      `last_updated: "${recorded}"`,
-      "produced_by:",
-      "  mode: human",
-      "  capability_tier: session",
-      `group: ${group}`,
-      "references: []",
-      "state_history: []",
-      "annotations_open: 0",
-      "reeval_pending:",
-      "  flag: false",
-      "  since: null",
-      "  source: null",
-      "visuals: []",
-      "criticality: supporting",
-      "source_status: unchanged",
-      "source:",
-      `  locator: ${JSON.stringify(locator)}`,
-      "  authority: the observing member",
-      `  retrieved: ${recorded}`,
-      "monitoring:",
-      "  enabled: false",
-      "  frequency: none",
-      "---",
-      "",
-      "## Summary",
-      "",
-      `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.`,
-      "",
-      "## Provenance Notes",
-      "",
-      `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is stamped by the plane from the signed-in session. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
-      "",
-      "## Session Log",
-      "",
-      `### Session ${recorded} | Authored | ${observer}`,
-      "Trigger: testify",
-      "Changes: created as a member's authored observation.",
-      "",
-      "## Review Notes",
-      ""
-    ].join("\n");
-    const doc = {
-      file,
-      locator,
-      retrieved: recorded,
-      /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
-         only because this method wrote it (the fence reads the register's flag,
-         not this field); the author is the STAMP, recorded in the register and
-         named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
-      authored: true,
-      author: observer,
-      observed_at: obs,
-      recorded_at: recorded,
-      authority: "the observing member",
-      authority_state: "determined",
-      authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
-      provenance_chain: [{
-        who: observer,
-        asserts: `these are my own words, as written, about what I observed at ${obs}`,
-        evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
-        bound: false
-      }],
-      capture: {
-        method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, hashed at receipt",
-        /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
-           arm): the capture axis measures reading a document in, and nothing was
-           read in. */
-        actor_class: "member",
-        sha256: sha,
-        encoding: "utf8",
-        bytes: fileBytes.length,
-        content_type: "text/plain; charset=utf-8"
-      },
-      origin: { kind: "member" },
-      attestation_attempts: []
-    };
-    const provText = JSON.stringify({ documents: [doc] }, null, 2);
-    const enc2 = (t) => {
-      const b = new TextEncoder().encode(t);
-      return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
-    };
-    const unit = [{ extent: { kind: "document" }, text, seq: 0 }];
-    const extentBad = checkContentExtent({ kind: "document" }, this.contentContextFor(sha));
-    if (extentBad) return extentBad;
-    const promoted = this.promote({
-      bundleId: id,
-      base: null,
-      snapKey: `${recorded.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-      author: who2,
-      files: [
-        { path: "bundle.md", ...enc2(md) },
-        { path: "data/provenance.json", ...enc2(provText) },
-        { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }
-      ],
-      meta: {
-        object_type: "information",
-        title: heading,
-        current_state: "collected",
-        prior_state: null,
-        created: recorded,
-        last_updated: recorded,
-        criticality: "supporting"
-      },
-      register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
-      [TESTIMONY_PATH]: {
-        captureSha: sha,
-        author: who2,
-        observedAt: obs,
-        /* Inside promote's transaction. ONE unit over the whole words, at the
-           `document` extent — the content row below is minted at that same
-           extent under that same (null) chain, so a `passage:` hit and a
-           citation address one passage under one id. The index observation
-           reads PRESENT because it is: the words are the whole document. No
-           READING is written, because no reader ran over the words — a
-           meaning-level row saying one looked would be a look nobody took. */
-        within: (bid) => {
-          const indexed = this.#writeCaptureText(bid, sha, unit, null);
-          this.#observeIndexed(bid, sha, indexed, { author: who2, hadText: true, unitArm: true });
-          const m = this.mintContent({
-            bundleId: bid,
-            captureSha: sha,
-            extent: { kind: "document" },
-            mintedBy: who2,
-            at: recorded
-          });
-          if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
-          const bad = this.#observe({
-            actorClass: "member",
-            actor: who2,
-            authorityKind: "extract",
-            authority: bid,
-            level: "content",
-            subjectKind: "capture",
-            subject: sha,
-            state: "PRESENT",
-            condition: null,
-            resultKind: "content",
-            resultRef: m.content_id,
-            detail: "first extraction; a member's authored observation \u2014 its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them"
-          });
-          if (bad) throw new Error(`MK-1: the observation's extraction row was refused: ${JSON.stringify(bad).slice(0, 200)}`);
-          return { content_id: m.content_id, indexed: indexed.written };
-        }
-      }
+    this.#observeIndexed(bid, pkg[TESTIMONY_PATH].captureSha, indexed, { author: pkg[TESTIMONY_PATH].author, hadText: true, unitArm: true });
+    const m = this.mintContent({
+      bundleId: bid,
+      captureSha: pkg[TESTIMONY_PATH].captureSha,
+      extent: { kind: "document" },
+      mintedBy: pkg[TESTIMONY_PATH].author,
+      at: pkg[TESTIMONY_PATH].recordedAt
     });
-    if (!promoted.ok) return promoted;
-    return {
-      ok: true,
-      bundle_id: id,
-      bundle_sha: promoted.bundleSha ?? null,
-      capture_sha: sha,
-      file,
-      bytes: fileBytes.length,
-      words_bytes: bytes.length,
-      content_id: promoted.testimony ? promoted.testimony.content_id : null,
-      authored: true,
-      origin: "member",
-      actor_class: "member",
-      author: who2,
-      observed_at: obs,
-      recorded_at: recorded,
-      axes: {
-        capture: {
-          grade: null,
-          determined: false,
-          undetermined_because: "CAPTURE_AXIS_AUTHORED",
-          why: "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here"
-        },
-        connection: {
-          grade: null,
-          determined: false,
-          why: "no reader ran over these words and nothing resolved them to a subject"
-        },
-        /* MK-2 / IC-142: CARRIED. It read `grade: null` and "this build does not
-           yet carry that axis (MK-2)" until the axis landed; the letter is the
-           registry's own constant, so this answer and a leg's refusal cannot
-           name different letters. */
-        testimony: {
-          grade: TESTIMONY_GRADE,
-          determined: true,
-          why: `an observation is graded as testimony, ${TESTIMONY_GRADE}, on the observing member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3). A leg citing it carries grade_axis: testimony, grade: ${TESTIMONY_GRADE}, grade_source: testimony, and nothing raises it \u2014 another member agreeing is a co-signature, not a second observation`
-        }
-      },
-      says: `${who2} recorded a firsthand observation, observed ${obs}. The words are held exactly as written and are the document; they stand on ${who2}'s trust. This record takes the author from the signed-in account and never from the request.`
-    };
+    if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
+    const bad = this.#observe({
+      actorClass: "member",
+      actor: pkg[TESTIMONY_PATH].author,
+      authorityKind: "extract",
+      authority: bid,
+      level: "content",
+      subjectKind: "capture",
+      subject: pkg[TESTIMONY_PATH].captureSha,
+      state: "PRESENT",
+      condition: null,
+      resultKind: "content",
+      resultRef: m.content_id,
+      detail: "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them"
+    });
+    if (bad) throw new Error(`MK-1: the observation's extraction row was refused: ${JSON.stringify(bad).slice(0, 200)}`);
+    return { content_id: m.content_id, indexed: indexed.written };
   }
   /** THE BOUND ON ONE TYPING: the per-unit cap the content-grain text index
    *  already stores one passage to (`CAPTURE_TEXT_UNIT_CAP`, M-20's figure).
@@ -59745,7 +63915,7 @@ ${words}`;
     if (!src.ok) return src;
     const { t } = src;
     const row = this.#one(`SELECT extent_kind, extent FROM content WHERE content_id=?`, t.content_id);
-    const scope = row ? _Store.#transcriptionAttestExtent(row.extent_kind, safeJson(row.extent)) : null;
+    const scope = row ? _Store.#transcriptionAttestExtent(row.extent_kind, safeJson2(row.extent)) : null;
     const att = { member: attestor, at: typeof at === "string" && at.trim() ? at.trim() : (/* @__PURE__ */ new Date()).toISOString(), extent: scope };
     const bad = checkAttestation(att);
     if (bad) return bad;
@@ -60666,7 +64836,7 @@ ${words}`;
         check: row.check,
         translation: row.translation,
         space: sp,
-        forms: ID_SPACES[sp].forms.map((f3) => f3.form),
+        forms: ID_SPACES[sp].forms.map((f4) => f4.form),
         detail: `${!ra ? "a" : "b"} has the shape of no form of the ${ID_SPACES[sp].label}`
       };
     }
@@ -61130,8 +65300,8 @@ ${words}`;
       basis: {
         fn: x.fn,
         version: x.fn_version,
-        chain: safeJson(x.chain),
-        says: describeChain(safeJson(x.chain))
+        chain: safeJson2(x.chain),
+        says: describeChain(safeJson2(x.chain))
       },
       cap: x.cap,
       earned: x.earned,
@@ -61286,7 +65456,7 @@ ${words}`;
       r.stale = !!row.stale;
       r.minted_by = row.minted_by;
       r.mint = _Store.#mintLabel(row.minted_by);
-      const ext = { kind: row.extent_kind, ...safeJson(row.extent) || {} };
+      const ext = { kind: row.extent_kind, ...safeJson2(row.extent) || {} };
       r.says = row.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent(ext)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent(ext)}, as this record holds it`;
     }
   }
@@ -61384,12 +65554,12 @@ ${words}`;
     if (!r) return null;
     return {
       ...r,
-      extent: safeJson(r.extent),
-      chain: safeJson(r.chain),
+      extent: safeJson2(r.extent),
+      chain: safeJson2(r.chain),
       stale: !!r.stale,
       resolves: true,
       mint: _Store.#mintLabel(r.minted_by),
-      says: r.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })}, as this record holds it`
+      says: r.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent({ kind: r.extent_kind, ...safeJson2(r.extent) || {} })} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent({ kind: r.extent_kind, ...safeJson2(r.extent) || {} })}, as this record holds it`
     };
   }
   /* ====================================================================== *
@@ -61488,7 +65658,7 @@ ${words}`;
       kind: "pdf-page",
       ref: `p${a.extent_page}`,
       page: a.extent_page,
-      rect: safeJson(a.extent_rect)
+      rect: safeJson2(a.extent_rect)
     } };
   }
   /** ONE ROW'S STANDING: its ceiling on the transcription axis, its position on
@@ -61504,8 +65674,8 @@ ${words}`;
    *  made against a transcription the citation never saw did not check the text
    *  the citation points at. */
   #contentStanding(r, atts, connectionByBundle, txs = null) {
-    const extent = { kind: r.extent_kind, ...safeJson(r.extent) || {} };
-    const chain2 = safeJson(r.chain);
+    const extent = { kind: r.extent_kind, ...safeJson2(r.extent) || {} };
+    const chain2 = safeJson2(r.chain);
     const target = _Store.#contentTarget(r.extent_kind, extent);
     const tx = txs && txs.by ? txs.by.get(r.content_id) : null;
     const covering = tx ? _Store.#transcriptionCovering(tx, r.extent_kind, extent) : (atts.by.get(r.capture_sha) || []).filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain)).map((a) => ({ member: a.attestor, at: a.at, extent: _Store.#attestationShape(a) }));
@@ -61899,7 +66069,7 @@ ${words}`;
       text_provenance: ts ? {
         transcribed: !!ts.transcribed,
         terminal_step: ts.terminal_step,
-        engines: safeJson(ts.engines) || [],
+        engines: safeJson2(ts.engines) || [],
         derivation_cap: ts.derivation_cap,
         steps: ts.steps,
         chain: chain2,
@@ -61960,7 +66130,7 @@ ${words}`;
         bundle_id: keep(r.bundle_id),
         transcribed: !!r.transcribed,
         terminal_step: r.terminal_step,
-        engines: safeJson(r.engines) || [],
+        engines: safeJson2(r.engines) || [],
         derivation_cap: r.derivation_cap,
         steps: r.steps
       }))
@@ -62202,7 +66372,7 @@ ${words}`;
     const truncated = page.length > cap;
     const bound = [];
     for (const r of page.slice(0, cap)) {
-      for (const id of safeJson(r.calibrations) || []) {
+      for (const id of safeJson2(r.calibrations) || []) {
         if (!wanted.has(id)) continue;
         bound.push({
           id: r.capture_sha,
@@ -62277,8 +66447,8 @@ ${words}`;
         at: r.at,
         cap: r.cap ?? null,
         probe_id: r.probe_id,
-        probe_inputs: safeJson(r.probe_inputs) ?? r.probe_inputs,
-        scores: safeJson(r.scores) ?? r.scores,
+        probe_inputs: safeJson2(r.probe_inputs) ?? r.probe_inputs,
+        scores: safeJson2(r.scores) ?? r.scores,
         measured_by: r.measured_by,
         superseded_by: r.replaced_by ?? null,
         drift: r.drift ?? null,
@@ -64120,7 +68290,7 @@ ${words}`;
         detail: "this record holds no content row with that id, so there is no portion to grade"
       };
     }
-    const extent = safeJson(row.extent);
+    const extent = safeJson2(row.extent);
     const cap = Math.max(1, Math.min(Number(limit) || _Store.#MEANING_LIMIT_DEFAULT, _Store.#MEANING_LIMIT_MAX));
     const scan = this.#rows(
       `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
@@ -64807,11 +68977,11 @@ ${words}`;
   #withDispositions(inst) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const byStage = this.#dispositionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f3) => ({ ...f3, disposition: byStage.get(f3.stage_key) ?? null }));
+    const findings = inst.findings.map((f4) => ({ ...f4, disposition: byStage.get(f4.stage_key) ?? null }));
     return {
       ...inst,
       findings,
-      open_finding_count: findings.filter((f3) => !(f3.disposition && f3.disposition.applies)).length
+      open_finding_count: findings.filter((f4) => !(f4.disposition && f4.disposition.applies)).length
     };
   }
   /* D-552: the ONE answer op=instance returns, and the op=thread / op=discharge echoes with it
@@ -65059,7 +69229,7 @@ ${words}`;
         continue;
       }
       e.n++;
-      const chain2 = safeJson(r.chain);
+      const chain2 = safeJson2(r.chain);
       const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
       if (isTranscribed(chain2)) e.transcribed++;
       if (b == null) continue;
@@ -65667,17 +69837,17 @@ ${words}`;
   #instanceDeadlines(inst) {
     const out = [];
     if (!inst || !inst.found || !Array.isArray(inst.findings) || inst.findings.length === 0) return out;
-    const missing = inst.findings.filter((f3) => f3.kind === "missing_predecessor");
+    const missing = inst.findings.filter((f4) => f4.kind === "missing_predecessor");
     if (missing.length === 0) return out;
     const within = new Map(this.#rows(
       `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
       inst.progression_key
     ).map((r) => [r.stage_key, r.within_interval]));
     const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
-    for (const f3 of missing) {
-      const wi = within.get(f3.stage_key);
+    for (const f4 of missing) {
+      const wi = within.get(f4.stage_key);
       if (!wi) continue;
-      const anchorKey = f3.after_stage;
+      const anchorKey = f4.after_stage;
       if (!anchorKey) continue;
       const anchor = stageByKey.get(anchorKey);
       if (!anchor || !anchor.present) continue;
@@ -65690,7 +69860,7 @@ ${words}`;
       const deadline = this.#intervalDeadlineMs(anchorMs, wi);
       if (deadline === null) continue;
       out.push({
-        finding: f3,
+        finding: f4,
         within_interval: wi,
         predecessor_stage: anchorKey,
         predecessor_ms: anchorMs,
@@ -65708,22 +69878,22 @@ ${words}`;
     const out = [];
     for (const d of this.#instanceDeadlines(inst)) {
       if (d.deadline_ms >= nowMs) continue;
-      const f3 = d.finding;
+      const f4 = d.finding;
       out.push({
         kind: "overdue_successor",
-        stage_key: f3.stage_key,
-        stage_label: f3.stage_label,
-        required: f3.required,
-        after_stage: f3.after_stage,
-        definition_version: f3.definition_version,
+        stage_key: f4.stage_key,
+        stage_label: f4.stage_label,
+        required: f4.required,
+        after_stage: f4.after_stage,
+        definition_version: f4.definition_version,
         predecessor_stage: d.predecessor_stage,
         predecessor_at: new Date(d.predecessor_ms).toISOString(),
         within_interval: d.within_interval,
         deadline: new Date(d.deadline_ms).toISOString(),
         overdue_by_ms: nowMs - d.deadline_ms,
-        grade: f3.grade,
-        grade_determined: f3.grade_determined,
-        detail: "the '" + f3.stage_key + "' stage is " + f3.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
+        grade: f4.grade,
+        grade_determined: f4.grade_determined,
+        detail: "the '" + f4.stage_key + "' stage is " + f4.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
       });
     }
     return out;
@@ -65800,20 +69970,20 @@ ${words}`;
       `SELECT DISTINCT progression_key, entity_id FROM progression_instances
          ORDER BY progression_key, entity_id`
     );
-    const instances3 = [];
+    const instances5 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p of pairs) {
       const inst = this.#assembleInstance(p.progression_key, p.entity_id);
       const disp = (sk) => disposed.has(inst.progression_key + "::" + sk);
       const missing = (inst.findings || []).filter(
-        (f3) => f3.kind === "missing_predecessor" && !disp(f3.stage_key)
+        (f4) => f4.kind === "missing_predecessor" && !disp(f4.stage_key)
       );
-      const overdueF = this.#overdueFindings(inst, now).filter((f3) => !disp(f3.stage_key));
-      const overdueByStage = new Map(overdueF.map((f3) => [f3.stage_key, f3]));
+      const overdueF = this.#overdueFindings(inst, now).filter((f4) => !disp(f4.stage_key));
+      const overdueByStage = new Map(overdueF.map((f4) => [f4.stage_key, f4]));
       const findings = [...missing, ...overdueF];
       if (findings.length === 0) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances3.push({
+      instances5.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -65821,8 +69991,8 @@ ${words}`;
         entity_label: entityLabel,
         findings
       });
-      for (const f3 of missing) {
-        const key = inst.progression_key + "::" + f3.stage_key;
+      for (const f4 of missing) {
+        const key = inst.progression_key + "::" + f4.stage_key;
         let g = groups.get(key);
         if (!g) {
           const prior = recorded.get(key) || null;
@@ -65830,9 +70000,9 @@ ${words}`;
             key,
             progression_key: inst.progression_key,
             progression_label: inst.label,
-            stage_key: f3.stage_key,
-            stage_label: f3.stage_label,
-            required: f3.required,
+            stage_key: f4.stage_key,
+            stage_label: f4.stage_label,
+            required: f4.required,
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
@@ -65850,15 +70020,15 @@ ${words}`;
           };
           groups.set(key, g);
         }
-        const od = overdueByStage.get(f3.stage_key) || null;
+        const od = overdueByStage.get(f4.stage_key) || null;
         if (od) g.overdue_count += 1;
         g.instances.push({
           entity_id: inst.entity_id,
           entity_label: entityLabel,
           progression_key: inst.progression_key,
           definition_version: inst.definition_version,
-          grade: f3.grade_determined ? f3.grade : null,
-          grade_determined: f3.grade_determined === true,
+          grade: f4.grade_determined ? f4.grade : null,
+          grade_determined: f4.grade_determined === true,
           overdue: !!od,
           deadline: od ? od.deadline : null
         });
@@ -65893,10 +70063,10 @@ ${words}`;
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances3,
+      instances: instances5,
       proposals,
       dispositions,
-      instance_count: instances3.length,
+      instance_count: instances5.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -65936,12 +70106,12 @@ ${words}`;
       captureSha
     );
     const assembled = /* @__PURE__ */ new Map();
-    const project = (f3) => ({
-      ...f3,
-      established: f3.grade_determined === true && _Store.#isEstablished(f3.grade),
-      needs_confirmation: f3.grade === "C"
+    const project = (f4) => ({
+      ...f4,
+      established: f4.grade_determined === true && _Store.#isEstablished(f4.grade),
+      needs_confirmation: f4.grade === "C"
     });
-    const instances3 = [];
+    const instances5 = [];
     for (const r of rows) {
       const ck = r.progression_key + "::" + r.entity_id;
       let a = assembled.get(ck);
@@ -65958,9 +70128,9 @@ ${words}`;
       const inst = a.inst;
       if (!inst || !inst.found) continue;
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
-      const missing = (inst.findings || []).filter((f3) => f3.kind === "missing_predecessor");
-      const findings = [...missing, ...a.overdue].map(project).map((f3) => ({ ...f3, disposition: a.decided.get(f3.stage_key) ?? null }));
-      instances3.push({
+      const missing = (inst.findings || []).filter((f4) => f4.kind === "missing_predecessor");
+      const findings = [...missing, ...a.overdue].map(project).map((f4) => ({ ...f4, disposition: a.decided.get(f4.stage_key) ?? null }));
+      instances5.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -65971,7 +70141,7 @@ ${words}`;
         findings
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances3.length, instances: instances3 };
+    return { ok: true, capture_sha: captureSha, count: instances5.length, instances: instances5 };
   }
   /* ========================= REC-20 · op=queue =======================   *
    * ONE read, ONE contract, over the two producers that already exist: an
@@ -66398,10 +70568,7 @@ ${words}`;
    *  DOCUMENTS behind it, derived exactly as every other item's are. */
   #conditionsGovernorHolding(viewer, now, identity = null) {
     const out = [];
-    for (const r of this.#rows(
-      `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`,
-      now
-    )) {
+    for (const r of governorOf(this.ctx).governorHolding({ now })) {
       const subj = this.#conditionBundlesForHost(r.host, viewer);
       const refusedAt = Number(r.last_refusal_at);
       out.push({
@@ -70288,10 +74455,10 @@ ${words}`;
     let touched = false;
     const member = (m) => {
       let out2 = m;
-      for (const f3 of _Store.#MEMBER_ID_FIELDS) {
-        if (m[f3] == null || keep(m[f3]) !== null) continue;
+      for (const f4 of _Store.#MEMBER_ID_FIELDS) {
+        if (m[f4] == null || keep(m[f4]) !== null) continue;
         if (out2 === m) out2 = { ...m };
-        out2[f3] = null;
+        out2[f4] = null;
         touched = true;
       }
       return out2;
@@ -70832,20 +74999,20 @@ ${words}`;
             detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself` : `the domain serves no ${_Store.GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
           } else if (status >= 200 && status < 300) {
             const text = (await res.text().catch(() => "")).slice(0, _Store.GROUP_WELL_KNOWN_MAX_BYTES);
-            let f3 = null;
+            let f4 = null;
             try {
-              f3 = JSON.parse(text);
+              f4 = JSON.parse(text);
             } catch {
-              f3 = null;
+              f4 = null;
             }
-            const inst = f3 && typeof f3.instance === "string" ? _Store.#instanceAddress(f3.instance) : null;
-            const grp = f3 && typeof f3.group === "string" ? f3.group.trim() : null;
+            const inst = f4 && typeof f4.instance === "string" ? _Store.#instanceAddress(f4.instance) : null;
+            const grp = f4 && typeof f4.group === "string" ? f4.group.trim() : null;
             if (inst === address && grp === slug) {
               verdict = "verified";
               detail = `the file names this instance (${address}) and its slug (${slug})`;
             } else {
               verdict = "mismatched";
-              detail = !f3 || typeof f3 !== "object" ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f3.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
+              detail = !f4 || typeof f4 !== "object" ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f4.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
             }
           } else {
             detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
@@ -70920,16 +75087,16 @@ ${words}`;
      of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
      A blob-backed file's digest is its content address, `blobSha`. Returns the files with every digest the
      computed lowercase value, and each file whose SUPPLIED value named another digest. */
-  static #fileDigestOf(f3) {
-    if (f3 && typeof f3.text === "string") return createSha256().update(new TextEncoder().encode(f3.text)).hex();
-    if (f3 && typeof f3.blobSha === "string" && f3.blobSha) return f3.blobSha.toLowerCase();
+  static #fileDigestOf(f4) {
+    if (f4 && typeof f4.text === "string") return createSha256().update(new TextEncoder().encode(f4.text)).hex();
+    if (f4 && typeof f4.blobSha === "string" && f4.blobSha) return f4.blobSha.toLowerCase();
     return null;
   }
   /* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
      `files.content` column stores — read by `promote` (the stored figure and OVERSIZE_INLINE) and by `digestCensus`
      (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
-  static #inlineBytesOf(f3) {
-    return f3 && typeof f3.text === "string" ? new TextEncoder().encode(f3.text).length : null;
+  static #inlineBytesOf(f4) {
+    return f4 && typeof f4.text === "string" ? new TextEncoder().encode(f4.text).length : null;
   }
   /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
      content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
@@ -70946,8 +75113,8 @@ ${words}`;
       const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
       for (const r of this.sql.exec(table === "files" ? `SELECT bundle_id, path, content, blob_sha, bytes, sha256 FROM files` : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
         out.rows++;
-        const f3 = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
-        const computed = _Store.#fileDigestOf(f3);
+        const f4 = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
+        const computed = _Store.#fileDigestOf(f4);
         if (r.content !== null) out.inline++;
         else out.blob++;
         const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
@@ -70988,94 +75155,9 @@ ${words}`;
        hash is cleared on enrollment, so possession of an old invite buys
        nothing against an enrolled member. Passwords live only as PBKDF2
        hashes under credentials role 'member:<id>'. */
-  /* Why is a register row unreferenced? (D-9)
-   *
-   * The register maps a capture's sha to the bundle and path it was intake for.
-   * Nothing could read it until 0.22.0, so the 30 unreferenced rows on the live
-   * record were explained only by a guess.
-   *
-   * THE FIRST VERSION OF THIS LOOKED IN TWO OF THE THREE PLACES BYTES CAN LIVE.
-   * It checked `files` and `history` and called everything else "dropped", which
-   * produced a confident and wrong finding: that the Apps Script migration could
-   * not be audited from the record it produced. The bytes were in R2 the whole
-   * time. `migrate.mjs` says so in its own header, carrying Drive provenance
-   * "verbatim as a registered drive-provenance capture, so the Drive era remains
-   * inspectable without polluting the live file image", which is precisely what
-   * the two-bucket design is for.
-   *
-   * So this returns rows and their capture hashes, and the CONTROL PLANE probes
-   * `bio-captures` to finish the classification, exactly as the ratify path does
-   * with `hasCapture`. The Durable Object does not know its own store name and
-   * R2 keys are `<store>/captures/<sha>`, so the probe cannot honestly be done
-   * from in here.
-   *
-   *   live        the capture's bytes are the current file at that path
-   *   superseded  the path is still there carrying different bytes now
-   *   historical  not live anywhere, but present in history
-   *   unresolved  in neither, so the control plane must ask R2 before this row
-   *               can be called sound or broken
-   */
+  /* D-9, D-533: the register's rows classified, and the parts a holding bundle's record names: provenance's (R6, R8). */
   registerAudit() {
-    const rows = this.#rows(`SELECT capture_sha, bundle_id, path, encoding, bytes, registered FROM register`);
-    const out = { total: rows.length, live: 0, superseded: 0, historical: 0, orphan: 0, unresolved: [] };
-    for (const r of rows) {
-      if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.bundle_id)) {
-        out.orphan++;
-        out.unresolved.push({ ...r, class: "orphan" });
-        continue;
-      }
-      const here = this.#one(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, r.bundle_id, r.path);
-      if (here && here.sha256 === r.capture_sha) {
-        out.live++;
-        continue;
-      }
-      if (this.#one(`SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`, r.bundle_id, r.capture_sha)) {
-        out.historical++;
-        continue;
-      }
-      if (here) {
-        out.superseded++;
-        continue;
-      }
-      out.unresolved.push({ ...r, class: "unresolved", named_parts: this.#partsNamedFor(r.bundle_id, r.capture_sha) });
-    }
-    return { ok: true, ...out, needsCaptureProbe: out.unresolved.length };
-  }
-  /* D-533 (BOB #33, 2026-09-24 21:17Z; Intake Doctrine section 8): WHICH PARTS DOES THE RECORD NAME FOR A
-   * CAPTURE IT HOLDS IN PARTS? `op=acquire` stores a multi-part document ONLY as its parts, each under its own
-   * hash, and never the whole under the whole's; the one place the record names those parts is the holding
-   * bundle's intake provenance register, `data/provenance.json`, whose document for that `capture_sha` carries
-   * `parts: [{file, sha256, bytes}]` (the shape C-18.1 checks). So the audit's R2 probe of the WHOLE key can
-   * only ever miss for such a row, and it called held bytes missing.
-   *
-   *   none        the register document names no parts for this sha (or the bundle has no register): the
-   *               whole key is the only place the record says the bytes live
-   *   named       the parts, as the record names them, for the control plane to head and verify
-   *   unreadable  the register exists and could not be read to an answer, with why: the row resolves
-   *               NEITHER way, and the ruling counts it UNDETERMINED, outside `sound`
-   *
-   * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
-  #partsNamedFor(bundleId, sha) {
-    const f3 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, bundleId);
-    if (!f3) return { state: "none" };
-    if (typeof f3.content !== "string")
-      return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
-    let reg;
-    try {
-      reg = JSON.parse(f3.content);
-    } catch {
-      return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
-    }
-    const bare = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bare(d.capture?.sha256) === sha && d.parts !== void 0);
-    if (!doc) return { state: "none" };
-    const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) => p && /^[0-9a-f]{64}$/.test(bare(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
-    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
-    return { state: "named", parts: doc.parts.map((p) => ({
-      file: typeof p.file === "string" ? p.file : null,
-      sha256: bare(p.sha256),
-      bytes: p.bytes
-    })) };
+    return provenanceOf(this.ctx).registerRows();
   }
   #isProjectOwner(...a) {
     return membershipOf(this.ctx).isProjectOwner(...a);
@@ -71321,8 +75403,8 @@ ${words}`;
   /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
      An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
   static #manifestFiles(filesJson) {
-    const arr2 = safeJson(filesJson);
-    return Array.isArray(arr2) ? arr2.filter((f3) => f3 && typeof f3 === "object") : [];
+    const arr2 = safeJson2(filesJson);
+    return Array.isArray(arr2) ? arr2.filter((f4) => f4 && typeof f4 === "object") : [];
   }
   /* REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ROWS — read-only, and a disagreeing bundle is REPORTED, never
      repaired: the row an INSERT OR REPLACE destroyed is not recoverable from the store, and inventing it back would be
@@ -71369,7 +75451,7 @@ ${words}`;
       if (deficit < 0) out.excess += -deficit;
       const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA3);
       const outputs = new Set(rows.map((r) => {
-        const md = _Store.#manifestFiles(r.files_json).find((f3) => f3.name === "bundle.md");
+        const md = _Store.#manifestFiles(r.files_json).find((f4) => f4.name === "bundle.md");
         return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
       }).filter(Boolean));
       const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA3 && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
@@ -71397,128 +75479,13 @@ ${words}`;
     out.note = "read-only: a bundle whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a bundle with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.";
     return out;
   }
-  /* REC-190: THE CENSUS OF DISPLACED HOMES (`BIO_Intake_Doctrine_v1_1.md` §8, ONE CAPTURE, ONE HOME — the ORIGINAL's;
-     D-179's residue). Before D-179's fence `op=promote` UPSERTed `register.bundle_id` on the `capture_sha` key, so a
-     second bundle registering bytes the record already held MOVED the first bundle's register row to itself, and the
-     first bundle's own `files` / `history` rows kept carrying bytes the register now says live elsewhere. This lists
-     every such row: a `files` or `history` row whose sha256 the register assigns to a DIFFERENT bundle that STILL
-     EXISTS, with both bundles named, grouped by the sha. READ-ONLY and never a repair (BOB #31, 2026-09-23 22:03Z: the
-     census's report STANDS ALONE): WHICH BUNDLE HELD THE CAPTURE FIRST IS UNDETERMINED — the register keeps one holder
-     and no prior one, and a row a bundle carried without ever registering it reads the same — so the answer names the
-     register's CURRENT holder as that and nothing more, and says so. A sha shared by several bundles that the register
-     does not assign elsewhere (an identical ordinary file, or the holder's own revisions) is NOT a displaced home and
-     is not listed: only the register decides a home. A register row whose bundle no longer exists names no home and
-     is counted apart (`home_absent`), never listed. The digest-level duplicate (the same content in different bytes)
-     is out of reach: this compares the bytes' digest and nothing about their meaning. Shas are compared lower-cased on
-     both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
-     always whole). */
-  homeCensus({ limit } = {}) {
-    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
-    const homes = /* @__PURE__ */ new Map();
-    const reg = { rows: 0, home_absent: 0 };
-    for (const r of this.sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
-                                     FROM register r LEFT JOIN bundles b ON b.bundle_id = r.bundle_id`)) {
-      reg.rows++;
-      if (r.present === null) {
-        reg.home_absent++;
-        continue;
-      }
-      homes.set(String(r.capture_sha).toLowerCase(), { bundle_id: r.bundle_id, path: r.path });
-    }
-    const bySha = /* @__PURE__ */ new Map();
-    const walk = (table) => {
-      const out = { rows: 0, displaced: 0 };
-      for (const r of this.sql.exec(table === "files" ? `SELECT bundle_id, NULL AS snap_key, path, sha256 FROM files` : `SELECT bundle_id, snap_key, path, sha256 FROM history`)) {
-        out.rows++;
-        const s = String(r.sha256 ?? "").toLowerCase();
-        const home = homes.get(s);
-        if (!home) continue;
-        if (home.bundle_id === r.bundle_id) continue;
-        out.displaced++;
-        if (!bySha.has(s)) bySha.set(s, { capture_sha: s, home: { ...home }, held_by: [] });
-        bySha.get(s).held_by.push({
-          table,
-          bundle_id: r.bundle_id,
-          path: r.path,
-          ...r.snap_key ? { snap_key: r.snap_key } : {}
-        });
-      }
-      return out;
-    };
-    const files = walk("files"), history = walk("history");
-    return {
-      ok: true,
-      register: reg,
-      files,
-      history,
-      shas: bySha.size,
-      listed: [...bySha.values()].slice(0, cap),
-      first_holder: "UNDETERMINED",
-      rewritten: 0,
-      note: "read-only: each listed sha is registered to `home` and ALSO carried by every `held_by` row, a different bundle that still exists. Nothing is rewritten or repaired. `home` is the register's current holder, never a finding about which bundle held the capture first \u2014 that is undetermined. The same content in different bytes is not reached."
-    };
+  /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
+     provenance's (R5, R10). */
+  homeCensus(...a) {
+    return provenanceOf(this.ctx).homeCensus(...a);
   }
-  /** D-476 - IS THIS WHOLE DOCUMENT ALREADY IN THE REGISTER? ONE BOUNDED READ ON
-   *  THE REGISTER'S OWN KEY, and the only question `op=acquire` can ask about a
-   *  MULTI-PART capture.
-   *
-   *  D-469 answered acquire's `existed` for a single-part capture by asking R2 for
-   *  the whole's own key BEFORE the put. A multi-part capture has no such key: the
-   *  whole is never stored under its own hash, only its parts are. So that
-   *  question cannot be asked at all, and acquire answered a flat `false` - which
-   *  CLAIMS THE BYTES ARE NEW every time a document the record already holds is
-   *  re-fetched. This is the question that CAN be asked, and it is the record's
-   *  own: `register` is keyed by `capture_sha`, the identity of the bytes across
-   *  the whole system (`INTERFACES.md` I1 section 1), and one capture has one
-   *  home (D-179; `BIO_Intake_Doctrine_v1_1.md` section 8).
-   *
-   *  THE HOLDER MUST STILL EXIST - the `bundles` join D-179's fence makes, for
-   *  the reason that ruling gives: bytes whose home was purged register afresh,
-   *  so a register row whose bundle is gone is not a holding.
-   *
-   *  IT NAMES NO BUNDLE, and so it needs no viewer. A caller learns only that the
-   *  record holds these bytes, which is the whole of what `existed` has ever said;
-   *  WHICH bundle holds them is D-15's question, answered under a visibility stamp
-   *  by `op=promote`'s refusal and never here.
-   *
-   *  A MISS IS NOT AN ABSENCE, and THE CALLER STATES THAT, not this read: the
-   *  register answers for documents the record REGISTERED, and a prior acquire
-   *  never promoted leaves parts in R2 and no register row. `registered: false` is
-   *  that one fact and nothing more; `registered: null` is no question asked.
-   *
-   *  D-530 - AND THE PLANE'S OWN RECEIPT, `acquired`. `captured_locators` has one
-   *  writer, `op=acquire`, and the hash in it is the one the plane computed as the
-   *  bytes ARRIVED; nothing deletes a store's captures. So a receipt for a whole
-   *  hash that has no object under it says the plane took the document and keeps
-   *  it in parts, and no caller can write it. The register cannot say that: a
-   *  register row is written by `op=promote` from what its CALLER names, and
-   *  promote does not read R2 (D-45). `op=attest` attests on the receipt and not on
-   *  the register alone; the ratify gate names a whole-hash row held in parts
-   *  rather than calling its bytes absent. One bounded read on the
-   *  `captured_locators_sha` index, and like `registered` it names no bundle.
-   */
-  /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
-   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
-   *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
-   *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
-   *  read, so it names nothing the ratifier has not already been handed in the image. */
-  registerHolds({ sha = null, bundle = null } = {}) {
-    const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
-    const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
-    return {
-      ok: true,
-      sha: s,
-      asked: true,
-      ...b ? { parts: this.#partsNamedFor(b, s) } : {},
-      registered: !!this.#one(
-        `SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.capture_sha = ? LIMIT 1`,
-        s
-      ),
-      acquired: !!this.#one(`SELECT capture_sha FROM captured_locators WHERE capture_sha = ? LIMIT 1`, s)
-    };
+  registerHolds(...a) {
+    return provenanceOf(this.ctx).registerHolds(...a);
   }
   static #noSuchProject(project) {
     return {
@@ -71631,12 +75598,12 @@ ${words}`;
       fileCount += files.length;
       return {
         ...b,
-        files: files.map((f3) => ({
-          path: f3.path,
-          sha256: f3.sha256,
-          bytes: f3.bytes,
-          blobSha: f3.blob_sha ?? null,
-          inline: !!f3.inline
+        files: files.map((f4) => ({
+          path: f4.path,
+          sha256: f4.sha256,
+          bytes: f4.bytes,
+          blobSha: f4.blob_sha ?? null,
+          inline: !!f4.inline
         })),
         /* The manifest chain and the base links, so the receiving side can
            re-derive the chain rather than believe it. `history` holds the
@@ -71780,7 +75747,7 @@ ${words}`;
                 c.manifest_sha, c.manifest, k.project_id
          FROM published_cases c LEFT JOIN cases k ON k.case_id = c.case_id
          ORDER BY c.case_id, c.edition`
-      ).map((c) => ({ ...c, bar: c.bar ? safeJson(c.bar) : null })),
+      ).map((c) => ({ ...c, bar: c.bar ? safeJson2(c.bar) : null })),
       /* CASE-1 / DEC-72: the member's PINNED VERSION and its AUTHORED ROLE travel
          with the roster row, because they are what the roster row now IS —
          (finding id, version hash, role, ordinal). Both are null until CASE-2
@@ -72358,7 +76325,7 @@ ${words}`;
          so the ratify path and the public read cannot disagree about them
          any more than they can about the scope. */
       project: owner ? owner.project_id : null,
-      bar: c.bar ? safeJson(c.bar) : null,
+      bar: c.bar ? safeJson2(c.bar) : null,
       scope: c.scope ?? null,
       /* ===== CASE-5b: THE SIGNED CASE DOCUMENT, ON THE ONE ACCESSOR THAT
                       ANSWERS WHAT A CASE EDITION IS — and it is here rather than in the
@@ -72613,7 +76580,7 @@ ${words}`;
         case_id: cid,
         case_edition: cm ? cm.edition : null,
         cases: cms,
-        bar: c && c.bar ? safeJson(c.bar) : null,
+        bar: c && c.bar ? safeJson2(c.bar) : null,
         /* The container's manifest is the CASE edition's, so it is
            reported from there — one manifest per case per edition,
            naming every member finding's parts. */
@@ -73528,89 +77495,80 @@ ${words}`;
     }
     return reg;
   }
-  /* 7b: the knock. Rate accounting and the row land in one transaction, so
-     an attacker cannot slip past the caps on a race. The worst case is by
-     construction a full inbox. */
-  knock({
-    knockId,
-    sha256: sha2562,
-    bytes,
-    content,
-    inR2,
-    note,
-    contact,
-    ipBucket,
-    ipPrevBucket,
-    globalBucket,
-    globalPrevBucket,
-    elapsedFrac,
-    perIpLimit,
-    globalLimit
-  } = {}) {
-    return this.ctx.storage.transactionSync(() => {
-      const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
-      const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
-      const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-      const refusal8 = (code, extra) => {
-        const row = KNOCK_CHECKS[code];
-        if (!row || typeof row.translation !== "string" || !row.translation)
-          throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
-        return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra || {} };
-      };
-      if (est(ipBucket, ipPrevBucket) >= perIpLimit) return refusal8("RATE_IP");
-      if (est(globalBucket, globalPrevBucket) >= globalLimit) return refusal8("RATE_GLOBAL");
-      for (const b of [ipBucket, globalBucket])
-        this.sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1)
-                       ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
-      const win = globalBucket.split(":").pop();
-      const prevWin = String(Number(win) - 1);
-      this.sql.exec(
-        `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
-        win,
-        prevWin
-      );
-      this.sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status)
-         VALUES (?,?,?,?,?,?,?,?,'new')`,
-        knockId,
-        sha2562,
-        bytes,
-        content ?? null,
-        inR2 ? 1 : 0,
-        (note || "").slice(0, 2e3),
-        (contact || "").slice(0, 300),
-        (/* @__PURE__ */ new Date()).toISOString()
-      );
-      return { ok: true, knockId, sha256: sha2562, bytes };
-    });
+  /* capture (T4-4): the doorbell, the render allowance, links and the host's chrome, capture sessions, site assets,
+     reuse verdicts, the platform's ceiling, the event queue and source reachability are capture's (src/capture/).
+     The public methods stay as one-line delegations so every caller answers as before. */
+  knock(...a) {
+    return captureOf(this.ctx).knock(...a);
   }
-  inboxList(status) {
-    return { inbox: this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
-       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
-      ...status ? [status] : []
-    ) };
+  inboxList(...a) {
+    return captureOf(this.ctx).inboxList(...a);
   }
-  inboxGet(knockId) {
-    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
-    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
+  inboxGet(...a) {
+    return captureOf(this.ctx).inboxGet(...a);
   }
-  inboxResolve({ knockId, status, by } = {}) {
-    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const r = this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId);
-    if (!r) return { ok: false, reason: "NOT_FOUND" };
-    this.sql.exec(
-      `UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
-      status,
-      (/* @__PURE__ */ new Date()).toISOString(),
-      by ?? null,
-      knockId
-    );
-    return { ok: true, knockId, status };
+  inboxResolve(...a) {
+    return captureOf(this.ctx).inboxResolve(...a);
   }
-  static async #sha256(v) {
-    const b = await crypto.subtle.digest("SHA-256", _Store.#enc.encode(v));
-    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  renderAdmit(...a) {
+    return captureOf(this.ctx).renderAdmit(...a);
+  }
+  renderSpend(...a) {
+    return captureOf(this.ctx).renderSpend(...a);
+  }
+  recordLinks(...a) {
+    return captureOf(this.ctx).recordLinks(...a);
+  }
+  linksTo(...a) {
+    return captureOf(this.ctx).linksTo(...a);
+  }
+  resolveLinks(...a) {
+    return captureOf(this.ctx).resolveLinks(...a);
+  }
+  recordLinkVerdict(...a) {
+    return captureOf(this.ctx).recordLinkVerdict(...a);
+  }
+  saveCaptureSession(...a) {
+    return captureOf(this.ctx).saveCaptureSession(...a);
+  }
+  loadCaptureSession(...a) {
+    return captureOf(this.ctx).loadCaptureSession(...a);
+  }
+  dropCaptureSession(...a) {
+    return captureOf(this.ctx).dropCaptureSession(...a);
+  }
+  siteAssets(...a) {
+    return captureOf(this.ctx).siteAssets(...a);
+  }
+  recordSiteAssets(...a) {
+    return captureOf(this.ctx).recordSiteAssets(...a);
+  }
+  reusedParts(...a) {
+    return captureOf(this.ctx).reusedParts(...a);
+  }
+  recordReuseVerdicts(...a) {
+    return captureOf(this.ctx).recordReuseVerdicts(...a);
+  }
+  reuseVerdicts(...a) {
+    return captureOf(this.ctx).reuseVerdicts(...a);
+  }
+  siteChrome(...a) {
+    return captureOf(this.ctx).siteChrome(...a);
+  }
+  captureLimit(...a) {
+    return captureOf(this.ctx).captureLimit(...a);
+  }
+  recordCaptureLimit(...a) {
+    return captureOf(this.ctx).recordCaptureLimit(...a);
+  }
+  taskEnqueue(...a) {
+    return captureOf(this.ctx).taskEnqueue(...a);
+  }
+  recordSourceOutcome(...a) {
+    return captureOf(this.ctx).recordSourceOutcome(...a);
+  }
+  sourceReachability(...a) {
+    return captureOf(this.ctx).sourceReachability(...a);
   }
   /* ------------------------------------------------------------------ *
    * Measured runtime cost
@@ -73649,167 +77607,6 @@ ${words}`;
       new_peak: isPeak
     };
   }
-  /* ------------------------------------------------------------------
-   * D-64: the daily render allowance (CLIENT-RENDERED.md, BOB #32 item 3)
-   * ------------------------------------------------------------------ */
-  /** Admit one render against today's allowance, or record it DEFERRED. The verdict
-   *  is the STRING `state` (`admitted` | `deferred`), never a leading boolean, so no
-   *  reader grades a datum as a refusal (meaning-bounds D-240 (e)). The DO
-   *  serialises, so one row per UTC day is globally correct for the instance.
-   *  Admission is decided on what has been SPENT PLUS WHAT IS RESERVED, because a render's
-   *  cost is only known after it ran and the renders in flight have not reported theirs.
-   *
-   *  THE BOUND THIS NOW HOLDS (D-492, 2026-09-24), stated as the thing a reader may rely on:
-   *
-   *      at every moment, spent_ms + reserved_ms <= allowance
-   *
-   *  because a render is admitted only when `spent + reserved + its own reservation` fits, and
-   *  its reservation is the MAXIMUM the asked environment permits it to cost (`renderReserveMs`:
-   *  the navigation timeout plus the wait timeout). So the allowance is not overrun by renders
-   *  in flight, however many there are, and the first factor of the old bound no longer has to
-   *  be bounded by anything.
-   *
-   *  THE TWO RESIDUES, NAMED RATHER THAN ROUNDED OFF, because neither is closed by this:
-   *  (1) the reservation binds only a renderer that HONOURS what it was asked. A renderer that
-   *      spends longer than its own navigation and wait timeouts reports that longer time and
-   *      `renderSpend` adds it, so `spent_ms` can pass the allowance by exactly the excess the
-   *      renderer took beyond what it was asked for. The plane cannot check this: the elapsed
-   *      time is the RENDERER'S CLAIM, as `render.mjs` says of everything else it reports.
-   *  (2) the allowance is an ACCOUNT, not a throttle. Nothing here caps CONCURRENCY, and
-   *      nothing here is a platform meter (`RENDER_DAILY_ALLOWANCE_MS` is this instance's own
-   *      fence). A day's renders are bounded in total browser time, not in how many run at once.
-   *
-   *  WHAT WAS CORRECTED, kept because the error is the shape this project meets most — a bound
-   *  believed on the strength of a sentence. This said the allowance "can therefore be overrun
-   *  by at most one render". That was FALSE: admission is serialised in the DO, but the render
-   *  RUNS IN THE WORKER and its cost is added afterwards by a SEPARATE op (`renderspend` ->
-   *  `renderSpend`; the two are distinct rows of the dispatch table), so every render IN FLIGHT
-   *  AT ONCE was admitted against the same `spent_ms` and the overrun was
-   *  (renders in flight) x (one render's maximum time), whose first factor nothing bounded.
-   *  CONDUCT #20 diagnosed it at integration and corrected the prose alone; the reservation
-   *  below is the fix, and the docstring above is now a claim about behaviour rather than a
-   *  claim about intent.
-   *
-   *  AND A FINDING ABOUT THE REBUILD RULE, measured making this very edit, because it came
-   *  back the opposite way to what `kickoffs/WORKER.md` step 0 predicted. That step said a
-   *  COMMENT-ONLY `src/` change leaves `bundled.mjs` BYTE-IDENTICAL (REC-110) — "if you are
-   *  hunting a diff after a comment-only change, there isn't one". This edit moved it by
-   *  1,104 bytes: the JSDoc block you are reading is PRESENT in the emitted bundle, verbatim.
-   *
-   *  THE DISCRIMINATOR FIRST PROPOSED HERE — "the bundler strips block comments and PRESERVES
-   *  JSDoc" — IS ITSELF REFUTED, and by a wider sample taken at c20-batch14 rather than by
-   *  argument. Counted over the emitted bundle: of 25 plain block comments sampled from
-   *  `index.mjs`, TWELVE are PRESENT (every one inspected sits inside the OPS table), and
-   *  `render.mjs`'s own JSDoc block is ABSENT. So the FORM does not decide it; position and
-   *  file do, by a rule nothing here has established. What is safe to say, and all that
-   *  `WORKER.md` step 0 now says, is that a comment-only change MAY move the bundle and the
-   *  answer is MEASURED, never assumed. A surprising green is a finding about the arm: the
-   *  first reading of this measurement generalised from three greps, which is the same error,
-   *  one sample size down, as the line it was correcting. */
-  renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
-    const now = at || stampInstant("second");
-    const day = now.slice(0, 10);
-    const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
-    const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
-    const capN = Number.isInteger(Number(cap)) && Number(cap) > 0 ? Number(cap) : null;
-    const nowMs = Date.parse(now);
-    if (capN !== null) {
-      if (Number.isFinite(nowMs)) this.sql.exec(`DELETE FROM render_slots WHERE expires_ms <= ?`, nowMs);
-      const running = [...this.sql.exec(`SELECT COUNT(*) AS n FROM render_slots`)][0].n;
-      if (running >= capN)
-        return {
-          state: "waiting",
-          day,
-          cap: capN,
-          running,
-          reserve_ms: reserve,
-          why: `${running} renders are running and this instance runs at most ${capN} at once`
-        };
-    }
-    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    const spent = cur ? cur.spent_ms : 0;
-    const reserved = cur ? cur.reserved_ms || 0 : 0;
-    const defer = (why) => {
-      if (cur) this.sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day);
-      else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day, now);
-      return {
-        state: "deferred",
-        day,
-        spent_ms: spent,
-        reserved_ms: reserved,
-        reserve_ms: reserve,
-        allowance_ms: allowance,
-        deferred: (cur ? cur.deferred : 0) + 1,
-        renders: cur ? cur.renders : 0,
-        why
-      };
-    };
-    if (!(reserve > 0))
-      return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
-    if (spent + reserved + reserve > allowance)
-      return defer(null);
-    if (cur) this.sql.exec(`UPDATE render_allowance SET renders = renders + 1, reserved_ms = reserved_ms + ?, last_at = ? WHERE day = ?`, reserve, now, day);
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
-    const slot = crypto.randomUUID();
-    this.sql.exec(
-      `INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
-      slot,
-      now,
-      (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve
-    );
-    return {
-      state: "admitted",
-      day,
-      spent_ms: spent,
-      reserved_ms: reserved + reserve,
-      reserve_ms: reserve,
-      allowance_ms: allowance,
-      renders: (cur ? cur.renders : 0) + 1,
-      deferred: cur ? cur.deferred : 0,
-      slot,
-      cap: capN
-    };
-  }
-  /** Add the browser time one render REPORTED, and RELEASE the reservation `renderAdmit` took
-   *  for it. An unreported time adds nothing and says so: the allowance is then under-counted,
-   *  never guessed.
-   *
-   *  AN UNREPORTED RENDER STAYS CHARGED (D-492), and that is the whole safety of the
-   *  reservation rather than an edge case. A render that reported no elapsed time may have
-   *  burned any amount of browser time up to its reservation — a renderer that threw, a Worker
-   *  that died, a fetch that never came back — and the plane has no figure for it. Releasing
-   *  the reservation on that path would hand the allowance back for time that may well have
-   *  been spent, so the reservation is KEPT for the rest of the UTC day. The allowance is then
-   *  under-used, which is the direction that cannot overrun, and `reserved_ms` says how much is
-   *  held that way. The caller RELEASES WITHOUT CHARGE (`ms: 0`) only where it knows no render
-   *  ran at all, which is the `RENDER_NOT_A_PAGE` path in `src/index.mjs`. */
-  renderSpend({ ms, releaseMs = 0, slot = null, at = null }) {
-    if (typeof slot === "string" && slot) this.sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-    const now = at || stampInstant("second");
-    const day = now.slice(0, 10);
-    const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
-    const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
-    const cur = [...this.sql.exec(`SELECT * FROM render_allowance WHERE day = ?`, day)][0] || null;
-    if (n === null)
-      return {
-        day,
-        spent_ms: cur ? cur.spent_ms : 0,
-        reserved_ms: cur ? cur.reserved_ms || 0 : 0,
-        released_ms: 0,
-        why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day"
-      };
-    const held = cur ? cur.reserved_ms || 0 : 0;
-    const released = Math.min(held, rel);
-    if (cur) this.sql.exec(
-      `UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
-      n,
-      held - released,
-      now,
-      day
-    );
-    else this.sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, ?, 0, 0, 0, ?)`, day, n, now);
-    return { day, spent_ms: (cur ? cur.spent_ms : 0) + n, reserved_ms: held - released, released_ms: released };
-  }
   runtimeObservations() {
     const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
     return {
@@ -73844,419 +77641,78 @@ ${words}`;
     );
     return { step, elapsed_ms: elapsedMs };
   }
-  /* ------------------------------------------------------------------ *
-   * D-95: the per-host request governor
-   *
-   * Our APPETITE is a configured constant because it is ours. Their CAPACITY
-   * is discovered by being refused and recorded, the pattern capture_limits
-   * proved. This lives here because the Durable Object serialises, so one
-   * token bucket is globally correct for the instance for free; a bucket in
-   * Worker memory governs nothing, since every invocation is independent.
-   *
-   * Pacing resembles a person rather than a loop: grants to one host are
-   * separated by a JITTERED gap around the appetite's base interval, never a
-   * metronome. The chosen constants are recorded in MEASUREMENTS.md as chosen,
-   * not measured. A 429 overrides the bucket entirely: cooloff_until in the
-   * future refuses admission regardless of token balance, honouring
-   * Retry-After when the counterparty names one and escalating with
-   * consecutive refusals when it does not, mirroring their own escalation.
-   * Success decays the escalation to zero. This governs OUR instance only and
-   * cannot solve the shared-egress problem; that is D-95's recorded limit.
-   * ------------------------------------------------------------------ */
-  static GOVERNOR = {
-    defaultAppetitePerMin: 12,
-    /* chosen: one document fetch every ~5s on average */
-    jitterLow: 0.6,
-    jitterHigh: 1.5,
-    burstTokens: 3,
-    /* a person opens a few tabs; a loop opens forty */
-    cooloff429BaseMs: 6e4,
-    cooloff429CapMs: 36e5,
-    cooloffRefusedBaseMs: 3e4,
-    cooloffRefusedCapMs: 18e5
-  };
-  #governorRow(host, now) {
-    let r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
-    if (!r) {
-      this.sql.exec(
-        `INSERT INTO host_governor (host, tokens, refilled_at, updated_at) VALUES (?, ?, ?, ?)`,
-        host,
-        _Store.GOVERNOR.burstTokens,
-        now,
-        new Date(now).toISOString()
-      );
-      r = [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)][0];
-    }
-    return r;
+  /* D-95, the per-host request governor: `host-governor`'s (T4-1). These delegate, so the object's RPC callers and
+     this file's own callers reach the one instance on this ctx (K61, K63). */
+  governorAdmit(...a) {
+    return governorOf(this.ctx).governorAdmit(...a);
   }
-  governorAdmit({ host }) {
-    if (!host) return { admitted: false, reason: "no host named" };
-    const G = _Store.GOVERNOR;
-    const now = Date.now();
-    const r = this.#governorRow(host, now);
-    const appetite = r.appetite_per_min || Number(this.env && this.env.GOVERNOR_APPETITE_PER_MIN) || G.defaultAppetitePerMin;
-    const baseGapMs = 6e4 / appetite;
-    if (r.cooloff_until > now) {
-      this.sql.exec(
-        `UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        new Date(now).toISOString(),
-        host
-      );
-      return {
-        admitted: false,
-        reason: "cooling_off",
-        retry_in_ms: r.cooloff_until - now,
-        refusals: r.refusals,
-        last_refusal_status: r.last_refusal_status
-      };
-    }
-    const tokens2 = Math.min(G.burstTokens, r.tokens + (now - r.refilled_at) / 6e4 * appetite);
-    if (tokens2 < 1) {
-      const retryIn = Math.ceil((1 - tokens2) / appetite * 6e4);
-      this.sql.exec(
-        `UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        tokens2,
-        now,
-        new Date(now).toISOString(),
-        host
-      );
-      return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
-    }
-    const jitter = G.jitterLow + Math.random() * (G.jitterHigh - G.jitterLow);
-    const gapWanted = baseGapMs * jitter;
-    const sinceLast = now - (r.last_grant_at || 0);
-    const wait = sinceLast >= gapWanted ? 0 : Math.round(gapWanted - sinceLast);
-    this.sql.exec(
-      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
-      tokens2 - 1,
-      now,
-      now + wait,
-      new Date(now).toISOString(),
-      host
-    );
-    return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
+  governorReport(...a) {
+    return governorOf(this.ctx).governorReport(...a);
   }
-  governorReport({ host, status, retry_after_ms = null }) {
-    if (!host) return { recorded: false };
-    const G = _Store.GOVERNOR;
-    const now = Date.now();
-    const r = this.#governorRow(host, now);
-    const s = Number(status) || 0;
-    if (s >= 200 && s < 400) {
-      this.sql.exec(
-        `UPDATE host_governor SET refusals = 0, updated_at = ? WHERE host = ?`,
-        new Date(now).toISOString(),
-        host
-      );
-      return { recorded: true, refusals: 0 };
-    }
-    if (s === 429 || s === 403 || s === 503) {
-      const refusals = (r.refusals || 0) + 1;
-      const base = s === 429 ? G.cooloff429BaseMs : G.cooloffRefusedBaseMs;
-      const cap = s === 429 ? G.cooloff429CapMs : G.cooloffRefusedCapMs;
-      const escalated = Math.min(cap, base * Math.pow(2, refusals - 1));
-      const cooloff = now + Math.max(escalated, Number(retry_after_ms) || 0);
-      this.sql.exec(
-        `UPDATE host_governor SET refusals = ?, last_refusal_at = ?, last_refusal_status = ?, cooloff_until = ?, updated_at = ? WHERE host = ?`,
-        refusals,
-        now,
-        s,
-        cooloff,
-        new Date(now).toISOString(),
-        host
-      );
-      return { recorded: true, refusals, cooloff_until: cooloff, cooloff_ms: cooloff - now };
-    }
-    return { recorded: true, ignored: s };
+  governorConfig(...a) {
+    return governorOf(this.ctx).governorConfig(...a);
   }
-  governorConfig({ host, appetite_per_min = null }) {
-    if (!host) return { configured: false };
-    const now = Date.now();
-    this.#governorRow(host, now);
-    this.sql.exec(
-      `UPDATE host_governor SET appetite_per_min = ?, updated_at = ? WHERE host = ?`,
-      appetite_per_min ? Number(appetite_per_min) : null,
-      new Date(now).toISOString(),
-      host
-    );
-    return { configured: true, host, appetite_per_min: appetite_per_min ? Number(appetite_per_min) : null };
-  }
-  governorState({ host = null }) {
-    const rows = host ? [...this.sql.exec(`SELECT * FROM host_governor WHERE host = ?`, host)] : [...this.sql.exec(`SELECT * FROM host_governor ORDER BY host`)];
-    return { hosts: rows.map((r) => ({ ...r })) };
+  governorState(...a) {
+    return governorOf(this.ctx).governorState(...a);
   }
   /* ------------------------------------------------------------------ *
-   * Links: what a document pointed at, and whether we hold that version
+   * Links: what a document pointed at, and whether we hold that version.
+   * The plane's own acquisition receipts and the version chain are provenance's (R13–R18, R47); the receipt's
+   * document-level observation (REC-93, OBSERVATION-LOG-DESIGN.md §4.1) is observation-log's work, registered here
+   * as provenance's receipt listener until that module is extracted (the constructor).
    * ------------------------------------------------------------------ */
   recordCapturedLocator({
-    address,
-    addressNorm,
-    captureSha,
-    retrieved,
-    via = "direct",
-    retrievalLocator = null,
     authorityKind = null,
     authority = null,
     actorClass = "plane",
     actor = null,
-    /* D-455: false only for a caller that writes its OWN look for this
-       act (the monitor's), so one look is one row. */
-    observe = true
-  }) {
-    if (!addressNorm || !captureSha) return { recorded: false };
-    const seen = this.#one(
-      `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
-         FROM captured_locators WHERE address_norm = ? AND via = ?`,
-      captureSha,
-      addressNorm,
-      String(via || "direct")
-    ) || { n: 0, same: 0 };
-    const detail = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
-    this.sql.exec(
-      `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-       ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
-         first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
-         last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
-         retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
-         observations      = observations + 1`,
-      addressNorm,
-      address || addressNorm,
-      captureSha,
-      String(via || "direct"),
-      retrievalLocator,
-      retrieved,
-      retrieved
-    );
-    let observed = null, wrote = false;
-    if (detail !== "unchanged" && observe !== false) {
-      observed = this.#observe({
-        actorClass,
-        actor,
-        /* The archive fallback and a direct acquire are DIFFERENT AUTHORITIES
-           for the same subject, which is D-96's split arriving in the log: an
-           archive observation and a direct one of one address are two rows. A
-           caller that named its own authority (the sweep does) keeps it. */
-        authorityKind: authorityKind || (String(via || "direct") === "direct" ? "acquire" : "link"),
-        authority,
-        level: "document",
-        subjectKind: "address",
-        subject: addressNorm,
-        state: "PRESENT",
-        resultKind: "capture",
-        resultRef: captureSha,
-        detail: `${detail} (via ${String(via || "direct")})`
-      }, retrieved);
-      wrote = observed === null;
-    }
+    observe = true,
+    ...receipt
+  } = {}) {
+    const r = provenanceOf(this.ctx).recordReceipt({
+      ...receipt,
+      context: { authorityKind, authority, actorClass, actor, observe }
+    });
+    if (!r.recorded) return r;
+    const look = (r.listeners || []).find((l) => l.module === "legacy-store");
     return {
       recorded: true,
-      address_norm: addressNorm,
-      via: String(via || "direct"),
-      /* PUBLISHED rather than inferred: a caller can see which of the
-         three this look was, whether a row was actually written, and — if
-         one was attempted and refused — which refusal stopped it. "No row
-         was written" is then a stated outcome with a reason, rather than
-         a silence a reader has to interpret. */
-      observation: detail,
-      observation_written: wrote,
-      observation_refused: observed || null
+      address_norm: r.address_norm,
+      via: r.via,
+      observation: r.observation,
+      observation_written: !!(look && look.answer && look.answer.written === true),
+      observation_refused: look && look.outcome === "refused" ? look.answer : null
     };
   }
-  /** The READ half of the above, added by REC-26. `observations` is not
-   *  bookkeeping — a run of them across an interval is the PRIMARY route by which
-   *  the record establishes that a link was contemporaneous (LINK-FIDELITY.md) —
-   *  and until now nothing could read the number back, which is why nothing could
-   *  notice a machine process inflating it. Deliberately not wired to a control-
-   *  plane op: it is reached over the Durable Object the way the suites reach
-   *  onAlarm and selectionCreate, so I3 is unchanged and no new caller-facing
-   *  surface is created for it. */
-  capturedLocators({ addressNorm = null } = {}) {
-    const rows = addressNorm ? this.#rows(`SELECT * FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm) : this.#rows(`SELECT * FROM captured_locators ORDER BY address_norm, via`);
-    return {
-      address_norm: addressNorm,
-      rows: rows.map((r) => ({ ...r })),
-      observations: rows.reduce((n, r) => n + r.observations, 0)
-    };
+  /* REC-93 (OBSERVATION-LOG-DESIGN.md §4.1): the document-level look a receipt is, `subject_kind = address`, `via` in
+     `detail`, so an archive capture and a direct capture of one address are two observations of one subject. §7'S
+     EDGE-TRIGGERED RULE: `unchanged` writes NO ROW (the receipt's counter is the record of it); `new` and `changed`
+     each write one. The archive fallback and a direct acquire are DIFFERENT AUTHORITIES for the same subject; a
+     caller that named its own authority (the sweep does) keeps it, and one that writes its own look (`observe:
+     false`) gets none here. Answers what happened: `{written}`, or the refusal that stopped the append. */
+  #receiptLook({ address_norm, capture_sha, via, retrieved, observation, context }) {
+    const c = context || {};
+    if (observation === "unchanged" || c.observe === false) return { written: false };
+    const refused = this.#observe({
+      actorClass: c.actorClass || "plane",
+      actor: c.actor ?? null,
+      authorityKind: c.authorityKind || (via === "direct" ? "acquire" : "link"),
+      authority: c.authority ?? null,
+      level: "document",
+      subjectKind: "address",
+      subject: address_norm,
+      state: "PRESENT",
+      resultKind: "capture",
+      resultRef: capture_sha,
+      detail: `${observation} (via ${via})`
+    }, retrieved);
+    return refused ? { ...refused, ok: false } : { written: true };
   }
-  /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
-     file publishes: the default a caller gets by saying nothing, and the
-     ceiling a caller cannot ask past. 200 because a weekly capture of one
-     calendar reaches roughly 50 versions a year and a member reading a chain is
-     reading a HISTORY, not paging a corpus; 1000 because past that the answer
-     stops being something a person reads and becomes something a run walks,
-     and a run has `offset`. Named rather than literal so REC-57's roster walk
-     can see this method carries a cap at all. */
-  static VERSION_CHAIN_LIMIT_DEFAULT = 200;
-  static VERSION_CHAIN_LIMIT_MAX = 1e3;
-  /** PL-10 / D-220 — EVERY VERSION AT AN ADDRESS, IN DATE ORDER, WITH ITS
-   *  BUNDLE, AND NOT ONE NEW BYTE OF SCHEMA TO ANSWER IT.
-   *
-   *  Bob ruled (2026-08-06) that versions of one document must be linked and
-   *  indexed by the same url. **The index he described already existed.**
-   *  `captured_locators` is keyed `(address_norm, capture_sha, via)` with
-   *  `captured_locators_addr ON (address_norm, first_retrieved)`; `register`
-   *  maps `capture_sha` to `bundle_id` on its primary key. So the link is not a
-   *  thing to BUILD, it is a thing to ASK — one indexed seek and one join, and
-   *  this method is the asking.
-   *
-   *  **THEREFORE NO EDGE BETWEEN VERSIONS IS ADDED, AND THAT IS THE ITEM.** An
-   *  explicit `supersedes` relation would be a SECOND COPY of a fact the record
-   *  already holds, and a second copy of a fact drifts from the first — D-164's
-   *  solve-it-once, D-138's guard that guarded nothing. There is no new table,
-   *  no new column, no new index and no new write: `recordCapturedLocator` above
-   *  is untouched and remains the only writer. `test/versionchain.test.mjs`
-   *  asserts that STRUCTURALLY rather than trusting this comment, because a
-   *  comment promising an absence is exactly the kind of guard that has guarded
-   *  nothing here before.
-   *
-   *  ONE VERSION IS ONE `capture_sha`, WHICH IS WHY THIS GROUPS. The primary key
-   *  carries `via` (D-96): an archive sighting of the same bytes is a different
-   *  FACT from a direct one, and the write path keeps both rows deliberately. It
-   *  is not a different VERSION. Grouping on the sha is what stops a document
-   *  seen twice through two routes from reading as two versions — the same
-   *  false-coverage failure this op exists to remove, one axis over. The `via`
-   *  values survive into the answer, so the distinction the key preserves is
-   *  reported rather than flattened away.
-   *
-   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — and never
-   *  `last_retrieved`, which moves every time the target holds still and would
-   *  reorder a settled history as a side effect of re-checking it. `capture_sha`
-   *  is the tiebreak, so the order is TOTAL and `offset` paging cannot repeat or
-   *  skip a version. The record cannot say when the SOURCE published a version;
-   *  it can say when we first saw it, and that difference is why the field is
-   *  named in the answer rather than relabelled "published".
-   *
-   *  D-221's FIX LIVES HERE, and it is a consequence of the shape rather than a
-   *  patch on top of it. The defect was that `heldMatch` found prior versions
-   *  with `locator:"<url>"` — a FULL-TEXT query on a text-indexed field, which
-   *  compiles to a text atom, which creates a rank arm, which orders by
-   *  RELEVANCE; every capture at one address carries identical URL text, the
-   *  bm25 scores tie, and the tiebreak decided. The predecessor named was
-   *  therefore not the previous version at all. Here `at` is resolved by
-   *  ADDRESS EQUALITY and the predecessor is the row immediately before it in
-   *  date order. No text index is consulted, no relevance exists to be ordered
-   *  by, and there is nothing to get wrong.
-   *
-   *  A CHAIN OF ONE IS A CHAIN. A single capture at an address answers with one
-   *  version, `at_index` 0 and `predecessor: null` — that is the record saying
-   *  "these are the first bytes we held", not a degenerate failure, and the
-   *  suite pins it as its own arm.
-   *
-   *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
-   *  every other read in this file compiles, and `total` is counted through the
-   *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
-   *  from a total that something was withheld. Nothing publishes how many rows
-   *  the gate removed, because that count is the leak (REC-36). */
-  versionChain({ addressNorm = null, at = null, limit = null, offset = 0, viewer = null } = {}) {
-    const refuse = (key, detail) => {
-      const row = VERSION_CHAIN_CHECKS[key];
-      return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
-    };
-    const addr = addressNorm == null ? "" : String(addressNorm).trim();
-    if (!addr)
-      return refuse(
-        "VERSION_CHAIN_NO_ADDRESS",
-        "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
-      );
-    const anchor = at == null ? "" : String(at).trim().toLowerCase();
-    if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
-      return refuse(
-        "VERSION_CHAIN_BAD_ANCHOR",
-        `at=${JSON.stringify(String(at).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
-      );
-    const cap = Math.max(1, Math.min(
-      _Store.VERSION_CHAIN_LIMIT_MAX,
-      Math.floor(Number(limit) || _Store.VERSION_CHAIN_LIMIT_DEFAULT)
-    ));
-    const from = Math.max(0, Math.floor(Number(offset) || 0));
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    const CHAIN = `WITH chain AS (
-        SELECT cl.capture_sha                   AS capture_sha,
-               MIN(cl.first_retrieved)          AS first_retrieved,
-               MAX(cl.last_retrieved)           AS last_retrieved,
-               SUM(cl.observations)             AS observations,
-               COUNT(*)                         AS sightings,
-               MIN(cl.address)                  AS address,
-               group_concat(DISTINCT cl.via)    AS via,
-               r.bundle_id                      AS bundle_id,
-               r.path                           AS path,
-               r.encoding                       AS encoding,
-               r.bytes                          AS bytes,
-               r.registered                     AS registered
-          FROM captured_locators cl
-          JOIN register r ON r.capture_sha = cl.capture_sha
-         WHERE cl.address_norm = ?
-           AND (${seen.sql})
-         GROUP BY cl.capture_sha)`;
-    const args = [addr, ...seen.args];
-    const total = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain`, ...args)?.n ?? 0;
-    const shape = (r) => r && {
-      capture_sha: r.capture_sha,
-      bundle_id: r.bundle_id,
-      first_retrieved: r.first_retrieved,
-      last_retrieved: r.last_retrieved,
-      observations: r.observations,
-      sightings: r.sightings,
-      via: String(r.via || "").split(",").filter(Boolean).sort(),
-      address: r.address,
-      path: r.path,
-      encoding: r.encoding,
-      bytes: r.bytes,
-      registered: r.registered
-    };
-    const versions = this.#rows(
-      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
-      ...args,
-      cap,
-      from
-    ).map(shape);
-    let anchorRow = null, predecessor = null, atIndex = null;
-    if (anchor) {
-      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
-      if (!anchorRow)
-        return refuse(
-          "VERSION_CHAIN_NO_SUCH_VERSION",
-          `no version with capture ${anchor.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
-        );
-      const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
-      const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
-      atIndex = this.#one(
-        `${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
-        ...args,
-        ...beforeArgs
-      )?.n ?? 0;
-      predecessor = shape(this.#one(
-        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
-        ...args,
-        ...beforeArgs
-      )) || null;
-    }
-    return {
-      ok: true,
-      address_norm: addr,
-      /* The count of DOCUMENTS is one, always, and saying so is the point of the
-         op: sixty rows here are sixty versions of ONE document, and a consumer
-         that read `count` as a document count would rebuild the exact false
-         coverage D-220 names. It is stated in the answer rather than left to be
-         inferred from a field name. */
-      documents: total > 0 ? 1 : 0,
-      versions,
-      count: versions.length,
-      total,
-      limit: cap,
-      offset: from,
-      /* REC-57's discipline: the bound PUBLISHED is the one APPLIED, after
-         clamping, never the number asked for; and `truncated` settles
-         completeness so "this is all of it" cannot read like "the first N". */
-      truncated: from + versions.length < total,
-      /* Present only when asked for, and null-valued rather than absent when the
-         anchor IS the oldest, so a consumer can tell "there is no earlier
-         version" from "nobody asked". */
-      at: anchorRow,
-      at_index: atIndex,
-      predecessor
-    };
+  capturedLocators(...a) {
+    return provenanceOf(this.ctx).receipts(...a);
+  }
+  versionChain(...a) {
+    return provenanceOf(this.ctx).versionChain(...a);
   }
   /** D-256 — THE "CHANGED FROM" SENTENCES ALREADY WRITTEN, EACH CHECKED AGAINST
    *  THE VERSION CHAIN, AND NOT ONE BYTE OF ANY BODY REWRITTEN.
@@ -74655,7 +78111,7 @@ ${words}`;
         return U("cited_text_truncated", "the cited passage's text is held only to the per-unit cap, so an identity with the newer version cannot be established");
       cited = { extent: at, text: u.text };
     }
-    const found = (x) => ({ extent: safeJson(x.extent), ref: x.ref });
+    const found = (x) => ({ extent: safeJson2(x.extent), ref: x.ref });
     if (whole) {
       const complete = newer.state === "PRESENT" && newer.units.length && !newer.units.some((u) => u.truncated);
       if (!complete)
@@ -74723,7 +78179,7 @@ ${words}`;
   }
   /** The notice for ONE content row. `row` is the stored row (extent as JSON text). */
   #versionNoticeFor(row, viewer, memo = /* @__PURE__ */ new Map()) {
-    const extent = safeJson(row.extent);
+    const extent = safeJson2(row.extent);
     const cap = _Store.VERSION_NOTICE_ADDRESSES_MAX;
     const addrRows = this.#capturedAddresses(row.capture_sha, cap + 1);
     const addresses = addrRows.slice(0, cap).map((r) => r.address_norm);
@@ -76856,7 +80312,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     });
     const candidateFm = _Store.#suggestionFrontmatter(target, persisted);
     const candidate = _Store.basisVersionsOf(candidateFm)[0] ?? null;
-    const substanceOf = (c) => String(c).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f3, i) => i === 3 ? "" : f3).join("	") : ln).join("\n");
+    const substanceOf = (c) => String(c).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f4, i) => i === 3 ? "" : f4).join("	") : ln).join("\n");
     const mine = candidate ? substanceOf(candidate.composition) : "";
     const held = this.#rows(
       `SELECT name, composition FROM inquiry_basis_versions WHERE bundle_id=? LIMIT ?`,
@@ -77814,8 +81270,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  own `governedFetch` spends one on the way out and a double spend would
    *  make this instance pace itself twice as hard as it declared. */
   #captureRequestHostHeld(host, nowMs) {
-    const r = this.#one(`SELECT cooloff_until FROM host_governor WHERE host=?`, host);
-    return !!(r && Number(r.cooloff_until) > nowMs);
+    return governorOf(this.ctx).isHeld(host, nowMs);
   }
   /** The member agent RECORDED on the inquiry, or null. Read from the question's
    *  own frontmatter, which is where inquiry creation would put it — and null is
@@ -77846,17 +81301,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  row under it instead of reporting a fetch that was never attempted. `reason`
    *  is unchanged for every other failure. */
   async #fireCaptureRequest(q) {
-    const token = await this.#monitorToken();
-    if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
     try {
-      const res = await this.env.SELF.fetch(
-        new Request(`https://self/api/?op=acquire&token=${encodeURIComponent(token)}`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ via: "capture-request", request: q.request })
-        })
-      );
-      const out = await res.json().catch(() => null);
+      const d = this.captureRequestDraining({ request: q.request });
+      const res = d.draining ? await captureOf(this.ctx).acquire({}, {
+        cls: "daemon",
+        member: false,
+        storeName: this.#ownNamespace() || "bio",
+        captureRequest: { locator: d.address, purpose: d.purpose, agent: d.ua_mode === "member-browser" ? d.agent : null, render: d.render }
+      }) : { status: 403, body: { ok: false, reason: "CAPTURE_NOT_DRAINING" } };
+      const out = res.body;
       const doc = out && out.ok && out.document;
       if (doc) return {
         ok: true,
@@ -78037,161 +81490,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   aiCredentials(...a) {
     return membershipOf(this.ctx).aiCredentials(...a);
   }
-  /** File the links a captured document made. Replaces this capture's rows
-   *  rather than appending, because a capture's own links are a property of its
-   *  bytes and do not change; a second filing is a re-run, not new information. */
-  recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] }) {
-    if (!sourceCapture) return { recorded: 0 };
-    const now = stampInstant("second");
-    this.sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
-    let n = 0;
-    for (const l of links) {
-      if (!l || !l.address_norm) continue;
-      this.sql.exec(
-        `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
-           citation_norm, fragment, partition, origin, chrome, captured_at, first_seen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
-        sourceBundle,
-        sourceCapture,
-        String(l.ref || l.address),
-        l.address || l.address_norm,
-        l.address_norm,
-        l.citation_norm || l.address_norm,
-        l.fragment || null,
-        l.type || "deferred",
-        l.origin || null,
-        l.chrome ? 1 : 0,
-        capturedAt || now,
-        now
-      );
-      n++;
-    }
-    return { recorded: n, source_capture: sourceCapture };
-  }
-  /** Everything that points AT an address. The reverse index, which is the
-   *  whole reason this is address-keyed. */
-  linksTo({ address_norm }) {
-    const rows = [...this.sql.exec(
-      `SELECT source_capture, source_bundle, link_ref, partition, fragment, citation_norm, captured_at
-       FROM links WHERE address_norm = ?`,
-      address_norm
-    )];
-    return {
-      address_norm,
-      count: rows.length,
-      sources: rows,
-      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))]
-    };
-  }
-  /** Resolve a capture's links against the store, with a contemporaneity
-   *  verdict for each that resolves.
-   *
-   *  The verdict answers one question: is the capture the store holds of the
-   *  target the version the source was pointing at on the day the source was
-   *  captured? Three values, because that question is usually unanswerable and a
-   *  binary scheme would sort every unanswerable case into one bucket or the
-   *  other, either asserting connections nobody established or discarding real
-   *  ones wholesale.
-   *
-   *  The strongest evidence available here is two captures of the target
-   *  BRACKETING the source's retrieval whose bytes hash equal: identical bytes
-   *  across the interval settles it outright and needs no timestamp anyone has
-   *  to trust. Everything weaker is named rather than leaned on. */
-  resolveLinks({ sourceCapture, at = null }) {
-    const rows = [...this.sql.exec(`SELECT * FROM links WHERE source_capture = ?`, sourceCapture)];
-    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
-    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
-    const out = [];
-    const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
-    const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
-    for (const r of rows) {
-      if (r.partition !== "deferred") {
-        tally[r.partition] = (tally[r.partition] || 0) + 1;
-        out.push({ ...r, resolution: r.partition, verdict: null });
-        continue;
-      }
-      const caps = [...this.sql.exec(
-        `SELECT capture_sha, first_retrieved, last_retrieved, observations FROM captured_locators
-         WHERE address_norm = ? AND via = 'direct' ORDER BY first_retrieved`,
-        r.address_norm
-      )];
-      if (!caps.length) {
-        tally.offsite++;
-        out.push({
-          ...r,
-          resolution: "offsite",
-          verdict: null,
-          basis: "the record holds no capture of this address"
-        });
-        continue;
-      }
-      tally.linked++;
-      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T && c.observations > 1) || null;
-      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
-      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
-      let verdict, basis, detail = null, pick = null;
-      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
-      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
-      if (bracket && bracket.capture_sha === sourceCapture) {
-        verdict = "contemporaneous";
-        pick = bracket;
-        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, and those same bytes were seen served on both sides of its retrieval";
-        detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
-      } else if (bracket) {
-        verdict = "contemporaneous";
-        pick = bracket;
-        basis = "the same bytes were seen served on both sides of this document's retrieval and hash equal, so the target did not change across the interval";
-        detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
-      } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
-        verdict = "undetermined";
-        pick = selfCap;
-        basis = "this link points at the document itself: the capture the record holds of its target is this very capture, observed once, so no second observation says whether the target was ever served as anything else";
-        detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
-      } else if (oneCapture) {
-        verdict = "undetermined";
-        pick = before;
-        basis = "the record holds one capture of the target made at this document's retrieval instant and observed once; one observation is not a second version, and it does not establish that the target was unchanged on either side";
-        detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
-      } else if (before && after) {
-        verdict = "undetermined";
-        pick = before;
-        basis = "the target changed somewhere between the captures bracketing this document's retrieval, so which version it pointed at is not established";
-        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, ${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
-      } else if (!before && after) {
-        verdict = "superseded";
-        pick = after;
-        basis = "every capture of the target postdates this document's retrieval, so the record holds a later version than the one pointed at";
-      } else {
-        verdict = "undetermined";
-        pick = before;
-        basis = "the record's captures of the target all predate this document's retrieval, and nothing establishes that it was unchanged in between";
-      }
-      verdicts[verdict]++;
-      const reg = pick ? [...this.sql.exec(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha)][0] : null;
-      out.push({
-        ...r,
-        resolution: "linked",
-        verdict,
-        basis,
-        detail,
-        target_capture: pick ? pick.capture_sha : null,
-        target_bundle: reg ? reg.bundle_id : null,
-        target_retrieved: pick ? pick.first_retrieved : null,
-        target_last_seen: pick ? pick.last_retrieved : null,
-        target_captures: caps.length
-      });
-    }
-    return {
-      sourceCapture,
-      resolved: out.length,
-      at: rows[0].captured_at,
-      tally,
-      verdicts,
-      links: out,
-      note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
-    };
-  }
   /** Project a capture's RESOLVED links into edges the record can traverse.
    *
    *  This is where a link becomes a citation. An unresolved link has no canonical
@@ -78257,99 +81555,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       unresolved: res.tally.offsite,
       note: "only resolved links project, and only to a target some bundle has registered. skipped_unregistered counts targets whose BYTES the record holds while no bundle claims them, which is every acquired-but-unpromoted capture: those become edges when the target is promoted, not before. The edge is links_to and never cites, because the source asserted it and not the group; a member promoting it to cites is a member's act."
     };
-  }
-  /** Append a verdict. Never an update: a verdict that changed is a fact about
-   *  the record, and the current answer is simply the newest row. */
-  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null }) {
-    const now = at || stampInstant("second");
-    this.sql.exec(
-      `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
-      sourceCapture,
-      addressNorm,
-      verdict,
-      basis,
-      targetBundle,
-      targetCapture,
-      now,
-      detail
-    );
-    const all = [...this.sql.exec(
-      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
-      sourceCapture,
-      addressNorm
-    )];
-    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
-  }
-  /* ------------------------------------------------------------------ *
-   * Capture sessions: a capture that needs another tick
-   * ------------------------------------------------------------------ */
-  /** Park what is left of a capture. Expired rows are pruned on the way past,
-   *  which is cheap and means an abandoned session cannot accumulate: a caller
-   *  that walks away costs one row until its hour is up. */
-  saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 36e5, at = null }) {
-    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
-    const iso2 = (d) => stampInstant("second", d);
-    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso2(now));
-    if (!session || !state) return { session: null, saved: false };
-    const cur = [...this.sql.exec(`SELECT ticks FROM capture_sessions WHERE session = ?`, session)][0];
-    const body = JSON.stringify(state);
-    if (cur) {
-      this.sql.exec(
-        `UPDATE capture_sessions SET updated = ?, expires = ?, ticks = ticks + 1, state = ? WHERE session = ?`,
-        iso2(now),
-        iso2(new Date(now.getTime() + ttlMs)),
-        body,
-        session
-      );
-      return { session, saved: true, ticks: cur.ticks + 1, bytes: body.length };
-    }
-    this.sql.exec(
-      `INSERT INTO capture_sessions (session, locator, primary_sha, primary_file, base, created, updated, expires, ticks, state)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      session,
-      locator,
-      primarySha,
-      primaryFile,
-      base,
-      iso2(now),
-      iso2(now),
-      iso2(new Date(now.getTime() + ttlMs)),
-      body
-    );
-    return { session, saved: true, ticks: 1, bytes: body.length };
-  }
-  loadCaptureSession({ session, at = null }) {
-    const now = at ? new Date(at) : /* @__PURE__ */ new Date();
-    const iso2 = stampInstant("second", now);
-    this.sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso2);
-    const r = [...this.sql.exec(`SELECT * FROM capture_sessions WHERE session = ?`, session)][0] || null;
-    if (!r) return {
-      session,
-      found: false,
-      note: "no such capture session: it either never existed, was already finished, or expired"
-    };
-    let state = null;
-    try {
-      state = JSON.parse(r.state);
-    } catch {
-      return { session, found: false, note: "session state did not parse" };
-    }
-    return {
-      session,
-      found: true,
-      locator: r.locator,
-      primarySha: r.primary_sha,
-      primaryFile: r.primary_file,
-      base: r.base,
-      ticks: r.ticks,
-      created: r.created,
-      state
-    };
-  }
-  dropCaptureSession({ session }) {
-    this.sql.exec(`DELETE FROM capture_sessions WHERE session = ?`, session);
-    return { session, dropped: true };
   }
   /* ==================================================================== *
    *  IS-6 — THE INVESTIGATIVE RUN AND ITS OBSERVATION LOG
@@ -81678,7 +84883,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     });
     const recordedSha = recorded && typeof recorded.statements_sha === "string" ? recorded.statements_sha : null;
     const atOpenHeld = row.lens_at_open != null && String(row.lens_at_open).trim() !== "";
-    const atOpenParsed = atOpenHeld ? safeJson(String(row.lens_at_open)) : null;
+    const atOpenParsed = atOpenHeld ? safeJson2(String(row.lens_at_open)) : null;
     const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
     const atOpenUnreadable = atOpenHeld && !atOpen;
     const shaOf = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
@@ -81945,7 +85150,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...seen.args,
       _Store.BIAS_DEBT_QUEUE_MAX
     )) {
-      const recipients = safeJson(row.recipients);
+      const recipients = safeJson2(row.recipients);
       const named = Array.isArray(recipients) ? recipients.filter((x) => typeof x === "string") : [];
       if (me && named.length && !named.includes(me)) continue;
       const raisedMs = Date.parse(row.raised);
@@ -82155,7 +85360,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         "this obligation has already been settled, and a settlement is appended rather than replaced",
         { run: id, settled: _Store.#biasDebtSettledView(row) }
       );
-    const when = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
+    const when = at && ISO_INSTANT2.test(at) ? at : stampInstant("second");
     const settled = this.#biasDebtSettle({
       run: id,
       kind: "resolved",
@@ -82489,189 +85694,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }
     };
   }
-  /* ------------------------------------------------------------------ *
-   * What a host has served
-   * ------------------------------------------------------------------ */
-  /** Look up assets this host has served before, by normalised address.
-   *
-   *  `documents` counts distinct PAGES, and a page is the primary's DOCUMENT
-   *  ADDRESS: `captured_locators.address_norm` for `capture_sha = primary_sha`
-   *  (CAP-13, `CAPTURE-SCALING.md` §Job one, reuse condition 3). Until CAP-13 it
-   *  counted distinct primary SHAS, and a primary sha is the content hash of the
-   *  page's bytes, so one page whose bytes changed between two captures read as
-   *  two documents and met the two-document reuse floor on its own. The document
-   *  address is the identity the record already keys a document on (D-96: an
-   *  archive capture and a direct one land on the same locator row), and D-58
-   *  writes it for every capture.
-   *
-   *  A primary with NO locator row (a capture from before D-58, or one whose
-   *  locator write failed inside its swallowing try) cannot say which page it
-   *  was. It is counted apart, as `documents_undetermined` (distinct primary
-   *  shas), and never guessed into `documents`: it may be a page already counted
-   *  or a new one, and the record cannot say which (CLAUDE.md §2). */
-  siteAssets({ host, addresses = [] }) {
-    if (!host) return { host: null, assets: {} };
-    const out = {};
-    const want = addresses.length ? new Set(addresses) : null;
-    const counts = /* @__PURE__ */ new Map();
-    for (const c of this.sql.exec(
-      `SELECT r.address_norm AS address_norm,
-              COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`,
-      host
-    ))
-      counts.set(c.address_norm, c);
-    for (const r of this.sql.exec(`SELECT * FROM site_assets WHERE host = ?`, host)) {
-      if (want && !want.has(r.address_norm)) continue;
-      const c = counts.get(r.address_norm);
-      out[r.address_norm] = {
-        ...r,
-        documents: c && c.pages || 0,
-        documents_undetermined: c && c.unlocated || 0
-      };
-    }
-    return { host, assets: out, count: Object.keys(out).length };
-  }
-  /** File what a capture saw of a host.
-   *
-   *  The change case is the one that matters. When an address comes back with a
-   *  different sha than the record holds, that is a dated fact about the site,
-   *  AND it retrospectively puts every document that reused the old bytes into
-   *  question. Both are recorded: stable_since moves, changes increments, and
-   *  the affected documents are returned so the caller can act rather than
-   *  having to go looking. */
-  recordSiteAssets({ host, primarySha, observations = [], at = null }) {
-    if (!host || !primarySha) return { host: null, recorded: 0 };
-    const now = at || stampInstant("second");
-    let added = 0, changedCount = 0;
-    const changed = [];
-    const fromObs = (o) => typeof o.reused_from === "string" && /^[0-9a-f]{64}$/.test(o.reused_from) ? o.reused_from : null;
-    for (const o of observations) {
-      if (!o || !o.address_norm || !o.sha256) continue;
-      const cur = [...this.sql.exec(
-        `SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`,
-        host,
-        o.address_norm
-      )][0] || null;
-      if (!cur) {
-        this.sql.exec(
-          `INSERT INTO site_assets (host, address_norm, address, sha256, content_type, bytes, kind,
-             first_seen, last_seen, last_fetched, stable_since, changes, last_fetched_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-          host,
-          o.address_norm,
-          o.address || o.address_norm,
-          o.sha256,
-          o.content_type || null,
-          o.bytes || 0,
-          o.kind || null,
-          now,
-          now,
-          now,
-          now,
-          o.reused ? fromObs(o) : primarySha
-        );
-        added++;
-      } else if (!o.reused && cur.sha256 !== o.sha256) {
-        const affected = [...this.sql.exec(
-          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
-          host,
-          o.address_norm
-        )];
-        this.sql.exec(
-          `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
-             last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
-          o.sha256,
-          o.content_type || cur.content_type,
-          o.bytes || 0,
-          now,
-          now,
-          primarySha,
-          now,
-          host,
-          o.address_norm
-        );
-        changedCount++;
-        changed.push({
-          address_norm: o.address_norm,
-          was: cur.sha256,
-          now: o.sha256,
-          reused_by: affected.map((a) => a.primary_sha)
-        });
-        for (const a of affected)
-          this.sql.exec(
-            `INSERT OR IGNORE INTO reuse_verdicts
-               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
-            a.primary_sha,
-            host,
-            o.address_norm,
-            cur.sha256,
-            o.sha256,
-            `a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source`,
-            now
-          );
-      } else if (!o.reused) {
-        this.sql.exec(
-          `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
-          now,
-          now,
-          primarySha,
-          host,
-          o.address_norm
-        );
-      } else {
-        this.sql.exec(
-          `UPDATE site_assets SET last_seen = ? WHERE host = ? AND address_norm = ?`,
-          now,
-          host,
-          o.address_norm
-        );
-      }
-      this.sql.exec(
-        `INSERT INTO site_asset_refs (host, address_norm, primary_sha, at, reused, sha256, reused_from)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(host, address_norm, primary_sha) DO UPDATE SET at = excluded.at,
-           reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
-        host,
-        o.address_norm,
-        primarySha,
-        now,
-        o.reused ? 1 : 0,
-        o.sha256,
-        o.reused ? fromObs(o) : null
-      );
-    }
-    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
-  }
-  /** CAP-4: the reused subresource PARTS of a bundle, so ratification can
-   *  re-fetch each one. A part is reused when a capture in this bundle drew an
-   *  asset from the record rather than requesting it, which is exactly a
-   *  `site_asset_refs` row with `reused = 1` whose `primary_sha` is one of the
-   *  bundle's registered captures. The register is the trust root and keys on
-   *  capture_sha, so the join to it is what scopes the reused parts to THIS
-   *  bundle. `reused_sha` is the bytes the capture actually reused (the ref row's
-   *  own sha, not necessarily what `site_assets` holds NOW -- the source may have
-   *  changed since), and `address` comes along from `site_assets` because a
-   *  re-fetch needs the real address, not the normalised key. */
-  reusedParts(bundleId) {
-    if (!bundleId) return { bundleId: null, parts: [] };
-    const parts = this.#rows(
-      `SELECT ar.host AS host, ar.address_norm AS address_norm, ar.primary_sha AS primary_sha,
-              ar.sha256 AS reused_sha, ar.reused_from AS reused_from,
-              sa.address AS address, sa.content_type AS content_type
-       FROM site_asset_refs ar
-       JOIN register r ON r.capture_sha = ar.primary_sha
-       LEFT JOIN site_assets sa ON sa.host = ar.host AND sa.address_norm = ar.address_norm
-       WHERE r.bundle_id = ? AND ar.reused = 1
-       ORDER BY ar.host, ar.address_norm`,
-      bundleId
-    ).map((p) => ({ ...p, reused_from_state: p.reused_from ? "recorded" : "undetermined" }));
-    return { bundleId, parts, count: parts.length };
-  }
   /** D-65 — THE MONITOR'S LOOK, written to the log as `OBSERVATION-LOG-DESIGN.md` §4.1's
    *  second row states it: *"the same vocabulary, `authority_kind = sweep`, `authority` = the
    *  named request or ratified sweep"*. An `op=monitor` tick has no capture request; the
@@ -82867,218 +85889,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       at
     );
   }
-  /** CAP-4: append the outcome of a ratification's re-fetch of the reused parts.
-   *  Appended and dated, never overwritten: a re-ratification is a fresh attempt
-   *  and a fresh set of dated rows, so the history of what the source said each
-   *  time it was checked is readable. The control plane owns all outbound R2 and
-   *  network traffic (VERIFICATION.md), so it does the fetching and hashing and
-   *  hands the store the verdicts to commit; the store invents none of them. */
-  recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
-    const now = at || stampInstant("second");
-    let recorded = 0;
-    const refusals = [];
-    for (const v of verdicts) {
-      if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
-      this.sql.exec(
-        `INSERT OR IGNORE INTO reuse_verdicts
-           (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-         VALUES (?, ?, ?, ?, 'ratify', ?, ?, ?, ?, ?)`,
-        v.source_capture,
-        bundleId,
-        v.host || "",
-        v.address_norm,
-        v.verdict,
-        v.reused_sha || "",
-        v.observed_sha ?? null,
-        v.basis || "",
-        now
-      );
-      recorded++;
-      const mapped = v.verdict === "confirmed" ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null } : v.verdict === "changed" ? {
-        state: "PRESENT",
-        detail: "changed",
-        ref: v.observed_sha || v.reused_sha || null
-      } : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null } : null;
-      if (mapped)
-        refusals.push(this.#observe({
-          actorClass: "plane",
-          authorityKind: "ratify",
-          authority: bundleId || v.source_capture,
-          level: "document",
-          subjectKind: "address",
-          subject: v.address_norm,
-          state: mapped.state,
-          resultKind: mapped.ref ? "capture" : null,
-          resultRef: mapped.ref,
-          detail: mapped.detail
-        }, now));
-    }
-    return {
-      ok: true,
-      bundleId,
-      recorded,
-      at: now,
-      /* Refusals are COLLECTED and reported, never thrown: §14b.7's
-         partial-results rule applied to the log, the same property
-         `op=airuntick` depends on. A null entry is a row that landed. */
-      observation_refusals: refusals.filter(Boolean)
-    };
-  }
-  /** CAP-4: read the reuse verdicts, newest first. By bundle (ratify verdicts) or
-   *  by source_capture (which also surfaces the free posthoc verdicts that carry
-   *  no bundle). The current answer for a part is its newest row; the older rows
-   *  are the trail of what the source said each time it was checked. */
-  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
-    if (bundleId)
-      return { bundleId, verdicts: this.#rows(
-        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
-         FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`,
-        bundleId
-      ) };
-    if (sourceCapture)
-      return { sourceCapture, verdicts: this.#rows(
-        `SELECT source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at
-         FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`,
-        sourceCapture
-      ) };
-    return { verdicts: [] };
-  }
-  /** Chrome by RECURRENCE, which works on sites that never write a <nav>.
-   *  A ratio, not a boolean: the threshold is a tuning decision and belongs to
-   *  the caller, so both numbers are returned and nothing is decided here.
-   *
-   *  CAP-13: a document is a PAGE (the primary's `captured_locators.address_norm`),
-   *  exactly as in `siteAssets`, so a page captured often no longer makes its own
-   *  assets read as the site's chrome. Primaries with no page on record are
-   *  reported apart as `documents_undetermined` and enter neither the numerator
-   *  nor the denominator: the share and the verdict rest on determined pages. */
-  siteChrome({ host, threshold = 0.6 }) {
-    if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
-    const d = [...this.sql.exec(
-      `SELECT COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ?`,
-      host
-    )][0];
-    const documents = d && d.pages || 0;
-    const undetermined = d && d.unlocated || 0;
-    const assets = [];
-    for (const r of this.sql.exec(
-      `SELECT r.address_norm AS address_norm,
-              COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r
-         LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`,
-      host
-    )) {
-      const share = documents ? r.pages / documents : 0;
-      assets.push({
-        address_norm: r.address_norm,
-        documents: r.pages,
-        documents_undetermined: r.unlocated || 0,
-        share,
-        chrome: documents >= 3 && share >= threshold
-      });
-    }
-    assets.sort((a, b) => b.share - a.share);
-    return {
-      host,
-      documents,
-      documents_undetermined: undetermined,
-      threshold,
-      assets,
-      note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents") + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, so which document each was is undetermined and none is counted` : "")
-    };
-  }
-  /* ------------------------------------------------------------------ *
-   * Observed runtime limits
-   * ------------------------------------------------------------------ */
-  /** What we last saw this runtime allow, and whether it is time to look again.
-   *  `probeDue` is the part that matters: an instance that only ever learns a
-   *  ceiling downward would run a paid account at free-tier caps forever, so
-   *  after enough confirmations it deliberately goes back to running without
-   *  one and lets itself be refused. */
-  captureLimit(runtime) {
-    const r = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
-    const PROBE_EVERY = 25;
-    return r ? { ...r, probeDue: r.since_probe >= PROBE_EVERY, probeEvery: PROBE_EVERY } : { runtime, observed: null, probeDue: true, probeEvery: PROBE_EVERY };
-  }
-  /** Record an observation. Called with `observed: null` for a run that was
-   *  never refused, which is NOT evidence about where the ceiling is and only
-   *  advances the counter toward the next probe. */
-  recordCaptureLimit({ runtime = "subrequests", observed = null, at = null }) {
-    const now = at || stampInstant("second");
-    const cur = [...this.sql.exec(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime)][0] || null;
-    if (observed == null) {
-      if (cur) this.sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
-      return {
-        runtime,
-        observed: cur ? cur.observed : null,
-        recorded: false,
-        note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is"
-      };
-    }
-    if (!cur) {
-      this.sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe)
-                     VALUES (?, ?, ?, ?, 1, 0)`, runtime, observed, now, now);
-      return { runtime, observed, recorded: true, moved: false, samples: 1 };
-    }
-    if (cur.observed === observed) {
-      this.sql.exec(`UPDATE capture_limits SET observed_at = ?, samples = samples + 1, since_probe = 0 WHERE runtime = ?`, now, runtime);
-      return { runtime, observed, recorded: true, moved: false, samples: cur.samples + 1 };
-    }
-    this.sql.exec(`UPDATE capture_limits SET previous = observed, moved_at = ?, observed = ?, observed_at = ?, samples = 1, since_probe = 0
-                   WHERE runtime = ?`, now, observed, now, runtime);
-    return { runtime, observed, previous: cur.observed, moved: true, moved_at: now, recorded: true, samples: 1 };
-  }
-  /* ---- D-98: the task inbox ----
-   *
-   * Bob RULED that an undetermined-authority capture creates a task
-   * AUTOMATICALLY AT CAPTURE, through a PRODUCER/CONSUMER QUEUE, and the queue
-   * is the safety property rather than a transport detail.
-   *
-   * The split, stated once here because it is the whole point: the capture path
-   * may only ENQUEUE. It cannot write a task, cannot name an assignee, cannot
-   * set a status, cannot forge a history entry. Everything a member would READ
-   * off a task is bounded at the enqueue boundary; everything a member would
-   * ACT on is decided by the consumer, which is the sole writer. So the blast
-   * radius of a leaked daemon credential stops at `task_queue`, where the worst
-   * it can do is queue noise that dedups against itself.
-   *
-   * That is also why the grammar runs at the WRITE and not only at the gate.
-   * The transport for these tasks MIGHT ONE DAY BE EMAIL, which renders in a
-   * client we do not control, so a malformed task must never land at all rather
-   * than be caught later at ratification.
-   */
-  /** PRODUCER. Called from the capture path. Bounds what it accepts, records
-   *  no decision, and is idempotent on (kind, capture_sha) so a re-capture loop
-   *  cannot flood the queue. */
-  async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
-    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
-    if (typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha))
-      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a bundle does not exist yet at capture time" };
-    const text = boundedSubject(subject) || "a capture whose authority could not be determined";
-    const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
-    const existing = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
-    if (existing) {
-      const armedAt2 = await this.#armDrain();
-      return { ok: true, queued: false, deduped: true, kind, captureSha, armedAt: armedAt2 };
-    }
-    this.sql.exec(
-      `INSERT INTO task_queue (kind, capture_sha, subject, locator, enqueued) VALUES (?,?,?,?,?)`,
-      kind,
-      captureSha,
-      text,
-      loc,
-      now
-    );
-    const armedAt = await this.#armDrain();
-    return { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
-  }
   /** The RULED routing order, resolved at write time by the consumer.
    *
    *  1. the referred bundle's project manager, 2. a group admin, 3. nobody.
@@ -83173,7 +85983,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 50)));
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT2.test(now) ? now : stampInstant("second");
     const queued = this.#rows(`SELECT * FROM task_queue ORDER BY enqueued, capture_sha LIMIT ?`, cap);
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     for (const q of queued) {
@@ -83445,7 +86255,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const target = this.#one(`SELECT member_id FROM members WHERE member_id=? AND status='active'`, to);
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT2.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -83493,7 +86303,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT2.test(now) ? now : stampInstant("second");
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
@@ -83648,59 +86458,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...head
     };
   }
-  /* ---- D-104: source reachability ----
-   *
-   * The archive fallback fires after THREE CONSECUTIVE FAILURES OR FOURTEEN
-   * DAYS (RULED, AUTHORITY-AND-TRUST.md). This is the counter it will read, and
-   * the whole reason it exists before the fallback does is so the exclusion
-   * below is designed in rather than discovered afterwards.
-   *
-   * A GOVERNED REFUSAL IS NOT A FAILURE. When the per-host governor holds a
-   * request, the source was never asked, so nothing was learned about it. If a
-   * governed refusal counted, sustained self-throttling would trip the fallback:
-   * we would fetch from the Internet Archive because WE paced ourselves, which
-   * is backwards, and it would load somebody else's infrastructure to solve a
-   * problem we created. Bob, 2026-07-31: the governor keeps traffic low enough
-   * that being banned is not a concern, which is exactly why its refusals will
-   * be COMMON and must never be mistaken for the source being unreachable.
-   *
-   * The same shape of mistake the 2026-07-31 CDX measurement found in a
-   * different mechanism: an empty-body digest matching another empty-body digest
-   * looks like "unchanged" and means nothing. Equality that costs nothing to
-   * produce is not evidence.
-   */
-  /* CHOSEN, not measured, and recorded as such in MEASUREMENTS.md. Bob framed
-     three-or-fourteen as a suggestion for finding an auditable alternative path
-     and left the metric to this thread, 2026-07-31.
-     *
-     * The third constant is the thread's own judgement and the reason it exists
-     * is worth stating. With a single failure able to age into eligibility, a
-     * document that failed once and was then never retried becomes eligible
-     * after a fortnight, which reads OUR MONITORING NEGLECT as the source being
-     * unreachable. That is D-104's mistake one level up: an outcome that cost
-     * nothing to produce (not asking again) turning into evidence about someone
-     * else. So the age arm requires corroboration too. Two failures a fortnight
-     * apart is a source that has actually been unreachable; one failure and
-     * silence is a gap in our own attention. */
-  static FALLBACK_CONSECUTIVE_FAILURES = 3;
-  static FALLBACK_STALE_DAYS = 14;
-  static FALLBACK_MIN_FAILURES_FOR_AGE = 2;
-  /* Overridable PER INSTANCE at deploy time, never at runtime, exactly as
-     GOVERNOR_APPETITE_PER_MIN is. A test instance can be told to fail fast so
-     the fallback can be exercised without waiting a fortnight; a runtime op
-     would be a fence anyone holding a credential could lower, which is not a
-     fence. Bad values fall back to the constants rather than being obeyed. */
-  #thresholds() {
-    const pick = (v, dflt, min) => {
-      const n = Number(v);
-      return Number.isFinite(n) && n >= min ? n : dflt;
-    };
-    return {
-      failures: pick(this.env.FALLBACK_CONSECUTIVE_FAILURES, _Store.FALLBACK_CONSECUTIVE_FAILURES, 1),
-      days: pick(this.env.FALLBACK_STALE_DAYS, _Store.FALLBACK_STALE_DAYS, 0),
-      minForAge: pick(this.env.FALLBACK_MIN_FAILURES_FOR_AGE, _Store.FALLBACK_MIN_FAILURES_FOR_AGE, 1)
-    };
-  }
   /* ===========================================================   *  CAP-3: the archive-fallback MONITORING consumer.
    *
    *  The decision half and the capture half of the archive fallback both work
@@ -83820,7 +86577,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
      attention for the ordinary path to retry, D-104 one level up (the age arm's
      own reasoning in `sourceReachability`), never evidence the source is gone. */
   #monitorFloor() {
-    const TH = this.#thresholds();
+    const TH = captureOf(this.ctx).reachabilityThresholds();
     return Math.max(1, Math.min(TH.failures, TH.minForAge));
   }
   /* Pending monitoring work keeps the one alarm armed; none lets it
@@ -84143,13 +86900,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         frequency_source: "undetermined",
         why: `no frequency authored, and the content type read at this address on ${type.read_at} is undetermined (${type.basis || "no basis recorded"})`
       };
-      const f3 = Object.prototype.hasOwnProperty.call(_Store.CONTRACT_FREQUENCY, type.contract) ? _Store.CONTRACT_FREQUENCY[type.contract] : void 0;
+      const f4 = Object.prototype.hasOwnProperty.call(_Store.CONTRACT_FREQUENCY, type.contract) ? _Store.CONTRACT_FREQUENCY[type.contract] : void 0;
       return {
-        monitor_frequency: f3 ?? null,
+        monitor_frequency: f4 ?? null,
         frequency_source: "contract",
         contract: type.contract,
         content_type: type.content_type ?? null,
-        ...f3 === null ? { why: "no frequency authored, and an unmonitorable document has no check clock: its bytes carry no substance to watch" } : f3 === void 0 ? { why: `no frequency authored, and the contract '${type.contract}' is given no frequency` } : {}
+        ...f4 === null ? { why: "no frequency authored, and an unmonitorable document has no check clock: its bytes carry no substance to watch" } : f4 === void 0 ? { why: `no frequency authored, and the contract '${type.contract}' is given no frequency` } : {}
       };
     };
     const rows = [];
@@ -84347,114 +87104,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     } catch (e) {
       return { ok: false, reason: String(e && e.message || e) };
     }
-  }
-  /** Record the outcome of one attempt on one document address.
-   *
-   *  `outcome` is deliberately a closed set, because the entire value of this
-   *  table is that it distinguishes kinds of not-getting-the-bytes, and a free
-   *  string would let a caller collapse the distinction by accident.
-   *    success         the source served us the document
-   *    source_refused  the ORIGIN answered 4xx/5xx: evidence about the source
-   *    fetch_failed    the network failed reaching it: also evidence
-   *    governed        OUR governor declined to ask: evidence about US
-   */
-  async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
-    if (typeof addressNorm !== "string" || addressNorm === "")
-      return { ok: false, reason: "NO_ADDRESS" };
-    if (!SOURCE_OUTCOMES.includes(outcome))
-      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : stampInstant("second");
-    const st = Number.isInteger(status) ? status : null;
-    this.sql.exec(
-      `INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?)
-       ON CONFLICT(address_norm) DO NOTHING`,
-      addressNorm,
-      now
-    );
-    if (outcome === "governed") {
-      this.sql.exec(
-        `UPDATE source_reachability
-            SET governed_refusals = governed_refusals + 1, last_outcome = ?, updated_at = ?
-          WHERE address_norm = ?`,
-        outcome,
-        now,
-        addressNorm
-      );
-      return { ok: true, counted: false, ...this.sourceReachability({ addressNorm, now }) };
-    }
-    if (outcome === "success") {
-      this.sql.exec(
-        `UPDATE source_reachability
-            SET attempts = attempts + 1, consecutive_failures = 0, first_failure_since = NULL,
-                last_success = ?, last_outcome = ?, last_status = ?, updated_at = ?
-          WHERE address_norm = ?`,
-        now,
-        outcome,
-        st,
-        now,
-        addressNorm
-      );
-      return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
-    }
-    this.sql.exec(
-      `UPDATE source_reachability
-          SET attempts = attempts + 1, failures_total = failures_total + 1,
-              consecutive_failures = consecutive_failures + 1,
-              first_failure_since = COALESCE(first_failure_since, ?),
-              last_failure = ?, last_outcome = ?, last_status = ?, updated_at = ?
-        WHERE address_norm = ?`,
-      now,
-      now,
-      outcome,
-      st,
-      now,
-      addressNorm
-    );
-    if (this.#monitorConfigured()) await this.#armScheduler();
-    return { ok: true, counted: true, ...this.sourceReachability({ addressNorm, now }) };
-  }
-  /** The reachability of one document address, and whether the RULED fallback
-   *  threshold is met. Returns the verdict AND the two facts it is computed
-   *  from, so a caller never has to re-derive it and a reader can see why. */
-  sourceReachability({ addressNorm = null, now = null } = {}) {
-    const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
-    if (!row) {
-      return {
-        address_norm: addressNorm,
-        known: false,
-        consecutive_failures: 0,
-        governed_refusals: 0,
-        fallback_eligible: false,
-        basis: "no attempt on this address has ever been recorded"
-      };
-    }
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
-    const TH = this.#thresholds();
-    const byCount = row.consecutive_failures >= TH.failures;
-    const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
-    const staleDays = since === null ? 0 : (Date.parse(at) - since) / 864e5;
-    const byAge = row.consecutive_failures >= TH.minForAge && staleDays >= TH.days;
-    return {
-      address_norm: row.address_norm,
-      known: true,
-      consecutive_failures: row.consecutive_failures,
-      attempts: row.attempts,
-      failures_total: row.failures_total,
-      /* Reported beside the verdict on purpose. A number excluded from a
-         decision must stay visible or the exclusion cannot be audited. */
-      governed_refusals: row.governed_refusals,
-      last_success: row.last_success || null,
-      last_failure: row.last_failure || null,
-      last_outcome: row.last_outcome || null,
-      last_status: row.last_status === null ? null : row.last_status,
-      first_failure_since: row.first_failure_since || null,
-      failing_days: since === null ? 0 : Math.floor(staleDays),
-      fallback_eligible: byCount || byAge,
-      /* Reported so a verdict can be audited against the thresholds actually in
-         force, which on a test instance are not the shipped constants. */
-      thresholds: TH,
-      basis: byCount ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}` : byAge ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures` : row.governed_refusals > 0 && row.consecutive_failures === 0 ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed` : row.consecutive_failures === 1 && staleDays >= TH.days ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it` : "not eligible: the threshold is not met"
-    };
   }
   /* ================================================================   * PL-12 / D-84 — THE BIAS OBJECT'S THREE ACTS, and DEC-54's four scopes
    * where they are ENFORCED rather than described.
@@ -85100,6 +87749,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     try {
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
+        ...captureOps(captureOf(this.ctx), url, body, this.env),
         /* REC-26. promote() itself is UNCHANGED and stays synchronous — this
            wrapper is the producer-side ARM for the monitor-cadence consumer, in
            the shape SCHEDULER.md prescribes ("arm it from whatever producer
@@ -85167,9 +87817,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           target: url.searchParams.get("target"),
           viewer: url.searchParams.get("viewer")
         }),
-        capturelimit: () => this.captureLimit(url.searchParams.get("runtime") || "subrequests"),
-        siteassets: () => this.siteAssets(body || { host: url.searchParams.get("host") }),
-        recordsiteassets: () => this.recordSiteAssets(body || {}),
         /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
@@ -85287,17 +87934,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer")
         }),
-        reusedparts: () => this.reusedParts(url.searchParams.get("id")),
-        recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         /* D-65: the monitor's look. The actor is the control plane's stamp, from the query string. */
         monitorlook: () => this.recordMonitorLook({
           ...body || {},
           actorClass: url.searchParams.get("actorClass"),
           actor: url.searchParams.get("actor")
-        }),
-        reuseverdicts: () => this.reuseVerdicts({
-          bundleId: url.searchParams.get("bundle"),
-          sourceCapture: url.searchParams.get("capture")
         }),
         /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
            sha, and the reverse index by raw entity reference. */
@@ -85334,7 +87975,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           url.searchParams.get("sha256"),
           url.searchParams.get("page") == null ? null : {
             page: Number(url.searchParams.get("page")),
-            rect: safeJson(url.searchParams.get("rect"))
+            rect: safeJson2(url.searchParams.get("rect"))
           },
           url.searchParams.get("viewer"),
           url.searchParams.get("limit")
@@ -85576,15 +88217,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         /* D-64: the daily render allowance. `renderadmit` takes a render or records
            a DEFERRAL; `renderspend` adds the browser time a render reported. */
-        renderadmit: () => this.renderAdmit(body || {}),
-        renderspend: () => this.renderSpend(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
         recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
-        recordlinks: () => this.recordLinks(body || {}),
-        resolvelinks: () => this.resolveLinks({ sourceCapture: url.searchParams.get("capture") }),
-        linksto: () => this.linksTo({ address_norm: url.searchParams.get("address") }),
-        recordlinkverdict: () => this.recordLinkVerdict(body || {}),
         projectlinks: () => this.projectLinks({
           sourceCapture: url.searchParams.get("capture"),
           sourceBundle: url.searchParams.get("bundle") || null
@@ -85925,15 +88560,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
            member actions. */
-        recordsourceoutcome: () => this.recordSourceOutcome(body || {}),
-        /* `now` is readable so a suite can pin the instant. A verdict with a
-           time arm that can only be evaluated against the wall clock is a
-           verdict no test can assert without being about the day it runs. */
-        sourcereach: () => this.sourceReachability({
-          addressNorm: url.searchParams.get("address"),
-          now: url.searchParams.get("now")
-        }),
-        taskenqueue: () => this.taskEnqueue(body || {}),
         taskdrain: () => this.taskDrain(body || {}),
         tasks: () => this.taskList({
           assignee: url.searchParams.get("assignee"),
@@ -85944,10 +88570,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         taskforward: () => this.taskForward(body || {}),
         taskresolve: () => this.taskResolve(body || {}),
-        governoradmit: () => this.governorAdmit(body || { host: url.searchParams.get("host") }),
-        governorreport: () => this.governorReport(body || {}),
-        governorconfig: () => this.governorConfig(body || {}),
-        governorstate: () => this.governorState(body || { host: url.searchParams.get("host") }),
+        ...governorRoutes(governorOf(this.ctx), url, body),
         /* IS-6. The investigative run, on the capture-session shape and routed
            beside it. `viewer` on the two READS is the control plane's
            server-side stamp and never a caller's word: the run names an inquiry
@@ -86035,14 +88658,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           limit: url.searchParams.get("limit")
         }),
-        savecapturesession: () => this.saveCaptureSession(body || {}),
-        loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
-        dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),
-        sitechrome: () => this.siteChrome({
-          host: url.searchParams.get("host"),
-          threshold: Number(url.searchParams.get("threshold")) || 0.6
-        }),
-        recordcapturelimit: () => this.recordCaptureLimit(body || {}),
         projection: () => this.projection({
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
@@ -86600,10 +89215,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         publish: () => this.publish(body || {}),
         verify: () => this.verifySha((url.searchParams.get("sha256") || "").toLowerCase()),
         publishedlist: () => this.publishedList(),
-        knock: () => this.knock(body || {}),
-        inboxlist: () => this.inboxList(url.searchParams.get("status") || null),
-        inboxget: () => this.inboxGet(url.searchParams.get("id")),
-        inboxresolve: () => this.inboxResolve(body || {}),
         purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") })
       };
       if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
@@ -86615,122 +89226,124 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   }
 };
 
-// src/index.mjs
-function userAgent(env, purpose = "acquire", delegated = null) {
-  const version = env && env.VERSION || "0.0.0";
-  const instance = env && env.INSTANCE_NAME || "unnamed";
-  if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
-  return civicosUserAgent(version, instance, purpose);
-}
-async function archiveSelect(env, st, address) {
-  const addrNorm = normalizeAddress(address);
-  const reach2 = (await (await st.fetch(
-    `http://x/sourcereach?address=${encodeURIComponent(addrNorm)}`
-  )).json()).result;
-  if (!reach2.fallback_eligible) {
-    return { ok: false, status: 409, payload: {
-      ok: false,
-      reason: "NOT_ELIGIBLE",
-      detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
-      reachability: reach2
-    } };
-  }
+// src/capture/ops.mjs
+async function ask(store, path, init) {
   try {
-    await st.fetch("http://x/governorconfig", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ host: "web.archive.org", appetite_per_min: 24 })
-    });
+    const out = await (await store.fetch(path, init)).json();
+    return out && out.ok === true ? { answered: true, result: out.result } : { answered: false };
   } catch {
+    return { answered: false };
   }
-  let res;
-  try {
-    const g = await governedFetch(env, st, cdxQuery(address), "archive-lookup");
-    if (g.refusedByGovernor)
-      return { ok: false, status: 429, payload: {
+}
+async function linksOp(url, store, { json: json2, storeSilent: storeSilent2, viewer }) {
+  const v = `viewer=${encodeURIComponent(viewer ?? "")}`;
+  const address = url.searchParams.get("address");
+  const capture = url.searchParams.get("capture");
+  const host = url.searchParams.get("host");
+  let r;
+  if (address) r = await ask(store, `http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`);
+  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&limit=${encodeURIComponent(url.searchParams.get("limit") || "")}&${v}`);
+  else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await ask(store, `http://x/resolvelinks?capture=${capture}&${v}`);
+  else return json2({
+    ok: false,
+    reason: "NEED_CAPTURE_OR_ADDRESS",
+    detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
+  }, 400);
+  if (!r.answered) return storeSilent2("links");
+  return json2({ ok: true, ...r.result });
+}
+async function captureObjectOp(req, url, env, { json: json2, storageAbsent: storageAbsent2, requiredArgument: requiredArgument2, key, storeName, cls }) {
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2("capture", "R2 is not configured on this instance");
+  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return json2({ ok: false, ...requiredArgument2(
+      "capture",
+      "sha256",
+      "<64 lowercase hex>",
+      "capture requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const k = key(sha);
+  if (req.method === "PUT" || req.method === "POST") {
+    const body = new Uint8Array(await req.arrayBuffer());
+    const d = await crypto.subtle.digest("SHA-256", body);
+    const digest = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    if (digest !== sha)
+      return json2({
         ok: false,
-        reason: "HOST_COOLING_OFF",
-        detail: `the governor is holding requests to web.archive.org (${g.reason})`,
-        retry_in_ms: g.retry_in_ms || 0
-      } };
-    res = g.res;
-  } catch (e) {
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+        reason: "INTEGRITY",
+        detail: "body hash does not match the sha256 parameter",
+        expected: sha,
+        got: digest,
+        store: storeName,
+        tokenClass: cls
+      }, 400);
+    const existing = await env.CAPTURES.head(k);
+    if (existing) return json2({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
+    await env.CAPTURES.put(k, body, { sha256: d });
+    return json2({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
   }
-  if (!res.ok)
-    return { ok: false, status: 502, payload: {
-      ok: false,
-      reason: "ARCHIVE_REFUSED",
-      status: res.status,
-      detail: res.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
-    } };
-  const parsed = parseCdx(await res.text());
-  if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
-  const sel = selectCapture(parsed.rows);
-  if (!sel.ok)
-    return { ok: false, status: 404, payload: {
-      ok: false,
-      reason: sel.reason,
-      detail: sel.detail,
-      considered: sel.considered,
-      address
-    } };
-  const replay = replayLocator(sel.chosen);
-  return {
-    ok: true,
-    reach: reach2,
-    chosen: sel.chosen,
-    rejected: sel.rejected,
-    usable_count: sel.usable_count,
-    replay,
-    hop: archiveHop(sel.chosen, replay)
-  };
+  const wantRange = req.headers.get("range");
+  const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : void 0);
+  const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
+  if (!obj) return json2({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
+  return new Response(obj.body, {
+    status: wantRange ? 206 : 200,
+    headers: {
+      "content-type": "application/octet-stream",
+      "access-control-allow-origin": "*",
+      "x-capture-sha256": sha,
+      ...dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}
+    }
+  });
 }
-async function governedFetch(env, stub, target, purpose, delegated = null) {
-  let host = null;
-  try {
-    host = new URL(target).host;
-  } catch {
-  }
-  let waitMs = 0;
-  if (host && stub) {
-    try {
-      const a = await (await stub.fetch("http://x/governoradmit", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host })
-      })).json();
-      const g = a && a.result || null;
-      if (g && g.admitted === false)
-        return {
-          refusedByGovernor: true,
-          reason: g.reason || "governed",
-          retry_in_ms: g.retry_in_ms || 0,
-          last_refusal_status: g.last_refusal_status || null
-        };
-      waitMs = g && g.wait_ms || 0;
-    } catch {
-    }
-  }
-  if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
-  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose, delegated) } });
-  if (host && stub) {
-    const ra = res.headers.get("retry-after");
-    let raMs = null;
-    if (ra) {
-      const n = Number(ra);
-      raMs = Number.isFinite(n) ? n * 1e3 : Math.max(0, Date.parse(ra) - Date.now() || 0);
-    }
-    try {
-      await stub.fetch("http://x/governorreport", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host, status: res.status, retry_after_ms: raMs })
-      });
-    } catch {
-    }
-  }
-  return { res };
+async function archiveLookupOp(req, url, store, { json: json2, storeSilent: storeSilent2 }) {
+  const body = req.method === "POST" ? await req.json().catch(() => null) : null;
+  const address = body?.address || url.searchParams.get("address");
+  const r = await ask(store, "http://x/archivelookup", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ address })
+  });
+  if (!r.answered) return storeSilent2("archivelookup");
+  return json2(r.result.body, r.result.status);
+}
+async function acquireOp(req, env, store, { json: json2, storeSilent: storeSilent2, storageAbsent: storageAbsent2, cls, member, sessMember, storeName }) {
+  if (req.method !== "POST") return { response: json2({ ok: false, error: "acquire is a POST" }, 405) };
+  if (typeof env.CAPTURES?.put !== "function")
+    return { response: storageAbsent2("acquire", "this instance has no evidence storage configured") };
+  const body = await req.json().catch(() => null);
+  const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
+  const r = await ask(store, `http://x/acquire?${q}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  if (!r.answered) return { response: storeSilent2("acquire") };
+  const { status, body: answer } = r.result;
+  if (!answer || answer.ok !== true || !answer.document) return { response: json2(answer, status) };
+  return { answer, inputs: await readingInputs(env, storeName, answer) };
+}
+function withReading(answer, { reading, textUnits, textUnitsOverBound }) {
+  const { file, locator, retrieved, profile, ...rest } = answer.document;
+  return { ...answer, document: {
+    file,
+    locator,
+    retrieved,
+    profile,
+    reading,
+    ...textUnits ? { text_units: textUnits } : {},
+    ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
+    ...rest
+  } };
+}
+
+// src/index.mjs
+async function governedFetch3(env, stub, target, purpose, delegated = null) {
+  return governedFetch(target, {
+    userAgent: userAgent(env, purpose, delegated),
+    fetch: (...a) => fetch(...a),
+    governor: stub ? governorOverStub(stub) : null
+  });
 }
 var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
@@ -88900,58 +91513,6 @@ var decorateAct = (a) => ({
   rung_absence: RUNG_ABSENT[a.id]?.ground ?? null,
   prompt: a.prompt ?? null
 });
-var KNOCK = {
-  windowMs: 10 * 60 * 1e3,
-  perIp: 12,
-  // knocks per source per window
-  global: 300,
-  // knocks per instance per window; bounds hostile R2 writes
-  maxBytes: 8 * 1024 * 1024,
-  // with R2: enough for a captured PDF
-  maxInline: 64 * 1024
-  // without R2: inline into the DO, small only
-};
-KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-function knockEnvelopeTooLarge() {
-  const row = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return {
-    ok: false,
-    reason: "KNOCK_ENVELOPE_TOO_LARGE",
-    code: "KNOCK_ENVELOPE_TOO_LARGE",
-    check: row.check,
-    translation: row.translation,
-    maxBytes: KNOCK.maxBytes
-  };
-}
-function knockPayloadTooLarge(cap, r2) {
-  const row = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return {
-    ok: false,
-    reason: "KNOCK_PAYLOAD_TOO_LARGE",
-    code: "KNOCK_PAYLOAD_TOO_LARGE",
-    check: row.check,
-    translation: row.translation,
-    maxBytes: cap,
-    detail: r2 ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
-  };
-}
-function knockEmpty() {
-  const row = KNOCK_CHECKS.KNOCK_EMPTY;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return {
-    ok: false,
-    reason: "KNOCK_EMPTY",
-    code: "KNOCK_EMPTY",
-    check: row.check,
-    translation: row.translation
-  };
-}
 var SCRATCH = "scratch";
 var PUBLISHED_STORE = "bio";
 async function fingerprint(v) {
@@ -88959,71 +91520,9 @@ async function fingerprint(v) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
 }
-async function sha256Hex7(v) {
+async function sha256Hex8(v) {
   const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
-var ODF_DIGEST_MAX = 8 * 1024 * 1024;
-function profilesAsText(ct, total, multipart) {
-  return !multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
-}
-async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes = null) {
-  const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
-  if (!digestCertain && !profileBytes && containerBytes && !multipart) {
-    let od;
-    try {
-      od = await odfEvidentiaryDigest(containerBytes, sha256Hex7);
-    } catch (e) {
-      od = {
-        determined: false,
-        flavour: "unread",
-        basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed`
-      };
-    }
-    if (od.determined) {
-      if (await sha256Hex7(containerBytes) !== sha)
-        return {
-          determined: false,
-          rendition: null,
-          evidentiary: null,
-          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted"
-        };
-      return {
-        determined: true,
-        rendition: null,
-        evidentiary: od.evidentiary,
-        over: od.over,
-        container: od.flavour,
-        boundary_missed: false,
-        basis: od.basis
-      };
-    }
-    if (od.flavour)
-      return { determined: false, rendition: null, evidentiary: null, container: od.flavour, basis: od.basis };
-  }
-  if (!digestCertain)
-    return {
-      determined: false,
-      rendition: null,
-      evidentiary: null,
-      basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
-    };
-  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex7 });
-  if (dg.identity !== sha)
-    return {
-      determined: false,
-      rendition: null,
-      evidentiary: null,
-      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted"
-    };
-  return {
-    determined: true,
-    rendition: dg.rendition,
-    evidentiary: dg.evidentiary,
-    boundary_missed: !!dg.boundary_missed,
-    basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`
-  };
 }
 var CONTRACT_FREQUENCY = Store.CONTRACT_FREQUENCY;
 function monitorCadence(authored, content) {
@@ -89047,8 +91546,8 @@ function monitorCadence(authored, content) {
       content_type: null,
       why: "the document states no frequency and the fetched document's content type could not be determined"
     };
-  const f3 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
-  if (f3 === void 0 || f3 !== null && !FREQ.includes(f3))
+  const f4 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
+  if (f4 === void 0 || f4 !== null && !FREQ.includes(f4))
     return {
       frequency: null,
       source: "undetermined",
@@ -89057,17 +91556,17 @@ function monitorCadence(authored, content) {
       why: `the contract '${contract}' is given no frequency the catalog knows`
     };
   return {
-    frequency: f3,
+    frequency: f4,
     source: "contract",
     contract,
     content_type: content.type,
-    ...f3 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
+    ...f4 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
   };
 }
 async function monitorAssess(env, storeName, { baseline, seen, bytes, ctx, beforeAt, afterAt }) {
   if (!bytes || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
-  const asText4 = profilesAsText(ctx.content_type, bytes.length, false);
-  if (!asText4) return {
+  const asText5 = profilesAsText(ctx.content_type, bytes.length, false);
+  if (!asText5) return {
     assessment: null,
     content: null,
     basis: "the fetched document is not read as text, and assess reads text documents only"
@@ -89095,7 +91594,7 @@ async function monitorAssess(env, storeName, { baseline, seen, bytes, ctx, befor
     return { assessment: null, content, basis: "the bytes held under the baseline's capture key do not hash to it, so they are not compared" };
   let r;
   try {
-    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex7, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
+    r = await assess(before, bytes, { ...ctx, sha256: sha256Hex8, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
   } catch (e) {
     return { assessment: null, content, basis: "assess could not run: " + String(e && e.message || e).slice(0, 90) };
   }
@@ -89209,7 +91708,7 @@ async function aiCredentialPresented(url, env) {
   const t = url.searchParams.get("token");
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
   const st = env.STORE.get(env.STORE.idFromName("bio"));
-  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex7(t)}`));
+  const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex8(t)}`));
   if (!out.answered) return { silent: "aicredentiallook" };
   return { cred: out.result?.found ? out.result.credential : null };
 }
@@ -89346,7 +91845,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   if (AI_TOKEN_SHAPE.test(t)) {
     let cred = presentedAi === void 0 ? void 0 : presentedAi;
     if (cred === void 0) {
-      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex7(t)}`));
+      const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex8(t)}`));
       if (!aOut.answered) return { silent: "aicredentiallook" };
       cred = aOut.result?.found ? aOut.result.credential : null;
     }
@@ -89424,40 +91923,6 @@ async function doAnswer(res) {
   }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: void 0 };
 }
-async function captureRequestArm(env, storeName, body, cls) {
-  const stCr = env.STORE.get(env.STORE.idFromName(storeName));
-  const dAns = await doAnswer(stCr.fetch(
-    `http://x/capturerequestdraining?request=${encodeURIComponent(String(body?.request || ""))}`
-  ));
-  if (!dAns.answered) return { ok: false, silent: true };
-  const d = dAns.result;
-  if (!d || d.draining !== true) {
-    const row = CAPTURE_REQUEST_CHECKS.CAPTURE_NOT_DRAINING;
-    return { ok: false, silent: false, refusal: {
-      ok: false,
-      reason: "CAPTURE_NOT_DRAINING",
-      code: "CAPTURE_NOT_DRAINING",
-      check: row.check,
-      translation: row.translation,
-      cls,
-      request: body?.request ?? null,
-      state: d ? d.state : null,
-      detail: "this instance fetches a requested document only from inside its own drain, and no such request is being drained right now. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it."
-    } };
-  }
-  return {
-    ok: true,
-    silent: false,
-    locator: d.address,
-    purpose: d.purpose,
-    agent: d.ua_mode === "member-browser" ? d.agent : null,
-    /* D-491 / IC-276: WHETHER THE ROW ASKED FOR THE RENDERED PAGE, read
-       from the row exactly as the three fields beside it are. `=== true`
-       rather than truthiness: the read answers a boolean, and a store that
-       answered something else must not become a render. */
-    render: d.render === true
-  };
-}
 function storeSilent(op) {
   return json({
     ok: false,
@@ -89504,18 +91969,6 @@ async function memberVersions(env) {
   }));
   return out;
 }
-var driveRow = (code) => {
-  const row = DRIVE_CAPTURE_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-var renderRow = (code) => {
-  const row = RENDER_CAPTURE_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
 var reextractRow = (code) => {
   const row = REEXTRACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -89691,38 +92144,13 @@ var StoreSilent = class extends Error {
   }
 };
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
-var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, keyOf, parts) {
-  const missing = [], disagree = [], unverified = [];
-  const hex3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  for (const p of parts) {
-    const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(keyOf(p.sha256));
-    if (!h) {
-      missing.push(name);
-      continue;
-    }
-    if (h.size !== p.bytes) {
-      disagree.push({ ...name, stored_bytes: h.size });
-      continue;
-    }
-    let digest = h.checksums?.sha256 ? hex3(h.checksums.sha256) : null;
-    if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(keyOf(p.sha256));
-      if (o) digest = hex3(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
-    }
-    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
-    else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
-  }
-  return { missing, disagree, unverified };
-}
 var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
 async function migrationReplayOf(env, storeName, b) {
   const cap = typeof b.provenanceCapture === "string" ? b.provenanceCapture.trim() : "";
   if (!/^[0-9a-f]{64}$/.test(cap)) return null;
   const registered = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
   if (!registered) return null;
-  const bm = Array.isArray(b.files) ? b.files.find((f3) => f3 && f3.path === "bundle.md" && typeof f3.text === "string") : null;
+  const bm = Array.isArray(b.files) ? b.files.find((f4) => f4 && f4.path === "bundle.md" && typeof f4.text === "string") : null;
   if (!bm) return null;
   const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
   if (bm.sha256 !== mdSha) return null;
@@ -89742,7 +92170,7 @@ async function migrationReplayOf(env, storeName, b) {
     return null;
   }
   const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
-  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f3) => f3 && f3.name === "bundle.md" && f3.sha256 === mdSha));
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f4) => f4 && f4.name === "bundle.md" && f4.sha256 === mdSha));
   if (!match) return null;
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
@@ -90177,18 +92605,18 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
       }
       anchored.push(region);
     }
-    const f3 = applyConfidenceFloor(
+    const f4 = applyConfidenceFloor(
       anchored,
       typeof r.confidence_floor === "number" ? r.confidence_floor : null
     );
-    floored += f3.floored;
-    undetermined += f3.undetermined;
-    kept += f3.regions.filter((x) => x.text != null).length;
+    floored += f4.floored;
+    undetermined += f4.undetermined;
+    kept += f4.regions.filter((x) => x.text != null).length;
     outPages.push({
       page: pageNo,
-      regions: f3.regions,
-      text: f3.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
-      undetermined: f3.regions.filter((x) => x.undetermined).map((x) => ({
+      regions: f4.regions,
+      text: f4.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
+      undetermined: f4.regions.filter((x) => x.undetermined).map((x) => ({
         page: pageNo,
         reason: "ocr_below_floor",
         font: null,
@@ -90359,9 +92787,9 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
        FINDING is the unit of truth: what a member signed is one
        document's bytes, and a case-level signature would be a signature
        over something nobody reviewed. */
-    findings: cs.findings.map((f3) => ({
-      bundle_id: f3.bundle_id,
-      title: f3.title,
+    findings: cs.findings.map((f4) => ({
+      bundle_id: f4.bundle_id,
+      title: f4.title,
       /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
          ARTIFACT. It read `edition: cs.edition` — the CASE's number,
          written onto every member as though it were the member's. While
@@ -90370,8 +92798,8 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          contradicts, and this is the copy that TRAVELS, so a reader has no
          way to check it against anything. It is the member's own edition,
          off the member's own published row, resolved by the pin. */
-      edition: f3.edition,
-      bundle_sha: f3.bundle_sha,
+      edition: f4.edition,
+      bundle_sha: f4.bundle_sha,
       /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
          sentence: the CASE artifact freezes its members — *"content by
          hash, version, per-member strength pair, role, the bar, the
@@ -90385,12 +92813,12 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          from the finding's own hash. `role` is the authored designation
          (clause 4): a stranger holding a SUPPORTING member must be able to
          see it was not presented as carrying the case. */
-      version_sha: f3.version_sha ?? null,
-      role: f3.role ?? null,
-      ratified_at: f3.ratified_at,
-      gate_version: f3.gate_version,
-      attestor: f3.attestor,
-      delivered_by: f3.delivered_by,
+      version_sha: f4.version_sha ?? null,
+      role: f4.role ?? null,
+      ratified_at: f4.ratified_at,
+      gate_version: f4.gate_version,
+      attestor: f4.attestor,
+      delivered_by: f4.delivered_by,
       /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
          ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
          `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -90406,20 +92834,20 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          right for `verifySshsig`'s caller two thousand lines up. */
       signature: {
         namespace: NS_RATIFY,
-        statement: new TextDecoder().decode(ratifyStatement(f3.bundle_id, f3.bundle_sha)),
-        armored: f3.sig_armored
+        statement: new TextDecoder().decode(ratifyStatement(f4.bundle_id, f4.bundle_sha)),
+        armored: f4.sig_armored
       },
-      strength: f3.strength,
-      required_strength: f3.required,
-      parts: f3.parts.map((p) => `${f3.bundle_id}/${p.path}`)
+      strength: f4.strength,
+      required_strength: f4.required,
+      parts: f4.parts.map((p) => `${f4.bundle_id}/${p.path}`)
     })),
     /* The parts are NAMESPACED BY FINDING, and that is forced rather than
        chosen: every finding carries a `bundle.md`, so a flat parts[]
        would have two members claiming one path and the archive would say
        two things about one name. */
-    parts: cs.findings.flatMap((f3) => f3.parts.map((p) => ({
-      path: `${f3.bundle_id}/${p.path}`,
-      finding: f3.bundle_id,
+    parts: cs.findings.flatMap((f4) => f4.parts.map((p) => ({
+      path: `${f4.bundle_id}/${p.path}`,
+      finding: f4.bundle_id,
       sha256: p.sha256,
       kind: p.kind,
       bytes: p.bytes ?? null
@@ -90638,7 +93066,7 @@ var index_default = {
           }, 400);
         const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent);
-        const docSecret = url.searchParams.has("secret") ? await sha256Hex7(url.searchParams.get("secret") || "") : "";
+        const docSecret = url.searchParams.has("secret") ? await sha256Hex8(url.searchParams.get("secret") || "") : "";
         const out2 = await doAnswer(stub2.fetch(
           `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}` + (docSecret ? `&secretSha=${docSecret}` : "")
         ));
@@ -90673,7 +93101,7 @@ var index_default = {
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex7(url.searchParams.get("secret") || ""));
+          q.set("secretSha", await sha256Hex8(url.searchParams.get("secret") || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent);
@@ -90901,91 +93329,15 @@ var index_default = {
           verification: {
             container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
             manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
-            findings: findings.map((f3) => ({
-              bundle_id: f3.bundle_id,
-              bytes: `op=publishedbytes&sha256=${f3.bundle_sha}`
+            findings: findings.map((f4) => ({
+              bundle_id: f4.bundle_id,
+              bytes: `op=publishedbytes&sha256=${f4.bundle_sha}`
             })),
             detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
           }
         }, 200);
       }
-      if (op === "knock") {
-        if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
-        const raw = await req.arrayBuffer();
-        if (raw.byteLength > KNOCK.maxBytes + 4096)
-          return json(knockEnvelopeTooLarge(), 413);
-        let body2;
-        try {
-          body2 = JSON.parse(new TextDecoder().decode(raw));
-        } catch {
-          body2 = null;
-        }
-        if (!body2 || typeof body2.contentB64 !== "string" && typeof body2.contentText !== "string")
-          return json({ ok: false, ...requiredArgument(
-            "knock",
-            "contentB64 or contentText",
-            "a JSON body with contentB64=<base64> or contentText=<text>",
-            "knock requires contentB64 or contentText, plus optional note and contact"
-          ) }, 400);
-        let bytes;
-        try {
-          bytes = body2.contentB64 !== void 0 ? Uint8Array.from(atob(body2.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body2.contentText);
-        } catch {
-          return json({ ok: false, ...requiredArgument(
-            "knock",
-            "contentB64",
-            "<base64>",
-            "contentB64 is not valid base64"
-          ) }, 400);
-        }
-        if (bytes.length === 0) return json(knockEmpty(), 400);
-        const r2 = typeof env.CAPTURES?.put === "function";
-        const cap = r2 ? KNOCK.maxBytes : KNOCK.maxInline;
-        if (bytes.length > cap)
-          return json(knockPayloadTooLarge(cap, r2), 413);
-        const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
-        const nowMs = Date.now();
-        const win = Math.floor(nowMs / KNOCK.windowMs);
-        const elapsedFrac = (nowMs - win * KNOCK.windowMs) / KNOCK.windowMs;
-        const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
-        const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await doAnswer(stub2.fetch(new Request("http://do/knock", {
-          method: "POST",
-          body: JSON.stringify({
-            knockId,
-            sha256: sha,
-            bytes: bytes.length,
-            content: r2 ? null : new TextDecoder().decode(bytes),
-            inR2: r2,
-            note: body2.note,
-            contact: body2.contact,
-            ipBucket: `ip:${ipHash}:${win}`,
-            ipPrevBucket: `ip:${ipHash}:${win - 1}`,
-            globalBucket: `all:${win}`,
-            globalPrevBucket: `all:${win - 1}`,
-            elapsedFrac,
-            perIpLimit: KNOCK.perIp,
-            globalLimit: KNOCK.global
-          })
-        })));
-        if (!rec.answered) return storeSilent("knock");
-        if (!rec.result?.ok) {
-          const stated = rec.result.reason === "RATE_IP" ? KNOCK.statedPerIp : rec.result.reason === "RATE_GLOBAL" ? KNOCK.statedGlobal : null;
-          return json({ ok: false, ...rec.result, ...stated ? { stated } : {} }, 429);
-        }
-        if (r2) await env.CAPTURES.put(
-          `bio/inbox/${sha}`,
-          bytes,
-          { sha256: await crypto.subtle.digest("SHA-256", bytes) }
-        );
-        return json({
-          ok: true,
-          knockId,
-          sha256: sha,
-          bytes: bytes.length,
-          received: "Your material is in the group's inbox awaiting member review."
-        }, 200);
-      }
+      if (op === "knock") return knockOp(req, env, stub2, { json, requiredArgument, storeSilent });
       const out = await doAnswer(stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
       if (!out.answered) return storeSilent("bootstrap");
       return json(
@@ -91186,63 +93538,7 @@ var index_default = {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
       if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
-      const r = aOut.result;
-      const canProbe = typeof env.CAPTURES?.head === "function";
-      const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
-      for (const { named_parts: named, ...row } of r.unresolved) {
-        if (row.class === "orphan") {
-          unbacked.push({ ...row, why: "the bundle itself is absent" });
-          continue;
-        }
-        if (!canProbe) {
-          unbacked.push({ ...row, why: "no capture bucket is configured to check" });
-          continue;
-        }
-        const h = await env.CAPTURES.head(`${storeName}/captures/${row.capture_sha}`);
-        if (h) {
-          if (typeof row.bytes === "number" && h.size !== row.bytes)
-            mismatched.push({ ...row, registered: row.bytes, stored: h.size });
-          else captured.push(row);
-          continue;
-        }
-        if (named?.state === "unreadable") {
-          undetermined.push({ ...row, why: named.why });
-          continue;
-        }
-        if (named?.state !== "named") {
-          unbacked.push({ ...row, why: "no bytes in the working bucket" });
-          continue;
-        }
-        const v = await partsHeld(env.CAPTURES, (s) => captureKey(storeName, s), named.parts);
-        const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
-        if (v.missing.length)
-          unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names are not in the working bucket`, missing_parts: v.missing });
-        else if (v.disagree.length || typeof row.bytes === "number" && sum !== row.bytes)
-          mismatched.push({
-            ...row,
-            registered: row.bytes,
-            stored: sum,
-            ...v.disagree.length ? { disagreeing_parts: v.disagree } : {}
-          });
-        else if (v.unverified.length)
-          undetermined.push({ ...row, why: `every part the record names is present, but the digest of ${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
-        else heldInParts.push(row);
-      }
-      return json({ ok: true, result: {
-        total: r.total,
-        live: r.live,
-        superseded: r.superseded,
-        historical: r.historical,
-        captured: captured.length,
-        held_in_parts: heldInParts.length,
-        mismatched: mismatched.length,
-        unbacked: unbacked.length,
-        undetermined: undetermined.length,
-        sound: unbacked.length === 0 && mismatched.length === 0,
-        probed: canProbe,
-        detail: "captured means the bytes are not in the bundle image but ARE in the working bucket, which is the deliberate pattern migrate.mjs uses and what the two-bucket design exists for. held_in_parts is the same for a document the store keeps only in parts: every part the record names is in the working bucket and each part's digest is verified (the reassembled whole's digest is C-18.6's check, not re-read here). unbacked is the only broken state, and names any missing part; mismatched means the register and the stored object disagree about size, or a part about its digest. undetermined rows resolved neither way and are counted OUTSIDE sound: sound speaks for the other rows only.",
-        sample: [...unbacked, ...mismatched, ...undetermined].slice(0, 40)
-      }, store: storeName, tokenClass: cls }, 200);
+      return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) } : null), store: storeName, tokenClass: cls }, 200);
     }
     if (op === "selftest") {
       const r2Configured = typeof env.CAPTURES?.get === "function" && typeof env.PUBLISHED?.get === "function";
@@ -91383,98 +93679,21 @@ var index_default = {
       if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
-    if (op === "governorstate") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const host = url.searchParams.get("host");
-      const r = await doAnswer(st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
-      if (!r.answered) return storeSilent("governorstate");
-      return json({ ok: true, ...r.result });
+    {
+      const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)));
+      if (g) return g.silent ? storeSilent(op) : json(g.body, g.status);
     }
-    if (op === "governorconfig") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const host = url.searchParams.get("host");
-      if (!host)
-        return json({ ok: false, reason: "NEED_HOST", detail: "pass host=<hostname>; governorconfig never sets a global appetite" }, 400);
-      const raw = url.searchParams.get("appetite_per_min");
-      let appetite = null;
-      if (raw !== null && raw !== "") {
-        appetite = Number(raw);
-        if (!Number.isFinite(appetite) || appetite <= 0)
-          return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
-      }
-      const r = await doAnswer(st.fetch("http://x/governorconfig", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host, appetite_per_min: appetite })
-      }));
-      if (!r.answered) return storeSilent("governorconfig");
-      return json({ ok: true, ...r.result });
-    }
-    if (op === "links") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const capture = url.searchParams.get("capture");
-      const address = url.searchParams.get("address");
-      if (address) {
-        const r2 = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`));
-        if (!r2.answered) return storeSilent("links");
-        return json({ ok: true, ...r2.result });
-      }
-      if (!/^[0-9a-f]{64}$/.test(capture || ""))
-        return json({
-          ok: false,
-          reason: "NEED_CAPTURE_OR_ADDRESS",
-          detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it"
-        }, 400);
-      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
-      if (!r.answered) return storeSilent("links");
-      return json({ ok: true, ...r.result });
-    }
-    if (op === "capture") {
-      if (typeof env.CAPTURES?.get !== "function")
-        return storageAbsent(op, "R2 is not configured on this instance");
-      const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-      if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, ...requiredArgument(
-          "capture",
-          "sha256",
-          "<64 lowercase hex>",
-          "capture requires sha256=<64 lowercase hex>"
-        ) }, 400);
-      const key = captureKey(storeName, sha);
-      if (req.method === "PUT" || req.method === "POST") {
-        const body2 = new Uint8Array(await req.arrayBuffer());
-        const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", body2))].map((x) => x.toString(16).padStart(2, "0")).join("");
-        if (digest !== sha)
-          return json({
-            ok: false,
-            reason: "INTEGRITY",
-            detail: "body hash does not match the sha256 parameter",
-            expected: sha,
-            got: digest,
-            store: storeName,
-            tokenClass: cls
-          }, 400);
-        const existing = await env.CAPTURES.head(key);
-        if (existing)
-          return json({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
-        await env.CAPTURES.put(key, body2, { sha256: await crypto.subtle.digest("SHA-256", body2) });
-        return json({ ok: true, sha256: sha, bytes: body2.length, existed: false, store: storeName, tokenClass: cls });
-      }
-      const wantRange = req.headers.get("range");
-      const obj = await env.CAPTURES.get(key, wantRange ? { range: req.headers } : void 0);
-      const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
-      if (!obj)
-        return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
-      return new Response(obj.body, {
-        status: wantRange ? 206 : 200,
-        headers: {
-          "content-type": "application/octet-stream",
-          "access-control-allow-origin": "*",
-          "x-capture-sha256": sha,
-          ...dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}
-        }
-      });
-    }
+    if (op === "links") return linksOp(
+      url,
+      env.STORE.get(env.STORE.idFromName(storeName)),
+      { json, storeSilent, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` }
+    );
+    if (op === "capture") return captureObjectOp(
+      req,
+      url,
+      env,
+      { json, storageAbsent, requiredArgument, key: (s) => captureKey(storeName, s), storeName, cls }
+    );
     if (op === "pdfstructure") {
       if (typeof env.CAPTURES?.get !== "function")
         return storageAbsent(op, "R2 is not configured on this instance");
@@ -91701,888 +93920,31 @@ var index_default = {
       });
       return json(structure, 200);
     }
-    if (op === "archivelookup") {
-      const body2 = req.method === "POST" ? await req.json().catch(() => null) : null;
-      const address = body2?.address || url.searchParams.get("address");
-      if (typeof address !== "string" || !isPublicHttpsLocator(address))
-        return json({
-          ok: false,
-          reason: "BAD_ADDRESS",
-          detail: "the document address must be https on a public host"
-        }, 400);
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const sel = await archiveSelect(env, st, address);
-      if (!sel.ok) return json(sel.payload, sel.status);
-      return json({
-        ok: true,
-        address,
-        eligible_because: sel.reach.basis,
-        chosen: sel.chosen,
-        /* Every row the index offered and why it was not used. A fallback that
-           says only "nothing suitable" when the index holds forty redirects is
-           unauditable. */
-        rejected: sel.rejected,
-        usable_count: sel.usable_count,
-        retrieval_locator: sel.replay,
-        provenance_hop: sel.hop,
-        capture_with: { op: "acquire", via: "archive.org", address },
-        note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the CDX record"
-      });
-    }
+    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent });
     if (op === "acquire") {
-      if (req.method !== "POST") return json({ ok: false, error: "acquire is a POST" }, 405);
-      if (typeof env.CAPTURES?.put !== "function")
-        return storageAbsent(op, "this instance has no evidence storage configured");
-      const body2 = await req.json().catch(() => null);
-      if (cls === "daemon" && body2?.via !== "archive.org" && body2?.via !== "capture-request")
-        return json({
-          ok: false,
-          reason: "NOT_PERMITTED",
-          op,
-          cls,
-          detail: `the daemon class reaches op=acquire through the archive fallback (via: "archive.org") and through the capture-request drain (via: "capture-request"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.`
-        }, 403);
-      const stArc = env.STORE.get(env.STORE.idFromName(storeName));
-      let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
-      if (body2?.via === "archive.org") {
-        if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
-          return json({
-            ok: false,
-            reason: "NOT_PERMITTED",
-            op,
-            via: "archive.org",
-            detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback."
-          }, 403);
-        const addr = body2?.address;
-        if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
-          return json({
-            ok: false,
-            reason: "BAD_ADDRESS",
-            detail: "an archive-sourced capture names the document address, not a replay locator"
-          }, 400);
-        const sel = await archiveSelect(env, stArc, addr);
-        if (!sel.ok) return json(sel.payload, sel.status);
-        archiveHopRecorded = sel.hop;
-        archiveChosen = sel.chosen;
-        archiveAddress = sel.chosen.original;
-        body2.locator = sel.replay;
-      }
-      let crPurpose = null, crAgent = null;
-      if (body2?.via === "capture-request") {
-        const arm = await captureRequestArm(env, storeName, body2, cls);
-        if (arm.silent) return storeSilent(op);
-        if (!arm.ok) return json({ ...arm.refusal, op }, 403);
-        body2.locator = arm.locator;
-        crPurpose = arm.purpose;
-        crAgent = arm.agent;
-        if (arm.render) body2.render = true;
-        else delete body2.render;
-      }
-      let driveCapture = null, driveHopRecorded = null;
-      {
-        const supplied = callerSuppliedHopFacts(body2);
-        if (supplied.length)
-          return json({
-            ok: false,
-            reason: "DRIVE_HOP_FACT_SUPPLIED",
-            ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
-            op,
-            supplied,
-            detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
-          }, 400);
-        const drive = readDriveAddress(body2?.locator);
-        if (drive) {
-          if (drive.shape === "folder")
-            return json({
-              ok: false,
-              reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
-              ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
-              op,
-              drive: { host: drive.host, shape: drive.shape, harvestable: false },
-              locator: drive.address,
-              detail: drive.why
-            }, 422);
-          if (drive.shape === "file")
-            return json({
-              ok: false,
-              reason: "DRIVE_KIND_UNDETERMINED",
-              ...driveRow("DRIVE_KIND_UNDETERMINED"),
-              op,
-              drive: {
-                host: drive.host,
-                shape: drive.shape,
-                harvestable: false,
-                ...drive.fileId ? { file_id: drive.fileId } : {}
-              },
-              locator: drive.address,
-              detail: drive.why
-            }, 422);
-          if (drive.shape === "unknown")
-            return json({
-              ok: false,
-              reason: "DRIVE_SHAPE_UNRECOGNISED",
-              ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
-              op,
-              drive: { host: drive.host, shape: drive.shape, harvestable: false },
-              locator: drive.address,
-              detail: drive.why
-            }, 422);
-          if (drive.harvestable) {
-            driveCapture = drive;
-            body2.locator = drive.exportAddress;
-          }
-        }
-      }
-      const locator = body2?.locator;
-      if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
-        return json({
-          ok: false,
-          reason: "BAD_LOCATOR",
-          detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
-        }, 400);
-      const authorityAsserted = typeof body2?.authority === "string" && body2.authority.trim() ? body2.authority.trim() : null;
-      const retrieved = stampInstant("second");
-      const stGov = env.STORE.get(env.STORE.idFromName(storeName));
-      const renderAsked = Object.prototype.hasOwnProperty.call(body2 || {}, "render") && body2.render !== false;
-      let renderer = null;
-      let renderReserved = 0;
-      let renderSlot = null;
-      if (renderAsked) {
-        if (body2.render !== true)
-          return json({
-            ok: false,
-            reason: "RENDER_FLAG_MALFORMED",
-            ...renderRow("RENDER_FLAG_MALFORMED"),
-            op,
-            detail: `render=${JSON.stringify(body2.render).slice(0, 40)} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.`
-          }, 400);
-        const conflict = body2.via === "archive.org" ? "via: archive.org (an archived replay)" : driveCapture ? "a Google Drive export (a document, not a page)" : body2.continue ? "continue: <session> (a capture already filed)" : null;
-        if (conflict)
-          return json({
-            ok: false,
-            reason: "RENDER_ARM_CONFLICT",
-            ...renderRow("RENDER_ARM_CONFLICT"),
-            op,
-            conflict,
-            detail: `render: true cannot be combined with ${conflict}.`
-          }, 400);
-        renderer = rendererFor(env);
-        if (typeof renderer.render !== "function")
-          return json({
-            ok: false,
-            reason: "RENDER_NO_RENDERER",
-            ...renderRow("RENDER_NO_RENDERER"),
-            op,
-            renderer: renderer.kind,
-            /* D-490 CORRECTED THIS SENTENCE, and the correction is the point: D-64's
-               words said the in-plane driver was not built, which was true of every
-               instance and is no longer true of any. What this branch can still mean
-               is NARROWER — BROWSER bound to something with no `fetch`, so there is
-               no endpoint to open a devtools session on. Saying the old sentence now
-               would be the record claiming less than it can support, which is the
-               same defect as claiming more. */
-            detail: renderer.kind === "browser-binding-without-driver" ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched." : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched."
-          }, 501);
-        let rHost = null;
-        try {
-          rHost = new URL(locator).host;
-        } catch {
-          rHost = null;
-        }
-        if (rHost) {
-          let g = null;
-          try {
-            g = (await (await stGov.fetch("http://x/governoradmit", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ host: rHost })
-            })).json()).result || null;
-          } catch {
-            g = null;
-          }
-          if (g && g.admitted === false)
-            return json({
-              ok: false,
-              reason: "RENDER_HOST_COOLING_OFF",
-              ...renderRow("RENDER_HOST_COOLING_OFF"),
-              op,
-              host: rHost,
-              retry_in_ms: g.retry_in_ms || 0,
-              detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).`
-            }, 429);
-        }
-        renderReserved = renderReserveMs(RENDER_DEFAULTS);
-        const admOut = await doAnswer(stGov.fetch("http://x/renderadmit", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            allowanceMs: renderAllowanceMs(env),
-            reserveMs: renderReserved,
-            cap: renderConcurrencyCap(env),
-            at: retrieved
-          })
-        }));
-        const adm = admOut.answered ? admOut.result : null;
-        if (adm && adm.state === "waiting")
-          return json({
-            ok: false,
-            reason: "RENDER_AT_CAPACITY",
-            ...renderRow("RENDER_AT_CAPACITY"),
-            op,
-            render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
-            detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; this render is waiting and nothing was fetched.`
-          }, 429);
-        if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
-        if (!adm || adm.state !== "admitted")
-          return json({
-            ok: false,
-            reason: "RENDER_DEFERRED",
-            ...renderRow("RENDER_DEFERRED"),
-            op,
-            render: { state: "deferred", content: "undetermined", allowance: adm || null },
-            detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
-          }, 429);
-      }
-      const via = body2?.via === "archive.org" ? "archive.org" : "direct";
-      const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
-      const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
-      const addrNorm = normalizeAddress(documentAddress);
-      const noteOutcome = async (outcome, status) => {
-        try {
-          await stGov.fetch("http://x/recordsourceoutcome", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ addressNorm: addrNorm, outcome, status: status ?? null, at: retrieved })
-          });
-        } catch {
-        }
-      };
-      let res2;
-      try {
-        const g = await governedFetch(env, stGov, locator, crPurpose || "acquire", crAgent);
-        if (g.refusedByGovernor) {
-          await noteOutcome("governed", null);
-          return json({
-            ok: false,
-            reason: "HOST_COOLING_OFF",
-            detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
-            retry_in_ms: g.retry_in_ms || 0,
-            locator
-          }, 429);
-        }
-        res2 = g.res;
-      } catch (e) {
-        await noteOutcome("fetch_failed", null);
-        return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
-      }
-      if (driveCapture && !res2.ok) {
-        await noteOutcome("source_refused", res2.status);
-        return json({
-          ok: false,
-          reason: "DRIVE_EXPORT_UNREACHABLE",
-          ...driveRow("DRIVE_EXPORT_UNREACHABLE"),
-          op,
-          status: res2.status,
-          locator: driveCapture.address,
-          export_address: driveCapture.exportAddress,
-          drive: {
-            host: driveCapture.host,
-            shape: driveCapture.shape,
-            kind: driveCapture.kind,
-            file_id: driveCapture.fileId,
-            export_format: driveCapture.format
-          },
-          detail: `Google answered ${res2.status} at the OpenDocument export address ${driveCapture.exportAddress}, which this instance composed from the ${driveCapture.kind} id in ${driveCapture.address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.`
-        }, 502);
-      }
-      if (driveCapture) {
-        const ect = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-        if (ect === "text/html" || ect === "application/xhtml+xml") {
-          await noteOutcome("source_refused", res2.status);
-          try {
-            await res2.body?.cancel?.();
-          } catch {
-          }
-          return json({
-            ok: false,
-            reason: "DRIVE_EXPORT_IS_THE_SHELL",
-            ...driveRow("DRIVE_EXPORT_IS_THE_SHELL"),
-            op,
-            status: res2.status,
-            locator: driveCapture.address,
-            export_address: driveCapture.exportAddress,
-            declared_content_type: ect,
-            refused_on: "the declared content type",
-            drive: {
-              host: driveCapture.host,
-              shape: driveCapture.shape,
-              kind: driveCapture.kind,
-              file_id: driveCapture.fileId,
-              export_format: driveCapture.format
-            },
-            detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.`
-          }, 502);
-        }
-      }
-      if (!res2.ok) {
-        await noteOutcome("source_refused", res2.status);
-        return json({ ok: false, reason: "SOURCE_REFUSED", status: res2.status, locator }, 502);
-      }
-      await noteOutcome("success", res2.status);
-      const PART = 8 * 1024 * 1024;
-      const MAX = 256 * 1024 * 1024;
-      const whole = createSha256();
-      const parts = [];
-      const partHeldBefore = [];
-      let total = 0, held = [], heldBytes = 0, oversize = false;
-      const flush = async () => {
-        if (!heldBytes) return;
-        const buf = new Uint8Array(heldBytes);
-        let at = 0;
-        for (const c of held) {
-          buf.set(c, at);
-          at += c.length;
-        }
-        held = [];
-        heldBytes = 0;
-        const d = await crypto.subtle.digest("SHA-256", buf);
-        const psha = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        const heldBefore = !!await env.CAPTURES.head(`${storeName}/captures/${psha}`);
-        if (!heldBefore)
-          await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
-        parts.push({ sha256: psha, bytes: buf.length });
-        partHeldBefore.push(heldBefore);
-      };
-      const driveHead = driveCapture ? new Uint8Array(1024) : null;
-      let driveHeadBytes = 0;
-      const reader = res2.body && res2.body.getReader ? res2.body.getReader() : null;
-      if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
-      for (; ; ) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        total += value.length;
-        if (total > MAX) {
-          oversize = true;
-          break;
-        }
-        whole.update(value);
-        if (driveHead && driveHeadBytes < driveHead.length) {
-          const take = Math.min(value.length, driveHead.length - driveHeadBytes);
-          driveHead.set(value.subarray(0, take), driveHeadBytes);
-          driveHeadBytes += take;
-        }
-        held.push(value);
-        heldBytes += value.length;
-        if (heldBytes >= PART) await flush();
-      }
-      if (driveCapture && driveHeadBytes > 0) {
-        const sniff = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
-        const declared = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-        if (sniff.format === "html") {
-          try {
-            await reader.cancel();
-          } catch {
-          }
-          await noteOutcome("source_refused", res2.status);
-          return json({
-            ok: false,
-            reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL",
-            ...driveRow("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
-            op,
-            status: res2.status,
-            locator: driveCapture.address,
-            export_address: driveCapture.exportAddress,
-            declared_content_type: declared || null,
-            refused_on: "the bytes",
-            detected: sniff,
-            drive: {
-              host: driveCapture.host,
-              shape: driveCapture.shape,
-              kind: driveCapture.kind,
-              file_id: driveCapture.fileId,
-              export_format: driveCapture.format
-            },
-            detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring \`${declared || "(no content type)"}\`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.`
-          }, 502);
-        }
-      }
-      if (oversize) {
-        try {
-          await reader.cancel();
-        } catch {
-        }
-        return json({
-          ok: false,
-          reason: "TOO_LARGE",
-          bytes: total,
-          maxBytes: MAX,
-          detail: "the document exceeds what this surface will capture even in parts"
-        }, 413);
-      }
-      await flush();
-      if (total === 0) return json({ ok: false, reason: "EMPTY", locator }, 502);
-      let sha = whole.hex();
-      let existed = false, multipart = parts.length > 1;
-      let existedUndetermined = null;
-      if (!multipart) {
-        const only = parts[0];
-        if (only.sha256 !== sha) {
-          return json({
-            ok: false,
-            reason: "HASH_DISAGREEMENT",
-            detail: "the incremental hash and the block hash of the same bytes differ"
-          }, 500);
-        }
-        existed = partHeldBefore[0];
-      } else {
-        const heldOut = await doAnswer(stGov.fetch(
-          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
-        ));
-        const reg = heldOut.answered ? heldOut.result : null;
-        const heldParts = partHeldBefore.filter(Boolean).length;
-        if (reg && reg.registered === true) existed = true;
-        else {
-          existed = null;
-          existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a bundle that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
-        }
-      }
-      let ct = (res2.headers.get("content-type") || "").split(";")[0].trim();
-      const responseHeaders = [];
-      for (const [k, v] of res2.headers) responseHeaders.push([k, v]);
-      const transport = {
-        requested: locator,
-        resolved: res2.url || locator,
-        redirected: !!(res2.url && res2.url !== locator),
-        status: res2.status,
-        http_headers: responseHeaders,
-        /* WARC records WARC-IP-Address: the address that actually answered.
-           The Workers runtime does not expose the peer address of an outbound
-           fetch, so we do not have it and this says so rather than leaving a
-           field a reader would take as absence of a redirect or of an address.
-           Recorded as a named limitation because a silently missing field and
-           an unobtainable one are different facts about the record. */
-        peer_address: null,
-        peer_address_unavailable: "the Workers runtime does not expose the peer address of an outbound fetch"
-      };
-      const name = (body2.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
-      const stLim = stGov;
-      let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderedExisted = false;
-      if (renderAsked) {
-        const pageUrl = res2.url || locator;
-        let answer = null, rbytes = null, rb = null;
-        if (multipart || detectFormat(null, ct || null).format !== "html") {
-          try {
-            await stGov.fetch("http://x/renderspend", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved })
-            });
-          } catch {
-          }
-          return json({
-            ok: false,
-            reason: "RENDER_NOT_A_PAGE",
-            ...renderRow("RENDER_NOT_A_PAGE"),
-            op,
-            content_type: ct || null,
-            bytes: total,
-            multipart,
-            detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, not an HTML page; nothing was filed.`
-          }, 422);
-        }
-        try {
-          answer = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS });
-        } catch (e) {
-          answer = { ok: false, error: String(e && e.message || e) };
-        }
-        try {
-          await stGov.fetch("http://x/renderspend", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ ms: answer && answer.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved })
-          });
-        } catch {
-        }
-        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved });
-        if (rb.ok) rbytes = new TextEncoder().encode(answer.html);
-        if (!rb.ok || rbytes.length > MAX)
-          return json({
-            ok: false,
-            reason: "RENDER_FAILED",
-            ...renderRow("RENDER_FAILED"),
-            op,
-            shell_sha256: sha,
-            filed: false,
-            detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem
-          }, 502);
-        const renderDigests = await keepRenderBodies(answer, {
-          sha256: async (b) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join(""),
-          put: async (s, b) => {
-            const k = `${storeName}/captures/${s}`;
-            if (!await env.CAPTURES.head(k)) await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
-          }
-        });
-        rb = renderBlock(answer, { pageUrl, shellSha: sha, at: retrieved, digests: renderDigests });
-        const rd = await crypto.subtle.digest("SHA-256", rbytes);
-        const rsha = [...new Uint8Array(rd)].map((x) => x.toString(16).padStart(2, "0")).join("");
-        renderedExisted = !!await env.CAPTURES.head(`${storeName}/captures/${rsha}`);
-        if (!renderedExisted) await env.CAPTURES.put(`${storeName}/captures/${rsha}`, rbytes, { sha256: rd });
-        shellRecorded = {
-          file: `snapshots/${name}.shell.html`,
-          sha256: sha,
-          bytes: total,
-          method: "bio-plane acquire, https fetch, hashed at receipt",
-          ...ct ? { content_type: ct } : {},
-          transport
-        };
-        renderRecorded = rb.render;
-        renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
-        if (typeof renderRecorded.status === "number") {
-          try {
-            await stGov.fetch("http://x/governorreport", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ host: new URL(pageUrl).host, status: renderRecorded.status, retry_after_ms: null })
-            });
-          } catch {
-          }
-        }
-        sha = rsha;
-        total = rbytes.length;
-        ct = "text/html";
-        existed = renderedExisted;
-      }
-      try {
-        await stLim.fetch("http://x/recordcapturedlocator", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            address: addressIsDerived ? documentAddress : res2.url || locator,
-            addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res2.url || locator),
-            captureSha: sha,
-            retrieved,
-            /* D-96: a direct fetch is its own source, and the document address
-               and the retrieval locator are the same string. An archive-sourced
-               capture will name via 'archive.org' and split the two.
-               *
-               CAP-8: A DRIVE EXPORT SPLITS THEM TOO, WITH `via` STILL 'direct',
-               AND THIS IS WHERE "KEEP THE LINK" IS ACTUALLY KEPT. The `address`
-               column takes the Drive link EXACTLY as the source page carried it
-               (`driveCapture.address` is the caller's own string, untouched);
-               `address_norm` is that link through the plane's normaliser, so
-               `resolveLinks` finds this capture for a page linking to the Doc;
-               and `retrieval_locator` holds the export address we actually
-               fetched. `res.url` is deliberately NOT used here — Google redirects
-               the export to a `googleusercontent.com` download address, and
-               filing the capture under THAT would file it under a one-time CDN
-               URL that names no document and no link would ever resolve to. */
-            via,
-            retrievalLocator: locator
-          })
-        });
-      } catch {
-      }
-      if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
-        try {
-          await stLim.fetch("http://x/taskenqueue", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            /* CAP-8: THE SUBJECT IS THE DOCUMENT, NOT THE EXPORT ADDRESS — and
-               this line is here because the item would otherwise have made the
-               record WORSE at the one place a person reads it. Before the Drive
-               handler, acquiring a Doc link enqueued a task whose subject was
-               that link; after it, the locator is the composed export address,
-               so the member resolving "who issued this?" would have been shown
-               `…/export?format=odt` instead of the document. `documentAddress`
-               is the Drive link for a Drive capture and IS `locator` for every
-               other direct capture, so no existing task changes by one byte.
-               The ARCHIVE arm is deliberately left as it was: its subject is the
-               replay URL today, which is a separate and pre-existing question
-               this item does not answer by drive-by. */
-            body: JSON.stringify({
-              kind: "authority-undetermined",
-              captureSha: sha,
-              subject: driveCapture ? documentAddress : locator,
-              locator,
-              at: retrieved
-            })
-          });
-        } catch {
-        }
-      }
-      const SUB_PARSE_MAX = 8 * 1024 * 1024;
-      let subs = null, subsSkipped = null, sessionId = null;
-      if (body2.subresources === true) {
-        if (multipart || total > SUB_PARSE_MAX)
-          subsSkipped = { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total}` };
-        else if (detectFormat(null, ct || null).format !== "html")
-          subsSkipped = { reason: "NOT_HTML", content_type: ct || null, detail: "only an HTML page has subresources; the capture is unaffected and complete" };
-        else {
-          const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (!obj) subsSkipped = { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" };
-          else {
-            const primaryBytes = new Uint8Array(await obj.arrayBuffer());
-            const hex3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-            let resumeState = null;
-            sessionId = body2.continue || null;
-            if (sessionId) {
-              try {
-                const ld = (await (await stLim.fetch(`http://x/loadcapturesession?session=${encodeURIComponent(sessionId)}`)).json()).result;
-                if (ld && ld.found) resumeState = ld.state;
-                else subsSkipped = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
-              } catch {
-                subsSkipped = { reason: "SESSION_UNREADABLE" };
-              }
-            }
-            let limit = null;
-            try {
-              limit = (await (await stLim.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
-            } catch {
-              limit = null;
-            }
-            const useCeiling = limit && limit.observed && !limit.probeDue ? limit.observed : null;
-            let baseHost = null;
-            try {
-              baseHost = new URL(res2.url || locator).hostname.toLowerCase();
-            } catch {
-              baseHost = null;
-            }
-            let siteKnown = {};
-            if (baseHost) {
-              try {
-                siteKnown = (await (await stLim.fetch("http://x/siteassets", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ host: baseHost })
-                })).json()).result.assets || {};
-              } catch {
-                siteKnown = {};
-              }
-            }
-            subs = await captureSubresources({
-              platformCeiling: useCeiling,
-              resume: resumeState,
-              siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
-              readBack: async (sh) => {
-                const o = await env.CAPTURES.get(`${storeName}/captures/${sh}`);
-                return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null;
-              },
-              html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
-              base: res2.url || locator,
-              primarySha: sha,
-              primaryFile: `snapshots/${name}`,
-              isPublic: isPublicHttpsLocator,
-              sha256: async (b) => hex3(await crypto.subtle.digest("SHA-256", b)),
-              put: async (s, b) => {
-                const k = `${storeName}/captures/${s}`;
-                if (await env.CAPTURES.head(k)) return { existed: true };
-                await env.CAPTURES.put(k, b, { sha256: await crypto.subtle.digest("SHA-256", b) });
-                return { existed: false };
-              },
-              fetchOne: async (u) => {
-                let subHost = null;
-                try {
-                  subHost = new URL(u).host;
-                } catch {
-                }
-                if (subHost) {
-                  try {
-                    const st = await (await stGov.fetch(`http://x/governorstate?host=${encodeURIComponent(subHost)}`)).json();
-                    const row = st?.result?.hosts?.[0];
-                    if (row && row.cooloff_until > Date.now())
-                      return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
-                  } catch {
-                  }
-                }
-                const stagger = env.GOVERNOR_SUBRESOURCE_STAGGER_MS !== void 0 ? Number(env.GOVERNOR_SUBRESOURCE_STAGGER_MS) || 0 : 50 + Math.floor(Math.random() * 200);
-                if (stagger) await new Promise((s) => setTimeout(s, stagger));
-                const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
-                if (subHost) {
-                  try {
-                    await stGov.fetch("http://x/governorreport", {
-                      method: "POST",
-                      headers: { "content-type": "application/json" },
-                      body: JSON.stringify({
-                        host: subHost,
-                        status: r.status,
-                        retry_after_ms: (() => {
-                          const ra = r.headers.get("retry-after");
-                          if (!ra) return null;
-                          const n = Number(ra);
-                          return Number.isFinite(n) ? n * 1e3 : Math.max(0, Date.parse(ra) - Date.now() || 0);
-                        })()
-                      })
-                    });
-                  } catch {
-                  }
-                }
-                if (!r.ok) return { ok: false, status: r.status, reason: "SOURCE_REFUSED" };
-                return {
-                  ok: true,
-                  status: r.status,
-                  bytes: new Uint8Array(await r.arrayBuffer()),
-                  contentType: r.headers.get("content-type") || ""
-                };
-              }
-            });
-            try {
-              subs.limitRecord = (await (await stLim.fetch("http://x/recordcapturelimit", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ runtime: "subrequests", observed: subs.manifest.platform.observed_ceiling })
-              })).json()).result;
-            } catch {
-            }
-            if (subs.resumeState) {
-              sessionId = sessionId || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
-              try {
-                subs.session = (await (await stLim.fetch("http://x/savecapturesession", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({
-                    session: sessionId,
-                    locator,
-                    primarySha: sha,
-                    primaryFile: `snapshots/${name}`,
-                    base: res2.url || locator,
-                    state: subs.resumeState
-                  })
-                })).json()).result;
-              } catch {
-              }
-            } else if (sessionId) {
-              try {
-                await stLim.fetch(`http://x/dropcapturesession?session=${encodeURIComponent(sessionId)}`);
-              } catch {
-              }
-            }
-            try {
-              subs.computeRecord = (await (await stLim.fetch("http://x/recordruntime", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                  metric: "capture_work_bytes",
-                  ms: subs.manifest.compute.work_bytes,
-                  detail: `${subs.manifest.compute.work_calls} compute calls over ${subs.manifest.compute.work_bytes} bytes; ${subs.manifest.counts.fetched} fetched, ${subs.manifest.discovered} discovered`
-                })
-              })).json()).result;
-            } catch {
-            }
-            try {
-              if (subs.links && subs.links.length) {
-                await stLim.fetch("http://x/recordlinks", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({
-                    sourceCapture: sha,
-                    capturedAt: retrieved,
-                    /* Anchors are filed too. An in-page anchor is an element
-                       reference into this document, which makes it a component
-                       reference rather than noise; dropping it left the manifest
-                       counting 27 anchors while the links table held none. */
-                    links: subs.links.filter((l) => l.address).map((l) => ({
-                      ref: l.ref,
-                      address: l.address,
-                      address_norm: normalizeAddress(l.address),
-                      citation_norm: l.citation || normalizeCitation(l.address),
-                      fragment: l.fragment || null,
-                      type: l.type,
-                      origin: l.origin
-                    }))
-                  })
-                });
-              }
-            } catch {
-            }
-            if (baseHost && subs.siteObservations && subs.siteObservations.length) {
-              try {
-                subs.siteRecord = (await (await stLim.fetch("http://x/recordsiteassets", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ host: baseHost, primarySha: sha, observations: subs.siteObservations })
-                })).json()).result;
-              } catch {
-              }
-            }
-          }
-        }
-      }
-      let profileText = "", profileBytes = null;
-      let readDialect;
-      if (profilesAsText(ct, total, multipart)) {
-        try {
-          const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (pobj) {
-            profileBytes = new Uint8Array(await pobj.arrayBuffer());
-            profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
-          }
-        } catch {
-        }
-      }
-      let formatBytes = profileBytes;
-      if (!formatBytes && !multipart && total > 0) {
-        try {
-          const fobj = await env.CAPTURES.get(
-            `${storeName}/captures/${sha}`,
-            { range: { offset: 0, length: Math.min(1024, total) } }
-          );
-          if (fobj) formatBytes = new Uint8Array(await fobj.arrayBuffer());
-        } catch {
-        }
-      }
-      const profHeaders = {};
-      for (const [hk, hv] of res2.headers) profHeaders[hk.toLowerCase()] = hv;
-      const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
-      const stackId = identify(profCtx);
-      const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind });
-      const profile = {
-        /* The STACK axis, via docprofile's own serialiser (handler key/label/
-           version, its confidence, its signals, the document kind, what was
-           considered, the instant, and any note). Reused rather than restated so
-           the record's notion of "how a document was profiled" lives in one place. */
-        ...profileRecord(stackId, { now: retrieved }),
-        /* The CONTENT-TYPE axis beside it: the second confidence and second signal
-           set the item asks for, keyed distinctly from the stack axis's. */
-        content_type: docType.type.key,
-        content_type_label: docType.type.label,
-        content_type_version: docType.type.version,
-        content_type_confidence: docType.confidence,
-        content_type_signals: docType.signals,
-        contract: docType.type.contract || null,
-        /* What this handler treats as machinery/furniture on this class of
-           document — the normalisation the profile's judgment rests on. Declared
-           (region + label), not the computed digests: those are Step 2, with their
-           own consumers. Recorded so a later reader can see WHY a digest called
-           certain bytes non-substantive. */
-        normalised: (typeof stackId.handler.rules === "function" ? stackId.handler.rules(profCtx) : []).map((r) => ({ region: r.region, label: r.label })),
-        boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
-        /* The source's own Content-Type, distinct from the recognised content
-           TYPE above: one is what the server declared, the other is what the
-           record decided the document is. */
-        source_content_type: ct || null,
-        profiled_from_text: !!profileText,
-        /* COFF-1 (I7): the FORMAT axis — { format, confidence, signals }
-           exactly as detectFormat returned it, `undetermined` first-class
-           when nothing matched. Advisory like the rest of the profile: it
-           records what the record THINKS the bytes are, never authority. */
-        format: detectFormat(formatBytes, ct || null)
-      };
-      if (driveCapture) {
-        driveHopRecorded = driveHop(
-          driveCapture,
-          { retrieved, resolved: res2.url || null, detected: profile.format }
-        );
-      }
-      let containerBytes = null;
-      const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
-      if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) {
-        try {
-          const cobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-          if (cobj) containerBytes = new Uint8Array(await cobj.arrayBuffer());
-        } catch {
-        }
-      }
-      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
+      const acquired = await acquireOp(
+        req,
+        env,
+        env.STORE.get(env.STORE.idFromName(storeName)),
+        { json, storeSilent, storageAbsent, cls, member: viaSession, sessMember, storeName }
+      );
+      if (acquired.response) return acquired.response;
+      let {
+        sha,
+        ct,
+        multipart,
+        retrieved,
+        profHeaders,
+        profCtx,
+        profileText,
+        profileBytes,
+        stackId,
+        docType,
+        documentAddress,
+        driveCapture,
+        profile,
+        readDialect
+      } = acquired.inputs;
       let reading;
       let textUnits = null, textUnitsOverBound = 0;
       let classifiedText = null;
@@ -92646,8 +94008,8 @@ var index_default = {
               const wbytes = wobj ? new Uint8Array(await wobj.arrayBuffer()) : null;
               let i2text = null;
               if (wbytes && typeof entry.text === "function") {
-                const parts2 = typeof entry.parts === "function" ? await entry.parts(wbytes) : wbytes;
-                const tt = await entry.text(parts2);
+                const parts = typeof entry.parts === "function" ? await entry.parts(wbytes) : wbytes;
+                const tt = await entry.text(parts);
                 if (tt && tt.ok !== false) {
                   i2text = tt;
                   wiredTier = 1;
@@ -92706,9 +94068,9 @@ var index_default = {
                 readDialect = readingDialect(i2text.dialect);
               if (i2text) {
                 const has3 = (k) => Array.isArray(i2text[k]);
-                const held2 = (k) => has3(k) && i2text[k].length ? i2text[k] : null;
+                const held = (k) => has3(k) && i2text[k].length ? i2text[k] : null;
                 if (has3("sheets") || has3("paragraphs") || has3("slides")) {
-                  const sh = held2("sheets"), pa = held2("paragraphs"), sl = held2("slides");
+                  const sh = held("sheets"), pa = held("paragraphs"), sl = held("slides");
                   const deckLen = Number.isInteger(i2text.deckLength) && i2text.deckLength > 0 ? i2text.deckLength : null;
                   const int = (v) => Number.isInteger(v) ? v : null;
                   const slideExtents = (units) => {
@@ -92834,377 +94196,25 @@ var index_default = {
         }
       }
       if (reading && readDialect !== void 0) reading.dialect = readDialect;
-      return json({
-        ok: true,
-        existed,
-        /* D-476: the stated reason, present exactly when `existed` is null and
-           absent otherwise - so the single-part answer is byte-identical to what
-           every caller reads today, and a null is never bare. */
-        ...existedUndetermined ? { existed_undetermined: existedUndetermined } : {},
-        document: {
-          file: `snapshots/${name}`,
-          locator,
-          retrieved,
-          /* CONSTRUCTS Step 1 (FW-3): which host stack and which content type the
-             record thinks it holds, with the confidence, signals and recogniser
-             versions that let it be revised later. A new sibling field, additive
-             to I1. */
-          profile,
-          /* CONSTRUCTS Step 3 (FW-5): what the doctype's reader found in this
-             document — entities[] (each with its raw kind:key reference) plus
-             document facts. A new sibling field, additive to I1. op=promote
-             derives it from data/provenance.json and persists it into the
-             `readings` table indexed by entity reference; a failed/empty reading
-             is carried honestly (found:false), never fabricated (framework §7). */
-          reading,
-          /*__REC91_TEXT_UNITS_WIRE_START__*/
-          /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
-             UNITS OF THIS DOCUMENT'S TEXT. A new sibling field, ADDITIVE to I1
-             in `reading`'s and `profile`'s own shape: `op=promote` derives the
-             content-grain text index from `data/provenance.json` exactly as it
-             already derives `readings` and `reading_refs` from it, and a caller
-             that copies the acquire document wholesale -- which is the shape
-             C-18.1 requires and every caller already builds -- carries this with
-             no change of its own.
-             *
-             * A SIBLING OF `reading` AND NOT A FIELD ON IT, and that is the one
-             * shape decision here. `readings.reading` is persisted WHOLE as
-             * JSON, so a `reading.text_units` would store every byte of the
-             * document's text in the `readings` table AND AGAIN in
-             * `capture_text` -- and section 3's chosen option is option (iii)
-             * precisely because "text is stored once". As a sibling the store
-             * consumes it into `capture_text` and the reading persists exactly
-             * as it did before this landing, gaining not one byte.
-             *
-             * WHAT THIS DOES COST, MEASURED AND REPORTED RATHER THAN LEFT TO BE
-             * FOUND: `data/provenance.json` is a bundle FILE, so its bytes land
-             * in `files.content` and in `history` -- which means the text IS
-             * stored a second time, in the one place section 3 says it is not.
-             * It is the only route that needs no change from any caller, and the
-             * alternative (a promote-package sibling outside the bundle image)
-             * costs edits in two areas this item does not own. Reported as a
-             * DESIGN GAP against section 3 / section 4.1 with the figure, not
-             * closed here by widening the scope. */
-          ...textUnits ? { text_units: textUnits } : {},
-          /* WHAT THE WIRE'S OWN BUDGET DROPPED, so the store can say `partial`
-             rather than recording a truncated capture as a whole one. Emitted
-             only when it is non-zero, so a document nothing was dropped from
-             carries exactly the keys it carried before. */
-          ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
-          /*__REC91_TEXT_UNITS_WIRE_END__*/
-          /* D-97: authority mirrors verdict / verdict_basis / verdict_at
-             rather than inventing a shape. The determination when one was
-             made; the STATE always; the basis in BOTH cases, dated, because
-             "the member asserted it" and "nothing could establish it" are
-             both facts about how the record got here. An undetermined
-             capture is held and barred from publication, never refused at
-             intake (RULED, AUTHORITY-AND-TRUST.md). */
-          ...renderedAuth ? renderedAuth : {
-            ...authorityAsserted ? { authority: authorityAsserted } : {},
-            authority_state: authorityAsserted ? "determined" : "undetermined",
-            authority_basis: authorityAsserted ? `asserted by the capturing ${viaSession ? "member" : "caller"} at intake, ${retrieved}` : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`
-          },
-          /* The chain of custody as ordered hops from us back to the origin,
-             each naming who, what they assert, the evidence, and whether the
-             assertion is cryptographically bound or merely stated (RULED). A
-             direct fetch is ONE hop, which is what grades it above an
-             archive-sourced capture of the same document: grade tracks
-             directness, never technique. */
-          /* Ordered hops from us back to the origin. A direct fetch is ONE hop,
-             which is what grades it above an archive-sourced capture of the same
-             document: grade tracks directness, never technique.
-             *
-             * An archive capture is TWO, and the second is weaker and says so.
-             * Our hop is honest about what we actually did (we fetched the
-             * replay address, not the publisher), and theirs carries the CDX
-             * evidence with `bound: false` and the reason it is unsigned. RULED:
-             * transitive trust is accepted WHERE DISCLOSED, and what is
-             * inherited is the fact of publication, never the credibility of
-             * the content. */
-          provenance_chain: [
-            {
-              who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-              /* D-499 / BOB #32: a render whose wait fired on its TIMEOUT is NEVER
-                 PRESENTED AS THE WHOLE PAGE. The qualification is DERIVED from the
-                 block by `completenessReading`, never retyped here: a second copy
-                 of the sentence would agree with the record for free and drift from
-                 it for free. The grade and the method above are untouched. */
-              asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
-              evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
-              bound: false,
-              via
-              /* CAP-8 joins the SAME spread, and a capture is never both: an archive
-                 arm requires `via: "archive.org"`, which the Drive arm never sets.
-                 A Drive export is therefore TWO hops — ours, honest that what we
-                 fetched was the export address rather than the document's own, and
-                 Google's, carrying the three facts with `bound: false` and the
-                 reason it is unsigned. */
-            },
-            ...archiveHopRecorded ? [archiveHopRecorded] : [],
-            ...driveHopRecorded ? [driveHopRecorded] : []
-          ],
-          capture: {
-            /* D-64 / BOB #32 item 1: the method is `rendered`; the shell keeps its own. */
-            method: renderRecorded ? RENDERED_METHOD : multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
-            /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
-               is one more party between us and the publisher, so it grades
-               below a direct capture of the same document even though the
-               bytes may be identical and the method just as careful.
-               *
-               REC-50: THE DIRECT-FETCH LETTER IS THE ENFORCED CEILING, so it is
-               that value and not a copy of it. `EARNED_CAPTURE_CEILING` is what
-               `checkEarnedLeg` refuses a capture leg for exceeding, and R2-g's
-               doctrine — "Grade B is what a direct capture by this instance is
-               worth" — is a statement ABOUT this stamp. A typed letter here
-               agreed with the rule at zero cost and would have drifted silently
-               the moment the ceiling moved, handing a caller a grade the gate
-               will not accept: the same defect REC-43 closed on the attest
-               fence and REC-48 on this op's own `note:`, one field over.
-               *
-               THE ARCHIVE-SOURCED LETTER IS DELIBERATELY STILL TYPED, and that
-               is open BY DECISION rather than by oversight. Naming it would
-               assert what an archive-sourced capture EARNS and whether that is
-               a ceiling or a fixed grade — a second capture-axis doctrine
-               value, which is a ruling and not a worker's or CONDUCT's to make
-               by writing a constant (QUEUE.md REC-50). What IS already ruled is
-               the ORDERING stated at the top of this comment, and
-               acquire.test.mjs pins that the typed letter still ranks strictly
-               below the ceiling — so if the ceiling ever moves onto or past it,
-               the suite says so by name instead of the record quietly claiming
-               an archive capture is worth as much as a direct one. */
-            grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING,
-            /* WHO SERVED US THESE BYTES, which is not who issued the document.
-               Bob, 2026-07-31: recording that the capture came through the
-               Internet Archive is proper even while the CONTENT authority is
-               still undetermined, because publication gates on there being no
-               undetermined authority link in the PROVENANCE, and the archive
-               leg is perfectly well attributed. Set only for an archive
-               capture: for a direct fetch the server and the document address
-               are the same string, and adding a field restating the locator
-               would invite it being read as the issuing party. */
-            ...via === "archive.org" ? { authority: "Internet Archive" } : {},
-            actor_class: viaSession ? "member" : cls === "probe" ? "session" : "daemon",
-            /* Over the reassembled whole, which is what C-18.1 requires of a
-               parted document and what C-18.6 checks by streaming the parts. */
-            sha256: sha,
-            encoding: "binary",
-            bytes: total,
-            ...ct ? { content_type: ct } : {},
-            /* The HTTP exchange belongs to the SHELL; on a rendered capture it is
-               carried there, and the render's own navigation is `render.*`. */
-            ...renderRecorded ? {} : { transport }
-          },
-          /* D-64: THE PAIR (BOB #32 item 2). The rendered document is PRIMARY and
-             is `file`/`capture`; the shell is beside it under its own digest, the
-             one part anyone can re-verify against the source. */
-          ...renderRecorded ? {
-            pair: {
-              primary: "rendered",
-              rendered: { file: `snapshots/${name}`, sha256: sha },
-              shell: { file: shellRecorded.file, sha256: shellRecorded.sha256 }
-            },
-            render: renderRecorded,
-            shell: shellRecorded
-          } : {},
-          ...multipart ? { parts: parts.map((p, i) => ({
-            file: `snapshots/${name}.part${String(i).padStart(3, "0")}`,
-            sha256: p.sha256,
-            bytes: p.bytes
-          })) } : {},
-          /* Named on the SAME register document rather than as documents of
-             their own. C-18.3 treats one capture hash appearing under two
-             register entries as a missed corroboration, and beyond that a
-             derived artifact is not an independent acquisition: it has no
-             locator, no authority, and no grade of its own. It is a rendering
-             of this document and it says so here. */
-          ...subs ? { renditions: subs.renditions } : {},
-          origin: {
-            kind: body2.matchedSweep ? "sweep" : "named_request",
-            ...body2.matchedSweep ? { matched_sweep: body2.matchedSweep, deeming_actor: sessMember || cls } : {}
-          },
-          attestation_attempts: []
-        },
-        ...multipart ? { parts: parts.length } : {},
-        ...subs ? {
-          subresources: subs.subresources,
-          snapshot: {
-            manifest_file: "data/snapshot-manifest.json",
-            manifest_sha256: subs.manifestSha,
-            render_file: `snapshots/${name}.render.html`,
-            render_sha256: subs.companionSha,
-            discovered: subs.discovered,
-            attempted: subs.attempted,
-            truncated: subs.truncated,
-            fetched: subs.manifest.counts.fetched,
-            failed: subs.manifest.counts.failed,
-            refused: subs.manifest.counts.refused,
-            scripts_held_unreferenced: subs.manifest.counts.scripts_held_unreferenced,
-            complete: subs.manifest.complete,
-            outstanding: subs.manifest.outstanding,
-            platform: subs.manifest.platform,
-            reuse: subs.manifest.reuse,
-            part_fetch_spread: subs.manifest.part_fetch_spread,
-            compute: subs.manifest.compute,
-            ...subs.computeRecord ? { compute_recorded: subs.computeRecord } : {},
-            ...subs.resumeState ? { continuation: {
-              session: sessionId,
-              outstanding: subs.manifest.outstanding,
-              ticks: subs.session ? subs.session.ticks : 1,
-              how: 'call op=acquire again with {continue: "<session>"} to pick up the outstanding parts; the primary is already complete and is never re-fetched'
-            } } : {},
-            ...subs.siteRecord ? { site: subs.siteRecord } : {},
-            ...subs.limitRecord ? { limit_recorded: subs.limitRecord } : {}
-          },
-          files: {
-            [`snapshots/${name}.render.html`]: subs.companionSha,
-            "data/snapshot-manifest.json": subs.manifestSha,
-            ...shellRecorded ? { [shellRecorded.file]: shellRecorded.sha256 } : {}
-          }
-        } : {},
-        ...shellRecorded && !subs ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {},
-        ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
-        note: ACQUIRE_GRADE_NOTE,
-        store: storeName,
-        tokenClass: cls
-      }, 200);
+      return json(Object.assign(withReading(acquired.answer, { reading, textUnits, textUnitsOverBound }), { note: ACQUIRE_GRADE_NOTE }), 200);
     }
     if (op === "attest") {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
       if (typeof env.CAPTURES?.put !== "function")
         return storageAbsent(op, "this instance has no evidence storage configured");
       const body2 = await req.json().catch(() => null);
-      const sha = typeof body2?.sha256 === "string" ? body2.sha256.toLowerCase() : "";
-      if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" }, 400);
-      let held = null;
-      if (!await env.CAPTURES.head(`${storeName}/captures/${sha}`)) {
-        const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
-          `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
-        ));
-        const holds = hOut.answered ? hOut.result : null;
-        if (holds && holds.acquired === true) {
-          held = {
-            form: "parts",
-            on: "acquisition_receipt",
-            detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. This plane hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
-          };
-        } else {
-          if (holds && holds.registered === true)
-            return json({
-              ok: false,
-              reason: "CAPTURE_HELD_IN_PARTS",
-              sha256: sha,
-              detail: "the record's register names these bytes, but no object is stored under this hash and this plane holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
-            }, 409);
-          return json({
-            ok: false,
-            reason: "NO_SUCH_CAPTURE",
-            detail: holds ? "no object is stored under that hash, the register holds no row for it under a bundle that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
-          }, 404);
+      const attested = await attest(body2 || {}, {
+        head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
+        put: (sha, bytes) => env.CAPTURES.put(captureKey(storeName, sha), bytes, { sha256: sha }),
+        fetch: (...a) => fetch(...a),
+        holds: async (sha) => {
+          const hOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(
+            `http://x/registerholds?sha256=${encodeURIComponent(sha)}`
+          ));
+          return hOut.answered ? hOut.result : null;
         }
-      }
-      const attempts = [];
-      let token = null, tokenSha = null, service = null;
-      for (const endpoint of TSA_ENDPOINTS) {
-        const attempted = stampInstant("second");
-        try {
-          const { der } = timestampRequest(sha);
-          const res2 = await fetch(endpoint, {
-            method: "POST",
-            body: der,
-            headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT }
-          });
-          if (!res2.ok) {
-            attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res2.status}` });
-            continue;
-          }
-          const parsed = parseTimestampResponse(new Uint8Array(await res2.arrayBuffer()), sha);
-          if (!parsed.ok) {
-            attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
-            continue;
-          }
-          const digest = await crypto.subtle.digest("SHA-256", parsed.token);
-          tokenSha = [...new Uint8Array(digest)].map((x) => x.toString(16).padStart(2, "0")).join("");
-          await env.CAPTURES.put(`${storeName}/captures/${tokenSha}`, parsed.token, { sha256: digest });
-          token = parsed.token;
-          service = endpoint;
-          attempts.push({
-            service: endpoint,
-            attempted,
-            ok: true,
-            kind: "rfc3161",
-            token_sha256: tokenSha,
-            token_bytes: parsed.token.length
-          });
-          break;
-        } catch (e) {
-          attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
-        }
-      }
-      let archive = null;
-      if (body2.archive === true) {
-        const attempted = stampInstant("second");
-        const locator = typeof body2.locator === "string" ? body2.locator : "";
-        if (!isPublicHttpsLocator(locator)) {
-          attempts.push({
-            service: ARCHIVE_SERVICE,
-            attempted,
-            ok: false,
-            note: "no public https locator to archive"
-          });
-        } else {
-          try {
-            const res2 = await fetch(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
-            const archived = archiveLocatorFrom(res2, locator);
-            if (res2.ok && archived) {
-              archive = { service: ARCHIVE_SERVICE, locator: archived };
-              attempts.push({
-                service: ARCHIVE_SERVICE,
-                attempted,
-                ok: true,
-                kind: "co-archive",
-                archived_locator: archived
-              });
-            } else {
-              attempts.push({
-                service: ARCHIVE_SERVICE,
-                attempted,
-                ok: false,
-                note: res2.ok ? "archived but returned no locator" : `http ${res2.status}`
-              });
-            }
-          } catch (e) {
-            attempts.push({
-              service: ARCHIVE_SERVICE,
-              attempted,
-              ok: false,
-              note: String(e && e.message || e).slice(0, 120)
-            });
-          }
-        }
-      }
-      return json({
-        ok: !!token,
-        attempts,
-        ...archive ? { archive } : {},
-        ...token ? {
-          attestation: {
-            file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
-            kind: "rfc3161",
-            service,
-            sha256: tokenSha,
-            bytes: token.length,
-            over: sha
-          },
-          note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
-          ...held ? { held } : {}
-        } : {
-          reason: "NO_ATTESTATION",
-          note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
-        },
-        store: storeName,
-        tokenClass: cls
-      }, token ? 200 : 502);
+      });
+      return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
     }
     if (op === "monitor") {
       if (req.method !== "POST") return json({ ok: false, error: "monitor is a POST" }, 405);
@@ -93309,7 +94319,7 @@ var index_default = {
         actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
       });
       try {
-        const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
+        const g = await governedFetch3(env, env.STORE.get(env.STORE.idFromName(storeName)), tickAddress, "monitor");
         if (g.refusedByGovernor) {
           const observation2 = await monitorLook({ outcome: "governed", reason: g.reason });
           return json({
@@ -93432,23 +94442,23 @@ var index_default = {
               comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
             else {
               const ct = res2.headers.get("content-type");
-              const asText4 = profilesAsText(ct, bytes.length, false);
+              const asText5 = profilesAsText(ct, bytes.length, false);
               const headers = {};
               for (const [hk, hv] of res2.headers) headers[hk.toLowerCase()] = hv;
               const profCtx = {
                 headers,
                 locator,
                 content_type: ct || null,
-                text: asText4 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : ""
+                text: asText5 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : ""
               };
               const stackId = identify(profCtx);
               const fresh = await substanceDigests(
-                asText4 ? bytes : null,
+                asText5 ? bytes : null,
                 stackId,
                 profCtx,
                 seen,
                 false,
-                asText4 || bytes.length > ODF_DIGEST_MAX ? null : bytes
+                asText5 || bytes.length > ODF_DIGEST_MAX ? null : bytes
               );
               const bdOver = bd.over || null, freshOver = fresh.over || null;
               if (bdOver !== freshOver)
@@ -93615,7 +94625,7 @@ var index_default = {
       }
       const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))].map((x) => x.toString(16).padStart(2, "0")).join("");
       const stamp = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const capCarried = !!(lookAfterPromote && carried.some((f3) => f3.sha256 === monCap.sha256));
+      const capCarried = !!(lookAfterPromote && carried.some((f4) => f4.sha256 === monCap.sha256));
       const promoteWith = async (withCap) => {
         const text2 = withEntry(!monCap ? null : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})` : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
         const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text2)))].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -94026,7 +95036,7 @@ var index_default = {
       if (!listOut.answered) return storeSilent("ratify/list");
       const known = new Set((listOut.result || []).map((b) => b.bundle_id));
       const partedRows = /* @__PURE__ */ new Map();
-      const gate = await runGate({
+      const gate = withRegisterChecks(image, await runGate({
         bundleId: body2.bundleId,
         image,
         knownIds: known,
@@ -94065,7 +95075,7 @@ var index_default = {
           const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
           return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
         }
-      });
+      }));
       if (!gate.ok)
         return json({
           ok: false,
@@ -94361,7 +95371,7 @@ var index_default = {
             edition: pub.case?.edition ?? null,
             complete: !!pub.case?.complete,
             awaiting: pub.case?.awaiting ?? [],
-            findings: (pub.case?.findings ?? []).map((f3) => f3.bundle_id),
+            findings: (pub.case?.findings ?? []).map((f4) => f4.bundle_id),
             detail: pub.case?.detail ?? null
           }
         } : {},
@@ -94565,7 +95575,7 @@ var index_default = {
       try {
         const b = JSON.parse(passBody);
         const promotedType = (() => {
-          const md = Array.isArray(b.files) ? b.files.find((f3) => f3 && f3.path === "bundle.md") : null;
+          const md = Array.isArray(b.files) ? b.files.find((f4) => f4 && f4.path === "bundle.md") : null;
           const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
           const said = fm && typeof fm === "object" ? fm.object_type : void 0;
           if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
@@ -94619,7 +95629,7 @@ var index_default = {
           b.ownerMemberId = sessMember;
         }
         if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
-          const bm = b.files.find((f3) => f3 && f3.path === "bundle.md" && typeof f3.text === "string");
+          const bm = b.files.find((f4) => f4 && f4.path === "bundle.md" && typeof f4.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
             const lines = bm.text.split("\n");
@@ -94750,7 +95760,7 @@ var index_default = {
       crypto.getRandomValues(raw);
       const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", await sha256Hex7(secret));
+      inner.searchParams.set("secretSha", await sha256Hex8(secret));
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
         { method: req.method, body: JSON.stringify({
@@ -94776,7 +95786,7 @@ var index_default = {
       const raw = new Uint8Array(32);
       crypto.getRandomValues(raw);
       const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      inner.searchParams.set("secretSha", await sha256Hex7(secret));
+      inner.searchParams.set("secretSha", await sha256Hex8(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (!issued.answered) return storeSilent("reviewgrant");
       if (!issued.result || issued.result.ok !== true)
@@ -94799,6 +95809,5 @@ export {
   PUBLISHED_TOKEN_HASHES,
   Store,
   index_default as default,
-  liveToken,
-  userAgent
+  liveToken
 };
