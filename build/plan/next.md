@@ -117,6 +117,7 @@
 - N119 · 2026-09-27 · **content** (LEGACY-TESTS #3 REPORT 14): R32 states the crop's wire encoding (base64, `bytes_base64` as D-419 answered), and the module or the route encodes it; through the plane it arrives today as a JSON object keyed by index.
 - N122 · 2026-09-27 · **capture** (K155): `captureOf` keeps the first instance made for a storage whatever options later callers pass, so an earlier module creating it without `env` silently strips the plane's renderer; a later call that supplies `env` (or a governor) must be adopted or refused loudly, tested at the interface.
 - N113 · 2026-09-27 · **observation-log** (RETRIEVAL #1 REPORT 12): state `DOCUMENT_EVIDENCE_IS_ONE_SIDED` in its vocabulary, beside content's, meaning's and the internet's, so retrieval R41 can publish the document level's sidedness (today `evidence_one_sided: true`, all three causes live). A requirement change: for Bob with the next observation-log entry.
+- N123 · 2026-09-27 · **membership**, **capture-sources** (K159): membership offers a revocation notice (a registration, the K31 pattern) and capture-sources registers it, so a revoked member's `member` credentials are destroyed at once, not at the next read.
 
 ## Tranche T6, in preparation (P18; BOB #45, 2026-09-27): opens when T5 closes
 
