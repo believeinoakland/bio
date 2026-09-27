@@ -114,3 +114,18 @@ Layer 11, started 2026-09-27 03:20 UTC, concurrently:
 - `legacy-tests` · LEGACY-TESTS #2 · `session_019sbQinGJRZm3pZkVZqMGvj`
 
 LEGACY-INDEX #1 complete at `2f6ecb9b`, merged: ownership 0; N43, N12, N19 applied; N21 deferred (its setting is instance-setup's, N10). Its readings confirmed (K124). For legacy-tests (forwarded): the suites N12's removal of `op-claims` breaks. affordances is N84; the pairing read is N85.
+
+LEGACY-TESTS #2 complete at `0aa79aa339`, merged: ownership 0 (176 files); the old battery 138 → 13 red (civicos-ui 21 → 2), every remaining red owed to a named entry (N70, N73, N86, N88) or REPORT in its record.
+
+## Layer 11 re-opened for two product faults (K125)
+
+LEGACY-TESTS #2's REPORTs 5 and 10 are product faults this tranche made, so T4 does not close on them (P1; P10 re-opens the jobs). Branches `job/T4/capture-2` and `job/T4/legacy-index-2`, from `tranche/T4`.
+
+**capture** (CAPTURE #2)
+- T4-6 · Export `driveRow` from `capture/acquire.mjs` (private since the extraction), with a test at the interface; record completion for an early merge.
+
+**legacy-index** (LEGACY-INDEX #2)
+- T4-7 · `op=monitor`'s Drive tick calls `driveRow`, which `index.mjs` no longer defines (monitor-assess crashes): import it from `capture` after the CHANGE, tested end to end.
+- T4-8 · N19's routing names a page that shows a text layer a tier-3 candidate (`textshown` 33/1): only a page marked `image_content_unread` or `no_text_layer` routes to OCR; restore that, with a test.
+
+The other REPORTs (6 legacy-store's `archivelookup` classification, 7/11 affordances' rungs (N84), 8 capture's six unbounded routes) go to the next plan (N89, N90).

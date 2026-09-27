@@ -91,6 +91,9 @@
 - N87 · 2026-09-27 · **legacy-checks** (LEGACY-TESTS #2, T4): re-point every row whose `where` names `src/store.mjs` or `src/index.mjs` for code layer 3 moved with its DEC-49 markers into `src/capture/` and `src/provenance/` (the list in legacy-tests' T4 record).
 - N88 · 2026-09-27 · **legacy-index** (LEGACY-TESTS #2, T4): `scripts/coverage.mjs --strict` stops gating on FLEET CONTROL, FLEET FLOOR and REGISTER FLOOR, the rules K100 (1) retires; `owed-controls` A13b then passes. (membership's R29/R62 wire check is N73.)
 
+- N89 · 2026-09-27 · **legacy-store** (LEGACY-TESTS #2 REPORT 6): classify `archivelookup` in `PROJECT_NAMING_READS` or `_NOT` (project-sight).
+- N90 · 2026-09-27 · **capture** (LEGACY-TESTS #2 REPORT 8): bound its six unbounded routes (meaning-bounds ceiling 45 → 51, not moved).
+
 ## Tranche T5, in preparation (P18; BOB #43, 2026-09-26): opens when T4 closes, once Bob has approved layers 4 and 5's requirements
 
 Each extraction by its target module's job (mechanics §12.2), from the legacy modules its `from` names, per its map (`build/extraction/<module>.md`) and its requirements; requirement-named tests for every live id (P7); every carried row its requirements mark not yet met is applied, and built work on the snapshot is judged against the requirements (§12.5). A layer's jobs run concurrently (P10), in the layer's order; a user builds against its provider's Provides and merges the tranche branch on a CHANGE.
