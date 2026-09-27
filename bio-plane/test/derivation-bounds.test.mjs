@@ -2254,16 +2254,17 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
 + "and each still PASSES; what changes is that the instrument now SAYS which methods its count "
 + "cannot defend, instead of a reader having to re-derive it from a debt row",
   CENSUS_BLIND,
-  ["#calDriftFor", "#frontierContent",
+  [/* T5-12 (legacy-tests), 2026-09-27: the module names are read where each moved; the list is sorted (see the end). */
+   "retrieval/frontier:#content",
    /* REC-129, 2026-09-18 — the arrival, and like `provenanceRoutesMarked` it joins the DEFENDED
       half: its page is graded by name (`#frontierInternet:page`), so the PARTITIONED arm below
       does not move. Its unbounded half is the viewer-scoped tally GROUP BY. */
-   "#frontierInternet", "#frontierMeaning",
+   "retrieval/frontier:#internet",
    /* c19-unionfix, 2026-09-24 — two arrivals, each measured on the union. `actionQuotes` (D-148) joins the
       DEFENDED half: its page is graded by name by REC-99's inversion, so PARTITIONED below does not gain it.
       `changedFromAudit` (D-256) is blind to BOTH halves — see PARTITIONED. */
-   "actionQuotes", "biasManifest", "changedFromAudit",
-   "documentsNamingEntity", "frontier",
+   "actionQuotes", "bias/index:biasManifest", "changedFromAudit",
+   "entities/index:namingDocuments",
    /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
       than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans
       unbounded, so the CENSUS COUNT cannot move if its paging LIMIT is lost —
@@ -2274,20 +2275,46 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
       assessed count; the PAGE beside it is bounded and index-served. */
    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the same method, moved with its page and its census
       GROUP BY into provenance, read off the widened corpus under its module name. No arrival, no departure. */
-   "provenance/index:provenanceRoutesMarked", "queueFeed"]);
+   "provenance/index:provenanceRoutesMarked", "queueFeed",
+   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from the printed roster, diffed by name against the opening tree
+      (11 -> 12). MOVED (4): biasManifest -> bias/index:biasManifest, documentsNamingEntity -> entities/index:namingDocuments,
+      #frontierContent -> retrieval/frontier:#content, #frontierInternet -> retrieval/frontier:#internet (still DEFENDED:
+      `retrieval/frontier:#internet:page` is graded by name). LEFT (3), each because it no longer holds an unbounded scan
+      of its own, so it left the census and with it this set: #calDriftFor (calibration R11: the join it scanned is
+      calibration's bounded `worseSupersessions`; its page stays graded as `extraction/index:driftFor:page`), and `frontier`
+      and #frontierMeaning (their one unbounded scan, the tally, is retrieval/frontier:#tally now; their claims stay graded
+      and cut-graded under #document and #meaning). ARRIVED (4), each read:
+      - connections/index:asserted (connections R54, new): its `truncated` is measured over an UNBOUNDED read — REC-99's
+        violation, which the TRUNCATION SOURCE arm above names and which is REPORTED, not legitimate; it is here because
+        it is census-blind by construction, which is the other half of the same fact.
+      - extraction/index:documentsByReference (extraction R48 gave it `limit` and `truncated`): DEFENDED, its page is graded
+        by name (`extraction/index:documentsByReference:docs`); the unbounded half is one document's occurrences.
+      - extraction/index:unitsOf (R36): the units read carries the unit bound (`LIMIT ?`), the skipped ranges of one capture
+        are unbounded, so a lost units LIMIT would not move the count. Its `truncated:` is each unit's own stored flag.
+      - extraction/index:reextractBasis: enrolled by `PUBLISHES_BOUND`'s literal reading — the `truncated=0` it matches is a
+        SQL predicate in its units read (whole pages only, D-616), not a published bound. The method does hold an
+        unbounded read (one capture's pdf-page units) and publishes nothing a lost LIMIT could hide; named as what the
+        reader reads, not as a bound. */
+   "connections/index:asserted", "extraction/index:documentsByReference", "extraction/index:reextractBasis",
+   "extraction/index:unitsOf"].sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
 + "that IS defended into a roster of methods that are not, which is the conflation this row was "
 + "written to undo",
   DOUBLY_BLIND,
-  ["#frontierContent", "#frontierMeaning", "biasManifest",
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), diffed by name (7 -> 8): #frontierContent, biasManifest and
+     documentsNamingEntity MOVED (retrieval/frontier:#content, bias/index:biasManifest, entities/index:namingDocuments);
+     `frontier` and #frontierMeaning LEFT with their tally (see SET 2 above); connections/index:asserted,
+     extraction/index:unitsOf and extraction/index:reextractBasis ARRIVED, each blind to both halves for the reason at
+     SET 2 (`asserted` is REPORTED: its claim is REC-99's violation). */
+  ["bias/index:biasManifest", "connections/index:asserted", "entities/index:namingDocuments",
+   "extraction/index:reextractBasis", "extraction/index:unitsOf", "retrieval/frontier:#content",
    /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, blind to BOTH halves and legitimately: its bound is
       an in-memory cut of the LISTING (`from + listed.length < all.length`, `biasManifest`'s OFFSET form, which
       the grader's spelling cannot read — declared in the UNREAD roster below), while its verdict totals are
       counted over every affected bundle by design. */
-   "changedFromAudit", "documentsNamingEntity",
-   "frontier", "queueFeed"]);
+   "changedFromAudit", "queueFeed"].sort());
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
    FOUND BY THIS ITEM AND NAMED RATHER THAN FIXED, because widening `TRUNC_RE` would enlarge
@@ -2377,7 +2404,10 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       is a composite of two measurements this file already made, and not an unmeasured claim. */
    "#contradictionK3: same.truncated || doc.truncated",
    "basisVersions: from + versions.length < total",
-   "biasManifest: from + page.length < all.length",
+   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): three claims MOVED, the same text under the module's name —
+      `biasManifest` (bias/index), `deriveConnections` (connections/index:derive), `search` (retrieval/index). No arrival,
+      no departure; 14 -> 18 republications (not claims; counted at the print). */
+   "bias/index:biasManifest: from + page.length < all.length",
    /* REC-198, 2026-09-23 — DECLARED HERE BECAUSE THIS SUITE SAYS A NEW ONE MUST BE, on REC-146's reasoning above
       and not reworded to vanish from every roster. `caseDraftList` (op=casedrafts, the list of a project's drafts)
       publishes `total` — a `COUNT(*)` over `case_drafts WHERE project_id=?`, the same predicate as its page — and
@@ -2390,9 +2420,9 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       be. `biasManifest`'s OFFSET form exactly: `all` is every affected bundle, measured; `listed` is the page cut
       from it at CHANGED_FROM_AUDIT_LIMIT. A comparison of two measured figures, not an unmeasured claim. */
    "changedFromAudit: from + listed.length < all.length",
-   "deriveConnections: rowsCut || distinct.length > endsCap",
+   "connections/index:derive: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",
-   "search: ids.length >= IDS_MAX",
+   "retrieval/index:search: ids.length >= IDS_MAX",
    "suggestVersion: rc ? !rc.legs_complete : false",
    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, R16): the same claim, moved with `versionChain`
       into provenance, read off the widened corpus under its module name. No arrival, no departure. */
