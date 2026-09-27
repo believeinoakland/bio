@@ -13,6 +13,14 @@ Seven layers, lowest first (P10): 1, 2, 3, 4, 6, 7, 11. Each extraction is done 
 - F4 · ROOT's `STARTED` notice goes to the predecessor BOB, which is finished and which its successor archives; it is a message with no reader (BOB #48 deleted it unfired).
 - Carried from T5 and D7: K140; a job waiting on its own long command reads idle; auto-mode refusals (K153; merge to `main`); archiving outside one's lineage (D7 finding 1); the dry-run toy's `run.mjs` baseline (D7 finding 2).
 
+**Forwarded to T6 jobs at their start** (P9; each is in its reporter's record, read there):
+- promotion (layer 2): LEGACY-CHECKS #2 REPORTs 6 (`FACT_MALFORMED`, `STEP_DECLARED` rows owed), 7 (`CATALOG_VERSION` after 30 rows added and 71 `where`s moved; d470 A3/A9).
+- provenance (layer 3): LEGACY-CHECKS #2 REPORT 4 (mark `is-origin-act`, `is-origin-statement`; the `is-testify-bytes` refusal).
+- content (layer 4): LEGACY-CHECKS #2 REPORT 8 (the store's `versionNotice` passage arm delegates to content's `passageNotice`).
+- run-productions (layer 6): LEGACY-CHECKS #2 REPORT 2; K163 (R12 `EXTRACT_NO_SCOPE`, R13).
+- capture-requests (layer 6): LEGACY-CHECKS #2 REPORT 3 (`is-capture-fetch-failed`; `captureRequestRetry > is-capture-request-retry` mints C-28.18).
+- legacy-tests (layer 11): LEGACY-CHECKS #2 REPORT 10 (the guard's ratchets and arm G, the old-battery re-pins); N124.
+
 ## Layer 1
 - **id-spaces** · N105.
 - **legacy-checks** · N94; the stale `where`s connections' move leaves and rows C-81.11–C-81.14 (connections R43, K152; CONNECTIONS #1's record); the two comments at `VERSION_CHAIN_CHECKS`' and `AI_RUNS_CONTEXT_CHECKS`' headers stop pointing at `MEANING_READ_CHECKS` "above" (RETRIEVAL #1 REPORT 4); N97; `ACT_SHAPE_CHECKS.NO_ALIAS.where` names `src/entities/index.mjs` `addAlias` (ENTITIES #1 REPORT 3); catalogue rows for run-productions R13's DEC-49 codes, capture-requests R19's `CAPTURE_FETCH_FAILED` (D-584) and K109's C-28 `CAPTURE_REQUEST_NOT_RETRYABLE`; N81; N87; N118 (its share: C-100's `where`s name marked regions in one grammar, no `fn1|fn2`; C-100 stops minting rows for codes other modules mint for other conditions; C-22.1 `AI_LOG_STATE_UNKNOWN`'s second condition, a look stating `NEVER_LOOKED` (K148), gets a code of its own).
