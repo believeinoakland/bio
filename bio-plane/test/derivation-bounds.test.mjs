@@ -2211,7 +2211,7 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      inversion grades it BY NAME one block up and this walk has nothing left to report about it. Source-graded
      is UNMOVED at 1: the departure was never source-graded here, so nothing this walk could bound was lost. */
   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests), from the printed roster, diffed by name (10 -> 12): the six moved claims
-     named at REC-99's ungradeable pin (retrieval's five, bias's `bars`, entities' `merged`), each with the same reason;
+     named at REC-99's ungradeable pin (retrieval's four, bias's `bars`, entities' `merged`), each with the same reason;
      ONE MIGRATION, named: `frontier:never` was SOURCE GRADED and its successor retrieval/frontier:#document:never is
      DERIVED from `missing` — the Frontier reader passes the cap-carrying fetch through a helper this one-method walk does
      not follow, the loss of reach D-389's note above took for `#frontierContent:page`; and ONE ARRIVAL,
