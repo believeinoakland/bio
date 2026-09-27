@@ -92,3 +92,9 @@ Layer 3, started 2026-09-27 ~02:14 UTC, concurrently:
 - `provenance` · PROVENANCE #1 · `session_01U29KuhspMg4rYkaVV3DM5k`
 - `capture-sources` · CAPTURE-SOURCES #1 · `session_013dcTX498bqp3qZbH6dTpQN`
 - `capture` · CAPTURE #1 · `session_0151qXkKcpqs1Km6yrLbXgtp`
+
+HOST-GOVERNOR #1 complete at `70321b6a28`, merged early (`337804c`): ownership 0 failures (legacy-store +13/−163, legacy-index +6/−82; every added line read by BOB: imports from `host-governor/` and delegating calls, §12.2); its suite 28/28 on the tranche. CHANGE sent to provenance, capture-sources and capture. For legacy-tests' T4-5: the 10 source-anchored reds it names (the six schema-order tests, `plane-envelope` 2, `derivation-bounds` 2).
+
+CAPTURE-SOURCES #1 complete at `63a87a481c`, merged (early at `dd48569`, the rest now): ownership 0, coverage 54/54, R26 on with N = 4 s measured. For legacy-tests' T4-5: `nc-d490.mjs`'s `nobodies` anchor, stale before this job. Its measurement's filing is N78.
+
+CAPTURE #1's REPORT 1 (02:55): for legacy-tests' T4-5, `doorbell` (the `KNOCK.windowMs` source pin), `hygiene` (the purge census lacks `site_chrome`, `site_chrome_refs`, `link_chrome`, `knock_key`), `observation-log` and `capturerequests` (each "declared BEFORE the host_governor block"); subresources and affordances are N79–N80; R27 states D-701's viewer filter (K123).

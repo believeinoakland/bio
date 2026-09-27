@@ -199,15 +199,6 @@ export function userAgent(env, purpose = "acquire", delegated = null) {
   return civicosUserAgent(version, instance, purpose);
 }
 
-/* D-95: every governed outbound fetch asks the Durable Object for admission
- * first, waits the jittered gap the governor names, fetches with the legible
- * agent, and reports the outcome back so the host's discovered capacity is
- * learned rather than guessed. Refusal by the governor is a named answer, not
- * an exception. An UNREACHABLE governor never blocks the fetch: this is
- * politeness, not coordination, and if the store is down the op fails by
- * itself anyway. MEASURED case in point, 2026-07-30 on the deployed 0.46.0:
- * eleven captures of www.oaklandca.gov from Workers egress, one 403 on the
- * only cold back-to-back pair, ten paced or warmed requests admitted. */
 /* The archive fallback's decision, in ONE place so the lookup op and the capture
  * path cannot drift into disagreeing about when the fallback may fire or which
  * capture it picks.
@@ -275,44 +266,14 @@ async function archiveSelect(env, st, address) {
  * passes nothing and gets the honest CivicOS string, which stays the default for
  * all other traffic. */
 async function governedFetch(env, stub, target, purpose, delegated = null) {
-  let host = null;
-  try { host = new URL(target).host; } catch { /* isPublicHttpsLocator refuses these shapes upstream */ }
-  let waitMs = 0;
-  if (host && stub) {
-    try {
-      const a = await (await stub.fetch("http://x/governoradmit", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host }),
-      })).json();
-      const g = (a && a.result) || null;
-      if (g && g.admitted === false)
-        return { refusedByGovernor: true, reason: g.reason || "governed",
-                 retry_in_ms: g.retry_in_ms || 0, last_refusal_status: g.last_refusal_status || null };
-      waitMs = (g && g.wait_ms) || 0;
-    } catch { /* ungoverned is better than unfetched; see above */ }
-  }
-  if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
-  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose, delegated) } });
-  if (host && stub) {
-    const ra = res.headers.get("retry-after");
-    let raMs = null;
-    if (ra) {
-      const n = Number(ra);
-      raMs = Number.isFinite(n) ? n * 1000 : Math.max(0, Date.parse(ra) - Date.now() || 0);
-    }
-    try {
-      await stub.fetch("http://x/governorreport", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host, status: res.status, retry_after_ms: raMs }),
-      });
-    } catch { /* an unrecorded outcome is not a failed fetch */ }
-  }
-  return { res };
+  return fetchGoverned(target, { userAgent: userAgent(env, purpose, delegated), fetch: (...a) => fetch(...a),
+                                 governor: stub ? governorOverStub(stub) : null });
 }
 import { cpuProbe } from "./cpu.mjs";
 import { readingProvenance } from "./readingprov.mjs";
 import { Store, stampInstant } from "./store.mjs";
 import { attest, attestStatus, partsHeld, registerAuditReport, withRegisterChecks } from "./provenance/index.mjs";
+import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
@@ -7430,46 +7391,9 @@ export default {
       return json({ ok: true, ...p.result });
     }
 
-    if (op === "governorstate") {
-      /* D-103: which hosts the governor is holding and why. A read; the host
-         param narrows to one, absence returns all. The store method already
-         shapes the rows, so this only forwards. */
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const host = url.searchParams.get("host");
-      /* REC-52: the same spread. An empty `{ok:true}` here reads as "the
-         governor is holding nothing", which is a claim about what the instance
-         is doing to other people's servers. */
-      const r = await doAnswer(st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
-      if (!r.answered) return storeSilent("governorstate");
-      return json({ ok: true, ...r.result });
-    }
-
-    if (op === "governorconfig") {
-      /* D-103: set a host's appetite. A host is required so a fat-fingered
-         global change is impossible; appetite_per_min omitted or null resets
-         that host to the instance default rather than pinning a number, which
-         is how an operator says "stop treating this host specially". */
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const host = url.searchParams.get("host");
-      if (!host)
-        return json({ ok: false, reason: "NEED_HOST", detail: "pass host=<hostname>; governorconfig never sets a global appetite" }, 400);
-      const raw = url.searchParams.get("appetite_per_min");
-      let appetite = null;
-      if (raw !== null && raw !== "") {
-        appetite = Number(raw);
-        if (!Number.isFinite(appetite) || appetite <= 0)
-          return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
-      }
-      /* REC-52, and this is the second WRITE in the class: an operator sets a
-         host's appetite, the store never records it, and the plane answers
-         `{ok:true}`. The operator then believes a courtesy limit is in force on
-         somebody else's server when none is. */
-      const r = await doAnswer(st.fetch("http://x/governorconfig", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ host, appetite_per_min: appetite }),
-      }));
-      if (!r.answered) return storeSilent("governorconfig");
-      return json({ ok: true, ...r.result });
+    {
+      const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)));
+      if (g) return g.silent ? storeSilent(op) : json(g.body, g.status);
     }
 
     if (op === "links") {

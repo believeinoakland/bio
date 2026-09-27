@@ -88,6 +88,36 @@ const CLIENT_HEADER = "bio-plane";
    CHOICE, not a measurement: puppeteer's own `networkidle0` uses 500 ms and this
    matches it so the two agree about what the word means. */
 const IDLE_QUIET_MS = 500;
+
+/* D-570 (R26) — THE QUIET WINDOW THAT DOES NOT WAIT FOR LONG-LIVED REQUESTS. BOB #34,
+   2026-09-25, ruled (c): after the load event the wait also ends when, for IDLE_QUIET_MS,
+   no request YOUNGER than N is in flight, N set from a measurement and never picked. A page
+   that holds a request open (an event stream, a long poll) never goes network-idle, so
+   without this every render of it ends on its timeout (M-151: 16 of 16 on the corpus's
+   founding client-rendered source).
+   MEASURED 2026-09-27 02:15–02:47Z by CAPTURE-SOURCES #1 (T4), extending M-151 with its own
+   instrument: headless Chromium Chrome/141.0.7390.37 (/opt/pw-browsers/chromium) over CDP by
+   puppeteer-core@23, through the container's egress proxy (trust pinned to its CA by SPKI), a
+   fresh incognito context per run, viewport 1280x800, 60 s of observation after Page.navigate,
+   every request's start and end recorded; 8 runs of each of oaklandca.opengov.com/transparency,
+   oaklandca.opengov.com/, data.oaklandca.gov/ and (server-rendered control)
+   oakland.legistar.com/Calendar.aspx. Harness sha256 118fad49…, rows f727eab5…, analysis 60f366cd….
+   - Requests that ENDED on the client-rendered sources: n = 1,597, median 301 ms, p99 1,148 ms,
+     MAX 1,968 ms.
+   - Requests that NEVER ended in 60 s: only on the two opengov addresses, 4 in every run (32 of 32
+     per address): a LaunchDarkly event stream (clientstream.launchdarkly.com), two
+     platform.twitter.com widget frames and a www.facebook.com plugin frame, each started 2.0 s or
+     more after navigation. The social frames may be held open by this egress path rather than by
+     the site; either way they are what the wait would stall on.
+   THE RULE, as M-151's: N = twice the tail of the lifetimes of requests that ended, rounded UP to
+   the next whole second: 2 x 1,968 = 3,936 ms, so N = 4 s. Replayed over the 32 recorded runs with
+   the 15 s wait: WITHOUT the rule both opengov addresses end on the timeout in 16 of 16 runs; WITH
+   N = 4 s they settle by this rule in 16 of 16, at 8.4-10.0 s from navigation, naming 4 long-lived
+   requests each; data.oaklandca.gov and legistar end on networkidle in 16 of 16 either way, at the
+   same instants. NOT MEASURED: Cloudflare's browser and network, other client-rendered sources, a
+   slow day; a request that legitimately runs longer than N while bringing data would be excluded,
+   and the record then says "settled", never "complete". */
+const LONG_LIVED_AFTER_MS = 4000;
 /* D-520: the least of the render's bound kept for serialising the document after the wait. */
 const SERIALISE_MS = 1000;
 
@@ -171,7 +201,14 @@ async function boundedOpen(binding, ms) {
   const expire = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`)), ms);
   });
-  try { return await Promise.race([openSession(binding), expire]); }
+  const opening = openSession(binding);
+  try { return await Promise.race([opening, expire]); }
+  catch (e) {
+    /* A session the binding hands out AFTER the bound expired is closed as soon as it
+       arrives: nothing will use it, and an open session spends the allowance. */
+    opening.then((s) => { try { s.ws.close(); } catch { /* already closed */ } }, () => {});
+    throw e;
+  }
   finally { clearTimeout(timer); }
 }
 
@@ -329,6 +366,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     try { await conn.send("Debugger.enable", {}, sessionId, navLeft()); sawDebugger = true; } catch { /* scripts -> null */ }
 
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
+    let quietYoungSince = null;
     conn.on((m) => {
       const p = m.params || {};
       switch (m.method) {
@@ -343,8 +381,11 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
             requests.set(`${p.requestId}#${requests.size}`, { ...prev, outcome: "completed",
               status: Number(p.redirectResponse.status) || prev.status, redirect: true });
           } else inflight++;
+          /* `since` dates the request (this hop of it), for R26's age; any request starting
+             restarts R26's quiet window, even one that ends before the next poll. */
           requests.set(p.requestId, { rid: p.requestId, url: String(p.request?.url || ""), type: resourceType(p.type),
-                                      outcome: "pending", status: null, blocked_by: null });
+                                      outcome: "pending", status: null, blocked_by: null, since: now() });
+          quietYoungSince = null;
           break;
         case "Network.responseReceived": {
           const r = requests.get(p.requestId);
@@ -407,13 +448,30 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     const overall = started + navMs + timeoutMs;
     const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
     let fired = null;
+    /* R26: the requests still open that are older than N, at a moment. */
+    const pending = () => [...requests.values()].filter((r) => r.outcome === "pending");
+    const isLongLived = (r) => LONG_LIVED_AFTER_MS !== null && now() - r.since >= LONG_LIVED_AFTER_MS;
+    const longLived = () => pending().filter(isLongLived);
     while (now() < deadline) {
       if (until === "load" && loadFired) { fired = "load"; break; }
       if (loadFired && inflight <= 0 && lastQuietAt !== null && now() - lastQuietAt >= IDLE_QUIET_MS) { fired = "networkidle"; break; }
       if (loadFired && inflight <= 0 && lastQuietAt === null) lastQuietAt = now();
+      /* R26, only while something IS open (with nothing open, R23's networkidle is the
+         rule) and only when every open request is older than N: then quiet for
+         IDLE_QUIET_MS ends the wait. Off while N is unmeasured. */
+      const openNow = LONG_LIVED_AFTER_MS !== null && until !== "load" && loadFired ? pending() : [];
+      if (openNow.length > 0 && openNow.every(isLongLived)) {
+        if (quietYoungSince === null) quietYoungSince = now();
+        else if (now() - quietYoungSince >= IDLE_QUIET_MS) { fired = "quiet_excluding_long_lived"; break; }
+      } else quietYoungSince = null;
       await new Promise((r) => setTimeout(r, 25));
     }
     if (!fired) fired = "timeout";
+    /* R26: N, and the requests the wait did not wait for (open and older than N when it
+       ended), whichever rule ended it. Absent while the rule is off. */
+    const open = longLived();
+    const longLivedReport = LONG_LIVED_AFTER_MS === null ? null
+      : { older_than_s: LONG_LIVED_AFTER_MS / 1000, count: open.length, urls: open.map((r) => r.url) };
 
     /* THE DOCUMENT. `outerHTML` drops the doctype, so the doctype is rebuilt from
        `document.doctype` rather than assumed to be `<!DOCTYPE html>`: a page served
@@ -450,7 +508,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       dpr: envOk.dpr ? (Number(asked.dpr) || 1) : null,
       locale: envOk.locale ? asked.locale : null,
       timezone: envOk.timezone ? asked.timezone : null,
-      wait: { condition: asked.wait || null, fired },
+      wait: { condition: asked.wait || null, fired, ...(longLivedReport ? { long_lived: longLivedReport } : {}) },
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,

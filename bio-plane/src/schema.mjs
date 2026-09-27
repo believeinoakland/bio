@@ -1,5 +1,6 @@
 import { RECORD_SCHEMA } from "./record-core/index.mjs";
 import { PROVENANCE_SCHEMA } from "./provenance/schema.mjs";
+import { HOST_GOVERNOR_SCHEMA } from "./host-governor/schema.mjs";
 export const SCHEMA = `-- BIO store schema, draft 1, derived from the real bundle.md frontmatter and
 -- _history/manifest.json shapes in tree 0.1.94. The bundle format is
 -- authoritative; this is a projection of it and must never bend it.
@@ -3770,30 +3771,5 @@ CREATE TABLE IF NOT EXISTS contradiction_candidates (
 );
 CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
 
--- D-95: the per-host request governor. Our APPETITE is a configured constant
--- because it is ours; their CAPACITY is discovered by being refused and
--- recorded, following the pattern capture_limits proved for the subrequest
--- ceiling. It lives in the Durable Object because the object serialises, which
--- makes one token bucket globally correct for the instance for free; a bucket
--- in Worker memory governs nothing because every invocation is independent.
--- appetite_per_min NULL means the configured default (a CHOSEN constant,
--- recorded in the MEASUREMENTS ledger, never a finding). cooloff_until is how a 429 or
--- a refusal overrides the bucket entirely: while it is in the future, no token
--- balance admits anything to that host. refusals counts CONSECUTIVE refusals
--- and decays to zero on success, so the cool-off escalates the way the
--- counterparty's own escalation does and resets when they relent.
-CREATE TABLE IF NOT EXISTS host_governor (
-  host                TEXT PRIMARY KEY,
-  appetite_per_min    REAL,
-  tokens              REAL    NOT NULL DEFAULT 0,
-  refilled_at         INTEGER NOT NULL DEFAULT 0,
-  last_grant_at       INTEGER NOT NULL DEFAULT 0,
-  cooloff_until       INTEGER NOT NULL DEFAULT 0,
-  refusals            INTEGER NOT NULL DEFAULT 0,
-  last_refusal_at     INTEGER,
-  last_refusal_status INTEGER,
-  granted             INTEGER NOT NULL DEFAULT 0,
-  refused_total       INTEGER NOT NULL DEFAULT 0,
-  updated_at          TEXT
-);
+${HOST_GOVERNOR_SCHEMA}
 `;

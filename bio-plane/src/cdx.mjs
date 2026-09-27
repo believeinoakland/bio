@@ -112,6 +112,9 @@ export function selectCapture(rows, { notAfter = null } = {}) {
   return {
     ok: true,
     chosen: {
+      /* R36: the archive's own key for the address (SURT form), carried verbatim so the
+         hop can name which index entry it read; `null` when the row carried none. */
+      urlkey: typeof chosen.urlkey === "string" && chosen.urlkey ? chosen.urlkey : null,
       timestamp: chosen.timestamp,
       archived_at: cdxTimestampToIso(chosen.timestamp),
       original: chosen.original,
@@ -165,6 +168,7 @@ export function archiveHop(chosen, replay, { mementoDatetime = null, warcSource 
     who: "Internet Archive Wayback Machine",
     asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
     evidence: [
+      chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : "the CDX record carried no urlkey",
       `CDX record: timestamp ${chosen.timestamp}, digest ${chosen.digest} (base32 SHA-1, over the body as they stored it)`,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
       chosen.warc_record_length ? `WARC record length ${chosen.warc_record_length}, which is THEIR compressed record size and not the length of what we received` : null,
