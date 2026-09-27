@@ -59,4 +59,6 @@ Layer 4 CLOSED 2026-09-27 ~07:55 UTC (sessions archived, rows in `build/metrics/
 
 Layer 4, started 2026-09-27 ~06:36 UTC: CALIBRATION #1 `session_01DT2wYuh5pHNvHTYzS5psTF`, EXTRACTION #1 `session_014jiwG7P66ao1PbMJXwqhSF`, CONTENT #1 `session_01RFEshCL4oFYL6LET9Gh1sH`.
 
+Layer 5, started 2026-09-27 ~07:50 UTC: ENTITIES #1 `session_01FFJSjwZY11KjjofLSWARDy`, CONNECTIONS #1 `session_01WfxC8Lht5EmaF2m5vmrG2i`, PROGRESSIONS #1 `session_01MqohHm1mTdqg92oxu4112q`, BIAS #1 `session_018B4eA3jst9ZcAUibKhY5FK`, OBSERVATION-LOG #1 `session_01YZefWwyAhTE5bdBCeBJe3j`, QUERY-LANGUAGE #1 `session_012jSiJ21iiBkFYdQgY49Gbe`, RETRIEVAL #1 `session_01Fv7FCJzWqLPnaNpjhg33rD`.
+
 **Size.** Fifteen jobs. T4: 13 jobs, 703.6M tokens, half of it legacy-tests (K126).
