@@ -1764,7 +1764,11 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
        its units carry the unit bound)}; progressions/index:#threads (R8: one instance's threadings); retrieval/index:migrate
        (the store's `#migrate` spelled `[...this.sql.exec(…)]`, which this reader does not see, now `#rows`). Per-key reads
        but for `asserted`, `portionGrades` and `markStale`. ARRIVALS NAMED, not graded here. */
-const SCANNING_MEASURED_2026_09_15 = 190;
+/* UPDATED AGAIN 2026-09-27 (T5-12, legacy-tests, BOB's CHANGE K155), 190 -> 188, read from the roster this run printed:
+   TWO DEPARTURES, both fixed by CONNECTIONS #2 and nothing else: connections/index:asserted (R54, now LIMIT-bounded:
+   legacy-tests' REPORT 6, which named it here) and connections/index:fileMembership (R59, LIMIT-bounded with it). No
+   arrival. */
+const SCANNING_MEASURED_2026_09_15 = 188;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -2302,7 +2306,9 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
         SQL predicate in its units read (whole pages only, D-616), not a published bound. The method does hold an
         unbounded read (one capture's pdf-page units) and publishes nothing a lost LIMIT could hide; named as what the
         reader reads, not as a bound. */
-   "connections/index:asserted", "extraction/index:documentsByReference", "extraction/index:reextractBasis",
+   /* RE-PINNED 2026-09-27 (T5-12, K155), 12 -> 11: connections/index:asserted LEFT, bounded in SQL by CONNECTIONS #2
+      (REPORT 6's fix), so it no longer holds the unbounded scan that made it census-blind. */
+   "extraction/index:documentsByReference", "extraction/index:reextractBasis",
    "extraction/index:unitsOf"].sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
@@ -2315,7 +2321,8 @@ t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blin
      `frontier` and #frontierMeaning LEFT with their tally (see SET 2 above); connections/index:asserted,
      extraction/index:unitsOf and extraction/index:reextractBasis ARRIVED, each blind to both halves for the reason at
      SET 2 (`asserted` is REPORTED: its claim is REC-99's violation). */
-  ["bias/index:biasManifest", "connections/index:asserted", "entities/index:namingDocuments",
+  /* RE-PINNED 2026-09-27 (T5-12, K155), 8 -> 7: connections/index:asserted LEFT with its fix (SET 2 above). */
+  ["bias/index:biasManifest", "entities/index:namingDocuments",
    "extraction/index:reextractBasis", "extraction/index:unitsOf", "retrieval/frontier:#content",
    /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, blind to BOTH halves and legitimately: its bound is
       an in-memory cut of the LISTING (`from + listed.length < all.length`, `biasManifest`'s OFFSET form, which
