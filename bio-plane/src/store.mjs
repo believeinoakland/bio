@@ -774,12 +774,12 @@ export class Store extends DurableObject {
     bias.registerWorkProducts("ai-run", aiRunWorkProducts({ row: (run) => this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run),
       list: (after, limit) => this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, after, limit).map((r) => r.run),
       read: (run, viewer) => this.aiRunRead({ run, viewer }) }));
-    bias.onLensChange("legacy-store", () => (bias.biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
+    bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
-      if (monitored || bias.biasDebtDue(Date.now()) !== null) await this.#armScheduler();
+      if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
     });
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
