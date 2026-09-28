@@ -62,7 +62,7 @@ export const INTENT_CHECKS = Object.freeze({
       + 'written.',
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
-    check: 'C-111.9', where: at("refuseGoalMachine", "is-goal-member"),
+    check: 'C-111.9', where: at("goalMachineRefusal", "is-goal-member"),
     translation: 'Declaring a goal, tying a project to it and closing it are members\' decisions. An assistant may '
       + 'propose; it may not decide what the group pursues. Sign in as a member. Nothing was written.',
   },
@@ -85,7 +85,7 @@ export const INTENT_CHECKS = Object.freeze({
       + 'so the next reader is not left guessing. Nothing was written.',
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
-    check: 'C-111.14', where: at("refuseAspirationMachine", "is-aspiration-member"),
+    check: 'C-111.14', where: at("aspirationMachineRefusal", "is-aspiration-member"),
     translation: 'What the group holds to is its members\' decision, and so is setting one aside. An assistant may '
       + 'propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written.',
   },

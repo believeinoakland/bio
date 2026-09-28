@@ -210,8 +210,8 @@ export class Intent {
     const author = c.author;
     const who = this.#memberOf(author);
     /* R20: an assistant proposes at any point and declares, revises, closes or retires at none. */
-    if (machine(author) || !who)
-      return type === GOAL ? this.#goalMachine() : this.#aspirationMachine();
+    const notMember = type === GOAL ? goalMachineRefusal(author, !!who) : aspirationMachineRefusal(author, !!who);
+    if (notMember) return notMember;
     /* R26: the state machine. A creation starts at the first state; a revision moves only forward, once. */
     const [first, last] = type === GOAL ? ["open", "closed"] : ["held", "retired"];
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
@@ -602,7 +602,8 @@ export class Intent {
 
   /** R8: declare a goal, bounded, optionally under an aspiration. */
   declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     if (!str(statement) || !str(bounds))
       return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
     if (aspiration != null && aspiration !== "") {
@@ -620,14 +621,10 @@ export class Intent {
     return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str(author), at };
   }
 
-  #goalMachine() {
-    return refuseGoalMachine("declaring, linking and closing a goal are a named member's acts. "
-                   + "Nothing was written.");
-  }
-
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
     if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
     if (g.head.currentState === "closed")
@@ -649,7 +646,8 @@ export class Intent {
 
   /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
   closeGoal({ goal, reason, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
     if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
     if (!str(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
@@ -692,14 +690,10 @@ export class Intent {
    * ASPIRATIONS (R9–R14, R26)
    * ===================================================================== */
 
-  #aspirationMachine() {
-    return refuseAspirationMachine("declaring, departing from, revising and retiring an aspiration "
-                   + "are a named member's acts. Nothing was written.");
-  }
-
   /** R9: declare an aspiration of the group, a project or a member. */
   declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const own = scope === "group" ? null : str(owner) || null;
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !own) || (scope === "group" && str(owner)))
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming "
@@ -727,7 +721,8 @@ export class Intent {
 
   /** R10: a project records its departure from a held group aspiration, with a reason. */
   departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
@@ -751,7 +746,8 @@ export class Intent {
 
   /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
     if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
@@ -773,7 +769,8 @@ export class Intent {
 
   /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
     if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
@@ -1233,89 +1230,108 @@ export class Intent {
   }
 }
 
-/* DEC-49: a code several acts answer is minted at one site, its own function here; each act relays it with its own
-   detail. */
+/* DEC-49: a code several acts answer is minted at one site, its own function here, which builds the refusal whole
+   from its row (D-484's shape); each act relays it with its own detail. */
 function refuseNoSuchProject(detail, extra) {
   /* DEC-49 REGION is-project-seen */
-  return refusal("NO_SUCH_PROJECT",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_SUCH_PROJECT;
+  return { ok: false, reason: "NO_SUCH_PROJECT", code: "NO_SUCH_PROJECT", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-project-seen */
 }
 
 function refuseNoSuchGoal(detail, extra) {
   /* DEC-49 REGION is-goal-held */
-  return refusal("NO_SUCH_GOAL",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_SUCH_GOAL;
+  return { ok: false, reason: "NO_SUCH_GOAL", code: "NO_SUCH_GOAL", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-goal-held */
 }
 
 function refuseNoSuchAspiration(detail, extra) {
   /* DEC-49 REGION is-aspiration-held */
-  return refusal("NO_SUCH_ASPIRATION",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_SUCH_ASPIRATION;
+  return { ok: false, reason: "NO_SUCH_ASPIRATION", code: "NO_SUCH_ASPIRATION", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-aspiration-held */
 }
 
 function refuseNoSuchProgression(detail, extra) {
   /* DEC-49 REGION is-named-progression */
-  return refusal("NO_SUCH_PROGRESSION",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_SUCH_PROGRESSION;
+  return { ok: false, reason: "NO_SUCH_PROGRESSION", code: "NO_SUCH_PROGRESSION", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-named-progression */
 }
 
 function refuseNoSuchEntity(detail, extra) {
   /* DEC-49 REGION is-named-entity */
-  return refusal("NO_SUCH_ENTITY",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_SUCH_ENTITY;
+  return { ok: false, reason: "NO_SUCH_ENTITY", code: "NO_SUCH_ENTITY", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-named-entity */
 }
 
 function refuseNoReason(detail, extra) {
   /* DEC-49 REGION is-reason-stated */
-  return refusal("NO_REASON",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_REASON;
+  return { ok: false, reason: "NO_REASON", code: "NO_REASON", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-reason-stated */
 }
 
 function refusePursuitUnstated(detail, extra) {
   /* DEC-49 REGION is-pursuit-stated */
-  return refusal("PURSUIT_UNSTATED",
-                 detail, extra);
+  const row = INTENT_CHECKS.PURSUIT_UNSTATED;
+  return { ok: false, reason: "PURSUIT_UNSTATED", code: "PURSUIT_UNSTATED", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-pursuit-stated */
 }
 
 function refuseNoLesson(detail, extra) {
   /* DEC-49 REGION is-retirement-taught */
-  return refusal("NO_LESSON",
-                 detail, extra);
+  const row = INTENT_CHECKS.NO_LESSON;
+  return { ok: false, reason: "NO_LESSON", code: "NO_LESSON", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-retirement-taught */
 }
 
 function refuseBadScope(detail, extra) {
   /* DEC-49 REGION is-aspiration-scoped */
-  return refusal("BAD_SCOPE",
-                 detail, extra);
+  const row = INTENT_CHECKS.BAD_SCOPE;
+  return { ok: false, reason: "BAD_SCOPE", code: "BAD_SCOPE", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-aspiration-scoped */
 }
 
 function refusePursuitEnded(detail, extra) {
   /* DEC-49 REGION is-pursuit-live */
-  return refusal("PURSUIT_ENDED",
-                 detail, extra);
+  const row = INTENT_CHECKS.PURSUIT_ENDED;
+  return { ok: false, reason: "PURSUIT_ENDED", code: "PURSUIT_ENDED", check: row.check,
+           translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-pursuit-live */
 }
 
-function refuseGoalMachine(detail, extra) {
+/* R8, R9, R20: a goal's and an aspiration's acts are a named member's. Each answers its refusal when the author is a
+   machine (or no one), or is not a member (`member` false, the registered check's case), and null otherwise. */
+function goalMachineRefusal(author, member = true) {
   /* DEC-49 REGION is-goal-member */
-  return refusal("MACHINE_CANNOT_DECLARE_GOAL",
-                 detail, extra);
+  if (str(author) && !isMachineIdentity(str(author)) && member) return null;
+  const row = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
+  return { ok: false, reason: "MACHINE_CANNOT_DECLARE_GOAL", code: "MACHINE_CANNOT_DECLARE_GOAL", check: row.check,
+           translation: row.translation,
+           detail: "declaring, linking and closing a goal are a named member's acts. Nothing was written." };
   /* END DEC-49 REGION is-goal-member */
 }
 
-function refuseAspirationMachine(detail, extra) {
+function aspirationMachineRefusal(author, member = true) {
   /* DEC-49 REGION is-aspiration-member */
-  return refusal("MACHINE_CANNOT_DECLARE_ASPIRATION",
-                 detail, extra);
+  if (str(author) && !isMachineIdentity(str(author)) && member) return null;
+  const row = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
+  return { ok: false, reason: "MACHINE_CANNOT_DECLARE_ASPIRATION", code: "MACHINE_CANNOT_DECLARE_ASPIRATION",
+           check: row.check, translation: row.translation,
+           detail: "declaring, departing from, revising and retiring an aspiration are a named member's acts. Nothing "
+                 + "was written." };
   /* END DEC-49 REGION is-aspiration-member */
 }
 
