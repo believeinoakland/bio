@@ -1032,7 +1032,7 @@ export const RECORDS_LAW_FENCE_CHECKS = {
  * D-717 / C-101 (R7): THE ACTION CATALOGUE AT THE ACT. Five arms of C-2.10 that ran only in the audit are enforced
  * at the write, each under its own name; `findings[]` carries the arm's own C-2.10 / C-11.1 sentences, so the act and
  * the audit say one thing. A MISSING counterparty and a pending entry PAST its date still land: the audit reports them
- * (R37). C-101.6 is R33's direction rule for the one mechanical clock write.
+ * (R37). C-117.1 (K248's family for this module) is R33's direction rule for the one mechanical clock write.
  * ========================================================================= */
 export const ACTION_CATALOGUE_CHECKS = {
   ACTION_KIND_UNKNOWN: {
@@ -1071,7 +1071,7 @@ export const ACTION_CATALOGUE_CHECKS = {
       + 'entry in this write lacked one of those or held one in another form, so nothing was written.',
   },
   CLOCK_STATUS_NOT_MECHANICAL: {
-    check: 'C-101.6',
+    check: 'C-117.1',
     where: 'src/actions/index.mjs #writeArms > is-promote-clock-mechanical',
     translation: 'The one change an automatic re-check may make to an action\'s deadlines is to mark a pending '
       + 'deadline whose date has passed as overdue. This write changed a deadline\'s status in another way, so '

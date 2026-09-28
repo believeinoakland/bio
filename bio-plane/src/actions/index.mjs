@@ -1718,11 +1718,18 @@ export class Actions {
     };
   }
 
-  /* R5: the recorded author of the version that stated the records law as it stands (the manifest's author). */
+  /* R5: the recorded author class of the action's creation (record-core R15–R16's manifest, first by `seq`): a law
+     written before C-32.20's fence was written with the action, and since the fence no machine can state one. */
   #lawAuthor(id, fm) {
     if (!fm || typeof fm.law !== "string" || !fm.law.trim()) return null;
-    const m = this.#one(`SELECT author FROM manifest WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, id);
-    return m ? m.author : null;
+    let entries = [];
+    try {
+      const im = this.record.readImage(id);
+      const m = im ? im["_history/manifest.json"] : null;
+      entries = (JSON.parse(typeof m === "string" ? m : m && m.text ? m.text : "{}").entries) || [];
+    } catch { entries = []; }
+    const first = [...entries].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))[0];
+    return first && typeof first.author === "string" ? first.author : null;
   }
 
   /** R29: one action's block (R25) for a viewer. */
@@ -1731,7 +1738,14 @@ export class Actions {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id ?? null };
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target: id, object_type: b.object_type };
-    return { ok: true, id, state: b.current_state, action: this.derived({ bundle_id: id }, now) };
+    const fm = this.#heldFm(id) || {};
+    const d = this.derived({ bundle_id: id }, now);
+    /* R29 (K248): R25's keys, and the document's own values its users read (filings, escalation). */
+    return { ok: true, id, current_state: b.current_state, ...d,
+             counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [],
+             legs: d.basis.map((l) => ({ target: l.target_id, kind: l.kind, note: l.note ?? null, at: l.at ?? null,
+                                         target_type: l.target_type, extent_capture: l.extent_capture })),
+             law: typeof fm.law === "string" ? fm.law : null, breach: fm.breach === true };
   }
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
