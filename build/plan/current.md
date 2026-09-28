@@ -4,7 +4,7 @@
 
 Opened by BOB #57, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T10.md` (BOB #56, K274; cut by BOB #57, K305, K317, K320) at once after T9 closed (K282: no pacing). Branch `tranche/T10` starts at `main` @ ac699662aa (T9 closed, K320). The provider sides were worded on T9's tranche before it closed (K304, K306, K303) and re-read against T9's close: layers 1–4 and 10–11 changed nothing they word. Bob's weekly meter at the opening: asked.
 
-**Jobs** · jurisdictions: JURISDICTIONS #3 session_01SU8wk5poE2iWXhvwJ4DL2R; membership: MEMBERSHIP #4 session_01DFpd1E91TLimBv3dJ5zL7N; capture-sources: CAPTURE-SOURCES #4 session_01M69ZsrZCDXrw2gwihj7LxK
+**Jobs** · jurisdictions: JURISDICTIONS #3 session_01SU8wk5poE2iWXhvwJ4DL2R; membership: MEMBERSHIP #4 session_01DFpd1E91TLimBv3dJ5zL7N; capture-sources: CAPTURE-SOURCES #4 session_01M69ZsrZCDXrw2gwihj7LxK; provenance: PROVENANCE #5 session_01U1hr3TuE7sjb7d1PSfBTtt
 
 **Rules at the opening (K315).** T6's to T9's rules hold, as T9's plan states them: the registration rule (K206), one code one site (K231), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. Every provider side this plan needs is worded before its layer opens (K277, K304; marks `not yet met: T10`). SQL a module runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes, tested under a workerd-like cap where the module builds a pattern (K313). Each layer is re-read at its start for what the layers below it changed (K170).
 
