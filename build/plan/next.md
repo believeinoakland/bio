@@ -160,6 +160,7 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N157 · 2026-09-28 · **agent-worker**, **skills** (BOB #51 at layer 6's close, K197): agent-worker's bundle takes 132 first-party inputs (1.4 MB), most of the plane, because R48's `renderPack` import chain (`skillpack.mjs`, `skilldoctrine.mjs`, `airun.mjs`, the catalogue) reaches the modules' indexes; narrow it (skills offering a render-only face, or agent-worker reading the rendered pack from `op=affordances`), so the member's bundle carries what it runs.
 - N158 · 2026-09-28 · **legacy-ui** (AI-RUNS #2 J7): the DEC-49 guard's `FLOOR.regions` in `civicos-ui/check-refusal-codes.mjs` moves 246 → 247, its growth named as ai-runs' C-109.1 region (`is-airun-open-mode`).
 - N159 · 2026-09-28 · **legacy-checks** (INTENT #1 Q2, K198): admit `aspiration` (`ASP-<year>-NNNN`, schema `aspiration@1`, states `held → retired`) and `goal` (`GOAL-<year>-NNNN`, `goal@1`, `open → closed`) to `OBJECT_TYPES`, the known schemas and `STATES`, so C-2.5 stops reporting intent's two document types as unknown in the audit and the gate; intent's own step enforces their machines from T7.
+- N160 · 2026-09-28 · **inquiry** (REEVALUATION #1 Q6, K199): R42's `onRaised` carries a failing listener as `listeners_failed` through `dispose` and `divide` (inquiry wraps the listener's array as `{source, since, raised}`, so reevaluation R8's field cannot reach those replies without it).
 
 ## Before layer 9
 
