@@ -1,24 +1,24 @@
 # strength — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `35ea098` (promotion merged; `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682) by a drafting worker for BOB #42 (P18). Ranges as in `build/extraction/inquiry.md`. The contract is `build/requirements/strength.md` (R1–R25); K23, K31, K61, K75 (2)–(3) apply. The module exports `strengthOf(ctx)` (K61), reaching `inquiry`, `basis-versions`, `membership` and `promotion` through theirs. `from` should read `["legacy-store", "legacy-checks"]`. Nothing moves from `index.mjs`.
+**Status** · Checked against `tranche/T7` @ `e15806be` by a worker for BOB #50 (P18) (`store.mjs` 33,756 lines, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,629); every line number below is re-measured there (the measured sizes are left as first measured). Corrections: all lines re-measured; `search` no longer calls `strengthOf` (it left with `retrieval`; the cache is read only as `query.mjs`'s `capture:` and `connection:` fields, 91 and 98); `#legEarnedCapture` is already `retrieval`'s (retrieval/index.mjs 551), fed by legacy-store's `registerLegGrades` (store 757–760); the cache's index loop sits after `retrievalOf().migrate()` in `#migrate` (1209–1215); the requirement's uses of `membership.bundleGate` and `bundleRedactor` and of `inquiry.subjectEntityOf` name no provided service (review file). Measured 2026-09-26 on `tranche/T3` @ `35ea098` (promotion merged; `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682) by a drafting worker for BOB #42 (P18). Ranges as in `build/extraction/inquiry.md`. The contract is `build/requirements/strength.md` (R1–R25); K23, K31, K61, K75 (2)–(3) apply. The module exports `strengthOf(ctx)` (K61), reaching `inquiry`, `basis-versions`, `membership` and `promotion` through theirs. `from` should read `["legacy-store", "legacy-checks"]`. Nothing moves from `index.mjs`.
 
 ## 1. What moves to `strength`
 
 | what | where today | lines | notes |
 | --- | --- | --- | --- |
-| DEC-72 bar header, `#barAxisWords`, `#projectBar`, `strengthBarSet`, `strengthBarOf` | store | 13170–13388 | R14–R16 |
-| the REC-12 header, `STRENGTH_AXES`, `DOCUMENT_AXES`, `#weakestOf`, `#namedMember`, `#groundResult`, `#axisResult` | | 31558–31921 | R1–R4 |
-| `#captureBoundsFor`, `#strengthWalk`, `strengthOf`, `inquiryStrength`, `#MEMBER_ID_FIELDS`, `#ID_IN_PROSE`, `#redactAxis`, `#writeStrengthProjection` | | 31996–32453 | R1–R6, R13; the `UPDATE` also writes `inquiry_basis_count` and `inquiry_subject_entity`, which are `inquiry`'s (its R12): the job splits it |
-| `#independenceOf` | | 37464–37532 | R12; it reads `register` and calls `#capturedAddresses` (a `provenance` read, content map §1) |
-| `VERSION_STRENGTH_STATES_MAX`, `#PAIR_COMPOSED_KEYS`, `#refusePairComposed`, `#versionLegsAsMembers`, `versionStrength`, `partitionIndependence` | | 37732–38457 | R7–R12 |
-| inside `#promoteProjections`: the cache write | | 18646–18660 | R13, registered as this module's projection (promotion R39) |
-| dispatch `strength`, `inquirystrength`, `versionstrength`, `partitionindependence`, `strengthbar`, `strengthbarof` | | 48603–48618, 48975–49001, 49705–49714 | K3 |
-| migrations: `bundles.inquiry_capture_strength`, `_state`, `inquiry_connection_strength`, `_state` | | 1068–1071 (with comment) | to a table of this module's keyed by `bundle_id` (R23, K75 (3)); the index loop (1513–1559) indexes them for `retrieval` |
-| `SUBJECT_POSITIONS`, `STRENGTH_STATES` | bio-checks | 2932–2945 | `STRENGTH_STATES` here; `SUBJECT_POSITIONS` is `publication`'s (the completeness block) |
-| `VERSION_STRENGTH_CHECKS` (C-30), `VERSION_STRENGTH_DEFAULT_STATES`, `VERSION_STRENGTH_INERT_SOURCES`, `PARTITION_INDEPENDENCE_CHECKS` (C-71) | bio-checks | 8780–9017 | R7–R11, R24 |
-| row C-32.9 (`MACHINE_CANNOT_DECLARE`) | bio-checks | in 9191–9421 | R15; `MACHINE_FENCE_CHECKS` split by the first job to move |
+| DEC-72 bar header, `#barAxisWords`, `#projectBar`, `strengthBarSet`, `strengthBarOf` | store | 11140–11358 | R14–R16 |
+| the REC-12 header, `STRENGTH_AXES`, `DOCUMENT_AXES`, `#weakestOf`, `#namedMember`, `#groundResult`, `#axisResult` | | 21117–21480 | R1–R4 |
+| `#captureBoundsFor`, `#strengthWalk`, `strengthOf`, `inquiryStrength`, `#MEMBER_ID_FIELDS`, `#ID_IN_PROSE`, `#redactAxis`, `#writeStrengthProjection` | | 21555–22012 | R1–R6, R13; the `UPDATE` also writes `inquiry_basis_count` and `inquiry_subject_entity`, which are `inquiry`'s (its R12): the job splits it |
+| `#independenceOf` | | 25726–25794 | R12; it reads `register` and calls `#capturedAddresses` (a `provenance` read, content map §1) |
+| `VERSION_STRENGTH_STATES_MAX`, `#PAIR_COMPOSED_KEYS`, `#refusePairComposed`, `#versionLegsAsMembers`, `versionStrength`, `partitionIndependence` | | 25994–26719 | R7–R12 |
+| inside `#promoteProjections`: the cache write | | 15657–15671 | R13, registered as this module's projection (promotion R39) |
+| dispatch `strength`, `inquirystrength`, `versionstrength`, `partitionindependence`, `strengthbar`, `strengthbarof` | | 32941–32956, 33151–33168, 33648–33657 | K3 |
+| migrations: `bundles.inquiry_capture_strength`, `_state`, `inquiry_connection_strength`, `_state` | | 898–912 (with its comment) | to a table of this module's keyed by `bundle_id` (R23, K75 (3)); the index loop (1209–1215) indexes them for `query.mjs`'s fields |
+| `SUBJECT_POSITIONS`, `STRENGTH_STATES` | bio-checks | 2662–2669 | `STRENGTH_STATES` here; `SUBJECT_POSITIONS` is `publication`'s (the completeness block) |
+| `VERSION_STRENGTH_CHECKS` (C-30), `VERSION_STRENGTH_DEFAULT_STATES`, `VERSION_STRENGTH_INERT_SOURCES`, `PARTITION_INDEPENDENCE_CHECKS` (C-71) | bio-checks | 7984–8203 | R7–R11, R24 |
+| row C-32.9 (`MACHINE_CANNOT_DECLARE`) | bio-checks | 8503–8510, in 8371–8634 | R15; `MACHINE_FENCE_CHECKS` split by the first job to move |
 
-**Schema (K4).** `group_strength_bar` (schema.mjs 1495–1513): keyed by group, not in the purge list today, and exempt as an instance setting (R23).
+**Schema (K4).** `group_strength_bar` (schema.mjs 432–450): keyed by group, not in the purge list today, and exempt as an instance setting (R23).
 
 **Measured size:** store.mjs 1,904 (760 code), bio-checks.mjs 252 (127), schema.mjs 19 (7): about 2,175 lines, about 890 of code.
 
@@ -26,18 +26,18 @@
 
 | what | where today | goes to | why |
 | --- | --- | --- | --- |
-| `#subjectEntityOf`, `earnedBasisRegistry`, `earnedRegistryForDoc`, `#capturedAt`, `#legVersions`, `earnedBasis`; dispatch `earnedbasis` | store 26364–26744, 31922–31995, 35552–35759, 48619–48626 | `inquiry` | the earliest module that needs what a leg earns (§5.1) |
-| `#frontmatterOf`, `#basisFrontmatter` | 31542–31557 | `reevaluation` | only `reevaluations` and `#reevalMoved` call them |
-| `QUEUE_ANCESTOR_DEPTH` | 27568 | `queue` | this module keeps its own depth bound, equal (Suggestions) |
-| `#legEarnedCapture` | 2424–2495 | `retrieval` | K75 (2): it reaches `inquiry.earned` by registration |
-| the pair frozen into a case, `#projectBar`'s callers `publishCase` and `reviewCopy` | 8406, 11017 | `publication` | they call R14 and R1–R5 and freeze the answer |
-| `op=suggest`'s walk and independence check | 39471, 39546 | `ai-runs` | it calls R1–R4 over proposed legs and R12 |
+| `#subjectEntityOf`, `earnedBasisRegistry`, `earnedRegistryForDoc`, `#capturedAt`, `#legVersions`, `earnedBasis`; dispatch `earnedbasis` | store 16772–17153, 21481–21554, 24811–25018, 32957–32968 | `inquiry` | the earliest module that needs what a leg earns (§5.1) |
+| `#frontmatterOf`, `#basisFrontmatter` | 21101–21116 | `reevaluation` | only `reevaluations` and `#reevalMoved` call them |
+| `QUEUE_ANCESTOR_DEPTH` | 17244 | `queue` | this module keeps its own depth bound, equal (Suggestions) |
+| `#legEarnedCapture` | retrieval/index.mjs 551 (moved) | `retrieval` (extracted) | K75 (2): it reaches the grades through `registerLegGrades`, which legacy-store fills today (store 757–760) and `strength` or `inquiry` fills after |
+| the pair frozen into a case, `#projectBar`'s callers `publishCase` and `reviewCopy` | 6376, 8987 | `publication` | they call R14 and R1–R5 and freeze the answer |
+| `op=suggest`'s walk and independence check | 27733, 27808 | `run-productions` (K82 (2)) | it calls R1–R4 over proposed legs and R12 |
 
 ## 3. Callers to rewire
 
-- `strengthOf`: `search` (2291, `retrieval`), `publishCase` (8413, 8932), `groundInquiry` (13033, 13096; through `inquiry`'s registration, its R28), `reevaluations` (31365).
-- `#strengthWalk`: `suggestVersion` (39471). `#independenceOf`: `suggestVersion` (39546). `#projectBar`: `publishCase` (8406), `reviewCopy` (11017).
-- The cache columns: `search` (2288) and the compiler's `capture:` and `connection:` fields (`query.mjs`), through `retrieval`'s registration.
+- `strengthOf`: `publishCase` (6383, 6902), `groundInquiry` (11003, 11066; through `inquiry`'s registration, its R28), `reevaluations` (20924). (`search` no longer calls it: it left with `retrieval`.)
+- `#strengthWalk`: `suggestVersion` (27733). `#independenceOf`: `suggestVersion` (27808). `#projectBar`: `publishCase` (6376), `reviewCopy` (8987).
+- The cache columns: the compiler's `capture:` and `connection:` fields (`query.mjs` 91, 98), through `retrieval`'s projection.
 - `this.basisFor`, `this.earnedBasisRegistry`, `Store.#capturedAt`, `this.#subjectEntityOf` → `inquiry`; `this.#currentVersionOf` → `basis-versions`; `this.#bundleGate`, `this.#bundleRedactor`, `viewerPredicate` → `membership`; `this.#producingGroup`, `this.#groupUndetermined` → the fact `producingGroup` (K69).
 
 ## 4. Old-battery tests that anchor on the moved source
