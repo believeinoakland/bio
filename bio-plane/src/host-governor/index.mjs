@@ -1,5 +1,5 @@
 /* host-governor — the per-host request governor (layer 3; D-95). Requirements: build/requirements/host-governor.md
-   (R1–R25). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
+   (R1–R26). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
 
    Our APPETITE is a configured constant because it is ours. Their CAPACITY is discovered by being refused and
    recorded, the pattern capture_limits proved. The governor lives in the Durable Object because the object
@@ -218,16 +218,48 @@ export class HostGovernor {
 }
 
 /* K61: the one HostGovernor of a Durable Object's storage, made on first use over its `sql`, reaching record-core by
-   `recordOf(ctx)` on the same `ctx`. `opts` (`{env, now, random, record}`) is read on the first call only. */
+   `recordOf(ctx)` on the same `ctx`. */
 const OF = new WeakMap();
-export function governorOf(ctx, { env = null, now, random, record = null } = {}) {
+
+/* R26 (N132, capture R58's pattern): for each instance, which of its options a caller supplied, so a later caller's
+   option is judged against the right thing: one taken by default is adopted, one a caller gave must be the same. */
+const SUPPLIED = new WeakMap();
+
+/* Two `env`s are the same when they carry the same bindings, each the same value: the object one module was handed
+   need not be the object another was handed for the one Durable Object. */
+const sameEnv = (a, b) => {
+  const ka = Object.keys(a || {}), kb = Object.keys(b || {});
+  return ka.length === kb.length && ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && a[k] === b[k]);
+};
+
+/** K61, R26: the one HostGovernor for this object's storage. `opts`: `env` (the bindings R3 reads), `now` and `random`
+ *  (the clock and the jitter source) and `record` (`recordOf(ctx)`). A later call's option is never silently dropped
+ *  (N132: a first caller without `env` left the instance binding unread for every later one): an `env`, `now` or
+ *  `random` the instance took by default is adopted from the first later caller that supplies it; one that differs
+ *  from what an earlier caller supplied, or a `record` other than the one held, throws, naming the option, and a
+ *  refused call changes nothing. */
+export function governorOf(ctx, { env = null, now = null, random = null, record = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  const opts = { env, now, random };
   let g = OF.get(storage);
   if (!g) {
     g = new HostGovernor({ sql: storage.sql, core: record ?? recordOf(ctx), env,
                            ...(now ? { now } : {}), ...(random ? { random } : {}) });
     OF.set(storage, g);
+    SUPPLIED.set(g, new Set(Object.keys(opts).filter((k) => opts[k] != null)));
+    return g;
   }
+  const given = SUPPLIED.get(g);
+  const refuse = (name) => {
+    throw new Error(`governorOf: a caller supplied a different \`${name}\` for a storage whose governor already holds `
+                  + `another one a caller gave; host-governor refuses it rather than run against either silently (R26)`);
+  };
+  /* Every option judged before any is adopted. */
+  if (env != null && given.has("env") && !sameEnv(g.env, env)) refuse("env");
+  for (const name of ["now", "random"]) if (opts[name] != null && given.has(name) && g[name] !== opts[name]) refuse(name);
+  if (record != null && record !== g.core) refuse("record");
+  for (const name of Object.keys(opts))
+    if (opts[name] != null && !given.has(name)) { g[name] = opts[name]; given.add(name); }
   return g;
 }
 
