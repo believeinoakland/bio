@@ -45,6 +45,9 @@
  *         with COLLATE NOCASE, because a NOCASE comparison cannot use the
  *         column's index and probe 2 recorded that losing the index turns a
  *         seek into a scan.
+ *   proj  set when the column is one of `retrieval`'s projection columns (its R2),
+ *         which it holds in a relation of its own beside `bundles` (N106): read
+ *         through the relation the caller names (R25), never off `bundles` there.
  */
 export const FIELDS = {
   id:             { col: "bundle_id",       type: "text" },
@@ -57,21 +60,21 @@ export const FIELDS = {
   updated:        { col: "last_updated",    type: "time" },
   criticality:    { col: "criticality",     type: "text", lower: true },
   sha:            { col: "bundle_sha",      type: "text", lower: true },
-  schema:         { col: "schema_id",       type: "text", lower: true },
-  mode:           { col: "produced_mode",   type: "text", lower: true },
-  tier:           { col: "capability_tier", type: "text", lower: true },
-  locator:        { col: "source_locator",  type: "text", fts: "locator" },
-  authority:      { col: "source_authority", type: "text", fts: "authority" },
-  retrieved:      { col: "source_retrieved", type: "time" },
-  status:         { col: "source_status",   type: "text", lower: true },
-  hash:           { col: "content_hash",    type: "text", lower: true },
-  monitored:      { col: "monitor_enabled", type: "bool" },
-  frequency:      { col: "monitor_frequency", type: "text", lower: true },
-  checked:        { col: "monitor_last_checked", type: "time" },
-  annotations:    { col: "annotations_open", type: "number" },
-  reeval:         { col: "reeval_flag",     type: "bool" },
-  since:          { col: "reeval_since",    type: "time" },
-  reevalsource:   { col: "reeval_source",   type: "text", lower: true },
+  schema:         { col: "schema_id",       type: "text", lower: true, proj: true },
+  mode:           { col: "produced_mode",   type: "text", lower: true, proj: true },
+  tier:           { col: "capability_tier", type: "text", lower: true, proj: true },
+  locator:        { col: "source_locator",  type: "text", fts: "locator", proj: true },
+  authority:      { col: "source_authority", type: "text", fts: "authority", proj: true },
+  retrieved:      { col: "source_retrieved", type: "time", proj: true },
+  status:         { col: "source_status",   type: "text", lower: true, proj: true },
+  hash:           { col: "content_hash",    type: "text", lower: true, proj: true },
+  monitored:      { col: "monitor_enabled", type: "bool", proj: true },
+  frequency:      { col: "monitor_frequency", type: "text", lower: true, proj: true },
+  checked:        { col: "monitor_last_checked", type: "time", proj: true },
+  annotations:    { col: "annotations_open", type: "number", proj: true },
+  reeval:         { col: "reeval_flag",     type: "bool", proj: true },
+  since:          { col: "reeval_since",    type: "time", proj: true },
+  reevalsource:   { col: "reeval_source",   type: "text", lower: true, proj: true },
   /* REC-12: the derived strength PAIR, filterable per axis over the projection
      CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
      single `strength:` selector would be the composed scalar DEC-21 forbids,
@@ -111,12 +114,12 @@ export const FIELDS = {
      same relationship REC-12's cached strength has with strengthOf(). A filter
      that is a little behind is a filter; an ANSWER that is behind is a record
      saying nothing is late when something is. */
-  actionkind:     { col: "action_kind",                 type: "text", lower: true },
-  risk:           { col: "action_risk_tier",            type: "number" },
-  addressee:      { col: "action_counterparty_state",   type: "text", lower: true },
-  resolution:     { col: "action_resolution",           type: "text", lower: true },
-  due:            { col: "action_clock_next",           type: "time" },
-  overdue:        { col: "action_clock_overdue",        type: "bool" },
+  actionkind:     { col: "action_kind",                 type: "text", lower: true, proj: true },
+  risk:           { col: "action_risk_tier",            type: "number", proj: true },
+  addressee:      { col: "action_counterparty_state",   type: "text", lower: true, proj: true },
+  resolution:     { col: "action_resolution",           type: "text", lower: true, proj: true },
+  due:            { col: "action_clock_next",           type: "time", proj: true },
+  overdue:        { col: "action_clock_overdue",        type: "bool", proj: true },
 };
 
 /* ---------------------------------------------------------------------------
@@ -415,9 +418,9 @@ export const CHAIN_DOES_NOT_APPLY = "does-not-apply";
    member reading both columns of one row must read one word for one fact. */
 export const CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
 /* The step kinds that are a MACHINE READING of the text (an engine read it): the ones
-   `content:chain` widens to `mixed` (content R14, DEC-4). Only kinds `text-chain`
-   declares are kept, so a kind it retires stops being a word here. */
-export const MACHINE_READ_KINDS = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
+   `content:chain` widens to `mixed` (content R14, DEC-4). `text-chain` states the list
+   (its R91) and this module re-exports it and never lists it (N104, K143). */
+export { MACHINE_READ_KINDS };
 
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
@@ -1004,7 +1007,7 @@ import { CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from ".
    here tests a step name against a literal — `content:chain=ocr` reads its
    vocabulary out of `STEP_KINDS` so a step kind added there is askable the same
    day, and one nobody classified is not a word this arm accepts. */
-import { STEP_KINDS, CHAIN_KIND_MIXED } from "./textchain.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS } from "./textchain.mjs";
 /* R9 (N37, K57): the viewer gate and its mark are `membership`'s (its R43), re-exported
    unchanged. This module interpolates the ONE compiled predicate into every statement
    and mints none of its own (R8, R21). */
@@ -1795,11 +1798,14 @@ function rankAtomList(atoms) {
  * ------------------------------------------------------------------------- */
 export const RANK_ATOMS_MAX = 8;
 const K1 = 1.2;
-function visibleBm25({ terms, gate }) {
+function visibleBm25({ terms, gate, rel }) {
   const parts = [], args = [];
   /* `vis` is the viewer's own index: every indexed row the gate passes. The gate is the ONE compiled predicate,
      interpolated (a use, not a mint: the gate is minted only in `membership`, R21). */
-  parts.push(`vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
+  parts.push(rel
+    ? `vis(fid) AS MATERIALIZED (SELECT bp.fts_id FROM bundles b JOIN ${rel.table} bp ON bp.${rel.key} = b.bundle_id `
+      + `WHERE (${gate.sql}) AND bp.fts_id IS NOT NULL)`
+    : `vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
   args.push(...gate.args);
   parts.push(`nvis(n) AS (SELECT count(*) FROM vis)`);
   const marks = (h) => `(length(${h}) - length(replace(${h}, char(1), '')))`;
@@ -1829,6 +1835,34 @@ function visibleBm25({ terms, gate }) {
 
 const ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
 
+/* R25 (N106, K144): the per-bundle projection is read through the relation the caller names,
+   `rel` = `{table, key}` (retrieval's own table, R61), or off `bundles` when there is none,
+   byte for byte as before N106. A projection column (`proj` on its field, and `fm_json`)
+   and the text-index key `fts_id` are the relation's; every other column is `bundles`'.
+   The gate compiles over `bundles b` and stays there. */
+const PROJ_COLS = new Set(Object.values(FIELDS).filter((f) => f.proj).map((f) => f.col));
+const allOf = (rel) => (rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL` : ALL);
+/* A leaf's rows: the text-index keys of the bundles whose `where` holds, `where` naming a
+   `bundles` column as `b.<col>` and a projection column bare (`fromProj`). */
+function keysWhere(rel, where, fromProj) {
+  if (!rel) return `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${where}`;
+  return fromProj
+    ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${where}`
+    : `SELECT bp.fts_id AS fid FROM bundles b JOIN ${rel.table} bp ON bp.${rel.key} = b.bundle_id `
+      + `WHERE bp.fts_id IS NOT NULL AND ${where}`;
+}
+/* The caller's relation, when it is one: two plain SQL identifiers, never interpolated otherwise. */
+const IDENT = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+function relationOf(second, warnings) {
+  const pr = second && typeof second === "object" ? second.projection : null;
+  if (pr === null || pr === undefined) return null;
+  if (pr && typeof pr === "object" && typeof pr.table === "string" && typeof pr.key === "string"
+      && IDENT.test(pr.table) && IDENT.test(pr.key))
+    return { table: pr.table, key: pr.key };
+  warnings.push("projection: not a table and a key; the projection is read from bundles");
+  return null;
+}
+
 /* MEASURED: workerd refuses a compound SELECT of more than five terms
    ("too many terms in compound SELECT"), which is far below SQLite's documented
    default of 500. Six metadata filters, which is one ordinary pass over a filter
@@ -1839,8 +1873,8 @@ const ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
    count again. */
 const MAX_COMPOUND = 4;
 
-function chain(op, parts) {
-  if (!parts.length) return { sql: ALL, args: [], compound: false };
+function chain(op, parts, rel) {
+  if (!parts.length) return { sql: allOf(rel), args: [], compound: false };
   if (parts.length === 1) return { sql: parts[0].sql, args: parts[0].args, compound: !!parts[0].compound };
   if (parts.length <= MAX_COMPOUND)
     return { sql: parts.map((p) => p.sql).join(` ${op} `), args: parts.flatMap((p) => p.args), compound: true };
@@ -1850,19 +1884,19 @@ function chain(op, parts) {
   const groups = [];
   for (let i = 0; i < parts.length; i += MAX_COMPOUND) groups.push(parts.slice(i, i + MAX_COMPOUND));
   return chain(op, groups.map((g) => {
-    const c = chain(op, g);
+    const c = chain(op, g, rel);
     return { sql: c.compound ? `SELECT fid FROM (${c.sql})` : c.sql, args: c.args, compound: false };
-  }));
+  }), rel);
 }
 
-function metaSql(node) {
-  const lhs = node.json ? `json_extract(fm_json, ?)` : node.col;
+function metaSql(node, rel) {
+  const fromProj = !!(node.json || PROJ_COLS.has(node.col));
+  const lhs = node.json ? `json_extract(fm_json, ?)` : rel && !fromProj ? `b.${node.col}` : node.col;
   const args = node.json ? [node.json] : [];
   if (node.cmp === "present")
-    return { sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} IS NOT NULL AND ${lhs} <> ''`,
+    return { sql: keysWhere(rel, `${lhs} IS NOT NULL AND ${lhs} <> ''`, fromProj),
              args: node.json ? [node.json, node.json] : [] };
-  return { sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} ${node.cmp} ?`,
-           args: [...args, node.value] };
+  return { sql: keysWhere(rel, `${lhs} ${node.cmp} ?`, fromProj), args: [...args, node.value] };
 }
 
 /* A meaning arm, compiled to the SAME SHAPE every other leaf has: a set of
@@ -1919,45 +1953,46 @@ function meaningWhere(node) {
   return { sql: `${node.col} ${node.cmp} ?`, args: [node.value] };
 }
 
-function meaningSql(node) {
+function meaningSql(node, rel) {
   const m = MEANING[node.arm];
   const w = meaningWhere(node);
   const inner = w.sql === null
     ? `SELECT ${m.key} FROM ${m.table}`
     : `SELECT ${m.key} FROM ${m.table} WHERE ${w.sql}`;
-  return { sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
+  return { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${rel.key} IN (${inner})`
+                   : `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
            args: w.args, compound: false };
 }
 
-function setSql(node) {
-  if (!node) return { sql: ALL, args: [], compound: false };
+function setSql(node, rel = null) {
+  if (!node) return { sql: allOf(rel), args: [], compound: false };
   /* Whole subtree expressible as text: one MATCH. */
   const fe = ftsExpr(node);
   if (fe !== null)
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
-  if (node.op === "meta") return { ...metaSql(node), compound: false };
-  if (node.op === "meaning") return meaningSql(node);
+  if (node.op === "meta") return { ...metaSql(node, rel), compound: false };
+  if (node.op === "meaning") return meaningSql(node, rel);
   if (node.op === "text")
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
   if (node.op === "not") {
     /* Negation with nothing to subtract from is the complement of the corpus. */
-    const inner = operand(setSql(node.kid));
-    return { sql: `${ALL} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
+    const inner = operand(setSql(node.kid, rel));
+    return { sql: `${allOf(rel)} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
   if (node.op === "or")
-    return chain("UNION", node.kids.map((k) => operand(setSql(k))));
+    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel))), rel);
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k))));
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel))), rel);
     if (!neg.length) return posChain;
     /* The positive side is a compound in its own right when it had more than one
        arm, so it is wrapped before EXCEPT is applied to it. */
     const head = { sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
                    args: posChain.args, compound: false };
-    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n)))]);
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel)))], rel);
   }
-  return { sql: ALL, args: [], compound: false };
+  return { sql: allOf(rel), args: [], compound: false };
 }
 
 const operand = (s) => (s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: s.args } : { sql: s.sql, args: s.args });
@@ -1965,6 +2000,8 @@ const operand = (s) => (s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: 
 /* ---------------------------------------------------------------------------
  * compile: the only entry point. Returns the parsed query plus the four
  * statements the surface runs, every one of which carries the viewer gate.
+ * Its second argument names the relation the projection is read through
+ * (`{projection: {table, key}}`, R25); without one, `bundles` holds it.
  * ------------------------------------------------------------------------- */
 
 export const PROVENANCE_COLS = [
@@ -1991,12 +2028,18 @@ export const MEANING_LIMIT_DEFAULT = 200, MEANING_LIMIT_MAX = 1000;
 export function compile({ q = "", viewer = null, sort = null, dir = null,
                           limit = LIMIT_DEFAULT, offset = 0, ids = null,
                           facets = null, implicitOp = "and", snippetChars = 12,
-                          rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0 } = {}) {
+                          rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0 } = {}, relation = null) {
   /* REC-92: `passageTerms` is the FTS5 expression of every `passage:` selector
      this query compiled, kept APART from `textAtoms` because the two are terms
      over different FTS tables — see the note in `meaningAtom`. It is the input
      to the row projection's MATCH and `snippet()`, and to nothing else. */
   const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [] };
+  /* R25: the relation the projection is read through, `compile(query, {projection: {table, key}})`. */
+  const rel = relationOf(relation, ctx.warnings);
+  /* A bundle's row in every statement: `bundles b`, and the projection's relation `bp` beside it. */
+  const rowJoin = rel ? `JOIN ${rel.table} bp ON bp.fts_id = s.fid JOIN bundles b ON b.bundle_id = bp.${rel.key}`
+                      : `JOIN bundles b ON b.fts_id = s.fid`;
+  const ref = (col) => (rel && PROJ_COLS.has(col) ? `bp.${col}` : `b.${col}`);
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
@@ -2051,7 +2094,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      that pulled them apart. One predicate, two callers. */
   const passageOn = (armName) =>
     !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
-  const set = setSql(ast);
+  const set = setSql(ast, rel);
   /* ---------------------------------------------------------------------
    * REC-92 / §4.4 — THE TALLY IS TAKEN OVER THE QUERY'S *OTHER* ARMS, AND
    * THAT PHRASE IN §4.4 IS LOAD-BEARING RATHER THAN INCIDENTAL.
@@ -2091,7 +2134,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     }
     return node;
   };
-  const armSet = (arm) => setSql(stripMeaningArm(ast, arm));
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel);
 
   /* Whether the query is a bare implicit conjunction of more than one atom,
      which is the only case where offering the OR reading makes sense. */
@@ -2126,7 +2169,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        The caller chunks the list; SQLite bounds how many variables one statement
        may bind, and a 10,000-item selection would exceed it. */
     const idArm = Array.isArray(ids) && ids.length
-      ? { sql: `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids }
+      ? { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (${ids.map(() => "?").join(",")})`
+                   : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids }
       : null;
     /* `picked` exists only when there IS an id restriction. The first version
        emitted a match-all CTE and intersected it unconditionally, which is a
@@ -2141,7 +2185,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     }
     const args = [...use.args, ...(idArm ? idArm.args : [])];
     if (withRanked && rank) {
-      const r = visibleBm25({ terms: rankTerms, gate });
+      const r = visibleBm25({ terms: rankTerms, gate, rel });
       parts.push(...r.parts);
       args.push(...r.args);
     }
@@ -2158,16 +2202,16 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   if (sortField === "relevance" && rank) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
-    const col = `b.${SORTABLE[sortField]}`;
+    const col = ref(SORTABLE[sortField]);
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
 
-  const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
+  const cols = PROVENANCE_COLS.map(ref).join(", ");
   const joinRanked = rank ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
   const page = () => {
     const c = cte(true);
     if (!rank)
-      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet FROM scope s ${rowJoin}${joinRanked}\n`
                   + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
     /* D-447: the snippet and NOT the score — the answer publishes the ORDER relevance produced, never its number.
        The snippet is cut for the PAGE's rows only, after the order and the LIMIT: `snippet()` re-reads a row's text,
@@ -2177,13 +2221,13 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     return { sql: `${c.sql}\nSELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts `
                 + `WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet\n`
                 + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
-                + `FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+                + `FROM scope s ${rowJoin}${joinRanked}\n`
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p\nORDER BY p._pos`,
              args: [...c.args, snip, rank, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);
-    return { sql: `${c.sql}\nSELECT count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid WHERE ${gate.sql}`,
+    return { sql: `${c.sql}\nSELECT count(*) AS n FROM scope s ${rowJoin} WHERE ${gate.sql}`,
              args: [...c.args, ...gate.args] };
   };
   /* Select-all: every id in the set in the presentation order, which is a
@@ -2191,7 +2235,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      the set an operator selected is the set they were looking at. */
   const idsStmt = () => {
     const c = cte(true);
-    return { sql: `${c.sql}\nSELECT b.bundle_id FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+    return { sql: `${c.sql}\nSELECT b.bundle_id FROM scope s ${rowJoin}${joinRanked}\n`
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   /* A selection snapshot needs the sha each item carried WHEN IT WAS SELECTED,
@@ -2200,7 +2244,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      is the set they were looking at. */
   const snapshot = () => {
     const c = cte(true);
-    return { sql: `${c.sql}\nSELECT b.bundle_id, b.bundle_sha FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+    return { sql: `${c.sql}\nSELECT b.bundle_id, b.bundle_sha FROM scope s ${rowJoin}${joinRanked}\n`
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS)
@@ -2222,9 +2266,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       const c = cte(false);
       const arms = group.map((name) => {
         const f = FIELDS[name];
-        return `SELECT '${name}' AS field, b.${f.col} AS value, count(*) AS n\n`
-             + `  FROM scope s JOIN bundles b ON b.fts_id = s.fid\n`
-             + `  WHERE ${gate.sql} AND b.${f.col} IS NOT NULL GROUP BY b.${f.col}`;
+        return `SELECT '${name}' AS field, ${ref(f.col)} AS value, count(*) AS n\n`
+             + `  FROM scope s ${rowJoin}\n`
+             + `  WHERE ${gate.sql} AND ${ref(f.col)} IS NOT NULL GROUP BY ${ref(f.col)}`;
       });
       out.push({ sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}\n`
                     + arms.join("\nUNION ALL\n") + `\nORDER BY field ASC, n DESC, value ASC`,
@@ -2370,7 +2414,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       return { sql: `${lc.sql}\nSELECT count(*) AS documents,`
                   + `\n       sum(CASE WHEN EXISTS (SELECT 1 FROM ${m.table} mx`
                   + ` WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows`
-                  + `\nFROM scope s JOIN bundles b ON b.fts_id = s.fid\nWHERE ${gate.sql}`,
+                  + `\nFROM scope s ${rowJoin}\nWHERE ${gate.sql}`,
                args: [...lc.args, ...gate.args] };
     }
     /* ------------------------------------------------------------------
@@ -2417,7 +2461,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
                   + `\n       ix.detail AS index_detail,`
                   + `\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha)`
                   + ` AS has_reading`
-                  + `\nFROM scope s JOIN bundles b ON b.fts_id = s.fid`
+                  + `\nFROM scope s ${rowJoin}`
                   + `\n JOIN register r ON r.bundle_id = b.bundle_id`
                   + `\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log`
                   + `\n      WHERE level = 'content' AND subject_kind = 'capture'`
@@ -2474,7 +2518,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        to a viewer predicate. */
     const ftsWhere = fts ? ` AND ${fts.name} MATCH ?` : "";
     const ftsArgs = fts ? [fts.expr] : [];
-    const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid`
+    const from = `FROM scope s ${rowJoin}`
                + `\n JOIN ${m.table} m ON m.${m.key} = b.bundle_id${ftsJoin}${joined}`
                + `\nWHERE ${gate.sql}${refSql}${ftsWhere}`;
     /* THE COUNT CARRIES THE SAME MATCH AS THE PAGE, for the reason the `rowJoin`
@@ -2544,8 +2588,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const facetScan = () => {
     if (!facetList.length) return null;
     const c = cte(false);
-    const sel = facetList.map((n) => `b.${FIELDS[n].col}`).join(", ");
-    return { sql: `${c.sql}\nSELECT ${sel} FROM scope s JOIN bundles b ON b.fts_id = s.fid\nWHERE ${gate.sql}`,
+    const sel = facetList.map((n) => ref(FIELDS[n].col)).join(", ");
+    return { sql: `${c.sql}\nSELECT ${sel} FROM scope s ${rowJoin}\nWHERE ${gate.sql}`,
              args: [...c.args, ...gate.args] };
   };
 
