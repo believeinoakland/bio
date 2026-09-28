@@ -125,3 +125,5 @@ Final battery and COMPLETE follow.
 - `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T7` → ownership: 15 files changed by legacy-tests between tranche/T7 and HEAD; 0 failures
 
 Size (session_01EbJbvw2MqsPnPv5f2PjGVo): test runs 32, module lines 4515
+
+**After B12 (K222):** gate-reads stays red and unpinned on the four unclassified reads: `intentproposals`, `pursuit`, `aspirationcontacts` are intent's R23, **N199** (first in T8's layer 7); `reevaluationnotices` is **N200**, a question for Bob about what reevaluation R14 means. J6's completion stands.
