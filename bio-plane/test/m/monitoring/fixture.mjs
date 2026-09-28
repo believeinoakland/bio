@@ -15,6 +15,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
+import { actionsOf, actionFacts } from "../../../src/actions/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -104,14 +105,14 @@ export function infoMd(id, locator, { freq = null, enabled = true, lines = [] } 
 }
 
 export function world({ profiles = ["test-port-ellery"], env = null, evidence = true, refuse = [], intent = undefined,
-                        actions = undefined, escalation = undefined, extraColumns = [] } = {}) {
+                        actions = undefined, escalation = undefined, extraColumns = [], realActions = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   /* retrieval's projection columns this module reads (K75 (3)). */
   for (const c of ["monitor_enabled INTEGER", "monitor_frequency TEXT", "monitor_last_checked TEXT", "source_locator TEXT",
-                   ...extraColumns]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
+                   ...(realActions ? ["action_clock_next TEXT"] : []), ...extraColumns]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { ms: NOW_MS };
   const bkt = evidence ? bucket() : null;
   const record = recordOf(host, { evidence: bkt, evidencePrefix: "bio/captures/" });
@@ -139,16 +140,22 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
       mon.enabled === true ? 1 : 0, typeof mon.frequency === "string" ? mon.frequency : null,
       typeof mon.last_checked === "string" ? mon.last_checked : null,
       fm && fm.source && typeof fm.source.locator === "string" ? fm.source.locator : null, c.bundleId);
+    /* and, with the real actions module, its clock column from its R12 facts (retrieval R53) */
+    if (realActions) st.sql.exec(`UPDATE bundles SET action_clock_next=? WHERE bundle_id=?`,
+      actionFacts(md && md.text, clock.ms).clock_next, c.bundleId);
     return null;
   } });
+  /* the real actions module (its clock rule, `pendingClocks`, the R33 bound), with conformance in its R9 shape */
+  const act = realActions ? actionsOf(host, { record, membership, promotion, retrieval: null, env: {}, now: () => clock.ms,
+    conformance: { determinationRead: () => ({ ok: false, reason: "NO_SUCH_DETERMINATION" }), registerStep: () => ({ ok: true }) } }) : undefined;
   const net = network();
   const intentStub = intent === undefined ? stubIntent() : intent;
   const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
     governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub,
-    ...(actions !== undefined ? { actions } : {}), ...(escalation !== undefined ? { escalation } : {}) });
+    ...(actions !== undefined ? { actions } : act ? { actions: act } : {}), ...(escalation !== undefined ? { escalation } : {}) });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub,
+    st, host, record, membership, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act,
     rows: (q, ...x) => st.sql.exec(q, ...x),
     row: (q, ...x) => st.sql.exec(q, ...x)[0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
