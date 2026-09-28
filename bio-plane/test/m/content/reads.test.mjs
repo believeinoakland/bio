@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
-import { CONTENT_READ_PARAMS, CONTENT_EARNED_MAX, canonicalExtent } from "../../../src/content/index.mjs";
+import { CONTENT_READ_PARAMS, CONTENT_EARNED_MAX, STALE_GRADED_MAX, canonicalExtent } from "../../../src/content/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 const OCR = [{ step: "layer", tier: 1, cap: null }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }];
@@ -144,11 +144,13 @@ test("R41: a row a replaced reading marks stale is graded old text against new, 
   w.ex.units[a.sha] = { units: [U(0, "the budget was cut"), U(1, "the budget was cut by the council today"), U(2, "entirely different")], state: "whole" };
   const NEW = [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "2", cap: "B", measured_by: "m" }];
   assert.equal(w.content.markStale(a.sha, NEW, { unitsBefore: before }), 3, "every row goes stale (R22)");
-  const by = Object.fromEntries(told.map((n) => [n.content_id, n]));
+  assert.equal(told.length, 1, "one notice per re-read, never one per row");
+  assert.deepEqual([told[0].capture_sha, told[0].staled, told[0].graded, told[0].ungraded], [a.sha, 3, 3, 0]);
+  const by = Object.fromEntries(told[0].rows.map((n) => [n.content_id, n]));
   assert.equal(r0 in by, false, "byte-identical: unaffected, nobody is told");
   assert.deepEqual([by[r1].grade, by[r1].affects], ["C", "affected"]);
   assert.deepEqual([by[r2].grade, by[r2].affects], ["NOT_FOUND", "affected"]);
-  assert.ok(by[r1].says && by[r1].stale);
+  assert.ok(told[0].says && by[r1].stale);
   /* nothing moved: the rows still resolve where they pointed */
   assert.equal(w.content.contentRow(r1).capture_sha, a.sha);
   /* without the old text, every stale row is undetermined and told */
@@ -156,7 +158,53 @@ test("R41: a row a replaced reading marks stale is graded old text against new, 
   const rb = w.content.mint({ bundleId: "INFO-2026-0002-b", captureSha: b.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") }).content_id;
   told.length = 0;
   w.content.markStale(b.sha, NEW);
-  assert.deepEqual(told.map((n) => [n.content_id, n.affects]), [[rb, "undetermined"]]);
+  assert.deepEqual(told.flatMap((n) => n.rows.map((x) => [x.content_id, x.affects])), [[rb, "undetermined"]]);
+  /* a re-read whose every stale row is unaffected tells nobody */
+  const c = w.cap("c"); w.doc("INFO-2026-0003-c", [c]); w.read(c.sha, { chain: OCR, pageCount: 1 });
+  w.content.mint({ bundleId: "INFO-2026-0003-c", captureSha: c.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") });
+  w.ex.units[c.sha] = { units: [U(0, "kept")], state: "whole" };
+  told.length = 0;
+  assert.equal(w.content.markStale(c.sha, NEW, { unitsBefore: { units: [U(0, "kept")], state: "whole" } }), 1);
+  assert.equal(told.length, 0);
+});
+
+test("R41 (N117): a re-read costs one bounded read and one update however many rows it stales; the rows past the bound are marked, counted and told as ungraded, in one notice", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: OCR, pageCount: STALE_GRADED_MAX + 5 });
+  const ids = [];
+  for (let p = 0; p < STALE_GRADED_MAX + 3; p++)
+    ids.push(w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "pdf-page", page: p }, mintedBy: V("bo") }).content_id);
+  const told = [];
+  w.content.onStale("inquiry", (n) => told.push(n));
+  const seen = [];
+  const sql = w.content.sql;
+  w.content.sql = { exec: (q, ...args) => { if (/\bcontent\b/.test(q) && !/sqlite_master/.test(q)) seen.push(q); return sql.exec(q, ...args); } };
+  const NEW = [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "2", cap: "B", measured_by: "m" }];
+  const n = w.content.markStale(a.sha, NEW);
+  w.content.sql = sql;
+  assert.equal(n, STALE_GRADED_MAX + 3, "the count is the whole set, not the bound");
+  assert.equal(seen.length, 2, "one read, one update");
+  assert.match(seen[0], /^\s*SELECT[\s\S]*LIMIT \?/, "the read is bounded in SQL");
+  assert.match(seen[1], /^UPDATE content SET stale=1/);
+  assert.equal(w.row(`SELECT count(*) AS c FROM content WHERE stale=1`).c, STALE_GRADED_MAX + 3, "every row is marked");
+  assert.equal(told.length, 1, "one notice for the re-read");
+  const t = told[0];
+  const sorted = [...ids].sort();
+  assert.deepEqual([t.staled, t.graded, t.ungraded, t.ungraded_affects], [STALE_GRADED_MAX + 3, STALE_GRADED_MAX, 3, "undetermined"]);
+  assert.equal(t.rows.length, STALE_GRADED_MAX, "no old text held: every graded row is undetermined and told");
+  assert.deepEqual(t.rows.map((x) => x.content_id), sorted.slice(0, STALE_GRADED_MAX));
+  assert.equal(t.ungraded_after, sorted[STALE_GRADED_MAX - 1]);
+  assert.ok(t.ungraded_why);
+  /* the rows past ungraded_after are exactly the ungraded ones */
+  assert.deepEqual(w.rows(`SELECT content_id FROM content WHERE capture_sha=? AND stale=1 AND content_id>? ORDER BY content_id`,
+                          a.sha, t.ungraded_after).map((r) => r.content_id), sorted.slice(STALE_GRADED_MAX));
+  /* with no listener the same one read and one update, and nobody told */
+  const b = w.cap("b"); w.doc("INFO-2026-0002-b", [b]); w.read(b.sha, { chain: OCR, pageCount: 1 });
+  w.content.mint({ bundleId: "INFO-2026-0002-b", captureSha: b.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") });
+  w.content.staleListeners.length = 0;
+  told.length = 0;
+  assert.equal(w.content.markStale(b.sha, NEW), 1);
+  assert.equal(told.length, 0);
 });
 
 test("R37: every act and read naming a document or row answers one the viewer may not see exactly as an absent one", () => {
@@ -195,6 +243,7 @@ test("R41: through extraction's reading notice, the units before the write (its 
   const out = listener.fn({ bundleId: DOC, captureSha: a.sha, reading: {}, chainBefore: OCR, chainAfter: NEW,
                             unitsBefore: { units: [U(0, "unchanged words"), U(1, "the original sentence here")], state: "whole" }, indexed: null, author: V("bo") });
   assert.deepEqual(out, { staled: 2 });
-  assert.deepEqual(told.map((n) => [n.content_id, n.grade, n.affects]), [[moved, "NOT_FOUND", "affected"]], "the unchanged page is A: nobody is told");
-  assert.equal(told.some((n) => n.content_id === same), false);
+  assert.equal(told.length, 1);
+  assert.deepEqual(told[0].rows.map((n) => [n.content_id, n.grade, n.affects]), [[moved, "NOT_FOUND", "affected"]], "the unchanged page is A: nobody is told");
+  assert.equal(told[0].rows.some((n) => n.content_id === same), false);
 });

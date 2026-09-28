@@ -25469,11 +25469,10 @@ export class Store extends DurableObject {
           + `answers exactly as one that does not exist.`, { target: tgt });
       inquiry = b.bundle_id;
     } else {
-      const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, cid);
-      if (!r || !this.#viewerSees(r.bundle_id, viewer))
-        return refusal("VERSION_NOTICE_NO_CONTENT",
-          `no cited passage by the id '${cid.slice(0, 80)}' is readable here.`, { content: cid });
-      rows = [r];
+      const passage = contentOf(this.ctx).passageNotice({ contentId: cid, viewer });
+      if (!passage.ok) return passage;
+      const { ok, states, grades, wrote, proposal_only, visible_to, ...notice } = passage;
+      rows = [notice];
     }
     /* END DEC-49 REGION is-version-notice-subject */
     const max = Math.max(1, Math.min(Store.VERSION_NOTICE_LEGS_MAX,
@@ -25493,7 +25492,7 @@ export class Store extends DurableObject {
         : [];
     }
     const memo = new Map();
-    const byId = new Map(rows.map((r) => [r.content_id, contentOf(this.ctx).noticeForRow(r, viewer, memo)]));
+    const byId = new Map(rows.map((r) => [r.content_id, inquiry ? contentOf(this.ctx).noticeForRow(r, viewer, memo) : r]));
     const notices = inquiry
       ? legs.map((l) => l.content_id && byId.has(l.content_id)
           ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
