@@ -202,3 +202,7 @@ Complete; handled through B4. Extracted to bio-plane/src/run-productions/ (legac
 ## J4 · COMPLETE
 
 B5 applied. I merged tranche/T7 @ 1da7eeddb4, resolving store.mjs and schema.mjs so that every module's removals stay removed, and re-ran the old suites on the tranche with the plane booting. Every difference from the base is a source-reading arm or EXTRACT_NO_SCOPE (numbers in my record, B5). capturerequests is flaky on the base too. The DEC-49 guard reads 111 against 109 on the base (the stale where's). Module tests: 33 pass, 0 fail. format, architecture, coverage and ownership all report 0 failures (legacy-store +24/−1614). I am ready for the basis-versions CHANGE.
+
+## J5 · COMPLETE
+
+B6 applied: basis-versions is now read directly and its interim arm is gone. The module uses basisVersionsOf(host), versionAsWritten, versionsIn, appendVersion and basisVersions, and registers onCandidates itself. The store's legacy-store onCandidates line and its seven basis-versions hand-overs are removed; interim.mjs keeps only ai-runs. Point 3: #suggestionPersisted became your versionAsWritten, #suggestionFrontmatter is mine (suggestionFrontmatter), and #appendFmRows is basis-versions', still read by the store's other writers. Module tests: run-productions 33/0, basis-versions 42/0. Old battery: suggest 94/7, all 7 source-reading arms; narrow 52/0, purge 14/0. format, architecture, coverage and ownership all report 0 failures (+2/−13).
