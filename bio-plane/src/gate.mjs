@@ -228,7 +228,22 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    moving the stamp for arrivals, departures and changed checks. Census 550 -> 491, sha256 42a9d0a3…, behaviour source
    17c6fd16…: the d470 suite's own print on this tree, whose re-pin (A3, A9) is legacy-tests' (N147's other share). Layer
    9's moves (actions' C-32 and C-94 rows, ratification's C-41) take the next number when they land. */
-export const CATALOG_VERSION = "1.37.0";
+/* 1.38.0 (PROMOTION #7, T8 after layer 9, 2026-09-28; N147, K233, K253): NO ARRIVALS, NINETY-SIX DEPARTURES, THREE CHANGED.
+   After 1.37.0 was minted, T8's layer-8 and layer-9 jobs moved rows out of `bio-checks.mjs` into their own modules (the
+   file's diff a99312070e..d8a0601f3d, 1,523 lines, pure removals). Layer 8 (55): publication's C-44.2, C-68.5,
+   C-92.1–C-92.9 and C-98.1–C-98.8; ratification's C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and
+   C-92.10–C-92.12; case-authoring's C-44.1, C-44.3–C-44.5 and C-82.2–C-82.7; review's C-87.1–C-87.11 and C-32.16.
+   Layer 9 (41), actions': C-11.1, C-32.3, C-32.4, C-32.18, C-32.19, C-33.3–C-33.9, C-72.1–C-72.8, C-73.1–C-73.5,
+   C-90.1–C-90.5 and C-94.1–C-94.11. CHANGED under an unmoved id, arms that `checkBundle` no longer runs because their
+   module runs them at its own registration: C-2.10 (the action arms, `checkActionExtension`, now actions'), C-6.1 (the
+   `responds_to` arm, now actions') and C-2.8 (`checkPublishedExtension` over a case member's own bytes, now run by
+   ratification's registered step; `checkCaseDocument`'s per-member arm stays). C-41.1–C-41.15 did NOT leave the file:
+   ratification holds its own `CASE_DOCUMENT_FAMILY` and the file keeps its copy for `checkCaseDocument`, so the census
+   still counts them. Outside the catalogue, and so outside this census, layer 9 added its modules' own families:
+   standards C-112, conformance C-113, consequences C-114, filings C-115, escalation C-116 and actions C-117. MINOR,
+   rule 17 moving the stamp for departures and changed checks. Census 491 -> 395, sha256 c22e2574…, behaviour source
+   4108bfa4…: the d470 suite's own print on this tree, whose re-pin (A1's floors, A3, A5, A9) is legacy-tests'. */
+export const CATALOG_VERSION = "1.38.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.

@@ -1,6 +1,6 @@
 # promotion (T8)
 
-**Status** · session_01YD4sPbdrGsgL4xn1Cbrnsp · depth 2 · COMPLETE · handled B2
+**Status** · session_01YGxAM3S1q5VWSShovpg56h · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -90,3 +90,66 @@ See J2: `CASE_CATALOGUE_FAILED`'s row and `STEP_DECLARED`'s now-single site (leg
   - ownership: 6 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
 
 Size (session_01YD4sPbdrGsgL4xn1Cbrnsp): test runs 45, module lines 2233
+
+## J4 · REPORT
+
+Found by this re-opening (B3). None of them is changed here.
+
+1. **legacy-tests (N147's share, 1.38.0):** `d470-catalog-census.test.mjs` needs the 1.38.0 row. Record it from the suite's own print on this tree:
+   - count 395, digest `c22e257463a71e5ef07465bd8960687b586dd556c964b1b437451325da8b4db2`, source `4108bfa49f11a4de75a5902772fdde1d34c366eea6695a24e4796eafe5004f58` (esbuild 0.25.12);
+   - `changed: ["C-2.8", "C-2.10", "C-6.1"]`: the arms `checkBundle` no longer runs (see the constant's note in `src/gate.mjs`);
+   - the 1.37.0 row too, if it is still unrecorded (J2 item 3's figures), since ratifications were stamped 1.37.0 in between;
+   - A5's literal moves to 1.38.0, with any pinned `gateVersion` (`ratify.test.mjs`).
+   - **A1's floors are now red on the measured figures:** count 395 against a floor of 400, and 44 literal emission sites against 45. The one literal site that left is C-11.1 (`checkActionExtension`'s clock arm, now actions'). Both floors are to re-pin from the print.
+2. **ratification and legacy-checks (R38, "the checks are carried"):** C-41.1–C-41.15 did not leave the catalogue file in layer 8. Ratification defines its own `CASE_DOCUMENT_FAMILY` in `src/ratification/checks.mjs`, and `bio-checks.mjs` keeps its copy for `checkCaseDocument`, promotion's fallback before a catalogue registers (R33, R47). So two definitions of the C-41 rows exist, and the census counts the file's. Once ratification registers at every host, the file's copy (and `checkCaseDocument`'s per-member arm) is a candidate to retire, which would be a departure and the next stamp. Your B3 lists C-41 among layer 8's departures; the census says it has not departed.
+3. **Generated artifacts (§14):** this job changes `bio-plane/src/gate.mjs`, so `agent-worker/dist/agent-worker.bundled.mjs` is stale (`fleetbundles`: the agent-worker rows fail, ocr-worker and pdf-worker pass). `bio-plane/dist/bio-plane.bundled.mjs` embeds the same source, so it is stale too. Regenerate both at the close.
+4. **actions (K253), for the record:** promotion's write-path suite no longer probes `GOVERNING_LAWS_REWRITTEN` or `RISK_TIER_REWRITTEN`. Their rows moved to `src/actions/`, which promotion cannot import, so their enforcement at the write is actions' to test.
+5. **affordances (layer 9, not promotion's):** its suite reads 43/22 on this branch and the same 43/22 on `tranche/T8` @ 732edcdf90; after layer 2 it read 65/0. One cause: its fixture creates `ACTN-2026-9400-request` with `action_kind: cpra_request`, which actions now refuses on creation (`ACTION_KIND_UNKNOWN`, C-101.1: records_request, request_for_comment, other). The 22 tests that fail all build on that one refused promotion. The fix is in the affordances fixture (a kind actions offers), a legacy-tests or affordances job's to make.
+6. **Other reds in users' suites, the same on the base as here (already in J2 item 6):** citation R5 (48/1) and connections "R24, R18, K155" (59/1).
+
+## J5 · COMPLETE
+
+**B3 is applied.** PROMOTION #7 (session_01YGxAM3S1q5VWSShovpg56h), restarted from this record at B3. Code is at commit f16a6c55b1 on `job/T8/promotion`, over `tranche/T8` @ 732edcdf90.
+
+## Entries applied
+
+- **N147, 1.38.0 (B3.1):** `CATALOG_VERSION` moves 1.37.0 → 1.38.0, MINOR. The figures are the d470 suite's own print on this tree: census 491 → 395, sha256 c22e2574…, behaviour source 4108bfa4…. The catalogue file's diff since the 1.37.0 stamp (a99312070e) is 1,523 lines, all removals.
+  - The constant's note names all 96 departures, read by diffing the census at a99312070e against this tree. Layer 8 has 55: publication's, ratification's, case-authoring's and review's rows, as B3 lists them. Layer 9 has 41, all actions': C-11.1, C-32.3, C-32.4, C-32.18, C-32.19, C-33.3–.9, C-72.1–.8, C-73.1–.5, C-90.1–.5 and C-94.1–.11. There are no arrivals.
+  - The note also names 3 checks changed under an unmoved id, arms that `checkBundle` no longer runs: C-2.10 and C-6.1 (to actions) and C-2.8's case-member arm (to ratification's registered step).
+  - It names the families outside the catalogue: standards C-112, conformance C-113, consequences C-114, filings C-115, escalation C-116 and actions C-117.
+  - **One correction to B3's list:** C-41.1–C-41.15 are still in the catalogue file, so the census still counts them. J4 item 2 has the detail.
+- **K253 (B3.2):** `write-path.test.mjs` is re-pinned.
+  - R18's floor is now 36. The measured row list confirms it: actions took `GOVERNING_LAWS_REWRITTEN` and `RISK_TIER_REWRITTEN`. Their two probes are removed, since those rows are actions' to test.
+  - R17's D-741 fixture now creates its action with `counterparty: {state: named, role: Town Clerk, body: Town of Port Ellery}`. The readability refusals are asserted unchanged.
+- **B3.3:** the suites are run (below).
+
+## Deferred
+
+None.
+
+## Found in other modules
+
+See J4:
+- the d470 1.38.0 row, the A5 literal and A1's floors (legacy-tests);
+- C-41 held twice, in ratification and in the catalogue file;
+- the stale agent-worker and bio-plane bundles;
+- affordances 43/22 since layer 9, from one fixture action kind (`cpra_request`) that actions now refuses;
+- citation R5 and connections K155, the same on the base.
+
+## Tests and checks
+
+- **This module:** `node --test bio-plane/test/m/promotion/`: tests 64, pass 64, fail 0. Before the re-pin it was 62/2 (R18's floor, R17's fixture).
+- **Users' suites** (every module whose uses include promotion), on this branch and on `tranche/T8` @ 732edcdf90. Every result is identical on both:
+  - provenance 55/0, extraction 65/0, content 50/0, bias 45/0, retrieval 58/0, inquiry 50/0, basis-versions 42/0, strength 40/0, ai-runs 41/0, capture-requests 53/0, intent 35/0, reevaluation 39/0, publication 53/0, ratification 65/0, standards 16/0, conformance 29/0, consequences 22/0, actions 30/0, escalation 27/0.
+  - These fail the same way here and on the base: connections 59/1, citation 48/1, affordances 43/22.
+  - monitoring, scheduler and instance-setup have no tests yet.
+- **Old battery:**
+  - `d470-catalog-census`: 10 pass, 3 fail. A3 has no 1.38.0 row, A5 has the literal, and A1 has the floors; all three are legacy-tests' re-pins.
+  - `fleetbundles`: the agent-worker rows are stale.
+- **Checks:**
+  - format: 69 modules, 64 requirements files; 0 failures.
+  - architecture: 16 product files, 53 relative imports; 0 failures.
+  - coverage: 48 of 48 live requirement ids named by a test; 0 failures.
+  - ownership: 3 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
+
+Size (session_01YGxAM3S1q5VWSShovpg56h): test runs 58, module lines 2248

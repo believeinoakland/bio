@@ -36,7 +36,8 @@ const inquiry = (id, extra = [], surfaced = "surfaced_by: human") => [...common(
   [surfaced, 'disposition_reason: ""', ...extra]), "---", "", "## Question", "", `Question ${id}`, "", "## What It Rests On", "",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const action = (id, extra = []) => [...common(id, "action", "action@1", "Records request", "planned",
-  ["references: []", "action_kind: other", ...extra, "counterparty:", "  state: named", "  name: The clerk"]),
+  ["references: []", "action_kind: other", ...extra, "counterparty:", "  state: named", "  role: Town Clerk",
+   "  body: Town of Port Ellery"]),
   "---", "", "## Plan", "", "Ask.", "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const bias = (id, state, statements) => [...common(id, "bias", "bias@1", "House lens", state,
   ["references: []", "statements:", ...statements]), "---", "", "## Statements", "", "The lens.", "", "## Adoption", "", "Adopted.", "",
@@ -96,14 +97,6 @@ probe("BIAS_ILLEGAL_TRANSITION", async () => {
   assert.equal(a.ok, true, JSON.stringify(a));
   return promote(id, bias(id, "proposed", STATEMENT), { base: a.bundleSha });
 });
-probe("GOVERNING_LAWS_REWRITTEN", () => promote("ACTN-2026-0116-p", action("ACTN-2026-0116-p",
-  ["governing_laws:", "  - level: state", '    citation: "A statute"'])));
-probe("RISK_TIER_REWRITTEN", async () => {
-  const id = "ACTN-2026-0117-q";
-  const a = await promote(id, action(id, ["risk_tier: 3"]));
-  assert.equal(a.ok, true, JSON.stringify(a));
-  return promote(id, action(id, ["risk_tier: 1"]), { base: a.bundleSha });
-});
 probe("SURFACED_BY_REWRITTEN", async () => {
   const id = "INQ-2026-0118-r";
   const a = await promote(id, inquiry(id, refs([])));
@@ -143,8 +136,9 @@ test("R18: every refusal the catalogue sites at the promote write is enforced th
       if (row && typeof row === "object" && typeof row.where === "string" && /promote\b/.test(row.where)
           && !/src\/index\.mjs/.test(row.where)) rows.push({ family, code, ...row });
   }
-  /* 38 since K150: bias's C-26.1–C-26.7 and C-26.11 moved to `src/bias/` (layer 5), which promotion cannot import. */
-  assert.ok(rows.length >= 38, `the catalogue's rows sited at the promote write: ${rows.length}`);
+  /* 36 since K253: actions took GOVERNING_LAWS_REWRITTEN and RISK_TIER_REWRITTEN (T8 layer 9), as bias took C-26.1–C-26.7
+     and C-26.11 (K150); promotion cannot import either module, so their rows are theirs to test. */
+  assert.ok(rows.length >= 36, `the catalogue's rows sited at the promote write: ${rows.length}`);
   for (const row of rows) {
     const relay = RELAYED.find((r) => r.site.test(row.where));
     if (relay) continue;                       // shown whole by the relay test below
