@@ -371,13 +371,15 @@ export class Citation {
        exactly the leg a default would silently turn into `supports`. The vocabulary travels WITH the refusal. REFUSED,
        not ignored, on the case arm: a `cites` edge has no role, and a field authored in one place and honoured nowhere
        is the D-21 class in miniature. */
+    /* The instance's own wiring, not a member's mistake: the question arm cannot run without inquiry's services. */
+    if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function"
+                        || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
+               detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
+                     + "registry, and this instance was created without them, so nothing was written." };
     /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
-      if (!this.inquiry || typeof this.inquiry.earned !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES))
-        return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
-                 detail: "citing onto a question needs the inquiry module's role vocabulary and earned registry, "
-                       + "and this instance was created without them, so nothing was written." };
       const roles = this.inquiry.BASIS_ROLES;
       if (rl === null)
         return { ok: false, reason: "NO_ROLE", ...rowOf(CITE_CHECKS, "NO_ROLE"), project, handle, roles: roles.slice(),
