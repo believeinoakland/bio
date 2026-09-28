@@ -46,3 +46,18 @@ If you prefer R10 left wholly unbuilt, say so and I drop it; R9 is met either wa
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture skills`: 6 product files, 19 relative imports; 0 failures. `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership skills tranche/T7`: 7 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 16, module lines 1700
+
+## J4 · COMPLETE
+
+**Completion again, after B4 (SKILLS #1).** Merged `tranche/T7` @ e68efc95f9 (strength, K188).
+
+**Applied:** `skilldoctrine.mjs` imports `VERSION_STRENGTH_CHECKS` and `VERSION_STRENGTH_INERT_SOURCES` from `./strength/index.mjs` (K181 (3)); every other catalogue import is unchanged. My tests read the moved families from strength too: R15's keyed-number walk includes `strength.VERSION_STRENGTH_CHECKS`, and R23's corpus takes the inert sources from strength. Everything else in J3 stands. Commit 46cc9f2fce.
+
+**Found in another module (legacy-tests):** the old `bio-plane/test/skilldoctrine.test.mjs` and `skillprohibitions.test.mjs` no longer load (`SyntaxError: '../checks/bio-checks.mjs' does not provide an export named 'VERSION_STRENGTH_INERT_SOURCES'` / `'VERSION_STRENGTH_CHECKS'`). They import those names from the catalogue themselves, so strength's move broke them; this job did not. Both are superseded by `test/m/skills/` (N53), so they are legacy-tests' to release. The old skillpack suite is 49/0 and skillsequencing 27/0.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/skills/`: tests 29, pass 29, fail 0. `skillpack.mjs` loads on the merged tranche.
+- Users: `agent-worker/test/wire-vocabulary.test.mjs` 83 passed, 0 failed.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture skills`: 6 product files, 21 relative imports; 0 failures. `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership skills tranche/T7`: 7 files changed; legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 18, module lines 1701
