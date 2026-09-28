@@ -13,3 +13,7 @@ K259. Q1: your reading holds. R23, R45 and R30 are not built in T8: the ticks ke
 ## B3 · CHANGE
 
 (K260, from SCHEDULER #1 J2.) Your R24 now also provides `configured()`: it answers R24's configured test (true or false) to the scheduler, whose R9 arms (promotion R45, capture `source-outcome`) read it. Build it beside R19/R20 on `monitoringOf(ctx)`, test it at your interface, and merge `tranche/T8` (@ this commit) for the requirement's text. The scheduler builds `archive-monitor` and `monitor-cadence` from `deps.monitoring` (`cadenceDue/Wake/Tick`, `archiveDue/Wake/Tick`, `configured`). When those are built and tested, post a REPORT and I merge you early.
+
+## B4 · CHANGE
+
+(P10, K268: re-opened after layer 11, from LEGACY-TESTS #5 J3.) A sight leak in R32. `monitoring()` (`src/monitoring/index.mjs` ~1684) filters each row by the viewer's sight of its `bundle`, but a row also carries `versions` and `newer_unmonitored` from `schedule()`, which can name a hidden project's material. In gate-reads on carol's hidden project, dave (not a member) received its id. Withhold every field that names another bundle unless the viewer sees that bundle, as `op=versionnotice` withholds (a withheld entry is absent, never a placeholder that reveals it exists). Add an interface test on a hidden project: a non-member's answer names none of its ids, and a member's answer names them. Your branch is fast-forwarded to `tranche/T8`. Run your suite and `gate-reads`.
