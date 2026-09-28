@@ -1745,7 +1745,11 @@ export class Actions {
              counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [],
              legs: d.basis.map((l) => ({ target: l.target_id, kind: l.kind, note: l.note ?? null, at: l.at ?? null,
                                          target_type: l.target_type, extent_capture: l.extent_capture })),
-             law: typeof fm.law === "string" ? fm.law : null, breach: fm.breach === true };
+             law: typeof fm.law === "string" ? fm.law : null, breach: fm.breach === true,
+             /* K248, B4 (filings R9's chronology): the state moves in order, each {state, at, by}. */
+             state_history: (Array.isArray(fm.state_history) ? fm.state_history : [])
+               .filter((e) => e && typeof e === "object")
+               .map((e) => ({ state: e.to_state ?? null, at: e.timestamp ?? null, by: e.author ?? null })) };
   }
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
@@ -1884,7 +1888,8 @@ export class Actions {
       target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at);
     return { ok: true, target, weight: "single", evidence: false,
              proposal: { ...proposalLabelFor(who, "clock"), rule, entry, at,
-                         ...(computed.date ? { start: computed.start } : { undetermined: computed.why }) },
+                         ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
+                         ...(computed.date ? {} : { undetermined: computed.why }) },
              says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a "
                  + "revision of the action." };
   }

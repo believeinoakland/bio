@@ -57,6 +57,8 @@ test("R29 R36 actionRead answers R25's block and the document's values; absent a
   assert.deepEqual([r.ok, r.id, r.current_state, r.law, r.counterparty.role, r.breach], [true, A, "planned", "Act s.1", "Town Clerk", false]);
   for (const k of ["kind", "risk_tier", "clock_next", "clock_overdue", "governing_laws", "lifecycle", "own_outcome", "responses", "legs", "clock"])
     assert.ok(k in r, k);
+  w.a.actionMove({ target: A, to: "active", reason: "go", viewer: M, author: M });
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).state_history, [{ state: "active", at: "2026-09-28T12:00:00Z", by: M }]);
   assert.equal(w.a.actionRead({ id: "ACTN-2026-0404-x", viewer: M }).reason, "NO_SUCH_BUNDLE");
   assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "invisible answers as absent");
   w.doc("INFO-2026-0001-d");
@@ -109,6 +111,7 @@ test("R32 clockPropose computes from the profile's deadline, stored apart and la
   w.a.actionCorrespond({ target: A, direction: ev, at: "2026-09-01", ...(ev === "sent" ? { account: "filed" } : { account: "got it" }), viewer: M, author: M });
   const p = P({});
   assert.equal(p.ok, true); assert.equal(p.evidence, false); assert.equal(p.proposal.machine_work, true);
+  assert.equal(p.proposal.counted_from, "the day after 2026-09-01", "counted from the day after the start event (B4)");
   assert.match(p.proposal.entry.basis, new RegExp(dl.citation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.ok(dl.count === "business" ? (p.proposal.entry.date === null || /^\d{4}-\d{2}-\d{2}$/.test(p.proposal.entry.date)) : /^\d{4}/.test(p.proposal.entry.date));
   assert.equal(w.fm(A).clock, undefined, "never written into clock[]");

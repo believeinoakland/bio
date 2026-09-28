@@ -21,7 +21,9 @@
 - `node --test "test/m/**/*.test.mjs"`: tests 2065, pass 2029, fail 26 (baseline on `tranche/T8`: affordances 1, citation 1, connections 1, promotion 1 red; mine adds affordances 21 and promotion 1, all from their fixtures meeting R9/R10 and the rows' move, J2).
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … actions`: 7 product files, 24 relative imports; 0 failures. `checks/coverage.mjs … actions`: 41 of 41 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … actions tranche/T8`: legacy-store 9 lines added (import, construction, six delegating methods, the ops spread), 1805 removed; legacy-checks 0 added, 853 removed; 0 failures.
 
-Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 12, module lines 3320
+B4 (K248, from FILINGS #1) applied after J3: `actionRead` answers `state_history` (`[{state, at, by}]`, in order) and `clockPropose` states `counted_from` (the day after the start event). Re-run: `test/m/actions`: tests 30, pass 29, fail 0, todo 1.
+
+Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 13, module lines 3330
 
 ## J1 · QUESTION
 
