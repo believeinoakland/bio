@@ -97,6 +97,8 @@ test("R2 the read derives each edge's trigger at nowMs (the caller's, else the i
   assert.equal(absent.reason, "NO_SUCH_ESCALATION");
   assert.deepEqual(unseen, absent);
   assert.deepEqual(w.esc.escalationRead({ id: undefined, viewer: V("bob") }), absent);
+  /* the project's owner reads the escalation a joined member opened */
+  assert.deepEqual([w.esc.escalationRead({ id: w.E, viewer: V("alice") }).ok, w.esc.escalationRead({ id: w.E, viewer: V("alice") }).id], [true, w.E]);
 });
 
 test("R3 exit answers R14's two conditions apart, each met, not_met or undetermined with its ids and why, never composed into a score", () => {

@@ -16,13 +16,34 @@ import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* A cursor as workerd's `sql.exec` answers one: an iterator over the rows, read once, with `toArray()` and `one()`;
+   never an array, so `[0]` or `.length` on it is undefined, as in a Durable Object (LEGACY-TESTS #6 J2). */
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    columnNames: rows.length ? Object.keys(rows[0]) : [],
+    rowsRead: rows.length,
+    rowsWritten: 0,
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+    raw() { return c.toArray().map((r) => Object.values(r))[Symbol.iterator](); },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -142,14 +163,14 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
   const w = {
     st, host, record, membership, promotion, esc, clock, calls, determinations, addressedBy, ledgers, actionHidden,
     stand: { conformance, consequences, actions, filings },
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)]);
       return out;
     },
     member(id, { role = "member", status = "active" } = {}) {
