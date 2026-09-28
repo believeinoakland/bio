@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   target_type  TEXT NOT NULL,
   role         TEXT NOT NULL,
   grade        TEXT,
-  grade_axis   TEXT,
+  grade_axis   TEXT,             -- 'capture' | 'connection' | 'testimony', the three axes of GRADE_AXES, the authority (D-423)
   grade_source TEXT,
   note         TEXT,
   at           TEXT,

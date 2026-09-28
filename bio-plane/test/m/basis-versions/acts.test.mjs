@@ -56,6 +56,19 @@ test("R12: refusals in order — no inquiry, not an inquiry, no version, a machi
   for (const r of [inc, cyc]) assert.ok(r.translation && r.act === "accept");
 });
 
+test("R12 (N204): a state move whose case-member fact has no provider is refused with promotion's own FACT_UNAVAILABLE, relayed unchanged, and writes nothing; hide and current ask no such fact", () => {
+  const w = world({ caseMemberFact: false });
+  w.doc(DOC); w.member("alice");
+  assert.equal(w.inquiry(Q, block(version("first", [DOC]))).ok, true);
+  const before = w.sha(Q);
+  const own = w.promotion.fact("caseMember", Q);
+  const r = act(w, "accept");
+  assert.deepEqual(r, { ...own, act: "accept", target: Q, version: "first" });
+  assert.deepEqual([r.reason, r.fact, typeof r.check, typeof r.translation], ["FACT_UNAVAILABLE", "caseMember", "string", "string"]);
+  assert.equal(w.sha(Q), before, "nothing written");
+  assert.equal(act(w, "hide").ok, true);
+});
+
 test("R13: current requires the version accepted, a project, one the viewer sees that cites the inquiry by a live edge, and the actor joined", () => {
   const w = setup();
   const cur = (o) => act(w, "current", o);

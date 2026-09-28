@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, inqMd, V, MACHINE } from "./fixture.mjs";
 import { ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { actNoBasis } from "../../../src/inquiry/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const T = "2026-09-27T00:00:00Z", NOW = "2026-09-28T01:00:00Z";
@@ -77,10 +78,19 @@ test("R17: NO_CLAIM when nothing can be adopted, and NO_BASIS when the adopted v
   const bare = setup({ basis: [] });
   const nb = bare.bv.conclude({ target: Q, author: ALICE, viewer: V("alice"), conclusion: "c", falsifier: "f", version: "first" });
   assert.deepEqual([nb.reason, nb.check, typeof nb.translation], ["NO_BASIS", "C-33.40", "string"]);
+  assert.deepEqual(nb, actNoBasis(nb.detail, { target: Q }), "answered through inquiry's one site (its R45)");
   const legless = world(); legless.doc(DOC);
   legless.inquiry(Q, block({ versions: [{ name: "empty", description: "no legs at all here", relationship: "and", claim: "c", ...ACCEPTED }],
     basis: [{ target: DOC, role: "supports" }], refs: [DOC] }));
-  assert.equal(legless.bv.conclude({ target: Q, author: ALICE, viewer: V("alice"), conclusion: "c", falsifier: "f", version: "empty" }).reason, "NO_BASIS");
+  const nl = legless.bv.conclude({ target: Q, author: ALICE, viewer: V("alice"), conclusion: "c", falsifier: "f", version: "empty" });
+  assert.deepEqual(nl, actNoBasis(nl.detail, { target: Q }), "the adopted version has no legs");
+  const lp = world(); lp.doc(DOC); lp.member("alice");
+  lp.inquiry(Q, block({ versions: [{ name: "empty", description: "no legs at all here", relationship: "and", claim: "c", ...ACCEPTED }],
+    basis: [{ target: DOC, role: "supports" }], refs: [DOC] }));
+  const pp = lp.project("Team", "alice", [Q], { extra: ["current_versions:", `  - inquiry: "${Q}"`, `    version: "empty"`,
+    `    at: "${T}"`, `    by: "${ALICE}"`] });
+  const np = lp.bv.conclude({ target: Q, author: ALICE, viewer: V("alice"), identity: ALICE, project: pp, falsifier: "f" });
+  assert.deepEqual(np, actNoBasis(np.detail, { target: Q }), "with a project, too");
 });
 
 test("R18: with a project, one dated, authored concluded row is appended to its conclusions[], the claim verbatim, the falsifier or override, the commentary not evidence; the question's bytes do not change; the answer names the prior stance and the history length", () => {
