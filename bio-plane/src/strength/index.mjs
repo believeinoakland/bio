@@ -51,9 +51,10 @@ export { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STREN
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
 export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES } from "./schema.mjs";
 
-/** R8: the legs one version is measured over, and (R11) the most a proposed partition may place: basis-versions' own
- *  per-version bound (its R9), read from it and never restated (N184). */
-export const VERSION_LEGS_MAX = BASIS_VERSION_LEGS_MAX;
+/* R8: the legs one version is measured over, and (R11) the most a proposed partition may place, is basis-versions' own
+   per-version bound (its R9), `BASIS_VERSION_LEGS_MAX`, read from it and never restated (N184); re-exported under the
+   name this module's callers use. */
+export { BASIS_VERSION_LEGS_MAX as VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
 /** R12: the origins read per step of the independence walk; reaching it makes the answer incomplete, never clean. */
 export const ORIGIN_LIMIT = 200;
 /** R12: the shared origins named per pair of parts. */
@@ -508,13 +509,13 @@ export class Strength {
     return refusePairComposed(out) ?? out;
   }
 
-  /* The legs of one stored version, in order, at most `VERSION_LEGS_MAX` (R8). */
+  /* The legs of one stored version, in order, at most `BASIS_VERSION_LEGS_MAX` (R8). */
   #versionLegs(inq, name, withGrades) {
     const cols = withGrades ? "ord, target_id, target_type, role, grade, grade_axis, grade_source, ground"
                             : "ord, target_id, target_type, role, ground";
     return this.#rows(
       `SELECT ${cols} FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
-      inq, name, VERSION_LEGS_MAX);
+      inq, name, BASIS_VERSION_LEGS_MAX);
   }
 
   /* ============================================================ independence (R11, R12, R27; D-195) */
@@ -621,10 +622,10 @@ export class Strength {
         return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
           + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a "
           + "written reading's groups instead.");
-      if (raw.length > VERSION_LEGS_MAX)
+      if (raw.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${raw.length} groups were proposed and a written reading holds at most ${VERSION_LEGS_MAX} reasons.`,
-          { inquiry: inq, limit: VERSION_LEGS_MAX });
+          `${raw.length} groups were proposed and a written reading holds at most ${BASIS_VERSION_LEGS_MAX} reasons.`,
+          { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const parts = [];
       for (let k = 0; k < raw.length; k++) {
         const g = raw[k];
@@ -646,11 +647,11 @@ export class Strength {
       }
       /* The question's own reasons, read one past the bound so a basis larger than a reading may hold is observed. */
       /* Bounded in SQL by inquiry's R16 `limit`; the slice holds the bound for a provider that reads whole. */
-      const legRows = this.#legsOf(inq, { limit: VERSION_LEGS_MAX + 1 }).slice(0, VERSION_LEGS_MAX + 1)
+      const legRows = this.#legsOf(inq, { limit: BASIS_VERSION_LEGS_MAX + 1 }).slice(0, BASIS_VERSION_LEGS_MAX + 1)
         .map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
-      if (legRows.length > VERSION_LEGS_MAX)
+      if (legRows.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${inq.slice(0, 60)} rests on more than ${VERSION_LEGS_MAX} reasons.`, { inquiry: inq, limit: VERSION_LEGS_MAX });
+          `${inq.slice(0, 60)} rests on more than ${BASIS_VERSION_LEGS_MAX} reasons.`, { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const byOrd = new Map(legRows.map((l) => [l.ord, l]));
       const placed = new Map();
       for (const p of parts)
