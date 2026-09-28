@@ -54,3 +54,7 @@ Two questions; I carry on with the job on my best reading of each.
 ## J3 · COMPLETE
 
 Job complete on job/T8/actions: every plan entry applied, 41 of 41 live ids named by tests (30 tests, 29 pass, 1 todo: R8's positive arm, waiting on conformance's early merge), the four checks pass. The completion section of this record lists entries, deferrals and the checks; J2 is the early-merge REPORT with the shapes and the findings in other modules.
+
+## J4 · REPORT
+
+B4 applied (after J3): actionRead answers state_history, the action's state moves in order, each {state, at, by} (from the document's state_history: to_state, timestamp, author), for R25's wording. clockPropose counts from the day after the start event (calendar: start + days; business: each weekday after the start not on the view's holidays, undetermined past a year the calendar does not list) and states counted_from: "the day after <start>" beside the entry, as filings does. Tests 30, pass 29, todo 1; the checks still pass.
