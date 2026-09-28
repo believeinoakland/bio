@@ -1,13 +1,14 @@
 /* citation's test fixture: the module over the modules it uses, each the real one (record-core, membership, promotion,
    provenance, content, retrieval with its selections), on a real SQLite database (node:sqlite) standing in for a Durable
-   Object's storage, built on retrieval's own fixture world. One provider is the test's: `inquiry` (its R4's roles, R5's
-   leg grammar and R13's earned registry), passed as the store passes it until inquiry's factory is merged; the grammar
-   and the roles are the catalogue's own, the registry answers what a test sets in `w.earned`. Every test drives
+   Object's storage, built on retrieval's own fixture world. One provider is partly the test's: `inquiry`'s R13 earned registry answers what a test
+   sets in `w.earned`; its R5 leg grammar and R4 roles are inquiry's own exports (the factory's default, the real
+   registry, is tested apart). Every test drives
    `citation` at its interface. */
 import { world as retrievalWorld, V, sha, provDoc, T0 } from "../retrieval/fixture.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { Citation, citationOf } from "../../../src/citation/index.mjs";
-import { BASIS_ROLES, checkLegExtentGrammar, parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
 
 export { V, sha, T0 };
 export const NOW = Date.parse("2026-09-28T01:02:03Z");
