@@ -3,7 +3,8 @@
  * `IS-BUILD-PLAN.md` SK-2; `INVESTIGATIVE-SESSION.md` §5 (composition), §6 rule
  * 1 (the description), §9 (the five kinds), §11 (the observation log), §14
  * (bias — a fence first and a skill requirement second), §14b.4 (what is
- * scripted and what is judged); `CLAUDE.md`'s sparse-at-every-level section;
+ * scripted and what is judged); the Content Framework Part II §14.3 (the
+ * four-level search and which absence);
  * `docs/archive/IS-SWEEP-2026-08-07.md` §1.3 and §3.
  *
  * PURE, for `skillpack.mjs`'s stated reason: no storage, no clock, no viewer.
@@ -25,7 +26,7 @@
  * mechanical consequences, each of which its suite holds:
  *
  *   1. `DEFERRED_ROWS` and `JUDGED_ROWS` are §14b.4's TABLE, both columns,
- *      verbatim. `test/skilldoctrine.test.mjs` parses that table out of the
+ *      verbatim. `test/m/skills/` parses that table out of the
  *      design document and fails if either column has moved. **The skill's
  *      authority is exactly the right-hand column and nothing else.**
  *   2. Every clause's `defers` names rows from the LEFT column. The union of
@@ -76,12 +77,25 @@
  * rosters are outside this area's paths.
  * ========================================================================= */
 
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES,
-         AI_RUN_CHECKS } from "./airun.mjs";
-import { SUGGEST_LEVELS, SUGGEST_CHECKS, MACHINE_FENCE_CHECKS,
+/* The levels, states and definitive subset are observation-log's (K78 (3),
+   K81). The catalogue families below are imported from the catalogue until each
+   moves to its module (K6), when this import re-points. */
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
+import { AI_RUN_CHECKS, SUGGEST_LEVELS, SUGGEST_CHECKS, MACHINE_FENCE_CHECKS,
          EARNED_GRADE_SOURCES, VERSION_STRENGTH_INERT_SOURCES,
          BASIS_ROLES, VERSION_STRENGTH_CHECKS,
          BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
+
+/* C-22.7 IS THIS MODULE'S ROW (R25, K81), named here by key and selected from
+   the catalogue, never copied, exactly as `observation-log` names its seven
+   C-22 rows. The row's text stays in the catalogue's `AI_RUN_CHECKS` for as long
+   as `ai-runs`, earlier in the order, holds its own copy of the predicate
+   (K82 (4)) and must read it. Held in this file rather than beside
+   `checkSkillVersion` because `skillpack.mjs` imports this one, and the clauses
+   below cite the row at load; `skillpack.mjs` re-exports it. */
+export const SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
+export const SKILL_CHECKS = Object.freeze(Object.fromEntries(
+  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
 
 export const JUDGEMENT_ID = "investigative-judgement";
 export const JUDGEMENT_EDITION = "1";
@@ -230,7 +244,7 @@ const C = {
   leg_unreachable:      SUGGEST_CHECKS.SUGGEST_LEG_UNREACHABLE.check,
   cannot_conclude:      MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
   cannot_ground:        MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND.check,
-  skill_version:        AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
+  skill_version:        SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
   /* SK-3's additions, read by KEY exactly as SK-2's are. */
   cannot_publish:       MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check,
   ground_unasserted:    BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED.check,
@@ -344,7 +358,8 @@ export const CLAUSES = [
     defers: ["the fan-out across the four levels"],
     enforced_by: [C.empty_level_unstated],
     why:
-      "`CLAUDE.md`'s sparse-at-every-level rule, and §9's `level-empty` kind exists so that a run "
+      "the Content Framework's four-level rule (Part II §14.3), and §9's `level-empty` kind exists so "
+      + "that a run "
       + "which honestly found nothing supportable is distinguishable from a run that emitted "
       + "nothing. Two absences that read alike collapse that distinction back again.",
   },
@@ -495,7 +510,7 @@ export const CLAUSES = [
  * copy failure SK-1 measured and `CLAUDE.md` records as this project's most
  * repeated finding. So each prohibition's `text` and `because` are SPANS OF
  * `PRACTICE-SURVEY.md` (or, for the fifth, of the design document), and
- * `test/skillprohibitions.test.mjs` looks each one up in the file it came from
+ * `test/m/skills/` looks each one up in the file it came from
  * through SK-1's normaliser. A word changed here fails; a prohibition dropped
  * from the survey fails; a paraphrase fails.
  *
@@ -733,10 +748,12 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * of the reasoning `harness.mjs` itself records for pinning `LEVELS` rather than
  * importing `airun.mjs` (*"the fleet's whole point is that a member ships
  * alone"*). What closes the drift there is a SOURCE PIN, and that is what closes
- * it here: `GATE_ADDRESS` names the file, the exports and the row KEY, and
- * `test/skillsequencing.test.mjs` DEREFERENCES that address against the landed
- * module. A row renamed, a mode dropped, or the flag flipped fails this area's
- * suite rather than leaving a doctrine sentence that quietly stopped being true.
+ * it here: `GATE_ADDRESS` names the file, the exports and the row KEY, and the
+ * gate's owner, `agent-worker`, later in the order and a user of this module,
+ * DEREFERENCES that address in its own tests (its R44; N53): a row renamed, a
+ * mode dropped, or `MODES` no longer equal to `order` fails there rather than
+ * leaving a doctrine sentence that quietly stopped being true. This module's
+ * own tests read nothing later in the order (P4).
  *
  * ---------------------------------------------------------------------------
  * AND THE RESIDUE IS LARGE, SO IT IS STATED FIRST RATHER THAN LAST
@@ -874,27 +891,30 @@ export const DEPLOYMENT_SEQUENCE = {
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
  * ========================================================================= */
 
-/** CLAUDE.md's four facts, in CLAUDE.md's own words, keyed by the level each one
- *  is a fact about. The KEYS are `OBSERVATION_LEVELS`' keys and appear here as
- *  UNQUOTED OBJECT KEYS, which is a keyed map over an imported vocabulary rather
- *  than a copy of it — and the suite PINS the key set to that vocabulary, so a
- *  level added, removed or renamed in `airun.mjs` fails here by name. The four
- *  `fact` sentences are quoted from `CLAUDE.md` and checked against it. */
+/** The Content Framework's four facts (Part II §14.3), in its own words, keyed
+ *  by the level each one is a fact about: *"Nothing derived may only mean
+ *  nothing was extracted; nothing extracted may only mean the document was
+ *  never read; no document may only mean nobody looked."* The KEYS are
+ *  `OBSERVATION_LEVELS`' keys and appear here as UNQUOTED OBJECT KEYS, which is
+ *  a keyed map over an imported vocabulary rather than a copy of it — and the
+ *  suite PINS the key set to that vocabulary, so a level added, removed or
+ *  renamed in `observation-log` fails there by name. The four `fact` words are
+ *  quoted from §14.3, in its order, and checked against it (R19, R21). */
 const ABSENCE_FACTS = {
   meaning: {
-    fact: "no meaning derived",
+    fact: "nothing derived",
     does_not_mean:
-      "that there is nothing here to derive meaning from. It may mean nothing was extracted.",
+      "that there is nothing here to derive meaning from. It may only mean nothing was extracted.",
   },
   content: {
     fact: "nothing extracted",
     does_not_mean:
-      "that the documents say nothing. It may mean the document was never read.",
+      "that the documents say nothing. It may only mean the document was never read.",
   },
   document: {
     fact: "no document",
     does_not_mean:
-      "that no such document exists. It may mean nobody looked.",
+      "that no such document exists. It may only mean nobody looked.",
   },
   internet: {
     fact: "nobody looked",
@@ -904,8 +924,8 @@ const ABSENCE_FACTS = {
   },
 };
 
-/** Where the four facts are quoted from. */
-export const FACTS_SOURCE = "CLAUDE.md";
+/** Where the four facts are quoted from: the Content Framework, Part II §14.3. */
+export const FACTS_SOURCE = "docs/architecture/BIO_Content_Framework_v0_10.md";
 
 /** The reporting spelling for a level, DERIVED rather than typed. A run writes
  *  the log in `OBSERVATION_LEVELS`' spelling and a `level-empty` suggestion in
@@ -918,7 +938,7 @@ export function reportsAs(level) {
 
 /** THE STATES THAT LICENSE A CONCLUSION, and their complement. Both derived
  *  from the record's own vocabulary and its own definitive subset, so a sixth
- *  state added to `airun.mjs` lands on one side of this line automatically
+ *  state added to `observation-log` lands on one side of this line automatically
  *  instead of escaping both. */
 export const LICENSES_A_CONCLUSION =
   Object.keys(OBSERVATION_STATES).filter((s) => DEFINITIVE_STATES.has(s));
@@ -928,7 +948,7 @@ export const LICENSES_NOTHING =
 /** The four levels with their absence discipline. The ESCALATION is the
  *  vocabulary's OWN ORDER — the next level is the next key — rather than a
  *  second chain this file would have to keep in step; the suite pins that order
- *  against the order `CLAUDE.md` names the four facts in. */
+ *  against the order §14.3 names the four facts in. */
 export function absenceByLevel() {
   const levels = Object.keys(OBSERVATION_LEVELS);
   const out = {};
