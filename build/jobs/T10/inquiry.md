@@ -20,3 +20,13 @@ My reading, which I am building now:
 Proposed R44 text: "`memberUserAgent(id)` answers the member-browser agent recorded when the inquiry was created: the control plane's `memberUserAgent` stamp on the creating promotion (SOURCE-ACCESS; trimmed, at most 512 characters), which a division's children carry from their parent; else the agent its document records (`member_user_agent`, trimmed); else null, never a default. It never throws." And R36 gains `inquiry_member_agents`.
 
 The alternative is that the UI (or the control plane) writes `member_user_agent:` into the creating document's bytes, and inquiry changes nothing; then R44's "recorded at creation" is legacy-index's or the UI's to build, not mine.
+
+## J3 · QUESTION
+
+**N183 (3) and R18: `exclusionsNaming` has a caller, so I have kept it.** N183 says it has none and R18 is marked retired on that ground. Measured on `tranche/T10` @ the merge I took (459c6711ee): `publication` calls it (`src/publication/index.mjs` 3073, `excludedBy`, publication R12 "from `inquiry`'s live exclusions"; its Uses names "`inquiry`: `exclusionsNaming` (R12)"), and `test/m/ratification/fixture.mjs` stubs it. Deleting it turned three of publication's module tests red (`test/m/publication/`: 47/3, R3, R12, R29: "this.inquiry.exclusionsNaming is not a function"). legacy-store's `excludedBy` is gone; publication's is the one that reads mine.
+
+My reading, built and pushed (f9c71352c7): R18 is live again, and N183 (2)'s bound applies to it as to R41: every exclusion is still answered (publication R12 says "every case"), read a page at a time, at most 500 rows per statement, in (inquiry, ord) order. Tests: R18's arm restored, plus a paging arm (1,050 rows over three statements). Inquiry 59/59 and publication 53/53 pass.
+
+Proposed R18 text (un-retiring it): "**R18** `exclusionsNaming(targetId, viewer)` answers every exclusion (`inquiry_exclusions`) naming the target that the viewer may see, each with its inquiry, edition, description, reason, author and date, in (inquiry, ord) order, read at most 500 rows per statement; an empty id answers an empty list and an absent viewer fails closed (R33). For `publication` (its R12)."
+
+If you rule instead that it goes, publication's `excludedBy` needs its own read of `inquiry_exclusions` (R40 would have to name that table in the read contract) before I delete it.
