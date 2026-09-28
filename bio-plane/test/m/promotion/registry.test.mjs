@@ -250,3 +250,75 @@ test("R45: a listener runs outside the transaction and writes no row of the prom
   await tick();
   assert.deepEqual(seen, [inq, inq]);
 });
+
+test("R47: registerCaseCatalogue — a later module registers the case-document catalogue once; any second registration is STEP_DECLARED; a fn that is not a function (or no module) is LISTENER_MALFORMED; R33 then runs it, with no change of shape or GATE_VERSION", async () => {
+  const { checkCaseDocument } = await import("../../../checks/bio-checks.mjs");
+  const { GATE_VERSION } = await import("../../../src/promotion/index.mjs");
+  const { p } = makePromotion();
+  const ctx = { caseId: "CASE-2026-0001", edition: 2, fm: { schema: "bio-case-document/4", case_id: "CASE-2026-0001" },
+                priorCase: { assertions: [] }, body: "the body", memberBasis: { "INQ-2026-0001": [] } };
+  /* Before any registration, the catalogue's own checkCaseDocument (R33), answered as the free gate answers. */
+  assert.deepEqual(p.runCaseGate(ctx), runCaseGate(ctx));
+  for (const [m, fn] of [["ratification", "not a function"], ["ratification", null], ["", () => []], [null, () => []]]) {
+    const r = p.registerCaseCatalogue(m, fn);
+    assert.deepEqual([r.ok, r.reason], [false, "LISTENER_MALFORMED"]);
+  }
+  assert.deepEqual(p.runCaseGate(ctx), runCaseGate(ctx), "a malformed registration registers nothing");
+  const calls = [];
+  const fn = (fm, c) => { calls.push([fm, c]); return [{ check: "C-41.1", severity: "error", message: "no", repairs: ["fix"] },
+                                                       { check: "C-41.2", severity: "warn", message: "hm" }]; };
+  assert.deepEqual(p.registerCaseCatalogue("ratification", fn), { ok: true, module: "ratification" });
+  for (const m of ["ratification", "publication"]) {
+    const r = p.registerCaseCatalogue(m, () => []);
+    assert.deepEqual([r.ok, r.reason, r.module], [false, "STEP_DECLARED", "ratification"]);
+  }
+  const got = p.runCaseGate(ctx);
+  assert.deepEqual(got, { gateVersion: GATE_VERSION, ok: false, findings: [{ check: "C-41.1", detail: "no", repairs: ["fix"] }], warnings: 1 });
+  /* The registered catalogue is asked with the facts the document cannot carry about itself, as R33 lists them. */
+  assert.deepEqual(calls, [[ctx.fm, { caseId: ctx.caseId, edition: ctx.edition, priorCase: ctx.priorCase, body: ctx.body,
+                                     memberBasis: ctx.memberBasis }]]);
+  /* The free gate and another host's promotion still run checkCaseDocument: a registration is its host's. */
+  const want = checkCaseDocument(ctx.fm, { caseId: ctx.caseId, edition: ctx.edition, priorCase: ctx.priorCase, body: ctx.body,
+                                           memberBasis: ctx.memberBasis }).filter((f) => f.severity === "error").map((f) => f.check);
+  assert.deepEqual(runCaseGate(ctx).findings.map((f) => f.check), want);
+  const other = makePromotion();
+  assert.deepEqual(other.p.runCaseGate(ctx).findings.map((f) => f.check), want);
+  assert.equal(other.p.registerCaseCatalogue("ratification", () => []).ok, true);
+  assert.deepEqual(other.p.runCaseGate(ctx), { gateVersion: GATE_VERSION, ok: true, findings: [], warnings: 0 });
+});
+
+test("R33: the case gate never throws: a registered catalogue that throws or answers no list of findings fails closed (ok false), never passes", () => {
+  for (const bad of [() => { throw new Error("broken"); }, () => null, () => "fine", () => [null], () => ({ findings: [] })]) {
+    const { p } = makePromotion();
+    assert.equal(p.registerCaseCatalogue("ratification", bad).ok, true);
+    for (const args of [{ caseId: "CASE-2026-0001", edition: 1, fm: {}, priorCase: null }, {}, undefined, null]) {
+      const r = p.runCaseGate(args);
+      assert.equal(r.ok, false);
+      assert.deepEqual(r.findings.map((f) => f.check), ["CASE_CATALOGUE_FAILED"]);
+      assert.equal(typeof r.findings[0].detail, "string");
+    }
+  }
+});
+
+test("R39, R40, R47: STEP_DECLARED is one answer at every registration that already holds what it registers (a step, a fact, the case catalogue), and the malformed registrations carry their rows (C-102.6, C-102.7)", async () => {
+  const { REGISTRATION_CHECKS } = await import("../../../checks/bio-checks.mjs");
+  const { p } = makePromotion();
+  p.registerStep("later", {});
+  p.registerCaseCatalogue("ratification", () => []);
+  const twice = [p.registerStep("later", {}), p.registerFact("citedBy", "later", () => []),
+                 p.registerCaseCatalogue("later", () => [])];
+  for (const r of twice) {
+    assert.deepEqual([r.ok, r.reason], [false, "STEP_DECLARED"]);
+    assert.equal(typeof r.detail, "string");
+    assert.equal(typeof r.module, "string", "it names the module that holds the registration");
+  }
+  assert.equal(twice[1].fact, "citedBy");
+  assert.equal(twice[1].module, "legacy-store");
+  for (const [r, code] of [[p.registerFact("", "m", () => 1), "FACT_MALFORMED"], [p.registerFact("f", "", () => 1), "FACT_MALFORMED"],
+                           [p.registerFact("f", "m", 1), "FACT_MALFORMED"], [p.registerStep("", {}), "STEP_MODULE_UNNAMED"],
+                           [p.registerStep(undefined), "STEP_MODULE_UNNAMED"]]) {
+    assert.deepEqual([r.ok, r.reason, r.check, r.translation], [false, code, REGISTRATION_CHECKS[code].check, REGISTRATION_CHECKS[code].translation]);
+  }
+  /* Nothing a refused registration named was registered. */
+  assert.equal(p.fact("f").reason, "FACT_UNAVAILABLE");
+});

@@ -128,6 +128,32 @@ test("R6: an inline file over the 1 MiB bound is OVERSIZE_INLINE, naming the pat
     { path: "notes.txt", text: "x".repeat(INLINE_MAX) }] })).ok, true);
 });
 
+test("R48: INLINE_MAX is 1,048,576 bytes, the most one file may carry inline; a larger inline file, bundle.md or any other, at creation or revision, is OVERSIZE_INLINE naming its path and bytes", () => {
+  assert.equal(INLINE_MAX, 1048576);
+  const { p, record, head } = held();
+  const pad = (text, n) => text + "x".repeat(n - Buffer.byteLength(text, "utf8"));
+  /* Exactly the bound is held; one byte more is refused, counted in UTF-8 bytes, not characters. */
+  const at = p.promote(revise(ID, head.bundleSha, infoDoc(ID), { files: [{ path: "bundle.md", text: infoDoc(ID) },
+    { path: "data/at.txt", text: "x".repeat(INLINE_MAX) }] }));
+  assert.equal(at.ok, true, JSON.stringify(at));
+  const before = record.dump();
+  const cases = [
+    ["bundle.md", pad(infoDoc(ID, { title: "Big" }), INLINE_MAX + 1)],
+    ["data/at.txt", "x".repeat(INLINE_MAX + 1)],
+    ["data/at.txt", "é".repeat(INLINE_MAX / 2) + "x"],
+  ];
+  for (const [path, text] of cases) {
+    const files = path === "bundle.md" ? [{ path, text }, { path: "data/at.txt", text: "x" }]
+                                       : [{ path: "bundle.md", text: infoDoc(ID) }, { path, text }];
+    const r = p.promote(revise(ID, at.bundleSha, "", { files, snapKey: `k-${path}-${text.length}` }));
+    assert.deepEqual([r.ok, r.reason, r.path, r.bytes], [false, "OVERSIZE_INLINE", path, Buffer.byteLength(text, "utf8")]);
+  }
+  assert.equal(record.dump(), before);
+  const fresh = makePromotion();
+  const c = fresh.p.promote(create(ID, pad(infoDoc(ID), INLINE_MAX + 1)));
+  assert.deepEqual([c.reason, c.path, c.bytes], ["OVERSIZE_INLINE", "bundle.md", INLINE_MAX + 1]);
+});
+
 test("R7: MALFORMED, NO_BUNDLE_MD, REFS_IN_PAYLOAD, BASIS_IN_PAYLOAD and FILES_DROPPED", () => {
   const { p, record, head } = held();
   assert.equal(p.promote({ base: null, snapKey: "x", files: [], meta: {} }).reason, "MALFORMED");
@@ -254,7 +280,9 @@ test("R15: a state move along an undeclared edge is refused (BIAS_ILLEGAL_TRANSI
     for (const from of states) for (const to of states) {
       if (from === to) continue;
       const env = makePromotion();
-      const prefix = { information: "INFO", inquiry: "INQ", project: "PROJ", bias: "BIAS", action: "ACTN" }[type];
+      /* The catalogue's own id prefixes (its OBJECT_TYPES), so every type it admits is driven; the last prefix a
+         type has is its current one (`INQ` for an inquiry, after the legacy `PROB` and `FOCUS`). */
+      const prefix = Object.entries(C.OBJECT_TYPES).filter(([, t]) => t === type).map(([x]) => x).pop();
       assert.ok(prefix, `an id prefix for ${type}`);
       const proj = type === "project";
       const d = (s, id) => doc({ id, object_type: type, title: "Same name", current_state: s, created: T0, last_updated: T0, group: "test-group" });

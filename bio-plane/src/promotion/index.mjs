@@ -3,7 +3,8 @@
  * own bytes as the record's word on what it is, and refuses a whole promotion when any rule fails: the bundle advances
  * as one transaction (`record-core.transact`) or nothing is written. Later modules join a promotion by registering a
  * check and a projection (R39) and the facts it needs (R40); until a module is extracted, `legacy-store` registers its
- * share. It also runs the gate (`../gate.mjs`) and reopens a set-down inquiry.
+ * share. It also runs the gate (`../gate.mjs`), and the case gate over the case-document catalogue a later module
+ * registers with the instance (R33, R47), and reopens a set-down inquiry.
  *
  * REACHED as `promotionOf(host, deps)`: one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps` and returned to every later caller. `deps`:
@@ -17,18 +18,20 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity, projectNameKey, withProducingGroup,
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
-         CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
+         CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
+import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 
-/** The instance's inline bound (R6): a file held as text is at most 1 MiB of UTF-8. */
+/** The instance's inline bound (R6, R48): a file held as text is at most 1 MiB of UTF-8. A later module that bounds
+ *  what it hands to a promotion reads this constant rather than its own. */
 export const INLINE_MAX = 1024 * 1024;
 /** The dispositions an inquiry is reopened from (R24). */
 export const REOPENABLE_FROM = ["deferred", "dismissed"];
@@ -117,7 +120,16 @@ function stampGroup(files, slug) {
 
 /* R40: a fact no module provides, answered in one place (DEC-49: one code, one site). It is never a value, so it is
    never read as false; `detail` says what the caller was doing when it found the fact missing. */
-const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", fact, detail });
+const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", code: "FACT_UNAVAILABLE",
+  check: REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
+
+/* R39, R40, R47 (K231, N202): a second registration of what one registrant already holds (a step, a fact, the case
+   catalogue) is refused here, the one site that mints STEP_DECLARED; `held` names what was registered twice. */
+const stepDeclared = (held, detail) => ({ ok: false, reason: "STEP_DECLARED", ...held, detail });
+
+/* R45, R46, R47 (N202's share within promotion): a listener or catalogue registered without its module's name or a
+   function to call, refused here, the one site in this module that mints LISTENER_MALFORMED. */
+const listenerMalformed = (detail) => ({ ok: false, reason: "LISTENER_MALFORMED", detail });
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
   detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
@@ -130,6 +142,7 @@ class Promotion {
   #listeners = [];        // {module, fn, seq}: R45's post-commit notice
   #reopenListeners = [];  // {module, fn, seq}: R46's notice of an accepted reopening
   #notices = new Map();   // accepted promotions awaiting their notice, by bundle and snap key
+  #caseCatalogue = null;  // {module, fn}: R47's registered case-document catalogue, which R33 runs
   #delivering = false;
 
   constructor({ record, membership, now, order } = {}) {
@@ -142,10 +155,15 @@ class Promotion {
   /* ---------------------------------------------------------------- R39, R40: the registry */
 
   registerStep(module, { check = null, project = null } = {}) {
+    /* DEC-49 REGION is-step-named */
     if (typeof module !== "string" || !module)
-      return { ok: false, reason: "STEP_MODULE_UNNAMED", detail: "a step names the module that registers it" };
+      return { ok: false, reason: "STEP_MODULE_UNNAMED", code: "STEP_MODULE_UNNAMED",
+               check: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.check,
+               translation: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.translation,
+               detail: "a step names the module that registers it" };
+    /* END DEC-49 REGION is-step-named */
     if (this.#steps.some((s) => s.module === module))
-      return { ok: false, reason: "STEP_DECLARED", module, detail: `${module} has already registered its step` };
+      return stepDeclared({ module }, `${module} has already registered its step`);
     this.#steps.push({ module, check: typeof check === "function" ? check : null,
                        project: typeof project === "function" ? project : null, seq: this.#steps.length });
     this.#steps.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
@@ -158,7 +176,7 @@ class Promotion {
   /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
   #listen(list, module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
+      return listenerMalformed("a listener names the module that registers it and its function");
     if (list.some((l) => l.module === module))
       return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
     list.push({ module, fn, seq: list.length });
@@ -214,27 +232,51 @@ class Promotion {
                              `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`);
     try { return { ok: true, fact: name, value: held.fn(...args) }; }
     catch (e) {
-      return { ok: false, reason: "FACT_FAILED", fact: name,
+      return { ok: false, reason: "FACT_FAILED", code: "FACT_FAILED", check: REGISTRATION_CHECKS.FACT_FAILED.check,
+               translation: REGISTRATION_CHECKS.FACT_FAILED.translation, fact: name,
                detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` };
     }
   }
 
   registerFact(name, module, fn) {
+    /* DEC-49 REGION is-fact-named */
     if (typeof name !== "string" || !name || typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "FACT_MALFORMED", detail: "a fact names itself, its module and its function" };
+      return { ok: false, reason: "FACT_MALFORMED", code: "FACT_MALFORMED", check: REGISTRATION_CHECKS.FACT_MALFORMED.check,
+               translation: REGISTRATION_CHECKS.FACT_MALFORMED.translation,
+               detail: "a fact names itself, its module and its function" };
+    /* END DEC-49 REGION is-fact-named */
     const held = this.#facts.get(name);
-    if (held) return { ok: false, reason: "STEP_DECLARED", fact: name, module: held.module,
-                       detail: `the fact '${name}' is already provided by ${held.module}` };
+    if (held) return stepDeclared({ fact: name, module: held.module }, `the fact '${name}' is already provided by ${held.module}`);
     this.#facts.set(name, { module, fn });
     return { ok: true, fact: name, module };
   }
 
-  /* A fact's value, or FACT_UNAVAILABLE naming it: never read as false (R40). */
+  /* A fact's value `{ok: true, value}`, or the act's refusal FACT_UNAVAILABLE naming it: never read as false (R40).
+     The refusal is the answer itself, never nested inside one (N70: the D-240 reader grades a return by its verdict). */
   #fact(name, ...args) {
     const held = this.#facts.get(name);
-    if (!held) return { unavailable: factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act `
-                                                           + `is refused rather than answered as if it were false. Nothing was written.`) };
-    return { value: held.fn(...args) };
+    if (!held) return factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act `
+                                            + `is refused rather than answered as if it were false. Nothing was written.`);
+    return { ok: true, value: held.fn(...args) };
+  }
+
+  /* ---------------------------------------------------------------- R47, R33: the case-document catalogue */
+
+  /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
+     runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
+  registerCaseCatalogue(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return listenerMalformed("a case-document catalogue names the module that registers it and its function");
+    if (this.#caseCatalogue)
+      return stepDeclared({ module: this.#caseCatalogue.module },
+                          `the case-document catalogue is already registered by ${this.#caseCatalogue.module}`);
+    this.#caseCatalogue = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R33: the case gate over the registered catalogue, else the catalogue's own. Same shape and GATE_VERSION (R34). */
+  runCaseGate(args = {}) {
+    return runCaseCatalogue(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : checkCaseDocument);
   }
 
   /* ---------------------------------------------------------------- promote */
@@ -407,7 +449,7 @@ class Promotion {
     let groupStamp = null, createdGroup = null;
     if (base === null) {
       const g = this.#fact("producingGroup");
-      if (g.unavailable) return g.unavailable;
+      if (!g.ok) return g;
       const recorded = typeof g.value === "string" && g.value ? g.value : null;
       if (recorded && !replay) { groupStamp = recorded; createdGroup = recorded; }
       else {
@@ -588,7 +630,7 @@ class Promotion {
       if (promotedState === "retired" && (!head || head.currentState !== "retired")
           && (head ? normalizeType(head.type) : promotedType) === "information") {
         const c = this.#fact("citedBy", bundleId);
-        if (c.unavailable) return c.unavailable;
+        if (!c.ok) return c;
         const citedBy = Array.isArray(c.value) ? c.value : [];
         if (citedBy.length)
           return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
@@ -959,7 +1001,7 @@ class Promotion {
     /* R24 */
     if (!REOPENABLE_FROM.includes(head.currentState)) {
       const m = this.#fact("caseMember", target);
-      if (m.unavailable) return { ...m.unavailable, target };
+      if (!m.ok) return { ...m, target };
       if (!m.value)
         return { ok: false, reason: "NOT_SET_DOWN", target, from: head.currentState, reopenable: REOPENABLE_FROM,
                  detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or a finding that is "

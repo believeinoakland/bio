@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../../../src/promotion/index.mjs";
 import { checkBundle, checkCaseDocument, parseFrontmatter } from "../../../checks/bio-checks.mjs";
-import { doc, T0 } from "./fixtures.mjs";
+import { doc, T0, makePromotion } from "./fixtures.mjs";
 
 const ID = "INFO-2026-0001-report";
 const hex = (b) => createHash("sha256").update(b).digest("hex");
@@ -121,4 +121,11 @@ test("R34: GATE_VERSION contains CATALOG_VERSION and both gates report the same 
   const b = runCaseGate({ caseId: "CASE-2026-0001", edition: 1, fm: {}, priorCase: null });
   assert.equal(a.gateVersion, b.gateVersion);
   assert.equal(a.gateVersion, GATE_VERSION);
+  /* The promotion instance's case gate, before and after a catalogue is registered with it (R47), reports it too. */
+  const { p } = makePromotion();
+  const args = { caseId: "CASE-2026-0001", edition: 1, fm: {}, priorCase: null };
+  assert.equal(p.runCaseGate(args).gateVersion, GATE_VERSION);
+  p.registerCaseCatalogue("ratification", () => []);
+  assert.equal(p.runCaseGate(args).gateVersion, GATE_VERSION);
 });
+
