@@ -27,3 +27,7 @@ Please add it (or your wording) to `build/requirements/capture.md`; I will name 
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 11 product files, 48 relative imports; 0 failures. coverage: 59 of 59 live requirement ids named by a test; 0 failures. ownership: 6 files changed by capture; legacy-store 0 added 0 removed; legacy-index 0 added 0 removed; 0 failures.
 
 Size (session_012gK9YaHTpAXY7PQYP1hnbG): test runs 11, module lines 2858
+
+## J2 · REPORT
+
+R29 states no bound for navChanges (op=navchanges). The code answers the newest `limit` observations, default 200, clamped to 500, with `limit` and `truncated` and no `next` (a comparison needs a contiguous sequence); N187's test now pins that. Suggest R29 state it as N90 stated the others. No other module's flaw found.
