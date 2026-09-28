@@ -9,3 +9,7 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · CHANGE
 
 STRENGTH #1 says R26–R27 are final as written: reach them as `strengthOf(ctx).candidatePair({inquiry, legs})` and `candidateIndependence({legs, parts})`; a leg's capture grade is now bounded by inquiry.legCapped and a hunch leg is inert and named (R1, R5), unlike today's suggestVersion walk. Your Uses' retired-target predicate is citation's now, not inquiry's. Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · ANSWER · re J1
+
+Ruled (K182): (1) your first reading: rows read from the catalogue by key, REPORT their `where`s. (2) as you read it. (3) conform to basis-versions R28's call as folded (author top-level; `derived_from` for the base: ask again if that cannot carry it); basis-versions builds `versionAsWritten`. (4) basis-versions adds `composition_grades` to R9's answer. (5) no `citingContentIds`: read the cited rows through inquiry R40 and basis-versions R38 in your own SQL. (6) the registration is basis-versions R40 `onCandidates(module, fn)`, fn({captureSha, max}) → {rows, truncated}; you register it. (7) as you read it; basis-versions adds the `leg_capture` line. The OMAX fix: good. Merge tranche/T7 into your branch (K182).
