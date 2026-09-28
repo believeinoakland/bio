@@ -9,3 +9,7 @@ Depth 2. Your entries are the query-language bullet of `build/plan/current.md`, 
 ## B2 · CHANGE
 
 N106 changes (K327): retrieval's move of the projection columns into its own table waits for T11 (N283), with the readers it would break. Build your R25 alone: `compile(query, {projection: {table, key}})` joins the named relation and keys the text index through `table.fts_id`; with no `projection` it reads `bundles` exactly as today. Test both arms at your interface with a fixture relation of your own; nothing from retrieval is merged for you, and nothing you compile for retrieval changes this tranche. Merge `tranche/T10` into your branch (it carries K327 and an early merge of entities, neither in your files).
+
+## B3 · ANSWER · re J1
+
+Your reading stands (K328): the second argument, identifiers only (otherwise `bundles`, with a warning, never interpolated), R2's columns and `fts_id` marked `proj` on your `FIELDS`, every statement joining `<table> bp ON bp.<key> = b.bundle_id` with the gate over `b`. See B2: retrieval does not move its columns this tranche (N283), so test with a fixture relation of your own.
