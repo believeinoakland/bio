@@ -55,7 +55,7 @@ test("R23: C-10.1, C-80.1 and C-80.2 moved here with their numbers and translati
     [["VERSION_NOTICE_NO_SUBJECT", "C-80.1"], ["VERSION_NOTICE_NO_INQUIRY", "C-80.2"]]);
   assert.deepEqual(Object.values(VERSION_NOTICE_CHECKS).map((v) => v.check), ["C-80.3"], "C-80.3 is content's");
   for (const row of [...Object.values(VERSION_NOTICE_SUBJECT_CHECKS), ...Object.values(REEVALUATION_ACT_CHECKS)]) {
-    assert.match(row.where, /^src\/reevaluation\/index\.mjs \w+ > is-[a-z-]+$/);
+    assert.match(row.where, /^src\/reevaluation\/index\.mjs #?\w+ > is-[a-z-]+$/);
     assert.ok(row.translation.length > 60);
   }
   assert.deepEqual(Object.values(REEVALUATION_ACT_CHECKS).map((v) => v.check),

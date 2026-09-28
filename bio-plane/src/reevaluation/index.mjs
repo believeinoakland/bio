@@ -18,7 +18,8 @@
  * REACHED as `reevaluationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to record-core's
  * purge (K23), registers its answer with `inquiry.onRaised` (a deferral, a division, a re-read) and
- * `promotion.onReopened` (a reopening), registers C-10.1 with promotion as a check and with record-core's audit (R22).
+ * `promotion.onReopened` (a reopening), registers C-10.1 with promotion as a check and with record-core's audit (R22), and
+ * listens to provenance's receipts (its R47), each of which makes the notice sweep pending again (R25).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readFile`, `head`, `livePaths`, `transact`, `declarePurge`,
  *                                   `registerAuditCheck`; `viewerPredicate`; `registerStep`, `onReopened`, the fact
@@ -26,10 +27,11 @@
  *   inquiry        `restingOn`, `restsOnLive`, `supersededBy`, `earned`, `onRaised` (its R13, R16, R17, R42).
  *   content        `noticeForRow`, `passageNotice` (its R29–R31).
  *   connections    `edgeSevered` (its R22), read through inquiry's `restingOn`.
- *   provenance     `versionChain` (its R17, R18).
+ *   provenance     `versionChain` (its R17, R18), `onReceipt` (its R47, R25 here).
  *   strength       `strengthOf` (its R1–R5).
  *   basisVersions  `appendVersion` (its R28).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
+ *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`, `title`,
  * `last_updated`, its R37) and `files` (the D-256 audit's scan, below); inquiry's `inquiry_basis` (`bundle_id`, `ord`,
@@ -72,6 +74,8 @@ export const NOTICE_SWEEP_MAX = 1000;
 /** R14: the notices one read lists (default and most). */
 export const NOTICES_LIMIT_DEFAULT = 200;
 export const NOTICES_LIMIT_MAX = 1000;
+/** R25: the notice sweep's delay after `now` while it is pending, unless the instance binding sets another. */
+export const REEVAL_NOTICE_DELAY_MS = 1000;
 /** R15, R16: the longest why or note a member's act stores. */
 export const NOTE_MAX = 500;
 /** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; §5.4's four cascade events
@@ -106,13 +110,15 @@ export class Reevaluation {
   #listeners = [];     // R8: {module, fn}, in registration order
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
-                connections = null, provenance = null, strength = null, basisVersions = null, now = null } = {}) {
+                connections = null, provenance = null, strength = null, basisVersions = null, now = null,
+                env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
+    this.env = env && typeof env === "object" ? env : {};
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -290,17 +296,21 @@ export class Reevaluation {
              ...(supersededBy ? { superseded_by: supersededBy } : {}) };
   }
 
-  /* R16: every recorded re-evaluation, keyed (dependent, target, source), the latest `since` recorded for each. */
-  #records() {
-    const rows = this.#rows(`SELECT dependent, target, source, since, note, author, at FROM reevaluation_records
-                               ORDER BY record_id`);
-    const by = new Map();
-    for (const r of rows) {
-      const k = `${r.dependent}\u0000${r.target}\u0000${r.source}`;
-      const held = by.get(k);
-      if (!held || !notLater(r.since, held.since) || r.since === held.since) by.set(k, r);
-    }
-    return by;
+  /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
+     source): the LATEST record of each key, which is the one with the latest `since`, because a record is only written
+     for a cause still owed, whose `since` is later than every earlier record's (`recordReevaluation`). So the read is
+     one row per key, at most one per cause source per pair, and its `LIMIT` says so (N182 (2)). */
+  #records(pairs) {
+    const keys = [...new Map(pairs.map(([d, t]) => [`${d}\u0000${t}`, { d, t }])).values()];
+    if (!keys.length) return new Map();
+    const rows = this.#rows(
+      `SELECT dependent, target, source, since, note, author, at FROM reevaluation_records
+        WHERE record_id IN (
+          SELECT MAX(r.record_id) FROM reevaluation_records r
+            JOIN json_each(?) k ON r.dependent = json_extract(k.value, '$.d') AND r.target = json_extract(k.value, '$.t')
+           GROUP BY r.dependent, r.target, r.source)
+        ORDER BY record_id LIMIT ?`, JSON.stringify(keys), keys.length * CAUSE_SOURCES.length);
+    return new Map(rows.map((r) => [`${r.dependent}\u0000${r.target}\u0000${r.source}`, r]));
   }
 
   /* R16: split one obligation's causes into those still owed and those a member's recorded re-evaluation closed. */
@@ -367,13 +377,11 @@ export class Reevaluation {
       : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
-    const records = this.#records();
     const obligations = [], closedOnly = [];
-    const place = (o, open, closed) => {
-      if (open.length) obligations.push({ ...o, reeval: { flag: true, since: open[0].since, source: open[0].source },
-                                          causes: open, closed });
-      else if (closed.length) closedOnly.push({ bundle_id: o.bundle_id, target: o.target, causes: closed });
-    };
+    /* Each obligation found is held with its causes, and the recorded re-evaluations of exactly those pairs are read
+       once after the walk (R16), so that read is bounded by the answer. */
+    const found = [];
+    const place = (o, causes) => found.push({ o, causes });
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
       if (!moved) continue;
@@ -426,7 +434,6 @@ export class Reevaluation {
           }
         }
         if (!causes.length) continue;
-        const { open, closed } = this.#split(bundleId, t, causes, records);
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
           object_type: dep?.object_type ?? null, current_state: dep?.current_state ?? null,
@@ -438,7 +445,7 @@ export class Reevaluation {
           stored: this.#storedTriple(fm),
           strength: this.#strengthOf(bundleId),
           ...(moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
-        }, open, closed);
+        }, causes);
       }
     }
     /* R17: each visible dependent at a published edition whose derivation weakened; its own target. */
@@ -448,11 +455,16 @@ export class Reevaluation {
       if (!w) continue;
       const dep = this.#one(`SELECT title, object_type, current_state FROM bundles WHERE bundle_id=?`, d);
       if (!dep) continue;
-      const { open, closed } = this.#split(d, d, [w], records);
       place({ bundle_id: d, title: dep.title ?? null, object_type: dep.object_type ?? null,
               current_state: dep.current_state ?? null, target: d, target_state: dep.current_state ?? null,
-              legs: [], stored: this.#storedTriple(this.#frontmatterOf(d)), strength: this.#strengthOf(d) },
-            open, closed);
+              legs: [], stored: this.#storedTriple(this.#frontmatterOf(d)), strength: this.#strengthOf(d) }, [w]);
+    }
+    const records = this.#records(found.map(({ o }) => [o.bundle_id, o.target]));
+    for (const { o, causes } of found) {
+      const { open, closed } = this.#split(o.bundle_id, o.target, causes, records);
+      if (open.length) obligations.push({ ...o, reeval: { flag: true, since: open[0].since, source: open[0].source },
+                                          causes: open, closed });
+      else if (closed.length) closedOnly.push({ bundle_id: o.bundle_id, target: o.target, causes: closed });
     }
     const order = (a, b) => (a.bundle_id < b.bundle_id ? -1 : a.bundle_id > b.bundle_id ? 1
                             : a.target < b.target ? -1 : a.target > b.target ? 1 : 0);
@@ -734,7 +746,7 @@ export class Reevaluation {
     const holders = [...new Set(legs.map((l) => l.holder))];
     const divided = new Set(holders.length
       ? this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
-                     AND current_state = 'divided'`, JSON.stringify(holders)).map((r) => r.bundle_id)
+                     AND current_state = 'divided' LIMIT ?`, JSON.stringify(holders), holders.length).map((r) => r.bundle_id)
       : []);
     const ids = [...new Set(legs.map((l) => l.content_id))];
     const rows = new Map((ids.length
@@ -798,9 +810,27 @@ export class Reevaluation {
              closed_by: r.closed_by, closed_at: r.closed_at, why: r.why, adopted_version: r.adopted_version };
   }
 
+  /* R14 (N200): whether the viewer sees a capture, by the gate `versionChain` reads it through (provenance R17): some
+     bundle registering it is one the viewer may see. Memoised for the one answer it serves. */
+  #captureSeer(viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "member") return () => true;          /* a machine credential: not filtered */
+    if (g.scope === "DENY") return () => false;
+    const memo = new Map();
+    return (sha) => {
+      if (!sha) return false;
+      if (!memo.has(sha))
+        memo.set(sha, !!this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                                    WHERE r.capture_sha=? AND (${g.sql}) LIMIT 1`, sha, ...g.args));
+      return memo.get(sha);
+    };
+  }
+
   /** R14: the notices raised, for the queue that renders them: by holder or all, open unless `state` names another,
    *  in holder then id order after `after`, at most `limit` (default 200, most 1,000), `truncated`. A notice whose holder
-   *  the viewer may not see is withheld and not counted; its newer bundle, if unseen, is null. */
+   *  the viewer may not see is withheld and not counted; its newer bundle, if unseen, is null. A viewer who does not
+   *  see the newer capture's project is given its `newer_capture`, `grade` and `affects` as absent, as
+   *  `op=versionnotice` withholds that version (N200, K224). */
   notices({ holder = null, state = "open", after = null, limit = null, viewer = null } = {}) {
     const cap = clamp(limit, NOTICES_LIMIT_DEFAULT, NOTICES_LIMIT_MAX);
     const h = str(holder);
@@ -811,9 +841,82 @@ export class Reevaluation {
         WHERE (${g.sql}) AND (? IS NULL OR n.holder = ?) AND (? = 'all' OR n.state = ?) AND n.notice_id > ?
         ORDER BY n.notice_id LIMIT ?`, ...g.args, h, h, st, st, String(after ?? ""), cap + 1);
     const visible = this.#redactor(viewer);
-    const list = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle) }));
+    const seesCapture = this.#captureSeer(viewer);
+    const list = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle),
+      ...(seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null }) }));
     return { ok: true, notices: list, count: list.length, limit: cap, truncated: rows.length > cap,
              cursor: rows.length > cap ? list[list.length - 1].notice : null, state: st };
+  }
+
+  /* ---------------------------------------------------------------- R25: the notice sweep's due, wake and tick */
+
+  /* R25: where the pass stands (`reevaluation_sweep`); an absent row is no pass yet complete and no receipt counted. */
+  #sweepRow() {
+    return this.#one(`SELECT cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq
+                        FROM reevaluation_sweep WHERE id = 1 LIMIT 1`)
+      || { cursor: null, pass_began: null, pass_seq: null, complete_began: null, complete_seq: null, receipt_seq: 0 };
+  }
+
+  #sweepWrite(row) {
+    this.sql.exec(`INSERT INTO reevaluation_sweep (id, cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq)
+                   VALUES (1,?,?,?,?,?,?)
+                   ON CONFLICT(id) DO UPDATE SET cursor=excluded.cursor, pass_began=excluded.pass_began,
+                     pass_seq=excluded.pass_seq, complete_began=excluded.complete_began,
+                     complete_seq=excluded.complete_seq, receipt_seq=excluded.receipt_seq`,
+                  row.cursor, row.pass_began, row.pass_seq, row.complete_began, row.complete_seq, row.receipt_seq);
+  }
+
+  /* R25: a receipt was written: the count moves. Not a service: it is the listener the factory registers with
+     provenance's `onReceipt`, run inside the receipt's own transaction. */
+  receiptSeen() {
+    this.sql.exec(`INSERT INTO reevaluation_sweep (id, receipt_seq) VALUES (1, 1)
+                   ON CONFLICT(id) DO UPDATE SET receipt_seq = receipt_seq + 1`);
+  }
+
+  /* R25: pending while a pass is part-way, when a receipt was counted since the last complete pass began, or, with no
+     pass yet complete, when any basis leg rests on a passage. */
+  #sweepPending(row = this.#sweepRow()) {
+    if (row.pass_began !== null) return true;
+    if (row.complete_began !== null) return Number(row.receipt_seq) > Number(row.complete_seq ?? 0);
+    return !!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE content_id IS NOT NULL AND content_id <> '' LIMIT 1`);
+  }
+
+  /* R25: the sweep delay, the instance binding `REEVAL_NOTICE_DELAY_MS` when it reads as a number >= 0. */
+  #sweepDelayMs() {
+    const raw = this.env.REEVAL_NOTICE_DELAY_MS;
+    const v = raw === null || raw === undefined || String(raw).trim() === "" ? NaN : Number(raw);
+    return Number.isFinite(v) && v >= 0 ? v : REEVAL_NOTICE_DELAY_MS;
+  }
+
+  /** R25: `now` while the sweep is pending, else null. Synchronous; writes nothing; never throws. */
+  noticeSweepDue(now) {
+    try { return this.#sweepPending() ? now : null; } catch { return null; }
+  }
+
+  /** R25: `now` plus the sweep delay while the sweep is pending, else null. Synchronous; writes nothing; never throws. */
+  noticeSweepWake(now) {
+    try { return this.#sweepPending() ? Number(now) + this.#sweepDelayMs() : null; } catch { return null; }
+  }
+
+  /** R25: one batch of R14's sweep at the default limit, where the pass stands (a pass begins when none is part-way),
+   *  answered as that batch's `raiseNotices` answer; a batch whose `cursor` is null completes the pass. Not pending, it
+   *  runs nothing and answers `{pending: false}`. `now` (ms) stamps when a pass began. */
+  noticeSweep(now) {
+    const row = this.#sweepRow();
+    if (!this.#sweepPending(row)) return { pending: false };
+    const ms = Number(now);
+    const began = row.pass_began !== null ? row.pass_began
+      : Number.isFinite(ms) ? new Date(ms).toISOString().replace(/\.\d+Z$/, "Z") : this.#when();
+    const pass = row.pass_began !== null ? { began, seq: row.pass_seq ?? 0, after: row.cursor }
+      : { began, seq: Number(row.receipt_seq) || 0, after: null };
+    const batch = this.raiseNotices({ after: pass.after });
+    /* The count read now: a receipt counted during the batch stays counted. */
+    const seq = this.#sweepRow().receipt_seq;
+    this.#sweepWrite(batch.cursor
+      ? { ...row, receipt_seq: seq, cursor: batch.cursor, pass_began: pass.began, pass_seq: pass.seq }
+      : { ...row, receipt_seq: seq, cursor: null, pass_began: null, pass_seq: null,
+          complete_began: pass.began, complete_seq: pass.seq });
+    return batch;
   }
 
   /* ---------------------------------------------------------------- R15: the member's choice (REC-223) */
@@ -855,6 +958,7 @@ export class Reevaluation {
     const fm = this.#frontmatterOf(r.holder);
     const legs = this.#basisFrontmatter(fm);
     const leg = legs[r.ord];
+    /* DEC-49 REGION is-version-adoptable */
     if (!fm || !leg || leg.target !== r.target_id)
       return this.#refuse("VERSION_ADOPT_UNWRITABLE",
         `${r.holder} no longer holds leg ${r.ord} on ${r.target_id} as this notice read it, so there is no reference to `
@@ -921,6 +1025,7 @@ export class Reevaluation {
     for (let k = 2; names.has(name.toLowerCase()); k++) name = `adopt-${r.newer_capture.slice(0, 8)}-${r.ord}-${k}`;
     if (!VERSION_NAME_RE.test(name))
       return this.#refuse("VERSION_ADOPT_UNWRITABLE", `no version name could be formed for ${r.holder}.`, { notice: r.notice_id });
+    /* END DEC-49 REGION is-version-adoptable */
     const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}: leg ${r.ord} rests on capture `
       + `${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). `
       + `Every other leg is as the live basis holds it.`;
@@ -932,7 +1037,10 @@ export class Reevaluation {
            + `Trigger: adoptVersion on ${r.notice_id}\n`
            + `Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to capture ${r.newer_capture}; `
            + `the live basis is unchanged.\n` });
-      if (!w || !w.ok) return { ...(w || { ok: false, reason: "VERSION_ADOPT_UNWRITABLE" }), notice: r.notice_id };
+      /* basis-versions' own refusal passes through as it came; no answer at all is this module's C-110.9 (N182 (4)). */
+      if (w && !w.ok) return { ...w, ok: false, notice: r.notice_id };
+      if (!w) return this.#refuse("VERSION_ADOPT_UNWRITABLE", `the newer version of ${r.holder} could not be written. `
+        + `Nothing was written.`, { notice: r.notice_id });
       this.sql.exec(`UPDATE reevaluation_notices SET state='adopted', closed_by=?, closed_at=?, adopted_version=?
                       WHERE notice_id=? AND state='open'`, who, when, name, r.notice_id);
       return { ok: true, bundleSha: w.bundleSha ?? null };
@@ -1062,6 +1170,8 @@ export function reevaluationOf(host, deps) {
     promotion.onReopened("reevaluation", ({ target, at, viewer }) => r.raise({ target, source: "reopened", since: at, viewer }));
     promotion.registerStep("reevaluation", { check: (c) => r.check(c) });
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
+    /* R25: a receipt makes the notice sweep pending again (provenance R47). */
+    r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
   }
   return r;
 }
