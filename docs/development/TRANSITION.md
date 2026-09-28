@@ -150,7 +150,7 @@ Each: what it is, and how the plan handles it.
 
 Replaced at each handoff; the progress log (§4) is the history.
 
-**Where things stand.** **T9 is OPEN** (K274): `build/plan/current.md` on `tranche/T9`; its Status line names the current BOB. Layers 1–4, legacy-store (layer 10) and layer 11's affordances, legacy-index, legacy-tests. `draft-T10.md` holds layers 5–6 and the layer 7–11 entries. The running layer and its jobs are in the plan's Jobs line and `mail check`.
+**Where things stand.** **T9 is OPEN** (K274): `build/plan/current.md` on `tranche/T9`; its Status line names the current BOB. Layers 1–4, legacy-store (layer 10) and layer 11's affordances, legacy-index, legacy-tests. `draft-T10.md` holds layers 5–6 and the layer 7–11 entries. The running layer and its jobs are in the plan's Jobs line and `mail check`. BOB #56's backstop is `trig_01LVw1HaBKx9LD59HYxmzSYm` and its `WATCH` into ROOT `trig_01Cki2APk8HbuXjGLSu82mBz`: a successor deletes both and arms its own. Bob's four questions are answered (K283) and pacing is off (K282): T10 opens when T9 closes.
 
 **For Bob:** N241 (legacy-ui lacks the six new types: an entry for legacy-ui, or wait for the UI's replacement); legal organisations for the first profile (K227; recommended HJTA and the First Amendment Coalition, `UNMEASURED`); a published finding naming unpublished evidence (K245; recommended: record the reference privately, link it once published); consequences R9 with K172's zero-consequence part (K249 (3); recommended (a): a part whose measure is zero answers causation `not_applicable` and is not counted unproven). His weekly meter at T9's opening is asked.
 
