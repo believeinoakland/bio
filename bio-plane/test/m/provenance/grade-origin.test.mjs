@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, infoMd } from "./fixture.mjs";
 import { ARCHIVE_CAPTURE_GRADE, ARCHIVE_VIA } from "../../../src/provenance/index.mjs";
-import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE } from "../../../checks/bio-checks.mjs";
+import { EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE, PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
 
 const T = "2026-09-27T01:00:00Z";
 const rank = (g) => BASIS_GRADES.indexOf(g);
@@ -70,20 +70,26 @@ test("R29: a member's attributed, dated, append-only declaration of a document's
   const d2 = w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "The records portal", by: V("sam"), viewer: V("sam") });
   assert.equal(d2.seq, 2);
   assert.equal(w.count("origin_declarations"), 2, "append-only: the first stays");
+  /* Each refusal carries its catalogue row (C-103), but NO_SUCH_BUNDLE, which has none (REC-64). */
+  const row = (r, code) => assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+    [false, code, code, PROVENANCE_ACT_CHECKS[code].check, PROVENANCE_ACT_CHECKS[code].translation], code);
   for (const who of ["token:member", "class:admin", "", null]) {
     const r = w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "x", by: who, viewer: V("x") });
-    assert.equal(r.reason, "ORIGIN_NOT_A_MEMBER", String(who));
+    row(r, "ORIGIN_NOT_A_MEMBER");
   }
   assert.equal(w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "x", by: V("r"), viewer: "stranger" }).reason, "NO_SUCH_BUNDLE",
                "a bundle the viewer may not see answers as absent");
   assert.equal(w.prov.declareOrigin({ bundleId: "INFO-2026-0404-x", system: "x", by: V("r"), viewer: V("r") }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(w.prov.declareOrigin({ bundleId: "", system: "x", by: V("r"), viewer: V("r") }).reason, "NO_BUNDLE");
-  assert.equal(w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: " ", by: V("r"), viewer: V("r") }).reason, "ORIGIN_NO_SYSTEM");
+  row(w.prov.declareOrigin({ bundleId: "", system: "x", by: V("r"), viewer: V("r") }), "NO_BUNDLE");
+  row(w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: " ", by: V("r"), viewer: V("r") }), "ORIGIN_NO_SYSTEM");
+  row(w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "x".repeat(201), by: V("r"), viewer: V("r") }), "ORIGIN_NO_SYSTEM");
+  assert.equal(w.prov.declareOrigin({ bundleId: "INFO-2026-0404-x", system: "x", by: V("r"), viewer: V("r") }).check, undefined);
+  assert.equal(w.count("origin_declarations"), 2, "no refusal wrote a declaration");
   w.record.transact(() => w.record.commit({ bundleId: "INQ-2026-0001-q", type: "inquiry", title: "Q", project: null, snapKey: "q",
     kind: "promotion", base: "", author: V("r"), writer: null, operation: null,
     files: [{ path: "bundle.md", text: infoMd("INQ-2026-0001-q"), sha256: sha(infoMd("INQ-2026-0001-q")), bytes: 1 }],
     state: "open", priorState: null, group: "g", created: T, lastUpdated: T, criticality: null, at: T }));
-  assert.equal(w.prov.declareOrigin({ bundleId: "INQ-2026-0001-q", system: "x", by: V("r"), viewer: V("r") }).reason, "ORIGIN_NOT_A_DOCUMENT");
+  row(w.prov.declareOrigin({ bundleId: "INQ-2026-0001-q", system: "x", by: V("r"), viewer: V("r") }), "ORIGIN_NOT_A_DOCUMENT");
 });
 
 test("R30: originOf answers the standing (latest) declaration, or null", () => {

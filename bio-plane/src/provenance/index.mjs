@@ -11,8 +11,9 @@
  * The legacy code's comments moved with it; where one names `Store.x`, the thing it names is now this module's `x`.
  *
  * REACHED as `provenanceOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps` and returned to every later caller. At creation it declares its tables to record-core's purge and
- * registers its check and projection with promotion (R1–R3, R42–R46). `deps`:
+ * call with `deps` and returned to every later caller. At creation it declares its tables to record-core's purge,
+ * registers its check and projection with promotion (R1–R3, R42–R46) and its audit check with record-core (R59, N92).
+ * `deps`:
  *   record, membership, promotion  the modules it uses, `recordOf(host)`, `membershipOf(host)`, `promotionOf(host)`
  *                                  unless a test passes its own.
  *   now           the module's clock, an ISO instant (default: the wall clock). R1's `registered`, R13's receipts
@@ -22,13 +23,13 @@
  *                 secret by the operator and replaceable. Absent, `signReceipt` answers that no key is bound. */
 
 import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, TESTIMONY_CHECKS,
-         ROUTE_MARK_CHECKS, VERSION_CHAIN_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES, TESTIMONY_GRADE, checkBundle }
-  from "../../checks/bio-checks.mjs";
+         ROUTE_MARK_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
+         TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
          ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
-import { promotionOf, recordAudit, recordChecks } from "../promotion/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks } from "./register-checks.mjs";
 
@@ -459,6 +460,8 @@ const rowRefusal = (family) => (code, detail, extra) => {
   const row = family[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 };
+/* This module's own acts' refusals (C-103: the register refusal at the write, a declared origin, a signed receipt). */
+const actRefusal = rowRefusal(PROVENANCE_ACT_CHECKS);
 
 /* ======================================================================= *
  * THE MEMBER'S OBSERVATION: its bytes and its reference (R28).
@@ -732,7 +735,7 @@ export function attestStatus(a) {
 }
 
 /* ======================================================================= *
- * THE C-18 ARMS AT THE GATE AND IN THE AUDIT (K72 (4); K64's pattern), so moving them out of the catalogue loses none.
+ * THE C-18 ARMS AT THE GATE AND IN THE AUDIT (K72 (4); record-core R59), so moving them out of the catalogue loses none.
  * ======================================================================= */
 
 /* An image (path → text, or a blob reference) as the arms read it: the files, the elided paths and the front matter. */
@@ -754,43 +757,6 @@ export function withRegisterChecks(image, gate) {
   return { ...gate, ok: gate.ok && errors.length === 0, findings,
            warnings: (gate.warnings || 0) + found.length - errors.length };
 }
-
-/** K64's pattern for this module: promotion's audit (`recordAudit`, itself record-core's `auditPass` with promotion's
- *  checks) with the C-18 register arms run over the same page, so the audit loses none of them. A bundle they find in
- *  error that the pass counted clean is counted with errors instead, once; the tallies and offenders carry them. */
-export async function provenanceAudit(host, opts = {}) {
-  const pass = await recordAudit(host, opts);
-  const record = recordOf(host);
-  const out = { ...pass, tally: { ...(pass.tally || {}) }, offenders: [...(pass.offenders || [])] };
-  const tallyDetail = { ...(pass.tallyDetail || {}) };
-  const sha256 = async (v) => hexBytes(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
-  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
-  for (const id of pass.page || []) {
-    const moved = registerChecks(imageForChecks(record.readImage(id) || {})).filter((x) => x.severity === "error");
-    if (!moved.length) continue;
-    /* Re-judged whole, as promotion's wrapper does: the pass counted this bundle clean unless the catalogue or
-       promotion's moved checks found an error in it, and a bundle is counted once. */
-    const img = record.readImage(id) || {};
-    const files = new Map(), elided = new Set();
-    for (const [path, v] of Object.entries(img)) (typeof v === "string" ? files.set(path, v) : elided.add(path));
-    const { findings } = await checkBundle({ folderName: id, files, elidedPaths: elided, sha256, sha512,
-      resolveTarget: (t) => !!record.bundleInfo(t),
-      ...(typeof opts.context === "function" ? (opts.context(id) || {}) : {}) });
-    const before = [...findings, ...await recordChecks({ folderName: id, files, sha256 })].filter((x) => x.severity === "error");
-    if (!before.length) { out.clean--; out.withErrors++; }
-    const at = out.offenders.findIndex((o) => o.bundleId === id);
-    for (const e of moved) {
-      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
-      if (e.code) { const k = `${e.check}/${e.code}`; tallyDetail[k] = (tallyDetail[k] || 0) + 1; }
-    }
-    const extra = moved.map((e) => ({ check: e.check, detail: e.message }));
-    if (at >= 0) out.offenders[at] = { bundleId: id, errors: [...out.offenders[at].errors, ...extra].slice(0, 5) };
-    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors: extra.slice(0, 5) });
-  }
-  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
-  return out;
-}
-
 
 /* ======================================================================= *
  * THE MODULE
@@ -867,11 +833,11 @@ class Provenance {
     }
     const added = now.filter((x) => !held.has(`${x.check}\u0000${x.message}`));
     if (!added.length) return null;
-    return { ok: false, reason: "PROVENANCE_REGISTER_REFUSED", bundleId,
-             findings: added.map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}),
-                                            ...(x.repairs ? { repairs: x.repairs } : {}) })),
-             detail: `this promotion's data/provenance.json fails ${added.length} of the intake provenance register's `
-                   + `rules (C-18) that the version it revises did not fail. Nothing was written.` };
+    return actRefusal("PROVENANCE_REGISTER_REFUSED",
+      `this promotion's data/provenance.json fails ${added.length} of the intake provenance register's `
+      + `rules (C-18) that the version it revises did not fail. Nothing was written.`,
+      { bundleId, findings: added.map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}),
+                                                ...(x.repairs ? { repairs: x.repairs } : {}) })) });
   }
 
   /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
@@ -1146,6 +1112,62 @@ class Provenance {
       .map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
   }
 
+  /** R49 · K171 (13), K176 — every attestation the record holds for a capture, for `filings`' exhibits (its R9): read
+   *  from the document entries of the capture's home (R4) that name it, in the order recorded, each naming the bundle
+   *  and the file it is recorded in. Two eras of the same facts are read alike: the daemon's `timestamp {authority,
+   *  token_file}` and bare `co_archive` locator (State Rules v1.5 §4.1), and `op=attest`'s answer as the plane records
+   *  it, `attestations: [{kind: "rfc3161", service, file, sha256}]` and `co_archive {service, locator}`. `at` is the
+   *  instant of the entry's matching attempt, when the entry recorded one. It asks no authority and verifies no
+   *  token's signature, and says so. An empty list is the earned "none recorded" only when the home's register was
+   *  read; with no home (a capture registered only by its parts has none under the whole's digest) or an unreadable
+   *  register the answer is `undetermined`, with why (R37). */
+  attestationsOf(captureSha) {
+    const s = bareSha(captureSha);
+    if (!s || !/^[0-9a-f]{64}$/.test(s))
+      return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
+    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's "
+               + "signature was verified here";
+    const home = this.homeOf(s);
+    const answer = (attestations, why) => ({ ok: true, sha256: s, registered: !!home, attestations,
+                                             ...(why ? { undetermined: why } : {}), note });
+    if (!home)
+      return answer([], "no register row names this capture under a bundle that exists, so the record states no "
+                      + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+    const PATH = "data/provenance.json";
+    const f = this.#record.readFile(home.bundleId, PATH);
+    if (!f) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    const reg = safeJson(f.text);
+    if (!isObj(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
+    const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const out = [];
+    for (const d of reg.documents) {
+      if (!isObj(d) || !isObj(d.capture) || bareSha(d.capture.sha256) !== s) continue;
+      const tries = Array.isArray(d.attestation_attempts) ? d.attestation_attempts.filter(isObj) : [];
+      const when = (match) => { const a = tries.find(match); return a && str(a.attempted) ? { at: a.attempted } : {}; };
+      const where = { bundle: home.bundleId, path: PATH };
+      if (isObj(d.timestamp)) {
+        const service = str(d.timestamp.service) || str(d.timestamp.authority);
+        out.push({ kind: "rfc3161", ...(service ? { service } : {}),
+                   ...(str(d.timestamp.token_file) ? { file: str(d.timestamp.token_file) } : {}),
+                   ...(service ? when((a) => a.ok === true && a.service === service && a.kind !== "co-archive") : {}), ...where });
+      }
+      for (const t of Array.isArray(d.attestations) ? d.attestations : []) {
+        if (!isObj(t) || t.kind !== "rfc3161") continue;
+        const tokenSha = bareSha(t.sha256);
+        out.push({ kind: "rfc3161", ...(str(t.service) ? { service: str(t.service) } : {}),
+                   ...(str(t.file) ? { file: str(t.file) } : {}), ...(tokenSha ? { token_sha: tokenSha } : {}),
+                   ...when((a) => a.ok === true && tokenSha && bareSha(a.token_sha256) === tokenSha), ...where });
+      }
+      const co = typeof d.co_archive === "string" ? { locator: str(d.co_archive) }
+               : isObj(d.co_archive) ? { service: str(d.co_archive.service), locator: str(d.co_archive.locator) } : null;
+      if (co && co.locator)
+        out.push({ kind: "co_archive", ...(co.service ? { service: co.service } : {}), locator: co.locator,
+                   ...when((a) => a.ok === true && a.kind === "co-archive" && a.archived_locator === co.locator), ...where });
+    }
+    return answer(out, null);
+  }
+
   /* ===================================================================== *
    * THE ACQUISITION RECEIPTS (R13–R16, R47).
    * ===================================================================== */
@@ -1275,23 +1297,29 @@ class Provenance {
 
   declareOrigin({ bundleId = "", system = "", by = null, viewer = null } = {}) {
     const who = String(by ?? "").trim();
+    /* DEC-49 REGION is-origin-act
+       The door (C-103.2, C-103.3): a named member, and a document named. NO_SUCH_BUNDLE, below, is minted at many
+       sites and carries no row (REC-64), so it stands outside both regions. */
     if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "ORIGIN_NOT_A_MEMBER",
-               detail: who ? `'${who.slice(0, 60)}' is a machine credential. Which system a document came from is a `
-                             + "named member's attributed statement, never a machine's"
-                           : "declaring a document's origin is a named member's act, and this call carries nobody" };
-    if (!bundleId) return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+      return actRefusal("ORIGIN_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. Which system a document came from is a `
+              + "named member's attributed statement, never a machine's"
+            : "declaring a document's origin is a named member's act, and this call carries nobody");
+    if (!bundleId) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    /* END DEC-49 REGION is-origin-act */
     const info = this.#record.bundleInfo(bundleId);
     if (!info || !this.#membership.inSight(bundleId, viewer))
       return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId,
                detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    /* DEC-49 REGION is-origin-statement
+       The statement (C-103.4, C-103.5): only a document came from a system, and the system is named briefly. */
     if (String(info.type).toLowerCase() !== "information")
-      return { ok: false, reason: "ORIGIN_NOT_A_DOCUMENT", bundleId,
-               detail: `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system` };
+      return actRefusal("ORIGIN_NOT_A_DOCUMENT",
+        `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId });
     const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     if (!sys || sys.length > 200)
-      return { ok: false, reason: "ORIGIN_NO_SYSTEM",
-               detail: "name the system the document came from, in at most 200 characters" };
+      return actRefusal("ORIGIN_NO_SYSTEM", "name the system the document came from, in at most 200 characters");
+    /* END DEC-49 REGION is-origin-statement */
     const at = secondOf(this.#now());
     const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM origin_declarations WHERE bundle_id = ?`, bundleId).m || 0) + 1;
     this.#sql.exec(`INSERT INTO origin_declarations (bundle_id, seq, system, by, at) VALUES (?, ?, ?, ?, ?)`,
@@ -1333,13 +1361,13 @@ class Provenance {
     const s = bareSha(captureSha);
     if (!s || !/^[0-9a-f]{64}$/.test(s) || typeof retrievalLocator !== "string" || !retrievalLocator
         || typeof retrieved !== "string" || !retrieved)
-      return { ok: false, reason: "RECEIPT_MALFORMED",
-               detail: "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched" };
+      return actRefusal("RECEIPT_MALFORMED",
+        "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched");
     const key = await this.#key();
     if (!key)
-      return { ok: false, reason: "RECEIPT_NO_KEY",
-               detail: "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds "
-                     + "one as a secret; nothing is claimed signed until then" };
+      return actRefusal("RECEIPT_NO_KEY",
+        "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds "
+        + "one as a secret; nothing is claimed signed until then");
     const statement = Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
     const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te.encode(statement)));
     const at = this.#now();
@@ -1564,7 +1592,7 @@ class Provenance {
                  : "reconstructing a provenance chain is a named act: the record must show who decided "
                    + "that the evidence supported this route" };
     if (!bundleId)
-      return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+      return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
     /* The bundle the viewer may see (membership R43; absent and unseen answer alike), and the row values a relabel
        falls back on where the carried document states none (record-core R41 and its `bundles` read contract, R37). */
     const head = this.#record.head(bundleId);
@@ -2245,17 +2273,14 @@ class Provenance {
       const fileText = testimonyBytes({ id, observedAt: obs, words: text });
       const fileBytes = new TextEncoder().encode(fileText);
       const sha = createSha256().update(fileBytes).hex();
-      /* DEC-49 REGION is-testify-bytes
-         THE REGISTER IS KEYED BY THE BYTES, and with the header those bytes are
+      /* THE REGISTER IS KEYED BY THE BYTES, and with the header those bytes are
          unique to this testimony — so a hit here is somebody having registered,
          IN ADVANCE, the exact bytes the next observation would have (the id is
          sequential and therefore predictable). Recording over them would re-file
-         their register row under this bundle. Refused, naming no bundle (D-15);
-         the id is spent and the next attempt gets new bytes. */
-      if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
-        return { spent: refusal("TESTIMONY_WORDS_REGISTERED",
-          `the canonical bytes of ${id} (${sha.slice(0, 16)}…) are already registered in this record`) };
-      /* END DEC-49 REGION is-testify-bytes */
+         their register row under this bundle. The transaction answers the hit as
+         a success so the id stays SPENT and the next attempt gets new bytes; the
+         refusal itself is made below, outside it (is-testify-bytes). */
+      if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha)) return { spent: { id, sha } };
       const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
       const locator = "a member's firsthand observation, authored in this record";
       /* MK-6 (§4.1): every file below names the author by this reference, never
@@ -2338,7 +2363,12 @@ class Provenance {
       if (!promoted.ok) return promoted;
       return { ok: true, id, sha, file, fileBytes, promoted };
     });
-    if (out.spent) return out.spent;
+    /* DEC-49 REGION is-testify-bytes
+       The canonical bytes are already registered: refused, naming no bundle (D-15). The id they carried is spent. */
+    if (out.spent)
+      return refusal("TESTIMONY_WORDS_REGISTERED",
+        `the canonical bytes of ${out.spent.id} (${out.spent.sha.slice(0, 16)}…) are already registered in this record`);
+    /* END DEC-49 REGION is-testify-bytes */
     if (!out.ok) return out;
     const { id, sha, file, fileBytes, promoted } = out;
     return {
@@ -2372,8 +2402,8 @@ class Provenance {
 const instances = new WeakMap();
 
 /** The one provenance instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
- *  first call only. At creation it declares its tables to purge (record-core R21, R46) and joins every promotion with
- *  its check and projection (promotion R39). */
+ *  first call only. At creation it declares its tables to purge (record-core R21, R46), joins every promotion with
+ *  its check and projection (promotion R39) and registers the C-18 arms as an audit check (record-core R59). */
 export function provenanceOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -2386,6 +2416,9 @@ export function provenanceOf(host, deps) {
     record.declarePurge("provenance", ["register", "provenance_route_marks", "origin_declarations",
       { name: "captured_locators", keys: [] }, { name: "signed_receipts", keys: [] }], { exempt: ["receipt_keys"] });
     p.joinPromotion();
+    /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
+       reads, so the audit judges each bundle once, whole, and loses none of them. */
+    record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
   }
   return p;
 }

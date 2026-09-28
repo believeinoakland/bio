@@ -3,9 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, createHash } from "node:crypto";
-import { world, sha, evidence } from "./fixture.mjs";
+import { world, sha, evidence, provDoc, infoMd } from "./fixture.mjs";
 import { attest, attestStatus } from "../../../src/provenance/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
 
 /* A TimeStampResp, granted, whose token carries the digest's raw bytes (what `parseTimestampResponse` binds on). */
 function granted(digestHex) {
@@ -144,9 +145,10 @@ test("R34: the instance signs its own receipt with its own key; a receipt stays 
   /* No key bound: stated, never a silent skip. */
   const w0 = world();
   const none = await w0.prov.signReceipt({ captureSha: s, retrievalLocator: "https://x", retrieved: "t" });
-  assert.equal(none.reason, "RECEIPT_NO_KEY");
+  assert.deepEqual([none.reason, none.check, none.translation], ["RECEIPT_NO_KEY", "C-103.7", PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation]);
   assert.equal(w0.count("signed_receipts"), 0);
-  assert.equal((await w0.prov.signReceipt({ captureSha: "x" })).reason, "RECEIPT_MALFORMED");
+  const bad = await w0.prov.signReceipt({ captureSha: "x" });
+  assert.deepEqual([bad.reason, bad.check, bad.translation], ["RECEIPT_MALFORMED", "C-103.6", PROVENANCE_ACT_CHECKS.RECEIPT_MALFORMED.translation]);
   /* The key is a secret: no answer carries it. */
   assert.equal(JSON.stringify([r1, r2, kept]).includes(k1.slice(0, 40)), false);
 });
@@ -170,5 +172,67 @@ test("R39: attest is the one caller of the network, and asks only the compiled e
     await w.prov.registerAudit(null);
     w.prov.testify({ words: "w", observedAt: "2026-09-20", author: "member:x" });
     w.prov.provenanceRouteAssess({ bundleId: "INFO-2026-0001-a", author: "member:x", viewer: "member:x" });
+  } finally { globalThis.fetch = real; }
+});
+
+test("R49: attestationsOf reads every attestation the capture's register entry records, in order, asking nothing", async () => {
+  const w = world();
+  const real = globalThis.fetch;
+  globalThis.fetch = () => { throw new Error("attestationsOf asked the network"); };
+  try {
+    assert.equal(w.prov.attestationsOf("nope").reason, "BAD_SHA");
+    assert.equal(w.prov.attestationsOf(sha("x").slice(1)).reason, "BAD_SHA");
+    /* The plane's own record of op=attest's answer (setup.mjs: `attestations`, `co_archive {service, locator}`),
+       with the attempts that obtained them. */
+    const a = w.cap("a");
+    const tok = sha("token bytes");
+    const plane = { attestations: [{ file: `snapshots/timestamp-${tok.slice(0, 12)}.tsr`, kind: "rfc3161", service: TSA_ENDPOINTS[1],
+                                     sha256: tok, bytes: 11, over: a.sha }, { kind: "something-else", file: "x" }],
+                    co_archive: { service: ARCHIVE_SERVICE, locator: "https://web.archive.org/web/2026/https://e.org/a" },
+                    attestation_attempts: [
+                      { service: TSA_ENDPOINTS[0], attempted: "2026-09-27T01:00:00Z", ok: false, note: "http 503" },
+                      { service: TSA_ENDPOINTS[1], attempted: "2026-09-27T01:00:01Z", ok: true, kind: "rfc3161", token_sha256: tok },
+                      { service: ARCHIVE_SERVICE, attempted: "2026-09-27T01:00:02Z", ok: true, kind: "co-archive",
+                        archived_locator: "https://web.archive.org/web/2026/https://e.org/a" }] };
+    /* The daemon era's shape (State Rules v1.5 §4.1): `timestamp {authority, token_file}` and a bare co-archive locator. */
+    const b = w.cap("b");
+    const daemon = { timestamp: { authority: "https://tsa.example", token_file: "snapshots/b.tsr.b64", encoding: "base64" },
+                     co_archive: "https://web.archive.org/web/2025/https://e.org/b",
+                     attestation_attempts: [{ service: "https://tsa.example", attempted: true, ok: true }] };
+    const c = w.cap("c");
+    const r = w.promoteInfo("INFO-2026-0001-x", { captures: [a, b, c],
+      docs: [provDoc(a, plane), provDoc(b, daemon), provDoc(c)] });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    const where = { bundle: "INFO-2026-0001-x", path: "data/provenance.json" };
+    const pa = w.prov.attestationsOf(`sha256:${a.sha.toUpperCase()}`);
+    assert.deepEqual({ ...pa, note: undefined }, { ok: true, sha256: a.sha, registered: true, note: undefined, attestations: [
+      { kind: "rfc3161", service: TSA_ENDPOINTS[1], file: plane.attestations[0].file, token_sha: tok, at: "2026-09-27T01:00:01Z", ...where },
+      { kind: "co_archive", service: ARCHIVE_SERVICE, locator: plane.co_archive.locator, at: "2026-09-27T01:00:02Z", ...where }] });
+    assert.match(pa.note, /no timestamp authority or archive was asked, and no token's signature was verified/);
+    const pb = w.prov.attestationsOf(b.sha);
+    assert.deepEqual(pb.attestations, [
+      { kind: "rfc3161", service: "https://tsa.example", file: "snapshots/b.tsr.b64", ...where },
+      { kind: "co_archive", locator: daemon.co_archive, ...where }], "a boolean `attempted` gives no instant");
+    /* None recorded, read from a readable register: the earned empty answer, nothing undetermined. */
+    const pc = w.prov.attestationsOf(c.sha);
+    assert.deepEqual([pc.registered, pc.attestations, pc.undetermined], [true, [], undefined]);
+    /* No home: not "none recorded", but undetermined, with why. */
+    const none = w.prov.attestationsOf(sha("never registered"));
+    assert.deepEqual([none.ok, none.registered, none.attestations], [true, false, []]);
+    assert.match(none.undetermined, /no register row names this capture/);
+    /* A home whose register cannot be read: undetermined, with why. */
+    const w2 = world();
+    const d = w2.cap("d");
+    w2.promotion.promote({ bundleId: "INFO-2026-0002-u", base: null, snapKey: "u", author: "member:alice", replay: true,
+      meta: { object_type: "information" }, register: [{ sha256: d.sha, path: d.path, encoding: "utf8", bytes: 9 }],
+      files: [{ path: "bundle.md", text: infoMd("INFO-2026-0002-u") }, { path: d.path, text: d.text },
+              { path: "data/provenance.json", text: "{broken" }] });
+    const u = w2.prov.attestationsOf(d.sha);
+    assert.deepEqual([u.registered, u.attestations], [true, []]);
+    assert.match(u.undetermined, /cannot be read as a register/);
+    /* It writes nothing. */
+    const before = w.snapshot();
+    w.prov.attestationsOf(a.sha);
+    assert.deepEqual(w.snapshot(), before);
   } finally { globalThis.fetch = real; }
 });

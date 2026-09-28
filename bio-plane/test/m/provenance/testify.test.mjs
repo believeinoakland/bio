@@ -101,6 +101,7 @@ test("R40: no place is named in the module's behaviour or outward text", async (
   texts.push(w.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0001-a", author: V("r"), viewer: V("r") }));
   texts.push(w.prov.versionChain({ addressNorm: "", viewer: V("r") }), w.prov.homeCensus({}), await w.prov.registerAudit(null));
   texts.push(w.prov.captureGrade(a.sha), w.prov.declareOrigin({ bundleId: "x", by: "" }), routeFinding("information", null));
+  texts.push(w.prov.attestationsOf(a.sha), w.prov.attestationsOf(sha("none")), w.prov.attestationsOf("x"));
   texts.push(chainFromEvidence({}), await attest({ sha256: "x" }, {}),
              await attest({ sha256: sha("n") }, { head: async () => null, holds: async () => null }));
   texts.push(await w.prov.signReceipt({}), await w.prov.signReceipt({ captureSha: sha("x"), retrievalLocator: "https://e.org", retrieved: "t" }));

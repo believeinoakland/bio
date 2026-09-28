@@ -258,13 +258,19 @@ test("R41: the module owns its tables, declared to purge once; another declarati
 });
 
 test("R48: register and captured_locators keep their read-contract columns, joinable in a later module's SQL", () => {
-  const w = world();
+  const w = world({ now: "2026-09-27T05:06:07.000Z" });
   const a = w.cap("a");
   w.promoteInfo("INFO-2026-0001-a", { captures: [a] });
   w.prov.recordReceipt({ address: "https://e.org/a", addressNorm: "e.org/a", captureSha: a.sha,
                          retrieved: "2026-09-27T00:00:00Z", retrievalLocator: "https://e.org/a?x" });
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((r) => r.name);
-  for (const c of ["capture_sha", "bundle_id", "path"]) assert.equal(cols("register").includes(c), true, c);
+  for (const c of ["capture_sha", "bundle_id", "path", "registered"]) assert.equal(cols("register").includes(c), true, c);
+  /* N111: `registered` is this module's clock at the register write (R1), an ISO instant; `address_norm` is the
+     receipt's document address as the acquisition normalised it (R13), the key a later module seeks on. */
+  assert.equal(w.row(`SELECT registered FROM register WHERE capture_sha = ?`, a.sha).registered, "2026-09-27T05:06:07.000Z");
+  assert.equal(Number.isFinite(Date.parse(w.row(`SELECT registered FROM register`).registered)), true);
+  assert.deepEqual({ ...w.row(`SELECT address_norm, address FROM captured_locators WHERE address_norm = ?`, "e.org/a") },
+                   { address_norm: "e.org/a", address: "https://e.org/a" });
   for (const c of ["address_norm", "address", "retrieval_locator", "capture_sha"]) assert.equal(cols("captured_locators").includes(c), true, c);
   const joined = w.row(`SELECT r.bundle_id, r.path, cl.address, cl.retrieval_locator FROM captured_locators cl
                           JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ?`, "e.org/a");
