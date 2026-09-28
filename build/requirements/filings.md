@@ -58,7 +58,7 @@ Terms. The **governing tier** of an action is the stricter (higher) of its kind'
 - `publication`: a finding's published edition (R3, R9); the evidence-package registration it offers (R15).
 - `standards`: `standardRead`, `inForce` (R3, R9).
 - `conformance`: `determinationRead` (R3, R8, R9, R12). *(not declared)*
-- `actions`: `actionRead`, `actionCorrespond`, `clockPropose`.
+- `actions`: `actionRead`, `actionCorrespond`, `clockPropose`; `noSuchAction` (its R43), through which R1's, R8's and R13's `NO_SUCH_ACTION` is answered, in place of C-115.2 (N217, K275). *(not yet met: N217)*
 - `consequences`: `consequencesOf` (R9).
 
 ### Invariants

@@ -42,7 +42,7 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 
 ### Layer 8
 
-- **publication** · N210 (R41 `caseCitedParts`, registered with reevaluation R26); N230 (R42); N256; N260; N277, N237, N238 (their shares); N297 (its share).
+- **publication** · N210 (R41 `caseCitedParts`, registered with reevaluation R26); N230 (R42); N256; N260; N277, N237 (their shares; N238 has no share here, K351); N297 (its share).
 - **ratification** · N256 (its share).
 - **case-authoring** · N259; N275 (its share); N297 (its share).
 - **review** · N297 (its share).
@@ -53,13 +53,13 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 - **conformance** · N233; N274; N296; N297 (its share).
 - **consequences** · N257; N296; N297 (its share).
 - **actions** · N283 (its read); N231 (R42 `kinds()`); N237 (R31's bound and cursor); N246; N261; N271; N277 (its share); N217's layer-9 sites (K275); N297 (its share).
-- **filings** · N296.
-- **escalation** · N296; N297 (its share).
+- **filings** · N296; N217 (its sites call actions R43 `noSuchAction`, keeping `#noAction`'s second sentence through `extra`, K351).
+- **escalation** · N296; N297 (its share); N217 (R9 calls actions R43 `noSuchAction`, K351).
 
 ### Layer 10
 
 - **monitoring** · N283 (its reads); N222; N278; N266 (R46 `counts()`); N224 (R19, R20); N230 (its share); N247 (its share); N297 (its share).
-- **scheduler** · N223's and N224's consumers (calibration R18–R19; monitoring's rank).
+- **scheduler** · N223's and N224's consumers (calibration R18–R19, ai-runs R43, capture-requests R44; monitoring's rank; K351).
 - **legacy-store** · N266 and N267 (their shares); N294 (its share: `#testimonyWithin` calls extraction's `indexTestimony`).
 
 ### Layer 11
