@@ -36,7 +36,7 @@
 - **connections** · N125 (`themes.mjs` re-exports C-81.11–C-81.14 from `THEME_CHECKS`, drops its copy); N131 (`m/connections/factory.test.mjs` line 18 asserts capture R58's refusal, or the arm goes).
 - **progressions** · N118 (its share: C-100's rows in one `where` grammar, no rows for other modules' codes); N63 (its share: R33's notice, if its mark still holds).
 - **bias** · N171 (its share: `counts(hid)`, `uncleared`); N143 (delete `bias/interim.mjs`, its re-export and its "R33 (interim)" test; K182 (3)); N118 (its share: `BIAS_REFUSED`'s `where` names the public `promotionCheck`); N63 (its share: R41's due and wake, if its mark still holds).
-- **observation-log** · N113 (`DOCUMENT_EVIDENCE_IS_ONE_SIDED`, approved K158); N118 (its share: `AI_LOG_NEVER_LOOKED_STORED`, C-22.17, at region `is-never-looked-stored`); N134 (`CAPTURE_TEXT_UNIT_CONTAINERS` gains `xlsx`, `ods`, `csv`; the reason and vocabulary sentences corrected); N139 (its share: `contentObservationsFor`, D-375).
+- **observation-log** · N174 (comments name the vocabulary's home); N113 (`DOCUMENT_EVIDENCE_IS_ONE_SIDED`, approved K158); N118 (its share: `AI_LOG_NEVER_LOOKED_STORED`, C-22.17, at region `is-never-looked-stored`); N134 (`CAPTURE_TEXT_UNIT_CONTAINERS` gains `xlsx`, `ods`, `csv`; the reason and vocabulary sentences corrected); N139 (its share: `contentObservationsFor`, D-375).
 - **query-language** · N104 (its share: `MACHINE_READ_KINDS` re-exported from text-chain); N106 (its share, with retrieval: compiled statements read retrieval's own table).
 - **retrieval** · N171 (its share: `counts(hid)`); N106 (its share: projection columns and `fts_id` off `bundles` into a table of its own; record-core R37's note then goes); N142 (its share: `answerChanged` into Provides).
 
