@@ -56,3 +56,44 @@ I verified my side: with that one row temporarily restored in the catalogue, my 
 The alternative is to keep a copy of C-87.1 in the catalogue. That breaks R23 (K6: each check moves, never copied), so I do not recommend it.
 
 Until this is decided my branch's tests cannot load publication, so I am blocked (cause: needs BOB's ruling). Everything else is done; case-authoring's merge is still ahead.
+
+## Completion
+
+**Entries applied.**
+- Extract per map and requirements (K102). `bio-plane/src/review/` (`index.mjs`, `checks.mjs`, `schema.mjs`) holds the review copy: the three acts behind one machine fence (R1–R7), the grant and sight predicates (R8, R9), the copy with its two doors and one dead answer (R10–R17), the comment (R18), the draft list (R19) and the six ops (`reviewOps`, K3). Behaviour moved unchanged, with one exception: `MACHINE_CANNOT_REVIEW` now carries its `code`, `check` and `translation` (R1: every refusal carries them).
+- Moved from the legacy modules:
+  - C-87.1–.11 and C-32.16 left `bio-checks.mjs` (R23). They sit in `REVIEW_COPY_CHECKS` with their ids and translations unchanged; only their `where`s changed.
+  - `case_drafts`, `review_grants` and `review_comments` left `schema.mjs`. The module migrates them, including `statement_by`'s added column (formerly legacy-store's migration).
+  - The three tables are declared to purge as whole-store tables (R24).
+  - The store's `DRAFT`/`RVG` mint-ledger rows now live in the module, which seeds the ledger at start and again before its first mint (D-432).
+- Used modules, each reached through its factory:
+  - strength `projectBar` (R11).
+  - basis-versions `testimonyReach` (R16; N67's share).
+  - publication `attributionInForce` (its R39; R16) and its `cases` and `published_cases` read contract (its R40; R3, R5).
+  - case-authoring `publishCase`, run inside `record.transact` and always rolled back (R13), and `statementAcknowledgements` with its `withheld_stated` (R15). These are N69's share.
+- The registration rule (K206): review fills publication's review provider in `reviewOf`, and legacy-store's fill is removed.
+- R26 (K240, K242): `REVIEW_LIST_MAX`, `statedEdition` and `caseIdentitySentence` are exported; `case_drafts` is a stated read contract; a test asserts `DRAFTS_READ_MAX` equals `REVIEW_LIST_MAX`.
+- Legacy rewiring (§12.2), net a removal:
+  - legacy-store: 3 lines added (the import, `reviewOf(ctx)` at construction, `...reviewOps(reviewOf(this.ctx), url, body)`), 920 removed.
+  - legacy-checks: 0 added, 132 removed.
+  - The interim one-line delegates were removed again once case-authoring took their callers.
+
+**Deferred.** Nothing of this module. `MINT_EXHAUSTED` (the draft and grant mints, unreachable in practice) has no catalogue row; that is pre-existing, and allocating one is a catalogue decision (REPORT J4).
+
+**Found in other modules / stale artifacts** (REPORT J4).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/review/`: tests 29, pass 29, fail 0, todo 0 (`acts` 9, `doors` 5, `copy` 8, `invariants` 7).
+- Negative controls, each failing only the tests it should:
+  - revocation check removed: R8, R10, R18 fail;
+  - grant widened to editors: R2, R23 fail;
+  - dry run not rolled back: R13, R20 fail;
+  - start-time ledger seed removed: R4/R6's seed test fails.
+  Each was restored green.
+- Old battery, base `tranche/T8` @ 747c8048d7 against this branch, 25 suites:
+  - Identical in 17, among them rec213-reviewcopy-writer 20/0, d573-lastchange-tie 12/0, rec212 46/0, project-discoverable 157/0, reviewcopy-inband 29/2, conclude-project 75/0, gate-reads 110/5, derivation-bounds 59/14, machine-fences 80/8, d470 11/2 and mint-ledger 23/3 (after the seed fix).
+  - Better in one: bounds 199/7 → 201/5.
+  - Differing only on source-text anchors: reviewcopy 98/0 → 95/3 (the `review_grants` DDL and `#seesProjectDrafts` read out of `schema.mjs`/`store.mjs`); d543 12/0 → 11/1 (its named-helper count over the store corpus); fence-e2e 53/2 → 50/5 (C-32.16's family harvest over the store and listed modules); opaque-ids 34/1 → 32/3 (the DRAFT/RVG mint sites looked for in the store corpus); d448-review-copy-translation (imports `REVIEW_COPY_CHECKS` from the catalogue, so it does not load).
+- format: 69 modules, 64 requirements files; 0 failures. architecture: 8 product files, 30 relative imports; 0 failures. coverage: 26 of 26 live requirement ids named by a test; 0 failures. ownership: 12 files changed; legacy-store 3 added, 920 removed; legacy-checks 0 added, 132 removed; 0 failures.
+
+Size (session_01B11NRC4vX3HGNywo9Ky3Cz): test runs 24, module lines 1003
