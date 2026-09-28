@@ -113,3 +113,7 @@ Size (session_01B11NRC4vX3HGNywo9Ky3Cz): test runs 24, module lines 1003
 3. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (not_product) is stale by `src/review/` and `store.mjs`; BOB regenerates at the close.
 4. **legacy-checks (catalogue decision):** `MINT_EXHAUSTED`, answered by the draft and grant mints when 64 draws collide, has no catalogue row. The refusal was pre-existing and is unreachable in practice. It is left as it was; a row would be a new check.
 5. **affordances / queue (layer 11):** they declare a use of `review`. Its instance is `reviewOf(ctx)`, and its ops are `casedraft`, `reviewgrant`, `reviewrevoke`, `reviewcopy`, `reviewcomment`, `casedrafts`.
+
+## J5 · COMPLETE
+
+Extraction per map and requirements (K102), N67's and N69's shares, K206's provider fill and R26 applied. 29/29 module tests pass; 26/26 ids covered; format, architecture, coverage and ownership clean (legacy-store 3 added, 920 removed; legacy-checks 0/132). Old battery identical to base except source anchors (REPORT J4). Record: build/jobs/T8/review.md, §Completion.
