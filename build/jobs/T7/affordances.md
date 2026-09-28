@@ -93,3 +93,54 @@ Found in other modules and in generated artifacts. None of it was changed by me.
 6. **legacy-index · `decorateAct`** (index.mjs 2691) duplicates my `decorate(act, gate)` (R11). When the extraction rewires it, the control plane passes `{needs: (op) => NEEDS[op] ?? null, mode: (op) => …SESSION_OPS…}`. The answer is then byte-identical: my plane test holds `op=affordances`' label, weight, rung, rung_absence and prompt equal to `decorate`'s.
 7. **Generated artifact · `bio-plane/dist/bio-plane.bundled.mjs`** (and `.bundle.json`) is stale: it embeds `src/affordances.mjs`. It is yours to regenerate at the layer's close.
 8. **Requirements text · R3** says "`RUNG_ABSENT` names every other op that writes". That is only checkable against the control plane's table, which no op publishes. My R3 test checks the tables' mutual consistency. The totality half is R12's service applied by the control plane (item 5).
+
+## J5 · COMPLETE
+
+**Entries applied** (plan layer 11: N84, N114's share, N115; forwarded: INQUIRY #1 J2.3, INTENT #1 J4.3; B3's scope, no extraction)
+
+- **N84, N114, N115:** `NON_ACTS` rows for `adminresign`, `hostingaccessset`, `memberpairingset`, `leadlist`, `connectionassert`, `filemembershipstore`, `filemembershipjudge`, `themewithdraw`, `aliaswithdraw`, `relationwithdraw`, `contentcrop`. Each of the nine mutating ones has a rung or a stated absence:
+  - `reasoned`: `aliaswithdraw`, `relationwithdraw`, `themewithdraw`, `filemembershipjudge`, `connectionassert`;
+  - `credential`: `adminresign`, `hostingaccessset`, `memberpairingset`;
+  - `substrate`: `filemembershipstore`.
+  - The legacy `rung-ladder` FORWARD arm and the exact count of 130 now pass.
+- **INTENT J4.3 (K208 Q2):** `NON_ACTS` for all 17 of intent's ops. The ten mutating ones are graded:
+  - `reasoned`: `goalclose`, `aspirationdepart`, `aspirationretire`;
+  - `undetermined`: the other seven.
+- **INQUIRY J2.3 and R6 (N49, N52, N91; K208 Q3):** `DISPOSITIONS` is inquiry's, `REOPENABLE_FROM` promotion's, `ENTITY_KINDS`/`RELATION_KINDS` entities', `STAGE_REQUIREDNESS` progressions' and `PER_ITEM_MAX` record-core's, all re-exported. **R6 is met.**
+- **R27 as ruled (K211 Q6):**
+  - to `reasoned`: `biasdebtresolve`, `actionrisktier`, `narrow`;
+  - to `reversible`: `versionaccept`, `versioncurrent`, `actionlaws`, `projectvisibilityset`;
+  - 34 stay `undetermined`.
+  - `JUSTIFICATION_REFUSALS` gained the seven codes those rungs rest on.
+  - The comments that called the moved ops undetermined are corrected. **R27 is met.**
+- **R25 (N6):** `NON_ACTS.idmatch` names no place. **Met.**
+- **R12:** `unaccounted(opTable)`, rows `{op, mutating, gated}` (K211 Q5). **Met.**
+- **R11:** `decorate(act, gate)`. **Met.**
+- **Improvement (a flaw in my module):** `deriveActs` threw on facts without `cites_in`/`cites_out`, and it could not read counts. It now reads a count or an array, and an unstated count never narrows an act (R10).
+
+**Still not met, each a `test.todo` with its cause:**
+- R26: waits on `actions`.
+- R16 and R14's `cites_in`: legacy-store passes ids (N176).
+- R18: `owner_floor_clear` counts leaving owners (N176).
+
+**Deferred:** nothing else.
+
+**Other modules:** J4 (routed by B6).
+- Legacy suites, measured: `affordances` has one red, the transient ghost row for intent's 17 ops until LEGACY-INDEX #4 lands (was 98/1 on the base). `rung-ladder` is red on BACKWARD and EXACTLY for the same cause, plus the `VERSION_ACT_TO` pin, which is red on the base. `d311-roster-affordances` stops at `NO_OBJECTIVE` (INTENT J4.1), and my plane test carries its arms.
+- The plane bundle is stale.
+
+**Tests and checks** (on `job/T7/affordances` after merging `tranche/T7` @ B6):
+- Module: `node --test bio-plane/test/m/affordances/` → tests 67, pass 64, fail 0, todo 3. Coverage by file:
+  - `derive` (R8–R10: an oracle from the requirement text over every type and state and each act's facts crossed exhaustively, 3 backgrounds);
+  - `catalogue` (R1–R7, R19 structural, R24, R25 read against the jurisdiction profiles, R27);
+  - `services` (R11, R12, R22);
+  - `plane`, in Miniflare (R13–R24: the facts at `op=affordancefacts`, `op=affordances`, the roster agreement, every `reasoned` op driven without its reason, the machine map both ways, nothing written);
+  - `backing` (R19 for `narrow`, through basis-versions' fixture).
+- `test/m/` whole: tests 1822, pass 1814, fail 1 (`connections/factory` K155, red identically on the base: N131), todo 7.
+- Layer tests: none are named in the manifest. My user, `queue`, is in `test/m`: green.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio affordances` → architecture: 6 product files, 26 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio affordances` → coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio affordances tranche/T7` → ownership: 7 files changed by affordances between tranche/T7 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures
+
+Size (session_01Uzmu9LYFCjcYb7iowFaKQZ): test runs 34, module lines 2410
