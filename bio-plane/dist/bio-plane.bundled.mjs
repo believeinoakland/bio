@@ -34429,9 +34429,23 @@ var oakland_alameda_default = {
       citation: "Cal. Gov. Code \xA7 7922.535",
       basis: "UNMEASURED"
     }
+  ],
+  /* Design Requirement 8's legal organisations, as Bob named them (K283 (2), K303): each takes up the
+     Tier 3 kinds given here; none takes up consent_decree_motion. Their public websites are unmeasured. */
+  legal_organisations: [
+    {
+      name: "Howard Jarvis Taxpayers Association",
+      evaluates: ["assessment_challenge", "taxpayer_action"],
+      contacts: [{ how: "web", value: "https://www.hjta.org" }],
+      basis: "UNMEASURED"
+    },
+    {
+      name: "First Amendment Coalition",
+      evaluates: ["constitutional_claim"],
+      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }],
+      basis: "UNMEASURED"
+    }
   ]
-  /* legal_organisations: absent. Which outside organisations the product names to residents is Bob's
-     to decide (K227); until then the first profile supplies none (R27). */
   /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
      counts calendar days; a business-day count here is undetermined (R27, R33). */
 };
