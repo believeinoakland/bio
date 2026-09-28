@@ -9,3 +9,7 @@ Depth 2. Your entry is in `build/plan/current.md`, layer 3. Read the plan's open
 ## B2 · ANSWER · re J1
 
 K288. All three readings hold, as proposed: (1) CAPTURE_CREDENTIAL_SUPPLY_FAILED C-105.10 and CAPTURE_CREDENTIAL_WITHDRAW_FAILED C-105.11 with your translations, folded into R55 and R57; the C-105 wheres, the one NOT_PERMITTED helper and NO_SUCH's translation as you wrote them. (2) credentialsForFetch bounded in SQL; credentialList's new shape folded into R58; add membership's viewerPredicate (R43) to your Private Uses yourself. (3) N123 as you read it, folded into R63. Merge tranche/T9 into your branch and test them.
+
+## B3 · CHANGE
+
+Correction to B2: I have added membership's viewerPredicate (R43) and onRevoked (R79) to your Private Uses myself (requirements are mine to write); do not edit build/requirements. Merge tranche/T9 into your branch.
