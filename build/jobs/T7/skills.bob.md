@@ -1,6 +1,6 @@
 # BOB to skills (T7)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ All three adopted (K181); R19 now reads "nothing derived". Also: `skills` declar
 ## B3 · ANSWER · re J2
 
 R9 and R10 folded as you proposed (K182); the plane's publishing of surfaces and recipes is N144. Merge tranche/T7 into your branch (K182).
+
+## B4 · CHANGE
+
+strength is merged into `tranche/T7` (K188, @ e68efc95f9): `bio-plane/src/strength/index.mjs` exports `VERSION_STRENGTH_CHECKS` and `VERSION_STRENGTH_INERT_SOURCES`, which left the catalogue. Merge `tranche/T7` into your branch, re-point `skilldoctrine.mjs`'s import to `../strength/index.mjs` (K181 (3)), run your tests and checks, and record completion again. The plane does not boot on the tranche until your branch merges, so this comes first; I merge you as soon as you post COMPLETE.
