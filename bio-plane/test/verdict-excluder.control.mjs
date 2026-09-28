@@ -68,6 +68,8 @@
  *       PAIRED with (4b), the same plant under the OLD gate -> GREEN. That pair
  *       is the receipt: the same real defect that the new gate catches is
  *       INVISIBLE to the one this item replaced.
+ *       RETIRED 2026-09-28 (legacy-tests T9, N248), (4) AND (4b) TOGETHER — see the
+ *       note where they stood, below.
  *   (5) PLANT A REFUSAL-SHAPED READ in `src/store.mjs` — a dispatched op whose
  *       refusal is spelled `found: false` and carries a collection off an
  *       unbounded scan -> meaning-bounds GREEN (the refusal is excluded).
@@ -330,37 +332,27 @@ const oneLine = (r) => `mb ${r.mb.pass}/${r.mb.fail} (a:${named(r.mb, "D-240 \\(
   restore("a3d", s);
 }
 
-/* ------------------------------ (4) THE REAL DEFECT AT THE COMPUTED-VERDICT SITE */
-const PROMOTED_GUARD = /^[ \t]*if \(!promoted\.answered\).*$\n/m;
-{
-  const s = snapshot("a4", ["index"]);
-  const src = readFileSync(P.index, "utf8");
-  const hits = (src.match(new RegExp(PROMOTED_GUARD.source, "gm")) || []).length;
-  if (hits !== 1) throw new Error(`ARM 4: promoted.answered guard occurs ${hits} times, expected 1`);
-  writeFileSync(P.index, src.replace(PROMOTED_GUARD, ""));
-  const r = run("pe");
-  record("4 the promoted.answered guard REMOVED (the real defect at the computed-verdict site)",
-    "plane-envelope RED, DETECTOR A firing and NAMING `promoted`",
-    r.fail > 0 && named(r, "DETECTOR A") === 1 && /DETECTOR A[^\n]*promoted/.test(r.out),
-    `plane-envelope ${r.pass}/${r.fail}, DETECTOR A failures ${named(r, "DETECTOR A")}, `
-    + `names promoted: ${/DETECTOR A[^\n]*promoted/.test(r.out)}`,
-    `failing: ${failing(r).join(" | ")}`);
-  restore("a4", s);
-}
-/* ------------- (4b) THE PAIR: the SAME defect under the OLD gate must PASS ---- */
-{
-  const s = snapshot("a4b", ["index", "pe"]);
-  const src = readFileSync(P.index, "utf8");
-  writeFileSync(P.index, src.replace(PROMOTED_GUARD, ""));
-  patch("pe", "const canReportSuccess = (arg) => { const v = declaresRefusalEnvelope(arg); return !!v && (v.kind === \"true\" || v.kind === \"expr\"); };",
-              "const canReportSuccess = (arg) => SUCCESS_ENVELOPE_OLD.test(arg);");
-  const r = run("pe");
-  record("4b THE RECEIPT: the SAME removed guard, read by the OLD one-literal gate",
-    "DETECTOR A reports ZERO violations — the same real defect is INVISIBLE to the gate this item replaced",
-    named(r, "DETECTOR A") === 0,
-    `DETECTOR A failures ${named(r, "DETECTOR A")} (suite ${r.pass}/${r.fail}; the D-240 arms fail here because the gate is the old one, which is arm 2)`);
-  restore("a4b", s);
-}
+/* ------------------------------ (4) and (4b) RETIRED 2026-09-28 (legacy-tests T9, N248)
+   Their subject left the Worker. Both armed on op=monitor's `if (!promoted.answered) return storeSilent("monitor/promote")`
+   in `src/index.mjs`, the one COMPUTED-verdict site (`json({ ok: !!promoted.result?.ok, …, ...promoted.result… })`).
+   T8's monitoring extraction (5501b53e10) moved that promotion and its verdict into the Durable Object's `monitor`
+   service (`src/monitoring/index.mjs`), which calls the store in process: no envelope is opened there, and no
+   `.answered` exists in the module to remove. So `PROMOTED_GUARD` matched 0 times, arm (4) THREW, and every arm after
+   it — (4b), (5), (5b), (6) — never ran (m025 A4's dead anchor).
+   WHAT NOW CARRIES THE RULE, and why neither is re-armed here:
+     - The Worker's successor site is `monitorOp` (`src/monitoring/index.mjs`), which answers
+       `json({ ...out.result.body, store, tokenClass }, out.result.status)` behind a HAND-ROLLED `out.ok !== true`
+       check outside `doAnswer`. That answer carries no verdict, so detector A's gate does not grade it by its own
+       stated rule (UNCLASSIFIED), and removing its check cannot make DETECTOR A fire. It already fails plane-envelope's
+       (e) and DETECTOR C on the unarmed tree (N247, monitoring's share) — a product red, not a control's subject.
+     - The PROPERTY (4)+(4b) proved — un-guarding a computed-verdict spread is seen by the new gate and invisible to
+       the old — is now proved INSIDE the suite on every battery run: plane-envelope.test.mjs's D-240 (c) strips
+       every answered-guard from the corpus plus the PLANTED computed-verdict site (PLANT_COMPUTED, the removed site's
+       own lines) and asserts the new gate finds spreads the old one cannot, and that they are `:promoted`. That is
+       (4) and (4b)'s pair, computed rather than armed, and arm (2) of this driver still breaks it (the old gate
+       restored fails (b) and (c) over the plant). Re-arming (4) against the plant would edit the suite that measures
+       it and duplicate (c). */
+console.log("  RETIRED  ARM 4 / 4b — the computed-verdict site left the Worker (5501b53e10); plane-envelope's D-240 (c) carries the pair over its planted site");
 
 /* -------------- (5) A REFUSAL-SHAPED READ THE OLD EXCLUDER COUNTS AS A DEFECT
    The planted method is a REAL member of the class the walk grades: it scans

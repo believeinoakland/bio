@@ -387,7 +387,12 @@ let SIGNED_SHA = null;
   + "the row it protects (a case published before DEC-72, owned by no project) is one no act can "
   + "write any more. A pre-DEC-72 store HAS those rows, and an inner join would delete published "
   + "material from the public record the moment this table landed",
-    /LEFT JOIN cases/i.test(readFileSync(join(DIR, "..", "src", "publication", "index.mjs"), "utf8")), true);
+    /* RE-DERIVED 2026-09-28 (legacy-tests T9, N248): `/LEFT JOIN cases/i` read ANY such join, and since T8 moved the
+       case index into `src/publication/index.mjs` that file carries three (`publishedEditionsOf` and
+       `ratifiedFindingsRestingOn` beside it), so an inner join HERE left the pin green (caseobject.control (c), T8).
+       The pin now reads the case index's own join, the one this arm is about. */
+    /FROM published_cases c LEFT JOIN cases k ON k\.case_id = c\.case_id/.test(
+      readFileSync(join(DIR, "..", "src", "publication", "index.mjs"), "utf8")), true);
 }
 
 /* ====================================================================== 3

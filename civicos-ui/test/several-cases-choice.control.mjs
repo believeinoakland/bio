@@ -12,7 +12,9 @@
  * arm the text its failing lines MUST name, and the ones that MUST NOT fail (the arm broke only the thing):
  *
  *   BASELINE (suite)                                                                         -> GREEN
- *   BASELINE (guard)                                                                         -> GREEN
+ *   BASELINE (guard)                                                                         -> RED, on the
+ *       guard's pinned failures (every one another module's), and NAMING NONE of this row's: not the code, not
+ *       the region `is-finding-in-several-cases`, not "The reach SHRANK" (RE-DECLARED 2026-09-28, T9; see below)
  *   (A) THE ROW'S CONTROL — the C-44.2 row dropped from CASE_DERIVATION_CHECKS (guard)       -> RED, naming
  *       the orphaned region `is-finding-in-several-cases` and the rows floor (RE-DECLARED after its first run,
  *       which was declared naming the code and did not: without its row the code is out of reach again)
@@ -26,14 +28,19 @@
  *       "NO RAW CODE" and "THE PLANE'S WORDS"; MUST NOT fail "CHOICES" or "NEVER PICKS"
  *   (E) EVERY CHOICE OPENS THE FIRST CASE (suite)                                            -> RED, naming
  *       "OPENS: the choice for case"; MUST NOT fail "CHOICES" or "NEVER PICKS"
- *   (F) `#resolveOneCase` back to the uncoded object, the row kept (suite)                   -> GREEN
- *       (RE-DECLARED after its first run came back GREEN against a RED declaration: D-262's `dec49Attach`
- *       puts the row's translation on every `ok:false` answer whose reason has a row — the row is the wire's)
- *   (F2) the row's translation dropped, through the suite                                    -> RED, naming
+ *   (F) `#resolveOneCase` back to the uncoded object, the row kept (suite)                   -> RED, naming
  *       "DEC-49: the refusal carries" and "THE PLANE'S WORDS"; MUST NOT fail "CHOICES", "NEVER PICKS", "OPENS"
+ *       (RE-DECLARED 2026-09-28, T9 — it was GREEN while D-262's `dec49Attach` put every catalogue row on the
+ *       wire; the row is publication's now and `dec49Attach` reads the catalogue only, so the spread is the wire's)
+ *   (F2) the row's translation dropped, through the suite                                    -> RED, naming
+ *       "SUBSTRATE", "DEC-49: the refusal carries" and "THE PLANE'S WORDS"; MUST NOT fail "NEVER PICKS"
+ *       (RE-DECLARED 2026-09-28, T9: publication's `rowOf` THROWS on a row with no translation, so the refusal
+ *       never forms and the read fails whole — the page has no `cases[]` to offer, and still never picks)
  *   (F3) the row's translation dropped, through the PLANE's `caseflip.test.mjs`               -> RED, naming
- *       "C-44.2 and the catalogue row's canned translation"; MUST NOT fail its stranger's two-cases arm
- *   (BEFORE) the three files as origin/main @ 4355bfda holds them (suite)                   -> RED, naming
+ *       "C-44.2 and the catalogue row's canned translation" and the stranger's two-cases arm (RE-DECLARED
+ *       2026-09-28, T9: the same throw — the stranger is no longer told anything, so that arm fails too)
+ *   (BEFORE) UI-81 (33f6822dd0) reverted IN PLACE: the row, the page's choices branch and the coded
+ *       refusal each put back as 4355bfda had them (suite)                                   -> RED, naming
  *       "DEC-49: the refusal carries", "CHOICES", "THE PLANE'S WORDS"; MUST NOT fail "SUBSTRATE"
  *   (G) OVER-STRICTNESS — the page's own heading and note re-worded (suite)                  -> GREEN
  */
@@ -49,17 +56,24 @@ const REPO = path.join(HERE, "..", "..");
 /* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): C-44.2's row left the catalogue for publication's
    `CASE_RESOLUTION_CHECKS` (`bio-plane/src/publication/checks.mjs`, key `checks`), and `#resolveOneCase`'s refusal
    left `store.mjs` for `bio-plane/src/publication/index.mjs` (key `store`), where it is built from its row by `rowOf`
-   rather than by the store's `refusal` helper; arm (F) removes that spread. The (BEFORE) arm restores whole files
-   from 4355bfda, a tree before the modules existed, so it keeps its own keys for the paths those files had
-   (`catalogue`, `legacystore`). Each file is floored at its own size. */
+   rather than by the store's `refusal` helper; arm (F) removes that spread. Each file is floored at its own size. */
+/* RE-DERIVED 2026-09-28 (legacy-tests T9, N248 with N57): (BEFORE) restored three WHOLE files from 4355bfda, a tree
+   before the modules existed — a pre-module `store.mjs` and `bio-checks.mjs` in a modular tree is not UI-81's before-state,
+   it is a different plane (the imports, the routes and every moved family go with them), so the arm could only measure
+   the wreck. UI-81 (33f6822dd0) changed exactly three things, and the arm now reverts exactly those three IN PLACE, in
+   the files that carry them today: the C-44.2 row taken out of publication's `CASE_RESOLUTION_CHECKS` (A's edit), the
+   page's choices branch taken out of `pubOpen` (C's edit; `pubSeveralCasesHtml` is left defined and unreached, which is
+   behaviourally the page before UI-81), and `#resolveOneCase`'s refusal back to the uncoded object (F's edit). Its
+   declaration is unchanged, and the keys `catalogue` and `legacystore` are gone with the whole-file restore.
+   AND BASELINE (guard) WAS DECLARED GREEN, which the guard cannot be while other modules' findings stand (J3/J5 of
+   T8 legacy-tests: 126 failures, each another module's). It is re-declared RED with this row's names as its MUST-NOT:
+   what the baseline proves is unchanged — nothing (A) and (A2) require the guard to name is named before they arm. */
 const FILES = {
   app: path.join(REPO, "civicos-ui", "app.html"),
   checks: path.join(REPO, "bio-plane", "src", "publication", "checks.mjs"),
   store: path.join(REPO, "bio-plane", "src", "publication", "index.mjs"),
-  catalogue: path.join(REPO, "bio-plane", "checks", "bio-checks.mjs"),
-  legacystore: path.join(REPO, "bio-plane", "src", "store.mjs"),
 };
-const FLOOR = { app: 100000, checks: 10000, store: 100000, catalogue: 100000, legacystore: 100000 };
+const FLOOR = { app: 100000, checks: 10000, store: 100000 };
 const SUITE = path.join(HERE, "several-cases-choice.test.mjs");
 const SCRATCH = path.join(REPO, ".ui81-harness", "control");
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
@@ -82,7 +96,8 @@ const BRANCH = `    if(c && c.ok === false && Array.isArray(c.cases) && c.cases.
 
 const ARMS = [
   { name: "BASELINE (suite)", run: "suite", declared: "GREEN" },
-  { name: "BASELINE (guard)", run: "guard", declared: "GREEN" },
+  { name: "BASELINE (guard)", run: "guard", declared: "RED",
+    mustNotFail: ["FINDING_IN_SEVERAL_CASES", "is-finding-in-several-cases", "The reach SHRANK"] },
   /* (A)'s declaration was CORRECTED after its first run, and the correction is a finding: declared
      naming "FINDING_IN_SEVERAL_CASES", it came back RED over nine failures that NEVER NAME THE CODE —
      without its row the code leaves the reach entirely (today's main blindness, exactly), and what the
@@ -114,22 +129,35 @@ const ARMS = [
      `reason` has a family row with `code`, `check` and `translation`, so the ROW is what puts the
      translation on the wire, and the store's `refusal` helper is the literal the guard's REGION reads.
      Re-declared GREEN, and (F2) is the arm that breaks the thing the wire actually carries. */
-  { name: "(F) the store's helper removed, the row kept", run: "suite", declared: "GREEN",
+  /* RE-DECLARED 2026-09-28 (legacy-tests T9, N248), measured on job/T9's tree in an isolated worktree: RED 12/3,
+     failing "DEC-49: the refusal carries", "SHAPE" and "THE PLANE'S WORDS", the choices intact. D-262's backstop
+     no longer covers this row: `dec49Row` (bio-plane/src/index.mjs) builds its map from the CATALOGUE's `*_CHECKS`
+     families only, and C-44.2 is publication's `CASE_RESOLUTION_CHECKS` now, so with the spread removed nothing
+     puts the code, check or translation on the wire. The arm now breaks the thing the wire carries. */
+  { name: "(F) the store's helper removed, the row kept", run: "suite", declared: "RED",
+    names: ["DEC-49: the refusal carries", "THE PLANE'S WORDS"], mustNotFail: ["CHOICES", "NEVER PICKS", "OPENS: the choice for case"],
     /* T8: publication builds the refusal from its row with a spread (`...rowOf(...)`); the arm removes the spread. */
     edits: [["store", `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,`,
                       `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,`]] },
+  /* RE-DECLARED 2026-09-28 (legacy-tests T9, N248), measured: RED 6/9. `rowOf` (src/publication/checks.mjs) THROWS
+     for a code whose row has no translation — the mint site fails closed — so op=publishedcase answers no refusal
+     at all: SUBSTRATE fails, and with no `cases[]` the page offers no choice (CHOICES, OPENS fail). It still never
+     picks one. The arm breaks the same thing; what the plane does about it is stricter than when it was declared. */
   { name: "(F2) the row's translation dropped, run through the suite", run: "suite", declared: "RED",
-    names: ["DEC-49: the refusal carries", "THE PLANE'S WORDS"], mustNotFail: ["CHOICES", "NEVER PICKS", "OPENS: the choice for case"],
+    names: ["SUBSTRATE", "DEC-49: the refusal carries", "THE PLANE'S WORDS"], mustNotFail: ["NEVER PICKS"],
     edits: [["checks", TRANSLATION, ""]] },
   { name: "(F3) the row's translation dropped, through the plane's caseflip.test.mjs", run: "caseflip", declared: "RED",
-    names: ["C-44.2 and the catalogue row's canned translation"],
-    mustNotFail: ["and a STRANGER holding only that finding's id is told it serves TWO cases"],
+    /* RE-DECLARED 2026-09-28 (T9, N248), measured 57/2: `rowOf`'s throw (see (F2)) takes the stranger's two-cases
+       answer down with the translation, so that arm fails too and is named rather than spared. */
+    names: ["C-44.2 and the catalogue row's canned translation",
+            "and a STRANGER holding only that finding's id is told it serves TWO cases"],
     edits: [["checks", TRANSLATION, ""]] },
-  /* THE BEFORE-STATE: the three subject files exactly as origin/main @ 4355bfda carried them. */
-  { name: "(BEFORE) origin/main 4355bfda's app.html, bio-checks.mjs and store.mjs", run: "suite", declared: "RED",
+  /* THE BEFORE-STATE: UI-81's three changes reverted in place (see the RE-DERIVED note above FILES). */
+  { name: "(BEFORE) UI-81 reverted in place: the row, the choices branch and the coded refusal", run: "suite", declared: "RED",
     names: ["DEC-49: the refusal carries", "CHOICES", "THE PLANE'S WORDS"], mustNotFail: ["SUBSTRATE"],
-    edits: [["app", null, "civicos-ui/app.html"], ["catalogue", null, "bio-plane/checks/bio-checks.mjs"],
-            ["legacystore", null, "bio-plane/src/store.mjs"]] },
+    edits: [["checks", ROW, ""], ["app", BRANCH, ""],
+            ["store", `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,`,
+                      `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,`]] },
   { name: "(G) over-strictness: the page's own words re-worded", run: "suite", declared: "GREEN",
     edits: [["app", `<h1>In \${esc(String(cases.length))} case files</h1>`, `<h1>Choose a case file</h1>`],
             ["app", `They are listed by their names, not ranked, and this page does not choose between them.`,

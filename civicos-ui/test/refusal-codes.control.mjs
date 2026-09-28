@@ -28,6 +28,36 @@
  * is green again. A hash alone would be satisfied by a file swapped for another
  * copy of itself by a process that never performed the restore.
  */
+/* DEFERRED 2026-09-28 (legacy-tests T9, N248 with N57), NOT RE-DERIVED, and why — measured on job/T9/legacy-tests,
+ * never by running this driver (it edits the tree):
+ *   1. ITS PREMISE IS A GREEN GUARD, and the guard is red on other modules' findings (T8 J5: 126 failures, each another
+ *      module's; 113 when read on this tree 2026-09-28, while this same job re-pins the guard's floors in the working
+ *      tree). More than thirty of its arms are written against that premise and cannot be re-read against a red
+ *      baseline by editing a declaration: every exit-0 arm ((c) the whole UI harness green, (r3), (n2), (n3), (w2),
+ *      (w3), (s1) on the exempt key, (z)), every arm counting EXACTLY N failure lines ((s1), (s2), (s3a), (g1), (h2)),
+ *      and the (s) precondition, which requires slack 0 on every ratchet key while four ceilings are BREACHED
+ *      (reachGap 33 > 32, unclassifiedOutcomes 8 > 0, inheritedVerdicts 8 > 4, multiSiteCodes 81 > 54) — a ceiling in
+ *      breach cannot be raised by one to show slack, so the four (s2) ceiling arms cannot bite at all until the
+ *      owners' fixes land. Re-deriving onto "the guard's pinned failures" would mean judging every arm by the DIFF
+ *      of its FAIL lines against the pristine run in the same invocation, and some FAIL lines carry counts an arm
+ *      moves (arm G's "N codes are minted at more than one site"), so each arm's diff must be re-declared by
+ *      measurement against a baseline that is itself moving in this tranche. That is a rewrite of the driver's
+ *      judgement, not an anchor repair, and it is owed when the guard's owners' reds are paid (or BOB rules the
+ *      diff shape).
+ *   2. TEN ANCHORS ARE DEAD (the code moved into modules), and the driver has no D-331 preflight, so the FIRST dead
+ *      one — (r1)'s FREEZE_ANCHOR — throws and aborts every arm after it:
+ *        (r1) FREEZE_ANCHOR and (r4) REGION_MARK `basis-version-freeze` -> `src/basis-versions/index.mjs` (`check`);
+ *        (r2) the two `where`s now name `src/basis-versions/index.mjs check > basis-version-{freeze,resolve}`;
+ *        (r3) `      if (basisLegs.length) {` -> `src/inquiry/index.mjs` (4 spaces);
+ *        (r5) the bias-set-refusal `if` and (r6) BIAS_REFUSED's `where` -> `src/bias/index.mjs #promotionCheck`,
+ *             `src/bias/checks.mjs`;
+ *        (n4) SET_MOVED's spread (now `SELECTION_CHECKS`) and (n5) the `is-selection-moved` marker ->
+ *             `src/retrieval/index.mjs selectionResolve`;
+ *        (h2) `["BAD_REQUIRED", "D-590"], ` left R4_OWED (T5: BAD_REQUIRED is PROGRESSION_CHECKS' row now).
+ *      (r2)'s and (r6)'s EXACT counts (18 each) name refusals of `#promoteChecks`, a function the promote checks
+ *      have since left, so both must be re-measured, not re-pointed.
+ *   The live anchors ((a), (b), (d), (e), (f), (n1), (n2)'s reader, (n6), (m1)-(m5), (g1), (h1), (h3)-(h7),
+ *   (w1)-(w3)) were each counted once in their files on this tree. */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
    this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
