@@ -71,6 +71,7 @@ import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
+import { OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -353,9 +354,9 @@ console.log("\n--- A3 · THE RETURN CONTRACT: a REPORT with a citation, NEVER do
   t("and null", checkReport(null)?.code ?? null, "REPORT_NOT_AN_OBJECT");
 
   console.log("\n  -- D-129's vocabulary is the PLANE's, pinned by a source read --");
-  const blk = PLANE_AIRUN.match(/export const OBSERVATION_STATES = \{([\s\S]*?)\n\};/);
-  t("the plane's OBSERVATION_STATES block was actually found", blk != null, true);
-  const planeStates = [...blk[1].matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+  /* T10: IMPORTED, no longer read as text — the plane re-exports the vocabulary from observation-log. */
+  const planeStates = Object.keys(OBSERVATION_STATES || {});
+  t("the plane's OBSERVATION_STATES was actually found", planeStates.length > 0, true);
   t("the plane declares five states", planeStates.length, 5);
   t("and this contract's set is exactly the plane's, in the plane's order",
     Object.keys(REPORT_STATES), planeStates);

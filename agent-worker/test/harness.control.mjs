@@ -524,11 +524,12 @@ arm({
      `m025-arm-anchor-witness` A4, which is that instrument doing its job. */
   /* RE-ANCHORED 2026-09-28 by AGENT-WORKER #1 (T7, R26/K148): the tick now sends an entry only when the step
      stated a look (`entry ? [entry] : []`), and B1's arm it fails by was renamed with it (every step TICKS). */
+  /* RE-ANCHORED 2026-09-28 by AGENT-WORKER #2 (T10, R11/N153): the tick also publishes the table's state. */
   find: `    const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume });`,
+      { run: runId, log: entry ? [entry] : [], consume,`,
   replace: `    const tick = decision.step === "close"
       ? { reached: true, status: 200, body: { ok: true, result: {} } }
-      : await call("airuntick", null, { run: runId, log: entry ? [entry] : [], consume });`,
+      : await call("airuntick", null, { run: runId, log: entry ? [entry] : [], consume,`,
   run: () => {
     const r = runHarness();
     const logArm = anyFailed(r, /every step the trace names ticked|last entry is terminal|and names the bound/);

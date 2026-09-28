@@ -109,7 +109,7 @@ import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
    drift again; arm A6c asserts the member can close on nothing the table lacks.
    Imported in the SUITE and not in the Worker: `harness.mjs`'s own header records
    why the member itself may not import the plane's module graph. */
-import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor } from "../../bio-plane/src/airun.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/airun.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -176,9 +176,15 @@ console.log("\n--- A1 · the table is DATA, and its edges are the enforcement --
     CONTROL_FLOW.compose.to.includes("submit"), false);
   t("`compose` goes to `dedup` and to `close`, and nowhere else",
     [...CONTROL_FLOW.compose.to].sort(), ["close", "dedup"]);
-  t("`dedup` is the only row that can reach `submit` other than `submit` and `adjust`",
+  /* R11, N153 (T10): `resume` reaches `submit` too, and ONLY to continue a queue a previous segment's `dedup`
+     formed — the state the run's own last tick published at `submit`. It never reaches it on its own. */
+  t("`dedup` is the only row that can reach `submit` other than `submit`, `adjust` and a resumed `resume`",
     Object.keys(CONTROL_FLOW).filter((s) => CONTROL_FLOW[s].to.includes("submit")).sort(),
-    ["adjust", "dedup", "submit"]);
+    ["adjust", "dedup", "resume", "submit"]);
+  t("…and `resume` goes to `submit` only when the run's published state is AT `submit`",
+    [null, "plan", "compose", "dedup", "adjust", "submit"]
+      .filter((resumeAt) => nextStep({ step: "resume", mode: "check", pass: 0, maxPasses: 3, resumeAt }).step === "submit"),
+    ["submit"]);
 }
 
 console.log("\n--- A2 · nextStep NEVER leaves a row except by an edge that row declares ---");
@@ -310,9 +316,10 @@ console.log("\n--- A5 · the four-level fan-out, and the levels are the PLANE's 
      publishes no op that names them), so what closes the drift is reading the
      plane's own file. A fifth level added there fails HERE rather than silently
      going unsearched — which is D-113's purge-list defect, one directory over. */
-  const blk = PLANE_AIRUN.match(/export const OBSERVATION_LEVELS = \{([\s\S]*?)\n\};/);
-  t("the plane's OBSERVATION_LEVELS block was actually found", blk != null, true);
-  const planeLevels = [...blk[1].matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+  /* T10: IMPORTED, no longer read as text — the plane now re-exports the vocabulary from observation-log, so the
+     block this arm scanned for left `airun.mjs` and the pin went blind. The export is what the plane holds. */
+  const planeLevels = Object.keys(OBSERVATION_LEVELS || {});
+  t("the plane's OBSERVATION_LEVELS was actually found", planeLevels.length > 0, true);
   t("the plane declares four levels", planeLevels.length, 4);
   t("and LEVELS is exactly the plane's set, in the plane's order", LEVELS, planeLevels);
 }
@@ -504,7 +511,7 @@ console.log("\n--- A8 · log-always: every row logs, and the entry is in the PLA
     ["LOOKED_INDETERMINATE", false, false, true, true]);
   t("every state this harness can emit is in the plane's D-129 vocabulary",
     ["NEVER_LOOKED", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"]
-      .filter((s) => !new RegExp(`^\\s{2}${s}:`, "m").test(PLANE_AIRUN)), []);
+      .filter((s) => !Object.prototype.hasOwnProperty.call(OBSERVATION_STATES, s)), []);
 }
 
 console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is the plane's ---");
@@ -1585,7 +1592,9 @@ console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC
               bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: "a".repeat(64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [] };
   const PROJECT_MD = ["---", "object_type: project", "current_state: forming", 'created: "2026-09-18T09:00:00Z"',
-    'last_updated: "2026-09-18T09:00:00Z"', "references: []", "---", "", "## Summary", "",
+    'last_updated: "2026-09-18T09:00:00Z"', "references: []",
+    /* T10: a project states its objective or the plane refuses it NO_OBJECTIVE (intent R1, C-2.9; N168). */
+    'objective: "Find out whether the step log lands."', "---", "", "## Summary", "",
     "The project the member token's surfacing run is opened over (REC-171).", "", "## Session Log", ""].join("\n");
   const SURFACING_PROJECT = {
     base: null, snapKey: "20260918T085900Z_inbox", author: "ruth",

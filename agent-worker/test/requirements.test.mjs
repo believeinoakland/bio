@@ -94,7 +94,10 @@ function reset(cfg) {
   CFG = cfg || {};
   S = { log: [], runlog: (CFG.priorLog || []).slice(), seq: (CFG.priorLog || []).length,
         budget: Object.fromEntries((CFG.budget || []).map((b) => [b.bound, { allowed: b.allowed, consumed: b.consumed || 0 }])),
-        refusals: new Map(), status: "running", ended: null, suggested: [], requests: [], spawns: 0, bvIds: [] };
+        refusals: new Map(), status: "running", ended: null, suggested: [], requests: [], spawns: 0, bvIds: [],
+        /* ai-runs R10, R12, R19: a run opens with the empty scratch, a tick that hands a state replaces it, and
+           op=airun publishes it (null when it cannot be read back). */
+        state: CFG.state === undefined ? {} : CFG.state };
 }
 reset({});
 /* the canonical bytes \`plane-suggest.mjs\`'s F10 branch keys a verbatim resubmit on */
@@ -111,7 +114,7 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/__mock/reset") { reset(await req.json()); return Response.json({ ok: true }); }
     if (url.pathname === "/__mock/state")
-      return Response.json({ log: S.log, runlog: S.runlog, budget: S.budget, status: S.status, ended: S.ended,
+      return Response.json({ log: S.log, runlog: S.runlog, budget: S.budget, status: S.status, ended: S.ended, state: S.state,
                              suggested: S.suggested, requests: S.requests, spawns: S.spawns, bvIds: S.bvIds,
                              repeats: [...S.refusals.values()].map((r) => r.repeats) });
     const op = url.searchParams.get("op") || "";
@@ -136,6 +139,7 @@ export default {
         id: url.searchParams.get("run"), mode: CFG.mode || "check", status: S.status, context: runCtx(CFG),
         ...(CFG.maxPasses != null ? { max_passes: CFG.maxPasses } : {}),
         principal: { plane: "member:ruth", claude: CFG.payer ?? null, ref: null, skill: CFG.skill ?? null },
+        state: S.state,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } } });
     }
@@ -171,6 +175,7 @@ export default {
       }
       for (const [k, v] of Object.entries((body && body.consume) || {}))
         if (S.budget[k]) S.budget[k].consumed += Number(v) || 0;
+      if (body && body.state != null) S.state = body.state;
       const hit = ["fetches","subsessions","wallclock","runtime","lease"]
         .find((b) => S.budget[b] && S.budget[b].allowed > 0 && S.budget[b].consumed >= S.budget[b].allowed);
       if (hit) {
@@ -432,6 +437,73 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
   t("R11: resumed_from is the number of entries the log holds, and the resume row continues rather than restarting",
     [c.out.resumed_from, /continuing rather than restarting/.test(c.out.trace?.find((x) => x.step === "resume")?.why ?? "")],
     [5, true]);
+
+  /* N153: the state op=airun publishes (ai-runs R19) is where a resumed run continues. */
+  const hop = (out) => (out.trace || []).map((x) => `${x.step}>${x.to}`);
+  const ticks = (st) => st.log.filter((l) => l.op === "airuntick");
+  await reset(mf);
+  const fresh = await runOp(mf, { ...base, judgements: J() });
+  const freshTicks = ticks(await planeState(mf));
+  t("R11: a run whose published state is the empty scratch it opened with starts from the resume row: resume -> plan",
+    [hop(fresh.out).slice(0, 3), /names no step yet/.test(fresh.out.trace?.[1]?.why ?? "")],
+    [["gate-mode>resume", "resume>plan", "plan>fanout"], true]);
+  t("R11: every tick after the gate publishes the table's state at the step it moves to; the gate's publishes none",
+    [freshTicks.length, "state" in (freshTicks[0].body || {}),
+     freshTicks.slice(1).every((k, i) => k.body?.state?.step === fresh.out.trace[i + 1].to)],
+    [fresh.out.trace.length, false, true]);
+  t("R11: the published state carries the table's fields and never the run's mode, target, pass limit or budget",
+    Object.keys(freshTicks[1].body.state).sort(),
+    ["adjusted", "candidates", "holdings", "pass", "queue", "refusal", "refusedSubmission", "reportsRefused",
+     "reports", "rereads", "step", "submission", "targets"].sort());
+
+  /* Two segments of one run: the first stops at its step bound mid-pass, the second continues where it stopped. */
+  const REPORTS = [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1" }];
+  await reset(mf, { budget: wide });
+  const seg1 = await runOp(mf, { ...base, max_steps: 4, judgements: J(REPORTS) });
+  const mid = await planeState(mf);
+  t("R11: a segment stopped by its step bound mid-pass leaves the state at the step it did not reach",
+    [hop(seg1.out), seg1.out.ended, mid.state?.step, mid.state?.pass, mid.spawns],
+    [["gate-mode>resume", "resume>plan", "plan>fanout", "fanout>collect"], null, "collect", 0, 4]);
+  const seg2 = await (async () => {
+    await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/reset", { method: "POST", body: JSON.stringify({
+      mode: "check", maxPasses: 1, budget: wide, target: "INQ-1", skill: PACK.version, published: PUBLISHED_ANSWER,
+      state: mid.state, priorLog: mid.runlog }) });
+    return runOp(mf, { ...base, judgements: [{ reports: REPORTS }, { candidates: [] }, {}] });
+  })();
+  const after2 = await planeState(mf);
+  t("R11: the next segment continues at that state — resume -> collect, no second fan-out — and finishes the run",
+    [hop(seg2.out).slice(0, 3), after2.spawns, seg2.out.passes, seg2.out.ended?.bound, seg2.out.resumed_from],
+    [["gate-mode>resume", "resume>collect", "collect>compose"], 0, 1, "completed", mid.runlog.length]);
+  t("R11: …and the resume row says where it continued", /published its state at 'collect'/.test(seg2.out.trace?.[1]?.why ?? ""), true);
+
+  await reset(mf, { maxPasses: 1, state: { step: "plan", pass: 1, queue: [] } });
+  const done = await runOp(mf, { ...base, judgements: J() });
+  t("R11: the pass count is the state's: one pass done of one closes at the resume row, spawning nothing",
+    [hop(done.out), done.out.passes, done.out.ended?.bound, (await planeState(mf)).spawns],
+    [["gate-mode>resume", "resume>close"], 1, "completed", 0]);
+
+  await reset(mf, { mode: "investigate", state: { step: "dedup", pass: 0 } });
+  t("R11: the gate still comes first — a published state never carries a run past a mode that is not deployed",
+    hop((await runOp(mf, { ...base, judgements: J() })).out), ["gate-mode>close"]);
+
+  await reset(mf, { target: "INQ-1", state: { step: "compose", pass: 0, mode: "investigate", target: "INQ-OTHER",
+                                             maxPasses: 9, budget: { fetches: { allowed: 1, consumed: 1 } } } });
+  const foreign = await runOp(mf, { ...base, judgements: [{ candidates: [] }, {}] });
+  t("R11: mode, target, pass limit and budget in a published state have no effect; the record's hold",
+    [foreign.out.mode, foreign.out.target?.id, hop(foreign.out).slice(0, 2), foreign.out.ended?.bound, foreign.out.passes],
+    ["check", "INQ-1", ["gate-mode>resume", "resume>compose"], "completed", 1]);
+
+  for (const [label, st] of [["a step no row holds", { step: "wat", pass: 0 }], ["the gate", { step: "gate-mode", pass: 0 }],
+                             ["a negative pass", { step: "dedup", pass: -1 }], ["a state that is not an object", "dedup"]]) {
+    await reset(mf, { state: st });
+    const r = await runOp(mf, { ...base, judgements: J() });
+    t(`R11: a published state naming ${label} is not continued from: resume -> plan, and it says so`,
+      [hop(r.out)[1], /UNDETERMINED|names no step/.test(r.out.trace?.[1]?.why ?? "")], ["resume>plan", true]);
+  }
+  await reset(mf, { state: null });
+  const unread = await runOp(mf, { ...base, judgements: J() });
+  t("R11: a state the plane cannot read back (null) starts from the resume row, and says so",
+    [hop(unread.out)[1], /publishes no state/.test(unread.out.trace?.[1]?.why ?? "")], ["resume>plan", true]);
 }
 
 section("R12 · the target is the run's context, never a project id");
@@ -464,8 +536,9 @@ section("R13 · the rows, their declared edges, and nextStep held to them");
     for (const mode of ["check", "investigate", "", "wat"])
       for (const pass of [0, 1, 3]) for (const maxPasses of [0, 1, 3])
         for (const refusal of [null, { code: "X" }]) for (const adjusted of [false, true])
-          for (const q of [0, 1, 2]) for (const budget of [null, { fetches: { allowed: 1, consumed: 1 } }]) {
-            const d = nextStep({ step, mode, pass, maxPasses, refusal, adjusted, budget,
+          for (const q of [0, 1, 2]) for (const budget of [null, { fetches: { allowed: 1, consumed: 1 } }])
+          for (const resumeAt of [null, "collect", "adjust", "gate-mode", "wat"]) {
+            const d = nextStep({ step, mode, pass, maxPasses, refusal, adjusted, budget, resumeAt,
                                  queue: Array.from({ length: q }, (_, i) => ({ name: `c${i}` })) });
             if (!CONTROL_FLOW[step].to.includes(d.step) && !(step === "close" && d.step === "close")) illegal.push([step, d.step]);
           }
@@ -741,13 +814,13 @@ section("R24 · submit: one candidate at a time, as formed; a refusal to adjust;
   const f = await runOp(mf, { ...base, judgements: [...J([], [{ kind: "basis-version", name: "v1",
     description: "a reading the plane refuses" }]), { submission: { kind: "basis-version", name: "v1", description: "changed words, in full" } }] });
   t("R24: a refusal goes to adjust", (f.out.trace || []).some((x) => x.step === "submit" && x.to === "adjust"), true);
-  /* The plane's F10 keys a verbatim resubmit on the canonical submission: the same bytes in a second segment. */
-  await reset(mf, { target: "INQ-R24" });
-  const first = await runOp(mf, { ...base, max_steps: 9, judgements: [...J([], [{ kind: "basis-version", name: "v1", description: "TBD" }]), {}] });
-  t("R24: (the first segment stopped short of its close, so the run is still running)", first.out.ended, null);
-  const again = await runOp(mf, { ...base, judgements: [...J([], [{ kind: "basis-version", name: "v1", description: "TBD" }]), {}] });
+  /* The plane's F10 keys a verbatim resubmit on the canonical submission: the same bytes formed again in a later
+     pass (a second segment no longer re-forms them: it continues at the published state, R11). */
+  await reset(mf, { target: "INQ-R24", maxPasses: 2 });
+  const same = () => J([], [{ kind: "basis-version", name: "v1", description: "TBD" }]);
+  const again = await runOp(mf, { ...base, judgements: [...same(), {}, ...same(), {}] });
   t("R24: a verbatim resubmit the plane reports (repeated: true) is counted in verbatim_resubmits",
-    [again.out.verbatim_resubmits, (await planeState(mf)).repeats], [1, [1]]);
+    [again.out.verbatim_resubmits, (await planeState(mf)).repeats, again.out.passes], [1, [1], 2]);
 }
 
 section("R25 · adjust: resend only changed bytes; an unchanged submission dropped, the rest still written");
