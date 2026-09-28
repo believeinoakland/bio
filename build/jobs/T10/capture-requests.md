@@ -22,3 +22,25 @@ Found outside this module (P9), none changed by me:
 2. **Generated artifact stale:** `bio-plane/dist/bio-plane.bundled.mjs` (the plane's source changed under `src/capture-requests/`). Not rebuilt.
 3. **intent (a user of R43):** `pursuitOf` (its R14) can now read `requestById({request, viewer})` for exact outcomes instead of the bounded list (N169's reason).
 4. **Requirement marks that no longer hold** (for you to strike): the T10 marks on R6, R12, R15, R38, R43, R44; K103's on R39 (heldSha and the 304/identical-bytes arms are built and tested here and in the plane); K58's on R16 (drain in process, `op=acquire` refusing `via: capture-request` from every class, tested in the module and in the plane). Older marks whose ids are met and tested today: R7, R18, R19, R20, R21, R27, R29, R37, R40, R41, R42 (each named by a passing interface test; R19's C-28.17 and R42's C-28.18 are now also driven through the plane, N188 (2)).
+
+## J3 · COMPLETE
+
+**Entries applied** (on K333's readings):
+- **N141 / R38.** A new capture from the drain is promoted at `collected` (never higher) as an `information@2` bundle `INFO-<year>-<n>-requested` through `promotion.promote`, author `token:daemon`: bundle.md (Summary, Provenance Notes with R10's statement, a Session Log entry), `data/provenance.json` holding capture's document, the primary (and a render's shell, a streamed capture's parts) as blobs, one register row. A capture already held makes no bundle (R39). A refused promotion spends no id and changes nothing of the row; `captured[]` entries carry `promoted: {ok, bundle_id} | {ok: false, reason, detail}` (the promotion's own code relayed, none minted here). Verified in the running plane with provenance's registered check in place.
+- **N262.** `#fire` passes `origin` `{matched_sweep: target, deeming_actor: "run <run> under <plane>, paid by <claude>"}` and `heldSha` (the latest `captured` row of this address and render flag, via a new index `capture_requests_address`); capture's `unchanged: true` (304) and `held: true` answers are recorded as the held capture, `already_held: true`.
+- **N169 / R43.** `requestById({request, viewer})`: one row by key, as R24 and R25 answer it, gated by membership's predicate; null for a blank, unknown or unseen id; never throws.
+- **N223 / R44.** `onRequestFiled(module, fn)` through `listenerRefusal`, run in `MODULE_ORDER`; called once per written row with `{request, run, expires}`; `already: true` notifies nobody; throws and rejections isolated.
+- **N224 / R12.** `drain({…, rank})`: reads 10 × batch oldest first, offers `{kind: "request", id, waitingSince (ms), cadenceMs}`, takes its batch in the rank's order; a failing rank leaves oldest first.
+- **N188.** (1) the wait source's `holds`/`woken` walk in keyset pages, at most `CAPTURE_REQUEST_READ_MAX` rows per call; (2) `CAPTURE_FETCH_FAILED` and `CAPTURE_REQUEST_NOT_RETRYABLE` driven through the plane (`plane.test.mjs`); (3) `captureRequest(args, {viewer, caller, at})`: each request's `requested_at` and `expires` follow its own `at`; the op never reads one from a body.
+- Tests moved to the plane's shape: the fixture's storage answers workerd's cursor and refuses LIKE/GLOB patterns over 50 bytes (K313, K316); real `promotion` in the fixture. The module runs no LIKE/GLOB.
+
+**Deferred:** none.
+
+**Found in other modules:** J2 (legacy-tests: `capturerequests` and `leadslug` need re-anchoring; the plane bundle stale; intent may adopt R43; marks to strike).
+
+**Tests and checks:**
+- `node --test test/m/capture-requests/` — tests 61, pass 61, fail 0, todo 0 (was 53).
+- users: `test/m/scheduler/` 46/0; `test/m/intent/` 35/0; `d334-monitor-credential`, `rec168-capturerequest-principal` pass; legacy `bounds` 220/3, `derivation-bounds` 69/4, `hygiene` 1346/1 unchanged from `tranche/T10`; `capturerequests` 138/2 and `leadslug` 21/2 new, J2.
+- `checks/format.mjs` — 0 failures; `checks/architecture.mjs … capture-requests` — 0 failures; `checks/coverage.mjs … capture-requests` — 44 of 44 live ids, 0 failures; `checks/ownership.mjs … capture-requests tranche/T10` — legacy-store 0 lines, 0 failures.
+
+Size (session_019sbMfF1wWCjRTgXkdVuLBi): test runs 24, module lines 1286
