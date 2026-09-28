@@ -82,3 +82,20 @@ For your layer close: in the old battery, the fixtures that author connection gr
 - `ownership`: 12 files; legacy-store 15 lines added, 1,890 removed; legacy-checks 0 added, 229 removed; 0 failures. The 15 added lines are the import, the wiring, the delegates and the calls listed above.
 
 Size (session_01HtJxXzMSHvzQXnWcPtibm8): test runs 10 (module) and 22 (old-battery suites), module lines 1,369
+
+## J6 · COMPLETE
+
+**B4 applied.** I merged `tranche/T7` at `a21d88b177` and later, cleanly. `partitionIndependence` now reads the question's basis through `inquiry.basisFor(id, {limit: VERSION_LEGS_MAX + 1})`, bounded in SQL by inquiry's R16. A test asserts the bound is asked for. I also kept a slice at 501, so the read stays bounded even when a provider reads the basis whole.
+
+**One thing for basis-versions' re-pointing:** legacy-store's strength wiring line (`store.mjs`, constructor) passes `basisFor: (id) => this.basisFor(id)`, which drops the options. I did not edit that line, because a one-for-one change there fails the ownership check's net-removal rule. When basis-versions re-points it, `inquiry: inquiryOf(ctx)` (or `(id, o) => …basisFor(id, o)`) passes the limit through. Until then the slice holds the bound.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/strength/`: tests 40, pass 40, fail 0.
+- `format`: 0 failures.
+- `architecture`: 0 failures.
+- `coverage`: 27 of 27 live ids named by a test; 0 failures.
+- `ownership`: 4 files; legacy-store and legacy-checks 0 lines added, 0 removed against `tranche/T7`; 0 failures.
+
+J4 is settled by B3 (K187). My reading was already the one built.
+
+Size (session_01HtJxXzMSHvzQXnWcPtibm8): test runs 13 (module) and 22 (old-battery suites), module lines 1,371
