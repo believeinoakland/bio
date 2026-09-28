@@ -6,10 +6,10 @@
  * catalogue (C-27 and C-104, `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
- * `membership`, `content`, `connections`, `strength`, `citation` and `basis-versions` through their factories, and
- * `ai-runs` as an injected provider written to its Provides (K120): `deps.interim` builds it from what the legacy store
- * hands over until ai-runs is extracted (`interim.mjs`). It declares its tables to purge (R17, K23) and registers its
- * candidate source with basis-versions (R14; its R40).
+ * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation` and `basis-versions` through their
+ * factories; a run is read only through ai-runs' `runFor` (its R28) and a bound through its `boundOf` and
+ * `consumeBound` (its R29), never in this module's SQL (N194). It declares its tables to purge (R17, K23) and registers
+ * its candidate source with basis-versions (R14; its R40).
  *
  * WHAT THIS MODULE DOES NOT DO (§4, §10): it accepts, hides, rejects or makes current nothing; it captures and requests
  * nothing; it notifies nobody; it opens no run, writes no run and no bound row (R18), and it reads a run only through
@@ -22,6 +22,7 @@ import { connectionsOf } from "../connections/index.mjs";
 import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
 import { basisVersionsOf, versionsIn, versionAsWritten } from "../basis-versions/index.mjs";
+import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../airun.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
@@ -33,7 +34,6 @@ import { RUN_PRODUCTIONS_TABLES, migrateRunProductions } from "./schema.mjs";
 export { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECK_KEYS,
          EXTRACT_PROPOSE_CHECK_KEYS, ROWLESS_CODES } from "./checks.mjs";
 export { RUN_PRODUCTIONS_SCHEMA, RUN_PRODUCTIONS_TABLES, runProductionsOwns, migrateRunProductions } from "./schema.mjs";
-export { runProductionsInterim } from "./interim.mjs";
 
 export const RUN_PRODUCTIONS_MODULE = "run-productions";
 
@@ -827,8 +827,8 @@ export class RunProductions {
 const instances = new WeakMap();
 
 /** The one run-productions instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
- *  first call only. A provider not given is built by `deps.interim(host)` (the legacy store's hand-over,
- *  `interim.mjs`). At creation it declares its tables to purge (R17). */
+ *  first call only; a provider not given is reached through its factory. At creation it declares its tables to purge
+ *  (R17). */
 export function runProductionsOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -837,14 +837,8 @@ export function runProductionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const content = d.content || contentOf(host);
     const connections = d.connections || connectionsOf(host);
-    const interim = typeof d.interim === "function" ? d.interim(host) : {};
-    const need = (k) => {
-      const v = d[k] || interim[k];
-      if (!v) throw new Error(`run-productions: no ${k} provider (its Provides) was given`);
-      return v;
-    };
     p = new RunProductions({ storage: d.storage || host.storage, record, membership, content, connections,
-                             aiRuns: need("aiRuns"), strength: d.strength || strengthOf(host, { record, membership }),
+                             aiRuns: d.aiRuns || aiRunsOf(host), strength: d.strength || strengthOf(host, { record, membership }),
                              citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
                              now: d.now || null });

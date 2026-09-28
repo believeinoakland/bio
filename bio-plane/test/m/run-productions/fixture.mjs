@@ -7,7 +7,9 @@
    and content's own two providers (extraction's readings, provenance's `capturesOf`). Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
-   here in their stated columns. Every test drives `run-productions` at its interface. */
+   here in their stated columns, and extraction's own tables from its schema (so a test can show a production writes
+   none of them, N201). The storage answers at the plane's shape (K316): a cursor, and workerd's 50-byte cap on a LIKE
+   or GLOB pattern (K313). Every test drives `run-productions` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -16,6 +18,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { versionsIn } from "../../../src/basis-versions/index.mjs";
+import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -29,17 +32,41 @@ export const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r", PROJ = "PROJ-2026-00
 export const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", HIDDEN_PROJ = "PROJ-2026-0009-h";
 export const RUN = "RUN-1", XRUN = "RUN-X";
 
+/* workerd's `sql.exec` answers a cursor, never an array (`[0]` and `.length` of it are undefined), and refuses a LIKE
+   or GLOB pattern over 50 bytes ("LIKE or GLOB pattern too complex"), which node:sqlite does not (K313, K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
+  const patterns = [];
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      patterns.push(...literal, ...bound);
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
-    db, sql,
+    db, sql, patterns,
     transactionSync(fn) {
       const sp = `sp${n++}`;
       db.exec(`SAVEPOINT ${sp}`);
@@ -88,13 +115,16 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
 
 /** `real`: strength and citation are the extracted modules themselves (reached through their factories, as the
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
- *  capture ceilings the test sets in `w.ceilings`. */
-export function world({ strengthPair = null, real = false } = {}) {
+ *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
+ *  module, over its own tables). */
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   st.db.exec(CONTRACT_TABLES);
+  for (const t of EXTRACTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
+    if (t.trim()) st.db.exec(t);
   const clock = { now: NOW };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -167,7 +197,7 @@ export function world({ strengthPair = null, real = false } = {}) {
     onCandidates(module, fn) { candidateSources.push({ module, fn }); return { ok: true }; },
     basisVersions({ id, limit, viewer }) {
       note("basisVersions", { id, limit, viewer });
-      const rows = st.sql.exec(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord LIMIT ?`, id, limit);
+      const rows = [...st.sql.exec(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord LIMIT ?`, id, limit)];
       return { ok: true, total: rows.length, truncated: false,
                versions: rows.map((r) => ({ name: r.name, kind: r.kind, run: r.run, state: r.state,
                                             author: r.author_for_test ?? w.authors[`${id}|${r.name}`] ?? null,
@@ -215,7 +245,8 @@ export function world({ strengthPair = null, real = false } = {}) {
     strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
     citationOf(host, { record, membership, content });
   }
-  const p = runProductionsOf(host, { record, membership, content, connections, aiRuns,
+  const p = runProductionsOf(host, { record, membership, content, connections,
+                                     ...(aiRunsGiven === null ? {} : { aiRuns }),
                                      basisVersions,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
@@ -223,7 +254,7 @@ export function world({ strengthPair = null, real = false } = {}) {
   /** A bundle and its files as record-core holds them (its R37 read contract): a new `bundle_sha` on every write. */
   let rev = 0;
   const put = (id, type, text, { state = null, files = [] } = {}) => {
-    const cur = st.sql.exec(`SELECT row_version FROM bundles WHERE bundle_id=?`, id)[0];
+    const cur = [...st.sql.exec(`SELECT row_version FROM bundles WHERE bundle_id=?`, id)][0];
     const bsha = sha(`${id}#${++rev}#${text}`);
     const fm = { inquiry: "open", information: "collected" };
     if (cur) st.sql.exec(`UPDATE bundles SET bundle_sha=?, row_version=row_version+1 WHERE bundle_id=?`, bsha, id);
@@ -241,16 +272,16 @@ export function world({ strengthPair = null, real = false } = {}) {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
     citation, retired, connections, cites, basisVersions, candidateSources, ceilings,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
-    row: (qq, ...a) => st.sql.exec(qq, ...a)[0] ?? null,
-    rows: (qq, ...a) => st.sql.exec(qq, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
-    sha: (id) => st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)[0]?.bundle_sha ?? null,
-    md: (id) => st.sql.exec(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id)[0]?.content ?? null,
+    row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
+    rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
+    count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
+    sha: (id) => [...st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)][0]?.bundle_sha ?? null,
+    md: (id) => [...st.sql.exec(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id)][0]?.content ?? null,
     /** Every table's rows, to prove an act wrote nothing. */
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)]);
       return out;
     },
     inquiry(id, versions = []) { w.versions[id] = versions.slice(); return put(id, "inquiry", inquiryMd(id, versions)); },
