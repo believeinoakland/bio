@@ -110629,6 +110629,51 @@ var OPS2 = {
   intentproposals: { classes: ["admin", "member", "probe"], mutating: false },
   triage: { classes: ["admin", "member", "probe"], mutating: true },
   workobjective: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T8–T9 (layer 9, K248, K250, K263): THE ACTION LAYER'S OPS — standards (R1–R10), conformance (R1–R12), consequences (R1–R9),
+     filings (R1–R11) and escalation (R1–R16). THE ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES
+     each and the module refuses it BY NAME on the author stamped below (MACHINE_CANNOT_DECLARE_STANDARD,
+     MACHINE_CANNOT_DETERMINE, MACHINE_CANNOT_APPROVE, MACHINE_CANNOT_OPEN, …) — except the PROPOSALS (`standardpropose`,
+     `comparisonpropose`, `filingprepare`, `theorypropose`), which any credential may make, each labelled with who made
+     it and whether it is machine work; the cut must admit a machine for those. Each act rides `contribute` and is a
+     session op in both sets. THE READS are open to every class that reads the record, and what a caller may see is the
+     module's, on the viewer stamped below. The durable object constructs the modules and dispatches each of
+     these through its module's op map (N216, T9; escalation's ten named in the store's map). */
+  standarddeclare: { classes: ["admin", "member", "probe"], mutating: true },
+  standardpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  standardadopt: { classes: ["admin", "member", "probe"], mutating: true },
+  standard: { classes: ["admin", "member", "probe"], mutating: false },
+  standards: { classes: ["admin", "member", "probe"], mutating: false },
+  standardinforce: { classes: ["admin", "member", "probe"], mutating: false },
+  determine: { classes: ["admin", "member", "probe"], mutating: true },
+  comparisonpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  determination: { classes: ["admin", "member", "probe"], mutating: false },
+  determinations: { classes: ["admin", "member", "probe"], mutating: false },
+  comparison: { classes: ["admin", "member", "probe"], mutating: false },
+  consequencerecord: { classes: ["admin", "member", "probe"], mutating: true },
+  consequencerevise: { classes: ["admin", "member", "probe"], mutating: true },
+  addressedrecord: { classes: ["admin", "member", "probe"], mutating: true },
+  consequence: { classes: ["admin", "member", "probe"], mutating: false },
+  consequencesof: { classes: ["admin", "member", "probe"], mutating: false },
+  addressed: { classes: ["admin", "member", "probe"], mutating: false },
+  filingprepare: { classes: ["admin", "member", "probe"], mutating: true },
+  filingapprove: { classes: ["admin", "member", "probe"], mutating: true },
+  filingsent: { classes: ["admin", "member", "probe"], mutating: true },
+  counselpacket: { classes: ["admin", "member", "probe"], mutating: true },
+  counselpacketexport: { classes: ["admin", "member", "probe"], mutating: true },
+  theorypropose: { classes: ["admin", "member", "probe"], mutating: true },
+  counselpacketread: { classes: ["admin", "member", "probe"], mutating: false },
+  filingsfor: { classes: ["admin", "member", "probe"], mutating: false },
+  availableactions: { classes: ["admin", "member", "probe"], mutating: false },
+  escalationopen: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationattach: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationevaluate: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationadvance: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationdecline: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationend: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationsuspend: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationresume: { classes: ["admin", "member", "probe"], mutating: true },
+  escalation: { classes: ["admin", "member", "probe"], mutating: false },
+  escalationsdue: { classes: ["admin", "member", "probe"], mutating: false },
   /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
        and two reads, and the class lists say two things worth stating.
   
@@ -110944,6 +110989,41 @@ var INTENT_READS = [
   "intentproposals"
 ];
 var REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord"];
+var STANDARDS_ACTIONS = ["standarddeclare", "standardpropose", "standardadopt"];
+var STANDARDS_READS = ["standard", "standards", "standardinforce"];
+var CONFORMANCE_ACTIONS = ["determine", "comparisonpropose"];
+var CONFORMANCE_READS = ["determination", "determinations", "comparison"];
+var CONSEQUENCES_ACTIONS = ["consequencerecord", "consequencerevise", "addressedrecord"];
+var CONSEQUENCES_READS = ["consequence", "consequencesof", "addressed"];
+var FILINGS_ACTIONS = [
+  "filingprepare",
+  "filingapprove",
+  "filingsent",
+  "counselpacket",
+  "counselpacketexport",
+  "theorypropose"
+];
+var FILINGS_READS = ["counselpacketread", "filingsfor", "availableactions"];
+var ESCALATION_ACTIONS = [
+  "escalationopen",
+  "escalationattach",
+  "escalationevaluate",
+  "escalationadvance",
+  "escalationdecline",
+  "escalationend",
+  "escalationsuspend",
+  "escalationresume"
+];
+var ESCALATION_READS = ["escalation", "escalationsdue"];
+var QUERY_AUTHOR_ACTIONS = [...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS];
+var ACTION_LAYER_ACTIONS = [...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS];
+var ACTION_LAYER_READS = [
+  ...STANDARDS_READS,
+  ...CONFORMANCE_READS,
+  ...CONSEQUENCES_READS,
+  ...FILINGS_READS,
+  ...ESCALATION_READS
+];
 var RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
 var PROGRESSION_ACTIONS = [
   "connect",
@@ -111125,7 +111205,13 @@ var SESSION_OPS = {
     ...INTENT_ACTIONS,
     ...REEVALUATION_ACTIONS,
     "capturerequestretry",
-    /* T8 (actions R28): the risk-tier proposal, `actionlawspropose`'s route, in BOTH sets. */
+    /* T8: the action layer's acts and actions' risk-tier proposal (R28), a member's own acts in their
+       own name (the proposal `actionlawspropose`'s route), in BOTH sets. */
+    ...STANDARDS_ACTIONS,
+    ...CONFORMANCE_ACTIONS,
+    ...CONSEQUENCES_ACTIONS,
+    ...FILINGS_ACTIONS,
+    ...ESCALATION_ACTIONS,
     "actionriskpropose",
     /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
        and a MEMBER is a signed-in person — not the MEMBER_TOKEN
@@ -111218,6 +111304,11 @@ var SESSION_OPS = {
     ...INTENT_ACTIONS,
     ...REEVALUATION_ACTIONS,
     "capturerequestretry",
+    ...STANDARDS_ACTIONS,
+    ...CONFORMANCE_ACTIONS,
+    ...CONSEQUENCES_ACTIONS,
+    ...FILINGS_ACTIONS,
+    ...ESCALATION_ACTIONS,
     "actionriskpropose",
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
@@ -111455,6 +111546,33 @@ var NEEDS = {
   actionlawspropose: "contribute",
   /* T8 (actions R28): proposing a tier takes `actionlawspropose`'s capability, for its reason. */
   actionriskpropose: "contribute",
+  /* T8 (layer 9): each of the action layer's acts writes the working record — a standard or a proposal, a
+     determination or a comparison, a consequence or its addressing, a filing draft, approval or sending, a counsel
+     packet or its export, an escalation's stage — so each rides `contribute`, `actioncorrespond`'s capability and the
+     version acts' reason, and NO fifth capability token is minted (CAPABILITIES.md §4). Who may act — a named member,
+     joined to the project — is the module's, asked of the stamped author: who a session IS, not a capability. */
+  standarddeclare: "contribute",
+  standardpropose: "contribute",
+  standardadopt: "contribute",
+  determine: "contribute",
+  comparisonpropose: "contribute",
+  consequencerecord: "contribute",
+  consequencerevise: "contribute",
+  addressedrecord: "contribute",
+  filingprepare: "contribute",
+  filingapprove: "contribute",
+  filingsent: "contribute",
+  counselpacket: "contribute",
+  counselpacketexport: "contribute",
+  theorypropose: "contribute",
+  escalationopen: "contribute",
+  escalationattach: "contribute",
+  escalationevaluate: "contribute",
+  escalationadvance: "contribute",
+  escalationdecline: "contribute",
+  escalationend: "contribute",
+  escalationsuspend: "contribute",
+  escalationresume: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -113039,7 +113157,7 @@ var index_default = {
          names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
       "projectrequests"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || op === "actionriskpropose" || op === "monitoring" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -113107,6 +113225,11 @@ var index_default = {
       inner.searchParams.set(
         "proposer",
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (QUERY_AUTHOR_ACTIONS.includes(op))
+      inner.searchParams.set(
+        "author",
+        viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (op === "contentmint")
       inner.searchParams.set(
@@ -113347,6 +113470,20 @@ var index_default = {
             if (!viaSession)
               b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
           }
+          passBody = JSON.stringify(b);
+        }
+      } catch {
+      }
+    }
+    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          const who2 = viaSession ? sessIdentity : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          delete b.author;
+          delete b.proposer;
+          if (op === "standardpropose") b.proposer = who2;
+          else b.author = who2;
           passBody = JSON.stringify(b);
         }
       } catch {

@@ -10,7 +10,7 @@
 - **reevaluation** · N239.
 - **publication** · N210; N237 (its share); N238 (its share); N230 (its share).
 - **publication**, **ratification** · N256. **case-authoring** · N259. **publication** · N260. **consequences** · N257.
-- **conformance** · N233. **standards** · N220; N267. **actions** · N231 (its share); N237 (its share); N246; N261. Layer-9 sites of N217 (K275).
+- **conformance** · N233. **standards** · N220; N267; N269. **actions** · N231 (its share); N237 (its share); N246; N261. Layer-9 sites of N217 (K275).
 - **monitoring** · N222; N266 (its share); N224 (its share); N230 (its share); N247 (its share). **scheduler** · N223's and N224's consumers.
 - **legacy-store** · N266 and N267 (their legacy-store shares).
 
