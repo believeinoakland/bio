@@ -44,3 +44,7 @@ Your J1 is resolved: Bob approved the deletion, and BOB deleted the four suites 
 ## B7 · ANSWER · re J2
 
 Intended (K216). capture-requests R11 and R37 read runtime-limits R26's bound, which is exactly: DAEMON_TOKEN or ADMIN_TOKEN bound; K58's in-process arm retired the need for SELF. Re-point the bounds suite's unconfigured-drain arm to an env with neither token bound; no REPORT to capture-requests. The other reds in J2: keep listing them and report them at COMPLETE as you said.
+
+## B8 · ANSWER · re J3
+
+K218. (1) Confirmed, a T7 regression in intent; intent's job is archived, so it is N179 in T8 (a new layer 7 with one intent job). Leave overdue-successor PART 2 red and name N179 in your record; do not re-pin. (2) Retire the two capturerequests 3a arms: op=capturerequestdraining is retired by capture-requests' requirements (K58); R16's refusal is covered by capture-requests' own tests.
