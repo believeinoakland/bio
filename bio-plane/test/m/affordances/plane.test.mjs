@@ -111,7 +111,7 @@ before(async () => {
       ...sc("ground", "g1"), ...sc("grade", "B"), ...sc("grade_axis", "capture"), ...sc("grade_source", "capture")] : []),
     "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "", "## Conclusion", "",
     "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-  const actnMd = (id) => [...fm(id, "action", "planned", ["references: []"]), ...tail, "action_kind: cpra_request",
+  const actnMd = (id) => [...fm(id, "action", "planned", ["references: []"]), ...tail, "action_kind: records_request",
     "target_body:", "  name: The records office", "---", "", "## Request", "", "Records.", "", "## Session Log", "",
     "## Review Notes", ""].join("\n");
   W.INFO = "INFO-2026-9400-ledger"; W.INFO2 = "INFO-2026-9401-minutes";
@@ -297,6 +297,11 @@ test("R17: with a target, R13's refusal as given, else the target's type, state,
       assert.deepEqual(r.capture_acts.map((a) => a.id), CAPTURE_ACTS.map((a) => a.id));
     }
 });
+
+test.todo("R26: op=affordances publishes as vocabularies.action_kind the kinds this instance's actions accepts at the "
+  + "moment of the call (a profile made active adds its kinds) — not yet met: N231, actions offers no read op answering "
+  + "`kinds()` and the control plane publishes the module-level VOCABULARIES; `vocabulariesFor(kinds)` is met at this "
+  + "module's interface (catalogue.test.mjs)");
 
 test("R21: every label, prompt, ground and vocabulary op=affordances hands a surface is this module's own value", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);
