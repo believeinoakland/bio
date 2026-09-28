@@ -1,5 +1,5 @@
-/* N34's measurement, re-runnable: the JPX decoder's live memory against its
- * working set, over real OpenJPEG codestreams of page sizes.
+/* N34's and N75's measurement, re-runnable: the JPX decoder's live memory
+ * against its output, over real OpenJPEG codestreams of page sizes.
  *
  *   node pdf-worker/test/codecs/jpx-memory.probe.mjs
  *
@@ -9,7 +9,9 @@
  * external memory every 2 ms (`worker.getHeapStatistics()`), so the figure is
  * the decode's own isolate, heap and ArrayBuffers together, with garbage not
  * yet collected included, as an isolate's memory is. Recorded in
- * build/jobs/T4/image-codecs.md (2026-09-27). */
+ * build/jobs/T4/image-codecs.md (2026-09-27, the whole-plane decode) and
+ * build/jobs/T9/image-codecs.md (2026-09-28, the line-based decode, N75: the
+ * working set is the 8-bit output and under 2 MB of buffers for these). */
 import "../../../bio-plane/test/sandbox.mjs";
 
 import { Worker, isMainThread, workerData, parentPort } from "node:worker_threads";
@@ -21,12 +23,13 @@ import { join } from "node:path";
 const IMAGES = [
   [1280, 1680, "L", false, null], [1280, 1680, "RGB", true, null], [1700, 2200, "RGB", true, null],
   [2000, 2600, "RGB", true, null], [2550, 3300, "L", false, null], [2550, 3300, "RGB", true, null],
-  [2550, 3300, "RGB", false, null], [2550, 3300, "RGB", true, 1024],
+  [2550, 3300, "RGB", false, null], [2550, 3300, "RGB", true, 1024], [3500, 4600, "L", true, null],
+  [4400, 4600, "RGB", true, null],
 ];
 
 if (!isMainThread) {
   const { decodeJpx } = await import("../../src/jpxdecode.mjs");
-  const d = new Uint8Array(readFileSync(workerData));
+  const d = readFileSync(workerData);             // a Buffer is a Uint8Array: no second copy
   await new Promise((r) => setTimeout(r, 50));
   const t0 = Date.now();
   try {
@@ -52,11 +55,11 @@ for w, h, mode, irr, tile in json.loads(sys.argv[1]):
     im.save(sys.argv[2] + f"/{w}x{h}-{mode}-{'97' if irr else '53'}{'-t' + str(tile) if tile else ''}.j2k", "JPEG2000", **kw)
 `;
   execFileSync("python3", ["-c", py, JSON.stringify(IMAGES), dir]);
-  console.log("image | working set MB | live peak above idle MB (heap, external) | result");
+  console.log("image | output MB | live peak above idle MB (heap, external) | result");
   for (const [w, h, mode, irr, tile] of IMAGES) {
     const f = join(dir, `${w}x${h}-${mode}-${irr ? "97" : "53"}${tile ? `-t${tile}` : ""}.j2k`);
     const nc = mode === "RGB" ? 3 : 1;
-    const ws = tile ? nc * tile * tile * 4 + w * h * nc : nc * w * h * 4;
+    const ws = w * h * nc;
     const worker = new Worker(new URL(import.meta.url), { workerData: f });
     let base = null, peak = 0, heap = 0, ext = 0;
     const iv = setInterval(async () => {
