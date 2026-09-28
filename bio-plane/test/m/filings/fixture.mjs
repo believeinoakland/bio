@@ -10,10 +10,7 @@ import { filingsOf, filingsOps } from "../../../src/filings/index.mjs";
 import { consequencesModule } from "../../../src/consequences/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
-import { strengthOf } from "../../../src/strength/index.mjs";
-import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
-import { legCapped } from "../../../src/inquiry/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
@@ -81,12 +78,9 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const deps = { record: w.record, membership: w.membership, promotion: w.promotion, content: w.content, now };
   const standards = standardsOf(w.host, deps);
   standards.migrate();
-  const strength = strengthOf(w.host, { record: w.record, membership: w.membership, now,
-    inquiry: { basisFor: (id, o) => w.k.basisFor(id, o), earned: (e, t) => w.k.earned(e, t), legCapped,
-               subjectEntityOf: (id) => w.k.subjectEntityOf(id) } });
-  const reevaluation = reevaluationOf(w.host, { ...deps, inquiry: w.k, strength, provenance: w.prov, basisVersions: w.basisVersions });
-  const conformance = conformanceOf(w.host, { ...deps, inquiry: w.k, strength, reevaluation, publication: w.p, standards });
-  const consequences = consequencesModule(w.host, { ...deps, conformance, provenance: w.prov, inquiry: w.k, strength });
+  /* strength and reevaluation (which filings does not use) are reached through conformance's own factories. */
+  const conformance = conformanceOf(w.host, { ...deps, inquiry: w.k, publication: w.p, standards });
+  const consequences = consequencesModule(w.host, { ...deps, conformance, provenance: w.prov, inquiry: w.k });
   const actions = actionsOf(w.host, { ...deps, retrieval: null, conformance, now: () => Date.parse(w.clock.now) });
   const groupRef = { value: group };
   const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content,
