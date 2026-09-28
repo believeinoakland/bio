@@ -73,8 +73,8 @@
     },
     {
       "path": "../bio-plane/src/calibration/index.mjs",
-      "bytes": 28653,
-      "sha256": "4292df90e30e3f9f3c4939c5131a368de8f247527d59eeed1859fb9249079fba"
+      "bytes": 28780,
+      "sha256": "923590f947f33784da4e6211360519a01661628e25467d592dc8071aa53cbe75"
     },
     {
       "path": "../bio-plane/src/calibration/schema.mjs",
@@ -143,18 +143,18 @@
     },
     {
       "path": "../bio-plane/src/content/extent.mjs",
-      "bytes": 25418,
-      "sha256": "5a193199f571c1426eba28c08781bea9eb1e42eab5d4f73d9f7d2902f09d9407"
+      "bytes": 25393,
+      "sha256": "1a1116634c485acc9ca9bddb64933eeaa0bc65ab088502025d9732b6ebdb2d13"
     },
     {
       "path": "../bio-plane/src/content/index.mjs",
-      "bytes": 87088,
-      "sha256": "6c175e9e6a8a1196244b0f9f86f3102a599458ddef1202337e2f07a073da11e2"
+      "bytes": 89877,
+      "sha256": "89ac9a806c1979e8f27192b38a4f06d4db49eb4d3f5003550ffe44b85669f290"
     },
     {
       "path": "../bio-plane/src/content/notice.mjs",
-      "bytes": 12143,
-      "sha256": "6e92f7aa407070180e99e77c3bc54271a07f95dcdf0119e84afbb834e4031156"
+      "bytes": 12975,
+      "sha256": "775bbd66a27f9eb8bf7a8589218ca59050c8e9b43bebf3ea046aae8dfff872b0"
     },
     {
       "path": "../bio-plane/src/content/schema.mjs",
@@ -213,13 +213,13 @@
     },
     {
       "path": "../bio-plane/src/extraction/index.mjs",
-      "bytes": 64686,
-      "sha256": "c5e01e52410e2fe4addc5fc06919a753b4b8bd9c9675000e3bd1aff5f18ea64a"
+      "bytes": 65427,
+      "sha256": "de902988ada56af71e3bd1cfa0aff9b8056f8a87511123bc4b3d7014d812fb2a"
     },
     {
       "path": "../bio-plane/src/extraction/pipeline.mjs",
-      "bytes": 65415,
-      "sha256": "251f991a42490ff75452f3976b34291b3436ab240fc2d2bfdf90cc0d76dc9a17"
+      "bytes": 66688,
+      "sha256": "eb6af3f3d6aff59673323455ad56d5683e7091395910a6cabd0d430b1ad0cd26"
     },
     {
       "path": "../bio-plane/src/extraction/schema.mjs",

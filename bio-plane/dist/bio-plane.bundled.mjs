@@ -17932,8 +17932,8 @@ var Promotion = class {
         groupStamp = recorded;
         createdGroup = recorded;
       } else {
-        const said = sentFm ? sentFm.group : void 0;
-        const stated = [said, envelope.group].find((x) => typeof x === "string" && x.trim() !== "");
+        const said2 = sentFm ? sentFm.group : void 0;
+        const stated = [said2, envelope.group].find((x) => typeof x === "string" && x.trim() !== "");
         createdGroup = stated ? stated.trim() : recorded;
         if (!createdGroup)
           return refusal2(
@@ -18141,20 +18141,20 @@ var Promotion = class {
           }
         }
         if (stateContradiction) {
-          const [field, said, asked] = stateContradiction;
+          const [field, said2, asked] = stateContradiction;
           return refusal2(
             "ENVELOPE_STATE_DISAGREES",
-            `the document being promoted says ${field} '${said === null ? "null" : cut(said, 40)}' and this request's meta says '${asked === null ? "null" : cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
-            { field, document_value: said === null ? null : cut(said, 80), envelope_value: asked === null ? null : cut(asked, 80) }
+            `the document being promoted says ${field} '${said2 === null ? "null" : cut(said2, 40)}' and this request's meta says '${asked === null ? "null" : cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
+            { field, document_value: said2 === null ? null : cut(said2, 80), envelope_value: asked === null ? null : cut(asked, 80) }
           );
         }
         const dateContradiction = envelopeCreated !== null && documentCreated !== null && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated] : envelopeLastUpdated !== null && documentLastUpdated !== null && !sameInstant(envelopeLastUpdated, documentLastUpdated) ? ["last_updated", documentLastUpdated, envelopeLastUpdated] : null;
         if (dateContradiction) {
-          const [field, said, asked] = dateContradiction;
+          const [field, said2, asked] = dateContradiction;
           return refusal2(
             "ENVELOPE_DATES_DISAGREE",
-            `the document being promoted says ${field} '${cut(said, 40)}' and this request's meta says '${cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
-            { field, document_value: cut(said, 80), envelope_value: cut(asked, 80) }
+            `the document being promoted says ${field} '${cut(said2, 40)}' and this request's meta says '${cut(asked, 40)}'. The record goes by the document. Nothing was written.`,
+            { field, document_value: cut(said2, 80), envelope_value: cut(asked, 80) }
           );
         }
       }
@@ -33617,7 +33617,7 @@ var Calibration = class {
   constructor({ sql, record, order, now } = {}) {
     this.#sql = sql;
     this.#record = record;
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.#now = typeof now === "function" ? now : () => Date.now();
   }
   #rows(q6, ...a) {
@@ -33705,21 +33705,12 @@ var Calibration = class {
   }
   /* ---------------------------------------------------------------- R12: the listeners */
   /** R12: a later module registers once; after each calibration `calibrationRecord` records, every listener runs in
-   *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`. */
+   *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`.
+   *  A malformed or repeated registration is refused through membership's `listenerRefusal` (its R81; N202), the one
+   *  site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
   onCalibration(module, fn) {
-    if (!nonEmpty(module) || typeof fn !== "function")
-      return {
-        ok: false,
-        reason: "LISTENER_MALFORMED",
-        detail: "a listener names the module that registers it and its function"
-      };
-    if (this.#listeners.some((l) => l.module === module))
-      return {
-        ok: false,
-        reason: "LISTENER_DECLARED",
-        module,
-        detail: `${module} has already registered its calibration listener`
-      };
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
     this.#listeners.push({ module, fn, seq: this.#listeners.length });
     this.#listeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
@@ -37903,8 +37894,8 @@ var LAYER = {
 };
 async function assess(before, after, ctx) {
   const trail = [];
-  const note = (layer, said, detail) => {
-    trail.push({ layer, said, ...detail || {} });
+  const note = (layer, said2, detail) => {
+    trail.push({ layer, said: said2, ...detail || {} });
   };
   const text3 = pipelineText(after);
   const id = identify({ ...ctx, text: text3 });
@@ -39283,16 +39274,16 @@ function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
     fetched_address: fetchedAddress,
     fetched_record: fetched.length ? fromExport && fromPage ? "both" : fromExport ? "export" : fromPage ? "page" : "other" : "none"
   };
-  const said = htmlSaid ? "the register's profile says HTML" : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
+  const said2 = htmlSaid ? "the register's profile says HTML" : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
   if (fromExport && !fromPage) return {
     verdict: htmlSaid ? "undetermined" : "export",
     ...facts,
-    basis: htmlSaid ? `the plane recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other` : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}`
+    basis: htmlSaid ? `the plane recorded fetching the export address, but ${said2}; the two disagree and neither is taken over the other` : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said2}`
   };
   if (fromPage && !fromExport) return {
     verdict: docSaid ? "undetermined" : "shell",
     ...facts,
-    basis: docSaid ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other` : `the plane recorded fetching ${fetchedAddress}, not the export address \u2014 Google serves the application there, not the document \u2014 and ${said}`
+    basis: docSaid ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said2}; the two disagree and neither is taken over the other` : `the plane recorded fetching ${fetchedAddress}, not the export address \u2014 Google serves the application there, not the document \u2014 and ${said2}`
   };
   if (fromExport && fromPage) return {
     verdict: "undetermined",
@@ -39302,17 +39293,17 @@ function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
   if (row2.locator === drive.exportAddress && !htmlSaid) return {
     verdict: "export",
     ...facts,
-    basis: `the register row names the export address and ${said}; the plane holds no retrieval record for these bytes`
+    basis: `the register row names the export address and ${said2}; the plane holds no retrieval record for these bytes`
   };
   if (htmlSaid && row2.locator !== drive.exportAddress) return {
     verdict: "shell",
     ...facts,
-    basis: `${said} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone`
+    basis: `${said2} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone`
   };
   return {
     verdict: "undetermined",
     ...facts,
-    basis: `the plane holds no direct retrieval record for these bytes and ${said}`
+    basis: `the plane holds no direct retrieval record for these bytes and ${said2}`
   };
 }
 
@@ -39344,32 +39335,6 @@ function needsTier2(text0) {
   if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
   return true;
 }
-function carryImageUnread(tier1, merged) {
-  if (!merged || !merged.ok || !Array.isArray(merged.replaced) || !merged.replaced.length) return merged;
-  const t1 = new Map((tier1 && Array.isArray(tier1.pages) ? tier1.pages : []).filter((p) => p && Number.isInteger(p.page)).map((p) => [p.page, p]));
-  const text3 = merged.text;
-  if (!text3 || !Array.isArray(text3.pages)) return merged;
-  let added = 0;
-  const same = (a, b) => a && b && a.reason === b.reason && JSON.stringify(a.rect ?? null) === JSON.stringify(b.rect ?? null);
-  const pages = text3.pages.map((p) => {
-    if (!p || !merged.replaced.includes(p.page)) return p;
-    const own2 = Array.isArray(p.undetermined) ? p.undetermined : [];
-    const had = t1.get(p.page);
-    const carry = (had && Array.isArray(had.undetermined) ? had.undetermined : []).filter((u) => u && u.reason === "image_unread" && !own2.some((o) => same(o, u)));
-    if (!carry.length) return p;
-    added += carry.length;
-    return { ...p, undetermined: [...own2, ...carry] };
-  });
-  if (!added) return merged;
-  const pageless = (Array.isArray(text3.undetermined) ? text3.undetermined : []).filter((m) => m && !Number.isInteger(m.page));
-  const undetermined = [...pages.flatMap((p) => p && Array.isArray(p.undetermined) ? p.undetermined : []), ...pageless];
-  return { ...merged, text: {
-    ...text3,
-    pages,
-    undetermined,
-    counts: { ...text3.counts || {}, undetermined: undetermined.length }
-  } };
-}
 async function tier2Escalate(env, { sha, storeName, text: text3 }) {
   const out = { outcome: "not_needed", text: text3, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
   if (!needsTier2(text3)) return out;
@@ -39389,7 +39354,7 @@ async function tier2Escalate(env, { sha, storeName, text: text3 }) {
       return out;
     }
     out.memberNotes = (Array.isArray(t2.notes) ? t2.notes : []).filter((n) => typeof n === "string");
-    const m = carryImageUnread(text3, mergeTier2Text(text3, t2.text));
+    const m = mergeTier2Text(text3, t2.text);
     if (m.ok) {
       out.outcome = "merged";
       out.text = text3 && text3.producer && !m.text.producer ? { ...m.text, producer: text3.producer } : m.text;
@@ -39504,16 +39469,16 @@ function mergeTier3Text(base, ocr, eligible, { kept = [] } = {}) {
   for (const b of usable) {
     const hit = byPage.get(b.page);
     const got = hit && hit.ocr;
-    const said = got && typeof got.text === "string" ? got.text : "";
+    const said2 = got && typeof got.text === "string" ? got.text : "";
     const fromOcr = got && Array.isArray(got.undetermined) ? got.undetermined : [];
     if (got && hit.append) {
       filled.push(b.page);
       appended.push(b.page);
-      const already = keptSet.has(b.page) && said.startsWith(b.text);
+      const already = keptSet.has(b.page) && said2.startsWith(b.text);
       pages.push({
         ...b,
-        text: already ? said : said.length ? `${b.text}
-${said}` : b.text,
+        text: already ? said2 : said2.length ? `${b.text}
+${said2}` : b.text,
         undetermined: [
           ...(Array.isArray(b.undetermined) ? b.undetermined : []).filter((u) => !discharged(u)),
           ...fromOcr
@@ -39521,7 +39486,7 @@ ${said}` : b.text,
       });
     } else if (got) {
       filled.push(b.page);
-      pages.push({ page: b.page, text: said, undetermined: fromOcr });
+      pages.push({ page: b.page, text: said2, undetermined: fromOcr });
     } else {
       pages.push(b);
     }
@@ -39915,6 +39880,40 @@ var readEntities = (list2) => (Array.isArray(list2) ? list2 : []).map((e) => ({
   source: readingSource(e && e.source),
   ...Array.isArray(e && e.occurrences) ? { occurrences: e.occurrences } : {}
 })).filter((e) => e.key != null || e.kind != null);
+function textCountsOf(text3) {
+  if (text3 == null) return null;
+  if (typeof text3 === "string")
+    return { text_chars: text3.length, text_glyphs: glyphCount(text3), text_undetermined: null };
+  if (typeof text3 !== "object") return null;
+  const c = decodeView(text3).counts;
+  const n = (v) => Number.isInteger(v) && v >= 0 ? v : null;
+  return {
+    text_chars: n(c && c.chars),
+    text_glyphs: typeof text3.document === "string" ? glyphCount(text3.document) : null,
+    text_undetermined: n(c && c.undetermined)
+  };
+}
+function pageBoxesFrom(v) {
+  if (!v || typeof v !== "object" || !Array.isArray(v.boxes) || !Array.isArray(v.of_page)) return null;
+  const fin = (x) => typeof x === "number" && Number.isFinite(x);
+  const boxes2 = [];
+  for (const b of v.boxes) {
+    const m = b && Array.isArray(b.media_box) && b.media_box.length === 4 && b.media_box.every(fin) ? b.media_box : null;
+    if (!m || !(m[2] > m[0] && m[3] > m[1])) return null;
+    boxes2.push({
+      media_box: m.slice(),
+      w: m[2] - m[0],
+      h: m[3] - m[1],
+      rotate: [0, 90, 180, 270].includes(b.rotate) ? b.rotate : null
+    });
+  }
+  const of_page = [];
+  for (const i of v.of_page) {
+    if (i !== null && !(Number.isInteger(i) && i >= 0 && i < boxes2.length)) return null;
+    of_page.push(i);
+  }
+  return { boxes: boxes2, of_page };
+}
 function readingFromWire({
   wired,
   docType,
@@ -40159,7 +40158,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       readDialect = void 0;
     }
   } else if (wireable) {
-    let i2text = null, wiredTier = null, pageCount = null, pdfPaints = null, wired = null;
+    let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain2 = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false;
     try {
       if (typeof entry.text === "function") {
@@ -40175,6 +40174,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           i2text = st.text || null;
           wiredTier = 1;
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+          pageBoxes = pageBoxesFrom(st.pageBoxes);
           pdfPaints = {
             images: Array.isArray(st.images) ? st.images : null,
             why: typeof st.imagesWhy === "string" ? st.imagesWhy : null
@@ -40231,9 +40231,10 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       }
       reading = wired ? readingFromWire({ wired, docType, chain: chain2, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`].filter(Boolean).join(" \u2014 ")) };
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+      reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), so nothing is claimed about its text`, { page_count: null, container_extent: null });
+      reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), so nothing is claimed about its text`, { page_count: null, page_boxes: null, container_extent: null });
       textUnits = null;
       textUnitsOverBound = 0;
       textUnitsSkipped = null;
@@ -40244,7 +40245,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       doc,
       docType,
       `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
-      { page_count: null, container_extent: null }
+      { page_count: null, page_boxes: null, container_extent: null }
     );
   }
   reading.provenance = await readingProvenance({
@@ -40255,6 +40256,10 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     planeVersion,
     member
   });
+  {
+    const n = textCountsOf(classifiedText);
+    if (n) Object.assign(reading, n);
+  }
   if (readDialect !== void 0) reading.dialect = readDialect;
   return {
     reading,
@@ -40278,7 +40283,6 @@ var TEXT_SOURCE_LIMIT_DEFAULT = 200;
 var TEXT_SOURCE_LIMIT_MAX = 5e3;
 var READING_HISTORY_SHOWN = 16;
 var OCCURRENCES_PER_REF = 256;
-var LISTENER_DECLARED = "LISTENER_DECLARED";
 var EXTRACTION_TABLES = Object.freeze([
   "readings",
   "reading_refs",
@@ -40489,15 +40493,17 @@ var Extraction = class {
     this.#calListening = !(r && r.ok === false);
     return this.#calListening;
   }
-  /** R24: a later module registers once; its function runs after each write, in the same transaction, in the
-   *  modules' total order (the host registers them in that order), with `unitsBefore` (the capture's indexed units
-   *  before the write, null when never indexed), and a throw fails the whole write. */
+  /** R24: a later module registers once, a malformed or repeated registration refused by membership's
+   *  `listenerRefusal` (its R81, N202: the one site of LISTENER_MALFORMED and LISTENER_DECLARED); its function runs
+   *  after each write, in the same transaction, in `MODULE_ORDER` (membership R83) whatever order they registered
+   *  in, with `unitsBefore` (the capture's indexed units before the write, null when never indexed), and a throw
+   *  fails the whole write. */
   onReading(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: LISTENER_DECLARED, module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn });
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
+    const i = MODULE_ORDER.indexOf(module);
+    this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
     return { ok: true, module };
   }
   /* ---- reading (R1–R18) ---- */
@@ -41099,6 +41105,8 @@ var Extraction = class {
       chain: chain2,
       pageCount: Number.isInteger(pc) && pc > 0 ? pc : null,
       ...reading && Object.prototype.hasOwnProperty.call(reading, "container_extent") ? { containerExtent: reading.container_extent } : {},
+      /* N100: the boxes as R13 stored them: absent never stored, null stored null. */
+      ...reading && Object.prototype.hasOwnProperty.call(reading, "page_boxes") ? { pageBoxes: reading.page_boxes } : {},
       textContainer: reading && typeof reading.text_container === "string" ? reading.text_container : null,
       captureFormat: typeof row2.capture_format === "string" ? row2.capture_format : null
     };
@@ -41398,6 +41406,11 @@ var Extraction = class {
           tier3Candidate: t3.stillWanting
         });
         reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0 ? structure.pages : Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null;
+        {
+          const pb = pageBoxesFrom(structure.pageBoxes);
+          if (pb) reading.page_boxes = pb;
+          else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes;
+        }
         if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
         reading.provenance = await readingProvenance({
           text: t3.i2text,
@@ -41406,6 +41419,10 @@ var Extraction = class {
           container: "pdf",
           planeVersion: e.VERSION || null
         });
+        {
+          const n = textCountsOf(t3.i2text);
+          if (n) Object.assign(reading, n);
+        }
         structureChain = chain2;
         reading.reextracted = {
           at: stampInstant("second"),
@@ -41594,11 +41611,6 @@ var ENVELOPE_ITEM_KINDS = Object.freeze({
 });
 var CONTENT_CITED_AS_ENVELOPE = "envelope";
 var ENVELOPE_ANCHOR_KINDS = Object.freeze(["doc-para", "slide-shape"]);
-var EXTENT_USER_SPACE = "user";
-function extentSpace(extent) {
-  const v = extent && typeof extent === "object" ? extent.space : void 0;
-  return v === void 0 || v === null ? EXTENT_USER_SPACE : String(v);
-}
 var CONTENT_EXTENT_OWN_CHECKS = Object.freeze({
   CONTENT_EXTENT_NOT_USER_SPACE: {
     check: "C-45.13",
@@ -41741,10 +41753,10 @@ function checkContentExtent2(extent, ctx = {}) {
   const e = isObj5(extent) ? extent : null;
   if (!e || e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, e.kind))
     return checkContentExtent(extent, ctx);
-  if ((e.kind === "pdf-page" || e.kind === "image") && extentSpace(e) !== EXTENT_USER_SPACE)
+  if ((e.kind === "pdf-page" || e.kind === "image") && rectSpace(e) !== RECT_USER_SPACE)
     return refusal5(
       "CONTENT_EXTENT_NOT_USER_SPACE",
-      `this ${e.kind} extent states its rect in space '${extentSpace(e).slice(0, 40)}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read`
+      `this ${e.kind} extent states its rect in space '${String(e.space).slice(0, 40)}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read`
     );
   const citedAs = contentCitedAs2(e);
   if (citedAs === CONTENT_CITED_AS_ENVELOPE !== (e.kind === "envelope"))
@@ -42152,11 +42164,25 @@ function dice(a, b) {
   for (const [w, c] of small) shared += Math.min(c, big.get(w) || 0);
   return 2 * shared / (a.n + b.n);
 }
+var said = (s) => s || "never recorded";
+function heldTextAt(extent, held) {
+  if (extent.kind === "document") {
+    if (held.state !== "whole" || !held.units.length || held.units.some((u2) => u2.truncated))
+      return { text: null, reason: "cited_text_partial", why: `the citation is to the whole document, and the record does not hold the cited version's text whole (its index reads ${said(held.state)}), so there is no whole text` };
+    return { text: held.units.map((u2) => u2.text).join("\n"), extent: canonicalExtent2(extent) };
+  }
+  const at14 = canonicalExtent2(extent);
+  const u = held.units.find((x) => x.extent === at14);
+  if (!u)
+    return { text: null, reason: "cited_text_not_held", why: `the record holds no text at exactly ${describeExtent2(extent)} of the cited version (only whole indexed units \u2014 a PDF page, a paragraph, a slide \u2014 carry text)` };
+  if (u.truncated)
+    return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit cap, so the whole passage is not held" };
+  return { text: u.text, extent: at14 };
+}
 function gradeAcross(row2, extent, older, newer) {
   const G = VERSION_NOTICE_GRADES;
   const out = (grade, reason, why, found_at = null, similarity = null) => ({ grade, affects: G[grade].affects, reason, why, found_at, similarity });
   const U = (reason, why) => out("UNDETERMINED", reason, why);
-  const said = (s) => s || "never recorded";
   const safeJson18 = (s) => {
     try {
       return s == null ? null : JSON.parse(s);
@@ -42169,20 +42195,8 @@ function gradeAcross(row2, extent, older, newer) {
   if (row2.cited_as === "bytes")
     return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with");
   const whole = extent.kind === "document";
-  let cited;
-  if (whole) {
-    if (older.state !== "whole" || !older.units.length || older.units.some((u) => u.truncated))
-      return U("cited_text_partial", `the citation is to the whole document, and the record does not hold the cited version's text whole (its index reads ${said(older.state)}), so there is no whole text to compare`);
-    cited = { extent: canonicalExtent2(extent), text: older.units.map((u) => u.text).join("\n") };
-  } else {
-    const at14 = canonicalExtent2(extent);
-    const u = older.units.find((x) => x.extent === at14);
-    if (!u)
-      return U("cited_text_not_held", `the record holds no text at exactly ${describeExtent2(extent)} of the cited version (only whole indexed units \u2014 a PDF page, a paragraph, a slide \u2014 carry text), so there is nothing to compare`);
-    if (u.truncated)
-      return U("cited_text_truncated", "the cited passage's text is held only to the per-unit cap, so an identity with the newer version cannot be established");
-    cited = { extent: at14, text: u.text };
-  }
+  const cited = heldTextAt(extent, older);
+  if (cited.text == null) return U(cited.reason, `${cited.why}, so there is nothing to compare`);
   const found = (x) => ({ extent: safeJson18(x.extent), ref: x.ref });
   if (whole) {
     const complete = newer.state === "whole" && newer.units.length && !newer.units.some((u) => u.truncated);
@@ -42295,9 +42309,10 @@ function transcriptionCovering(tx, kind, extent) {
 }
 var staleSays = (extent) => `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent2(extent)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's`;
 function normUnits(u) {
-  const units = u && Array.isArray(u.units) ? u.units : [];
+  const units = u && Array.isArray(u.units) ? u.units.filter((x) => x && typeof x === "object") : [];
+  const seq = (x) => Number.isFinite(x.seq) ? x.seq : Infinity;
   return {
-    units: units.map((x) => ({
+    units: units.map((x, i) => ({ x, i })).sort((a, b) => seq(a.x) - seq(b.x) || a.i - b.i).map(({ x }) => ({
       ...x,
       extent: typeof x.extent === "string" ? x.extent : canonicalExtent2(x.extent),
       truncated: !!x.truncated
@@ -43014,12 +43029,19 @@ var Content = class {
    * ===================================================================== */
   /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each re-read that
    *  stales a row whose passage the new text affects or cannot be told, `fn` is called ONCE with the re-read's notice
-   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined. */
+   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined.
+   *  N202: a malformed or repeated registration is refused by membership's `listenerRefusal` (its R81), the one site
+   *  of LISTENER_MALFORMED and LISTENER_DECLARED; the listeners run in the modules' total order (`MODULE_ORDER`, its
+   *  R83; an unknown module last, in the order it registered). */
   onStale(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED" };
-    if (this.staleListeners.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED", module };
-    this.staleListeners.push({ module, fn });
+    const refused = listenerRefusal(this.staleListeners, module, fn);
+    if (refused) return refused;
+    this.staleListeners.push({ module, fn, seq: this.staleListeners.length });
+    const rank5 = (m) => {
+      const i = MODULE_ORDER.indexOf(m);
+      return i === -1 ? Infinity : i;
+    };
+    this.staleListeners.sort((a, b) => rank5(a.module) - rank5(b.module) || a.seq - b.seq);
     return { ok: true };
   }
   /** R22: RE-EXTRACTION MOVED THE CHAIN — mark, never delete. Every row over the capture whose recorded chain differs
@@ -43324,13 +43346,13 @@ var Content = class {
       };
     const ctx = this.contentContextFor(newerSha);
     const bad = checkContentExtent2(extent, ctx);
-    const said = bad ? String(bad.detail || bad.code).slice(0, 240) : "";
+    const said2 = bad ? String(bad.detail || bad.code).slice(0, 240) : "";
     if (bad && bad.code === "CONTENT_EXTENT_OUT_OF_RANGE")
       return {
         holds: false,
         reason: "outside_newer_capture",
         existing_content_id: null,
-        why: `the newer capture does not hold this extent (${said}); the passage may have moved, been renumbered or been removed`
+        why: `the newer capture does not hold this extent (${said2}); the passage may have moved, been renumbered or been removed`
       };
     if (bad && bad.code === "CONTENT_EXTENT_NO_CHAIN")
       return {
@@ -43344,7 +43366,7 @@ var Content = class {
         holds: false,
         reason: "not_testable",
         existing_content_id: null,
-        why: `the extent test could not be asked of the newer capture (${bad.code}: ${said})`
+        why: `the extent test could not be asked of the newer capture (${bad.code}: ${said2})`
       };
     const unheld = extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined);
     if (unheld)
@@ -43365,9 +43387,20 @@ var Content = class {
     if (!memo.has(captureSha)) memo.set(captureSha, normUnits(this.extraction.unitsOf(captureSha)));
     return memo.get(captureSha);
   }
-  /** The notice for ONE stored row (`extent` as JSON text). The legacy store's question arm (reevaluation's) calls it
-   *  per passage with one `memo`, because one newer capture is usually asked about by every leg citing it. */
+  /** N161: the notice for ONE row a caller has read from `content` through R45's read contract (`{content_id,
+   *  capture_sha, bundle_id, extent_kind, extent, ref, cited_as}`, `extent` as stored), for `viewer`'s version chains.
+   *  No sight gate and no C-80.3: the caller gates the row (R37). Reevaluation calls it per passage with one `memo` for
+   *  its read, because one newer capture is usually asked about by every leg citing it. Writes nothing; never throws:
+   *  a row that is not an object, or a read that fails, answers null. */
   noticeForRow(row2, viewer, memo = /* @__PURE__ */ new Map()) {
+    if (!isObj6(row2)) return null;
+    try {
+      return this.#noticeForRow(row2, viewer, memo instanceof Map ? memo : /* @__PURE__ */ new Map());
+    } catch {
+      return null;
+    }
+  }
+  #noticeForRow(row2, viewer, memo) {
     const extent = safeJson5(row2.extent);
     const cap = VERSION_NOTICE_ADDRESSES_MAX;
     const addrRows = this.#rows(
@@ -43476,13 +43509,36 @@ var Content = class {
     }
     return {
       ok: true,
-      ...this.noticeForRow(r, viewer),
+      ...this.#noticeForRow(r, viewer, /* @__PURE__ */ new Map()),
       states: VERSION_NOTICE_STATES,
       grades: VERSION_NOTICE_GRADES,
       wrote: false,
       proposal_only: true,
       visible_to: "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them"
     };
+  }
+  /* ===================================================================== *
+   * THE PASSAGE'S TEXT (R46; N215, K249), for a later module that reads what a cited passage says (consequences R2).
+   * ===================================================================== */
+  /** R46: the text of a held row's passage, or null. A typing (R24) answers its text byte for byte; any other row the
+   *  text the capture's index holds at exactly the row's extent, by the one rule R31 grades a cited passage by
+   *  (`heldTextAt`). Null for a row not held, one cited as `bytes` (R4), or text not held whole there: a caller reads
+   *  null as the passage held in a form not read, never as empty text. No viewer: a caller that shows the text asks
+   *  sight first (R37). Writes nothing; never throws. */
+  passageText(contentId) {
+    try {
+      const id = typeof contentId === "string" ? contentId.trim() : "";
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, cited_as FROM content WHERE content_id=?`, id) : null;
+      if (!r || r.cited_as === "bytes") return null;
+      const typed = this.#one(`SELECT text FROM transcriptions WHERE content_id=?`, r.content_id);
+      if (typed) return typeof typed.text === "string" ? typed.text : null;
+      const e = safeJson5(r.extent);
+      if (!isObj6(e)) return null;
+      const held = heldTextAt({ ...e, kind: r.extent_kind }, normUnits(this.extraction.unitsOf(r.capture_sha)));
+      return typeof held.text === "string" ? held.text : null;
+    } catch {
+      return null;
+    }
   }
   /* ===================================================================== *
    * THE CROP (R32; D-419, K70).
@@ -48759,7 +48815,7 @@ var WITHDRAW_REASON_MAX = 2e3;
 var ENTITIES_TABLES = Object.freeze(["resolutions", "entity_relations", "entity_aliases", "entities"]);
 var RESOLVE_ITEM_KEYS = [["captureSha"], ["captureSha", "ref"]];
 var RESOLVE_SHARED_KEYS = ["ref"];
-var LISTENER_DECLARED2 = "LISTENER_DECLARED";
+var LISTENER_DECLARED = "LISTENER_DECLARED";
 var cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 function actShape(code, detail, extra = {}) {
   const row2 = ACT_SHAPE_CHECKS[code];
@@ -49385,7 +49441,7 @@ var Entities = class _Entities {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener is a module name and a function" };
     if (list2.some((l) => l.module === module))
-      return { ok: false, reason: LISTENER_DECLARED2, module, detail: "a module registers once" };
+      return { ok: false, reason: LISTENER_DECLARED, module, detail: "a module registers once" };
     list2.push({ module, fn });
     return { ok: true };
   }
@@ -51323,7 +51379,7 @@ var Connections = class _Connections {
           const grade2 = weakerGrade(m.grade, theirGrade);
           const onPoint = { ref: m.ref, ...occ, position, grade: m.grade, chosen_by: mine.chosen_by, at: mine.at };
           const chosenEntry = { ...entry, grade: grade2, on_point: onPoint };
-          const said = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
+          const said2 = `a member (${mine.chosen_by}) chose ${m.ref} as the on-point mention on this end`;
           const verdict = checkConnectionPairCovers(
             side === "a" ? { a_ref: m.ref, a_position: position } : { b_ref: m.ref, b_position: position },
             side,
@@ -51331,13 +51387,13 @@ var Connections = class _Connections {
             extent,
             readingPositionInExtent
           );
-          if (!verdict) reaching.push({ ...chosenEntry, why: `${said}; it was read at ${position.ref}, inside ${row2.ref}` });
+          if (!verdict) reaching.push({ ...chosenEntry, why: `${said2}; it was read at ${position.ref}, inside ${row2.ref}` });
           else (verdict.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined).push({
             ...chosenEntry,
             code: verdict.code,
             check: verdict.check,
             translation: verdict.translation,
-            why: `${said}; ${verdict.detail.replace(/^the determining reference/, "that mention")}`
+            why: `${said2}; ${verdict.detail.replace(/^the determining reference/, "that mention")}`
           });
           continue;
         }
@@ -53189,7 +53245,7 @@ var LEAD_LIST_LIMIT_MAX = 2e3;
 var LEAD_LIST_EMPTY = "there is no lead here you may read. A lead is readable by its author and by the joined participants of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
 var LEAD_LIST_NOTE = "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it (NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are listed. A lead is never evidence";
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
-var LISTENER_DECLARED3 = "LISTENER_DECLARED";
+var LISTENER_DECLARED2 = "LISTENER_DECLARED";
 var OBSERVATION_LOG_MODULE = "observation-log";
 function actorOf(author) {
   const mint = contentMintState(author);
@@ -53683,7 +53739,7 @@ var ObservationLog = class _ObservationLog {
         detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}, with its function`
       };
     if (this.resolvers.has(kind))
-      return { ok: false, reason: LISTENER_DECLARED3, kind, detail: `the ${kind} authority already has its resolver` };
+      return { ok: false, reason: LISTENER_DECLARED2, kind, detail: `the ${kind} authority already has its resolver` };
     this.resolvers.set(kind, resolve);
     return { ok: true, kind };
   }
@@ -61812,14 +61868,14 @@ var BasisVersions = class _BasisVersions {
       const declared = [...new Set(vlegs.filter((l) => l && typeof l === "object" && String(l.version ?? "").trim() === vname).map((l) => String(l.ground ?? "").trim()).filter(Boolean))];
       if (declared.length > 1) {
         const raw = a.affirmed == null || a.affirmed === "" ? [] : Array.isArray(a.affirmed) ? a.affirmed : String(a.affirmed).split(",");
-        const said = [...new Set(raw.map((s) => String(s).trim()).filter(Boolean))];
-        const missing = declared.filter((d) => !said.includes(d));
-        const unknown = said.filter((s) => !declared.includes(s));
+        const said2 = [...new Set(raw.map((s) => String(s).trim()).filter(Boolean))];
+        const missing = declared.filter((d) => !said2.includes(d));
+        const unknown = said2.filter((s) => !declared.includes(s));
         if (missing.length || unknown.length)
           return refuse5(
             "VERSION_AFFIRMATION_INCOMPLETE",
             `'${vname.slice(0, 60)}' rests on ${declared.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing.length ? `Not affirmed: ${missing.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`,
-            { target, version: vname, declared, affirmed: said, missing, unknown }
+            { target, version: vname, declared, affirmed: said2, missing, unknown }
           );
         affirmedParts = declared.join("	");
       }
@@ -63749,7 +63805,7 @@ function attributionFrontmatterLines(rows) {
   ];
 }
 function attributionBodyLines(rows) {
-  const said = {
+  const said2 = {
     group: "the group that publishes this case",
     project: "the project that produced it",
     cover: "the cover the group knows its author by",
@@ -63760,7 +63816,7 @@ function attributionBodyLines(rows) {
     "",
     `This case rests, directly or through another finding, on ${rows.length} firsthand observation${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md \xA74). An observation names no person in its own bytes; the words below are the whole of the attribution.`,
     "",
-    ...rows.map((r) => !r.level ? `- **${r.observation}** \u2014 NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author chooses one, or the finding resting on it leaves the case.` : `- **${r.observation}** \u2014 attributed to ${said[r.level]}${r.shown == null ? " (this record names no producing group, so none is printed)" : `: ${r.shown}`} \u2014 level \`${r.level}\`, chosen at edition ${r.chosen_at_edition}.`),
+    ...rows.map((r) => !r.level ? `- **${r.observation}** \u2014 NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author chooses one, or the finding resting on it leaves the case.` : `- **${r.observation}** \u2014 attributed to ${said2[r.level]}${r.shown == null ? " (this record names no producing group, so none is printed)" : `: ${r.shown}`} \u2014 level \`${r.level}\`, chosen at edition ${r.chosen_at_edition}.`),
     ""
   ];
 }
@@ -81469,17 +81525,17 @@ function projectGate({
   );
 }
 function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
-  const said = String(contextType ?? "");
+  const said2 = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
-  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said))
+  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said2))
     return refusal12(
       "AI_RUN_NO_SUCH_CONTEXT",
-      `${JSON.stringify(said.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
+      `${JSON.stringify(said2.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
     );
-  if (found !== null && found !== void 0 && found === said) return null;
+  if (found !== null && found !== void 0 && found === said2) return null;
   return refusal12(
     "AI_RUN_NO_SUCH_CONTEXT",
-    `no ${JSON.stringify(said)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
+    `no ${JSON.stringify(said2)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
   );
 }
 function runPrincipalOf(principal) {
@@ -83688,10 +83744,10 @@ var CaptureRequests = class _CaptureRequests {
         const renderRow2 = q6.render === 1;
         const reason = renderHoldReason(q6.code);
         const why = String(q6.detail || "").slice(0, 400);
-        const said = `held under ${reason.check || "no catalogued check"} ${q6.code || "(no code: never attempted)"} until this request expired at ${q6.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why ? ` \u2014 the reason last given: ${why}` : " \u2014 no further detail was carried");
+        const said2 = `held under ${reason.check || "no catalogued check"} ${q6.code || "(no code: never attempted)"} until this request expired at ${q6.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why ? ` \u2014 the reason last given: ${why}` : " \u2014 no further detail was carried");
         this.#sql.exec(
           `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
-          said.slice(0, 600),
+          said2.slice(0, 600),
           at14,
           q6.request
         );
@@ -83715,7 +83771,7 @@ var CaptureRequests = class _CaptureRequests {
           source_reason: q6.source_reason ?? null,
           render: renderRow2 ? { state: "expired", content: "undetermined" } : null,
           expires: q6.expires,
-          detail: said
+          detail: said2
         });
       }
       const queued = this.#rows(
@@ -85576,7 +85632,7 @@ var Bias = class _Bias {
     };
     const id = String(run ?? "").trim();
     const who2 = String(actor ?? "").trim();
-    const said = typeof reason === "string" ? reason.trim() : "";
+    const said2 = typeof reason === "string" ? reason.trim() : "";
     if (!id)
       return refusal18(
         "BIAS_DEBT_NO_RUN",
@@ -85592,16 +85648,16 @@ var Bias = class _Bias {
         "BIAS_DEBT_MACHINE_CANNOT_RESOLVE",
         "settling a bias debt is a judgement that the lens change does not bear on the finding, and that is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential may raise the obligation, surface it and prepare what it needs, and may not answer it"
       );
-    if (!said)
+    if (!said2)
       return refusal18(
         "BIAS_DEBT_NO_REASON",
         "this act settles an obligation the record raised, and the whole of what it records is the member's stated ground for settling it. Without the reason the row would say that somebody decided and not what they decided"
       );
-    if (said.length > BIAS_DEBT_REASON_MAX)
+    if (said2.length > BIAS_DEBT_REASON_MAX)
       return refusal18(
         "BIAS_DEBT_REASON_TOO_LONG",
-        `the stated reason is ${said.length} characters and this record holds at most ${BIAS_DEBT_REASON_MAX}`,
-        { limit: BIAS_DEBT_REASON_MAX, length: said.length }
+        `the stated reason is ${said2.length} characters and this record holds at most ${BIAS_DEBT_REASON_MAX}`,
+        { limit: BIAS_DEBT_REASON_MAX, length: said2.length }
       );
     const seen = _Bias.#gate("bd.context_id", viewer);
     const row2 = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
@@ -85623,7 +85679,7 @@ var Bias = class _Bias {
       kind: "resolved",
       at: when,
       actor: who2,
-      reason: said,
+      reason: said2,
       lensThen: row2.lens_then,
       lensNow: row2.lens_now
     });
@@ -113068,8 +113124,8 @@ var index_default = {
         const promotedType = (() => {
           const md = Array.isArray(b.files) ? b.files.find((f8) => f8 && f8.path === "bundle.md") : null;
           const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
-          const said = fm && typeof fm === "object" ? fm.object_type : void 0;
-          if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
+          const said2 = fm && typeof fm === "object" ? fm.object_type : void 0;
+          if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
           return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : void 0;
         })();
         delete b.ownerMemberId;
