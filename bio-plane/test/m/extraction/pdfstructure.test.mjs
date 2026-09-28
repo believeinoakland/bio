@@ -240,3 +240,14 @@ test("R34 R60 (N100, N139): a re-read carries the structure's page boxes, else t
   const merged = "Text\nocr text of page 1";
   assert.deepEqual([none.text_chars, none.text_glyphs, none.text_undetermined], [merged.length, merged.replace(/\s/g, "").length, 0]);
 });
+
+test("R31 (N100): the plain read carries pdf-reader's own pageBoxes beside membership and membershipWhy, and writes nothing", async () => {
+  const pb = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0] };
+  const { w, d } = await held(i2([{ page: 0, text: "x" }]));
+  const before = writes(w);
+  const entry = { format: "pdf", structure: async () => ({ ok: true, text: i2([{ page: 0, text: "x" }]), pages: 1, notes: [], pageBoxes: pb }) };
+  const r = await withEntry(entry, () => w.x.pdfStructure({ sha: d }));
+  assert.deepEqual(r.body.pageBoxes, pb);
+  assert.ok("membership" in r.body && "membershipWhy" in r.body);
+  assert.equal(writes(w), before);
+});

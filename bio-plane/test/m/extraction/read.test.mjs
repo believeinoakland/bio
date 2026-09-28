@@ -576,3 +576,13 @@ test("R60 R45 (N139): a reading whose text was classified carries text_chars, te
     async () => { const d = await hold(w.evidence, "t60b"); return (await w.x.read(doc({ digest: d, format: "t60b" }))).reading; });
   assert.equal("text_chars" in threw, false);
 });
+
+test("R4 (N253): a scan marker is any of no_text_layer, image_content_unread, image_content_undetermined: a document whose remaining markers are all scan markers does not escalate", async () => {
+  const w = fresh();
+  for (const reason of ["no_text_layer", "image_content_unread", "image_content_undetermined"]) {
+    const marks = [0, 1, 2].map(() => ({ page: 0, reason, font: null, codes: null, count: 1 }));
+    const pdf = member(() => { throw new Error(`tier 2 asked for ${reason}`); });
+    await readPdf(w, i2([{ page: 0, text: "", undetermined: [...marks, unreadImage(0)] }]), { env: { PDF_WORKER: pdf } });
+    assert.equal(pdf.calls.length, 0, reason);
+  }
+});
