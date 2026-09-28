@@ -57,9 +57,17 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-casesign");            /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
-const INDEX = join(ROOT, "src", "index.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, layer 8): the case document's store, its read gate (`caseDocument`,
+   `hasCaseStanding`, now a service, and the module function `noCaseDocument`) and the roster read moved to
+   `src/publication/index.mjs` (the name STORE is kept); op=caseratify's handler to `src/ratification/ops.mjs` (the
+   name INDEX is kept; the passing of the signature is indented eight spaces there). `checkCaseDocument` is LIVE IN
+   TWO COPIES: the catalogue's (`checks/bio-checks.mjs`, imported by `src/gate.mjs`) and ratification's own
+   (`src/ratification/checks.mjs`, imported by `ratifyCaseDocument`), so arm (c) arms the rule in BOTH, since a rule
+   loosened or tightened in one copy is not the rule changed. Every needle matches once per file. */
+const STORE = join(ROOT, "src", "publication", "index.mjs");
+const INDEX = join(ROOT, "src", "ratification", "ops.mjs");
 const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
+const RAT_CHECKS = join(ROOT, "src", "ratification", "checks.mjs");
 const SUITE = join(DIR, "casesign.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -98,8 +106,8 @@ const ARMS = {
             + "the PASSING of it to the committer is removed — so what this measures is the committer's own "
             + "fence, `CASE_UNSIGNED`, which no caller route can otherwise reach",
        apply: () => edit(INDEX,
-         "          sigArmored: body.sig, attestorKey: sv.keyB64,",
-         "          attestorKey: sv.keyB64,") },
+         "        sigArmored: body.sig, attestorKey: sv.keyB64,",
+         "        attestorKey: sv.keyB64,") },
 
   b: { files: [CHECKS],
        label: "(b) STRIP THE KEYS WITHOUT THE CEREMONY'S FENCE — the queue row's second arm, and the one "
@@ -160,15 +168,15 @@ const ARMS = {
      `declared: true` would refuse every case published by a project that never
      set a standard — pressuring a group into declaring one so they can publish,
      which is the bug-in-the-gate shape CLAUDE.md names by that name. */
-  c: { files: [CHECKS],
+  c: { files: [CHECKS, RAT_CHECKS],
        label: "(c) OVER-STRICTNESS — the direction a control usually forgets, and the direction this item "
             + "could most plausibly have got wrong: make the case document's bar arm demand a DECLARED bar "
             + "rather than a STATED one. Every case published by a project that never set a standard is then "
             + "refused, which would pressure a group into declaring one so they can publish. An absent bar "
             + "is not a bar of zero, and this arm is red when the gate forgets that",
-       apply: () => edit(CHECKS,
+       apply: () => { for (const f of [CHECKS, RAT_CHECKS]) edit(f,
          "  if (!rq || typeof rq.declared !== 'boolean') {",
-         "  if (!rq || rq.declared !== true) {") },
+         "  if (!rq || rq.declared !== true) {"); } },
 
   d: { files: [STORE],
   /* (d)'s FIRST DRAFT DELETED THE PIN CLAUSE AND LEFT ITS BOUND PARAMETER BEHIND,
@@ -211,10 +219,10 @@ const ARMS = {
             + "answers anybody again, so every stranger arm in block 1b (anonymous, unknown token, member of "
             + "another project, probe, another member's agent) and the op=caseratify oracle arm must FAIL",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+         "    if (!doc.ratified_at && !this.hasCaseStanding(doc, viewer)\n"
        + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
-       + "      return Store.#noCaseDocument(id, ed);",
-         "    if (false) return Store.#noCaseDocument(id, ed);") },
+       + "      return noCaseDocument(id, ed);",
+         "    if (false) return noCaseDocument(id, ed);") },
 
   /* REC-126, 2026-09-18: arms (e), (f) and (g) RE-ANCHORED, not re-thought. The
      gate line they arm gained a third clause — a LIVE REVIEW GRANT for exactly
@@ -228,10 +236,10 @@ const ARMS = {
             + "sequence learns exactly which ids are live. The byte-for-byte arms must FAIL; an arm that only "
             + "checked the text was withheld would stay green, which is why none of them does",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+         "    if (!doc.ratified_at && !this.hasCaseStanding(doc, viewer)\n"
        + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
-       + "      return Store.#noCaseDocument(id, ed);",
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+       + "      return noCaseDocument(id, ed);",
+         "    if (!doc.ratified_at && !this.hasCaseStanding(doc, viewer)\n"
        + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
        + "      return { ok: false, reason: \"NOT_PERMITTED\", caseId: id, edition: ed };") },
 
@@ -240,12 +248,12 @@ const ARMS = {
             + "stranger-verification path then depends on this instance's goodwill; the signed-public arms "
             + "must FAIL while every unsigned-side arm stays green",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+         "    if (!doc.ratified_at && !this.hasCaseStanding(doc, viewer)\n"
        + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
-       + "      return Store.#noCaseDocument(id, ed);",
-         "    if (!this.#hasCaseStanding(doc, viewer)\n"
+       + "      return noCaseDocument(id, ed);",
+         "    if (!this.hasCaseStanding(doc, viewer)\n"
        + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
-       + "      return Store.#noCaseDocument(id, ed);") },
+       + "      return noCaseDocument(id, ed);") },
 
   h: { files: [STORE],
        label: "(h) OVER-STRICTNESS ON THE UNSIGNED SIDE — standing narrowed to the instance-level machine "

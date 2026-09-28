@@ -33,17 +33,21 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
-const STORE = join(PLANE, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8): the signer roster, its two write bars and the predicate left `store.mjs`
+   with membership in T3 (membership R70) and this driver was never moved with them — every anchor had been dead since.
+   They are membership's now (`src/membership/index.mjs`, where the constant is `Membership.SIGNER_ATTESTS`); the name
+   STORE is kept for the file every arm edits, and each anchor matches exactly once there. */
+const STORE = join(PLANE, "src", "membership", "index.mjs");
 const SUITE = join(HERE, "signer-enrolment.test.mjs");
 /* A restore below this is not a restore. The file is far larger; the floor exists
    so a truncated write cannot be reported as byte-identical to itself. */
-const MIN_BYTES = { [STORE]: 2_000_000 };
+const MIN_BYTES = { [STORE]: 150_000 };
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The four sites exactly as they stand in the source. */
 const ADD_BAR = `    const barAdd = this.#signerMemberBar(memberId);\n    if (barAdd) return barAdd;`;
 const SET_BAR = `      const barSet = this.#signerMemberBar(row.member_id);\n      if (barSet) return barSet;`;
-const ATTESTS = `              CASE WHEN \${Store.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests`;
+const ATTESTS = `              CASE WHEN \${Membership.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests`;
 const ORDER   = `        ORDER BY s.added\`)`;
 const PREDICATE_TEXT = `s.status='active' AND m.status='active'`;
 
@@ -147,7 +151,7 @@ const ARMS = {
        clause that reads the shared constant, taking the reader count to four —
        the pin seeing its own subject being edited, which is the pin working.
        **AND THE INVARIANT ARM STAYS GREEN**, which is this arm's whole point. */
-    edits: [[ORDER, `        WHERE \${Store.SIGNER_ATTESTS} ORDER BY s.added\`)   /* ARMED */`]],
+    edits: [[ORDER, `        WHERE \${Membership.SIGNER_ATTESTS} ORDER BY s.added\`)   /* ARMED */`]],
     mustFail: [L.present, L.revokedWhy, L.nonEmpty, L.cascade, L.setNothing, L.whyFloor, L.structure],
   },
 

@@ -41,7 +41,14 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { ATTRIBUTION_CHECKS, TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6, RATIFICATION #2 J6): C-92 and C-53.10/.11 left the
+   catalogue. The act's rows (C-92.1–.9) are publication's `ATTRIBUTION_ACT_CHECKS`; the ceremony's (C-92.10–.12) are
+   ratification's `RATIFY_ATTRIBUTION_CHECKS`; the three unpublishable-testimony rows are ratification's
+   `RATIFY_TESTIMONY_CHECKS`. The names below are the union the catalogue's families were. */
+import { ATTRIBUTION_ACT_CHECKS } from "../src/publication/checks.mjs";
+import { RATIFY_ATTRIBUTION_CHECKS, RATIFY_TESTIMONY_CHECKS } from "../src/ratification/checks.mjs";
+const ATTRIBUTION_CHECKS = { ...ATTRIBUTION_ACT_CHECKS, ...RATIFY_ATTRIBUTION_CHECKS };
+const TESTIMONY_CHECKS = RATIFY_TESTIMONY_CHECKS;
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -387,7 +394,8 @@ t("its author makes edition 2 MORE protective (name -> cover) by their own act; 
   [[true, null], { observation: OBS.name, level: "cover", shown: `the ${OBSERVER.name.cover} volunteer`, chosen_at_edition: 2 }, "name"]);
 
 console.log("\n--- 7. OFF THE RECORD IS A STRUCTURAL ABSENCE: the act's table has no column that could hold a source ---");
-const schemaText = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+/* T8: the table is publication's (`src/publication/schema.mjs`). */
+const schemaText = readFileSync(fileURLToPath(new URL("../src/publication/schema.mjs", import.meta.url)), "utf8");
 const tbl = /CREATE TABLE IF NOT EXISTS observation_attributions \(([\s\S]*?)\n\);/.exec(schemaText);
 t("observation_attributions holds exactly case_id, edition, bundle_id, level, chosen_by, chosen_at, and a key",
   tbl ? tbl[1].split("\n").map((l) => l.replace(/--.*$/, "").trim()).filter(Boolean).map((l) => l.split(/[\s(]/)[0]) : null,
@@ -436,7 +444,9 @@ writeFileSync(memPath, ms);
 writeFileSync(provPath, ps);
 t("each legacy-state edit's anchor occurs EXACTLY ONCE in the real store.mjs (EDITS 1 and 3 in membership's index.mjs, "
 + "EDIT 2 in provenance's index.mjs, extracted from it), and neither touches the subject",
-  [counts, st.includes("attributeObservation({"), [E1, E2, E3].some((e) => e.includes("attribute"))], [[1, 1, 1], true, false]);
+  /* T8: the subject (`attributeObservation`) is publication's now, read from the mirror's `src/publication/index.mjs`. */
+  [counts, readFileSync(join(SB, "bio-plane", "src", "publication", "index.mjs"), "utf8").includes("attributeObservation({"),
+   [E1, E2, E3].some((e) => e.includes("attribute"))], [[1, 1, 1], true, false]);
 const mf2 = boot(join(SB, "bio-plane", "src", "index.mjs")); mfs.push(mf2);
 const L = driver(mf2, "legacy");
 const IRIS2 = await L.enrol("iris", "iris", "cover for iris", ["contribute", "publish", "create_projects"], "admin");

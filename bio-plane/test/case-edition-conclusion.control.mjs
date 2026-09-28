@@ -74,7 +74,12 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-case-edition-conclusion");   /* inside this worktree */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8; CASE-AUTHORING #1 J5, RATIFICATION #2 J6): ALREADY_A_CASE_MEMBER, the
+   refusal arms (a) and (b) edit, left `store.mjs` with `publishCase` for `src/case-authoring/index.mjs`; the comparison
+   (`editionsRecordingConclusion`, its entry fields and its no-project rule, arms (c)–(e)) for ratification's
+   `src/ratification/index.mjs` (the name STORE is kept for those). Each needle matches exactly once. */
+const STORE = join(ROOT, "src", "ratification", "index.mjs");
+const AUTHORING = join(ROOT, "src", "case-authoring", "index.mjs");
 const AFF = join(ROOT, "src", "affordances.mjs");
 const SUITE = join(DIR, "case-edition-conclusion.test.mjs");
 const LOG = join(PEN, "run.out");
@@ -139,17 +144,17 @@ const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
               apply: () => {}, mustFail: [], mustNotFail: [S1_ED1, S2_SAME, S4_SECOND, S8_SAME, S9_PIN, S9_ROUTE] },
 
-  a: { files: [STORE],
+  a: { files: [AUTHORING],
        label: "(A) PIN ON bundle_sha ALONE AGAIN — the refusal reverts to `rel.member`, the row's own named control",
-       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (same.length)", "if (p.warrant)")),
+       apply: () => edit(AUTHORING, REFUSAL, REFUSAL.replace("if (same.length)", "if (p.warrant)")),
        mustFail: [S4_SECOND, S4_WHY, S4_RECORDS, S4_ABSENT, S5_SAME, S5_STOPS,
                   S6_DISC, S6_WARRANTED, S6_RECORDS, S6_SAME, S7_MOVED, S7_RECORDS,
                   S8_PROV, S8_DISCLOSES, S8_SAME, S9_ROUTE],
        mustNotFail: [S1_ED1, S2_SAME, S2_NAMES, S2_SURFACE, S3_WD, S4_DISC, S4_OFFERS, S7_SAME, S7_DISC, S9_PIN] },
 
-  b: { files: [STORE],
+  b: { files: [AUTHORING],
        label: "(B) THE REFUSAL DROPPED — the liar, who passes every second-edition arm",
-       apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (same.length)", "if (false && same.length)")),
+       apply: () => edit(AUTHORING, REFUSAL, REFUSAL.replace("if (same.length)", "if (false && same.length)")),
        mustFail: [S2_SAME, S2_NAMES, S5_SAME, S6_SAME, S7_SAME, S8_SAME],
        /* DECLARATION CORRECTED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), and the arm is
           unchanged: the three DISCRIMINATORS were declared to cascade because a publish the dropped refusal let

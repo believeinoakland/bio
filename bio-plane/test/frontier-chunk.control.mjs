@@ -32,7 +32,15 @@ import { tmpdir } from "node:os";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8): every read this control arms has left `store.mjs` for the module
+   that owns it — `#contentStandings` for connections (T3), the content reads (`standings`, `#attestationsOver`,
+   `#transcriptionsOver`) for content (T5), `earnedBasisRegistry`'s union for inquiry (T7), the superseded-by MAX for
+   reevaluation (T7), and `publishedCaseRegistryFor` for publication (T8). Each arm now names its FILE, its anchors
+   match exactly once there, and the pristine copy, the restore and its sha are per arm. */
+const FILES = { standings: "src/connections/index.mjs", earned: "src/content/index.mjs", attest: "src/content/index.mjs",
+                txrows: "src/content/index.mjs", txatts: "src/content/index.mjs", union: "src/inquiry/index.mjs",
+                supmax: "src/reevaluation/index.mjs", casereg: "src/publication/index.mjs",
+                overstrict: "src/publication/index.mjs" };
 /* THE PEN IS OUTSIDE THE WORKTREE — CORRECTED 2026-09-24 (D-445), on BOB #32's ruling of the same day.
    It was `bio-plane/.d443-control`, and its comment said "inside this worktree, never a shared /tmp name":
    the second half was right and the first was the trap. A file in the worktree is not inert — repository
@@ -57,8 +65,10 @@ const ARMS = {
              "        WHERE content_id IN (${ids.map(() => \"?\").join(\",\")})`, ...ids);"]],
     mustFail: ["D443-1"], mayFail: ["D443-0", "D443-2", "D443-3", "D443-4", "D443-5"] },
   earned: {      /* `#contentEarned`, reached by op=earnedbasis on Q_C (120 ids); Q_T's 120 go the same way. */
-    edits: [[`         FROM content WHERE content_id ${J} LIMIT ?\`, JSON.stringify(ids), ids.length);`,
-             "         FROM content WHERE content_id IN (${ids.map(() => \"?\").join(\",\")}) LIMIT ?`, ...ids, ids.length);"]],
+    /* T8: content's `standings` spells the read on one line and binds on the next. */
+    edits: [[`FROM content WHERE content_id ${J} LIMIT ?\`,
+                            JSON.stringify(ids), ids.length);`,
+             "FROM content WHERE content_id IN (${ids.map(() => \"?\").join(\",\")}) LIMIT ?`,\n                            ...ids, ids.length);"]],
     mustFail: ["D443-2"], mayFail: ["D443-0", "D443-3", "D443-4", "D443-5"] },
   attest: {      /* `#attestationsOver`: Q_C's 120 captures refuse; Q_T stands on ONE capture, so D443-4 must hold. */
     edits: [[`         FROM text_attestations WHERE capture_sha ${J}`,
@@ -119,13 +129,14 @@ const run = () => {
 };
 
 const want = process.argv[2] ? [process.argv[2]] : Object.keys(ARMS);
-const pristineSha = sha(STORE);
-const pristineBytes = readFileSync(STORE).length;
-if (pristineBytes < 2_000_000) throw new Error(`store.mjs is ${pristineBytes} B — not the file this control expects`);
-console.log(`subject src/store.mjs ${pristineBytes} B sha256 ${pristineSha.slice(0, 16)}…`);
 let bad = 0;
 for (const name of want) {
   const arm = ARMS[name];
+  const STORE = join(PLANE, FILES[name] || "src/store.mjs");
+  const pristineSha = sha(STORE);
+  const pristineBytes = readFileSync(STORE).length;
+  if (pristineBytes < 20_000) throw new Error(`${FILES[name]} is ${pristineBytes} B — not the file this control expects`);
+  console.log(`subject ${FILES[name] || "src/store.mjs"} ${pristineBytes} B sha256 ${pristineSha.slice(0, 16)}…`);
   const copy = join(SAFE, `store.${name}.pristine.mjs`);
   copyFileSync(STORE, copy);
   let armed = true;

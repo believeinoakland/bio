@@ -354,8 +354,17 @@ await mustPromote(INQ_MOVED, inquiryMd(INQ_MOVED, {
    is not a captured document. */
 const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
                    { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" },
-                   { target: INQ_MOVED, grade: "B", axis: "connection", source: "hunch",
-                     author: "pilar", date: "2026-08-04" }];
+                   /* RE-GRADED 2026-09-28 by legacy-tests (T8), never exempted: this leg stated an AUTHORED
+                      connection B, `grade_source: hunch`, which is hunch debt that case-authoring R12 now refuses
+                      to publish over (DEC-20, UNCLEARED_HUNCH, "give each leg a grade the record earns, or take
+                      the hunch out of the basis"). Its target is an INQUIRY, which earns nothing from the
+                      recogniser (no capture to resolve) and cannot inherit (it is published in no case), and the
+                      one earned source left, testimony, earns D — which would become the case's DETERMINING
+                      connection member and move the frozen pair this whole suite holds still (measured: (B, D)).
+                      So the hunch is TAKEN OUT: the leg states no grade and no grade_source, which is C-2.8's own
+                      spelling of an honestly undetermined leg. It is still leg 2, still `supports`, still the leg
+                      every block moves the ground under, and still non-determining: the pair stays (B, C). */
+                   { target: INQ_MOVED }];
 /* REC-136: INQ_CASE is concluded (twice), so it carries an accepted reading to adopt. */
 await mustPromote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, {
   question: "Did the City transfer sewer funds without authority?",
@@ -483,10 +492,12 @@ console.log("\n--- 2. D-5, the terminal arm and the reversible arm on the SAME q
        from one it WITHDREW — `inquiry_basis` drops the status. This leg's
        reference records `status: confirmed`, so it reads `confirmed`; block 9
        drives the severed half. Corrected, never exempted. */
-    r.obligations[0]?.legs ?? [], [{ ord: 2, role: "supports", grade: "B",
-                              grade_axis: "connection", grade_source: "hunch",
+    /* T8: the leg is ungraded now (see CASE_LEGS), so the op publishes its letter, axis, source and authored letter
+       as the nulls they are; REC-118's capture-ceiling byte-identity is held by `rec118-reeval-earned.test.mjs`. */
+    r.obligations[0]?.legs ?? [], [{ ord: 2, role: "supports", grade: null,
+                              grade_axis: null, grade_source: null,
                               target_edition: null, status: "confirmed",
-                              grade_authored: "B", grade_why: null }]);
+                              grade_authored: null, grade_why: null }]);
   t("the REUSED triple: flag, since and source, in the reeval_pending vocabulary already in the schema",
     [r.obligations[0]?.reeval?.flag ?? null, r.obligations[0]?.reeval?.source ?? null,
      typeof r.obligations[0]?.reeval?.since], [true, "deferred", "string"]);

@@ -45,7 +45,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { parseFrontmatter, CASE_CONCLUSION_CHECKS } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* C-65.1's row left the catalogue with ratification (RATIFICATION #2, T8 layer 8): its family is `src/ratification/checks.mjs`. */
+import { CASE_CONCLUSION_CHECKS } from "../src/ratification/checks.mjs";
 import { signCase } from "./caseceremony.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -351,6 +353,12 @@ console.log("\n--- 3. publishing again prepares a document recording claim B, an
 const prep2 = await publish(A, Q);
 t("A publishes again: a fresh preparation (the unsigned one was never a case, so nothing pins the finding and "
 + "no edition of it is refused)", [prep2?.ok, typeof prep2?.caseId], [true, "string"]);
+/* RE-ANCHORED (legacy-tests T8): since case-authoring R7 ("else the case this act's own unsigned preparation
+   names") a publisher who prepares again LANDS ON THE SAME CASE, and the new preparation REPLACES the unsigned
+   edition 1 rather than minting a second case beside it. Before T8 that route read `case_id` off the member's
+   bytes, which name no case since D-442, so it was dead and a second case was minted. */
+t("and it lands on the case its own unsigned preparation names, re-preparing edition 1 (case-authoring R7)",
+  [prep2?.caseId === CASE, prep2?.edition], [true, 1]);
 if (prep2?.ok !== true) await bail("A publishes again", prep2);
 const doc2 = await caseDoc(prep2.caseId, prep2.edition);
 t("the new preparation records A's conclusion now: reading B, claim B, and not the withdrawn claim",
@@ -364,9 +372,14 @@ const st3 = await docState(prep2.caseId, prep2.edition);
 t("the signed edition is the one recording claim B",
   [st3?.ratified, (parseFrontmatter(String(st3?.text ?? "")).data?.case_conclusions || [])[0]?.claim], [true, CLAIM_B]);
 
+/* RE-ANCHORED (legacy-tests T8, case-authoring R7): the OLD preparation no longer stands beside the new one, because
+   publishing again re-prepared the same edition. What was asked of it is still asked of its BYTES: a signature over
+   the claim-A document's sha signs nothing, and the one edition of the case records claim B. */
 const rOld = await caseRatify(prep1);
-t("and the OLD preparation, still unsigned beside it and still recording claim A, is STILL refused by name",
-  [rOld?.ok, rOld?.reason, (await docState(CASE, 1))?.ratified], [false, "CASE_CONCLUSION_MOVED", false]);
+t("and the OLD preparation's bytes, recording claim A and replaced by the re-preparation, are STILL refused and signed nowhere",
+  [rOld?.ok, rOld?.reason, rOld?.expected === prep2.caseDocument?.doc_sha, rOld?.got === SHA1,
+   (parseFrontmatter(String((await docState(CASE, 1))?.text ?? "")).data?.case_conclusions || [])[0]?.claim],
+  [false, "CASE_RATIFY_STALE", true, true, CLAIM_B]);
 
 /* =======================================================================
    4. AN UNCHANGED CONCLUSION RATIFIES AS TODAY — the over-strictness arm.

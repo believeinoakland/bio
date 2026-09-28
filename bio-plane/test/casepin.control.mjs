@@ -59,7 +59,11 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-casepin");             /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): the pin write (the roster upsert), the signature
+   write and the roster SELECT left `store.mjs` for `src/publication/index.mjs` (`commitCaseEdition`,
+   `caseEditionState`); the name STORE is kept for arms (a), (b), (e), (f). The pin write binds the roster's own
+   objects now (`m.version_sha`), and the signature write is indented nine spaces. Each needle matches once. */
+const STORE = join(ROOT, "src", "publication", "index.mjs");
 /* ADDED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): the version door `#moveVersionState` and its published
    fence moved to basis-versions, where the case relation is promotion's fact `caseMember`. Arms (c) and (d) edit it
    there; the pin write, the ceremony and the roster SELECT stay in store.mjs. */
@@ -125,7 +129,7 @@ const edit = (file, needle, replacement) => {
    more than the arm claims and would fail for the wrong reason. Binding `null` in
    place of the signed document's value is the same state, minimally: the row is
    written, the column is there, and nothing fills it. */
-const PIN_WRITE = "          id, ed, i, m, r.version_sha ?? null, r.role ?? null);";
+const PIN_WRITE = "        id, ed, i, m.bundle_id, m.version_sha ?? null, m.role ?? null);";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
@@ -135,7 +139,7 @@ const ARMS = {
        label: "(a) THE FREEZE NEVER HAPPENS: delete the pin write from publish() entirely. This is exactly "
             + "the state the tree was in BEFORE this item — CASE-1's column existed and nothing on earth "
             + "filled it — so this arm measures the size of the hole the item closed",
-       apply: () => edit(STORE, PIN_WRITE, "          id, ed, i, m, null /* ARMED AWAY: the pin */, r.role ?? null);") },
+       apply: () => edit(STORE, PIN_WRITE, "        id, ed, i, m.bundle_id, null /* ARMED AWAY: the pin */, m.role ?? null);") },
 
   b: { files: [STORE],
        label: "(b) THE PIN IS MUTATED IN PLACE — THE ARM THIS ITEM EXISTS FOR. Drop `AND version_sha IS "
@@ -163,8 +167,8 @@ const ARMS = {
         The arm is CORRECTED rather than exempted, and the old expectation is on the
         record above as right when it was written. */
        apply: () => edit(STORE,
-         "           ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,",
-         "           ratified_at=? WHERE case_id=? AND edition=?`,") },
+         "         ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,",
+         "         ratified_at=? WHERE case_id=? AND edition=?`,") },
 
   c: { files: [BV],
        label: "(c) THE MINT IS NOT ENFORCED: remove the PUBLISHED_CANNOT_MOVE_VERSION arm, so an edit "

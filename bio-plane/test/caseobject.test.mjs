@@ -68,11 +68,15 @@ import { dirname, join } from "node:path";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (DEC-20, case-authoring R12) */
 import { tmpdir } from "node:os";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED (legacy-tests T8, PUBLICATION #1 J4.6): the case tables (`cases`, `published_cases`,
+   `published_case_members`) left `src/schema.mjs` for publication's own schema, and the case index's LEFT JOIN left
+   `store.mjs` for `src/publication/index.mjs`. */
+const SCHEMA_SRC = readFileSync(SRC("publication/schema.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -258,13 +262,25 @@ let SIGNED_SHA = null;
 
   const CAP = "INFO-2026-1100-cap", CONN = "INFO-2026-1100-conn", LEFT = "INFO-2026-1100-left";
   const INQ = "INQ-2026-1100-authorisation";
+  /* RE-GRADED 2026-09-28 by legacy-tests (T8), never exempted: the connection leg on CONN stated `grade_source:
+     hunch`, which is hunch debt, and case-authoring R12 now refuses to publish over it (DEC-20: a hunch is the one
+     bias cleared before publication — UNCLEARED_HUNCH). This suite is about the case OBJECT, not about hunches, so
+     the leg now EARNS its C the way the record grants a connection grade: CONN carries a reading naming the
+     inquiry's subject entity by its label, that capture is RESOLVED, and the leg says `grade_source: resolution`
+     (`earned-connection.mjs`, as `caseflip` and `publish` do since T7). */
+  const EARNED = await connectionAtC(async (b) => POST(`op=entitycreate&token=${RUTH}`, b));
   for (const d of [CAP, CONN, LEFT])
-    await mustPromote(d, infoMd(d), "information", [],
+    await mustPromote(d, infoMd(d), "information",
+      d === CONN ? EARNED.files(sha(`capture-of-${d}`), "snapshots/doc.bin") : [],
       [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${d}`), encoding: "binary", bytes: 10 }]);
-  const legs = ["basis:",
+  {
+    const res = await POST(`op=resolve&token=${RUTH}`, { captureSha: sha(`capture-of-${CONN}`) });
+    if (res?.ok === false) throw new Error(`resolve ${CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+  }
+  const legs = [`subject_entity: ${EARNED.entityId}`, "basis:",
     `  - target: ${CAP}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
     `  - target: ${CONN}`, "    role: supports", "    grade: C", "    grade_axis: connection",
-    "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
+    "    grade_source: resolution"].join("\n");
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
      conclusion drawn with no project NAMES the accepted reading whose claim it
      adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
@@ -371,7 +387,7 @@ let SIGNED_SHA = null;
   + "the row it protects (a case published before DEC-72, owned by no project) is one no act can "
   + "write any more. A pre-DEC-72 store HAS those rows, and an inner join would delete published "
   + "material from the public record the moment this table landed",
-    /LEFT JOIN cases/i.test(readFileSync(join(DIR, "..", "src", "store.mjs"), "utf8")), true);
+    /LEFT JOIN cases/i.test(readFileSync(join(DIR, "..", "src", "publication", "index.mjs"), "utf8")), true);
 }
 
 /* ====================================================================== 3

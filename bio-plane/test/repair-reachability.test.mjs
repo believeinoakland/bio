@@ -90,6 +90,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES, normalizeType, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, ratification R9): the case-member arm of C-2.8
+   (`checkPublishedExtension` over a member's bytes) left `checkBundle` for ratification, which joins it to the gate's
+   answer over the same image (`withCaseMemberChecks` -> `caseMemberImageFindings`). The probe below reads the pair. */
+import { caseMemberImageFindings } from "../src/ratification/checks.mjs";
 import { registerChecks } from "../src/provenance/index.mjs";
 import { deriveActs } from "../src/affordances.mjs";
 
@@ -489,10 +493,11 @@ const runChecks = async (files) => [...(await checkBundle({
      whatever the wrong findings happen to contain. A case member is now
      recognised by its FROZEN STRENGTH PAIR, which is what op=publish stamps and
      what op=reopen clears, so the fixture hands that in instead. */
-  const pubFindings = (await checkBundle({ folderName: "INQ-2026-0003-x",
-    files: inq("concluded", "published_strength:\n  - axis: capture\n    state: unrated\n"
-                          + "    grade: null\n  - axis: connection\n    state: unrated\n    grade: null\n"),
-    sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true })).findings
+  const memberFiles = inq("concluded", "published_strength:\n  - axis: capture\n    state: unrated\n"
+                          + "    grade: null\n  - axis: connection\n    state: unrated\n    grade: null\n");
+  const pubFindings = [...(await checkBundle({ folderName: "INQ-2026-0003-x", files: memberFiles,
+    sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true })).findings,
+    ...caseMemberImageFindings({ files: memberFiles }, parseFrontmatter)]
     .filter((x) => x.check === "C-2.8" && Array.isArray(x.repairs));
   t("THE PROBE IS ARMED: a document that CLAIMS case membership is owed the published ceremony, so the repairs below exist to be read",
     pubFindings.length >= 1, true);

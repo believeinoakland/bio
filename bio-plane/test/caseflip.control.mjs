@@ -63,8 +63,15 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-caseflip");            /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
-const INDEX = join(ROOT, "src", "index.mjs");
+/* RE-ANCHORED (legacy-tests T8): the member resolution (`caseEditionState`) and `#casesOfSha` left `store.mjs` for
+   `src/publication/index.mjs`; the container assembly left `index.mjs` for `src/publication/worker.mjs`; the member
+   edition op=publish records left for `src/case-authoring/index.mjs` (`memberEditions.get(memberId)`). The names
+   STORE and INDEX are kept for arms (a), (c), (e), (f) and (b); (d) edits AUTHORING. Every needle matches once;
+   (c) and (f) now anchor on the one `awaiting` line, since publication reads the frozen pair between it and the
+   push. */
+const STORE = join(ROOT, "src", "publication", "index.mjs");
+const INDEX = join(ROOT, "src", "publication", "worker.mjs");
+const AUTHORING = join(ROOT, "src", "case-authoring", "index.mjs");
 const SUITE = join(DIR, "caseflip.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -144,12 +151,10 @@ const ARMS = {
             + "edition 2, and a case that verifies must keep verifying. A fence wider than its ruling is an "
             + "undeclared contract change wearing the costume of caution",
        apply: () => edit(STORE,
-         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,",
-         "      if (!r || Number(r.edition) !== Number(ed)) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,") },
+         "      if (!r) { awaiting.push(m.bundle_id); continue; }",
+         "      if (!r || Number(r.edition) !== Number(ed)) { awaiting.push(m.bundle_id); continue; }") },
 
-  d: { files: [STORE],
+  d: { files: [AUTHORING],
        label: "(d) RE-SLAVE THE EDITION — stamp the CASE's edition as the member's `edition:` again. This "
             + "is the arm that proves the DIVERGENCE IS REAL rather than an artifact of how the suite "
             + "reads: with the two numbers forced equal again the fixture cannot diverge, and block 1's "
@@ -157,8 +162,8 @@ const ARMS = {
        /* RE-AIMED 2026-09-23 by the D-442 worker (BIO_Publication_v0_1.md §3 rule 12), never exempted: op=publish no
           longer stamps `edition:` into a member — the case document states the member's own edition — so the arm
           re-slaves it at the one place it is now decided, the member's edition op=publish records for the case. */
-       apply: () => edit(STORE,
-         '      const memberEdition = already ? Number(already.edition) : memberEditions.get(target);',
+       apply: () => edit(AUTHORING,
+         '      const memberEdition = already ? Number(already.edition) : memberEditions.get(memberId);',
          '      const memberEdition = already ? Number(already.edition) : edition;') },
 
   e: { files: [STORE],
@@ -184,10 +189,8 @@ const ARMS = {
             + "unpinned row, so THIS suite cannot see it. Recorded as an instrument limit rather than left "
             + "to read as a defence that held",
        apply: () => edit(STORE,
-         "      if (!r) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,",
-         "      if (!r || !m.version_sha) { awaiting.push(m.bundle_id); continue; }\n"
-       + "      findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,") },
+         "      if (!r) { awaiting.push(m.bundle_id); continue; }",
+         "      if (!r || !m.version_sha) { awaiting.push(m.bundle_id); continue; }") },
 };
 
 const want = process.argv[2];

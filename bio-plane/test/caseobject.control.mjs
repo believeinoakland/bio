@@ -36,8 +36,11 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-caseobject");          /* inside this worktree, rule 1 */
-const SCHEMA = join(ROOT, "src", "schema.mjs");
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED (legacy-tests T8, PUBLICATION #1 J4.6): the case tables and their ADD COLUMN ladder moved to
+   publication's schema (the ladder is a top-level list there, indented two spaces), and the case index's join to
+   `src/publication/index.mjs`. The names SCHEMA and STORE are kept for the arms; every needle matches once. */
+const SCHEMA = join(ROOT, "src", "publication", "schema.mjs");
+const STORE = join(ROOT, "src", "publication", "index.mjs");
 const SUITE = join(DIR, "caseobject.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -66,7 +69,7 @@ const ARMS = {
          "CREATE TABLE IF NOT EXISTS cases (",
          "CREATE TABLE IF NOT EXISTS cases_ARMED_AWAY (") },
 
-  b: { files: [SCHEMA, STORE],
+  b: { files: [SCHEMA],
        label: "(b) THE TWO MEMBER FACTS: drop `version_sha` and `role` from BOTH schema.mjs and store.mjs's "
             + "ADD COLUMN ladder. BOTH halves together, because a fresh store takes the CREATE TABLE and a "
             + "migrated one takes the ladder, so breaking one alone leaves the other supplying the column",
@@ -75,9 +78,9 @@ const ARMS = {
            "  version_sha TEXT,               -- the member finding's pinned bundle_sha. NULL = not pinned, and STATED\n"
          + "  role        TEXT,               -- 'load_bearing' | 'supporting'. NULL = nobody authored one, and STATED\n",
            "");
-         edit(STORE,
-           '      ["published_case_members", "version_sha", "TEXT"],\n'
-         + '      ["published_case_members", "role", "TEXT"],\n',
+         edit(SCHEMA,
+           '  ["published_case_members", "version_sha", "TEXT"],\n'
+         + '  ["published_case_members", "role", "TEXT"],\n',
            "");
        } },
 

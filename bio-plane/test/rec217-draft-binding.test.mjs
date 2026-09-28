@@ -104,7 +104,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { parseFrontmatter, CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* C-44.3–.5 left the catalogue with case-authoring (CASE-AUTHORING #1 J5, T8 layer 8). */
+import { CASE_DERIVATION_CHECKS } from "../src/case-authoring/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- rec217-draft-binding ---");

@@ -60,7 +60,9 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-caseratify-conclusion");   /* inside this worktree */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED (legacy-tests T8): the three anchors left `store.mjs` with ratification (RATIFICATION #2); each
+   matches exactly once in `src/ratification/index.mjs`. The name STORE is kept for the arms below. */
+const STORE = join(ROOT, "src", "ratification", "index.mjs");
 const SUITE = join(DIR, "caseratify-conclusion.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -97,7 +99,8 @@ const S3_RECORDS = "the new preparation records A's conclusion now";
 const S3_RATIFIES = "AND IT RATIFIES: the case is committed";
 const S3_FINDING = "and the finding ratifies at the version the case pinned";
 const S3_SIGNED = "the signed edition is the one recording claim B";
-const S3_OLD = "and the OLD preparation, still unsigned beside it";
+const S3_SAME = "and it lands on the case its own unsigned preparation names";
+const S3_OLD = "and the OLD preparation's bytes, recording claim A";
 const S4_OVER = "OVER-STRICTNESS: an unchanged conclusion RATIFIES";
 const S4_FINDING = "and its finding ratifies";
 
@@ -111,7 +114,7 @@ const ARMS = {
        apply: () => edit(STORE, PASSES, PASSES.replace("conc.state === \"concluded\" && rec.same.length",
                                                        "conc.state === \"concluded\"")),
        mustFail: [S2_AGAIN, S2_NAMES],
-       cascade: [S2_NOTHING, S3_OLD],
+       cascade: [S2_NOTHING, S3_SAME, S3_OLD],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC,
                      S3_PUB, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S4_OVER, S4_FINDING] },
 
@@ -119,6 +122,7 @@ const ARMS = {
        label: "(B) THE WHOLE REFUSAL DROPPED — the plane as M-92 measured it",
        apply: () => edit(STORE, GATE, GATE.replace("if (moved.length) {", "if (false && moved.length) {")),
        mustFail: [S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_AGAIN, S2_NAMES, S2_NOTHING, S3_OLD],
+       cascade: [S3_SAME],
        mustNotFail: [S1_FIX, S2_DISC, S3_PUB, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S4_OVER, S4_FINDING] },
 
   c: { files: [STORE],
@@ -127,7 +131,7 @@ const ARMS = {
                                                        "rec.same.length")),
        mustFail: [],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_NAMES, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC, S2_AGAIN,
-                     S2_NAMES, S2_NOTHING, S3_PUB, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S3_OLD,
+                     S2_NAMES, S2_NOTHING, S3_PUB, S3_SAME, S3_RECORDS, S3_RATIFIES, S3_FINDING, S3_SIGNED, S3_OLD,
                      S4_OVER, S4_FINDING] },
 
   d: { files: [STORE],
@@ -136,7 +140,7 @@ const ARMS = {
        mustFail: [S3_RATIFIES, S4_OVER, S1_NAMES, S2_NAMES],
        cascade: [S3_FINDING, S3_SIGNED, S4_FINDING],
        mustNotFail: [S1_FIX, S1_REFUSED, S1_ROW, S1_ROUTE, S1_NOTHING, S1_RATIFY, S2_DISC, S2_AGAIN, S2_NOTHING,
-                     S3_PUB, S3_RECORDS, S3_OLD] },
+                     S3_PUB, S3_SAME, S3_RECORDS, S3_OLD] },
 };
 
 const want = process.argv[2];
@@ -245,3 +249,11 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
    EVERY ARM AS DECLARED ON THE FIRST RUN. Arm (c)'s null result is recorded as what it is — a measurement that
    the refusal does not rest on the explicit concluded gate — and not as that gate being dead: it is §7.1 item 4's
    question by name and the only source of the refusal's `why`, which arm (d) shows an assertion reading. */
+
+/* RE-MEASURED 2026-09-28 by legacy-tests (T8), on a copy of the tree (never the checkout): the anchors re-pointed to
+   `src/ratification/index.mjs` (each matches once), and §3 re-anchored on case-authoring R7 (publishing again lands on
+   the case its own unsigned preparation names, so the old preparation is replaced, not kept beside). The new §3 arm
+   (S3_SAME) is a declared CASCADE of (a) and (b): once the old preparation SIGNS, publishing again mints edition 2.
+   Every restore sha256 MATCH, IDENTICAL, SAME (`ratification/index.mjs` 64,063 bytes).
+
+     baseline  22 pass, 0 fail    (c) 22 pass, 0 fail    (d) 15 pass, 7 fail    (a) 17/5    (b) 11/11 */

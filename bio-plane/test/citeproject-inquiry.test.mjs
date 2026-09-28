@@ -127,8 +127,12 @@ const actionMd = (id) => ["---",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
-  "action_kind: cpra_request", "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-GRADED 2026-09-28 by legacy-tests (T8; ACTIONS #1 J2.1): `cpra_request` with no jurisdiction profile is a kind
+     this instance does not offer, and actions R10 refuses it (ACTION_KIND_UNKNOWN, C-101.1). This fixture is about
+     citing a project's inquiry, not about kinds, so the action is one actions offers: `records_request`. */
+  "action_kind: records_request", "risk_tier: 1",
+  /* RE-GRADED 2026-09-28 (T8; actions R9, C-2.10): a named counterparty is an OFFICE, its role and its body. */
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "P.", "", "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 /* NO `references` BLOCK WITH ANYTHING IN IT, EVER. This is the whole discipline

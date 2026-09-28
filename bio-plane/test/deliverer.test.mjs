@@ -74,7 +74,11 @@ const kindOf = (d) => (d && typeof d === "object") ? (d.kind === "member" ? `mem
 /* ========================================================== 0. STRUCTURE */
 console.log("\n--- 0. structure — both acts hand the SESSION ROW to deliveringPrincipal, and it cannot see a signature ---");
 t("STRUCTURE: both acts take the deliverer from the session row — `deliveringPrincipal(sessRights)` at op=caseratify and at op=ratify",
-  (IDX_SRC.match(/const deliveredBy = deliveringPrincipal\(sessRights\);/g) || []).length, 2);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): both handlers left `index.mjs` for
+     `src/ratification/ops.mjs` (`caseRatifyOp`, `ratifyOp`); counted over both files, so a third site in either shows. */
+  (IDX_SRC.match(/const deliveredBy = deliveringPrincipal\(sessRights\);/g) || []).length
+  + (readFileSync(fileURLToPath(new URL("../src/ratification/ops.mjs", import.meta.url)), "utf8")
+       .match(/const deliveredBy = deliveringPrincipal\(sessRights\);/g) || []).length, 2);
 {
   const a = DLV_SRC.indexOf("export function deliveringPrincipal("), b = DLV_SRC.indexOf("\n}", a);
   const body = a < 0 ? "" : DLV_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");

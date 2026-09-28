@@ -68,7 +68,11 @@ const SCHEMA_SRC = readFileSync(join(SRC_DIR, "schema.mjs"), "utf8");
    store.mjs into `record-core` (`RecordCore#mintOpaqueId`, `seedMintLedger`, the `minted_ids` DDL in its own schema),
    and REC-141's PROJ mint into `promotion`. §1 reads the store's corpus as it stood before the extraction — store.mjs
    AND the extracted modules' files — and record-core's schema literal; §2 and §3 patch the line where it now is. */
-const MODULES = ["record-core", "membership", "promotion"];
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4.1, CASE-AUTHORING #1 J5): the CASE mint moved with
+   `publishCase` into `case-authoring`, and the DRAFT and RVG mints into `review`, which seeds its own two prefixes
+   (`reviewOf` -> `record.seedMintLedger([...])`). The corpus widens to both, and S8's seed is the store's
+   `#MINT_LEDGER_LIVE` AND every module's `seedMintLedger([...])` literal, read the same way. */
+const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review"];
 const moduleFiles = (d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => `${d}/${f}`);
 const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
 const RECORD_SCHEMA_SRC = readFileSync(join(SRC_DIR, "record-core", "schema.mjs"), "utf8");
@@ -379,7 +383,9 @@ console.log("\n--- 1. the ledger at the source: beside seq, read only as a point
     + "the counter issued for those is an id this minter can draw, and one with a slug is not",
     declared, untailed);
   const seedBlock = (/static #MINT_LEDGER_LIVE = Object\.freeze\(\[([\s\S]*?)\]\);/.exec(STORE_SRC) || [])[1] || "";
-  const seedPairs = [...seedBlock.matchAll(/\["([A-Z]+)",\s*"(\w+)",\s*"(\w+)"\]/g)]
+  const moduleSeeds = MODULES.flatMap(moduleFiles).map((f) => codeOnly(readFileSync(join(SRC_DIR, f), "utf8")))
+    .flatMap((code) => [...code.matchAll(/\.seedMintLedger\((\[\s*\[[\s\S]*?\]\s*\])\)/g)].map((m) => m[1])).join("\n");
+  const seedPairs = [...(seedBlock + "\n" + moduleSeeds).matchAll(/\["([A-Z]+)",\s*"(\w+)",\s*"(\w+)"\]/g)]
     .map((m) => `${m[1]} ${m[2]}.${m[3]}`).sort();
   /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R34, promotion): a site's `taken` may now ask record-core
      (promotion's PROJ mint asks `record.bundleInfo(id)`); such a call is read as the table and column that method of

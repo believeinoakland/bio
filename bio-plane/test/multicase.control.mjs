@@ -129,7 +129,11 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-multicase");           /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED (legacy-tests T8): arm (a)'s site left `store.mjs` with publication (`#casesOfSha`,
+   `src/publication/index.mjs`), and arms (b) and (c)'s derivation with case-authoring (`publishCase`,
+   `src/case-authoring/index.mjs`, which spells the trim as `str(caseId)`). Each needle matches once there. */
+const PUBLICATION = join(ROOT, "src", "publication", "index.mjs");
+const AUTHORING = join(ROOT, "src", "case-authoring", "index.mjs");
 const LOG = join(PEN, "run.out");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -174,11 +178,11 @@ const ARMS = {
               label: "nothing armed — what distinguishes three-arms-working from three-arms-broken",
               apply: () => {} },
 
-  a: { files: [STORE], suites: [CENSUS, BEHAVIOUR],
+  a: { files: [PUBLICATION], suites: [CENSUS, BEHAVIOUR],
        label: "(a) THE ARM THIS ITEM EXISTS FOR — RE-SCALAR ONE FORMER SITE. `#casesOfSha`'s pinned read "
             + "goes back to a LIMIT 1 over the set and answers with its newest element. The CENSUS must "
             + "FAIL naming the site; a second membership silently dropped is the overclaim class",
-       apply: () => edit(STORE,
+       apply: () => edit(PUBLICATION,
          "    const rows = bundleSha\n"
        + "      ? this.#rows(`SELECT case_id, edition FROM published_case_members\n"
        + "                     WHERE bundle_id=? AND version_sha=? ORDER BY case_id, edition`, bundleId, bundleSha)\n"
@@ -189,23 +193,23 @@ const ARMS = {
        + "                   bundleId, bundleSha)].filter(Boolean)\n"
        + "      : [];") },
 
-  b: { files: [STORE], suites: [CENSUS, BEHAVIOUR],
+  b: { files: [AUTHORING], suites: [CENSUS, BEHAVIOUR],
        label: "(b) THE AMBIGUOUS DERIVATION DEFAULTS INTO CASE A — the refusal is neutered so the "
             + "derivation falls through to `distinct[0]`, which is the pre-D-309 behaviour. The act must "
             + "not merely fail differently: it must come back ok:true having landed in a case nobody "
             + "named, which is what proves the default path existed before",
-       apply: () => edit(STORE,
-         "    if (!newCase && !String(caseId ?? \"\").trim() && distinct.length > 1)",
-         "    if (false && !newCase && !String(caseId ?? \"\").trim() && distinct.length > 1)") },
+       apply: () => edit(AUTHORING,
+         "    if (!newCase && !str(caseId) && distinct.length > 1)",
+         "    if (false && !newCase && !str(caseId) && distinct.length > 1)") },
 
-  c: { files: [STORE], suites: [LIFECYCLE, CASEPIN, PUBLISH],
+  c: { files: [AUTHORING], suites: [LIFECYCLE, CASEPIN, PUBLISH],
        label: "(c) OVER-STRICTNESS — the REJECTED READING, armed. The derivation refuses on ANY existing "
             + "membership rather than on more than one. Correct work in a spelling this item did not "
             + "change must keep passing, so three suites that publish SECOND EDITIONS without naming a "
             + "case must go RED here — the measurement behind where the line was drawn",
-       apply: () => edit(STORE,
-         "    if (!newCase && !String(caseId ?? \"\").trim() && distinct.length > 1)",
-         "    if (!newCase && !String(caseId ?? \"\").trim() && distinct.length > 0)") },
+       apply: () => edit(AUTHORING,
+         "    if (!newCase && !str(caseId) && distinct.length > 1)",
+         "    if (!newCase && !str(caseId) && distinct.length > 0)") },
 };
 
 const want = process.argv[2];

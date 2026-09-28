@@ -56,9 +56,13 @@ const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), 
    `entitycreate` and `relationdeclare` into `src/entities/index.mjs` (`this.#record.allocId("ENT"|"REL", …)`), so the
    corpus widens to every module T5 extracted (calibration, extraction, content, entities, connections, progressions,
    bias, observation-log, retrieval) — a gated prefix minted from the counter in any of them is caught too. */
-const MINT_CORPUS = [STORE_SRC, ...["record-core", "membership", "promotion", "provenance", "capture", "host-governor",
-  "calibration", "extraction", "content", "entities", "connections", "progressions", "bias", "observation-log",
-  "retrieval"].flatMap((d) =>
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4.1, CASE-AUTHORING #1 J5): the CASE mint moved with
+   `publishCase` into `src/case-authoring/`, and the DRAFT and RVG mints into `src/review/`. Rather than add two more
+   names to a hand list that each layer has had to widen, the corpus is now the store and EVERY module directory under
+   `src/` (the list above, the T6–T8 extractions and the new modules alike), so a gated prefix minted from the counter
+   in any module is caught, and a mint site that moves again is still found. */
+const MODULE_DIRS = readdirSync(SRC_DIR, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+const MINT_CORPUS = [STORE_SRC, ...MODULE_DIRS.flatMap((d) =>
   readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(join(SRC_DIR, d, f), "utf8")))]
   .join("\n");
 

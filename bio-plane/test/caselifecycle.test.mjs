@@ -91,7 +91,7 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -136,7 +136,17 @@ const anonCase = async (args) => rP(await (await mf.dispatchFetch(`http://x/api/
 const anonFlags = async (args = "") => rP(await (await mf.dispatchFetch(`http://x/api/?op=caseflags${args ? "&" + args : ""}`)).json());
 
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED (legacy-tests T8, PUBLICATION #1 J4.6, CASE-AUTHORING #1 J5): the revision flag (its detection, its
+   discharge and its table) is publication's, and the NOT_CONCLUDED refusal is case-authoring's. */
+const PUB_SRC = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+const AUTHORING_SRC = readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8");
+const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/publication/schema.mjs", import.meta.url)), "utf8");
+/* Every plane source file, for "nothing in the plane deletes a flag" — asked of the whole tree, not one file. */
+const PLANE_SRC = (() => { const out = [];
+  (function walk(d) { for (const e of readdirSync(d, { withFileTypes: true })) {
+    const p = join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name.endsWith(".mjs")) out.push(readFileSync(p, "utf8")); } })(
+    fileURLToPath(new URL("../src/", import.meta.url)));
+  return out.join("\n"); })();
 
 /* ---- keys and roster ---- */
 const dir = mkdtempSync(join(tmpdir(), "caselifecycle-"));
@@ -607,7 +617,7 @@ console.log("\n--- 5. a revised member FLAGS its containing case, by name ---");
      is asserted against the store's own source rather than described. */
   t("the detection reuses CASE-5's pin and mints no second mechanism: the flag is raised off the "
   + "roster's own `version_sha` matching the sha the new version REPLACED",
-    /WHERE bundle_id=\? AND version_sha=\?/.test(STORE_SRC), true);
+    /WHERE bundle_id=\? AND version_sha=\?/.test(PUB_SRC), true);
   /* AND THE FREEZE HELD. The case still serves edition 1 at the old pin: the
      flag reports that something moved and changes nothing about what was
      published, which is the design's "never silently updated". */
@@ -674,12 +684,20 @@ console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project'
     [true, 2, [V_CASE, W_CASE].sort()]);
 
   /* THE DISCHARGE IS AN AUTHORED ACT, AND IT IS A SIGNED ONE. */
-  const vE2 = await publishCase(VERA, V_PROJECT, { target: V_PUB, ...CEREMONY(2) });
+  /* RE-ANCHORED 2026-09-28 by legacy-tests (T8), never exempted: the edition is RATIFIED when its CASE DOCUMENT is
+     signed (CASE-5b), and since T8 that commit is what discharges (ratification R3: `ratifyCaseDocument` "discharges
+     the case's flags (publication R5)"). The fixture helper signs the case document inside `publishCase`, so this
+     arm now publishes UNSIGNED, asks while nothing is signed, and then signs — the question ("an unsigned
+     publication answers nothing") is asked exactly where it was. */
+  const vE2 = await publishCase(VERA, V_PROJECT, { target: V_PUB, ...CEREMONY(2) }, { sign: false });
   t("(fixture) the owning project publishes a second edition — the deliberate act the design names",
     [vE2.ok, vE2.edition, vE2.caseId], [true, 2, V_CASE]);
   t("and the flag is STILL OUTSTANDING until that edition is RATIFIED: the discharge rests on a "
   + "signature exactly as the pin does, so an unsigned publication answers nothing",
     (await anonFlags(`case=${V_CASE}`)).outstanding, 1);
+  await ratifyCase(async (q, b) => rP(await POST(q, b)), vE2, { dir, key: SIGNER_FOR[VERA], token: VERA });
+  t("(T8, ratification R3) and SIGNING the case document is the ratification that discharges it",
+    (await anonFlags(`case=${V_CASE}`)).outstanding, 0);
   const vRat2 = await ratify("vera", VERA, V_PUB);
   t("(fixture) and it ratifies, at the member's own next edition on its own chain",
     [vRat2.ok, vRat2.signedSha !== V_SIGNED_1], [true, true]);
@@ -707,7 +725,7 @@ console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project'
   t("STRUCTURALLY: the only statement in the plane that removes a revision flag is op=purge's "
   + "whole-corpus sweep — nothing else deletes one, so 'never cleared' is a property of the source "
   + "rather than a rule a later caller is trusted to respect",
-    (STORE_SRC.match(/DELETE FROM case_revision_flags/g) || []).length, 0);
+    (PLANE_SRC.match(/DELETE FROM case_revision_flags/g) || []).length, 0);
   /* CORRECTED 2026-09-14 by REC-82, and the old assertion was WRONG rather than
      superseded by a rule change. It read `/"case_revision_flags"\]/` — the name
      followed by the array's CLOSING BRACKET — which asserts "this table is LAST
@@ -860,7 +878,7 @@ console.log("\n--- 9. the expectation is parsed from CASE-AS-PRODUCTION.md, not 
     /only a CONCLUDED finding may be a case member/.test(table), true);
   t("and it is the same sentence the plane's own refusal prints, so the document and the record "
   + "cannot drift",
-    /only a CONCLUDED finding may be a case member/.test(STORE_SRC), true);
+    /only a CONCLUDED finding may be a case member/.test(AUTHORING_SRC), true);
 }
 
 /* ==================================================================== 10

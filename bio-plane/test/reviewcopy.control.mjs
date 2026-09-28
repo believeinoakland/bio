@@ -35,7 +35,15 @@ const ROOT = join(DIR, "..");
    in one night; see `kickoffs/WORKER.md`). The default is unchanged, so no other lane's run moves;
    `BIO_NC_PEN` points it at the session scratchpad, which is how REC-199 ran it. */
 const PEN = process.env.BIO_NC_PEN || join(ROOT, ".nc-reviewcopy");
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8, REVIEW #1 J4.1): the review copy left `store.mjs` for
+   `src/review/index.mjs` (the name STORE is kept for every arm). What moved in the SPELLING, arm by arm, with each arm's
+   meaning unchanged: the store's private helpers are review's (`draftIdentity`, `#gates` for `#reviewGates`,
+   `#publisher` for `#draftPublisher`, `seesProjectDrafts`) or module functions (`noReviewCopy`, `notReviewOwner`,
+   `caseIdentitySentence`, `statedEdition`); membership is reached as `this.membership.*` (`isAdministrator` for the
+   store's `#isAdminMember`) and the actor is `who`; the recipient's door is `#door`, which answers null for the dead
+   answer, so arm (d)'s liar marks the door and `copy`/`comment` answer the distinguishable refusal; `caseDraftList`
+   is review's `list`, the last method of the class, so arm (k)'s span ends at the class. Every needle matches once. */
+const STORE = join(ROOT, "src", "review", "index.mjs");
 const SUITE = join(DIR, "reviewcopy.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -75,47 +83,55 @@ const ARMS = {
        label: "(c) OVER-STRICTNESS: a grant is live only while its draft PASSES every publish gate — the gate "
             + "pressuring a member into filling a gap to send the copy",
        apply: () => edit(STORE,
-         "    const now = this.#draftIdentity(d);\n    if ((now.caseId",
-         "    if (this.#reviewGates(d).gates !== \"passed\") return null;\n"
-       + "    const now = this.#draftIdentity(d);\n    if ((now.caseId") },
+         "    const now = this.draftIdentity(d);\n    if ((now.caseId",
+         "    if (this.#gates(d).gates !== \"passed\") return null;\n"
+       + "    const now = this.draftIdentity(d);\n    if ((now.caseId") },
 
   d: { files: [STORE],
        label: "(d) THE LIAR'S REFUSAL: a revoked grant's READ answers REVIEW_GRANT_REVOKED instead of the one "
             + "dead answer — the copy is still withheld, and the holder learns their access existed",
-       apply: () => edit(STORE,
-         "      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();\n"
-       + "      d = live.draft; grant = live.grant; reader = \"recipient\";",
+       apply: () => {
+         edit(STORE,
+         "      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return null;\n",
          "      if (!live && this.#one(`SELECT 1 AS x FROM review_grants WHERE secret_sha=? AND revoked_at IS NOT NULL`, "
-       + "String(secretSha ?? \"\"))) return { ok: false, reason: \"REVIEW_GRANT_REVOKED\", detail: \"withdrawn\" };\n"
-       + "      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();\n"
-       + "      d = live.draft; grant = live.grant; reader = \"recipient\";") },
+       + "String(secretSha ?? \"\"))) return { revoked: true };\n"
+       + "      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return null;\n");
+         edit(STORE, "    if (!door) return noReviewCopy();\n    const { draft: d, grant, reader } = door;",
+         "    if (!door) return noReviewCopy();\n"
+       + "    if (door.revoked) return { ok: false, reason: \"REVIEW_GRANT_REVOKED\", detail: \"withdrawn\" };\n"
+       + "    const { draft: d, grant, reader } = door;");
+         edit(STORE, "    if (!door) return noReviewCopy();\n    const { draft: d, grant } = door;",
+         "    if (!door) return noReviewCopy();\n"
+       + "    if (door.revoked) return { ok: false, reason: \"REVIEW_GRANT_REVOKED\", detail: \"withdrawn\" };\n"
+       + "    const { draft: d, grant } = door;");
+       } },
 
   /* REC-133 — §6A.2's authority (BOB #15). Declarations in the suite's header. */
   e: { files: [STORE],
        label: "(e) REVOKE WIDENED TO ADMINISTRATORS (§6A.2's first, corrected version): an administrator who is "
             + "not the owner withdraws a grant",
        apply: () => edit(STORE,
-         "if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner(\"revoke\");",
-         "if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who))) "
-       + "return Store.#notReviewOwner(\"revoke\");") },
+         "if (!g || !this.membership.isProjectOwner(g.project_id, who)) return notReviewOwner(\"revoke\");",
+         "if (!g || !(this.membership.isProjectOwner(g.project_id, who) || this.membership.isAdministrator(who))) "
+       + "return notReviewOwner(\"revoke\");") },
 
   f: { files: [STORE],
        label: "(f) ISSUE WIDENED TO EDITORS: a joined participant who is not an owner hands the draft outside",
        apply: () => edit(STORE,
-         "if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner(\"grant\");",
-         "if (!d || !this.#isProjectEditor(d.project_id, a.who)) return Store.#notReviewOwner(\"grant\");") },
+         "if (!d || !this.membership.isProjectOwner(d.project_id, who)) return notReviewOwner(\"grant\");",
+         "if (!d || !this.membership.isProjectEditor(d.project_id, who)) return notReviewOwner(\"grant\");") },
 
   g: { files: [STORE],
        label: "(g) THE LIAR'S WIDENING: authoring a draft admitted to ANY signed-in member, position ignored",
        apply: () => edit(STORE,
-         "    if (!this.#isProjectEditor(owning, a.who)) return Store.#notReviewOwner(\"draft\");\n",
+         "    if (!this.membership.isProjectEditor(owning, who)) return notReviewOwner(\"draft\");\n",
          "") },
 
   h: { files: [STORE],
        label: "(h) THE DRY RUN AS THE EDITOR: the gates run as the draft's last editor, so a non-owner editor's "
             + "draft reads NOT_THE_PROJECT_OWNER instead of its real gaps",
        apply: () => edit(STORE,
-         "        const by = this.#draftPublisher(row);",
+         "        const by = this.#publisher(row);",
          "        const by = row.updated_by;") },
 
   /* REC-198 — the list of a project's drafts (BOB #32: fenced exactly like reading one). Declarations in the
@@ -123,30 +139,30 @@ const ARMS = {
   i: { files: [STORE],
        label: "(i) THE FENCE DROPPED: the list answers any caller the op table admits, for any project that exists",
        apply: () => edit(STORE,
-         "\n        || !this.#seesProjectDrafts(pid, viewer)) return Store.#noReviewCopy();",
-         ") return Store.#noReviewCopy();") },
+         "\n        || !this.seesProjectDrafts(pid, viewer)) return noReviewCopy();",
+         ") return noReviewCopy();") },
 
   j: { files: [STORE],
        label: "(j) THE LIAR'S SECOND FENCE: the list asks a COPY that agrees today on owner, editor and uninvited "
             + "member — joined participants only, as the ruling's parenthesis reads — instead of calling the fence",
        apply: () => edit(STORE,
-         "\n        || !this.#seesProjectDrafts(pid, viewer)) return Store.#noReviewCopy();",
-         "\n        || !this.#isProjectEditor(pid, String(viewer ?? \"\").replace(/^member:/, \"\"))) "
-       + "return Store.#noReviewCopy();") },
+         "\n        || !this.seesProjectDrafts(pid, viewer)) return noReviewCopy();",
+         "\n        || !this.membership.isProjectEditor(pid, String(viewer ?? \"\").replace(/^member:/, \"\"))) "
+       + "return noReviewCopy();") },
 
   k: { files: [STORE],
        label: "(k) OVER-STRICTNESS: correct work in a spelling the suite did not write — the list's local `pid` "
             + "renamed `projectId` throughout — must PASS",
        apply: () => {
          const src = readFileSync(STORE, "utf8");
-         const a = src.indexOf("  caseDraftList({ project = null");
-         const b = src.indexOf("  /* ===== END REC-126", a);
-         if (a < 0 || b < 0) throw new Error("ARM k: caseDraftList's span not found");
+         const a = src.indexOf("  list({ project = null");
+         const b = src.indexOf("\n}\n\nconst instances", a);
+         if (a < 0 || b < 0) throw new Error("ARM k: list's span not found");
          const span = src.slice(a, b);
          const renamed = span.replace(/\bpid\b/g, "projectId");
          if (renamed === span || (span.match(/\bpid\b/g) || []).length < 4)
            throw new Error("ARM k: the rename matched too little to be an arm");
-         if (DRY) { DRY.push({ file: STORE, needle: "  caseDraftList({ project = null" }); return; }
+         if (DRY) { DRY.push({ file: STORE, needle: "  list({ project = null" }); return; }
          writeFileSync(STORE, src.slice(0, a) + renamed + src.slice(b));
        } },
 
@@ -158,9 +174,9 @@ const ARMS = {
        apply: () => edit(STORE,
          /* RE-ANCHORED by D-538: the identity line now passes the draft's `newCase` to the sentence. The arm
             still drops the FIELD alone; the sentence beside it is (o)'s subject, not this one's. */
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),\n"
+         "              identity: caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),\n"
        + "              newCase: !!params.newCase },",
-         "              identity: Store.#caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase) },") },
+         "              identity: caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase) },") },
 
   m: { files: [STORE],
        label: "(m) THE LIAR'S FIELD: `newCase` answered from the CASE IDENTITY (`!ident.caseId`) instead of "
@@ -199,16 +215,16 @@ const ARMS = {
        label: "(r) `newCase` IGNORED AGAIN: the sentence treats every draft naming no case as a new case, and "
             + "every draft naming one as its next edition — the plane exactly as it stood before D-538",
        apply: () => edit(STORE,
-         "  static #caseIdentitySentence(caseId, edition, newCase) {",
-         "  static #caseIdentitySentence(caseId, edition, _ignored, newCase = !caseId) {") },
+         "export function caseIdentitySentence(caseId, edition, newCase) {",
+         "export function caseIdentitySentence(caseId, edition, _ignored, newCase = !caseId) {") },
 
   s: { files: [STORE],
        label: "(s) OVER-STRICTNESS: the derived sentence REWORDED, saying the same two facts (derived at "
             + "publication; undetermined here) in words this suite did not write — must PASS",
        apply: () => edit(STORE,
-         "    return \"a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED \"",
-         "    return \"an undetermined case: publication will derive it from the record, since this draft names none \"\n"
-       + "         + \"and asks for no new one; until then \"") },
+         "  return \"a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED \"",
+         "  return \"an undetermined case: publication will derive it from the record, since this draft names none \"\n"
+       + "       + \"and asks for no new one; until then \"") },
 
   /* D-568 — a derived draft's edition is UNDETERMINED on the wire, and its internal key still binds. Declarations in
      the suite's header, made before arming. */
@@ -216,15 +232,15 @@ const ARMS = {
        label: "(t) THE INTERNAL EDITION ANSWERED AGAIN: `#statedEdition` returns the key's edition whatever the "
             + "draft is — the plane exactly as it stood before D-568, edition 1 beside a DERIVED case",
        apply: () => edit(STORE,
-         "    return ident.caseId || newCase ? ident.edition : null;",
-         "    return ident.edition;") },
+         "  return ident.caseId || newCase ? ident.edition : null;",
+         "  return ident.edition;") },
 
   u: { files: [STORE],
        label: "(u) THE LIAR'S NULL: every draft naming no case answers null, `newCase` ignored — right about DD for "
             + "free, and denies the minted-case edition a new-case draft truly stands at",
        apply: () => edit(STORE,
-         "    return ident.caseId || newCase ? ident.edition : null;",
-         "    return ident.caseId ? ident.edition : null;") },
+         "  return ident.caseId || newCase ? ident.edition : null;",
+         "  return ident.caseId ? ident.edition : null;") },
 
   v: { files: [STORE],
        label: "(v) THE WIRE EDITION USED AS THE KEY: a grant's liveness compared with the STATED edition instead of "
@@ -232,14 +248,14 @@ const ARMS = {
        apply: () => edit(STORE,
          "    if ((now.caseId ?? null) !== (g.case_id ?? null) || now.edition !== Number(g.edition)) return null;",
          "    if ((now.caseId ?? null) !== (g.case_id ?? null)\n"
-       + "        || Store.#statedEdition(now, !!JSON.parse(d.params).newCase) !== Number(g.edition)) return null;") },
+       + "        || statedEdition(now, !!JSON.parse(d.params).newCase) !== Number(g.edition)) return null;") },
 
   w: { files: [STORE],
        label: "(w) OVER-STRICTNESS: the same rule in a spelling this suite did not write — two early returns "
             + "instead of one conditional — must PASS",
        apply: () => edit(STORE,
-         "    return ident.caseId || newCase ? ident.edition : null;",
-         "    if (!ident.caseId && !newCase) return null;\n    return ident.edition;") },
+         "  return ident.caseId || newCase ? ident.edition : null;",
+         "  if (!ident.caseId && !newCase) return null;\n  return ident.edition;") },
 };
 
 const want = process.argv[2];

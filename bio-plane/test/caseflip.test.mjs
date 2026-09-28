@@ -105,7 +105,9 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster row */
-import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs"; /* UI-81: C-44.2's row, read, never typed */
+/* UI-81: C-44.2's row, read, never typed. T8 (PUBLICATION #1 J4, CASE-AUTHORING #1 J5): C-44.2 left the catalogue's
+   CASE_DERIVATION_CHECKS for publication's `CASE_RESOLUTION_CHECKS` (the refusal is the public read's). */
+import { CASE_RESOLUTION_CHECKS } from "../src/publication/checks.mjs";
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -1038,7 +1040,7 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
   t("and that refusal carries its CODE, C-44.2 and the catalogue row's canned translation (DEC-49), "
     + "so the stranger reads a sentence instead of the code",
     [strangerAmbig.code, strangerAmbig.check,
-     strangerAmbig.translation === CASE_DERIVATION_CHECKS.FINDING_IN_SEVERAL_CASES?.translation
+     strangerAmbig.translation === CASE_RESOLUTION_CHECKS.FINDING_IN_SEVERAL_CASES?.translation
        && typeof strangerAmbig.translation === "string" && strangerAmbig.translation.length > 40],
     ["FINDING_IN_SEVERAL_CASES", "C-44.2", true]);
   /* THE OVER-STRICTNESS COMPLEMENT, IN THE SUITE RATHER THAN ONLY IN THE CONTROL:

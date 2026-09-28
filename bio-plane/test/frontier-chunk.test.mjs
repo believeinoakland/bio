@@ -79,6 +79,7 @@ import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (DEC-20, case-authoring R12) */
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -298,7 +299,8 @@ async function d443() {
 
   /* D443-7: STRUCTURAL, for the reason the header gives. Read off the source: the function's statement binds
      ONE json_each value and carries no spread marks. */
-  const src = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): `publishedCaseRegistryFor` is publication's. */
+  const src = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
   const body = (name) => { const i = src.indexOf(`\n  ${name}(`); return i < 0 ? "" : src.slice(i, src.indexOf("\n  }\n", i)); };
   const pcr = body("publishedCaseRegistryFor");
   /* CORRECTED 2026-09-24 (D-445), never exempted: this label said "not drivable past 100 through its op".
@@ -382,6 +384,7 @@ async function d443b() {
     name: "PROJ-2026-0923-d445", created: V, updated: V });
 
   const DOC = "INFO-2026-0923-d445doc", F = "INQ-2026-0923-d445f";
+  const CONN = await connectionAtC(async (b) => POST(`op=entitycreate&token=${VERA}`, b));
   const docMd = [...["---", `id: ${DOC}`, "object_type: information", "schema: information@1",
     `title: "D-445 ${DOC}"`, "current_state: collected", "prior_state: null", `created: "${V}"`,
     `last_updated: "${V}"`, "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -403,25 +406,32 @@ async function d443b() {
     "surfaced_by: agent", 'disposition_reason: ""',
     "recheck_triggers:", "  - text: Revisit after the next budget cycle",
     "    description: The adopted budget may restate the transfer basis.",
+    /* RE-GRADED 2026-09-28 by legacy-tests (T8), never exempted: the connection leg stated `grade_source: hunch`,
+       hunch debt that case-authoring R12 now refuses to publish over (DEC-20, UNCLEARED_HUNCH). This arm is about
+       the registry read past the ceiling, not about hunches, so the leg EARNS its C: DOC carries a reading naming
+       the finding's subject entity by its label, that capture is resolved, and the leg says `resolution`
+       (`earned-connection.mjs`). */
+    `subject_entity: ${CONN.entityId}`,
     "basis:", `  - target: ${DOC}`, "    role: supports", "    grade: B", "    grade_axis: capture",
     "    grade_source: capture", `  - target: ${DOC}`, "    role: supports", "    grade: C",
-    "    grade_axis: connection", "    grade_source: hunch", "    author: vera445",
-    `    date: ${V.slice(0, 10)}`,
+    "    grade_axis: connection", "    grade_source: resolution",
     "---", "", "## Question", "", `What does ${F} rest on?`, "", "## What It Rests On", "",
     "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
     `### Session ${V} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
     "## Review Notes", ""].join("\n");
   let s445 = 0;
-  const put = async (id, text, type, state, register = []) => POST(`op=promote&token=${VERA}`, {
+  const put = async (id, text, type, state, register = [], extra = []) => POST(`op=promote&token=${VERA}`, {
     bundleId: id, base: null,
     snapKey: `20260923T${String(600000 + (++s445)).slice(-6)}Z_${sha(`d445-${s445}`).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", current_state: state,
             created: V, last_updated: V },
-    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register });
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extra], register });
   /* A REGISTERED CAPTURE on the document, because C-2.8 refuses a capture grade over a document whose
      arrival the record never witnessed. */
   must(`promote ${DOC}`, await put(DOC, docMd, "information", "collected",
-    [{ path: "snapshots/source.bin", sha256: sha("d445-doc-bytes"), bytes: 512, encoding: "binary" }]));
+    [{ path: "snapshots/source.bin", sha256: sha("d445-doc-bytes"), bytes: 512, encoding: "binary" }],
+    CONN.files(sha("d445-doc-bytes"), "snapshots/source.bin")));   /* T8: its reading, so the connection C is earned */
+  must(`resolve ${DOC}`, await POST(`op=resolve&token=${VERA}`, { captureSha: sha("d445-doc-bytes") }));
   must(`promote ${F}`, await put(F, withAdoptableReading(findingMd, { by: "vera445", at: V }), "inquiry", "open"));
   must("conclude", await GET(`op=conclude&token=${VERA}&target=${encodeURIComponent(F)}`
     + `&conclusion=${encodeURIComponent("The record the finding cites answers its question.")}`

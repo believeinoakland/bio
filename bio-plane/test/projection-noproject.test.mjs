@@ -294,13 +294,19 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
      THREE, each counted in the file that holds it. */
   t("ONE READER: exactly THREE call sites — op=basisversions, op=projection's single-bundle arm, "
   + "and REC-135's #caseConclusionFor (the case path's no-project arm)",
-    [count(BV, "this.noProjectConclusionOf("), count(store, "this.#noProjectConclusionOf(")], [1, 2]);
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): `#caseConclusionFor` is ratification's
+       `caseConclusionFor` and calls the reader through basis-versions (`this.basisVersions.noProjectConclusionOf(`);
+       the store keeps only op=projection's decoration. Still THREE, each counted in the file that holds it. */
+    [count(BV, "this.noProjectConclusionOf("), count(store, "this.#noProjectConclusionOf("),
+     count(readFileSync(SRC("ratification/index.mjs"), "latin1"), "this.basisVersions.noProjectConclusionOf(")], [1, 1, 1]);
   /* NAMED FILES, NOT A DIRECTORY WALK (hygiene.test.mjs's walk census): the store
      that holds the reader and the dispatch that could host a copy beside the op. */
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval): retrieval's files join the named ones, since the op's
      implementation now lives there and a copy beside it would sit there. */
   /* RE-ANCHORED 2026-09-28: and basis-versions', where the reader itself now lives. */
-  const srcs = ["store.mjs", "index.mjs", "retrieval/index.mjs", "retrieval/projection.mjs", "basis-versions/index.mjs"]
+  /* RE-ANCHORED 2026-09-28 (T8): and ratification's, where the third call site now lives. */
+  const srcs = ["store.mjs", "index.mjs", "retrieval/index.mjs", "retrieval/projection.mjs", "basis-versions/index.mjs",
+                "ratification/index.mjs"]
     .map((f) => readFileSync(SRC(f), "latin1")).join("\n");
   t("ONE READER: the reader's own tokens occur ONCE across store.mjs and index.mjs (a copy carries them twice)",
     [count(srcs, "relationship_established: false"), count(srcs, "fm.conclusion_claim"),
