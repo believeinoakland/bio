@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { checkSkillVersion, parseSkillVersion, renderPack, SKILL_CHECKS, SKILL_CHECK_KEYS }
   from "../../../src/skillpack.mjs";
 import { CLAUSES } from "../../../src/skilldoctrine.mjs";
+import * as airun from "../../../src/airun.mjs";
 import { catalogue, published } from "./fixture.mjs";
 
 const ROW = catalogue.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
@@ -36,6 +37,11 @@ test("R12 a trimmed value not <pack>@<edition> with no whitespace and exactly on
   }
 });
 
+test("R12 R13 checkSkillVersion and parseSkillVersion are ai-runs' own (its R8), re-exported with no copy", () => {
+  assert.equal(checkSkillVersion, airun.checkSkillVersion);
+  assert.equal(parseSkillVersion, airun.parseSkillVersion);
+});
+
 test("R12 every well-formed value is accepted, including one this module never rendered, and a rendered version is", () => {
   for (const v of ACCEPTED) assert.equal(checkSkillVersion(v), null, v);
   assert.equal(checkSkillVersion(renderPack(published(), catalogue).version), null);
@@ -57,15 +63,20 @@ test("R13 parseSkillVersion returns {pack, edition, digest} for an accepted valu
   for (const v of ACCEPTED) assert.notEqual(parseSkillVersion(v), null, v);
 });
 
-test("R25 C-22.7 is this module's row: its code, number and translation unchanged from the catalogue, and the one code it refuses under", () => {
+test("R25 C-22.7 is this module's row, named by key: its code, number and translation unchanged, the row ai-runs' predicate mints, and the one code it refuses under", () => {
   assert.deepEqual(SKILL_CHECK_KEYS, ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   assert.deepEqual(Object.keys(SKILL_CHECKS), ["AI_RUN_SKILL_VERSION_UNNAMED"]);
-  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "the catalogue's own row, never a copy");
+  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED,
+    "ai-runs' own row, never a copy");
+  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "the row the catalogue held, unchanged");
   assert.equal(ROW.check, "C-22.7");
-  assert.equal(typeof ROW.translation, "string");
-  assert.ok(ROW.translation.length > 0);
-  assert.match(ROW.where, /skillpack\.mjs checkSkillVersion/);
+  assert.equal(ROW.translation, "This run did not say which version of its instructions it was working under. "
+    + "What a run found can only be read against the instructions it was given, so the record "
+    + "asks for that version before the run starts rather than guessing at it afterwards.");
   const r = checkSkillVersion("");
   assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_SKILL_VERSION_UNNAMED", ROW.check, ROW.translation]);
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
+
+test.todo("R25 the C-22.7 row is held in this module's paths: not met, SKILLS #2 QUESTION J1 (the row's one minting site, "
+  + "checkSkillVersion, is ai-runs', earlier in the order, and cannot read a row held here)");

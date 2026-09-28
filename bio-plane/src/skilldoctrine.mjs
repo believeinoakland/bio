@@ -85,17 +85,23 @@
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
-import { AI_RUN_CHECKS, MACHINE_FENCE_CHECKS,
-         EARNED_GRADE_SOURCES, BASIS_ROLES,
+import { MACHINE_FENCE_CHECKS, EARNED_GRADE_SOURCES, BASIS_ROLES,
          BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
+/* The run's rows and the one deployment order are ai-runs' (its R8, R35, R44;
+   N156): read from it, never copied. */
+import { AI_RUN_CHECKS } from "./airun.mjs";
+import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
+         SEQUENCING_ALSO_NAMED_IN } from "./ai-runs/deployment.mjs";
+export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
-/* C-22.7 IS THIS MODULE'S ROW (R25, K81), named here by key and selected from
-   the catalogue, never copied, exactly as `observation-log` names its seven
-   C-22 rows. The row's text stays in the catalogue's `AI_RUN_CHECKS` for as long
-   as `ai-runs`, earlier in the order, holds its own copy of the predicate
-   (K82 (4)) and must read it. Held in this file rather than beside
-   `checkSkillVersion` because `skillpack.mjs` imports this one, and the clauses
-   below cite the row at load; `skillpack.mjs` re-exports it. */
+/* C-22.7 IS THIS MODULE'S ROW (R25, K81, K194), named here by key and selected
+   from `ai-runs`' `AI_RUN_CHECKS`, never copied, exactly as `observation-log`
+   names its seven C-22 rows. `ai-runs`, earlier in the order, holds the one
+   predicate that mints it (`checkSkillVersion`, its R8) and must read the row,
+   so the row's text is held where that predicate can reach it. Held in this
+   file rather than beside the re-export of `checkSkillVersion` because
+   `skillpack.mjs` imports this one, and the clauses below cite the row at load;
+   `skillpack.mjs` re-exports it. */
 export const SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
 export const SKILL_CHECKS = Object.freeze(Object.fromEntries(
   SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
@@ -721,174 +727,24 @@ export const PERMITTED_AUTO_COMPOSITION = {
 };
 
 /* =========================================================================
- * SK-4 — CHECK DEPLOYS FIRST. THE SEQUENCING IS RECORDED HERE; THE GATE IS NOT.
+ * SK-4 — CHECK DEPLOYS FIRST. THE ORDER IS ai-runs', RE-EXPORTED HERE.
  *
  * `IS-BUILD-PLAN.md` SK-4; `INVESTIGATIVE-SESSION.md` §2 (the objective and the
- * first deployed mode) and §14b.4; `docs/archive/IS-SWEEP-2026-08-07.md` §4b item
- * 7; DEC-24 (the CHECK role) and DEC-55's enacted CHECK-first instruction.
+ * first deployed mode) and §14b.4; DEC-24 (the CHECK role) and DEC-55's enacted
+ * CHECK-first instruction.
  *
- * ---------------------------------------------------------------------------
- * THE ROW'S OWN CONSTRAINT, AND IT IS THE WHOLE SHAPE OF WHAT IS BELOW
- * ---------------------------------------------------------------------------
- *
- * The plan row is explicit: *"SK-4 RECORDS the sequencing; the gate itself is a
- * row in FL-3's table and must not be re-implemented here."* So this block holds
- * NO FLAG, NO PREDICATE AND NO DECISION. It holds an ADDRESS and a reason, and a
- * statement of what the thing at that address does not reach.
- *
- * The gate is `agent-worker/src/harness.mjs` — FL-3's landed `gate-mode` row, the
- * FIRST row every run takes, reading a `deployed` flag that no judgement can set.
- * A second gate written here would be the defect §14b.4 names, and it would be
- * worse than the ordinary case of that defect: two gates disagreeing is how a run
- * gets past both while each looks like it held.
- *
- * ---------------------------------------------------------------------------
- * WHY AN ADDRESS AND NOT AN IMPORT, WHICH IS A DECISION AND NOT LAZINESS
- * ---------------------------------------------------------------------------
- *
- * This module is bundled into the PLANE's Worker. Importing the fleet member's
- * harness would drag a fleet member into the plane's bundle — the exact inversion
- * of the reasoning `harness.mjs` itself records for pinning `LEVELS` rather than
- * importing `airun.mjs` (*"the fleet's whole point is that a member ships
- * alone"*). What closes the drift there is a SOURCE PIN, and that is what closes
- * it here: `GATE_ADDRESS` names the file, the exports and the row KEY, and the
- * gate's owner, `agent-worker`, later in the order and a user of this module,
- * DEREFERENCES that address in its own tests (its R44; N53): a row renamed, a
- * mode dropped, or `MODES` no longer equal to `order` fails there rather than
- * leaving a doctrine sentence that quietly stopped being true. This module's
- * own tests read nothing later in the order (P4).
- *
- * ---------------------------------------------------------------------------
- * AND THE RESIDUE IS LARGE, SO IT IS STATED FIRST RATHER THAN LAST
- * ---------------------------------------------------------------------------
- *
- * SK-3's rule — `does_not_reach` is required even on the ENFORCED items, because
- * a partial fence read as a whole one is worse than an unenforced rule read as
- * unenforced — bites hardest on this record. The gate is real and it is code, and
- * it sits INSIDE the thing it gates: `ai_runs.mode` is free text in the plane's
- * schema with no vocabulary check and no C-number over it (MEASURED, and the
- * suite re-measures it every run), so what refuses `investigate` is one row in
- * one fleet member's own control flow and nothing at the record's edge. That is
- * a true statement about a gate whose authorisation surface is deliberately
- * small, and it is NOT a statement that the record refuses a mode. It does not.
+ * This file wrote the deployment order first. It is now held once, by `ai-runs`
+ * (`ai-runs/deployment.mjs`, its R44; K182 (3), N156), because the plane's open
+ * refuses a run in a mode that is not deployed (C-109.1, ai-runs R40) and must
+ * read the order, and `ai-runs` is earlier in the order than this module. So
+ * `DEPLOYMENT_SEQUENCE`, `GATE_ADDRESS`, `SEQUENCING_SOURCE` and
+ * `SEQUENCING_ALSO_NAMED_IN` are imported above and re-exported unchanged
+ * (R18), and the layer below carries them: an ADDRESS for the gate and a
+ * reason for the order, and no flag, predicate or decision of this module's.
+ * The gate itself is `agent-worker`'s first row (`gate-mode`), whose owner,
+ * later in the order and a user of this module, dereferences `GATE_ADDRESS` in
+ * its own tests; this module's own tests read nothing later in the order (P4).
  * ========================================================================= */
-
-/** WHERE THE GATE ACTUALLY LIVES. An address, dereferenced by the suite — never
- *  an import, never a copy, and never a flag this file holds. */
-export const GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) — landed, and outside this area's paths",
-  modes_export: "MODES",
-  table_export: "CONTROL_FLOW",
-  row: "gate-mode",
-  first_step_export: "FIRST_STEP",
-  decision_function: "nextStep",
-  why_it_is_first:
-    "a run in a mode that is not deployed terminates before it has spent anything, so the gate "
-    + "cannot be reached around by exhausting something else first",
-};
-
-/** Where §2's ruling was written, and where the sweep restates it. Both are
- *  looked up by the suite; neither is quoted from memory. */
-export const SEQUENCING_SOURCE = TABLE_SOURCE;
-export const SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
-
-/** SK-4's ONE DOCTRINE ITEM. It records an ORDER and cites a gate; it decides
- *  nothing and refuses nothing.
- *
- *  `order` IS THE DELIVERABLE. Everything else on this object is either a span
- *  of a document (checked by lookup) or an address (checked by dereference), so
- *  the only thing here a reader has to take on trust is the order itself — and
- *  the suite pins that to the landed table in BOTH directions, so a mode added,
- *  dropped or enabled moves it. */
-export const DEPLOYMENT_SEQUENCE = {
-  id: "check-deploys-first",
-
-  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
-     mode that deploys first, and every later index is a mode that enables only
-     after the one before it has been verified live. */
-  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
-     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
-     directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
-  order: ["check", "investigate", "extract"],
-  first_deployed_mode: "check",
-
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
-  text: "CHECK IS THE FIRST DEPLOYED MODE",
-  role:
-    "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role "
-    + "— the record read adversarially, by the machine aimed at self-directed overclaiming, the "
-    + "threat model the doctrine names",
-  because:
-    "also the safest first deployment, because a run over a concluded inquiry has the smallest "
-    + "authorisation surface and the clearest ground truth to be measured against",
-  satisfies:
-    "Deploying that mode first satisfies the enacted instruction without a second architecture",
-  source: SEQUENCING_SOURCE,
-
-  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
-     standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
-  also_named_in:
-    "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session "
-    + "run with §2's objective against an existing conclusion IS the CHECK role; deploy that mode "
-    + "first. No second architecture.",
-  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
-
-  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
-     half is this area's, and saying so is the point rather than a disclaimer. */
-  enabling_condition:
-    "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED "
-    + "inquiry, swept after, with `op=audit` clean.",
-  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
-
-  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
-     cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
-  verification_recorded: null,
-
-  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
-  enables_how:
-    "by an EDIT to the landed table under review — `MODES.investigate.deployed`. A mode that could "
-    + "be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
-
-  gate: GATE_ADDRESS,
-
-  /* NO C-NUMBER, AND THAT IS A FACT ABOUT THE RECORD RATHER THAN AN OMISSION
-     HERE. Nothing in the check catalogue refuses a mode, so citing a C-number
-     would be citing something that does not exist. `enforced_by_row` is a THIRD
-     kind of backing beside SK-2's C-numbers and SK-3's instruction-only, and the
-     suite prints all three rather than collapsing them — a control-flow row is
-     code, but it is not a refusal at the record's edge and must not be tallied
-     as one. */
-  enforced_by: [],
-  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
-  does_not_reach:
-    "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a "
-    + "build with the flag already flipped, and no instrument reads a release note. It also does "
-    + "not reach the RECORD: `ai_runs.mode` is free text in the plane's schema with no vocabulary "
-    + "check and no C-number over it, so a caller that never runs this harness can open a run in "
-    + "any mode string at all and the plane will store it. What the gate refuses is one fleet "
-    + "member's own control flow, which is the smallest authorisation surface §2 asked for and is "
-    + "also the whole of its reach. And it cannot verify its own enabling condition: `deployed: "
-    + "true` is an edit, and the REVIEW of that edit — not this text and not that flag — is what "
-    + "holds CHECK's live verification in front of it.",
-
-  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
-  holds_no_gate:
-    "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of "
-    + "it gets past nothing, because the row at `gate-mode` runs before anything it could ignore.",
-};
 
 /* =========================================================================
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
