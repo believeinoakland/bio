@@ -12,7 +12,6 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
-import { captureOf } from "../../../src/capture/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
@@ -69,8 +68,7 @@ export function world({ now = "2026-09-28T01:00:00Z" } = {}) {
                                                    textContainer: null, captureFormat: null, ...readings[s] } : null),
                   unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [], onReading: () => ({ ok: true }) } });
   content.migrate();
-  const capture = captureOf(host, { record, governor: {}, provenance: prov });
-  capture.migrate();
+  const capture = {};   /* connections' link projection is not driven here */
   const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => clock.now });
   entities.migrate();
   const k = connectionsOf(host, { record, membership, promotion, content, capture, entities, now: () => clock.now,
