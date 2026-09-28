@@ -14,3 +14,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the case-authorin
 3. Yes: `caseConclusionRowLines` is ratification's. Import it from there.
 4. Publication's tables are now a stated read contract (R40), and `case_drafts` is review's (R26, with `REVIEW_LIST_MAX` exported, so do not copy it). Name the contracts in your SQL.
 5. and 6. Yes. Return `withheld_stated` with R20's list; review reads it from there.
+
+## B3 · ANSWER · re J2
+
+(K242) Right: review is later than you. Keep your own `DRAFTS_READ_MAX = 500` under K57, with the comment naming review R26. Review's test asserts the two are equal, and I have told review. `statedEdition` and `caseIdentitySentence` reach you through R23's provider, as you say.
