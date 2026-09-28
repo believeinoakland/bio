@@ -44,12 +44,36 @@ export function actionMd(id, o) {
   return lines.join("\n");
 }
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB pattern too
+   complex"), which node:sqlite does not (K313). The world's storage answers as workerd does, so code that indexes a
+   cursor or writes a long pattern fails here as it would in the durable object (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function workerdShaped(st) {
+  const exec = st.sql.exec.bind(st.sql);
+  st.sql.exec = (q, ...args) => {
+    const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+    const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+    if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+      throw new Error("LIKE or GLOB pattern too complex");
+    const rows = exec(q, ...args);
+    let i = 0;
+    return {
+      [Symbol.iterator]() { return this; },
+      next: () => (i < rows.length ? { value: rows[i++], done: false } : { value: undefined, done: true }),
+      toArray: () => { const r = rows.slice(i); i = rows.length; return r; },
+      one: () => { if (rows.length - i !== 1) throw new Error("Expected exactly one result from SQL query"); return rows[i++]; },
+    };
+  };
+}
+
 /** The world: a project (olive owns it; bo and cy joined; quinn outside) whose published case edition holds F (resting on
  *  DOC), a live determination D of an act against two standards resting on F, the test profile active, and the layer-9
- *  modules. `profiles` replaces the active profile list filings reads (ids or profile objects); actions reads
- *  record-core's setting, the test profile. */
+ *  modules, over storage shaped as workerd's (a cursor-answering `sql.exec`). `profiles` replaces the active profile
+ *  list filings reads (ids or profile objects); actions reads record-core's setting, the test profile. */
 export function world({ profiles = undefined, group = "test-group" } = {}) {
   const w = publicationWorld({ group });
+  workerdShaped(w.st);
   for (const m of ["olive", "bo", "cy", "quinn"]) w.member(m);
   const proj = w.project("Parks", "olive");
   for (const m of ["bo", "cy"]) {
@@ -111,6 +135,11 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const x = {
     ...w, w, f, proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
+    /* the world's own reads, over the cursor */
+    row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
+    rows: (sq, ...a) => [...w.st.sql.exec(sq, ...a)],
+    count: (t) => [...w.st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
+    snapshot: (tables) => Object.fromEntries(tables.map((t) => [t, JSON.stringify([...w.st.sql.exec(`SELECT * FROM "${t}"`)])])),
     /** A new action created by a member (throws when refused); answers its id. `o` as `actionMd`'s, over defaults;
      *  its governing laws are stated through actions' R18 act unless `laws: null`. */
     action(o = {}) {
