@@ -45,3 +45,49 @@ B4 applied: `tranche/T8` (publication) merged into `job/T8/case-authoring` and p
 Merge resolutions: in `store.mjs` both imports, both purge filters and both op spreads kept; the two removed blocks (publication's case-document code, my `#searchedForCase` and `publishcase` op) both dropped. In `bio-checks.mjs` both removals taken, so `CASE_DERIVATION_CHECKS` is now `{}` (J3 point 2). One consequence for legacy-store: store's module-level `refusal(key)` helper (store.mjs 507) and its `CASE_DERIVATION_CHECKS` import now read an empty family, and nothing in store calls that helper any more (the `refusal(...)` calls left in store are local helpers of other methods). It is dead code for whoever closes the layer.
 
 Status: my 38 interface tests pass against the merged publication plus ratification's pushed branch, in a scratch copy. format, architecture and coverage (30 of 30) report 0 failures, and ownership reports 0 failures (legacy-store +7/−3017, legacy-checks +0/−108). I am waiting on ratification's merge to run the tests in the repo and the old battery, and then complete.
+
+## J5 · COMPLETE
+
+`case-authoring` is built on `job/T8/case-authoring` (pushed, 4fbcf25c97 and the mail commits after it), with `tranche/T8` merged in (publication and ratification). Every live id, R1–R30, is named by an interface test that passes in the repo.
+
+**Entries applied**
+- **Extraction, per the map and the requirements.** `publishCase`, the statement acknowledgements, the case document's builder and the searched section moved into `bio-plane/src/case-authoring/`. Moved with them: `statement_acknowledgements` (its DDL and its whole-table purge declaration), rows C-44.1, C-44.3–C-44.5 and C-82.2–C-82.7 (`checks.mjs`, each `where` naming this module's region), and the dispatch entries `publishcase` and `statementack`. `searchedSection` and `SEARCHED_LEVEL_OUTCOMES` now live in `searched.mjs` (N138's share of `airun.mjs`).
+- **Calls to the layer's providers.** Publication: `caseRelation`, `storeCaseDocument`, `reauthorSection`, `attributionStatements`, `hasCaseStanding`, the review provider under K240's door names, and `CASE_DOCUMENT_FORMAT`. Ratification: `caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines` and `completenessFields`. Reads of publication's tables use R40's contract. `DRAFTS_READ_MAX = 500` mirrors review R26 (K242).
+- **R12 (new).** A member whose live basis holds a leg with `grade_source: hunch` is refused `UNCLEARED_HUNCH`, naming every such leg. The check runs after the bar and before the case identity is derived, so nothing is minted or written.
+- **R21's named-draft half (new).** The named draft's stamp decides `statement_by` when its statement is the published sentence.
+- **R7 third route.** Now reads the prepared case from `publication.caseRelation`.
+- **R11 reachable.** A clock answering a string is used as is.
+- **R1 refusal.** Now carries the check, code and translation of the catalogue's C-32.6 row.
+- **B7.** Removed store's dead `refusal(key)` helper and its `CASE_DERIVATION_CHECKS` import. `CASE_DERIVATION_CHECKS` is `{}` in the catalogue, left for N212.
+
+**Deferred**
+- **R29's C-32.6 arm (B5, item 3).** The row stays in the catalogue because `skills` reads it by key. Its `where` still names `src/store.mjs publishCase > is-machine-publish` and is N212's to re-point. My R29 test pins that the fence answers with that row; it does not pin the region.
+
+**Found in other modules**
+1. **legacy-tests: re-anchoring the old battery.** I ran the battery on `tranche/T8` (without me) and on my branch, suite by suite. Every difference is one of three kinds. Behind each hunch refusal I reran with R12 switched off in a scratch copy: nothing else differed.
+   - *Imports of rows that moved to this module.* `d150-statement-acknowledgement`, `d507-statement-ack-translation` (`STATEMENT_ACK_CHECKS`), `rec217-draft-binding` and `multicase` (`CASE_DERIVATION_CHECKS`), and `caseflip` (C-44.2, now publication's `CASE_RESOLUTION_CHECKS`) no longer load. With the imports re-pointed in a scratch copy, d150 and rec217 match the baseline exactly (64/0, 27/0) and caseflip does better (59/0 vs 58/1). d507 and multicase then differ only by source scans (next item).
+   - *Source scans pinned to `src/store.mjs`.* The text they look for now lives in `src/case-authoring/`. Suites and extra failures:
+     - bias: 3
+     - casepin: 2
+     - caselifecycle: 1 ("only a CONCLUDED finding may be a case member")
+     - case-opened: 3 (the REC-58 anchors)
+     - rung-ladder: 1 (the dispatch route)
+     - refusal-wire: 2 (the fence harvest)
+     - machinefences-dec49: 2 (C-32.6's and C-33.14's `where`)
+     - machine-fences: 1 (the harvest's module list lacks case-authoring)
+     - d507: 28 (`where` strings, and minting sites in `src/store.mjs`)
+     - multicase: 4 (site 1 of 9, and the row/region/helper arms)
+   - *Fixtures that publish over hunch debt, which R12 now refuses.* `caseobject` and `shadowed-refusals` (`ratifyCase` throws), and `machine-fences` (one arm). Each grades a connection leg `grade_source: hunch`. By DEC-20 that is hunch debt and blocks publication, so these fixtures need a grade the record earns, not an exemption.
+   - Unchanged by me, red on `tranche/T8` too: `publish` (section 9's old-shape migration, `NOT NULL constraint failed: published_bundles.edition`), `caseproduction` 80/6, `derivation-bounds`, `meaning-bounds`, `bounds`, `gate-reads`, `d470-catalog-census`, `reviewcopy-inband`, `projection-noproject`, `hygiene` 1334/1.
+2. **legacy-checks.** C-33.14's `where` (`src/store.mjs publishCase > is-publish-statement`), like C-32.6's, names a region that now lives in `src/case-authoring/index.mjs`. Both are N212's.
+3. **The bundled worker.** `dist/bio-plane.bundled.mjs` is stale against the extraction until it is rebuilt.
+4. **review.** My `DRAFTS_READ_MAX` equals review's `REVIEW_LIST_MAX` (R26) only by copy. Review's job should test the two equal from its side, because I cannot import from a later module.
+
+**Tests and checks**
+- `node --test test/m/case-authoring/`: tests 38, pass 38, fail 0, todo 0. Negative controls (each caught): hunch check off; named-draft half off; preparation route off; `withheld_stated` off; C-32.6 row off; `transact` off.
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture`: 12 product files, 56 relative imports (0 naming no tracked file, not judged); 0 failures.
+- `coverage`: 1 modules, 30 of 30 live requirement ids named by a test; 0 failures.
+- `ownership` (against `origin/tranche/T8`): 16 files changed by case-authoring; legacy-store: 7 line(s) added, 3031 removed; legacy-checks: 0 line(s) added, 108 removed; 0 failures.
+
+Size (session_013mdoyx9b1ho4qUnQHZZifh): test runs 72, module lines 2257
