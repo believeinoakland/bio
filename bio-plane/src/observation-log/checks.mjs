@@ -4,7 +4,7 @@
  * (`LEAD_NOT_EVIDENCE`) and `leadLegFindings` stay with the leg grammars (K78), which is why `LEAD_ID_RE` stays there
  * too. `where` names the site this module now holds.
  *
- * C-22.1–C-22.4, C-22.6, C-22.9 and C-22.10, the log's own refusals, are NAMED here and read from the catalogue's
+ * C-22.1–C-22.4, C-22.6, C-22.9, C-22.10 and C-22.17, the log's own refusals, are NAMED here and read from the catalogue's
  * `AI_RUN_CHECKS`, never copied: `airun.mjs` (ai-runs' file, later in the order) still builds its run refusals and
  * `translationOf` from that object and `skillpack.mjs` publishes it whole, so the rows leave it when `ai-runs`
  * re-exports this module's vocabulary (N49). One source, and every C-22 refusal of the append is minted by this
@@ -12,10 +12,10 @@
 
 import { AI_RUN_CHECKS } from "../../checks/bio-checks.mjs";
 
-/** The seven C-22 rows the observation log's append refuses under (R2, R26). */
+/** The eight C-22 rows the observation log's append refuses under (R2, R3, R26); C-22.17 is R3's own (N118). */
 export const OBSERVATION_CHECK_KEYS = Object.freeze(["AI_LOG_STATE_UNKNOWN", "AI_LOG_GOVERNED_ABSENCE",
   "AI_LOG_SHELL_PRESENT", "AI_RUN_CONDITION_UNKNOWN", "AI_LOG_NOT_A_BUNDLE", "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT"]);
+  "OBS_PRESENT_NO_REFERENT", "AI_LOG_NEVER_LOOKED_STORED"]);
 
 export const OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
 

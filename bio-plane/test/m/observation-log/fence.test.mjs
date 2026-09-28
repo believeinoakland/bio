@@ -100,14 +100,26 @@ test("R13 a lead, an objective and any other kind withhold the row from every id
   }
 });
 
-test("R13 registerAuthority: one resolver for `sweep` and one for `run`; any other kind, a second registration or no function is refused; the row is withheld whole", () => {
+test("R13 registerAuthority: one resolver for `sweep` and one for `run`; any other kind AUTHORITY_NOT_RESOLVABLE; a second registration or no function refused through membership's listenerRefusal with {kind}; the row is withheld whole", () => {
   const { w, hidden } = fenced();
   assert.deepEqual([...RESOLVED_AUTHORITY_KINDS], ["sweep", "run"]);
-  assert.equal(w.obs.registerAuthority("acquire", () => []).reason, "AUTHORITY_NOT_RESOLVABLE");
-  assert.equal(w.obs.registerAuthority("lead", () => true).reason, "AUTHORITY_NOT_RESOLVABLE");
-  assert.equal(w.obs.registerAuthority("sweep", null).reason, "AUTHORITY_NOT_RESOLVABLE");
+  for (const k of [...Object.keys(OBSERVATION_AUTHORITY_KINDS).filter((k) => !RESOLVED_AUTHORITY_KINDS.includes(k)), "gremlin", null]) {
+    const r = w.obs.registerAuthority(k, () => []);
+    assert.deepEqual([r.ok, r.reason], [false, "AUTHORITY_NOT_RESOLVABLE"], String(k));
+  }
+  // no function: membership R81's malformed refusal, the kind beside it, and nothing registered
+  const bad = w.obs.registerAuthority("sweep", null);
+  assert.deepEqual([bad.ok, bad.reason, bad.code, bad.kind], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED", "sweep"]);
+  assert.equal(sees(w, entry({ authority_kind: "sweep", authority: "CR-1" }), V("inner")), false, "no resolver was recorded");
   assert.equal(w.obs.registerAuthority("sweep", () => null).ok, true);
-  assert.equal(w.obs.registerAuthority("sweep", () => null).reason, "LISTENER_DECLARED");
+  const again = w.obs.registerAuthority("sweep", () => ["INFO-2026-0001"]);
+  assert.deepEqual([again.ok, again.reason, again.code, again.kind, again.module],
+    [false, "LISTENER_DECLARED", "LISTENER_DECLARED", "sweep", "capture-requests"]);
+  assert.equal(sees(w, entry({ authority_kind: "sweep", authority: "CR-1" }), V("inner")), false, "the first resolver still answers");
+  // each kind is its own slot
+  assert.deepEqual(w.obs.registerAuthority("run", () => false), { ok: true, kind: "run" });
+  assert.deepEqual([w.obs.registerAuthority("run", () => true).reason, w.obs.registerAuthority("run", () => true).module],
+    ["LISTENER_DECLARED", "ai-runs"]);
   // whole: the answer is a yes or no about the row, and the row is never returned with a column blanked
   const r = entry({ result_kind: "capture", result_ref: hidden });
   const copy = { ...r };

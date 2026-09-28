@@ -13,7 +13,7 @@
  * `observeConnectionDerivation` where they fire. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND }
   from "../extraction/index.mjs";
@@ -33,11 +33,10 @@ export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } fr
 
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
- * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
- * producer are the none-with-a-reason member of the content-axis vocabulary
- * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
- * PDF whose pages are scans. Both are absences and only one of them is about
- * the container.
+ * into it. An HTML page with no `dom` producer is the none-with-a-reason member
+ * of the content-axis vocabulary (spelled in `vocabulary.mjs`, never here); a
+ * PDF that produced nothing is a PDF whose pages are scans. Both are absences
+ * and only one of them is about the container.
  *
  * NAMED BY CONTAINER RATHER THAN DERIVED FROM THE UNITS, deliberately: deriving
  * it would make "this producer emitted nothing today" and "this record has no
@@ -45,11 +44,13 @@ export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } fr
  * 4.1's whole point about workbooks is that they are two. The spellings are
  * `reading.text_container`'s, which is `detectFormat`'s own format key.
  *
- * `odt` and `odp` ARE HERE and `ods` IS NOT, which is the rule rather than a
- * list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes --
- * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
- * The arm follows the SHAPE the producer returns, not the file extension. */
-export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp"]));
+ * The arm follows the SHAPE the producer returns, not the file extension: COFF-10's
+ * ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes -- `paragraphs[]` and
+ * `slides[]` -- for `odt` and `odp`, and the xlsx, ods and csv entries return
+ * `sheets[]`, whose unit extraction writes as a `sheet-range` at the sheet's used
+ * range (its R16, N108, K179). So a workbook's `indexed` row reads indexed, not
+ * "no unit arm" (N134). */
+export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
 
 /* op=leadread's bound: `op=frontier`'s 200/2000 pair, and for its reason: the population is looks at ONE subject. */
 export const LEAD_READ_LIMIT_DEFAULT = 200;
@@ -67,8 +68,8 @@ export const LEAD_LIST_NOTE =
 
 /* R13: the authority kinds whose bundles a later module's resolver answers (N39, K71). */
 export const RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
-
-const LISTENER_DECLARED = "LISTENER_DECLARED";
+/* Which module holds each resolved kind's authority (R13), the name its one registration is held under. */
+const AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
 
 /** The name this module registers its listeners under (provenance R47, extraction R24), which is how a caller finds
  *  this module's outcome among a notice's listeners. */
@@ -246,9 +247,8 @@ export class ObservationLog {
     const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
     this.observeIndexed(e.bundleId, e.captureSha, e.indexed, { author: e.author, hadText: e.reading.read_from_text === true,
       unitArm: armed, armReason: armed ? null : container
-        ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, `
-          + "and the `sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; "
-          + "HTML has no `dom` producer)"
+        ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is `
+          + "a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)"
         : "this record does not hold which container this capture is, so it has no unit arm to name" });
     const ex = this.observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
     this.observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
@@ -503,13 +503,17 @@ export class ObservationLog {
   /** R13 (N39, K71): a later module answers which bundles a `sweep` or `run` authority names. `resolve(authority,
    *  viewer)` answers an array of bundle ids (the row is visible only when every one is), `true` or `false` (the
    *  module's own decision for this viewer), or null (it holds no such authority: the row falls back to a bundle of
-   *  that id). One resolver per kind; any other kind is fixed by this module and is refused. */
+   *  that id). Any other kind is fixed by this module and is refused `AUTHORITY_NOT_RESOLVABLE`. Each kind takes one
+   *  resolver, held under the module that holds that authority; a second registration, or one with no function, is
+   *  refused by membership's `listenerRefusal` (its R81, N202), the one site that mints those codes, with `{kind}`. */
   registerAuthority(kind, resolve) {
-    if (!RESOLVED_AUTHORITY_KINDS.includes(kind) || typeof resolve !== "function")
-      return { ok: false, reason: "AUTHORITY_NOT_RESOLVABLE",
-               detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}, with its function` };
-    if (this.resolvers.has(kind))
-      return { ok: false, reason: LISTENER_DECLARED, kind, detail: `the ${kind} authority already has its resolver` };
+    if (!RESOLVED_AUTHORITY_KINDS.includes(kind))
+      return { ok: false, reason: "AUTHORITY_NOT_RESOLVABLE", code: "AUTHORITY_NOT_RESOLVABLE", kind: kind ?? null,
+               detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; every other `
+                     + `authority kind's bundles are fixed by the observation log` };
+    const holder = AUTHORITY_HOLDERS[kind];
+    const refused = listenerRefusal(this.resolvers.has(kind) ? { module: holder } : null, holder, resolve, { kind });
+    if (refused) return refused;
     this.resolvers.set(kind, resolve);
     return { ok: true, kind };
   }
