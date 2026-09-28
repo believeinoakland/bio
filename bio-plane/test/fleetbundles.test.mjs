@@ -168,7 +168,10 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      all still here; AGENT-WORKER #1 added `src/model.mjs` and, for R48's pack check, `skillpack.mjs`, `skilldoctrine.mjs`,
      `airun.mjs` and the catalogue, whose own imports carry the plane's extracted modules, docprofile, jurisdictions and
      pdf-worker's decoders into the member's build. N157 narrows it later; the pin moves with it then, as it did at FL-6. */
-  t("agent-worker's 132 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
+  /* RE-PINNED 2026-09-28 (legacy-tests T9; K286): 132 -> 133 inputs, from the committed manifest this suite reads (its
+     staleness arm green): the one arrival is `bio-plane/src/membership/checks.mjs`, membership's own row family (C-70.5,
+     R78), which `membership/index.mjs` now imports and so every member reaching membership builds in. None left. */
+  t("agent-worker's 133 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/skill-version.mjs",
@@ -188,7 +191,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/extractrun.mjs", "../bio-plane/src/formats-xlsx.mjs", "../bio-plane/src/formats.mjs",
      "../bio-plane/src/gate.mjs", "../bio-plane/src/host-governor/index.mjs", "../bio-plane/src/host-governor/schema.mjs",
      "../bio-plane/src/idspaces.mjs", "../bio-plane/src/inquiry/grammar.mjs", "../bio-plane/src/inquiry/index.mjs",
-     "../bio-plane/src/inquiry/schema.mjs", "../bio-plane/src/inquiry/text.mjs", "../bio-plane/src/membership/index.mjs",
+     "../bio-plane/src/inquiry/schema.mjs", "../bio-plane/src/inquiry/text.mjs", "../bio-plane/src/membership/checks.mjs", "../bio-plane/src/membership/index.mjs",
      "../bio-plane/src/membership/schema.mjs", "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/index.mjs",
      "../bio-plane/src/observation-log/schema.mjs", "../bio-plane/src/observation-log/vocabulary.mjs", "../bio-plane/src/odf.mjs",
      "../bio-plane/src/ooxml.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/pptx.mjs",
