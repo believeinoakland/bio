@@ -429,25 +429,6 @@ CREATE TABLE IF NOT EXISTS inquiry_exclusions (
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_exclusions_target ON inquiry_exclusions(target_id);
--- REC-14 / DEC-17 as amended: the GROUP's default required evidentiary
--- strength, which a project may then override in its own bundle.md. A PAIR
--- (capture, connection) per R2 and never a scalar, because a single letter
--- would re-collapse the two axes in the one field a reader is most likely to
--- quote.
---
--- It is a DECLARATION BY THE GROUP ABOUT ITS OWN WORK, not a system rule and
--- not a property of any reader: nobody's standard is set by who they are
--- (AUDIENCES 5). An ABSENT declaration gates nothing and the published case
--- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
--- Governance, not corpus: like members and signers it survives a whole-store
--- purge, and hygiene.test.mjs carries that exemption with its reason.
-CREATE TABLE IF NOT EXISTS group_strength_bar (
-  group_id   TEXT PRIMARY KEY,
-  capture    TEXT,
-  connection TEXT,
-  author     TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
 -- REC-22 / R4: the PUBLISHED GRAPH. One row per edge OUT of a published
 -- bundle, written by the publishing act (Store.publish, the committer op=ratify
 -- calls) from the RATIFIED BYTES' own references[] and division disclosure --
@@ -1691,37 +1672,6 @@ CREATE TABLE IF NOT EXISTS monitor_address_type (
   read_at       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS monitor_address_type_raw ON monitor_address_type(address);
--- REC-147 / IC-318 (CONTRADICTION-IDENTIFY-DESIGN.md section 8): THE CONTRADICTION CANDIDATE. One row per
--- PROPOSED conflict between two referents the pairing FORMED (op=contradictionpairs), written as labelled
--- MACHINE work through ONE append site (Store appendContradictionCandidate) and never updated in place.
--- APPEND-ONLY AND KEYED BY WHAT WAS COMPARED: candidate is a digest of the key and both referents AT THEIR
--- VERSIONS, order-free, so a re-run over unchanged referents collides and writes nothing (section 8), while a
--- changed side is a new row and the old one stays with its versions. A claim side is the inquiry and the reading
--- it is held on, versioned by the sha256 of the claim text as compared. An extent side is its content row (or the
--- capture where none is named), versioned by the capture, whose bytes never change.
--- state is only 'proposed' until PRESENT and RESOLVE are designed (section 9 item 4). origin is always 'machine'
--- (DEC-24: a proposal, labelled). a_bundle_id and b_bundle_id are the bundles each side lives in, so a purge of
--- either end takes the row (D-113), as connections do. Nothing reads this table to a member yet.
-CREATE TABLE IF NOT EXISTS contradiction_candidates (
-  candidate    TEXT PRIMARY KEY,
-  key          TEXT NOT NULL,
-  a_kind       TEXT NOT NULL,
-  a_ref        TEXT NOT NULL,
-  a_version    TEXT NOT NULL,
-  a_bundle_id  TEXT,
-  b_kind       TEXT NOT NULL,
-  b_ref        TEXT NOT NULL,
-  b_version    TEXT NOT NULL,
-  b_bundle_id  TEXT,
-  run          TEXT NOT NULL,
-  proposed_by  TEXT NOT NULL,
-  label        TEXT NOT NULL,
-  reason       TEXT NOT NULL,
-  state        TEXT NOT NULL DEFAULT 'proposed',
-  origin       TEXT NOT NULL DEFAULT 'machine',
-  at           TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candidates(run);
 
 ${HOST_GOVERNOR_SCHEMA}
 `;
