@@ -8,6 +8,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { biasOf, BIAS_SCHEMA } from "../../../src/bias/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { aiRunsOf, AI_RUNS_SCHEMA } from "../../../src/ai-runs/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -37,9 +38,13 @@ export function world({ env = {} } = {}) {
   const membership = membershipOf(ctx, { record }); membership.migrate();
   const promotion = promotionOf(ctx, { record, membership });
   for (const f of ["producingGroup", "citedBy", "caseMember"]) promotion.registerFact(f, "legacy-store", () => (f === "citedBy" ? [] : f === "producingGroup" ? "test-group" : false));
+  /* provenance's `register` (its read contract), which connections' step reads on every promotion: empty here, as a
+     record with no registered capture holds it. provenance is not among this module's uses, so the table stands alone. */
+  sql.exec(`CREATE TABLE IF NOT EXISTS register (bundle_id TEXT, capture_sha TEXT, registered TEXT, authored INTEGER NOT NULL DEFAULT 0)`);
   connectionsOf(ctx, { env }).migrate();
   observationLogOf(ctx, { extraction: null, provenance: null }).migrate();
   biasOf(ctx, { env });
+  retrievalOf(ctx).migrate();
   const runs = aiRunsOf(ctx, env);
   runs.migrate();
   return { db, sql, ctx, record, membership, promotion, runs,

@@ -17,7 +17,8 @@ import { biasOf } from "../bias/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { CONDITION_KINDS } from "../observation-log/vocabulary.mjs";
-import { normalizeType, OBJECT_TYPES, ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS } from "../../checks/bio-checks.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { normalizeType, OBJECT_TYPES } from "../../checks/bio-checks.mjs";
 import { sha256hex, instanceAiCredential, instanceClaudeToken } from "../tokens.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS,
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
@@ -25,9 +26,14 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STAT
          runPrincipalGate } from "../airun.mjs";
 import { checkSkillVersion } from "./skill-version.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
+import { AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS, AI_RUN_OPEN_CHECKS } from "./checks.mjs";
+import { DEPLOYED_MODES, DEFAULT_MODE } from "./deployment.mjs";
 
 export { checkSkillVersion, parseSkillVersion } from "./skill-version.mjs";
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
+export * from "./checks.mjs";
+export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN, DEPLOYED_MODES, DEFAULT_MODE }
+  from "./deployment.mjs";
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
@@ -51,6 +57,8 @@ export class AiRuns {
         ? this.surfacedIn(row.bundle_id, viewer).then((s) => ({ surfaced_in: s }))
         : { surfaced_in: null }));
     biasOf(ctx, { env: this.env }).registerWorkProducts("ai-run", this.workProducts());
+    /* R25–R26: the surfacing step, joining every promotion (promotion R39, K31). */
+    promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
   }
 
   /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
@@ -612,8 +620,8 @@ export class AiRuns {
     if (!run || !contextType || !contextId)
       return { run: run || null, started: false,
                code: "AI_RUN_NO_CONTEXT",
-               check: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
-               translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
+               check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
+               translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
     /* END DEC-49 REGION is-airun-open-context */
@@ -698,8 +706,8 @@ export class AiRuns {
     if (!principalPlane || !principalClaude)
       return { run, started: false,
                code: "AI_RUN_CAPABILITY_UNAVAILABLE",
-               check: ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
-               translation: ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
+               check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
+               translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
                    + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
@@ -716,6 +724,22 @@ export class AiRuns {
     if (badSkill)
       return { run, started: false, code: badSkill.code, check: badSkill.check,
                translation: badSkill.translation, note: badSkill.detail };
+    /* R40 (K102, K182 (4c)) — THE MODE IS A DEPLOYED ONE, asked after the skill version and before anything is
+       written: no run, and so no production under a run, exists in a mode not deployed. A run that names no mode
+       opens in the deployed mode and records it; a blank mode, or one the one deployment order has not deployed, is
+       refused. The fleet member's own first row (`gate-mode`) still refuses first inside the harness. */
+    const runMode = mode === undefined || mode === null ? DEFAULT_MODE : String(mode).trim();
+    /* DEC-49 REGION is-airun-open-mode — C-109.1. */
+    if (!DEPLOYED_MODES.includes(runMode))
+      return { run, started: false,
+               code: "AI_RUN_MODE_NOT_DEPLOYED",
+               check: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check,
+               translation: AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.translation,
+               mode: String(mode).slice(0, 60), deployed: [...DEPLOYED_MODES],
+               note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one `
+                   + `order, each only after the one before it is verified live, and today ${DEPLOYED_MODES.join(", ")} `
+                   + `${DEPLOYED_MODES.length === 1 ? "is" : "are"} deployed. Nothing was written` };
+    /* END DEC-49 REGION is-airun-open-mode */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
        `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
        bound the plane counts. The same check the tick asks (`checkConsume`), with an absent seed meaning none spent.
@@ -757,8 +781,8 @@ export class AiRuns {
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return { run, started: false,
                code: "AI_RUN_ALREADY_OPEN",
-               check: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
-               translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
+               check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
+               translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
                note: "a run with this id already exists" };
     /* END DEC-49 REGION is-airun-open-already */
 
@@ -779,8 +803,8 @@ export class AiRuns {
       if (reRuns === String(run))
         return { run, started: false,
                  code: "AI_RUN_RERUN_SELF",
-                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
-                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
+                 check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.check,
+                 translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_SELF.translation,
                  note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's "
                      + "work this one repeats, and a self-reference would let one run discharge its own "
                      + "bias debt" };
@@ -790,15 +814,15 @@ export class AiRuns {
       if (!target || !this.#aiRunInSight(reRuns, viewer))
         return { run, started: false,
                  code: "AI_RUN_RERUN_UNKNOWN",
-                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
-                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
+                 check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.check,
+                 translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_UNKNOWN.translation,
                  note: "no such run: it either never existed, was purged, or is not one this caller can "
                      + "open" };
       if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
         return { run, started: false,
                  code: "AI_RUN_RERUN_OTHER_CONTEXT",
-                 check: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
-                 translation: ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
+                 check: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.check,
+                 translation: AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_RERUN_OTHER_CONTEXT.translation,
                  note: "a re-run runs the same question or project again. The lens a bias debt is owed "
                      + "against is the one in force for the INDEBTED run's context, so a re-run somewhere "
                      + "else would be measured against a different lens entirely" };
@@ -812,7 +836,7 @@ export class AiRuns {
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
            rerun_of)
          VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
-        run, label, mode, String(contextType), String(contextId),
+        run, label, runMode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
            present and travels. `checkSkillVersion` judged the trimmed value, so
@@ -2204,10 +2228,12 @@ export class AiRuns {
    *  was declared). `n` 0 writes nothing; a figure that is not a non-negative safe integer is C-22.13 and nothing
    *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
   consumeBound(run, bound, n) {
-    const bad = checkConsume([[String(bound ?? ""), n]], { seed: false });
-    if (bad && bad.code === "AI_RUN_CONSUME_INVALID") return bad;
-    if (!(typeof n === "number" && Number.isSafeInteger(n) && n >= 0))
-      return checkConsume([["fetches", n]]);
+    const b = String(bound ?? "");
+    /* The figure's rule is R3's, asked of this one pair (C-22.13; an unknown bound C-22.15; `lease`, which nothing
+       spends, C-22.14), in its allowance form: the plane-counted refusal of `mints` and `surfaces` is not asked,
+       because the caller here IS the plane counting its own work (R29), and its zero is a spend of nothing. */
+    const bad = checkConsume([[b, n]], { seed: false, allowance: true });
+    if (bad && bad.code !== "AI_RUN_BOUND_NO_ALLOWANCE") return bad;
     if (n === 0) return null;
     this.sql.exec(
       `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
@@ -2222,6 +2248,93 @@ export class AiRuns {
     if (!r) return { found: false, running: false, refusal: null, run: null };
     return { found: true, running: r.status === "running", run: r,
              refusal: runPrincipalGate({ caller, principal: r.principal_plane, ...(act ? { act } : {}) }) };
+  }
+
+  /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
+
+  /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
+   *  plane's `assistantPrincipal` stamp, which `index.mjs` sets for an `ai` credential only, deleting any caller's copy
+   *  first. A member's creation, and every store-internal one, carries no stamp and is not asked. */
+  static #surfacing(c) {
+    const pkg = (c && c.pkg) || {};
+    return !!c && !c.head && c.promotedType === "inquiry"
+      && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim() !== "";
+  }
+
+  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25) — MAY THIS ASSISTANT OPEN A QUESTION, AND
+   *  INSIDE WHICH RUN? Null when the creation may land, else the refusal (R25).
+   *
+   *  REC-165's ORDER, the tick's (REC-152): SIGHT first — a run whose context the caller cannot see answers the
+   *  SAME SURFACE_NO_RUN a run never minted gets, and so does a creation naming no run, since both say the same
+   *  thing to the caller: there is no run of yours here; then POSITION — `runPrincipalGate`, the member who
+   *  opened the run or a credential she minted, relayed FIELD BY FIELD (a spread would hide the verdict from the
+   *  DEC-49 guard); then STATUS; then the BOUND, on `mints`' rule — a run that declares no `surfaces` bound may
+   *  surface nothing, because a default allowance chosen here would be a measurement with no measurement behind
+   *  it. The bound is asked here AND consumed inside the promotion's transaction (R26), so a refused creation spends
+   *  none. The caller is the STAMP, never a field the body carries; the run is the body's word, which is why every
+   *  question above is asked of it. */
+  #surfacingGate(pkg) {
+    const caller = String(pkg.assistantPrincipal ?? "").trim();
+    const run = String(pkg.run ?? "").trim();
+    const refusal = (code, detail, extra) => {
+      const row = SURFACE_RUN_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               run: run || null, ...(extra || {}) };
+    };
+    const runRow = this.runFor(run, pkg.actorViewer ?? null);
+    /* DEC-49 REGION is-surface-run */
+    if (!runRow)
+      return refusal("SURFACE_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run `
+              + `it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): the run carries the lens in force and `
+              + `the objective the question was surfaced under. Nothing was created.`
+            : "an assistant opens a question only inside a run it holds: pass run=<the run this question is "
+              + "surfaced under> in the promotion. The run carries the lens in force and the objective it "
+              + "pursued (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Nothing was created.");
+    const notPrincipal = runPrincipalGate({ caller, principal: runRow.principal_plane,
+                                            act: "opening a question under a run" });
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run,
+               note: "an assistant opens a question only inside a run it holds. Nothing was created" };
+    if (runRow.status !== "running")
+      return refusal("SURFACE_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read `
+        + `against the conditions of the run that surfaced it, which stopped being current when it stopped. `
+        + `Nothing was created.`, { status: runRow.status });
+    const bound = this.boundOf(run, "surfaces");
+    if (!bound || !(bound.allowed > 0))
+      return refusal("SURFACE_NO_BOUND",
+        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be `
+        + `unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`);
+    if (bound.consumed >= bound.allowed)
+      return refusal("SURFACE_BOUND_REACHED",
+        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of `
+        + `${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which `
+        + `bound stopped it.`, { allowed: bound.allowed, consumed: bound.consumed });
+    /* END DEC-49 REGION is-surface-run */
+    return null;
+  }
+
+  /** R25: the step's check, before the promotion writes anything. */
+  #surfacingCheck(c) {
+    if (!AiRuns.#surfacing(c)) return null;
+    return this.#surfacingGate(c.pkg);
+  }
+
+  /** R26: THE LINK AND THE BOUND, in the creation's own transaction, so a question an assistant opened cannot exist
+   *  without the row naming its run, and a refused creation spends nothing. An INSTANCE row keyed by the new inquiry
+   *  and never a line in its bytes (the run is scratch). The answer's `surfaced_in` names the run, the instant and the
+   *  bound after this spend. */
+  #surfacingProject(c) {
+    if (!AiRuns.#surfacing(c)) return null;
+    const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
+      c.bundleId, run, principal, at);
+    this.consumeBound(run, "surfaces", 1);
+    const left = this.boundOf(run, "surfaces");
+    return { surfaced_in: { run, at, bound: { bound: "surfaces", allowed: left.allowed, consumed: left.consumed } } };
   }
 
   /* ---- R36: HIDDEN RUNS, registered with retrieval and observation-log ------------------------------------------ */
@@ -2283,4 +2396,26 @@ export function aiRunsOf(ctx, env = null) {
   if (!m) { m = new AiRuns(ctx, env || {}); INSTANCES.set(key, m); }
   else if (env && (!m.env || !Object.keys(m.env).length)) m.env = env;
   return m;
+}
+
+/** The run's ops (K3), for the control plane's dispatch: `airunopen`, `airuntick`, `airunclose`, `airun`, `airunlog`,
+ *  `airuns`, `airunspawn`. Every identity is a server-side stamp read from the QUERY and set AFTER the body's spread,
+ *  so a caller's own copy in the body is overwritten rather than believed: the two principals on the open (§14a — a
+ *  principal a caller can name is not one), `actor` (PL-18, DEC-63: which member is asking; empty for a machine),
+ *  `viewer` (D-15's fail-closed sight; on the open only the stated project count reads it, REC-139) and `caller` (the
+ *  caller's principal on the tick and the close, REC-152). */
+export function aiRunsOps(runs, url, body) {
+  const q = (k) => url.searchParams.get(k);
+  return {
+    airunopen: () => runs.open({ ...(body || {}), principalPlane: q("principal"), actor: q("actor"), viewer: q("viewer") }),
+    airuntick: () => runs.tick({ ...(body || {}), actor: q("actor"), viewer: q("viewer"), caller: q("principal") }),
+    airunclose: () => runs.close({ ...(body || {}), actor: q("actor"), viewer: q("viewer"), caller: q("principal") }),
+    airun: () => runs.read({ run: q("run"), viewer: q("viewer") }),
+    airunlog: () => runs.log({ run: q("run"), viewer: q("viewer"), limit: q("limit") }),
+    /* REC-69: the CONTEXT-keyed read, beside the run-id-keyed ones; a caller that could name the viewer could read the
+       runs of a project it was never invited to. */
+    airuns: () => runs.listInContext({ contextType: q("contextType"), contextId: q("contextId"), viewer: q("viewer"),
+                                       limit: q("limit") }),
+    airunspawn: () => runs.spawnPayload({ run: q("run"), half: q("half"), viewer: q("viewer") }),
+  };
 }

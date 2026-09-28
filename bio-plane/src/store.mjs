@@ -442,7 +442,7 @@ import { checkSkillVersion } from "./skillpack.mjs";
    column alone — one function, so every read says the same thing about it. */
 import { delivererOf } from "./deliverer.mjs";
 import { biasOf, biasOps, BIAS_TABLES } from "./bias/index.mjs";
-import { aiRunsOf } from "./ai-runs/index.mjs";
+import { aiRunsOf, aiRunsOps } from "./ai-runs/index.mjs";
 /* REC-63 / DEC-56: the route marker's four door refusals, imported for the same
    reason every other DEC-49 family is — the C-number, the wire code and the
    canned translation are ONE ROW there and this file holds no second copy. */
@@ -14440,68 +14440,6 @@ export class Store extends DurableObject {
 
   /* ---- writes: promotion is the sole writer of live state ---- */
 
-  /** D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25) — MAY THIS ASSISTANT OPEN A QUESTION, AND
-   *  INSIDE WHICH RUN? Asked by `promote` of a CREATION of an inquiry that carries the control plane's
-   *  `assistantPrincipal` stamp — which `index.mjs` sets for an `ai` credential ONLY, deleting any caller's copy
-   *  first — and of nothing else: a member's creation, and every store-internal creation, carries no stamp and is
-   *  untouched. Null when the creation may land (the answer then names the run it lands inside), else the refusal.
-   *
-   *  REC-165's ORDER, the tick's (REC-152): SIGHT first — a run whose context the caller cannot see answers the
-   *  SAME SURFACE_NO_RUN a run never minted gets, and so does a creation naming no run, since both say the same
-   *  thing to the caller: there is no run of yours here; then POSITION — `runPrincipalGate`, the member who
-   *  opened the run or a credential she minted, relayed FIELD BY FIELD (a spread would hide the verdict from the
-   *  DEC-49 guard); then STATUS; then the BOUND, on `mints`' rule — a run that declares no `surfaces` bound may
-   *  surface nothing, because a default allowance chosen here would be a measurement with no measurement behind
-   *  it. The bound is asked here AND consumed inside `promote`'s transaction, so a refused creation spends none.
-   *  The caller is the STAMP, never a field the body carries; the run is the body's word, which is why every
-   *  question above is asked of it. */
-  #surfacingGate(pkg) {
-    const caller = String(pkg.assistantPrincipal ?? "").trim();
-    const run = String(pkg.run ?? "").trim();
-    const refusal = (code, detail, extra) => {
-      const row = SURFACE_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               run: run || null, ...(extra || {}) };
-    };
-    const runRow = run
-      ? this.#one(`SELECT run, status, context_type, context_id, principal_plane FROM ai_runs WHERE run=?`, run)
-      : null;
-    const runSeen = !!runRow && this.#aiRunInSight(run, pkg.actorViewer ?? null);
-    /* DEC-49 REGION is-surface-run */
-    if (!runSeen)
-      return refusal("SURFACE_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run `
-              + `it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): the run carries the lens in force and `
-              + `the objective the question was surfaced under. Nothing was created.`
-            : "an assistant opens a question only inside a run it holds: pass run=<the run this question is "
-              + "surfaced under> in the promotion. The run carries the lens in force and the objective it "
-              + "pursued (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Nothing was created.");
-    const notPrincipal = runPrincipalGate({ caller, principal: runRow.principal_plane,
-                                            act: "opening a question under a run" });
-    if (notPrincipal)
-      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
-               translation: notPrincipal.translation, detail: notPrincipal.detail, run,
-               note: "an assistant opens a question only inside a run it holds. Nothing was created" };
-    if (runRow.status !== "running")
-      return refusal("SURFACE_RUN_NOT_RUNNING",
-        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read `
-        + `against the conditions of the run that surfaced it, which stopped being current when it stopped. `
-        + `Nothing was created.`, { status: runRow.status });
-    const bound = this.#one(
-      `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'surfaces'`, run) || null;
-    if (!bound || !(Number(bound.allowed) > 0))
-      return refusal("SURFACE_NO_BOUND",
-        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be `
-        + `unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`);
-    if (Number(bound.consumed) >= Number(bound.allowed))
-      return refusal("SURFACE_BOUND_REACHED",
-        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${Number(bound.consumed)} of `
-        + `${Number(bound.allowed)}). Nothing was created; the next tick ends the run, and the log says which `
-        + `bound stopped it.`, { allowed: Number(bound.allowed), consumed: Number(bound.consumed) });
-    /* END DEC-49 REGION is-surface-run */
-    return null;
-  }
-
   /**
    * One transaction. Either the whole bundle advances or nothing does.
    *
@@ -14518,17 +14456,6 @@ export class Store extends DurableObject {
   #promoteChecks(c) {
     const { pkg, bundleId, base, meta, author, register, files, promotedType } = stepContext(c);
     const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
-    /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): AN ASSISTANT'S CREATION OF A QUESTION names a running run
-       it holds, with room under its `surfaces` bound — asked here, before anything is written; the link row and the
-       bound's consumption are written inside the transaction below, on the creation's own success path. Only a
-       creation carrying the `ai`-only `assistantPrincipal` stamp is asked; a member's is untouched. */
-    let surfacing = null;
-    if (base === null && meta && typeof meta === "object" && promotedType === "inquiry"
-        && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()) {
-      const refusedSurface = this.#surfacingGate(pkg);
-      if (refusedSurface) return refusedSurface;
-      surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
-    }
       /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
          FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
          restamp; REC-173's verified replay keeps the Drive era's), and the restamp runs only there — so without this
@@ -15622,24 +15549,6 @@ export class Store extends DurableObject {
          to roll the whole promotion back rather than return a half. */
       const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
 
-      /* D-85 (§11 item 5, rule 2): THE LINK AND THE BOUND, in the creation's own transaction, so a question an
-         assistant opened cannot exist without the row naming its run, and a refused creation spends nothing.
-         An INSTANCE row keyed by the new inquiry and never a line in its bytes (the run is scratch). The bound
-         is consumed through the same upsert `op=airuntick` and `op=extractpropose` use: one shape. */
-      let surfacedIn = null;
-      if (!cur && surfacing) {
-        const ts = new Date().toISOString();
-        this.sql.exec(
-          `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
-          bundleId, surfacing.run, surfacing.principal, ts);
-        this.sql.exec(
-          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, 'surfaces', 0, 1)
-           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + 1`, surfacing.run);
-        const left = this.#one(
-          `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'surfaces'`, surfacing.run);
-        surfacedIn = { run: surfacing.run, at: ts,
-                       bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) } };
-      }
       /* REC-173: the migration replay's instance row, in the creation's own transaction — a replayed question cannot
          exist without the row saying it was migrated, and a refused creation writes none. */
       let migrated = null;
@@ -15674,9 +15583,6 @@ export class Store extends DurableObject {
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...(testimonyWrote ? { testimony: testimonyWrote } : {}),
-        /* D-85: present ONLY on an assistant's creation of a question, naming the run it landed inside and
-           that run's `surfaces` bound after this creation — so no member's answer gains a key. */
-        ...(surfacedIn ? { surfaced_in: surfacedIn } : {}),
         /* REC-173: present ONLY on a creation admitted as a migration replay, naming the provenance capture and the
            Drive promotion that listed its bytes — so no other caller's answer gains a key. */
         ...(migrated ? { migration_replay: migrated } : {}),
@@ -29183,16 +29089,9 @@ export class Store extends DurableObject {
 
 
 
-  /* IS-6 — THE AI RUN is `ai-runs`' (`src/ai-runs/`, its R9–R29; T7). The store keeps the ops' names and the private
+  /* IS-6 — THE AI RUN is `ai-runs`' (`src/ai-runs/`, its R9–R29; T7). The store keeps the private
    * names its remaining readers call, each delegating to the module, until those readers are extracted. */
   #aiRuns() { return aiRunsOf(this.ctx, this.env); }
-  aiRunOpen(a) { return this.#aiRuns().open(a); }
-  aiRunTick(a) { return this.#aiRuns().tick(a); }
-  aiRunClose(a) { return this.#aiRuns().close(a); }
-  aiRunRead(a) { return this.#aiRuns().read(a); }
-  aiRunsInContext(a) { return this.#aiRuns().listInContext(a); }
-  aiRunSpawnPayload(a) { return this.#aiRuns().spawnPayload(a); }
-  aiRunLog(a) { return this.#aiRuns().log(a); }
   #aiRunInSight(run, viewer) { return !!this.#aiRuns().runFor(run, viewer); }
 
   /* CPDF-10: the transcription reads' page bound. ONE pair for BOTH reads
@@ -31038,11 +30937,6 @@ export class Store extends DurableObject {
           version: url.searchParams.get("version"),
           viewer: url.searchParams.get("viewer"),
         }),
-        airunspawn: () => this.aiRunSpawnPayload({
-          run: url.searchParams.get("run"),
-          half: url.searchParams.get("half"),
-          viewer: url.searchParams.get("viewer"),
-        }),
         /* PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS. `author` and
            `viewer` are stamped by the control plane and never taken from the
            caller: a machine credential arrives honestly named `token:<class>`,
@@ -31193,53 +31087,10 @@ export class Store extends DurableObject {
         taskforward: () => this.taskForward(body || {}),
         taskresolve: () => this.taskResolve(body || {}),
         ...governorRoutes(governorOf(this.ctx), url, body),
-        /* IS-6. The investigative run, on the capture-session shape and routed
-           beside it. `viewer` on the two READS is the control plane's
-           server-side stamp and never a caller's word: the run names an inquiry
-           or a project, and whose view that resolves against is a server
-           decision (D-15's fail-closed, the same rule op=queue states). The two
-           PRINCIPALS on the open are stamped server-side too, for the reason §14a
-           gives — a principal a caller can name is not a principal. */
-        /* PL-18 / DEC-63: `actor` is the third server-side stamp on this
-           surface, beside `principal` on the open and `viewer` on the two
-           reads. It is read from the QUERY rather than from the body for
-           exactly the reason `principal` is — a body is the caller's, and a
-           gate that trusts the caller's word about who they are is not a
-           gate. Empty means no member is behind this call. */
-        /* REC-139: `viewer` is the fourth, from the QUERY for the same reason and set AFTER the body's
-           spread, so a caller's own `viewer` in the body is overwritten rather than believed. It is
-           read only for the count of citing projects the answer states (§7.9). */
-        airunopen: () => this.aiRunOpen({ ...(body || {}),
-                                          principalPlane: url.searchParams.get("principal"),
-                                          actor: url.searchParams.get("actor"),
-                                          viewer: url.searchParams.get("viewer") }),
-        /* REC-152: `caller` is the fifth stamp — the caller's PRINCIPAL, from the QUERY and set AFTER the
-           body's spread, so a `caller` in the body is overwritten rather than believed. */
-        airuntick: () => this.aiRunTick({ ...(body || {}),
-                                          actor: url.searchParams.get("actor"),
-                                          viewer: url.searchParams.get("viewer"),
-                                          caller: url.searchParams.get("principal") }),
-        airunclose: () => this.aiRunClose({ ...(body || {}),
-                                            actor: url.searchParams.get("actor"),
-                                            viewer: url.searchParams.get("viewer"),
-                                            caller: url.searchParams.get("principal") }),
-        airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
-                                      viewer: url.searchParams.get("viewer") }),
-        airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
-                                        viewer: url.searchParams.get("viewer"),
-                                        limit: url.searchParams.get("limit") }),
+        ...aiRunsOps(aiRunsOf(this.ctx, this.env), url, body),
         /* retrieval's ops (K3): frontier, contentaxis, projection, search, meaningrows, searchfields, select, selection,
            selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
         ...retrievalRoutes(retrievalOf(this.ctx), url, body),
-        /* REC-69: the CONTEXT-keyed read, beside the three run-id-keyed ones.
-           `viewer` is the control plane's server-side stamp exactly as it is for
-           its three siblings — a caller that could name the viewer could read
-           the runs of a project it was never invited to, which is the whole
-           point of the op being gated at all. */
-        airuns: () => this.aiRunsInContext({ contextType: url.searchParams.get("contextType"),
-                                             contextId: url.searchParams.get("contextId"),
-                                             viewer: url.searchParams.get("viewer"),
-                                             limit: url.searchParams.get("limit") }),
         /* REC-24 (c)/(d). No `handle` and no selection: one action moves at a
            time and one entry is recorded at a time, so both take the ONE target
            and the viewer/author stamps the control plane sets. */

@@ -2,7 +2,7 @@
  *
  * `INVESTIGATIVE-SESSION.md` §11 (the run is an object), §14b.6 (a run is
  * bounded and the bound is RECORDED), §14b.7 (partial results survive). The
- * mechanism lives in `store.mjs`; this file holds the words and the decisions
+ * mechanism lives in `ai-runs/index.mjs`; this file holds the words and the decisions
  * that can be made without a database, for `queuestate.mjs`'s stated reason:
  *
  *   "It is PURE — no storage, no clock, no viewer — so a suite can hold the
@@ -89,9 +89,14 @@
  * the reading that must NOT report as PRESENT.
  * ========================================================================= */
 
-import { AI_RUN_CHECKS, SEARCHED_SUBJECT_SOURCES } from "../checks/bio-checks.mjs";
+import { AI_RUN_CHECKS as CATALOGUE_AI_RUN_CHECKS, SEARCHED_SUBJECT_SOURCES } from "../checks/bio-checks.mjs";
+import { AI_RUN_OWN_CHECKS } from "./ai-runs/checks.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_SUBJECT_KINDS, MEANING_EVIDENCE_IS_ONE_SIDED }
   from "./observation-log/vocabulary.mjs";
+
+/* R35: C-22's rows, one object — the observation log's, which the catalogue still holds (observation-log takes them at
+   its next job), and the run's, which moved to `ai-runs/checks.mjs`. Every reader of `AI_RUN_CHECKS` keeps every code. */
+const AI_RUN_CHECKS = Object.freeze({ ...CATALOGUE_AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
 
 /* N49 (K78 (3)): THE OBSERVATION LOG'S VOCABULARY AND ITS CHECKS ARE observation-log's. They stood here (the four
    levels, D-129's states, coverage, the content axis, the missing-row causes and sidedness, the watermark, the three
@@ -1086,3 +1091,6 @@ export function translationOf(code) {
 }
 
 export { AI_RUN_CHECKS };
+
+/* R8: the skill version's grammar is in the vocabulary block too; held in `ai-runs/skill-version.mjs` (K82 (4)). */
+export { checkSkillVersion, parseSkillVersion } from "./ai-runs/skill-version.mjs";
