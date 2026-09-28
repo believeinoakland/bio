@@ -257,7 +257,6 @@ const ARMS = {
      entity whose pre-log look found nothing — a set the record genuinely cannot
      distinguish, presented as a positive finding. */
   cause: {
-    files: [STORE, RETRIEVAL],
     why: "let a missing meaning-level row read as nobody-looked whatever its cause — collapsing "
        + "design section 5.1's three causes into the one that makes a claim",
     /* CORRECTED AFTER THE FIRST RUN, AND THIS ARM EARNED ITS KEEP BEFORE IT EVER
@@ -285,9 +284,18 @@ const ARMS = {
             + "fixture the rule is tested on",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the frontier's classifier is retrieval's
        `missingMeaningCause` (G2 drives it); G5 pins the store's copy's line, so the arm collapses both. */
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6)): the store's half matched 0 times and the arm could not arm
+       (red since T8: legacy-store's copy of the meaning-level cause, `if (!probe) return "purged";`, left `store.mjs`
+       with case-authoring, and nothing in `src/` spells it now). Retrieval's `missingMeaningCause` is the one live
+       spelling: G2's frontier reads it and G5 pins ITS line (`observation-meaning.test.mjs`, T8's re-anchor), so
+       collapsing it alone is the whole defect this arm plants, at the one site that still holds the rule. The
+       must-fail set (G2, G5) is unchanged; the arm still refuses to arm unless its anchor occurs exactly once.
+       RUN 2026-09-28 in an isolated worktree of 377a3a23d0: 71/4, AS DECLARED (2/2), every restore byte-identical.
+       The two failures beyond the declaration are named, not smoothed: H7-fixture and H7 (REC-107's section, added
+       after this arm was written) build their `purged` reference row through the same cause rule, so collapsing it
+       leaves no `purged` row to measure. Correct, and not added to the must-fail set, which stays this item's. */
+    files: [RETRIEVAL],
     patch: () => armEach([
-      [STORE, "    if (!probe) return \"purged\";",
-              "    if (!probe) return \"never_looked\";\n    return \"never_looked\";"],
       [RETRIEVAL, "      if (!Object.prototype.hasOwnProperty.call(PROBE, kind)) return \"purged\";",
                   "      return \"never_looked\";"]]),
   },

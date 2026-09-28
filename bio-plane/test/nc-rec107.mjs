@@ -60,6 +60,23 @@ mkdirSync(SAFE, { recursive: true });
 
 const STORE = join(PLANE, "src/store.mjs");
 const AIRUN = join(PLANE, "src/airun.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6)): SEVEN of the eight arms could not arm on this tree (each anchor
+   matched 0 times; red since T7, so before T10's layers too). Their subject left the two files they patched:
+   - the rule, both sidedness maps and the `purged` sentence (`causesNotRuledOut`, `MEANING_EVIDENCE_IS_ONE_SIDED`,
+     `CONTENT_EVIDENCE_IS_ONE_SIDED`, `MEANING_MISSING_ROW_CAUSES.purged`) are observation-log's
+     `src/observation-log/vocabulary.mjs` (AI-RUNS #2 REPORT J6.1, N49: `airun.mjs` re-exports them, and both suites
+     still import them through it, so patching the definition is patching what they import);
+   - the per-row publication (`evidence_one_sided`, `not_ruled_out`) is retrieval's `#causeSet` in
+     `src/retrieval/frontier.mjs` (R41, R43, R46, R48), which every frontier row at every level takes. The store's
+     `#missingCauseSet`, the old anchor (the one arm that still armed at T9), was a copy nothing called; legacy-store
+     deleted it in T10 (N268).
+   Each arm patches the SAME text at its new home (every anchor asserted to occur exactly once, as before) and every
+   declaration is unchanged. `rowfield`'s anchor is the new spelling of the same two-field return.
+   RUN 2026-09-28 in an isolated worktree of 377a3a23d0 (the observation family's re-anchors, K331 included): baseline
+   150/0 over both suites, all eight arms AS DECLARED, each with exactly its declared failures, every restore
+   byte-identical by sha256 and content. */
+const VOCAB = join(PLANE, "src/observation-log/vocabulary.mjs");
+const FRONTIER = join(PLANE, "src/retrieval/frontier.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;   /* store.mjs is over two megabytes and airun.mjs tens of KB;
                               a restore over a stub must fail loudly rather than quietly. */
@@ -122,7 +139,7 @@ const ARMS = {
      subject nobody may ever have looked at. It is the overclaim direction and it
      is the whole reason this row was weighed as it was. */
   never: {
-    files: [AIRUN],
+    files: [VOCAB],
     why: "drop `never_looked` from the two-sided undetermined set, restoring the shipped claim that "
        + "a subject with no row and no evidence was either looked at before the log or purged",
     mustFail: ["H1: THE PURE RULE",
@@ -134,7 +151,7 @@ const ARMS = {
     mustPass: "H2, H4 and H7/H8 in the meaning suite — every one-sided answer, which this arm does "
             + "not touch — and every arm in either suite about a RESOLVED cause. A `pre_log` or a "
             + "`never_looked` row is a set of one and cannot move here",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       `  if (evidenceOneSided === false) return ["purged", "never_looked"];`,
       `  if (evidenceOneSided === false) return ["purged"];`),
   },
@@ -145,7 +162,7 @@ const ARMS = {
      top-level `evidence_one_sided` map was published to WARN about and which a
      caller who did not join it already read. */
   onesided: {
-    files: [AIRUN],
+    files: [VOCAB],
     why: "collapse the ONE-SIDED widening onto the two-sided set, so a reference or an entity "
        + "claims a pre-log fruitless look is excluded when its evidence can never exclude one",
     /* CORRECTED AFTER THE FIRST RUN. `H5` WAS DECLARED MUST-FAIL AND CAME BACK
@@ -164,7 +181,7 @@ const ARMS = {
             + "other branch, so if the content suite moves at all the two levels are entangled and "
             + "the shared function is not shared, it is coupled. H1 and H4 in the meaning suite too, "
             + "and H5, which exits one line above this patch and is armed by nothing here",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       `  return [...ALL_MISSING_ROW_CAUSES];\n}`,
       `  return ["purged", "never_looked"];\n}`),
   },
@@ -180,7 +197,7 @@ const ARMS = {
      the spelling exists to prevent. It is also live rather than hypothetical:
      `OBSERVATION-LOG-DESIGN.md` §8's fourth item is being built as this lands. */
   weakdefault: {
-    files: [AIRUN],
+    files: [VOCAB],
     why: "rewrite the weakest-default predicate from `=== false` to a falsy test, so an UNDECLARED "
        + "sidedness inherits the STRONG two-member answer by omission instead of the weak one",
     mustFail: ["H3: THE WEAKEST-CLAIM DEFAULT"],
@@ -188,7 +205,7 @@ const ARMS = {
             + "as before, which is what makes this defect invisible and what makes H3 the only "
             + "instrument that can see it. If a second arm goes red, this patch took something "
             + "besides the default and the finding is about the ARM",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       `  if (evidenceOneSided === false) return ["purged", "never_looked"];`,
       `  if (!evidenceOneSided) return ["purged", "never_looked"];`),
   },
@@ -198,7 +215,7 @@ const ARMS = {
      which the widening existed as a top-level map and the row said nothing. This
      arm removes the per-row fields and leaves the pure rule untouched. */
   rowfield: {
-    files: [STORE],
+    files: [FRONTIER],
     why: "stop publishing `not_ruled_out` and `evidence_one_sided` ON THE ROW, leaving the rule "
        + "correct and unreachable — the state this item found, where the limit sat beside the rows "
        + "and a caller had to remember to join it",
@@ -223,8 +240,8 @@ const ARMS = {
     mustPass: "every PURE-RULE arm — H1 to H6 in the meaning suite and H4 in the content suite. "
             + "They call `causesNotRuledOut` directly and this arm does not touch it; if one moves, "
             + "the rule and its publication are entangled",
-    patch: () => arm(STORE,
-      `    return {\n      evidence_one_sided: oneSided !== false,\n      not_ruled_out: causesNotRuledOut(missingCause, { evidenceOneSided: oneSided }),\n    };`,
+    patch: () => arm(FRONTIER,
+      `    return { evidence_one_sided: oneSided,\n             not_ruled_out: this.obs.causesNotRuledOut(missingCause, { evidenceOneSided: oneSided }) };`,
       `    return {};`),
   },
 
@@ -232,14 +249,14 @@ const ARMS = {
      claims about one fact and either can be wrong alone — this item found the
      sentence asserting a two-member set while the map beside it said three. */
   prose: {
-    files: [AIRUN],
+    files: [VOCAB],
     why: "restore the two-member assertion in the meaning level's `purged` sentence, so the prose "
        + "claims a set the row's own field contradicts",
     mustFail: ["H10: AND THE PROSE STOPPED ASSERTING A SET IT CANNOT ASSERT"],
     mustPass: "every arm about the SET itself, at both levels — the fields are computed and this "
             + "arm rewrites only a canned string. A set arm going red here means the sentence is "
             + "load-bearing for a value, which it must never be",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       `              + "may have cleared the rows that described it, or nobody may have looked -- and at a "`,
       `              + "may have cleared the rows that described it. Neither can be ruled out -- and at a "`),
   },
@@ -260,14 +277,14 @@ const ARMS = {
      kind declares its sidedness in its OWN map and measures it, and if anyone
      widens THIS map they will be stopped here and made to say why. */
   extrakey: {
-    files: [AIRUN],
+    files: [VOCAB],
     why: "add an UNMEASURED fourth subject kind to the meaning level's sidedness map — declared as "
        + "an over-strictness arm, and RED is the correct answer",
     mustFail: ["A4: THE ONE-SIDED EVIDENCE"],
     mustPass: "everything else at both levels, including all of section H — which reads the map the "
             + "code publishes rather than pinning three kinds by name, so it is indifferent to a "
             + "fourth. A section-H red here would mean this item's own arms had hardcoded the kinds",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       "  entity:    true,    /* `connections` holds a row only where a pair was DERIVED */",
       "  entity:    true,    /* `connections` holds a row only where a pair was DERIVED */\n"
       + "  address:   false,   /* ARMED: an UNMEASURED fourth kind */"),
@@ -281,13 +298,13 @@ const ARMS = {
      is where it says so — and the next item would land into a suite that refused
      it for being NEW rather than for being wrong. */
   extrakey_content: {
-    files: [AIRUN], expectGreen: true,
+    files: [VOCAB], expectGreen: true,
     why: "add a declared kind to the CONTENT level's sidedness map — correct work in a spelling "
        + "neither suite anticipated, which must pass",
     mustFail: [],
     mustPass: "EVERYTHING, at both levels. This is the arm that proves section H reads the "
             + "published map instead of pinning the kinds it happened to be written against",
-    patch: () => arm(AIRUN,
+    patch: () => arm(VOCAB,
       "  capture: false,     /* `readings` holds a row whether or not text was produced */",
       "  capture: false,     /* `readings` holds a row whether or not text was produced */\n"
       + "  address: false,    /* ARMED: a declared kind this suite did not anticipate */"),
