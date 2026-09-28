@@ -54,7 +54,9 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-casesearched");        /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9, N248): R17's `#searchedForCase` left `store.mjs` for case-authoring
+   (`src/case-authoring/index.mjs`, its own `SEARCHED_SUBJECT_MAX`, T8), so arm (a) edits it there. */
+const CASEAUTH = join(ROOT, "src", "case-authoring", "index.mjs");
 const AIRUN = join(ROOT, "src", "airun.mjs");
 const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
 const SUITE = join(DIR, "casesearched.test.mjs");
@@ -81,16 +83,16 @@ const ARMS = {
      the states, not the causes, not the outcome rule. That isolation is the
      point: a control whose method perturbs a second variable produces a
      refutation more confident than the finding it refutes. */
-  a: { files: [STORE],
+  a: { files: [CASEAUTH],
        label: "(a) THE ARM THIS ITEM EXISTS FOR — THE SUBJECT SET COMES FROM THE LOG. Nothing is forged and "
             + "no state is altered: the captures the case names are replaced by the captures the observation "
             + "log already holds a content-level row for. Every number stays true and the case that never "
             + "looked at its own document reads SEARCHED, because that document is no longer in the set",
-       apply: () => edit(STORE,
-         "    const capList = [...captures].slice(0, Store.SEARCHED_SUBJECT_MAX);",
+       apply: () => edit(CASEAUTH,
+         "    const capList = [...captures].slice(0, SEARCHED_SUBJECT_MAX);",
          "    const capList = this.#rows(`SELECT DISTINCT subject FROM observation_log "
        + "WHERE level = 'content' AND subject_kind = 'capture'`).map((r) => r.subject)"
-       + ".slice(0, Store.SEARCHED_SUBJECT_MAX);") },
+       + ".slice(0, SEARCHED_SUBJECT_MAX);") },
 
   b: { files: [AIRUN],
        label: "(b) THE ONE-SIDED COERCION NEUTERED — a caller's `never_looked` is taken at face value at "
