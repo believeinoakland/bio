@@ -62,7 +62,7 @@ test("R36, R40: a built level answers found, built, level, limit, truncated, loo
   assert.equal(w.retrieval.frontier({ level: "document", viewer: MACHINE, limit: 2 }).looked.length, 2);
 });
 
-test("R40, R41: never_looked is each address in the deferred partition with no document row, with from_document, in address order — read through §5.1's causes: an address held in captured_locators is pre_log in missing_unexplained, one first seen before the level's first row is undetermined; every such row carries not_ruled_out and evidence_one_sided", () => {
+test("R40, R41: never_looked is each address in the deferred partition with no document row, with from_document, in address order — read through §5.1's causes: an address held in captured_locators is pre_log in missing_unexplained and names pre_log alone, one first seen before the level's first row is undetermined; the level's evidence is one-sided (DOCUMENT_EVIDENCE_IS_ONE_SIDED), so every never_looked address names all three causes; every such row carries not_ruled_out and evidence_one_sided", () => {
   const w = world();
   const c = w.cap("a", "a");
   w.doc("INFO-1", {}, { captures: [c] });
@@ -76,10 +76,11 @@ test("R40, R41: never_looked is each address in the deferred partition with no d
   w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations)
                  VALUES ('https://example.org/held', 'https://example.org/held', ?, 'direct', ?, ?, 1)`, c.sha, T0, T0);
   const f = w.retrieval.frontier({ level: "document", viewer: V("vera") });
-  assert.deepEqual(f.never_looked.map((r) => [r.subject, r.from_document, r.missing_cause, r.evidence_one_sided]),
-    [["https://example.org/a-new", c.sha, "never_looked", true],
-     ["https://example.org/b-new", c.sha, "never_looked", true]]);
-  assert.ok(f.never_looked.every((r) => Array.isArray(r.not_ruled_out) && r.not_ruled_out.includes("never_looked")));
+  assert.deepEqual(VOCAB.DOCUMENT_EVIDENCE_IS_ONE_SIDED, { address: true }, "the level's sidedness, read by name");
+  const all = ["pre_log", "purged", "never_looked"];
+  assert.deepEqual(f.never_looked.map((r) => [r.subject, r.from_document, r.missing_cause, r.not_ruled_out, r.evidence_one_sided]),
+    [["https://example.org/a-new", c.sha, "never_looked", all, true],
+     ["https://example.org/b-new", c.sha, "never_looked", all, true]]);
   assert.equal(f.never_looked_count, 2);
   assert.deepEqual(f.missing_unexplained.map((r) => [r.subject, r.missing_cause, r.not_ruled_out, r.evidence_one_sided]),
     [["https://example.org/held", "pre_log", ["pre_log"], true],
@@ -87,8 +88,6 @@ test("R40, R41: never_looked is each address in the deferred partition with no d
   assert.ok(f.never_looked.every((r) => r.evidence_one_sided === true));
   assert.equal(f.missing_unexplained_count, 2);
 });
-
-test.todo("R41: at the document level (one-sided evidence) a never_looked address names all three causes in not_ruled_out — observation-log's causesNotRuledOut answers [never_looked] for that cause whatever the sidedness (its R11, N113; J4 in this job's record)");
 
 test("R42, R44: content entries are each capture's latest extract row (read by authority), with indexed, indexed_determined and indexed_why, tier3_candidate, calibration_drifted and calibration_id, recandidate; recandidates are exactly those entries; the note contradicts nothing", () => {
   const w = world();

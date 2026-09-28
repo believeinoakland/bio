@@ -16,10 +16,8 @@ import { extractionOf, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../extraction/ind
 import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
-         contentAxisFor, observationCoverage, causesNotRuledOut, missingCause } from "../observation-log/index.mjs";
-/* N113 (observation-log's, this layer): the document level's evidence sidedness, read by name when that module states
-   it; until then the frontier reads the level as one-sided, the weaker statement (R41). */
-import * as observationLog from "../observation-log/index.mjs";
+         DOCUMENT_EVIDENCE_IS_ONE_SIDED, contentAxisFor, observationCoverage, causesNotRuledOut, missingCause }
+  from "../observation-log/index.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
 import { normalizeType } from "../../checks/bio-checks.mjs";
@@ -1068,7 +1066,7 @@ export function observationOf(o, sql) {
     vocabulary: { OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED, MISSING_ROW_CAUSES,
                   MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
                   INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
-                  DOCUMENT_EVIDENCE_IS_ONE_SIDED: observationLog.DOCUMENT_EVIDENCE_IS_ONE_SIDED ?? null },
+                  DOCUMENT_EVIDENCE_IS_ONE_SIDED },
     contentAxisFor, observationCoverage, causesNotRuledOut, missingCause,
     /* §5.1 at the meaning level (K80): an unrecognised subject kind takes the weakest cause, never the strongest. */
     missingMeaningCause(kind, subject, entered) {
