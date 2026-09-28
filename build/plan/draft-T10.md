@@ -22,16 +22,17 @@
 - **citation** · N165 (its share); N146 and N208 (adopt membership's helper, delete its copy); N196; N203.
 - **basis-versions** · N99; N185; N186 (imports inquiry's `actNoBasis`, deletes its own); N204; N202 (its share).
 - **strength** · N152 (its share); N184; N218; N208 (its site calls membership's helper; `BAD_GRADE` its own row).
-- **ai-runs** · N138 (its share: delete `airun.mjs`' copy, case-authoring now holding it); N190; N191 (keeps the one D-486 predicate and exports it; legacy-store reads it); N223 (its share).
+- **ai-runs** · N138 (its share: delete `airun.mjs`' copy, case-authoring now holding it); N190; N276; N191 (keeps the one D-486 predicate and exports it; legacy-store reads it); N223 (its share).
 - **run-productions** · N165 (its share); N194; N201.
 - **capture-requests** · N169; N141; N188; N262; N223 (its share); N224 (its share).
 - **skills** · N156.
 - **agent-worker** · N153 (its share).
 
 - **jurisdictions** (layer 1) · N258 (K303).
+- **capture-sources** (layer 3) · N273.
 - **provenance** (layer 3) · N263. **content** (layer 4) · N264; N201 (its share: a member's leg on a machine-minted content row).
 - **legacy-store** (layer 10) · N265 (its share); N268; N270; N191 (reads ai-runs' predicate, R42).
 - **legacy-index** (layer 11) · N265 (its share).
 - **legacy-tests** (layer 11) · re-anchor or retire what T10's layers break; the reds T9 leaves, re-measured.
 
-**Size (K305).** 22 jobs: layer 1 1, layer 3 1, layer 4 1, layer 5 7, layer 6 9, layer 10 1, layer 11 2. Layers 7–9, monitoring and scheduler, the layer-11 extractions, legacy-checks' convergence rows, and N157/N245 are `draft-T11.md`.
+**Size (K305, K317).** 23 jobs: layer 1 1, layer 3 2, layer 4 1, layer 5 7, layer 6 9, layer 10 1, layer 11 2. Layers 7–9, monitoring and scheduler, the layer-11 extractions, legacy-checks' convergence rows, and N157/N245 are `draft-T11.md`.
