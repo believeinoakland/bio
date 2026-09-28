@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { VERSION_CHAIN_LIMIT_DEFAULT, VERSION_CHAIN_LIMIT_MAX } from "../../../src/provenance/index.mjs";
+import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 
 const T = (h) => `2026-09-27T${String(h).padStart(2, "0")}:00:00Z`;
 
@@ -23,6 +24,9 @@ test("R13: one row per (address, capture, via); a repeat widens the interval and
   assert.equal(row.observations, 3);
   assert.equal(row.retrieval_locator, "https://e.org/doc?export", "kept when none is given");
   assert.equal(row.address, "https://E.org/doc", "the address as given is kept");
+  /* The interval is spelled whole-second (R48): a fraction is dropped, and widening compares instants. */
+  w.prov.recordReceipt({ addressNorm: "e.org/doc", captureSha: s, retrieved: "2026-09-27T09:00:00.999Z" });
+  assert.equal(w.row(`SELECT last_retrieved FROM captured_locators`).last_retrieved, T(9));
   /* Another via is another row. */
   w.prov.recordReceipt({ addressNorm: "e.org/doc", captureSha: s, retrieved: T(6), via: "archive.org" });
   assert.equal(w.count("captured_locators"), 2);
@@ -78,11 +82,10 @@ test("R16: receipts lists an address's rows by via, or all, with the summed obse
 });
 
 test("R47: listeners run in the receipt's transaction in the modules' order; one that fails never undoes the receipt", () => {
-  const w = world();
+  const w = world({ order: [] });
   const seen = [];
   assert.deepEqual(w.prov.onReceipt("observation-log", (e) => { seen.push(["log", e]); return { written: true }; }),
                    { ok: true, module: "observation-log" });
-  assert.equal(w.prov.onReceipt("observation-log", () => null).reason, "LISTENER_DECLARED");
   w.prov.onReceipt("capture", () => { throw new Error("boom"); });
   w.prov.onReceipt("monitoring", () => ({ ok: false, reason: "NOPE" }));
   const r = w.prov.recordReceipt({ address: "https://e.org/a", addressNorm: "e.org/a", captureSha: sha("a"), retrieved: T(4),
@@ -91,7 +94,7 @@ test("R47: listeners run in the receipt's transaction in the modules' order; one
   assert.equal(w.count("captured_locators"), 1, "the receipt stands");
   assert.deepEqual(r.listeners.map((l) => [l.module, l.outcome]),
                    [["observation-log", "ran"], ["capture", "threw"], ["monitoring", "refused"]],
-                   "with no total order given, in the order they registered");
+                   "modules the order does not name run in the order they registered");
   assert.match(r.listeners.find((l) => l.module === "capture").error, /boom/);
   assert.deepEqual(seen[0][1], { address: "https://e.org/a", address_norm: "e.org/a", capture_sha: sha("a"), via: "direct",
     retrieval_locator: "https://e.org/a", retrieved: T(4), observation: "new", context: { actor: "x" } });
@@ -105,6 +108,34 @@ test("R47: listeners run in the receipt's transaction in the modules' order; one
   });
   assert.equal(w2.count("listened"), 0);
   assert.equal(w2.count("captured_locators"), 0);
+});
+
+test("R47: a registration is refused through membership's listenerRefusal, the one site of its two codes (N202)", () => {
+  const w = world();
+  const held = [];
+  const fn = () => null;
+  assert.deepEqual(w.prov.onReceipt("observation-log", fn), { ok: true, module: "observation-log" });
+  held.push({ module: "observation-log" });
+  const again = w.prov.onReceipt("observation-log", () => null);
+  assert.deepEqual(again, listenerRefusal(held, "observation-log", fn));
+  assert.deepEqual([again.ok, again.reason, again.code, again.module], [false, "LISTENER_DECLARED", "LISTENER_DECLARED", "observation-log"]);
+  for (const [m, f] of [["", fn], [null, fn], ["capture", null], ["capture", "not a function"]]) {
+    const r = w.prov.onReceipt(m, f);
+    assert.deepEqual(r, listenerRefusal(held, m, f));
+    assert.deepEqual([r.ok, r.reason, r.code], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED"]);
+  }
+  /* A refused registration registers nothing: the receipt names the one listener. */
+  const r = w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: sha("a"), retrieved: T(1) });
+  assert.deepEqual(r.listeners.map((l) => l.module), ["observation-log"]);
+});
+
+test("R47: listeners run in the modules' total order (membership's MODULE_ORDER unless one is given)", () => {
+  const w0 = world();
+  const order0 = [];
+  for (const m of ["monitoring", "observation-log", "capture"]) w0.prov.onReceipt(m, () => { order0.push(m); });
+  w0.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: sha("a"), retrieved: T(1) });
+  assert.deepEqual(order0, ["capture", "observation-log", "monitoring"].sort((x, y) => MODULE_ORDER.indexOf(x) - MODULE_ORDER.indexOf(y)));
+  assert.deepEqual(order0, ["capture", "observation-log", "monitoring"], "layer 3, layer 5, layer 10");
 });
 
 test("R47: listeners run in the modules' total order, whatever order they registered in", () => {

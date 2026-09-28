@@ -236,4 +236,17 @@ export function migrateProvenance(sql) {
   }
   const bare = PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";")) { const t = s.trim(); if (t) sql.exec(t); }
+  respellReceiptInstants(sql);
+}
+
+/* R48 (N133): `first_retrieved` and `last_retrieved` are spelled whole-second UTC, `YYYY-MM-DDTHH:MM:SSZ`, on every
+   row, so a later module compares them as text. Receipts written before the spelling was stated may carry a fraction
+   of a second (or another readable ISO spelling); each is re-spelled to its whole second, the fraction dropped, and
+   nothing else about the row moves. A stored value that names no instant is left as it is: it is not this module's
+   to invent one. Idempotent: a row already spelled whole-second is not touched. */
+const WHOLE_SECOND_GLOB = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z";
+function respellReceiptInstants(sql) {
+  for (const col of ["first_retrieved", "last_retrieved"])
+    sql.exec(`UPDATE captured_locators SET ${col} = strftime('%Y-%m-%dT%H:%M:%SZ', ${col})
+               WHERE ${col} NOT GLOB '${WHOLE_SECOND_GLOB}' AND strftime('%Y-%m-%dT%H:%M:%SZ', ${col}) IS NOT NULL`);
 }
