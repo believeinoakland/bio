@@ -284,6 +284,14 @@ export class AiRuns {
    *  override below only ever turns LOOKED_ABSENT / NEVER_LOOKED into
    *  LOOKED_INDETERMINATE and never produces or removes PRESENT. A rollup that
    *  is not PRESENT owes no referent and carries none. */
+  /** A non-terminal restatement of the rollup (the wake's entry, a dispatch that did not complete): `NEVER_LOOKED` is
+   *  never stored as a look (observation-log R3; only a run's terminal rollup may say it, K148), so a run whose own log
+   *  holds no look yet restates LOOKED_INDETERMINATE — what its search established is not yet known from its log. */
+  #aiRunRestatedState(run) {
+    const s = this.#aiRunSearchState(run, false);
+    return s.state === "NEVER_LOOKED" ? { ...s, state: "LOOKED_INDETERMINATE" } : s;
+  }
+
   #aiRunSearchState(run, stoppedByBound) {
     const latest = new Map(this.#rows(
       `SELECT state, MAX(seq) seq FROM observation_log
@@ -1304,7 +1312,7 @@ export class AiRuns {
           /* The rollup AND its `observation` referent (REC-100, IC-130): a wake
              entry is a rollup like the terminal one, so it points at the latest
              PRESENT look it restates, computed in the same read. */
-          ...this.#aiRunSearchState(r.run, false),
+          ...this.#aiRunRestatedState(r.run),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
                 + `(${captured} captured, ${refused} refused). The run is resumable: its own log `
@@ -1460,7 +1468,7 @@ export class AiRuns {
     } finally { clearTimeout(timer); }
     if (outcome.state !== "DISPATCHED") {
       const refusal = this.#aiRunAppend(d.run, {
-        level: "internet", subject: d.context_id, ...this.#aiRunSearchState(d.run, false), governed: false,
+        level: "internet", subject: d.context_id, ...this.#aiRunRestatedState(d.run), governed: false,
         detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
               + `The run was woken and is still resumable by its own principal; nothing it established is lost`,
       }, iso, 0);
@@ -1533,11 +1541,12 @@ export class AiRuns {
     if (!row) return { run: run || null, found: false, session: null };
     const bounds = this.#rows(
       `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound`, run);
+    /* R19: the stopping bound's or ending's sentence, whether or not a queue condition was named beside it (a close
+       names none, and its ending's sentence is still what a reader is owed). */
     const cond = row.stopped_bound
       ? { kind: row.stopped_condition || "",
-          detail: row.stopped_condition
-            ? `${row.stopped_bound}: ${RUN_BOUNDS[row.stopped_bound] || RUN_ENDINGS[row.stopped_bound] || ""}`
-            : `the run stopped on '${row.stopped_bound}'`,
+          detail: `${row.stopped_bound}: ${RUN_BOUNDS[row.stopped_bound] || RUN_ENDINGS[row.stopped_bound]
+                                           || "a bound or ending this vocabulary no longer holds"}`,
           bound: row.stopped_bound, at: row.stopped_at }
       : null;
 
@@ -2235,11 +2244,12 @@ export class AiRuns {
    *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
   consumeBound(run, bound, n) {
     const b = String(bound ?? "");
-    /* The figure's rule is R3's, asked of this one pair (C-22.13; an unknown bound C-22.15; `lease`, which nothing
-       spends, C-22.14), in its allowance form: the plane-counted refusal of `mints` and `surfaces` is not asked,
-       because the caller here IS the plane counting its own work (R29), and its zero is a spend of nothing. */
-    const bad = checkConsume([[b, n]], { seed: false, allowance: true });
-    if (bad && bad.code !== "AI_RUN_BOUND_NO_ALLOWANCE") return bad;
+    /* The figure's rule is R3's, asked of this one pair (an unknown bound C-22.15; `lease`, which nothing spends,
+       C-22.14; a figure that is not a non-negative safe integer C-22.13). A good figure is asked as a zero, because the
+       plane-counted refusal of `mints` and `surfaces` is not this caller's: here the plane is counting its own work. */
+    const figure = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+    const bad = checkConsume([[b, figure ? 0 : n]], { seed: false });
+    if (bad) return bad;
     if (n === 0) return null;
     this.sql.exec(
       `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)

@@ -1,0 +1,181 @@
+/* ai-runs R15–R18, R41: the reaper, the wake through the registered wait source, and the woken run's resume. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { world, OPEN, INQ, ORG, sha, agentWorker } from "./world.mjs";
+import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
+
+const at = (s) => Date.parse(`2026-07-01T${s}Z`);
+const logOf = (w, run = "R1") => w.rows(`SELECT * FROM observation_log WHERE authority_kind='run' AND authority=? ORDER BY seq`, run);
+
+/** A wait source over plain maps (`capture-requests`' registration in shape): requests per run, each
+ *  `{request, state, expires, woken}`; `state` "pending" is outstanding, anything else a completion. */
+function waitSource(reqs, { tickMs = 5000, configured = true } = {}) {
+  const calls = [];
+  const src = {
+    tickMs: () => tickMs,
+    configured: () => configured,
+    holds: (iso, limit) => { calls.push(["holds", iso, limit]);
+      return Object.entries(reqs).map(([run, rs]) => ({ run, outstanding: rs.filter((q) => q.state === "pending" && q.expires > iso).length }))
+        .filter((h) => h.outstanding > 0).slice(0, limit); },
+    woken: (limit) => { calls.push(["woken", limit]);
+      return Object.entries(reqs).filter(([, rs]) => rs.some((q) => q.state !== "pending" && !q.woken)).map(([run]) => run).slice(0, limit); },
+    completions: (run, limit) => { calls.push(["completions", run, limit]);
+      return (reqs[run] || []).filter((q) => q.state !== "pending" && !q.woken).slice(0, limit).map((q) => ({ request: q.request, state: q.state })); },
+    markWoken: (ids, iso) => { calls.push(["markWoken", ids, iso]);
+      for (const rs of Object.values(reqs)) for (const q of rs) if (ids.includes(q.request)) q.woken = iso; },
+  };
+  return { src, calls };
+}
+
+async function schedWorld(env = {}) {
+  const w = world({ env });
+  await w.group("ann");
+  w.bundle(INQ);
+  await w.runs.open(OPEN({ at: "2026-07-01T00:00:00Z", leaseMs: 60000 }));
+  await w.runs.open(OPEN({ run: "R2", at: "2026-07-01T00:00:00Z", leaseMs: 600000, bounds: [{ bound: "fetches", allowed: 1 }] }));
+  return w;
+}
+
+test("R15: reapDue counts lapsed running runs; reapWake is the earliest expiry never before now, or null; reap ends each lapsed run with bound lease through R14", async () => {
+  const w = await schedWorld();
+  assert.equal(w.runs.reapDue(at("00:00:30")), 0);
+  assert.equal(w.runs.reapWake(at("00:00:30")), at("00:01:00"));
+  assert.equal(w.runs.reapWake(at("00:05:00")), at("00:05:00"), "never before now");
+  assert.equal(w.runs.reapDue(at("00:02:00")), 1);
+  const r = w.runs.reap(at("00:02:00"));
+  assert.deepEqual(r, { at: "2026-07-01T00:02:00Z", lapsed: 1, reaped: [{ run: "R1", terminated: true, bound: "lease" }] });
+  const term = logOf(w).pop();
+  assert.deepEqual([term.terminal, term.bound, term.state], [1, "lease", "LOOKED_INDETERMINATE"]);
+  assert.equal(w.row(`SELECT status FROM ai_runs WHERE run='R1'`).status, "stopped");
+  /* an exhausted budget names itself, not the lease, when the killed run is reaped */
+  await w.runs.tick({ run: "R2", viewer: "admin", caller: ORG, at: "2026-07-01T00:01:00Z", consume: { fetches: 0 } });
+  w.sql.exec(`UPDATE ai_run_bounds SET consumed = 1 WHERE run='R2' AND bound='fetches'`);
+  assert.deepEqual(w.runs.reap(at("02:00:00")).reaped, [{ run: "R2", terminated: true, bound: "fetches" }]);
+  assert.equal(w.runs.reapWake(at("02:00:00")), null, "no run in flight");
+  assert.equal(w.runs.reapDue(at("02:00:00")), 0);
+});
+
+test("R17: with no wait source registered, wakeDue is 0 and nothing is held or woken", async () => {
+  const w = await schedWorld();
+  assert.equal(w.runs.wakeDue(at("00:00:10")), 0);
+  assert.equal(w.runs.wakeWake(at("00:00:10")), null);
+  const before = w.dump();
+  assert.deepEqual(await w.runs.wake(at("00:00:10")), { at: "2026-07-01T00:00:10Z", held: 0, holds: [], woken: 0, wakes: [], dispatched: 0 });
+  assert.equal(w.dump(), before);
+});
+
+test("R41: registerWaitSource takes one well-formed source; a second is WAIT_SOURCE_DECLARED, a malformed one WAIT_SOURCE_MALFORMED", async () => {
+  const w = await schedWorld();
+  const { src } = waitSource({});
+  for (const [m, s] of [["", src], [null, src], ["capture-requests", null], ["capture-requests", { ...src, markWoken: 1 }],
+                        ["capture-requests", { tickMs: src.tickMs, holds: src.holds, woken: src.woken, completions: src.completions }]])
+    assert.equal(w.runs.registerWaitSource(m, s).reason, "WAIT_SOURCE_MALFORMED");
+  assert.deepEqual(w.runs.registerWaitSource("capture-requests", src), { ok: true, module: "capture-requests" });
+  const again = w.runs.registerWaitSource("legacy-store", waitSource({}).src);
+  assert.deepEqual([again.ok, again.reason, again.declaredBy], [false, "WAIT_SOURCE_DECLARED", "capture-requests"]);
+});
+
+test("R16: through the wait source — an outstanding request extends the lease; completions get one internet-level entry with the counts and the decision, the lease extended and the completions marked woken, in one step; at most 25 per tick", async () => {
+  const w = await schedWorld();
+  const reqs = {
+    R1: [{ request: "q1", state: "pending", expires: "2026-07-01T05:00:00Z" }],
+    R2: [{ request: "q2", state: "captured" }, { request: "q3", state: "refused" }, { request: "q4", state: "pending", expires: "2026-07-01T00:00:01Z" }],
+    GONE: [{ request: "q9", state: "captured" }],
+  };
+  const { src, calls } = waitSource(reqs);
+  w.runs.registerWaitSource("capture-requests", src);
+  assert.equal(w.runs.wakeDue(at("00:00:10")), 2, "one held (R1), one to wake (R2); a run not held here is neither");
+  assert.equal(w.runs.wakeWake(at("00:00:10")), at("00:00:10") + 5000, "the producer's cadence");
+  const r = await w.runs.wake(at("00:00:10"));
+  assert.deepEqual([r.held, r.woken, r.dispatched], [1, 1, 0]);
+  assert.deepEqual(r.holds, [{ run: "R1", outstanding: 1, expires: "2026-07-01T01:00:10Z" }]);
+  assert.deepEqual([r.wakes[0].run, r.wakes[0].completions, r.wakes[0].captured, r.wakes[0].refused, r.wakes[0].woken, r.wakes[0].resume],
+                   ["R2", 2, 1, 1, true, "AGENT_WORKER_UNBOUND"]);
+  assert.equal(w.row(`SELECT expires FROM ai_runs WHERE run='R1'`).expires, "2026-07-01T01:00:10Z");
+  assert.equal(w.row(`SELECT updated FROM ai_runs WHERE run='R1'`).updated, "2026-07-01T00:00:00Z", "a hold is not the run acting");
+  const e = logOf(w, "R2");
+  assert.equal(e.length, 1);
+  assert.deepEqual([e[0].level, e[0].terminal, e[0].actor, e[0].subject], ["internet", 0, null, INQ]);
+  assert.equal(e[0].state, "LOOKED_INDETERMINATE", "a run with no look yet restates no NEVER_LOOKED (observation-log R3)");
+  assert.match(e[0].detail, /2 capture request\(s\).*1 captured, 1 refused.*Resumption: NOT dispatched/);
+  assert.deepEqual(reqs.R2.map((q) => !!q.woken), [true, true, false]);
+  assert.ok(calls.some(([f, , l]) => f === "holds" && l === 25));
+  assert.ok(calls.some(([f, l]) => f === "woken" && l === 25));
+  /* woken once: a second tick holds R1 again and wakes nothing */
+  const again = await w.runs.wake(at("00:00:20"));
+  assert.deepEqual([again.held, again.woken], [1, 0]);
+  /* nothing drains: the hold is inert and nothing is due */
+  const w2 = await schedWorld();
+  w2.runs.registerWaitSource("capture-requests", waitSource(reqs, { configured: false }).src);
+  assert.equal((await w2.runs.wake(at("00:00:10"))).held, 0);
+  /* the batch: at most 25 runs held per tick */
+  const w3 = await schedWorld();
+  const many = {};
+  for (let i = 0; i < 30; i++) {
+    await w3.runs.open(OPEN({ run: `M${String(i).padStart(2, "0")}` }));
+    many[`M${String(i).padStart(2, "0")}`] = [{ request: `m${i}`, state: "pending", expires: "2026-07-02T00:00:00Z" }];
+  }
+  w3.runs.registerWaitSource("capture-requests", waitSource(many).src);
+  assert.equal((await w3.runs.wake(at("00:00:10"))).held, 25);
+});
+
+test("R18: a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked; otherwise the decision is withheld and named; the call is bounded and the secret never enters the record", async () => {
+  const TOKEN = "instance-ai-secret-value-7f3c";
+  const bound = (w, store = "bio") => { w.ctx.id = { equals: (x) => x === `id:${store}` }; };
+  const env = (aw, extra = {}) => ({ AGENT_WORKER: aw, INSTANCE_AI_TOKEN: TOKEN, INSTANCE_CLAUDE_TOKEN: "claude-account-x",
+                                      STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50", ...extra });
+  const setup = async (e, { principal = ORG, mint = "organisation", revoke = false, store = "bio" } = {}) => {
+    const w = world({ env: e });
+    await w.group("ann");
+    w.bundle(INQ);
+    if (mint) {
+      const m = w.membership.aiCredentialMint({ who: mint === "member" ? "ann" : "admin", tokenId: "tok-org", secretSha: sha(TOKEN),
+        principalKind: mint, taskScope: "investigative", writes: ["airuntick"], note: "the instance's key" });
+      assert.equal(m.ok, true, JSON.stringify(m));
+      if (revoke) w.membership.aiCredentialRevoke({ who: "admin", tokenId: "tok-org" });
+    }
+    bound(w, store);
+    await w.runs.open(OPEN({ principalPlane: principal }));
+    const reqs = { R1: [{ request: "q1", state: "captured" }] };
+    w.runs.registerWaitSource("capture-requests", waitSource(reqs).src);
+    return w;
+  };
+  const decision = async (w) => (await w.runs.wake(at("00:00:10"))).wakes[0];
+  /* the one comparison: stamps equal → dispatched, the body carrying the credential and no more */
+  const aw = agentWorker();
+  const w = await setup(env(aw));
+  const cred = w.membership.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  const stamp = `${cred.principal}/${cred.tokenId}`;
+  const w1 = await setup(env(aw), { principal: stamp });
+  const d = await decision(w1);
+  assert.deepEqual([d.resume, d.dispatch.state], ["DISPATCH", "DISPATCHED"]);
+  assert.equal(aw.calls.length, 1);
+  assert.deepEqual(aw.calls[0].body, { run_id: "R1", store: "bio", credential: TOKEN,
+                                       claude_accounts: { instance: { token: "claude-account-x", ref: "instance" } } });
+  assert.equal(JSON.stringify(w1.rows(`SELECT * FROM observation_log`)).includes(TOKEN), false, "the secret never enters the record");
+  assert.equal(JSON.stringify(d).includes(TOKEN), false);
+  /* every withheld ground, each named, none calling the binding */
+  const calls = aw.calls.length;
+  assert.equal((await decision(await setup(env(aw), { principal: "member:ann/tok-m" }))).resume, "MEMBER_PRINCIPAL_RUN");
+  assert.equal((await decision(await setup(env(aw), { principal: "class:ai/other" }))).resume, "NOT_THE_INSTANCE_CREDENTIALS_RUN");
+  assert.equal((await decision(await setup(env(null), { principal: stamp }))).resume, "AGENT_WORKER_UNBOUND");
+  assert.equal((await decision(await setup(env(aw, { INSTANCE_AI_TOKEN: "" }), { principal: stamp }))).resume, "NO_INSTANCE_AI_CREDENTIAL");
+  assert.equal((await decision(await setup(env(aw), { principal: stamp, store: "elsewhere" }))).resume, "NAMESPACE_UNDETERMINED");
+  assert.equal((await decision(await setup(env(aw), { principal: stamp, mint: null }))).resume, "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD");
+  assert.equal((await decision(await setup(env(aw), { principal: stamp, revoke: true }))).resume, "INSTANCE_AI_CREDENTIAL_REVOKED");
+  assert.equal((await decision(await setup(env(aw), { principal: "member:ann/tok-org", mint: "member" }))).resume, "MEMBER_PRINCIPAL_RUN");
+  const memberKey = await setup(env(aw), { principal: "class:ai/tok-org", mint: "member" });
+  assert.equal((await decision(memberKey)).resume, "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION");
+  const silent = { get: () => ({ fetch: async () => new Response("{}", { status: 500 }) }), idFromName: (n) => `id:${n}` };
+  assert.equal((await decision(await setup(env(aw, { STORE: silent }), { principal: stamp, store: "scratch" }))).resume, "CREDENTIAL_RECORD_SILENT");
+  assert.equal(aw.calls.length, calls, "no withheld run reached the binding");
+  /* a refused or silent dispatch appends one entry saying the run is still resumable; the wait is bounded */
+  for (const answer of [{ status: 403, body: { ok: false, reason: "NO" } }, "hang", "throw"]) {
+    const x = await setup(env(agentWorker(answer)), { principal: stamp });
+    const o = await decision(x);
+    assert.equal(o.dispatch.state, answer === "hang" || answer === "throw" ? "SILENT" : "REFUSED");
+    const rows = logOf(x);
+    assert.equal(rows.length, 2);
+    assert.match(rows[1].detail, /did not complete .*still resumable/);
+  }
+});
