@@ -86,6 +86,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)). *(not declared)*
 - `intent`, `publication`, `reevaluation` (R33); `actions`: `pendingClocks` (its R31) and the bound of its R33 (R34, R44); `escalation` (R35). `publication` is *(not declared)*.
 - `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23. *(not declared)*
+- `subresources`: `normalizeAddress` (the look's subject, D-524's baseline match); `jurisdictions`: `combine` over record-core's `jurisdiction_profiles` setting, the view N116 passes to `identify`/`doctypeFor`/`assess` (K259).
 - `extraction`, `content`: nothing here calls them.
 
 ### Invariants
