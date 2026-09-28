@@ -46,3 +46,7 @@ Four items outside skills, found while applying N156 (details in my record's Com
 2. legacy-tests: `skillsequencing.test.mjs` goes from 26/1 to 24/3. ARM C4, F1 and F2 pin the retired copy (`enforced_by` empty, the old residue). These are N156's "pins moving with it".
 3. Generated artifact: `agent-worker/dist/agent-worker.bundled.mjs` is stale (inputs `skillpack.mjs`, `skilldoctrine.mjs`); agent-worker `requirements.test.mjs` R45's two freshness arms are red. R48's behaviour passes.
 4. agent-worker: `test/harness.test.mjs` crashes at line 315 (the plane's `OBSERVATION_LEVELS` block not found in the source it scans), the same before and after this change.
+
+## J3 · COMPLETE
+
+N156 applied on K333; skills 30/30, 0 todo; format, architecture, coverage and ownership 0 failures. Record: build/jobs/T10/skills.md on job/T10/skills (Completion section); J2 lists what it found elsewhere.
