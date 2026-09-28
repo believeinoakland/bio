@@ -154,7 +154,7 @@ Replaced at each handoff; the progress log (§4) is the history.
 **Decided this session:** K223–K246 (T8's opening, N200 folded as Bob ruled, N178's provider services folded into intent R27–R28 and reevaluation R25 before layer 7, one-code-one-site K231, and each layer's answers and closes). New entries N202–N209. T7's close meter 58% (Bob), recorded as T8's opening reading too.
 
 **Open items, in order.**
-1. **Layer 9:** answer its jobs; close it as the earlier layers (ownership, reading every `ADDED` line against §12.2, bundles, merge, archive, rows). Then re-open promotion for the 1.38.0 catalogue stamp (K233), counting layer 8's and 9's departures.
+1. **Layer 9:** answer its jobs; close it as the earlier layers (ownership, reading every `ADDED` line against §12.2, bundles, merge, archive, rows). Then re-open promotion for the 1.38.0 catalogue stamp (K233), counting layer 8's and 9's departures and re-pinning its write-path floor and R17 fixture (K253).
 2. **Layer 10** (monitoring, scheduler: they read intent R27/R28, reevaluation R25 and capture R59), then **layer 11** (affordances, legacy-index, installer, legacy-tests; legacy-tests' entry has grown by each layer's re-pins).
 3. **P18:** N209 wants a bound worded into intent R12–R13 (BOB's); `draft-T9.md` is the next plan (legacy-store's own job carries N28, N89, N193, N205).
 
