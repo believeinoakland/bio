@@ -1,6 +1,6 @@
 # review (T8)
 
-**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · RUNNING until 2026-09-28T09:03:12Z (old-battery comparison after case-authoring) · handled B8
+**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
