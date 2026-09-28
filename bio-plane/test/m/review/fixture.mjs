@@ -1,7 +1,7 @@
 /* review over record-core, membership and strength (the real ones) on a real SQLite database (node:sqlite) standing in
    for a Durable Object's storage. What it reads from `publication` (its `cases` and `published_cases` read contract,
-   R3 and R5; `attributionInForce`, R16), `case-authoring` (`publishCase` run dry, R13; `statementAcknowledgements`
-   and `withheldWriterStated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
+   R3 and R5, its R40; `attributionInForce`, R16, its R39), `case-authoring` (`publishCase` run dry, R13;
+   `statementAcknowledgements` with its `withheld_stated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -76,9 +76,9 @@ export function world({ now = NOW } = {}) {
       const undetermined = writer && writer.by === null ? rows.filter((r) => r.kind === "participant").length : 0;
       const listed = rows.filter((r) => !(r.kind === "participant" && (writer.by === null || r.by === writer.by)));
       return { statementSha: sha(statement), truncated: false, byWriter, withheldWriterUndetermined: undetermined,
+               withheld_stated: `withheld ${byWriter + undetermined} by ${writer && writer.by ? writer.by : "UNDETERMINED"}`,
                rows: listed.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at })) };
     },
-    withheldWriterStated: (n, by) => `withheld ${n} by ${by ?? "UNDETERMINED"}`,
   };
   /* publication's side: the attribution level in force (its R17). */
   const chosen = new Set();          // `${case}|${edition}|${observation}`

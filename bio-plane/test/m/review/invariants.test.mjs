@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, V, SECRET } from "./fixture.mjs";
-import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, noReviewCopy, caseIdentitySentence,
-         reviewOwns } from "../../../src/review/index.mjs";
+import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, REVIEW_LIST_MAX, noReviewCopy, caseIdentitySentence,
+         statedEdition, reviewOwns } from "../../../src/review/index.mjs";
 import * as catalogue from "../../../checks/bio-checks.mjs";
 
 /** Every act and read, over two drafts (one naming a case), a grant, a revocation, comments and the list. */
@@ -132,3 +132,27 @@ test("R25: no place is named in this module's behaviour or outward text", () => 
   for (const place of ["Oakland", "Alameda", "California", "Berkeley", "San Francisco", "County of", "City of"])
     assert.equal(text.toLowerCase().includes(place.toLowerCase()), false, place);
 });
+
+test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported and pure; case_drafts is a stated read contract", () => {
+  assert.equal(REVIEW_LIST_MAX, 500);
+  for (const [ident, newCase, want] of [[{ caseId: "C", edition: 3 }, false, 3], [{ caseId: "C", edition: 3 }, true, 3],
+                                        [{ caseId: null, edition: 1 }, true, 1], [{ caseId: null, edition: 1 }, false, null],
+                                        [{ caseId: null, edition: 1 }, "yes", 1], [{ caseId: null, edition: 1 }, 0, null]])
+    assert.equal(statedEdition(ident, newCase), want);
+  const ident = { caseId: "C", edition: 3 };
+  statedEdition(ident, true);
+  assert.deepEqual(ident, { caseId: "C", edition: 3 }, "pure: nothing it is given changes");
+  assert.equal(caseIdentitySentence("C", 3, false), caseIdentitySentence("C", 3, false));
+  assert.equal(caseIdentitySentence("C", 3, false), "the next edition (3) of C");
+  /* the read contract: the columns, holding what this module's writes put there */
+  const w = standard();
+  w.clock.now = "2026-09-28T05:00:00.000Z";
+  const d = w.r.act({ act: "draft", author: "ed", project: P, statement: "S", scope: "x" });
+  const cols = w.rows(`PRAGMA table_info(case_drafts)`).map((c) => c.name);
+  for (const c of ["draft_id", "case_id", "project_id", "params", "statement_by", "created_at"]) assert.ok(cols.includes(c), c);
+  const r = w.row(`SELECT draft_id, case_id, project_id, params, statement_by, created_at FROM case_drafts`);
+  assert.deepEqual(r, { draft_id: d.draftId, case_id: null, project_id: P, params: JSON.stringify({ scope: "x", statement: "S" }),
+                        statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
+});
+
+test.todo("R26: case-authoring's DRAFTS_READ_MAX equals REVIEW_LIST_MAX (K242) — case-authoring is not yet on tranche/T8, so it cannot be imported");

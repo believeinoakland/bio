@@ -39,14 +39,18 @@
  *                        `isProjectOwner`, `projectOwners`, `existenceAct`, `viewerPredicate`.
  *   strength             `projectBar` (its R14; R11's `required_strength`).
  *   basisVersions        `testimonyReach` (its R39; R16).
- *   publication          `attributionInForce` (its R17; R16) and `registerReviewProvider` (its R23).
- *   caseAuthoring        `publishCase` (its R18; R13), `statementAcknowledgements` and `withheldWriterStated` (its R20;
- *                        R15).
+ *   publication          `attributionInForce` (its R39; R16) and `registerReviewProvider` (its R23).
+ *   caseAuthoring        `publishCase` (its R18; R13) and `statementAcknowledgements`, whose list carries its
+ *                        `withheld_stated` sentence (its R20; R15).
  *   now                  the clock for the instants it writes, an ISO string (default: the wall clock, to the ms).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`) and
  * `files` (`bundle_id`, `path`, `content`), its R37 (R12's findings, R19's project); publication's `cases`
- * (`case_id`, `project_id`) and `published_cases` (`case_id`, `edition`) (R3, R5). */
+ * (`case_id`, `project_id`) and `published_cases` (`case_id`, `edition`), its R40 (R3, R5).
+ *
+ * READ CONTRACT it states (R26): `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`,
+ * `created_at`), on record-core R37's terms, which `case-authoring`'s acknowledgements read under `REVIEW_LIST_MAX`;
+ * every write to it stays here. */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
@@ -68,8 +72,9 @@ export const REVIEW_DRAFT_MAX = 64 * 1024;
 export const REVIEW_TEXT_MAX = 4000;
 /** R6: a recipient's label. */
 export const REVIEW_RECIPIENT_MAX = 200;
-/** R14, R19: THE COPY'S LISTS ARE BOUNDED AND SAY SO. Comments, grants and drafts are read under this cap (one row over
- *  it to know), and an answer that hit it says so rather than presenting a page as the whole. */
+/** R14, R19, R26: THE COPY'S LISTS ARE BOUNDED AND SAY SO. Comments, grants and drafts are read under this cap (one row
+ *  over it to know), and an answer that hit it says so rather than presenting a page as the whole. `case-authoring`,
+ *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it (K242). */
 export const REVIEW_LIST_MAX = 500;
 /** R11: the marking every copy carries. */
 export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draft of a case, shown inside this "
@@ -600,7 +605,7 @@ export class Review {
                             ...(acks.withheldWriterUndetermined
                               ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined }
                               : {}),
-                            withheld_stated: this.caseAuthoring.withheldWriterStated(withheld, writer.by),
+                            withheld_stated: acks.withheld_stated,
                             act: "op=statementack&draft=" + d.draft_id };
     return {
       ok: true, kind: "review-copy", marking: REVIEW_MARKING, published: false,
