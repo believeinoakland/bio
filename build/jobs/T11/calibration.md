@@ -1,6 +1,6 @@
 # calibration (T11)
 
-**Status** · session_014Qef6d2cmQSeamSR91bGRi · depth 2 · WORKING · handled B1
+**Status** · session_014Qef6d2cmQSeamSR91bGRi · depth 2 · COMPLETE · handled B1
 
 CALIBRATION #3 (the first session of this job to start in T11).
 
