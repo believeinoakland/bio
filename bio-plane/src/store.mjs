@@ -678,7 +678,7 @@ export class Store extends DurableObject {
         wake: ()    => this.#groupDomainWake(),
         tick: ()    => this.#groupDomainTick() });
     ctx.blockConcurrencyWhile(async () => this.#migrate());
-    ctx.blockConcurrencyWhile(async () => scheduler.start());
+    ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
 
   #migrate() {
