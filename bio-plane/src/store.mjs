@@ -144,22 +144,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* And the catalog's OWN canonical serializer, used for F10's
             idempotence key rather than a second one written here. */
          canonicalJson,
-         /* PL-4 / IS-4 / SWEEP 4b.1: the capture-request door's DEC-49 rows, the
-            two CLOSED vocabularies DEC-47's conduct is expressed in, and the ONE
-            user-agent legibility predicate. Imported for the same reason as
-            everything above it: the drain's conduct check and the suite that
-            drives it must be reading the SAME roster, or the rule and its test
-            can only agree by coincidence. */
-         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
          civicosUserAgent,
-         /* D-491 / IC-276: C-83's rows, imported READ-ONLY and for ONE purpose —
-            the drain asks whether the code op=acquire sent belongs to the render
-            family, so a render refused can be held under its own name instead of
-            reported as a fetch that failed. The family is DECLARED in index.mjs's
-            span (`is-render-admit`) and every code is minted there; nothing here
-            refuses with one, which is why this import cannot conscript this file
-            into that family's governed span. */
-         RENDER_CAPTURE_CHECKS,
          /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
             three and the REVOKE's two live here; the gate's four live in
             index.mjs, because what a scope may REACH is a question only the OPS
@@ -209,6 +194,7 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
+import { captureRequestsOf, captureRequestsOps, renderHoldReason } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
@@ -686,7 +672,6 @@ export class Store extends DurableObject {
       { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
       { name: "monitor_fired", keys: ["subject"] },
       { name: "suggest_refusals", keys: ["target"] },
-      { name: "capture_requests", keys: ["target"] },
       { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
       { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
       { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
@@ -715,10 +700,6 @@ export class Store extends DurableObject {
     /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
        capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
        extracted and register their own. */
-    observations.registerAuthority("sweep", (request) => {
-      const r = this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, request);
-      return r ? [r.target, r.lead_inquiry].filter(Boolean) : null;
-    });
     observations.registerAuthority("run", (run, viewer) => this.aiRunLog({ run, viewer, limit: 1 }).found === true);
     const promotion = promotionOf(ctx);
     /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
@@ -794,6 +775,12 @@ export class Store extends DurableObject {
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
+    /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
+       (its R28), answered by legacy-store until ai-runs is extracted. */
+    captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
+      runs: { runFor: (run, viewer) => (run && this.#aiRunInSight(run, viewer ?? null)
+        ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run)
+        : null) } });
     capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
     capture.on("source-outcome", "legacy-store", async (o) => (o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null));
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
@@ -973,33 +960,6 @@ export class Store extends DurableObject {
          though it had. Backfilling any value here — even an empty one — would
          manufacture the affirmation DEC-32 requires be affirmatively claimed. */
       ["inquiry_basis_versions", "affirmed_parts", "TEXT"],
-      /* PL-15 / D-213: the OTHER question a requested capture bears on. Additive
-         and nullable for the same reason every column above is — a request
-         written before this item existed was made under the question the run was
-         working and named no lead, and NULL states exactly that. A non-null
-         default here would invent an observation nobody made, which on THIS
-         column would mint a member-facing notification out of a migration. */
-      ["capture_requests", "lead_inquiry", "TEXT"],
-      /* FL-4 / IS-9: the instant the run waiting on this request was woken for
-         its completion. Additive and nullable for the same reason every column
-         above is — a request written before this item existed was never woken,
-         because nothing existed to wake it, and NULL states exactly that. A
-         non-null default would claim the run had been told about a completion
-         nobody delivered, which on THIS column would mean a wake that never
-         happened reading as one that did. */
-      ["capture_requests", "run_woken_at", "TEXT"],
-      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
-         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
-         IS NOT NULLABLE, and the distinction is the point rather than an
-         exception: every column above is nullable because a legacy row carried
-         an unstated value that a default would INVENT. This one has no unstated
-         value to invent. A request written before the column existed could not
-         ask for a render — no door read the flag, and no drain could have
-         honoured one — so 0 states what was true of that row, and a NULL here
-         would mean "we do not know whether this asked for a render" about a row
-         that demonstrably could not have. Backfilled by the ALTER so a migrated
-         store and a fresh install present the same table. */
-      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -1103,6 +1063,7 @@ export class Store extends DurableObject {
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
     observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before the run log folds into them below */
+    captureRequestsOf(this.ctx).migrate();   /* capture-requests' table, its additive columns and indexes (R35) */
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
     contradictionOf(this.ctx).migrate();   /* contradiction's table and its purge declaration (R22) */
     progressionsOf(this.ctx).migrate();   /* progressions' tables and REC-184's column (R29) */
@@ -1947,9 +1908,9 @@ export class Store extends DurableObject {
          an unconfigured or idle instance holds no alarm at all — the
          self-termination property REC-1 prized and the Free tier is paid for. */
       { name: "capture-request-drain",
-        due:  (now) => this.#captureRequestPending() > 0 ? now : null,
-        wake: (now) => this.#captureRequestPending() > 0 ? now + this.#captureRequestTickMs() : null,
-        tick: (now) => this.captureRequestDrain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
+        due:  (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now : null,
+        wake: (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now + captureRequestsOf(this.ctx).drainIntervalMs() : null,
+        tick: (now) => captureRequestsOf(this.ctx).drain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
       /* FL-4 / IS-9 / INVESTIGATIVE-SESSION.md §14b.3 — THE SUSPENDED RUN'S
          WAKE: the TENTH consumer on the one alarm, and ONE APPENDED ENTRY
          exactly as SCHEDULER.md instructs: *"append an entry to
@@ -13328,11 +13289,8 @@ export class Store extends DurableObject {
    *  reported rather than silently absorbed. */
   #conditionsCaptureRequested(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.target", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.state='captured' AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
-      const attribution = this.#captureRequestAttribution(r);
+    for (const r of captureRequestsOf(this.ctx).completed({ viewer }).requests) {
+      const attribution = r.attribution;
       /* DEFENCE IN DEPTH, AND STATED AS SUCH RATHER THAN CLAIMED AS A CONTROL.
          The drain refuses to capture a row it cannot attribute, so no `captured`
          row reaching this walk can fail the composer today and this `continue`
@@ -13494,12 +13452,8 @@ export class Store extends DurableObject {
    *  member acts over something that may still be refused at the drain. */
   #findingsOutOfInquiryLead(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.lead_inquiry", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.state='captured' AND cr.lead_inquiry IS NOT NULL AND cr.lead_inquiry <> ''
-          AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
-      const attribution = this.#captureRequestAttribution(r);
+    for (const r of captureRequestsOf(this.ctx).leads({ viewer }).requests) {
+      const attribution = r.attribution;
       /* THE SAME DEFENCE `#conditionsCaptureRequested` STATES, for the same
          reason and with the same honesty about what it is. The drain refuses to
          capture a row it cannot attribute, so no `captured` row reaching this
@@ -14583,20 +14537,14 @@ export class Store extends DurableObject {
    *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
   #conditionsRenderDeferred(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.target", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.render = 1
-          AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))
-          AND (${seen.sql})
-        ORDER BY cr.updated, cr.request`, ...seen.args)) {
+    for (const r of captureRequestsOf(this.ctx).rendersHeld({ viewer }).requests) {
       /* EVERY RENDER THE DRAIN HAS HELD, UNDER WHATEVER CODE IT LAST CARRIED, and every one that EXPIRED. A render
          held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request for the
          same host wins the slot, and that overwrites the row's code (measured, capturerequests.test.mjs 7d) — so
          showing C-83 codes alone would make the item VANISH for a tick while the render still waits, which is the
          silence the ruling forbids. A row never yet attempted (no code) is simply queued and is not shown. The
          reason is the code's own family's sentence; a code no family catalogues says so. */
-      const row = Store.#renderHoldReason(r.code);
+      const row = renderHoldReason(r.code);
       const words = row.translation
         || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
       const released = r.state === "expired";
@@ -16634,7 +16582,7 @@ export class Store extends DurableObject {
     // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
     recordOf(this.ctx).transact(() => {
       recordOf(this.ctx).purge({ bundleId });
-      if (bundleId) this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
+      if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);
     });
     const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
@@ -21949,904 +21897,9 @@ export class Store extends DurableObject {
     };
   }
 
-  /* ==============================================================
-   * PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR AND ITS DRAIN.
-   *
-   * THE SPINE, AND IT IS THE ITEM: THE AI DOES NOT CAPTURE. IT REQUESTS, AND
-   * THE DAEMON CAPTURES WITH PROVENANCE PRESERVED. Bob, 2026-08-05: *"capturing
-   * a document (with provenance preserved) is something the daemon does
-   * (sometimes at the suggestion of an AI)."* So the requester holds no capture
-   * write at all and never touches the provenance chain, which is the foundation
-   * the whole trust model rests on. `captureRequest` writes a ROW and cannot
-   * fetch; `captureRequestDrain` fetches and cannot be reached by a caller.
-   *
-   * THE GATE IS A SHAPE, NOT A CLASS LIST, and that is deliberate. op=acquire's
-   * capture-request arm admits a row in `draining`, and `draining` is set by the
-   * drain inside the tick that then fetches — so a caller holding a real request
-   * id still cannot make the plane fetch for it. A class list would have to name
-   * `ai`, a class PL-11 has not minted yet; a shape holds the day it arrives.
-   *
-   * DEC-47's CONDUCT IS ENFORCED ONCE, AT THE DRAIN. The authorisation question
-   * is CLOSED — the inquiry and the session launch ARE the authorisation, and a
-   * member asked to approve forty URLs *"has not done the research and cannot
-   * judge them"*. What remains is behaviour: a UA with a contact URL, a purpose
-   * token, and rate. All three fire in `is-capture-conduct` and nowhere else.
-   *
-   * AND ROBOTS.TXT IS NOT ONE OF THEM. BOB-3, RULED 2026-08-07: disallows do not
-   * bar capture of publicly available documents, and the member-browser UA is
-   * permitted. There is no robots rule in this span and the drain fetches no
-   * `robots.txt`. The suite drives a document under a `Disallow` path and
-   * asserts it CAPTURES, because an absence by decision needs an arm.
-   *
-   * ATTRIBUTION STATES BOTH PRINCIPALS (DEC-27(b), DEC-55.4). The act is the
-   * DAEMON'S, performed AT THE SESSION'S REQUEST, and the record names the
-   * plane-credential principal AND the Claude-account principal — never a token
-   * value, and never a person's name in the actor slot. A record naming one of
-   * the two is the defect, so the composer refuses and the capture is not made.
-   * ================================================================== */
-
-  /** How many requests one drain tick will act on, and how many per host. The
-   *  per-host figure is ONE and it is DEC-47's rate rule in its smallest honest
-   *  form: *"a stranger's server has no relationship with this instance"*, so a
-   *  tick does not burst one host even when the token bucket would admit it. */
-  static CAPTURE_REQUEST_TICK_BATCH = 10;
-  static CAPTURE_REQUEST_PER_HOST_PER_TICK = 1;
-  /** How long a request stays interesting. SCRATCH, on `capture_sessions`'
-   *  shape: a work list with an expiry, not record. */
-  static CAPTURE_REQUEST_TTL_MS = 86_400_000;   // 24h
-  /** The cadence between drain ticks when work is waiting. */
-  static CAPTURE_REQUEST_TICK_MS = 60_000;
-
-  #captureRequestTickMs() {
-    const v = Number(this.env && this.env.CAPTURE_REQUEST_TICK_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Store.CAPTURE_REQUEST_TICK_MS;
-  }
-  /** INERT unless configured, exactly as the archive monitor is: no self
-   *  binding and no daemon credential means no wake, no alarm and no behaviour
-   *  change on an instance that has not wired this. */
-  #captureRequestConfigured() {
-    /* D-334: PRESENCE, exactly as before — `#monitorTokenBound()` is the old
-       `#monitorToken()` expression under its real name. Whether the bound
-       credential is LIVE is asked at the fire site, where it is awaitable and
-       where spending it is what a wrong answer would cost. */
-    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorTokenBound());
-  }
-  #captureRequestPending() {
-    if (!this.#captureRequestConfigured()) return 0;
-    return this.#one(`SELECT count(*) c FROM capture_requests WHERE state='requested'`).c;
-  }
-
-  /** op=capturerequest — THE DOOR. It writes a row. It fetches NOTHING.
-   *
-   *  Read this function looking for an outbound call and there is none, which is
-   *  the item's whole claim expressed as an absence: the suite asserts that
-   *  absence over this span's own source, because a fence you can only see by
-   *  reading carefully is a fence that grows a hole nobody notices. */
-  captureRequest(a = {}) {
-    const args = a || {};
-    const refusal = (code, detail, extra) => {
-      const row = CAPTURE_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check,
-               translation: row.translation, detail, ...(extra || {}) };
-    };
-
-    /* DEC-49 REGION is-capture-request
-     *
-     * THE SPAN `CAPTURE_REQUEST_CHECKS`' door rows name (REC-71). A REGION and
-     * not the whole function, so a refusal that arrives here later is not
-     * conscripted into this family by a `where` that claims too much. The local
-     * helper is `refusal` and every code is a STRING LITERAL at its site, which
-     * is what makes arm C of the DEC-49 guard able to COMPARE them rather than
-     * merely read past them (REC-71's measurement, PL-3's fix). */
-    const run = String(args.run ?? "").trim();
-    const runRow = run
-      ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run)
-      : null;
-    /* REC-168 (INVESTIGATIVE-SESSION.md §11 item 5, the `op=capturerequest` paragraph, BOB #28, 2026-09-22): A
-       REQUEST THAT NAMES A RUN IS A PRODUCTION OF THAT RUN, so it names a RUNNING run whose PRINCIPAL is the caller.
-       Until this landed the door asked only `running`, never whose, and copied the run's principals onto the row —
-       so a member could file a request under another member's run and the record credited that member with it.
-       REC-165's three questions, in REC-165's order:
-       (a) SIGHT — a run whose context this viewer cannot see answers exactly as a never-minted id does, byte for
-           byte but for the id (§7.9: a refusal would say the run exists). `#aiRunInSight` is the tick's, the
-           close's and `op=suggest`'s own predicate, so the run `op=airun` hides is the run this hides.
-       (b) POSITION — REC-152's `runPrincipalGate`, the caller being the control plane's `principal` stamp
-           (`RUN_PRODUCTION_ACTIONS`), never a field sent; its refusal relayed field by field.
-       (c) STATUS — the run is running; the pre-existing refusal, unchanged in code and words.
-       Rule 1's TARGET is NOT asked: a request names an address, not a question (BOB #28). A request naming NO run
-       is refused below exactly as before — the door has always required one (DEC-47), so there is no run-less
-       request for this rule to reach, and nothing about that arm moved. */
-    const requestRunSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
-    if (!requestRunSeen)
-      return refusal("CAPTURE_REQUEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-              + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-              + `live session is a fetch nothing authorised.`
-            : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
-              + "(DEC-47), and a request naming no session names no authorisation.",
-        { run: run || null });
-    const notPrincipal = runPrincipalGate({ caller: args.caller ?? null, principal: runRow.principal_plane,
-                                            act: "requesting a capture under a run" });
-    /* RELAYED FIELD BY FIELD AND NEVER SPREAD (REC-165's relay: a spread is a return whose VERDICT the DEC-49
-       guard cannot read). The code, check and translation are the gate's own (C-22.12's literal stays there). */
-    if (notPrincipal)
-      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
-               translation: notPrincipal.translation, detail: notPrincipal.detail, run,
-               note: "a capture request names a run its caller holds. Nothing was requested or written" };
-    if (runRow.status !== "running")
-      return refusal("CAPTURE_REQUEST_NO_RUN",
-        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-        + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-        + `live session is a fetch nothing authorised.`,
-        { run });
-
-    const address = String(args.address ?? "").trim();
-    if (!isPublicHttpsLocator(address))
-      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a `
-        + `session may reach to "areas that anybody can go through", and this address is not one on `
-        + `its face.`, { address: address || null });
-    let host = null;
-    try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
-    if (!host)
-      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is "
-        + "computed from one.", { address });
-
-    const target = String(args.target ?? "").trim();
-    const gate = viewerPredicate(args.viewer ?? null);
-    const b = target
-      ? this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-                  target, ...gate.args)
-      : null;
-    if (!b || normalizeType(b.object_type) !== "inquiry")
-      return refusal("CAPTURE_REQUEST_NOT_AN_INQUIRY",
-        `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is `
-        + `accountable to the question it was asked under, and a fetch belonging to nothing is a fetch `
-        + `nobody can account for afterwards.`, { target: target || null });
-
-    /* PL-15 / D-213 — THE LEAD, and it is OPTIONAL by construction. Absent on
-       every ordinary request, and absent is the common case: a run working one
-       question and capturing for that question names nothing here.
-
-       WHEN IT IS PRESENT it must be a question this caller can read, exactly as
-       `target` must, and for the identical reason — a lead filed under a bundle
-       the caller cannot see would let this door probe for the existence of a
-       project nobody invited them to, which is the D-15 leak `#queueCaseFor`
-       already refuses one surface over. Reusing `gate` rather than recompiling
-       it: one predicate, one compilation point.
-
-       AND IT MAY NOT BE THE TARGET. A "lead" pointing back at the question the
-       run is already working is not out-of-inquiry evidence at all — it is
-       ordinary evidence wearing the notification's clothes, and admitting it
-       would put a FINDING on inquiry A's own queue saying *evidence for another
-       question was found*, about A. Refused rather than normalised to NULL: a
-       caller whose field was silently dropped learns nothing about where the
-       distinction is, which is the same argument the spine check below makes. */
-    const lead = String(args.lead_inquiry ?? args.lead ?? "").trim();
-    if (lead) {
-      const lb = this.#one(
-        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-        lead, ...gate.args);
-      if (!lb || normalizeType(lb.object_type) !== "inquiry")
-        return refusal("CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this `
-          + `evidence bears on, so it names a question or it names nothing — a document, a project or a `
-          + `bundle id nothing answers to would give the notification a home that cannot hold it.`,
-          { lead_inquiry: lead });
-      if (lead === target)
-        return refusal("CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
-          `this request names ${lead.slice(0, 60)} as both the question it was made under and the `
-          + `question the evidence bears on. That is ordinary evidence for this question, which needs `
-          + `no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one `
-          + `pointing back here would file a notification about this question saying evidence for a `
-          + `different one was found.`, { lead_inquiry: lead, target });
-    }
-
-    /* THE SPINE, AT THE DOOR. A request that arrives carrying bytes, a digest or
-       a provenance hop is a caller trying to be the fetcher. Refused BY NAME
-       rather than by dropping the fields: CLAUDE.md's rule is that a provenance
-       hop a caller can hand us is one a caller can invent, and a caller whose
-       fields were silently ignored learns nothing about where the fence is. */
-    const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]
-      .filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
-    if (brought.length)
-      return refusal("CAPTURE_REQUEST_CARRIES_A_CAPTURE",
-        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does `
-        + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
-        + `structural gate, DEC-60).`, { fields: brought });
-
-    /* D-491 / IC-276 — THE RENDER FLAG, AND IT IS READ STRICTLY BECAUSE READING
-       IT LOOSELY IS THE DEFECT. `render: true` asks the drain for the page as a
-       visitor saw it (CLIENT-RENDERED.md, BOB #32 item 3: an unattended sweep MAY
-       render). Absent, null and `false` are the document as the site serves it —
-       a caller saying "no render" is ANSWERED and not refused, because a fence
-       tighter than its rule is an undeclared interface change wearing the costume
-       of caution.
-
-       ANY OTHER VALUE IS REFUSED BY NAME. That is C-83.1's argument at this door:
-       a `render: "yes"` normalised to 0 queues a plain capture, and the served
-       shell is then filed as the content — the one outcome the C-83 family exists
-       to prevent. It is worse here than at op=acquire by exactly the row's
-       lifetime: the call that dropped the flag is gone, the drain fetches under a
-       flag nobody can see was dropped, and the request reads afterwards as one
-       that never asked for a render. */
-    const renderRaw = args.render ?? null;
-    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
-      return refusal("CAPTURE_REQUEST_RENDER_MALFORMED",
-        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send `
-        + `render: true for the page as a visitor saw it, or nothing for the document as the site `
-        + `serves it.`, { render: null });
-    const render = renderRaw === true ? 1 : 0;
-
-    /* END DEC-49 REGION is-capture-request */
-
-    /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
-       caller that could name its own principals could name somebody else's —
-       AND THEY ARE NOT JUDGED HERE.
-       CORRECTED 2026-09-23 BY REC-168 (BOB #28): the PLANE principal is now the CALLER's, as the control plane
-       STAMPED it — still never a field the caller sent. The run's copy could name somebody other than who asked
-       (the defect this item closes), and after the gate above the stamp is the run's principal in the one form
-       REC-152 compares, spelled as the account that asked (a member's session or the credential she minted,
-       D-199 (4)'s composite kept). The CLAUDE principal is still the run's: it is the account the run's budget is
-       paid from, which the request does not choose. The first draft of this door refused an
-       incomplete attribution at the write as well as at the drain, and DRIVING
-       THE FAMILY EXPOSED THAT AS A DEFECT: with identical predicates at both
-       points, the door's refusal makes the DRAIN'S unreachable, so one of the
-       two codes could never be driven and a refusal nobody can drive is a
-       refusal nobody can prove fires (DEC-49's floor, and the same defect class
-       as a control that passes while asserting nothing). It is judged ONCE, at
-       the drain, which is also where this item's conduct is judged and for the
-       same reason: the drain is the last point before anything leaves, and a row
-       can outlive the rules the door applied to it. */
-
-    /* Conduct is NOT checked here and that is the design rather than an
-       omission: one enforcement point at the drain. What IS recorded here is
-       what the drain will enforce over — the purpose token and the UA mode ride
-       the row unvalidated, and the drain turns away what it cannot honour. */
-    const purpose = String(args.purpose ?? "").trim();
-    const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
-    /* REC-168: the stamp the gate above passed, trimmed as the gate reads it. */
-    const callerPlane = String(args.caller ?? "").trim();
-
-    const nowMs = args.at ? Date.parse(args.at) : Date.now();
-    const now = Store.#aiIso(nowMs);
-    const request = String(args.request ?? "").trim()
-      || `CR-${now.replace(/[-:TZ]/g, "")}-${Store.#rand(6)}`;
-
-    /* IDEMPOTENT ON (run, address, render). A run that asks twice for the same
-       document has asked once: the second ask returns the standing row rather
-       than queueing a second fetch at somebody else's server. That is DEC-47's
-       rate rule arriving at the door as arithmetic rather than as politeness.
-
-       `render` JOINED THE KEY WITH D-491, AND NOT AS A CONVENIENCE. The rendered
-       page and the served document are NOT the same document — that is D-64's
-       founding claim, and the plane files them under two digests and calls the
-       rendered one the primary. A key of (run, address) alone would answer a
-       render ask with a standing plain row, `already: true`, and a render nobody
-       ever performed: the run's ask silently unmet, and the answer agreeing with
-       a row that says something else. Two rows is the honest shape, and DEC-47's
-       politeness is not spent by it — the drain admits ONE request per host per
-       tick, so the second lands in a later tick either way. */
-    const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
-      run, address, render);
-    if (standing)
-      return { ok: true, request: standing.request, run, target: standing.target, address,
-               host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
-               /* PL-15: the STANDING row's lead, never this call's. Idempotence
-                  means the second ask returns what the first one recorded, and
-                  echoing the caller's field back would report a lead nothing
-                  stored — the answer disagreeing with the row it stands for. */
-               lead_inquiry: standing.lead_inquiry ?? null,
-               /* D-491: the STANDING row's flag, on the identical reasoning the
-                  lead above carries — and here it cannot disagree with the call,
-                  because the flag is part of the key this row was found by. */
-               render: standing.render === 1,
-               state: standing.state, requested: false, already: true,
-               principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
-
-    this.sql.exec(
-      `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
-      request, run, target, address, host, purpose, uaMode,
-      callerPlane, runRow.principal_claude,
-      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null, render);
-    return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
-             lead_inquiry: lead || null,
-             /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
-                INSERT bound, not the field the caller sent, so an answer saying
-                `render: true` cannot disagree with the value the drain will
-                read. It is not a re-read of the row, and this comment says so
-                rather than letting the next reader assume one. */
-             render: render === 1,
-             state: "requested", requested: true, already: false,
-             principals: { plane: callerPlane, claude: runRow.principal_claude },
-             detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
-                   + "this queue, and DEC-47's conduct rules are applied there." };
-  }
-
-  /** THE ATTRIBUTION, composed in ONE place, refusing rather than half-stating.
-   *
-   *  DEC-27(b): *"the assistant captured this, at Anna's request"* — the record
-   *  states BOTH. Here that is three names and not two: the ACTOR is the daemon
-   *  and must be MACHINE-SHAPED (REC-2's `token:<class>`, never a person's
-   *  name), and behind it stand the run's two principals, which are different
-   *  principals and not two spellings of one. A record naming only one of the
-   *  two is the defect this composer exists to make impossible. */
-  #captureRequestAttribution(row) {
-    const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
-    /* TRIMMED, and that is not tidiness. `aiRunOpen`'s own guard is `!principal`
-       — so a run opened with a principal of WHITESPACE passes it and stores " ",
-       and a record naming " " names nobody while looking like it names
-       somebody. That is the worse direction of the two: an absent principal is
-       visibly absent, a blank one reads as present. Caught here rather than
-       repaired in PL-5's landed check, which is a neighbouring family's rule and
-       is delegated rather than reached into (REC-71's lesson). */
-    const plane = String((row && row.principal_plane) || "").trim();
-    const claude = String((row && row.principal_claude) || "").trim();
-    if (!row || !plane || !claude)
-      return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-               plane: plane || null, claude: claude || null };
-    /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION, and there is deliberately
-       NO REFUSAL FOR IT. `actor` is `MACHINE_AUTHOR_PREFIX` — REC-2's
-       `token:` — concatenated with a literal, so it cannot be a person's name
-       and a branch refusing one would be a gate for a condition this code cannot
-       produce. That is the empty gate this project refuses everywhere else, and
-       it would also mint a DEC-49 code nobody could ever drive. The property is
-       asserted instead, over this composer's own output, in
-       test/capturerequests.test.mjs. */
-    return {
-      ok: true, actor, machine_attributed: true,
-      at_the_request_of: { run: row.run, inquiry: row.target },
-      principals: { plane, claude },
-      /* The sentence a surface renders, composed from the fields above so it
-         cannot say something the fields do not. Both principals appear in it
-         because DEC-27(b) is about what the RECORD STATES, and a structured
-         field a surface may or may not open is not a statement. */
-      statement: `the daemon captured this, at the investigative session's request `
-               + `(run ${row.run}), under ${plane}, paid by ${claude}`,
-    };
-  }
-
-  /** op=capturerequestdrain, and the `capture-request-drain` alarm consumer.
-   *  THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH. */
-  async captureRequestDrain({ limit = null, actor = "consumer", now = null } = {}) {
-    if (!this.#captureRequestConfigured())
-      return { configured: false, drained: 0, captured: [], refused: [], held: [], remaining: 0,
-               detail: "no self binding or no daemon credential: this instance drains nothing and "
-                     + "holds no alarm for it" };
-    /* NOT RE-ENTRANT, for the reason MEASURED on the archive monitor: a tick
-       that reaches op=acquire over env.SELF re-enters this same Durable Object
-       and can arm an alarm underneath the tick still awaiting its own fetch. */
-    if (this.#tickRunning.has("capture-request-drain"))
-      return { configured: true, busy: true, drained: 0, captured: [], refused: [], held: [],
-               remaining: this.#captureRequestPending() };
-    this.#tickRunning.add("capture-request-drain");
-    try {
-      const nowMs = Number.isFinite(now) ? now : Date.now();
-      const at = Store.#aiIso(nowMs);
-      const cap = Math.max(1, Math.min(Number(limit) || Store.CAPTURE_REQUEST_TICK_BATCH,
-                                       Store.CAPTURE_REQUEST_TICK_BATCH));
-      /* D-523 — A HELD RENDER ENDS AT ITS ROW'S OWN `expires`, RECORDED UNDETERMINED WITH ITS C-83 REASON AND
-         RELEASED, NEVER DROPPED SILENTLY (BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24
-         by BOB #33"). D-491's hold below says *"The row's own `expires` bounds the hold"*, and until this sweep
-         NOTHING READ `expires` HERE: the drain selected every `requested` row whatever its age, so a render this
-         instance could not do was asked for again on every tick for as long as the row existed, and when it
-         ended nothing said what became of it. The hold is kept (the ruling's KEEP) and is now bounded in fact.
-
-         `expired` IS A STATE OF ITS OWN, and neither of the two it could be mistaken for. Not `refused`: nothing
-         refused the ask, and a refusal is terminal because of what the ask SAID, while this ends because the
-         time it was valid for ran out. Not `captured`: nothing was filed. The C-83 code the row was held under is
-         KEPT, so the record says WHY the render never happened, and the content is UNDETERMINED — what the page
-         showed is not known to this instance, and saying "absent" would claim a look that was never made.
-
-         EVERY RENDER REQUEST PAST ITS `expires`, WHATEVER ITS LAST CODE — MEASURED, not chosen for tidiness. A
-         render held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request
-         for the same host wins the tick's one slot (CAPTURE_CONDUCT_TICK_SPENT overwrites the row's code), and
-         the first draft of this sweep, which matched C-83 codes only, let exactly that row through past its
-         `expires` to be ASKED AGAIN — a render performed after the ask lapsed, had a renderer been bound by
-         then (capturerequests.test.mjs 7d, the tick before expiry). So the bound is the ROW's, and the reason
-         recorded is the code the row carries, read off the family that minted it (`#renderHoldReason`). A PLAIN
-         request past its `expires` is still drained: that is not a render, the ruling does not reach it, and it
-         is a separate defect named in D-523's report rather than widened into here. Bounded by the tick's batch,
-         and BEFORE the batch is selected, so an expired row never takes a slot a live one could use; a backlog
-         past the batch is released on the next tick. */
-      const expired = [];
-      {
-        for (const q of this.#rows(
-          `SELECT * FROM capture_requests WHERE state='requested' AND render=1 AND expires <= ?
-            ORDER BY expires, request LIMIT ?`, at, cap)) {
-          const reason = Store.#renderHoldReason(q.code);
-          const why = String(q.detail || "").slice(0, 400);
-          const said = `held under ${reason.check || "no catalogued check"} ${q.code || "(no code: never attempted)"} `
-                     + `until this request expired at ${q.expires}. `
-                     + "The render was never performed and nothing was filed for it, so what the page showed "
-                     + "is UNDETERMINED"
-                     + (why ? ` — the reason last given: ${why}` : " — no further detail was carried");
-          this.sql.exec(
-            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
-            said.slice(0, 600), at, q.request);
-          /* GOVERNED, on D-491's own reasoning for the hold: every C-83 admission refusal is a fact about US, so
-             the look is an indeterminate we GOVERNED, never the source failing. The condition is named now that
-             the vocabulary has a kind for it (D-491 declined to invent one, correctly, and D-523 minted it). */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
-            detail: `${reason.check || "no catalogued check"} ${q.code || "(no code)"}: the render expired `
-                  + `UNDETERMINED at ${q.expires} and the request is released — ${why || "no detail was carried"}`,
-          }, at, 0);
-          expired.push({ request: q.request, address: q.address, host: q.host,
-                         code: q.code ?? null, check: reason.check, translation: reason.translation,
-                         render: { state: "expired", content: "undetermined" },
-                         expires: q.expires, detail: said });
-        }
-      }
-      const queued = this.#rows(
-        `SELECT * FROM capture_requests WHERE state='requested' ORDER BY requested_at, request LIMIT ?`, cap);
-      const captured = [], refused = [], held = [];
-      const hostsThisTick = new Map();
-
-      for (const q of queued) {
-        const verdict = this.#captureRequestConduct(q, nowMs, hostsThisTick);
-        if (!verdict.ok) {
-          const row = CAPTURE_REQUEST_CHECKS[verdict.code];
-          const answer = { request: q.request, address: q.address, host: q.host,
-                           code: verdict.code, check: row.check, translation: row.translation,
-                           detail: verdict.detail };
-          this.sql.exec(
-            `UPDATE capture_requests SET state=?, code=?, detail=?, attempts=attempts+1, updated=? WHERE request=?`,
-            verdict.terminal ? "refused" : "requested", verdict.code, verdict.detail, at, q.request);
-          /* THE RUN IS TOLD, IN THE RECORD'S OWN VOCABULARY. A governed hold is
-             D-104's split and carries `governed: true` with
-             LOOKED_INDETERMINATE, because OUR pacing holding a host is a fact
-             about US and never about the source — writing "source unreachable"
-             here is the exact thing D-104 exists to stop. */
-          /* REC-93: through the ONE append site, under the authority that
-             actually made the look. The vocabulary is UNCHANGED — D-104's split
-             still travels as `governed` with LOOKED_INDETERMINATE, because our
-             pacing holding a host is a fact about US and writing "source
-             unreachable" here is the exact thing D-104 exists to stop. */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE",
-            governed: verdict.governed === true,
-            condition: verdict.condition || null,
-            detail: `${row.check} ${verdict.code}: ${verdict.detail}`,
-          }, at, 0);
-          (verdict.terminal ? refused : held).push(answer);
-          continue;
-        }
-
-        /* `draining` IS THE FENCE. It is set HERE, by the drain, in the tick
-           that then fetches — and op=acquire's capture-request arm admits
-           nothing else. So the window in which this plane will fetch for a
-           request is exactly the window in which the drain is doing it. */
-        this.sql.exec(`UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
-                      at, q.request);
-        hostsThisTick.set(q.host, (hostsThisTick.get(q.host) || 0) + 1);
-        const r = await this.#fireCaptureRequest(q);
-        if (r.ok) {
-          this.sql.exec(
-            `UPDATE capture_requests SET state='captured', code=NULL, detail=?, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
-            verdict.attribution.statement, r.sha || null, at, at, q.request);
-          /* PRESENT, and the detail is the ATTRIBUTION — so the run's own log
-             carries the sentence naming both principals rather than a bare
-             "captured". */
-          /* REC-93: PRESENT NOW CARRIES WHAT IT FOUND. `r.sha` was already in
-             hand at this line and was simply not recorded — C-22.10's refusal is
-             what turned that from a nicety into a requirement, and the sweep
-             authority could not have satisfied it otherwise. The detail stays
-             the ATTRIBUTION, so the log still carries the sentence naming both
-             principals rather than a bare "captured". */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "PRESENT", governed: false,
-            resultKind: "capture", resultRef: r.sha || null,
-            detail: verdict.attribution.statement,
-          }, at, 0);
-          captured.push({ request: q.request, address: q.address, sha: r.sha || null,
-                          grade: r.grade ?? null, attribution: verdict.attribution });
-        } else if (r.renderCode) {
-          /* D-491 / IC-276 — A RENDER THIS INSTANCE COULD NOT DO IS DEFERRED, AND
-             THE SERVED SHELL IS NEVER FILED IN ITS PLACE (CLIENT-RENDERED.md, BOB
-             #32 item 3: *"the tick records the render as DEFERRED (undetermined).
-             It never records the shell as though it were the content."*).
-             op=acquire decides every way a render cannot happen before it fetches
-             anything, so there is nothing to fall back TO — and that is the
-             property, not a convenience: a fallback here would file the frame of
-             a page as the page, which is the whole of C-83 undone by its own
-             consumer.
-
-             THE ROW IS HELD, NOT REFUSED, and `requested` is what holds it. Every
-             C-83 admission refusal names a condition that can change without the
-             request changing — a renderer gets bound, the allowance rolls over at
-             midnight UTC, a cooling-off host comes back — so the next tick asks
-             again. A terminal `refused` would make an instance's CURRENT inability
-             a permanent fact about the ask. The row's own `expires` bounds the
-             hold, so this is not an unbounded retry.
-
-             THE CODE IS THE ONE THE PLANE SENT, never collapsed into a single
-             deferral word. C-83.3's sentence and C-83.4's are different sentences
-             — one says this instance cannot render at all, the other says it can
-             and has spent today's allowance, and only the second may tell a member
-             to ask again after midnight. Recording either under the other's
-             translation would be the record saying more than it can support. */
-          const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
-          const why = String(r.detail || r.reason || "").slice(0, 400);
-          /* THE HOST'S SLOT IS GIVEN BACK, AND THIS IS A DEFECT D-491 WOULD HAVE
-             INTRODUCED RATHER THAN A TIDY-UP. The per-host count is taken before
-             the fire, which is right for every other outcome because every other
-             outcome SENT something — CONDUCT 3's own sentence is *"this tick has
-             already fetched from <host> once"*. A deferred render fetched nothing.
-             Left counted, the oldest row wins the host's one slot every tick and
-             defers again, so a plain request behind a render this instance cannot
-             do would be answered CAPTURE_CONDUCT_TICK_SPENT until the render row
-             expired 24 hours later: starvation caused by a request that never
-             touched the host. Driven in `capturerequests.test.mjs` block 7c, where
-             a plain request for the SAME host is captured in the same tick as the
-             deferral. It is a rollback and not a re-ordering: nothing else about
-             the rate rule moves, and a render that DOES load the page spends the
-             slot exactly as any other fetch. */
-          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
-          this.sql.exec(
-            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
-            r.renderCode, why, at, q.request);
-          /* GOVERNED, AND ON D-104's OWN REASONING RATHER THAN BY ANALOGY: every
-             one of these is a fact about US — our allowance, our per-host pacing,
-             our missing renderer — and none of them is the source failing or even
-             being asked. Writing this as an ungoverned indeterminate would put
-             "we looked and could not tell" against an address nothing was sent
-             to, and the archive fallback reads exactly that counter (D-104). No
-             `condition` is named: the queue's vocabulary has no kind for a
-             deferred render, and `client-rendered-shell` would claim a shell was
-             captured when nothing was fetched at all. Inventing a kind is an
-             interface change to another surface's roster and is NOT taken here.
-             CORRECTED BY D-523: the kind now EXISTS — `render-deferred`, minted
-             under BOB #33's ruling of 2026-09-24 19:54Z through NOTIFICATIONS.md's
-             catalogue — so the look names it. The reasoning above for not
-             inventing one stands; what changed is that it was ruled and catalogued. */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
-            detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
-                  + `filed — ${why || "no detail was carried"}`,
-          }, at, 0);
-          held.push({ request: q.request, address: q.address, host: q.host,
-                      code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
-                      /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
-                         a reader needs no second one: the content is UNDETERMINED
-                         and says so, which is what keeps a deferral out of the
-                         coverage a captured row would imply. */
-                      /* D-520: the STATE is op=acquire's own word when it sent one — a render
-                         over the concurrency cap is `waiting` (C-83.8), not `deferred`: nothing
-                         was taken from the day's allowance, and the next tick is expected to
-                         run it. `deferred` is kept for every code that sends no word. */
-                      render: { state: r.renderState || "deferred", content: "undetermined" },
-                      detail: why });
-        } else {
-          this.sql.exec(
-            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
-            "CAPTURE_FETCH_FAILED", String(r.reason || "").slice(0, 400), at, q.request);
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: false,
-            detail: `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`,
-          }, at, 0);
-          held.push({ request: q.request, address: q.address, host: q.host,
-                      code: "CAPTURE_FETCH_FAILED", detail: String(r.reason || "") });
-        }
-      }
-      return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
-               captured, refused, held, expired, remaining: this.#captureRequestPending() };
-    } finally { this.#tickRunning.delete("capture-request-drain"); }
-  }
-
-  /** D-523 — THE REASON A RENDER WAS HELD, in DEC-49 words, read off the family that MINTED the code: C-83 for a
-   *  render op=acquire could not do, C-28 for the drain's own conduct holds. A code in neither (the drain's
-   *  `CAPTURE_FETCH_FAILED` is written to the row and catalogued nowhere) or no code at all answers `check` and
-   *  `translation` NULL, stated as such rather than given a sentence nobody minted. */
-  static #renderHoldReason(code) {
-    const own = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
-    const row = own(RENDER_CAPTURE_CHECKS) || own(CAPTURE_REQUEST_CHECKS);
-    return { code: code ?? null, family: own(RENDER_CAPTURE_CHECKS) ? "C-83" : row ? "C-28" : null,
-             check: row ? row.check : null, translation: row ? row.translation : null };
-  }
-
-  /** DEC-47's CONDUCT, and this is the ONE place it is applied. */
-  #captureRequestConduct(q, nowMs, hostsThisTick) {
-    /* DEC-49 REGION is-capture-conduct
-     *
-     * THE SPAN `CAPTURE_REQUEST_CHECKS`' conduct and attribution rows name
-     * (REC-71). Everything between this marker and its `END` is a DEC-49
-     * GOVERNED SITE: every refusal inside it owes a code with a canned
-     * translation, and the codes are STRING LITERALS at their sites so arm C can
-     * compare them rather than read past them.
-     *
-     * ORDER IS DELIBERATE. Attribution first, because a capture nobody can
-     * account for should not be made even if every other rule passes; then the
-     * two rules about WHAT WE SAY (purpose, agent), because they are facts about
-     * this submission and cost nothing; then RATE last, because it is the only
-     * one that is TEMPORARY — a held request is still queued, and running it
-     * last means a request refused for what it says is never also reported as
-     * merely paced. */
-    const attribution = this.#captureRequestAttribution(q);
-    if (!attribution.ok)
-      return { ok: false, terminal: true, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-               detail: `this request names `
-                     + `${attribution.plane && !attribution.claude ? "only the plane principal" : ""}`
-                     + `${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}`
-                     + `${!attribution.plane && !attribution.claude ? "neither principal" : ""}`
-                     + `, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes `
-                     + `ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made `
-                     + `for an act the record could not attribute.` };
-
-    /* CONDUCT 2 — THE PURPOSE TOKEN. Checked before the agent because it is a
-       COMPONENT of the agent: `purpose` is what lets a source tell a first
-       capture from a routine re-check, so a purpose outside the roster would
-       produce an agent string that misdescribes what we are doing. */
-    if (!CAPTURE_PURPOSES.includes(q.purpose))
-      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
-               detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
-                     + `this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
-                     + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
-                     + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
-
-    /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms. */
-    if (!CAPTURE_UA_MODES.includes(q.ua_mode))
-      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-               detail: `'${String(q.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible `
-                     + `agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, `
-                     + `and a mode this door cannot express is a string nobody could account for.` };
-    /* THE TWO FORMS ARE LEGIBLE FOR DIFFERENT REASONS, and conflating them was a
-       real defect in the first draft of this check — caught by driving BOB-3's
-       own permitted case, which the contact-URL test REFUSED. A browser agent
-       carries no `(+url)` component and never has: what makes it honest is that
-       it is an agent a member ACTUALLY USED, recorded on the question, delegated
-       rather than invented. What makes the CivicOS form honest is the contact
-       component D-94 measured. So the rule is applied per form, and a single
-       predicate over both would have made the ruling unimplementable. */
-    let ua;
-    if (q.ua_mode === "member-browser") {
-      /* BOB-3 / DEC-47's access-parity amendment: the member's OWN browser agent
-         is PERMITTED for publicly available documents, because delegating an
-         agent a member actually uses is speaking as themselves through a tool
-         they run. What it is NOT is a licence to invent one — so the agent must
-         have been RECORDED on the inquiry, and an unrecorded one is refused
-         rather than substituted. */
-      ua = this.#captureRequestMemberAgent(q.target);
-      if (!ua)
-        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",
-                 detail: `this request asked to fetch as the member's own browser and `
-                       + `${q.target} records no member agent. BOB-3 permits DELEGATING an agent a `
-                       + `member actually used; composing one would be inventing a client that does `
-                       + `not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.` };
-    } else {
-      /* The honest product string, composed by the catalog's ONE composer — the
-         same function op=acquire will send, not a copy of it. THE CONTACT-URL
-         RULE APPLIES HERE and only here: D-94's ladder measured that removing
-         the component flips admission 200 to 403 uniformly, so a CivicOS string
-         without it is both dishonest and useless. */
-      ua = civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, q.purpose);
-      if (!userAgentIsLegible(ua))
-        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-                 detail: `the agent this fetch would carry names no contact anybody could reach. D-94's `
-                       + `ladder MEASURED that removing the contact component flips admission 200 to 403 `
-                       + `uniformly, so this is the component that decides whether the fetch happens at `
-                       + `all — and being blocked honestly is a fact we can record.` };
-    }
-
-    /* CONDUCT 3 — RATE, and BOTH halves are NON-TERMINAL: a held request is
-       still queued and is fetched when the wait is over. */
-    if (this.#captureRequestHostHeld(q.host, nowMs))
-      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
-               code: "CAPTURE_CONDUCT_HOST_HELD",
-               detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
-                     + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
-                     + `more tightly than re-fetch because a stranger's server has no relationship `
-                     + `with this instance.` };
-    if ((hostsThisTick.get(q.host) || 0) >= Store.CAPTURE_REQUEST_PER_HOST_PER_TICK)
-      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
-               code: "CAPTURE_CONDUCT_TICK_SPENT",
-               detail: `this tick has already fetched from ${q.host} once. A person opens a few tabs `
-                     + `and then reads; a loop opens forty, so the drain spreads requests across ticks `
-                     + `rather than emptying the queue at one host's expense.` };
-    /* END DEC-49 REGION is-capture-conduct */
-
-    return { ok: true, ua, attribution };
-  }
-
-  /** Is the per-host governor holding this host? A NON-CONSUMING read — the
-   *  drain must not spend a token it is not about to use, because op=acquire's
-   *  own `governedFetch` spends one on the way out and a double spend would
-   *  make this instance pace itself twice as hard as it declared. */
-  #captureRequestHostHeld(host, nowMs) {
-    return governorOf(this.ctx).isHeld(host, nowMs);
-  }
-
-  /** The member agent RECORDED on the inquiry, or null. Read from the question's
-   *  own frontmatter, which is where inquiry creation would put it — and null is
-   *  answered honestly rather than defaulted, because a default here is exactly
-   *  the invented client BOB-3 does not license. */
-  #captureRequestMemberAgent(target) {
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!md || md.content === null) return null;
-    const fm = parseFrontmatter(md.content).data || {};
-    const ua = fm.member_user_agent;
-    return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
-  }
-
-  /** The fetch, through op=acquire, exactly as the archive monitor fires its
-   *  own — the capture path, its provenance and its grade stay where they
-   *  already live, and this consumer only DECIDES and INVOKES.
-   *
-   *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
-   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
-   *  is exactly what the conduct check judged. Passing them in the body would
-   *  have made the check an assertion about a value the sender could still differ
-   *  from, which is the "checked one thing, sent another" gap in its smallest
-   *  form. D-491 did NOT add a third field for the render, and that is why.
-   *
-   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
-   *  every way a render cannot happen BEFORE it fetches anything and answers a
-   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
-   *  row under it instead of reporting a fetch that was never attempted. `reason`
-   *  is unchanged for every other failure. */
-  async #fireCaptureRequest(q) {
-    try {
-      /* K58: capture's trusted in-process arm, handed the draining row's own address, purpose, agent and render flag
-         (what the conduct check judged); no credential and no request body carry them. */
-      const d = this.captureRequestDraining({ request: q.request });
-      const res = d.draining ? await captureOf(this.ctx).acquire({}, { cls: "daemon", member: false, storeName: this.#ownNamespace() || "bio",
-        captureRequest: { locator: d.address, purpose: d.purpose, agent: d.ua_mode === "member-browser" ? d.agent : null, render: d.render } })
-        : { status: 403, body: { ok: false, reason: "CAPTURE_NOT_DRAINING" } };
-      const out = res.body;
-      const doc = out && out.ok && out.document;
-      if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256,
-                        grade: doc.capture && doc.capture.grade };
-      const reason = (out && (out.reason || out.error)) || `http ${res.status}`;
-      /* D-491: A RENDER REFUSED IS NOT A FETCH THAT FAILED, and the discriminator
-         is read off the CATALOGUE rather than off a spelling this method invents
-         — the code the plane sent is looked up in the family that owns it, so a
-         row added to C-83 later is recognised here without a second list to keep
-         in step. `q.render` is asked as well, so a code arriving on a row that
-         asked for no render is treated as the ordinary failure it must be. */
-      const renderCode = q.render === 1 && typeof reason === "string"
-        && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
-      return { ok: false, reason,
-               renderCode,
-               /* D-520: op=acquire's word for the held render (`waiting`, `deferred`), read and
-                  never invented; any other value is dropped rather than carried into the record. */
-               renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred")
-                 ? out.render.state : null,
-               detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
-    } catch (e) {
-      /* D-205: the message is the plane's own, never the exception's, because a
-         thrown error can carry a query string and a query string can carry a
-         credential. */
-      return { ok: false, reason: "the fetch did not complete and this plane did not record why" };
-    }
-  }
-
-  /** Is this request row in `draining`? op=acquire's capture-request arm asks
-   *  exactly this and admits nothing else.
-   *
-   *  IT ANSWERS WITH THE ROW'S OWN address, purpose AND agent, and that is the
-   *  point rather than a convenience: op=acquire then takes NONE of them from
-   *  the request body. The drain sends two fields — `via` and `request` — and
-   *  everything that decides what leaves this instance is read from the row the
-   *  conduct check just judged. A value a caller can supply is a value a caller
-   *  can differ from what was checked. */
-  captureRequestDraining({ request }) {
-    const r = request
-      ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request)
-      : null;
-    if (!r)
-      return { request: request || null, found: false, state: null, draining: false,
-               address: null, purpose: null, ua_mode: null, agent: null,
-               /* D-491: FALSE on a row that does not exist, and that is the
-                  fail-closed direction — an absent row asks for no render, so a
-                  silence here can never turn into a render nobody requested. */
-               render: false };
-    const agent = r.ua_mode === "member-browser"
-      ? this.#captureRequestMemberAgent(r.target)
-      : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
-    return { request: r.request, found: true, state: r.state, draining: r.state === "draining",
-             address: r.address, purpose: r.purpose, ua_mode: r.ua_mode, agent: agent || null,
-             /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
-                the identical reasoning the three fields above it carry. op=acquire
-                takes it FROM HERE and never from the request body, so what this
-                instance renders is what the drain's conduct check judged — a value
-                a caller can supply is a value a caller can differ from what was
-                checked, and a render is a second load of the page. */
-             render: r.render === 1,
-             run: r.run, target: r.target };
-  }
-
-  /** op=capturerequests — a read, for a run and for an operator.
-   *
-   *  GATED AT THE TARGET through `#bundleGate`, the one predicate every read
-   *  here compiles (D-15's single compilation point), and `count` is counted
-   *  BEHIND the gate rather than beside it, so a total larger than the rows
-   *  cannot arise. A request under a question the caller was never invited to is
-   *  absent exactly as one that was never made, and nothing publishes how many
-   *  the gate removed, because that count is the leak. An absent or unrecognised
-   *  viewer stamp compiles to DENY, so a missing stamp is an outage and never a
-   *  disclosure. */
-  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
-    const cap = Math.max(1, Math.min(Number(limit) || 200, 1000));
-    const seen = this.#bundleGate("cr.target", viewer);
-    const where = [`(${seen.sql})`], args = [...seen.args];
-    if (run) { where.push("cr.run=?"); args.push(String(run)); }
-    if (target) { where.push("cr.target=?"); args.push(String(target)); }
-    if (state) { where.push("cr.state=?"); args.push(String(state)); }
-    /* CAP + 1 SO THE ANSWER CAN SAY IT WAS CUT. REC-57's rule and this suite's
-       own: a read cut at its cap must SAY SO or a caller believes it saw
-       everything. `limit` is the bound APPLIED after clamping, never the number
-       asked for, so an over-ask is answered at the ceiling and the ceiling is
-       what is published. */
-    const found = this.#rows(
-      `SELECT cr.* FROM capture_requests cr WHERE ${where.join(" AND ")}
-        ORDER BY cr.requested_at, cr.request LIMIT ?`, ...args, cap + 1);
-    const rows = found.slice(0, cap);
-    return { count: rows.length, limit: cap, truncated: found.length > cap, requests: rows.map((r) => ({
-      request: r.request, run: r.run, target: r.target, address: r.address, host: r.host,
-      purpose: r.purpose, ua_mode: r.ua_mode, state: r.state, code: r.code, detail: r.detail,
-      capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
-      updated: r.updated, expires: r.expires, captured_at: r.captured_at,
-      /* PL-15 / D-213: THE LEAD, PUBLISHED. Additive — every existing reader
-         keeps the shape it reads — and it is not decoration. This projection is
-         explicit rather than a row spread, so a column omitted here is a column
-         no caller can see: a run cannot read back the observation it filed, and
-         an operator cannot see a lead pointing at a purged question. The second
-         of those is the one that matters, because a MACHINE viewer's bundle
-         gate is `1=1` and this read is therefore the only place a stale pointer
-         is visible at all. FOUND BY DRIVING IT: the suite's purge arm filtered
-         on this field before it was published, so it counted zero for every
-         input and would have passed over a missing purge clause. */
-      lead_inquiry: r.lead_inquiry ?? null,
-      /* FL-4 / IS-9: WHEN THE RUN WAITING ON THIS REQUEST WAS TOLD, and NULL
-         means the daemon has answered and the run has not been told yet.
-         Published for the reason the field above it was, applied to this
-         column: the projection is explicit, so a column omitted here is a
-         column no caller can see — and the wake is the one fact about a
-         request that is about the RUN rather than about the fetch. An operator
-         looking at a suspended run needs to be able to tell "the daemon has not
-         answered" from "the daemon answered and nothing collected it", and
-         those are the two states this one field distinguishes. Additive, on
-         PL-15's precedent: no existing reader's shape moves. */
-      run_woken_at: r.run_woken_at ?? null,
-      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
-         reason the two fields above it are — this projection is explicit, so a
-         column omitted here is a column NO caller can see. It is the field that
-         makes a held row legible: a row sitting at `requested` under C-83.3 with
-         no `render` beside it reads as a fetch that keeps failing, when what it
-         is is a render this instance cannot yet do. A run cannot otherwise read
-         back what it asked, and an operator cannot tell the two apart. */
-      render: r.render === 1,
-      /* D-523 (BOB #33 RULED 2026-09-24 19:54Z): WHAT BECAME OF A RENDER THIS INSTANCE COULD NOT DO, in the words
-         the drain and op=queue use. `deferred` while the row is held under its C-83 code, `expired` once its
-         `expires` passed and the drain released it — and in both the content is UNDETERMINED, because nothing of
-         what a visitor saw was captured. NULL on a plain request and on a render not yet attempted, so those read
-         exactly as they did. The reason is the code's own family's row (C-83, or C-28 when the drain's rate rule
-         held it that tick), never re-typed; `#renderHoldReason` says which. */
-      render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
-        ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
-            content: "undetermined", code, check, translation }))(Store.#renderHoldReason(r.code))
-        : null,
-      /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
-         drain used. A row whose principals cannot both be named answers with the
-         refusal rather than with a half attribution — the read cannot state less
-         carefully than the write did. */
-      attribution: this.#captureRequestAttribution(r) })) };
-  }
+  /* The capture requests (the door, the drain, the reads): `capture-requests`' (K58; its R1–R42). The drain stays
+     reachable as a Durable Object method for the scheduler's consumer and the suites that drive it. */
+  captureRequestDrain(o) { return captureRequestsOf(this.ctx).drain(o); }
 
   aiCredentialMint(...a) { return membershipOf(this.ctx).aiCredentialMint(...a); }
 
@@ -24090,7 +23143,7 @@ export class Store extends DurableObject {
      a hold persists as long as the daemon owes an answer and a zero wake would
      spin an idle-looking instance for as long as that lasts. */
   #aiRunWakeTickMs() {
-    return Math.max(1000, Math.min(this.#captureRequestTickMs(),
+    return Math.max(1000, Math.min(captureRequestsOf(this.ctx).drainIntervalMs(),
                                    Math.floor(Store.AI_RUN_LEASE_MS / 4)));
   }
 
@@ -24129,7 +23182,7 @@ export class Store extends DurableObject {
    *  holding its run at its own TTL, and the reaper then takes the run with an
    *  honest bound. Removing that predicate is declared control arm (4). */
   #aiRunWakeHolds(iso) {
-    if (!this.#captureRequestConfigured()) return [];
+    if (!captureRequestsOf(this.ctx).configured()) return [];
     return this.#rows(
       `SELECT r.run,
               (SELECT count(*) FROM capture_requests cr
@@ -26819,26 +25872,7 @@ export class Store extends DurableObject {
              AFTER the body's spread, so a `caller` the body carries is overwritten rather than believed. */
           caller: url.searchParams.get("principal"),
         }),
-        /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
-           `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`
-           writes a row and cannot fetch, `capturerequestdrain` fetches and is
-           not a member verb, and `capturerequestdraining` is a READ op=acquire's
-           capture-request arm asks so it can admit the drain and nobody else. */
-        capturerequest: () => this.captureRequest({
-          ...(body || {}),
-          viewer: url.searchParams.get("viewer"),
-          /* REC-168: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression, via
-             `RUN_PRODUCTION_ACTIONS`) and SET AFTER the body's spread, so a `caller` the body carries is
-             overwritten rather than believed. */
-          caller: url.searchParams.get("principal"),
-        }),
-        capturerequestdrain: () => this.captureRequestDrain(body || {}),
-        capturerequestdraining: () => this.captureRequestDraining(
-          body || { request: url.searchParams.get("request") }),
-        capturerequests: () => this.captureRequests({
-          run: url.searchParams.get("run"), target: url.searchParams.get("target"),
-          state: url.searchParams.get("state"), limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer") }),
+        ...captureRequestsOps(captureRequestsOf(this.ctx), url, body),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
