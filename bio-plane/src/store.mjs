@@ -614,10 +614,7 @@ export class Store extends DurableObject {
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
-    inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
-    strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
-      legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
-      versions: basisVersionsOf(ctx) });   /* strength (K61), over inquiry's and basis-versions' own services */
+    strengthModule(ctx);   /* strength (K61): reaches inquiry and basis-versions itself, and registers its pair (R17) */
     /* bias (K61): joins every promotion before legacy-store (R8–R10). */
     biasOf(ctx, { env });
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its

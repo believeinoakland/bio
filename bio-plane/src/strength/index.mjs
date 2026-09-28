@@ -18,13 +18,15 @@
  *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares `group_strength_bar` to record-core's purge,
- * exempt (R23). `deps`:
+ * exempt (R23), and registers the pair with `inquiry`'s grouping act (`onGrounded("strength", …)`, R17, N152). `deps`:
  *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declarePurge`.
  *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15).
  *   inquiry      `basisFor(id) → {legs}`, `earned(subject, targets) → {earned: {capture, connection, testimony},
  *                subject_entity, subject_known}`, `legCapped(stated, earned, targetId)`, `subjectEntityOf(id)` (its
- *                R13, R14, R16). Required: legacy-store passes its own until `inquiry` is extracted.
- *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). The version rows and
+ *                R13, R14, R16), and `onGrounded(module, fn)` (its R42) when it offers one. Default: `inquiryOf(host)`
+ *                with the module's own `legCapped`, reached lazily as the other modules are (N218).
+ *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). Default:
+ *                `basisVersionsOf(host)`, reached lazily on the first read that names a project. The version rows and
  *                legs are read from `inquiry_basis_versions` and `inquiry_basis_version_legs`.
  *   producingGroup  the store's recorded group or null; default: promotion's fact `producingGroup`.
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
@@ -33,8 +35,10 @@
  * provenance's `register` and `captured_locators` (its R48). */
 
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { inquiryOf, legCapped } from "../inquiry/index.mjs";
+import { basisVersionsOf, BASIS_VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
          isMachineIdentity, VERSION_MACHINE, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
 import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK, axisResult } from "./arithmetic.mjs";
@@ -47,8 +51,10 @@ export { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STREN
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
 export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES } from "./schema.mjs";
 
-/** R8: the legs one version is measured over, and (R11) the most a proposed partition may place. */
-export const VERSION_LEGS_MAX = 500;
+/* R8: the legs one version is measured over, and (R11) the most a proposed partition may place, is basis-versions' own
+   per-version bound (its R9), `BASIS_VERSION_LEGS_MAX`, read from it and never restated (N184); re-exported under the
+   name this module's callers use. */
+export { BASIS_VERSION_LEGS_MAX as VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
 /** R12: the origins read per step of the independence walk; reaching it makes the answer incomplete, never clean. */
 export const ORIGIN_LIMIT = 200;
 /** R12: the shared origins named per pair of parts. */
@@ -81,15 +87,46 @@ export function barAxisWords(bar) {
     .join(", ");
 }
 
+/* N218: `inquiry`'s instance as the walk reads it, its module-level `legCapped` (R14) beside its methods. */
+function inquiryReader(k) {
+  return { basisFor: (id, o) => k.basisFor(id, o), earned: (s, t) => k.earned(s, t), legCapped,
+           subjectEntityOf: (id) => k.subjectEntityOf(id), onGrounded: (m, fn) => k.onGrounded(m, fn) };
+}
+
 export class Strength {
-  constructor({ storage, record, membership, inquiry, versions = null, producingGroup = null, now = null }) {
+  #deps;
+
+  constructor({ storage, record, membership, inquiry = null, versions = null, producingGroup = null, now = null,
+                host = null }) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.inquiry = inquiry;
-    this.versions = versions;
+    this.#deps = { inquiry, versions, host };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
+  }
+
+  /* The providers reached lazily (K61, N218): each is created on the same host on first use, unless a caller passed
+     its own. A test may replace one by assignment. */
+  get inquiry() {
+    return this.#deps.inquiry ||= inquiryReader(inquiryOf(this.#deps.host, { record: this.record, membership: this.membership }));
+  }
+  set inquiry(v) { this.#deps.inquiry = v; }
+  get versions() {
+    if (!this.#deps.versions && this.#deps.host)
+      this.#deps.versions = basisVersionsOf(this.#deps.host, { record: this.record, membership: this.membership });
+    return this.#deps.versions;
+  }
+
+  /** R17 (N152): the pair the grouping act carries before and after (inquiry R28, R42), registered by this module
+   *  itself. Answers the registration's own answer, or null when the inquiry reached offers no slot. */
+  registerGrounded() {
+    const k = this.inquiry;
+    if (!k || typeof k.onGrounded !== "function") return null;
+    return k.onGrounded("strength", (id) => {
+      const s = this.strengthOf(id);
+      return Object.fromEntries(STRENGTH_AXES.map((a) => [a, s[a]]));
+    });
   }
 
   migrate() { migrateStrength(this.sql); }
@@ -197,7 +234,9 @@ export class Strength {
           grade: resolved ? resolved.grade : stated,
           why: noReferent
             ? `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent`
-            : leg.grade == null ? (leg.why || `the leg carries no grade`)
+            /* N184 (K220): the arithmetic's own reason; where a version leg's grade came from is the record's fact,
+               published beside it in `ungraded` (R9), never in its place. */
+            : leg.grade == null ? `the leg carries no grade`
             : resolved && resolved.why ? resolved.why
             : onAxis ? null
             /* MK-2: capture does not apply to a member's own words at all, which is a different fact from "graded on
@@ -408,7 +447,8 @@ export class Strength {
        relationship to the inquiry, so there is no default project). */
     const wantVersion = String(args.version ?? "").trim();
     const project = String(args.project ?? "").trim();
-    const current = project && this.versions ? this.versions.currentOf(project, inq, args.viewer ?? null) : null;
+    const versions = project ? this.versions : null;
+    const current = versions ? versions.currentOf(project, inq, args.viewer ?? null) : null;
     const name = wantVersion || (current ? current.version : "");
     if (!name)
       return refusal("VERSION_STRENGTH_NO_VERSION",
@@ -469,13 +509,13 @@ export class Strength {
     return refusePairComposed(out) ?? out;
   }
 
-  /* The legs of one stored version, in order, at most `VERSION_LEGS_MAX` (R8). */
+  /* The legs of one stored version, in order, at most `BASIS_VERSION_LEGS_MAX` (R8). */
   #versionLegs(inq, name, withGrades) {
     const cols = withGrades ? "ord, target_id, target_type, role, grade, grade_axis, grade_source, ground"
                             : "ord, target_id, target_type, role, ground";
     return this.#rows(
       `SELECT ${cols} FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
-      inq, name, VERSION_LEGS_MAX);
+      inq, name, BASIS_VERSION_LEGS_MAX);
   }
 
   /* ============================================================ independence (R11, R12, R27; D-195) */
@@ -582,10 +622,10 @@ export class Strength {
         return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
           + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a "
           + "written reading's groups instead.");
-      if (raw.length > VERSION_LEGS_MAX)
+      if (raw.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${raw.length} groups were proposed and a written reading holds at most ${VERSION_LEGS_MAX} reasons.`,
-          { inquiry: inq, limit: VERSION_LEGS_MAX });
+          `${raw.length} groups were proposed and a written reading holds at most ${BASIS_VERSION_LEGS_MAX} reasons.`,
+          { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const parts = [];
       for (let k = 0; k < raw.length; k++) {
         const g = raw[k];
@@ -607,11 +647,11 @@ export class Strength {
       }
       /* The question's own reasons, read one past the bound so a basis larger than a reading may hold is observed. */
       /* Bounded in SQL by inquiry's R16 `limit`; the slice holds the bound for a provider that reads whole. */
-      const legRows = this.#legsOf(inq, { limit: VERSION_LEGS_MAX + 1 }).slice(0, VERSION_LEGS_MAX + 1)
+      const legRows = this.#legsOf(inq, { limit: BASIS_VERSION_LEGS_MAX + 1 }).slice(0, BASIS_VERSION_LEGS_MAX + 1)
         .map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
-      if (legRows.length > VERSION_LEGS_MAX)
+      if (legRows.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${inq.slice(0, 60)} rests on more than ${VERSION_LEGS_MAX} reasons.`, { inquiry: inq, limit: VERSION_LEGS_MAX });
+          `${inq.slice(0, 60)} rests on more than ${BASIS_VERSION_LEGS_MAX} reasons.`, { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const byOrd = new Map(legRows.map((l) => [l.ord, l]));
       const placed = new Map();
       for (const p of parts)
@@ -736,10 +776,11 @@ export class Strength {
                detail: "the default bar is the GROUP's declaration, keyed by its group; this request names no group "
                      + "and this store records none. Nothing was declared." };
     }
+    /* DEC-49 REGION is-strength-bar-grade */
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       if (v != null && !BASIS_GRADES.includes(v))
-        return { ok: false, reason: "BAD_GRADE", axis,
-                 detail: `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null` };
+        return { ...refusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`), axis };
+    /* END DEC-49 REGION is-strength-bar-grade */
     if (capture == null && connection == null)
       return { ok: false, reason: "NO_BAR",
                detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
@@ -773,10 +814,8 @@ export class Strength {
       const gate = viewerPredicate(viewer);
       const pb = this.#one(
         `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, pid, ...gate.args);
-      if (!pb)
-        return { ok: false, reason: "NO_SUCH_PROJECT", project: pid,
-                 detail: `no project answers to ${pid}. A project you cannot see is answered exactly as one `
-                       + `that does not exist.` };
+      /* N208: the one answer to an absent or unseen project is membership's (its R78), minted there. */
+      if (!pb) return noSuchProject(pid);
       if (normalizeType(pb.object_type) !== "project")
         return { ok: false, reason: "NOT_A_PROJECT", project: pid, object_type: pb.object_type,
                  detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a `
@@ -915,10 +954,11 @@ export function strengthOf(host, deps) {
       const f = promotionOf(host).fact("producingGroup");
       return f && f.ok ? (f.value || null) : null;
     });
-    s = new Strength({ ...d, storage, record, membership, producingGroup });
+    s = new Strength({ ...d, host, storage, record, membership, producingGroup });
     instances.set(host, s);
     s.migrate();
     record.declarePurge("strength", [], { exempt: STRENGTH_EXEMPT_TABLES });
+    s.registerGrounded();
   }
   return s;
 }
