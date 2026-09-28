@@ -27,6 +27,7 @@
 - **agent-worker** · N153 (its share); N157 (its share).
 
 - **provenance** (layer 3) · N263. **content** (layer 4) · N264.
+- **legacy-store** (layer 10), **legacy-index** (layer 11) · N265.
 
 ### Layers 7–10
 
