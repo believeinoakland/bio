@@ -49,6 +49,8 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 **list({project, viewer, limit})** (`op=casedrafts`) Writes nothing.
 - **R19** Fenced exactly as R9: a project that does not exist or a viewer without standing receives the dead answer. `limit` as R14; the answer carries `drafts` (each with its case identity per R5, creators, editors, `statement_by` and its read), `count`, `total`, `limit`, `truncated`.
 
+- **R26** `REVIEW_LIST_MAX`, `statedEdition(ident, newCase)` and `caseIdentitySentence(caseId, edition, newCase)` are exported (pure), and the table `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`, `created_at`) is a stated read contract on record-core R37's terms, read by `case-authoring`'s acknowledgements under `REVIEW_LIST_MAX`; every write stays this module's (K240). *(not yet met: K240)*
+
 ## Private
 
 ### Uses
