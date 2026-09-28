@@ -1,4 +1,8 @@
 // src/ui.mjs
+var PRODUCT = "CivicOS";
+var PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
+var EXAMPLE_SLUG = "clean-water-coalition";
+var publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
 var PAGE_CSS = `
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -55,6 +59,7 @@ button.copy:hover{border-color:var(--verdigris)}
 .row.ok span:last-child::before{content:""}
 @keyframes pulse{50%{opacity:.35}}
 .actions{margin-top:8px}
+.publisher{margin-top:34px;border-top:1px solid var(--rule);padding-top:16px}
 `;
 function page({
   title,
@@ -98,6 +103,7 @@ ${extra}
 <p class="small">Pressing the button takes you to dash.cloudflare.com to
 approve the permission, then brings you straight back here.</p>
 ${footer}
+${publisherFooter()}
 </main>
 <script>
 const $=s=>document.querySelector(s);
@@ -124,17 +130,20 @@ $("#go").addEventListener("click",async()=>{
 }
 var WIZARD_HTML = page({
   mode: "install",
-  title: "Set up your group's copy",
-  description: "Install your group's own copy of the Believe in Oakland accountability record, into your own Cloudflare account.",
-  eyebrow: "Believe in Oakland &middot; installer",
-  lede: `In a few minutes your group will have its own copy of the
+  title: "Set up your group's copy of CivicOS",
+  description: "Install your group's own copy of CivicOS, the accountability record, into your own Cloudflare account.",
+  eyebrow: "CivicOS &middot; installer",
+  lede: `In a few minutes your group will have its own copy of CivicOS, the
 accountability record, running in your own Cloudflare account. Not an account
 of ours: yours, under your control, from the first second.`,
   blocks: `<div class="card">
-<p style="margin:0"><b>What you need:</b> a Cloudflare account, which is free
-and takes an email address to create. No card is needed. If your account
-happens to have large-file storage turned on, this copy will use it; if not,
-everything still works and it can be added later.
+<p style="margin:0"><b>What you need:</b> a Cloudflare account with two
+things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your copy
+does real work, reading documents and assembling evidence, and the free plan's
+processing allowance is too small for it. Second, a <b>payment method</b> on
+the account: Cloudflare requires one before it turns on the file storage your
+copy keeps its evidence in. The installer checks both before it creates
+anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
 </div>
@@ -149,13 +158,14 @@ database and nowhere to keep it, and it is never stored.</p>
 <p class="small">Prefer to do everything by hand, with nothing passing
 through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
-that your group can stand up a copy even if Believe in Oakland disappears.</p>
+that your group can stand up a copy even if the publisher of CivicOS releases
+disappears.</p>
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
   slugHint: `Lower-case letters, digits, and hyphens. It becomes part of your
 web address, so pick something you are happy to say out loud.`,
-  placeholder: "oakland-sewer-watch",
+  placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Already running a copy and looking for the current release? That is
@@ -163,10 +173,10 @@ Already running a copy and looking for the current release? That is
 });
 var UPDATE_HTML = page({
   mode: "update",
-  title: "Update your copy",
-  description: "Bring an existing group copy of the Believe in Oakland record up to the current software release.",
-  eyebrow: "Believe in Oakland &middot; software update",
-  lede: `This brings a copy your group already runs up to the current software
+  title: "Update your copy of CivicOS",
+  description: "Bring your group's existing copy of CivicOS up to the current release.",
+  eyebrow: "CivicOS &middot; software update",
+  lede: `This brings the copy of CivicOS your group already runs up to the current
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
@@ -186,7 +196,7 @@ the permission is gone the moment it finishes. Nothing is stored here.</p>
 <p class="hint">Only if a member of your group minted an organisation AI credential on this copy and you want the copy
 to resume paused assistant runs on its own. It is stored in your copy as a secret and never shown. Left empty, the
 update sends none and keeps any your copy already holds. This installer never creates one.</p>`,
-  placeholder: "oakland-sewer-watch",
+  placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Setting up a brand-new copy instead? That is <a href="/">the setup page</a>.</p>`
@@ -453,8 +463,8 @@ async function selectRelease(emit) {
     emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
     return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
   } catch (e) {
-    man = null;
-    const fallback = " The installer's own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is worth mentioning to Believe in Oakland.";
+    if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
+    const fallback = " The installer's own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
     emit.ok(
       "rel",
       e && e.integrity ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback : e && e.unsigned ? "The repository's copy carries no signature, and this installer only accepts signed releases, so it was NOT used." + fallback : e && e.signature ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid") + "), so it was NOT used." + fallback : "The public repository was not reachable just now, so the built-in release (" + RELEASE_VERSION + ") is used. That is fine."
@@ -938,12 +948,13 @@ function progressShell(title, slug) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">Believe in Oakland &middot; installer</p>
+<p class="eyebrow">CivicOS &middot; installer</p>
 <h1>${esc(title)}</h1>
-<p class="small">Reference: <span class="mono">${esc(slug)}</span>. Leave this page open. This usually takes under a minute.</p>
+<p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. Leave this page open. This usually takes under a minute.</p>
 <div id="log" class="log"></div>
 <div id="fail" class="notice" hidden><h2 id="fail-h"></h2><p id="fail-p"></p><p class="small mono" id="fail-d"></p></div>
 <div id="done" hidden></div>
+${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);const rows={};
 function step(id,label){const d=document.createElement("div");d.className="row go";d.id="r-"+id;
@@ -958,7 +969,11 @@ function done(html){$("#done").innerHTML=html;$("#done").hidden=false;
  const h=$("#handover");if(h)h.addEventListener("click",()=>{location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent);});}
 </script>`;
 }
-var jsStr = (s) => JSON.stringify(String(s ?? ""));
+var jsLit = (v) => JSON.stringify(v).replace(
+  /[<>&\u2028\u2029]/g,
+  (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")
+);
+var jsStr = (s) => jsLit(String(s ?? ""));
 function streamPage(headers, shell, run) {
   const { readable, writable } = new TransformStream();
   const w = writable.getWriter();
@@ -972,7 +987,7 @@ function streamPage(headers, shell, run) {
 `),
     fail: (h, p, d) => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)})</script>
 `),
-    done: (inner) => write(`<script>done(${JSON.stringify(inner)})</script>
+    done: (inner) => write(`<script>done(${jsLit(inner)})</script>
 `)
   };
   (async () => {
@@ -1056,7 +1071,7 @@ async function runInstall(emit, code, saved) {
     emit.no("plan");
     return emit.fail(
       "The Workers Paid plan is needed first",
-      "Your copy runs on Cloudflare Workers, and the work it does \u2014 reading captured documents, assembling evidence, answering members \u2014 needs the processing allowance that comes with Cloudflare's Workers Paid plan ($5/month). Your account already has a payment method for the storage this installer sets up, so this is $5 a month on a card Cloudflare already has, not a new kind of commitment. Installing without it would hand you a copy that looks right and quietly fails under real work, which is worse than this message. Nothing was installed, so there is nothing to clean up.",
+      "Your copy runs on Cloudflare Workers, and the work it does \u2014 reading captured documents, assembling evidence, answering members \u2014 needs the processing allowance that comes with Cloudflare's Workers Paid plan ($5/month), paid with a payment method on the account, which the evidence storage this installer sets up needs as well. Installing without it would hand you a copy that looks right and quietly fails under real work, which is worse than this message. Nothing was installed, so there is nothing to clean up.",
       "To continue: sign in at dash.cloudflare.com with this same account, open Workers & Pages, choose Plans, enable Workers Paid, then come back here and run the installer again."
     );
   }
@@ -1151,15 +1166,16 @@ async function runInstall(emit, code, saved) {
   else emit.no("verify");
   emit.done(successPanel(base, secrets, !!st, verdict));
 }
+var NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
 function successPanel(base, secrets, verified, verdict = null) {
   const lagging = verified && verdict && !verdict.confirmed;
   const head = verified && !lagging ? `<b>Your copy is running.</b> It lives in your
-Cloudflare account, under your control. Believe in Oakland holds no key to it.` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
+Cloudflare account, under your control. ${NO_KEY}` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
 When it was last asked:${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
-account, under your control. Believe in Oakland holds no key to it.` : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
+account, under your control. ${NO_KEY}` : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
 credentials below now, then open your address. It lives in your Cloudflare account, under
-your control. Believe in Oakland holds no key to it.`;
+your control. ${NO_KEY}`;
   return `<div class="${lagging ? "notice" : "okbox"}"><p style="margin:0">${head}</p></div>
 <div class="card">
  <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
@@ -1202,8 +1218,8 @@ claim step over): <span class="mono">POST ${at}/api/?op=instancegroupseed&amp;to
 added, for your scratch record. Each records it once and never again, so check the spelling first;
 <span class="mono">op=instancegroup</span> shows what is recorded.</p>
 <p class="small">A suggestion, not a default: this copy was installed under the name <span class="mono">${esc(slug)}</span>.
-Your group&#39;s slug may differ from it &mdash; this project&#39;s own copy is named biosmoke7, and its group is
-believe-in-oakland. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
+Your group&#39;s slug may differ from it: a copy&#39;s name and the name of the group producing its record need not be
+the same. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
 }
 async function runUpdate(emit, code, saved) {
   const slug = saved.slug;
@@ -1332,7 +1348,7 @@ var index_default = {
     if (req.method === "POST" && url.pathname === "/begin") {
       const body = await req.json().catch(() => ({}));
       const mode = body.mode === "update" ? "update" : "install";
-      const slug = String(body.slug || "").trim();
+      const slug = typeof body.slug === "string" ? body.slug.trim() : "";
       if (!slugOk(slug))
         return json({ ok: false, error: "The name needs 3 to 40 characters: lower-case letters, digits, and hyphens, starting and ending with a letter or digit." }, 400);
       const v = rand(32), s = rand(16);
@@ -1375,7 +1391,8 @@ var index_default = {
         return html(plainPage(
           "Permission was not granted",
           "Cloudflare did not approve the request, so nothing was created.",
-          url.searchParams.get("error_description") || err
+          url.searchParams.get("error_description") || err,
+          saved?.slug
         ), 200, clear);
       if (!code || !saved || saved.s !== state || typeof saved.t !== "number" || Date.now() - saved.t > CFG.COOKIE_MAX_AGE_S * 1e3)
         return html(plainPage(
@@ -1397,14 +1414,17 @@ var index_default = {
     ), 404);
   }
 };
-function plainPage(head, what, detail) {
+function plainPage(head, what, detail, slug) {
+  const group = typeof slug === "string" && slugOk(slug) ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : "Setting up your group&#39;s copy of CivicOS.";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(head)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">Believe in Oakland &middot; installer</p>
+<p class="eyebrow">CivicOS &middot; installer</p>
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
+<p class="small">${group}</p>
 <p><a href="/">Back to the start</a></p>
+${publisherFooter()}
 </main></body></html>`;
 }
 export {

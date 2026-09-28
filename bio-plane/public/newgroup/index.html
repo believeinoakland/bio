@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Start a group — Believe in Oakland</title>
-<meta name="description" content="Set up your group's own copy of the Believe in Oakland accountability record, in your own Cloudflare account, under your own control.">
+<title>Start your group's copy — CivicOS</title>
+<meta name="description" content="Set up your group's own copy of CivicOS, the accountability record, in your own Cloudflare account, under your own control.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400;9..144,600;9..144,700&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -46,34 +46,38 @@ hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
 </head>
 <body>
 <main>
-<p class="eyebrow">Believe in Oakland</p>
+<p class="eyebrow">CivicOS</p>
 <h1>Start your group's own accountability record</h1>
 
-<p class="lede">Believe in Oakland runs on a public, tamper-evident record:
-every capture signed, every change kept, nothing quietly rewritten. Your
-group can run the same system for your own city, your own agency, your own
-fight. Not an account on our servers. Your own copy, in your own
-infrastructure, from the first second.</p>
+<p class="lede">CivicOS is a public, tamper-evident record: every capture
+signed, every change kept, nothing quietly rewritten. Your group can run its
+own copy for the government it watches, the agency it holds to account, the
+fight it is in. Not an account on someone else's servers. Your own copy, in
+your own infrastructure, from the first second.</p>
 
 <h2>What you get</h2>
 <ul>
-<li>Your own copy of the record, running in your own free Cloudflare
-account, at your own web address.</li>
-<li>Full control: your passwords, your credentials, your data. Believe in
-Oakland holds no key to any of it and cannot see inside it.</li>
+<li>Your own copy of CivicOS, running in your own Cloudflare account, at
+your own web address.</li>
+<li>Full control: your passwords, your credentials, your data. No one else,
+the publisher of CivicOS releases included, holds a key to any of it or can
+see inside it.</li>
 <li>An append-only history, so what your group has established can be shown
 and cannot be silently altered, by anyone, including you.</li>
 </ul>
 
 <h2>What it needs, honestly</h2>
 <ul>
-<li><b>A Cloudflare account.</b> Free. An email address and a couple of
+<li><b>A Cloudflare account.</b> An email address and a couple of
 minutes. <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create
 one here</a> if you do not have one.</li>
-<li><b>No card.</b> A new group's record fits comfortably in the free tier.
-The one optional extra, storage for very large attached files, does require
-a card on file with Cloudflare even though it stays free at this scale. You
-can add it later, deliberately, if your group ever needs it.</li>
+<li><b>The Workers Paid plan,</b> $5 a month from Cloudflare. Your copy reads
+documents and assembles evidence, and the free plan's processing allowance is
+too small for that work.</li>
+<li><b>A payment method on the account.</b> Cloudflare requires one before it
+turns on the file storage your copy keeps its evidence in. The installer
+checks for the plan and the storage before it creates anything, and stops,
+saying which is missing, if either is.</li>
 <li><b>About five minutes,</b> in a browser. No terminal, no code, nothing
 to download.</li>
 </ul>
@@ -85,11 +89,11 @@ up its storage. You approve it on Cloudflare's own page, and you can revoke
 it any time from your dashboard. That permission passes through our
 assistant for the seconds the installation takes, is stored nowhere, and is
 never seen by a person. After setup, nothing your group does routes through
-Believe in Oakland at all.</p>
-<p class="small">Prefer that nothing pass through us even once? The manual
-path is documented and permanently supported, using only the Cloudflare
-dashboard. It exists so your group could stand a copy up even if Believe in
-Oakland disappeared tomorrow. Ask us for it, or find it in the project
+the installer, or its publisher, at all.</p>
+<p class="small">Prefer that nothing pass through the installer even once? The
+manual path is documented and permanently supported, using only the Cloudflare
+dashboard. It exists so your group could stand a copy up even if the
+publisher of CivicOS releases disappeared tomorrow. Find it in the project
 documentation.</p>
 
 <hr>
@@ -97,8 +101,8 @@ documentation.</p>
 <div class="okbox">
 <p style="margin:0"><b>One thing before you press the button.</b> It takes
 you to <span class="mono">newgroup.believeinoakland.workers.dev</span>. That
-is Believe in Oakland's setup assistant, running on Cloudflare's worker
-platform, which is why the address ends the way it does. You will see the
+is the CivicOS setup assistant, run by the publisher of CivicOS releases on
+Cloudflare's worker platform, which is why the address ends the way it does. You will see the
 name in your address bar the whole time. We send you there with a button
 rather than a silent redirect, so you always know where you are.</p>
 </div>
@@ -109,6 +113,8 @@ rather than a silent redirect, so you always know where you are.</p>
 is a separate page:
 <span class="mono">newgroup.believeinoakland.workers.dev/update</span>.
 Updates never touch your passwords or your record.</p>
+
+<p class="small publisher">This installer is run by the publisher of CivicOS releases.</p>
 
 </main>
 </body>
