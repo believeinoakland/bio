@@ -36,7 +36,11 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { affordances: ROOT + "src/affordances.mjs", store: ROOT + "src/store.mjs" };
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts, and the roster fact with it, moved to
+   src/affordances/facts.mjs (AFFORDANCES #3 J2, K225), so that file is armed and restored with the other two and arm
+   (1) edits the roster's `owner` there, where it reads membership's `isProjectOwner` through the facts' accessor `m`. */
+const F = { affordances: ROOT + "src/affordances.mjs", store: ROOT + "src/store.mjs",
+            facts: ROOT + "src/affordances/facts.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -106,8 +110,8 @@ if (!ONLY) {
 }
 
 arm("1", "THE ROW'S OWN — D-310's `owner of SOME project` swapped in for the pair",
-  [["store", "return { owner: this.#isProjectOwner(b.bundle_id, actor),",
-             "return { owner: this.#ownsAnyProject(actor),"]],
+  [["facts", "return { owner: m.isProjectOwner(projectId, actor),",
+             "return { owner: m.ownsAnyProject(actor),"]],
   { mustFail: ["CROSS-PROJECT", "THE AGREEMENT — projectinvite", "THE AGREEMENT — projectremove",
                "THE AGREEMENT — projectowneradd"],
     mustNotFail: ["MACHINE WITHHELD", "THE MACHINE MAP IS THE STORE'S"] });

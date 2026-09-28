@@ -57,6 +57,14 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const STORE = join(PLANE, "src/store.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+   K225), so arms `copy` and `blind` — the fact's own site — edit that file. There the fact asks
+   `citation.retiredNotCitable(r.target)` through the facts' citation accessor, on one line; `copy` puts its own read of
+   the head in its place (the helper's spelling, over the facts' `this.sql`), `blind` stops the count. The other store
+   arms (citecopy, suggestcopy, typed) anchor on text that left store.mjs at T7 (citation, run-productions) and are
+   not re-anchored here. */
+const FACTS = join(PLANE, "src/affordances/facts.mjs");
+const nameOf = (f) => f === STORE ? "src/store.mjs" : f === FACTS ? "src/affordances/facts.mjs" : "src/affordances.mjs";
 const SUITE = join(HERE, "affordances.test.mjs");
 /* M0-182's one spelling (moved at c20-batch27 by CONDUCT #20): both old branches were already outside the
    worktree, but the env-var-first expression is one the pen sweep cannot resolve (UNCLASSIFIED). */
@@ -65,13 +73,10 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 const PROJ_ARM = `|| (ty === "project" && (f.cites_out.severed_reinstatable ?? 0) > 0\n`
                + `                         && f.project_participant !== false) },`;
-const FACT = `          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))\n`
-           + `            citesOut.severed_reinstatable++;`;
+const FACT = `          if (typeof r.target === "string" && !citation.retiredNotCitable(r.target)) citesOut.severed_reinstatable++;`;
 const COPY = `          if (typeof r.target === "string") {\n`
-           + `            const tb = this.#one(\`SELECT object_type, current_state FROM bundles WHERE bundle_id=?\`, r.target);\n`
-           + `            if (!(tb && normalizeType(tb.object_type) === "information"\n`
-           + `                  && String(tb.current_state ?? "").trim() === "retired"))\n`
-           + `              citesOut.severed_reinstatable++;\n`
+           + `            const tb = [...this.sql.exec(\`SELECT current_state FROM bundles WHERE bundle_id=?\`, r.target)][0];\n`
+           + `            if (!(tb && String(tb.current_state ?? "").trim() === "retired")) citesOut.severed_reinstatable++;\n`
            + `          }`;
 
 const CITE_ONE = `    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));\n`;
@@ -103,11 +108,10 @@ const ARMS = {
     mustFail: [S0, S1, S4], mustHold: [OFFER, ACCEPT, S3] },
   drop: { file: AFF, floor: 100_000, from: PROJ_ARM, to: `},`,
     mustFail: [S0, OFFER], mustHold: [S1, ACCEPT, S3, S4] },
-  copy: { file: STORE, floor: 1_000_000, from: FACT, to: COPY,
+  copy: { file: FACTS, floor: 10_000, from: FACT, to: COPY,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
-  blind: { file: STORE, floor: 1_000_000, from: FACT,
-    to: `          if (false && typeof r.target === "string" && !this.#retiredNotCitable(r.target))\n`
-      + `            citesOut.severed_reinstatable++;`,
+  blind: { file: FACTS, floor: 10_000, from: FACT,
+    to: `          if (false && typeof r.target === "string" && !citation.retiredNotCitable(r.target)) citesOut.severed_reinstatable++;`,
     mustFail: [OFFER], mustHold: [S0, S1, ACCEPT, S3, S4] },
   citecopy: { file: STORE, floor: 1_000_000, from: CITE_ONE, to: CITE_COPY,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
@@ -138,9 +142,9 @@ if (base.code !== 0 || !base.foot || base.foot.fail || base.foot.pass < 99) {
 
 for (const [arm, a] of Object.entries(ARMS)) {
   const bytes = readFileSync(a.file);
-  const what = a.file === STORE ? "src/store.mjs" : "src/affordances.mjs";
+  const what = nameOf(a.file);
   if (bytes.length < a.floor) { console.log(`REFUSING: ${what} is ${bytes.length} bytes`); process.exit(2); }
-  const dest = join(SNAP, `${arm}--${a.file === STORE ? "src_store" : "src_affordances"}.mjs.pristine`);
+  const dest = join(SNAP, `${arm}--${what.replace(/[/.]/g, "_")}.pristine`);
   writeFileSync(dest, bytes);
   console.log(`\narm ${arm}: pristine ${what} ${bytes.length} bytes, sha256 ${sha(bytes).slice(0, 12)}…`);
   const text = bytes.toString("latin1");

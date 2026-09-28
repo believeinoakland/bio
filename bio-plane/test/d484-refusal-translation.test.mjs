@@ -131,20 +131,35 @@ t("the two translations are not each other (one sentence serving two codes is DE
    that a measured fact rather than a sentence in a catalogue.
    --------------------------------------------------------------------------- */
 console.log("\n--- ONE site per code, and it is inside the region the `where` names ---");
-const regionOf = (name) => {
-  const a = store.indexOf(`DEC-49 REGION ${name}`);
-  const b = store.indexOf(`END DEC-49 REGION ${name}`);
-  return (a < 0 || b < 0 || b < a) ? null : store.slice(a, b);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): store.mjs's `actNoBasis` left it (N186, LEGACY-STORE T9 item 5), so
+   NO_BASIS's three arms read the file C-33.40's `where` names — `src/inquiry/index.mjs actNoBasis > is-act-no-basis` —
+   and its one site must also sit inside `function actNoBasis(` there; store.mjs must now mint it nowhere. NO_CITATION's
+   three arms read src/store.mjs as before (C-33.41's `where` still names the store's `actNoCitation`). The file each
+   `where` names is the one read, so a `where` moved without its code (or the reverse) fails here. */
+const INQ_SRC = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
+const cnt0 = (s, re) => (s.match(re) || []).length;
+const regionOf = (src, name) => {
+  const a = src.indexOf(`DEC-49 REGION ${name}`);
+  const b = src.indexOf(`END DEC-49 REGION ${name}`);
+  return (a < 0 || b < 0 || b < a) ? null : src.slice(a, b);
 };
-for (const [code, region] of [["NO_BASIS", "is-act-no-basis"], ["NO_CITATION", "is-act-no-citation"]]) {
+for (const [code, region, file, src, fn, row] of [
+  ["NO_BASIS", "is-act-no-basis", "src/inquiry/index.mjs", INQ_SRC, "actNoBasis", ROW_BASIS],
+  ["NO_CITATION", "is-act-no-citation", "src/store.mjs", store, "actNoCitation", ROW_CITE]]) {
   const lit = new RegExp(`reason: "${code}"`, "g");
-  const hits = [...store.matchAll(lit)];
-  t(`\`reason: "${code}"\` is minted at EXACTLY ONE site in src/store.mjs (was 4 and 3)`, hits.length, 1);
-  const span = regionOf(region);
+  const hits = [...src.matchAll(lit)];
+  t(`\`reason: "${code}"\` is minted at EXACTLY ONE site in ${file} (was 4 and 3)`,
+    [hits.length, row.where === `${file} ${fn} > ${region}`], [1, true]);
+  const span = regionOf(src, region);
   t(`the DEC-49 region ${region} exists and is a marker PAIR`, !!span, true);
+  const fnAt = src.search(new RegExp(`\\n(?:export )?function ${fn}\\(`));
   t(`that one site is INSIDE ${region} — the span the row's \`where\` claims`,
-    !!span && span.includes(`reason: "${code}"`) && span.includes(`code: "${code}"`), true);
+    !!span && span.includes(`reason: "${code}"`) && span.includes(`code: "${code}"`)
+      && fnAt >= 0 && src.indexOf(`DEC-49 REGION ${region}`) > fnAt
+      && src.indexOf(`DEC-49 REGION ${region}`) < src.indexOf("\n}\n", fnAt), true);
 }
+t("store.mjs mints NO_BASIS nowhere any more: its helper left with N186",
+  [cnt0(store, /reason: "NO_BASIS"/g), /\nfunction actNoBasis\(/.test(store)], [0, false]);
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): five of the seven former sites left store.mjs with their ops
    (entities R4/R8's relationdeclare and testify: entities REPORT 2; progressions' progressiondefine revision and
    exception document: progressions REPORT 1). Each module mints them through its OWN helper over the SAME

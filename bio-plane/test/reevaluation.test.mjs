@@ -731,10 +731,18 @@ console.log("\n--- 8. STRUCTURAL: a query and not a flag, and no verdict compute
     readBody.match(/GRADE_RANK|weakerGrade|weakestOf/g) || [], []);
   /* RE-ANCHORED (T7; INQUIRY #1 J3): the two CITED refusals are inquiry's `dispose` and `divide`, which call its
      `restsOnLive`; the store's `affordanceFacts` calls `#restsOnLive`, now the one-line delegate to it. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+     K225) and asks inquiry itself: `this.inquiry().restsOnLive(id)`, its inquiry accessor being
+     `of("inquiry", inquiryOf)` over `import { inquiryOf } from "../inquiry/index.mjs"`. The store's `#restsOnLive`
+     delegate has no caller left (legacy-store's to delete), so the second and third clauses read the moved call and
+     its accessor instead of the delegate and the store's call. */
+  const facts = readFileSync(fileURLToPath(new URL("../src/affordances/facts.mjs", import.meta.url)), "utf8");
   t("the two CITED refusals and op=affordances run the SAME predicate, so a published act and a refusal cannot disagree",
     [(inquirySrc.match(/this\.restsOnLive\(/g) || []).length >= 2,
-     /#restsOnLive\(id\) \{ return inquiryOf\(this\.ctx\)\.restsOnLive\(id\); \}/.test(store),
-     /this\.#restsOnLive\(target\)/.test(store)], [true, true, true]);
+     /^import \{ inquiryOf \} from "\.\.\/inquiry\/index\.mjs";$/m.test(facts)
+       && /\n    this\.inquiry = of\("inquiry", inquiryOf\);\n/.test(facts),
+     /\n    const rested = type === "inquiry" \? this\.inquiry\(\)\.restsOnLive\(id\) : \{ confirmed: \[\], frozen: \[\], severed: \[\] \};\n/
+       .test(facts)], [true, true, true]);
   const aff = readFileSync(fileURLToPath(new URL("../src/affordances.mjs", import.meta.url)), "utf8");
   t("the act catalogue reads that predicate's COUNTS and never its ids: an affordance names no dependent",
     [/rested_on\?\.working/.test(aff), /rested_on\.[a-z]*\.map/.test(aff)], [true, false]);

@@ -504,10 +504,16 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
    MACHINE_CANNOT_CORRESPOND, _MOVE_ACTION, _SET_LAWS and _SET_RISK_TIER with actions (`src/actions/`, which also mints
    T8's MACHINE_CANNOT_STATE_RECORDS_LAW), MACHINE_CANNOT_PUBLISH with case-authoring and MACHINE_CANNOT_REVIEW with
    review — each harvested where it went, its row asked of every family (`ALL_ROWS`). */
-const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry", "case-authoring", "actions", "review"].flatMap(moduleFiles)
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; LEGACY-INDEX #6, K312): layer 9's five modules — standards, conformance,
+   consequences, filings, escalation — are routed now (36 ops), so their seventeen fences reach the wire through this
+   drive (MACHINE_CANNOT_DECLARE_STANDARD, _DETERMINE, _ADDRESS, _ASSESS, _APPROVE, _FILE, _NAME_COUNSEL, _EXPORT and
+   escalation's nine). They never stood in the store, so no re-point found them; each is harvested where it is minted,
+   its row asked of every family (`ALL_ROWS`), so none arrives unmeasured. */
+const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry", "case-authoring", "actions", "review",
+  "standards", "conformance", "consequences", "filings", "escalation"].flatMap(moduleFiles)
   .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))];
 const FENCES = [...new Set(FENCE_SOURCES.flatMap((b) => [...b.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1])))].sort();
-console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review}/: ${FENCES.length} code(s)`);
+console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review,standards,conformance,consequences,filings,escalation}/: ${FENCES.length} code(s)`);
 /* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
    WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
    one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
@@ -528,7 +534,9 @@ t("the fence harvest found a REAL family and not an empty set — and the floor 
 + "fails this line and must be struck with its reason",
   /* MOVED 13 -> 14 on 2026-09-28 by T8 legacy-tests, FROM THIS LINE'S OWN PRINT: the thirteen, re-harvested where T8
      moved them, and MACHINE_CANNOT_STATE_RECORDS_LAW, actions' T8 fence (RECORDS_LAW_FENCE_CHECKS). */
-  FENCES.length >= 14, true);
+  /* MOVED 14 -> 31 on 2026-09-28 by legacy-tests T9, FROM THIS LINE'S OWN PRINT: the fourteen, and layer 9's seventeen
+     (section 3's re-anchor above). */
+  FENCES.length >= 31, true);
 t("every harvested fence has a row with a canned translation — the catalogue's or, since T8, its module's own "
 + "family (REC-64's work, and the precondition for asking whether it reaches anybody)",
   FENCES.filter((c) => !ALL_ROWS.has(c)), []);
@@ -586,8 +594,10 @@ const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
   /* T7 (LEGACY-TESTS #4, 2026-09-28): basis-versions and inquiry, where three catalogued fences and C-25.24's went. */
   /* T8 (legacy-tests, 2026-09-28): case-authoring, actions and review, where six of the store's fences went, and
      ratification, where index.mjs's four ratify fences went (`src/ratification/ops.mjs`). */
+  /* T9 (legacy-tests, 2026-09-28): layer 9's five modules, routed by LEGACY-INDEX #6 (K312), where seventeen fences
+     are minted with their rows in the modules' own families (section 3's re-anchor). */
   ...["record-core", "membership", "promotion", "basis-versions", "inquiry", "case-authoring", "actions", "review",
-      "ratification"].flatMap(moduleFiles).map((f) =>
+      "ratification", "standards", "conformance", "consequences", "filings", "escalation"].flatMap(moduleFiles).map((f) =>
     [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
 for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {
@@ -653,12 +663,27 @@ t("D-494 · the CATALOGUE and the WIDENED HARVEST agree, BY NAME and not by coun
 + "minted nowhere is a DEFECT — delete the row or build the fence; it is never allow-listed here",
   { cataloguedMintedNowhere, whereNamesTheWrongSource, mintedOutsideTheFenceFamily },
   { cataloguedMintedNowhere: [], whereNamesTheWrongSource: [],
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T9), LOOKED AT as the set asks, by name, from this line's own print: the
+       harvest now reads layer 9's five modules (routed by LEGACY-INDEX #6, K312), and their seventeen fences are each
+       held by their module's own family — CONSEQUENCES_CHECKS (_ADDRESS, _ASSESS), ESCALATION_CHECKS (_ADVANCE,
+       _ATTACH, _DECLINE, _END, _EVALUATE, _OPEN, _RESUME, _SUSPEND, _WRITE_ESCALATION), FILINGS_CHECKS (_APPROVE,
+       _EXPORT, _FILE, _NAME_COUNSEL), STANDARDS_CHECKS (_DECLARE_STANDARD) and CONFORMANCE_CHECKS (_DETERMINE). */
     mintedOutsideTheFenceFamily: [
-      "MACHINE_CANNOT_CORRESPOND -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_MOVE_ACTION -> ACTION_FENCE_CHECKS",
-      "MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS", "MACHINE_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
-      "MACHINE_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS", "MACHINE_CANNOT_REVIEW -> REVIEW_COPY_CHECKS",
+      "MACHINE_CANNOT_ADDRESS -> CONSEQUENCES_CHECKS", "MACHINE_CANNOT_ADVANCE -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_APPROVE -> FILINGS_CHECKS", "MACHINE_CANNOT_ASSESS -> CONSEQUENCES_CHECKS",
+      "MACHINE_CANNOT_ATTACH -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_CORRESPOND -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_DECLARE_STANDARD -> STANDARDS_CHECKS",
+      "MACHINE_CANNOT_DECLINE -> ESCALATION_CHECKS", "MACHINE_CANNOT_DETERMINE -> CONFORMANCE_CHECKS",
+      "MACHINE_CANNOT_END -> ESCALATION_CHECKS", "MACHINE_CANNOT_EVALUATE -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_EXPORT -> FILINGS_CHECKS", "MACHINE_CANNOT_FILE -> FILINGS_CHECKS",
+      "MACHINE_CANNOT_MOVE_ACTION -> ACTION_FENCE_CHECKS",
+      "MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS", "MACHINE_CANNOT_NAME_COUNSEL -> FILINGS_CHECKS",
+      "MACHINE_CANNOT_OPEN -> ESCALATION_CHECKS", "MACHINE_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
+      "MACHINE_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS", "MACHINE_CANNOT_RESUME -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_REVIEW -> REVIEW_COPY_CHECKS",
       "MACHINE_CANNOT_SET_LAWS -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_SET_RISK_TIER -> ACTION_FENCE_CHECKS",
-      "MACHINE_CANNOT_STATE_RECORDS_LAW -> RECORDS_LAW_FENCE_CHECKS",
+      "MACHINE_CANNOT_STATE_RECORDS_LAW -> RECORDS_LAW_FENCE_CHECKS", "MACHINE_CANNOT_SUSPEND -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_WRITE_ESCALATION -> ESCALATION_CHECKS",
       "OPERATOR_TOKEN_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
       "OPERATOR_TOKEN_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS"] });
 
@@ -874,7 +899,15 @@ t("the fences this empty-payload sweep does not reach are NAMED rather than coun
      a machine STATING a records law, so an empty call — no action, no law — is refused by the payload complaints long
      before it. Reachability is its interface test's: `test/m/actions/write.test.mjs`, "R5 a machine may not state,
      change or remove a records law; one stated before reads MACHINE-STATED (C-32.20)". */
-  unreached, ["MACHINE_CANNOT_MOVE_VERSION", "MACHINE_CANNOT_STATE_RECORDS_LAW"]);
+  /* MOVED 2026-09-28 by legacy-tests T9, never exempted, from this line's own print after section 3's harvest took
+     layer 9's seventeen fences (fifteen reached by the empty call, each wire+row): MACHINE_CANNOT_ASSESS (C-105.9,
+     consequences R3) stands in `#basis`, after the part's own shape is judged, so an empty `consequencerecord` is refused
+     by the payload complaints first — reachability is `test/m/consequences/record.test.mjs` and `assessed.test.mjs`';
+     MACHINE_CANNOT_WRITE_ESCALATION (escalation R17) is escalation's promotion step, which only a promote carrying an
+     escalation document reaches (an empty promote carries none) — reachability is
+     `test/m/escalation/invariants.test.mjs`'. */
+  unreached, ["MACHINE_CANNOT_ASSESS", "MACHINE_CANNOT_MOVE_VERSION", "MACHINE_CANNOT_STATE_RECORDS_LAW",
+              "MACHINE_CANNOT_WRITE_ESCALATION"]);
 
 /* ====================================================================== 7
  * TWO PRODUCERS, ONE CODE — AND THE `detail` IS WHAT TELLS THEM APART.

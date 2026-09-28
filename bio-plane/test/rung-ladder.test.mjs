@@ -298,12 +298,17 @@ const refusesInRaw = (b) => { const h = jre.test(b); jre.lastIndex = 0; return h
    calls by name. Such a helper is the refusal's one minting site (DEC-49), so a body calling it refuses for want of an
    account exactly as a body spelling the code does. The helpers are found in the source being read — a top-level
    `function name(` whose own body mints a code of the family — and nothing else is followed. */
+/* RE-ANCHORED 2026-09-28 (T9, legacy-tests; LEGACY-INDEX #6 J1.2, escalation R10, R13, R15): escalation's
+   `refuseReason` — named above as such a helper — is `export function refuseReason(reason)`, the one minting site of
+   its `NO_REASON` (DEC-49 region `is-reason-given`, C-116.24), and a top-level function that is also exported is still
+   a top-level function. The finder therefore takes an optional `export ` before `function`; the helper must still mint
+   a code of the family in its own body, and nothing else is followed. */
 const HELPERS = new Map();
 function justifyingHelpers(src) {
   if (HELPERS.has(src)) return HELPERS.get(src);
   const out = [];
-  for (const m of src.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
-    const body = methodBody(src.replace(new RegExp(`^function\\s+${m[1].replace(/\$/g, "\\$")}\\s*\\(`, "m"),
+  for (const m of src.matchAll(/^(?:export\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
+    const body = methodBody(src.replace(new RegExp(`^(?:export\\s+)?function\\s+${m[1].replace(/\$/g, "\\$")}\\s*\\(`, "m"),
       `  ${m[1]}(`), m[1]);
     if (body != null && refusesInRaw(body)) out.push(m[1]);
   }
@@ -359,7 +364,14 @@ const T5_OP_MAPS = [["entities", "entitiesOps"], ["progressions", "progressionOp
      conformance, consequences, filings, escalation) are not routed in T8 (K263, K264), so they are not read. */
   ["capture", "captureOps"], ["case-authoring", "caseAuthoringOps"], ["ratification", "ratificationOps"],
   ["publication", "publicationOps"], ["review", "reviewOps"], ["actions", "actionsOps"],
-  ["monitoring", "monitoringOps"]];
+  ["monitoring", "monitoringOps"],
+  /* RE-ANCHORED 2026-09-28 (T9, legacy-tests; N216, LEGACY-STORE T9 item 1, LEGACY-INDEX #6 K263, AFFORDANCES #3 K264):
+     layer 9 is routed now, and the store's dispatch map spreads four of its modules' op maps the same way —
+     `standardsOps`, `conformanceOps`, `consequencesOps` (`consequencerevise`, `addressedrecord`, …) and `filingsOps`.
+     Escalation publishes no op map; its ten ops are named in the store's map itself and read below
+     (`ESCALATION_ROUTES`). */
+  ["standards", "standardsOps"], ["conformance", "conformanceOps"], ["consequences", "consequencesOps"],
+  ["filings", "filingsOps"]];
 const T5_ROUTES = new Map();
 for (const [mod, fn] of T5_OP_MAPS) {
   const src = moduleSources(mod);
@@ -371,6 +383,28 @@ for (const [mod, fn] of T5_OP_MAPS) {
 t("the T5 modules' op maps were read — relationdeclare and discharge route to entities and progressions",
   [T5_ROUTES.get("relationdeclare")?.method, T5_ROUTES.get("discharge")?.method],
   ["declareRelation", "dischargeStage"]);
+/* RE-ANCHORED 2026-09-28 (T9, legacy-tests; N216, LEGACY-STORE T9 item 1): escalation's ten ops are entries of the
+   store's own dispatch map of the shape `escalationX: () => escalationOf(this.ctx).escalationY({…})`, so the dispatch
+   reader routes them to `escalationOf`, the factory, not to a method. Each is followed through that entry into the
+   method it names, read in escalation's own source — the one hop the op maps above get. */
+const ESCALATION_SRC = moduleSources("escalation");
+const STORE_MAP_BODY = (() => {   /* the store's `const map = {` literal, brace-matched (the dispatch reader's anchor) */
+  const open = storeSrc.indexOf("{", storeSrc.indexOf("const map = {"));
+  for (let p = open, d = 0; p < storeSrc.length; p++) {
+    if (storeSrc[p] === "{") d++;
+    else if (storeSrc[p] === "}" && --d === 0) return storeSrc.slice(open + 1, p);
+  }
+  return "";
+})();
+const ESCALATION_ROUTES = new Map([...STORE_MAP_BODY
+  .matchAll(/^\s{8}([a-z][a-z0-9]*)\s*:\s*\(\)\s*=>\s*escalationOf\(this\.ctx\)\.([A-Za-z0-9_]+)\s*\(/gm)]
+  .map((x) => [x[1], x[2]]));
+t("layer 9's op maps were read — consequencerevise, determine, filingapprove and standardadopt route to their "
++ "modules, and escalation's ten ops to escalation's methods through the store's map",
+  [T5_ROUTES.get("consequencerevise")?.method, T5_ROUTES.get("determine")?.method,
+   T5_ROUTES.get("filingapprove")?.method, T5_ROUTES.get("standardadopt")?.method,
+   ESCALATION_ROUTES.size, ESCALATION_ROUTES.get("escalationsuspend"), ESCALATION_ROUTES.get("escalationresume")],
+  ["consequenceRevise", "determine", "filingApprove", "standardAdopt", 10, "escalationSuspend", "escalationResume"]);
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1): the store's map no longer names the method — it spreads
    `caseAuthoringOps(…)`, whose `publishcase` routes to case-authoring's `publishCase` — so the route is followed into
    the op map exactly as section 4's backing scan follows it (`T5_ROUTES`, just above). Still derived, never spelled. */
@@ -389,9 +423,13 @@ for (const op of MUTATING) {
      names is looked up in `membershipOps`, the map membership contributes to it, and read in membership's source. */
   const viaMembership = !r.method ? MEMBERSHIP_ROUTES.get(r.doPath) : null;
   const viaT5 = !r.method && !viaMembership ? T5_ROUTES.get(r.doPath) : null;   /* RE-ANCHORED 2026-09-27 (T5-12) */
+  /* RE-ANCHORED 2026-09-28 (T9, legacy-tests; N216): an op the store's map routes to `escalationOf` is read in
+     escalation's source, at the method its entry names. */
+  const viaEscalation = r.method === "escalationOf" ? ESCALATION_ROUTES.get(r.doPath) : null;
   if (!r.method && !viaMembership && !viaT5) continue;
-  const src = viaMembership ? MODULE_SRC.membershipOf : viaT5 ? viaT5.src : storeSrc;
-  const body = methodBody(src, viaMembership ?? viaT5?.method ?? r.method);
+  if (r.method === "escalationOf" && !viaEscalation) continue;
+  const src = viaMembership ? MODULE_SRC.membershipOf : viaT5 ? viaT5.src : viaEscalation ? ESCALATION_SRC : storeSrc;
+  const body = methodBody(src, viaMembership ?? viaT5?.method ?? viaEscalation ?? r.method);
   if (body == null) continue;
   bodiesRead.push(op);
   if (demandsInBody(body, src)) demandsAccount.add(op);
@@ -427,9 +465,28 @@ t("NO UNBACKED CLAIM: every op declared `reasoned` really is refused without an 
 const reversible = Object.entries(RUNGS).filter(([, r]) => r === "reversible").map(([o]) => o).sort();
 /* CORRECTED 2026-09-28 (T7; K211, affordances R2's R27 ruling, AFFORDANCES #1 J4.4): four more acts carry
    `reversible` — `actionlaws`, `projectvisibilityset`, `versionaccept` and `versioncurrent`. */
+/* CORRECTED 2026-09-28 (T9, legacy-tests; K264, affordances R2 as K309 folds it, AFFORDANCES #3 J2 item 1): layer 9's
+   restored rows add one — `escalationresume`, whose way back is `escalationsuspend` (escalation R15: a member suspends
+   an open escalation and resumes it at the same stage; neither ends it). That way back is read out of escalation's
+   source just below, as cite's is out of citation's. */
 t("`reversible` is carried by exactly the acts with a published way back",
-  reversible, ["actionlaws", "cite", "projectvisibilityset", "versionaccept", "versioncurrent",
+  reversible, ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
                "versionhide", "versionrevert"]);
+{
+  const resume = methodBody(ESCALATION_SRC, "escalationResume") ?? "";
+  const suspend = methodBody(ESCALATION_SRC, "escalationSuspend") ?? "";
+  t("escalationresume's way back is published and moves exactly the other way: both ops are routed mutating acts, "
+  + "resume takes a SUSPENDED escalation to `open` and suspend an OPEN one to `suspended`, neither moving the stage",
+    [table.mutating.has("escalationresume") && table.mutating.has("escalationsuspend"),
+     ESCALATION_ROUTES.get("escalationresume"), ESCALATION_ROUTES.get("escalationsuspend"),
+     /if \(e\.state !== "suspended"\) return refusal\("NOT_SUSPENDED"/.test(resume),
+     /this\.#append\(e, entry, \{ state: "open", blurb: "Escalation resumed" \}\)/.test(resume),
+     /if \(e\.state === "suspended"\) return refusal\("ALREADY_SUSPENDED"/.test(suspend),
+     /this\.#append\(e, entry, \{ state: "suspended", blurb: "Escalation suspended" \}\)/.test(suspend),
+     /\bstage:/.test(/this\.#append\([^)]*\)/.exec(resume)?.[0] ?? "stage:")
+       || /\bstage:/.test(/this\.#append\([^)]*\)/.exec(suspend)?.[0] ?? "stage:")],
+    [true, "escalationResume", "escalationSuspend", true, true, true, true, false]);
+}
 t("nothing declared `reversible` is one the store refuses without an account "
 + "(the FW-14 row's own negative control: `reversible` on op=retire must fail, "
 + "and it fails HERE, because retire refuses NO_REASON)",

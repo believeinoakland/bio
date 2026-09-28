@@ -471,16 +471,48 @@ console.log(`    DECLARED REFUSALS spreading a store .result (outside this detec
      drift.chars > drift.minChars, drift.readings >= drift.minReadings, drift.held],
     [[], [], [], drift.expected, drift.expected, true, true, drift.readings]);
 }
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; N247, MONITORING #1 J3.1): THE COMPUTED-VERDICT SITE LEFT THE WORKER. (b)
+   and (c) were witnessed on the tree by ONE site, op=monitor's `json({ ok: !!promoted.result?.ok, … })` behind
+   `if (!promoted.answered) return storeSilent("monitor/promote")`; T8's monitoring extraction (5501b53e10) moved the
+   promotion and its verdict into the Durable Object's `monitor` service, so the Worker corpus now holds NO computed
+   verdict (the GATE line above prints `0 carry a COMPUTED verdict`, and the real tree's census still drives (e) and
+   (f)). What (b) and (c) assert is a property of the GATE — that it sees the computed shape the literal cannot, and
+   that the answered-guard at such a site is load-bearing — and the tree no longer carries a specimen of it. So the
+   specimen is PLANTED, as REACH (D)'s bound is (T4): the removed site's own lines, verbatim in every part the gate and
+   the guard strip read (the guard, the computed `ok`, the `promoted.result` spreads, the computed status), as its own
+   handler region appended to a copy of the corpus. Nothing on disk is changed, and the one-literal gate (the
+   verdict-excluder control's arm 2) still fails both arms over it. What monitoring's Worker half answers now —
+   `monitorOp`'s unclassified spread and its raw envelope — is (e)'s and DETECTOR C's, N247's monitoring share. */
+const PLANT_COMPUTED = `
+if (op === "__plant monitor, the computed-verdict site as it stood before 5501b53e10") {
+      const promoted = await doAnswer(stub.fetch(new Request("http://do/promote", { method: "POST", body })));
+      if (!promoted.answered) return storeSilent("monitor/promote");
+
+      return json({
+        ok: !!promoted.result?.ok,
+        checked, status, note, baseline, seen,
+        reeval_raised: flags,
+        ...(promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail }),
+        store: storeName, tokenClass: cls,
+      }, promoted.result?.ok ? 200 : 409);
+}
+`;
+const SRC_PLANTED = SRC + PLANT_COMPUTED;
 /* (b) THE WIDENING, AS A DELTA IN BOTH DIRECTIONS. It must grade MORE than the
    literal, and it must grade EVERYTHING the literal graded — a gate that traded
    one blind spot for another would pass a count and fail the file's purpose. */
 {
-  const lost = jsonCalls(SRC).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg) && !canReportSuccess(c.arg))
+  const lost = jsonCalls(SRC_PLANTED).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg) && !canReportSuccess(c.arg))
     .map((c) => c.line);
+  const pGraded = jsonCalls(SRC_PLANTED).filter((c) => canReportSuccess(c.arg)).length;
+  const pOld = jsonCalls(SRC_PLANTED).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg)).length;
+  const pComputed = jsonCalls(SRC_PLANTED).filter((c) => (declaresRefusalEnvelope(c.arg) || {}).kind === "expr").length;
+  console.log(`  PLANTED (b): over the corpus and the planted site, the OLD gate grades ${pOld}, this gate ${pGraded}, `
+            + `${pComputed} of them COMPUTED`);
   t("D-240 (b) THE GATE SEES MORE AND LOSES NOTHING — it grades strictly more json() sites than "
   + "`/^\\s*\\{\\s*ok:\\s*true\\b/`, and NOT ONE site the literal graded is now skipped. The gain is "
   + "the COMPUTED verdicts, which is D-236's shape arriving in this instrument",
-    [A_CENSUS.graded > A_CENSUS.oldGraded, A_CENSUS.computed > 0, lost],
+    [pGraded > pOld, pComputed > 0, lost],
     [true, true, []]);
 }
 /* (c) REACH, AS A DELTA ON THE GATE ITSELF — and this is the arm that shows the
@@ -490,7 +522,8 @@ console.log(`    DECLARED REFUSALS spreading a store .result (outside this detec
    between the two planted counts IS the blind spot D-240 named. */
 {
   const GUARD_A = /^[ \t]*if \(![A-Za-z_$][\w$]*(?:Out)?\.answered.*$\n/gm;
-  const stripped = SRC.replace(GUARD_A, "");
+  /* T9 (legacy-tests): over the corpus and the planted computed-verdict site, (b)'s re-anchor above. */
+  const stripped = SRC_PLANTED.replace(GUARD_A, "");
   const withOld = [];
   for (const c of jsonCalls(stripped)) {
     if (!SUCCESS_ENVELOPE_OLD.test(c.arg)) continue;

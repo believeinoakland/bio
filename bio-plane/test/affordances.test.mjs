@@ -512,17 +512,32 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      table the owner question a second time. The span is the ONE region this item
      claims — affordanceFacts' own body — so the pin cannot pass on some other
      method's use of the predicate. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+     K225), the method of `AffordanceFacts` that `affordancesOf(host, deps)` returns, with the same signature. The
+     region is that method's body there; the roster fact it composes is its `#roster(projectId, by)` in the same file,
+     and each position is asked of `m`, the facts' membership accessor — `this.membership()`, which is
+     `membershipOf(host)` (or a test's `deps.membership`). FACTS_WIRING pins that accessor, so `m.` below is
+     membership's own predicates and not a look-alike. */
+  const FACTS_SRC = readFileSync(new URL("../src/affordances/facts.mjs", import.meta.url), "utf8");
+  const FACTS_WIRING =
+    /^import \{[^}]*\bmembershipOf\b[^}]*\} from "\.\.\/membership\/index\.mjs";$/m.test(FACTS_SRC)
+    && /\n    this\.membership = of\("membership", membershipOf\);\n/.test(FACTS_SRC);
   const factsRegion = (() => {
     /* CORRECTED 2026-09-18 by REC-132 (D-422, IC-149), never exempted: the method gained
        `identity` — the POSITIONAL half of the one session resolver — so its signature moved. */
     /* CORRECTED 2026-09-23 by D-311, never exempted: the method gained the two ACT stamps
        (`author`, `by`) — the roster acts' per-pair fact and the machine fences' question are asked
        of the strings the acts receive — so its signature moved again. */
-    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
-    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+    const s = FACTS_SRC.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
+    return s === -1 ? "" : FACTS_SRC.slice(s, FACTS_SRC.indexOf("\n  }\n", s));
+  })();
+  const rosterRegion = (() => {
+    const s = FACTS_SRC.indexOf("  #roster(projectId, by) {");
+    return s === -1 ? "" : FACTS_SRC.slice(s, FACTS_SRC.indexOf("\n  }\n", s));
   })();
   t("the region under test EXISTS (an empty slice would pass everything below)",
-    factsRegion.length > 2000, true);
+    [factsRegion.length > 2000, rosterRegion.length > 300, FACTS_WIRING,
+     /\n    const m = this\.membership\(\);\n/.test(factsRegion)], [true, true, true, true]);
   /* CORRECTED IN FLIGHT 2026-09-10, never exempted, and the correction is the
      useful half. This pin first read `#isProjectOwner(` inside the facts region
      and passed — with the row scan written INLINE in the method. That put the
@@ -543,19 +558,27 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      source, where `isProjectOwner` is called as `this.isProjectOwner(`. The property is unchanged: the owner
      rule and the viewer parse are consumed, never restated. */
   const MEMBERSHIP_SRC = readFileSync(new URL("../src/membership/index.mjs", import.meta.url), "utf8");
-  const delegates = (priv, pub) =>
-    new RegExp(`^  #${priv}\\(\\.\\.\\.a\\) \\{ return membershipOf\\(this\\.ctx\\)\\.${pub}\\(\\.\\.\\.a\\); \\}`, "m").test(storeSrc);
+  /* (T9: the store-delegate matcher `delegates(priv, pub)` that stood here is gone with its two callers; see the
+     RE-ANCHORED notes below.) */
   const ownsAny = (() => {
     const s = MEMBERSHIP_SRC.indexOf("  ownsAnyProject(memberId) {");
     return s === -1 ? "" : MEMBERSHIP_SRC.slice(s, MEMBERSHIP_SRC.indexOf("\n  }\n", s));
   })();
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+     K225) and asks membership directly, no longer through the store's `#ownsAnyProject` / `#isProjectOwner` delegates
+     (which it left with no caller; legacy-store's to delete). So the first clause pins the facts' membership accessor
+     (FACTS_WIRING) instead of the store's delegates, the third reads `project_owner: … m.ownsAnyProject(who)` in the
+     region, and a sixth reads the roster's owner field — which moved out of the region into `#roster` — as
+     `m.isProjectOwner(projectId, actor)`. The two restatement clauses read `#roster` too, since it is moved code. */
   t("the fact is derived THROUGH `#isProjectOwner` — the same predicate publishCase()'s refusal runs "
   + "— and neither the facts region nor the predicate restates the owner rule in SQL",
-    [ownsAny.length > 50 && delegates("ownsAnyProject", "ownsAnyProject") && delegates("isProjectOwner", "isProjectOwner"),
-     /this\.isProjectOwner\(/.test(ownsAny), /#ownsAnyProject\(/.test(factsRegion),
-     /\bowner\s*=\s*1\b/.test(stripComments(factsRegion) + stripComments(ownsAny)),
-     /project_participants/.test(stripComments(factsRegion))],
-    [true, true, true, false, false]);
+    [ownsAny.length > 50 && FACTS_WIRING,
+     /this\.isProjectOwner\(/.test(ownsAny),
+     /\n             project_owner: who === null \? null : m\.ownsAnyProject\(who\),\n/.test(factsRegion),
+     /\bowner\s*=\s*1\b/.test(stripComments(factsRegion) + stripComments(rosterRegion) + stripComments(ownsAny)),
+     /project_participants/.test(stripComments(factsRegion) + stripComments(rosterRegion)),
+     /\n    return \{ owner: m\.isProjectOwner\(projectId, actor\),\n/.test(rosterRegion)],
+    [true, true, true, false, false, true]);
   /* ONE VIEWER PARSER. The member id comes from `viewerPredicate`, which is the
      function that already decides what a viewer may SEE; a second parse here
      would fail in the direction that reopens the disagreement — a spelling the
@@ -570,14 +593,22 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
   const positional = (() => {
     /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): read in membership's source, the
        store's `#positionalMember` asserted to be the one-line delegation to it. */
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the facts region moved to src/affordances/facts.mjs (AFFORDANCES #3
+       J2, K225) and calls membership's `positionalMember` itself, not the store's `#positionalMember` delegate (which
+       still exists for the store's own `#queueOptions`, but is no longer on this path). So the helper is read in
+       membership's source, gated on the facts' membership accessor (FACTS_WIRING) instead of on the store's delegate. */
     const s = MEMBERSHIP_SRC.indexOf("  positionalMember(viewer, identity = null) {");
-    return s === -1 || !delegates("positionalMember", "positionalMember") ? ""
+    return s === -1 || !FACTS_WIRING ? ""
       : MEMBERSHIP_SRC.slice(s, MEMBERSHIP_SRC.indexOf("\n  }\n", s));
   })();
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the second clause reads the region's one call,
+     `const who = m.positionalMember(viewer, identity);` — the store's `#positionalMember(` is no longer in it. The
+     `member:` clause reads `#roster` as well, the moved code where the roster stamp `by` is taken as given. */
   t("the store does not parse the viewer a SECOND time: no `member:` prefix literal and no slice of "
   + "one inside the facts region — the id comes from `#positionalMember`, whose ONLY parser is "
   + "`viewerPredicate`",
-    [/["']member:["']/.test(stripComments(factsRegion)), /#positionalMember\(/.test(factsRegion),
+    [/["']member:["']/.test(stripComments(factsRegion) + stripComments(rosterRegion)),
+     /\n    const who = m\.positionalMember\(viewer, identity\);\n/.test(factsRegion),
      positional.length > 50, /viewerPredicate\(/.test(positional), /["']member:["']|slice\(7\)/.test(stripComments(positional))],
     [false, true, true, true, false]);
   t("and `viewerPredicate` answers the positional question only for an identified session: a machine "
@@ -1115,9 +1146,17 @@ const reinstateApplies = String(ACTS.find((a) => a.id === "reinstate").applies);
    `this.citation.retiredNotCitable(`. The helper reads the head through record-core, so its one inline comparison is
    spelled on `currentState`; the literal matches either spelling of the field. The census is taken over the three
    files together, comments stripped. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+   K225), where the fact asks `citation.retiredNotCitable(r.target)` of `const citation = this.citation();` — the facts'
+   citation accessor, `citationOf(host)`. So the census takes that file too (four files, comments stripped), the count
+   stays five (the definition and the four doors), and the store's own count of the call is pinned at zero beside it,
+   so the fact's site is the moved one and not a copy left behind. */
 const CITATION_SRC = readFileSync(new URL("../src/citation/index.mjs", import.meta.url), "utf8");
 const RUNPROD_SRC = readFileSync(new URL("../src/run-productions/index.mjs", import.meta.url), "utf8");
-const corpusNoComments = [storeSrcNoComments, stripComments(CITATION_SRC), stripComments(RUNPROD_SRC)].join("\n");
+const FACTS_SRC_0 = readFileSync(new URL("../src/affordances/facts.mjs", import.meta.url), "utf8");
+const corpusNoComments = [storeSrcNoComments, stripComments(CITATION_SRC), stripComments(RUNPROD_SRC),
+                          stripComments(FACTS_SRC_0)].join("\n");
+const factsNoComments0 = stripComments(FACTS_SRC_0);
 const citeRegion = (CITATION_SRC.match(
   /DEC-49 REGION is-cite-retired[\s\S]*?END DEC-49 REGION is-cite-retired/) || [""])[0];
 const RETIRED_LITERAL = /String\(\w+\.(?:current_state|currentState) \?\? ""\)\.trim\(\) === "retired"/g;
@@ -1143,8 +1182,15 @@ t("§0 STRUCTURAL (D-444, D-553): `#retiredNotCitable` is DEFINED once and READ 
       counts through `countOf(f.cites_out?.…)`, so the field is matched with or without the optional chain. */
    /cites_out\??\.severed_reinstatable/.test(reinstateApplies),
    /cites_out\??\.severed\b/.test(reinstateApplies),
-   /cites_out\??\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies))],
-  [5, 1, 1, false, 1, 0, true, 1, false, true, false, true]);
+   /cites_out\??\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies)),
+   /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the fact's door is facts.mjs's, once, through its citation accessor. */
+   (storeSrcNoComments.match(/\bretiredNotCitable\(/g) || []).length,
+   (factsNoComments0.match(/\bretiredNotCitable\(/g) || []).length,
+   /\n      const citation = this\.citation\(\);\n/.test(factsNoComments0)
+     && /\n    this\.citation = of\("citation", citationOf\);\n/.test(factsNoComments0)
+     && /if \(typeof r\.target === "string" && !citation\.retiredNotCitable\(r\.target\)\) citesOut\.severed_reinstatable\+\+;/
+       .test(factsNoComments0)],
+  [5, 1, 1, false, 1, 0, true, 1, false, true, false, true, 0, 1, true]);
 
 /* §1 THE ITEM'S OWN ARM. P holds exactly ONE cites edge; it is severed; its
    target B is retired. The store would refuse a reinstate here — it just did,

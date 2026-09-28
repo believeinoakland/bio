@@ -179,11 +179,35 @@ const probe = {
 };
 const HANDLE = new Map(CALLERS.map(([who, tok]) => [tok, who.split(" ")[0]]));
 const rows = [];
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; N45, K309, membership R35): A PERFORMED LEAVE MOVES ANOTHER CALLER'S
+   ANSWER NOW. An owner's leave is refused LAST_COMMITTED_OWNER unless ANOTHER owner is committed (not `leaving`), and
+   the offer reads that (`roster.other_owner_committed`, affordances N45). PC has two owners, iris and pam: iris's leave
+   is performed first (accepted), which leaves pam PC's last committed owner, so pam's probe was answered on a roster
+   the offer (read before any probe) never saw — measured: `pam@PC: offered true, LAST_COMMITTED_OWNER`. So a leave
+   that LANDED on a caller who was joined when the offers were read is withdrawn at once by that caller's own
+   `projectjoin` (which sets any participant back to `joined`), and every later probe answers on the offer-time
+   roster, the PROBE ORDER note's rule extended to the leave that N45 made load-bearing. Each withdrawal must land,
+   and the roster after the leave pass must equal the offer-time roster, pair by pair (asserted below). */
+const withdrawn = [];
 for (const act of ROSTER)
   for (const [who, tok] of CALLERS)
     for (const [pn, p] of PROJECTS) {
       const r = await probe[act](tok, p, HANDLE.get(tok));
       const reason = codeOf(r);
+      if (act === "projectleave" && reason === "ok" && stateAt.get(`${HANDLE.get(tok)}|${pn}`) === "joined")
+        withdrawn.push([`${HANDLE.get(tok)}@${pn}`, codeOf(await POST(`op=projectjoin&token=${tok}&projectId=${p}`))]);
+      if (act === "projectleave" && who === CALLERS[CALLERS.length - 1][0] && pn === PROJECTS[PROJECTS.length - 1][0]) {
+        const after = new Map();
+        for (const [qn, q] of PROJECTS)
+          for (const row of must(`participants of ${qn}`, await DO(`projectparticipants?projectId=${q}&by=ruth`, {})).participants)
+            after.set(`${row.handle}|${qn}`, row.state);
+        t("THE LEAVE PASS LEAVES THE OFFER-TIME ROSTER: every leave that landed on a joined caller was withdrawn by "
+        + "that caller's own join, and every participant's state is what it was when the offers were read "
+        + "(floor: at least one leave landed)",
+          [withdrawn.length > 0, withdrawn.filter(([, c]) => c !== "ok"),
+           [...stateAt].filter(([k, v]) => after.get(k) !== v).map(([k, v]) => `${k}: ${v} -> ${after.get(k)}`)],
+          [true, [], []]);
+      }
       /* CORRECTED by REC-186 (BOB #31, 2026-09-23 21:37Z): for projectjoin this read "accepted" as the
          store answering ok, which counted a JOINED participant's join — idempotent, it succeeds and changes
          nothing — as an act the caller can take, and so demanded the offer to a joined participant. The
@@ -376,17 +400,29 @@ const affBy = expr(/const affBy = ([^;]+);/);
 t("op=affordances sends `author` and `by` composed by the SAME expressions the object-directed acts' "
 + "author stamp and the roster acts' `by` stamp use",
   [authorAtAct !== null, byAtAct !== null, affAuthor === authorAtAct, affBy === byAtAct], [true, true, true, true]);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; AFFORDANCES #3 J2, K225): `affordanceFacts` left the store for
+   `src/affordances/facts.mjs`, and the roster fact with it: the inline `roster: (() => { … })()` is the method
+   `#roster(projectId, by)`, called `roster: type === "project" ? this.#roster(id, by)` with `id` the target's own
+   `b.bundle_id`. It asks membership's predicates through the accessor `m` rather than the store's private delegates —
+   `m.isProjectOwner(projectId, actor)`, `m.participation(`, `Membership.ownerMath(` over `m.projectOwners(projectId)`,
+   `m.rescueRefusal(` — the same predicates the roster refusals run (the store's `#isProjectOwner`, `#participation`,
+   `#owners` and `#rescueRefusal` were one-line delegations to exactly these). The claim is unchanged: THIS target,
+   asked of `by`, never of `identity`, never D-310's `ownsAnyProject`. */
+const factsSrc = readFileSync(new URL("../src/affordances/facts.mjs", import.meta.url), "utf8");
 const facts = (() => {
-  const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
-  return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+  const s = factsSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
+  return s === -1 ? "" : factsSrc.slice(s, factsSrc.indexOf("\n  }\n", s));
 })();
-const rosterFact = (() => { const s = facts.indexOf("roster: (() => {"); return s === -1 ? "" : facts.slice(s, facts.indexOf("})(),", s)); })();
+const rosterFact = (() => { const s = factsSrc.indexOf("  #roster(projectId, by) {"); return s === -1 ? "" : factsSrc.slice(s, factsSrc.indexOf("\n  }\n", s)); })();
+const rosterBare = rosterFact.replace(/\/\*[\s\S]*?\*\//g, "");
 t("the roster fact is asked of `by` through the predicates the roster refusals run — `#isProjectOwner` "
 + "on THIS target, `#participation`, `ownerMath` over `#owners`, `#rescueRefusal` — and never of "
 + "`identity` nor D-310's `#ownsAnyProject`",
-  [rosterFact.length > 200, /#isProjectOwner\(b\.bundle_id, actor\)/.test(rosterFact), /#participation\(/.test(rosterFact),
-   /ownerMath\(this\.#owners\(/.test(rosterFact), /#rescueRefusal\(/.test(rosterFact),
-   /\bidentity\b/.test(rosterFact.replace(/\/\*[\s\S]*?\*\//g, "")), /#ownsAnyProject/.test(rosterFact)],
+  [rosterFact.length > 200 && /roster: type === "project" \? this\.#roster\(id, by\)/.test(facts) && /const id = b\.bundle_id;/.test(facts),
+   /m\.isProjectOwner\(projectId, actor\)/.test(rosterBare), /m\.participation\(/.test(rosterBare),
+   /Membership\.ownerMath\(owners\.length\)/.test(rosterBare) && /const owners = m\.projectOwners\(projectId\);/.test(rosterBare),
+   /m\.rescueRefusal\(projectId, actor\)/.test(rosterBare),
+   /\bidentity\b/.test(rosterBare), /ownsAnyProject/.test(rosterBare)],
   [true, true, true, true, true, false, false]);
 /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership extraction): `projectOwnerRescue` and the rescue predicate
    moved to `src/membership/`. The store's `projectOwnerRescue` and `#rescueRefusal` are one-line delegations to
@@ -395,9 +431,12 @@ t("the roster fact is asked of `by` through the predicates the roster refusals r
    act's predicate are still ONE. */
 const membershipSrc = readFileSync(new URL("../src/membership/index.mjs", import.meta.url), "utf8");
 const rescue = (() => { const s = membershipSrc.indexOf("  projectOwnerRescue({"); return s === -1 ? "" : membershipSrc.slice(s, membershipSrc.indexOf("\n  }\n", s)); })();
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; AFFORDANCES #3 J2): the fact asks membership's `rescueRefusal` itself
+   (`m.rescueRefusal(projectId, actor)` in facts.mjs' `#roster`), no longer the store's `#rescueRefusal` delegation,
+   which has no caller left (AFFORDANCES #3's report to legacy-store); so the fact's side is read where it asks. */
 t("and the rescue ACT runs the same `#rescueRefusal` the fact asks — one predicate, not a copy",
   [rescue.length > 200, /this\.rescueRefusal\(projectId, by\)/.test(rescue), /OWNERS_ARE_ACTIVE/.test(rescue),
-   /^  #rescueRefusal\(\.\.\.a\) \{ return membershipOf\(this\.ctx\)\.rescueRefusal\(\.\.\.a\); \}/m.test(storeSrc),
+   /m\.rescueRefusal\(projectId, actor\)/.test(rosterBare),
    /^  projectOwnerRescue\(\.\.\.a\) \{ return membershipOf\(this\.ctx\)\.projectOwnerRescue\(\.\.\.a\); \}/m.test(storeSrc)],
   [true, true, false, true, true]);
 

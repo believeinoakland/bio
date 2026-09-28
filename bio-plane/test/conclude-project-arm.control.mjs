@@ -25,7 +25,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "conclude-project-arm.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/affordances.mjs", "src/store.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/affordances.mjs", "src/affordances/facts.mjs", "src/store.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));   /* T9: facts.mjs (K225) */
 const before = REAL.map(digest);
 
 const NOT_OFFERED = ["NOT OFFERED: vera", "NOT OFFERED: olga", "NOT OFFERED: ruth", "NOT OFFERED: the ADMIN"];
@@ -56,9 +56,16 @@ const ARMS = {
   },
 
   /* (d) OVER-STRICTNESS: the fact asks OWNERSHIP instead of joined participation. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the store's `#joinedCitingProjectOf` moved to
+     src/affordances/facts.mjs (AFFORDANCES #3 J2, K225), where the one walk `#joinedCitingProjects` now serves three
+     facts. So the arm patches `concludes_for_project`'s own predicate, `#concludesForProject`, to walk the same
+     live-citing projects in sight asking `isProjectOwner` in place of `isJoinedParticipant` — the old arm's one
+     change, still confined to this one fact. */
   "owners-only": {
-    patches: [["src/store.mjs", "if (this.#inSight(pid, viewer) && this.#isJoinedParticipant(pid, memberId)) return true;",
-               "if (this.#inSight(pid, viewer) && this.#isProjectOwner(pid, memberId)) return true;"]],
+    patches: [["src/affordances/facts.mjs",
+               "    return this.#joinedCitingProjects(inquiryId, viewer, memberId).length > 0;",
+               "    return this.connections().citesInto(inquiryId).confirmed.some((pid) => this.#isProject(pid)\n"
+               + "      && this.membership().inSight(pid, viewer) && this.membership().isProjectOwner(pid, memberId));"]],
     mustFail: ["OFFERED: jonah"],
   },
 };
