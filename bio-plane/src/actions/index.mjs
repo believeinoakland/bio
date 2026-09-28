@@ -31,6 +31,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
          BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
@@ -131,15 +132,21 @@ export class Actions {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
-  /* R8, R30: conformance is a layer-9 module built beside this one; it is reached only when provided. */
-  get conformance() { return this.#deps.conformance || null; }
+  /* R8, R30: conformance's `determinationRead` (its R9; K252). Reached on the same host unless a test passes its own; a
+     host on which it cannot be created answers null, and R8 then refuses, never passes. */
+  get conformance() {
+    if (this.#deps.conformance === undefined || this.#deps.conformance === null) {
+      try { this.#deps.conformance = conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
+    }
+    return this.#deps.conformance || null;
+  }
 
   migrate() {
     migrateActions(this.sql);
@@ -2002,6 +2009,7 @@ export function actionsOf(host, deps) {
     a = new Actions({ ...d, host, storage, record, membership, promotion });
     instances.set(host, a);
     a.migrate();
+    void a.conformance;   /* R8: conformance joins the host before this module's step runs (K252) */
     record.declarePurge("actions", [...ACTIONS_TABLES]);
     promotion.registerStep("actions", { check: (c) => a.check(c), project: (c) => a.project(c) });
     record.registerAuditCheck("actions", (image) => a.audit(image));

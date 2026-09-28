@@ -10,7 +10,6 @@
 **Fixed in the moved code:** `actionMove` now adds `prior_state` where the document lacks it (R14; the legacy `#setScalar` dropped it); `actionCorrespond` released its lease on the `NO_DOCUMENT` and `UNSPLICEABLE_CORRESPONDENCE` paths too (R16); files carried through record-core's `livePaths`/`readFile` and the base through `head` (read contract), not `files.blob_sha`/`bundles.bundle_sha`.
 
 **Deferred, and why:**
-- R8's positive arm (a breach action on a live determination; `DETERMINATION_SUPERSEDED`): conformance is not merged; the write refuses (never passes) with `cause: CONFORMANCE_UNAVAILABLE`, `test.todo` names it. Wired when BOB's CHANGE merges conformance (K247).
 - R9's "an `entity_id` naming a person": the shape (`ENT-YYYY-NNNN`) is refused; whether it names a person needs the entities registry, which is not in actions' uses.
 - The vocabularies `affordances` and `instance-setup` still import from `legacy-checks` (`ACTION_KINDS`, `RISK_TIERS`, `riskTierState`, `LAW_LEVELS`, `ACTION_BASIS_KINDS`, `CORRESPONDENCE_DIRECTIONS`, `RESOLUTIONS`, `actionBasisFindings`, `correspondenceFindings`, `CORRESPONDENCE_STAGES`, `CORRESPONDENCE_OUTCOMES`, and the quote and lifecycle grammars `correspondenceFindings` runs) stay there; actions imports and re-exports them (R40). They leave legacy-checks once those readers re-point (N65 (3), layer 11).
 
@@ -23,7 +22,9 @@
 
 B4 (K248, from FILINGS #1) applied after J3: `actionRead` answers `state_history` (`[{state, at, by}]`, in order) and `clockPropose` states `counted_from` (the day after the start event). Re-run: `test/m/actions`: tests 30, pass 29, fail 0, todo 1.
 
-Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 13, module lines 3330
+B5, B6 (K252) applied: `tranche/T8` merged; the `conformance` dep defaults to `conformanceOf(host)`, created with actions so its step joins before any promotion; R8's reader takes conformance's R9 shape (`live`, `superseded_by`; `NO_SUCH_DETERMINATION` is no determination). The fixture now builds the real chain conformance brings (content, connections, entities, inquiry, reevaluation) as the store's boot does. R8's todo is replaced by its test: the real module refuses a breach action with no determination, and a stand-in in the R9 shape proves the live and superseded arms (a live one needs published findings and standards, which are conformance's to build). `test/m/actions`: tests 29, pass 29, fail 0, todo 0.
+
+Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 20, module lines 3340
 
 ## J1 · QUESTION
 

@@ -138,16 +138,27 @@ test("R7 R9 R10 the five C-101 arms at the write; a missing counterparty and a p
     '  - text: "t"', '    description: "d"', "    date: 2020-01-01", "    basis: s", "    status: pending"])).ok, true, "a past pending entry lands");
 });
 
-test("R8 a breach action with no conformance provider is refused, never passed", () => {
+test("R8 a breach action rests on a live determination the author may see, read through conformance (K252)", () => {
+  /* the real conformance module on this host: a leg naming no determination it answers is refused. */
   const w = world();
-  const r = w.promote(A, md(["breach: true", "action_basis:", "  - target: INFO-2026-0001-x", "    kind: rests_on"]));
-  assert.equal(r.ok, false);
-  const x = world();
-  x.doc("INFO-2026-0001-d");
-  const b = x.promote(A, md(["breach: true", "action_basis:", "  - target: INFO-2026-0001-d", "    kind: rests_on"]));
-  assert.equal(b.reason, "ACTION_NO_DETERMINATION"); assert.equal(b.cause, "CONFORMANCE_UNAVAILABLE");
+  w.doc("INFO-2026-0001-d");
+  const b = w.promote(A, md(["breach: true", "action_basis:", "  - target: INFO-2026-0001-d", "    kind: rests_on"]));
+  assert.equal(b.reason, "ACTION_NO_DETERMINATION");
+  assert.equal(w.promote(A, md(["breach: false", "action_basis:", "  - target: INFO-2026-0001-d", "    kind: rests_on"])).ok, true,
+    "only a breach action is asked (K102)");
+  /* determinations in conformance's R9 shape (K252), for the live and the superseded arms. */
+  const D1 = "CONF-2026-0001-determination", D2 = "CONF-2026-0002-determination";
+  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null }, [D2]: { ok: true, id: D2, live: false, superseded_by: D1 } };
+  const x = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } } });
+  for (const id of [D1, D2]) {
+    const r = x.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
+      'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
+    assert.equal(r.ok, true, JSON.stringify(r));
+  }
+  const leg = (id) => md(["breach: true", "action_basis:", `  - target: ${id}`, "    kind: rests_on"]);
+  assert.equal(x.promote(A, leg(D2)).reason, "DETERMINATION_SUPERSEDED");
+  assert.equal(x.promote(A, leg(D1)).ok, true, "a live determination");
 });
-test.todo("R8 a breach action resting on a live determination lands, a superseded one is DETERMINATION_SUPERSEDED — waits on conformance's early merge (K247, K248): a determination is not yet a leg target the catalogue's leg grammar admits");
 
 test("R11 a leg onto a document pins the capture presented at the write; a later capture does not move it; an old leg is never back-filled", () => {
   const w = world();
