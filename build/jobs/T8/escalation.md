@@ -1,6 +1,6 @@
 # escalation (T8)
 
-**Status** · session_01SpVCFJ485ktPaATS1SaQpH · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01SpVCFJ485ktPaATS1SaQpH · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
