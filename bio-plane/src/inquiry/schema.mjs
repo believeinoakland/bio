@@ -1,6 +1,6 @@
 /* inquiry's tables (requirements: `build/requirements/inquiry.md`, R36). Moved out of the legacy `schema.mjs` at this
  * module's extraction (layers.md ruling 3, "each module owns its tables"): `inquiry_basis`, `inquiry_exclusions` and
- * `inquiry_migration_replays`, with the comments that record why each is shaped as it is. Each carries `bundle_id`
+ * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
  * and is declared to record-core's purge by this module (K23). `migrateInquiry` brings a store created under an
  * earlier shape to this one (the `ground` and `content_id` columns REC-42 and REC-82 added, moved here from the
  * store's additive list). */
@@ -192,10 +192,20 @@ CREATE TABLE IF NOT EXISTS inquiry_migration_replays (
   promotion_key  TEXT,
   at             TEXT NOT NULL
 );
+
+-- R44 (N149, SOURCE-ACCESS's amendment, DEC-47): the member-browser agent recorded when the inquiry was created, the
+-- control plane's memberUserAgent stamp on the creating promotion (the User-Agent of the member's own browser, never
+-- a caller's claim). Written once, at the creation, and never by a revision; a division's children carry their
+-- parent's. An INSTANCE row, not a line in the question's bytes, which the member wrote. One row per inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_member_agents (
+  bundle_id   TEXT PRIMARY KEY,
+  user_agent  TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
-export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays"];
+export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents"];
 
 const ADDITIVE = [["inquiry_basis", "ground", "TEXT"], ["inquiry_basis", "content_id", "TEXT"]];
 

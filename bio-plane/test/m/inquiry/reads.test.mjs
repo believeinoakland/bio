@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
+import { INQUIRY_TABLES } from "../../../src/inquiry/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
@@ -76,4 +77,37 @@ test("R16 basisFor with a limit reads at most that many legs in SQL, the first b
   assert.deepEqual([whole.legs.length, whole.truncated], [5, false]);
   assert.equal(w.k.basisFor("INQ-2026-0001-q").legs.length, 5);
   assert.equal(w.k.basisFor("INQ-2026-0001-q").truncated, undefined, "unbounded, the answer is unchanged");
+});
+
+test("R44 R36 the member-browser agent is recorded at the creation from the control plane's stamp, never by a revision; a division's children carry it", () => {
+  const w = world(); w.doc(A); w.doc(B);
+  const Q = "INQ-2026-0001-q";
+  assert.equal(w.promote(Q, inquiryMd(Q, { legs: [{ target: A }, { target: B }] }), null,
+    { memberUserAgent: "  Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0  " }).ok, true);
+  assert.equal(w.k.memberUserAgent(Q), "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0");
+  /* a revision carrying another stamp, or a document line, never moves it */
+  const rev = inquiryMd(Q, { legs: [{ target: A }, { target: B }], extra: ['member_user_agent: "Other/1.0"'] });
+  assert.equal(w.promote(Q, rev, undefined, { memberUserAgent: "Changed/2.0" }).ok, true);
+  assert.equal(w.k.memberUserAgent(Q), "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0");
+  /* no stamp: the document's own line (an inquiry created before the stamp), else null */
+  w.inquiry("INQ-2026-0002-r", { extra: ['member_user_agent: "Legacy/1.0"'] });
+  assert.equal(w.k.memberUserAgent("INQ-2026-0002-r"), "Legacy/1.0");
+  /* a stamp that is not an agent is not recorded */
+  for (const [i, bad] of [["3", "   "], ["4", "x".repeat(513)], ["5", "a\nb"], ["6", 42]]) {
+    const id = `INQ-2026-000${i}-z`;
+    assert.equal(w.promote(id, inquiryMd(id), null, { memberUserAgent: bad }).ok, true);
+    assert.equal(w.k.memberUserAgent(id), null, JSON.stringify(bad).slice(0, 20));
+  }
+  assert.equal(w.promote("INQ-2026-0007-m", inquiryMd("INQ-2026-0007-m"), null, { memberUserAgent: "x".repeat(512) }).ok, true);
+  assert.equal(w.k.memberUserAgent("INQ-2026-0007-m"), "x".repeat(512));
+  /* a division's children carry the parent's */
+  const r = w.k.divide({ target: Q, reason: "two", viewer: "admin", author: V("alice"),
+    children: [{ id: "INQ-2026-0008-a", question: "A?", legs: [0] }, { id: "INQ-2026-0009-b", question: "B?", legs: [1] }] });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(w.k.memberUserAgent("INQ-2026-0008-a"), "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0");
+  assert.equal(w.k.memberUserAgent("INQ-2026-0009-b"), "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0");
+  /* R36: the table carries bundle_id and is declared to purge */
+  assert.ok(w.rows(`PRAGMA table_info(inquiry_member_agents)`).some((c) => c.name === "bundle_id"));
+  assert.ok(INQUIRY_TABLES.includes("inquiry_member_agents"));
+  assert.equal(w.k.memberUserAgent(null), null); assert.equal(w.k.memberUserAgent({}), null);
 });

@@ -34,7 +34,7 @@ import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExt
   from "../content/index.mjs";
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
-import { retrievalOf, SELECTION_ID_CHUNK } from "../retrieval/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
@@ -50,11 +50,20 @@ export const RELEASE_ACK_MAX = 500;
 /** R15: how many legs one `earnedBasis` read backfills, and how many targets it answers. */
 export const LEG_BACKFILL_MAX = 50;
 export const EARNED_TARGETS_MAX = 200;
+/** R15: how many ids one statement binds in `#legVersions` (D-36's variable ceiling); this module's own copy of the
+ *  bound retrieval holds for its selections, which is not a service it provides (K57). */
+const ID_CHUNK = 64;
 /** R39 (N183): the projects drawing on one member a refusal names, at most, the first by id (basis-versions R37's
  *  bound); deciding "more than one" is never cut by it. */
 export const PROJECTS_DRAWING_MAX = 32;
 /** R41 (N183): the most legs, and the most stale rows past a notice's bound, one statement reads. */
 export const STALE_PAGE = 500;
+/** R44 (N149): the longest member-browser agent recorded; a longer or unprintable stamp is not an agent to present. */
+export const MEMBER_AGENT_MAX = 512;
+const agentOf = (v) => {
+  const t = typeof v === "string" ? v.trim() : "";
+  return t && t.length <= MEMBER_AGENT_MAX && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
+};
 /** R20: the two dispositions (a copy, K78 (3): `affordances` re-exports it). */
 export const DISPOSITIONS = ["deferred", "dismissed"];
 
@@ -480,6 +489,11 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R44 (N149): the member-browser agent, recorded at the creation from the control plane's stamp, never after. */
+    const agent = !cur && isInquiry && !pkg.replay ? agentOf(pkg.memberUserAgent) : null;
+    if (agent)
+      this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at) VALUES (?,?,?)`,
+        bundleId, agent, this.#when());
     return { ...(migrated ? { migration_replay: migrated } : {}),
              ...(contentProjected.length ? { content: contentProjected } : {}) };
   }
@@ -516,11 +530,15 @@ export class Inquiry {
       by: r.author ?? null, reason: r.blurb ?? null })) };
   }
 
-  /** The member-browser agent the inquiry's own document records (`member_user_agent`, trimmed), or null when none is
-   *  recorded: never a default, which would be an invented client (capture-requests reads it, its R3, R14). */
+  /** R44: the member-browser agent recorded when the inquiry was created (the control plane's stamp, N149; a division's
+   *  children carry their parent's), else the one its own document records (`member_user_agent`, trimmed), or null:
+   *  never a default, which would be an invented client (capture-requests reads it, its R3, R14). */
   memberUserAgent(id) {
     try {
-      const md = id ? this.record.readFile(id, "bundle.md") : null;
+      if (!id || typeof id !== "string") return null;
+      const rec = this.#one(`SELECT user_agent FROM inquiry_member_agents WHERE bundle_id=?`, id);
+      if (rec && rec.user_agent) return rec.user_agent;
+      const md = this.record.readFile(id, "bundle.md");
       const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
       const ua = fm && typeof fm === "object" ? fm.member_user_agent : null;
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
@@ -1390,6 +1408,9 @@ export class Inquiry {
                    detail: `${cp.detail ? cp.detail + " " : ""}The division lands whole or not at all, so nothing was `
                          + `written: the parent is untouched and no child exists.` };
         created.push({ id: pl.id, question: pl.q, siblings: pl.sibs, legs: pl.mine, bundleSha: cp.bundleSha });
+        /* R44 (N149): the child is the parent's question asked again, in the browser the parent's was asked in. */
+        this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at)
+                       SELECT ?, user_agent, at FROM inquiry_member_agents WHERE bundle_id=?`, pl.id, target);
       }
       return null;
     });
@@ -2430,11 +2451,11 @@ export class Inquiry {
     if (!docs.length) return;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     const bytesLegs = md && md.content !== null ? (parseFrontmatter(md.content).data?.basis || []) : [];
-    /* CHUNKED under D-36's ~100-variable ceiling (the store's own `SELECTION_ID_CHUNK`): the count names
+    /* CHUNKED under D-36's ~100-variable ceiling (`ID_CHUNK`): the count names
        each chunk TWICE (both halves of the union), so it takes half a chunk at a time. */
     const targets = [...new Set(docs.map((l) => l.target))];
     const held = new Map();
-    const half = Math.floor(SELECTION_ID_CHUNK / 2);
+    const half = Math.floor(ID_CHUNK / 2);
     for (let i = 0; i < targets.length; i += half) {
       const part = targets.slice(i, i + half), qs = part.map(() => "?").join(",");
       for (const r of this.#rows(
@@ -2446,8 +2467,8 @@ export class Inquiry {
     }
     const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
     const capOf = new Map();
-    for (let i = 0; i < cids.length; i += SELECTION_ID_CHUNK) {
-      const part = cids.slice(i, i + SELECTION_ID_CHUNK);
+    for (let i = 0; i < cids.length; i += ID_CHUNK) {
+      const part = cids.slice(i, i + ID_CHUNK);
       for (const r of this.#rows(
         `SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
         ...part)) capOf.set(r.content_id, r.capture_sha);
