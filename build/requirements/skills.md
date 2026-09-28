@@ -65,7 +65,7 @@ Terms. **published** is the plane's own answer to `op=affordances` with no targe
 - **R22** Pure: no storage, network, clock or randomness; the same inputs render the same pack byte for byte.
 - **R23** No member of an imported or driven vocabulary appears in this module's source as a string literal (outside comments); the one published token it names, the `machine` act mode, is the spelling the plane computes it with.
 - **R24** It holds no gate: nothing here refuses anything but R12's one code, and no text it renders carries control-flow authority (R16).
-- **R25** The C-22.7 row moves here as an invariant with its test (K6), its code, number and translation unchanged.
+- **R25** C-22.7 is named here by key through `ai-runs`, which mints it with its predicate (its R8), never copied; its code, number and translation are unchanged, and a test holds that `SKILL_CHECKS`' row is the one `checkSkillVersion` mints (K6, K333). The row is held with its one minting site, in `ai-runs` (N289).
 - **R26** No place is named in its behaviour or rendered text.
 
 ### Satisfies
