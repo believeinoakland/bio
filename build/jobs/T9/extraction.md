@@ -24,3 +24,13 @@ My entries need wording `build/requirements/extraction.md` does not state. Propo
    - **R9**: the tier-2 half is carried by `text-chain.mergeTier2Text` (its R90), which is why `carryImageUnread` goes. Uses → text-chain is unchanged.
 
 Content's `passageText` (its R46) reads `unitsOf` (R36) as it stands, so it needs no new read from me.
+
+## J2 · REPORT
+
+Found while applying my entries. I changed none of these.
+
+1. **Generated artifact made stale** (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` carry `src/extraction/pipeline.mjs` and `index.mjs`. Regenerate at the layer close.
+2. **observation-log** (layer 5, N139's other share): the reading now carries `text_chars`, `text_glyphs` and `text_undetermined` (R60). `contentObservationsFor` can read them to file a scan read to nothing as `LOOKED_ABSENT` (D-375, OBSERVATION-LOG-DESIGN §4.2's fourth outcome). The legacy pins that follow, `nc-d375` and `observation-content`, are legacy-tests' work. `observation-content.test.mjs` is 0/1 on `tranche/T9` and on my branch alike.
+3. **Legacy suites** that touch readings, pdfstructure, tiers, units or `onReading`: 71 suites run on `tranche/T9` and on my branch, with identical results on every suite. 60 are all green. These 11 are red on both, so none is mine: bounds, cpdf18-pdf-images, derivation-bounds, fleetbundles, hygiene, observation-content, reextract, strengthpair, textshown, tier3-layer-parts, versionnotice. reextract's plain-read digest pin (`PRE_ITEM_DIGEST`) already moved with pdf-reader's `pageBoxes` (R31, as K293 now states); the D-374 branch holds re-taken literals for it.
+4. **connections** (test): m/connections is 59/1 on the base and on my branch alike (`factory.test.mjs`, already CAPTURE #3's report).
+5. **My requirements file, header**: its "Not yet met" list is stale. Several ids it names (for example R20, R21, R22, R36 and R49) are met and tested since T5 and T7, and the K293 tags `(not yet met: T9, …)` on R4, R9, R12, R13, R24, R30, R31, R34, R58 and R60 are met now. Strike them, BOB's to word.
