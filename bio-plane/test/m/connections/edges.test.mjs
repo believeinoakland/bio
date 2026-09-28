@@ -1,4 +1,4 @@
-/* connections: edges between bundles (R19–R23) and the link projection (R24–R29, R32). */
+/* connections: edges between bundles (R19–R23), the `refs` read contract (R58) and the link projection (R24–R29, R32). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
@@ -25,6 +25,34 @@ test("R19: in the promotion's transaction the bundle's edges are replaced by its
   w.promotion.registerStep("zz-refuse", { check: () => ({ ok: false, reason: "NO" }) });
   assert.throws(() => w.revise(C, []));
   assert.deepEqual(w.rows(`SELECT target_id FROM refs WHERE bundle_id=?`, C), [{ target_id: A }]);
+});
+
+test("R58 (N213): refs is a stated read contract — bundle_id the citing bundle, target_id the target, kind the relation, as R19 and R24 write them; no severance column", () => {
+  const w = world();
+  /* The columns a later module joins, by name, and no others: severance is asked of edgeSevered (R22), never read here. */
+  assert.deepEqual(w.rows(`PRAGMA table_info(refs)`).map((c) => c.name).sort(), ["bundle_id", "kind", "target_id"]);
+  w.doc(A, ["a"]); w.doc(B, ["b"]);
+  w.doc(C, ["c"], { references: [{ rel: "cites", target: A }, { rel: "supersedes", target: B },
+                                 { rel: "cites", target: B, status: "severed" }] });
+  /* R19's meaning: one row per (citing bundle, target, relation) of the citing document's references[]. */
+  assert.deepEqual(w.rows(`SELECT bundle_id, target_id, kind FROM refs ORDER BY target_id, kind`),
+    [{ bundle_id: C, target_id: A, kind: "cites" }, { bundle_id: C, target_id: B, kind: "cites" },
+     { bundle_id: C, target_id: B, kind: "supersedes" }]);
+  /* A severed entry is still an edge; whether it is severed is R22's answer, not a column. */
+  assert.equal(w.k.edgeSevered(C, B, "cites"), true);
+  assert.deepEqual(w.k.citesInto(B), { confirmed: [], severed: [C] });
+  /* A reader's join, as inquiry, publication and ratification write it: who cites a target, by relation. */
+  assert.deepEqual(w.rows(`SELECT r.bundle_id FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+                            WHERE r.target_id = ? AND r.kind = 'cites'`, A), [{ bundle_id: C }]);
+  /* R24's meaning: a source's resolved link is a row of kind links_to, the source bundle citing its target. */
+  const [src] = w.doc("INFO-2026-0009-s", ["the source"]);
+  const [tgt] = w.doc("INFO-2026-0010-t", ["the target"]);
+  w.receipt("https://example.org/t", tgt);
+  w.links(src, "INFO-2026-0009-s", ["https://example.org/t"]);
+  const r = w.k.projectLinks({ sourceCapture: src, viewer: MACHINE });
+  assert.equal(r.projected, 1);
+  assert.deepEqual(w.rows(`SELECT bundle_id, target_id, kind FROM refs WHERE kind='links_to'`),
+    [{ bundle_id: "INFO-2026-0009-s", target_id: "INFO-2026-0010-t", kind: "links_to" }]);
 });
 
 test("R20: NO_TARGET; a target the viewer cannot see answers as an absent one; every visible citer with relation, type, title, state and the edge's status", () => {

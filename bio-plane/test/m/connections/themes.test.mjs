@@ -122,6 +122,11 @@ test("R43: the placer or an administrator withdraws a membership, any member rej
   /* The placer may withdraw their own. */
   assert.equal(w.k.withdrawFromTheme({ ...base, actor: "alice" }).ok, true);
   for (const c of Object.values(THEME_WITHDRAW_CHECKS)) assert.ok(c.translation && c.check.startsWith("C-81."));
+  /* N125: the withdrawal's four rows are the catalogue's own (C-81.11–C-81.14), never a copy beside it. */
+  assert.deepEqual(Object.keys(THEME_WITHDRAW_CHECKS).sort(), ["THEME_WITHDRAW_NOTHING_STANDING", "THEME_WITHDRAW_NOT_A_MEMBER",
+                                                              "THEME_WITHDRAW_NOT_THE_PLACER", "THEME_WITHDRAW_NO_REASON"]);
+  for (const [code, row] of Object.entries(THEME_WITHDRAW_CHECKS)) assert.equal(row, THEME_CHECKS[code]);
+  assert.deepEqual(Object.values(THEME_WITHDRAW_CHECKS).map((c) => c.check).sort(), ["C-81.11", "C-81.12", "C-81.13", "C-81.14"]);
 });
 
 test("R44: one theme — C-81.6 for an unknown id or viewer; members and hunches apart, each by target and bounded, gated per placement, never counted when hidden", () => {

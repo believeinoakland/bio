@@ -20,34 +20,11 @@ import { CAPTURE_TEXT_UNIT_CAP } from "../extraction/index.mjs";
 export const THEME_READ_LIMIT_DEFAULT = 200;
 export const THEME_READ_LIMIT_MAX = 2000;
 
-/** R43 (K102): the refusals of taking a placement back, in the catalogue's shape, minted by this job from C-81.11
- *  (map §5.8). Held here until the catalogue, which may only lose rows while it is a legacy module, carries them. */
-export const THEME_WITHDRAW_CHECKS = Object.freeze({
-  THEME_WITHDRAW_NOT_A_MEMBER: {
-    check: "C-81.11",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw",
-    translation: "Taking a document or a passage out of a theme, or turning down a proposal, is a member's own "
-      + "judgement, done in their name. A machine may propose a placement; it cannot take one back.",
-  },
-  THEME_WITHDRAW_NO_REASON: {
-    check: "C-81.12",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Say why. A placement taken back or a proposal turned down keeps its reason beside it, so the next "
-      + "reader of the theme can see what was judged and on what ground.",
-  },
-  THEME_WITHDRAW_NOTHING_STANDING: {
-    check: "C-81.13",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Nothing stands in this theme at that document or passage: it was never placed or proposed there, "
-      + "or it has already been taken back. There is nothing to withdraw.",
-  },
-  THEME_WITHDRAW_NOT_THE_PLACER: {
-    check: "C-81.14",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "A membership is taken back by the member who placed it, or by an administrator. Any member may turn "
-      + "down a proposal, but another member's placement stands on their judgement until they withdraw it.",
-  },
-});
+/** R43 (K102, N125): the refusals of taking a placement back, C-81.11–C-81.14. The catalogue carries them in
+ *  `THEME_CHECKS` (legacy-checks T6); this is a view of those four rows, never a copy, kept under its name for the
+ *  readers that ask for the withdrawal's family alone. */
+export const THEME_WITHDRAW_CHECKS = Object.freeze(Object.fromEntries(
+  Object.entries(THEME_CHECKS).filter(([code]) => code.startsWith("THEME_WITHDRAW_"))));
 
 const bytes = (s) => new TextEncoder().encode(s).length;
 const randHex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -59,7 +36,7 @@ export class Themes {
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
 
   static #refusal(code, detail, extra) {
-    const row = THEME_CHECKS[code] || THEME_WITHDRAW_CHECKS[code];
+    const row = THEME_CHECKS[code];
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
   }
 
