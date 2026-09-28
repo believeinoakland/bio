@@ -293,9 +293,14 @@ const DECAY_MOD = join(ROOT, "bio-plane/scripts/armdecay.mjs");
 const CASEPIN_DRIVER = join(ROOT, "bio-plane/test/casepin.control.mjs");
 const CASESIGN_DRIVER = join(ROOT, "bio-plane/test/casesign.control.mjs");
 const STORE_SRC = join(ROOT, "bio-plane/src/store.mjs");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): the two lines P1 stales for `casepin.control.mjs` —
+   the pin write (the roster upsert) and the roster SELECT — left store.mjs for publication's `commitCaseEdition` and
+   `caseEditionState`, where casepin's own arms now quote them. */
+const PUB_SRC = join(ROOT, "bio-plane/src/publication/index.mjs");
 const CENSUS = join(ROOT, "bio-plane/test/m025-arm-census.mjs");
 Object.assign(MIN_BYTES, { [AICRED_DRIVER]: 5_000, [DECAY_MOD]: 5_000, [CASEPIN_DRIVER]: 5_000,
-                           [CASESIGN_DRIVER]: 5_000, [STORE_SRC]: 500_000 });
+                           [CASESIGN_DRIVER]: 5_000, [STORE_SRC]: 500_000,
+                           [PUB_SRC]: 100_000 });
 
 /* Run a driver for ONE arm and hand back what it printed. Captured to a FILE,
    never a pipe (D-282), and a run that produced no recognisable foot reports
@@ -420,7 +425,7 @@ arm({
 
 armOn({
   id: "P1", subject: "THE ARM D-331 EXISTS FOR — TWO dead anchors, and the SECOND one must still be reported",
-  what: "TWO lines `casepin.control.mjs` quotes are changed IN PLACE in `src/store.mjs` — arm (a)'s pin write "
+  what: "TWO lines `casepin.control.mjs` quotes are changed IN PLACE in `src/publication/index.mjs` — arm (a)'s pin write "
       + "and the roster SELECT that arms (e) and (f) share. Before the preflight, `edit()` threw at arm (a) "
       + "and arms (c) through (f) were never reached: the census measured 2 of 6 announcements while FOUR "
       + "anchors were dead. THE WHOLE CLAIM OF THIS FIX IS THAT THE ARMS BEHIND THE FIRST CASUALTY ARE STILL "
@@ -429,10 +434,10 @@ armOn({
          + "the four live ones, in ONE run",
   mustNot: "the driver must not arm anything, must not run the suite, and must leave the tree exactly as found",
   edits: [
-    [STORE_SRC, `          id, ed, i, m, r.version_sha ?? null, r.role ?? null);`,
-                `          id, ed, i, m, r.version_sha ?? null, r.role ?? null );`],
-    [STORE_SRC, `      \`SELECT ord, bundle_id, version_sha, role FROM published_case_members`,
-                `      \`SELECT ord, bundle_id,  version_sha, role FROM published_case_members`],
+    [PUB_SRC, `        id, ed, i, m.bundle_id, m.version_sha ?? null, m.role ?? null);`,
+              `        id, ed, i, m.bundle_id, m.version_sha ?? null, m.role ?? null );`],
+    [PUB_SRC, `      \`SELECT ord, bundle_id, version_sha, role FROM published_case_members`,
+              `      \`SELECT ord, bundle_id,  version_sha, role FROM published_case_members`],
   ],
   run: () => runProcess(CASEPIN_DRIVER, [], "P1"),
   expect: (r) => {
@@ -513,7 +518,7 @@ console.log(`byte count printed and a per-file minimum guarded.`);
   const dirty = spawnSync("git", ["status", "--porcelain", "--untracked-files=no"], { cwd: ROOT, encoding: "utf8" });
   const lines = (dirty.stdout || "").trim().split("\n").filter(Boolean);
   const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC,
-                   AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, CASESIGN_DRIVER, STORE_SRC]
+                   AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, CASESIGN_DRIVER, STORE_SRC, PUB_SRC]
     .map((p) => p.slice(ROOT.length));
   const stillDirty = lines.filter((l) => touched.some((p) => l.includes(p)));
   console.log(`tree: ${stillDirty.length ? `*** STILL MODIFIED: ${stillDirty.join(", ")}` : "every file this driver touched is back to its committed bytes"}`);

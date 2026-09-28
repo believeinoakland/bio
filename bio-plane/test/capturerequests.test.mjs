@@ -111,6 +111,8 @@ const PEC = "https://www.oaklandca.gov/Government/Boards-Commissions/Public-Ethi
 const BUDGET = "https://www.oaklandca.gov/files/assets/fy25-27-budget.pdf";
 const OTHER = "https://records.alamedacountyca.gov/contracts/2026-0042.pdf";
 const HELD = "https://www.cooling-off.example.gov/held.pdf";
+/* T8 (legacy-tests; N188 (2)): block 8a's two sources that do not serve the document (see `outboundService`). */
+const FAILING = "https://records.failing.example.gov/", LOGIN_WALL = "https://portal.login-wall.example.gov/";
 const BODY = new Uint8Array(4096).map((_, i) => (i * 31 + 7) % 256);
 
 /* WHAT THE SOURCE SAW. The egress mock records the agent of every request, so
@@ -163,6 +165,11 @@ const mf = new Miniflare({
     RENDERER: async () => { RENDER_CALLS++; return Response.json({ ok: false, error: "never reached" }); } },
   outboundService(request) {
     SEEN.push({ url: request.url, agent: request.headers.get("user-agent") });
+    /* ADDED 2026-09-28 (T8, legacy-tests; N188 (2)): two sources that do NOT serve the document, for block 8a — one
+       answers 500 (not a terminal refusal under R40: held, C-28.17) and one 401 (the source turned us away: a
+       login, retryable under R42). Every other address is served as before. */
+    if (request.url.startsWith(FAILING)) return new Response("upstream error", { status: 500 });
+    if (request.url.startsWith(LOGIN_WALL)) return new Response("sign in first", { status: 401 });
     return new Response(BODY, { headers: { "content-type": "application/pdf" } });
   },
 });
@@ -1094,6 +1101,42 @@ console.log("\n--- 7d. D-520: a render over the concurrency cap WAITS in the ala
   const h2 = (d2.held || []).find((x) => x.request === ID_RENDER);
   t("7d4 the next tick ASKED AGAIN and passed the cap: the row now meets the allowance (zero here) by name",
     h2 && [h2.code, h2.check, h2.render.state], ["RENDER_DEFERRED", "C-83.4", "deferred"]);
+}
+
+/* ====================================================================== 8a
+ * N188 (2), T8 (legacy-tests): THE TWO CODES THE FAMILY'S FLOOR NAMED AS NEVER DRIVEN, DRIVEN OUT OF THE PLANE.
+ * `CAPTURE_FETCH_FAILED` (R19, D-584): a source answer that is not one of R40's terminal refusals — here a 500 —
+ * HOLDS the row under C-28.17, still `requested`, reason `other`. `CAPTURE_REQUEST_NOT_RETRYABLE` (R42, C-28.18): op=capturerequestretry
+ * (routed since LEGACY-INDEX #4) refuses a request the source did NOT turn away — that held one — and nothing is
+ * written; and the over-strictness half, a request the source DID turn away (a 401, a login) goes back to the queue.
+ * Each on its own host, so CONDUCT 3's one load per host per tick cannot decide the order.
+ * ====================================================================== */
+console.log("\n--- 8a. N188 (2): a failed fetch is HELD (C-28.17), and only a source's refusal is retried (C-28.18) ---");
+{
+  const failing = await request({ address: `${FAILING}budget-2026.pdf` });
+  const walled = await request({ address: `${LOGIN_WALL}contracts.pdf` });
+  if (!failing.ok || !walled.ok) throw new Error(`8a fixture: ${JSON.stringify([failing, walled]).slice(0, 600)}`);
+  const d = await drain();
+  const h = (d.held || []).find((x) => x.request === failing.request);
+  drive(h);
+  t("8a1 A FETCH THE SOURCE ANSWERED BUT DID NOT REFUSE IS HELD by name: CAPTURE_FETCH_FAILED, C-28.17, its reason "
+  + "`other` (R40: a 5xx is not one of the five terminal statuses), and the source's answer is the detail",
+    h && [h.code, h.check, h.source_reason, /HTTP 500/.test(h.detail || "")],
+    ["CAPTURE_FETCH_FAILED", CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED.check, "other", true]);
+  const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
+  const rowF = rows.requests.find((r) => r.request === failing.request);
+  const rowW = rows.requests.find((r) => r.request === walled.request);
+  t("8a2 and the row is still QUEUED, its code kept, nothing captured",
+    rowF && [rowF.state, rowF.code, rowF.capture_sha], ["requested", "CAPTURE_FETCH_FAILED", null]);
+  const no = drive(await POST(`op=capturerequestretry&token=${RUTH}`, { request: failing.request }));
+  t("8a3 A RETRY OF A REQUEST THE SOURCE DID NOT TURN AWAY IS REFUSED by name, C-28.18, and nothing is written",
+    [no.ok, codeOf(no), no.check, (await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`)).requests
+       .find((r) => r.request === failing.request)?.state],
+    [false, "CAPTURE_REQUEST_NOT_RETRYABLE", CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE.check, "requested"]);
+  const yes = await POST(`op=capturerequestretry&token=${RUTH}`, { request: walled.request });
+  t("8a4 OVER-STRICTNESS: a request the SOURCE turned away (a login wall) is refused by the source's own code and "
+  + "DOES go back to the queue on retry — the refusal above is about which requests, not about retrying",
+    [rowW && rowW.state, rowW && rowW.source_reason, yes.ok, yes.state], ["refused", "login", true, "requested"]);
 }
 
 /* ====================================================================== 8

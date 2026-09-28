@@ -1915,6 +1915,12 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
           { method: "POST", body: JSON.stringify(b ?? {}) })).json()),
         GET: async (q) => rP(await (await m.dispatchFetch(`http://x/api/?${q}`)).json()) });
       const KL = "RUN-2026-0918-rec100-legacy";
+      /* ADDED 2026-09-28 (T8, legacy-tests; SCHEDULER #1 REPORT J2 item 2, scheduler R11): the live plane below
+         re-arms its alarm at start over the old plane's storage (R11 reconciles), so the reaper sweeps any run whose
+         lease has lapsed IN WALL-CLOCK TIME before K6d closes it. A 10-minute lease dated `T0` lapsed days ago, and
+         the reaper took the run — a fixture artefact, not the rule under test. The lease now reaches a day past the
+         wall clock, so K6d closes a run that is still live, which is what it always meant to measure. */
+      const KL_LEASE = Math.max(600000, Date.now() - Date.parse(T0) + 86400000);
 
       const old = planeAt(join(root, "bio-plane", "src", "index.mjs"));
       let legacyTick;
@@ -1931,9 +1937,9 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
           run: KL, contextType: "inquiry", contextId: KB, label: "a run written under the old rule",
           mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
           skillVersion: "investigative-session@1", biasManifest: null,
-          bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0 });
+          bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: KL_LEASE, at: T0 });
         legacyTick = await o.POST(`op=airuntick&token=${TOK}`, {
-          run: KL, at: at(1000), leaseMs: 600000, consume: { fetches: 1 },
+          run: KL, at: at(1000), leaseMs: KL_LEASE, consume: { fetches: 1 },
           log: [{ level: "document", subject: "observation:legacy-bare", state: "PRESENT",
                   detail: "a run PRESENT that names nothing, written before the carve-out was deleted" }] });
       } finally { await old.dispose(); }

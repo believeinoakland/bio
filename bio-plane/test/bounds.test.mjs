@@ -118,6 +118,7 @@ import { Miniflare } from "miniflare";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations re-inlined */
 import { reinlineLayer5, T7_MODULES } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes; T7: and layers 6-7's */
+import { T8_MODULES } from "./t8-extracted.mjs";                      /* T8 (legacy-tests): and layers 8-10's, through the same re-inliner */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
@@ -161,8 +162,12 @@ const t = (label, got, want) => {
    while still capped and still driven (the second PIN arm named all twelve). The corpus is T5's with a second pass of
    the same re-inliner over T7's modules (`{ modules: T7_MODULES }`, `t5-extracted.mjs`); the roster is diffed BY NAME
    against the T7 opening's (f986aec704) print at the pin below. */
-const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text;
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; layers 8-10 of T8): seven more modules (case-authoring, ratification,
+   publication, review, actions, monitoring, scheduler) left the store behind delegations and spreads of their routes,
+   and op=caseflags, op=actionquotes and the rest of their capped reads left the roster while still capped. The corpus is
+   T7's with a third pass of the same re-inliner over T8's modules (`{ modules: T8_MODULES }`, `t8-extracted.mjs`). */
+const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -247,8 +252,17 @@ const cappedMethods = (code) => {
        an answer is a refusal's size bound (`cite`'s INLINE_MAX, `biasDebtResolve`'s BIAS_DEBT_REASON_MAX), measured
        admitting them and excluded. It admits nothing the store wrote before T5 (the roster diffed by name against
        the T5 opening, at the pin below). */
+    /* WIDENED 2026-09-28 by legacy-tests (T8), PL-9's rule again: review (REVIEW #1) holds its list clamp in ONE
+       module-level FUNCTION (`listCap(limit)`, R14/R19: the caller may ask for less, never more than REVIEW_LIST_MAX),
+       which the re-inliner does not carry (free functions are outside the class). So a method that computes its cap
+       from its caller's `limit` through a function (`const cap = listCap(limit)`), reads under `LIMIT ?` AND publishes
+       that cap (`limit: cap`, `list_limit: cap`) carries the same property as the `this.#cap(limit)` spelling. It
+       re-admits op=reviewcopy and op=casedrafts, and it ALSO reads capture's seven reads capped the same way behind
+       `limitOf` since T4, which no spelling here had seen (the roster diffed by name at the pin below). */
     if ((/\bthis\.#[A-Za-z_$][\w$]*\(\s*limit\s*[,)]/.test(body) && /\bLIMIT\s+\?/.test(body))
-        || /\blimit:\s*[A-Z][A-Z0-9_]*_LIMIT\b/.test(body)) why.push("helper-cap");
+        || /\blimit:\s*[A-Z][A-Z0-9_]*_LIMIT\b/.test(body)
+        || (/\bconst\s+cap\s*=\s*[A-Za-z_$][\w$]*\(\s*limit\s*\)/.test(body) && /\bLIMIT\s+\?/.test(body)
+            && /\b(?:[a-z]+_)?limit:\s*cap\b/.test(body))) why.push("helper-cap");
     /* TWO MORE SPELLINGS OF THE SAME CLAMP, added 2026-09-28 by legacy-tests (T7), PL-9's rule a third time: widen the
        detector, never reword the source. (a) The caller's `limit` clamped between two NAMED constants by a clamp
        FUNCTION (`clamp(limit, CHANGED_FROM_AUDIT_LIMIT_DEFAULT, CHANGED_FROM_AUDIT_LIMIT_MAX)`, reevaluation's and
@@ -305,8 +319,11 @@ for (const [op, meth] of [...OPS].sort()) console.log(`    op=${op.padEnd(20)} -
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the old anchor `static SEARCH_ORPHAN_MAX = 100;` left the store with
    retrieval (T5-10), where it is a module constant (`export const`), outside the class this walk reads; the guard
    asks the same of another of the store's own numeric statics. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): `static CASE_FLAGS_LIMIT = 500;` left the store with publication
+   (PUBLICATION #1), where it is a module constant (`export const`), outside the class this walk reads; the guard asks
+   the same of another of the store's own numeric statics, T5's precedent. */
 t("WALK GUARD: block comments are blanked, and a known CODE line SURVIVES it",
-  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
+  /static GROUP_DOMAIN_CHECKS_MAX = 20;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — the anchor cannot match this item's own comments",
   /buried in its statement/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -737,7 +754,19 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
          cap in the private `#narrowCandidateList`) — read through its module helper by `module-helper-cap`;
        - op=reevaluationraise, op=reevaluationnotices (REEVALUATION #1, new: `LIMIT ?` at a clamped cap, `limit`,
          `truncated`, `cursor`) — new capped reads. */
-  OPS.size, 58);
+  /* MOVED 58 -> 69 on 2026-09-28 by legacy-tests (T8), from THIS ARM'S OWN OUTPUT on `job/T8/legacy-tests` with layers
+     8-10 re-inlined (`t8-extracted.mjs`), never by adding; the roster DIFFED BY NAME against T7's 58. NO DEPARTURE:
+     op=reviewcopy and op=casedrafts left it while still capped when review (REVIEW #1) moved their clamp into its module
+     function `listCap`, and are read again by the `helper-cap` widening at `cappedMethods`; op=actionquotes and
+     op=caseflags are read through the T8 re-inliner (actions' `actionQuotes`, publication's `caseFlags`). ELEVEN
+     ARRIVALS, each read:
+       - op=objectiveprogress, op=aspirations, op=pursuit, op=intentproposals (INTENT #2, N181: MEASURE_MAX,
+         DEPARTURES_MAX, GOALS_MAX/TRIAGED_MAX, SET_ASIDE_MAX, each published with its `truncated`) — new capped reads;
+       - op=linksto, op=recordlinkverdict, op=chromeof, op=sitechrome, op=recordsiteassets, op=reuseverdicts,
+         op=inboxlist (CAPTURE, N90: `const cap = limitOf(limit)` beside `LIMIT ?`, `limit` and `truncated`
+         published) — capped since T4 and INVISIBLE to this walk until the same widening read the function spelling; the
+         blind spot is closed rather than the arrivals being new. */
+  OPS.size, 69);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1668,11 +1697,34 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      each" — `truncated` false, then NARROW_CANDIDATES_MAX + 5 readings cut at 50, true);
                                      op=reevaluationraise in `test/m/reevaluation/pushed.test.mjs` ("… the sweep pages":
                                      a limit of one cut with a cursor, paged to the end).
-                                     NOT ADDED, and the PIN names them: op=navchanges and op=reevaluationnotices publish
-                                     `limit`/`truncated` but no suite drives their bite (REPORTED to capture and to
-                                     reevaluation). */
+                                     NOT ADDED IN T7, and the PIN named them: op=navchanges and op=reevaluationnotices
+                                     published `limit`/`truncated` but no suite drove their bite (REPORTED to capture and to
+                                     reevaluation) — ADDED IN T8 below, once each module's interface test drove it. */
                                   "connectionsasserted", "filemembership", "derivesitechrome", "narrowcandidates",
-                                  "reevaluationraise"]);
+                                  "reevaluationraise",
+                                  /* ADDED 2026-09-28 by legacy-tests (T8). (a) The two T7 left red, now driven at their
+                                     modules' interfaces in this loop's shape: op=navchanges in `test/m/capture/reads.test.mjs`
+                                     "R29 (N187): op=navchanges answers at most `limit` observations …" (the cap biting with
+                                     `truncated` true, every observation under it with it false, an over-ask clamped);
+                                     op=reevaluationnotices in `test/m/reevaluation/sweep.test.mjs` "R14 (N182 (3)):
+                                     op=reevaluationnotices clamps its limit to 1–1,000 (default 200) and pages with
+                                     truncated and a cursor". (b) Capture's six reads and its inbox list, capped behind
+                                     capture's `limitOf` since T4 and first SEEN by this walk in T8 (the `helper-cap`
+                                     widening at `cappedMethods`): each is driven in `test/m/capture/reads.test.mjs`, a
+                                     page cut with `truncated` true and the last page false, and the route bounding a
+                                     caller that names no limit — op=linksto "R27 (N90): linksTo answers at most `limit`
+                                     rows …", op=recordlinkverdict "R27 (N90): recordLinkVerdict answers the newest `limit`
+                                     verdicts …", op=chromeof "R28 (N90): chromeOf answers a host's classified links …",
+                                     op=sitechrome "R24 (N90): siteChrome answers at most `limit` assets …",
+                                     op=recordsiteassets "R25 (N90): recordSiteAssets counts every change …",
+                                     op=reuseverdicts "R26 (N90): reuseVerdicts lists at most `limit` …", op=inboxlist
+                                     "R32 (N90): inboxList lists at most `limit` knocks …". (c) op=pursuit, driven in THIS
+                                     file with a real bite (intent's four caps, above). Its three siblings are NOT added:
+                                     their bites are driven nowhere, and the PIN names them. */
+                                  "navchanges", "reevaluationnotices",
+                                  "linksto", "recordlinkverdict", "chromeof", "sitechrome", "recordsiteassets",
+                                  "reuseverdicts", "inboxlist",
+                                  "pursuit"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1821,7 +1873,9 @@ t("op=partitionindependence: a partition OVER the bound is REFUSED and the refus
    WHAT A SILENT CUT WOULD LOSE: the 501st quote a body sent back. Quotes are set side by side so a member can
    see a fee revised or a request priced twice; a list silently cut at 500 reads as every quote the record
    holds, and the one left out is exactly the one nobody would know to ask for. */
-const QT_MAX = Number((/static QUOTES_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2.4): `QUOTES_MAX` left the store with actions, where it is
+   the module's exported constant; the walk reads `actionQuotes` there through the T8 re-inliner. */
+const QT_MAX = Number((/export const QUOTES_MAX = (\d+);/.exec(readFileSync(new URL("../src/actions/index.mjs", import.meta.url), "utf8")) || [])[1]);
 const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
@@ -1831,8 +1885,13 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
      REC-189's fence (C-32.19, IC-249) now refuses a machine credential's promote that SETS a tier, and `mem-r57` is one.
      The tier is not this block's subject (the quotes bound is), so the fixture leaves it undetermined, which a machine
      may do where no member set one (BOB #32). The old assertion was right for its day, not wrong. */
-  "action_kind: cpra_request", "risk_tier: undetermined",
-  "counterparty:", "  state: named", "  name: Bounds Clerk r57",
+  /* CORRECTED 2026-09-28 (T8, legacy-tests; ACTIONS #1, actions R26, C-101.1): `cpra_request` is not a kind this
+     instance offers (records_request, request_for_comment, other), and the write now refuses it. A records request is
+     the kind this fixture always described ("Records request …", a request and quotes answering it). */
+  "action_kind: records_request", "risk_tier: undetermined",
+  /* CORRECTED 2026-09-28 (T8, legacy-tests; actions R9, C-101.3): a named counterparty is an OFFICE, its role and the
+     body it belongs to, and the write now refuses a bare name. The clerk this fixture named is stated as that office. */
+  "counterparty:", "  state: named", "  role: Bounds Clerk r57", "  body: City of Oakland",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",
   ...Array.from({ length: n }, (_, i) => ["  - direction: received", "    at: 2026-07-05",
@@ -2055,6 +2114,73 @@ t("op=projectdirectory: THE NEGATED GATE IS READ TOO (D-497) — the OWNER of al
 + "a statement missing it could not say",
   [D497_OWNER_DIR?.ok, D497_OWNER_DIR?.count, D497_OWNER_DIR?.truncated], [true, 0, false]);
 
+/* ------------------------------------------------------ INTENT's FOUR CAPS (T8, legacy-tests; INTENT #2 J2, N181).
+   op=objectiveprogress (MEASURE_MAX, the instances one condition measures), op=aspirations (DEPARTURES_MAX, one
+   project's departures in force), op=pursuit (GOALS_MAX and TRIAGED_MAX, one pursuit record's goals and triage acts) and
+   op=intentproposals (SET_ASIDE_MAX, the proposals set aside) joined this roster when intent published its bounds. None
+   takes a `limit` from the caller — actionquotes' and versionstrength's kind — so each is driven HERE: its bound read
+   back as the module's named constant, and `truncated` said false on a whole answer. The goals' bound is BITTEN, with
+   real goals: one member aspiration and GOALS_MAX + 1 goals opened under it, each a promoted document, as a member's
+   act (a machine may declare neither). The other three bites need a record this suite cannot afford (MEASURE_MAX + 1
+   threaded instances, DEPARTURES_MAX + 1 held group aspirations, SET_ASIDE_MAX + 1 distinct open proposals set aside),
+   and no interface test of intent drives them either; so the PIN below still names those three, REPORTED to intent.
+   Intent writes its documents through promotion naming no group of their own (C-64.1), so the copy records the group
+   every fixture above names, once — AFTER IC-246's arms, whose verdicts are measured on a store naming none. */
+const INTENT_SRC = readFileSync(new URL("../src/intent/index.mjs", import.meta.url), "utf8");
+const intentMax = (name) => Number((new RegExp(`\\b${name} = (\\d+)`).exec(INTENT_SRC) || [])[1]);
+const [MEASURE_MAX, DEPARTURES_MAX, GOALS_MAX, TRIAGED_MAX, SET_ASIDE_MAX] =
+  ["MEASURE_MAX", "DEPARTURES_MAX", "GOALS_MAX", "TRIAGED_MAX", "SET_ASIDE_MAX"].map(intentMax);
+{
+  const seeded = await POST("op=instancegroupseed&token=adm-r57", { slug: "believe-in-oakland" });
+  if (seeded?.ok === false) throw new Error(`intent fixture instancegroupseed: ${JSON.stringify(seeded).slice(0, 400)}`);
+}
+const INT_PROJ = D479_PROJECTS[0];
+const intentAsp = await POST(`op=aspirationdeclare&token=${D479_OWNER_TOK}`,
+  { scope: "member", owner: "d479own", statement: "Every goal under one aspiration, for the bound" });
+if (intentAsp?.ok !== true) throw new Error(`intent fixture aspirationdeclare: ${JSON.stringify(intentAsp).slice(0, 600)}`);
+const INT_ASP = intentAsp.aspiration;
+const PURSUIT_WHOLE = await GET(`op=pursuit&token=${D479_OWNER_TOK}&id=${INT_ASP}`);
+for (let i = 0; i <= GOALS_MAX; i++) {
+  const g = await POST(`op=goaldeclare&token=${D479_OWNER_TOK}`,
+    { statement: `Goal ${i + 1} of the bound fixture`, bounds: "until the bound is measured", aspiration: INT_ASP });
+  if (g?.ok !== true) throw new Error(`intent fixture goaldeclare ${i}: ${JSON.stringify(g).slice(0, 600)}`);
+}
+const PURSUIT_BITE = await GET(`op=pursuit&token=${D479_OWNER_TOK}&id=${INT_ASP}`);
+t("FIXTURE ARMS THE TRAP (intent): the five bounds are numbers read off the module, and GOALS_MAX + 1 goals were "
++ "opened under one aspiration",
+  [[MEASURE_MAX, DEPARTURES_MAX, GOALS_MAX, TRIAGED_MAX, SET_ASIDE_MAX].every((n) => Number.isInteger(n) && n > 0),
+   PURSUIT_WHOLE?.ok, PURSUIT_BITE?.ok], [true, true, true]);
+t("op=pursuit: THE BITE — the first GOALS_MAX of GOALS_MAX + 1 goals, the bound published and the cut SAID",
+  [PURSUIT_BITE?.goals?.length, PURSUIT_BITE?.goals_limit, PURSUIT_BITE?.goals_truncated],
+  [GOALS_MAX, GOALS_MAX, true]);
+t("op=pursuit: WHOLE — before any goal the record is complete and says so, for goals and for the triage acts",
+  [PURSUIT_WHOLE?.goals?.length, PURSUIT_WHOLE?.goals_limit, PURSUIT_WHOLE?.goals_truncated,
+   PURSUIT_WHOLE?.triaged_limit, PURSUIT_WHOLE?.triaged_truncated], [0, GOALS_MAX, false, TRIAGED_MAX, false]);
+t("op=pursuit: DELTA — 'every goal under it' and 'the first GOALS_MAX' do NOT read alike",
+  PURSUIT_WHOLE?.goals_truncated !== PURSUIT_BITE?.goals_truncated, true);
+/* The other three: the bound each APPLIES is published, and a whole answer says it is whole. */
+{
+  const pd = await POST("op=progressiondefine&token=mem-r57", { progressionKey: "boundsintent", label: "Bounds intent",
+    stages: [{ key: "ask", label: "request", cardinality: "1", required: "always" },
+             { key: "answer", label: "response", after: "ask", cardinality: "1", required: "always" }] });
+  if (pd?.ok !== true) throw new Error(`intent fixture progressiondefine: ${JSON.stringify(pd).slice(0, 400)}`);
+  const cond = await POST(`op=objectivecondition&token=${D479_OWNER_TOK}`, { project: INT_PROJ,
+    condition: { progression: "boundsintent", entity: ENT, required: { stages: ["answer"] }, satisfied: { share: 100 } } });
+  if (cond?.ok !== true) throw new Error(`intent fixture objectivecondition: ${JSON.stringify(cond).slice(0, 600)}`);
+}
+const PROGRESS_WHOLE = await GET(`op=objectiveprogress&token=${D479_OWNER_TOK}&project=${encodeURIComponent(INT_PROJ)}`);
+const ASPIRATIONS_WHOLE = await GET(`op=aspirations&token=${D479_OWNER_TOK}&project=${encodeURIComponent(INT_PROJ)}`);
+const PROPOSALS_WHOLE = await GET(`op=intentproposals&token=${D479_OWNER_TOK}`);
+t("op=objectiveprogress: publishes the bound it APPLIES (MEASURE_MAX), and a measure that was not cut says so",
+  [PROGRESS_WHOLE?.ok, PROGRESS_WHOLE?.computable, PROGRESS_WHOLE?.limit, PROGRESS_WHOLE?.truncated],
+  [true, true, MEASURE_MAX, false]);
+t("op=aspirations: publishes the bound on a project's departures (DEPARTURES_MAX), and a whole list says so",
+  [ASPIRATIONS_WHOLE?.ok, ASPIRATIONS_WHOLE?.departures_limit, ASPIRATIONS_WHOLE?.departures_truncated],
+  [true, DEPARTURES_MAX, false]);
+t("op=intentproposals: publishes the bound on the proposals set aside (SET_ASIDE_MAX), and a whole list says so",
+  [PROPOSALS_WHOLE?.ok, PROPOSALS_WHOLE?.set_aside_limit, PROPOSALS_WHOLE?.set_aside_truncated],
+  [true, SET_ASIDE_MAX, false]);
+
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -2187,7 +2313,22 @@ const answersByOp = new Map([
   ["navchanges", await DO("navchanges?host=example.gov&limit=1")],
   ["derivesitechrome", await DO("derivesitechrome?host=example.gov&limit=1")],
   ["reevaluationnotices", await DO("reevaluationnotices?limit=1&viewer=adm-r57")],
+  /* ADDED 2026-09-28 by legacy-tests (T8): intent's four (driven above and REUSED), and capture's seven reads the walk
+     first saw in T8, asked at the Durable Object (none has a control-plane row), for CPDF-10's reason: the envelope. */
+  ["pursuit", PURSUIT_BITE], ["objectiveprogress", PROGRESS_WHOLE], ["aspirations", ASPIRATIONS_WHOLE],
+  ["intentproposals", PROPOSALS_WHOLE],
+  ["linksto", await DO(`linksto?address=${encodeURIComponent(VC_ADDR)}&limit=1`)],
+  ["chromeof", await DO("chromeof?host=example.gov&limit=1")],
+  ["sitechrome", await DO("sitechrome?host=example.gov&limit=1")],
+  ["reuseverdicts", await DO("reuseverdicts?bundle=INFO-2026-0001-r57&limit=1")],
+  ["inboxlist", await DO("inboxlist?limit=1")],
   ["reevaluationraise", await DO("reevaluationraise?limit=1")],
+  /* The two capture WRITES that answer a bounded list are asked LAST, beside the raise: a site-asset record naming no
+     observation, and one link verdict on a capture no arm above reads. */
+  ["recordsiteassets", await DO("recordsiteassets", { host: "example.gov", primarySha: "0".repeat(64), observations: [],
+                                                      limit: 1 })],
+  ["recordlinkverdict", await DO("recordlinkverdict", { sourceCapture: "0".repeat(64),
+    addressNorm: "https://example.gov/bounds-envelope", verdict: "offsite", basis: "bounds envelope", limit: 1 })],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

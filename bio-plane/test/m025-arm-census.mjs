@@ -116,8 +116,11 @@
  * `*-controls.mjs`, both deliberately undiscovered, both hand-run), and the two
  * probes that carry their arm tables behind a `--controls` FLAG rather than in a
  * filename (`ocr-composed-probe.mjs`, `cpdf15-tesseract-runtime.probe.mjs`).
- * `newgroup/test/` holds no driver of either kind (two `.test.mjs` files) and is
- * DIST's ground regardless.                                                    */
+ * `newgroup/test/` holds no driver of either kind and is DIST's ground regardless:
+ * three `.test.mjs` files (`embed`, `wizard`, and `requirements`, the one that is a
+ * `node:test` driver over the installer's R1–R33) and their `fixture.mjs` — a
+ * fixture, not a control (CORRECTED 2026-09-28, T8 legacy-tests; INSTALLER #1 J2.3:
+ * it said "two `.test.mjs` files").                                             */
 
 import { readdirSync, readFileSync, existsSync, mkdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";

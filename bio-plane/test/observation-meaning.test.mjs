@@ -189,6 +189,8 @@ const SRC = {
   /* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): observation-log's `run` resolver and retrieval's hidden-run
      tail are registered by ai-runs now; J5 reads them there. */
   runs: readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8"),
+  /* T8 (legacy-tests): G5's cause-at-an-unrecognised-kind is retrieval's `missingMeaningCause` (legacy-store's copy is gone). */
+  retrieval: readFileSync(new URL("../src/retrieval/index.mjs", import.meta.url), "utf8"),
 };
 
 const TOK = "mem-rec95";
@@ -859,7 +861,11 @@ t("G5: AND AN UNRECOGNISED SUBJECT KIND TAKES THE WEAKEST CAUSE, never the stron
 + "that asked about something the cause function does not understand has not established that "
 + "nobody looked, and defaulting to it would let a later reader reach the positive statement by "
 + "adding an eighth subject kind and forgetting to come here",
-  /if \(!probe\) return "purged";/.test(SRC.store), true);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; retrieval R45/R46, K80): legacy-store's copy of the meaning-level cause
+     (`if (!probe) return "purged";`) is gone at T8; the one live spelling is retrieval's `missingMeaningCause`, whose
+     unrecognised kind — any kind with no pre-log probe — takes `purged`, the weakest cause, before any probe runs. */
+  /missingMeaningCause\(kind, subject, entered\) \{\s*if \(!Object\.prototype\.hasOwnProperty\.call\(PROBE, kind\)\) return "purged";/
+    .test(SRC.retrieval), true);
 
 /* ===================================================================== *
  * H · REC-107 — THE UNDETERMINED SET IS NAMED ON THE ROW, AND IT WAS ONE

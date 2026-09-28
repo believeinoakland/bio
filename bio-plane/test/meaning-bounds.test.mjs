@@ -198,6 +198,7 @@ import { readFileSync } from "node:fs";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations and routes re-inlined */
 import { reinlineLayer5, T7_MODULES } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes re-inlined; T7: and layers 6-7's */
+import { T8_MODULES } from "./t8-extracted.mjs";                      /* T8 (legacy-tests): and layers 8-10's, through the same re-inliner */
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -250,9 +251,15 @@ const t = (label, got, want) => {
    T5's with a second pass of the same re-inliner over T7's modules (`{ modules: T7_MODULES }`, `t5-extracted.mjs`,
    which states the two spellings it reads beyond T5's); every figure and name below is diffed BY NAME against this
    suite's print on the T7 opening (f986aec704), not re-pinned. */
-const SRC_STORE = reinlineLayer5(
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; layers 8 to 10 of T8): seven more modules (case-authoring, ratification,
+   publication, review, actions, monitoring, scheduler) left the store behind delegations and spreads of their routes, so
+   the walk read delegations again (`op=caseratify` through `#caseEditionState`, publication's reads, actions' quotes).
+   The corpus is T7's with a third pass of the same re-inliner over T8's modules (`{ modules: T8_MODULES }`,
+   `t8-extracted.mjs`); every figure and name below is diffed BY NAME against this suite's print on the T7 close
+   (84d078c16a), not re-pinned. */
+const SRC_STORE = reinlineLayer5(reinlineLayer5(
   reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text;
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -602,7 +609,13 @@ const REFUSAL_RETURN_OLD = /\bok\s*:\s*false/;
  * caller exactly where it was before this rule — unjudged or absent — which is the safe direction.
  * ===================================================================================== */
 const DELEGATE_DEPTH = 3;
-const PRIVATE_CALL = /^(?:await\s+)?this\.(#[A-Za-z_$][\w$]*)\s*\(/;
+/* WIDENED 2026-09-28 by legacy-tests (T8), the rule's own premise and no further: record-core's `transact(fn)` answers
+   what `fn` answers, so `return this.record.transact(() => this.#x(…))` (or `this.#record.`) RETURNS `#x`'s result
+   exactly as `return this.#x(…)` does. CASE-AUTHORING #1 wrote `op=publish`'s act that way (`publishCase(args) { return
+   this.record.transact(() => this.#publishCase(args)); }`), and the walk lost it into NO_COLLECTION with its body
+   unchanged. A transaction whose callback is a BLOCK (`() => { … }`) is not this shape: its returns are already in the
+   method's own segment. Measured: the widening restores `op=publishcase` and moves no other op. */
+const PRIVATE_CALL = /^(?:await\s+)?(?:this\.#?record\.transact\(\s*\(\s*\)\s*=>\s*)?this\.(#[A-Za-z_$][\w$]*)\s*\(/;
 const delegatesOf = (body) => {
   const assigned = new Map();
   const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*((?:await\s+)?this\.#[A-Za-z_$][\w$]*\s*\()/g;
@@ -837,8 +850,10 @@ console.log(`    EXCLUDED WHILE PUBLISHING A COLLECTION — the returns this rea
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `static SEARCH_ORPHAN_MAX = 100;` left the store with retrieval
    (T5-10), where it is a module constant (`export const`), outside the class this walk reads; the guard asks the same
    of another of the store's own numeric statics, as `bounds.test.mjs`'s guard does. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): `static CASE_FLAGS_LIMIT = 500;` left the store with publication (a module
+   `export const` now); the guard asks the same of another of the store's own numeric statics, as `bounds.test.mjs`'s. */
 t("WALK GUARD: comments are blanked, and a known CODE line SURVIVES it",
-  /static CASE_FLAGS_LIMIT = 500;/.test(CODE), true);
+  /static GROUP_DOMAIN_CHECKS_MAX = 20;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — this file's subject is named in dozens of comments",
   /the most important entity produces the largest unbounded response/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -885,6 +900,12 @@ t("RETURN-DELEGATE: `op=resolve` is on the BARE roster again, reached through `#
 t("RETURN-DELEGATE: `op=caseratify` likewise, reached through `#caseEditionState` — and this one was "
 + "ALREADY LOST on origin/main 548eb2c5, measured there with this rule on and off (43 -> 44). It "
 + "left as UNJUDGED rather than as a shrink, which is why no floor caught it",
+  /* T8 (legacy-tests), 2026-09-28 — LEFT RED, NOT RE-PINNED: RATIFICATION #2 moved `ratifyCaseDocument` into
+     ratification and its case-edition state into publication (`commitCaseEdition` / `caseEditionState`, reached through
+     ratification's held `this.publication` service, and consulted rather than returned). Neither the re-inliner nor
+     this rule follows a held module service, so the op reads UNJUDGED; the collections it publishes are unchanged. An
+     instrument blind spot (REPORTED), the same limit T7 recorded for `versionstrength`: following consulted services
+     is a reader redesign, not a re-anchor. */
   [BARE_OPS.includes("caseratify"), (DELEGATED.get("ratifyCaseDocument") || []).includes("#caseEditionState")],
   [true, true]);
 
@@ -1007,6 +1028,9 @@ t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal 
      before, outside it. Each is a refusal written in the route's envelope, `{ status: 4xx, body: { ok: false, … } }`:
      the verdict sits one level down, the old literal matched it anywhere, and `verdictOf` reads the top level. None
      carries a collection, so none can reach a roster; recorded, not corrected (the reader is D-240's shared one). */
+  /* T8 (legacy-tests), 2026-09-28 — still red, ONE DEPARTURE: `adoptVersion[silent]` left the list (REEVALUATION #2,
+     N182 (4): the failed write's return now carries `ok: false` itself, `{ ...w, ok: false, notice }`). What remains is `pdfStructure[silent]` x7 and
+     `#document$citationOf[silent]` x2, each a refusal whose verdict sits below the top level — N70's, left for it. */
   [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
   [true, true, []]);
 /* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
@@ -1360,6 +1384,18 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
      So 51 - 9 + 1 = 43, and the ceiling holds only because `basis` left in the same tranche that `pursuit` arrived: a
      COUNT cannot see that swap, which is why it is written here by name. Inside the 43 are still N70's two
      (`hostingaccess`, `memberpairings`, T3's REPORT 3) and T5's `projection` misread. */
+  /* T8 (legacy-tests), 2026-09-28 — NOT MOVED. With layers 8-10 re-inlined (the corpus note at the top) the walk PRINTS
+     41 against the T7 close's (84d078c16a) 43, diffed BY NAME:
+       ONE DEPARTURE BY A FIX: `pursuit -> pursuitOf`, T7's reported arrival (INTENT #2, N181: `goals_limit`/
+       `triaged_limit` beside `goals_truncated`/`triaged_truncated`, now on the BOUNDED roster).
+       ONE DEPARTURE BY THE READER, NOT BY THE PLANE: `caseratify -> ratifyCaseDocument` (RATIFICATION #2). Its roster,
+       members and awaiting are unchanged, but the case edition's state it answers is now publication's
+       (`this.publication.commitCaseEdition(…)`, a HELD module service), which neither the re-inliner nor the
+       RETURN-DELEGATE rule follows, so the op reads as UNJUDGED — the stated limit T7 recorded for `versionstrength`.
+       REPORTED as this instrument's own blind spot (see the RETURN-DELEGATE arm naming it, left red).
+       `publishcase -> publishCase` LEFT AND CAME BACK: CASE-AUTHORING #1 wrapped the act in `record.transact`, and the
+       RETURN-DELEGATE rule was widened to that one wrapper (see PRIVATE_CALL); it is bare as before, the same keys.
+       `gatefacts -> gateFacts` is the same op (RATIFICATION #2), its keys read off the moved body. */
   BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
@@ -1394,6 +1430,9 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      were made on DIFFERENT BASES and met here for the first time; this figure is neither of theirs and was
      not arithmetic on them. It is what THIS walk PRINTED on the merged tree, and BOTH reasons stand: two
      restored by the return-delegate rule, one departed to the bounded roster. Nothing arrived unbounded. */
+  /* T8 (legacy-tests), 2026-09-28 — NOT MOVED, AND RED: the walk prints 41, and ONE of its two departures is the reader
+     losing `op=caseratify` (see the ceiling's T8 note), which is exactly what this floor refuses to let pass as progress.
+     The other, `pursuit`, is a fix; the floor moves when the reader sees caseratify again, not before. */
   BARE_OPS.length >= 43, true);
 
 /* ==========================================================================
@@ -1535,7 +1574,8 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               `auditPass` builds its sighted set with an unbounded scan and calls record-core's pass, so the walk sees a
               scan and no verdict) and `projectfork->forkProject` / `projectowneradd->projectOwnerAdd` LEAVE (their reads
               are record-core's and membership's services now). Red identically on `tranche/T6` and the T7 opening; left
-              red for its owners, as this job was told. */
+              red for its owners, as this job was told. T8 (legacy-tests), 2026-09-28: UNCHANGED, the identical nine
+              printed on the T7 close (84d078c16a) and on this tree; still left red for its owners. */
           ]);
 t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
 + "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "
@@ -1590,7 +1630,10 @@ t("REC-70: NEITHER FIGURE IS NEW — 200 is op=exportlog's default (the plane's 
 + "meaning layer both reused rather than minting a second",
   [/static AI_RUN_LOG_LIMIT_DEFAULT = 200;/.test(AIRUNS_SRC),
    /static AI_RUN_LOG_LIMIT_MAX = 5000;/.test(AIRUNS_SRC),
-   /static EXPORT_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
+   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=exportlog's default moved with the log to publication (publication
+      R19), a module constant there; the store's static now reads it (`static EXPORT_LOG_LIMIT_DEFAULT =
+      EXPORT_LOG_LIMIT_DEFAULT`). The same figure, read at its home. */
+   /^export const EXPORT_LOG_LIMIT_DEFAULT = 200;$/m.test(readFileSync(new URL("../src/publication/index.mjs", import.meta.url), "utf8")),
    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=projection's ceiling moved with the projection to retrieval
       (T5-10), where it is a module constant of `src/retrieval/projection.mjs`; the same figure, read at its home. */
    /^export const PROJECTION_LIMIT_MAX = 5000;$/m.test(readFileSync(new URL("../src/retrieval/projection.mjs", import.meta.url), "utf8"))],
