@@ -168,6 +168,9 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N165 · 2026-09-28 · **actions**, **run-productions**, **citation** (REEVALUATION #1 REPORT J2.5; D-579, D-595): a case's `cites`, an action's legs and a run's suggested legs raise reevaluation notices only once each module pins its capture and names a holder; each states it when its job next runs.
 - N166 · 2026-09-28 · **capture**, **monitoring** (the T8 map re-check, K206): capture states `source_reachability` as a read contract in Provides, with its test; monitoring's `#monitorPending` and `#monitorTick` read it by name today.
 - N167 · 2026-09-28 · **scheduler** (the T8 map re-check, K206): intent's `ageSurfaced` (R17) is a consumer with no caller; scheduler's requirements name it, and R10 names the intent service it ranks by.
+- N168 · 2026-09-28 · **legacy-ui** (INTENT #1 REPORT J4.1): `civicos-ui/test/` fixtures that promote a project with no `objective` (`project-workspace`, `published-index-pair`, `several-cases-choice`, `conclude-reading`, `statement-ack`, `review-copy`) are refused `NO_OBJECTIVE` since intent R1; each states one.
+- N169 · 2026-09-28 · **capture-requests** (INTENT #1 REPORT J4.7): a read of one request by id in Provides, so intent's `pursuitOf` (R14) reads outcomes exactly rather than through a bounded list.
+- N170 · 2026-09-28 · **monitoring** (INTENT #1 REPORT J4.6): monitoring watches `intentOf(ctx).watchSet({project})` (intent R7), and its findings join intent's proposals through `registerSource` (R15), as scheduler's do (N167).
 
 ## Before layer 9
 

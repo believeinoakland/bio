@@ -41,7 +41,7 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 
 ### Layer 10 (order: `monitoring`, `scheduler`)
 
-- **monitoring** · N164 (with scheduler: the caller of reevaluation's sweep); reads capture's `source_reachability` through N166's contract (K206); Extract per map and requirements (K102); no rows; N116 (the instance's active profiles reach `identify`/`doctypeFor`/`assess` in `op=monitor`: through a record-core route, or N21's view passed where `op=monitor` now runs); N65 (2) (R34 bounded by actions R33: `pending` to `overdue` only); R23 reads runtime-limits R26 (N63, layer 1).
+- **monitoring** · N170 (reads intent's `watchSet`, registers its source); N164 (with scheduler: the caller of reevaluation's sweep); reads capture's `source_reachability` through N166's contract (K206); Extract per map and requirements (K102); no rows; N116 (the instance's active profiles reach `identify`/`doctypeFor`/`assess` in `op=monitor`: through a record-core route, or N21's view passed where `op=monitor` now runs); N65 (2) (R34 bounded by actions R33: `pending` to `overdue` only); R23 reads runtime-limits R26 (N63, layer 1).
 - **scheduler** · N164, N167 (the consumers `raiseNotices` and intent's `ageSurfaced`); Extract per map and requirements (K102); D-583 (R12, met once capture-requests R29 counts `expired`, T7); N66 (its share: R9, a later producer arms by calling R8); N63 (the registry calls each provider's named services, built in layers 1–6).
 
 ### Layer 11 (order: `affordances`, `legacy-index`, `installer`, `legacy-tests`)

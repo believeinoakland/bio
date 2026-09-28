@@ -47,7 +47,7 @@
 - **basis-versions** · N99 (the narrow act reads content's `extentRelation`, not the catalogue's).
 - **strength** · N152 (its share: `inquiry.onGrounded("strength", …)` made by strength itself, replacing legacy-store's registration).
 - **run-productions** · N165 (its share: a run's suggested legs).
-- **capture-requests** · N141 (R38's promotion at `collected`: an `information` bundle through `promotion.promote` under `token:daemon`, deferred from T7).
+- **capture-requests** · N169 (a by-id read); N141 (R38's promotion at `collected`: an `information` bundle through `promotion.promote` under `token:daemon`, deferred from T7).
 - **skills** · N156 (unless SKILLS #1 did it in T7); N157 (its share: a render-only face).
 - **agent-worker** · N153 (its share: read `op=airun`'s `state` on resume); N157 (its share: its bundle carries what it runs).
 
