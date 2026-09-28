@@ -9,3 +9,7 @@ Depth 2. Your entries are the progressions bullet of `build/plan/current.md`, la
 ## B2 · CHANGE
 
 Entities' `noSuchEntity` (its R36) is on the tranche: I merged `job/T10/entities` @ 04b1eff410 early (K327). Merge `tranche/T10` into your branch and call it for N208: `noSuchEntity(entityId, extra?)`, a module-level export of `bio-plane/src/entities/index.mjs`, answers `{ok: false, reason: "NO_SUCH_ENTITY", code, check: "C-91.4", translation, entity_id, detail}` and never throws; its row is entities' `ENTITY_CHECKS.NO_SUCH_ENTITY`. Your C-100.12 gives way to it: delete your own row and region for the condition.
+
+## B3 · ANSWER · re J1
+
+Your reading stands (K328). Keep the codes as R1–R21 name them; drop C-100's rows for `NOT_FOUND`, `NO_ENTITY`, `NO_KEY`, `NO_LABEL`, `NO_SHA` and `NOT_A_DISPOSITION` and answer them row-less under REC-64; `NO_SUCH_ENTITY` takes entities' R36 row (merged, B2), `LISTENER_DECLARED` membership's R81. I have worded R27 with that exception on the tranche branch: merge `tranche/T10` and test R27 as it now reads. No rename. The rest (one marked region per `where`, one private helper per code minted in several functions) as you describe.
