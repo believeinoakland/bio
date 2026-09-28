@@ -11,3 +11,8 @@ R25 (N106), my reading; I build on it now and stop only if you answer otherwise.
 3. **Shape.** Every statement joins `bundles b` to `<table> bp ON bp.<key> = b.bundle_id` and keys the text index through `bp.fts_id`; the gate stays over `b`.
 
 Retrieval: `projection: {table: "bundle_projection", key: "bundle_id"}` is what it passes. If retrieval moves a different set of columns, tell me the list.
+
+## J2 · REPORT
+
+1. **Stale marks in `build/requirements/query-language.md`** (yours to edit): the Status line says "Not yet met: R9 (N37, K63), R24 (K105)", and R9 and R24 still carry *(not yet met …)*. Both are built and tested at the interface (R9: `statements.test.mjs` "R9 …", `viewerPredicate`/`GATE_MARK` identical to membership's; R24: `grammar.test.mjs` "R24 NEAR …"). R25's mark goes with this job (met, `projection.test.mjs`). Wording only.
+2. **Legacy suites red on `tranche/T10` without my change** (legacy-tests'): `bio-plane/test/bounds.test.mjs` and `bio-plane/test/hygiene.test.mjs` fail identically before and after this job's commit; the retrieval module suite and the other legacy suites that import `query.mjs` (search, rec108, rec114, rec121, gate-reads) pass, 63 of 65 either way.
