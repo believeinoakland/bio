@@ -1220,7 +1220,9 @@ export class Publication {
        an undriven bound is one that grows silently. An over-ask is answered AT
        THE CEILING and the ceiling is what is published, so a caller is never told
        they got more than they did. */
-    const cap = Math.max(1, Math.min(Number(limit) || CASE_FLAGS_LIMIT, CASE_FLAGS_LIMIT));
+    /* The cap is a whole number of rows: a fractional ask is floored, so LIMIT is always an integer (a fraction reached
+       SQLite as a non-integer LIMIT, a datatype error rather than an answer; found at this module's extraction). */
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CASE_FLAGS_LIMIT, CASE_FLAGS_LIMIT));
     const rows = this.#rows(
       `SELECT case_id, edition, bundle_id, pinned_sha, revised_sha, project_id, since,
               acted_at, acted_by, acted_edition
