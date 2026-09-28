@@ -155,7 +155,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 ### Suggestions
 
-- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-53.14 (legacy-checks' row until this module holds its family, as C-53.13), C-34.1–C-34.4, C-24.1–C-24.3, C-89.1 and the C-18 register arms (R42–R46) move with this module. Of the rest of C-18, C-18.5 (`gathering.json`) goes to monitoring and C-18.7 stays with C-18.8 in promotion (K49). C-53.10–C-53.12 are publication's.
+- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-53.14 (this module's own row, `REGISTER_ENTRY_CHECKS`; K324), C-34.1–C-34.4, C-24.1–C-24.3, C-89.1 and the C-18 register arms (R42–R46) move with this module. Of the rest of C-18, C-18.5 (`gathering.json`) goes to monitoring and C-18.7 stays with C-18.8 in promotion (K49). C-53.10–C-53.12 are publication's.
 - **What stays out.** `testimonyReach`, `observationsNamingAuthor` and `attributeObservation` read inquiry basis and attribution tables (later modules); `attestText`, `transcriptionAttest` and `text_attestations` are extraction's; `projectLinks` writes `refs` (connections, K23).
 - **Testify's later work.** Today `testify` hands `promote` a hook that indexes the words, mints the content row and logs an extraction observation. Under K31 those become projections `extraction`, `content` and `observation-log` register for an authored register row, so this module calls none of them.
 - **The receipt's observation row.** Observation-log (layer 5) registers its OBSERVATION-LOG-DESIGN §4.1 writer through R47; `capture`'s reuse-verdict rows can use the same pattern.

@@ -19149,6 +19149,15 @@ function registerChecks({ files, fm, elided = null }) {
   return findings;
 }
 
+// src/provenance/checks.mjs
+var REGISTER_ENTRY_CHECKS = {
+  REGISTER_BYTES_UNSTATED: {
+    check: "C-53.14",
+    where: "src/provenance/index.mjs #registerEntries > is-register-bytes",
+    translation: "Each document this save registers must state its size, as a whole number of bytes, and one of them states none, or a size no document can have. The record keeps each document's size so it can later check that the stored copy is whole. Nothing was written. State the document's size in bytes and save again."
+  }
+};
+
 // src/provenance/index.mjs
 var PROVENANCE_TABLES = [
   "register",
@@ -19603,10 +19612,12 @@ var Provenance = class _Provenance {
   /* ===================================================================== *
    * R1–R3, R42–R46: THE REGISTER, WRITTEN INSIDE A PROMOTION (promotion R39, K31).
    * ===================================================================== */
-  /* The check, before anything is written: the testimony fence (R3) and one capture, one home (R2), then the C-18
-     register arms (R42–R46). A refusal refuses the whole promotion (promotion R2). */
+  /* The check, before anything is written: each entry's stated size (R50), the testimony fence (R3) and one capture,
+     one home (R2), then the C-18 register arms (R42–R46). A refusal refuses the whole promotion (promotion R2). */
   #check(c) {
     const { pkg, bundleId, files, register: register2, head, promotedType, replay } = c;
+    const unstated = this.#registerEntries(bundleId, register2);
+    if (unstated) return unstated;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     const fenced = this.#testimonyFence(
       bundleId,
@@ -19617,6 +19628,30 @@ var Provenance = class _Provenance {
     );
     if (fenced) return fenced;
     return this.#registerArms({ bundleId, files, head, promotedType, replay, docFm: c.docFm });
+  }
+  /* R50 · N263: every entry of the promotion's `register` list states its size, a whole number of bytes at least 0,
+     which R1 stores exactly as stated. Asked first, of every entry and on a replay too: an entry that states no size is
+     malformed before anything is judged about it, and without this the NOT NULL column refused an absent size as a
+     bare PROMOTE_FAILED while `-1` or `1.5` were stored. A safe integer, so the stored value is the stated one. The
+     stated size is not compared with the stored object's here (R7 and R8 read that). */
+  #registerEntries(bundleId, register2) {
+    const refusal18 = rowRefusal(REGISTER_ENTRY_CHECKS);
+    const list2 = Array.isArray(register2) ? register2 : [];
+    for (let i = 0; i < list2.length; i++) {
+      const e = list2[i];
+      const bytes2 = isObj3(e) ? e.bytes : void 0;
+      if (Number.isSafeInteger(bytes2) && bytes2 >= 0) continue;
+      const sha2562 = isObj3(e) && typeof e.sha256 === "string" ? e.sha256 : null;
+      const path = isObj3(e) && typeof e.path === "string" ? e.path : null;
+      const shown2 = typeof bytes2 === "string" ? JSON.stringify(bytes2).slice(0, 40) : bytes2 !== null && typeof bytes2 === "object" ? Array.isArray(bytes2) ? "a list" : "an object" : String(bytes2);
+      const said2 = bytes2 === void 0 ? "states no bytes" : `states bytes ${shown2}`;
+      return refusal18(
+        "REGISTER_BYTES_UNSTATED",
+        `register[${i}] (${sha2562 ? `capture ${sha2562.slice(0, 16)}\u2026` : "no capture named"}, ${path ? `path ${path.slice(0, 120)}` : "no path"}) ${said2}: an entry states its size as a whole number of bytes at least 0. Nothing was written`,
+        { bundleId, index: i, sha256: sha2562, path }
+      );
+    }
+    return null;
   }
   /* R42–R46 at the write (K72 (4)): the C-18 arms over the promoted package, for an information bundle whose register
      is present. Every error finding of a creation refuses it; a revision is refused for an error finding the held
@@ -87488,14 +87523,14 @@ var CaptureCredentials = class _CaptureCredentials {
         return refusal14("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
-      return _CaptureCredentials.#supplyFailed();
+      return refusal14(
+        "CAPTURE_CREDENTIAL_SUPPLY_FAILED",
+        "the credential could not be encrypted and stored, so nothing was written"
+      );
     }
   }
   /* R55: the encryption and the write, once every check has passed. Any failure here is `SUPPLY_FAILED`'s one
-     condition, and the transaction leaves nothing written. */
-  static #supplyFailed() {
-    return refusal14("CAPTURE_CREDENTIAL_SUPPLY_FAILED", "the credential could not be encrypted and stored, so nothing was written");
-  }
+     condition, minted in `credentialSupply`'s catch, and the transaction leaves nothing written. */
   async #store({ kind, h, secret, scope, project, by, key }) {
     const id = `CRED-${b642(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, "").slice(0, 16)}`;
     const proj = scope === "project" ? project : null;
@@ -87587,7 +87622,10 @@ var CaptureCredentials = class _CaptureCredentials {
       const at14 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
       return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at14, withdrawn_by: by }) };
     } catch {
-      return refusal14("CAPTURE_CREDENTIAL_WITHDRAW_FAILED", "the credential could not be read or withdrawn, so nothing was changed");
+      return refusal14(
+        "CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
+        "the credential could not be read or withdrawn, so nothing was changed"
+      );
     }
   }
   /* ================= R58: the listing ================= */
