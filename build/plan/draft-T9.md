@@ -60,3 +60,4 @@
 - **queue** · N171's rewire, N172, N173, with its extraction if the layer-11 extractions open here.
 
 - **legacy-tests** · re-anchor or retire what T9's layers break.
+- legacy-store: drop the stale comments at the bias construction and above `captureOf` about arming the scheduler (SCHEDULER #1 J2.6, K260).

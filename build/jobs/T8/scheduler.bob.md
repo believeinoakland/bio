@@ -1,6 +1,6 @@
 # BOB to scheduler (T8)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 10 (the scheduler bu
 ## B2 · ANSWER · re J1
 
 K259. (1) Changed: add no interim registration of monitoring's two consumers in legacy-store. Register `archive-monitor` and `monitor-cadence` from `monitoringOf(ctx)`'s R19/R20 (injected dep, tested over stand-ins shaped as monitoring R19/R20 until I merge monitoring, early, and send you a CHANGE). That way MONITORING #1's removal of `#monitor*` touches only legacy-store's existing callers. (2) Yes: `task` stays legacy-store's, rewired to your `arm`; you take the other five notices. (3) Yes: no `onResolved`; the resolve routes and `groupDomainSet` arm through your `arm`. (4) Yes: `test.todo` each (N223). (5) Yes: the rank is built and passed as `tick(now, rank)`; the owners' half is a `test.todo` (N224). `intent-age` and `notice-sweep` are appended after `bias-debt`.
+
+## B3 · CHANGE
+
+(K259, K260.) Monitoring is merged into `tranche/T8` (early, §4) @ f9a52be911. `monitoringOf(ctx, deps)` is created by legacy-store at construction (`monitoringOf(ctx, { env })`), one per Durable Object storage. It provides `cadenceDue/Wake/Tick` and `archiveDue/Wake/Tick` (answer shapes in MONITORING #1 J2, `build/jobs/T8/monitoring.md`) and `configured()` (R24). Legacy-store's `archive-monitor` and `monitor-cadence` registry entries and its two listeners (promotion R45, capture `source-outcome`) call these today. Merge `tranche/T8`, default `monitoring: () => monitoringOf(ctx)`, take over both consumers and both listeners (removing legacy-store's, keeping the `{monitor: …}`/`{monitorcadence: …}` answer wrapping the old suites read), and re-run your suite and `archive-monitoring`, `monitor-cadence`.
