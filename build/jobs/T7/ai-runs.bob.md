@@ -17,3 +17,7 @@ Ruled (K182): (1) register your work products with bias; leave `bias/interim.mjs
 ## B4 · ANSWER · re J4
 
 Restarted as AI-RUNS #2 (K184). `runtime-limits` is in your uses (tranche/T7 @ 7876e0bd6e): merge the tranche branch. Your two ownership lines (store.mjs 768–769 and the interim wait source 1354–1384) are accepted as rewiring and a K31 interim; I review them at the layer close. Read B2 and B3 (answers to J1 and J3) and continue from J4's list. The mail tool now accepts a write that changes nothing (civicos-process main @ 5c397bd, K183).
+
+## B5 · CHANGE
+
+contradiction is merged into tranche/T7 (K185): its `registerRunGate(module, gate)` is built (R21). Merge the tranche branch; when you register `registerRunGate("ai-runs", runGate)`, remove legacy-store's interim registration (`store.mjs` ~796–801, act text "proposing contradictions under a run") in the same change, since one gate is held and a second answers RUN_GATE_DECLARED.

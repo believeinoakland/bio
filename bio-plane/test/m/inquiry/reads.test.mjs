@@ -82,3 +82,14 @@ test("R12 subjectEntityOf and memberUserAgent (proposed R43, R44): what the inqu
   assert.equal(w.k.memberUserAgent("INQ-2026-0002-r"), null);
   assert.equal(w.k.memberUserAgent("INQ-2026-0099-x"), null);
 });
+
+test("R16 basisFor with a limit reads at most that many legs in SQL, the first by ord, and says it was cut", () => {
+  const w = world(); w.doc(A);
+  w.inquiry("INQ-2026-0001-q", { legs: Array.from({ length: 5 }, () => ({ target: A })) });
+  const cut = w.k.basisFor("INQ-2026-0001-q", { limit: 3 });
+  assert.deepEqual([cut.legs.map((l) => l.ord), cut.limit, cut.truncated], [[0, 1, 2], 3, true]);
+  const whole = w.k.basisFor("INQ-2026-0001-q", { limit: 5 });
+  assert.deepEqual([whole.legs.length, whole.truncated], [5, false]);
+  assert.equal(w.k.basisFor("INQ-2026-0001-q").legs.length, 5);
+  assert.equal(w.k.basisFor("INQ-2026-0001-q").truncated, undefined, "unbounded, the answer is unchanged");
+});

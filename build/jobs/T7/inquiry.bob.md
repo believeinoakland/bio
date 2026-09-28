@@ -13,3 +13,7 @@ All six readings adopted (K181), with these changes. Q3: add no second table; th
 ## B3 · CHANGE
 
 N82's share is yours (K182; STRENGTH #1 J3): the earned registry you take reads provenance's `captureGrade` for a leg's capture ceiling. Merge tranche/T7 into your branch (K182).
+
+## B4 · CHANGE
+
+Two things (K188). (1) strength and citation are merged into `tranche/T7` (@ e68efc95f9); both build against your Provides with services the store injects (`store.mjs` constructor: `strengthModule(ctx, {inquiry: {basisFor, earned, legCapped, subjectEntityOf}, versions})` and `citationOf(ctx, {inquiry: {earned, checkLegExtentGrammar, BASIS_ROLES}})`). Merge `tranche/T7` before you finish. Keep `earned`'s answer shape `{earned: {connection: {target: {grade, why}}}}`. When you merge I send citation a CHANGE to adopt `inquiryOf(ctx)`; if you merge after basis-versions, re-point the store's strength wiring statement to `inquiryOf`/`basisVersionsOf` yourself (the extraction rule, mechanics §12.2). (2) Forwarded from STRENGTH #1 (P9): R16's `basisFor` has no bound; `partitionIndependence` reads it whole and slices at 501 legs, where the SQL it replaced had a `LIMIT`. Deal with it in this job if you can (a bounded read, stated in Provides for me to fold); otherwise say so and it goes to `next.md`.

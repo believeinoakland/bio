@@ -146,6 +146,9 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N143 · 2026-09-28 · **bias** (AI-RUNS #1 Q1, K182): delete `bias/interim.mjs`, its re-export (`bias/index.mjs` 39) and its test "R33 (interim)" (`test/m/bias/debt.test.mjs`), unused since ai-runs registers its own work products (K146's remainder).
 - N144 · 2026-09-28 · **affordances**, **legacy-ui** (SKILLS #1 Q2, K182): the plane publishes the surface registry and the recipes (`surfaces`, `recipes`) in `op=affordances`, so skills R10 is met (SK-5); today they are `civicos-ui`'s alone.
 - N145 · 2026-09-28 · **provenance** (K182): a test naming R48's `authored` column, which basis-versions R39 joins.
+- N146 · 2026-09-28 · **membership** (CITATION #1 REPORT J1.11): state the one no-such-project answer (`#noSuchProject`) as a service; `citation` and legacy-store hold byte-identical copies (K57) until then.
+- N147 · 2026-09-28 · **promotion**, **legacy-tests** (CITATION #1 REPORT J1.9; STRENGTH #1 J5): `CATALOG_VERSION` takes a MINOR stamp for layer 6's departures from the catalogue (citation's C-33.15–C-33.19, C-33.39, C-45.7–C-45.10; strength's C-30, C-71, C-32.9; the others the layer-6 records name), 1.35.0's precedent; legacy-tests re-pins the census.
+- N148 · 2026-09-28 · **legacy-checks** (CITATION #1 REPORT J1.12): the prose header of `CONTENT_EXTENT_CHECKS` still names C-45.7–C-45.10 as that family's; reword it.
 
 ## Before layer 9
 

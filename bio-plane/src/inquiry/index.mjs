@@ -2323,11 +2323,16 @@ export class Inquiry {
   /* REC-11: read a bundle's basis legs back, in document order — the ord that
      makes a leg addressable. A read of the PROJECTION; bundle.md stays the
      authority. */
-  basisFor(bundleId) {
+  /* R16 (B4, STRENGTH #1): `limit`, a positive integer, bounds the read in SQL (at most `limit` legs, the first by
+     ord, `truncated` measured by reading one more); without it the basis is read whole, as a walk over it needs. */
+  basisFor(bundleId, { limit = null } = {}) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
-    const legs = this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
-       FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
+    const cols = `ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground`;
+    if (Number.isInteger(limit) && limit > 0) {
+      const rows = this.#rows(`SELECT ${cols} FROM inquiry_basis WHERE bundle_id=? ORDER BY ord LIMIT ?`, bundleId, limit + 1);
+      return { ok: true, bundleId, legs: rows.slice(0, limit), limit, truncated: rows.length > limit };
+    }
+    const legs = this.#rows(`SELECT ${cols} FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
     return { ok: true, bundleId, legs };
   }
 
