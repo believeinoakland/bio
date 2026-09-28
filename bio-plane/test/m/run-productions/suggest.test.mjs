@@ -247,7 +247,8 @@ test("R4: success writes exactly one version through appendVersion, in state sug
   assert.equal(w.basisVersions.appended.length, 1);
   const a = w.basisVersions.appended[0];
   assert.equal(a.target, Q);
-  assert.deepEqual(Object.keys(a.version), ["name", "kind", "description", "claim", "relationship", "derived_from", "run"]);
+  assert.deepEqual(Object.keys(a.version), ["name", "kind", "description", "claim", "relationship", "derived_from", "run", "author", "at"],
+                   "the version row in the order the document writes it (basis-versions R28)");
   assert.equal(a.version.state, undefined); assert.equal(a.version.hidden, undefined);
   assert.deepEqual([a.version.run, a.version.kind, a.author, a.version.description],
                    [RUN, "basis-version", ALICE, "the ledger shows the transfer was approved twice"]);

@@ -736,10 +736,6 @@ export class Store extends DurableObject {
        legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
     inquiryOf(ctx).onRaised("reevaluation", ({ target, viewer }) => this.#reevalRaisedBy(target, viewer));
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
-    /* basis-versions (K61): joins every promotion after inquiry and before legacy-store (R6, R7). Its extract candidates
-       (R40) are run-productions'; legacy-store registers its `candidates` until run-productions leaves its
-       interim bridge and registers them itself. */
-    basisVersionsOf(ctx).onCandidates("legacy-store", (a) => runProductionsOf(ctx).candidates(a));
     strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
       versions: basisVersionsOf(ctx) });   /* strength (K61), over inquiry's and basis-versions' own services */
@@ -751,17 +747,10 @@ export class Store extends DurableObject {
       read: (run, viewer) => this.aiRunRead({ run, viewer }) }));
     bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
-       tables to purge (R17). The providers it reads that are not yet extracted (ai-runs, basis-versions) are built from
-       what this store hands over, until each merges (`run-productions/interim.mjs`). */
+       tables to purge (R17) and registers its candidates with basis-versions (R14). ai-runs, not yet extracted, is built
+       by `runProductionsInterim` from what this store hands over until it merges. */
     runProductionsOf(ctx, { interim: runProductionsInterim({
       aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
-      basisVersionsOf: (fm) => Store.basisVersionsOf(fm),
-      basisVersions: (a) => this.basisVersions(a),
-      promote: (pkg) => this.promote(pkg),
-      fmSafe: (x) => Store.#fmSafe(x),
-      appendFmRows: (text, key, rows) => Store.#appendFmRows(text, key, rows),
-      setScalar: (text, key, value) => Store.#setScalar(text, key, value),
-      appendSessionLog: (text, entry) => Store.#appendSessionLog(text, entry),
     }) });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
