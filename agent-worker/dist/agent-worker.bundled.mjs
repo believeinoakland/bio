@@ -990,7 +990,6 @@ __export(bio_checks_exports, {
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
-  CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
@@ -1068,16 +1067,13 @@ __export(bio_checks_exports, {
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   PROPOSAL_STATES: () => PROPOSAL_STATES,
   PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
-  PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_CHECKS: () => QUOTE_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
-  RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REGISTRATION_CHECKS: () => REGISTRATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
-  REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   RISK_TIERS: () => RISK_TIERS,
   RISK_TIER_HISTORY_MAX: () => RISK_TIER_HISTORY_MAX,
@@ -1086,7 +1082,6 @@ __export(bio_checks_exports, {
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
-  STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
@@ -1116,7 +1111,6 @@ __export(bio_checks_exports, {
   actionBasisFindings: () => actionBasisFindings,
   b64ToBytes: () => b64ToBytes,
   basisVersionFindings: () => basisVersionFindings,
-  biasAcknowledgementOf: () => biasAcknowledgementOf,
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   canonicalRange: () => canonicalRange,
@@ -1133,7 +1127,6 @@ __export(bio_checks_exports, {
   checkLegExtentGrammar: () => checkLegExtentGrammar,
   checkProjectNameUniqueness: () => checkProjectNameUniqueness,
   civicosUserAgent: () => civicosUserAgent,
-  completenessFields: () => completenessFields,
   consequenceState: () => consequenceState,
   contentCitedAs: () => contentCitedAs,
   contentIdFor: () => contentIdFor,
@@ -2663,7 +2656,6 @@ function checkInquiryExtension(ctx, findings) {
       ));
     }
   }
-  if (isCaseMemberBytes(fm)) checkPublishedExtension(fm, findings);
   for (const k of [
     "case_id",
     "case_edition",
@@ -2804,23 +2796,6 @@ function checkDividedExtension(fm, findings) {
 var SUBJECT_POSITIONS = ["sought_and_answered", "sought_no_answer", "not_sought"];
 var STRENGTH_STATES = ["graded", "unrated", "undetermined"];
 var CASE_MEMBER_ROLES = ["load_bearing", "supporting"];
-function biasAcknowledgementOf(fm) {
-  const v = fm && typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null;
-  return v === null || v === "null" ? null : v;
-}
-function completenessFields(fm) {
-  const c = fm && typeof fm.completeness === "object" && fm.completeness || {};
-  const rows = Array.isArray(fm?.completeness_excluded) ? fm.completeness_excluded : [];
-  return {
-    statement: typeof c.statement === "string" ? c.statement : null,
-    subject_justification: typeof c.subject_justification === "string" ? c.subject_justification : null,
-    excluded: JSON.stringify(rows.map((r) => [
-      r && typeof r.target === "string" ? r.target : null,
-      r && typeof r.description === "string" ? r.description : "",
-      r && typeof r.reason === "string" ? r.reason : ""
-    ]))
-  };
-}
 function checkPublishedExtension(fm, findings) {
   const e = fm.edition;
   if (!Number.isInteger(e) || e < 1) {
@@ -6244,49 +6219,7 @@ var QUEUE_MINT_CHECKS = {
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   }
 };
-var CASE_DERIVATION_CHECKS = {
-  CASE_IDENTITY_AMBIGUOUS: {
-    check: "C-44.1",
-    where: "src/store.mjs publishCase > case-identity-derivation",
-    translation: "This publication did not say which case it is. The findings you are publishing already serve more than one published case, and a finding is allowed to serve many \u2014 so the record cannot work out from them alone whether you are publishing a further edition of one of those cases or starting a new case that rests on the same work. Nothing has been published and nothing has changed. Say which case this is, or say that it is a new one, and publish again."
-  },
-  /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
-     finding id that several cases pin refuses and names every case (IC-74), because each case is
-     its own artifact and serving one would choose for the reader. That refusal reached the
-     published case page — the one page a stranger reads — with no code and no translation, and no
-     row here named it, so the DEC-49 guard could not see it (R1 misses it; R2 misses it because
-     the surface keys on the refusal's `cases[]`, not on the code). A ROW IN THIS FAMILY rather than
-     a new one: the condition is clause 6's ambiguity at the read where C-44.1 is the same
-     ambiguity at the act, and `#resolveOneCase` already sits in the file whose `refusal` helper
-     reads this table. The translation says what a reader of either surface can do — choose — and
-     names no screen, because every caller of `#resolveOneCase` answers with it. */
-  FINDING_IN_SEVERAL_CASES: {
-    check: "C-44.2",
-    where: "src/store.mjs #resolveOneCase > is-finding-in-several-cases",
-    translation: "This finding is part of more than one published case file. Each case file is its own publication, with its own scope and its own statement of what it covers, so the record will not pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and it opens with this finding in it."
-  },
-  /* REC-217 (BIO_Publication_v0_1.md §3 rule 13; BOB #33, 2026-09-24 19:14Z) — THE PUBLISHER NAMES THE DRAFT
-     A CASE WAS PREPARED IN, and at that act the readings taken through it bind to the case it produced. The
-     three conditions under which that link would be FALSE are refused here, in this family because each is
-     about the case identity the act publishes: the same question C-44.1 asks of the members, asked of the
-     draft. Each is its own row and its own region, for three different mistakes. Asked before a case id is
-     minted, so a refusal spends none — and none of them can refuse a publication that names no draft. */
-  PUBLISH_DRAFT_NOT_FOUND: {
-    check: "C-44.3",
-    where: "src/store.mjs publishCase > is-publish-draft-found",
-    translation: "The draft named for this case is not a draft of this project that you can open. Nothing was published. Name the draft this case was prepared in, or publish without naming one; readings of a draft that was not named are then counted in the case file and not attributed to anyone."
-  },
-  PUBLISH_DRAFT_NOT_THIS_CASE: {
-    check: "C-44.4",
-    where: "src/store.mjs publishCase > is-publish-draft-this-case",
-    translation: "The draft named here was prepared for a different case than the one being published, so its readers did not read this one. Nothing was published. Publish the case that draft is for, or name the draft of this case."
-  },
-  PUBLISH_DRAFT_ALREADY_BOUND: {
-    check: "C-44.5",
-    where: "src/store.mjs publishCase > is-publish-draft-bound",
-    translation: "That draft has already been named as the draft of another published case, and the people who read it are listed there. One draft becomes one case, so it cannot be named for this one too. Nothing was published."
-  }
-};
+var CASE_DERIVATION_CHECKS = {};
 var MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: "C-32.1",
@@ -6349,57 +6282,6 @@ var MACHINE_FENCE_CHECKS = {
     where: "src/store.mjs taskResolve > is-machine-resolve",
     translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
   },
-  /* REC-123 / IC-132 — THE TWO RATIFICATIONS, and they are the first of this
-     family that live in the CONTROL PLANE rather than at the top of a store
-     method, because both handlers do their work there: the signature is
-     verified and the gate run in `index.mjs`, and the store is handed only the
-     verified attestor. TRACED BY DRIVING, 2026-09-18: an `ai` credential whose
-     member-authored scope named op=ratify / op=caseratify, carrying a registered
-     member's VALID signature, PUBLISHED the finding and COMMITTED the case, and
-     the record named the MEMBER as having done it. The scope check was the only
-     thing in front of either, and a broader scope passes a scope check.
-     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4: *"No machine credential
-     performs the attested act"*; both acts sit at the `attested` rung.
-     WHAT THESE TWO DO NOT REFUSE: the operator's own ENV-BINDING credentials
-     (ADMIN/MEMBER/PROBE tokens). REC-123 left them open as a provisional and
-     raised D-421; BOB #14 DECIDED it (REFUSE), and C-32.14 / C-32.15 below are
-     that ruling, landed by REC-125. */
-  MACHINE_CANNOT_RATIFY: {
-    check: "C-32.12",
-    where: "src/index.mjs fetch > is-machine-ratify-bundle",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and the member whose key signed it has to be the one who does it. The credential that asked here is an assistant's: it can prepare the finding and lay out what will be signed, and it cannot carry the signature in for you. Sign in and ratify it yourself."
-  },
-  MACHINE_CANNOT_RATIFY_CASE: {
-    check: "C-32.13",
-    where: "src/index.mjs fetch > is-machine-ratify-case",
-    translation: "Ratifying a case commits the group's own assertions about it \u2014 its scope, its completeness, its position on the people it concerns \u2014 under a member's signature. The credential that asked here is an assistant's: it can assemble the case document, and it cannot be the one who commits it. Sign in and ratify it yourself."
-  },
-  /* REC-125 / IC-137 — D-421, DECIDED by BOB #14 applying
-     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new doctrine): an
-     ATTESTED act is performed ONLY by a named member's OWN AUTHENTICATED
-     SESSION, and the operator's bearer tokens may no longer deliver one, even
-     carrying a member's valid signature. *The signature proves who AUTHORISED;
-     the credential that delivers it decides WHEN the record changes, and the
-     record names the actor.* ONE ROW PER ACT, like C-32.12 / C-32.13, and ONE
-     ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
-     on how the caller ARRIVED (not through a session), so the class is named in
-     the answer's `tokenClass` and the rule does not need a row per token. */
-  OPERATOR_TOKEN_CANNOT_RATIFY: {
-    check: "C-32.14",
-    where: "src/index.mjs fetch > is-operator-ratify-bundle",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there."
-  },
-  OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
-    check: "C-32.15",
-    where: "src/index.mjs fetch > is-operator-ratify-case",
-    translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there."
-  },
-  /* REC-126 / DEC-31 / IC-145 — THE REVIEW COPY's three authoring acts (draft,
-     grant, revoke) share ONE fence, because they are one doctrine: the act is
-     ADDRESSED and ATTRIBUTED (`BIO_Publication_v0_1.md` §6A.2), so the record
-     must name the person who handed the group's draft to somebody. One row, one
-     region: the three acts enter through `reviewAct`, and the fence stands at that
-     door before any act is chosen. */
   /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
      the same doctrine rather than a new one: *the credential that delivers an
      act decides when the record changes, and the record names the actor.* A
@@ -6419,11 +6301,6 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.17",
     where: "src/index.mjs fetch > is-operator-governance-act",
     translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
-  },
-  MACHINE_CANNOT_REVIEW: {
-    check: "C-32.16",
-    where: "src/store.mjs reviewAct > is-machine-review",
-    translation: "Handing a draft of the group's case to a named person, or withdrawing it, is an act somebody in the group answers for, and the record names who did it. The credential that asked here is an automated one: it can help prepare the draft, and it cannot address it to anyone. Sign in to do this yourself."
   },
   /* D-149 (BIO_Case_Making_v0_1.md §2): stating which laws govern a records request is a member's authored
      act — the design's words are *set by a member's authored act*, and a machine may PROPOSE a list, labelled
@@ -7021,17 +6898,6 @@ var INSTALLATION_CHECKS = {
     check: "C-68.4",
     where: "src/index.mjs fetch > is-bootstrap-claim",
     translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
-  },
-  /* D-549. The one row in this family whose reader is most likely NOT whoever installed the copy:
-     `publishedbytes` and `publishedcase` are PUBLIC, so the sentence is written for a member of the
-     public holding no credential, and says what they can rely on (the document IS published, and
-     nothing about it changed) before who can cure it. It names no binding and no mechanism. It is
-     true at both sites: at `publishedbytes` the hash has already been verified as published, and at
-     `publishedcase` the finding is a member of a published case. */
-  NO_PUBLISHED_STORE: {
-    check: "C-68.5",
-    where: "src/index.mjs publishedStoreAbsent > is-published-store-absent",
-    translation: "This copy of the record was set up without the storage it keeps its published documents in, so it cannot hand over the published document's contents. The document is published; this is a fact about how this copy was set up, not about the document or this request, and nothing was changed. Whoever runs this copy can connect that storage."
   }
 };
 var RENDER_CAPTURE_CHECKS = {
@@ -7154,48 +7020,6 @@ var DISPATCH_CHECKS = {
     check: "C-69.2",
     where: "src/index.mjs storeSilent > is-store-silent",
     translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
-  }
-};
-var PUBLISHED_READ_CHECKS = {
-  NO_PUBLISHED_PART: {
-    check: "C-98.1",
-    where: "src/index.mjs noPublishedPart > is-no-published-part",
-    translation: "Nothing this copy of the record has published matches that fingerprint. Something that was never published and something that never existed get this same answer, so it says nothing about anything unpublished. Check that the fingerprint was copied whole. Nothing was changed."
-  },
-  OBJECT_MISSING: {
-    check: "C-98.2",
-    where: "src/index.mjs publishedObjectMissing > is-published-object-missing",
-    translation: "This document is published, but this copy of the record cannot find its contents in its storage, so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. Whoever runs this copy can restore the missing contents."
-  },
-  NOT_A_CONTAINER: {
-    check: "C-98.3",
-    where: "src/index.mjs fetch > is-not-a-container",
-    translation: "You asked for a whole case file as one download, but that fingerprint belongs to a single document inside a case file. Ask for it without the download-as-one-file option to get that document, or use the fingerprint of the case file's list of contents to get the whole case file. Nothing was changed."
-  },
-  MANIFEST_UNREADABLE: {
-    check: "C-98.4",
-    where: "src/index.mjs fetch > is-manifest-unreadable",
-    translation: "This case file is published, but this copy of the record cannot read the list of its contents, so it cannot put the case file together as one download. Nothing was changed. Whoever runs this copy can repair it."
-  },
-  PART_MISSING: {
-    check: "C-98.5",
-    where: "src/container.mjs containerEntries > is-part-missing",
-    translation: "This case file is published, but this copy of the record cannot find one of the documents it lists, and it will not hand over a case file with a piece missing. The reply names the missing document; the others can still be asked for one at a time. Nothing was changed. Whoever runs this copy can restore it."
-  },
-  DUPLICATE_PATH: {
-    check: "C-98.6",
-    where: "src/container.mjs serialiseContainer > is-duplicate-path",
-    translation: "The list of this case file's contents puts two documents under the same name, so one download could be read two ways. This copy will not hand over a case file that says two things about one name. Each document can still be asked for on its own. Nothing was changed."
-  },
-  CONTAINER_TOO_LARGE: {
-    check: "C-98.7",
-    where: "src/container.mjs serialiseContainer > is-container-too-large",
-    translation: "This case file is too large to hand over as one download. Every document in it can still be asked for on its own, which gives the same contents. Nothing was changed."
-  },
-  NOT_PUBLISHED: {
-    check: "C-98.8",
-    where: "src/store.mjs publishedCase > is-not-published",
-    translation: "Nothing this copy of the record has published answers to what you asked for. A case that was never published, an edition that does not exist and a name that never existed all get this same answer, so it says nothing about anything unpublished. Nothing was changed."
   }
 };
 var KNOCK_CHECKS = {
@@ -8229,73 +8053,7 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
-var ATTRIBUTION_CHECKS = {
-  ATTRIBUTION_NOT_A_MEMBER: {
-    check: "C-92.1",
-    where: "src/store.mjs attributeObservation > is-attribute-act",
-    translation: "How a member's observation is attributed is that member's own choice. The credential that asked is an automated one, and it cannot make that choice for anybody. Sign in and choose it yourself."
-  },
-  ATTRIBUTION_NO_LEVEL: {
-    check: "C-92.2",
-    where: "src/store.mjs attributeObservation > is-attribute-act",
-    translation: "No level was chosen. Choose what a published case shows of who said your observation: the group, the project, the cover the group knows you by, or your handle. Nothing is filled in for you."
-  },
-  ATTRIBUTION_LEVEL_UNKNOWN: {
-    check: "C-92.3",
-    where: "src/store.mjs attributeObservation > is-attribute-act",
-    translation: "That is not one of the four levels. Choose group, project, cover or name."
-  },
-  ATTRIBUTION_NOT_AN_OBSERVATION: {
-    check: "C-92.4",
-    where: "src/store.mjs attributeObservation > is-attribute-author",
-    translation: "That document is not a member's firsthand observation in this record, so there is no author whose choice this is. Attribution is chosen for observations only."
-  },
-  ATTRIBUTION_NOT_THE_AUTHOR: {
-    check: "C-92.5",
-    where: "src/store.mjs attributeObservation > is-attribute-author",
-    translation: "Another member recorded that observation. Only the member who said it chooses how a published case shows who said it \u2014 not a project owner, not an administrator, and not a default."
-  },
-  ATTRIBUTION_AUTHOR_NOT_ACTIVE: {
-    check: "C-92.6",
-    where: "src/store.mjs attributeObservation > is-attribute-author",
-    translation: "That observation's author is not an active member, and nobody chooses for them. The observation stays in the record and can be used where its author already chose, and nowhere new."
-  },
-  ATTRIBUTION_NOT_REACHED: {
-    check: "C-92.7",
-    where: "src/store.mjs attributeObservation > is-attribute-edition",
-    translation: "No prepared case edition by that name rests on your observation. You choose an attribution for an edition that uses your words, once its case document has been prepared."
-  },
-  ATTRIBUTION_EDITION_RATIFIED: {
-    check: "C-92.8",
-    where: "src/store.mjs attributeObservation > is-attribute-edition",
-    translation: "That edition is already signed, and a signed edition does not change. Your choice can apply to the next edition, which keeps your last choice until you change it."
-  },
-  /* PROVISIONAL (§4.6, carried to Bob): `name` publishes the member's HANDLE, because the record holds no
-     legal name and must not start to. */
-  ATTRIBUTION_NAME_NO_HANDLE: {
-    check: "C-92.9",
-    where: "src/store.mjs attributeObservation > is-attribute-edition",
-    translation: "Choosing your name publishes the handle you appear under in this record, and you have none. Choose another level, or set a handle first."
-  },
-  /* PROVISIONAL (§4.4, carried to Bob): THE NARROW VETO. An edition reaching an unchosen observation is not
-     signed, so each member has a veto over the use of their own words and over nothing else: the owner's
-     recourse is an edition without the finding that rests on it. */
-  ATTRIBUTION_UNCHOSEN: {
-    check: "C-92.10",
-    where: "src/index.mjs fetch > is-attribution-gate",
-    translation: "This case edition uses a member's firsthand observation whose author has not yet chosen how it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask the author to choose, or prepare the edition without the finding that rests on it."
-  },
-  ATTRIBUTION_STATEMENT_STALE: {
-    check: "C-92.11",
-    where: "src/index.mjs fetch > is-attribution-gate",
-    translation: "This case document states an attribution for an observation that its author's choices no longer give. Prepare the case document again so it states what the authors chose, then sign that."
-  },
-  ATTRIBUTION_UNSTATED: {
-    check: "C-92.12",
-    where: "src/index.mjs fetch > is-attribution-ratify",
-    translation: "This observation's words are published only beside a signed case that states whose they are, and no signed case does yet. Sign the case document that uses it first."
-  }
-};
+var ATTRIBUTION_CHECKS = {};
 var TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: "C-53.1",
@@ -8349,35 +8107,6 @@ var TESTIMONY_CHECKS = {
     check: "C-53.9",
     where: "src/provenance/index.mjs #testimonyFence > is-testimony-fence",
     translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
-  },
-  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
-     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
-     in the working bucket PUBLISHED its words, its provenance document and the
-     observer's handle; a finding resting on one, and a case over that finding,
-     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level.
-     LIFTED BY MK-7 AS ITS OWN ACT, AND NARROWED RATHER THAN DELETED: the three
-     codes now refuse only an observation that still NAMES ITS AUTHOR in its own
-     files — one written before MK-6 (§4.1: "Authored bundles written before the
-     change carry the member id and STAY FENCED") — and what rests on one. No
-     level can hide a name the bundle itself prints, because the level lives
-     outside the bundle. Every other observation crosses under C-92. The old
-     sentences said the record could not YET honour the choice; since MK-7 it
-     can, so they would now be false, and they are corrected, not kept. */
-  TESTIMONY_UNPUBLISHABLE: {
-    check: "C-53.10",
-    where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This document is a member's own firsthand observation, recorded before the record stopped writing its author's name into the observation's own files. Publishing it would publish that name whatever level its author chose, so it is not published. Its author can record it again as a new observation, which names nobody in its files."
-  },
-  TESTIMONY_CITED_UNPUBLISHABLE: {
-    check: "C-53.11",
-    where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This finding rests, directly or through another finding, on a member's firsthand observation recorded before the record stopped writing its author's name into the observation's own files, so it is not published. Rest the finding on a newer observation of the same thing, or publish it without that observation in its basis."
-  },
-  TESTIMONY_CASE_UNPUBLISHABLE: {
-    check: "C-53.12",
-    where: "src/index.mjs fetch > is-testimony-publish-case",
-    translation: "A finding in this case rests, directly or through another finding, on a member's firsthand observation recorded before the record stopped writing its author's name into the observation's own files, so the case is not published: that name would be published whatever level its author chose. Rest the finding on a newer observation, or leave it out of this edition."
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
@@ -8599,13 +8328,6 @@ var CASE_AUTHORITY_CHECKS = {
     translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
   }
 };
-var CASE_CONCLUSION_CHECKS = {
-  CASE_CONCLUSION_MOVED: {
-    check: "C-65.1",
-    where: "src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved",
-    translation: "This case document records a conclusion its project no longer stands on: since the document was prepared, the project withdrew that conclusion or concluded again differently. Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case again from the project, so the document records what the project stands on now, and sign that."
-  }
-};
 var SURFACE_CHECKS = {
   /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
      carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
@@ -8638,31 +8360,6 @@ var SURFACE_CHECKS = {
     check: "C-66.6",
     where: "src/index.mjs fetch > is-promote-replay-verified",
     translation: "This save says it is a replay of the record's own history, and the plane could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
-  }
-};
-var RATIFY_SCOPE_CHECKS = {
-  RATIFY_PROJECT_BUNDLE: {
-    check: "C-58.1",
-    where: "src/index.mjs fetch > is-ratify-project-bundle",
-    translation: "A project's own document is not published. A project publishes through its cases: publish a case from the project, have an owner sign the case document, and then ratify the findings in it. Nothing was published."
-  },
-  /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
-   * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
-   * publications outside a case and pinned them as measured: an information bundle in no case, a
-   * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
-   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
-   * refusals and the retry, and ONE region carries both, because the one condition — no ratified
-   * case pins this sha and none of their pinned findings rests on this bundle — is split only by
-   * what the bundle IS. */
-  RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
-    check: "C-58.2",
-    where: "src/store.mjs publish > is-ratify-outside-a-case",
-    translation: "A finding is published only as part of a case its project has ratified, and no ratified case holds this version of it. Publish it into a case from its project, have an owner of the project sign the case document first, and then ratify this finding at the version the case holds. Nothing was published."
-  },
-  RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
-    check: "C-58.3",
-    where: "src/store.mjs publish > is-ratify-outside-a-case",
-    translation: "This is published only as evidence for a case, and no finding in any ratified case rests on it. Cite it from a finding, publish that finding's case and have an owner of the project sign the case document; an owner of that project can then sign this. Nothing was published."
   }
 };
 var PROJECT_ID_CHECKS = {
@@ -8880,116 +8577,6 @@ function leadLegFindings(label, leg, findings) {
 var THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
 var THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
 var THEME_LEG_KEYS = ["theme", "themes"];
-var STATEMENT_ACK_CHECKS = {
-  /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
-     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
-     row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
-     is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
-     obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the
-     SMALLEST SPAN in which its refusal is enforced, and `acknowledgeStatement`'s `refusal` helper stood
-     BELOW all six, so none of them could be built through it and none could honestly hold a row. The six
-     returns now go through the helper, each inside its own DEC-49 region, and each carries the sentence
-     below beside its unchanged `reason` and `detail`.
-     THE WORDS ARE BOB #33's, approved 2026-09-24 and used verbatim. One was checked against the code and
-     is right rather than narrow: C-82.5 says "This draft", and the case-DOCUMENT door cannot reach it —
-     `publishCase` refuses `NO_STATEMENT` (region `is-publish-statement`) before authoring any document, so
-     every case document in the store carries a non-empty `completeness.statement` and the draft door is
-     the only one that reaches an empty one. */
-  STATEMENT_ACK_NO_SUBJECT: {
-    check: "C-82.2",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-subject",
-    translation: "Say which statement you are acknowledging: a draft case, or a case document, by its case and edition, that has been written but not yet signed."
-  },
-  STATEMENT_ACK_ALREADY_SIGNED: {
-    check: "C-82.3",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-signed",
-    translation: "This edition of the case is already signed, and the signature covers its list of who acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the next edition."
-  },
-  STATEMENT_ACK_NOT_A_PARTICIPANT: {
-    check: "C-82.4",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-participant",
-    translation: "Only someone who has joined the project that makes this case, or someone given a review copy of it, can acknowledge its statement. Being able to see a project is not the same as having joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it."
-  },
-  STATEMENT_ACK_NO_STATEMENT: {
-    check: "C-82.5",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-statement",
-    translation: "This draft does not yet say what its case leaves out, so there is nothing to acknowledge. Once an editor of the draft writes that statement, you can acknowledge it."
-  },
-  STATEMENT_ACK_BY_ITS_AUTHOR: {
-    check: "C-82.6",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author",
-    /* CONDUCT #20 at c20-batch23: REC-212 sends a SECOND person through this code — the member who PUBLISHED the
-       case, who did not write its statement (§3 rule 13) — and the D-507 sentence told them "You wrote this
-       statement", which is false of them. Generalised at the union to be true of both; the words go to BOB #33,
-       who approved the originals, to confirm or replace. */
-    translation: "You wrote this statement or published this case, so you have already read it. An acknowledgement means a second person has read what the case leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case can be published without one, and will say so."
-  },
-  STATEMENT_ACK_AUTHOR_UNDETERMINED: {
-    check: "C-82.7",
-    where: "src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined",
-    /* CONDUCT #20 at c20-batch23: REC-212 reaches this code from a CASE DOCUMENT that states its writer could not
-       be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
-       union to name both routes; to BOB #33 with the other. */
-    translation: "The record does not say who wrote this statement, so it cannot tell whether you are its author. For a draft, ask an editor of the project to save the statement again; for a published case, it can be published again from a draft that records who wrote it. You can acknowledge it after that. The case can be published either way."
-  }
-};
-var REVIEW_COPY_CHECKS = {
-  NO_REVIEW_COPY: {
-    check: "C-87.1",
-    where: "src/store.mjs #noReviewCopy > is-no-review-copy",
-    translation: "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case."
-  },
-  REVIEW_UNKNOWN_ACT: {
-    check: "C-87.2",
-    where: "src/store.mjs reviewAct > is-review-unknown-act",
-    translation: "That is not one of the things you can do to a review copy. There are three: draft the case that will be shown, grant someone a copy to read, and withdraw a grant you issued."
-  },
-  REVIEW_NOT_PROJECT_OWNER: {
-    check: "C-87.3",
-    where: "src/store.mjs #notReviewOwner > is-review-authority",
-    translation: "You do not hold this act's authority over this project. Drafting the case needs permission to edit the project's work; handing the draft to someone outside the group, and withdrawing a copy you handed over, are the project owner's own acts. A project, draft or grant you hold no such authority over is answered exactly as one that does not exist, so this answer does not tell you whether it is there."
-  },
-  REVIEW_NO_PROJECT: {
-    check: "C-87.4",
-    where: "src/store.mjs #caseDraft > is-review-no-project",
-    translation: "Say which project this draft belongs to. A draft case is a piece of a project's work, the same as a published case is, and it is not held by anybody until it names one."
-  },
-  REVIEW_DRAFT_CHANGES_PROJECT: {
-    check: "C-87.5",
-    where: "src/store.mjs #caseDraft > is-review-draft-changes-project",
-    translation: "This draft belongs to a different project, and a case does not change hands. If the other project should be making this case, draft it there as a case of its own."
-  },
-  REVIEW_NO_SUCH_CASE: {
-    check: "C-87.6",
-    where: "src/store.mjs #caseDraft > is-review-no-such-case",
-    translation: "This project has published no case by that name. A draft may name an existing case, which makes the draft that case's next edition; a case another project published is answered exactly as one that does not exist. Leave the name off and the draft is a new case."
-  },
-  REVIEW_DRAFT_TOO_LARGE: {
-    check: "C-87.7",
-    where: "src/store.mjs #caseDraft > is-review-draft-too-large",
-    translation: "This draft's arguments are larger than the plane will store: the limit is 64 KiB, the same size publishing the case would accept. Nothing was saved. Material this large belongs in the documents and content the case rests on rather than in the draft itself."
-  },
-  REVIEW_NO_RECIPIENT: {
-    check: "C-87.8",
-    where: "src/store.mjs #reviewGrant > is-review-recipient",
-    translation: "Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the record says who it went to, and a grant addressed to nobody would leave no such record."
-  },
-  REVIEW_NO_SECRET: {
-    check: "C-87.9",
-    where: "src/store.mjs #reviewGrant > is-review-secret",
-    translation: "The reading secret that would let this recipient open the copy was not set. That secret is made for you when the grant is issued, so this is a fault in the request rather than something you supply; nothing was issued. Try issuing the grant again."
-  },
-  REVIEW_NO_GRANT: {
-    check: "C-87.10",
-    where: "src/store.mjs #reviewRevoke > is-review-grant-named",
-    translation: "Say which grant to withdraw, by the id you were given when it was issued. Nothing was withdrawn. This answer says only that no grant was named; it says nothing about which grants exist."
-  },
-  REVIEW_NO_COMMENT_TEXT: {
-    check: "C-87.11",
-    where: "src/store.mjs reviewComment > is-review-comment-text",
-    translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
-  }
-};
 var THEME_CHECKS = {
   THEME_NOT_EVIDENCE: {
     check: "C-81.1",
