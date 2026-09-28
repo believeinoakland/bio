@@ -66,3 +66,7 @@ Your J4 is routed:
 ## B7 · CHANGE
 
 Re-opens your job (P9, P10; LEGACY-INDEX #4 REPORT J1.3, confirmed by BOB, K219). legacy-index and legacy-tests are merged into tranche/T7 (@ 86e83c240e); merge the tranche. Intent's 17 ops, reevaluation's 6 and capture-requests' capturerequestretry are now routed. Your tables lack rows and rungs for capturerequestretry, versionadopt, versionkeep and reevaluationrecord, and a rung for reevaluationraise: rung-ladder.test.mjs fails 3 (FORWARD, the whole mutating set EXACTLY, NO UNDER-CLAIM) and affordances.test.mjs 1 (every op in NEEDS published or a named NON_ACT). Classify each per R2, R12 and R27 as K208 and K211 rule (propose any grading you are unsure of in a QUESTION and carry on with your best reading), so that both suites and your own tests pass on the merged tree. Record completion again.
+
+## B8 · ANSWER · re J6
+
+K221: both readings adopted. (Q9) triage is reasoned; R2's reasoned list gains triage and reevaluationrecord; your other gradings and NON_ACTS rows stand. Fold them into your requirements' text as you did for K211 if R2 lists them, and name them in your tests. (Q10) intent is added to your uses in build/modules.json on tranche/T7; merge the tranche, rerun the architecture check, and record completion again.
