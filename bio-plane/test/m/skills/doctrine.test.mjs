@@ -4,6 +4,7 @@ import * as pack from "../../../src/skillpack.mjs";
 import * as doctrine from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "../../../src/observation-log/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+import * as strength from "../../../src/strength/index.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
@@ -25,10 +26,10 @@ function table() {
   return { left: rows.map((r) => r[0]), right: rows.map((r) => r[1]).filter((c) => c !== "—") };
 }
 
-/* Every C-number any keyed row of the catalogue carries. */
+/* Every C-number any keyed row of the catalogue, or of a family moved to its module, carries. */
 function keyedNumbers() {
   const out = new Set();
-  for (const rows of Object.values(catalogue))
+  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS])
     if (rows && typeof rows === "object" && !Array.isArray(rows))
       for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;
@@ -207,7 +208,7 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
   add("SUGGEST_LEVELS", catalogue.SUGGEST_LEVELS);
   add("BASIS_ROLES", catalogue.BASIS_ROLES);
   add("EARNED_GRADE_SOURCES", catalogue.EARNED_GRADE_SOURCES);
-  add("VERSION_STRENGTH_INERT_SOURCES", catalogue.VERSION_STRENGTH_INERT_SOURCES);
+  add("VERSION_STRENGTH_INERT_SOURCES", strength.VERSION_STRENGTH_INERT_SOURCES);
   add("AI_RUN_CHECKS", Object.keys(AI_RUN_CHECKS).filter((k) => !pack.SKILL_CHECK_KEYS.includes(k)));
   add("the published act modes", ["session", "admin-session"]);
   let machine = 0;
