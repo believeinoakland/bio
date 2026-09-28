@@ -363,7 +363,13 @@ test("R18: projectleave is offered to an owner only while another owner is commi
   const leave = async (tok) => codeOf(await POST(`op=projectleave&token=${tok}&projectId=${W.PD}`));
   /* two committed owners and a joined participant: each is offered leave */
   assert.deepEqual([await leaveOffered(W.IRIS), await leaveOffered(W.PAM), await leaveOffered(W.ZED)], [true, true, true]);
+  const before = await facts(W.PD, { viewer: "member:pam", identity: "member:pam", by: "pam" });
+  assert.deepEqual([before.roster.owner_floor_clear, before.roster.other_owner_committed], [true, true]);
   assert.equal(await leave(W.IRIS), "ok");
+  /* the two roster facts R9 names (K309): the floor is clear for owner-remove (two owners, one committed); leave's
+     other committed owner is iris for pam before iris leaves, and nobody after */
+  const roster = async (by) => (await facts(W.PD, { viewer: `member:${by}`, identity: `member:${by}`, by })).roster;
+  assert.deepEqual([(await roster("pam")).owner_floor_clear, (await roster("pam")).other_owner_committed], [true, false]);
   /* iris is leaving, so pam is the last committed owner: neither offered nor accepted */
   assert.equal(await leaveOffered(W.PAM), false);
   assert.equal(await leave(W.PAM), "LAST_COMMITTED_OWNER");

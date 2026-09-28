@@ -52,7 +52,7 @@ const R9 = {
   projectremove: (f, t) => t === "project" && f.roster?.owner === true,
   projectowneradd: (f, t) => t === "project" && f.roster?.owner === true,
   projectjoin: (f, t) => t === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined",
-  /* R9 as R18 states it (N45; J1 Q2): an owner leaves only while another owner is committed. */
+  /* R9 as folded (N45, K309): an owner leaves only while another owner is committed. */
   projectleave: (f, t) => t === "project" && f.roster?.state === "joined"
     && (f.roster?.owner !== true || f.roster?.other_owner_committed === true),
   projectownerremove: (f, t) => t === "project" && f.roster?.owner === true && f.roster?.owner_floor_clear === true,
