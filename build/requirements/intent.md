@@ -69,11 +69,11 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - `record-core`: `recordOf(ctx)`, `transact`, id allocation for aspirations and goals, `declarePurge`.
 - `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`.
 - `promotion`: `promote`, `registerStep` (R1, R2). *(not declared)*
-- `entities`: `readEntity`, the constitutive relations (R4, R7, R28). *(not declared)*
+- `entities`: `readEntity`, the constitutive relations (R4, R7, R28). *(not declared)* `noSuchEntity` (its R36), R2's `NO_SUCH_ENTITY`, in place of C-111.5 (N285).
 - `provenance`: the captures held at an address (R28). *(not declared)*
 - `progressions`: `readProgression`, `readInstance`, `proposalsFeed`, `disposeProposal` (R4–R6, R15, R16).
 - `retrieval`: `selectionCreate` (one enumerated selection per aged question, owner `plane:intent`, for inquiry's `dispose`; R17; K198).
-- `capture-requests`: `captureRequests` (a request's outcome, for R14's pursuit; K200).
+- `capture-requests`: `requestById` (its R43: one request's outcome by key, for R14's pursuit; N291) and `bundlesOf` (its R28); `captureRequests` (a request's outcome, for R14's pursuit; K200) until N291. *(not yet met: N291; `pursuitOf` reads the bounded list)*
 - `inquiry`: the create-at-`surfaced` path and the dispose act (R16, R17).
 - `ai-runs`: opening a run (R18).
 - `content`: nothing any requirement calls. Proposed dropped.

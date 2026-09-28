@@ -46,7 +46,7 @@ Terms. A **query** `q` is a string. A **plan** is `compile`'s answer: `{ast, war
 - `membership`: `viewerPredicate`, `GATE_MARK` (R9).
 - `text-chain`: `STEP_KINDS` (R6) and `MACHINE_READ_KINDS` (its R91), which this module re-exports and never lists (N104, K143).
 - `legacy-checks`: `parseFrontmatter`, `normalizeType`, `MACHINE_CLASS_PREFIX`, `BASIS_ROLES`, `GRADE_AXES`, `GRADE_SOURCES`; and `CONTENT_EXTENT_KINDS`, `CONTENT_MINTED_BY_PLANE`, `contentCitedAs` until `content` takes them (its map §1), then from `content`. *(`content` is not declared in `modules.json` today)*
-- The statements name tables other modules own, as read contracts: `bundles` (`record-core` R37) and the projection relation its caller names (R25), `content` (`content`), `capture_text`, `capture_text_fts` and `readings` (`extraction`), `resolutions` (`entities`), `register` (`provenance` R48), `observation_log` (`observation-log`), and `inquiry_basis`, `inquiry_basis_version_legs` (`inquiry`, `basis-versions`, layer 6; see Suggestions).
+- The statements name tables other modules own, as read contracts: `bundles` (`record-core` R37, `group_id` and `prior_state` included, N287) and the projection relation its caller names (R25), `content` (`content`), `capture_text`, `capture_text_fts` and `readings` (`extraction`), `resolutions` (`entities`), `register` (`provenance` R48), `observation_log` (`observation-log`), and `inquiry_basis`, `inquiry_basis_version_legs` (`inquiry`, `basis-versions`, layer 6; see Suggestions).
 
 ### Invariants
 

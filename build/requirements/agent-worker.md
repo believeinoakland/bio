@@ -47,6 +47,7 @@ What each row does against the plane:
 - **R24** `submit`: one candidate at a time, as formed, through `op=suggest` with the run and its target; a refusal goes to `adjust`. A verbatim resubmit the plane reports (`repeated: true`) is counted in `verbatim_resubmits`.
 - **R25** `adjust`: the candidate is resent only when its canonical bytes differ from the refused submission; otherwise it is dropped and never resent, and the rest of the queue is still written.
 - **R26** After every step, one `op=airuntick` carries the spend, with `runtime` = the plane calls of that step + 1, and a log entry `{level, subject:"<step> -> <next>", state, governed, condition, terminal, bound, detail}` (`detail` at most 500 characters) only when the step's judgement states a look; a step that looked at nothing sends none, and no entry carries `NEVER_LOOKED` (observation-log R3, K148; K181). A step judged `PRESENT` is logged `LOOKED_INDETERMINATE` with the stated reason and counted in `present_unbacked`. `logged` counts entries the plane appended; each entry it refused is in `log_refused` and `refusals`. When the tick reports the run ended, the segment stops and `ended.by` is `"the plane's own exit"`.
+- **R49** (N293) The `state` a tick publishes (R11's resumable scratch) stays within `ai-runs`' `AI_RUN_STATE_MAX_BYTES` (its R45). A tick refused `AI_RUN_STATE_TOO_LARGE` is recorded as a refusal (in `refusals`, at `airuntick`, with its code and check), never read as a failure of the plane. *(not yet met: N293)*
 - **R27** `close`: `op=airunclose` names the bound; `ended` is `{bound, by:"the table"}` only when the plane accepted, and `null` with the refusal published when it did not. `max_steps` (at most 400) bounds one invocation and is never reported as a run's bound.
 
 The answer:
@@ -73,6 +74,7 @@ The answer:
 - `runtime-limits`: `PUBLISHED_TOKEN_HASHES`, `sha256hex` (`tokens.mjs`, a bundle input).
 - `bundler`: `discoverMembers`, `writeMember` (the build).
 - `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); `renderPack` at runtime once R48 is met (K102).
+- `ai-runs`: `AI_RUN_STATE_MAX_BYTES` and `AI_RUN_STATE_TOO_LARGE` (its R45), which R49 keeps within (N293).
 - `ai-runs`, `query-language`, `legacy-checks`: tests only; the suites read `OBSERVATION_LEVELS`, `OBSERVATION_STATES`, `RUN_ENDINGS`, the plane's namespaces and `OPS` table, and `SUGGEST_LEVELS` from the plane's source to pin this member's copies (R44). At runtime it uses them only over the wire.
 
 ### Invariants

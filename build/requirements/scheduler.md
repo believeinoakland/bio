@@ -50,7 +50,7 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 ### Uses
 
 - `retrieval`, `connections`, `progressions`, `bias`, `calibration`, `ai-runs`, `capture-requests`, `monitoring`: the due, wake and tick services R5 names, through their factories (K61).
-- `retrieval` (`onSelectionCreated`, R52), `capture` (R44), `entities` (R13), `progressions` (`onThreaded`, R33), `bias` (`onLensChange`, R23), `promotion` (`onCommitted`, R45): the notices R9 registers with.
+- `retrieval` (`onSelectionCreated`, R52), `capture` (R44), `entities` (R13), `progressions` (`onThreaded`, R33), `bias` (`onLensChange`, R23), `promotion` (`onCommitted`, R45), `calibration` (`onSubjectRegistered`, R18; `onSignalRecorded`, R19; N223): the notices R9 registers with.
 - `intent`: the rank (R10), through `servesOf` (its R28); `ageSurfaced` (its R17) with `ageDue`, `ageWake` (its R27), a consumer (R5; N167, N178).
 - `reevaluation`: `noticeSweep`, `noticeSweepDue`, `noticeSweepWake` (its R25, over R14's `raiseNotices`, K199 (1)), a consumer (R5; N164, N178).
 - The Durable Object's alarm (`ctx.storage.setAlarm`, `getAlarm`, `deleteAlarm`).

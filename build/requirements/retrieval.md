@@ -106,14 +106,14 @@ Internet level
 
 - `query-language`: `compile`, `textOf`, `FIELDS`, `FTS_COLUMNS`, `DEFAULT_FACETS`, `IDS_MAX`, `MEANING`, `meaningVocabulary`, `cachedNotes`, `MEANING_AXIS_CAP`, `GATE_MARK`.
 - `membership`: `viewerPredicate` (R5, R17, R21, R38) and `inSight` for `contentAxis` and the frontier (R23, R38; `legacy-store`'s `#bundleRedactor` wraps it today); `positionalMember` (R47); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
-- `record-core`: `recordOf(ctx)`, `transact`, the `bundles` read contract (R37) and the bundle's live files (R41–R43), the latest manifest row (R19's revision class), `declarePurge`.
+- `record-core`: `recordOf(ctx)`, `transact`, the `bundles` read contract (R37; `group_id` and `prior_state` for R1's projection, N287) and the bundle's live files (R41–R43), the latest manifest row (R19's revision class), `declarePurge`.
 - `promotion`: `registerStep` for R1's projection (K31). *(not declared)*
 - `provenance`: the `register` read contract (R48) for R14, R23, R38 and R43; `captured_locators` for R41.
 - `extraction`: the `readings`, `reading_refs` and `capture_text` read contracts (its map §3), the units behind R25; the drift obligations (R38 there) for R42.
 - `observation-log`: its content-axis vocabulary and rule (`CONTENT_AXIS_STATES`, `CONTENT_AXIS_UNDETERMINED`, `contentAxisFor`), the missing-row rule (`#missingCauseFrom`, `#missingContentCause`) and the `observation_log` reads; for the frontier, `latest`, `verification`, `missingCause` and `causesNotRuledOut`, `rowVisible` with its registered `run` resolver, `leadReach` and `leadRead`'s referent rule (R9–R13, R18, R19 there), and the vocabulary (`DEFINITIVE_STATES`, each level's missing-row causes and sentences and evidence sidedness, `INTERNET_FRONTIER_EMPTY_CAUSES`, `observationCoverage`).
 - `entities`, `content`: tables the compiler's arms read (`resolutions`, `content`); `entities`' read contract (its R35) for R46.
 - `capture`: the `deferred` partition of `links` (R40). *(not declared: K75 dropped `capture`, and it offers no read of that partition; map §5.9)*
-- `connections`: the `connections` table, R46's evidence for an entity. *(not declared: K75 dropped it; map §5.9, §5.10)*
+- `connections`: the `connections` table, R46's evidence for an entity, by its read contract on `entity_id` (its R59, N288). *(not declared: K75 dropped it; map §5.9, §5.10)*
 - `legacy-checks`: `parseFrontmatter`, `normalizeType`; C-23, C-33.20, C-33.32 until they move here (R31).
 - `progressions`: nothing in this module's share calls it (map §5).
 - `actions`: `actionFacts` (its R12), reached only through R53's registration, never by a use (layer 9).
