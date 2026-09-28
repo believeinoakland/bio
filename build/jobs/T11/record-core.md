@@ -38,3 +38,7 @@ Merged `tranche/T11` (C-22.7's catalogue row restored, the plane boots again) in
 - Still reported: the plane bundle is stale from record-core's `index.mjs` (not rebuilt); the requirements' Status line's "not yet met" for N213/N219 is stale.
 
 Size (session_01F4Zw6fHHxLm7fXnQfo4nc5): test runs 2, module lines 1046
+
+## J2 · COMPLETE · re B2
+
+B2 applied: merged tranche/T11 (C-22.7 restored); no change needed. record-core 55/55; users' suites incl. the plane-booting ones 1786 tests, 1767 pass, 0 fail, 19 todo (the 40 J1 reds all gone); format, architecture, coverage 61/61, ownership 0 failures. Record updated with its own Size line.
