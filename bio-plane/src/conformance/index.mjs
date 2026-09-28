@@ -340,13 +340,14 @@ export class Conformance {
     return { ok: true, standards: out };
   }
 
-  /* standards R7's answer, as a word and why, whatever spelling the answer takes. */
+  /* standards R7's answer (`{ok, id, date, state, why}`, K251) as a word and why. A refusal or an unreadable answer is
+     undetermined, never in force. */
   #inForce(id, date) {
     let r = null;
     try { r = this.standards.inForce(id, date); } catch { r = null; }
-    const answer = typeof r === "string" ? r : isObj(r) ? (r.answer ?? r.state ?? r.in_force ?? null) : null;
-    return { date, answer: ["in_force", "not_in_force", "undetermined"].includes(answer) ? answer : "undetermined",
-             why: isObj(r) ? (r.why ?? null) : null };
+    const ok = isObj(r) && r.ok !== false;
+    const answer = ok && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
+    return { date, answer, why: ok ? (r.why ?? null) : (isObj(r) ? (r.detail ?? r.reason ?? null) : "standards did not answer") };
   }
 
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */

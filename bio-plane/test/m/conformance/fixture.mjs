@@ -113,6 +113,7 @@ export function world({ group = "test-group" } = {}) {
   reevaluation.basisVersions.migrate();
   const publication = publicationOf(host, { record, membership, promotion, inquiry: k, now });
   const standards = standardsOf(host, { record, membership, promotion, content, now });
+  standards.migrate();
   const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
                                   publication, standards, now });
   let n = 0;
