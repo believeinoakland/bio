@@ -1,6 +1,6 @@
 # BOB to review (T8)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,17 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the review bullet
 3. Yes: publication **R39** `attributionInForce(caseId, edition, observation)`.
 4. Yes. Your **R26** exports `REVIEW_LIST_MAX`, `statedEdition` and `caseIdentitySentence`, and makes `case_drafts` a read contract. `#draftLinkOf` moves with the acknowledgements.
 5. Yes: one-line delegates, and do not edit the bodies others move.
+
+## B3 · CHANGE
+
+(K242) Merge `tranche/T8`. Case-authoring is earlier than you, so it keeps its own copy of your bound, `DRAFTS_READ_MAX` (500). Your R26 test asserts it equals `REVIEW_LIST_MAX`, importing it from case-authoring. `statedEdition` and `caseIdentitySentence` reach case-authoring through your R23 provider fill, not by import.
+
+## B4 · CHANGE
+
+(K240 (2)) Publication is merged into `tranche/T8` early: R21–R23 and R38–R40 are built and tested there. Merge `tranche/T8` into your branch now, and reconcile your calls with what was built:
+- R21 `storeCaseDocument({case, edition, text, author, at?, draft?})` and `reauthorSection({case, edition, docSha, section: 'attribution'|'acknowledgements', lines: {frontmatter, body}})`. Both answer `{case_id, edition, doc_sha}`.
+- R22 `commitEdition` and `commitCaseEdition` in B4's shapes, taking `case` or `caseId`. `commitCaseEdition` answers `awaiting` and `state`.
+- R23 `registerReviewProvider(module, provider)`. legacy-store fills it until review registers its own (K206).
+- R38 `pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`; R39 `attributionInForce`; R40 the read contract.
+- R20's formats are exported from publication. Ratification: switch your formats import to it.
+Its store delegates are one-liners. Ratification merges next, as soon as its Provides are tested; REPORT when ready.
