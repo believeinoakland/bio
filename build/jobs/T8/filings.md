@@ -48,3 +48,7 @@ Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 12, module lines 1303
 4. legacy-tests: the DEC-49 guard may harvest `FILINGS_CHECKS` (C-115.1–.26, `src/filings/checks.mjs`), each `where` a region marked in `src/filings/index.mjs`.
 5. My readings beyond J1: `ALREADY_APPROVED` is asked right after `NO_SUCH_FILING` (R6 names it outside its ordered list); a draft id is `FIL-`, a packet `CPK-` (one per action, versioned), a theory proposal `THY-` (none of them bundles).
 6. No generated artifact is stale: nothing bundled imports `src/filings/`.
+
+## J3 · COMPLETE
+
+filings built per requirements (R1–R21): 30/30 tests, 21/21 ids covered; format, architecture, coverage and ownership clean; no legacy file touched. Providers' shapes (J1 items 1–5) are my reading until their early merges; a CHANGE re-opens the adapters. Record: build/jobs/T8/filings.md, §Completion; REPORT J2.
