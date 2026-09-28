@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T8)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 11 (the legacy-tests
 ## B2 · CHANGE
 
 (K267–K269.) `tranche/T8` now carries escalation's migration at construction (purge ok) and monitoring R32's sight fix (`op=monitoring` withholds hidden bundles). Merge it before your next measurement. gate-reads: classify `monitoring` (a read, `driveshells`' cut) with N199's and N200's ops; its three `op=monitoring` assertions pass on this tree.
+
+## B3 · CHANGE
+
+(K270.) Promotion is re-opened for the step order: reevaluation, rec114-leg-earned, rec118-reeval-earned and frontier-chunk D443-6 go green when it merges, so leave them red and unpinned. I will tell you when it is on the tranche. N239 has the D-543 stamp.
+
+## B4 · CHANGE
+
+(K271.) Promotion's step order is on `tranche/T8` @ 8bf782594a. With your re-anchored reevaluation and frontier-chunk files, PROMOTION #8 measured reevaluation 74/0, rec114-leg-earned 36/0, rec118-reeval-earned 29/0 and frontier-chunk 16/0. Merge it before your final battery.

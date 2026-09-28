@@ -17258,6 +17258,88 @@ var sameInstant = (a, b) => {
   return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();
 };
 var cut = (v, n) => String(v).slice(0, n);
+var MODULE_ORDER = Object.freeze([
+  /* 1 */
+  "legacy-checks",
+  "jurisdictions",
+  "test-support",
+  "bundler",
+  "runtime-limits",
+  "signatures",
+  "id-spaces",
+  "subresources",
+  "ooxml",
+  "office-readers",
+  "odf-reader",
+  "pdf-reader",
+  "format-registry",
+  "text-chain",
+  "docprofile",
+  "image-codecs",
+  "pdf-pixels",
+  "pdf-worker",
+  "ocr-worker",
+  /* 2 */
+  "record-core",
+  "membership",
+  "promotion",
+  /* 3 */
+  "host-governor",
+  "provenance",
+  "capture-sources",
+  "capture",
+  /* 4 */
+  "calibration",
+  "extraction",
+  "content",
+  /* 5 */
+  "entities",
+  "connections",
+  "progressions",
+  "bias",
+  "observation-log",
+  "query-language",
+  "retrieval",
+  /* 6 */
+  "inquiry",
+  "citation",
+  "basis-versions",
+  "strength",
+  "contradiction",
+  "ai-runs",
+  "run-productions",
+  "capture-requests",
+  "skills",
+  "agent-worker",
+  /* 7 */
+  "intent",
+  "reevaluation",
+  /* 8 */
+  "publication",
+  "ratification",
+  "case-authoring",
+  "review",
+  /* 9 */
+  "standards",
+  "conformance",
+  "consequences",
+  "actions",
+  "filings",
+  "escalation",
+  /* 10 */
+  "monitoring",
+  "scheduler",
+  "legacy-store",
+  /* 11 */
+  "affordances",
+  "queue",
+  "instance-setup",
+  "control-plane",
+  "legacy-index",
+  "legacy-ui",
+  "installer",
+  "legacy-tests"
+]);
 var rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var ROW_FAMILIES = [
   ACT_SHAPE_CHECKS,
@@ -17361,7 +17443,7 @@ var Promotion = class {
     this.#record = record;
     this.#membership = membership;
     this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
   }
   /* ---------------------------------------------------------------- R39, R40: the registry */
   registerStep(module, { check = null, project = null } = {}) {

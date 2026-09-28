@@ -72,7 +72,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **R39** A later module registers, once at start, a `check` run before the write and a `project`ion
   written after it, both inside the promotion's one `record-core.transact`. A registered check's refusal
   refuses the promotion under R2, with its own `reason`. Steps run in the modules' total order. A step
-  or fact registered twice by one module is refused `STEP_DECLARED`. This module's own refusals (R1–R20) are asked first, then the registered checks in the total order (`legacy-store` last); then `commit`; then the registered projections in order. A projection answers `null` or an object whose keys are added to the accepted answer, never replacing this module's own keys. (K62)
+  or fact registered twice by one module is refused `STEP_DECLARED`. This module's own refusals (R1–R20) are asked first, then the registered checks in the modules' total order (the layer order of `build/modules.json`, then file order; a module it does not name runs last, K270); then `commit`; then the registered projections in order. A projection answers `null` or an object whose keys are added to the accepted answer, never replacing this module's own keys. (K62)
 - **R40** A fact this module needs from a later module (the citation index behind `CITED`, R16; case
   membership, R24) is read through `registerFact`. A fact with no registered provider refuses the act
   that needs it with `FACT_UNAVAILABLE`, naming the fact; it is never read as false.

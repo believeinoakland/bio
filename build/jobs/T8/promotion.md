@@ -1,6 +1,6 @@
 # promotion (T8)
 
-**Status** · session_01YGxAM3S1q5VWSShovpg56h · depth 2 · COMPLETE · handled B3
+**Status** · session_01EuPnv3s9AHDC8wfDv5W1A8 · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -153,3 +153,56 @@ See J4:
   - ownership: 3 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
 
 Size (session_01YGxAM3S1q5VWSShovpg56h): test runs 58, module lines 2248
+
+## J6 · REPORT
+
+Found by this re-opening (B4). None of them is changed here.
+
+1. **Generated artifacts (§14):** this job changes `bio-plane/src/promotion/index.mjs`, so `agent-worker/dist/agent-worker.bundled.mjs` is stale (`fleetbundles`: the agent-worker rows fail on staleness and byte identity; ocr-worker and pdf-worker pass). `bio-plane/dist/bio-plane.bundled.mjs` embeds the same source, so it is stale too. Regenerate both at the close.
+2. **legacy-tests (K270), for the merge:** the four suites B4 names pass on this code only with LEGACY-TESTS #5's re-anchored copies of `reevaluation.test.mjs`, `frontier-chunk.test.mjs` and `frontier-chunk.control.mjs` (`job/T8/legacy-tests`). With `tranche/T8`'s own copies, `reevaluation.test.mjs` stops at its first publish on `UNCLEARED_HUNCH` (the hunch-debt fixture its plan entry re-grades), here and on the base alike. Figures below, in J7.
+3. **R39's wording, for BOB (no change made):** R39 says the registered checks run "in the total order (`legacy-store` last)". In the layer order of `modules.json`, `legacy-store` (layer 10) comes before the eight layer-11 modules. None of those registers a step, check, projection or listener today, so the two readings agree on every registration made now. If a layer-11 module ever registers a step, it would run after `legacy-store`, and R39's parenthesis would need its wording clarified.
+4. **`modules.json` and promotion:** promotion now holds the modules' order as a constant (`MODULE_ORDER`), because product code cannot read `build/` at run time. The R39 test holds it equal to `modules.json`. So a module added, moved or reordered there turns promotion's suite red until the list follows it. That is intended, but it is a promotion entry each time.
+
+## J7 · COMPLETE
+
+**B4 is applied.** PROMOTION #8 (session_01EuPnv3s9AHDC8wfDv5W1A8), restarted from this record at B4. Code is at commit 1a92018593 on `job/T8/promotion`, over `tranche/T8` @ add57a2bc9.
+
+## Entries applied
+
+- **K270 (B4), R39's step order:** with no `order` given, `promotionOf` now uses `MODULE_ORDER`, held in `src/promotion/index.mjs`: the ids of `build/modules.json` by layer, then by their place in the file (69 ids). Before this, it used an empty list, so every step ran in registration order.
+  - The same order governs R45's `onCommitted` and R46's `onReopened` listeners, which R45 and R46 also put "in the modules' total order". A module the list does not name still runs last, in the order it registered. An `order` passed at creation still wins.
+  - On the plane this puts connections' projection (layer 5) before inquiry's (layer 6), so connections writes `refs` before inquiry's projection reads them. It also puts the listeners in the order bias, connections, monitoring, scheduler.
+- **Tests (registry.test.mjs):**
+  - "R39: two steps registered in reverse order still run in the modules' order when none is given": inquiry registered before connections; checks and projections run connections first.
+  - "R39, R45, R46: with no order given, every module's steps and listeners run in the modules' total order": reads `build/modules.json`, sorts its ids by layer and then file order, registers a check, a projection, an `onCommitted` and an `onReopened` listener for every id in reverse, plus one unknown module first. It asserts all four run in exactly that order, the unknown module last. This holds the constant equal to the file through behaviour at the interface; the constant is not exported.
+  - Negative control: with the old empty default, both new tests fail (14/2) and the rest pass.
+
+## Deferred
+
+None.
+
+## Found in other modules
+
+See J6: the stale agent-worker and bio-plane bundles; the four legacy suites need LEGACY-TESTS #5's fixtures; R39's "`legacy-store` last" against layer 11 (agrees today); `modules.json` changes now need a promotion entry.
+
+## Tests and checks
+
+- **This module:** `node --test bio-plane/test/m/promotion/`: tests 66, pass 66, fail 0 (64 before, plus the two new tests).
+- **Users' suites** (every module whose uses include promotion), on this branch and on `tranche/T8` @ add57a2bc9. Every result is identical on both:
+  - provenance 55/0, extraction 65/0, content 50/0, bias 45/0, retrieval 58/0, inquiry 50/0, basis-versions 42/0, strength 40/0, ai-runs 41/0, capture-requests 53/0, intent 35/0, reevaluation 39/0, publication 53/0, ratification 65/0, standards 16/0, conformance 29/0, consequences 22/0, actions 30/0, escalation 28/0, monitoring 43/0, scheduler 46/0, affordances 72/0.
+  - These fail the same way here and on the base: connections 59/1, citation 48/1.
+  - instance-setup has no tests yet.
+- **The four legacy suites B4 names,** with LEGACY-TESTS #5's copies of the reevaluation and frontier-chunk files (J6 item 2), this branch against the base:
+  - `reevaluation`: 74/0, against 69/5 on the base.
+  - `rec114-leg-earned`: 36/0, against 33/3.
+  - `rec118-reeval-earned`: 29/0, against 10/19.
+  - `frontier-chunk`: 16/0, against 15/1 (D443-6).
+  - With `tranche/T8`'s own copies: `rec114-leg-earned` and `rec118-reeval-earned` pass here and fail on the base. `reevaluation` and `frontier-chunk` fail on both, at `UNCLEARED_HUNCH` and the fixtures legacy-tests re-anchors.
+- **Old battery:** `fleetbundles`: the agent-worker rows are stale (J6 item 1).
+- **Checks:**
+  - format: 69 modules, 64 requirements files; 0 failures.
+  - architecture: 16 product files, 53 relative imports; 0 failures.
+  - coverage: 48 of 48 live requirement ids named by a test; 0 failures.
+  - ownership: 3 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
+
+Size (session_01EuPnv3s9AHDC8wfDv5W1A8): test runs 14, module lines 2270

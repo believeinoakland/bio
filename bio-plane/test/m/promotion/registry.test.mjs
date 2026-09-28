@@ -39,6 +39,47 @@ test("R39: steps run in the modules' total order given at creation", async () =>
   assert.deepEqual(seen, ["a", "b", "legacy-store"]);
 });
 
+/* The modules' total order, as `build/modules.json` states it: its ids by layer, then by their place in the file. */
+const modulesOrder = async () => {
+  const { readFile } = await import("node:fs/promises");
+  const { modules } = JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
+  return modules.map((m, i) => [m.layer, i, m.id]).sort((a, b) => (a[0] - b[0]) || (a[1] - b[1])).map((x) => x[2]);
+};
+
+test("R39: two steps registered in reverse order still run in the modules' order when none is given (connections writes refs before inquiry reads them)", () => {
+  const { p } = makePromotion();
+  const seen = [];
+  for (const m of ["inquiry", "connections"])
+    p.registerStep(m, { check: () => { seen.push(`check:${m}`); return null; }, project: () => { seen.push(`project:${m}`); return null; } });
+  assert.equal(p.promote(create(ID, infoDoc(ID))).ok, true);
+  assert.deepEqual(seen, ["check:connections", "check:inquiry", "project:connections", "project:inquiry"]);
+});
+
+test("R39, R45, R46: with no order given, every module's steps and listeners run in the modules' total order, the layer order of build/modules.json; an unknown module runs last", async () => {
+  const order = await modulesOrder();
+  const { p, record } = makePromotion();
+  const checks = [], projections = [], committed = [], reopened = [];
+  /* Registered in the reverse of the order, an unknown module first. */
+  for (const m of ["not-a-module", ...[...order].reverse()]) {
+    assert.equal(p.registerStep(m, { check: () => { checks.push(m); return null; },
+                                     project: () => { projections.push(m); return null; } }).ok, true);
+    assert.equal(p.onCommitted(m, () => { committed.push(m); }).ok, true);
+    assert.equal(p.onReopened(m, () => { reopened.push(m); return null; }).ok, true);
+  }
+  const want = [...order, "not-a-module"];
+  const inq = "INQ-2026-0001";
+  const r = p.promote({ ...create(inq, doc({ id: inq, object_type: "inquiry", title: "Q", current_state: "deferred",
+    created: T0, last_updated: T0, group: "test-group", state_history: "[]" })), replay: true });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  await new Promise((res) => setTimeout(res, 0));
+  assert.deepEqual(checks, want);
+  assert.deepEqual(projections, want);
+  assert.deepEqual(committed, want);
+  assert.equal(p.reopen({ target: inq, reason: "why", viewer: "member:a", author: "member:a" }).ok, true);
+  assert.deepEqual(reopened, want);
+  assert.equal(record.head(inq).currentState, "open");
+});
+
 test("R40: a fact with no registered provider refuses the act that needs it with FACT_UNAVAILABLE; a fact registered twice is STEP_DECLARED", () => {
   const bare = makePromotion({ facts: false });
   const r = bare.p.promote(create(ID, infoDoc(ID)));
