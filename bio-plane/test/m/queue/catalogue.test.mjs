@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   classOfKind, catalogueIdOf, itemClassOf, suppressedBy, mutedAsItem, serializeMutedKinds, parseMutedKinds,
-  QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, CONDITION_KINDS as REEXPORTED,
+  QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS,
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
@@ -91,7 +91,6 @@ test("R4: suppressedBy names the first muted ancestor holding the kind, with no 
 
 test("R5: the condition kinds are observation-log's vocabulary, re-exported as QUEUE_CONDITION_KINDS", () => {
   assert.equal(QUEUE_CONDITION_KINDS, CONDITION_KINDS);
-  assert.equal(REEXPORTED, CONDITION_KINDS);
   assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted(CONDITION));
   assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 12);
   for (const k of Object.keys(CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);

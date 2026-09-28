@@ -58,8 +58,8 @@
  * the feed can emit (four of the twelve have a producer), which is the safe direction: the fence accepts a mute for
  * a kind whose generator is not built, and the mint refuses any CONDITION kind this list does not name. A surface
  * never keeps a copy of it; it reads it from the refusal or from op=queue's own answer. */
-export { CONDITION_KINDS as QUEUE_CONDITION_KINDS, CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
 import { CONDITION_KINDS as QUEUE_CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
+export { QUEUE_CONDITION_KINDS };
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a
  * refusal can say what the kind ACTUALLY is instead of only what it is not, and
