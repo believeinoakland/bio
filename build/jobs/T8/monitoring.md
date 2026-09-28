@@ -37,7 +37,7 @@ Size (session_01Lj27owwtEDMzBp4RqU8K7N): test runs 33, module lines 2106
 - `gate-reads` (legacy-tests' version, against this branch): 134 pass, 1 fail (the classification list above). The `tranche/T8` version: 110 pass, 5 fail, none about `op=monitoring`'s answer.
 - `checks/format.mjs`: 0 failures. `architecture … monitoring`: 0 failures. `coverage … monitoring`: 45 of 45; 0 failures. `ownership … monitoring tranche/T8`: 3 files; legacy modules 0 added, 0 removed; 0 failures.
 
-Size (session_01Gi5kia2MeGG61hfhuR3yVU): test runs 9, module lines 2130
+Size (session_01Gi5kia2MeGG61hfhuR3yVU): test runs 9, module lines 2129
 
 ## J1 · QUESTION
 
