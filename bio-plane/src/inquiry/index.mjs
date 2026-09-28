@@ -28,13 +28,13 @@ import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, derive
          MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS } from "../../checks/bio-checks.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
-import { retrievalOf, SELECTION_ID_CHUNK } from "../retrieval/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
@@ -50,6 +50,20 @@ export const RELEASE_ACK_MAX = 500;
 /** R15: how many legs one `earnedBasis` read backfills, and how many targets it answers. */
 export const LEG_BACKFILL_MAX = 50;
 export const EARNED_TARGETS_MAX = 200;
+/** R15: how many ids one statement binds in `#legVersions` (D-36's variable ceiling); this module's own copy of the
+ *  bound retrieval holds for its selections, which is not a service it provides (K57). */
+const ID_CHUNK = 64;
+/** R39 (N183): the projects drawing on one member a refusal names, at most, the first by id (basis-versions R37's
+ *  bound); deciding "more than one" is never cut by it. */
+export const PROJECTS_DRAWING_MAX = 32;
+/** R41, R18 (N183): the most legs, stale rows past a notice's bound, or exclusions one statement reads. */
+export const STALE_PAGE = 500;
+/** R44 (N149): the longest member-browser agent recorded; a longer or unprintable stamp is not an agent to present. */
+export const MEMBER_AGENT_MAX = 512;
+const agentOf = (v) => {
+  const t = typeof v === "string" ? v.trim() : "";
+  return t && t.length <= MEMBER_AGENT_MAX && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
+};
 /** R20: the two dispositions (a copy, K78 (3): `affordances` re-exports it). */
 export const DISPOSITIONS = ["deferred", "dismissed"];
 
@@ -58,7 +72,7 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
 export const INQUIRY_DISPOSE_CHECKS = {
   DRAWN_ON_BY_SEVERAL_PROJECTS: {
     check: 'C-106.1',
-    where: 'src/inquiry/index.mjs dispose > is-dispose-shared',
+    where: 'src/inquiry/index.mjs #dispose > is-dispose-shared',
     translation: 'More than one project draws on this question, and setting it down here would set it down for '
       + 'every one of them. One team\'s disposition never moves another team\'s stance: set it aside for your own '
       + 'project instead, which leaves the question where the other projects have it.',
@@ -188,29 +202,46 @@ export class Inquiry {
 
   /** R21, R25: `reevaluation`'s obligation. `fn({target, cause, since, viewer})` answers the dependents raised. */
   onRaised(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
-    if (this.#onRaised) return { ok: false, reason: "LISTENER_DECLARED", module: this.#onRaised.module };
+    /* N202: membership's one site of LISTENER_MALFORMED and LISTENER_DECLARED (its R81); a one-registration slot. */
+    const refused = listenerRefusal(this.#onRaised, module, fn);
+    if (refused) return refused;
     this.#onRaised = { module, fn };
     return { ok: true, module };
   }
   /** R28: `strength`'s pair. `fn(inquiryId)` answers `{capture, connection, testimony?}`, each `{state, grade}`. */
   onGrounded(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
-    if (this.#onGrounded) return { ok: false, reason: "LISTENER_DECLARED", module: this.#onGrounded.module };
+    const refused = listenerRefusal(this.#onGrounded, module, fn);
+    if (refused) return refused;
     this.#onGrounded = { module, fn };
     return { ok: true, module };
   }
-  /* The re-evaluation an act raised, or null when no module is registered to raise it. */
+  /* The re-evaluation an act raised, `{raised, failed}`, or null when no module is registered to raise it. The listener
+     answers the dependents (an array), or `{raised, listeners_failed}` when some of its own listeners failed
+     (reevaluation R8), which are carried unchanged (R42, N160); a listener that throws is named there itself, and
+     never undoes the act. */
   #raise(target, cause, since, viewer) {
     if (!this.#onRaised) return null;
-    try { const r = this.#onRaised.fn({ target, cause, since, viewer }); return Array.isArray(r) ? r : []; }
-    catch { return []; }
+    try {
+      const r = this.#onRaised.fn({ target, cause, since, viewer });
+      if (Array.isArray(r)) return { raised: r, failed: [] };
+      if (r && typeof r === "object")
+        return { raised: Array.isArray(r.raised) ? r.raised : [],
+                 failed: Array.isArray(r.listeners_failed) ? r.listeners_failed : [] };
+      return { raised: [], failed: [] };
+    } catch { return { raised: [], failed: [this.#onRaised.module] }; }
+  }
+  /* R42: the `reevaluation` field of an act's answer, over what each raise answered (in order), or the absence. */
+  static #reevaluation(cause, since, raises) {
+    if (raises === null)
+      return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
+    const failed = [];
+    for (const r of raises) for (const f of r.failed) if (!failed.includes(f)) failed.push(f);
+    return { reevaluation: { source: cause, since, raised: raises.flatMap((r) => r.raised),
+                             ...(failed.length ? { listeners_failed: failed } : {}) } };
   }
   #reevaluationField(target, cause, since, viewer) {
-    const raised = this.#raise(target, cause, since, viewer);
-    return raised === null
-      ? { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" }
-      : { reevaluation: { source: cause, since, raised } };
+    const r = this.#raise(target, cause, since, viewer);
+    return Inquiry.#reevaluation(cause, since, r === null ? null : [r]);
   }
   #strength(id) {
     if (!this.#onGrounded) return null;
@@ -458,6 +489,11 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R44 (N149): the member-browser agent, recorded at the creation from the control plane's stamp, never after. */
+    const agent = !cur && isInquiry && !pkg.replay ? agentOf(pkg.memberUserAgent) : null;
+    if (agent)
+      this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at) VALUES (?,?,?)`,
+        bundleId, agent, this.#when());
     return { ...(migrated ? { migration_replay: migrated } : {}),
              ...(contentProjected.length ? { content: contentProjected } : {}) };
   }
@@ -477,15 +513,23 @@ export class Inquiry {
     return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM bundles WHERE bundle_id=?`, id));
   }
 
-  /** R18: the exclusions naming `targetId` the viewer may see, each with its inquiry, edition, description, reason,
-   *  author and date. */
+  /** R18 (publication R12 reads it): the exclusions naming `targetId` the viewer may see, each with its inquiry, edition,
+   *  description, reason, author and date, in (inquiry, ord) order. Every one is answered; they are read a page at a
+   *  time, at most `STALE_PAGE` rows per statement (N183). An absent viewer fails closed. */
   exclusionsNaming(targetId, viewer = null) {
     if (!targetId) return [];
     const gate = viewerPredicate(viewer);
-    return this.#rows(
-      `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at, b.current_state, b.title
-         FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
-        WHERE x.target_id=? AND (${gate.sql}) ORDER BY x.bundle_id, x.ord`, targetId, ...gate.args);
+    const out = [];
+    for (let bid = "", ord = -1; ;) {
+      const page = this.#rows(
+        `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at, b.current_state, b.title
+           FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
+          WHERE x.target_id=? AND (${gate.sql}) AND (x.bundle_id > ? OR (x.bundle_id = ? AND x.ord > ?))
+          ORDER BY x.bundle_id, x.ord LIMIT ?`, targetId, ...gate.args, bid, bid, ord, STALE_PAGE);
+      out.push(...page);
+      if (page.length < STALE_PAGE) return out;
+      ({ bundle_id: bid, ord } = page[page.length - 1]);
+    }
   }
 
   /** R19 (D-592): the inquiry's state transitions from its own `state_history`, each with who took it and when (a
@@ -505,11 +549,15 @@ export class Inquiry {
       by: r.author ?? null, reason: r.blurb ?? null })) };
   }
 
-  /** The member-browser agent the inquiry's own document records (`member_user_agent`, trimmed), or null when none is
-   *  recorded: never a default, which would be an invented client (capture-requests reads it, its R3, R14). */
+  /** R44: the member-browser agent recorded when the inquiry was created (the control plane's stamp, N149; a division's
+   *  children carry their parent's), else the one its own document records (`member_user_agent`, trimmed), or null:
+   *  never a default, which would be an invented client (capture-requests reads it, its R3, R14). */
   memberUserAgent(id) {
     try {
-      const md = id ? this.record.readFile(id, "bundle.md") : null;
+      if (!id || typeof id !== "string") return null;
+      const rec = this.#one(`SELECT user_agent FROM inquiry_member_agents WHERE bundle_id=?`, id);
+      if (rec && rec.user_agent) return rec.user_agent;
+      const md = this.record.readFile(id, "bundle.md");
       const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
       const ua = fm && typeof fm === "object" ? fm.member_user_agent : null;
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
@@ -523,21 +571,40 @@ export class Inquiry {
    *  none registered, the answer names them and nothing is written. Runs in content's transaction, so it never throws. */
   staled(notice) {
     try {
-      const ids = new Set((Array.isArray(notice && notice.rows) ? notice.rows : []).map((r) => r.content_id).filter(Boolean));
+      const ids = new Set((Array.isArray(notice && notice.rows) ? notice.rows : [])
+        .map((r) => r && r.content_id).filter((x) => typeof x === "string" && x));
+      /* N183: the capture's stale rows past the bound, and then the legs, each read a page at a time (at most
+         STALE_PAGE rows per statement) until every one is read. */
       if (notice && notice.ungraded && notice.ungraded_after)
-        for (const r of this.#rows(`SELECT content_id FROM content WHERE capture_sha=? AND stale=1 AND content_id > ?`,
-                                   notice.capture_sha, notice.ungraded_after)) ids.add(r.content_id);
+        for (let after = String(notice.ungraded_after); ;) {
+          const page = this.#rows(`SELECT content_id FROM content WHERE capture_sha=? AND stale=1 AND content_id > ?
+                                    ORDER BY content_id LIMIT ?`, notice.capture_sha, after, STALE_PAGE);
+          for (const r of page) ids.add(r.content_id);
+          if (page.length < STALE_PAGE) break;
+          after = page[page.length - 1].content_id;
+        }
       if (!ids.size) return { citing: [] };
-      const citing = this.#rows(
-        `SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
-          WHERE content_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify([...ids]));
+      const citing = [];
+      const list = JSON.stringify([...ids]);
+      for (let bid = "", ord = -1; ;) {
+        const page = this.#rows(
+          `SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
+            WHERE content_id IN (SELECT value FROM json_each(?)) AND (bundle_id > ? OR (bundle_id = ? AND ord > ?))
+            ORDER BY bundle_id, ord LIMIT ?`, list, bid, bid, ord, STALE_PAGE);
+        citing.push(...page);
+        if (page.length < STALE_PAGE) break;
+        ({ bundle_id: bid, ord } = page[page.length - 1]);
+      }
       const since = this.#when();
       const told = [];
+      let raises = [];
       for (const id of [...new Set(citing.map((l) => l.bundle_id))]) {
-        const raised = this.#raise(id, "restaled", since, null);
-        if (raised !== null) told.push({ inquiry: id, raised });
+        const r = this.#raise(id, "restaled", since, null);
+        if (r === null) { raises = null; break; }
+        told.push({ inquiry: id, raised: r.raised });
+        raises.push(r);
       }
-      return { citing, told, since };
+      return { citing, told, since, ...(raises ? Inquiry.#reevaluation("restaled", since, raises) : {}) };
     } catch { return { citing: [], failed: true }; }
   }
 
@@ -707,7 +774,8 @@ export class Inquiry {
       const drawing = this.projectsDrawingOn(id);
       if (drawing.length > 1) {
         const seen = drawing.filter((p) => this.membership.inSight(p, viewer));
-        shared.push({ id, projects: seen, ...(seen.length < drawing.length ? { others_out_of_view: true } : {}) });
+        shared.push({ id, projects: seen, ...(seen.length < drawing.length ? { others_out_of_view: true } : {}),
+                      ...(drawing.truncated ? { truncated: true, bound: PROJECTS_DRAWING_MAX } : {}) });
       }
     }
     if (shared.length)
@@ -767,27 +835,41 @@ export class Inquiry {
        inquiry cannot be dismissed at all. */
     let reevaluation = {};
     if (to === "deferred") {
-      const raisedAll = [];
-      let absent = false;
+      let raises = [];
       for (const id of disposed) {
-        const raised = this.#raise(id, "deferred", when, viewer);
-        if (raised === null) { absent = true; break; }
-        raisedAll.push(...raised.map((d) => ({ ...d, target: id })));
+        const r = this.#raise(id, "deferred", when, viewer);
+        if (r === null) { raises = null; break; }
+        raises.push({ raised: r.raised.map((d) => ({ ...d, target: id })), failed: r.failed });
       }
-      reevaluation = absent ? { reevaluation_absent: "no module is registered to raise the re-evaluation a deferral raises, so none is named here" }
-                            : { reevaluation: { source: "deferred", since: when, raised: raisedAll } };
+      reevaluation = Inquiry.#reevaluation("deferred", when, raises);
     }
     return { ok: true, to, reason: why, handle, disposed: disposed.sort(), weight: "refuse", drift: sel.drift,
              ...reevaluation };
   }
 
   /** R39: the projects drawing on an inquiry — a project whose document cites it (connections' `refs`, kind `cites`),
-   *  the citation not severed (connections R22), over every project whatever any viewer sees. */
+   *  the citation not severed (connections R22), over every project whatever any viewer sees. At most
+   *  `PROJECTS_DRAWING_MAX`, the first by id, the list carrying `truncated` when one more draws on it (N183). The
+   *  candidates are read a page at a time, one past the bound, and a severed citer takes no slot, so the bound never
+   *  decides whether more than one project draws on it. */
   projectsDrawingOn(id) {
-    return this.#rows(
-      `SELECT DISTINCT r.bundle_id AS p FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.target_id=? AND r.kind='cites' AND b.object_type='project' ORDER BY r.bundle_id`, id)
-      .map((r) => r.p).filter((p) => !this.connections.edgeSevered(p, id, "cites"));
+    const out = [];
+    out.truncated = false;
+    if (!id) return out;
+    let after = "";
+    for (;;) {
+      const page = this.#rows(
+        `SELECT DISTINCT r.bundle_id AS p FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+          WHERE r.target_id=? AND r.kind='cites' AND b.object_type='project' AND r.bundle_id > ?
+          ORDER BY r.bundle_id LIMIT ?`, id, after, PROJECTS_DRAWING_MAX + 1);
+      for (const r of page) {
+        after = r.p;
+        if (this.connections.edgeSevered(r.p, id, "cites")) continue;
+        if (out.length === PROJECTS_DRAWING_MAX) { out.truncated = true; return out; }
+        out.push(r.p);
+      }
+      if (page.length <= PROJECTS_DRAWING_MAX) return out;
+    }
   }
 
   /* THE ONE live-basis-leg predicate (REC-17 / D-5). Which inquiries REASON
@@ -1345,6 +1427,9 @@ export class Inquiry {
                    detail: `${cp.detail ? cp.detail + " " : ""}The division lands whole or not at all, so nothing was `
                          + `written: the parent is untouched and no child exists.` };
         created.push({ id: pl.id, question: pl.q, siblings: pl.sibs, legs: pl.mine, bundleSha: cp.bundleSha });
+        /* R44 (N149): the child is the parent's question asked again, in the browser the parent's was asked in. */
+        this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at)
+                       SELECT ?, user_agent, at FROM inquiry_member_agents WHERE bundle_id=?`, pl.id, target);
       }
       return null;
     });
@@ -2385,11 +2470,11 @@ export class Inquiry {
     if (!docs.length) return;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     const bytesLegs = md && md.content !== null ? (parseFrontmatter(md.content).data?.basis || []) : [];
-    /* CHUNKED under D-36's ~100-variable ceiling (the store's own `SELECTION_ID_CHUNK`): the count names
+    /* CHUNKED under D-36's ~100-variable ceiling (`ID_CHUNK`): the count names
        each chunk TWICE (both halves of the union), so it takes half a chunk at a time. */
     const targets = [...new Set(docs.map((l) => l.target))];
     const held = new Map();
-    const half = Math.floor(SELECTION_ID_CHUNK / 2);
+    const half = Math.floor(ID_CHUNK / 2);
     for (let i = 0; i < targets.length; i += half) {
       const part = targets.slice(i, i + half), qs = part.map(() => "?").join(",");
       for (const r of this.#rows(
@@ -2401,8 +2486,8 @@ export class Inquiry {
     }
     const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
     const capOf = new Map();
-    for (let i = 0; i < cids.length; i += SELECTION_ID_CHUNK) {
-      const part = cids.slice(i, i + SELECTION_ID_CHUNK);
+    for (let i = 0; i < cids.length; i += ID_CHUNK) {
+      const part = cids.slice(i, i + ID_CHUNK);
       for (const r of this.#rows(
         `SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
         ...part)) capOf.set(r.content_id, r.capture_sha);

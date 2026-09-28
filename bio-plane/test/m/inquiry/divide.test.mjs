@@ -105,3 +105,17 @@ test("R26 the parent and every child land together or none does", () => {
   assert.equal(w.record.head(C1), null, "the first child rolled back");
   assert.equal(r.created, undefined, "no partial answer");
 });
+
+test("R42 R25 a division carries the listener's own failures as reevaluation.listeners_failed; a listener that throws is named and the division stands", () => {
+  const w = setup();
+  w.k.onRaised("reevaluation", ({ target, cause }) => ({ raised: [{ bundle_id: "DEP", ord: 0, target, cause }], listeners_failed: ["intent"] }));
+  const r = div(w);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.reevaluation, { source: "supersession", since: r.at, raised: [{ bundle_id: "DEP", ord: 0, target: P, cause: "supersession" }],
+                                     listeners_failed: ["intent"] });
+  const w2 = setup();
+  w2.k.onRaised("reevaluation", () => { throw new Error("boom"); });
+  const t = div(w2);
+  assert.equal(t.ok, true); assert.equal(w2.fm(P).current_state, "divided");
+  assert.deepEqual(t.reevaluation.listeners_failed, ["reevaluation"]); assert.deepEqual(t.reevaluation.raised, []);
+});
