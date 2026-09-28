@@ -3,19 +3,32 @@
    `bundles` projection and `bundles_fts`, membership's `members` and `project_participants`, content R45,
    extraction's `capture_text` and its index, entities' `resolutions`, inquiry's `inquiry_basis`, basis-versions'
    `inquiry_basis_version_legs`, provenance's `register`, extraction's `readings`, the `observation_log`).
-   The module holds no database: every test compiles a plan at the interface and runs what it returns. */
+   The module holds no database: every test compiles a plan at the interface and runs what it returns.
+   `world({projection: {table, key}})` holds the projection in a relation of its own (R25, N106): retrieval R2's
+   columns, `fm_json` and `fts_id` there, keyed by bundle, and none of them on `bundles`, so a statement that reads
+   one off `bundles` fails; every compile of that world is given the relation. */
 import { DatabaseSync } from "node:sqlite";
 import { compile, FIELDS, PROVENANCE_COLS, FTS_COLUMNS } from "../../../src/query.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
-export function world() {
+/* retrieval R2's projection columns (its R61 moves them, with `fts_id`, off `bundles`). */
+export const PROJECTION_COLS = ["schema_id", "produced_mode", "capability_tier", "source_locator", "source_authority",
+  "source_retrieved", "source_status", "content_hash", "monitor_enabled", "monitor_frequency", "monitor_last_checked",
+  "annotations_open", "reeval_flag", "reeval_since", "reeval_source", "fm_json", "action_kind", "action_risk_tier",
+  "action_counterparty_state", "action_resolution", "action_clock_next", "action_clock_overdue"];
+
+export function world({ projection = null } = {}) {
   const db = new DatabaseSync(":memory:");
+  const P = projection;
   const cols = [...new Set([...PROVENANCE_COLS, ...Object.values(FIELDS).map((f) => f.col)])]
     .filter((c) => c !== "bundle_id");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, fts_id INTEGER, fm_json TEXT,
-             ${cols.map((c) => `${c} ${["annotations_open", "reeval_flag", "monitor_enabled", "inquiry_basis_count",
-               "action_risk_tier", "action_clock_overdue"].includes(c) ? "INTEGER" : "TEXT"}`).join(", ")})`);
+  const decl = (c) => `${c} ${["annotations_open", "reeval_flag", "monitor_enabled", "inquiry_basis_count",
+    "action_risk_tier", "action_clock_overdue", "fts_id"].includes(c) ? "INTEGER" : "TEXT"}`;
+  const onProj = (c) => !!P && (c === "fts_id" || PROJECTION_COLS.includes(c));
+  const all = ["fts_id", "fm_json", ...cols];
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, ${all.filter((c) => !onProj(c)).map(decl).join(", ")})`);
+  if (P) db.exec(`CREATE TABLE ${P.table} (${P.key} TEXT PRIMARY KEY, ${all.filter(onProj).map(decl).join(", ")})`);
   db.exec(`CREATE VIRTUAL TABLE bundles_fts USING fts5(${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
   db.exec(`CREATE TABLE members (member_id TEXT PRIMARY KEY, role TEXT, status TEXT);
     CREATE TABLE project_participants (project_id TEXT, member_id TEXT, state TEXT);
@@ -48,16 +61,18 @@ export function world() {
       const row = { bundle_id: id, fts_id: fid, object_type: type, title, fm_json: fm ? JSON.stringify(fm) : null,
                     last_updated: rest.last_updated ?? `2026-01-${String(fid).padStart(2, "0")}`,
                     source_locator: locator, source_authority: authority, ...rest };
-      const keys = Object.keys(row);
-      db.prepare(`INSERT INTO bundles (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`)
+      const put = (table, keys) => db.prepare(`INSERT INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`)
         .run(...keys.map((k) => bind(row[k])));
+      put("bundles", Object.keys(row).filter((k) => !onProj(k)));
+      if (P) { row[P.key] = id; put(P.table, [P.key, ...Object.keys(row).filter(onProj)]); }
       db.prepare(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (?,?,?,?,?,?)`)
         .run(fid, title, body, `${id} ${meta}`, locator, authority);
       return id;
     },
     /* Replace a bundle's indexed text (a revision). */
     revise(id, { title = "", body = "", meta = "" } = {}) {
-      const f = db.prepare(`SELECT fts_id FROM bundles WHERE bundle_id=?`).get(id).fts_id;
+      const f = (P ? db.prepare(`SELECT fts_id FROM ${P.table} WHERE ${P.key}=?`)
+                   : db.prepare(`SELECT fts_id FROM bundles WHERE bundle_id=?`)).get(id).fts_id;
       db.prepare(`DELETE FROM bundles_fts WHERE rowid=?`).run(f);
       db.prepare(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (?,?,?,?,?,?)`)
         .run(f, title, body, `${id} ${meta}`, "", "");
@@ -76,7 +91,7 @@ export function world() {
     all(stmt) { return db.prepare(stmt.sql).all(...stmt.args.map(bind)).map((r) => ({ ...r })); },
     /* Compile and run one shape. */
     run(opts, shape = "page", arg) {
-      const plan = compile(opts);
+      const plan = P ? compile(opts, { projection: P }) : compile(opts);
       const s = plan.statements[shape](arg);
       if (s === null) return { plan, rows: null };
       const rows = Array.isArray(s) ? s.flatMap((x) => w.all(x)) : w.all(s);

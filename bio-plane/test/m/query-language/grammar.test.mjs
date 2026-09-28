@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { compile, FIELDS, MEANING, MACHINE_READ_KINDS } from "../../../src/query.mjs";
 import { CONTENT_EXTENT_KINDS } from "../../../src/content/index.mjs";
-import { STEP_KINDS, CHAIN_KIND_MIXED } from "../../../src/textchain.mjs";
+import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS as TEXT_CHAIN_MACHINE_READ_KINDS } from "../../../src/textchain.mjs";
 import { normalizeType } from "../../../checks/bio-checks.mjs";
 
 const V = "class:member";
@@ -206,6 +206,7 @@ test("R6 the content: arm's sub-fields over the content table, and passage: over
   assert.deepEqual(ids("content:layer"), [], "a kind no row holds");
   /* content R14, DEC-4: a machine reading also finds the units read in more than one way. */
   assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai"]);
+  assert.equal(MACHINE_READ_KINDS, TEXT_CHAIN_MACHINE_READ_KINDS, "text-chain's list, re-exported (N104)");
   assert.deepEqual(ids("content:ocr"), ["D1", "D2"]);
   assert.deepEqual(ids("content:chain=ai"), ["D2", "D5"]);
   assert.deepEqual(ids("content:mixed"), ["D2"]);
