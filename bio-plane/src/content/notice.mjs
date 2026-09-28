@@ -88,6 +88,32 @@ function dice(a, b) {
   return (2 * shared) / (a.n + b.n);
 }
 
+const said = (s) => s || "never recorded";
+
+/** THE TEXT THE RECORD HOLDS WHOLE AT EXACTLY `extent` of one capture (R31's cited passage, R46's `passageText`), from
+ *  its held units `{units: [{extent (canonical JSON), ref, text, truncated}], state}` in `seq` order: for a `document`
+ *  extent every unit joined by a line feed, only when the index reads `whole` and no unit is cut at the per-unit cap;
+ *  otherwise the one unit whose canonical extent is `extent`'s, only when it is not cut. Returns `{text, extent}` (the
+ *  canonical extent), or `{text: null, reason, why}` naming what is not held. ONE rule, so a passage graded across
+ *  versions and a passage's text read by a later module are the same text. Pure. */
+export function heldTextAt(extent, held) {
+  if (extent.kind === "document") {
+    if (held.state !== "whole" || !held.units.length || held.units.some((u) => u.truncated))
+      return { text: null, reason: "cited_text_partial", why: "the citation is to the whole document, and the record "
+        + `does not hold the cited version's text whole (its index reads ${said(held.state)}), so there is no whole text` };
+    return { text: held.units.map((u) => u.text).join("\n"), extent: canonicalExtent(extent) };
+  }
+  const at = canonicalExtent(extent);
+  const u = held.units.find((x) => x.extent === at);
+  if (!u)
+    return { text: null, reason: "cited_text_not_held", why: `the record holds no text at exactly ${describeExtent(extent)} `
+      + "of the cited version (only whole indexed units — a PDF page, a paragraph, a slide — carry text)" };
+  if (u.truncated)
+    return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit "
+      + "cap, so the whole passage is not held" };
+  return { text: u.text, extent: at };
+}
+
 /** THE GRADE for one cited passage (`row`: its `cited_as`, `ref`) against one newer capture, from the two captures'
  *  held units `{units: [{extent (canonical JSON), ref, text, truncated}], state}` where `state` is the text index's
  *  own (`whole`, `partial`, `none`, or null for never indexed; extraction R36). Returns
@@ -97,7 +123,6 @@ export function gradeAcross(row, extent, older, newer) {
   const out = (grade, reason, why, found_at = null, similarity = null) =>
     ({ grade, affects: G[grade].affects, reason, why, found_at, similarity });
   const U = (reason, why) => out("UNDETERMINED", reason, why);
-  const said = (s) => s || "never recorded";
   const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
   if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
     return U("extent_unreadable", "the cited passage's extent could not be read back from its row");
@@ -105,24 +130,8 @@ export function gradeAcross(row, extent, older, newer) {
     return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part "
       + "digest of the newer capture to compare it with");
   const whole = extent.kind === "document";
-  let cited;
-  if (whole) {
-    if (older.state !== "whole" || !older.units.length || older.units.some((u) => u.truncated))
-      return U("cited_text_partial", "the citation is to the whole document, and the record does not hold the "
-        + `cited version's text whole (its index reads ${said(older.state)}), so there is no whole text to compare`);
-    cited = { extent: canonicalExtent(extent), text: older.units.map((u) => u.text).join("\n") };
-  } else {
-    const at = canonicalExtent(extent);
-    const u = older.units.find((x) => x.extent === at);
-    if (!u)
-      return U("cited_text_not_held", `the record holds no text at exactly ${describeExtent(extent)} of the cited `
-        + "version (only whole indexed units — a PDF page, a paragraph, a slide — carry text), so there is "
-        + "nothing to compare");
-    if (u.truncated)
-      return U("cited_text_truncated", "the cited passage's text is held only to the per-unit cap, so an "
-        + "identity with the newer version cannot be established");
-    cited = { extent: at, text: u.text };
-  }
+  const cited = heldTextAt(extent, older);
+  if (cited.text == null) return U(cited.reason, `${cited.why}, so there is nothing to compare`);
   const found = (x) => ({ extent: safeJson(x.extent), ref: x.ref });
   if (whole) {
     const complete = newer.state === "whole" && newer.units.length && !newer.units.some((u) => u.truncated);

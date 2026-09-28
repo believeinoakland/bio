@@ -85,11 +85,18 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - **R45** The table `content` and its columns `content_id` (the key), `capture_sha`, `bundle_id`, `extent_kind`, `extent` (the canonical extent, R2), `ref`, `stale` (0 or 1, one way, R22), `minted_by`, `cited_as` and `chain_kind` (R14) are a stated read contract: a later module may join them in its own SQL, and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's.
 
 **passageText(contentId) → string or null** (N215, K249)
-- **R46** The text of a held row's passage: for a typed row (R24) the typed text byte for byte; otherwise the text `extraction.unitsOf` (its R36) holds for the row's capture at exactly the row's extent, as R31 reads a cited passage: the one unit whose canonical extent is the row's, or, for a `document` extent, every unit in `seq` order joined by a line feed, only when the index reads `whole`. It answers `null` when the row is not held, is cited as `bytes` (R4), or no such text is held whole (no unit at exactly that extent, a unit held only to its per-unit cap, an index not `whole` for a `document` extent, a capture never indexed); a caller reads `null` as the passage held in a form not read (`consequences` R2: `undetermined`), never as empty text. It takes no viewer: a caller that shows the text asks sight first (R37). It writes nothing and never throws. *(not yet met: T9, N215)*
+- **R46** The text of a held row's passage: for a typed row (R24) the typed text byte for byte; otherwise the text `extraction.unitsOf` (its R36) holds for the row's capture at exactly the row's extent, as R31 reads a cited passage: the one unit whose canonical extent is the row's, or, for a `document` extent, every unit in `seq` order joined by a line feed, only when the index reads `whole`. It answers `null` when the row is not held, is cited as `bytes` (R4), or no such text is held whole (no unit at exactly that extent, a unit held only to its per-unit cap, an index not `whole` for a `document` extent, a capture never indexed); a caller reads `null` as the passage held in a form not read (`consequences` R2: `undetermined`), never as empty text. It takes no viewer: a caller that shows the text asks sight first (R37). It writes nothing and never throws.
+
+**noticeForRow(row, viewer, memo?) → notice or null** (N161, K292) For a caller that has already read the rows it asks about through R45's read contract (reevaluation R11, R14).
+
+- **R47** `row` is `{content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as}` with `extent` as stored (R45). Answers R29–R31's notice for that row: the fields `passageNotice` answers apart from `ok`, `states`, `grades`, `wrote`, `proposal_only` and `visible_to`, with the version chains read for `viewer`. It asks no sight and has no C-80.3: the caller gates the row (R37). `memo`, a `Map` the caller holds for one read, carries the captures' text units between calls, so rows citing one newer capture read its units once; it holds nothing past that read. It writes nothing and never throws; a `row` that is not an object answers null.
 
 ## Private
 
 ### Uses
+
+- `membership`: `listenerRefusal` (R81) and `MODULE_ORDER` (R83), for `onStale` (R41) (N202, K292).
+- `text-chain`: `rectSpace` and `RECT_USER_SPACE` (R87), in place of a copy of their own (N252, K292).
 
 - `legacy-checks`: the C-45, C-52 and C-80 rows until they move here (R38), `isMachineIdentity`, `canonicalJson`, `sha256HexSync`.
 - `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`.
