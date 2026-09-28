@@ -1,7 +1,8 @@
 /* entities (layer 5): the entity axis and the bias doctrine's subject registry, one construct (Framework §13;
    `build/requirements/entities.md`). The registry (R1–R8), the recogniser and testimony (R9–R13), the reverse
    reads (R14–R16), the name lookup (R17–R19) and the identifier-space judgement (R20–R25), reached through
-   `entitiesOf(ctx)` (K61). Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their
+   `entitiesOf(ctx)` (K61); the grade order (R33–R34) and the one `NO_SUCH_ENTITY` answer (R36, `noSuchEntity`) are
+   module-level. R35's read contract is the `entities` and `resolutions` columns `schema.mjs` names. Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their
    dispatch), `bio-checks.mjs` (C-91, now `checks.mjs`) and `schema.mjs` (the four tables, now `schema.mjs` here),
    with the rows this job applied named at their sites. It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
@@ -80,7 +81,7 @@ const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 2
 
 /* D-484: the governed site for an act that rests on nothing (C-33.40), names no source (C-33.41) or names no alias
    (C-33.25): the catalogue's act-shape rows, never a second sentence. */
-function actShape(code, detail, extra = {}) {
+function actShapeRefusal(code, detail, extra = {}) {
   const row = ACT_SHAPE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`entities: ${code} has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49)`);
@@ -263,9 +264,8 @@ export class Entities {
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
     /* DEC-49 REGION is-alias-named — REC-64/C-33.25; N126: the whole refusal, the alias's fold with it. */
     const norm = normAlias(alias);
-    if (!norm)
-      return actShape("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or only "
-                    + "whitespace), so there is nothing a document could be matched by. Nothing was written.");
+    if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or "
+                               + "only whitespace), so there is nothing a document could be matched by. Nothing was written.");
     /* END DEC-49 REGION is-alias-named */
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
@@ -294,7 +294,7 @@ export class Entities {
     const cite = typeof citation === "string" ? citation.trim() : "";
     if (!just) return { ok: false, reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)" };
-    if (!cite) return actShape("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
+    if (!cite) return actShapeRefusal("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
     if (!this.has(fromEntity)) return noSuchEntity(fromEntity, { end: "from" });
     if (!this.has(toEntity)) return noSuchEntity(toEntity, { end: "to" });
     const at = this.#now();
@@ -534,7 +534,7 @@ export class Entities {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
-    if (!b) return actShape("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
+    if (!b) return actShapeRefusal("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
     if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
       detail: "this captured document's reading carries no such reference to testify about" };

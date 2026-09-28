@@ -1,8 +1,9 @@
-/* entities' test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec`, `transactionSync` nesting as
-   savepoints) with the real modules entities uses — record-core, membership, extraction (whose writer lays down the
-   readings, references and name terms R9–R19 read) and provenance (the register, the captured locators and the
-   declared origin R22–R23 read) — and a promotion registry standing in for promotion's R39, which provenance and
-   extraction join. Every test drives `entities` at its interface. */
+/* entities' test fixture: a Durable Object storage stand-in over node:sqlite at the plane's shape (`sql.exec` answering
+   a cursor under workerd's 50-byte LIKE/GLOB cap, `transactionSync` nesting as savepoints) with the real modules
+   entities uses — record-core, membership, extraction (whose writer lays down the readings, references and name terms
+   R9–R19 read) and provenance (the register, the captured locators and the declared origin R22–R23 read) — and a
+   promotion registry standing in for promotion's R39, which provenance and extraction join. Every test drives
+   `entities` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -14,6 +15,26 @@ import { Entities } from "../../../src/entities/index.mjs";
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
+   a cursor or writes a long pattern fails here as it would in the Durable Object (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -22,8 +43,12 @@ export function storage() {
   return {
     db,
     sql: { exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     } },
     transactionSync(fn) {
       const sp = `sp${n++}`;
@@ -62,7 +87,7 @@ export function world({ profiles = null, now = null } = {}) {
   e.migrate();
   const w = {
     st, host, record, membership, x, prov, e,
-    rows: (q, ...a) => st.sql.exec(q, ...a), one: (q, ...a) => st.sql.exec(q, ...a)[0] || null,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)], one: (q, ...a) => [...st.sql.exec(q, ...a)][0] || null,
     /* A bundle row (record-core's `bundles`, its R37 read contract); a project bundle when `project` is true. */
     bundle(id, { type = "information" } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
