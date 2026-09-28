@@ -64,7 +64,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 - `legacy-checks`: the rows until they move (R33), `parseFrontmatter`, `normalizeType`, `OBJECT_TYPES`, `sectionText`, `canonicalJson`.
 - `signatures`: `verifySshsig`, `NS_RATIFY` (a published case's signature, R10). `ooxml`: `crc32` (R15).
-- `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `declarePurge`, the `bundles`, `files`, `history` and `manifest` read contracts (R18), `textAtSha` (R2). *(not declared: `textAtSha` not yet provided)*
+- `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `declarePurge`, the `bundles`, `files`, `history` and `manifest` read contracts (R18), `textAtSha` (its R60; R2). *(not yet provided: T8's record-core entry)*
 - `membership`: `viewerPredicate`, `isProjectOwner`, `isJoinedParticipant`, `existenceAct`, `attestingKeys`, members' handles, covers and status (R17).
 - `promotion`: `registerStep`, `registerFact`, the fact `producingGroup`.
 - `provenance`: the `register` read contract, `observerRef` (R17, R18).

@@ -59,6 +59,9 @@ and every other module that stores anything, write through and read from.
 - **R14** Returns `null` when the bundle or the path is not held.
 - Errors: never throws.
 
+**textAtSha(bundleId, sha) → string or null**
+- **R60** Returns the inline text of the bundle's `bundle.md` whose SHA-256 is `sha`, from the live file or, when the live file has moved on, from any historical snapshot of it, read from this module's own tables alone; `null` when either argument is absent, no such text is held, or the file is held only as a blob. Never throws. (The pinned bytes of a case member, which `publication` R2 and `ratification` R3 read; legacy-store's `#memberTextAtSha`, D-442; K94, N69; K203.)
+
 **readImage(bundleId) → `{path → content or blob reference}` or null**
 - **R15** Assembles, from this module's own tables alone: every live file; every historical snapshot,
   each named by a fixed derivation from its path and the snapshot key that archived it; and one manifest
