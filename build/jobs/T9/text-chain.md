@@ -18,7 +18,9 @@
 - Users' suites (a provided service changed): extraction 65/0, content 50/0, observation-log 42/0, query-language 24/0, inquiry 50/0, basis-versions 42/0, run-productions 33/0, `ocr-worker/test/` 1/0; connections 59 pass, 1 fail, the same failure on the module before this job (not text-chain's, J2).
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … text-chain`: 6 product files, 9 relative imports; 0 failures. `checks/coverage.mjs … text-chain`: 86 of 86 live requirement ids named by a test; 0 failures (R87–R91 are named by tests and join the count once worded). `checks/ownership.mjs … text-chain tranche/T9`: 0 failures.
 
-Size (session_01LkjS5fE3osSrYaAkNn6uqe): test runs 9, module lines 1692
+B2 (K278) applied: `tranche/T9` merged, R87–R91 worded as proposed and R72's stale text struck; no code change. Re-run: `test/m/text-chain/`: tests 93, pass 93, fail 0. `format`: 0 failures. `architecture … text-chain`: 7 product files, 11 relative imports; 0 failures. `coverage … text-chain`: 91 of 91 live requirement ids named by a test; 0 failures. `ownership … text-chain tranche/T9`: 5 files; 0 failures.
+
+Size (session_01LkjS5fE3osSrYaAkNn6uqe): test runs 10, module lines 1692
 
 ## J1 · QUESTION
 
