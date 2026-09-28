@@ -34,3 +34,24 @@ Found while applying my entries. I changed none of these.
 3. **Legacy suites** that touch readings, pdfstructure, tiers, units or `onReading`: 71 suites run on `tranche/T9` and on my branch, with identical results on every suite. 60 are all green. These 11 are red on both, so none is mine: bounds, cpdf18-pdf-images, derivation-bounds, fleetbundles, hygiene, observation-content, reextract, strengthpair, textshown, tier3-layer-parts, versionnotice. reextract's plain-read digest pin (`PRE_ITEM_DIGEST`) already moved with pdf-reader's `pageBoxes` (R31, as K293 now states); the D-374 branch holds re-taken literals for it.
 4. **connections** (test): m/connections is 59/1 on the base and on my branch alike (`factory.test.mjs`, already CAPTURE #3's report).
 5. **My requirements file, header**: its "Not yet met" list is stale. Several ids it names (for example R20, R21, R22, R36 and R49) are met and tested since T5 and T7, and the K293 tags `(not yet met: T9, …)` on R4, R9, R12, R13, R24, R30, R31, R34, R58 and R60 are met now. Strike them, BOB's to word.
+
+## J3 · COMPLETE
+
+**Entries applied**, as K293 folded them (B2).
+- **N253.** `carryImageUnread` is gone: text-chain's `mergeTier2Text` (its R90) now carries a tier-2 page's `image_unread` markers. `needsTier2` and `readText` are handed the decode view, so a photo page does not escalate (R4, R12). R4's scan markers are the three it names.
+- **N100.** `page_boxes` is set from pdf-reader's `pageBoxes` (its R33) by `pageBoxesFrom`. It is read whole or it is null, never partial, and it sits under `page_count`'s three-state rule (R13). A re-read takes the structure's boxes, else the stored reading's, else leaves the key absent (R34). `readingOf` answers `pageBoxes` as stored (R30). The plain read serves pdf-reader's own `pageBoxes` (R31).
+- **N139.** `textCountsOf` sets `text_chars`, `text_glyphs` and `text_undetermined` over the text the reader was handed, with `image_unread` not counted. A reading with no text has none of the keys, and a re-read gets its own counts (R60). This is the built work from `land/worker/D-375` @ 9a5df6e6, taken at the one R15 site.
+- **N151.** `reading_text_source.capture_sha` and `.chain` are tested as R58's fifth table. The code needed no change.
+- **N202.** `onReading` refuses through `membership.listenerRefusal` (R81), and its local `LISTENER_DECLARED` constant is gone (one code, one site). Listeners run in `MODULE_ORDER` (R83) whatever order they registered in (R24).
+
+**Deferred:** nothing.
+
+**Found in other modules:** REPORT J2.
+
+**Tests and checks** (on `job/T9/extraction` @ 76fbc8fd85, `tranche/T9` merged after B2):
+- `node --test bio-plane/test/m/extraction/`: **75 pass, 0 fail**, up from 65. New arms: R4/R12 photo page with a control; R4 scan markers; R9 tier-2 carry; R13 page_boxes; R60 counts; R24 refusals and order; R30 pageBoxes; R34 boxes and counts on a re-read; R31 plain-read pageBoxes; R58 `reading_text_source`. The R4 arm was confirmed to fail with the decode view taken out of `needsTier2`.
+- Users' tests, all unchanged from the base: m/content 50/0, entities 34/0, connections 59/1 (J2 item 4), progressions 40/0, observation-log 42/0, retrieval 58/0, inquiry 50/0, basis-versions 42/0, contradiction 28/0.
+- Legacy suites touching readings: 71 run, identical results to `tranche/T9` (J2 item 3).
+- `checks/format.mjs`: 69 modules, 64 requirements files, 0 failures. `checks/architecture.mjs bio extraction`: 0 failures. `checks/coverage.mjs bio extraction`: **55 of 55** live ids named, 0 failures. `checks/ownership.mjs bio extraction tranche/T9`: 7 files; legacy-checks, legacy-store and legacy-index 0 lines added and 0 removed; 0 failures.
+
+Size (session_01CqUWiaFQX9UhsvtQ1DT23r): test runs 18, module lines 3448
