@@ -1,6 +1,6 @@
 # legacy-tests (T9)
 
-**Status** · session_01NtbuUmjDKeKm6364QwnWp2 · depth 2 · WORKING · handled B5
+**Status** · session_01NtbuUmjDKeKm6364QwnWp2 · depth 2 · RUNNING until 2026-09-28T20:38:45Z (battery after B5) · handled B5
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
