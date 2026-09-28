@@ -54,3 +54,5 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 
 **Forwarded to later jobs in T7** (P9):
 - capture-requests (layer 6): CAPTURE-SOURCES #2 COMPLETE (J2, its record on `job/T7/capture-sources`): pass `key: env.CAPTURE_CREDENTIALS_KEY` on the first `credentialsOf` call; pass the row's `principal_plane`, `target` and `host` to R56; the ops, the redirect rule and provenance marking are the caller's (capture-sources' Suggestions).
+- legacy-tests (layer 11): CAPTURE #3 REPORT J2.2–3 (its record on `job/T7/capture`): re-pin `derivation-bounds` (`recordSiteAssets` leaves the dispatched-members pin; `resolveLinks` joins SET 2) and `meaning-bounds` (BARE 51 → 43, OPAQUE 11 → 10, the named-residual arm).
+- legacy-index (layer 11): CAPTURE #3 REPORT J2.5: `bio-plane/src/index.mjs` line 156 imports `withReading` from `capture/ops.mjs` unused; drop it.
