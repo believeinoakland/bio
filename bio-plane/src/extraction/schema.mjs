@@ -264,12 +264,13 @@ CREATE INDEX IF NOT EXISTS reading_text_source_kind
 -- not extracted, extracted but over the bound, and extracted and indexed are one
 -- vocabulary in one place (section 4.3).
 --
--- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
--- (a cell is not a passage, and the sheet-range extent arm landed with FW-19 but no unit writer uses it -- written before
--- that, when EXTRACTION-BREADTH section 3.2 had not landed -- 288 workbooks in M-20 census hold
--- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
--- HTML (no dom producer, Part II section 15). Neither is scored zero: the
--- capture's indexed observation says none with the reason.
+-- A WORKBOOK'S UNIT IS ITS SHEET (N108, D-672): one sheet-range unit per sheet at
+-- the whole used range its reader names (a cell is not a passage; M-20's census
+-- held 288 workbooks, 72,651,441 bytes of text over 1,056 sheets, and until N108
+-- not one indexable unit). A sheet whose range the reader could not name is no
+-- unit. WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: HTML (no
+-- dom producer, Part II section 15). It is not scored zero: the capture's index
+-- state says none.
 --
 -- DERIVED, AND PURGED ON BOTH ARMS. It carries bundle_id -- the document this
 -- text is of -- so it rides purge's TABLES list. Text is a PROJECTION and is
@@ -281,7 +282,7 @@ CREATE INDEX IF NOT EXISTS reading_text_source_kind
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | sheet-range (N108)
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so

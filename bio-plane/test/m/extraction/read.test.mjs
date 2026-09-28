@@ -420,6 +420,40 @@ test("R16 R45: text units one per page, paragraph or slide holding a glyph, the 
   assert.deepEqual(slides.text_units[0].extent, { kind: "slide-shape", slide: 1, shape: null });
 });
 
+test("R16 R22 R45: a workbook's unit is its sheet, a sheet-range at the used range its reader names; a sheet with no named range, or no glyph, is no unit; the real csv entry's sheet reaches the index and reads whole", async () => {
+  const w = fresh();
+  const rng = (sheet, range) => ({ kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range });
+  const out = await withEntry({ format: "t16x", text: async () => ({ ok: true, container: "xlsx", document: "a\nc",
+      sheets: [{ sheet: 0, name: "Budget", text: "a\tb", range: rng("Budget", "A1:B3") },
+               { sheet: 1, name: "Blank", text: "  ", range: rng("Blank", "A1:A1") },
+               { sheet: 2, name: "Unmeasured", text: "has words", range: null },
+               { sheet: 3, name: "Notes", text: "c", range: rng("Notes", "A1:A9") }],
+      counts: { chars: 3, undetermined: 0 }, undetermined: [] }) },
+    async () => { const d = await hold(w.evidence, "t16x bytes"); return w.x.read(doc({ digest: d, format: "t16x", ct: "application/x" })); });
+  assert.deepEqual(out.text_units, [
+    { extent: { kind: "sheet-range", sheet: "Budget", range: "A1:B3" }, seq: 0, text: "a\tb" },
+    { extent: { kind: "sheet-range", sheet: "Notes", range: "A1:A9" }, seq: 3, text: "c" }]);
+  /* a sheet list whose reader named no range at all: no unit, and the list is absent */
+  const unnamed = await withEntry({ format: "t16y", text: async () => ({ ok: true, document: "x", sheets: [{ name: "S", text: "x", range: null }],
+      counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },
+    async () => { const d = await hold(w.evidence, "t16y bytes"); return w.x.read(doc({ digest: d, format: "t16y", ct: "application/x" })); });
+  assert.equal("text_units" in unnamed, false);
+  /* the real csv entry, read and written: the index holds the sheet as a sheet-range unit and says whole */
+  const csv = "name,place\nAna,Hall\nBo,Park\n";
+  const d = await hold(w.evidence, csv);
+  const r = await w.x.read(doc({ digest: d, bytes: csv.length, ct: "text/csv", format: "csv", fromText: true, headers: [["content-type", "text/csv"]] }));
+  assert.equal(r.text_units.length, 1);
+  assert.equal(r.text_units[0].extent.kind, "sheet-range");
+  assert.match(r.text_units[0].extent.range, /^A1:B3$/);
+  w.s.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+                VALUES ('B-1','information','g','t','collected','2026-01-01','2026-01-01','x',1)`);
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: r.reading, textUnits: r.text_units });
+  const u = w.x.unitsOf(d);
+  assert.equal(u.state, "whole");
+  assert.deepEqual(u.units.map((x) => [x.extent.kind, x.ref]), [["sheet-range", `${r.text_units[0].extent.sheet}!A1:B3`]]);
+  assert.equal(u.chain_kind, "layer");
+});
+
 test("R17: nothing about the source is fetched: tiers 2 and 3 are reached only through their bindings, with the capture's digest and store", async () => {
   const w = fresh();
   const orig = globalThis.fetch;

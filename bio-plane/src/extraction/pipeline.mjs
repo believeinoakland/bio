@@ -631,7 +631,15 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
    the prefix the index receives is the prefix it would keep. A unit whose capped prefix does not fit what remains is
    left out, and every unit left out is NAMED (D-724, BOB #36 2026-09-25 11:20Z, option (b)): as runs of consecutive
    skipped units (first and last extent and seq, a count), because the keys ride in `data/provenance.json` under
-   INLINE_MAX; a capture sends at most ~1,018 runs. */
+   INLINE_MAX; a capture sends at most ~1,018 runs.
+   N108 (R16, retrieval R25, D-672): a workbook's unit is its SHEET, `sheet-range` at the whole used range its reader
+   names (`sheets[].range`, `usedSheetRange` in the xlsx, ods and csv entries); a sheet whose range the reader could
+   not name is no unit, never a guessed rectangle. A workbook's defined names and tables are not units here. */
+const sheetRangeOf = (u) => {
+  const r = u.range;
+  return r && r.kind === "sheet-range" && typeof r.sheet === "string" && r.sheet && typeof r.range === "string" && r.range
+    ? { sheet: r.sheet, range: r.range } : { sheet: null, range: null };
+};
 export function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
@@ -646,6 +654,8 @@ export function textUnitsFor(i2text) {
           (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
       : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
           (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+      : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
+          .filter((u) => u.extent.sheet !== null)
       : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
     const kept = [], runs = [];
