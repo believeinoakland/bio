@@ -3343,9 +3343,31 @@ var AI_RUN_CHECKS = {
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
     translation: "The observation log is not part of any published document and cannot be filed into one."
   },
-  /* C-22.7 (AI_RUN_SKILL_VERSION_UNNAMED, SK-1) stood here until T11 (legacy-checks, N289). It left for
-     ai-runs' own row table, beside its one minting site `checkSkillVersion` (`src/ai-runs/skill-version.mjs`,
-     ai-runs R8 and R35 as K343 words it); skills names it by key through ai-runs (skills R25, K333). */
+  // C-22.7 is ai-runs' row: ai-runs takes it into its own table (ai-runs R35); this copy leaves in T12 (N299).
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+       bias manifest in force, the launching project's standard pair, and THE
+       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+       a hat" and a version is only interpretable against them. SK-1's row makes
+       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+       disclosure standard), and a condition that may be omitted is not recorded:
+       it is recorded by the runs that felt like it.
+  
+       REFUSED AT THE OPEN, beside the two principals, for the same reason those
+       are: refusing later would mean a run had already searched under
+       instructions nobody can name. Two ways to fail and ONE code, because they
+       are one fact — the run object cannot say what it ran under. The worse of
+       the two is a version that names no pack: `3` reads as an answer and
+       identifies nothing, which is the blank-principal shape PL-4 measured one
+       field over, arriving on a condition instead of an identity.
+  
+       A WHOLE-FUNCTION `where`, and it is the case the convention above blesses:
+       `checkSkillVersion` is small, single-purpose, and the only refusal it makes
+       is this one — `src/airun.mjs`'s three check functions are the named model. */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: "C-22.7",
+    where: "src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen",
+    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
+  },
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
        `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
        the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
@@ -8019,13 +8041,17 @@ var RecordCore = class _RecordCore {
    *  (the tables each mint site's `taken` reads; their owners declare them). COUNTER: for a prefix
    *  whose mint passes no tail, every id `seq` says the counter issued before REC-151, used or not,
    *  capped at 9,999. Rows already recorded are left as they are. One statement per source and one
-   *  for the counter, each doing its work inside SQLite. */
+   *  for the counter, each doing its work inside SQLite. A live id is matched by its literal `<prefix>-`
+   *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
+   *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
     const at14 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table2, column] of sources) {
       if (!IDENT.test(String(table2)) || !IDENT.test(String(column))) continue;
+      const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
-                      SELECT DISTINCT ${column}, ?, 'live' FROM ${table2} WHERE ${column} GLOB ?`, at14, `${prefix}-*`);
+                      SELECT DISTINCT ${column}, ?, 'live' FROM ${table2}
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at14, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -8428,7 +8454,9 @@ var RecordCore = class _RecordCore {
    *  `manifest` is modified or removed (R29): a snap key already used for the bundle fails the
    *  append loudly (their primary keys) rather than rewriting it. R44: the row records the state, prior
    *  state, group, times and criticality as the caller gives them, and the entry's time is `at`, the
-   *  caller's stated time (this module's clock when it states none). */
+   *  caller's stated time (this module's clock when it states none). R37 (N287): `group_id` is the producing
+   *  group as the committer gave it, KEPT when a later commit gives none (absent or null: the column holds no
+   *  null), the empty string for a bundle created naming none; `prior_state` is `priorState` as last given. */
   commit({
     bundleId,
     type,
@@ -8495,7 +8523,7 @@ var RecordCore = class _RecordCore {
         ["created", created],
         ["last_updated", lastUpdated],
         ["criticality", criticality]
-      ].filter(([, v]) => v !== void 0);
+      ].filter(([k, v]) => v !== void 0 && !(k === "group_id" && v === null));
       if (cur)
         this.#sql.exec(
           `UPDATE bundles SET object_type=?, title=?, project=?, bundle_sha=?, row_version=row_version+1
@@ -11959,15 +11987,19 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.40.0";
+var CATALOG_VERSION = "1.41.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
 function caseCatalogueFailed(e) {
   return {
-    check: "CASE_CATALOGUE_FAILED",
-    severity: "error",
-    message: `the case-document catalogue could not judge this document, so it is not passed: ` + String(e && e.message ? e.message : e).slice(0, 200)
+    gateVersion: GATE_VERSION,
+    ok: false,
+    findings: [{
+      check: "CASE_CATALOGUE_FAILED",
+      detail: `the case-document catalogue could not judge this document, so it is not passed: ` + String(e && e.message ? e.message : e).slice(0, 200)
+    }],
+    warnings: 0
   };
 }
 function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null } = {}, catalogue = checkCaseDocument) {
@@ -11977,7 +12009,7 @@ function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis 
     if (!Array.isArray(findings) || !findings.every((x) => x && typeof x === "object"))
       throw new Error("the catalogue answered no list of findings");
   } catch (e) {
-    findings = [caseCatalogueFailed(e)];
+    return caseCatalogueFailed(e);
   }
   const errors = findings.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
   return {

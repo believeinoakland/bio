@@ -67,7 +67,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 **`CATALOG_VERSION`, `GATE_VERSION` → strings**
 
-- **R34** `GATE_VERSION` contains `CATALOG_VERSION`, and both gates report the same `GATE_VERSION`. One version names one catalogue: `CATALOG_VERSION` changes whenever a check is added, removed or changed, so two ratifications carrying the same string were judged by the same catalogue. *(not yet met: N281; C-53.14 arrived in T10 unstamped)*
+- **R34** `GATE_VERSION` contains `CATALOG_VERSION`, and both gates report the same `GATE_VERSION`. One version names one catalogue: `CATALOG_VERSION` changes whenever a check is added, removed or changed, so two ratifications carrying the same string were judged by the same catalogue.
 
 **registerStep(module, {check?, project?}) → void; registerFact(name, module, fn) → void**
 - **R39** A later module registers, once at start, a `check` run before the write and a `project`ion
