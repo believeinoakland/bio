@@ -84446,8 +84446,9 @@ var Escalation = class {
   migrate() {
     migrateEscalation(this.sql);
   }
+  /* workerd's `sql.exec` answers a cursor, never an array: every read is spread into one (LEGACY-TESTS #6 J2). */
   #rows(q6, ...a) {
-    return this.sql.exec(q6, ...a);
+    return [...this.sql.exec(q6, ...a)];
   }
   #one(q6, ...a) {
     return this.#rows(q6, ...a)[0] || null;
