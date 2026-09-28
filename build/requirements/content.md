@@ -65,7 +65,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - **R31** Each candidate's grade is read from the captures' text units (`extraction`), never from the extent test: `A` byte-identical at the extent, `B` identical text at another position (`found_at`), `C` word-multiset Dice at or above 0.7 (`similarity`), `NOT_FOUND` only where the newer capture's units are held whole, else `UNDETERMINED` with its reason (a partial or absent index, an extent no unit carries, `bytes`). `A` and `B` are unaffected, `C` and `NOT_FOUND` affected, `UNDETERMINED` undetermined; the notice's `affects` is affected if any candidate is, else undetermined if any is, else unaffected, null with no newer capture and undetermined when unread.
 
 **cropOf({contentId, viewer}) → image bytes or refusal**
-- **R32** The crop of an image cited by page and rectangle, through `pdf-pixels`, served as a derived rendition that says so; an absent or invisible row is `NO_SUCH_CONTENT`. *(not yet met: D-419)*
+- **R32** The crop of an image cited by page and rectangle, through `pdf-pixels`, served as a derived rendition that says so; its bytes travel as `bytes_base64` (standard base64 of the rendition's file, whose `file_sha256` the answer states), never as raw octets; an absent or invisible row is `NO_SUCH_CONTENT`. *(not yet met: D-419; N119, K179)*
 
 **The envelope**
 - **R33** An office document's envelope items (tracked-change authors, comments, core properties, speaker notes) are citable as content through an `envelope` extent. *(not yet met: REC-204; K102)*
