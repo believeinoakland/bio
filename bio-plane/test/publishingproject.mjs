@@ -41,7 +41,7 @@
  *  title is built from (it was the id, which is what made each fixture's title unique). */
 export const projectFixtureMd = (id, { created, updated, bar = null, name = id, objective =
   "Decide whether to refer this to the auditor." } = {}) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", "schema: project@1",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
   `title: "Project ${name}"`, "current_state: investigating", "prior_state: null",
   `created: "${created}"`, `last_updated: "${updated}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",

@@ -33,6 +33,7 @@ import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { ratifyCase } from "./caseceremony.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs"; /* K187: INFO_CONN's reading, which earns the case's connection C */
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -95,7 +96,7 @@ const legLines = (legs) => legs.length
       ...(l.date ? [`    date: ${l.date}`] : []),
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
-const inquiryMd = (id, { question = `What does ${id} rest on?`, legs = [] } = {}) => ["---",
+const inquiryMd = (id, { question = `What does ${id} rest on?`, legs = [], subject = null } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -106,6 +107,8 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, legs = [] } = {}
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
+  /* 2026-09-28 (T7; K187): the registered subject a connection leg's letter is EARNED against (the case only). */
+  ...(subject ? [`subject_entity: ${subject}`] : []),
   ...legLines(legs),
   "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
   "## What Would Falsify This", "", "## Session Log", "", `### Session ${LATER} | Formation | agent`,
@@ -125,12 +128,12 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
-const promote = async (id, md, type) => {
+const promote = async (id, md, type, { files = [] } = {}) => {
   const r = rP(await POST(`op=promote&token=${PILAR}`, {
     bundleId: id, base: null, snapKey: `20260923T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "information" ? "collected" : "open", created: NOW, last_updated: LATER },
-    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...files],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [] }));
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
@@ -145,11 +148,33 @@ const INQ_INH = "INQ-2026-1780-inherits";       // written AFTER, inheriting edi
 const INQ_PLAIN = "INQ-2026-1780-plain";        // an ungraded leg on the case: inert, and must stay clean
 
 await promote(INFO_CAP, infoMd(INFO_CAP), "information");
-await promote(INFO_CONN, infoMd(INFO_CONN), "information");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102; STRENGTH #1 J5), never exempted. The case's connection C was
+   authored as a HUNCH, and a hunch is now inert in every pair: the case froze connection UNRATED, and INQ_INH's
+   correct inheritance of C was refused C-21.2 at the write ("nothing on that axis was ever established there"). The
+   same letter is now one the record COUNTS, EARNED by resolution (DEC-15's earned path, earnedbasis.test.mjs): a
+   registered subject, a reading of INFO_CONN whose reference matches it by NAME only (framework §8.1's grade C), and
+   op=resolve over it; the case names the subject and states the leg as `resolution` at C. It still freezes capture B
+   / connection C. INQ_OWN's own grade on the case stays a hunch: it is the only own connection letter above D an
+   inquiry leg can state (a resolution cannot grade an inquiry leg, testimony is D), and what this suite asks of it
+   is only that it is a grade of its OWN on a case that was later published. */
+const SUBJECT = rP(await POST(`op=entitycreate&token=${PILAR}`,
+  { kind: "ordinance", label: "Sewer Fund Transfer Ordinance" })).entity_id;
+if (!/^ENT-/.test(SUBJECT || "")) throw new Error(`entitycreate: ${SUBJECT}`);
+const CONN_SHA = sha(`capture-of-${INFO_CONN}`);
+const connDoc = registerDoc({ capture: { sha256: CONN_SHA, encoding: "binary", bytes: 10 },
+  reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+             entities: [{ ref: "ordinance:1780", kind: "ordinance", key: "1780",
+                          label: "Sewer Fund Transfer Ordinance" }] } }, { file: "snapshots/doc.bin" });
+const connProv = JSON.stringify({ documents: [connDoc] });
+await promote(INFO_CONN, infoMd(INFO_CONN), "information", { files: [
+  { path: "data/provenance.json", text: connProv, bytes: connProv.length, sha256: sha(connProv) }, registerFile(connDoc)] });
+const connRes = rP(await POST(`op=resolve&token=${PILAR}`, { captureSha: CONN_SHA }));
+if (connRes?.resolved?.[0]?.grade !== "C" || connRes.resolved[0].entity_id !== SUBJECT)
+  throw new Error(`resolve INFO_CONN: ${JSON.stringify(connRes)}`);
 await promote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, {
-  question: "Did the City transfer sewer funds without authority?",
+  question: "Did the City transfer sewer funds without authority?", subject: SUBJECT,
   legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-         { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch", author: "pilar", date: "2026-08-04" }] })),
+         { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }] })),
   "inquiry");
 /* Legal WHEN WRITTEN: the case beneath it is a working inquiry, and a hunch is an authored connection grade. */
 await promote(INQ_OWN, inquiryMd(INQ_OWN, { question: "Should this go to the grand jury?",

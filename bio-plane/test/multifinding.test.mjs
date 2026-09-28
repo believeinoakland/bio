@@ -55,6 +55,7 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster rows */
+import { registerDoc, registerFile } from "./register-doc.mjs"; /* K187: INFO_CONN's reading, which earns FIND_A's connection C */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- multifinding ---");
@@ -200,7 +201,7 @@ const legLines = (legs) => legs.length
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
 const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
-                         refs = [], legs = [] } = {}) => ["---",
+                         refs = [], legs = [], subject = null } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -211,6 +212,8 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
+  /* 2026-09-28 (T7; K187): the registered subject a connection leg's letter is EARNED against (FIND_A only). */
+  ...(subject ? [`subject_entity: ${subject}`] : []),
   ...legLines(legs),
   "---", "",
   "## Question", "", question, "",
@@ -271,16 +274,38 @@ const DOC_CAP_SHA = sha("multifinding-INFO_CAP-bytes");
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected", null,
   { register: [{ path: "snapshots/source.bin", sha256: DOC_CAP_SHA, bytes: 512, encoding: "binary" }] });
-await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102; STRENGTH #1 J5), never exempted. FIND_A's connection C was
+   authored as a HUNCH, and a hunch is now inert in every pair and named as a hunch: FIND_A's connection axis read
+   UNRATED, so the two findings no longer differed on that axis in GRADE and C-21.2 refused block 4's inheritance of
+   C. The same letter is now one the record COUNTS, EARNED by resolution (DEC-15's earned path, earnedbasis.test.mjs):
+   a registered subject, a reading of INFO_CONN whose reference matches that subject by NAME only — framework §8.1's
+   grade C, a correspondence and never established — and op=resolve over it. FIND_A names the subject and states
+   the leg as `resolution` at C. Every pair and assertion below is otherwise as it was: FIND_A (B, C), FIND_B
+   (unrated, D). */
+const SUBJECT = rP(await POST(`op=entitycreate&token=${WREN}`,
+  { kind: "ordinance", label: "Sewer Fund Transfer Ordinance" })).entity_id;
+if (!/^ENT-/.test(SUBJECT || "")) throw new Error(`entitycreate: ${SUBJECT}`);
+const CONN_SHA = sha("multifinding-INFO_CONN-bytes");
+const connDoc = registerDoc({ capture: { sha256: CONN_SHA, encoding: "binary", bytes: 10 },
+  reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+             entities: [{ ref: "ordinance:4400", kind: "ordinance", key: "4400",
+                          label: "Sewer Fund Transfer Ordinance" }] } }, { file: "snapshots/conn.bin" });
+const connProv = JSON.stringify({ documents: [connDoc] });
+await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected", null, {
+  files: [{ path: "data/provenance.json", text: connProv, bytes: connProv.length, sha256: sha(connProv) },
+          registerFile(connDoc)],
+  register: [{ path: "snapshots/conn.bin", sha256: CONN_SHA, encoding: "binary", bytes: 10 }] });
+const connRes = rP(await POST(`op=resolve&token=${WREN}`, { captureSha: CONN_SHA }));
+if (connRes?.resolved?.[0]?.grade !== "C" || connRes.resolved[0].entity_id !== SUBJECT)
+  throw new Error(`resolve INFO_CONN: ${JSON.stringify(connRes)}`);
 await mustPromote(INFO_TEST, infoMd(INFO_TEST), "information", "collected");
 
 /* FIND_A: capture GRADED B (earned from the capture record) and connection
-   GRADED C (a hunch, announced with its author and date — DEC-15). */
+   GRADED C (earned by resolution to the subject FIND_A names — K187, above). */
 await mustPromote(FIND_A, withAdoptableReading(inquiryMd(FIND_A, { question: "Was the FY2024 sewer transfer authorised?",
-  refs: [INFO_CAP, INFO_CONN],
+  refs: [INFO_CAP, INFO_CONN], subject: SUBJECT,
   legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-         { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-           author: "wren", date: "2026-08-04" }] })), "inquiry", "open", null, {
+         { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }] })), "inquiry", "open", null, {
   files: [{ path: "snapshots/memo.bin", blobSha: CAP_SHA, bytes: CAPTURE.length, sha256: CAP_SHA }],
   register: [{ path: "snapshots/memo.bin", sha256: CAP_SHA, bytes: CAPTURE.length, encoding: "binary" }],
 });
