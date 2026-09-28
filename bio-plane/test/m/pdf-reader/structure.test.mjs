@@ -36,7 +36,7 @@ test("R1: not bytes -> NOT_BYTES; no %PDF- signature in the first 1024 bytes -> 
 
 test("R2: the ok shape — version, pages, links, counts, text, images at the top level, notes", async () => {
   const r = await extractPdfStructure(doc([{ content: "BT /F1 10 Tf (Hi) Tj ET" }, { content: "" }], { header: "%PDF-1.6\n" }));
-  assert.deepEqual(Object.keys(r).sort(), ["container", "counts", "images", "links", "notes", "ok", "pages", "text", "version"]);
+  assert.deepEqual(Object.keys(r).sort(), ["container", "counts", "images", "links", "notes", "ok", "pageBoxes", "pages", "text", "version"]);
   assert.equal(r.ok, true);
   assert.equal(r.container, "pdf");
   assert.equal(r.version, "1.6");
@@ -82,6 +82,7 @@ test("R3: a URI link is deferred (http, https, bare relative) or refused (any ot
       wrapper: deferred ? linkWrapper.deferred(u) : linkWrapper.refused(u),
       target: { url: u },
       source: { page: 0, rect: [10, 20, 110, 40] },
+      anchor: { text: null, why: "no_text_in_rect", tier: 1 },
     });
   });
 });
@@ -92,8 +93,8 @@ test("R3: a URI action with no /URI string is undetermined uri_action_without_ur
     link("/A << /S /URI /URI 5 >>", "/Rect [1 2 3]"),
     link("/A << /S /URI /URI (https://example.org/) >>", ""),
   ]));
-  assert.deepEqual(r.links[0], { partition: "undetermined", wrapper: null, target: { why: "uri_action_without_uri" }, source: { page: 0, rect: [10, 20, 110, 40] } });
-  assert.deepEqual(r.links[1], { partition: "undetermined", wrapper: null, target: { why: "uri_action_without_uri" }, source: { page: 0, rect: null } });
+  assert.deepEqual(r.links[0], { partition: "undetermined", wrapper: null, target: { why: "uri_action_without_uri" }, source: { page: 0, rect: [10, 20, 110, 40] }, anchor: { text: null, why: "no_text_in_rect", tier: 1 } });
+  assert.deepEqual(r.links[1], { partition: "undetermined", wrapper: null, target: { why: "uri_action_without_uri" }, source: { page: 0, rect: null }, anchor: { text: null, why: "no_rect", tier: 1 } });
   assert.equal(r.links[2].source.rect, null);
 });
 
@@ -117,7 +118,7 @@ test("R4: GoTo and /Dest resolve through an explicit array, /Root /Dests, and th
     const [page, dest] = want[i];
     const fragment = `#page=${page + 1}`;
     assert.deepEqual(l, { partition: "anchor", wrapper: linkWrapper.anchor(fragment),
-      target: { page, fragment, dest }, source: { page: 0, rect: [10, 20, 110, 40] } }, `link ${i}`);
+      target: { page, fragment, dest }, source: { page: 0, rect: [10, 20, 110, 40] }, anchor: { text: null, why: "no_text_in_rect", tier: 1 } }, `link ${i}`);
   });
 });
 
@@ -152,10 +153,10 @@ test("R5: an attached or embedded file with decodable bytes is intra, content-ad
     { objs, catalog: "/Names << /EmbeddedFiles 54 0 R >>" }));
   const s1 = sha(bytesOf(body)), s2 = sha(bytesOf("plain"));
   assert.deepEqual(r.links[0], { partition: "intra", wrapper: linkWrapper.intra(s1),
-    target: { sha256: s1, name: "the data", bytes: body.length }, source: { page: 0, rect: [0, 0, 10, 10] } });
+    target: { sha256: s1, name: "the data", bytes: body.length }, source: { page: 0, rect: [0, 0, 10, 10] }, anchor: { text: null, why: "no_text_in_rect", tier: 1 } });
   assert.equal(r.links[1].target.name, "data.csv");
   assert.deepEqual(r.links[2], { partition: "intra", wrapper: linkWrapper.intra(s2),
-    target: { sha256: s2, name: "key-name", bytes: 5 }, source: null });
+    target: { sha256: s2, name: "key-name", bytes: 5 }, source: null, anchor: { text: null, why: "no_rect", tier: 1 } });
 });
 
 test("R5: an embedded file that cannot be resolved is undetermined, naming the step and the file", async () => {

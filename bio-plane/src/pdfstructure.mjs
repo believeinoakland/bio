@@ -1542,6 +1542,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const toks = tokenizeContent(content.text);
 
   const pieces = [];
+  /* R35 (REC-206) — WHERE EACH PIECE'S INK IS, PARALLEL TO `pieces` (see
+     `glyphBox`). A separator this reader inserts has no ink and holds null; a
+     glyph shown while the pen was unknown holds null too and is COUNTED in
+     `unpositioned`, so nothing downstream reads "no box" as "no glyph". */
+  const boxes = [];
+  const undecodedCenters = []; // ink points of shown codes that decode to nothing
+  let unpositioned = 0;        // glyphs shown while the pen was unknown
   /* D-591 (R25): a page whose content could not be read says so on the PAGE,
      so it is never indistinguishable from a page that is actually blank. */
   const undetermined = content.unread.map((reason) =>
@@ -1573,6 +1580,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
       penKnown = false; inkValid = false; // D-502: nothing says how far this moved the pen
+      unpositioned += bytes.length;       // R35: and nothing says where they are
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -1586,7 +1594,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       /* D-502: the text is undecodable, the ADVANCE is not \u2014 a width is
          looked up by CODE and needs no /ToUnicode. So the pen survives a run
          this reader cannot read, and the gap after it is still judged. */
-      advanceOver(bytes);
+      { /* R35: the run cannot be read and CAN be placed; its ink is kept so an
+           anchor over it is known to be partly undecodable, never complete. */
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -1599,9 +1613,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u = curFont.toUni.get(code);
       if (u == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -1618,8 +1636,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
            separator ONLY where the document wrote none. (D-502 for a
            positioning operator's jump; SINCE D-517 for a TJ displacement too,
            which until then pushed its space past both halves of this rule.) */
-        if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); softAt = -1; }
-        pieces.push(u);
+        if (softAt === pieces.length && /^\s/.test(u)) { pieces.pop(); boxes.pop(); softAt = -1; }
+        pieces.push(u); boxes.push(box);
       }
     }
     endRun();
@@ -1700,8 +1718,8 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
        M-145: 122 space characters and 12 whitespace-only lines leave the
        corpus, and not one token, word, glue token or non-whitespace character
        moves.] */
-    if (softAt === pieces.length && pieces.length) { pieces.pop(); softAt = -1; }
-    pieces.push("\n");
+    if (softAt === pieces.length && pieces.length) { pieces.pop(); boxes.pop(); softAt = -1; }
+    pieces.push("\n"); boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
 
@@ -1759,12 +1777,27 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
   };
+  /* R35 — THE INK OF ONE SHOWN CODE, IN THE PAGE'S DEFAULT USER SPACE: the
+   * same space and [x0,y0,x1,y1] order as an annotation's /Rect and an image's
+   * rect (the walk's CTM starts at identity). The box is the glyph's EM BOX —
+   * the pen's advance across, one em (the font size) up from the baseline — not
+   * its outline: a descender is outside it, a text rise (`Ts`) is not applied,
+   * and the font's own bounding box is not read. That is the most this reader
+   * can place without inventing a figure. `c` is the point an anchor asks
+   * about: mid-advance, 0.35 em up, inside the ink of any glyph of an ordinary
+   * face. `m0`/`m1` are the text matrix before and after the advance. */
+  const glyphBox = (m0, m1) => {
+    const a = matMul(m0, ctm), b = matMul(m1, ctm);
+    const pt = (m, x, y) => [x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]];
+    const p0 = pt(a, 0, 0), p1 = pt(b, 0, 0), q0 = pt(a, 0, tfs);
+    return { c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])] };
+  };
   /** Push a separator unless one is already there. Never opens a line. */
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
-    pieces.push(" ");
+    pieces.push(" "); boxes.push(null);
     softAt = pieces.length;
   };
   /** A positioning operator landed on the CURRENT baseline: is the distance it
@@ -2080,7 +2113,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       page: pageIdx, reason: "no_text_layer", font: null, codes: "", count: 0,
     });
   }
-  return { text, undetermined };
+  return { text, undetermined, placed: { pieces, boxes, undecodedCenters, unpositioned } };
 }
 
 /* D-585 — THE TEXT-SHOWING OPERATORS, and the ONE predicate built on them.
@@ -2153,8 +2186,60 @@ function pageDrawsImage(doc, resources) {
   return false;
 }
 
-/** Document text (Tier 1). Extends the I2 output; see the module header. */
-async function extractText(doc) {
+/* R35 (REC-206) — WHAT TEXT A LINK SITS OVER: its ANCHOR TEXT, read off tier
+ * 1's placed glyphs, never off the link's target and never guessed.
+ *
+ * A glyph belongs to the anchor when its ink point (`glyphBox`'s `c`) lies in
+ * the annotation's /Rect. The glyphs are taken in the order the page SHOWED
+ * them, and anything between two that are inside (a separator, whitespace, a
+ * glyph outside the rect) reads as ONE space; the result is trimmed. So the
+ * anchor is the link's own words in content-stream order, which is reading
+ * order for every producer measured and is not promised for one that paints
+ * out of order.
+ *
+ * `why` IS NULL ONLY FOR A COMPLETE READING. It names, when not:
+ *   no_rect            — the link has no page rect (a document-level file, a
+ *                        malformed /Rect);
+ *   text_not_read      — tier 1 read no text on that page (encrypted, an
+ *                        unreadable page, an extraction error);
+ *   no_text_in_rect    — every glyph on the page was placed and none is inside;
+ *   positions_unknown  — none placed inside, and the page has glyphs it could
+ *                        not place, so absence is not established;
+ *   partly_unplaced    — text found, and the page has glyphs it could not place;
+ *   undecodable        — nothing decoded inside, and a code under the rect
+ *                        decoded to nothing;
+ *   partly_undecodable — text found, and a code under the rect decoded to nothing.
+ * `tier` is 1 always: when tier 2 later replaces a page's text, the anchor stays
+ * tier 1's reading and says so. */
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a, b, c, d] = source.rect;
+  const x0 = Math.min(a, c), x1 = Math.max(a, c), y0 = Math.min(b, d), y1 = Math.max(b, d);
+  const inside = (pt) => pt[0] >= x0 && pt[0] <= x1 && pt[1] >= y0 && pt[1] <= y1;
+  let out = "", gap = false;
+  for (let i = 0; i < placed.pieces.length; i++) {
+    const p = placed.pieces[i], bx = placed.boxes[i];
+    if (bx && !/^\s*$/.test(p) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p; gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown"
+                            : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return { text: out,
+           why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+           tier: 1 };
+}
+
+/** Document text (Tier 1). Extends the I2 output; see the module header.
+ *  `placedByPage` receives each read page's placed glyphs (R35), kept off the
+ *  output. */
+async function extractText(doc, placedByPage = new Map()) {
   /* D-251: WHO MADE THIS LAYER. Read ONCE, from the file's own /Info, and
      carried on the text shape rather than on the document — because the claim
      it bounds is a claim about the TEXT, and a consumer holding the text is the
@@ -2192,6 +2277,7 @@ async function extractText(doc) {
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    if (res.placed) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -2478,26 +2564,34 @@ const IMAGE_CONTENT_MAX_GLYPHS = 4;
 const IMAGE_CONTENT_MIN_SHARE = 0.18;
 const IMAGE_CONTENT_TEXT_GLYPHS = 22;
 
+/** An INHERITABLE page attribute (/MediaBox, /CropBox, /Rotate: ISO 32000-1
+ *  §7.7.3.4), read up the page tree: the nearest definition, resolved, or
+ *  undefined when neither the page nor any /Pages ancestor defines it. */
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap, d = 0;
+  while (p && d++ < 32) {
+    if (p[key] !== undefined) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return undefined;
+}
+
+/** An inherited box attribute as [x0,y0,x1,y1], corners normalised and origin
+ *  kept, or null when the nearest definition is not four finite numbers. */
+function inheritedBox(doc, pageMap, key) {
+  const a = inheritedAttr(doc, pageMap, key);
+  if (!a || a.t !== "arr" || a.items.length !== 4) return null;
+  const v = a.items.map((x) => doc.resolve(x));
+  if (!v.every((x) => typeof x === "number" && Number.isFinite(x))) return null;
+  return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+}
+
 /** A page's visible box, [x0,y0,x1,y1]: CropBox inside MediaBox, each inherited
  *  through /Parent. Null when there is no readable MediaBox. */
 function pageBox(doc, pageMap) {
-  const read = (key) => {
-    let p = pageMap, d = 0;
-    while (p && d++ < 32) {
-      const a = doc.resolve(p[key]);
-      if (a && a.t === "arr" && a.items.length === 4) {
-        const v = a.items.map((x) => doc.resolve(x));
-        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
-          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
-        return null;
-      }
-      p = doc.dictOf(p.Parent);
-    }
-    return null;
-  };
-  const mb = read("MediaBox");
+  const mb = inheritedBox(doc, pageMap, "MediaBox");
   if (!mb) return null;
-  const cb = read("CropBox");
+  const cb = inheritedBox(doc, pageMap, "CropBox");
   return cb ? clipRect(cb, mb) : mb;
 }
 
@@ -2549,9 +2643,115 @@ function markImageContent(doc, text, images) {
     added++;
   }
   if (!added) return;
+  restateUndetermined(text);
+}
+
+/** After markers were added to pages: the document's list is every page's, in
+ *  page order, then the document-level ones; the count follows it. */
+function restateUndetermined(text) {
   text.undetermined = [...text.pages.flatMap((p) => p.undetermined),
                        ...text.undetermined.filter((m) => !Number.isInteger(m.page))];
   text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+
+/* ------------------------------------------------------------------ *
+ * D-665 (R34) — EVERY PAINTED IMAGE ABOVE A SIZE FLOOR SAYS ITS CONTENT IS
+ * UNREAD
+ * ------------------------------------------------------------------ *
+ *
+ * The true statement is per IMAGE and needs no classifier: an image a page
+ * paints is content whose text, if it has any, is UNREAD until a pass reads
+ * it. That holds for a photo as for a chart, so tier 1 says it for every
+ * placement above a size floor without deciding what the image depicts. The
+ * marker carries the placement's `rect` exactly as R16 emits it (so it names
+ * the same `image {page, rect}` reference) and its `area_share`: the part of
+ * the rect inside the page's visible box (R26's box), over the box's area, to
+ * 4 places. With no readable box the share is NULL and the image is still
+ * marked: that it was painted is known, its size is not. `count` is 0: it is
+ * not an undecoded character.
+ *
+ * THE FLOOR IS MEASURED (M-182), NOT GUESSED. Over 1,104 placements in three
+ * held documents, 781 are 12x12-pixel bullets with shares of at most 0.0000624;
+ * the smallest other placement has 0.0079. 0.001 sits inside that gap, nearer
+ * the bullets, so an image smaller than any measured one is stated rather than
+ * hidden. A general PDF-reading parameter (R29).
+ *
+ * IT ROUTES NOTHING. M-178's 49 classified pages showed no measured signal that
+ * separates a chart under a title from a photo page, so this is not an OCR
+ * reason; it says what is true in the meantime. */
+const IMAGE_UNREAD_MIN_SHARE = 0.001;
+
+/** Add R34's per-image markers to tier 1's text, in place. `images` is R16's list. */
+function markImagesUnread(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({ page: pg.page, reason: "image_unread", font: null, codes: "", count: 0,
+                   rect: im.rect, area_share: raw === null ? null : Math.round(raw * 10000) / 10000 });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...pg.undetermined, ...marks];
+    added += marks.length;
+  }
+  if (added) restateUndetermined(text);
+}
+
+/* ------------------------------------------------------------------ *
+ * D-374 (R33) — EACH PAGE'S BOX, THE BOUND A `pdf-page` RECT IS CHECKED
+ * AGAINST
+ * ------------------------------------------------------------------ *
+ *
+ * WHICH BOX, AND WHY THE MEDIABOX. A `pdf-page` rect is in default user space,
+ * the space the file's own content is laid out in, and the MediaBox is that
+ * space's page. The CropBox is only the part a viewer SHOWS; content cropped
+ * out of view is still in the file and a citation may need to point at it, so
+ * bounding by the CropBox would refuse a true address. (R26's share asks a
+ * different question, what a viewer sees, and reads the visible box.)
+ *
+ * NEVER A DEFAULT. A page with no readable /MediaBox has an UNDETERMINED box:
+ * inventing US Letter for it would bound a citation by a box the document never
+ * stated. A box with no area bounds nothing and is unreadable, not a zero page.
+ *
+ * THE BOX KEEPS ITS ORIGIN (`[-9 -9 621 801]` is legal): a rect is compared
+ * with the box's own corners. `w`/`h` ride beside it for a reader who wants a
+ * size. /ROTATE IS CARRIED AND DOES NOT MOVE THE BOX: user space is the
+ * unrotated space; `rotate` lets a refusal tell a member whose coordinates came
+ * from a turned view why they do not fit. One that is not a multiple of 90 is
+ * not a rotation the format admits and reads NULL. */
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const box = inheritedBox(doc, pageMap, "MediaBox");
+  if (!box || !(box[2] > box[0] && box[3] > box[1])) return null;
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  const rotate = r === undefined || r === null ? 0
+    : typeof r === "number" && Number.isInteger(r) && r % 90 === 0 ? ((r % 360) + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
+
+/** Every page's box, `{ boxes, of_page }`: `of_page[i]` indexes page i's
+ *  distinct box in `boxes`, or is null where it cannot be read. A document of
+ *  thousands of pages is almost always one box, so each is stored once. Null
+ *  only when there is no page to read. */
+function extractPageBoxes(doc) {
+  if (!doc.pageCount) return null;
+  const boxes = [], key = new Map(), of_page = [];
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const b = pdfPageBox(doc, doc.pageDict(idx));
+    if (!b) { of_page.push(null); continue; }
+    const k = JSON.stringify(b);
+    if (!key.has(k)) { key.set(k, boxes.length); boxes.push(b); }
+    of_page.push(key.get(k));
+  }
+  return { boxes, of_page };
 }
 
 /* ------------------------------------------------------------------ *
@@ -2669,7 +2869,11 @@ export async function extractPdfStructure(bytes) {
   for (const l of links) counts[l.partition]++;
 
   // Tier 1 text (CPDF-4): extends this same I2 output object; do not fork it.
-  const text = await extractText(doc);
+  /* R35: each page's placed glyphs, kept off the output, from which every
+     link's anchor text is read. */
+  const placedByPage = new Map();
+  const text = await extractText(doc, placedByPage);
+  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
 
   /* CPDF-18: the images each page PAINTS, as IC-1 `image {page, rect}`
      references. TOP-LEVEL on the structure object rather than on `text`,
@@ -2679,6 +2883,8 @@ export async function extractPdfStructure(bytes) {
   const imgs = await extractImages(doc);
   /* D-627 (R26): a page an image fills while its text is a folio says so. */
   if (imgs.images) markImageContent(doc, text, imgs.images);
+  /* R34: and every painted image above the floor says its content is unread. */
+  if (imgs.images) markImagesUnread(doc, text, imgs.images);
 
   return {
     ok: true,
@@ -2690,6 +2896,9 @@ export async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...(imgs.images ? {} : { imagesWhy: imgs.why }),
+    /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
+       replaces `text`): the bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc),
     notes: doc.notes,
   };
 }
