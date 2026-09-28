@@ -176,6 +176,7 @@ test("R27: every undetermined, why and reason names its kind — never a bare fa
     const r = await extractPdfStructure(f);
     for (const m of r.text.undetermined) { assert.ok(named(m.reason), JSON.stringify(m)); seen++; }
     for (const l of r.links.filter((x) => x.partition === "undetermined")) { assert.ok(named(l.target.why), JSON.stringify(l)); seen++; }
+    for (const l of r.links) if (l.anchor.why !== null) { assert.ok(named(l.anchor.why), JSON.stringify(l)); seen++; }
     if (r.images === null) { assert.ok(named(r.imagesWhy), r.imagesWhy); seen++; }
     assert.ok(named(r.text.producer.why) || r.text.producer.why === null);
     // a page with no text and no marker never showed text this reader could have read
@@ -184,7 +185,7 @@ test("R27: every undetermined, why and reason names its kind — never a bare fa
       assert.notEqual(await pageShowsText(d, d.pageDict(p.page)), true);
     }
   }
-  assert.equal(seen, 9);
+  assert.equal(seen, 13);
 });
 
 test("R28: producer.determination is only ever 'ocr' with a named engine, or 'undetermined' — never 'authored'", async () => {
