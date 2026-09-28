@@ -77,4 +77,35 @@ test("R9 over the real actions: a breach action resting on the determination att
   assert.equal(av.determination, d.id);
 });
 
-test.todo("R5 R6 over the real actions: a sent entry on the attached breach action, recorded through actions.actionCorrespond, meets 2→3, and a reply after it meets 3→4 — blocked by actions: actionCorrespond (and its other acts that revise an action) promote without the viewer, so actions' own R8 check reads the determination with no viewer, the real conformance answers it unseen, and every correspondence on a breach action is refused ACTION_NO_DETERMINATION (REPORT J3). Stages 2 and 3, and stage 5 with its available actions and filings, are tested over the stand-ins in stages.test.mjs.");
+test("R5 R6 R7 over the real actions (K256): a sent entry on the attached breach action, recorded through actions.actionCorrespond, meets 2→3 at its date; a reply after it meets 3→4; the reply is evaluated at stage 4", () => {
+  const x = real();
+  const d = x.w.c.determine(x.input());
+  const E = x.esc.escalationOpen({ determination: d.id, author: V("pat"), viewer: V("pat") }).id;
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 2, reason: "Notify.", author: V("pat"), viewer: V("pat") }).ok, true);
+  const N = "ACTN-2026-0001-notice";
+  const md = ["---", `id: ${N}`, "object_type: action", `title: ${N}`, "current_state: planned",
+    'created: "2026-09-28T01:00:00Z"', 'last_updated: "2026-09-28T01:00:00Z"', "action_kind: other",
+    "counterparty:", "  state: named", "  role: Director of Parks", "  body: Parks Department", "breach: true",
+    "action_basis:", `  - target: ${d.id}`, "    kind: rests_on", "---", "", "A notice.", ""].join("\n");
+  const made = x.w.promotion.promote({ bundleId: N, base: null, snapKey: "20260928T010000Z_000000b1", author: V("pat"),
+    viewer: V("pat"), files: [{ path: "bundle.md", text: md }], meta: { object_type: "action" } });
+  assert.equal(made.ok, true, JSON.stringify(made).slice(0, 400));
+  assert.equal(x.esc.escalationAttach({ id: E, action: N, author: V("pat"), viewer: V("pat") }).ok, true);
+  const edge = (to) => x.esc.escalationRead({ id: E, viewer: V("pat") }).triggers.find((t) => t.to === to);
+  assert.equal(edge(3).met, false);
+  const sent = x.esc.actions.actionCorrespond({ target: N, direction: "sent", at: "2026-09-02", account: "we wrote to the office",
+                                                viewer: V("pat"), author: V("pat") });
+  assert.equal(sent.ok, true, JSON.stringify(sent).slice(0, 400));
+  assert.deepEqual([edge(3).met, edge(3).instant, edge(3).ids], [true, "2026-09-02T00:00:00Z", [N, `${N}#${sent.ord}`]]);
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 3, reason: "Sent.", author: V("pat"), viewer: V("pat") }).ok, true);
+  assert.equal(edge(4).met, false);
+  const reply = x.esc.actions.actionCorrespond({ target: N, direction: "received", at: "2026-09-12", account: "they refused",
+                                                 viewer: V("pat"), author: V("pat") });
+  assert.equal(reply.ok, true, JSON.stringify(reply).slice(0, 400));
+  assert.deepEqual([edge(4).met, edge(4).instant, edge(4).ids], [true, "2026-09-12T00:00:00Z", [N, `${N}#${sent.ord}`, `${N}#${reply.ord}`]]);
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 4, reason: "Replied.", author: V("pat"), viewer: V("pat") }).ok, true);
+  const ev = x.esc.escalationEvaluate({ id: E, response: { action: N, ord: reply.ord }, reading: "denied", reason: "Refused.",
+                                       author: V("pat"), viewer: V("pat") });
+  assert.equal(ev.ok, true, JSON.stringify(ev).slice(0, 300));
+  assert.deepEqual(x.esc.escalationRead({ id: E, viewer: V("pat") }).proposed.map((p) => p.to), [5, 7]);
+});
