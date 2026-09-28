@@ -288,8 +288,8 @@
     },
     {
       "path": "../bio-plane/src/membership/index.mjs",
-      "bytes": 215055,
-      "sha256": "82bdbf1c88e1eba4fcd678110d7944b2a16d9f31ea6a7d2fe0e99b5c02cb32af"
+      "bytes": 215130,
+      "sha256": "a04ba4c36cfa853f6af9ba729823b286ee4e02bf0c05ab208f4353352cf0f720"
     },
     {
       "path": "../bio-plane/src/membership/schema.mjs",
