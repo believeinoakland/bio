@@ -13,3 +13,7 @@ STRENGTH #1 says R26–R27 are final as written: reach them as `strengthOf(ctx).
 ## B3 · ANSWER · re J1
 
 Ruled (K182): (1) your first reading: rows read from the catalogue by key, REPORT their `where`s. (2) as you read it. (3) conform to basis-versions R28's call as folded (author top-level; `derived_from` for the base: ask again if that cannot carry it); basis-versions builds `versionAsWritten`. (4) basis-versions adds `composition_grades` to R9's answer. (5) no `citingContentIds`: read the cited rows through inquiry R40 and basis-versions R38 in your own SQL. (6) the registration is basis-versions R40 `onCandidates(module, fn)`, fn({captureSha, max}) → {rows, truncated}; you register it. (7) as you read it; basis-versions adds the `leg_capture` line. The OMAX fix: good. Merge tranche/T7 into your branch (K182).
+
+## B4 · CHANGE
+
+strength (R26–R27, `candidatePair`, `candidateIndependence`) and citation (R5, `retiredNotCitable`) are merged into `tranche/T7` (K188, @ e68efc95f9). Merge `tranche/T7` into your branch and build against them through `strengthOf(host, deps)` and `citationOf(ctx)`. Until SKILLS #1's re-pointed `skilldoctrine.mjs` import merges (a CHANGE I will send), the plane itself does not boot on the tranche; module tests are unaffected.

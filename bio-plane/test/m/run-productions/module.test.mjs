@@ -148,3 +148,32 @@ test("R3's constants are published: the legs bound, the origin limit, the versio
   assert.deepEqual(RP.posFields({ kind: "pdf-page", ref: "p1", page: 0, rect: [0, 0, 1, 1] }), { page: 0, rect: [0, 0, 1, 1] });
   assert.equal(RP.substanceOf("name\ta\nkind\tk\nderived_from\tb\nground\tg\tm\t2026\ts"), "kind\tk\nground\tg\tm\t\ts");
 });
+
+test("R3 through the extracted providers: strength's candidatePair and candidateIndependence (its R26, R27) and citation's retiredNotCitable (its R5), reached through their factories", async () => {
+  const { strengthOf } = await import("../../../src/strength/index.mjs");
+  const { citationOf } = await import("../../../src/citation/index.mjs");
+  const w = world({ real: true });
+  assert.equal(w.p.strength, strengthOf(w.host));
+  assert.equal(w.p.citation, citationOf(w.host));
+  w.inquiry(Q); w.run(RUN);
+  w.doc(DOC); w.doc(DOC2, "retired doc", { state: "retired" });
+  const PART = [{ ground: "paper", statement: "the paper trail of the approval" }];
+  const leg = (target, over = {}) => ({ target, role: "supports", ground: "paper", ...over });
+  const retired = w.suggest({ name: "r", legs: [leg(DOC2)], grounds: PART });
+  assert.equal(retired.code, "SUGGEST_LEG_UNREACHABLE");
+  assert.equal(retired.legs[0].why, "the record has RETIRED it");
+  const ok = w.suggest({ name: "g", legs: [leg(DOC, { grade: "B", grade_axis: "capture", grade_source: "capture" })], grounds: PART });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.deepEqual([ok.pair.capture.state, ok.pair.capture.grade, ok.pair.connection.state, ok.pair.testimony.state],
+                   ["graded", "B", "unrated", "unrated"]);
+  assert.deepEqual([ok.origins_complete, ok.shared_origins, ok.origin_limit], [true, [], 200]);
+  /* A hunch is inert in the pair, and named (strength R5): the reading rests on nothing graded. */
+  const hunch = w.suggest({ name: "h", legs: [leg(DOC, { grade: "A", grade_axis: "capture", grade_source: "hunch" })], grounds: PART });
+  assert.equal(hunch.ok, true);
+  assert.equal(hunch.pair.capture.state, "unrated");
+  /* Two parts resting on one document share an upstream origin: refused C-27.11 by strength's own trace. */
+  const two = [{ ground: "paper", statement: "one part of it" }, { ground: "record", statement: "the other part" }];
+  const shared = w.suggest({ name: "s", legs: [leg(DOC), leg(DOC, { ground: "record" })], grounds: two });
+  assert.equal(shared.code, "SUGGEST_BRANCHES_NOT_INDEPENDENT");
+  assert.deepEqual(shared.shared.map((x) => [x.a, x.b]), [["paper", "record"]]);
+});

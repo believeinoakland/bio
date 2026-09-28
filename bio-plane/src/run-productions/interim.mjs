@@ -4,37 +4,20 @@
  * provider (K78 (3)'s pattern, bias's `interim.mjs` precedent):
  *
  *   aiRuns         ai-runs R28 `runFor`, R29 `boundOf` and `consumeBound`     over `ai_runs` and `ai_run_bounds`
- *   strength       strength R26 `candidatePair`, R27 `candidateIndependence`  the store's walk and independence trace
- *   citation       citation R5 `retiredNotCitable`                            the store's one retired predicate
  *   basisVersions  basis-versions R5 `basisVersionsOf`, R8–R9 `basisVersions`, R28 `appendVersion`, and `asWritten`
  *                  (the scalar the write stores; basis-versions' `versionAsWritten` replaces it, K182)
  *
  * `h`, from the store:
  *   aiRunInSight(run, viewer)   whether the viewer may see the run (`op=airun`'s own predicate)
- *   strengthWalk(inquiry, legs) the pair's walk over legs given in the walk's shape; strengthAxes its axes
- *   independenceOf(legs, parts) the independence trace over legs in the walk's shape
- *   retiredNotCitable(id)
  *   basisVersionsOf(fm), basisVersions(args), promote(pkg)
  *   fmSafe(s), appendFmRows(text, key, rows), setScalar(text, key, value), appendSessionLog(text, entry) */
 
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../../checks/bio-checks.mjs";
 import { fileDigestOf, inlineBytesOf } from "../record-core/index.mjs";
 
 const rowsOf = (sql, q, ...a) => [...sql.exec(q, ...a)];
 const oneOf = (sql, q, ...a) => rowsOf(sql, q, ...a)[0] ?? null;
 const isCount = (n) => Number.isSafeInteger(n) && n >= 0;
-
-/** A leg as strength R26 takes it (`{target, role, grade, grade_axis, grade_source, ground}`), in the walk's shape. */
-function walkLeg(l, k) {
-  const target = typeof l?.target === "string" ? l.target.trim() : "";
-  return {
-    ord: k, target_id: target,
-    target_type: normalizeType(OBJECT_TYPES[target.split("-")[0]]) ?? "",
-    role: typeof l?.role === "string" ? l.role : "",
-    grade: l?.grade ?? null, grade_axis: l?.grade_axis ?? null, grade_source: l?.grade_source ?? null,
-    ground: typeof l?.ground === "string" && l.ground.trim() ? l.ground.trim() : null,
-  };
-}
 
 const random4 = () => [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
@@ -61,18 +44,6 @@ export function runProductionsInterim(h) {
         return null;
       },
     };
-    const strength = {
-      candidatePair({ inquiry, legs }) {
-        try {
-          const pair = h.strengthWalk(inquiry, (legs || []).map(walkLeg));
-          return { pair: Object.fromEntries(h.strengthAxes.map((a) => [a, pair?.[a] ?? null])), error: null };
-        } catch (e) {
-          return { pair: null, error: String(e && e.message ? e.message : e).slice(0, 200) };
-        }
-      },
-      candidateIndependence({ legs, parts }) { return h.independenceOf((legs || []).map(walkLeg), parts); },
-    };
-    const citation = { retiredNotCitable: (id) => h.retiredNotCitable(id) };
     const basisVersions = {
       basisVersionsOf: (fm) => h.basisVersionsOf(fm),
       basisVersions: (a) => h.basisVersions(a),
@@ -121,6 +92,6 @@ export function runProductionsInterim(h) {
         });
       },
     };
-    return { aiRuns, strength, citation, basisVersions };
+    return { aiRuns, basisVersions };
   };
 }

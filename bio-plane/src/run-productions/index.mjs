@@ -6,7 +6,7 @@
  * catalogue (C-27 and C-104, `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
- * `membership`, `content` and `connections` through their factories, and `ai-runs`, `strength`, `citation` and
+ * `membership`, `content`, `connections`, `strength` and `citation` through their factories, and `ai-runs` and
  * `basis-versions` as injected providers written to their Provides (K120): `deps.interim` builds those not yet
  * extracted from what the legacy store hands over (`interim.mjs`). It declares its tables to purge (R17, K23).
  *
@@ -18,6 +18,8 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { contentOf, mintLabel } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
+import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
+import { citationOf } from "../citation/index.mjs";
 import { runPrincipalGate } from "../airun.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
@@ -36,9 +38,9 @@ export const RUN_PRODUCTIONS_MODULE = "run-productions";
 /** R3's legs bound: the WRITE cap, below the read cap of 500 (basis-versions R9), because every leg of a reading is a
  *  thing a member must read (§6 rule 4). Published in the refusal that hits it and on every answer (R5). */
 export const SUGGEST_LEGS_MAX = 120;
-/** The independence trace's origin limit (strength R12, R27): `strength`'s, published here as R5's `origin_limit` and
- *  read by the legacy store's trace until `strength` holds it; the answer's own `limit` wins where it gives one. */
-export const SUGGEST_ORIGIN_MAX = 200;
+/** The independence trace's origin limit (strength R12, R27): `strength`'s, re-exported as R5's `origin_limit`; the
+ *  trace's own `limit` wins where it gives one. */
+export const SUGGEST_ORIGIN_MAX = ORIGIN_LIMIT;
 /** C-27.16's second bound: basis-versions' read maximum (its R9). A question holding more versions than a comparison
  *  reads cannot be said to hold none the same in substance. */
 export const SUGGEST_VERSIONS_MAX = 1000;
@@ -46,7 +48,7 @@ export const SUGGEST_VERSIONS_MAX = 1000;
 export const SUGGEST_UNWRITABLE_FIELDS = Object.freeze(["state", "hidden", "state_by", "state_at", "state_reason", "at",
                                                         "affirmed_parts", "affirmed"]);
 /** The three axes strength answers (strength's Terms), never composed into one value (DEC-21, DEC-44). */
-export const PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
+export const PAIR_AXES = Object.freeze([...STRENGTH_AXES]);
 
 /** R12's bounds. */
 export const EXTRACT_PROPOSALS_LIMIT_DEFAULT = 100;
@@ -871,7 +873,8 @@ export function runProductionsOf(host, deps) {
       return v;
     };
     p = new RunProductions({ storage: d.storage || host.storage, record, membership, content, connections,
-                             aiRuns: need("aiRuns"), strength: need("strength"), citation: need("citation"),
+                             aiRuns: need("aiRuns"), strength: d.strength || strengthOf(host, { record, membership }),
+                             citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: need("basisVersions"), now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);

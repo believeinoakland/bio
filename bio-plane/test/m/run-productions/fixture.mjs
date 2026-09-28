@@ -13,6 +13,8 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { strengthOf } from "../../../src/strength/index.mjs";
+import { citationOf } from "../../../src/citation/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -49,8 +51,12 @@ export function storage() {
 /** A text layer's chain, unscoped (content's fixture's). */
 export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }];
 
-/* The read contracts of the later modules this one joins (inquiry R40, basis-versions R38), in their stated columns. */
+/* The read contracts of the later modules this one joins (inquiry R40, basis-versions R38), and provenance's (its R48)
+   the extracted strength joins for its origin trace, in their stated columns. */
 const CONTRACT_TABLES = `
+CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT, encoding TEXT,
+  bytes INTEGER, registered TEXT, authored INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS captured_locators (capture_sha TEXT, address_norm TEXT);
 CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
 CREATE TABLE IF NOT EXISTS inquiry_basis_versions (bundle_id TEXT, name TEXT, ord INTEGER, state TEXT, hidden INTEGER,
   claim TEXT, relationship TEXT, derived_from TEXT, run TEXT, kind TEXT, composition TEXT, leg_count INTEGER);
@@ -97,7 +103,10 @@ export function basisVersionsOf(fm) {
   });
 }
 
-export function world({ strengthPair = null } = {}) {
+/** `real`: strength and citation are the extracted modules themselves (reached through their factories, as the
+ *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
+ *  capture ceilings the test sets in `w.ceilings`. */
+export function world({ strengthPair = null, real = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -211,8 +220,21 @@ export function world({ strengthPair = null } = {}) {
     },
   };
 
-  const p = runProductionsOf(host, { record, membership, content, connections, aiRuns, strength, citation,
-                                     basisVersions, now: () => Date.parse(clock.now) });
+  const ceilings = new Map();
+  if (real) {
+    const inquiry = {
+      basisFor: (id) => ({ ok: true, bundleId: id, legs: [] }),
+      earned: (subject, targets) => ({ subject_entity: subject || null, subject_known: !!subject,
+        earned: { capture: Object.fromEntries(targets.filter((t) => ceilings.has(t)).map((t) => [t, { mode: "ceiling", ...ceilings.get(t) }])),
+                  connection: {}, testimony: {} } }),
+      legCapped: () => null,
+      subjectEntityOf: () => null,
+    };
+    strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
+    citationOf(host, { record, membership, content });
+  }
+  const p = runProductionsOf(host, { record, membership, content, connections, aiRuns, basisVersions,
+                                     ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
   /** A bundle and its files as record-core holds them (its R37 read contract): a new `bundle_sha` on every write. */
@@ -234,7 +256,7 @@ export function world({ strengthPair = null } = {}) {
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources,
+    citation, retired, connections, cites, basisVersions, candidateSources, ceilings,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => st.sql.exec(qq, ...a)[0] ?? null,
     rows: (qq, ...a) => st.sql.exec(qq, ...a),
@@ -264,6 +286,8 @@ export function world({ strengthPair = null } = {}) {
       const s = sha(text);
       put(id, "information", infoMd(id, state), { state, files: [{ path: `snapshots/${id}.txt`, text }] });
       (registered[id] || (registered[id] = [])).push(s);
+      st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                   VALUES (?, ?, ?, 'utf8', ?, ?)`, s, id, `snapshots/${id}.txt`, Buffer.byteLength(text), clock.now);
       if (read) ex.readings[s] = { chain: LAYER, pageCount };
       return s;
     },
