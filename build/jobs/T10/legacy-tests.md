@@ -1,6 +1,6 @@
 # legacy-tests (T10)
 
-**Status** · session_01A1J6fyxhnqGHDJseJ1nErt · depth 2 · RUNNING until 2026-09-29T02:17:19Z (old battery baseline + five family agents) · handled B2
+**Status** · session_01A1J6fyxhnqGHDJseJ1nErt · depth 2 · RUNNING until 2026-09-29T01:38:28Z (final battery: 369 plane + 90 civicos-ui suites on cd5e39d98d) · handled B2
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
