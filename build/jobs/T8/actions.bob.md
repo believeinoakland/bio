@@ -1,6 +1,6 @@
 # BOB to actions (T8)
 
-**Read** · handled J1
+**Read** · handled J6
 
 ## B1 · START
 
