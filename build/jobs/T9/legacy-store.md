@@ -51,3 +51,14 @@
 - **Checks** (civicos-process): format: 69 modules, 64 requirements files; 0 failures. architecture: 2 product files, 75 relative imports; 3 failures, the same 3 as on `tranche/T9` (the imports of `affordances.mjs`, `queuestate.mjs` and `queue/proposals.mjs`: N13); the five imports added here pass. coverage: 0 of 0 live ids (legacy, no requirements); 0 failures. ownership: 0 failures.
 
 Size (session_013A1X4NYhkV6rFR5qtbriVB): test runs 760, module lines 8,379
+
+## J2 · REPORT
+
+For routing. Full detail is in my record's § Completion.
+1. **standards:** `standardsOf` declares its tables to purge but never creates them (K267's defect; N267, K302). Measured: without legacy-store's `migrate()` call, every standards op throws and a whole-store purge fails (`no such table: standards`).
+2. **legacy-tests (re-anchors):**
+   - `project-sight` 11g++: the sweep must read `standardsOps`, `conformanceOps`, `consequencesOps` and `filingsOps` (T8's loop). Standards' and conformance's maps read parameters through `qp("…")`. It is 248/1 here, and its only red is 11g++ naming `standard`, `standardinforce`, `determination`, `determinations`, `consequence`, `comparison` and `counselpacketread`. 11g itself is green.
+   - `d484-refusal-translation`: three arms scan `store.mjs` for `NO_BASIS` and `is-act-no-basis` (30/0 → 27/3). They re-anchor to inquiry's `actNoBasis`, which C-33.40 already names.
+3. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` from `store.mjs` (fleetbundles 95/1 → 91/5), for the layer close (§14).
+4. **promotion / legacy-checks:** no catalogue row's `where` moves.
+5. **Seen on both trees, not mine:** `acquire` is intermittent (a TypeError after 78 passes, the same on tranche and branch). `capturerequests`' two rate-rule arms are timing-sensitive (138/2 once, 140/0 on re-run).
