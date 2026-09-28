@@ -82,8 +82,15 @@ import * as CATALOGUE from "../checks/bio-checks.mjs";
 import { strip } from "../scripts/walkfloor.mjs";
 import { renderPack, packVersion } from "../src/skillpack.mjs";
 import { RUN_ENDINGS, RUN_BOUNDS } from "../src/airun.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156, ai-runs R44, skills R18): the deployment order is held
+   ONCE, by ai-runs (`src/ai-runs/deployment.mjs`); `skilldoctrine.mjs` deleted its copy and re-exports ai-runs'
+   object unchanged. The subject is therefore read from the one surviving source, and ARM C4 holds that the
+   doctrine's names are that same object (identity), not a second copy. */
 import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
-         SEQUENCING_ALSO_NAMED_IN, CLAUSES, PROHIBITIONS,
+         SEQUENCING_ALSO_NAMED_IN, DEPLOYED_MODES } from "../src/ai-runs/deployment.mjs";
+import { AI_RUN_OPEN_CHECKS } from "../src/ai-runs/checks.mjs";
+import * as DOCTRINE from "../src/skilldoctrine.mjs";
+import { CLAUSES, PROHIBITIONS,
          controlFlowAuthority, judgementLayers } from "../src/skilldoctrine.mjs";
 
 /* FL-3's LANDED TABLE, IMPORTED BY THE SUITE AND NEVER BY THE DOCTRINE. The
@@ -314,12 +321,22 @@ t("ARM C3b: THE DETECTOR REACHES — a fixture holding a real mode gate trips al
            + 'function go(s) { const mode = MODES[s.mode]; if (!mode.deployed) return "close"; }\n').length,
   GATE_SHAPES.length);
 
-t("ARM C4: the doctrine cites the row by ADDRESS and holds no C-number for it, because there is "
-  + "none to hold. `enforced_by` is empty and `enforced_by_row` resolves to the landed table",
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156; ai-runs R40, R44; skills R18): this arm said
+   "`enforced_by` is empty ... because there is none to hold". ai-runs R40 made that false: `op=airunopen` refuses a
+   mode not deployed with C-109.1 (`AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED`), and N156 retired the doctrine's
+   copy that still said so. The "holds no C-number" half is RETIRED by that ruling; the rest is re-anchored and
+   strengthened: `enforced_by` names exactly the code the ai-runs row mints, the doctrine re-exports the one object
+   (no second copy), and `enforced_by_row` still resolves to the landed table (agent-worker R14 still refuses first). */
+t("ARM C4: the doctrine cites the gate's row by ADDRESS and the plane's refusal by the ONE C-number that mints it. "
+  + "`enforced_by` is exactly ai-runs' C-109.1 row, the doctrine's names ARE ai-runs' objects (no copy), and "
+  + "`enforced_by_row` resolves to the landed table",
   [DEPLOYMENT_SEQUENCE.enforced_by,
+   AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check,
+   [DOCTRINE.DEPLOYMENT_SEQUENCE === DEPLOYMENT_SEQUENCE, DOCTRINE.GATE_ADDRESS === GATE_ADDRESS,
+    DOCTRINE.SEQUENCING_SOURCE === SEQUENCING_SOURCE, DOCTRINE.SEQUENCING_ALSO_NAMED_IN === SEQUENCING_ALSO_NAMED_IN],
    DEPLOYMENT_SEQUENCE.enforced_by_row.startsWith(GATE_ADDRESS.file),
    DEPLOYMENT_SEQUENCE.enforced_by_row.includes(GATE_ADDRESS.row)],
-  [[], true, true]);
+  [["C-109.1"], "C-109.1", [true, true, true, true], true, true]);
 
 /* ==========================================================================
    BLOCK D — THE PLAN ROW'S NEGATIVE CONTROL, RUN IN THE SUITE.
@@ -502,8 +519,10 @@ console.log(`  MEASURED — CLAUSES: ${instructionOnlyC.length} of ${CLAUSES.len
           + `(${instructionOnlyC.map((c) => c.id).join(", ")})`);
 console.log(`  MEASURED — PROHIBITIONS: ${instructionOnlyP.length} of ${PROHIBITIONS.length} `
           + `INSTRUCTION ONLY (${instructionOnlyP.map((p) => p.id).join(", ") || "(none)"})`);
-console.log(`  MEASURED — SK-4's RECORD: 1 item, backed by CODE THAT IS NOT A C-NUMBER `
-          + `(${DEPLOYMENT_SEQUENCE.enforced_by_row})`);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156; ai-runs R40): SK-4's record is backed by BOTH the
+   plane's C-109.1 and the fleet member's control-flow row now; printed as both. */
+console.log(`  MEASURED — SK-4's RECORD: 1 item, backed by ${JSON.stringify(DEPLOYMENT_SEQUENCE.enforced_by)} at the `
+          + `plane's open AND by a control-flow row (${DEPLOYMENT_SEQUENCE.enforced_by_row})`);
 console.log(`  MEASURED — THE SKILL AS A WHOLE: ${totalItems} doctrine items · `
           + `${totalInstructionOnly} carry no code at all · ${cNumberBacked} are backed by a `
           + `C-number · 1 is backed by a control-flow ROW. **The three are printed separately `
@@ -512,8 +531,12 @@ console.log(`  MEASURED — THE SKILL AS A WHOLE: ${totalItems} doctrine items �
 
 t("ARM F1: SK-4 adds no instruction-only item and does not move SK-2's and SK-3's published "
   + "figures. The total rises by one and the uncoded count does not",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156; ai-runs R40): the last element read
+     "`enforced_by` empty and a row present", the retired copy's claim. SK-4's record is still not
+     instruction-only (so the uncoded count is unchanged), and it is now backed by exactly C-109.1 AND the row. */
   [totalItems, totalInstructionOnly, instructionOnlyC.length, instructionOnlyP.length,
-   DEPLOYMENT_SEQUENCE.enforced_by.length === 0 && DEPLOYMENT_SEQUENCE.enforced_by_row.length > 0],
+   JSON.stringify(DEPLOYMENT_SEQUENCE.enforced_by) === JSON.stringify(["C-109.1"])
+     && DEPLOYMENT_SEQUENCE.enforced_by_row.length > 0],
   /* CORRECTED 2026-09-23 by D-220, never exempted: 16/4/3 was SK-4's moment. D-220 added ONE clause,
      `versions-are-versions`, and it is INSTRUCTION ONLY — the run's document COUNT is code in the fleet
      member (`documentHoldings`), but nothing refuses the model's own prose about coverage, and a fleet
@@ -531,20 +554,29 @@ t("ARM F1: SK-4 adds no instruction-only item and does not move SK-2's and SK-3'
    this arm is red because the record's residue claim is no longer true (the gate DOES reach the record), which is
    `skilldoctrine.mjs`'s stale `DEPLOYMENT_SEQUENCE` copy for skills to re-export from `src/ai-runs/deployment.mjs`
    (AI-RUNS #2 REPORT 3); this arm's pins move with that re-export. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156; ai-runs R40, R44): the residue this arm re-measured
+   ("the gate does not reach the RECORD: `ai_runs.mode` is free text with no C-number over it") is RETIRED by R40,
+   and N156 retired the doctrine copy that still stated it. The record now states the opposite (C-109.1 refuses at the
+   open), so the arm measures THAT, both halves against the landed sources: the column is still text, the open's
+   refusal exists in ai-runs' rows AND its code tests `DEPLOYED_MODES`, and `does_not_reach` names the refusal and
+   keeps its one true residue (a DEPLOYMENT). */
+const RUNS_INDEX_SRC = readRepo("bio-plane/src/ai-runs/index.mjs");
 const RUNS_SCHEMA_SRC = readRepo("bio-plane/src/ai-runs/schema.mjs");
 const RUNS_CHECKS_SRC = readRepo("bio-plane/src/ai-runs/checks.mjs");
 const modeColumn = /\n\s*mode\s+TEXT\s*,/.test(SCHEMA_SRC + "\n" + RUNS_SCHEMA_SRC);
 const modeCheckedAnywhere = [CHECKS_SRC, RUNS_CHECKS_SRC].some((src) =>
   /['"]?\bmode\b['"]?\s*(?:===|!==)\s*['"](?:check|investigate)['"]/.test(src) || /AI_RUN_MODE/.test(src));
 
-t("ARM F2 (THE RESIDUE, RE-MEASURED RATHER THAN BELIEVED): the record says the gate does not reach "
-  + "the RECORD, because `ai_runs.mode` is free text with no vocabulary check and no C-number over "
-  + "it. Both halves are measured against the landed schema and the landed catalogue every run — a "
-  + "residue asserted once and never re-read is how a partial fence starts reading as a whole one",
+t("ARM F2 (THE RESIDUE, RE-MEASURED RATHER THAN BELIEVED): the record says the plane's open refuses a mode not "
+  + "deployed (C-109.1) and that what no gate reaches is a DEPLOYMENT. Both halves are measured against the landed "
+  + "schema, rows and code every run — a residue asserted once and never re-read is how a partial fence starts "
+  + "reading as a whole one",
   [modeColumn, modeCheckedAnywhere,
-   /ai_runs\.mode/.test(DEPLOYMENT_SEQUENCE.does_not_reach),
+   /DEPLOYED_MODES\.includes\(/.test(RUNS_INDEX_SRC),
+   JSON.stringify(DEPLOYED_MODES) === JSON.stringify([DEPLOYMENT_SEQUENCE.first_deployed_mode]),
+   /C-109\.1/.test(DEPLOYMENT_SEQUENCE.does_not_reach),
    /a DEPLOYMENT/.test(DEPLOYMENT_SEQUENCE.does_not_reach)],
-  [true, false, true, true]);
+  [true, true, true, true, true, true]);
 
 t("ARM F3: `does_not_reach` is present and substantial on this record, which is SK-3's standard "
   + "applied to an ENFORCED item — a partial fence read as a whole one is worse than an unenforced "
@@ -573,9 +605,11 @@ console.log(`  SK-4's accepts-when has TWO halves and only one of them is reacha
     observed deployments. Those are different claims and this suite makes only the first.
 
   AND THE GATE'S OWN REACH IS SMALL, WHICH IS BY DESIGN AND IS STILL A LIMIT (ARM F2 measures
-    it): what refuses an undeployed mode is one row inside one fleet member's own control flow.
-    The plane stores \`ai_runs.mode\` as free text and no C-number refuses a value, so a caller
-    that never runs this harness is not gated by it at all.`);
+    it): what refuses an undeployed mode is one row inside one fleet member's own control flow AND,
+    since ai-runs R40, the plane's open (C-109.1). Neither reaches a DEPLOYMENT: shipping a build
+    with the flag flipped is held by review, not by code.`);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N156; ai-runs R40): the printed limit said "no C-number
+   refuses a value"; R40's C-109.1 does, so the limit is re-stated as it stands. */
 
 console.log(`\nskillsequencing: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

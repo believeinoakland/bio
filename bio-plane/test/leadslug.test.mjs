@@ -46,6 +46,10 @@
  *     a successful acquire). `collected` is what a later `promote` makes. So
  *     the item reports `undetermined` off the drain and `collected` once a
  *     promote registers the digest, and BOTH are driven.
+ *     RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N141; capture-requests
+ *     R38): the drain now promotes a new capture itself at `collected`, so the
+ *     lead reads that document off the drain (`absent`, at `collected`), and
+ *     block 5 reaches `undetermined` by purging the drain's document.
  *  4. THE CASE SET IS INQUIRY B'S ANCESTORS AND NOT INQUIRY A'S. The item, in
  *     one block, driven over two projects that both exist and are both visible.
  *  5. NO BASIS ENTRY, AND THE ABSENCE IS MEASURED. All THREE states driven from
@@ -394,6 +398,10 @@ console.log("\n--- 2. the door: a lead is optional, names a question, and is nev
  * ====================================================================== */
 console.log("\n--- 3. the spine: the capture lands at `collected` and never higher, and the lead surfaces ---");
 let LEAD_REQ = null;
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N141; capture-requests R38): the document the requested capture
+   lands in is the one the DRAIN promotes (`captured[].promoted.bundle_id`), no longer one this suite promotes by hand
+   (a hand promote of the same bytes is now refused C-53.13, one capture one home). */
+let DOC_V = null;
 {
   const r = await request({ address: VENDOR, lead_inquiry: INQ_B });
   t("the door accepts a lead naming ANOTHER question, and echoes what it stored",
@@ -402,6 +410,9 @@ let LEAD_REQ = null;
 
   const d = await drain();
   t("the drain captured it", [d.captured.length, d.refused.length], [1, 0]);
+  DOC_V = g(d, "captured.0.promoted.bundle_id");
+  t("N141: and it PROMOTED the capture itself, naming the information bundle it made (R38)",
+    [g(d, "captured.0.promoted.ok"), /^INFO-\d{4}-\d+-requested$/.test(String(DOC_V))], [true, true]);
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture R20, K60): this counted EVERY outbound request as the fetch.
      Since capture R20 every capture also asks provenance's `attest` for a trusted timestamp (each authority in
      TSA_ENDPOINTS; this fixture answers PDF bytes, so all are asked) and a co-archive of the address
@@ -440,27 +451,32 @@ let LEAD_REQ = null;
      document yet to ask about. An item reporting `absent` here would be
      claiming more than the record can support — the defect class this project
      ranks above a missing feature. */
+  /* RETIRED 2026-09-28 (legacy-tests T10, B1 (7), N141; capture-requests R38): the measurement above ("a drained
+     capture lands at NO bundle state at all ... `collected` is what a later `promote` makes") and the arm that read
+     `undetermined` / `unregistered_capture` straight off the drain. N141 made the drain promote a new capture itself
+     at `collected`, so straight off the drain the capture IS registered under a document. The property the arm
+     guarded (the item never overclaims, and says WHICH absence it is) is re-anchored below: off the drain it names
+     the drain's own document at `collected` and `absent` (looked for, in no case), and block 5 still drives
+     `undetermined` from a capture whose document is gone. */
   const be = g(leads[0], "basis.basis_entry") || {};
-  t("straight off the drain the basis question is UNDETERMINED and says which absence it is: the "
-  + "bytes are held and no document in this store carries them yet, so there is nothing whose place "
-  + "in a case could be asked. `absent` here would be an overclaim",
-    [be.state, be.reason, be.bundle_id], ["undetermined", "unregistered_capture", null]);
+  t("straight off the drain the lead names the document the DRAIN made, at `collected` and never higher, and "
+  + "reports it `absent` — looked for, part of no case — rather than a word it did not measure",
+    [be.state, be.reason, be.bundle_id, be.bundle_state], ["absent", "not_made_part_of_the_case", DOC_V, "collected"]);
 }
 
 /* ------------------------------------------------------------------------
    AND NOW THE `collected` HALF, reached by the act that actually produces it.
-   A promote registering the captured digest under an INFO bundle is what puts
-   a capture into the corpus, and the intake doctrine caps it at `collected` —
-   sweep material never ratifies itself. */
-const DOC_V = "INFO-2026-4901-northbay-0042-contract";
+   RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N141): that act is now the DRAIN's own promotion (R38), so the
+   suite no longer promotes the bytes by hand; it reads the drain's bundle and holds the lead and the record to it.
+   The intake doctrine still caps it at `collected` — sweep material never ratifies itself. */
 {
   const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
   const row = rows.requests.find((r) => r.request === LEAD_REQ);
   t("the row is `captured` and carries the digest the daemon filed",
     [row.state, typeof row.capture_sha === "string" && row.capture_sha.length === 64],
     ["captured", true]);
-  await promote(DOC_V, infoMd(DOC_V), "information", "collected", RUTH,
-    [{ sha256: row.capture_sha, path: "snapshots/northbay-0042.pdf", encoding: "binary", bytes: 4096 }]);
+  const home = ((await GET(`op=list&token=${RUTH}&limit=1000`)).bundles || []).find((b) => b.bundle_id === DOC_V) || {};
+  t("the drain's document is in the record at `collected`, never higher", home.current_state, "collected");
   const be = g(leadsIn(await queueOf(CAROL)).find((i) => g(i, "basis.address") === VENDOR),
                "basis.basis_entry") || {};
   t("once the capture IS registered under a document, the lead reports that document and its state — "
@@ -539,7 +555,17 @@ const INQ_D = "INQ-2026-4400-does-northbay-perform";
      same word would prove the field is constant, not that it is measured. */
   const second = await request({ address: SECOND, lead_inquiry: INQ_B });
   t("fixture: a second lead requested", second.ok, true);
-  await drain();
+  const d2 = await drain();
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N141): the drain now promotes this capture too, so "never
+     registered" is no longer the drain's outcome. It is reached by a real act instead: an operator purges the
+     document the drain made, which takes its register row (provenance declares `register` per bundle) and leaves
+     the request `captured` with its digest — a capture no document in this store carries, which is exactly the
+     `undetermined` fact. */
+  const doc2 = g(d2, "captured.0.promoted.bundle_id");
+  t("fixture: the drain promoted the second capture too, and an operator purges that document",
+    [/^INFO-\d{4}-\d+-requested$/.test(String(doc2)),
+     (await GET(`op=purge&token=adm-pl15&confirm=bio&bundleId=${encodeURIComponent(String(doc2))}`)).ok],
+    [true, true]);
   queueSnapshot = await queueOf(CAROL);
   const two = leadsIn(queueSnapshot);
   t("two leads now stand", two.length, 2);

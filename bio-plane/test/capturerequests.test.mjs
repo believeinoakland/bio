@@ -204,8 +204,12 @@ const DO = async (p, body) => rP(await (await doStub.fetch("http://x/" + p,
 const decomment = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
   .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N188 (3); capture-requests R6, K333 reading 4): the door's
+   signature now carries the in-process caller's instant, `{ viewer, caller, at }` (a test's or the scheduler's replay;
+   the op never passes one and never reads a body's `at`). The locator follows the new signature; every source arm
+   below still asks its question of the whole door body, and the length guard keeps a failed locate loud. */
 function doorBlock() {
-  const at = CR_SRC.indexOf("  captureRequest(a = {}, { viewer = null, caller = null } = {}) {");
+  const at = CR_SRC.indexOf("  captureRequest(a = {}, { viewer = null, caller = null, at = null } = {}) {");
   if (at < 0) return "";
   const end = CR_SRC.indexOf("\n  #inquiryInSight(", at);
   return CR_SRC.slice(at, end < 0 ? at + 20000 : end);
@@ -472,6 +476,14 @@ t("and every other request that left is capture R20's co-attestation of that cap
   t("A CAPTURE IS NOT EVIDENCE: whatever the daemon filed is at `collected` and NEVER higher — "
   + "sweep material never ratifies itself (Intake Doctrine, SWEEP §1.7)",
     [...new Set(landed.map((b) => b.current_state))].filter((s) => s !== "collected"), []);
+  /* ADDED 2026-09-28 (legacy-tests T10, B1 (7), N141; capture-requests R38): the drain now PROMOTES a new requested
+     capture itself, so the arm above is no longer asked over nothing the daemon made. This names the bundle the drain
+     reports and holds it, specifically, at `collected`. */
+  const promoted = (D1.captured[0] || {}).promoted || {};
+  const home = (listed.bundles || []).find((b) => b.bundle_id === promoted.bundle_id) || {};
+  t("N141: the drain promoted the capture it filed, naming the bundle, and THAT bundle is at `collected`",
+    [promoted.ok, /^INFO-\d{4}-\d+-requested$/.test(String(promoted.bundle_id)), home.current_state],
+    [true, true, "collected"]);
 }
 
 /* ====================================================================== 4
