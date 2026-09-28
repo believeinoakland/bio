@@ -25,9 +25,9 @@
  *   record, membership, promotion, content, retrieval   the modules it uses, through their factories on the same host
  *                unless a test passes its own.
  *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES}` (inquiry R13, R5, R4): the earned registry that fills a
- *                leg's grade, the one leg-part grammar, and the role vocabulary. Passed by the store until `inquiry`'s
- *                own factory is merged (K120's pattern); with none, citing onto a question is refused
- *                `INQUIRY_UNAVAILABLE` (never written ungraded by default).
+ *                leg's grade, the one leg-part grammar, and the role vocabulary; by default `inquiryOf(host)`'s
+ *                registry with the grammar and roles inquiry exports. One lacking any of the three refuses citing onto
+ *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default).
  *   now          the module's clock, milliseconds since the epoch (default: the wall clock). */
 
 import { normalizeType, OBJECT_TYPES, parseFrontmatter, createSha256 } from "../../checks/bio-checks.mjs";
@@ -36,6 +36,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { promotionOf, INLINE_MAX } from "../promotion/index.mjs";
 import { contentOf, citationExtent } from "../content/index.mjs";
 import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
+import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.mjs";
 import { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
 import { spliceEdgeStatus, spliceReferences, spliceBasis, setScalar, appendSessionLog } from "./splice.mjs";
 
@@ -713,6 +714,11 @@ export class Citation {
 
 const instances = new WeakMap();
 
+/* inquiry's three services this module builds against (inquiry R13, R5, R4), from its instance and its exports. */
+export function inquiryServices(k) {
+  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
+}
+
 export function citationOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -722,7 +728,8 @@ export function citationOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
-    c = new Citation({ ...d, record, membership, promotion, content, retrieval });
+    const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
+    c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
     instances.set(host, c);
   }
   return c;

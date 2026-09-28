@@ -188,6 +188,7 @@ test("R11, R24: a proposed partition is refused C-71.3 unreadable, C-71.7 too ma
   w.basis.set("INQ-2026-0002-a", Array.from({ length: VERSION_LEGS_MAX + 1 }, (_, ord) => ({ ord, target_id: A, target_type: "information", role: "supports" })));
   w.bundle("INQ-2026-0002-a", "inquiry");
   refused(w.s.partitionIndependence({ id: "INQ-2026-0002-a", viewer: MACHINE, partition: [[0]] }), "PARTITION_INDEPENDENCE_TOO_MANY_LEGS");
+  assert.equal(w.calls.limits.at(-1), VERSION_LEGS_MAX + 1, "the basis is read bounded, one past the limit (inquiry R16)");
   const unk = pi([[0, 1, 2, 9]]);
   refused(unk, "PARTITION_INDEPENDENCE_UNKNOWN_LEG");
   assert.equal(unk.check, "C-71.4");

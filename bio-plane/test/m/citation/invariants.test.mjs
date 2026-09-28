@@ -3,7 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, biasMd, docMd } from "./fixture.mjs";
-import { citationOps, CITE_CHECKS, CITE_EXTENT_CHECKS } from "../../../src/citation/index.mjs";
+import { citationOps, inquiryServices, CITE_CHECKS, CITE_EXTENT_CHECKS } from "../../../src/citation/index.mjs";
+import { inquiryOf, BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
 import { ACT_SHAPE_CHECKS, CONTENT_EXTENT_CHECKS, STATES } from "../../../checks/bio-checks.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
@@ -135,4 +136,18 @@ test("K3, R7: the op routes — the control plane's stamps are read from the que
   const h = await w.select(["INFO-2026-0001"]);
   const r = citationOps(w.cit, new URL(`http://x/?project=${p}&handle=${h}&viewer=member:ann&owner=o&identity=member:ann&weight=refuse`)).cite();
   assert.deepEqual([r.ok, r.weight, r.cited], [true, "report", ["INFO-2026-0001"]]);
+});
+
+test("R2, R8: the factory's default inquiry services are inquiry's own — its earned registry (R13), leg grammar (R5) and roles (R4)", async () => {
+  const w = world();
+  w.info("INFO-2026-0001");
+  const k = inquiryOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, content: w.content });
+  const s = inquiryServices(k);
+  assert.equal(s.checkLegExtentGrammar, checkLegExtentGrammar);
+  assert.deepEqual(s.BASIS_ROLES, ["supports", "cuts_against"]);
+  assert.equal(s.BASIS_ROLES, BASIS_ROLES);
+  assert.deepEqual(s.earned(null, ["INFO-2026-0001"]), k.earned(null, ["INFO-2026-0001"]));
+  /* Nothing resolved to a subject: nothing is earned on the connection axis, so a leg would be written ungraded (R8). */
+  const reg = s.earned(null, ["INFO-2026-0001"]);
+  assert.equal(reg?.earned?.connection?.["INFO-2026-0001"]?.grade ?? null, null);
 });

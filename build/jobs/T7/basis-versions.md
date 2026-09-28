@@ -1,0 +1,103 @@
+# basis-versions (T7)
+
+**Status** · session_01F5QeEchurud7ZcEMw3BUKd · depth 2 · COMPLETE · handled B7
+
+## J1 · QUESTION
+
+Six points; I am building on the best reading of each and carry on meanwhile. None blocks me.
+
+**Q1 · `testimonyReach` and the `concluded_elsewhere` read have no Provides text (N67).** The plan moves `testimonyReach` here and gives R22–R23 "the read `concluded_elsewhere` needs", but no id states either. `#findingsConcludedElsewhere` reads two things per project: the record (R22) and the stance only while it is a conclusion (`#conclusionOf`). Proposed, to fold:
+- R22 gains: "`conclusionOf(project, inquiry, viewer)` answers the stance when its act is `concluded`, else null (never concluded, withdrawn, undetermined, or an invisible project)."
+- **R38** `testimonyReach(ids) → {self, via}`: from at most 200 distinct non-empty root ids, walks every `inquiry_basis` leg and every `inquiry_basis_version_legs` leg to depth 64 and answers each member's authored observation it reaches (a bundle holding a `register` row with `authored` 1): `self` the roots that are one, `via` `{finding, observation}` for one reached at depth ≥ 1; at most 200 rows. An empty list answers `{self: [], via: []}`. One bounded statement; writes nothing; never throws. (Read by the ratification fence, C-53.10–.12.)
+It joins `register.authored` (provenance) and `inquiry_basis(bundle_id, target_id)` (inquiry) in SQL, as today. Best reading: `modules.json` gains `provenance` in my uses; provenance R48 widens to `register.authored`; inquiry states `inquiry_basis(bundle_id, target_id)` as a read contract (its R12 already says it is the projection). If you would rather I walk through services (`provenance.registeredFor`, `inquiry.basisFor`), say so: it costs one read per node.
+
+**Q2 · `appendVersion` (R28) needs its exact shape now, because `ai-runs` builds against it concurrently.** Proposed text for R28's signature line and a second sentence:
+`appendVersion({target, version: {name, description, claim?, relationship, derived_from?, kind?, run?, level?, observed_at?}, grounds: [{ground, asserted_by, at, statement?}], legs: [{target, role, …leg fields}], author, at?, log?})` → promote's answer plus `version_content`, or `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`, `UNSPLICEABLE_BASIS` (the block cannot be extended; nothing written). The version row is written in the caller's field order with `state: "suggested"` and `hidden: false` placed after `relationship` (a caller's `state` or `hidden` is never read); each leg's fields in the caller's order, numbers bare, arrays of numbers inline, text quoted; `log` is the Session Log entry (a default names the act and the version). That keeps `op=suggest`'s bytes and `op=narrow`'s bytes exactly as today. `legacy-store`'s `suggestVersion` keeps its own copy of the splice until `ai-runs` moves it (not my module's to rewire).
+
+**Q3 · The version tables as a read contract (map §3, proposed there).** `contradiction`, `strength`, `queue`, `ai-runs` (`suggestVersion`, `extractProposals`) and `testimonyReach` read `inquiry_basis_versions` and `inquiry_basis_version_legs` in SQL. Proposed **R39**: "The tables `inquiry_basis_versions` (`bundle_id`, `name`, `ord`, `state`, `hidden`, `claim`, `relationship`, `derived_from`, `run`, `kind`, `composition`, `leg_count`) and `inquiry_basis_version_legs` (`bundle_id`, `name`, `ord`, `target_id`, `target_type`, `role`, `grade`, `grade_axis`, `grade_source`, `ground`, `content_id`) are a stated read contract (record-core R37's form); every write to them stays this module's (R7)."
+
+**Q4 · R25's extract arm as a registration.** Proposed **R40**: "`onCandidates(module, fn)`: one module (`ai-runs`, K73 (2)) registers a candidate source; `fn({captureSha, max})` answers `{rows, truncated}` of proposed passages (`run`, `ref`, `label`, a reading position, `content_id`, `proposed_by`); a second registration is `LISTENER_DECLARED`; with none registered the extract arm lists nothing and `counts.extract` is 0." `legacy-store` registers the `proposed_readings` reader until `ai-runs` is extracted.
+
+**Q5 · inquiry is not merged; built against its Provides through a bridge.** R10 (`legCapped`, `earned`) and R12 (`cyclePath`) are inquiry's. Until its CHANGE, `basisVersionsOf(ctx, {inquiry})` takes `{earned(subject, targets), legCapped(stated, earned, targetId), cyclePath(id, targets)}` and `legacy-store` passes an adapter over its own `earnedBasisRegistry`, `#capturedAt` and `#basisCyclePath` (content's Q3 pattern, K134). On the CHANGE I switch to `inquiryOf(ctx)`.
+
+**Q6 · Decisions (recorded, not asked; say if you rule otherwise).** (a) The grammar and rows stay in the catalogue, as content's Q7 (K138): `basisVersionFindings`, `VERSION_MACHINE`, `versionNeedsReason`, `VERSION_NAME_RE`, `BASIS_VERSION_CHECKS`, `VERSION_ACT_CHECKS`, `NARROW_CHECKS`, `SUGGEST_KINDS` and C-27.15, C-33.x, C-32.2 are read by the catalogue's own `checkInquiryBasis`, `affordances`, `agent-worker`, `newgroup`, the UI and the refusal-code guard; this module re-exports them as its one public face and every refusal is minted by this module's code and tested (R35 met in behaviour). (b) My promotion step registers before `legacy-store`'s (the modules' order), so until inquiry is extracted a version refusal is asked before legacy-store's basis and cycle refusals. (c) `projectsDrawingOn` filters to project bundles in SQL before the bound, so the 32 are 32 projects, not 32 citing bundles of which some are not projects.
+
+## J2 · QUESTION
+
+One use missing, and one decision on K182 (c) for your review. Merged tranche/T7 (K181, K182); building on them.
+
+**Q7 · `text-chain` in my uses.** R25's reading arm turns a `reading_refs` position (`pos_kind`, `pos`, `pos_ref`, extraction R58) into an extent through `text-chain`'s `readingSourceFromColumns`, as the store did and as `connections` and `extraction` do. `text-chain` (layer 1) is not in my `uses`, so the architecture check fails on `src/basis-versions/index.mjs` importing `src/textchain.mjs`. Best reading: add `text-chain` to basis-versions' uses in `modules.json`; I am building so.
+
+**Decision (K182 (c), recorded):** R5's composition now carries `leg_capture\t<k>\t<capture>` after the `leg_referent` lines for a leg with `extent_capture`. Every version already in a record that carries a pin (every `op=narrow` output) was frozen without that line, so the freeze would refuse the next promotion of its question. R6 therefore compares a held composition that has no `leg_capture` line with the offered one's `leg_capture` lines left out (`sameComposition`); the next re-projection stores the new form, and from then the pin is frozen. No migration, no back-fill. Proposed wording for R6's freeze clause at COMPLETE.
+
+## J3 · REPORT
+
+**`tranche/T7` does not boot the plane** (measured after merging it here, K186). `bio-plane/src/skilldoctrine.mjs:83` (skills) imports `VERSION_STRENGTH_CHECKS` from the catalogue, and strength's merge removed that export from `bio-checks.mjs`, so workerd refuses the module graph: every Miniflare-driven old suite fails with `does not provide an export named 'VERSION_STRENGTH_CHECKS'` before any test body runs (e.g. `node test/versions.test.mjs`). Not mine to fix (skills' file, strength's catalogue removal); I cannot run the old battery against the merged tree until one of them re-points it (strength re-exporting the rows, or skilldoctrine importing them from `src/strength/`).
+
+My own state: merged cleanly (store.mjs re-derived from the tranche with this job's rewire applied block by block; strength's `versions.currentOf` adapter now reaches my `currentOf` through legacy-store's delegate). Module tests 42/42; format, architecture, coverage (40/40), ownership all 0 failures. The old-battery comparison I hold was measured before this merge (base and mine, serial, same machine): every difference is a suite reading `store.mjs`/`schema.mjs` source or a catalogue `where` span; none is behaviour. Details at COMPLETE.
+
+## J4 · COMPLETE
+
+**Entries applied (T6-3, carried as T7 layer 6).** `basis-versions` extracted from `legacy-store` per map and requirements (K3, K91, K102, N64, N67, K181, K182, K186): `bio-plane/src/basis-versions/` — `index.mjs` (the service, `basisVersionsOf(host, deps)`, `basisVersionsOps`), `grammar.mjs` (the catalogue's grammar re-exported, plus the moved `versionsIn` — formerly `Store.basisVersionsOf` — `compositionDiff`, `sameComposition`, `versionAsWritten`), `text.mjs` (the version, CURRENT and conclusion splices), `schema.mjs` (both tables and their additive columns). Moved out of `store.mjs`: `conclude`, `#withdrawConclusion` and the conclusion record's writer and reads; `#narrowSource`, `narrowCandidates`, `narrow`; `#setVersionField`, `#setCurrentVersionRow`; `#canon`, `basisVersionsOf`, `#compositionDiff`; the version arm of `#promoteChecks` and the version tables' projection with `version_content`; `testimonyReach`; `#projectsDrawingOn`; the bounds, `#versionCollections`, `#versionLegsEarned`, `basisVersions`, `#currentVersionOf`; the six acts, `#versionArgs`, `VERSION_ACT_TO`, `#moveVersionState`, `#setProjectCurrentVersion`; the dispatch entries; from `schema.mjs` both tables. `legacy-store` now delegates (41 added lines, 3,253 removed; every added line is the import, the construction with the inquiry adapter and the `proposed_readings` source, the migrate call, the ops spread, or a one-line delegate). N64 (R37) and N67 (R39, R22's `conclusionOf`) built. Every requirement R1–R40 met and named by a test.
+
+**Decisions made in the module (P17: recorded, not asked).**
+- The step registers before `legacy-store`'s: until inquiry is extracted, a version refusal is asked before legacy-store's basis and cycle refusals (Q6 (b), adopted).
+- Interim inquiry bridge (Q5, adopted): `deps.inquiry` `{earned, legCapped, cyclePath}`; legacy-store passes an adapter over `earnedBasisRegistry`, `#capturedAt`, `#basisCyclePath`. Without a bridge the accept that needs a cycle walk is refused `FACT_UNAVAILABLE`, never accepted unchecked. On inquiry's CHANGE it becomes `inquiryOf(ctx)`.
+- `PUBLISHED_CANNOT_MOVE_VERSION` asks promotion's fact `caseMember`; an unprovided fact refuses the act (promotion R40), never reads as false.
+- `projectsDrawingOn` filters to project bundles in SQL and reads candidates in pages until 33 draw on the question (a severed citer takes no slot), examining at most 256 (`PROJECTS_DRAWING_EXAMINED`), truncated past that. Reads the document through `record.readFile`.
+- Reads go through record-core's services (`readFile`, `head`, `livePaths`) rather than `files`/`bundle_sha` SQL; `refs` (connections), `reading_refs`/`readings` (extraction R58), `resolutions` (entities), `content` (content R45), `register.authored` (provenance R48) and `inquiry_basis` (inquiry) are joined in SQL as before.
+- `appendVersion` is the one append; `narrow` writes through it (its bytes unchanged). `legacy-store`'s `suggestVersion` keeps its own splice until run-productions moves it.
+- Freeze and `leg_capture` (K186): `sameComposition` compares a held composition that has no `leg_capture` line with the offered one's `leg_capture` lines left out; the next re-projection stores the new form.
+
+**Proposed requirement text (K182, K186), to fold:**
+- **R5** add: "A leg carrying `extent_capture` adds a `leg_capture\t<ord>\t<capture>` line after the `leg_referent` lines (D-595, BOB #34's ruling: the pin is frozen with the version). `versionAsWritten(submission) → {version, grounds, legs}` is what a submitted version becomes in the document, the one normaliser a writer and a comparison both read: every value frontmatter-safe (quotes and backslashes to apostrophes, line breaks folded, trimmed; idempotent); `claim`, `derived_from`, `author`, `level`, `observed_at`, a ground's `statement` and each optional leg field null when blank; a ground with no label dropped; each ground asserted by the author, or by the explicit no-claim value when the author is a machine; each leg `extent_kind: document` and its `extent_capture` when given. Pure; never throws."
+- **R6** freeze clause, add: "A held composition stored before the `leg_capture` line existed is compared with the offered one's `leg_capture` lines left out, so its first re-projection stores the pin rather than refusing; once stored, the pin is frozen."
+- **R9** add: "Each version carries `composition_grades: \"authored\"`: its composition keeps the grades as authored while `legs[]` reports them as R10 bounds them."
+- **R37** add: "Candidates are examined in id order until 33 draw on the inquiry, at most 256; reaching that cap with more left is `truncated`."
+
+**Deferred.** Nothing of this module's. The catalogue rows stay the catalogue's (Q6 (a), content's Q7): R35 is met in behaviour and tested; their `where`s name `store.mjs` spans (below).
+
+**Found in other modules (REPORT).**
+1. **legacy-tests**: old suites that read moved source or `schema.mjs` text, none failing on behaviour (serial, same machine, `tranche/T7` @ 1e4eb662ea against this job before the K186 merge; 100 `.test.mjs` suites of 136 driving these ops): `versions`, `versionstate`, `current` (ARM 4 reads the writer), `suggest` (write-site census), `casepin` (reads `VERSION_ACT_TO` from the store source), `projection-noproject`, `rec114-leg-earned`, `rec118-reeval-earned`, `rec119-version-legs-earned`, `dec65-strength-reach` (the version tables in `schema.mjs`), `content-arm` (the legs' content index in `schema.mjs`), `d484-refusal-translation` (counts `actNoBasis` sites in store), `aicredential`, `machine-fences`, `fence-e2e` (census of the fences `store.mjs` mints: `MACHINE_CANNOT_CONCLUDE`, `MACHINE_CANNOT_MOVE_VERSION` are now minted in `src/basis-versions/index.mjs`), `machinefences-dec49` (the DEC-49 spans). The map §4 controls (`versionstate.control`, `nc-rec119*`, `current*.control`, `d216-sharing.control`, `sufficiency-state.control`, `conclude-project*.control`, `case-project-conclusion.control`, `projection-noproject.control`, `suggest.control`) patch moved text. Every other suite green on the base is green here.
+2. **legacy-checks**: the `where` of C-25.11, C-25.16–C-25.18, C-25.20–C-25.34, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2 now name code in `src/basis-versions/index.mjs` (same region names: `check > basis-version-resolve|basis-version-freeze`, `#moveVersionState`, `basisVersions`, `#narrowSource > is-narrow-source`, `narrow > is-narrow-extent|is-narrow-claim`, `conclude > is-machine-conclude|is-conclude-answer|is-conclude-claim`, `#setProjectConclusion > is-conclusion-row`, `withdrawConclusion > is-withdraw-stance`). The refusal-code guard (`civicos-ui/check-refusal-codes.mjs`) reads them.
+3. **skills / strength (tranche/T7 itself)**: J3 — `skilldoctrine.mjs` imports `VERSION_STRENGTH_CHECKS`, which strength's merge removed from the catalogue; the plane does not boot, so no Miniflare suite can run on the merged tree.
+4. **strength**: reaches `currentOf` through legacy-store's `#currentVersionOf` delegate; can take `basisVersionsOf(ctx).currentOf` now.
+5. **run-productions**: `appendVersion`, `versionAsWritten`, `onCandidates` and the `leg_capture` line are built; `suggestVersion`'s `#suggestionPersisted`, `#suggestionFrontmatter` and `#appendFmRows` remain in legacy-store for it to move.
+6. **queue, publication (legacy-store)**: `#projectsDrawingOn`, `#conclusionOf`, `#conclusionRecordOf`, `#noProjectConclusionOf` are delegates to R37, R22, R23.
+7. **Generated artifact (§14)**: `bio-plane/dist/bio-plane.bundled.mjs` is stale (the plane's source changed).
+
+**Tests and checks.**
+- Module: `node --test bio-plane/test/m/basis-versions/` — tests 42, pass 42, fail 0 (grammar, promote, reads, acts, conclude, narrow).
+- civicos-process checks: format 69 modules, 0 failures; architecture 11 product files, 38 relative imports, 0 failures; coverage 40 of 40 live ids named, 0 failures; ownership 14 files, legacy-store 41 added / 3,253 removed, legacy-checks 0/0, 0 failures.
+- No layer tests are named in `build/manifest.md`. Old battery as in REPORT 1 (not re-runnable on the merged tree until REPORT 3 is fixed).
+- A lesson recorded: running `*.control.mjs` suites in parallel lets their source patches collide; one run left two patched lines in `store.mjs` and one in `query.mjs`, `bio-checks.mjs` and `agent-worker/src/harness.mjs`; all were restored from the base and re-verified before commit (store.mjs re-derived and diffed against the base plus this job's edits).
+
+Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 34, module lines 1998
+
+## J5 · COMPLETE
+
+B5 and B6 applied; J4's record stands, with these changes.
+
+**Merges.** `tranche/T7` merged twice (K190 @ a21d88b177, then K193 @ 3bfd3f9f2f, the second clean). `store.mjs` was re-derived from the tranche with this job's 20 removals applied block by block (all found verbatim) and the same insertions.
+
+**Wiring (B5 (2), B6).** The interim inquiry bridge is gone: `basisVersionsOf(host)` reaches `inquiryOf(host)` (`earned`, `cyclePath`) and inquiry's `legCapped` itself; a test may still pass its own. legacy-store now creates `basis-versions` right after inquiry (its step runs after inquiry's, before legacy-store's) and registers only the `proposed_readings` source (R40) there. Strength is built over `inquiryOf(ctx)` (`basisFor: (id, o) => …basisFor(id, o)`, passing `{limit}` through, `earned`, `legCapped`, `subjectEntityOf`) and `versions: basisVersionsOf(ctx)`.
+
+**Tests and checks, on the merged tree (@ this commit).**
+- Module: `node --test bio-plane/test/m/basis-versions/` 42 pass, 0 fail; with strength's and inquiry's module tests beside it, 132 pass, 0 fail.
+- civicos-process checks: format 69 modules, 0 failures; architecture 11 product files, 39 relative imports, 0 failures; coverage 40 of 40, 0 failures; ownership 14 files, legacy-store 41 added / 3,256 removed, legacy-checks 0/0, 0 failures.
+- Old battery, serial, `tranche/T7` @ 3bfd3f9f2f against this branch, the 31 suites that drive versions, conclusions, narrowing, CURRENT, strength, suggest, publish and the fences: 25 identical; 6 differ, each only in arms that read source text (J4.1): `versions` (write-site and table census of `store.mjs`/`schema.mjs`), `suggest` (write-site census), `casepin` (`VERSION_ACT_TO` and two refusal words read from store source), `current` (ARM 4 reads the writer), `projection-noproject` (reader call sites in store source), `rec119-version-legs-earned` (the resolver in store source). An earlier serial pass over 83 suites (@ a21d88b177) differed in 4 of these only. None fails on behaviour.
+
+Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 40, module lines 2003
+
+## J6 · COMPLETE
+
+B7 applied. `tranche/T7` @ 727c18a7fb merged (K192); run-productions' removals kept.
+
+- `store.mjs` re-derived from the tranche with this job's removals; the narrowing region (which run-productions had rewired to `runProductionsOf(ctx).candidates`) moves whole to basis-versions and leaves the one delegate. run-productions' interim bridge names no method this job removed (`Store.basisVersionsOf`, `basisVersions` are delegates here), so it is unchanged.
+- R40's registration: until run-productions leaves its interim and registers itself, legacy-store registers `basisVersionsOf(ctx).onCandidates("legacy-store", (a) => runProductionsOf(ctx).candidates(a))`. **run-productions' CHANGE should delete that one store line** when it registers (a second registration is `LISTENER_DECLARED`, which its factory would receive, not throw).
+- The extract arm reads a source row's `position` when the source parses it (run-productions' `candidates` does), else its `pos_kind`/`pos`/`pos_ref` columns; R40's test covers both.
+- Strength's wiring is as J5 (`inquiryOf(ctx)` with `basisFor(id, o)`, `versions: basisVersionsOf(ctx)`).
+
+**Tests and checks (@ this commit).** Module tests with run-productions', strength's and inquiry's: `node --test bio-plane/test/m/{basis-versions,run-productions,strength,inquiry}/` 165 pass, 0 fail. Old `narrow` suite (boots the plane, drives both arms): 52 pass, 0 fail. format 69 modules, 0 failures; architecture 11 product files, 39 relative imports, 0 failures; coverage 40 of 40, 0 failures; ownership 14 files, legacy-store 38 added / 3,254 removed, legacy-checks 0/0, 0 failures.
+
+Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 42, module lines 2004

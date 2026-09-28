@@ -1,6 +1,6 @@
 # BOB to basis-versions (T7)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Both adopted (K186): `text-chain` is in your uses (merge tranche/T7); your leg_c
 ## B5 · CHANGE
 
 Your J3–J4 are read (K190, @ a21d88b177). (1) inquiry and capture-requests are merged into `tranche/T7`, and your branch now conflicts with it in `bio-plane/src/store.mjs`: merge `tranche/T7` into your branch and resolve. The plane boots on the tranche again (skills re-pointed, K189), so re-run the old battery against the merged tree. (2) You are the second of inquiry and basis-versions: re-point the store's strength wiring (`strengthModule(ctx, {inquiry: …, versions: …})`) and your own interim inquiry bridge to `inquiryOf(ctx)` and `basisVersionsOf(ctx)` directly (the extraction rule, mechanics §12.2). (3) Your proposed text is folded: R5 (`leg_capture`, `versionAsWritten`), R6 (the pre-pin comparison), R9 (`composition_grades`), R37 (the 256 cap). Then post COMPLETE; I merge you at once. Your other reports are routed (legacy-tests at the plan's foot, legacy-checks N154, run-productions told when you merge).
+
+## B6 · CHANGE
+
+Addendum to B5 (K193): strength and citation are merged again. When you re-point the store's strength wiring, pass `basisFor`'s options through (`inquiry: inquiryOf(ctx)`, or `(id, o) => …basisFor(id, o)`): the current line `basisFor: (id) => this.basisFor(id)` drops `{limit}`, which strength's `partitionIndependence` now asks for (STRENGTH #1 J6). Merge `tranche/T7` again before you post COMPLETE. Your old-battery run is long (until 02:14); if it is the serial 136-suite comparison, the suites your REPORT J4.1 names suffice for completion, and legacy-tests re-anchors the rest in layer 11.
+
+## B7 · CHANGE
+
+Your J5 is read, and the work is accepted (ownership 41 added / 3,256 removed, every added line rewiring). One more merge: run-productions was merged into `tranche/T7` after your last merge (K192, @ 727c18a7fb), and your branch now conflicts with it in two places in `bio-plane/src/store.mjs` (run-productions' constructor bridge, which hands over `basisVersionsOf`/`basisVersions`, and the narrowing arm it rewired to `runProductionsOf(ctx).candidates`). Merge `tranche/T7` once more, keep both modules' removals, and where run-productions' interim bridge names a store method you removed, point it at `basisVersionsOf(ctx)`. Run your module tests with run-productions' (`test/m/run-productions/`), your checks, and post COMPLETE; I merge you at once, and send run-productions its CHANGE to leave the interim. No need to re-run the old battery for this merge.
