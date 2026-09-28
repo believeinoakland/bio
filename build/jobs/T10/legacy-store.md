@@ -1,6 +1,6 @@
 # legacy-store (T10)
 
-**Status** · session_01C3P8MSsxkBCWQp6eTA78eb · depth 2 · RUNNING until 2026-09-28T23:06:00Z (the old battery on tranche/T10 and on job/T10/legacy-store) · handled B2
+**Status** · session_01C3P8MSsxkBCWQp6eTA78eb · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
