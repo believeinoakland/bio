@@ -74,3 +74,19 @@ No `tests` path (legacy). Measured on the merged branch (after B4) against the t
   - `ownership: 5 files changed by legacy-index between tranche/T7 and HEAD; 0 failures`
 
 Size (session_0187Db6WrLHm27JAfM829YxD): test runs 830, module lines 19,829 (`index.mjs` 9,225; `scripts/` and `migrate/` 10,604)
+
+## J1 · COMPLETE
+
+T6-13 and every forwarded item applied, at the commit carrying this entry; the record above has the detail.
+- K153's `coverage.mjs` edit is made (not refused this time).
+- Layer 6–7's ops are routed: intent's 17 (after B3, NEEDS carries all 17, with exactly 10 mutating), reevaluation's 6 (`reevaluationraise` unattended per K199) and `capturerequestretry`. The retired `capturerequestdraining` row is removed, and the unused `withReading` import is dropped.
+- N70: pensweep asks git at a symbolic link, never through it. N68: walkfloor's stale op-claims prose is corrected.
+- Tests: a scratch plane driver reads 56/0 here and 3/53 on the tip. The whole old battery on both trees differs only in the suites named in my REPORT.
+- Checks: format, architecture, coverage and ownership each show 0 failures.
+
+REPORTs:
+1. legacy-tests re-pins `daemon-token` and `d270-refusal-truth` (K199).
+2. `NO_STATEMENT` is two catalogue rows: intent C-110.10 and legacy-checks C-33.14. `refusal-wire` shows it.
+3. affordances needs rows and rungs for `capturerequestretry`, `versionadopt`, `versionkeep` and `reevaluationrecord`, and a rung for `reevaluationraise`.
+4. `coverage --strict` is now gated only by `d419-content-crop` declaring no negative control (legacy-tests).
+5. The plane bundle is stale.
