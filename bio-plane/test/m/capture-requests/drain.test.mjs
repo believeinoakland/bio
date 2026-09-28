@@ -2,7 +2,7 @@
    `capture`'s in-process arm a scripted stand-in that records exactly what it was handed. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, T0, ENV, refused, renderRefusal, sha } from "./fixture.mjs";
+import { world, V, T0, ENV, refused, renderRefusal, sha, filed } from "./fixture.mjs";
 import { captureRequestAttribution, CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TTL_MS, CAPTURE_SOURCE_CHECKS,
          sourceReasonOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, civicosUserAgent, userAgentIsLegible }
@@ -171,13 +171,15 @@ test("R14 the civicos agent is the catalogue's composer and legible; a recorded 
   assert.equal(userAgentIsLegible(ua), true);
 });
 
-test("R15 a row passing conduct is set draining in the tick that fires, counts one fetch for its host, and is fired with the row's address, purpose, agent and render and nothing else", async () => {
+test("R15 a row passing conduct is set draining in the tick that fires, counts one fetch for its host, and is fired with the row's address, purpose, agent and render, its sweep origin (R38) and nothing else", async () => {
   const w = world().scene();
   const id = w.ask({ address: "https://s.example.org/doc", render: true }).request;
   let seen = null;
   w.capture.script.set("https://s.example.org/doc", (body, opts) => {
     seen = w.req(id).state;
-    return { status: 200, body: { ok: true, existed: false, document: { capture: { sha256: sha("s"), grade: "A" } } } };
+    const f = filed("https://s.example.org/doc", opts, { bytes: "s" });
+    f.body.document.capture.grade = "A";
+    return f;
   });
   const d = await w.cr.drain({});
   assert.equal(seen, "draining");
@@ -185,12 +187,15 @@ test("R15 a row passing conduct is set draining in the tick that fires, counts o
   const call = w.capture.calls[0];
   assert.deepEqual(call.body, {});
   assert.deepEqual(call.opts, { cls: "daemon", member: false, storeName: "bio",
-    captureRequest: { locator: "https://s.example.org/doc", purpose: "investigate", agent: null, render: true } });
+    captureRequest: { locator: "https://s.example.org/doc", purpose: "investigate", agent: null, render: true,
+                      origin: { matched_sweep: "INQ-1", deeming_actor: "run R-1 under member:ann/tok1, paid by instance" } } });
   const r = w.req(id);
   assert.deepEqual([r.state, r.code, r.capture_sha, r.captured_at, r.attempts], ["captured", null, sha("s"), iso(T0), 1]);
   assert.equal(r.detail, captureRequestAttribution(r).statement);
+  assert.match(d.captured[0].promoted.bundle_id, /^INFO-2026-\d{4}-requested$/);
   assert.deepEqual(d.captured, [{ request: id, address: "https://s.example.org/doc", sha: sha("s"), grade: "A",
-                                  attribution: captureRequestAttribution(r), already_held: false }]);
+                                  attribution: captureRequestAttribution(r), already_held: false,
+                                  promoted: { ok: true, bundle_id: d.captured[0].promoted.bundle_id } }]);
   const look = w.log().at(-1);
   assert.deepEqual([look.state, look.result_kind, look.result_ref, look.detail, look.governed],
                    ["PRESENT", "capture", sha("s"), r.detail, 0]);
@@ -340,13 +345,47 @@ test("R22 remaining is the number of requested rows after the tick", async () =>
   assert.equal(d.remaining, 3);
 });
 
-test("R38 (its promotion deferred, N141, K181): a captured row carries what the promotion at collected will name: the run, both principals and the target inquiry", async () => {
+test("R38 a new capture is promoted at collected, never higher, as an information bundle under the daemon's machine actor: origin sweep, the target inquiry its matched scope, the run and both principals its deeming actor", async () => {
   const w = world().scene();
   const id = w.ask().request;
-  await w.cr.drain({});
-  const r = w.req(id);
-  assert.deepEqual([r.run, r.principal_plane, r.principal_claude, r.target, r.state],
-                   ["R-1", "member:ann/tok1", "instance", "INQ-1", "captured"]);
+  const d = await w.cr.drain({});
+  const c = d.captured[0];
+  assert.equal(c.promoted.ok, true, JSON.stringify(c.promoted));
+  const bid = c.promoted.bundle_id;
+  assert.match(bid, /^INFO-2026-\d{4}-requested$/);
+  const b = w.row(`SELECT * FROM bundles WHERE bundle_id=?`, bid);
+  assert.deepEqual([b.object_type, b.current_state, b.group_id], ["information", "collected", "test-group"]);
+  const m = w.rows(`SELECT * FROM manifest WHERE bundle_id=?`, bid);
+  assert.deepEqual(m.map((x) => [x.kind, x.author]), [["promotion", "token:daemon"]]);
+  const prov = JSON.parse(w.record.readFile(bid, "data/provenance.json").text);
+  assert.deepEqual(prov.documents[0].origin, { kind: "sweep", matched_sweep: "INQ-1",
+    deeming_actor: "run R-1 under member:ann/tok1, paid by instance" });
+  assert.equal(prov.documents[0].capture.sha256, w.req(id).capture_sha);
+  const md = w.record.readFile(bid, "bundle.md").text;
+  assert.match(md, /^current_state: collected$/m);
+  assert.match(md, /^object_type: information$/m);
+  assert.ok(md.includes(captureRequestAttribution(w.req(id)).statement), "the attribution is stated in the record");
+  const primary = w.row(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, bid, prov.documents[0].file);
+  assert.equal(primary && primary.sha256, w.req(id).capture_sha, "the primary is in the bundle, under its register document's name");
+  /* the row itself is unchanged by the promotion: captured, its digest, R24's fields */
+  assert.deepEqual([w.req(id).state, w.req(id).code], ["captured", null]);
+});
+
+test("R38 a refused promotion changes nothing of the row and spends no id; the drain's answer relays the promotion's own refusal; a capture already held is not promoted again (R39)", async () => {
+  const w = world({ group: null }).scene();
+  const id = w.ask().request;
+  const d = await w.cr.drain({});
+  assert.equal(d.captured[0].promoted.ok, false);
+  assert.equal(typeof d.captured[0].promoted.reason, "string");
+  assert.deepEqual([w.req(id).state, typeof w.req(id).capture_sha], ["captured", "string"]);
+  assert.equal(w.row(`SELECT count(*) AS n FROM manifest WHERE author='token:daemon'`).n, 0);
+  assert.equal(w.record.allocId("INFO", "2026").id, world().record.allocId("INFO", "2026").id, "no id spent");
+  const x = world().scene();
+  x.ask();
+  x.capture.script.set("https://example.org/a", (b, o) => filed("https://example.org/a", o, { existed: true }));
+  const e = await x.cr.drain({});
+  assert.deepEqual([e.captured[0].already_held, "promoted" in e.captured[0]], [true, false]);
+  assert.equal(x.row(`SELECT count(*) AS n FROM manifest WHERE author='token:daemon'`).n, 0);
 });
 
 test("R39 bytes the record already held are recorded as that capture: the row points at its digest and the answer says it was already held", async () => {
@@ -420,4 +459,69 @@ test("R11 R15 op=capturerequestdrain drives the same drain", async () => {
   w.ask();
   const d = await captureRequestsOps(w.cr, new URL("http://x/capturerequestdrain"), { actor: "suite" }).capturerequestdrain();
   assert.deepEqual([d.configured, d.actor, d.captured.length], [true, "suite", 1]);
+});
+
+test("R39 a request for an address the record holds a capture of is fired with that capture's digest (heldSha, capture R61); the source's 304 records the held capture, already held, no new bundle; bytes identical to it are that capture", async () => {
+  const w = world().scene();
+  w.run("R-2");
+  w.run("R-3");
+  const first = w.ask().request;
+  await w.cr.drain({});
+  const held = w.req(first).capture_sha;
+  assert.equal("heldSha" in w.capture.calls[0].opts.captureRequest, false, "nothing held before the first");
+  /* the source answers that nothing changed: no document, no bytes */
+  w.tick(60_000);
+  const second = w.ask({ run: "R-2" }).request;
+  w.capture.script.set("https://example.org/a", [{ status: 200, body: { ok: true, existed: true, unchanged: true,
+    capture: { sha256: held }, basis: "304" } }]);
+  const d = await w.cr.drain({});
+  assert.equal(w.capture.calls.at(-1).opts.captureRequest.heldSha, held);
+  assert.deepEqual([w.req(second).state, w.req(second).capture_sha], ["captured", held]);
+  assert.deepEqual([d.captured[0].already_held, d.captured[0].sha, "promoted" in d.captured[0]], [true, held, false]);
+  const look = w.log().at(-1);
+  assert.deepEqual([look.state, look.result_ref], ["PRESENT", held]);
+  /* the same bytes served again: `held`, recorded as that capture */
+  w.tick(60_000);
+  const third = w.ask({ run: "R-3" }).request;
+  w.capture.script.set("https://example.org/a", [(b, o) => { const f = filed("https://example.org/a", o); f.body.held = true; f.body.existed = true; return f; }]);
+  const e = await w.cr.drain({});
+  assert.deepEqual([w.req(third).capture_sha, e.captured[0].already_held, "promoted" in e.captured[0]], [held, true, false]);
+  assert.equal(w.row(`SELECT count(*) AS n FROM manifest WHERE author='token:daemon'`).n, 1, "one bundle, the first");
+  /* a render request is another document: the plain capture is not its held one */
+  w.ask({ run: "R-3", render: true });
+  await w.cr.drain({});
+  assert.equal("heldSha" in w.capture.calls.at(-1).opts.captureRequest, false);
+});
+
+test("R12 given the scheduler's rank, the tick reads at most ten times its batch oldest first, offers each as {kind: request, id, waitingSince, cadenceMs} and takes its batch in the rank's order; a rank that fails leaves oldest first", async () => {
+  const w = world().scene();
+  const ids = [];
+  for (let i = 0; i < 15; i++) { ids.push(w.ask({ address: addr(i) }).request); w.tick(1000); }
+  let offered = null, at = null;
+  const reverse = (items, now) => { offered = items; at = now; return [...items].reverse(); };
+  const d = await w.cr.drain({ limit: 1, rank: reverse });
+  assert.equal(offered.length, 10, "ten times a batch of one");
+  assert.deepEqual(offered.map((x) => x.id), ids.slice(0, 10));
+  assert.deepEqual(Object.keys(offered[0]).sort(), ["cadenceMs", "id", "kind", "waitingSince"]);
+  assert.deepEqual([offered[0].kind, offered[0].waitingSince, offered[0].cadenceMs], ["request", T0, 60_000]);
+  assert.equal(at, T0 + 15_000);
+  assert.deepEqual(d.captured.map((c) => c.request), [ids[9]], "the rank's first");
+  /* the full batch in the rank's order; an item the rank drops follows oldest first */
+  const e = await w.cr.drain({ rank: (items) => items.filter((x) => x.id === ids[5]) });
+  assert.deepEqual(e.captured.map((c) => c.request), [ids[5], ids[0], ids[1], ids[2], ids[3], ids[4], ids[6], ids[7], ids[8], ids[10]]);
+  for (const bad of [() => { throw new Error("x"); }, () => null, () => "no"]) {
+    const x = world().scene();
+    const xs = [];
+    for (let i = 0; i < 3; i++) { xs.push(x.ask({ address: addr(i) }).request); x.tick(1000); }
+    assert.deepEqual((await x.cr.drain({ rank: bad })).captured.map((c) => c.request), xs);
+  }
+  /* what is offered lets the scheduler's rank put work waiting longer than one cadence first (its R10): one request
+     waiting two cadences, one waiting none */
+  const y = world().scene();
+  y.ask({ address: addr(1) });
+  y.tick(120_000);
+  y.ask({ address: addr(2) });
+  let overdue = null;
+  await y.cr.drain({ rank: (items, now) => { overdue = items.map((x) => now - x.waitingSince > x.cadenceMs); return items; } });
+  assert.deepEqual(overdue, [true, false]);
 });

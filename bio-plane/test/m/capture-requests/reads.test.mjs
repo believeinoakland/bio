@@ -2,7 +2,7 @@
    ai-runs' wait source, K182). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, T0, refused, renderRefusal, sha } from "./fixture.mjs";
+import { world, V, MACHINE, T0, refused, renderRefusal, sha, cursor } from "./fixture.mjs";
 import { captureRequestAttribution, captureRequestsOps, CAPTURE_REQUEST_TTL_MS, CAPTURE_REQUEST_READ_MAX,
          CAPTURE_REQUEST_WAIT_BATCH, CAPTURE_SOURCE_CHECKS } from "../../../src/capture-requests/index.mjs";
 import { RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
@@ -140,7 +140,11 @@ test("R27 terminal rows do not accumulate in what R26 walks: every walk is bound
                   `2026-01-01T00:00:${String(i).padStart(2, "0")}Z`, "RENDER_DEFERRED");
   const seen = [];
   const exec = w.st.sql.exec.bind(w.st.sql);
-  w.st.sql.exec = (q, ...a) => { const out = exec(q, ...a); if (/FROM capture_requests cr/.test(q)) seen.push(out.length); return out; };
+  w.st.sql.exec = (q, ...a) => {
+    const out = exec(q, ...a).toArray();
+    if (/FROM capture_requests cr/.test(q)) seen.push(out.length);
+    return cursor(out);
+  };
   for (const read of [w.cr.completed, w.cr.leads, w.cr.rendersHeld]) {
     seen.length = 0;
     const x = read.call(w.cr, { viewer: V("ann"), limit: 5 });
@@ -245,4 +249,52 @@ test("R35 the table is declared to record-core's purge keyed by target: a bundle
   assert.equal(w.row(`SELECT count(*) AS n FROM capture_requests`).n, 0);
   /* declared once, by this module */
   assert.equal(w.record.declarePurge("x", [{ name: "capture_requests", keys: ["target"] }]).reason, "TABLE_DECLARED");
+});
+
+test("R43 requestById answers one request as R24 answers a row, with R25's render_deferral, when its target is one the viewer can see; null for a blank, unknown or unseen id alike; it writes nothing and never throws", async () => {
+  const w = fenced();
+  const one = w.cr.captureRequests({ viewer: V("ann") }).requests[0];
+  assert.deepEqual(w.cr.requestById({ request: one.request, viewer: V("ann") }), one);
+  assert.deepEqual(w.cr.requestById({ request: "CR-HIDDEN", viewer: V("inner") }),
+                   w.cr.captureRequests({ viewer: V("inner"), target: "PROJ-H" }).requests[0]);
+  for (const [request, viewer] of [["CR-HIDDEN", V("ann")], ["CR-NONE", V("ann")], ["", V("ann")], [null, V("ann")],
+                                   ["  ", V("ann")], [one.request, null], [one.request, "nobody"]])
+    assert.equal(w.cr.requestById({ request, viewer }), null, `${request} ${viewer}`);
+  /* a held render answers its deferral */
+  const r = w.ask({ address: "https://r.example.org/1", render: true }).request;
+  w.capture.script.set("https://r.example.org/1", renderRefusal("RENDER_DEFERRED", "deferred"));
+  await w.cr.drain({});
+  assert.equal(w.cr.requestById({ request: r, viewer: V("ann") }).render_deferral.code, "RENDER_DEFERRED");
+  const before = w.rows(`SELECT * FROM capture_requests ORDER BY request`);
+  for (const junk of [undefined, null, 5, { request: { toString: null } }, { request: 7, viewer: 3 }])
+    assert.doesNotThrow(() => w.cr.requestById(junk));
+  assert.deepEqual(w.rows(`SELECT * FROM capture_requests ORDER BY request`), before);
+});
+
+test("R29 the wait source's walks are bounded: holds and woken read in pages and at most CAPTURE_REQUEST_READ_MAX rows per call, however many finished runs' rows the table holds (N188 (1))", () => {
+  const w = world().scene();
+  const src = w.waitRegs[0].source;
+  for (let i = 0; i < 1200; i++)
+    w.st.sql.exec(`INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode, principal_plane,
+                   principal_claude, state, attempts, requested_at, updated, expires)
+                   VALUES (?, ?, 'INQ-1', 'https://e.org/', 'e.org', 'investigate', 'civicos', 'p', 'c', ?, 1, 't', 't', '2099-01-01T00:00:00Z')`,
+                  `CR-${i}`, `R-GONE-${String(i).padStart(5, "0")}`, i % 2 ? "captured" : "requested");
+  w.run("R-A"); w.run("R-ZZ");
+  w.ask({ run: "R-A", address: "https://a.example.org/" });
+  const read = [];
+  const exec = w.st.sql.exec.bind(w.st.sql);
+  w.st.sql.exec = (q, ...a) => {
+    const out = exec(q, ...a).toArray();
+    if (/FROM capture_requests/.test(q)) read.push(out.length);
+    return cursor(out);
+  };
+  const iso = new Date(T0).toISOString().replace(/\.\d+Z$/, "Z");
+  assert.deepEqual(src.holds(iso, 25), [{ run: "R-A", outstanding: 1 }], "a running run before the bound is found");
+  const total = () => read.reduce((a, b) => a + b, 0);
+  for (const f of [() => src.holds(iso, 1000), () => src.woken(1000)]) {
+    read.length = 0;
+    f();
+    assert.ok(total() <= CAPTURE_REQUEST_READ_MAX + CAPTURE_REQUEST_WAIT_BATCH, `read ${total()}`);
+    assert.ok(read.every((n) => n <= CAPTURE_REQUEST_WAIT_BATCH), "every statement bounded by a page");
+  }
 });

@@ -23,6 +23,9 @@ const mf = new Miniflare({
               CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
   outboundService(request) {
     SEEN.push(request.url);
+    if (new URL(request.url).host === "down.example.org") return new Response("unavailable", { status: 503 });
+    if (new URL(request.url).host === "up.example.org")
+      return new Response(new TextEncoder().encode(`%PDF-1.4 a document of its own at ${request.url}`), { headers: { "content-type": "application/pdf" } });
     return new Response(new Uint8Array(512).map((_, i) => i % 251), { headers: { "content-type": "application/pdf" } });
   },
 });
@@ -111,4 +114,25 @@ test("R16 R31 the spine in the plane: the member's run requests and nothing is f
   assert.equal(SEEN.filter((u) => u.startsWith("https://spine.example.org/")).length, 1);
   const read = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body;
   assert.equal(read.requests.find((r) => r.request === a.request).state, "captured");
+});
+
+test("R19 R42 R38 in the plane: a source's 503 holds the row under CAPTURE_FETCH_FAILED (C-28.17), read back through op=capturerequests; op=capturerequestretry refuses it CAPTURE_REQUEST_NOT_RETRYABLE (C-28.18) and writes nothing; a new capture drained is promoted", async () => {
+  const { RUTH } = await world();
+  const ask = (address) => call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9000-cr", purpose: "investigate" });
+  const down = (await ask("https://down.example.org/gone.pdf")).body;
+  const up = (await ask("https://up.example.org/doc.pdf")).body;
+  assert.equal(down && down.ok, true, String(JSON.stringify(down)));
+  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
+  const held = d.held.find((h) => h.request === down.request);
+  assert.deepEqual([held && held.code, held && held.check], ["CAPTURE_FETCH_FAILED", "C-28.17"], String(JSON.stringify(d)).slice(0, 900));
+  const row = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body.requests.find((r) => r.request === down.request);
+  assert.deepEqual([row.state, row.code, row.source_reason], ["requested", "CAPTURE_FETCH_FAILED", "other"]);
+  const r = (await call("capturerequestretry", RUTH, { request: down.request })).body;
+  assert.deepEqual([r.ok, r.code, r.check], [false, "CAPTURE_REQUEST_NOT_RETRYABLE", "C-28.18"], JSON.stringify(r));
+  const again = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body.requests.find((x) => x.request === down.request);
+  assert.deepEqual(again, row, "nothing written");
+  const got = d.captured.find((c) => c.request === up.request);
+  assert.ok(got, JSON.stringify(d).slice(0, 600));
+  assert.equal(got.promoted && got.promoted.ok, true, String(JSON.stringify(got)));
+  assert.match(got.promoted.bundle_id, /^INFO-\d{4}-\d{4}-requested$/);
 });

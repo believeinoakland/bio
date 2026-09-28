@@ -216,3 +216,50 @@ test("R34 every door refusal carries its catalogue row: the code, its C-28 check
 });
 
 function st(w) { return w.st.sql; }
+
+test("R6 an in-process caller's stated instant (`at`) sets each request's requested_at and expires, so two requests expire apart; the op never reads `at` from a body", async () => {
+  const w = world().scene();
+  const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+  const a = w.cr.captureRequest({ run: "R-1", address: "https://example.org/1", target: "INQ-1", purpose: "investigate" },
+                                { viewer: V("ann"), caller: "member:ann/tok1", at: T0 - 3_600_000 });
+  const b = w.cr.captureRequest({ run: "R-1", address: "https://example.org/2", target: "INQ-1", purpose: "investigate" },
+                                { viewer: V("ann"), caller: "member:ann/tok1", at: iso(T0 + 3_600_000) });
+  assert.deepEqual([w.req(a.request).requested_at, w.req(a.request).expires], [iso(T0 - 3_600_000), iso(T0 - 3_600_000 + CAPTURE_REQUEST_TTL_MS)]);
+  assert.deepEqual([w.req(b.request).requested_at, w.req(b.request).expires], [iso(T0 + 3_600_000), iso(T0 + 3_600_000 + CAPTURE_REQUEST_TTL_MS)]);
+  /* between the two expiries, one is released and the other drained */
+  w.tick(CAPTURE_REQUEST_TTL_MS);
+  const d = await w.cr.drain({});
+  assert.deepEqual([d.expired.map((x) => x.request), d.captured.map((x) => x.request)], [[a.request], [b.request]]);
+  /* an unreadable `at` is this module's clock */
+  const c = w.cr.captureRequest({ run: "R-1", address: "https://example.org/3", target: "INQ-1", purpose: "investigate" },
+                                { viewer: V("ann"), caller: "member:ann/tok1", at: "not a time" });
+  assert.equal(w.req(c.request).requested_at, iso(w.clock.ms));
+  /* the op: a body's `at` is not the instant */
+  const url = new URL("http://x/capturerequest?viewer=member%3Aann&principal=member%3Aann%2Ftok1");
+  const e = captureRequestsOps(w.cr, url, { run: "R-1", address: "https://example.org/4", target: "INQ-1",
+                                           purpose: "investigate", at: "2001-01-01T00:00:00Z" }).capturerequest();
+  assert.equal(w.req(e.request).requested_at, iso(w.clock.ms));
+});
+
+test("R44 onRequestFiled: a malformed registration or a second by one module is refused through membership's listenerRefusal; listeners run in the modules' total order, once per written request with {request, run, expires}; an answer already standing notifies nobody; a listener that throws or rejects changes neither row nor answer", async () => {
+  const w = world({ order: ["m-first", "m-second", "m-third"] }).scene();
+  const heard = [];
+  assert.deepEqual(w.cr.onRequestFiled("m-second", (n) => { heard.push(["m-second", n]); }), { ok: true, module: "m-second" });
+  assert.equal(w.cr.onRequestFiled("m-first", (n) => { heard.push(["m-first", n]); }).ok, true);
+  assert.equal(w.cr.onRequestFiled("m-third", () => { throw new Error("boom"); }).ok, true);
+  assert.equal(w.cr.onRequestFiled("m-zz", async () => { throw new Error("late"); }).ok, true);
+  for (const [m, fn] of [["", () => {}], [null, () => {}], ["x", null], ["x", "fn"]])
+    assert.equal(w.cr.onRequestFiled(m, fn).reason, "LISTENER_MALFORMED");
+  const dup = w.cr.onRequestFiled("m-first", () => {});
+  assert.deepEqual([dup.ok, dup.reason, dup.module], [false, "LISTENER_DECLARED", "m-first"]);
+  const a = w.ask();
+  assert.equal(a.ok, true);
+  assert.deepEqual(heard, [["m-first", { request: a.request, run: "R-1", expires: a.expires }],
+                           ["m-second", { request: a.request, run: "R-1", expires: a.expires }]]);
+  assert.equal(w.req(a.request).state, "requested");
+  heard.length = 0;
+  assert.equal(w.ask().already, true);
+  w.ask({ run: "R-NONE" });
+  assert.deepEqual(heard, [], "no row written, nobody told");
+  await new Promise((r) => setImmediate(r));
+});
