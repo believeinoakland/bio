@@ -25,6 +25,6 @@ BASIS-VERSIONS #2 (the first session of this job; #1 left no record on this bran
 - `node --test test/m/basis-versions/`: tests 44, pass 44, fail 0, todo 0. The N99 test fails against the catalogue's relation (checked by swapping the import back).
 - Modules using basis-versions: strength 40/0, contradiction 28/0, run-productions 33/0, case-authoring 38/0, reevaluation 39/0, publication 53/0, ratification 65/0, review 29/0, queue 10/0, affordances 73/0 (pass/fail).
 - Legacy: `versionstate`, `narrow`, `current-shared-question` 1/0 each, before and after; `hygiene` 0/1 before, 1/0 after.
-- `format`: 0 failures. `architecture basis-versions`: 11 product files, 0 failures. `coverage basis-versions`: 40 of 40 live ids named, 0 failures. `ownership basis-versions tranche/T10`: see below.
+- `format`: 0 failures. `architecture basis-versions`: 11 product files, 0 failures. `coverage basis-versions`: 40 of 40 live ids named, 0 failures. `ownership basis-versions tranche/T10`: 7 files, legacy-store and legacy-checks 0 added, 0 failures.
 
 Size (session_016q7pJH6bnNGAnXFMFWBYoL): test runs 9, module lines 1998
