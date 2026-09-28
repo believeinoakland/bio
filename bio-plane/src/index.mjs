@@ -9053,13 +9053,13 @@ export default {
        founder's `member:admin`), the form intent asks membership's `projectAuthority` of; a machine credential stamps
        `class:<cls>` and an `ai` credential `class:ai/<tokenId>` (`contentmint`'s form), each a machine identity intent
        refuses BY NAME at every act but `triage`'s `question` — NEVER a key's principal, which would put an assistant's
-       act under a member's name.
+       act under a person's name.
        `triage` also carries `assistantPrincipal`, op=promote's stamp by op=promote's expression: `question` opens an
        inquiry through promotion, and ai-runs' surfacing step (its R25) asks that stamp for the run the caller holds. It
        is deleted first for every caller and set only for one that did not arrive by a session, so a session is never
        taken for an assistant and an assistant cannot name another. `run` stays the caller's word: the step asks every
-       question of it (sight, position, status, bound). An empty POST body is stamped too, so a member's act never
-       reads as a machine's for want of a body. */
+       question of it (sight, position, status, bound). An empty POST body is stamped too, so a signed-in session's
+       act never reads as a machine's for want of a body. */
     if (INTENT_ACTIONS.includes(op) && req.method === "POST") {
       try {
         const b = passBody ? JSON.parse(passBody) : {};
