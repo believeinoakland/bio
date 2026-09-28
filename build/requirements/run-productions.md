@@ -23,7 +23,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 - **R6** `SUGGEST_KINDS` is `basis-version`, `sharpen-question`, `new-inquiry`, `level-empty`, `new-edition` (held by `basis-versions`, re-exported here); `SUGGEST_LEVELS` is `meaning`, `content`, `documents`, `internet`.
 - **R7** R1's refusals and R3's verdicts are all asked before anything is written; a refused suggestion writes nothing to the record, only R2's memo of the refusal.
 - **R8** The target and run are the body's; `author`, `viewer` and `caller` are stamps and a body's are overwritten.
-- **R9** Each suggested leg names the capture the run read (`extent_capture`), so a suggestion says which version of a document it rests on. *(not yet met: D-595)*
+- **R9** Each suggested leg names the capture the run read (`extent_capture`), so a suggestion says which version of a document it rests on. *(not yet met: T10, N165, D-595)*
 
 **extractPropose({run, bundleId, fn, version, cap, refs, at, proposedBy, viewer, caller})** (`op=extractpropose`) The EXTRACT role's productions.
 - **R10** Refusals in order, nothing written on any: `NO_PROPOSER`; `NO_RUN`; `NO_SUCH_RUN` (absent or invisible alike); `ai-runs`' R5 relayed; `RUN_NOT_RUNNING`; `NOT_AN_EXTRACT_RUN` (mode not `extract`); `NO_MINTS_BOUND` (none, or allowed 0); `MINTS_BOUND_REACHED`; `NO_PROPOSALS`; `NO_TARGET`; `NO_SUCH_BUNDLE` (absent or invisible alike); `NOT_A_DOCUMENT`; `NO_BYTES_HELD`; the chain step's own refusal from `text-chain` (for example `TEXT_CHAIN_STRENGTHENS`), unchanged; each reference's own check (`extraction`'s), with `at_index`, the batch refused whole; `MINTS_BOUND_WOULD_EXCEED` (the batch refused whole, never trimmed, with `allowed`, `consumed`, `would_mint`).

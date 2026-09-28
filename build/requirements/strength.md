@@ -43,11 +43,11 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 
 **The bar: projectBar(projectId), strengthBarSet({group, capture, connection, author}), strengthBarOf({group, target, project, viewer})** (`op=strengthbar`, `op=strengthbarof`)
 - **R14** `projectBar` reads the project's own `required_strength`: a declared axis carries its letter, an axis not declared is null and stated in words ("no bar set on the … axis"), never a default; a project declaring neither has no bar, stated as absent and not as a bar of zero (DEC-72). Nothing composes bars across projects.
-- **R15** `strengthBarSet`: `MACHINE_CANNOT_DECLARE` (C-32.9); an author who is not an active administrator (the founder included) is refused by a new code, as an organisation-wide AI key is (membership R62); the group is the one named or the producing group, else undetermined; `BAD_GRADE`; `NO_BAR` when neither axis is given. It records the group's default with its author and time, answering that it seeds new projects and gates nothing. *(not yet met: K102; any signed-in member may set it)*
-- **R16** `strengthBarOf`: a `target` is refused `BAR_IS_A_PROJECT_PROPERTY`; a project the viewer may not see is `NO_SUCH_PROJECT`, one not a project `NOT_A_PROJECT`, otherwise R14; with no project, the group default or its stated absence, `seeds_new_projects: true`.
+- **R15** `strengthBarSet`: `MACHINE_CANNOT_DECLARE` (C-32.9); an author who is not an active administrator (the founder included) is refused by a new code, as an organisation-wide AI key is (membership R62); the group is the one named or the producing group, else undetermined; `BAD_GRADE` (a code of strength's own, not intent's `CONDITION_BAD_GRADE`, with its own row in C-107, K275); `NO_BAR` when neither axis is given. It records the group's default with its author and time, answering that it seeds new projects and gates nothing. *(not yet met: K102; any signed-in member may set it)* *(not yet met: T10, N208)*
+- **R16** `strengthBarOf`: a `target` is refused `BAR_IS_A_PROJECT_PROPERTY`; a project the viewer may not see is `membership.noSuchProject`'s answer (its R78), one not a project `NOT_A_PROJECT`, otherwise R14; with no project, the group default or its stated absence, `seeds_new_projects: true`. *(not yet met: T10, N208)*
 
 **The registration it fills** (K31's pattern, offered by `inquiry`)
-- **R17** `inquiry`'s grouping act receives the pair before and after (inquiry R28), from R1–R5.
+- **R17** `inquiry`'s grouping act receives the pair before and after (inquiry R28), from R1–R5. Strength makes the registration itself when its factory first builds (`inquiry.onGrounded("strength", …)`), in place of `legacy-store`'s (N152). *(not yet met: T10, N152)*
 
 ## Private
 
@@ -55,11 +55,11 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 
 - `legacy-checks`: the C-30, C-71 and C-32.9 rows until they move (R24), `BASIS_GRADES`, `TESTIMONY_GRADE`, `normalizeType`, `OBJECT_TYPES`, `BUNDLE_ID_RE`.
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract.
-- `membership`: `bundleGate`, `bundleRedactor`, `viewerPredicate`, and whether an author is an active administrator (R15). *(not declared)*
+- `membership`: `viewerPredicate`, `inSight` (R80), `noSuchProject` (R78), and whether an author is an active administrator (R15). *(not declared)*
 - `promotion`: `registerStep` (R13); the fact `producingGroup`. *(not declared)*
 - `provenance`: the `register` and `captured_locators` read contract (R12).
 - `inquiry`: `basisFor`, `earned`, `legCapped`, `subjectEntityOf`, the registration R17 fills.
-- `basis-versions`: the version rows and legs, `currentOf` (R7, R8).
+- `basis-versions`: the version rows and legs, `currentOf` (R7, R8); `BASIS_VERSION_LEGS_MAX` (its R9), R8's bound (N184).
 - `content`, `connections`, `bias`: nothing here calls them once the earned registry is `inquiry`'s (map §5.2).
 
 ### Invariants

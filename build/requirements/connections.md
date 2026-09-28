@@ -17,7 +17,7 @@ Terms. A **connection** is `{a_capture_sha, b_capture_sha, entity_id, a_bundle_i
 **derive({entityId, assertedBy, limit?})** (`op=connect`)
 - **R1** `NO_ENTITY` for an empty id. It reads the entity's resolutions (`entities`), keeps per capture the strongest (ties: the first reference by sort), and writes one connection per unordered pair of captures, graded the weaker end, `established` only when both ends are `A` or `B`, `asserted_by` as given (`system` from the control plane and the sweep), a `basis` sentence naming both grades and the pair, each end's determining reference with the position of its first read (null where the reading could not say), and the pair rule `strongest-graded/first-reference-by-sort`. A held connection is updated in place, never duplicated. An unregistered entity id derives from whatever resolutions name it, `found: false`. `assertedBy` `member` or `source` is refused `CONNECTION_AUTHOR_NOT_DERIVED`, writing nothing.
 - **R2** The pair bound is `limit` (default 500, maximum 5,000); the document bound is the largest k with k(k−1)/2 within it (32 at 500, 100 at 5,000); at most 5,000 resolution rows are read, a trailing partly-read capture dropped rather than graded weaker. The answer carries `documents`, `document_limit`, `resolution_rows`, `count`, `limit` and `truncated`; every connection written is true, and a truncated set is the first documents by capture digest.
-- **R3** `onDerived(module, fn)`: a later module registers once (`LISTENER_DECLARED` on a second); after each derivation `fn` runs with `{entityId, count, documents, truncated, entityKnown, assertedBy}` (for `observation-log`).
+- **R3** `onDerived(module, fn)`: a later module registers once; a malformed registration, or a second by the same module, is refused through `membership`'s `listenerRefusal` (its R81: `LISTENER_MALFORMED`, `LISTENER_DECLARED`), and the listeners run in the modules' total order (`membership`'s `MODULE_ORDER`, R83); after each derivation `fn` runs with `{entityId, count, documents, truncated, entityKnown, assertedBy}` (for `observation-log`). *(not yet met: T10, N202)*
 
 **read({entityId | captureSha, limit, viewer})** (`op=connections&id=`, `&sha256=`)
 - **R4** By entity or by capture, else `NO_KEY`; ordered by grade; at most `limit` (as R2's default and maximum) with `truncated` measured by reading one more. Each row carries the connection, and `on_point` naming each end's standing member choice when any.
@@ -87,6 +87,9 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 - **R56** `fileMembership({captureSha, viewer, limit})` (`op=filemembership`; R30 at this module): the capture's stored pairs (with their judgements) and its pending ones, each with R30's label and `stored` true or false; `NO_SUCH_CAPTURE` as in R55. Each list at most `limit` (default 200, maximum 2,000), with `truncated`, `stored_truncated` and `pending_truncated` (K155).
 - **R57** `judgeFileMembership({id, verdict, reason, member, viewer})` (`op=filemembershipjudge`): refusals in order: `FILE_MEMBERSHIP_NOT_A_MEMBER`, `FILE_MEMBERSHIP_BAD_VERDICT` (not confirm or reject), `FILE_MEMBERSHIP_NO_REASON`, `FILE_MEMBERSHIP_NO_SUCH_CONNECTION` (no stored containment by that id, or an end hidden). Otherwise appends the judgement with who, when and why; the latest stands; the grade does not move.
 
+**The `refs` read contract** (N213)
+- **R58** (N213) The table `refs` with its columns `bundle_id` (the citing bundle), `target_id` and `kind` (the relation: `cites`, `links_to`, `supersedes` and the others R19 projects) is a stated read contract. A later module may join it in its own SQL: `inquiry` (its R39), `publication` and `ratification`. On the terms of record-core R37, this module changes none of those columns' names or meaning without a change to this requirement. Whether an edge is severed is not a column of it: a reader asks R22's `edgeSevered`. Every write to it stays this module's (R19, R24). *(not yet met: T10, N213: stated by a test)*
+
 ## Private
 
 ### Uses
@@ -96,7 +99,7 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 - `entities`: `strongestByCapture`, `has`, `readEntity`, `gradeRank` (K149), the read contract on `resolutions` (R1, R8, R14), and `onResolved` (R17).
 - `subresources`: `normalizeAddress` (R49's address matching, the one normalisation capture writes the locators with; Q7).
 - `content`: `contentRow` (R7–R10), and a content id's document (R40, R41).
-- `membership`: `membershipOf(ctx)`, `viewerPredicate` (R12, R14, R20, R21, R26, R33, R40–R44), and a person's handle, member id and cover for R45's projection (membership map §2 lists `#themePerson`'s read of `members`).
+- `membership`: `membershipOf(ctx)`, `viewerPredicate` (R12, R14, R20, R21, R26, R33, R40–R44), and a person's handle, member id and cover for R45's projection (membership map §2 lists `#themePerson`'s read of `members`); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `text-chain`: `readingSourceFromColumns`, `readingSourceJson`, `readingOccurrenceKey`, `readingPositionInExtent` (R1, R8, R9, R15). *(not declared)*
 - `extraction`: the read contract over `reading_refs` (positions and occurrences, R1, R9, R14). *(not declared)*
 - `promotion`: `registerStep` (R19), `registerFact` (R23). *(not declared)*
@@ -128,7 +131,6 @@ Terms. A **theme** is `{theme_id, name, test, at}` and its declarer, `theme_id` 
 ### Suggestions
 
 - **Factory.** `connectionsOf(ctx)` answers the one instance per Durable Object storage and reaches `record-core`, `membership`, `entities` and `content` through theirs (K61). The op handlers move here (K3).
-- **Read contract.** Ten readers outside this module join `refs` in SQL (map §3). State `refs(bundle_id, target_id, kind)` as a read contract, as record-core R37 does for `bundles`, or offer `edgesInto`/`edgesFrom`; the job proposes which through BOB.
 - **What stays out.** `cite`, `sever`, `reinstate` (`#edgeTransition`) are acts on a document's references and stay with `inquiry`, projecting through R19; `#writeSupersededBy` is `inquiry`'s; the progression table (Framework §8, "The connection table") is `progressions'` (§8.2 generalises it).
 - **Callers of R46.** The basis, version-leg and action-basis grammars (`checkInquiryBasis`, the version legs, `actionBasisFindings`; bio-checks 3585, 8501, 4609) must call `themeLegFindings` before their own target complaint; that obligation is `inquiry`'s, `basis-versions`' and `actions`'.
 - Tests: each C-49, C-74 and C-81 refusal gets a negative control (`nc-d162.mjs`'s eleven arms are the pattern); R2 a bound arm at k=33; R16 an over-strictness arm (the same choice twice writes nothing); R28 a promotion of the source after `op=linkproject`. Built work for D-575, D-625, D-706, D-722 and REC-206 is on their `land/worker/*` branches, judged at the job.

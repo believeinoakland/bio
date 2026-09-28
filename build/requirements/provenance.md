@@ -111,6 +111,9 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 **attestationsOf(captureSha) → `{sha256, registered, attestations: [{kind, service?, locator?, at?, file?, token_sha?, bundle, path}], undetermined?, note}` or refusal**
 - **R49** Answers every attestation recorded for the capture, from each document entry that registers it (the register, R48), in the entry's order: its `timestamp` (daemon era), each `attestations[]` entry of kind `rfc3161` (R32's token, as `op=attest`'s answer is recorded: `kind: "rfc3161"`, its service, the token's file and SHA-256), and its `co_archive` (R33's archived locator, a string or `{service, locator}`, `kind: "co_archive"`), as the entry states them (C-18), each naming the bundle and path it is recorded in; `at` is the matching attempt's instant where one is recorded. The answer also states `registered`, and `undetermined` with why when no register row names the capture under an existing bundle (a capture registered only by its parts) or the home's register cannot be read; `attestations: []` alone means none is recorded. A read over what `attest` and promotion already write: it asks no authority and verifies no token's signature, and its `note` says so. `BAD_SHA` for a digest not 64 hex. It is the read `filings` R9's exhibits use. *(not yet met: K171 (13), forwarded to PROVENANCE #2, K176, K177)*
 
+**A register entry's stated `bytes`** (N263)
+- **R50** (N263) A promotion whose `register` list holds an entry whose `bytes` is absent, null, or not a whole number at least 0 is refused `REGISTER_BYTES_UNSTATED` (C-53.14, this module's row, its `where` naming the check's region), before anything is written. The refusal names the entry's `sha256` and `path`. An accepted entry's `bytes` is stored exactly as stated. This module does not compare it with the stored object's size (R7 and R8 read that). *(not yet met: T10, N263: an absent `bytes` fails as `PROMOTE_FAILED` and `-1` or `1.5` are stored)*
+
 ## Private
 
 ### Uses
@@ -152,7 +155,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 ### Suggestions
 
-- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-34.1–C-34.4, C-24.1–C-24.3, C-89.1 and the C-18 register arms (R42–R46) move with this module. Of the rest of C-18, C-18.5 (`gathering.json`) goes to monitoring and C-18.7 stays with C-18.8 in promotion (K49). C-53.10–C-53.12 are publication's.
+- **Checks carried here.** C-53.1–C-53.9, C-53.13, C-53.14 (legacy-checks' row until this module holds its family, as C-53.13), C-34.1–C-34.4, C-24.1–C-24.3, C-89.1 and the C-18 register arms (R42–R46) move with this module. Of the rest of C-18, C-18.5 (`gathering.json`) goes to monitoring and C-18.7 stays with C-18.8 in promotion (K49). C-53.10–C-53.12 are publication's.
 - **What stays out.** `testimonyReach`, `observationsNamingAuthor` and `attributeObservation` read inquiry basis and attribution tables (later modules); `attestText`, `transcriptionAttest` and `text_attestations` are extraction's; `projectLinks` writes `refs` (connections, K23).
 - **Testify's later work.** Today `testify` hands `promote` a hook that indexes the words, mints the content row and logs an extraction observation. Under K31 those become projections `extraction`, `content` and `observation-log` register for an authored register row, so this module calls none of them.
 - **The receipt's observation row.** Observation-log (layer 5) registers its OBSERVATION-LOG-DESIGN §4.1 writer through R47; `capture`'s reuse-verdict rows can use the same pattern.
