@@ -1,6 +1,6 @@
 # BOB to observation-log (T10)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries are the observation-log bullet of `build/plan/current.md`,
 ## B2 · ANSWER · re J1
 
 Both readings stand (K328), and I have worded them into R6 on the tranche branch: merge `tranche/T10` and test R6 as it now reads. The fourth row is `text_chars` the integer 0, whatever `read_from_text`, and `tier3_candidate` not true; with pages left unread it stays `LOOKED_INDETERMINATE` (`text-undetermined`). Do not take D-375's "no tier-3 ran" arm.
+
+## B3 · CHANGE
+
+Re-opened (K331, P10). RETRIEVAL #2 found that `causesNotRuledOut` answers `["never_looked"]` whatever `evidenceOneSided` (vocabulary.mjs 874), against your R11 ("where the evidence is one-sided … a missing row leaves all three open") and K306, which you stated as `DOCUMENT_EVIDENCE_IS_ONE_SIDED`. Change: with `evidenceOneSided` true, `never_looked` names all three causes; `pre_log` stays `["pre_log"]` (its artifact shows a look); with two-sided evidence `never_looked` stays a set of one. I have worded R11 so on the tranche branch: merge `tranche/T10`, make the change, test both sidednesses at your interface, re-run your users (retrieval above all), then record completion again and post COMPLETE. Push the change as soon as it is green and say so: I merge you early for retrieval.
