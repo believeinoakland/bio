@@ -101,3 +101,40 @@ Cause: **context**. This session has passed half its window. The work is pushed 
    - a catalogue row for `CASE_MEMBER_REFUSED` (legacy-checks, next plan);
    - `gateFacts`' `dangling` read of connections' `refs`, which has no contract.
 5. Record completion (step 7).
+
+## J4 · REPORT
+
+RATIFICATION #2 has restarted from J3 and done everything that does not need publication on `tranche/T8`. I am now waiting for your CHANGE saying publication has merged (B3).
+
+**Done since J3 (pushed on `job/T8/ratification`):**
+- The comments in `index.mjs` now use the current names of the moved services (J3 next step 3).
+- Store-half and ceremony tests are in `test/m/ratification/`. They run over a world fixture: the real record-core, membership and promotion, with providers the test controls for basis-versions, provenance, inquiry and publication's reads and R22 commits.
+  - R1: one arm per `why`, plus the comparison over rows written by `caseConclusionRowLines`.
+  - R2: `op=caseratify`'s full order through `caseRatifyOp`, using a real SSHSIG, plus the `casegate` gate.
+  - R3: its order of refusals and what it hands `commitCaseEdition`, plus the retry arms.
+  - R4: `op=ratify`'s full order through `ratifyOp`.
+  - R5: C-58.2/.3 and the authority arms, including several projects.
+  - R6: the copy by hash, the container assembled once, and the reuse report, including a store silence after the commit.
+  - R7: the identical-bytes arm and the existence act.
+  - R8 and R9: through promotion's `runCaseGate`, the promotion step and the audit sweep.
+  - R10–R13 and R15.
+  - R16 is a `test.todo`: publication R35 is not yet met (K102).
+- I built the plane against publication's WIP (`754f85f516`) in a scratch merge. There, `test/m/ratification/`: 64 pass, 0 fail, 1 todo.
+- Checks on my branch: format 0 failures; architecture 0 failures; coverage 16 of 16 ids named; ownership 0 failures (legacy-store +8/−1212, legacy-checks +0/−258, legacy-index +3/−975).
+
+**For the merge of publication and ratification:**
+- `bio-checks.mjs` has one conflict. Both sides remove their rows from `ATTRIBUTION_CHECKS`, which leaves it empty.
+- `index.mjs` has three conflicts:
+  - Hunks 1–2 (the `bio-checks.mjs` import): keep both sides' removals.
+  - Hunk 3 (the two handlers): take ratification's two delegating lines. Publication's only edit inside them was `publishedGraphEdges` from publication, and `ratification/ops.mjs` already has it.
+
+**Still to do after the CHANGE:**
+- Reconcile my calls with publication's built R22 (`commitEdition`/`commitCaseEdition` are not in its WIP yet), R38 and R20. Switch the case-document formats import in `checks.mjs` to publication.
+- Run the old battery's affected suites.
+- Record completion.
+
+**Found in other modules (repeated at completion):**
+- legacy-tests re-anchors: `casesign`, `caseratify-conclusion`, `ratify-authority`, `publish`, `case-project-conclusion.control`, the `check-refusal-codes` families, and the d470 census for 1.38.0.
+- Stale generated bundles: the plane, agent-worker, and newgroup `release.mjs`.
+- `CASE_MEMBER_REFUSED` has no catalogue row (legacy-checks, next plan).
+- `gateFacts`' `dangling` list reads connections' `refs`, which states no read contract.
