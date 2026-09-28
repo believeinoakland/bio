@@ -79,3 +79,7 @@ The exact answer shapes (every refusal is `{ok: false, reason, code, check, tran
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 8 product files, 27 relative imports; 0 failures. coverage: 15 of 15 live requirement ids named by a test; 0 failures. ownership: 9 files changed by standards; 0 failures.
 
 Size (session_01UmVjw9n9gtCPtw463X9hRc): test runs 14, module lines 781
+
+## J3 · COMPLETE
+
+Built per requirements (map: nothing moves); R3's level (N130) and R9's proposalLabel (N129) applied; J1's readings as answered (K248). 16/16 module tests; 15/15 live ids covered; format, architecture, coverage and ownership clean; no legacy module touched. The early-merge shapes and two code names to fold are in REPORT J2. Record: build/jobs/T8/standards.md, §Completion.
