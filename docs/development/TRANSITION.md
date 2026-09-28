@@ -154,8 +154,8 @@ Replaced at each handoff; the progress log (§4) is the history.
 **Decided this session:** K223–K246 (T8's opening, N200 folded as Bob ruled, N178's provider services folded into intent R27–R28 and reevaluation R25 before layer 7, one-code-one-site K231, and each layer's answers and closes). New entries N202–N209. T7's close meter 58% (Bob), recorded as T8's opening reading too.
 
 **Open items, in order.**
-2. **Layer 10** (running: answer, merge early per §4 if one needs the other, close as the earlier layers), then **layer 11** (affordances, legacy-index, installer, legacy-tests; legacy-tests' entry has grown by each layer's re-pins).
-3. **P18:** N209 wants a bound worded into intent R12–R13 (BOB's); `draft-T9.md` is the next plan (legacy-store's own job carries N28, N89, N193, N205).
+1. **Layer 10** (running: answer, merge early per §4 if one needs the other, close as the earlier layers), then **layer 11** (affordances, legacy-index, installer, legacy-tests; legacy-tests' entry has grown by each layer's re-pins).
+2. **P18:** N209 wants a bound worded into intent R12–R13 (BOB's); `draft-T9.md` is the next plan (legacy-store's own job carries N28, N89, N193, N205).
 
 **For Bob:** RATIFICATION #2 J5: whether a published finding may name (by id) evidence not yet published (K245; recommended: record the reference privately and link it only once the evidence is published); which legal organisations the first profile names (K227; recommended: HJTA and the First Amendment Coalition, their public websites, `UNMEASURED`); until then the section is absent. His approval of this session's acts was typed in BOB #54's session.
 
