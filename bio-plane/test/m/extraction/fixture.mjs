@@ -1,5 +1,5 @@
-/* extraction's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec`, `transactionSync`
-   nesting as savepoints), record-core's and membership's tables, an evidence bucket, scripted fleet members
+/* extraction's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec` answering a cursor,
+   `transactionSync` nesting as savepoints), record-core's and membership's tables, an evidence bucket, scripted fleet members
    (PDF_WORKER, OCR_WORKER), a calibration provider behaving as calibration's Provides state (R10–R12), a promotion
    registry recording the step this module registers, and helpers that build capture documents in the shape
    capture's acquire answer carries. */
@@ -13,6 +13,34 @@ import { registerFormat, unregisterFormat, getFormat } from "../../../src/format
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 
+/* The plane's shape (K316): `sql.exec` answers workerd's cursor, an iterator read once with `toArray()` and `one()`,
+   never an array, so code that indexes the answer fails here as it fails on the plane. K313: workerd refuses a
+   LIKE or GLOB pattern over 50 bytes, and so does this, for a literal pattern or a bound one. */
+export const PATTERN_BYTES_MAX = 50;
+function cursor(rows) {
+  let i = 0;
+  return {
+    next() { return i < rows.length ? { value: rows[i++], done: false } : { value: undefined, done: true }; },
+    [Symbol.iterator]() { return this; },
+    toArray() { const rest = rows.slice(i); i = rows.length; return rest; },
+    one() {
+      const rest = this.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length === 0 ? "no" : "multiple"} results.`);
+      return rest[0];
+    },
+    get rowsRead() { return rows.length; },
+  };
+}
+function checkPatterns(q, args) {
+  const bytes = (v) => Buffer.byteLength(String(v));
+  for (const m of q.matchAll(/\b(?:LIKE|GLOB)\s+'((?:[^']|'')*)'/gi))
+    if (bytes(m[1]) > PATTERN_BYTES_MAX) throw new Error("LIKE or GLOB pattern too complex: SQLITE_ERROR");
+  const parts = q.split("?");
+  for (let k = 0; k < parts.length - 1; k++)
+    if (/\b(?:LIKE|GLOB)\s*$/i.test(parts[k]) && typeof args[k] === "string" && bytes(args[k]) > PATTERN_BYTES_MAX)
+      throw new Error("LIKE or GLOB pattern too complex: SQLITE_ERROR");
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -20,7 +48,11 @@ export function storage() {
   let n = 0;
   return {
     db,
-    sql: { exec(q, ...args) { return db.prepare(q).all(...args.map((a) => (a === undefined ? null : a))); } },
+    sql: { exec(q, ...args) {
+      const a = args.map((v) => (v === undefined ? null : v));
+      checkPatterns(q, a);
+      return cursor(db.prepare(q).all(...a));
+    } },
     transactionSync(fn) {
       const sp = `sp${n++}`;
       db.exec(`SAVEPOINT ${sp}`);
@@ -90,7 +122,7 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
   const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env });
   x.migrate();
   return { s, ctx, x, core, membership, evidence, cal, prom, env,
-           rows: (q, ...a) => s.sql.exec(q, ...a), one: (q, ...a) => s.sql.exec(q, ...a)[0] || null };
+           rows: (q, ...a) => s.sql.exec(q, ...a).toArray(), one: (q, ...a) => s.sql.exec(q, ...a).toArray()[0] || null };
 }
 
 /* A bundle row (record-core's `bundles`, its R37 read contract), optionally a project. */
