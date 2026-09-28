@@ -40,3 +40,7 @@ Two findings outside my module.
 - `ownership subresources tranche/T9`: 3 files changed; 0 failures
 
 Size (session_01PwqLa1NvQSNYxStbJ9R5ds): test runs 16, module lines 1426
+
+## J4 · REPORT
+
+Correction to J3, one sentence: a refused link does NOT have `address: null`. It carries the refused address (the raw text for a refused scheme, the resolved address for a refused locator), as before N79, so capture's `acquire.mjs` files refused links too, each with its `chrome` and `chrome_basis` like every other link. Only an empty href is refused with no link record. Everything else in J3 stands; my state stays COMPLETE.
