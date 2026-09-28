@@ -93274,7 +93274,7 @@ var Escalation = class {
     if (!v) throw new ProviderAbsent(name);
     return v;
   }
-  /** The module's tables (R20). */
+  /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
   migrate() {
     migrateEscalation(this.sql);
   }
@@ -94146,6 +94146,7 @@ function escalationOf(host, deps) {
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
     instances28.set(host, i);
+    i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
   }
@@ -95944,17 +95945,24 @@ var Monitoring = class {
    * ================================================================== */
   /** R32: every monitored address the viewer may see, with its R15–R16 row: due, scheduled or unscheduled, so a
    *  document that is not being checked is visible without waiting for a tick. An address is seen when the viewer
-   *  sees the version it checks. At most MONITORING_READ_MAX rows (`truncated` stated). */
+   *  sees the version it checks. At most MONITORING_READ_MAX rows (`truncated` stated).
+   *  Every other bundle a row names (`versions`, `newer_unmonitored`, `disagreement.authored`) is answered only when
+   *  the viewer sees it, as `op=versionnotice` withholds a version: a withheld one is ABSENT, never a placeholder, and
+   *  a list or a disagreement left with nothing the viewer sees is not stated at all (B4, K268). */
   monitoring({ viewer = null, now = null, limit = null } = {}) {
     const at12 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit2(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
     const s = this.schedule(at12);
-    const sees = (id) => this.membership.inSight(id, viewer);
+    const sight = /* @__PURE__ */ new Map();
+    const sees = (id) => {
+      if (!sight.has(id)) sight.set(id, this.membership.inSight(id, viewer));
+      return sight.get(id);
+    };
     const all = [
       ...s.due.map((d) => ({ state: "due", ...d, due_at: d.due_at ? stampInstant("second", d.due_at) : null })),
       ...s.scheduled.map((d) => ({ state: "scheduled", ...d, next_at: stampInstant("second", d.next_at) })),
       ...s.unscheduled.map((d) => ({ state: "unscheduled", ...d }))
-    ].filter((r) => sees(r.bundle));
+    ].filter((r) => sees(r.bundle)).map((r) => this.#withheld(r, sees));
     const items = all.slice(0, cap);
     return {
       ok: true,
@@ -95969,6 +95977,24 @@ var Monitoring = class {
       limit: cap,
       truncated: all.length > cap
     };
+  }
+  /** R32: one plan row with every bundle the viewer does not see removed from it. `versions` keeps the seen ones;
+   *  `newer_unmonitored` keeps the seen ones, or is dropped; a disagreement is restated over the authored words of
+   *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
+   *  disagreement only a hidden version makes would say that version exists. */
+  #withheld(row2, sees) {
+    const { versions, newer_unmonitored: newer, disagreement, ...rest } = row2;
+    const out = { ...rest };
+    if (Array.isArray(versions)) out.versions = versions.filter(sees);
+    const newerSeen = Array.isArray(newer) ? newer.filter(sees) : [];
+    if (newerSeen.length) out.newer_unmonitored = newerSeen;
+    if (disagreement && typeof disagreement === "object") {
+      const authored = (disagreement.authored || []).filter((a) => a && sees(a.bundle));
+      const words = new Set(authored.map((a) => a.frequency));
+      if (words.size > 1 || words.size === 1 && disagreement.governs !== [...words][0])
+        out.disagreement = { ...disagreement, authored };
+    }
+    return out;
   }
   /* ================================================================== *
    * What the understanding and action layers rest on (R33–R35, R44)

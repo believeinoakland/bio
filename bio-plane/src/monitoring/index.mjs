@@ -1680,23 +1680,46 @@ export class Monitoring {
 
   /** R32: every monitored address the viewer may see, with its R15–R16 row: due, scheduled or unscheduled, so a
    *  document that is not being checked is visible without waiting for a tick. An address is seen when the viewer
-   *  sees the version it checks. At most MONITORING_READ_MAX rows (`truncated` stated). */
+   *  sees the version it checks. At most MONITORING_READ_MAX rows (`truncated` stated).
+   *  Every other bundle a row names (`versions`, `newer_unmonitored`, `disagreement.authored`) is answered only when
+   *  the viewer sees it, as `op=versionnotice` withholds a version: a withheld one is ABSENT, never a placeholder, and
+   *  a list or a disagreement left with nothing the viewer sees is not stated at all (B4, K268). */
   monitoring({ viewer = null, now = null, limit = null } = {}) {
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
     const s = this.schedule(at);
-    const sees = (id) => this.membership.inSight(id, viewer);
+    const sight = new Map();
+    const sees = (id) => { if (!sight.has(id)) sight.set(id, this.membership.inSight(id, viewer)); return sight.get(id); };
     const all = [
       ...s.due.map((d) => ({ state: "due", ...d, due_at: d.due_at ? stampInstant("second", d.due_at) : null })),
       ...s.scheduled.map((d) => ({ state: "scheduled", ...d, next_at: stampInstant("second", d.next_at) })),
       ...s.unscheduled.map((d) => ({ state: "unscheduled", ...d })),
-    ].filter((r) => sees(r.bundle));
+    ].filter((r) => sees(r.bundle)).map((r) => this.#withheld(r, sees));
     const items = all.slice(0, cap);
     return { ok: true, as_of: stampInstant("second", at), configured: this.configured(), items,
              counts: { due: items.filter((r) => r.state === "due").length,
                        scheduled: items.filter((r) => r.state === "scheduled").length,
                        unscheduled: items.filter((r) => r.state === "unscheduled").length },
              limit: cap, truncated: all.length > cap };
+  }
+
+  /** R32: one plan row with every bundle the viewer does not see removed from it. `versions` keeps the seen ones;
+   *  `newer_unmonitored` keeps the seen ones, or is dropped; a disagreement is restated over the authored words of
+   *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
+   *  disagreement only a hidden version makes would say that version exists. */
+  #withheld(row, sees) {
+    const { versions, newer_unmonitored: newer, disagreement, ...rest } = row;
+    const out = { ...rest };
+    if (Array.isArray(versions)) out.versions = versions.filter(sees);
+    const newerSeen = Array.isArray(newer) ? newer.filter(sees) : [];
+    if (newerSeen.length) out.newer_unmonitored = newerSeen;
+    if (disagreement && typeof disagreement === "object") {
+      const authored = (disagreement.authored || []).filter((a) => a && sees(a.bundle));
+      const words = new Set(authored.map((a) => a.frequency));
+      if (words.size > 1 || (words.size === 1 && disagreement.governs !== [...words][0]))
+        out.disagreement = { ...disagreement, authored };
+    }
+    return out;
   }
 
   /* ================================================================== *

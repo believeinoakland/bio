@@ -135,8 +135,8 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
     },
   };
   const given = Object.fromEntries(Object.entries({ conformance, consequences, actions, filings }).filter(([k]) => !omit.includes(k)));
+  /* no explicit migrate: the factory migrates its tables at construction (K267) */
   const esc = escalationOf(host, { record, membership, promotion, ...given, now: () => clock.now });
-  esc.migrate();
 
   let n = 0, nd = 0, na = 0;
   const w = {

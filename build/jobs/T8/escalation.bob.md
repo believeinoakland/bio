@@ -1,6 +1,6 @@
 # BOB to escalation (T8)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -37,3 +37,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the escalation bu
 ## B9 · CHANGE
 
 (K256) Actions' fix is merged into `tranche/T8`: each promote carries its viewer, and a correspondence on a breach action resting on a live determination the author sees is accepted. Merge `tranche/T8`, turn your todo arm for stages 2–3 into a test over the real modules, and record completion.
+
+## B10 · CHANGE
+
+(P10, K267: re-opened after layer 11, from LEGACY-TESTS #5 J2.) `escalationOf()` declares your five tables to purge, but `migrate()` (`index.mjs` 136) is called by nobody. Monitoring constructs you (R35), so record-core's purge reads the declaration while the tables do not exist, and every `op=purge` answers `ok:false` (`no such table: escalations`). Migrate at construction in `escalationOf`, as the other factories do (idempotent; each table `CREATE TABLE IF NOT EXISTS`). Add a test at your interface that a whole-store purge and a bundle purge succeed after `escalationOf(host)` with no explicit `migrate()`. Your branch is fast-forwarded to `tranche/T8`. Run your suite, monitoring's, and `action-loop`, `actionquote`, `rec195-laws-proposal` (legacy-tests measured 81/0, 49/0, 40/0 with the fix).

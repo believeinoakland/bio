@@ -23,7 +23,8 @@
  * raw promotion cannot disagree about what happened.
  *
  * REACHED as `escalationOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
- * to every later caller. At creation it declares its tables to purge (R20, K23) and registers its step with promotion.
+ * to every later caller. At creation it migrates its tables (idempotent), declares them to purge (R20, K23) and
+ * registers its step with promotion.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
@@ -132,7 +133,7 @@ export class Escalation {
     return v;
   }
 
-  /** The module's tables (R20). */
+  /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
   migrate() { migrateEscalation(this.sql); }
 
   #rows(q, ...a) { return this.sql.exec(q, ...a); }
@@ -950,8 +951,9 @@ for (const name of ["escalationOpen", "escalationRead", "escalationAttach", "esc
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. It declares its tables to purge (R20) and
- *  registers its check and projection with promotion (R17, R18, R21). */
+/** K61: the one instance per host, created on the first call with `deps`. It migrates its tables, so a purge that
+ *  reads their declaration finds them (K267), declares them to purge (R20) and registers its check and projection with
+ *  promotion (R17, R18, R21). */
 export function escalationOf(host, deps) {
   let i = instances.get(host);
   if (!i) {
@@ -969,6 +971,7 @@ export function escalationOf(host, deps) {
       || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
     instances.set(host, i);
+    i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
   }
