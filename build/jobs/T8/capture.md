@@ -31,3 +31,7 @@ Size (session_012gK9YaHTpAXY7PQYP1hnbG): test runs 11, module lines 2858
 ## J2 · REPORT
 
 R29 states no bound for navChanges (op=navchanges). The code answers the newest `limit` observations, default 200, clamped to 500, with `limit` and `truncated` and no `next` (a comparison needs a contiguous sequence); N187's test now pins that. Suggest R29 state it as N90 stated the others. No other module's flaw found.
+
+## J3 · COMPLETE
+
+N80's share, N187 and N166 (R59) applied; 59/59 tests, 59/59 ids covered, format, architecture, coverage and ownership clean. Record: build/jobs/T8/capture.md, §Completion.
