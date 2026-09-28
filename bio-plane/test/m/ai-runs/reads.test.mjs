@@ -23,14 +23,15 @@ async function readWorld() {
   return w;
 }
 
-test("R19: absent or invisible {found: false, session: null}; otherwise the session with its context (a project's visible confirmed-cited questions), principals, budget, condition, bias, standard and state", async () => {
+test("R19: absent or invisible {found: false, session: null}; otherwise the session with its context (a project's visible confirmed-cited questions), principals, budget, condition, bias, standard, state and rerun_of", async () => {
   const w = await readWorld();
   assert.deepEqual(await w.runs.read({ run: "R404", viewer: "admin" }), { run: "R404", found: false, session: null });
   assert.deepEqual(await w.runs.read({ run: "RH", viewer: "member:dan" }), { run: "RH", found: false, session: null });
   assert.deepEqual(await w.runs.read({ run: "R1", viewer: "nobody-we-know" }), { run: "R1", found: false, session: null });
   const s = (await w.runs.read({ run: "R1", viewer: "member:dan" })).session;
   assert.deepEqual(Object.keys(s), ["id", "label", "mode", "status", "ticks", "created", "updated", "expires", "context",
-    "principal", "budget", "condition", "bias", "standard", "state"]);
+    "principal", "budget", "condition", "bias", "standard", "state", "rerun_of"]);
+  assert.equal(s.rerun_of, null, "a run that re-runs nothing");
   assert.deepEqual(s.state, {}, "the run's scratch as the open wrote it");
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
                    ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T01:00:00Z"]);
@@ -51,6 +52,31 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   await w.runs.close({ run: "RP", bound: "runtime", condition: "runtime-ceiling-reached", viewer: "member:bob", actor: "bob", caller: "member:bob", at: "2026-07-01T00:06:00Z" });
   assert.deepEqual((await w.runs.read({ run: "RP", viewer: "member:bob" })).session.condition,
     { kind: "runtime-ceiling-reached", detail: `runtime: ${RUN_BOUNDS.runtime}`, bound: "runtime", at: "2026-07-01T00:06:00Z" });
+});
+
+test("R19 (N190): rerun_of names the run this run re-runs only when the viewer can see that run too; otherwise null, answering alike a run that re-runs nothing and one whose earlier run is out of view", async () => {
+  const w = await readWorld();
+  /* RH is over a project dan cannot see; RH2 re-runs it, and a stored link to a run dan cannot see is read as out of view */
+  await w.runs.open(OPEN({ run: "R1B", rerunOf: "R1" }));
+  await w.runs.open(OPEN({ run: "RH2", contextType: "project", contextId: HIDDEN, actor: "ann", viewer: "member:ann",
+                           principalPlane: "member:ann", rerunOf: "RH" }));
+  const at = async (run, viewer) => (await w.runs.read({ run, viewer })).session;
+  assert.equal((await at("R1B", "member:dan")).rerun_of, "R1");
+  assert.equal((await at("R1B", "admin")).rerun_of, "R1");
+  assert.equal((await at("RH2", "member:ann")).rerun_of, "RH");
+  assert.equal(await at("RH2", "member:dan"), null, "the re-run itself is out of dan's view");
+  /* a visible run whose stored link names a run the viewer cannot see, or no run at all: null, as for none */
+  w.sql.exec(`UPDATE ai_runs SET rerun_of = 'RH' WHERE run = 'R1B'`);
+  assert.equal((await at("R1B", "member:dan")).rerun_of, null);
+  assert.equal((await at("R1B", "member:ann")).rerun_of, "RH");
+  w.sql.exec(`UPDATE ai_runs SET rerun_of = 'R-PURGED' WHERE run = 'R1B'`);
+  assert.equal((await at("R1B", "admin")).rerun_of, null);
+  w.sql.exec(`UPDATE ai_runs SET rerun_of = '   ' WHERE run = 'R1B'`);
+  assert.equal((await at("R1B", "admin")).rerun_of, null);
+  /* the list is the read, per row */
+  w.sql.exec(`UPDATE ai_runs SET rerun_of = 'R1' WHERE run = 'R1B'`);
+  const listed = (await w.runs.listInContext({ contextType: "inquiry", contextId: INQ, viewer: "member:dan" })).runs;
+  assert.equal(listed.find((r) => r.id === "R1B").rerun_of, "R1");
 });
 
 test("R20: the lens block — manifest in force or stated absent or unreadable, now, at_open (recorded, unreadable, not recorded), moved against the open where recorded else the hand, moved_basis, and hand in_force or stale", async () => {

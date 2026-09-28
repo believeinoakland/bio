@@ -1,5 +1,6 @@
 /* ai-runs over the real modules it uses — record-core, membership, promotion, connections, bias, observation-log,
-   retrieval and contradiction — over node:sqlite (the engine a Durable Object runs). Each world is its own storage, so
+   retrieval and contradiction — over node:sqlite (the engine a Durable Object runs), at the Durable Object's shape:
+   `sql.exec` answers a cursor, never an array, and refuses a LIKE or GLOB pattern over 50 bytes (K313, K316). Each world is its own storage, so
    `aiRunsOf` answers a fresh instance. Tests drive the module at its interface; the helpers below set the record up
    through the used modules' own acts (a member enrolled, a project owned and joined, a bias set promoted and adopted). */
 import { DatabaseSync } from "node:sqlite";
@@ -54,11 +55,31 @@ const biasMd = (fm) => [yaml(fm), "", "## Statements", "", "The lens.", "", "## 
 export const inquiryMd = (id) => `---\nid: ${id}\nobject_type: inquiry\ntitle: Q\ncurrent_state: open\nsurfaced_by: agent\n`
   + `created: ${T0}\nlast_updated: ${T0}\ngroup: test-group\n---\n\n## Question\n\nWhy did the fee rise?\n`;
 
+/* workerd's cursor: rows are read by iterating it (or its `toArray()`/`one()`); `[0]` and `.length` of it are undefined. */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function world({ env = {} } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
+    const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+    const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+    if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP)) throw new Error("LIKE or GLOB pattern too complex");
     const st = db.prepare(q);
-    return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+    return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
   } };
   let n = 0;
   const storage = { sql, transactionSync(fn) {
@@ -86,10 +107,10 @@ export function world({ env = {} } = {}) {
   let k = 0;
   const w = {
     db, sql, ctx, record, membership, promotion, bias, runs,
-    row: (q, ...a) => sql.exec(q, ...a)[0] ?? null, rows: (q, ...a) => sql.exec(q, ...a),
-    count: (t) => sql.exec(`SELECT count(*) AS n FROM ${t}`)[0].n,
+    row: (q, ...a) => [...sql.exec(q, ...a)][0] ?? null, rows: (q, ...a) => [...sql.exec(q, ...a)],
+    count: (t) => [...sql.exec(`SELECT count(*) AS n FROM ${t}`)][0].n,
     /** Every row of this module's tables and of the observation log, for "nothing was written". */
-    dump: () => [...TABLES, "observation_log"].map((t) => JSON.stringify(sql.exec(`SELECT * FROM ${t} ORDER BY rowid`))).join("\n"),
+    dump: () => [...TABLES, "observation_log"].map((t) => JSON.stringify([...sql.exec(`SELECT * FROM ${t} ORDER BY rowid`)])).join("\n"),
     /** A bundle of a type, committed through record-core (a context for a run). */
     bundle(id, type = "inquiry", text = null) {
       const t = text ?? `---\nid: ${id}\n---\n`;
