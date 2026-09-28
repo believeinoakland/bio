@@ -54,7 +54,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - **R18** The pairing is deterministic: the same record and viewer give the same pairs; keys are added, never widened.
 - **R19** No act here judges, grades, edits or closes a side, and no read shows a candidate to a member.
 - **R20** Each check moves here as an invariant with its test (K6): C-60.1, C-93.1–C-93.7.
-- **R21** Whether a run is visible, running and the caller's is asked of a run gate `ai-runs` registers here (K31), `legacy-store` registering until then; with none registered, R13's run checks refuse as C-93.2. *(not yet met: K31 — the code reads `ai_runs` and calls `runPrincipalGate` directly)*
+- **R21** Whether a run is visible, running and the caller's is asked of a run gate `ai-runs` registers here as `registerRunGate(module, gate)`, `gate(run, viewer, caller) → {found, running, refusal}` (`found` false for blank, absent or invisible alike; `refusal` null or ai-runs R5's `AI_RUN_NOT_PRINCIPAL`) (K31, K182), `legacy-store` registering until then; with none registered, R13's run checks refuse as C-93.2.
 - **R22** `contradiction_candidates` is declared to record-core's purge by `a_bundle_id` and `b_bundle_id` (K23).
 - **R23** No place is named in this module's behaviour or outward text.
 
