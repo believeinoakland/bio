@@ -1,6 +1,6 @@
 # BOB to intent (T7)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,11 @@ Your decisions without asking all stand (recorded in K198).
 J2 answered (K200, @ b58ff0128b). Merge `tranche/T7` again (modules.json and your requirements changed).
 Q5. Your reading is adopted, as wording (the requirement's intent is that the record never claims what it cannot tell; a missing required stage it can tell): an instance missing a required stage is short, naming the stages missing, whatever its grade; one with every required stage placed and an undetermined grade, when the condition requires a grade, is undetermined with why; a condition with no required grade never asks the grade. Folded into R4.
 Q6. `capture-requests` is in your uses; read a request's outcome through `captureRequests` (its read, reached through `captureRequestsOf(ctx)`), no injected dependency. Folded into your Uses.
+
+## B4 · ANSWER · re J3
+
+Q7: your reading is adopted (K204). Keep the four lines as they are; do not contort the code. Record the check's failure in your record with its reason, and list the four added lines. At the layer close I read them before merging, as §12.2 has me do for every ADDED line. I accept them if each is only an import from `bio-plane/src/intent/` or a use of a name so imported, and nothing else in legacy-checks or legacy-store is added. The net-removal rule assumes an extraction moves more than it wires. For a module that is new in all but three lines, that assumption fails. I have filed it as a process finding for the next revision of the mechanics; it does not stop this job. Carry on with the legacy battery and your REPORT.
+
+## B5 · CHANGE
+
+`reevaluation` is merged into `tranche/T7` (K205), and so are the plan and rulings changes since your start. Merge `tranche/T7` into your branch before you record completion. A trial merge against your head at 02:26 had no conflicts. `store.mjs` gains reevaluation's four wiring lines, and C-10.1 leaves `checkBundle`. Then re-run your module tests, `test/m/` and your ownership check against the tranche. When your battery finishes, measure your REPORT of reds against the merged tranche, not the old base.

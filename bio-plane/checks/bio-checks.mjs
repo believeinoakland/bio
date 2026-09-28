@@ -1202,57 +1202,6 @@ function checkFrontmatterContract(ctx, findings) {
     if (!fm.produced_by.mode) findings.push(f('C-2.2', 'error', 'produced_by.mode is missing'));
     if (!fm.produced_by.capability_tier) findings.push(f('C-2.2', 'error', 'produced_by.capability_tier is missing'));
   }
-  checkReevalPending(ctx, findings);
-}
-
-/**
- * C-10 cascade hygiene (spec v1.2). reeval_pending is a {flag, since, source}
- * record. A legacy bare boolean is accepted (old bundles validate against the
- * contract they declared) but a true flag with no `since` cannot be staleness-
- * checked, so it is surfaced. When `since` is present and the flag is true, a
- * `since` older than the policy age is a surfaced finding (info, not load-bearing).
- */
-const REEVAL_SOURCES = ['deletion', 'source_status', 'wp_retraction', 'annotation'];
-function checkReevalPending(ctx, findings) {
-  const rp = ctx.fm?.reeval_pending;
-  if (rp === undefined) return; // C-2 core-field presence handles absence
-  const ageDays = ctx.maxReevalAgeDays ?? 30;
-  if (typeof rp === 'boolean') {
-    if (rp === true) {
-      findings.push(f('C-10.1', 'warn', 'reeval_pending is a legacy boolean true with no since/source; staleness cannot be checked',
-        ['migrate reeval_pending to {flag, since, source}']));
-    }
-    return;
-  }
-  if (typeof rp !== 'object') {
-    findings.push(f('C-10.1', 'error', `reeval_pending must be a {flag, since, source} record or boolean, got ${typeof rp}`));
-    return;
-  }
-  if (typeof rp.flag !== 'boolean') {
-    findings.push(f('C-10.1', 'error', 'reeval_pending.flag must be boolean'));
-    return;
-  }
-  if (rp.flag === false) {
-    if (rp.since != null || rp.source != null) {
-      findings.push(f('C-10.1', 'warn', 'reeval_pending.flag is false but since/source are not null',
-        ['reset since and source to null when clearing the flag']));
-    }
-    return;
-  }
-  // flag is true: since and source are required and meaningful
-  if (!ISO_TS_RE.test(rp.since || '')) {
-    findings.push(f('C-10.1', 'error', 'reeval_pending.flag is true but since is not an ISO-8601 UTC instant',
-      ['stamp since with the cascade event time']));
-  } else {
-    const ageMs = (ctx.nowMs ?? Date.now()) - Date.parse(rp.since);
-    if (ageMs > ageDays * 86400000) {
-      findings.push(f('C-10.1', 'info', `reeval_pending set ${Math.floor(ageMs / 86400000)}d ago (policy age ${ageDays}d) with no recorded re-evaluation`,
-        ['perform and record the re-evaluation', 'record an explicit accept-risk note (policy permitting)']));
-    }
-  }
-  if (!REEVAL_SOURCES.includes(rp.source)) {
-    findings.push(f('C-10.1', 'error', `reeval_pending.source '${rp.source}' is not one of: ${REEVAL_SOURCES.join(', ')}`));
-  }
 }
 
 function checkHeadings(ctx, findings) {
@@ -12242,23 +12191,6 @@ export const LIFECYCLE_CHECKS = {
  * NARROW_NO_INQUIRY): a question or a passage in a project the caller was never
  * invited to refuses byte-identically to one that does not exist. */
 export const VERSION_NOTICE_CHECKS = {
-  /* Neither subject, or both. There is no default: the notice is about a CITATION,
-     and a notice answered for no citation, or for two at once, is a list the caller
-     did not ask for wearing the word "notice". */
-  VERSION_NOTICE_NO_SUBJECT: {
-    check: 'C-80.1',
-    where: 'src/store.mjs versionNotice > is-version-notice-subject',
-    translation: 'That request did not say which citation to check. Ask about one question (target=) '
-      + 'to check every passage its evidence rests on, or about one passage (content=) — one of the '
-      + 'two, not both and not neither.',
-  },
-  /* The question named is not one this caller may read, or is not a question. */
-  VERSION_NOTICE_NO_INQUIRY: {
-    check: 'C-80.2',
-    where: 'src/store.mjs versionNotice > is-version-notice-subject',
-    translation: 'There is no question by that id that you can read here. A question you may not see '
-      + 'answers exactly as one that does not exist, so nothing about it was checked.',
-  },
   /* The passage named is not a content row this caller may read. Its `where` names content's `passageNotice`
      (content R29–R31, T5; N97, T6): the passage arm is content's. The store's `versionNotice` still answers the
      same condition inside `is-version-notice-subject`, one sentence true at both, until legacy-store's passage arm

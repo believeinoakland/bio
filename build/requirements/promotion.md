@@ -55,7 +55,11 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 **`runCaseGate({caseId, edition, fm, priorCase, body?, memberBasis?}) → {gateVersion, ok, findings, warnings}`**
 
-- **R33** Runs the case-document catalogue (`checkCaseDocument`) over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. Never throws.
+- **R33** Runs the case-document catalogue registered by R47 (until one is registered, `legacy-checks`' `checkCaseDocument`) over the parsed front matter, with the facts a case document cannot carry about itself: the case and edition it is about to become, the previous edition's assertions (`priorCase`, for C-21.1), the body, and each member's basis at its pinned bytes. Passing `null` for any of them blinds the checks that need it. The result has R29's shape. Never throws.
+
+**`registerCaseCatalogue(module, fn) → void`**
+
+- **R47** A later module (`ratification`, its R8) registers once at start the case-document catalogue `fn(fm, ctx) → findings` that R33 runs, in place of `legacy-checks`' `checkCaseDocument`. A second registration, by that module or any other, is refused `STEP_DECLARED`; a `fn` that is not a function is refused `LISTENER_MALFORMED`. The registration changes no answer's shape and no `GATE_VERSION` of its own: the catalogue's rows are counted by `CATALOG_VERSION` (R34) wherever they live (K94, N67, N69; K202).
 
 **`CATALOG_VERSION`, `GATE_VERSION` → strings**
 
