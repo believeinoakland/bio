@@ -1,6 +1,6 @@
 # capture (T7)
 
-**Status** · session_01L2yS2q9k4fhVDfNH5pKtLX · depth 2 · WORKING · handled B2
+**Status** · session_01L2yS2q9k4fhVDfNH5pKtLX · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
